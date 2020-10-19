@@ -2209,11 +2209,12 @@ define variable v-mess as character no-undo .
   do
   on error undo, return error return-value
   :
+
+  run gbl\get-gbl2.p (output p-Ok ) no-error.
+  if p-Ok then return.
+  
   p-Ok = true .
   p-mess = "".
-  
-  run gbl\get-gbl2.p (output p-ok ) no-error.
-  if p-ok then return.
   
   find first ub.goods no-lock where ub.goods.gds-code = p-gds-code no-error .
   if error-status :error then return error.

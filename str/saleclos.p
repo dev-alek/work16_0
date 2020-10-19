@@ -1646,7 +1646,7 @@ procedure compense-tabak :
                                                    and rowid(b_marking-chk) <> rowid(br_marking-chk)  
                                                    :                                                                                          
                 assign vCodeIdent = GetCodeIdent(b_marking-chk.mark) .
-                find first buf_marking no-lock where buf_marking.mark = vCodeIdent no-error .
+                find first buf_marking no-lock where buf_marking.mark begins vCodeIdent no-error .
                 if not available buf_marking then next .
                 assign
                   b_marking-chk.sts = 2  

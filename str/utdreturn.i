@@ -20,7 +20,8 @@ function  canUtdReturn returns logical
 (input idoc-code as character ):
    define variable Vflag as logical no-undo.
    find first trn-doc where trn-doc.doc-code     eq idoc-code
-                        and trn-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh_VP}
+                        and (trn-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh_VP}
+                             or trn-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh}) 
    no-lock no-error.
    find first utd where utd.doc-code eq trn-doc.doc-code
                     and utd.EDocType eq objSrv:Env:Utd:EDocType:returns:KeyIntDB no-lock no-error.
@@ -71,10 +72,12 @@ function  crUtdReturn returns logical
    define buffer Buf_utd-marking-lines for utd-marking-lines.
    define variable vi as integer no-undo.
    define variable vFlag as logical no-undo.
-   
+   define variable vdb-num as integer no-undo.
+   define variable vdoc-id as integer no-undo.
    
    find first trn-doc where trn-doc.doc-code     eq idoc-code
-                        and trn-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh_VP}
+                        and (  trn-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh_VP}
+                            or trn-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh})    
    no-lock no-error.
    find first utd where utd.doc-code eq trn-doc.doc-code
                     and utd.EDocType eq objSrv:Env:Utd:EDocType:returns:KeyIntDB no-lock no-error.
@@ -104,16 +107,19 @@ function  crUtdReturn returns logical
                                      and marking-lines.prt-code   = parts.prt-code
                                      and marking-lines.doc-level  = 1
             no-lock no-error.
+            subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
             if available marking-lines
             then do trans:
-               subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
-               MySeqUtd = ?.
                find first utd where utd.doc-code eq parts.in-code no-lock no-error.
                if available utd
                then do:
-                  vFlag = yes.
-                  create buf_utd.
-                  buffer-copy utd  except Timestamp  
+                  if first-of(parts.in-code)
+                  then do:
+                     
+                     MySeqUtd = ?.
+                     vFlag = yes.
+                     create buf_utd.
+                     buffer-copy utd  except Timestamp  
                                           RevocationStatus 
                                           RecipientResponseStatus 
                                           ReceiptStatus 
@@ -145,6 +151,15 @@ function  crUtdReturn returns logical
                   Buf_utd.sts-edi               = if utd.AmendmentRequested 
                                                   then ObjSrv:Env:Utd:Sts:edi:AvailAdjustment:KeyIntDB 
                                                   else ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
+                  assign 
+                        vdb-num = Buf_utd.db-num
+                        vdoc-id = Buf_utd.doc-id
+                     .
+                  end.
+                  else
+                     find first Buf_utd where Buf_utd.db-num eq vdb-num
+                                          and Buf_utd.doc-id eq vdoc-id
+                                          exclusive-lock.
                   for each marking-lines where marking-lines.gds-code   = goods.gds-code
                                            and marking-lines.obj-type   = parts.obj-type
                                            and marking-lines.obj-code   = parts.obj-code
@@ -189,31 +204,46 @@ function  crUtdReturn returns logical
                               assign
                                  buf_utd-lines.db-num     = buf_utd.db-num
                                  buf_utd-lines.doc-id     = buf_utd.doc-id
-                              .   
+                              .
+                              buf_utd-lines.Total =  utd-lines.Total / utd-lines.Quantity * parts.fact-qnty.
+                              buf_utd-lines.TotalWithVatExcluded =  utd-lines.TotalWithVatExcluded / utd-lines.Quantity * parts.fact-qnty.
+                              buf_utd-lines.Vat =   utd-lines.vat / utd-lines.Quantity * parts.fact-qnty.
+                              buf_utd-lines.Quantity = parts.fact-qnty.
+                           
                            end.     
                         end.
+                        
                         if buf_utd-marking-lines.doc-level eq 1
-                        then
+                        then do:
                            AddUtdErr(buf_utd.db-num,
                                   buf_utd.doc-id,
                                   buffer buf_utd-marking-lines:handle,
                                   "return",
                                   "Mark",
                                   buf_utd-marking-lines.mark + {&delim-par} + (if available buf_utd-lines then  buf_utd-lines.ProductCode else goods.gds-name)). 
-                     end. 
+                        end.
+                     end.
+                     release buf_utd-marking-lines. 
                   end.
-                  for each buf_utd-lines where buf_utd-lines.db-num eq buf_utd.db-num
-                                           and buf_utd-lines.doc-id eq buf_utd.doc-id
-                  exclusive-lock:
-                     buf_utd-lines.Total = buf_utd-lines.Total / buf_utd-lines.Quantity * parts.fact-qnty.
-                     buf_utd-lines.TotalWithVatExcluded = buf_utd-lines.TotalWithVatExcluded / buf_utd-lines.Quantity * parts.fact-qnty.
-                     buf_utd-lines.Vat = buf_utd-lines.vat / buf_utd-lines.Quantity * parts.fact-qnty.
-                     buf_utd-lines.Quantity = parts.fact-qnty.
+                  if last-of(parts.in-code)
+                  then do:
+                     buf_utd.Total = 0.
+                     buf_utd.Vat   = 0.
+                     for each buf_utd-lines where buf_utd-lines.db-num eq buf_utd.db-num
+                                              and buf_utd-lines.doc-id eq buf_utd.doc-id
+                     no-lock:
+                        buf_utd.Total = buf_utd.Total + buf_utd-lines.Total.
+                        buf_utd.Vat   = buf_utd.Vat   + buf_utd-lines.Vat.
+                     end.
+                  
+                     release buf_utd.
                   end.
+                  
                end.
                else do:
                   if first-of(parts.in-code)
                   then do:
+                     MySeqUtd = ?.
                      vFlag = yes. 
                      create buf_utd.
                      assign
@@ -231,10 +261,42 @@ function  crUtdReturn returns logical
                         vi = 0
                      .
                      validate buf_utd.
-                     buf_utd.sts             = ObjSrv:Env:Utd:Sts:th:SignatureRequired:KeyIntDB.
-                     Buf_utd.sts-edi         = ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
+                     define variable conf-par as character no-undo.
+                     define variable mode-erprn as logical no-undo.
+                     define variable par-type as character no-undo.
+                      { gbl/conf-rd.i
+                        "'is-erpRN'"
+                         0
+                         "''"
+                         0
+                         "''"
+                         "''"
+                         "''"
+                         NO
+                         conf-par
+                         par-type
+                         no-error
+                         }
+                     if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+                     else mode-erprn = no.
+                   buf_utd.sts             = if mode-erprn  
+                                             then ObjSrv:Env:Utd:Sts:th:Confirmed:KeyIntDB
+                                             else ObjSrv:Env:Utd:Sts:th:SignatureRequired:KeyIntDB.
+                     
+                     
+                     Buf_utd.sts-edi         = if mode-erprn  
+                                               then ObjSrv:Env:Utd:Sts:EDI:Verification:KeyIntDB
+                                               else ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
                   
+                     assign 
+                        vdb-num = Buf_utd.db-num
+                        vdoc-id = Buf_utd.doc-id
+                     .
                   end.
+                  else
+                     find first Buf_utd where Buf_utd.db-num eq vdb-num
+                                          and Buf_utd.doc-id eq vdoc-id
+                                          exclusive-lock.
                   create buf_utd-lines.
                   assign
                      vi                      = vi + 1
@@ -275,18 +337,25 @@ function  crUtdReturn returns logical
                      if buf_utd-marking-lines.doc-level eq 1
                      then 
                         AddUtdErr(buf_utd.db-num,buf_utd.doc-id,buffer buf_utd-marking-lines:handle,"return","Mark",marking-lines.mark + {&delim-par} + buf_utd-lines.ProductCode).
+                     release buf_utd-marking-lines.
+                  end.
+                  if last-of(parts.in-code)
+                  then do:
+                     buf_utd.Total = 0.
+                     buf_utd.Vat   = 0.
+                     for each buf_utd-lines where buf_utd-lines.db-num eq buf_utd.db-num
+                                           and buf_utd-lines.doc-id eq buf_utd.doc-id
+                     no-lock:
+                        buf_utd.Total = buf_utd.Total + buf_utd-lines.Total.
+                        buf_utd.Vat   = buf_utd.Vat   + buf_utd-lines.Vat.
+                     end.
+                     release buf_utd.
                   end.
                end.
-               buf_utd.Total = 0.
-               buf_utd.Vat   = 0.
-               for each buf_utd-lines where buf_utd-lines.db-num eq buf_utd.db-num
-                                           and buf_utd-lines.doc-id eq buf_utd.doc-id
-               no-lock:
-                 buf_utd.Total = utd.Total + buf_utd-lines.Total.
-                 buf_utd.Vat   = utd.Vat   + buf_utd-lines.Vat.
-               end.
-               unsubscribe "getNextseq".
+               
+               
             end.
+            unsubscribe "getNextseq".
          end.
       end.
    end.

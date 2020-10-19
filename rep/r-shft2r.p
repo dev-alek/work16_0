@@ -339,6 +339,7 @@ FOR EACH  ub.trn-doc  NO-LOCK
       v-type 
       no-error
     }
+
   if v-value <> "yes" then 
   do:
 
@@ -382,6 +383,7 @@ FOR EACH  ub.trn-doc  NO-LOCK
         tincome-2.supp-code    = ub.trn-doc.cli-code
         tincome-2.doc-code     = v-doc-code + "/" + v-InfoSectionsTotal:InfoSectionCurr:SectionName
         tincome-2.doc-code-trn = ub.trn-doc.doc-code
+        tincome-2.qnty1       = v-InfoSectionsTotal:InfoSectionCurr:FactQnty
         tincome-2.qnty3        = ub.doc-line.cli-qnty
         tincome-2.qnty2        = ( IF AVAILABLE ub.inv-line THEN v-InfoSectionsTotal:InfoSectionCurr:FactKgQnty ELSE 0 )
         tincome-2.temperature  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):DensTemp

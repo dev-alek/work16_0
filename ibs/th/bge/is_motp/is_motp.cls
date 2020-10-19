@@ -33,7 +33,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   { gbl/thbj-def.i }
   
   
-  define temp-table tt-childs
+  define temp-table tt-childs no-undo
     field mark    as character case-sensitive
     field parent_ as character
     index pi as primary unique
@@ -137,6 +137,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
   define property BadAuth as logical no-undo init false
     get.
     protected set.
+    
+  define property lastLineCisInfo as integer no-undo init 0
+    get.
+    set.
     
   define property currToken as character no-undo
     get :
@@ -845,6 +849,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
     
     if not checkINN
+    and lastLineCisInfo = 0
     then do :
       for each buf_utd-err exclusive-lock where buf_utd-err.db-num = pDB-num
                                             and buf_utd-err.doc-id = pDoc-id
@@ -898,6 +903,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     lines_:
     for each buf_utd-lines no-lock where buf_utd-lines.db-num = pDB-num
                                      and buf_utd-lines.doc-id = pDoc-id
+                                     and buf_utd-lines.LineNum >= lastLineCisInfo
+                                     break by buf_utd-lines.LineNum
                                      :
       objKeyRec:GenKeyRec ( input "utd-lines"
                             ,input buffer buf_utd-lines:handle
@@ -921,7 +928,11 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                                                and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum,
       first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
                                                break by  buf_utd-marking-lines.doc-id :
-        if v-num-marks = 999 then leave lines_ .
+        if v-num-marks = 999
+        then do :
+          lastLineCisInfo = buf_utd-lines.LineNum .
+          leave lines_ .
+        end .
         if pLevel2 and buf_marking.unit-ext <> "LEVEL2" then next marks_ .
         if not pLevel2 and buf_marking.unit-ext = "LEVEL2" then next marks_ .
         if checkINN and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then next marks_ .
@@ -948,6 +959,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
     delete object objKeyRec.
     
+    if v-num-marks <> 999 then lastLineCisInfo = 0 .
+    
     putcisesInfo (vfilereq + " (out-data):" ) .
     if isDebug
     then
@@ -956,8 +969,8 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     if pToken > ""
     then
        vCmdToken = substitute (' -H "Authorization: Bearer &1"',pToken).
-       define variable vfileresult as character no-undo.
-       define variable vfileresulterr as character no-undo.
+    define variable vfileresult as character no-undo.
+    define variable vfileresulterr as character no-undo.
     vfileresult    = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".json".
     vfileresulterr = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".err".
     
@@ -1002,27 +1015,26 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
 /*    import unformatted vLine .                        */
 /*    input close .                                     */
 
-    copy-lob from file vfileresult to vlongJson .
-    vlongJson = replace(vlongJson, "&", "&amp;") .
-    vlongJson = replace(vlongJson, "<", "&lt;") .
-    vlongJson = replace(vlongJson, ">", "&gt;") .
-    vlongJson = replace(vlongJson, ':null', ':""') .
-    copy-lob from vlongJson to file vfileresult .
-    
-    if vLine begins "<html>"
+    if searchFile(vfileresult) = ?
     then do :
       v-ok = false .
+      MSG = "Запрос не выполнен! Нет ответа от МОТП. Не могу найти файл " + search(vfileresult) .
       return .
     end .
-    
-    file-info:file-name = search(vfileresult) .
+    file-info:file-name = searchFile(vfileresult) .
     if file-info:file-size = 0
     then do :
       v-ok = false .
       MSG = "Запрос не выполнен! Файл-ответ из МОТП " + search(vfileresult) + " пустой (размер 0 байт)." .
       return .
     end .
-    
+
+    copy-lob from file vfileresult to vlongJson .
+    vlongJson = replace(vlongJson, "&", "&amp;") .
+    vlongJson = replace(vlongJson, "<", "&lt;") .
+    vlongJson = replace(vlongJson, ">", "&gt;") .
+    vlongJson = replace(vlongJson, ':null', ':""') .
+    copy-lob from vlongJson to file vfileresult .
     
     putcisesInfo ( vfileresult + " (in-data):") .
     if isDebug

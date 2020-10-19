@@ -1748,20 +1748,20 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
 
   /*************************************** собственно маршрутизация **********************************/
   
-  define variable observupdObj as class observupd no-undo.
-  if g#db-num = 0 /* на гбд отправляем в любом случае так как схема БД должна быть обязатльно обновлена*/
-  then do:
-  
-    observupdObj = new observupd ().
-  
-    /*исключение из списка бд маршуртизации обновленных таблиц, где схема бд не обновилась туда не уходит*/
-  
-    observupdObj:dbexcept(input-output list-db-for-send, input p-tbl-name).
-  
-    delete object observupdObj no-error.
-    if list-db-for-send = "NULL"
-      then return.
-  end.
+/*  define variable observupdObj as class observupd no-undo.                                                 */
+/*  if g#db-num = 0 /* на гбд отправляем в любом случае так как схема БД должна быть обязатльно обновлена*/  */
+/*  then do:                                                                                                 */
+/*                                                                                                           */
+/*    observupdObj = new observupd ().                                                                       */
+/*                                                                                                           */
+/*    /*исключение из списка бд маршуртизации обновленных таблиц, где схема бд не обновилась туда не уходит*/*/
+/*                                                                                                           */
+/*    observupdObj:dbexcept(input-output list-db-for-send, input p-tbl-name).                                */
+/*                                                                                                           */
+/*    delete object observupdObj no-error.                                                                   */
+/*    if list-db-for-send = "NULL"                                                                           */
+/*      then return.                                                                                         */
+/*  end.                                                                                                     */
 
   if v-routing-type = 'LOB':U
   then do:

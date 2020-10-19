@@ -1258,6 +1258,7 @@ end.
 ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
   DO:
     define buffer buf_marking-lines for ub.marking-lines .
+    define buffer pri_marking-lines for ub.marking-lines .
     define buffer buf_marking       for ub.marking .
     define buffer buf_goods         for ub.goods .
     define buffer buf_doc-line      for ub.doc-line .
@@ -1265,6 +1266,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     define buffer buf_parts         for ub.parts .
     define buffer bf_parts          for ub.parts .
     define buffer cpl_gds-dtl       for ub.gds-dtl .
+    define buffer pri_trn-doc       for ub.trn-doc .
     define variable mark       as character no-undo .
     define variable ii         as integer   no-undo .
     define variable jj         as integer   no-undo .
@@ -1273,6 +1275,18 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     define variable ungroup    as logical   no-undo .
     define variable v-message  as character no-undo .
     
+    
+    if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+    then do :
+      if t-doc.out-code = ?
+      or t-doc.out-code = ""
+      or not can-find(pri_trn-doc no-lock where pri_trn-doc.doc-code = t-doc.out-code)
+      then do :
+        message "Сначала выберите корректный источник (ПН)" view-as alert-box .
+        return no-apply.
+      end.
+    end .
     v-add = yes .
     do while v-add:
     
@@ -1369,14 +1383,32 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
             end.  
           end.   
        end.
-          
-          run str/out-add.p (parparentproc,
-            recid(t-doc),
-            ?,
-            ?,
-            recid(buf_goods),
-            {&add-def},
-            'scan-marks' + {&delim-key} + mark) no-error.
+          if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+          and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+          then do :
+            if not can-find (pri_marking-lines no-lock where pri_marking-lines.out-code = t-doc.out-code
+                                                         and pri_marking-lines.mark begins mark)
+            then do :
+              message "Марка " mark " не найдена в документе-источнике (" t-doc.out-code ")" view-as alert-box .
+              return no-apply.
+            end .                                             
+            run str/out-add.p (parparentproc,
+              recid(t-doc),
+              ?,
+              ?,
+              recid(buf_goods),
+              {&add-def} + {&delim-par} + "return",
+              'scan-marks' + {&delim-key} + mark) no-error.
+          end .
+          else do :
+            run str/out-add.p (parparentproc,
+              recid(t-doc),
+              ?,
+              ?,
+              recid(buf_goods),
+              {&add-def},
+              'scan-marks' + {&delim-key} + mark) no-error.
+          end .
 
         /*          /*Добавляем товар в накладную*/                                                                                                                                                               */
 
@@ -1400,19 +1432,34 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
          v-message = "У марки нет свободной зоны" .
        end.  
           /*Увеличеваем кол-во товара в накладной*/
-                      find first cpl_gds-dtl exclusive-lock where cpl_gds-dtl.doc-code = buf_doc-line.doc-code
-                        and cpl_gds-dtl.artic = buf_doc-line.artic and buf_doc-line.prod-code = cpl_gds-dtl.prod-code
-                        and buf_doc-line.prod-type = cpl_gds-dtl.prod-type no-error.
+        find first cpl_gds-dtl exclusive-lock where cpl_gds-dtl.doc-code = buf_doc-line.doc-code
+          and cpl_gds-dtl.artic = buf_doc-line.artic and buf_doc-line.prod-code = cpl_gds-dtl.prod-code
+          and buf_doc-line.prod-type = cpl_gds-dtl.prod-type no-error.
  
-                      run str/out-add.p
-                        ( input parparentproc
-                        ,input recid(t-doc)
-                        ,input recid(buf_doc-line)
-                        ,input recid(cpl_gds-dtl)
-                        ,input recid (buf_goods)
-                        ,input {&update}
-            ,input 'scan-marks' + {&delim-key} + mark)
-            no-error.
+          if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+          and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+          then do :
+            run str/out-add.p
+              ( input parparentproc
+              ,input recid(t-doc)
+              ,input recid(buf_doc-line)
+              ,input recid(cpl_gds-dtl)
+              ,input recid (buf_goods)
+              ,input {&update} + {&delim-par} + "return"
+              ,input 'scan-marks' + {&delim-key} + mark)
+              no-error.
+          end .
+          else do :
+            run str/out-add.p
+              ( input parparentproc
+              ,input recid(t-doc)
+              ,input recid(buf_doc-line)
+              ,input recid(cpl_gds-dtl)
+              ,input recid (buf_goods)
+              ,input {&update}
+              ,input 'scan-marks' + {&delim-key} + mark)
+              no-error.
+          end .
 
         end. 
       end.

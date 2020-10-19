@@ -228,7 +228,7 @@ class ibs.th.str.marking.handlers.tree inherits objth:
 
   end method.
   
-  method public void LockChkChildeMark (buffer buf_mark for marking):
+  method public void LockChkChildeMark (buffer buf_mark for ub.marking):
     
     def buffer buf_marking for ub.marking. 
     

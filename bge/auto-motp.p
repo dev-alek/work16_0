@@ -96,7 +96,6 @@ on error undo, return error
   define buffer buf_utd-marking-lines for ub.utd-marking-lines .
   define buffer buf_utd-lines         for ub.utd-lines .
   
-  define variable objThObj      as class ibs.th.str.clients.clisub        no-undo.
   define variable objKeyRec     as class ibs.th.gbl.keyrec                no-undo.
   
   define variable v-part-rowid as rowid no-undo .
@@ -186,17 +185,7 @@ on error undo, return error
   
   run gbl/getobjsrvhndl.p (input-output ObjSrv).
   
-  
   SECURITY-POLICY:SYMMETRIC-ENCRYPTION-KEY = GENERATE-PBE-KEY("sysadm").
-  
-  objThObj = new clisub ().
-/*  Получение ответов   
-  run write-to-log( "Получение ответов на отправленные запросы " ) .
-    
-  ans_ :
-  
-*/
-
   
   do v-ind = 1 to v-num-entries-db-list
   on error undo, return error
@@ -274,7 +263,7 @@ on error undo, return error
           then do :
             run write-to-log( oMotp:Msg ) .
             if not oMotp:Msg begins "Нет ответа от ИС МОТП"
-            then do :
+            then do transaction :
               find first buf_ext-system-attr no-lock where buf_ext-system-attr.db-num   = buf_ext-system.db-num
                                                        and buf_ext-system-attr.esys-id  = buf_ext-system.esys-id
                                                        and buf_ext-system-attr.esya-attr-code = {&attr-esys-AuthToken-send}
@@ -299,10 +288,16 @@ on error undo, return error
               then do :
                 assign buf_ext-system-attr.esya-attr-value = "" .
               end .
-            end . 
+            end . /* trans */
+          end .
+          else do :
+            if oMotp:HttpStatus = 502
+            then do :
+              run write-to-log( oMotp:Msg ) .
+            end .
           end .
         end .
-        else do :
+        else do transaction :
           run write-to-log( "Отсутствует токен для авторизации в ИС МОТП." ) .
           find first buf_ext-system-attr no-lock where buf_ext-system-attr.db-num   = buf_ext-system.db-num
                                                    and buf_ext-system-attr.esys-id  = buf_ext-system.esys-id
@@ -327,93 +322,105 @@ on error undo, return error
           then do :
             assign buf_ext-system-attr.esya-attr-value = "" .
           end .
-        end .
+        end . /* trans */
 /*      end .*/
                                  
       /* По всем УТД/еДокам в статусе "Получен от поставщика" И статус ЕДО не равен Запрос аннуляции */
         if vToken > ""
         then do :
-           for each buf_utd no-lock where buf_utd.obj-type = clients.obj-type
+            utd_ :
+            for each buf_utd no-lock where buf_utd.obj-type = clients.obj-type
                                        and buf_utd.obj-code = clients.obj-code
                                        and (buf_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or buf_utd.EDocType = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB)
                                        and buf_utd.sts = objSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB
                                        and buf_utd.sts-edi <> objSrv:Env:Utd:Sts:EDI:RevocationIsRequestedByMe:KeyIntDB :
               /* Запрос информации по маркам */
-              find first locked_utd exclusive-lock where rowid(locked_utd) = rowid(buf_utd) no-wait no-error .
-              if not available locked_utd
-              then do :
-                next .
-              end .
-              
-              run write-to-log( "Запрос информации по маркам. УПД " + string(buf_utd.DocumentNumber) ) .
-              v-found = false .
-              for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num
-                                                 and buf_utd-marking-lines.doc-id = buf_utd.doc-id,
-              first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
-                                          and buf_marking.unit-ext = "LEVEL2" :
-                v-found = true .
-                leave .                                   
-              end .
-              if v-found
-              then do :
-                oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, true, output v-ok) .
-                if not v-ok
+              do transaction :
+                find first locked_utd exclusive-lock where rowid(locked_utd) = rowid(buf_utd) no-wait no-error .
+                if not available locked_utd
                 then do :
-                  run write-to-log( oMotp:Msg ) .
-                  next .
+                  next utd_ .
                 end .
-              end .     
-              oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .
-              if not v-ok
-              then do :
-                run write-to-log( oMotp:Msg ) .
-                next .
-              end .                         
-              /* Смена статуса документа на основании статусов марок */   
-              
-              v-found = false .
-              objKeyRec = new ibs.th.gbl.keyrec().
-              lines_ :
-              for each buf_utd-lines no-lock where buf_utd-lines.db-num = buf_utd.db-num
-                                               and buf_utd-lines.doc-id = buf_utd.doc-id:
-                objKeyRec:GenKeyRec ( input "utd-lines"
-                                     ,input buffer buf_utd-lines:handle
-                                     ,output vRecKey).
-                if can-find (first buf_utd-err  where buf_utd-err.db-num = buf_utd.db-num
-                                                  and buf_utd-err.doc-id    = buf_utd.doc-id
-                                                  and buf_utd-err.CheckType = "LoadUtd"
-                                                  and buf_utd-err.reckey    =  vRecKey)
-                then next lines_ .                                
-                for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
-                                                         and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
-                                                         and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum,
+                
+                run write-to-log( "Запрос информации по маркам. УПД " + string(buf_utd.DocumentNumber) ) .
+                v-found = false .
+                for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num
+                                                   and buf_utd-marking-lines.doc-id = buf_utd.doc-id,
                 first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
-                                            and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB :
-                                              
+                                            and buf_marking.unit-ext = "LEVEL2" :
                   v-found = true .
                   leave .                                   
                 end .
-              end .
-              delete object objKeyRec.
-              
-              if not v-found
-              then do :
-                locked_utd.sts = objSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB .
-              end .
-              else do :
-                locked_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .
-              end .
-              
-              release locked_utd no-error .
-      /*        for first ub.utd exclusive-lock where rowid(ub.utd) = rowid(buf_utd) :*/
-      /*          ub.utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .    */
-      /*        end .                                                                 */
-      /*        v-ok = oMotp:CheckStatus(buf_utd.db-num, buf_utd.doc-id) .  */
-      /*        if not v-ok                                                 */
-      /*        then do :                                                   */
-      /*          run write-to-log( "Не получена полная информация по КМ") .*/
-      /*          next .                                                    */
-      /*        end .                                                       */
+                if v-found
+                then do :
+                  oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, true, output v-ok) .
+                  if not v-ok
+                  then do :
+                    run write-to-log( oMotp:Msg ) .
+                    next utd_ .
+                  end .
+                end .
+                oMotp:lastLineCisInfo = 0 .   
+                oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .
+                if not v-ok
+                then do :
+                  run write-to-log( oMotp:Msg ) .
+                  next utd_ .
+                end .     
+                do while oMotp:lastLineCisInfo <> 0 :
+                  oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .
+                  if not v-ok
+                  then do :
+                    run write-to-log( oMotp:Msg ) .
+                    next utd_ .
+                  end .
+                end .                    
+                /* Смена статуса документа на основании статусов марок */   
+                
+                v-found = false .
+                objKeyRec = new ibs.th.gbl.keyrec().
+                lines_ :
+                for each buf_utd-lines no-lock where buf_utd-lines.db-num = buf_utd.db-num
+                                                 and buf_utd-lines.doc-id = buf_utd.doc-id:
+                  objKeyRec:GenKeyRec ( input "utd-lines"
+                                       ,input buffer buf_utd-lines:handle
+                                       ,output vRecKey).
+                  if can-find (first buf_utd-err  where buf_utd-err.db-num = buf_utd.db-num
+                                                    and buf_utd-err.doc-id    = buf_utd.doc-id
+                                                    and buf_utd-err.CheckType = "LoadUtd"
+                                                    and buf_utd-err.reckey    =  vRecKey)
+                  then next lines_ .                                
+                  for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                                           and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                                           and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum,
+                  first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
+                                              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB :
+                                                
+                    v-found = true .
+                    leave .                                   
+                  end .
+                end .
+                delete object objKeyRec.
+                
+                if not v-found
+                then do :
+                  locked_utd.sts = objSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB .
+                end .
+                else do :
+                  locked_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .
+                end .
+                
+                release locked_utd no-error .
+        /*        for first ub.utd exclusive-lock where rowid(ub.utd) = rowid(buf_utd) :*/
+        /*          ub.utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .    */
+        /*        end .                                                                 */
+        /*        v-ok = oMotp:CheckStatus(buf_utd.db-num, buf_utd.doc-id) .  */
+        /*        if not v-ok                                                 */
+        /*        then do :                                                   */
+        /*          run write-to-log( "Не получена полная информация по КМ") .*/
+        /*          next .                                                    */
+        /*        end .                                                       */
+              end . /* transaction */
             end .
       end.
       
@@ -423,14 +430,16 @@ on error undo, return error
                                  and (buf_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or buf_utd.EDocType = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB)
                                  and buf_utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB :
         /* Проверка по спецификации */ 
-        find first locked_utd exclusive-lock where rowid(locked_utd) = rowid(buf_utd) no-wait no-error .
-        if not available locked_utd
-        then do :
-          next .
-        end .
-        run write-to-log( "Проверка по спецификации. УПД " + string(buf_utd.DocumentNumber) ) .
-        oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) .
-        release locked_utd no-error .
+        do transaction :
+          find first locked_utd exclusive-lock where rowid(locked_utd) = rowid(buf_utd) no-wait no-error .
+          if not available locked_utd
+          then do :
+            next .
+          end .
+          run write-to-log( "Проверка по спецификации. УПД " + string(buf_utd.DocumentNumber) ) .
+          oMotp:CheckSpec(buf_utd.db-num, buf_utd.doc-id) .
+          release locked_utd no-error .
+        end . /* transaction */
       end .
       
       if vToken > ""
@@ -441,17 +450,19 @@ on error undo, return error
                                    and (buf_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or buf_utd.EDocType = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB)
                                    and buf_utd.sts = objSrv:Env:Utd:Sts:TH:AwaitingConfirmation:KeyIntDB :
           /* Проверка по спецификации */ 
-          find first locked_utd exclusive-lock where rowid(locked_utd) = rowid(buf_utd) no-wait no-error .
-          if not available locked_utd
-          then do :
-            next .
-          end .
-          run write-to-log( "Проверка документа в ИС МОТП. УПД " + string(buf_utd.DocumentNumber) ) .
-/*          oMotp:checkUtd(vToken, buf_utd.db-num, buf_utd.doc-id) .*/
-          oMotp:checkINN = true .
-          oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .
-          oMotp:checkINN = false .
-          release locked_utd no-error .
+          do transaction :
+            find first locked_utd exclusive-lock where rowid(locked_utd) = rowid(buf_utd) no-wait no-error .
+            if not available locked_utd
+            then do :
+              next .
+            end .
+            run write-to-log( "Проверка документа в ИС МОТП. УПД " + string(buf_utd.DocumentNumber) ) .
+  /*          oMotp:checkUtd(vToken, buf_utd.db-num, buf_utd.doc-id) .*/
+            oMotp:checkINN = true .
+            oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .
+            oMotp:checkINN = false .
+            release locked_utd no-error .
+          end . /* transaction */
           if not v-ok
           then do :
             run write-to-log( oMotp:Msg ) .
@@ -466,37 +477,39 @@ on error undo, return error
                                    and buf_utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
                                    and buf_utd.sts = objSrv:Env:Utd:Sts:TH:AwaitingConfirmation:KeyIntDB :
           /* Запрос информации по маркам */
-          find first locked_utd exclusive-lock where rowid(locked_utd) = rowid(buf_utd) no-wait no-error .
-          if not available locked_utd
-          then do :
-            next .
-          end .
-          run write-to-log( "Запрос информации по маркам. Первоначальный ввод " + string(buf_utd.DocumentNumber) ) .
-          oMotp:isFirstEnter = true .
-          oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .
-          oMotp:isFirstEnter = false .        
-          if not v-ok
-          then do :
-            run write-to-log( oMotp:Msg ) .
-            next .
-          end .   
-          for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num
-                                                   and buf_utd-marking-lines.doc-id = buf_utd.doc-id,
-          first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
-                                      and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB :
-            v-ok = false .
-            leave .                                   
-          end .
-          if not v-ok
-          then do :
-            run write-to-log( "Не получена полная информация по КМ") .
-            next .
-          end .
-          locked_utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB .
-          release locked_utd no-error .
-  /*        for first upd_utd exclusive-lock where rowid(upd_utd) = rowid(buf_utd) :*/
-  /*          upd_utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB .              */
-  /*        end .                                                                   */
+          do transaction :
+            find first locked_utd exclusive-lock where rowid(locked_utd) = rowid(buf_utd) no-wait no-error .
+            if not available locked_utd
+            then do :
+              next .
+            end .
+            run write-to-log( "Запрос информации по маркам. Первоначальный ввод " + string(buf_utd.DocumentNumber) ) .
+            oMotp:isFirstEnter = true .
+            oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .
+            oMotp:isFirstEnter = false .        
+            if not v-ok
+            then do :
+              run write-to-log( oMotp:Msg ) .
+              next .
+            end .   
+            for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num
+                                                     and buf_utd-marking-lines.doc-id = buf_utd.doc-id,
+            first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark
+                                        and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB :
+              v-ok = false .
+              leave .                                   
+            end .
+            if not v-ok
+            then do :
+              run write-to-log( "Не получена полная информация по КМ") .
+              next .
+            end .
+            locked_utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB .
+            release locked_utd no-error .
+    /*        for first upd_utd exclusive-lock where rowid(upd_utd) = rowid(buf_utd) :*/
+    /*          upd_utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB .              */
+    /*        end .                                                                   */
+          end . /* transaction */
         end .
       end .
 /*      if last-of (clients.host-code)*/
@@ -512,10 +525,6 @@ on error undo, return error
     
   end.
 
-  delete object objThObj no-error . 
-  
-  
-/*  delete object vsdStsType no-error .*/
   
 end.
 

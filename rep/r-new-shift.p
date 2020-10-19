@@ -81,6 +81,7 @@ define variable vss-description as character no-undo initial "сменный отчет":U .
 { cmp/breakstr.i }
 { gbl/cur-time.i }
 { gbl/getcntxt.i def }
+{ gbl/getsect.i  def }
 /*данные по реализации*/
 { rep/real-2df.i "NEW SHARED" treal-2 }
 { rep/real-3df.i "NEW SHARED" treal-3 }
@@ -157,9 +158,9 @@ define stream OutStr-html.
 /*определение какого формата будет печататься сменный отчет*/
 define variable v-sort-list     as character no-undo .
 define variable v-param-type    as character no-undo .
-define variable v-value-date    as date      no-undo .
-define variable v-value-decimal as decimal   no-undo .
-define variable v-value-logical AS LOGICAL   no-undo .
+/*define variable v-value-date    as date      no-undo .*/
+/*define variable v-value-decimal as decimal   no-undo .*/
+/*define variable v-value-logical AS LOGICAL   no-undo .*/
 define variable v-tth           as handle    no-undo .
 
 run adm/shattri.p (
@@ -263,18 +264,10 @@ assign
              else (p-obj-type + string(p-obj-code))
     .
 { gbl/hostname.i p-obj-type p-obj-code v-host-code v-host-name}
-
-{ gbl/conf-rd.i "'shft-qty'" v-host-code p-obj-type p-obj-code "''" "''" "''" no v-param_shft-qty v-param_data-type no-error }
-if error-status :error or v-param_data-type <> "C":U or lookup( v-param_shft-qty, "system,state,state-all-per":U ) = 0 then 
-do:
-    assign 
-        v-param_shft-qty = "system":U.
-end.
-{ gbl/conf-rd.i "'prt-z-no'" v-host-code p-obj-type p-obj-code "''" "''" "''" no v-param_prt-z-no v-param_data-type no-error }
-if error-status :error or v-param_data-type <> "L":U or lookup( v-param_prt-z-no, "yes,no,true,false":U ) = 0 then 
-do:
-    assign 
-        v-param_prt-z-no = "yes":U.
+{ gbl/getsect.i run p-obj-type p-obj-code {&attr-report-obj} }
+for each thbjattr_thbj-attr :
+  if thbjattr_thbj-attr.prop-code = 'shft-qty'  then v-param_shft-qty = thbjattr_thbj-attr.property-value-character .
+  if thbjattr_thbj-attr.prop-code = 'prt-z-no'  then v-param_prt-z-no = string(thbjattr_thbj-attr.property-value-logical) .
 end.
 define temp-table temp-shift-obj no-undo like ub.shift-obj
     FIELD num as integer

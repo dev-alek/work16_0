@@ -283,11 +283,11 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     
     TrdcAattrPri().
     
-    find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = {&trdcattr-nids} no-error. ~
+    /*find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = {&trdcattr-nids} no-error. ~
     if available (buf_doc-attr) 
     then do:
       write-data-element ('doc-id', buf_doc-attr.attr-value) no-error.
-    end.
+    end.*/
     
     if v-is-petrol-trn
       then PriVneshLineFuel().

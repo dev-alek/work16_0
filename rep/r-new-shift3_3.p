@@ -248,8 +248,8 @@ FOR EACH t-3 where (pclassify <> "totals":U or t-3.grp-code-sheet = 0) use-index
       .
       if treal-3.is-pay then
       assign
-      areal-is-pay-qnty1 = areal-is-pay-qnty1 + treal-3.qnty1
-      areal-is-pay-netto = areal-is-pay-netto + treal-3.netto
+      areal-is-pay-qnty1 = areal-is-pay-qnty1 + round(treal-3.qnty1,2)
+      areal-is-pay-netto = areal-is-pay-netto + round(treal-3.netto,2)
       .
       else
       assign
@@ -266,8 +266,8 @@ FOR EACH t-3 where (pclassify <> "totals":U or t-3.grp-code-sheet = 0) use-index
                      )
       treal-3.ii = curr-real-ii
       curr-real-ii = curr-real-ii + 1
-      areal-no-pay-qnty1 = areal-no-pay-qnty1 + treal-3.qnty1
-      areal-no-pay-netto = areal-no-pay-netto + treal-3.netto
+      areal-no-pay-qnty1 = areal-no-pay-qnty1 + round(treal-3.qnty1,2)
+      areal-no-pay-netto = areal-no-pay-netto + round(treal-3.netto,2)
       .
       end.
     END.

@@ -356,7 +356,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     and  (new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB  and new-{&main-tbl}.sts <> old-{&main-tbl}.sts)
     and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
     and ((g#db-num ne 0 and g#news) or (g#db-num eq 0 and not g#news))
-    and ub.clients.db-num = g#db-num
+    and ub.clients.db-num = g#db-num 
+    and g#db-num ne 0
   then do:
     def var v-file-name as character no-undo.
     def var v-msg as character no-undo.

@@ -258,150 +258,6 @@ FOR EACH t-2 USE-INDEX pi :
       curr-real-ii = treal-2.ii + 1.
   end.
 
-  /* родим записи таблицы treal-2 - подитоги */
-  IF CAN-FIND( FIRST treal-2 WHERE
-    treal-2.gds-code = t-2.gds-code ) THEN 
-  DO:
-    /* если есть вообще оплаченный расход */
-    do v-step = 1 to 2:
-      if v-step = 1 then assign v-is-pay = yes.
-      if v-step = 2 then assign v-is-pay = no .
-      FOR EACH treal-2 WHERE treal-2.is-pay = v-is-pay AND treal-2.gds-code = t-2.gds-code and treal-2.curr-code >= 0 USE-INDEX pi :
-        if treal-2.discnt-type = -99 or treal-2.discnt-type = -98 or (treal-2.cpay-code < 0) then 
-        do: 
-          assign
-            areal-qnty1 = areal-qnty1 + treal-2.qnty1
-            areal-qnty2 = areal-qnty2 + treal-2.qnty2
-            areal-netto = areal-netto + treal-2.netto
-            .
-          if treal-2.is-pay = yes then 
-          do:
-            assign
-              areal-is-pay-qnty1 = areal-is-pay-qnty1 + treal-2.qnty1
-              areal-is-pay-qnty2 = areal-is-pay-qnty2 + treal-2.qnty2
-              areal-is-pay-netto = areal-is-pay-netto + treal-2.netto.
-
-            if p-with-cp-grouping = yes then 
-            do:
-              /*найдем итоги по группе типов кассовых платежей - если включена галка*/
-              assign
-                v-grp-code = ?
-                v-grp-code = get-grp-name-code(treal-2.cpay-code, treal-2.curr-code, output v-grp-name)
-                v-grp-code = (if v-grp-code = ? then 10000 else v-grp-code)
-                v-grp-name = (if v-grp-code = 10000
-                          then "(По остальным)"
-                          else substitute("(По гр. &1)", string(v-grp-name, "X(9)"))
-                          )
-                .
-              FIND FIRST grptreal-2 WHERE
-                grptreal-2.gds-code = treal-2.gds-code AND
-                grptreal-2.cpay-code = - v-grp-code AND
-                grptreal-2.curr-code = - 1 AND
-                grptreal-2.is-pay = treal-2.is-pay NO-ERROR.
-              if not available grptreal-2 then 
-              do:
-                /*увеличим кол-во записей расхода всего и кол-во записей оплаченного расхода*/
-                run create-treal-2 in this-procedure ( input treal-2.gds-code,
-                  input - v-grp-code,
-                  input - 1 ,
-                  input treal-2.qnty1,
-                  input treal-2.qnty2,
-                  input treal-2.netto,
-                  input  {&delim-par} + v-grp-name, /*создаем с странным именем - имя прописываем только если платежей в группе больше двух*/
-                  input treal-2.is-pay,
-                  input loc-real-ii ) no-error.
-                assign
-                  curr-real-ii            = curr-real-ii + 1
-                  loc-grp-only-not-single = loc-grp-only-not-single + 1
-                  loc-real-ii             = loc-real-ii + 1
-                  loc-grpii               = loc-grpii + 1
-                  .
-              end.
-              else 
-              do:
-                assign
-                  loc-grp-only-not-single = (if grptreal-2.out-name  begins {&delim-par}
-                                     then (loc-grp-only-not-single - 1)
-                                     else loc-grp-only-not-single)
-                  grptreal-2.out-name     = v-grp-name
-                  grptreal-2.qnty1        = grptreal-2.qnty1 + treal-2.qnty1
-                  grptreal-2.qnty2        = grptreal-2.qnty2 + treal-2.qnty2
-                  grptreal-2.netto        = grptreal-2.netto + treal-2.netto
-                  .
-              end.
-            /*в ii пишем кол-во записей по данной группе*/
-            /*идем по pi поэтому сначала обработаются те где is-pay = no*/
-            end.  /*if p-with-cp-grouping then do:*/
-          end.
-          else 
-          do:
-            assign /* treal-2.qnty2 = ( if treal-2.cpay-code = -3 then treal-2.qnty2 else treal-2.qnty1 * density ) */
-              rc           = recid( treal-2 )
-              curr-real-ii         = ( if (curr-real-ii = loc-real-ii)
-                                   AND /* первый проход */
-                                    ( (loc-real-ii - loc-grp-only-not-single) > 1 /* оплаченные были и есть неоплач раз мы здесь */
-                                    OR
-                                    can-find( first treal-2 no-lock where
-                                                    treal-2.gds-code =  t-2.gds-code and
-                                                    treal-2.is-pay   =  no           and
-                                                    recid( treal-2 ) <> rc ) )
-                                  then ( curr-real-ii + 1 )
-                                  else   curr-real-ii )
-          treal-2.ii           = curr-real-ii
-          curr-real-ii         = curr-real-ii + 1.
-            if treal-2.cpay-code <> -4 and treal-2.discnt-type <> -98 then 
-            do: /* инвентаризацию и техпролив с сервисным платежем не включаем */
-              assign 
-                areal-no-pay-qnty1 = areal-no-pay-qnty1 + treal-2.qnty1
-                areal-no-pay-qnty2 = areal-no-pay-qnty2 + treal-2.qnty2
-                areal-no-pay-netto = areal-no-pay-netto + treal-2.netto.
-            end.
-          end.
-        end.
-      end. /* for each treal-2 */
-    END.
-    if curr-real-ii - loc-grp-only-not-single > 2 then 
-    do:
-      /* treal-2 большей одной */
-      /* рожаем запись ИТОГО ОПЛАЧ.РАСХОД */
-      run create-treal-2 in this-procedure ( input t-2.gds-code,
-        input 0,
-        input 0,
-        input areal-is-pay-qnty1,
-        input areal-is-pay-qnty2,
-        input areal-is-pay-netto,
-        input "ИТОГО ОПЛАЧ.РАСХОД",
-        input yes,
-        input loc-real-ii           ) no-error.
-      /* рожаем запись ИТОГО ПРОЧ.РАСХОДОВ */
-      /* если не было прочих расходов - переведем счетчик */
-      if loc-real-ii = curr-real-ii then 
-      do:
-        assign 
-          curr-real-ii = curr-real-ii + 1.
-      end.
-      run create-treal-2 in this-procedure ( input t-2.gds-code,
-        input 0,
-        input 0,
-        input areal-no-pay-qnty1,
-        input areal-no-pay-qnty2,
-        input areal-no-pay-netto,
-        input "ИТОГО ПРОЧ.РАСХОД",
-        input no,
-        input curr-real-ii         ) no-error.
-      assign 
-        curr-real-ii = curr-real-ii + 1.
-      run create-treal-2 in this-procedure ( input t-2.gds-code,
-        input 0,
-        input 0,
-        input areal-qnty1,
-        input areal-qnty2,
-        input areal-netto,
-        input "ВСЕГО РАСХОД ",
-        input ?,
-        input curr-real-ii     ) no-error.
-    end. /* if curr-real-ii > 2 */
-  END. /* IF CAN-FIND FIRST treal-2 */
   if not is-sug(t-2.gds-code) then 
   do:
     create t-2-not-sug .
@@ -418,9 +274,29 @@ END. /* FOR EACH t-2 */
 /* если есть вообще оплаченный расход */
 
 for each t-2-not-sug: 
-  loc-real-ii  = 1.
-  curr-real-ii = 1.  
-  loc-income-ii = 0 .
+  assign 
+    areal-is-pay-qnty1      = 0
+    areal-is-pay-qnty2      = 0
+    areal-is-pay-netto      = 0
+    areal-no-pay-qnty1      = 0
+    areal-no-pay-qnty2      = 0
+    areal-no-pay-netto      = 0
+    areal-qnty1             = 0
+    areal-qnty2             = 0
+    areal-netto             = 0
+    aincome-qnty1           = 0
+    aincome-qnty2           = 0
+    aincome-qnty3           = 0
+    aincome-sug-qnty1       = 0
+    aincome-sug-qnty2       = 0
+    aincome-sug-qnty3       = 0
+    loc-real-ii             = 1
+    loc-grpii               = 0
+    loc-grp-only-not-single = 0
+    loc-income-ii           = 0
+    loc-income-sug-ii       = 0
+    /*     density                 = ? */
+    curr-real-ii            = 1.
 
   FIND LAST treal-2 NO-LOCK WHERE
     treal-2.gds-code = t-2-not-sug.gds-code AND
@@ -432,6 +308,143 @@ for each t-2-not-sug:
       curr-real-ii = treal-2.ii + 1.
   end.
 
+  IF CAN-FIND( FIRST treal-2 WHERE
+                     treal-2.gds-code = t-2-not-sug.gds-code ) THEN DO:
+    /* если есть вообще оплаченный расход */
+    do v-step = 1 to 2:
+      if v-step = 1 then assign v-is-pay = yes.
+      if v-step = 2 then assign v-is-pay = no .
+      FOR EACH treal-2 WHERE treal-2.is-pay = v-is-pay AND treal-2.gds-code = t-2-not-sug.gds-code and treal-2.curr-code >= 0 USE-INDEX pi :
+        if treal-2.discnt-type = -99 then do:
+        assign
+          areal-qnty1 = areal-qnty1 + treal-2.qnty1
+          areal-qnty2 = areal-qnty2 + treal-2.qnty2
+          areal-netto = areal-netto + treal-2.netto
+        .
+        end.
+        if treal-2.is-pay = yes then do:
+          if treal-2.discnt-type = -99 then do:
+          assign
+          areal-is-pay-qnty1 = areal-is-pay-qnty1 + treal-2.qnty1
+          areal-is-pay-qnty2 = areal-is-pay-qnty2 + treal-2.qnty2
+          areal-is-pay-netto = areal-is-pay-netto + treal-2.netto.
+          end.
+          if p-with-cp-grouping = yes then do:
+            /*найдем итоги по группе типов кассовых платежей - если включена галка*/
+            assign
+            v-grp-code = ?
+            v-grp-code = get-grp-name-code(treal-2.cpay-code, treal-2.curr-code, output v-grp-name)
+            v-grp-code = (if v-grp-code = ? then 10000 else v-grp-code)
+            v-grp-name = (if v-grp-code = 10000
+                          then "(По остальным)"
+                          else substitute("(По гр. &1)", string(v-grp-name, "X(9)"))
+                          )
+            .
+            FIND FIRST grptreal-2 WHERE
+                        grptreal-2.gds-code = treal-2.gds-code AND
+                        grptreal-2.cpay-code = - v-grp-code AND
+                        grptreal-2.curr-code = - 1 AND
+                        grptreal-2.is-pay = treal-2.is-pay NO-ERROR.
+            if not available grptreal-2 then do:
+              /*увеличим кол-во записей расхода всего и кол-во записей оплаченного расхода*/
+              run create-treal-2 in this-procedure ( input treal-2.gds-code,
+                                                        input - v-grp-code,
+                                                        input - 1 ,
+                                                        input treal-2.qnty1,
+                                                        input treal-2.qnty2,
+                                                        input treal-2.netto,
+                                                        input  {&delim-par} + v-grp-name, /*создаем с странным именем - имя прописываем только если платежей в группе больше двух*/
+                                                        input treal-2.is-pay,
+                                                        input loc-real-ii ) no-error.
+              assign
+              curr-real-ii = curr-real-ii + 1
+              loc-grp-only-not-single = loc-grp-only-not-single + 1
+              loc-real-ii = loc-real-ii + 1
+              loc-grpii       = loc-grpii + 1
+              .
+            end.
+            else do:
+              assign
+              loc-grp-only-not-single = (if grptreal-2.out-name  begins {&delim-par}
+                                     then (loc-grp-only-not-single - 1)
+                                     else loc-grp-only-not-single)
+                  grptreal-2.out-name     = v-grp-name
+                  grptreal-2.qnty1        = grptreal-2.qnty1 + treal-2.qnty1
+                  grptreal-2.qnty2        = grptreal-2.qnty2 + treal-2.qnty2
+                  grptreal-2.netto        = grptreal-2.netto + treal-2.netto
+                  .
+              end.
+            /*в ii пишем кол-во записей по данной группе*/
+            /*идем по pi поэтому сначала обработаются те где is-pay = no*/
+          end.  /*if p-with-cp-grouping then do:*/
+        end.
+        else do:
+          assign /* treal-2.qnty2 = ( if treal-2.cpay-code = -3 then treal-2.qnty2 else treal-2.qnty1 * density ) */
+                rc            = recid( treal-2 )
+          curr-real-ii         = ( if (curr-real-ii = loc-real-ii)
+                                   AND /* первый проход */
+                                    ( (loc-real-ii - loc-grp-only-not-single) > 1 /* оплаченные были и есть неоплач раз мы здесь */
+                                    OR
+                                    can-find( first treal-2 no-lock where
+                                                    treal-2.gds-code =  t-2-not-sug.gds-code and
+                                                    treal-2.is-pay   =  no           and
+                                                    recid( treal-2 ) <> rc ) )
+                                  then ( curr-real-ii + 1 )
+                                  else   curr-real-ii )
+          treal-2.ii           = curr-real-ii
+          curr-real-ii         = curr-real-ii + 1.
+          if treal-2.cpay-code <> -4 and treal-2.discnt-type = -99 then do: /* инвентаризацию не включаем */
+            assign areal-no-pay-qnty1 = areal-no-pay-qnty1 + treal-2.qnty1
+                  areal-no-pay-qnty2 = areal-no-pay-qnty2 + treal-2.qnty2
+                  areal-no-pay-netto = areal-no-pay-netto + treal-2.netto.
+          end.
+        end.
+      end. /* for each treal-2 */
+    END.
+    if curr-real-ii - loc-grp-only-not-single > 2 then 
+    do:
+      /* treal-2 большей одной */
+      /* рожаем запись ИТОГО ОПЛАЧ.РАСХОД */
+      run create-treal-2 in this-procedure ( input t-2-not-sug.gds-code,
+                                             input 0,
+                                             input 0,
+                                             input areal-is-pay-qnty1,
+                                             input areal-is-pay-qnty2,
+                                             input areal-is-pay-netto,
+                                             input "ИТОГО ОПЛАЧ.РАСХОД",
+                                             input yes,
+                                             input loc-real-ii           ) no-error.
+      /* рожаем запись ИТОГО ПРОЧ.РАСХОДОВ */
+      /* если не было прочих расходов - переведем счетчик */
+      if loc-real-ii = curr-real-ii then do:
+        assign curr-real-ii = curr-real-ii + 1.
+      end.
+      run create-treal-2 in this-procedure ( input t-2-not-sug.gds-code,
+                                             input 0,
+                                             input 0,
+                                             input areal-no-pay-qnty1,
+                                             input areal-no-pay-qnty2,
+                                             input areal-no-pay-netto,
+                                             input "ИТОГО ПРОЧ.РАСХОД",
+                                             input no,
+                                             input curr-real-ii         ) no-error.
+      assign curr-real-ii = curr-real-ii + 1.
+      run create-treal-2 in this-procedure ( input t-2-not-sug.gds-code,
+                                             input 0,
+                                             input 0,
+                                             input areal-qnty1,
+                                             input areal-qnty2,
+                                             input areal-netto,
+                                             input "ВСЕГО РАСХОД ",
+                                             input ?,
+                                             input curr-real-ii     ) no-error.
+    end. /* if curr-real-ii > 2 */
+  END. /* IF CAN-FIND FIRST treal-2 */
+  assign
+      aincome-qnty1 = 0
+      aincome-qnty2 = 0
+      aincome-qnty3 = 0
+  .  
   for EACH tincome-2 WHERE
     tincome-2.gds-code = t-2-not-sug.gds-code
     USE-INDEX vi
@@ -478,10 +491,30 @@ for each t-2-not-sug:
 
 end.
 for each t-2-sug: 
-  loc-real-ii  = 1.
-  curr-real-ii = 1.
-  loc-income-sug-ii = 0 .
-    FIND LAST treal-2 NO-LOCK WHERE
+  assign 
+    areal-is-pay-qnty1      = 0
+    areal-is-pay-qnty2      = 0
+    areal-is-pay-netto      = 0
+    areal-no-pay-qnty1      = 0
+    areal-no-pay-qnty2      = 0
+    areal-no-pay-netto      = 0
+    areal-qnty1             = 0
+    areal-qnty2             = 0
+    areal-netto             = 0
+    aincome-qnty1           = 0
+    aincome-qnty2           = 0
+    aincome-qnty3           = 0
+    aincome-sug-qnty1       = 0
+    aincome-sug-qnty2       = 0
+    aincome-sug-qnty3       = 0
+    loc-real-ii             = 1
+    loc-grpii               = 0
+    loc-grp-only-not-single = 0
+    loc-income-ii           = 0
+    loc-income-sug-ii       = 0
+    /*     density                 = ? */
+    curr-real-ii            = 1.
+  FIND LAST treal-2 NO-LOCK WHERE
     treal-2.gds-code = t-2-sug.gds-code AND
     treal-2.is-pay   = YES          USE-INDEX vi NO-ERROR.
   if available treal-2 then 
@@ -490,6 +523,141 @@ for each t-2-sug:
       loc-real-ii  = treal-2.ii + 1
       curr-real-ii = treal-2.ii + 1.
   end.
+  
+  
+    IF CAN-FIND( FIRST treal-2 WHERE
+                     treal-2.gds-code = t-2-sug.gds-code ) THEN DO:
+    /* если есть вообще оплаченный расход */
+    do v-step = 1 to 2:
+      if v-step = 1 then assign v-is-pay = yes.
+      if v-step = 2 then assign v-is-pay = no .
+      FOR EACH treal-2 WHERE treal-2.is-pay = v-is-pay AND treal-2.gds-code = t-2-sug.gds-code and treal-2.curr-code >= 0 USE-INDEX pi :
+        if treal-2.discnt-type = -99 then do:
+        assign
+          areal-qnty1 = areal-qnty1 + treal-2.qnty1
+          areal-qnty2 = areal-qnty2 + treal-2.qnty2
+          areal-netto = areal-netto + treal-2.netto
+        .
+        end.
+        if treal-2.is-pay = yes then do:
+          if treal-2.discnt-type = -99 then do: 
+          assign
+          areal-is-pay-qnty1 = areal-is-pay-qnty1 + treal-2.qnty1
+          areal-is-pay-qnty2 = areal-is-pay-qnty2 + treal-2.qnty2
+          areal-is-pay-netto = areal-is-pay-netto + treal-2.netto.
+          end.
+          if p-with-cp-grouping = yes then do:
+            /*найдем итоги по группе типов кассовых платежей - если включена галка*/
+            assign
+            v-grp-code = ?
+            v-grp-code = get-grp-name-code(treal-2.cpay-code, treal-2.curr-code, output v-grp-name)
+            v-grp-code = (if v-grp-code = ? then 10000 else v-grp-code)
+            v-grp-name = (if v-grp-code = 10000
+                          then "(По остальным)"
+                          else substitute("(По гр. &1)", string(v-grp-name, "X(9)"))
+                          )
+            .
+            FIND FIRST grptreal-2 WHERE
+                        grptreal-2.gds-code = treal-2.gds-code AND
+                        grptreal-2.cpay-code = - v-grp-code AND
+                        grptreal-2.curr-code = - 1 AND
+                        grptreal-2.is-pay = treal-2.is-pay NO-ERROR.
+            if not available grptreal-2 then do:
+              /*увеличим кол-во записей расхода всего и кол-во записей оплаченного расхода*/
+              run create-treal-2 in this-procedure ( input treal-2.gds-code,
+                                                        input - v-grp-code,
+                                                        input - 1 ,
+                                                        input treal-2.qnty1,
+                                                        input treal-2.qnty2,
+                                                        input treal-2.netto,
+                                                        input  {&delim-par} + v-grp-name, /*создаем с странным именем - имя прописываем только если платежей в группе больше двух*/
+                                                        input treal-2.is-pay,
+                                                        input loc-real-ii ) no-error.
+              assign
+              curr-real-ii = curr-real-ii + 1
+              loc-grp-only-not-single = loc-grp-only-not-single + 1
+              loc-real-ii = loc-real-ii + 1
+              loc-grpii       = loc-grpii + 1
+              .
+            end.
+            else do:
+              assign
+              loc-grp-only-not-single = (if grptreal-2.out-name  begins {&delim-par}
+                                     then (loc-grp-only-not-single - 1)
+                                     else loc-grp-only-not-single)
+              grptreal-2.out-name = v-grp-name
+              grptreal-2.qnty1 = grptreal-2.qnty1 + treal-2.qnty1
+              grptreal-2.qnty2 = grptreal-2.qnty2 + treal-2.qnty2
+              grptreal-2.netto = grptreal-2.netto + treal-2.netto
+              .
+            end.
+            /*в ii пишем кол-во записей по данной группе*/
+            /*идем по pi поэтому сначала обработаются те где is-pay = no*/
+          end.  /*if p-with-cp-grouping then do:*/
+        end.
+        else do:
+          assign /* treal-2.qnty2 = ( if treal-2.cpay-code = -3 then treal-2.qnty2 else treal-2.qnty1 * density ) */
+                rc            = recid( treal-2 )
+          curr-real-ii         = ( if (curr-real-ii = loc-real-ii)
+                                   AND /* первый проход */
+                                    ( (loc-real-ii - loc-grp-only-not-single) > 1 /* оплаченные были и есть неоплач раз мы здесь */
+                                    OR
+                                    can-find( first treal-2 no-lock where
+                                                    treal-2.gds-code =  t-2-sug.gds-code and
+                                                    treal-2.is-pay   =  no           and
+                                                    recid( treal-2 ) <> rc ) )
+                                  then ( curr-real-ii + 1 )
+                                  else   curr-real-ii )
+          treal-2.ii           = curr-real-ii
+          curr-real-ii         = curr-real-ii + 1.
+          if treal-2.cpay-code <> -4 and treal-2.discnt-type = -99 then do: /* инвентаризацию не включаем */
+            assign areal-no-pay-qnty1 = areal-no-pay-qnty1 + treal-2.qnty1
+                  areal-no-pay-qnty2 = areal-no-pay-qnty2 + treal-2.qnty2
+                  areal-no-pay-netto = areal-no-pay-netto + treal-2.netto.
+          end.
+        end.
+
+      end. /* for each treal-2 */
+    END.
+    if curr-real-ii - loc-grp-only-not-single > 2 then do:
+      /* treal-2 большей одной */
+      /* рожаем запись ИТОГО ОПЛАЧ.РАСХОД */
+      run create-treal-2 in this-procedure ( input t-2-sug.gds-code,
+                                             input 0,
+                                             input 0,
+                                             input areal-is-pay-qnty1,
+                                             input areal-is-pay-qnty2,
+                                             input areal-is-pay-netto,
+                                             input "ИТОГО ОПЛАЧ.РАСХОД",
+                                             input yes,
+                                             input loc-real-ii           ) no-error.
+      /* рожаем запись ИТОГО ПРОЧ.РАСХОДОВ */
+      /* если не было прочих расходов - переведем счетчик */
+      if loc-real-ii = curr-real-ii then do:
+        assign curr-real-ii = curr-real-ii + 1.
+      end.
+      run create-treal-2 in this-procedure ( input t-2-sug.gds-code,
+                                             input 0,
+                                             input 0,
+                                             input areal-no-pay-qnty1,
+                                             input areal-no-pay-qnty2,
+                                             input areal-no-pay-netto,
+                                             input "ИТОГО ПРОЧ.РАСХОД",
+                                             input no,
+                                             input curr-real-ii         ) no-error.
+      assign curr-real-ii = curr-real-ii + 1.
+      run create-treal-2 in this-procedure ( input t-2-sug.gds-code,
+                                             input 0,
+                                             input 0,
+                                             input areal-qnty1,
+                                             input areal-qnty2,
+                                             input areal-netto,
+                                             input "ВСЕГО РАСХОД ",
+                                             input ?,
+                                             input curr-real-ii     ) no-error.
+    end. /* if curr-real-ii > 2 */
+  END. /* IF CAN-FIND FIRST treal-2 */
+ 
   for EACH tincome-2 WHERE
     tincome-2.gds-code = t-2-sug.gds-code
     USE-INDEX vi
@@ -551,12 +719,12 @@ procedure print-total .
                 <th text_wrap="true" colspan="3" style="text-align: center;">Информация о продукте</th>                  
                 <th text_wrap="true" colspan="6" style="text-align: center;">Расшифровка поступления</th>                
                 <th text_wrap="true" colspan="7" style="text-align: center;">Расшифровка реализации</th>                 
-                <th text_wrap="true" rowspan="3" style="text-align: center;">Остаток на конец кг/л</th>                       
+                <th text_wrap="true" rowspan="3" style="text-align: center;">Остаток на конец кг</th>                       
             </tr>                                                                                       
             <tr>                                                                                        
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Наименование продукта</th>                  
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Цена розничная на конец смены</th>          
-                <th text_wrap="true" rowspan="2" style="text-align: center;">Остаток на начало кг/л</th>                      
+                <th text_wrap="true" rowspan="2" style="text-align: center;">Остаток на начало кг</th>                      
                 <th text_wrap="true"             style="text-align: center;">Поставщик</th>                              
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Номер документа прихода (ТТН)</th>          
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Количество кг/л</th>                             
@@ -726,10 +894,11 @@ procedure print-total .
         do:
           put stream OutStr-html unformatted
             substitute (
-            '  <tr>
+            '  
+            <tr>
                     <td rowspan="2" text_wrap="true">&1</td>
                     <td rowspan="2" style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
+                    <td rowspan="2" style="text-align: right;">&3</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
                     <td text_wrap="true" rowspan="2">&6</td>
                     <td text_wrap="true" style="text-align: right;">&8</td>
@@ -756,7 +925,7 @@ procedure print-total .
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&6</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&7</td>
-                    <td text_wrap="true" style="text-align: right;">&8</td>
+                    <td rowspan="2" text_wrap="true" style="text-align: right;">&8</td> 
                     </tr>
                '
             ,
@@ -775,9 +944,9 @@ procedure print-total .
             substitute (
             '
                     <tr>
-                    <td text_wrap="true" style="text-align: right;">&1</td>
+                    
                     <td text_wrap="true" style="text-align: right;">&2</td>
-                    <td text_wrap="true" style="text-align: right;">&3</td>
+                    
                     </tr>
                '
             ,
@@ -895,7 +1064,7 @@ procedure print-total .
               '  <tr>
                     <td rowspan="2" text_wrap="true">&1</td>
                     <td rowspan="2" style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
+                    <td rowspan="2" style="text-align: right;">&3</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
                     <td text_wrap="true" rowspan="2">&6</td>
                     <td text_wrap="true" style="text-align: right;">&8</td>
@@ -923,7 +1092,7 @@ procedure print-total .
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&6</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&7</td>
-                    <td text_wrap="true" style="text-align: right;">&8</td>
+                    <td rowspan="2" text_wrap="true" style="text-align: right;">&8</td>
                     </tr>
                '
               ,
@@ -941,9 +1110,9 @@ procedure print-total .
               substitute (
               '
                     <tr>
-                    <td text_wrap="true" style="text-align: right;">&1</td>
+                    
                     <td text_wrap="true" style="text-align: right;">&2</td>
-                    <td text_wrap="true" style="text-align: right;">&3</td>
+                    
                     </tr>
                '
               ,
@@ -1013,7 +1182,7 @@ procedure print-total .
         '  <tr>
                     <th text_wrap="true" rowspan="2" style="text-align: left; vertical-align: middle;">&1</th>
                     <th rowspan="2"></th>
-                    <th style="text-align: right; vertical-align: middle;">&2</th>
+                    <th rowspan="2" style="text-align: right; vertical-align: middle;">&2</th>
                     <th text_wrap="true" rowspan="2" style="text-align: right; vertical-align: middle;">&3</th>
                     <th rowspan="2"></th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
@@ -1042,11 +1211,11 @@ procedure print-total .
         '
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
-            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&3</th>
+            <th rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&3</th>
             </tr><tr>
-            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
+            
             <th text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
-            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&6</th>
+            
                </tr>'
         ,
         string(pol16,"->>>>>>>>>>>9.99"),
@@ -1235,12 +1404,12 @@ procedure print-sug .
                 <th text_wrap="true" colspan="3" style="text-align: center;">Информация о продукте</th>                  
                 <th text_wrap="true" colspan="6" style="text-align: center;">Расшифровка поступления</th>                
                 <th text_wrap="true" colspan="7" style="text-align: center;">Расшифровка реализации</th>                 
-                <th text_wrap="true" rowspan="3" style="text-align: center;">Остаток на конец кг/л</th>                       
+                <th text_wrap="true" rowspan="3" style="text-align: center;">Остаток на конец кг</th>                       
             </tr>                                                                                       
             <tr>                                                                                        
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Наименование продукта</th>                  
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Цена розничная на конец смены</th>          
-                <th text_wrap="true" rowspan="2" style="text-align: center;">Остаток на начало кг/л</th>                      
+                <th text_wrap="true" rowspan="2" style="text-align: center;">Остаток на начало кг</th>                      
                 <th text_wrap="true" style="text-align: center;">Поставщик</th>                              
                 <th text_wrap="true" rowspan="2" style="text-align: center;">Номер документа прихода (ТТН)</th>          
                 <th text_wrap="true" colspan="4" style="text-align: center;">Количество</th>                             
@@ -1405,10 +1574,10 @@ procedure print-sug .
         do:
           put stream OutStr-html unformatted
             substitute (
-            '  <tr>
+            '  <tr><tr></tr> 
                               <td rowspan="2" text_wrap="true">&1</td>
                               <td rowspan="2" style="text-align: right;">&2</td>
-                              <td style="text-align: right;">&3</td>
+                              <td rowspan="2" style="text-align: right;">&3</td>
                               <td rowspan="2" text_wrap="true" style="text-align: right;">&4</td>
                               <td text_wrap="true" rowspan="2">&5</td>
                               <td colspan="2" rowspan="2" text_wrap="true" style="text-align: right;">&6</td>
@@ -1435,10 +1604,7 @@ procedure print-sug .
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&3</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&4</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
-                    <td text_wrap="true" style="text-align: right;">&6</td>
-                    </tr><tr>
-                    <td text_wrap="true" style="text-align: right;">&7</td>
-                    <td text_wrap="true" style="text-align: right;">&8</td>
+                    <td rowspan="2" text_wrap="true" style="text-align: right;">&6</td>
                     </tr>
                '
             ,
@@ -1561,7 +1727,7 @@ procedure print-sug .
               '  <tr>
                     <td rowspan="2" text_wrap="true">&1</td>
                     <td rowspan="2" style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
+                    <td rowspan="2" style="text-align: right;">&3</td>
                     <td rowspan="2" text_wrap="true" style="text-align: right;">&4</td>
                     <td text_wrap="true" rowspan="2">&5</td>
                     <td colspan="2" rowspan="2" text_wrap="true" style="text-align: right;">&6</td>
@@ -1588,10 +1754,7 @@ procedure print-sug .
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&3</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&4</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
-                    <td text_wrap="true" style="text-align: right;">&6</td>
-                    </tr><tr>
-                    <td text_wrap="true" style="text-align: right;">&7</td>
-                    <td text_wrap="true" style="text-align: right;">&8</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&6</td>
                     </tr>
                '
               ,
@@ -1664,10 +1827,11 @@ procedure print-sug .
 
       put stream OutStr-html unformatted
         substitute (
-        '  <tr>
+        '<tr></tr> 
+        <tr>
                     <th text_wrap="true" rowspan="2" style="text-align: left; vertical-align: middle;">&1</th>
                     <th rowspan="2"></th>
-                    <th style="text-align: right; vertical-align: middle;">&2</th>
+                    <th rowspan="2" style="text-align: right; vertical-align: middle;">&2</th>
                     <th rowspan="2" style="text-align: right; vertical-align: middle;">&3</th>
                     <th rowspan="2"></th>
                     <th colspan="2" rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
@@ -1694,10 +1858,7 @@ procedure print-sug .
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>       
             <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
-            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
-            </tr><tr>
-            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
-            <th text_wrap="true" style="text-align: right; vertical-align: middle;">&6</th>
+            <th rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
             </tr>'
         ,
         string(pol15,"->>>>>>>>>>>9.99"),

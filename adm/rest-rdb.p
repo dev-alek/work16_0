@@ -623,11 +623,21 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           dst.code-range.range-type = {&gbl-bc-code}
           dst.code-range.PS         = "FOR ERP"
           dst.code-range.beg-date   = today
+          dst.code-range.first-code = 1
+          dst.code-range.last-code  = {&minvalue} - 1
+          dst.code-range.db-num     = p-db-num
+          dst.code-range.stts       = "u":U
+        .
+        create dst.code-range.
+        assign
+          dst.code-range.range-type = {&gbl-bc-code}
+          dst.code-range.PS         = "FOR ERP"
+          dst.code-range.beg-date   = today
           dst.code-range.first-code = {&minvalue}
           dst.code-range.last-code  = {&minvalue} * 2
           dst.code-range.db-num = p-db-num
           dst.code-range.stts = "a":U
-        .  
+        .
         create dst.code-range.
         assign
           dst.code-range.range-type = {&gbl-fm-code}
@@ -1262,6 +1272,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
     for each buf_rrdb-option where
             buf_rrdb-option.dump-point = "ref"
+            by buf_rrdb-option.dump-point by buf_rrdb-option.first-table-name
     on error  undo, return error substitute( "&1 (buf_rrdb-option.dump-point = ref). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
     on stop   undo, return error substitute( "&1 (buf_rrdb-option.dump-point = ref). stop", vss-workfile )
     on endkey undo, return error substitute( "&1 (buf_rrdb-option.dump-point = ref). endkey", vss-workfile )
@@ -1613,18 +1624,19 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         end.
       end.
     end.
-
-    run cre-activ-code-range ( input p-db-num
-                              ,input {&gbl-bc-code}
-                             ) no-error.
-    if error-status :error then do:
-      message
-        vss-workfile vss-revision vss-description skip
-        "Ошибка при активизации диапазона собственных кодов товаров (бар-кодов)" skip
-        error-status :get-message(1) skip
-        return-value skip
-        view-as alert-box error .
-      undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+    if not mode-erprn then do: 
+       run cre-activ-code-range ( input p-db-num
+                                 ,input {&gbl-bc-code}
+                                ) no-error.
+       if error-status :error then do:
+         message
+           vss-workfile vss-revision vss-description skip
+           "Ошибка при активизации диапазона собственных кодов товаров (бар-кодов)" skip
+           error-status :get-message(1) skip
+           return-value skip
+           view-as alert-box error .
+         undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+       end.
     end.
     run cre-activ-code-range ( input p-db-num
                               ,input {&gbl-sc-code}

@@ -4513,12 +4513,15 @@ define input parameter p-obj-code       as integer      no-undo.
     define buffer buf_chk-doc-attr  for ub.chk-doc-attr.
     define buffer buf_chk-gds       for ub.chk-gds.
     define buffer buf_chk-pay       for ub.chk-pay.
+    define buffer buf_chk-pay-attr  for ub.chk-pay-attr.
     define buffer buf_bar-code      for ub.bar-code.
     define buffer buf_goods         for ub.goods.
     define buffer buf_c-chk-doc     for ub.c-chk-doc.
     define buffer buf_chk-discnt    for ub.chk-discnt.
     define buffer buf_dis-card      for ub.dis-card.
     define buffer buf_chk-gds-pay   for ub.chk-gds-pay.
+        
+    define variable v-RRN               as character no-undo.
 
 do
 for buf_chk-doc
@@ -4677,6 +4680,24 @@ on error undo, return error
             run wp-xmltagopen( input 4, input "checkPay", input "" ).
             run wp-xmltagput( input 5, input "payCode"      , input string( buf_chk-pay.pay-code )     , input 2 ).
             run wp-xmltagput( input 5, input "payCard"      , input string( buf_chk-pay.pay-card )     , input 2 ).
+            v-RRN = '' .
+            for first buf_chk-pay-attr no-lock
+                where buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code 
+                and buf_chk-pay-attr.attr-code = "CPDOC" 
+                and buf_chk-pay-attr.line-num = buf_chk-pay.line-num  :
+                v-RRN = buf_chk-pay-attr.attr-value .
+            end.       
+            if v-RRN = '' 
+            then 
+            do: 
+                for first buf_chk-pay-attr no-lock
+                    where buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code 
+                    and buf_chk-pay-attr.attr-code = "RRN"
+                    and buf_chk-pay-attr.line-num = buf_chk-pay.line-num:
+                    v-RRN = buf_chk-pay-attr.attr-value .
+                end.
+            end.
+            run wp-xmltagput( input 5, input "OperationCode", input v-RRN                              , input 2 ).
             run wp-xmltagput( input 5, input "currCode"     , input string( buf_chk-pay.curr-code )    , input 0 ).
             run wp-xmltagput( input 5, input "sumBase"      , input string( buf_chk-pay.tot-base )     , input 2 ).
             run wp-xmltagput( input 5, input "sumRubl"      , input string( buf_chk-pay.tot-rubl )     , input 2 ).

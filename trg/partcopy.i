@@ -829,6 +829,9 @@ procedure partcopy-update-parts :
   
   define variable v-exch-rate  like ub.curr-accnt.exch-rate no-undo .
   define variable v-exch-scale like ub.curr-accnt.exch-scale no-undo .
+  
+  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
   do
   on error undo, return error return-value
@@ -1126,7 +1129,7 @@ procedure partcopy-update-parts :
                                                 and orig_marking-lines.out-code   = archive_parts.out-code
                                                 and orig_marking-lines.part-code  = archive_parts.part-code,
           first buf_marking exclusive-lock where buf_marking.mark = orig_marking-lines.mark :
-            assign buf_marking.sts = 0 .
+            assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB .
           end .
         end .
 
@@ -1399,6 +1402,16 @@ procedure partcopy-update-parts :
               assign
                 v-rsrv-code = ""
               .
+              
+              for each orig_marking-lines no-lock where orig_marking-lines.gds-code   = buf_goods.gds-code
+                                                    and orig_marking-lines.obj-type   = archive_parts.obj-type
+                                                    and orig_marking-lines.obj-code   = archive_parts.obj-code
+                                                    and orig_marking-lines.in-code    = archive_parts.in-code
+                                                    and orig_marking-lines.out-code   = archive_parts.out-code
+                                                    and orig_marking-lines.part-code  = archive_parts.part-code,
+              first buf_marking exclusive-lock where buf_marking.mark = orig_marking-lines.mark :
+                assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB .
+              end .
             end.
           end.
           else do:
@@ -1609,7 +1622,9 @@ procedure partcopy-update-parts :
                                                     and orig_marking-lines.part-code  = archive_parts.part-code
                                                     and orig_marking-lines.prt-code   = archive_parts.prt-code,
               first buf_marking exclusive-lock where buf_marking.mark = orig_marking-lines.mark :
-                if buf_marking.sts = 9 then assign buf_marking.sts = 10 .
+                if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+                then
+                assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
               end .
               
               if v-goods-twounit = true

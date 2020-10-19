@@ -338,7 +338,7 @@ DEFINE QUERY br-mark-item FOR
 DEFINE BROWSE br-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-mark d-mark _STRUCTURED
   QUERY br-mark NO-LOCK DISPLAY
-  mark-string( input recid(X_marking), input v-rid-list) column-label "*" format "X(1)":U
+  X_marking.marking-string column-label "*" format "X(1)":U
   X_marking.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U
   X_marking.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 15
   X_marking.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
@@ -356,7 +356,7 @@ DEFINE BROWSE br-mark
 DEFINE BROWSE br-mark-item
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-mark-item d-mark _STRUCTURED
   QUERY br-mark-item NO-LOCK DISPLAY
-  mark-string( input recid(X_marking-line), input v-rid-list2) column-label "*" format "X(1)":U
+  X_marking-line.marking-string column-label "*" format "X(1)":U
   X_marking-line.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U
   X_marking-line.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 15
   X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
@@ -509,14 +509,10 @@ ON CHOOSE OF b-change IN FRAME d-mark /* Поменять */
 DO:
     define variable ii         as integer no-undo .
     define variable recid_mark as integer no-undo .
-
-    if v-rid-list <> "" then 
+find first tt-marking-lines where tt-marking-lines.marking-string = "*" and tt-marking-lines.doc-level = 1 no-error .
+    if available (tt-marking-lines) then 
     do:
-      do ii = 1 to num-entries (v-rid-list):
-        recid_mark = integer(entry(ii,v-rid-list)) .
-        find first X_marking where recid (X_marking) = recid_mark no-error.
-        if available (X_marking) then 
-        do:
+        for each X_marking where X_marking.marking-string = "*" and X_marking.doc-level = 1 :
           find first buf_marking exclusive-lock where buf_marking.mark = X_marking.mark no-error .
            if available (buf_marking) 
            then do: 
@@ -534,10 +530,11 @@ DO:
               X_marking.sts-utd = buf_utd-marking-lines.sts .
               X_marking.stts-utd =  StatusTHName(X_marking.sts-utd).
            end.
+           X_marking.marking-string = "" .
         end.
 
       end.  
-    end.  
+    
     else 
     do:
       recid_mark = recid(X_marking) .
@@ -582,13 +579,10 @@ DO:
     define variable ii         as integer no-undo .
     define variable recid_mark as integer no-undo .
   
-    if v-rid-list2 <> "" then 
+find first tt-marking-lines where tt-marking-lines.marking-string = "*" and tt-marking-lines.doc-level > 1 no-error .
+    if available (tt-marking-lines) then 
     do:
-      do ii = 1 to num-entries (v-rid-list2):
-        recid_mark = integer(entry(ii,v-rid-list2)) .
-        find first X_marking-line where recid (X_marking-line) = recid_mark no-error.
-        if available (X_marking-line) then 
-        do:
+        for each X_marking-line where X_marking-line.marking-string = "*" and tt-marking-lines.doc-level > 1:
           X_marking-line.sts-utd = c-status-2 .
           X_marking-line.stts-utd =  StatusTHName(X_marking-line.sts-utd).
           X_marking-line.sts = c-status-2 .
@@ -598,10 +592,11 @@ DO:
           find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking-line.mark and buf_utd-marking-lines.db-num = X_marking-line.db-num and
             buf_utd-marking-lines.doc-id = X_marking-line.doc-id no-error .
           if available (buf_utd-marking-lines) then buf_utd-marking-lines.sts = X_marking-line.sts-utd .
+       X_marking-line.marking-string = "" .
         end.
-
+            
       end.  
-    end.  
+
     else 
     do:
       recid_mark = recid(X_marking-line) .
@@ -801,7 +796,9 @@ DO:
     define variable row-marking as rowid   no-undo .
     if available X_marking then 
     do:
-      { gbl/markstrn.i X_marking v-rid-list }
+        if X_marking.marking-string = "*" then X_marking.marking-string = "" .
+        else X_marking.marking-string = "*" . 
+/*      { gbl/markstrn.i X_marking v-rid-list }*/
       row-marking = rowid(X_marking).
       loc#log = {&browse-name}:refresh() .
       reposition br-mark to rowid row-marking.
@@ -827,12 +824,16 @@ DO:
 ON CHOOSE OF b-mark-2 IN FRAME d-mark /* * */
 DO:
     define variable loc#log as logical no-undo .
+    define variable row-marking as rowid   no-undo .
     apply "entry" to {&browse-name} in frame {&frame-name}.
     if available X_marking-line then 
     do:
-      { gbl/markstrn.i X_marking-line v-rid-list2 }
+        if X_marking-line.marking-string = "*" then X_marking-line.marking-string = "" .
+        else X_marking-line.marking-string = "*" .
+        row-marking = rowid(X_marking-line).
+/*      { gbl/markstrn.i X_marking-line v-rid-list2 }*/
       loc#log = br-mark-item:refresh() .
-
+      reposition br-mark-item to rowid row-marking.  
       if last-event:function <> "MOUSE-SELECT-DBLCLICK" then 
       do:
         loc#log = br-mark-item:select-next-row () .
@@ -1053,8 +1054,9 @@ DO:
     if available X_marking then 
     do:
       v-rid-list = "" .
-      for each X_marking no-lock:
-        { gbl/markstrn.i X_marking v-rid-list }
+      for each X_marking where X_marking.doc-level = 1:
+          X_marking.marking-string = "*" .
+/*        { gbl/markstrn.i X_marking v-rid-list }*/
         loc#log = br-mark:refresh() no-error.
       end.
     end.
@@ -1070,12 +1072,12 @@ DO:
 ON CHOOSE OF bt-not-sel-all-2 IN FRAME d-mark /* + */
 DO:
     define variable loc#log as logical no-undo .
-
-    if available X_marking-line then 
+    if available (X_marking) then 
     do:
-      v-rid-list = "" .
-      for each X_marking-line no-lock:
-        { gbl/markstrn.i X_marking-line v-rid-list2 }
+     v-rid-list2 = "" .
+      for each X_marking-line where X_marking.mark begins X_marking-line.mark-parent and X_marking-line.doc-level > 1:
+          X_marking-line.marking-string = "*" .
+/*        { gbl/markstrn.i X_marking-line v-rid-list2 }*/
         loc#log = br-mark-item:refresh() no-error.
       end.
     end.
@@ -1092,6 +1094,9 @@ ON CHOOSE OF bt-not-sel-desel-all IN FRAME d-mark /* - */
 DO:
     define variable loc#log as logical no-undo .
     v-rid-list = "" .
+    For each X_marking where X_marking.marking-string = "*":
+        X_marking.marking-string = "" .
+    end.    
     loc#log = br-mark:refresh() no-error.
   END.
 
@@ -1105,6 +1110,9 @@ ON CHOOSE OF bt-not-sel-desel-all-2 IN FRAME d-mark /* - */
 DO:
     define variable loc#log as logical no-undo .
     v-rid-list2 = "" .
+    For each X_marking-line where X_marking-line.marking-string = "*":
+        X_marking-line.marking-string = "" .
+    end.
     loc#log = br-mark-item:refresh() .
 
   END.
@@ -1898,7 +1906,7 @@ define variable v_list      as character no-undo .
           v-mark = "" .
         end.  
       end.
-      else 
+      else /*не серая зона*/
       do:  
         find first X_marking exclusive-lock where X_marking.mark begins v-marking no-error .
         if available (X_marking) then
@@ -1948,7 +1956,7 @@ define variable v_list      as character no-undo .
               buf_utd-marking-lines.doc-id = X_marking.doc-id no-error .
             if available (buf_utd-marking-lines) then 
             do:
-                    
+                    /*просканирована марка с серой зоной*/
               if can-find (buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:GrayZone:KeyIntDB)
                 then 
               do:

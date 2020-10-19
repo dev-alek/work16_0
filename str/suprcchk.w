@@ -28,6 +28,7 @@ DEFINE BUFFER pay_cash-pay FOR ub.cash-pay.
 DEFINE BUFFER pay_currency FOR ub.currency.
 DEFINE BUFFER sales-man FOR ub.person.
 DEFINE NEW SHARED TEMP-TABLE tt-chk-discnt NO-UNDO LIKE ub.chk-discnt.
+DEFINE BUFFER buf_chk-doc-attr FOR ub.chk-doc-attr .
 DEFINE NEW SHARED TEMP-TABLE tt-chk-doc NO-UNDO LIKE ub.chk-doc
        field real-subdiscnt as decimal.
 DEFINE TEMP-TABLE tt-chk-doc-attr NO-UNDO LIKE ub.chk-doc-attr.
@@ -81,7 +82,8 @@ define variable vss-description AS CHAR NO-UNDO INIT "чек : добавление, изменени
 { cmp/showinf.i  }
 { str/shftnmef.i chk-doc shift-name }
 { gbl/thbj-def.i }
-
+{ ref/extclass.i }
+{ str/is-corr.i }
 DEFINE VARIABLE var-mode as character no-undo.
 /*настройка - разрешено ли менять на бар-код с другой текущей прейскурантной ценой*/
 DEFINE VARIABLE ch-bc-ck as logical no-undo init no.
@@ -291,8 +293,9 @@ tt-chk-doc.shift-date
 &Scoped-define ENABLED-TABLES tt-chk-doc
 &Scoped-define FIRST-ENABLED-TABLE tt-chk-doc
 &Scoped-Define ENABLED-OBJECTS B-quit B-prev B-next Cb-chk-type B-help ~
-fhour fmin fsec B-bonus B-discnt B-gds BR-gds BR-discnt BR-pay F-cashier ~
-F-salesman f-cli-name
+RECT-1 fhour fmin fsec v-corr-osnov v-corr-type v-doc-osnov corr-date ~
+f-num-corr f-cause-corr B-bonus B-discnt B-gds BR-discnt BR-gds BR-pay ~
+F-cashier F-salesman f-cli-name 
 &Scoped-Define DISPLAYED-FIELDS tt-chk-doc.chk-date tt-chk-doc.cashier ~
 tt-chk-doc.sales-man tt-chk-doc.obj-code tt-chk-doc.d-card ~
 tt-chk-doc.pay-desk tt-chk-doc.chk-num tt-chk-doc.z-number ~
@@ -303,8 +306,9 @@ tt-chk-doc.sub-discnt tt-chk-doc.netto tt-chk-doc.d-pcnt ~
 tt-chk-doc.shift-date
 &Scoped-define DISPLAYED-TABLES tt-chk-doc
 &Scoped-define FIRST-DISPLAYED-TABLE tt-chk-doc
-&Scoped-Define DISPLAYED-OBJECTS Cb-chk-type fhour fmin fsec F-cashier ~
-F-salesman f-cli-name
+&Scoped-Define DISPLAYED-OBJECTS Cb-chk-type fhour fmin fsec v-corr-osnov ~
+v-corr-type v-doc-osnov corr-date f-num-corr f-cause-corr F-cashier ~
+F-salesman f-cli-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -379,30 +383,64 @@ DEFINE VARIABLE Cb-chk-type AS CHARACTER FORMAT "X(256)":U
      SIZE 27 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE F-cashier AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 19.6 BY .67 NO-UNDO.
+DEFINE VARIABLE corr-date AS DATE FORMAT "99/99/9999":U 
+     LABEL "Дата" 
+     VIEW-AS FILL-IN 
+     SIZE 11.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-cli-name AS CHARACTER FORMAT "X(256)":U
-     LABEL "Клиент"
-      VIEW-AS TEXT
-     SIZE 20.6 BY 1 NO-UNDO.
+DEFINE VARIABLE F-cashier AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 19.63 BY .67 NO-UNDO.
 
-DEFINE VARIABLE F-salesman AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 19.6 BY .67 NO-UNDO.
+DEFINE VARIABLE f-cause-corr AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Описание корректировки" 
+     VIEW-AS FILL-IN 
+     SIZE 64 BY 1 TOOLTIP "Краткое описание причины проведения корректировки" NO-UNDO.
 
-DEFINE VARIABLE fhour AS INTEGER FORMAT "99":U INITIAL 0
-     VIEW-AS FILL-IN
-     SIZE 2.9 BY 1 NO-UNDO.
+DEFINE VARIABLE f-cli-name AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Клиент" 
+      VIEW-AS TEXT 
+     SIZE 20.63 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fmin AS INTEGER FORMAT "99":U INITIAL 0
-     VIEW-AS FILL-IN
-     SIZE 2.9 BY 1 NO-UNDO.
+DEFINE VARIABLE f-num-corr AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Номер" 
+     VIEW-AS FILL-IN 
+     SIZE 21 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fsec AS INTEGER FORMAT "99":U INITIAL 0
-     VIEW-AS FILL-IN
-     SIZE 2.9 BY 1 NO-UNDO.
+DEFINE VARIABLE F-salesman AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 19.63 BY .67 NO-UNDO.
+
+DEFINE VARIABLE fhour AS INTEGER FORMAT "99":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 2.88 BY 1 NO-UNDO.
+
+DEFINE VARIABLE fmin AS INTEGER FORMAT "99":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 2.88 BY 1 NO-UNDO.
+
+DEFINE VARIABLE fsec AS INTEGER FORMAT "99":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 2.88 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-corr-osnov AS CHARACTER FORMAT "X(80)" 
+     LABEL "Основание" 
+     VIEW-AS FILL-IN 
+     SIZE 53.25 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-corr-type AS CHARACTER FORMAT "X(15)" 
+     LABEL "Тип коррекции" 
+     VIEW-AS FILL-IN 
+     SIZE 20 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-doc-osnov AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Документ" 
+     VIEW-AS FILL-IN 
+     SIZE 32.38 BY 1 NO-UNDO.
+
+DEFINE RECTANGLE RECT-1
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 100.5 BY 3.5 TOOLTIP "Основание корректировки".
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -440,7 +478,7 @@ tt-chk-discnt.kateg COLUMN-LABEL "Код !валюты" FORMAT "->>>9"
   tt-chk-discnt.discnt-value-abs
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 97.9 BY 6.67.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 101.5 BY 6.67.
 
 DEFINE BROWSE BR-gds
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-gds Dialog-Frame _FREEFORM
@@ -490,7 +528,7 @@ DEFINE BROWSE BR-gds
       tt-chk-gds.price-service
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 97.9 BY 6.67 ROW-HEIGHT-CHARS .67.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 101.5 BY 6.67 ROW-HEIGHT-CHARS .67.
 
 DEFINE BROWSE BR-pay
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-pay Dialog-Frame _FREEFORM
@@ -521,7 +559,7 @@ DEFINE BROWSE BR-pay
       tt-chk-pay.cash-rate
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 97.9 BY 4.2 ROW-HEIGHT-CHARS .67.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 101 BY 4.21 ROW-HEIGHT-CHARS .67.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -532,120 +570,129 @@ DEFINE FRAME Dialog-Frame
      B-next AT ROW 1 COL 27
      Cb-chk-type AT ROW 1 COL 39 COLON-ALIGNED NO-LABEL
      B-help AT ROW 1 COL 95
-     tt-chk-doc.chk-date AT ROW 2 COL 11 COLON-ALIGNED
+     tt-chk-doc.chk-date AT ROW 2.08 COL 11.5 COLON-ALIGNED
           LABEL "Дата"
           VIEW-AS FILL-IN
           SIZE 11.5 BY 1
-     tt-chk-doc.cashier AT ROW 2 COL 33.6 COLON-ALIGNED
+     tt-chk-doc.cashier AT ROW 2.08 COL 33.63 COLON-ALIGNED
           LABEL "Кассир"
           VIEW-AS FILL-IN
           SIZE 7 BY 1
-     fhour AT ROW 3 COL 11 COLON-ALIGNED NO-LABEL
-     fmin AT ROW 3 COL 14.4 COLON-ALIGNED NO-LABEL
-     fsec AT ROW 3 COL 18.5 COLON-ALIGNED NO-LABEL
-     tt-chk-doc.sales-man AT ROW 3 COL 33.6 COLON-ALIGNED
+     fhour AT ROW 3.33 COL 11.5 COLON-ALIGNED NO-LABEL
+     fmin AT ROW 3.33 COL 14.88 COLON-ALIGNED NO-LABEL
+     fsec AT ROW 3.33 COL 19 COLON-ALIGNED NO-LABEL
+     tt-chk-doc.sales-man AT ROW 3.33 COL 33.63 COLON-ALIGNED
           LABEL "Продавец"
           VIEW-AS FILL-IN
           SIZE 7 BY 1
-     tt-chk-doc.obj-code AT ROW 4 COL 11 COLON-ALIGNED
+     tt-chk-doc.obj-code AT ROW 4.46 COL 11.5 COLON-ALIGNED
           LABEL "N магазина"
-          VIEW-AS FILL-IN
-          SIZE 6.8 BY 1
-     tt-chk-doc.d-card AT ROW 4 COL 33.6 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 6.75 BY 1
+     tt-chk-doc.d-card AT ROW 4.46 COL 33.63 COLON-ALIGNED
           LABEL "Диск. карта"
-          VIEW-AS FILL-IN
-          SIZE 17.4 BY 1
-     tt-chk-doc.pay-desk AT ROW 5 COL 11 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 20.88 BY 1
+     tt-chk-doc.pay-desk AT ROW 5.58 COL 11.5 COLON-ALIGNED
           LABEL "N кассы"
           VIEW-AS FILL-IN
           SIZE 5.5 BY 1
-     tt-chk-doc.chk-num AT ROW 6 COL 11 COLON-ALIGNED
+     v-corr-osnov AT ROW 6.75 COL 11.5 COLON-ALIGNED WIDGET-ID 58
+     v-corr-type AT ROW 6.75 COL 80.13 COLON-ALIGNED WIDGET-ID 60
+     v-doc-osnov AT ROW 8.75 COL 11.5 COLON-ALIGNED WIDGET-ID 56
+     corr-date AT ROW 8.75 COL 55.13 COLON-ALIGNED WIDGET-ID 24
+     f-num-corr AT ROW 8.75 COL 100.13 RIGHT-ALIGNED WIDGET-ID 30
+     f-cause-corr AT ROW 10.25 COL 100.13 RIGHT-ALIGNED WIDGET-ID 32
+     tt-chk-doc.chk-num AT ROW 11.5 COL 11.5 COLON-ALIGNED
           LABEL "N по кассе" FORMAT "->>>>>>9"
-          VIEW-AS FILL-IN
-          SIZE 8.4 BY 1
-     tt-chk-doc.z-number AT ROW 6 COL 33.8 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 8.38 BY 1
+     tt-chk-doc.z-number AT ROW 11.5 COL 34.75 COLON-ALIGNED
           LABEL "Z-отчет"
           VIEW-AS FILL-IN
           SIZE 10.5 BY 1
-     tt-chk-doc.src-d-pcnt AT ROW 6 COL 62.6 COLON-ALIGNED
+     tt-chk-doc.src-d-pcnt AT ROW 11.5 COL 63.63 COLON-ALIGNED
           LABEL "Скидка клиен.(%)"
           VIEW-AS FILL-IN
           SIZE 7 BY 1
-     tt-chk-doc.src-shift-date AT ROW 7 COL 11 COLON-ALIGNED
+     tt-chk-doc.src-shift-date AT ROW 12.67 COL 11.25 COLON-ALIGNED
           LABEL "&Дата смены" FORMAT "99/99/9999"
-          VIEW-AS FILL-IN
-          SIZE 10.4 BY 1.03
-     tt-chk-doc.cash-scale AT ROW 7 COL 89.4 COLON-ALIGNED
-          LABEL "Масштаб"
-          VIEW-AS FILL-IN
-          SIZE 6.9 BY 1
-     tt-chk-doc.cash-rate AT ROW 7.03 COL 60.4 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 12.75 BY 1
+     tt-chk-doc.cash-rate AT ROW 12.67 COL 63.5 COLON-ALIGNED
           LABEL "Курс нац вал."
-          VIEW-AS FILL-IN
-          SIZE 19.9 BY 1
-     tt-chk-doc.shift-name AT ROW 8 COL 11 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 19.88 BY 1
+     tt-chk-doc.cash-scale AT ROW 12.67 COL 93.13 COLON-ALIGNED
+          LABEL "Масштаб"
+          VIEW-AS FILL-IN 
+          SIZE 6.88 BY 1
+     tt-chk-doc.shift-name AT ROW 13.75 COL 11.25 COLON-ALIGNED
           LABEL "№ смены"
           VIEW-AS FILL-IN
           SIZE 4 BY 1
-     tt-chk-doc.shift-num AT ROW 8 COL 20 COLON-ALIGNED
+     tt-chk-doc.shift-num AT ROW 13.75 COL 20 COLON-ALIGNED
           LABEL "П."
-          VIEW-AS FILL-IN
-          SIZE 4.1 BY 1
-     v-src-d-card AT ROW 8 COL 35 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 4.13 BY 1
+     tt-chk-doc.src-d-card AT ROW 13.75 COL 36.25 COLON-ALIGNED
           LABEL "ДК в чеке"
           VIEW-AS FILL-IN
           SIZE 19 BY 1
-     B-bonus AT ROW 8 COL 55.9
-     B-discnt AT ROW 8 COL 69.9
-     B-gds AT ROW 8 COL 83.9
-     BR-gds AT ROW 9.07 COL 1
-     BR-discnt AT ROW 9.07 COL 1
-     BR-pay AT ROW 15.8 COL 1
-     tt-chk-doc.PS AT ROW 20.03 COL 1.3 NO-LABEL
+     B-bonus AT ROW 13.75 COL 59.38
+     B-discnt AT ROW 13.75 COL 73.38
+     B-gds AT ROW 13.75 COL 87.38
+     BR-discnt AT ROW 14.75 COL 1
+     BR-gds AT ROW 14.83 COL 1
+     BR-pay AT ROW 21.54 COL 1
+     tt-chk-doc.PS AT ROW 25.79 COL 1.25 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
-          SIZE 86.4 BY 2
-     F-cashier AT ROW 2 COL 42 COLON-ALIGNED NO-LABEL
-     tt-chk-doc.tot-doc AT ROW 2 COL 76.5 COLON-ALIGNED
-          LABEL "Сумма брутто"
-           VIEW-AS TEXT
-          SIZE 20 BY .67
-     F-salesman AT ROW 3 COL 42 COLON-ALIGNED NO-LABEL
-     tt-chk-doc.discnt AT ROW 3 COL 76.5 COLON-ALIGNED
-          LABEL "Скидка общ."
-           VIEW-AS TEXT
-          SIZE 20 BY .67
-     tt-chk-doc.sub-discnt AT ROW 4 COL 76.5 COLON-ALIGNED
-          LABEL "Сумма списаний"
-           VIEW-AS TEXT
-          SIZE 20 BY .67
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          SIZE 100.75 BY 2
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          CANCEL-BUTTON B-quit.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     f-cli-name AT ROW 5 COL 33.8 COLON-ALIGNED
-     tt-chk-doc.netto AT ROW 5 COL 76.5 COLON-ALIGNED
+     F-cashier AT ROW 2 COL 42 COLON-ALIGNED NO-LABEL
+     tt-chk-doc.tot-doc AT ROW 2.08 COL 76.5 COLON-ALIGNED
+          LABEL "Сумма брутто"
+           VIEW-AS TEXT 
+          SIZE 20 BY 1
+     F-salesman AT ROW 3 COL 42 COLON-ALIGNED NO-LABEL
+     tt-chk-doc.discnt AT ROW 3.33 COL 76.5 COLON-ALIGNED
+          LABEL "Скидка общ."
+           VIEW-AS TEXT 
+          SIZE 20 BY 1
+     tt-chk-doc.sub-discnt AT ROW 4.46 COL 76.5 COLON-ALIGNED
+          LABEL "Сумма списаний"
+           VIEW-AS TEXT 
+          SIZE 20 BY 1
+     f-cli-name AT ROW 5.58 COL 33.75 COLON-ALIGNED
+     tt-chk-doc.netto AT ROW 5.58 COL 76.5 COLON-ALIGNED
           LABEL "Сумма оплат(нетто)"
-           VIEW-AS TEXT
-          SIZE 20 BY .67
-     tt-chk-doc.d-pcnt AT ROW 6 COL 89.6 COLON-ALIGNED
+           VIEW-AS TEXT 
+          SIZE 20 BY 1
+     tt-chk-doc.d-pcnt AT ROW 11.5 COL 93.25 COLON-ALIGNED
           LABEL "Скидка итоговая(%)"
-           VIEW-AS TEXT
-          SIZE 6.3 BY .67
-     tt-chk-doc.shift-date AT ROW 7 COL 33.8 COLON-ALIGNED
+           VIEW-AS TEXT 
+          SIZE 6.25 BY 1
+     tt-chk-doc.shift-date AT ROW 12.67 COL 36.25 COLON-ALIGNED
           LABEL "Дата учета" FORMAT "99/99/9999"
-           VIEW-AS TEXT
-          SIZE 10.5 BY .67
-          FGCOLOR 12
-     "Тип чека" VIEW-AS TEXT
-          SIZE 8.6 BY 1.03 AT ROW 1 COL 31
-          FGCOLOR 4
+           VIEW-AS TEXT 
+          SIZE 10.5 BY 1
+          FGCOLOR 12 
+     "Основание корректировки" VIEW-AS TEXT
+          SIZE 24 BY .67 AT ROW 7.83 COL 41.13 WIDGET-ID 28
      "Время:" VIEW-AS TEXT
           SIZE 6.5 BY 1 AT ROW 3 COL 11 RIGHT-ALIGNED
-     SPACE(86.88) SKIP(18.07)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     "Тип чека" VIEW-AS TEXT
+          SIZE 8.63 BY 1.04 AT ROW 1 COL 31
+          FGCOLOR 4 
+     RECT-1 AT ROW 8 COL 1.63 WIDGET-ID 26
+     SPACE(0.74) SKIP(16.70)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "<insert dialog title>"
          CANCEL-BUTTON B-quit.
 
@@ -718,6 +765,10 @@ ASSIGN
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN tt-chk-doc.discnt IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
+/* SETTINGS FOR FILL-IN f-cause-corr IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN f-num-corr IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN tt-chk-doc.netto IN FRAME Dialog-Frame
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN tt-chk-doc.obj-code IN FRAME Dialog-Frame
@@ -1079,6 +1130,39 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME corr-date
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL corr-date Dialog-Frame
+ON LEAVE OF corr-date IN FRAME Dialog-Frame /* Дата */
+DO:
+  assign corr-date.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-cause-corr
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-cause-corr Dialog-Frame
+ON LEAVE OF f-cause-corr IN FRAME Dialog-Frame /* Описание корректировки */
+DO:
+  assign f-cause-corr.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME f-num-corr
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-num-corr Dialog-Frame
+ON LEAVE OF f-num-corr IN FRAME Dialog-Frame /* Номер */
+DO:
+  assign f-num-corr.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define BROWSE-NAME BR-discnt
 &UNDEFINE SELF-NAME
 
@@ -1279,7 +1363,8 @@ PROCEDURE enable_UI :
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY Cb-chk-type fhour fmin fsec F-cashier F-salesman f-cli-name
+  DISPLAY Cb-chk-type fhour fmin fsec v-corr-osnov v-corr-type v-doc-osnov 
+          corr-date f-num-corr f-cause-corr F-cashier F-salesman f-cli-name 
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-chk-doc THEN
     DISPLAY tt-chk-doc.chk-date tt-chk-doc.cashier tt-chk-doc.sales-man
@@ -1291,15 +1376,16 @@ PROCEDURE enable_UI :
           tt-chk-doc.sub-discnt tt-chk-doc.netto tt-chk-doc.d-pcnt
           tt-chk-doc.shift-date
       WITH FRAME Dialog-Frame.
-  ENABLE B-quit B-prev B-next Cb-chk-type B-help tt-chk-doc.chk-date
-         tt-chk-doc.cashier fhour fmin fsec tt-chk-doc.sales-man
-         tt-chk-doc.obj-code tt-chk-doc.d-card tt-chk-doc.pay-desk
-         tt-chk-doc.chk-num tt-chk-doc.z-number tt-chk-doc.src-d-pcnt
-         tt-chk-doc.src-shift-date tt-chk-doc.cash-scale tt-chk-doc.cash-rate
-         tt-chk-doc.shift-name tt-chk-doc.shift-num v-src-d-card
-         B-bonus B-discnt B-gds BR-gds BR-discnt BR-pay tt-chk-doc.PS F-cashier
-         tt-chk-doc.tot-doc F-salesman tt-chk-doc.discnt tt-chk-doc.sub-discnt
-         f-cli-name tt-chk-doc.netto tt-chk-doc.d-pcnt tt-chk-doc.shift-date
+  ENABLE B-quit B-prev B-next Cb-chk-type B-help RECT-1 tt-chk-doc.chk-date 
+         tt-chk-doc.cashier fhour fmin fsec tt-chk-doc.sales-man 
+         tt-chk-doc.obj-code tt-chk-doc.d-card tt-chk-doc.pay-desk v-corr-osnov 
+         v-corr-type v-doc-osnov corr-date f-num-corr f-cause-corr 
+         tt-chk-doc.chk-num tt-chk-doc.z-number tt-chk-doc.src-d-pcnt 
+         tt-chk-doc.src-shift-date tt-chk-doc.cash-rate tt-chk-doc.cash-scale 
+         tt-chk-doc.shift-name tt-chk-doc.shift-num tt-chk-doc.src-d-card 
+         B-bonus B-discnt B-gds BR-discnt BR-gds BR-pay tt-chk-doc.PS F-cashier 
+         tt-chk-doc.tot-doc F-salesman tt-chk-doc.discnt tt-chk-doc.sub-discnt 
+         f-cli-name tt-chk-doc.netto tt-chk-doc.d-pcnt tt-chk-doc.shift-date 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -2587,6 +2673,28 @@ VIEW FRAME {&frame-name}.
 {&OPEN-QUERY-BR-discnt}
 hide br-discnt in frame {&frame-name}.
 
+for first buf_chk-doc-attr where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code 
+and buf_chk-doc-attr.attr-code = "corr-osnov":
+  v-doc-osnov = OsnovCorr(integer(buf_chk-doc-attr.attr-value)) .
+end.   
+for first buf_chk-doc-attr where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code 
+and buf_chk-doc-attr.attr-code = "corr-date":
+  corr-date = date(buf_chk-doc-attr.attr-value) .
+end.   
+for first buf_chk-doc-attr where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code 
+and buf_chk-doc-attr.attr-code = "corr-num":
+  f-num-corr = buf_chk-doc-attr.attr-value .
+end.   
+for first buf_chk-doc-attr where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code 
+and buf_chk-doc-attr.attr-code = "corr-cause":
+  f-cause-corr = buf_chk-doc-attr.attr-value .
+end.   
+display 
+v-doc-osnov
+corr-date
+f-cause-corr
+f-num-corr
+with frame {&frame-name} . 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3025,6 +3133,7 @@ input  parpay-code
 ,output parcurr-name
 ,output varpay-name ) no-error.
 return varpay-name.
+
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
