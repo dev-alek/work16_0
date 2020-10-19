@@ -46,7 +46,8 @@ define variable vss-description as character no-undo init "Ошибки документа".
 { cmp/str-glbl.i  }
 { str/temp_upd.i }
 { str/utd-err.i }
-{gbl/key-rec.i}
+{ gbl/key-rec.i }
+
 define buffer buf_utd-err for ub.utd-err .
 define buffer utd-err for tt-utd-err .
 /* _UIB-CODE-BLOCK-END */
@@ -91,7 +92,7 @@ tt-utd-err.CheckObj
     ~{&OPEN-QUERY-BROWSE-2}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Cancel BROWSE-2 
+&Scoped-Define ENABLED-OBJECTS Btn_OK b-print BROWSE-2 
 &Scoped-Define DISPLAYED-OBJECTS f-error 
 
 /* Custom List Definitions                                              */
@@ -107,6 +108,13 @@ tt-utd-err.CheckObj
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON b-print 
+    IMAGE-UP FILE "cmp/b-print.bmp":U
+    IMAGE-DOWN FILE "cmp/b-print.bmp":U
+    IMAGE-INSENSITIVE FILE "cmp/b-print.bmp":U NO-CONVERT-3D-COLORS
+    LABEL "Печать" 
+    SIZE 3 BY 1.
+
 DEFINE BUTTON Btn_OK AUTO-GO 
      LABEL "Выход" 
      SIZE 15 BY 1.13
@@ -143,6 +151,8 @@ DEFINE BROWSE BROWSE-2
 
 DEFINE FRAME Dialog-Frame
      Btn_OK AT ROW 1 COL 1
+     b-print AT ROW 1 COL 127 WIDGET-ID 62
+     
      BROWSE-2 AT ROW 3.5 COL 2 WIDGET-ID 200
      "Сформированные ошибки:" VIEW-AS TEXT
           SIZE 27 BY .67 AT ROW 2.5 COL 2.5 WIDGET-ID 16
@@ -207,6 +217,21 @@ ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Ошибки документа */
 DO:
     APPLY "END-ERROR":U TO SELF.
   END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
+ON CHOOSE OF b-print IN FRAME Dialog-Frame /* Печать */
+DO:
+   run rep\r-print-error.p (
+   input p-doc-id,
+   input p-db-num,
+   input table tt-utd-err 
+   ).   
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
