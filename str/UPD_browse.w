@@ -1533,6 +1533,9 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
     
         for each X_utd-lines where X_utd-lines.qnty-mark <> X_utd-lines.qnty-scan:
             v-ok = yes .
+        end.       
+        for each X_utd-lines where X_utd-lines.Quantity = 0 or X_utd-lines.Quantity = ?:
+             v-ok = yes . 
         end.
         if v-ok and (c-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or c-type = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB) then 
         do:  
