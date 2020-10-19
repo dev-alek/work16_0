@@ -1044,7 +1044,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                 buf_dis-card-type.type = temp-d-card.type
            and  buf_dis-card-type.emitent-host-code = temp-d-card.emitent-host-code.
       v-dct-uniq-key-rec = buf_dis-card-type.uniq-key-rec.
-      if p-save and not mode-erprn then do:
+      if p-save and (not mode-erprn or p-process = {&dct-proc_one-card-add}) then do:
         run create-nws-outline in this-procedure (
                                                    input v-cmd-proc-handle
                                                   ,input buf_temp-cmd.cmd-code
@@ -1217,7 +1217,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       end. /*do v-jj*/
     end. /*if first-of(temp-d-card.type) then do:*/
   end. /*for each temp-d-card*/
-  if p-save and not mode-erprn then do:
+  if p-save and (not mode-erprn or p-process = {&dct-proc_one-card-add}) then do:
   find first buf_temp-cmd.
   run after-command in this-procedure ( buffer buf_temp-cmd) no-error.
         if error-status:error then do:
@@ -1621,7 +1621,7 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
 :
 
 
-if p-save and not mode-erprn then do:
+if p-save and (not mode-erprn or p-process = {&dct-proc_one-card-add}) then do:
   /*пустышка разделитель*/
   run create-nws-outline in this-procedure (
                                               input v-cmd-proc-handle
@@ -1641,7 +1641,7 @@ if {&run-persistent} then do:
                                                       input this-procedure:handle
                                                       ,input '':U /*p-proc-name */ ).
 end.
-if p-save and not mode-erprn then do:
+if p-save and (not mode-erprn or p-process = {&dct-proc_one-card-add}) then do:
   if g#db-num = 0 then do:
     find first buf1_temp-cmd where buf1_temp-cmd.db-list = string(-1).
   end.
