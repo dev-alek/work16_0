@@ -899,6 +899,48 @@ ON VALUE-CHANGED OF a-n-c IN FRAME d-utd
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME a-n-c-name
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL a-n-c-name d-utd
+ON leave, return OF a-n-c-name IN FRAME d-utd
+    DO:
+       assign a-n-c-name .
+       assign a-n-c .
+       case a-n-c:
+          when "code" then 
+             do:
+                find first X_utd-lines where X_utd-lines.gds-code = integer(a-n-c-name) no-error .
+                if available (X_utd-lines) then do:
+                   recid_utd = recid (X_utd-lines) .
+                br-utd :refresh() no-error.
+                reposition br-utd to recid recid_utd no-error .
+                end.   
+             end.
+          when "name" then 
+             do:
+                find first X_utd-lines where X_utd-lines.ProductCode begins a-n-c-name no-error .
+                if available (X_utd-lines) then do:
+                   recid_utd = recid (X_utd-lines) .
+                br-utd :refresh() no-error.
+                reposition br-utd to recid recid_utd no-error .
+                end.                  
+             end.
+          when "context" then 
+             do:
+                find first X_utd-lines where X_utd-lines.ProductCode MATCHES "*" + a-n-c-name + "*" no-error .
+                if available (X_utd-lines) then do:
+                   recid_utd = recid (X_utd-lines) .
+                br-utd :refresh() no-error.
+                reposition br-utd to recid recid_utd no-error .
+                end.  
+             end.         
+       end case.
+        
+        apply "TAB":U to self .
+        return no-apply .
+    END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel d-utd
@@ -1534,7 +1576,10 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
         for each X_utd-lines where X_utd-lines.qnty-mark <> X_utd-lines.qnty-scan:
             v-ok = yes .
         end.       
-        for each X_utd-lines where X_utd-lines.Quantity = 0 or X_utd-lines.Quantity = ?:
+
+        for each buf_utd-err where buf_utd-err.CodeErr = "NotMarkForLine" and
+                                   buf_utd-err.db-num = p-db-num and
+                                   buf_utd-err.doc-id = p-doc-id:
              v-ok = yes . 
         end.
         if v-ok and (c-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or c-type = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB) then 
