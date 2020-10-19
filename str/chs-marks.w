@@ -68,7 +68,7 @@ define variable l-error         as logical   no-undo. /* Есть ли ошибки */
 define variable is-impfile      as logical   no-undo. /* Есть ли ошибки */
 define variable v-user-action   as character no-undo.
 define variable v-printed       as logical   no-undo.
-define variable v-mark-shot     as character no-undo. 
+define variable v-mark-short     as character no-undo. 
 define buffer t_doc        for ub.trn-doc .
 define buffer bf_trn-doc   for ub.trn-doc .
 define buffer buf_marking  for ub.marking .
@@ -544,15 +544,15 @@ define variable v-error      as logical   no-undo init no.
     then return.
 
   define variable vcodident as character no-undo.
-  v-mark-shot = GetCodeIdent(v-mark).
+  v-mark-short = GetCodeIdent(v-mark).
   
-  if v-mark-shot = "" or v-mark-shot = ?
+  if v-mark-short = "" or v-mark-short = ?
   then do:
     run dispmessage ("Марка не распознана.").
     return.
   end.
   
-  find first ub.marking-attr no-lock where (ub.marking-attr.attr-code = "inv-doc" or ub.marking-attr.attr-code = "inv-doc-scan") and (ub.marking-attr.mark begins v-mark-shot) no-error.
+  find first ub.marking-attr no-lock where (ub.marking-attr.attr-code = "inv-doc" or ub.marking-attr.attr-code = "inv-doc-scan") and (ub.marking-attr.mark begins v-mark-short) no-error.
   
   if available (ub.marking-attr) 
   then do:
@@ -560,7 +560,7 @@ define variable v-error      as logical   no-undo init no.
     return.
   end.
   
-  find first buf_marking where (buf_marking.mark begins v-mark-shot) no-error.
+  find first buf_marking where (buf_marking.mark begins v-mark-short) no-error.
 
   if not available (buf_marking)
   then do:
@@ -568,7 +568,7 @@ define variable v-error      as logical   no-undo init no.
     return.    
   end.
   
-  find first buf_marking-lines where (buf_marking-lines.mark begins v-mark-shot)
+  find first buf_marking-lines where (buf_marking-lines.mark begins v-mark-short)
     and buf_marking-lines.out-code = {&free-code} no-error.
   
   if buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
@@ -607,7 +607,7 @@ define variable v-error      as logical   no-undo init no.
       ObjSrv:Lib:MarkingTree:LockInvChildeMark(buf_marking.mark, p-doc-code).
     end.
     run go-line in p-inv-handle (input rec).
-    f-msg:screen-value in frame {&FRAME-NAME} = v-mark-shot .
+    f-msg:screen-value in frame {&FRAME-NAME} = v-mark-short .
     f-msg:fgcolor in frame {&FRAME-NAME} = 2.
   end.
   else do:
@@ -629,11 +629,26 @@ PROCEDURE crIntroduce :
     return.
   end. 
   define variable vcodident as character no-undo.
-  v-mark-shot = GetCodeIdent(v-mark).
-  if v-mark-shot = "" or v-mark-shot = ?
+  v-mark-short = GetCodeIdent(v-mark).
+  if v-mark-short = "" or v-mark-short = ?
   then do:
     run dispmessage ("Марка не распознана.").
     return.
+  end.
+  find first buf_marking no-lock where buf_marking.mark = v-mark-short no-error.
+  if available (buf_marking)
+  then do:
+    case buf_marking.sts:
+      when ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB then do:
+        run dispmessage ("Упаковка разгруппирована.").
+        return.
+      end.
+      when ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB then do:
+        run dispmessage ("Марка в свободной зоне.").
+        return.
+      end.
+    end case.
+    ObjSrv:Lib:MarkingTree:UnGroupMark(buf_marking.mark).
   end.
   find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code.
   find first ub.goods no-lock where ub.goods.gds-code = bf_bar-code.gds-code no-error.
@@ -648,7 +663,7 @@ PROCEDURE crIntroduce :
   end.
   def var IntroUtd as class introduce no-undo.
   IntroUtd = new introduce().
-  IntroUtd:AddMarkUTD(v-mark-shot, p-doc-code) no-error.
+  IntroUtd:AddMarkUTD(v-mark, p-doc-code) no-error.
   if error-status:error
   then do:
     run dispmessage (substitute ("Ошибка добавления марки &1.", return-value)).
@@ -658,8 +673,9 @@ PROCEDURE crIntroduce :
   def var rec as recid no-undo.
   rec = recid (bf_doc-line).
   release bf_doc-line.
+  release buf_marking.
   run go-line in p-inv-handle (input rec).
-  f-msg:screen-value in frame {&FRAME-NAME} = v-mark-shot .
+  f-msg:screen-value in frame {&FRAME-NAME} = v-mark-short .
   f-msg:fgcolor in frame {&FRAME-NAME} = 2.
 
 end.
@@ -845,7 +861,7 @@ define variable v-error      as logical   no-undo init no.
         else run CrCheckMark.
     v-mark = "".
     v-mark:screen-value in frame {&frame-name} = "".
-    v-mark-shot = "".
+    v-mark-short = "".
   end.
 end procedure.
 

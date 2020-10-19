@@ -18,7 +18,6 @@ class ibs.th.str.utd.handlers.introduce inherits objth:
 
   { utl/gtin.i class }
 
-
   method public character CheckMarkUTD(mark as char, doc-id as integer, db-num as integer):
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
     define buffer bf_utd-marking-lines  for ub.utd-marking-lines .
@@ -123,23 +122,63 @@ method public character AddMarkUTD(input mark as char, input p-doc-inv as char):
   
 end.
 
+method public character AddLineUTD(gds-code as int, doc-id as integer, db-num as integer, output jj as integer):
+  
+  define buffer buf_utd               for ub.utd .
+  define buffer buf_utd-lines         for ub.utd-lines .
+  define buffer buf_goods             for ub.goods .
+  
+  find first buf_goods no-lock where buf_goods.gds-code = gds-code no-error .   
+  if not available (buf_goods) then do:
+    return error "Не найден товар с кодом - " + string (gds-code).  
+  end.
+
+  find first buf_utd no-lock where buf_utd.doc-id = doc-id and buf_utd.db-num = db-num no-error .
+  find first buf_utd-lines exclusive-lock where buf_utd-lines.doc-id = doc-id and buf_utd-lines.db-num = db-num
+    and buf_utd-lines.gds-code = buf_goods.gds-code no-error .
+  
+  if not available (buf_utd-lines) then 
+  do:
+    find last ub.utd-lines where ub.utd-lines.db-num = db-num and ub.utd-lines.doc-id = doc-id no-error .
+    if not available (ub.utd-lines) then jj = 0 .
+    else jj = ub.utd-lines.LineNum .       
+    create buf_utd-lines .
+    assign
+      buf_utd-lines.GdsName  = buf_goods.gds-name
+      buf_utd-lines.db-num   = db-num
+      buf_utd-lines.doc-id   = doc-id
+      buf_utd-lines.LineNum  = jj + 1
+      buf_utd-lines.gds-code = buf_goods.gds-code
+      buf_utd-lines.sts      = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB
+      buf_utd-lines.UnitCode = buf_goods.unit-base
+      .
+  end.
+  else do:
+    jj = buf_utd-lines.LineNum .
+  end.
+    
+end.
+
 method public character AddMarkUTD(mark as char, doc-id as integer, db-num as integer):
   define buffer buf_utd-marking-lines for ub.utd-marking-lines .
   define buffer bf_utd-marking-lines  for ub.utd-marking-lines .
-  define buffer buf_utd               for ub.utd .
   define buffer buf_goods             for ub.goods .
-  define buffer buf_utd-lines         for ub.utd-lines .
   define buffer buf_marking           for ub.marking .
-  define variable v-error    as character no-undo .
-  define variable Tree       as class     tree no-undo .
-  define variable Marking    as class     mark no-undo .
-  define variable ungroup    as logical   no-undo .
-  define variable v-GTIN     as character no-undo .
-  define variable v-gds-code as integer   no-undo .
-  define variable jj         as integer   no-undo .
-  define variable v-qnty     as decimal   no-undo .
+  define buffer buf_utd               for ub.utd .
+  define buffer buf_utd-lines         for ub.utd-lines .
+  define variable v-error      as character no-undo .
+  define variable Tree         as class     tree no-undo .
+  define variable Marking      as class     mark no-undo .
+  define variable ungroup      as logical   no-undo .
+  define variable v-GTIN       as character no-undo .
+  define variable v-gds-code   as integer   no-undo .
+  define variable v-qnty       as decimal   no-undo .
+  define variable jj           as integer   no-undo .
+  define variable v-mark-short as character no-undo .
+  
   Tree = ObjSrv:Lib:MarkingTree . 
   Marking = ObjSrv:Env:Marking:Sts:Mark.
+  v-mark-short = GetCodeIdent(mark).
   /*Добавление товаров по маркам*/
     v-GTIN = getGtinByDM(mark) .
     if v-GTIN <> "" then 
@@ -151,47 +190,35 @@ method public character AddMarkUTD(mark as char, doc-id as integer, db-num as in
       if available (buf_goods) then 
       do:     
         find first buf_utd no-lock where buf_utd.doc-id = doc-id and buf_utd.db-num = db-num no-error .
+        
         find first buf_utd-lines exclusive-lock where buf_utd-lines.doc-id = doc-id and buf_utd-lines.db-num = db-num
           and buf_utd-lines.gds-code = buf_goods.gds-code no-error .
-        if not available (buf_utd-lines) then 
-        do:
-
-          find last ub.utd-lines where ub.utd-lines.db-num = db-num and ub.utd-lines.doc-id = doc-id no-error .
-          if not available (ub.utd-lines) then jj = 0 .
-          else jj = ub.utd-lines.LineNum .       
-          create buf_utd-lines .
-          assign
-            buf_utd-lines.GdsName  = buf_goods.gds-name
-            buf_utd-lines.db-num   = db-num
-            buf_utd-lines.doc-id   = doc-id
-            buf_utd-lines.LineNum  = jj + 1
-            buf_utd-lines.gds-code = buf_goods.gds-code
-            buf_utd-lines.sts      = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB
-            buf_utd-lines.UnitCode = buf_goods.unit-base
-            .
-        end.  
-        
-        find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.mark = mark and buf_utd-marking-lines.doc-id = doc-id and buf_utd-marking-lines.db-num = db-num no-error.
+        if not available (buf_utd-lines)
+        then do:
+          AddLineUTD(buf_goods.gds-code, buf_utd.doc-id, buf_utd.db-num, output jj).
+          if error-status:error
+            then undo, return error "Не созадана линия УТД по марке - " + mark.
+          find first buf_utd-lines exclusive-lock where buf_utd-lines.doc-id = doc-id and buf_utd-lines.db-num = db-num
+            and buf_utd-lines.gds-code = buf_goods.gds-code no-error .
+        end.
+        find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.mark begins v-mark-short and buf_utd-marking-lines.doc-id = doc-id and buf_utd-marking-lines.db-num = db-num no-error.
         if available ( buf_utd-marking-lines)
           then undo, return error "Марка уже была сканирована " + mark.
         create buf_utd-marking-lines .
         assign
           buf_utd-marking-lines.db-num    = db-num
           buf_utd-marking-lines.doc-id    = doc-id
-          buf_utd-marking-lines.gds-code  = buf_utd-lines.gds-code
+          buf_utd-marking-lines.gds-code  = buf_goods.gds-code
           buf_utd-marking-lines.LineNum   = buf_utd-lines.LineNum
-          buf_utd-marking-lines.mark      = mark
-          buf_utd-marking-lines.sts       = ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB
           buf_utd-marking-lines.doc-level = 1
          .
-
-        find first buf_marking exclusive-lock where buf_marking.mark begins mark no-error .
+        find first buf_marking exclusive-lock where buf_marking.mark begins v-mark-short no-error .
         if not available (buf_marking) then 
-        do:            
+        do:
           create buf_marking .
           assign
             buf_marking.gds-code   = buf_utd-marking-lines.gds-code
-            buf_marking.mark       = mark
+            buf_marking.mark       = v-mark-short
             buf_marking.sts        = Marking:PendingVerification:KeyIntDB
             buf_marking.gds-ext-id = v-GTIN
             buf_marking.obj-code   = buf_utd.obj-code
@@ -200,14 +227,21 @@ method public character AddMarkUTD(mark as char, doc-id as integer, db-num as in
           buf_marking.unit-ext  = getLevelMotpByDM(mark) .
           buf_marking.box-qnty  = getQntyUTDByDM(mark) .
           buf_marking.unit  = getLevelUTDByDM(mark) .
+          buf_utd-marking-lines.sts       = Marking:PendingVerification:KeyIntDB.
+          buf_utd-marking-lines.mark = buf_marking.mark.
         end.
         else 
         do:
-          buf_marking.sts      = Marking:PendingVerification:KeyIntDB .
-        end.    
+          buf_utd-marking-lines.mark = buf_marking.mark.
+          /*buf_marking.sts      = Marking:PendingVerification:KeyIntDB .*/
+          for each buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.doc-id = doc-id and buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum:
+            find first ub.marking exclusive-lock where ub.marking.mark = buf_utd-marking-lines.mark no-error.
+            buf_utd-marking-lines.sts = Marking:PendingVerification:KeyIntDB.
+            ub.marking.sts = Marking:PendingVerification:KeyIntDB .
+          end.
+        end.
         if buf_marking.box-qnty = ? or buf_marking.box-qnty = 0 then 
         do:
-
           run gbl/d-prompt.w (
             'title=':u + "Ввод количества" + '\':u
             + 'text1=':u + "Введите количество:" + '\':u

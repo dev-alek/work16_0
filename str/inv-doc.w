@@ -966,13 +966,13 @@ procedure procmarkqntycheckinv:
 
   define parameter buffer local-doc-line for ub.doc-line.
   define output parameter ii as integer no-undo.
-  
   define buffer buf_marking-lines for ub.marking-lines.
   define buffer buf_marking for ub.marking.
   define buffer buf_gds for ub.goods.
+  define buffer buf_utd-marking-lines for ub.utd-marking-lines.
+  
   if v-is-marking = false
     then ii = 0.
-
   find first buf_gds no-lock where buf_gds.artic = local-doc-line.artic
     and buf_gds.prod-type = local-doc-line.prod-type
     and buf_gds.prod-code = local-doc-line.prod-code.
@@ -983,8 +983,13 @@ procedure procmarkqntycheckinv:
     ii = ii + 1.
   end.
   for each ub.utd no-lock where ub.utd.doc-code = local-doc-line.doc-code:
-    for each ub.utd-marking-lines no-lock where ub.utd-marking-lines.doc-id = ub.utd.doc-id and ub.utd-marking-lines.db-num = ub.utd.db-num and ub.utd-marking-lines.gds-code = buf_gds.gds-code:
+    for each ub.utd-marking-lines no-lock where ub.utd-marking-lines.doc-id = ub.utd.doc-id and ub.utd-marking-lines.db-num = ub.utd.db-num and ub.utd-marking-lines.gds-code = buf_gds.gds-code
+      and (ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB or ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB):
       for each ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark.
+        if can-find (buf_utd-marking-lines where 
+              buf_utd-marking-lines.doc-id = ub.utd.doc-id and buf_utd-marking-lines.db-num = ub.utd.db-num and buf_utd-marking-lines.mark = ub.marking.mark-parent
+            )
+          then next.
         ii = ii + ub.marking.box-qnty.
       end.
     end.
@@ -2956,6 +2961,33 @@ procedure local-add :
           view-as alert-box error .
         undo tr, next tr.
       end.
+      if v-is-introduce then do:
+        def var introdUtd as class introduce no-undo.
+        def var jj as integer no-undo.
+        find first ub.utd no-lock where ub.utd.doc-code = t-doc.doc-code no-error.
+        if not available (ub.utd)
+        then do:
+          message
+            vss-workfile vss-revision vss-description skip
+            substitute("Ошибка при добавлении строки в инвентаризацию первоначального ввода. Привязанный документ первоначального ввода не найден.")
+            view-as alert-box error .
+          undo tr, next tr.
+        end.
+        introdUtd = new introduce() no-error.
+        introdUtd:AddLineUTD(input ub.goods.gds-code, input ub.utd.doc-id, input ub.utd.db-num, output jj).
+        if error-status:error
+        then do:
+          delete object introdUtd no-error.
+          message
+            vss-workfile vss-revision vss-description skip
+            substitute("Ошибка при добавлении строки первоначального ввода.") skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+          undo tr, next tr.
+        end.
+        delete object introdUtd no-error.
+      end.
       if v-marking-type = "tabak" and vismsg and can-find (first buf_marking-lines no-lock 
                                                   where buf_marking-lines.gds-code = ub.goods.gds-code and buf_marking-lines.out-code = {&free-code} and buf_marking-lines.mark begins {&tech-mark-prefix})
       then do:
@@ -3450,7 +3482,7 @@ procedure local-delete :
       end.
       for each ub.utd no-lock where ub.utd.doc-code = ub.doc-line.doc-code:
         for each ub.utd-lines exclusive-lock where ub.utd-lines.db-num = ub.utd.db-num
-          and ub.utd-lines.doc-id =  ub.utd-lines.doc-id and ub.utd-lines.gds-code = ub.goods.gds-code:
+          and ub.utd-lines.doc-id =  ub.utd.doc-id and ub.utd-lines.gds-code = ub.goods.gds-code:
           for each ub.utd-lines-attr exclusive-lock where ub.utd-lines-attr.db-num = ub.utd-lines.db-num
             and ub.utd-lines-attr.doc-id = ub.utd-lines.doc-id
             and ub.utd-lines-attr.LineNum = ub.utd-lines.LineNum:
