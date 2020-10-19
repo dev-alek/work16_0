@@ -380,7 +380,7 @@ end.
                                 , p-GdsObj:code_
                                 , {&new-line}
                                 , error-status:get-message(1)
-                                , return-value ).
+                                , replace(return-value,{&delim-par}," ") ).
       undo, return error v-err-mess .
   end.
   
