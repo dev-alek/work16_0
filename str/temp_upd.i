@@ -61,6 +61,7 @@ define temp-table tt-marking-lines like ub.marking-lines
   field doc-id      as integer
   field LineNum     as integer
   field GrayZone    as logical 
+  field marking-string as character
   index pi  doc-level   sts
   index pi2 mark-parent sts
   index pi3 unit-ext
