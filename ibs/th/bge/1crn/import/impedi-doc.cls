@@ -109,8 +109,15 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
          
    end.
    if objImp:obj-load eq "edi-doc-stts"
-   then
+   then do:
       utd.sts  = ObjSrv:Env:Utd:Sts:th:GetKeyIntDB(objImp:edoc-stts).
+      for each utd-marking-lines where utd-marking-lines.db-num    eq utd.db-num
+                                   and utd-marking-lines.doc-id    eq utd.doc-id
+                                   and utd-marking-lines.doc-level eq 1
+      exclusive-lock:
+         addMark(buffer utd-marking-lines ).
+      end.
+   end.
    else do:
       assign
          utd.comment  = objImp:comment
