@@ -917,7 +917,8 @@ ON leave, return OF a-n-c-name IN FRAME d-utd
              end.
           when "name" then 
              do:
-                find first X_utd-lines where X_utd-lines.ProductCode begins a-n-c-name no-error .
+                find first X_utd-lines where (X_utd-lines.ProductCode begins a-n-c-name or X_utd-lines.gds-name begins a-n-c-name) no-error .
+                
                 if available (X_utd-lines) then do:
                    recid_utd = recid (X_utd-lines) .
                 br-utd :refresh() no-error.
@@ -926,7 +927,7 @@ ON leave, return OF a-n-c-name IN FRAME d-utd
              end.
           when "context" then 
              do:
-                find first X_utd-lines where X_utd-lines.ProductCode MATCHES "*" + a-n-c-name + "*" no-error .
+                find first X_utd-lines where (X_utd-lines.ProductCode MATCHES "*" + a-n-c-name + "*" or X_utd-lines.gds-name MATCHES "*" + a-n-c-name + "*") no-error .
                 if available (X_utd-lines) then do:
                    recid_utd = recid (X_utd-lines) .
                 br-utd :refresh() no-error.
