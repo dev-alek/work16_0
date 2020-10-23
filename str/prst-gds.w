@@ -47,6 +47,7 @@ define input  parameter parqnty-kg          as   decimal             no-undo.
 define input  parameter parqnty-plus        as   decimal             no-undo.
 define input  parameter parqnty-kg-plus     as   decimal             no-undo.
 define input  parameter parpstunqtn-log     as   logical             no-undo.
+define input  parameter parpstunit          as   logical             no-undo.
 define input  parameter parmxpcicp-dec      as   decimal             no-undo.
 define input  parameter parmxpcdcp-dec      as   decimal             no-undo.
 define input  parameter parmxsmicp-dec      as   decimal             no-undo.
@@ -449,6 +450,14 @@ DO:
     if recid(bf_goods) = recid(bf_goods-plus) then do:
       message "Вы выбрали один и тот же товар для списания и оприходования." view-as alert-box error.
       apply "entry" to varartic-plus in frame {&frame-name}.
+      return no-apply.
+    end.
+    if bf_goods.unit-base <> bf_goods-plus.unit-base
+    and parpstunit 
+    then do:
+      message "У выбранных товаров разные единицы измерения!" skip
+              "Пересорт товаров с разными единицами измерения является недопустимым (параметр pstunit)."
+      view-as alert-box error.
       return no-apply.
     end.
     if bf_goods.unit-base =  bf_goods-plus.unit-base and

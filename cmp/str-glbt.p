@@ -416,7 +416,7 @@ attr-inv-global }
 /* атрибут объектный  -  ИНВЕНТАРИЗАЦИЯ настройки */
 { cmp/cr-prep.i 1 attr-inv-obj  inv-obj inv-obj inv-obj inv-obj }
 { cmp/cr-prepc.i 1 prop-list-attr-inv-obj
-"invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp,izlcstpr"
+"invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp,pstunit,izlcstpr"
 attr-inv-obj }
 /* атрибут глобальный -  АРХИВЫ */
 { cmp/cr-prep.i 1 attr-arh-global arh-global arh-global arh-global arh-global }

@@ -34,6 +34,7 @@ define input  parameter parcallback        as   handle              no-undo.
 define input  parameter pardoc-code        like ub.trn-doc.doc-code no-undo.
 define input  parameter parold-supp-cntr   as   logical             no-undo.
 define input  parameter parpstunqtn-log    as   logical             no-undo.
+define input  parameter parpstunit         as   logical             no-undo.
 define input  parameter parmxpcicp-dec     as   decimal             no-undo.
 define input  parameter parmxpcdcp-dec     as   decimal             no-undo.
 define input  parameter parmxsmicp-dec     as   decimal             no-undo.
@@ -217,6 +218,7 @@ run str/prst-gds.w (input  parparentproc,
                 input  varqnty-plus,
                 input  ?, /*тне подлежит редактированию*/
                 input  parpstunqtn-log,
+                input  parpstunit,
                 input  parmxpcicp-dec,
                 input  parmxpcdcp-dec,
                 input  parmxsmicp-dec,

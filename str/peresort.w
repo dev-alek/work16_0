@@ -187,6 +187,7 @@ define variable varmxpcdcp-dec  as decimal no-undo.
 define variable varmxsmicp-dec  as decimal no-undo.
 define variable varmxsmdcp-dec  as decimal no-undo.
 define variable vargrp-is-eq    as logical no-undo.
+define variable varpstunit      as logical no-undo.
 
 define temp-table tt-del-list no-undo
 field rec-id as recid
@@ -2019,6 +2020,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     { gbl/getsect.i run bf_trn-doc.obj-type bf_trn-doc.obj-code {&attr-inv-obj} }
     for each thbjattr_thbj-attr :
         if thbjattr_thbj-attr.prop-code = 'pstgrp' then vargrp-is-eq = thbjattr_thbj-attr.property-value-logical.
+        if thbjattr_thbj-attr.prop-code = 'pstunit' then varpstunit = thbjattr_thbj-attr.property-value-logical.
         if thbjattr_thbj-attr.prop-code = 'pstunqtn' then varpstunqtn-log = thbjattr_thbj-attr.property-value-logical.
         if thbjattr_thbj-attr.prop-code = 'mxpcicp' then varmxpcicp-dec = thbjattr_thbj-attr.property-value-decimal.
         if thbjattr_thbj-attr.prop-code = 'mxpcdcp' then varmxpcdcp-dec = thbjattr_thbj-attr.property-value-decimal.
@@ -2335,6 +2337,7 @@ run str/pstlnadd.p
    input  varmxsmicp-dec,
    input  varmxsmdcp-dec,
    input  vargrp-is-eq,
+   input  varpstunit,
    output varrec-minus-line,
    output varrec-plus-line,
    output varadd)         no-error.
@@ -2376,6 +2379,7 @@ run str/pstlnupd.p
    input  bf_trn-doc.doc-code,
    input  parold-supp-cntr,
    input  varpstunqtn-log,
+   input  varpstunit,
    input  varmxpcicp-dec,
    input  varmxpcdcp-dec,
    input  varmxsmicp-dec,
