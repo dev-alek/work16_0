@@ -37,6 +37,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     get. 
     set.
 
+  define variable GrayZoneQnty  as integer no-undo .
+  { gbl/thbj-def.i }
+  
   method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
     define variable objImp    as class ibs.th.bge.1crn.subjects.edi-doc no-undo.
     define variable v-retfl   as logical no-undo .
@@ -52,6 +55,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     define variable v-i-num2     as integer no-undo .
     
     define variable v-stub      as integer no-undo .
+    
+    define variable v-value-character     as character     no-undo .
+    define variable v-value-decimal       as decimal       no-undo .
+    define variable v-value-integer       as integer       no-undo .
+    define variable v-value-logical       as logical       no-undo .
+    define variable v-value-type          as character     no-undo .
+    define variable v-value-date          as date          no-undo .
     
     define variable v-host-code  as integer no-undo .
     define buffer buf_clients    for ub.clients .
@@ -140,6 +150,25 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             utd.host-code  = buf_clients.host-code
             
          .
+          run adm/shattri.p (
+               input "get":U
+               ,input utd.obj-type
+               ,input utd.obj-code
+               ,input {&attr-marking}
+               ,input "gray_zone_qnty"
+               ,output v-value-character
+               ,output v-value-date
+               ,output v-value-decimal
+               ,output v-value-integer
+               ,output v-value-logical
+               ,output v-value-type
+               ,input-output TABLE thbjattr_thbj-attr
+               ) no-error .
+           if v-value-integer <> ?
+           then
+              GrayZoneQnty = v-value-integer
+           . 
+
          find first shop where shop.obj-code eq buf_clients.obj-code
          no-lock no-error.
          if available shop
@@ -299,8 +328,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                      delMark(buffer utd-marking-lines).
                      delete utd-marking-lines.
                   end.
-                  else
+                  else do:
+                     MarkGray(utd-marking-lines.mark).
                      addMark( buffer utd-marking-lines).
+                  end.
+                     
                end.
                release utd-lines.
             end. //
@@ -381,6 +413,31 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       return v-retfl .
     end finally .
   end method. /* end_of Excute */
-  method public void MySeqForUtd():
+  
+  method public void MarkGray(imark as char):
+     define buffer marking for marking.
+     define buffer BuF_marking for marking.
+     define variable vAllQnty as integer no-undo init ?.
+     define variable vQnty as integer no-undo.
+     find first marking where marking.mark eq imark
+     no-lock no-error.
+     if available marking
+        and marking.box-qnty ne 1
+     then do:
+        for each buf_marking where buf_marking.mark-parent eq marking.mark
+        no-lock:
+           if vAllQnty eq ?
+           then
+              vAllQnty = marking.box-qnty / buf_marking.box-qnty.
+           vQnty = vQnty + 1.
+        end.
+        if vAllQnty <> vQnty and GrayZoneQnty <> 100
+        then do:
+           find current marking exclusive-lock.
+           marking.sts = if vAllQnty - vQnty <= GrayZoneQnty 
+                         then objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+                         else objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
+        end.
+     end.
   end.
 end class.
