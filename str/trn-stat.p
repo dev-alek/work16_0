@@ -1281,6 +1281,7 @@ vartechproliv = no
       end.
       if bf_trn-doc.ext-doc-type = {&TDEDT_Inv} and varstatus = {&fact}
       then do:
+
         { gbl/getsect.i run "''" 0  {&attr-inv-global} }
         for each thbjattr_thbj-attr :
             if thbjattr_thbj-attr.prop-code = 'inv-prs'  then varinv-prs = string( thbjattr_thbj-attr.property-value-integer).
@@ -1331,7 +1332,60 @@ vartechproliv = no
           v-attr-type
           no-error
         }
+        
+        def var v-minus as logical no-undo.
+        run adm/shattri.p (
+           input "get":U
+          ,input bf_trn-doc.obj-type
+          ,input bf_trn-doc.obj-code
+          ,input {&attr-inv-obj}
+          ,input  "minus"
+          ,output v-value-character
+          ,output v-value-date
+          ,output v-value-decimal
+          ,output v-value-integer
+          ,output v-minus
+          ,output v-attr-type
+          ,INPUT-OUTPUT table-handle v-tth
+          ) no-error .
+        
+        if not v-minus
+        then do:
+          for each bf_doc-line where bf_doc-line.doc-code = bf_trn-doc.doc-code 
+            and bf_doc-line.doc-qnty < 0 on error undo, return error return-value:
+            
+            find first bf_goods where bf_goods.artic = bf_doc-line.artic
+              and bf_goods.prod-type = bf_doc-line.prod-type
+              and bf_goods.prod-code = bf_doc-line.prod-code no-lock.
+            
+            assign
+              varerr = true.
+            
+            output stream str-err to value( replace( bf_trn-doc.doc-code, "*", "$" ) + ".err" ) append.
+            put    stream str-err unformatted substitute ("Товар &1 &2 имеет отрицательное фактическое кол-во: было &3, стало &4", bf_goods.artic, bf_goods.gds-name, (bf_doc-line.doc-qnty - bf_doc-line.fact-qnty), bf_doc-line.doc-qnty) skip.
+            output stream str-err close.
+            
+          end.
+        end.
+        
+        if varerr
+        then do:
+          if g#auto <> yes then do:
 
+            run gbl/prnfilen.w
+              (input  "Ошибкa. Имеются товары с отрицательным фактическим кол-вом"
+              ,input  0
+              ,input  replace(bf_trn-doc.doc-code, "*", "$") + ".err"
+              ,input  7
+              ,output v-user-action
+              ,output v-printed
+              ).
+          end.
+          return error substitute( 'Ошибкa. Имеются товары с отрицательным фактическим кол-вом' +
+                                  'Смотри файл "&1.err"'
+                                , replace( bf_trn-doc.doc-code, "*", "$" ) ).
+        end.
+        
         if not error-status:error and v-attr-value = "yes" then do:
           find first bf_utd where bf_utd.doc-code = bf_trn-doc.doc-code no-error.
           if available bf_utd 

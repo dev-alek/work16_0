@@ -74,17 +74,19 @@ v-tthg = buffer thbjattr_thbj-attr-g:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help I-mxpcdcp I-invclcsp ~
-I-invdnull I-pstunqtn I-mxsmdcp I-mxsmicp I-wastage I-mxpcicp I-invclcwt ~
-I-invclcas I-inv-prs I-pstgrp I-pstunit I-izlcstpr B-2 invclcsp B-3 invdnull B-4 ~
-pstunqtn invclcas invclcwt inv-prs B-7 wastage B-1 mxpcdcp B-9 mxpcicp B-5 ~
-mxsmdcp B-6 mxsmicp B-8 pstgrp B-11 pstunit B-10 izlcstpr v-invclcsp v-invdnull ~
-v-pstunqtn v-invclcas v-invclcwt v-inv-prs v-wastage v-mxpcdcp v-mxpcicp ~
-v-mxsmdcp v-mxsmicp v-pstgrp v-pstunit v-izlcstpr 
+&Scoped-Define ENABLED-OBJECTS B-exit I-mxpcdcp I-invclcsp I-invdnull ~
+I-pstunqtn I-mxsmdcp I-mxsmicp I-wastage I-mxpcicp I-invclcwt I-invclcas ~
+I-inv-prs I-pstgrp I-pstunit I-izlcstpr I-minus B-quit B-Help B-2 ~
+invclcsp B-3 invdnull B-4 pstunqtn invclcas invclcwt inv-prs B-7 wastage ~
+B-1 mxpcdcp B-9 mxpcicp B-5 mxsmdcp B-6 mxsmicp B-8 pstgrp B-11 pstunit ~
+B-10 izlcstpr B-12 minus v-invclcsp v-invdnull v-pstunqtn v-invclcas ~
+v-invclcwt v-inv-prs v-wastage v-mxpcdcp v-mxpcicp v-mxsmdcp v-mxsmicp ~
+v-pstgrp v-pstunit v-izlcstpr v-minus 
 &Scoped-Define DISPLAYED-OBJECTS invclcsp invdnull pstunqtn invclcas ~
-invclcwt inv-prs wastage mxpcdcp mxpcicp mxsmdcp mxsmicp pstgrp pstunit izlcstpr ~
-v-invclcsp v-invdnull v-pstunqtn v-invclcas v-invclcwt v-inv-prs v-wastage ~
-v-mxpcdcp v-mxpcicp v-mxsmdcp v-mxsmicp v-pstgrp v-pstunit v-izlcstpr 
+invclcwt inv-prs wastage mxpcdcp mxpcicp mxsmdcp mxsmicp pstgrp pstunit ~
+izlcstpr minus v-invclcsp v-invdnull v-pstunqtn v-invclcas v-invclcwt ~
+v-inv-prs v-wastage v-mxpcdcp v-mxpcicp v-mxsmdcp v-mxsmicp v-pstgrp ~
+v-pstunit v-izlcstpr v-minus 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -110,6 +112,11 @@ DEFINE BUTTON B-10
      SIZE 3 BY 1.
 
 DEFINE BUTTON B-11 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON B-12 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
      SIZE 3 BY 1.
@@ -229,6 +236,10 @@ DEFINE VARIABLE v-mxsmicp AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT 
      SIZE 87.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE v-minus AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 98.13 BY 1 NO-UNDO.
+
 DEFINE VARIABLE v-pstgrp AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 98.13 BY 1 NO-UNDO.
@@ -285,6 +296,10 @@ DEFINE IMAGE I-mxsmicp
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.04.
 
+DEFINE IMAGE I-minus
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+
 DEFINE IMAGE I-pstgrp
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
@@ -322,6 +337,11 @@ DEFINE VARIABLE invdnull AS LOGICAL INITIAL no
      SIZE 2.38 BY 1 NO-UNDO.
 
 DEFINE VARIABLE izlcstpr AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 2.38 BY 1 NO-UNDO.
+
+DEFINE VARIABLE minus AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 2.38 BY 1 NO-UNDO.
@@ -378,6 +398,8 @@ DEFINE FRAME Dialog-Frame
      pstunit AT ROW 20 COL 6.63 WIDGET-ID 302
      B-10 AT ROW 21.5 COL 3.63 WIDGET-ID 84
      izlcstpr AT ROW 21.5 COL 6.63 WIDGET-ID 20
+     B-12 AT ROW 22.71 COL 3.75 WIDGET-ID 306
+     minus AT ROW 22.71 COL 6.75 WIDGET-ID 308
      v-invclcsp AT ROW 3.04 COL 9.38 NO-LABEL WIDGET-ID 18
      v-invdnull AT ROW 4 COL 9.38 NO-LABEL WIDGET-ID 54
      v-pstunqtn AT ROW 5.13 COL 9.38 NO-LABEL WIDGET-ID 60
@@ -392,6 +414,7 @@ DEFINE FRAME Dialog-Frame
      v-pstgrp AT ROW 18.63 COL 9.38 NO-LABEL WIDGET-ID 204
      v-pstunit AT ROW 20 COL 9.38 NO-LABEL WIDGET-ID 304
      v-izlcstpr AT ROW 21.5 COL 7.38 COLON-ALIGNED NO-LABEL WIDGET-ID 20
+     v-minus AT ROW 22.71 COL 7.5 COLON-ALIGNED NO-LABEL WIDGET-ID 310
      I-mxpcdcp AT ROW 12.92 COL 1 WIDGET-ID 10
      I-invclcsp AT ROW 3.04 COL 1 WIDGET-ID 34
      I-invdnull AT ROW 4 COL 1 WIDGET-ID 50
@@ -406,7 +429,8 @@ DEFINE FRAME Dialog-Frame
      I-pstgrp AT ROW 18.63 COL 1 WIDGET-ID 200
      I-pstunit AT ROW 20 COL 1 WIDGET-ID 300
      I-izlcstpr AT ROW 21.5 COL 1 WIDGET-ID 36
-     SPACE(103.99) SKIP(0.87)
+     I-minus AT ROW 22.67 COL 1 WIDGET-ID 312
+     SPACE(103.99) SKIP(0.32)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки Инвентаризации"
@@ -556,6 +580,7 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &Scoped-define SELF-NAME B-11
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-11 Dialog-Frame
 ON CHOOSE OF B-11 IN FRAME Dialog-Frame
@@ -563,6 +588,20 @@ DO:
   run gbl/v-taobj.w
       ({&attr-inv-obj},
        "pstunit"
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-12
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-12 Dialog-Frame
+ON CHOOSE OF B-12 IN FRAME Dialog-Frame
+DO:
+  run gbl/v-taobj.w
+      ({&attr-inv-obj},
+       "minus"
        ).
 END.
 
@@ -792,6 +831,17 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME I-minus
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-minus Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-minus IN FRAME Dialog-Frame
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME I-pstgrp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-pstgrp Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-pstgrp IN FRAME Dialog-Frame
@@ -918,17 +968,19 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY invclcsp invdnull pstunqtn invclcas invclcwt inv-prs wastage mxpcdcp 
-          mxpcicp mxsmdcp mxsmicp pstgrp pstunit izlcstpr v-invclcsp v-invdnull 
-          v-pstunqtn v-invclcas v-invclcwt v-inv-prs v-wastage v-mxpcdcp 
-          v-mxpcicp v-mxsmdcp v-mxsmicp v-pstgrp v-pstunit v-izlcstpr 
+          mxpcicp mxsmdcp mxsmicp pstgrp pstunit izlcstpr minus v-invclcsp 
+          v-invdnull v-pstunqtn v-invclcas v-invclcwt v-inv-prs v-wastage 
+          v-mxpcdcp v-mxpcicp v-mxsmdcp v-mxsmicp v-pstgrp v-pstunit v-izlcstpr 
+          v-minus 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit B-Help I-mxpcdcp I-invclcsp I-invdnull I-pstunqtn 
-         I-mxsmdcp I-mxsmicp I-wastage I-mxpcicp I-invclcwt I-invclcas 
-         I-inv-prs I-pstgrp I-pstunit I-izlcstpr B-2 invclcsp B-3 invdnull B-4 pstunqtn 
-         invclcas invclcwt inv-prs B-7 wastage B-1 mxpcdcp B-9 mxpcicp B-5 
-         mxsmdcp B-6 mxsmicp B-8 pstgrp B-11 pstunit B-10 izlcstpr v-invclcsp v-invdnull 
-         v-pstunqtn v-invclcas v-invclcwt v-inv-prs v-wastage v-mxpcdcp 
-         v-mxpcicp v-mxsmdcp v-mxsmicp v-pstgrp v-pstunit v-izlcstpr 
+  ENABLE B-exit I-mxpcdcp I-invclcsp I-invdnull I-pstunqtn I-mxsmdcp I-mxsmicp 
+         I-wastage I-mxpcicp I-invclcwt I-invclcas I-inv-prs I-pstgrp I-pstunit 
+         I-izlcstpr I-minus B-quit B-Help B-2 invclcsp B-3 invdnull B-4 
+         pstunqtn invclcas invclcwt inv-prs B-7 wastage B-1 mxpcdcp B-9 mxpcicp 
+         B-5 mxsmdcp B-6 mxsmicp B-8 pstgrp B-11 pstunit B-10 izlcstpr B-12 
+         minus v-invclcsp v-invdnull v-pstunqtn v-invclcas v-invclcwt 
+         v-inv-prs v-wastage v-mxpcdcp v-mxpcicp v-mxsmdcp v-mxsmicp v-pstgrp 
+         v-pstunit v-izlcstpr v-minus 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1087,6 +1139,10 @@ FOR EACH thbjattr_thbj-attr
 &scop type logical
 {&telo1}
 
+&scop pole minus
+&scop type logical
+{&telo1}
+
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
 
@@ -1159,6 +1215,9 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 {&telo2g}
 
 &scop pole izlcstpr
+{&telo2}
+
+&scop pole minus
 {&telo2}
 
 END PROCEDURE.
@@ -1259,6 +1318,7 @@ define variable v-found as decimal   no-undo .
      pstgrp
      pstunit
      izlcstpr
+     minus
      with frame {&frame-name}.
      B-exit:label = "Вы&ход"  .
      hide B-quit in frame {&frame-name} .
@@ -1344,6 +1404,7 @@ ASSIGN
     pstgrp
     pstunit
     izlcstpr
+    minus
  .
 assign
   fh = frame {&frame-name}:first-child

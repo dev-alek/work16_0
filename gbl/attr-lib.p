@@ -3772,6 +3772,8 @@ logical,~
 logical,~
 logical,~
 logical,~
+logical,~
+logical,~
 logical~
 ':U
 &scop prop-label-list-attr-inv-obj '~
@@ -3785,8 +3787,9 @@ logical~
 Начисление естественной убыли,~
 Запрещена пересортица товаров из разных групп,~
 Запрещена пересортица товаров с разными единицами измерения,~
-Приходовать излишки по продажным ценам без НДС'
-&scop prop-list-attr-inv-obj  'invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp,pstunit,izlcstpr'
+Приходовать излишки по продажным ценам без НДС,~
+Разрешить создание инвентаризации с отрицательными количествами'
+&scop prop-list-attr-inv-obj  'invclcsp,invdnull,mxpcdcp,mxpcicp,mxsmdcp,mxsmicp,pstunqtn,wastage,pstgrp,pstunit,izlcstpr,minus'
 &scop global-attr-inv-obj true
 &scop host-attr-inv-obj true
 &scop shop-attr-inv-obj true
@@ -3804,7 +3807,8 @@ logical~
 &scop attr-inv-obj-pstgrp_tooltip  (pstgrp) Установка Yes запрещает добавлять товары из разных групп
 &scop attr-inv-obj-pstunit_tooltip  (pstunit) Установка Yes запрещает добавлять товары с разными единицами измерения
 &scop attr-inv-obj-izlcstpr_tooltip  (izlcstpr) Yes - излишки в инвентаризации приходуются по продажным ценам без НДС
-&scop prop-tooltip-list-attr-inv-obj {&attr-inv-obj-invclcsp_tooltip},{&attr-inv-obj-invdnull_tooltip},{&attr-inv-obj-mxpcdcp_tooltip},{&attr-inv-obj-mxpcicp_tooltip},{&attr-inv-obj-mxsmdcp_tooltip},{&attr-inv-obj-mxsmicp_tooltip},{&attr-inv-obj-pstunqtn_tooltip},{&attr-inv-obj-wastage_tooltip},{&attr-inv-obj-pstgrp_tooltip},{&attr-inv-obj-pstunit_tooltip},{&attr-inv-obj-izlcstpr_tooltip}
+&scop attr-inv-obj-minus_tooltip  (nominus) Yes - Разрешить создание инвентаризации с отрицательными количествами
+&scop prop-tooltip-list-attr-inv-obj {&attr-inv-obj-invclcsp_tooltip},{&attr-inv-obj-invdnull_tooltip},{&attr-inv-obj-mxpcdcp_tooltip},{&attr-inv-obj-mxpcicp_tooltip},{&attr-inv-obj-mxsmdcp_tooltip},{&attr-inv-obj-mxsmicp_tooltip},{&attr-inv-obj-pstunqtn_tooltip},{&attr-inv-obj-wastage_tooltip},{&attr-inv-obj-pstgrp_tooltip},{&attr-inv-obj-pstunit_tooltip},{&attr-inv-obj-izlcstpr_tooltip},{&attr-inv-obj-nominus_tooltip}
 &scop level-way-attr-inv-obj "obj,host,global"
 &scop up-way-attr-inv-obj "inv-obj,inv-obj,inv-obj"
 
