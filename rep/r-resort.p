@@ -58,7 +58,7 @@ define variable itog-sum-cost-in  as decimal   no-undo .
 define variable itog-sum-cost-out as decimal   no-undo .
 define variable fact-qnty-in   as decimal   no-undo .
 define variable fact-qnty-out  as decimal   no-undo .
-define variable t_inv-date     as date      no-undo .
+define variable t_inv-date     as date     no-undo .
 define variable j_LineCount    as integer   no-undo .
 define variable word-sum-total as character no-undo .
 define variable word-sum-temp1 as character no-undo .
@@ -69,7 +69,8 @@ define variable word-sum-buf-3 as character no-undo .
 define variable v-stroka       as integer   no-undo .
 define variable v-stroka-out   as integer   no-undo .
 define variable v-sum-sale-in  as decimal   no-undo .
-
+define variable v-doc-date     as character no-undo .
+define variable v-inv-date     as character no-undo .  
 define buffer bf_trn-doc    for ub.trn-doc    .
 define buffer bf_doc-line   for ub.doc-line   .
 define buffer bf_goods-in   for ub.goods      .
@@ -109,6 +110,7 @@ define temp-table tt-resort-in no-undo
 
 { gbl/std-func.i {&f-l} }
 
+   
 function CenterLine returns character ( input p-in-string as character
                                       , input p-rep-width as integer ) :
   define variable v-out-string as character no-undo .
@@ -228,6 +230,15 @@ on error undo, return error return-value
   .
 
   run r-resort-init            in this-procedure .
+  
+      v-doc-date =     string( entry(2,string(bf_trn-doc.doc-date),"/") + "/" + 
+    entry(1,string(bf_trn-doc.doc-date),"/") + "/" + 
+    entry(3,string(bf_trn-doc.doc-date),"/"))
+    . 
+      v-inv-date =     string( entry(2,string(t_inv-date),"/") + "/" + 
+    entry(1,string(t_inv-date),"/") + "/" + 
+    entry(3,string(t_inv-date),"/"))
+    . 
   run r-resort-write-cell-data in this-procedure
     ( input {&r-resort-h_OwnFirm}
     , input trim( v-host-name )
@@ -246,11 +257,11 @@ on error undo, return error return-value
     ) .
   run r-resort-write-cell-data in this-procedure
     ( input {&r-resort-h_DocDate}
-    , input string( bf_trn-doc.doc-date, "99/99/9999":U )
+    , input string( v-doc-date )
     ) .
   run r-resort-write-cell-data in this-procedure
     ( input {&r-resort-h_DocFact}
-    , input string( t_inv-date, "99/99/9999":U )
+    , input string( v-inv-date )
     ) .
   run r-resort-write-cell-data in this-procedure
     ( input {&r-resort-h_PostScr}
