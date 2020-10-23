@@ -58,7 +58,8 @@ if (old-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
   or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
   or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
-  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB)
 then do:
   ub.marking.sts = old-marking.sts.
 end.
