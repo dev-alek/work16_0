@@ -1603,7 +1603,7 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                 case bf_utd-marking-lines.sts:
                     when Marking:Checked_:KeyIntDB then 
                         do:
-                            if buf_marking.sts <> Marking:MarkError:KeyIntDB then
+                            if buf_marking.sts <> Marking:MarkError:KeyIntDB and buf_marking.sts <> Marking:Ungrouped:KeyIntDB then
                                 buf_marking.sts = Marking:Checked_:KeyIntDB .
                         end.
                     when Marking:MarkError:KeyIntDB then 
