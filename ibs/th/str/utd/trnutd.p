@@ -183,7 +183,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
 p-ok-doc = 0 .
 
-for each  temp_trn-doc :
+find first  temp_trn-doc no-lock .
   run clear-tt .
   find first bufo_clients no-lock where
              bufo_clients.obj-type  = temp_trn-doc.obj-type  and
@@ -529,7 +529,7 @@ assign
                undo, return error v-end-message.
       end.
     end.
-
+do trans :
     { str/crtrndoc.i
       tt-trn-doc.acc-date
       tt-trn-doc.bge-date
@@ -1233,19 +1233,18 @@ end.
                   + {&tabulation} + "Документ:" + string(new_trn-doc.doc-code) + " / " + string(temp_trn-doc.doc-code) + {&tabulation} + string( k ) + " товаров"
                     .
     run pcall-log-file in p-log-handle (input v-end-message) .
-     
+    release new_trn-doc.
+end .     
+
     p-ok-doc = p-ok-doc + 1.
-    def var v-gnews as logical no-undo.
-    v-gnews = g#news.
-    g#news = false.
+    find first new_trn-doc where new_trn-doc.doc-code = n-d.
     run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-    
+        
     if error-status:error
       then p-msg  = "Ошибка закрытия на факт: " + replace (replace (return-value, {&new-line}, " "), '"', "'").
       else p-msg  = "Накладная закрыта на факт.".
-    g#news = v-gnews.
 
-end.
+/*end.*/
 end.
 
 
@@ -1399,25 +1398,41 @@ define variable varcopyflag        like ub.trn-doc.flag     no-undo.
 define variable varcheck-return as logical no-undo .
 define variable varchg-inv as logical no-undo .
 
-run str/trn-stat.p (
-    input  parparentproc ,
-    input  this-procedure ,
-    input  {&close-fact} ,
-    input  p-trn-code,
-    input  false /* проверка старого возврата */ ,
-    input  v-cntxt-db-num,
-    input  false /* проверка переоценки */,
-    input  v-cntxt-rsrv-time,
-    input  v-cntxt-load-time,
-    input  v-cntxt-holidays,
-    input  false ,
-    output varchg-inv ,
-    output table gds-list)
-    no-error.
+  if g#news
+  then do:
+    { str/tdat-wrt.i
+      p-trn-code
+      {&trdcattr-is-not-close-fact-news}
+      "yes"
+      no-error
+    }
+  end.
+
+  run str/trn-stat.p (
+      input  parparentproc ,
+      input  this-procedure ,
+      input  {&close-fact} ,
+      input  p-trn-code,
+      input  false /* проверка старого возврата */ ,
+      input  v-cntxt-db-num,
+      input  false /* проверка переоценки */,
+      input  v-cntxt-rsrv-time,
+      input  v-cntxt-load-time,
+      input  v-cntxt-holidays,
+      input  false ,
+      output varchg-inv ,
+      output table gds-list)
+      no-error.
     if error-status:error
-    then do: 
-      return error return-value.
+    then do:
+      find first ub.doc-attr where ub.doc-attr.doc-code = new_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-is-not-close-fact-news} no-error.
+      if available (ub.doc-attr)
+        then delete ub.doc-attr.       
+      undo, return error return-value.
     end.
+    find first ub.doc-attr where ub.doc-attr.doc-code = new_trn-doc.doc-code and ub.doc-attr.attr-code = {&trdcattr-is-not-close-fact-news} no-error.
+    if available (ub.doc-attr)
+      then delete ub.doc-attr.
   end.
 end procedure. /* clos-trn2 */
 

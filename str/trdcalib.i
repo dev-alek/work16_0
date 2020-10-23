@@ -1444,6 +1444,19 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-inv-introduce false
 &glob sort-trdcattr-inv-introduce 100
 
+/* Признак, что документ созан по УТД и должен в новостях обрабатываться на закрытия без учета, что это новости */
+&glob fillin_width-trdcattr-is-not-close-fact-news 3
+&glob fillin_height-trdcattr-is-not-close-fact-news 1
+&glob type-trdcattr-is-not-close-fact-news {&type-log}
+&glob format-trdcattr-is-not-close-fact-news "yes/no"
+&glob label-trdcattr-is-not-close-fact-news ""
+&glob tooltip-trdcattr-is-not-close-fact-news ""
+&glob user-can-edit-trdcattr-is-not-close-fact-news false
+&glob output-display-trdcattr-is-not-close-fact-news true
+&glob other-trdcattr-is-not-close-fact-news '':u
+&glob news-trdcattr-is-not-close-fact-news true
+&glob sort-trdcattr-is-not-close-fact-news 100
+
 &if "{1}" = "class" &then
 &else
 define new global shared variable g#trdcalib as handle no-undo.
