@@ -68,31 +68,31 @@ define variable vss-description as character no-undo init "Проверка кодов маркир
 
 /* Local Variable Definitions ---                                       */
 
-define variable log-res-statch   as log       no-undo.
-define variable rr               as recid     no-undo.
-define variable v_type           as char      no-undo.
-define variable v-is-deploy      as logical   no-undo .
-define variable v-rid-list       as character no-undo .
-define variable v-db-list        as character no-undo .
-define variable v-comment        as character no-undo .
-define variable gds-rec          as integer   no-undo .
-define variable recid_utd        as integer   no-undo . 
-define variable v-GTIN           as character no-undo .
-define variable v-gds-code       as integer   no-undo .
-define variable type_mark        as integer   no-undo .
-define variable iLang            as integer   no-undo .
-define variable Tree             as class     tree no-undo .
+define variable log-res-statch as log       no-undo.
+define variable rr             as recid     no-undo.
+define variable v_type         as char      no-undo.
+define variable v-is-deploy    as logical   no-undo .
+define variable v-rid-list     as character no-undo .
+define variable v-db-list      as character no-undo .
+define variable v-comment      as character no-undo .
+define variable gds-rec        as integer   no-undo .
+define variable recid_utd      as integer   no-undo . 
+define variable v-GTIN         as character no-undo .
+define variable v-gds-code     as integer   no-undo .
+define variable type_mark      as integer   no-undo .
+define variable iLang          as integer   no-undo .
+define variable Tree           as class     tree no-undo .
 
 /*define variable Check_      as class     check_ no-undo .*/
-define variable ungroup          as logical   no-undo .
+define variable ungroup        as logical   no-undo .
 
-define variable line-num-error   as integer   no-undo .
-define variable qnty-gray        as integer   no-undo .
-define variable qnty-check       as integer   no-undo .
-define variable v-pred-status    as integer   no-undo .
-define variable v-obj-active     as logical   no-undo .
+define variable line-num-error as integer   no-undo .
+define variable qnty-gray      as integer   no-undo .
+define variable qnty-check     as integer   no-undo .
+define variable v-pred-status  as integer   no-undo .
+define variable v-obj-active   as logical   no-undo .
 
-define variable mRecKey-line as character no-undo.
+define variable mRecKey-line   as character no-undo.
 define buffer buf_clients           for ub.clients .
 define buffer X_utd-lines           for tt-utd-lines .
 define buffer buf_utd               for ub.utd .
@@ -917,7 +917,8 @@ ON leave, return OF a-n-c-name IN FRAME d-utd
              end.
           when "name" then 
              do:
-                find first X_utd-lines where X_utd-lines.ProductCode begins a-n-c-name no-error .
+                find first X_utd-lines where (X_utd-lines.ProductCode begins a-n-c-name or X_utd-lines.gds-name begins a-n-c-name) no-error .
+                
                 if available (X_utd-lines) then do:
                    recid_utd = recid (X_utd-lines) .
                 br-utd :refresh() no-error.
@@ -926,7 +927,7 @@ ON leave, return OF a-n-c-name IN FRAME d-utd
              end.
           when "context" then 
              do:
-                find first X_utd-lines where X_utd-lines.ProductCode MATCHES "*" + a-n-c-name + "*" no-error .
+                find first X_utd-lines where (X_utd-lines.ProductCode MATCHES "*" + a-n-c-name + "*" or X_utd-lines.gds-name MATCHES "*" + a-n-c-name + "*") no-error .
                 if available (X_utd-lines) then do:
                    recid_utd = recid (X_utd-lines) .
                 br-utd :refresh() no-error.
@@ -1163,8 +1164,8 @@ ON VALUE-CHANGED OF br-utd IN FRAME d-utd
     DO:
 
         f-info = "" .
-        define variable vRecKey as character no-undo.
-        define variable vRecKey-line as character no-undo.
+        define variable vRecKey          as character no-undo.
+        define variable vRecKey-line     as character no-undo.
         define variable vRecKey-markLine as character no-undo.
         if available (X_utd-lines) and available (buf_utd) then 
         do:
@@ -1186,9 +1187,10 @@ ON VALUE-CHANGED OF br-utd IN FRAME d-utd
 
                 /*        menu-item m_error-lines:sensitive in menu m_error = yes.*/
                 if f-info = "" then f-info = GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line} no-error.
-                else do:
+                else 
+                do:
                     if length (f-info) >= 2000 then leave .
-                f-info = f-info + GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line} no-error.
+                    f-info = f-info + GetTextError(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj) + {&new-line} no-error.
                 end.
 
             end.
@@ -1602,7 +1604,7 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                 case bf_utd-marking-lines.sts:
                     when Marking:Checked_:KeyIntDB then 
                         do:
-                            if buf_marking.sts <> Marking:MarkError:KeyIntDB then
+                            if buf_marking.sts <> Marking:MarkError:KeyIntDB and buf_marking.sts <> Marking:Ungrouped:KeyIntDB then
                                 buf_marking.sts = Marking:Checked_:KeyIntDB .
                         end.
                     when Marking:MarkError:KeyIntDB then 
@@ -2372,7 +2374,7 @@ ON CHOOSE OF r-supp-TH IN FRAME d-utd
         display f-supp-type-TH f-supp-code-TH f-supp-name-TH with frame {&frame-name} .
         if c-type <> objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
             disable r-supp-TH with frame {&frame-name} .
-            run enable_BUTTON .
+        run enable_BUTTON .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2905,8 +2907,8 @@ PROCEDURE enable_BUTTON :
     define variable v-write-cancel as logical no-undo .
     v-write-cancel = false .
   
-    for each cancel_utd-marking-lines where cancel_utd-marking-lines.doc-id = p-doc-id and cancel_utd-marking-lines.db-num = p-db-num, 
-        first cancel_marking where cancel_marking.mark = cancel_utd-marking-lines.mark and (cancel_marking.sts = Marking:PendingVerification:KeyIntDB or cancel_marking.sts = Marking:DeliveryControl:KeyIntDB): 
+    for each cancel_utd-marking-lines no-lock where cancel_utd-marking-lines.doc-id = p-doc-id and cancel_utd-marking-lines.db-num = p-db-num, 
+        first cancel_marking no-lock where cancel_marking.mark = cancel_utd-marking-lines.mark and (cancel_marking.sts = Marking:PendingVerification:KeyIntDB or cancel_marking.sts = Marking:DeliveryControl:KeyIntDB): 
         v-write-cancel = true .
         leave .
     end.
@@ -3254,7 +3256,7 @@ PROCEDURE enable_UI :
                         with frame {&frame-name} .
                 end.  
                 if p-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then
-                menu-item m_check-akt:sensitive in menu POPUP-MENU-b-servis = no.
+                    menu-item m_check-akt:sensitive in menu POPUP-MENU-b-servis = no.
             end.
         when {&lookup} then 
             do:
@@ -4081,10 +4083,11 @@ PROCEDURE save_mark :
     define buffer gray_utd-marking-lines      for ub.utd-marking-lines .
     define buffer gray_unit_utd-marking-lines for ub.utd-marking-lines .
     define buffer buf_utd-lines-attr          for ub.utd-lines-attr .
-    define VARIABLE v-qnty     as decimal   no-undo .
-    define VARIABLE v-rowid    as rowid     no-undo .
-    define VARIABLE v-tbl-name as character no-undo .
-    
+    define buffer un_utd-marking-lines        for ub.utd-marking-lines .
+    define VARIABLE v-qnty       as decimal   no-undo .
+    define VARIABLE v-rowid      as rowid     no-undo .
+    define VARIABLE v-tbl-name   as character no-undo .
+    define variable v-ungroup_ok as logical   no-undo .
     if p-mode = {&lookup} then 
     do:
         v-mark:screen-value in frame {&frame-name} = "" .
@@ -4245,14 +4248,15 @@ PROCEDURE save_mark :
                     do:
                         if buf_utd-marking-lines.doc-level > 1 then 
                         do:
-                            /*                            if can-find (ub.marking where ub.marking.mark = buf_utd-marking-lines.mark and ub.marking.unit-ext <> "UNIT") then*/
-                            /*                            do:                                                                                                               */
-                            /*            if tree:LevelUpUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:*/
+                            /*Разгруппировка блока*/
                             find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark no-error .
                             if available (buf_marking) then 
                             do:
-                                if can-find (ub.marking where ub.marking.mark = buf_marking.mark-parent and ub.marking.sts <> Marking:GrayZone:KeyIntDB) then 
+                                /*смотрим входит ли марка в состав блока со статусом Серая зона или Разгруппирован*/
+                                find first ub.marking exclusive-lock where ub.marking.mark = buf_marking.mark-parent and ub.marking.sts <> Marking:GrayZone:KeyIntDB and ub.marking.sts <> Marking:Ungrouped:KeyIntDB no-error .
+                                if available (ub.marking) then 
                                 do:
+                                    /*Не входит*/
                                     message "Разгруппировать упаковки?"
                                         view-as alert-box question buttons yes-no update ungroup.
                                     if ungroup then 
@@ -4262,7 +4266,11 @@ PROCEDURE save_mark :
                                             message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
                                                 view-as alert-box.
                                         end.
-                                    end.
+                                        /*Проставили статус у блока*/              
+
+                                        buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB .
+                           
+                                    end. /*if ungroup then*/
                                     else 
                                     do:
                                         F-text = "                            Просканируйте марку" .
@@ -4271,46 +4279,76 @@ PROCEDURE save_mark :
                                         v-mark = "" .
                                         return no-apply.
                                     end.
-                                end.
+                                end. /*find first ub.marking exclusive-lock where ub.marking.mark = buf_marking.mark-parent and ub.marking.sts <> Marking:GrayZone:KeyIntDB and ub.marking.sts <> Marking:Ungrouped:KeyIntDB no-error .*/
                                 else
                                 do:
-                                    message " Марка входит в состав упаковки c серой зоной, разгруппировать упаковки?"
-                                        view-as alert-box question buttons yes-no update ungroup.
-                                    if ungroup then 
+                                    /*Блок имеет статус Серая зона или Разгруппирован*/
+                                    if can-find (first ub.marking where ub.marking.mark = buf_marking.mark-parent and ub.marking.sts = Marking:GrayZone:KeyIntDB) then 
                                     do:
-                                        if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                                        /*Если серая зона*/                                    
+                                        message " Марка входит в состав упаковки c серой зоной, разгруппировать упаковки?"
+                                            view-as alert-box question buttons yes-no update ungroup.
+                                        if ungroup then 
                                         do:
-                                            message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
-                                                view-as alert-box.
-                                        end.
+                                            if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                                            do:
+                                                message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
+                                                    view-as alert-box.
+                                            end.
                                         
-                                    end.
-                                    /*                                F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .*/
-                                    /*                                display F-text with frame {&frame-name}.                                             */
-                                    /*                                v-mark:screen-value = "" .                                                           */
-                                    /*                                v-mark = "" .                                                                        */
-                                    /*                                return no-apply.                                                                     */
+                                        end. /*if ungroup then */
+                                        /*                                F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .*/
+                                        /*                                display F-text with frame {&frame-name}.                                             */
+                                        /*                                v-mark:screen-value = "" .                                                           */
+                                        /*                                v-mark = "" .                                                                        */
+                                        /*                                return no-apply.                                                                     */
 
+                                        else 
+                                        do:
+                                            F-text = "                            Просканируйте марку" .
+                                            display F-text with frame {&frame-name} .
+                                            v-mark:screen-value = "" .
+                                            v-mark = "" .
+                                            return no-apply.
+                                        end.
+                                    end. /*if can-find (first ub.marking where ub.marking.mark = buf_marking.mark-parent and ub.marking.sts = Marking:GrayZone:KeyIntDB) then 
+                                        do:*/
                                     else 
                                     do:
-                                        F-text = "                            Просканируйте марку" .
-                                        display F-text with frame {&frame-name} .
-                                        v-mark:screen-value = "" .
-                                        v-mark = "" .
-                                        return no-apply.
-                                    end.
-                                end.
+                                        /*Если Разгруппирован*/
+                                        find first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num and
+                                            bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id no-error .
+                                        if available (bf_utd-marking-lines) then 
+                                        do:
+                                            bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .
+                                            find first un_utd-marking-lines exclusive-lock where un_utd-marking-lines.mark = buf_marking.mark-parent no-error .
+                                            if available (un_utd-marking-lines) then 
+                                            do:
+                                                
+                                                for each ub.marking no-lock where ub.marking.mark-parent = un_utd-marking-lines.mark,
+                                                    first ub.utd-marking-lines exclusive-lock where ub.utd-marking-lines.mark = ub.marking.mark and
+                                                    ub.utd-marking-lines.sts = Marking:PendingVerification:KeyIntDB:
+                                                    v-ungroup_ok = true .                                                 
+                                                end.
+                                                if v-ungroup_ok = no then un_utd-marking-lines.sts = Marking:Checked_:KeyIntDB .
+                                            end.      
+                                        end.    /*if available (un_utd-marking-lines) then*/                                  
+                                    end.    /* find first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num and*/        
+                                end. /*else find first ub.marking exclusive-lock where ub.marking.mark = buf_marking.mark-parent and ub.marking.sts <> Marking:GrayZone:KeyIntDB and ub.marking.sts <> Marking:Ungrouped:KeyIntDB no-error .*/
+                            end. /*find first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark no-error .*/
+                        end. /*if buf_utd-marking-lines.doc-level > 1 then*/
+                        else 
+                        do:
+                            if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                            do:
+                                tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
+                            end.
+                            for first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num and
+                                bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id:
+                                bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .  
+                                X_utd-lines.qnty-scan     = X_utd-lines.qnty-scan + 1  .
                             end.
                         end.
-                    end.  
-                    if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
-                    do:
-                        tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
-                    end.
-                    for first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num and
-                        bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id:
-                        bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .  
-                        X_utd-lines.qnty-scan     = X_utd-lines.qnty-scan + 1  .
                     end.  
                 /*            if available (gray_marking) then do:                                               */
                 /*              gray_marking.box-qnty = gray_marking.box-qnty - 1 .                              */
@@ -4323,6 +4361,7 @@ PROCEDURE save_mark :
                 end.
                 /*          end.*/
                 run mark-temp .
+
                 find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
                     and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
 /*                    and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB*/
@@ -4331,7 +4370,6 @@ PROCEDURE save_mark :
                 do:
                     find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum no-error .
                     if available (X_utd-lines) then
-          
                         recid_utd = recid (X_utd-lines) .
                 end.
                 else 

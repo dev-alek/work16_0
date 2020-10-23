@@ -108,7 +108,7 @@ define variable v-bge-incr-last-shift-date as character no-undo.
 define variable v-bge-incr-last-shift-num as character no-undo.
 define variable v-type as character no-undo.
 define variable loc#in-ov as logical no-undo.
-
+define variable v-not-close-news as logical no-undo .
 /* дата документа или дата фактического закрытия документа
    при закрытии по факту
  */
@@ -399,7 +399,7 @@ end.
   end.
 
   /* обновляем пользователя, дату и время последнего обновления */
-  if not g#news
+  if not g#news or v-not-close-news
   then do:
     { gbl/curdburt.i
       ub.trn-doc.user-db-num
@@ -688,7 +688,7 @@ end.
       end.
     end.
 
-    if not g#news
+    if not g#news or v-not-close-news
     then do:
       if ub.trn-doc.fact-num > 0
       then do:
@@ -983,7 +983,7 @@ end.
     undo main-block, return error return-value .
   end.
 
-  if not g#news
+  if not g#news or v-not-close-news
   then do:
     /* инициализируем признак того, что была автоматическая переоценка */
     assign
@@ -3590,7 +3590,7 @@ procedure process-line :
             buf_goods.gds-code
             ub.trn-doc.hold-obj-type
             ub.trn-doc.hold-obj-code
-            "if g#news then false else true"
+            "if (g#news and not v-not-close-news) then false else true"
             var-ok-assort-pol
             var-mess-assort-pol
           }
@@ -3635,7 +3635,7 @@ procedure process-line :
           buf_goods.gds-code
           ub.trn-doc.obj-type
           ub.trn-doc.obj-code
-          "if g#news then false else true"
+          "if (g#news and not v-not-close-news) then false else true"
           var-ok-assort-pol
           var-mess-assort-pol
         }
@@ -3866,7 +3866,7 @@ procedure process-line :
             buf_doc-line.transport-base buf_doc-line.transport-rubl
             buf_doc-line.other-base buf_doc-line.other-rubl
         */
-        if not g#news
+        if not g#news and not v-not-close-news
         then do:
           if  ub.trn-doc.ext-doc-type <> {&TDEDT_Pri_Vnesh}
           and ub.trn-doc.ext-doc-type <> {&TDEDT_Pri_Prvo}
@@ -3910,7 +3910,7 @@ procedure process-line :
         .
 
         /* Расчет текущих продажных цен */
-        if not g#news
+        if not g#news and not v-not-close-news
         then do:
           /* определяется текущая продажная цена признака */
           define variable v-prt-b-code like ub.bar-code.b-code no-undo .

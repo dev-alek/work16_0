@@ -355,6 +355,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       g#db-num
     }
   g#language = 'RUS'.
+  run gbl/get-gbl.p no-error.
+  if error-status:error
+  then do:
+    message "Ошибка получения глобальный переменных." view-as alert-box.
+    return error.
+  end. 
   IF NOT THIS-PROCEDURE:PERSISTENT THEN
     WAIT-FOR CLOSE OF THIS-PROCEDURE.
 END.

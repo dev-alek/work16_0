@@ -40,6 +40,7 @@ define input  parameter parmxpcdcp-dec     as   decimal             no-undo.
 define input  parameter parmxsmicp-dec     as   decimal             no-undo.
 define input  parameter parmxsmdcp-dec     as   decimal             no-undo.
 define input  parameter pargrp-is-eq       as   logical             no-undo.
+define input  parameter parpstunit         as   logical             no-undo.
 define output parameter parrec-minus-line  as   recid               no-undo.
 define output parameter parrec-plus-line   as   recid               no-undo.
 define output parameter paradd             as   logical initial no  no-undo.
@@ -132,6 +133,7 @@ run str/prst-gds.w (input  parparentproc,
                 input  ?,
                 input  ?,
                 input  parpstunqtn-log,
+                input  parpstunit,
                 input  parmxpcicp-dec,
                 input  parmxpcdcp-dec,
                 input  parmxsmicp-dec,
