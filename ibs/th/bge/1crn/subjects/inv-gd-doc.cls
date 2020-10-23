@@ -223,6 +223,9 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         write-data-element ("sum-eu", string-mth (round ( fncwastage( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-b-s", string-mth (round (fncbefore-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
         write-data-element ("sum-a-s", string-mth (round (fncafter-rubl( buffer buf_doc-line, buffer buf_gds ), 2))).
+        define variable vqnty as decimal no-undo.
+        run str/getost.p (buf_doc-line.obj-type,buf_doc-line.obj-code,buf_gds.gds-code, buf_doc-line.doc-code, output vqnty ).
+        write-data-element ("qnty-delta",string(round (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty - vqnty, 3))). 
         if can-find (first bf_gen-attr no-lock where bf_gen-attr.table-name = "inv-doc-mark" and bf_gen-attr.attr-code = buf_trn-doc.doc-code
           and bf_gen-attr.attr-value = string(buf_gds.gds-code) and not bf_gen-attr.p-key begins {&tech-mark-prefix})
         then do:
