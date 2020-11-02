@@ -269,6 +269,7 @@ for each thbjattr_thbj-attr :
   if thbjattr_thbj-attr.prop-code = 'shft-qty'  then v-param_shft-qty = thbjattr_thbj-attr.property-value-character .
   if thbjattr_thbj-attr.prop-code = 'prt-z-no'  then v-param_prt-z-no = string(thbjattr_thbj-attr.property-value-logical) .
 end.
+if v-param_shft-qty = "" then v-param_shft-qty = "system" .
 define temp-table temp-shift-obj no-undo like ub.shift-obj
     FIELD num as integer
     INDEX ii IS UNIQUE num
