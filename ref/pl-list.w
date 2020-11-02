@@ -140,7 +140,7 @@ define temp-table tt-place-attr
 &Scoped-define ENABLED-TABLES X_place
 &Scoped-define FIRST-ENABLED-TABLE X_place
 &Scoped-Define ENABLED-OBJECTS b-quit B-mark b-sel b-add b-chg b-del b-rest ~
-b-level b-print B-hist B-sch b-help br-pl mark-num
+b-level b-print B-hist B-sch b-help br-pl mark-num b-ATD
 &Scoped-Define DISPLAYED-FIELDS X_place.PS
 &Scoped-define DISPLAYED-TABLES X_place
 &Scoped-define FIRST-DISPLAYED-TABLE X_place
@@ -159,6 +159,14 @@ b-level b-print B-hist B-sch b-help br-pl mark-num
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
+DEFINE MENU MENU-B-ATD 
+       MENU-ITEM m_obj-sched LABEL "Управление расписанием сообщений"      
+       MENU-ITEM m_pl-alarm  LABEL "Отключение повторных сообщений"     .
+
+DEFINE BUTTON b-ATD
+     LABEL "&АТД"
+     SIZE 7 BY 1.
+     
 DEFINE BUTTON b-add
   LABEL "&Добавить"
   SIZE 10 BY 1.
@@ -273,6 +281,7 @@ DEFINE FRAME d-pl-list
   b-del AT ROW 1 COL 49
   b-rest AT ROW 1 COL 59
   b-level AT ROW 1 COL 69 WIDGET-ID 2
+  b-ATD at row 1 col 79
   b-print AT ROW 1 COL 86
   B-hist AT ROW 1 COL 89
   B-sch AT ROW 1 COL 92
@@ -311,7 +320,10 @@ DEFINE FRAME d-pl-list
 /* BROWSE-TAB br-pl b-help d-pl-list */
 ASSIGN
   FRAME d-pl-list:SCROLLABLE = FALSE.
-
+ASSIGN 
+       b-ATD:POPUP-MENU IN FRAME d-pl-list       = MENU MENU-B-ATD:HANDLE
+       b-ATD:menu-mouse = 1
+.
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -819,6 +831,80 @@ ON CHOOSE OF b-sel IN FRAME d-pl-list /* Выбор  */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME m_obj-sched
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_obj-sched d-pl-list
+ON CHOOSE OF menu-item m_obj-sched in menu menu-b-atd /* - */
+DO:
+  define variable varlog as logical no-undo .
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_atd-obj-sched':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    varlog
+  }
+  
+  if varlog <> yes then return no-apply .
+  
+  run ref/atd-obj-sched.w (input parparentproc,
+                           input p-obj-type,
+                           input p-obj-code)
+                           .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_pl-alarm
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_pl-alarm d-pl-list
+ON CHOOSE OF menu-item m_pl-alarm in menu menu-b-atd /* - */
+DO:
+  define variable v-pl-rowid as rowid no-undo .
+  define variable varlog as logical no-undo .
+  
+  if not AVAILABLE X_place then 
+  do:
+    message "Неправильно выбрана строка." view-as alert-box .
+    return no-apply.
+  end.
+  
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_atd-obj-sched':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    varlog
+  }
+  
+  if varlog <> yes then return no-apply .
+  
+  v-pl-rowid = rowid (X_place).
+  
+  run ref/atd-pl-alarm.w (input parparentproc,
+                          input p-obj-type,
+                          input p-obj-code,
+                          input v-pl-rowid)
+                          .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define BROWSE-NAME br-pl
 &Scoped-define SELF-NAME br-pl
@@ -1008,6 +1094,7 @@ PROCEDURE enable_UI :
     when can-do ("b-add", bttns)
     b-del 
     when can-do ("b-add", bttns)
+    b-ATD
     b-level 
     when can-do ("b-add", bttns)
     b-sch

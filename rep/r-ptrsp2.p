@@ -554,7 +554,7 @@ if varnozzle-code = ? then varnozzle-code = 0.
           tt_line.chk-date    = chk-doc.chk-date
           tt_line.chk-time    = chk-doc.chk-time
           tt_line.chk-code    = chk-doc.doc-code
-          tt_line.chk-num     = string(chk-doc.chk-num) + ":" + STRING (chk-doc.z-number)
+          tt_line.chk-num     = string(chk-doc.chk-num) + ":" + (if chk-doc.z-number <> ? then string(chk-doc.z-number) else "")
           tt_line.pass-gds    = if bf_chk-gds.pass-gds = 1 then "+" else "-"
           tt_line.doc-num2    = if chk-doc.doc-num2 <> ? then chk-doc.doc-num2 else " "
         .

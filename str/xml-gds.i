@@ -34,6 +34,7 @@ define variable v-IBCType as integer no-undo .
 define variable v-mark  as logical no-undo initial no.
 define variable v-cli-base  as character initial "".
 define variable v-i-cli     as integer no-undo .
+define variable v-dop-alt-name as character no-undo.
 
 define buffer buf_prod-bc-attr for ub.prod-bc-attr .
 define buffer buf_prod-bc for ub.prod-bc .
@@ -78,7 +79,15 @@ end.
 
 &if "{1}" <> "7" &then
 if action = "U":U then do:
-  run bgelib-tag-put in this-procedure ( input 3, input "ItemName"       , input trim(chk_name, {&space-char}), input 1 ).
+
+    for first ub.gds-obj-attr no-lock where ub.gds-obj-attr.attr-code = "dop-alt-name-o"
+                                                   and ub.gds-obj-attr.gds-code = cash-gds.gds-code
+                                                   and ub.gds-obj-attr.obj-code = cash-gds.obj-code
+                                                   and ub.gds-obj-attr.obj-type = cash-gds.obj-type :
+        v-dop-alt-name = ub.gds-obj-attr.attr-value .
+    end.                                                       
+                      
+  run bgelib-tag-put in this-procedure ( input 3, input "ItemName"       , input string(trim(chk_name, {&space-char}) + v-dop-alt-name), input 1 ).
   run bgelib-tag-put in this-procedure ( input 3, input "ItemAltName"    , input trim(second-name, {&double-quote}), input 1 ).
   run bgelib-tag-put in this-procedure ( input 3, input "ItemMainPrice"  , input string( cash-gds.price-sale ), input 1 ).
   run bgelib-tag-put in this-procedure ( input 3, input "ItemMasterCode"  , input string( cash-gds.gds-code), input 1 ).
@@ -102,8 +111,8 @@ if action = "U":U then do:
 	end.
   if pos-type = {&cd-type-infokiosk} then do:
     find first bb_goods no-lock where bb_goods.gds-code = cash-gds.gds-code.
- 
-    run bgelib-tag-put in this-procedure ( input 3, input "ItemNameLong"  , input string( bb_goods.gds-name ), input 1 ).
+                      
+    run bgelib-tag-put in this-procedure ( input 3, input "ItemNameLong"  , input string( bb_goods.gds-name), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemDetails"    , input string( bb_goods.Ps ), input 1 ).
 
     run bgelib-tag-put in this-procedure ( input 3, input "ItemPhoto"    , input string( entry(1,vVal)), input 1 ).
@@ -236,6 +245,14 @@ end.
       run bgelib-tag-put in this-procedure ( input 3, input "ISEgaisNoPDF", input 1, input 1 ).
     end.  
   end.  
+  
+  find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
+                              and buf_goods-attr.attr-code = "time-coock" 
+                              and buf_goods-attr.attr-value = "yes" no-lock no-error. 
+  if available buf_goods-attr then do:   
+      run bgelib-tag-put in this-procedure ( input 3, input "ISCookStumped", input 1, input 1 ).
+  end.  
+  
       run bgelib-tag-close in this-procedure ( input 3, input "ItemStatus").
   end. /*не инфокиоск*/
 

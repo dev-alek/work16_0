@@ -5,6 +5,6 @@ ver |>NUL find /v "5." && if "%~1"=="" (
   cscript.exe //nologo "%~dp0Elevating.vbs" "%~f0"& goto :eof
 )
 echo remove
-agentasm.exe remove
+agentasm86.exe remove
 echo completed
 pause

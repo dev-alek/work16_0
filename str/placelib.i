@@ -19,6 +19,7 @@ Creation date: 12/22/11
 &global-define place-SI           "place-SI"                    /*средство измерения*/
 &global-define place-diameter     "place-diameter"        /*диаметр резервуара(мм)*/
 &global-define dead-balance       "dead-balance"        /*мертвый остаток*/
+&global-define water-level        "water-level"        /*Допустимый уровень воды(мм)*/
 &global-define place-ratio-error  "place-ratio-error"  /*относительная погрешность составления калибровочной таблицы резервуара*/
 &global-define place-dens-prov    "dens-prov"         /*плотность при поверке резервуара*/
 &global-define place-virtual      "place-virtual"     /*виртуальный резервуар*/
@@ -30,8 +31,10 @@ Creation date: 12/22/11
 &global-define place-rvd-dnsty    "place-rvd-dnsty" /*РВД плотности*/
 &global-define place-rvd-lvl      "place-rvd-lvl" /*РВД уровня*/
 &global-define place-rvd-tmp      "place-rvd-tmp" /*РВД температуры*/
+&global-define disable-water-alarm   "disable-water-alarm" /*Отключить сообщения по воде*/
+&global-define disable-level-alarm   "disable-level-alarm" /*Отключить сообщения по уровню*/
 
-&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp':u /*список атрибутов резервуара*/
+&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,place-ratio-error,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,disable-water-alarm,disable-level-alarm':u /*список атрибутов резервуара*/
 
 
 procedure placelib_write-attr:

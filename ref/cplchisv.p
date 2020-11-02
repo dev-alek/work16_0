@@ -44,7 +44,7 @@ define variable ii as integer no-undo.
 define variable v-mess as character no-undo .
 
 define buffer buf_c-plc-hist for ub.c-plc-hist.
-
+&Glob VisibleKeyField yes
 { ref/tmpchgs.i "SHARED" " " "with-action" }
 
 
@@ -108,7 +108,7 @@ define buffer curr_c-place for ub.c-place  .
       run err-mess in this-procedure ( input-output v-mess).
       return error v-mess.
     end.
-&scop fields-name-list  "add-qnty,is-meas,loc1,loc2,loc3,loc4,max-qnty,obj-code,obj-type,pl-code,pl-name,PS,status_"
+&scop fields-name-list  "add-qnty,is-meas,loc1,loc2,loc3,loc4,max-qnty,pl-name,PS,status_"
 
 define variable v-label-param as character no-undo .
 
@@ -163,7 +163,7 @@ define buffer curr_c-pl-gds for ub.c-pl-gds  .
       return error v-mess.
     end.
 
-&scop fields-name-list  "tolerance,max-qnty,obj-code,obj-type,pl-code,PS,status_"
+&scop fields-name-list  "tolerance,max-qnty,PS,status_"
 
 define variable v-label-param as character no-undo .
 
@@ -212,7 +212,7 @@ define buffer curr_c-pl-gds-pump for ub.c-pl-gds-pump  .
       run err-mess in this-procedure ( input-output v-mess).
       return error v-mess.
     end.
-&scop fields-name-list  "pump-code,gds-code,obj-code,obj-type,pl-code,PS,status_"
+&scop fields-name-list  "pump-code,gds-code,PS,status_"
 
 define variable v-label-param as character no-undo .
 
@@ -309,9 +309,6 @@ define variable v-label-param as character no-undo .
 
 v-label-param =
   "pump-code" + {&delim-par} + "№ ТРК" + {&delim-par} + "" + {&delim-flf}
- + "obj-code" + {&delim-par} + "Код объекта" + {&delim-par} + "" + {&delim-flf}
- + "obj-type" + {&delim-par} + "Тип объекта" + {&delim-par} + "" + {&delim-flf}
- + "pl-code" + {&delim-par} + "Код складского места" + {&delim-par} + "" + {&delim-flf}
  + "PS" + {&delim-par} + "Примечание" + {&delim-par} + "" + {&delim-flf}
  + "status_" + {&delim-par} + "Статус" + {&delim-par} + ""  .
  run proc-full-temp-changes in this-procedure (
@@ -327,6 +324,43 @@ v-label-param =
 end.
 
 end procedure. /* pl-pump-proc */
+
+function  getPlaceAttrCode returns character (istr as char ):
+   define variable OStr as character no-undo.
+   if istr eq "disable-level-alarm"
+   then
+      OStr = "Сообщения о переполнении".
+   else if istr eq "disable-water-alarm"
+   then
+      OStr = "Сообщения по воде".
+   else
+      OStr = istr.
+   return OStr.
+end.
+
+function  getPlaceAttrValue returns character (istr as char ):
+   define variable OStr as character no-undo.
+   define variable vFlag as logical no-undo.
+   if    entry(1,istr,{&delim-par}) eq "enable"
+   then
+      assign
+         OStr = "Включено"
+         vFlag = yes
+      .
+   else if    entry(1,istr,{&delim-par}) eq "disable"
+   then
+      assign
+         OStr  = "Выключено"
+         vFlag = yes
+      .
+   else
+      OStr = istr.
+   if     vFlag
+      and num-entries (istr,{&delim-par}) > 2
+   then
+      OStr = OStr + " для смены № " + entry(3,istr,{&delim-par}) + " Дата " + entry(2,istr,{&delim-par}).
+   return OStr.
+end.
 
 procedure place-attr-proc :
 define output parameter p-description as character no-undo .
@@ -358,15 +392,13 @@ define buffer current_c-place-attr for ub.c-place-attr  .
     p-description = "Атрибут" + {&space-char} + v-label
     .
 
-&scop fields-name-list  "attr-value,obj-code,obj-type,pl-code,PS,status_"
+&scop fields-name-list  "attr-code,attr-value,PS,status_"
 
 define variable v-label-param as character no-undo .
 
 v-label-param =
-  "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "" + {&delim-flf}
- + "obj-code" + {&delim-par} + "Код объекта" + {&delim-par} + "" + {&delim-flf}
- + "obj-type" + {&delim-par} + "Тип объекта" + {&delim-par} + "" + {&delim-flf}
- + "pl-code" + {&delim-par} + "Код складского места" + {&delim-par} + "" + {&delim-flf}
+  "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "getPlaceAttrValue" + {&delim-flf}
+ + "attr-code" + {&delim-par} + "Код трибута" + {&delim-par} + "getPlaceAttrCode" + {&delim-flf}
  + "PS" + {&delim-par} + "Примечание" + {&delim-par} + "" + {&delim-flf}
  + "status_" + {&delim-par} + "Статус" + {&delim-par} + ""  .
  run proc-full-temp-changes in this-procedure (
@@ -414,16 +446,14 @@ define buffer current_c-pl-gds-attr for ub.c-pl-gds-attr  .
     assign
     p-description = "Атрибут" + {&space-char} + v-label
     .
-&scop fields-name-list  "attr-value,gds-code,obj-code,obj-type,pl-code,PS,status_"
+&scop fields-name-list  "attr-code,attr-value,gds-code,PS,status_"
 
 define variable v-label-param as character no-undo .
 
 v-label-param =
   "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "" + {&delim-flf}
+  + "attr-code" + {&delim-par} + "Код трибута" + {&delim-par} + "" + {&delim-flf}
  + "gds-code" + {&delim-par} + "КОд товара" + {&delim-par} + "" + {&delim-flf}
- + "obj-code" + {&delim-par} + "Код объекта" + {&delim-par} + "" + {&delim-flf}
- + "obj-type" + {&delim-par} + "Тип объекта" + {&delim-par} + "" + {&delim-flf}
- + "pl-code" + {&delim-par} + "Код складского места" + {&delim-par} + "" + {&delim-flf}
  + "PS" + {&delim-par} + "Примечание" + {&delim-par} + "" + {&delim-flf}
  + "status_" + {&delim-par} + "Статус" + {&delim-par} + ""  .
  run proc-full-temp-changes in this-procedure (
@@ -461,15 +491,15 @@ define buffer curr_c-pl-level for ub.c-pl-level  .
       return error v-mess.
     end.
 
-&scop fields-name-list  "obj-code,obj-type,pl-code,pl-level,pl-qnty"
+&scop fields-name-list  "pl-level,pl-qnty"
 
 define variable v-label-param as character no-undo .
 
 v-label-param =
-   "obj-code" + {&delim-par} + "Код объектаТип объекта" + {&delim-par} + "" + {&delim-flf}
- + "obj-type" + {&delim-par} + "Код объекта" + {&delim-par} + "" + {&delim-flf}
+   "obj-code" + {&delim-par} + "Код объекта" + {&delim-par} + "" + {&delim-flf}
+ + "obj-type" + {&delim-par} + "Тип объекта" + {&delim-par} + "" + {&delim-flf}
  + "pl-code" + {&delim-par} + "Код складского места" + {&delim-par} + "" + {&delim-flf}
- + "pl-level" + {&delim-par} + "Уровень в мм" + {&delim-par} + "" + {&delim-flf}
+ + "pl-level" + {&delim-par} + "Уровень в см" + {&delim-par} + "" + {&delim-flf}
  + "pl-qnty" + {&delim-par} + "Объем в л" + {&delim-par} + "".
  run proc-full-temp-changes in this-procedure (
                                              input buf_c-plc-hist.action = integer({&hn-create})

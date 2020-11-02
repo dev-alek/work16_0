@@ -263,6 +263,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 /* код фирмы для печати накладных - если для объекта задан параметр outhold */
 { cmp/cr-prep.i 1 attr-holdfirm-code          holdfirm-code            " " holdfirm-code }
 
+/* Расписание (интервал повторения) для алармов на воду и уровень АТД */
+{ cmp/cr-prep.i 1 attr-atd-alarm-schedule  atd-alarm-schedule " " atd-alarm-schedule  }
+
 /* Система налогообложения */
 
 
@@ -484,6 +487,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* товар фасуется */
 { cmp/cr-prep.i 1 attr-fasovka            fasovka            " " fasovka       }
 
+/* Время приготовления в чеке */
+{ cmp/cr-prep.i 1 attr-time-coock            time-coock            " " time-coock       }
+
 /* требуется обязательная маркировка  */
 { cmp/cr-prep.i 1 attr-mark            mark            " " mark       }
 
@@ -576,6 +582,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-ban-bonus}~
 ,{&bef-attr-null-price}~
 ,{&bef-attr-fasovka}~
+,{&bef-attr-time-coock}~
 ,{&bef-attr-mark}~
 ,{&bef-attr-sum-grp-gl}~
 ,{&bef-attr-mercur_FGIS}~

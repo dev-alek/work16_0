@@ -552,7 +552,18 @@ end.
 &scop manual-edit-attr-pharm  0
 &scop batch-edit-attr-pharm  0
 
-
+/* Расписание (интервал повторения) для алармов на воду и уровень АТД */
+&scop bef-attr-atd-alarm-schedule               atd-alarm-schedule
+&scop type-attr-atd-alarm-schedule              {&type-char}
+&scop format-attr-atd-alarm-schedule            "X(40)"
+&scop label-attr-atd-alarm-schedule             "Расписание алармов АТД"
+&scop tooltip-attr-atd-alarm-schedule           "Интервал повторения для алармов на воду и уровень АТД"
+&scop user-can-edit-attr-atd-alarm-schedule     true
+&scop output-display-attr-atd-alarm-schedule    true
+&scop other-attr-atd-alarm-schedule             '':u
+&scop news-attr-atd-alarm-schedule              true
+&scop manual-edit-attr-atd-alarm-schedule       0
+&scop batch-edit-attr-atd-alarm-schedule        0
 
 /* дата время обновления актуальности информации - при импорте с другой системы */
 &scop bef-attr-cli-upd-date-time              upd-date-time
@@ -1130,6 +1141,8 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-cli-decommissioned
       {&attr-temp-full-code}
+      &scop attr-code attr-atd-alarm-schedule
+      {&attr-temp-full-code}
 
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -1280,6 +1293,8 @@ procedure clntattr-tooltip :
       &scop attr-code attr-cli-clim-grp
       {&attr-temp-code}
       &scop attr-code attr-cli-decommissioned
+      {&attr-temp-code}
+      &scop attr-code attr-atd-alarm-schedule
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -1638,6 +1653,8 @@ procedure clntattr-news :
       &scop attr-code attr-cli-clim-grp
       {&attr-news-code}
       &scop attr-code attr-cli-decommissioned
+      {&attr-news-code}
+      &scop attr-code attr-atd-alarm-schedule
       {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -2195,6 +2212,8 @@ procedure clntattr-manual-edit :
       {&attr-manual-edit-code}
       &scop attr-code attr-cli-decommissioned
       {&attr-manual-edit-code}
+      &scop attr-code attr-atd-alarm-schedule
+      {&attr-manual-edit-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
       otherwise do:
@@ -2259,6 +2278,8 @@ procedure clntattr-batch-edit :
       &scop attr-code attr-cli-clim-grp
       {&attr-batch-edit-code}
       &scop attr-code attr-cli-decommissioned
+      {&attr-batch-edit-code}
+      &scop attr-code attr-atd-alarm-schedule
       {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутво клиентов */
@@ -6085,6 +6106,19 @@ end procedure.
 &scop manual-edit-attr-fasovka 1
 &scop batch-edit-attr-fasovka  1
 
+/*Печатать время приготовления в чеке*/
+&glob type-attr-time-coock {&type-log}
+&glob format-attr-time-coock  "+/ "
+&glob label-attr-time-coock   "Печатать время приготовления в чеке"
+&glob tooltip-attr-time-coock   "Печатать время приготовления в чеке"
+&glob user-can-edit-attr-time-coock  true
+&glob output-display-attr-time-coock  true
+&glob other-attr-time-coock  ""
+&glob news-attr-time-coock true
+&glob copy-attr-time-coock  true
+&scop manual-edit-attr-time-coock 1
+&scop batch-edit-attr-time-coock  1
+
 /*Требует обязательной маркировки*/
 &glob type-attr-mark {&type-log}
 &glob format-attr-mark  "+/ "
@@ -6495,6 +6529,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-fasovka
       {&attr-temp-full-code}
+      &scop attr-code attr-time-coock
+      {&attr-temp-full-code}     
       &scop attr-code attr-mark
       {&attr-temp-full-code}
       &scop attr-code attr-mercur_FGIS
@@ -6596,6 +6632,8 @@ do
       &scop attr-code attr-null-price
       {&attr-temp-code}
       &scop attr-code attr-fasovka
+      {&attr-temp-code}
+	  &scop attr-code attr-time-coock
       {&attr-temp-code}
       &scop attr-code attr-mark
       {&attr-temp-code}
@@ -6934,6 +6972,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-fasovka
       {&attr-news-code}
+	  &scop attr-code attr-time-coock
+      {&attr-news-code}
       &scop attr-code attr-mark
       {&attr-news-code}
       &scop attr-code attr-sum-grp-gl
@@ -7029,6 +7069,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-null-price
       {&attr-copy-code}
       &scop attr-code attr-fasovka
+      {&attr-copy-code}
+      &scop attr-code attr-time-coock
       {&attr-copy-code}
       &scop attr-code attr-mark
       {&attr-copy-code}
@@ -7713,6 +7755,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-fasovka
       {&attr-manual-edit-code}
+      &scop attr-code attr-time-coock
+      {&attr-manual-edit-code}
       &scop attr-code attr-mercur_FGIS
       {&attr-manual-edit-code}
       &scop attr-code attr-perishable
@@ -7809,6 +7853,8 @@ do
       &scop attr-code attr-null-price
       {&attr-batch-edit-code}
       &scop attr-code attr-fasovka
+      {&attr-batch-edit-code}
+	  &scop attr-code attr-time-coock
       {&attr-batch-edit-code}
       &scop attr-code attr-mark
       {&attr-batch-edit-code}
@@ -11605,8 +11651,8 @@ end procedure.
 /* Дополнение к альтернативному названию */
 &scop type-attr-dop-alt-name-o {&type-char}
 &scop format-attr-dop-alt-name-o  "X(40)"
-&scop label-attr-dop-alt-name-o   "Дополнение к альтернативному названию"
-&scop tooltip-attr-dop-alt-name-o   "Дополнение к альтернативному названию"
+&scop label-attr-dop-alt-name-o   "Дополнение к названию товара"
+&scop tooltip-attr-dop-alt-name-o   "Дополнение к названию товара"
 &scop user-can-edit-attr-dop-alt-name-o  true
 &scop output-display-attr-dop-alt-name-o  true
 &scop other-attr-dop-alt-name-o "spr=gds-obj-dop-alt-name"
