@@ -16,7 +16,7 @@ Creation date: 09/08/05
 */
 
 define input parameter parparentproc as widget-handle no-undo .
-DEFINE INPUT PARAMETER cdoc like ub.chk-doc.doc-code.
+DEFINE INPUT PARAMETER cdoc like chk-doc.doc-code.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -31,278 +31,479 @@ define variable vss-description as character no-undo init "Печать одного чека".
 { cmp/r-pril.i new }
 { gbl/prn-lib.i }
 { str/shftnmef.i chk-doc shift-name }
+{ gbl/prn-lib.i     }
+{ rep/html-conv.i }
 
-define variable sym1   as char format "X(1)" init ":".
-define variable sym10 as char format "X(1)" init ":".
-define variable date_string     as      char    no-undo.
-define variable Line                as      char    no-undo.
-define variable for-time as char.
-define variable for-gds-sum like ub.chk-doc.netto no-undo.
-define variable for-gds-price like ub.chk-gds.price-base no-undo.
-define variable fgds-discnt-pc as decimal no-undo.
-define variable accum-pay-r-b as decimal no-undo .
-define variable v-curr-r-b as character no-undo .
-define variable v-is-write-off as logical no-undo .
+define variable sym1           as char      format "X(1)" init ":".
+define variable sym10          as char      format "X(1)" init ":".
+define variable date_string    as char      no-undo.
+define variable Line           as char      no-undo.
+define variable for-time       as char.
+define variable for-gds-sum    like chk-doc.netto no-undo.
+define variable for-gds-price  like chk-gds.price-base no-undo.
+define variable fgds-discnt-pc as decimal   no-undo.
+define variable accum-pay-r-b  as decimal   no-undo .
+define variable v-curr-r-b     as character no-undo .
+define variable v-is-write-off as logical   no-undo .
+define variable itog-doc-qnty as decimal no-undo .
+define variable itog-price-service as decimal no-undo .
+define variable itog-discnt as decimal no-undo .
+define variable itog-discnt-pc as decimal no-undo .
+define variable itog-gds-sum as decimal no-undo .
+define variable itog-gds-price as decimal no-undo .
+define variable itog-tot-sum as decimal no-undo .
+define variable itog-tot-base as decimal no-undo .
+define variable itog-tot-rubl as decimal no-undo .
 
-DEFINE FRAME Goods-Frame
-ub.chk-gds.line-num    column-label "NN"  format "->>>>9"
-ub.chk-gds.b-code      column-label "Код" FORMAT "-9999999999"
-ub.goods.artic
-ub.goods.gds-name   COLUMN-LABEL "Название/!Производитель" FORMAT "X(30)"
-ub.chk-gds.is-error COLUMN-LABEL "Ош" FORMAT "+/ "
-ub.chk-gds.src-code Column-label "Код в спул-файле" FORMAT "X(16)"
-ub.chk-gds.pump column-label "ТРК!Пист!Рез" FORMAT ">>9"
-ub.chk-gds.doc-qnty
-ub.bar-code.unit-cli     COLUMN-LABEL "Изм" FORMAT "X(3)"
-ub.chk-gds.price-base
-ub.chk-gds.discnt
-fgds-discnt-pc COLUMn-LABEL "% ск"  FORMAT "->9.99%"
-for-gds-price COLUMN-LABEL "Цена нетто"
-for-gds-sum COLUMN-LABEL "Сумма по строке"
-ub.chk-gds.road-tax  FORMAT "->>>,>>9.99"
-v-is-write-off COLUMN-LABEL "Спи" format "+/ "
-with width {&DOS_CW_2} down stream-io use-text    .
+define variable v-attr-rnn as character no-undo .
+define variable v-attr-sbprrn as character no-undo .
+define variable v-fix   as character no-undo .
+define variable v-fix-png  as character no-undo .
 
+define variable v-arc as character no-undo .
+define buffer buf_chk-pay-attr for ub.chk-pay-attr .
 
-DEFINE FRAME Pay-Frame
-ub.chk-pay.line-num    column-label "NN"  format ">>9"
-ub.chk-pay.curr-code column-label "Код. вал"
-ub.currency.curr-name column-label "Валюта" FORMAT "X(15)"
-ub.chk-pay.pay-code Column-label "Код платежа"
-ub.cash-pay.obj-name COLUMn-LABEL "Платеж"
-ub.chk-pay.tot-sum COLUMN-LABEL "Сумма в вал. платежа"
-ub.chk-pay.tot-base COLUMN-LABEL "Сумма в баз.вал"
-ub.chk-pay.tot-rubl  COLUMN-LABEL "Сумма в {&abbr_rublyah}"
-with width {&DOS_CW_2} down stream-io use-text    .
+define stream Out-Stream.
+define stream OutStr-html.
+define VARIABLE p-report-id         as character no-undo .
+define variable v-file-name-rep-htm as character no-undo .
 
-{ gbl/curr-r-b.i
-  v-curr-r-b
-}
+FIND FIRST chk-doc NO-LOCK WHERE chk-doc.doc-code = cdoc NO-ERROR.
+IF NOT avail chk-doc then return.
 
-
-run prn-lib-open-stream  in this-procedure (
-                                             input parParentProc
-                                            ,input {&LS_PS_A4}
-                                            ,input yes /*p-is-stream*/
-                                            ,input no /*p-append*/
-                                            ).
-
-
-
-VIEW  STREAM PrnLibStream FRAME BottomFrame .
-
-FORM with FRAME Goods-Frame  .
-
-FIND FIRST ub.chk-doc NO-LOCK WHERE ub.chk-doc.doc-code = cdoc NO-ERROR.
-IF NOT avail ub.chk-doc then return.
-
-FOR EACH ub.chk-pay No-LOCK where ub.chk-pay.doc-code = ub.chk-doc.doc-code:
-  assign
-  accum-pay-r-b = accum-pay-r-b +
+FOR EACH chk-pay No-LOCK where chk-pay.doc-code = chk-doc.doc-code:
+   assign
+      accum-pay-r-b = accum-pay-r-b +
               (if v-curr-r-b = {&r-b-base}
                 then chk-pay.tot-base
                 else chk-pay.tot-rubl)
-                 .
+      .
 END.
 
-if NOT chk-doc.d-card = "" then do:
-    FIND FIRST ub.dis-card NO-LOCK WHERE ub.dis-card.d-card = ub.chk-doc.d-card NO-ERROR.
-    IF avail ub.dis-card then do:
-        FIND FIRST ub.clients where ub.clients.obj-type = ub.dis-card.cli-type AND
-                                                  ub.clients.obj-code = ub.dis-card.cli-code No-ERROR.
-    END.
+if NOT chk-doc.d-card = "" then 
+do:
+   FIND FIRST dis-card NO-LOCK WHERE dis-card.d-card = chk-doc.d-card NO-ERROR.
+   IF avail dis-card then 
+   do:
+      FIND FIRST clients where clients.obj-type = dis-card.cli-type AND
+         clients.obj-code = dis-card.cli-code No-ERROR.
+   END.
 end.
 
-Line = fill("-", 198).
+      assign
+        v-arc = search( "exe/qrgen.exe":U )
+        .
+      if v-arc = ? then 
+      do:
+        message "Не найдена программа qrgen.exe" 
+        view-as alert-box.
+         
+         return error .
+      end.   
+/*      Пример формата: t=20150720T1638&i=12345678&n=1      */
+/*                                                          */
+/*t-датавремя, i - номер чека,  n - тип документа (1-приход)*/
+/*                                                          */
+/*Формат даты: формат такой ГГГГММДДTЧЧММ                   */
+/*                                                          */
+      
+      define variable v-date as character no-undo .
+      
+      v-date = "20" + entry(3,string(chk-doc.chk-date),"/") + entry(2,string(chk-doc.chk-date),"/") + entry(1,string(chk-doc.chk-date),"/").
+     
+      v-fix = "t=" + v-date + "T" + replace(string(chk-doc.chk-time,"HH:MM"),":","") + "&i=" + string(chk-doc.chk-num) + "&n=" + string(chk-doc.chk-type) .
+      os-command silent value (v-arc + ' -size=128 -content="' + v-fix + '"' + ' -filename="' + string(session :temp-directory) + 'qr-code_fix"') .
+      v-fix-png = string(session :temp-directory) + "qr-code_fix" + ".png" .
+
+find first buf_chk-pay-attr no-lock where buf_chk-pay-attr.attr-code = "sbprrn" and
+                                          buf_chk-pay-attr.doc-code = chk-doc.doc-code 
+                                          and buf_chk-pay-attr.attr-value <> "" no-error .
+                                          
+if available (buf_chk-pay-attr) then do:
+      os-command silent value (v-arc + ' -size=128 -content="' + buf_chk-pay-attr.attr-value + '"' + ' -filename="' + string(session :temp-directory) + 'qr-code_sbprnn"') .
+      v-attr-sbprrn = string(session :temp-directory) + "qr-code_sbprnn" + ".png" .
+
+end.                                          
+find first buf_chk-pay-attr no-lock where (buf_chk-pay-attr.attr-code = "RNN" or buf_chk-pay-attr.attr-code = "cpdoc") and
+                                          buf_chk-pay-attr.doc-code = chk-doc.doc-code 
+                                          and buf_chk-pay-attr.attr-value <> "" no-error .
+if available (buf_chk-pay-attr) then do:
+      os-command silent value (v-arc + ' -size=128 -content="' + buf_chk-pay-attr.attr-value + '"' + ' -filename="' + string(session :temp-directory) + 'qr-code_rnn"') .
+      v-attr-rnn = string(session :temp-directory) + "qr-code_rnn" + ".png" .   
+end.   
+                                          
+/*Line = fill("-", 198).*/
 date_string = cur-time-print() .
 
+/*печать*/
+run get-report-num (output p-report-id).
+    
+v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
+                        
+output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
+put stream OutStr-html unformatted
+   "<!DOCTYPE HTML>" skip
+   ' <html>' skip
+   '  <head>' skip
+   '   <meta charset="utf-8">' skip
+   '    <style type="text/css">' skip
+                        
+   '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+   '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+   '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+   '   </style>' skip
+   '  </head>' skip
+   .
+ 
+ 
+put stream OutStr-html unformatted
+   '<body>' skip
+   /*Первая таблица*/
+   '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+   '<thead>' skip
+   .
+put stream OutStr-html unformatted
+   '<tr class="set_columns">' skip
+   '<td style="width: 20px;"></td>' skip
+   '<td style="width: 15px;"></td>' skip
+   '<td style="width: 20px;"></td>' skip
+   '<td style="width: 30px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 120px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 60px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 20px;"></td>' skip
+   '<td style="width: 20px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '<td style="width: 60px;"></td>' skip
+   '<td style="width: 60px;"></td>' skip
+   '<td style="width: 80px;"></td>' skip
+   '<td style="width: 40px;"></td>' skip
+   '</tr>' skip
+   .
+                        
+ 
+put stream OutStr-html unformatted  
+   '<TR>'skip
+   '<TD colspan="14" style="font-weight: bold;">' + string(date_string) + '</TD>' skip
+   '<TD colspan="4" style="text-align: center;">Фискальные данные</TD>' skip
+   '<TD colspan="3" style="text-align: center;">RNN</TD>' skip
+   '<TD colspan="3" style="text-align: center;">SBPRNN</TD>' skip
+   '</TR>' skip 
+   '<TR>'skip
+   '<TD colspan="14" style="font-weight: bold;">Чек N ' + string(chk-doc.doc-code) + ' Магазин N ' + string(chk-doc.obj-code) + ' Дата: ' + string(chk-doc.chk-date, "99/99/9999") + ' Время: ' + string(chk-doc.chk-time, "HH:MM") + ' Дата смены: ' + string(chk-doc.shift-date, "99/99/9999") + ' Номер смены: ' + shift-name-no-err(buffer chk-doc) + '</TD>' skip
+   .
+     if search(v-fix-png) <> ? then 
+  do:  
+    put stream OutStr-html unformatted  
+      '<TD text_wrap="true" rowspan="5" colspan="4" style="text-align: center;"><img src="' + string(v-fix-png)+ '" width="130" height="130" alt=""/></TD>' skip
+      .
+  end.
+  else 
+  do:
+    put stream OutStr-html unformatted  
+      '<TD rowspan="5" colspan="4"></TD>' skip
+      .
 
-PUT STREAM PrnLibStream UNFORMATTED
-line skip(0)
-date_string skip(0)
-"Чек N "
-chk-doc.doc-code SPace(1)
-"Магазин N " string(chk-doc.obj-code, ">>>>9") space(1)
-"Дата: " string(chk-doc.chk-date, "99/99/9999") space(1)
-"Время: " string(chk-doc.chk-time, "HH:MM") space(1)
-"Дата смены: " string(chk-doc.shift-date, "99/99/9999") space(1)
-"Номер смены: " shift-name-no-err(buffer chk-doc) format "X(6)" space(1)
- skip(0)
-"Касса N" string(chk-doc.pay-desk, ">>>>9") space(1)
-"Номер по кассе " string(chk-doc.chk-num, "-9999999") space(1)
-"Кассир: " string(chk-doc.cashier, ">>>>9") space(1)
-"Продавец: " string(chk-doc.sales-man, ">>>>9") skip(0)
-(if NOT chk-doc.d-card = "" then
-    ("Дисконтная карта N: " + chk-doc.d-card +
-    (if avail clients then (" Клиент: " + clients.obj-name) else "")
-     + {&new-line} )
-else "")
-"Сумма товарная: " string(chk-doc.tot-doc, "->>>,>>>,>>9.99") skip(0)
-"Скидка общая  : " string(chk-doc.discnt, "->>>,>>>,>>9.99") space(1)
-(If chk-doc.sub-discnt <> 0
-        then ("Списания: " + string(chk-doc.sub-discnt, "->>>,>>>,>>9.99") + ") ")
-        else "")
-"Процент скидки: " string( ( if chk-doc.tot-doc = 0 then 0 else ( chk-doc.discnt / chk-doc.tot-doc * 100 ) ), "->9.99%") skip(0)
-"Сумма нетто   : " string(chk-doc.netto, "->>>,>>>,>>9.99") space(1)
-"Сумма оплат  : " string(ACCUM-pay-r-b, "->>>,>>>,>>9.99") skip(1)
-"ТОВАРЫ ПО ЧЕКУ:" skip(0)
-.
-FOR EACH ub.chk-gds No-LOCK where
-        ub.chk-gds.doc-code = ub.chk-doc.doc-code
-by abs(ub.CHk-gds.line-num ):
-    FIND FIRST ub.bar-code No-LOCK WHERE ub.bar-code.b-code = ub.chk-gds.b-code NO-ERROR.
-    IF AVAIL ub.bar-code then do:
-      FIND FIRST ub.goods NO-LOCK WHERE
-                ub.goods.gds-code = ub.bar-code.gds-code NO-ERROR.
-      FIND FIRST  ub.clients NO-LOCK WHERE
-                  ub.clients.obj-type = ub.goods.prod-type AND
-                  ub.clients.obj-code = ub.goods.prod-code NO-ERROR.
-      FIND FIRST ub.gds-prt No-LOCK where ub.gds-prt.upper-code = ub.goods.prt-root NO-ERROR.
-    end.
+  end.  
+  
+     if search(v-attr-rnn) <> ? then 
+  do:  
+    put stream OutStr-html unformatted  
+      '<TD text_wrap="true" rowspan="5" colspan="3" style="text-align: center;"><img src="' + string(v-attr-rnn)+ '" width="130" height="130" alt=""/></TD>' skip
+      .
+  end.
+  else 
+  do:
+    put stream OutStr-html unformatted  
+      '<TD rowspan="5" colspan="3"></TD>' skip
+      .
 
-    assign
-    fgds-discnt-pc = (ub.chk-gds.discnt / (ub.chk-gds.price-base + ub.chk-gds.price-service) * 100)
-    for-gds-sum = (ub.chk-gds.price-base + ub.chk-gds.price-service - ub.chk-gds.discnt) * ub.chk-gds.doc-qnty
-    for-gds-price = ub.chk-gds.price-base + ub.chk-gds.price-service - ub.chk-gds.discnt
-    .
-    DISPLAY STREAM PrnLibStream
-    ub.chk-gds.line-num
-    ub.chk-gds.b-code
-    if avail ub.bar-code then ub.goods.artic else "" @ ub.goods.artic
-    if avail ub.bar-code then ub.goods.gds-name else "" @ ub.goods.gds-name
-    ub.chk-gds.is-error
-    ub.chk-gds.src-code
-    ub.chk-gds.pump
-    ub.chk-gds.doc-qnty
-    if avail ub.bar-code then ub.bar-code.unit-cli else "" @ ub.bar-code.unit-cli
-    (ub.chk-gds.price-base + ub.chk-gds.price-service) @ ub.chk-gds.price-base
-    ub.chk-gds.discnt
-    fgds-discnt-pc
-    for-gds-price
-    for-gds-sum
-    ub.chk-gds.road-tax
-    (if ub.chk-gds.write-off-code <> ?
-     and ub.chk-gds.write-off-code <> 0
-    then yes
-    else no) @ v-is-write-off
-    WITH FRAME Goods-Frame.
-    DOWN 1 stream PrnLibStream
-    WITH FRAME Goods-Frame.
-    DISPLAY STREAM PrnLibStream
-    IF avail ub.bar-code then (IF ( ub.gds-prt.node-name <> {&empty-scale})  then ub.gds-prt.f-name  else "" ) else "" @ ub.goods.artic
-    if avail ub.bar-code then ub.clients.obj-name else "" @ ub.goods.gds-name
-    WITH FRAME Goods-Frame.
-    if ub.chk-gds.nozzle-code <> 0 then do:
-      DISPLAY STREAM PrnLibStream
-      ub.chk-gds.nozzle-code @ ub.chk-gds.pump
-      WITH FRAME Goods-Frame.
-      if ub.chk-gds.loc1 <> '':u then do:
-        DOWN 1 stream PrnLibStream
-        WITH FRAME Goods-Frame.
+  end.  
+     if search(v-attr-sbprrn) <> ? then 
+  do:  
+    put stream OutStr-html unformatted  
+      '<TD text_wrap="true" rowspan="5" colspan="3" style="text-align: center;"><img src="' + string(v-attr-sbprrn)+ '" width="130" height="130" alt=""/></TD>' skip
+      .
+  end.
+  else 
+  do:
+    put stream OutStr-html unformatted  
+      '<TD rowspan="5" colspan="3"></TD>' skip
+      .
+  end.    
+
+put stream OutStr-html unformatted  
+   '</TR>' skip 
+   '<TR>'skip
+   '<TD colspan="14" style="font-weight: bold;">Касса N ' + string(chk-doc.pay-desk) + ' Номер по кассе ' + string(chk-doc.chk-num) + ' Кассир: ' + if chk-doc.cashier <> ? then string(chk-doc.cashier) else "" + ' Продавец: ' + if chk-doc.sales-man <> ? then string(chk-doc.sales-man) else "" + '</TD>' skip
+   '</TR>' skip
+   .
+
+if NOT chk-doc.d-card = "" then 
+do:
+   if available (clients) then 
+   do:
+      put stream OutStr-html unformatted     
+         '<TR>'skip
+         '<TD colspan="14" style="font-weight: bold;">Дисконтная карта №: ' + string(chk-doc.d-card) + ' Клиент: ' + string(clients.obj-name) + ' Сумма товарная: ' + string(chk-doc.tot-doc,"->>>,>>>,>>9.99") + '</TD>'
+         '</TR>' skip
+         .
+   end.
+   else 
+   do:
+      put stream OutStr-html unformatted     
+         '<TR>'skip
+         '<TD colspan="14" style="font-weight: bold;">Дисконтная карта №: ' + string(chk-doc.d-card) + ' Сумма товарная: ' + string(chk-doc.tot-doc,"->>>,>>>,>>9.99") + '</TD>'
+         '</TR>' skip
+         .
+   end.      
+end.
+
+if chk-doc.sub-discnt <> 0 then 
+do:
+   put stream OutStr-html unformatted  
+      '<TR>'skip
+      '<TD colspan="14" text_wrap="true" style="text-align: left; font-weight: bold;">Скидка общая: ' + string((chk-doc.discnt),"->>>>>>>>>>>9.99") + ' Списание: ' + string(chk-doc.sub-discnt, "->>>,>>>,>>9.99") + ' Процент скидки: ' + string((if chk-doc.tot-doc = 0 then 0 else ( chk-doc.discnt / chk-doc.tot-doc * 100 ) ), "->9.99%") + '</TD>' skip
+      '</TR>' skip 
+      .
+end.
+else 
+do:
+   put stream OutStr-html unformatted  
+      '<TR>'skip
+      '<TD colspan="14" text_wrap="true" style="text-align: left; font-weight: bold;">Скидка общая: ' + string((chk-doc.discnt),"->>>>>>>>>>>9.99") + ' Списание: ' + string(chk-doc.sub-discnt, "->>>,>>>,>>9.99") + ' Процент скидки: ' + string((if chk-doc.tot-doc = 0 then 0 else ( chk-doc.discnt / chk-doc.tot-doc * 100 ) ), "->9.99%") + '</TD>' skip
+      '</TR>' skip 
+      . 
+end.   
+put stream OutStr-html unformatted
+   '<TR>'skip
+   '<TD colspan="14" style="font-weight: bold;">Сумма нетто: ' + string(chk-doc.netto, "->>>,>>>,>>9.99") + ' Сумма оплат: ' + string(ACCUM-pay-r-b, "->>>,>>>,>>9.99") + '</TD>' skip
+   '</TR>' skip 
+   '<TR>'skip
+   '<TD colspan="14" style="font-weight: bold;">ТОВАРЫ ПО ЧЕКУ:</TD>' skip
+   '</TR>' skip 
+   '<TR height: 14px;>'skip
+   '<TD colspan="14" style="font-weight: bold; border-bottom: 1px solid black;"></TD>' skip
+   '</TR>' skip 
+   .
+
+put stream OutStr-html unformatted
+   '<TR>' skip
+   '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">NN</TD>' skip
+   '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Код</TD>' skip
+   '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Артикул</TD>' skip
+   '<TD text_wrap="true" colspan="2" style="text-align: center; font-weight: bold; background-color: silver; border-top: 1px solid black;">Название/</TD>' skip
+   '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Ош</TD>' skip
+   '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Код в спул-файле</TD>' skip
+   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver; border-top 1px solid black;">ТРК</TD>' skip
+   '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Количество</TD>' skip
+   '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Изм</TD>' skip
+   '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Цена</TD>' skip
+   '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Скидка</TD>' skip    
+   '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">% ск</TD>' skip
+   '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Ценна нетто</TD>' skip
+   '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Сумма по строке</TD>' skip
+   '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Дорожный налог</TD>' skip
+   '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Спи</TD>' skip
+   '</TR>'skip       
+   '<TR>'skip
+   '<TD text_wrap="true" colspan="2" rowspan="2" style="text-align: center; font-weight: bold; background-color: silver; border-bottom: 1px solid black;">Производитель</TD>' skip
+   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Пист</TD>' skip
+   '</TR>'skip
+   '<TR>'skip
+   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver; border-bottom: 1px solid black;">Рез</TD>' skip
+   '</TR>'skip
+   .
+FOR EACH chk-gds No-LOCK where
+   chk-gds.doc-code = chk-doc.doc-code
+   by abs(CHk-gds.line-num ):
+   FIND FIRST bar-code No-LOCK WHERE bar-code.b-code = chk-gds.b-code NO-ERROR.
+   IF AVAIL bar-code then 
+   do:
+      FIND FIRST goods NO-LOCK WHERE
+         goods.gds-code = bar-code.gds-code NO-ERROR.
+      FIND FIRST  clients NO-LOCK WHERE
+         clients.obj-type = goods.prod-type AND
+         clients.obj-code = goods.prod-code NO-ERROR.
+      FIND FIRST gds-prt No-LOCK where gds-prt.upper-code = goods.prt-root NO-ERROR.
+   end.
+
+   assign
+      fgds-discnt-pc = (chk-gds.discnt / (chk-gds.price-base + chk-gds.price-service) * 100)
+      for-gds-sum    = (chk-gds.price-base + chk-gds.price-service - chk-gds.discnt) * chk-gds.doc-qnty
+      for-gds-price  = chk-gds.price-base + chk-gds.price-service - chk-gds.discnt
+      .
+
+   put stream OutStr-html unformatted
+      '<TR>' skip
+      '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; border: 1px solid black;">' + string(chk-gds.line-num) + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; border: 1px solid black;">' + string(chk-gds.b-code) + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" style="text-align: center; border-top: 1px solid black; border-right: 1px solid black;">' + if avail bar-code then goods.artic + '</TD>' else "" + '</td>' skip
+      '<TD text_wrap="true" colspan="2" style="text-align: center; border-top: 1px solid black; border-right: 1px solid black;">' + if avail bar-code then goods.gds-name + '</TD>' else "" + '</td>' skip
+      '<TD text_wrap="true" rowspan="3" style="text-align: center; border: 1px solid black;">' + if chk-gds.is-error then "yes" + '</TD>' else "no" + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; border: 1px solid black;">' + string(chk-gds.src-code) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center; border-top: 1px solid black;">' + string(chk-gds.pump) + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-gds.doc-qnty,"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true" rowspan="3" style="text-align: center; border: 1px solid black;">' + if avail bar-code then string(bar-code.unit-cli) + '</TD>' else "" + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: right; border: 1px solid black;">' + string((chk-gds.price-base + chk-gds.price-service),"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-gds.discnt,"->>>>>>>>>>>9.99") + '</TD>' skip    
+      '<TD text_wrap="true" rowspan="3" style="text-align: right; border: 1px solid black;">' + string(fgds-discnt-pc,"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true" rowspan="3" style="text-align: right; border: 1px solid black;">' + string(for-gds-price,"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true" rowspan="3" style="text-align: right; border: 1px solid black;">' + string(for-gds-sum,"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true" rowspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-gds.road-tax,"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true" rowspan="3" style="text-align: right; border: 1px solid black;">' + if chk-gds.write-off-code <> ? and chk-gds.write-off-code <> 0 then "yes" + '</TD>' else "no" + '</TD>' skip
+      '</TR>'skip     
+      '<TR>' skip
+      .
+      if avail bar-code then do:
+         put stream OutStr-html unformatted
+      '<TD text_wrap="true" colspan="2" rowspan="2" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black;">' + IF ub.gds-prt.node-name <> {&empty-scale} then string(gds-prt.f-name) + '</TD>' else "" + '</td>' skip .
       end.
-    end.
-    if ub.chk-gds.loc1 <> '':u then
-    DISPLAY STREAM PrnLibStream
-    integer(ub.chk-gds.loc1)  @ ub.chk-gds.pump
-    WITH FRAME Goods-Frame.
-    ACCUMULATE
-    ub.chk-gds.doc-qnty (TOTAL)
-    (ub.chk-gds.price-base + ub.chk-gds.price-service) * ub.chk-gds.doc-qnty (TOTAL)
-    ub.chk-gds.discnt * ub.chk-gds.doc-qnty (TOTAL)
-    (ub.chk-gds.price-base + ub.chk-gds.price-service - ub.chk-gds.discnt) * ub.chk-gds.doc-qnty (TOTAL).
-    DOWN STREAM PrnLibStream
-    WITH FRAME GOods-Frame.
-END.
-UNDERLINE STREAM PrnLibStream
-ub.chk-gds.line-num
-ub.chk-gds.b-code
-ub.goods.artic
-ub.goods.gds-name
-ub.chk-gds.is-error
-ub.chk-gds.src-code
-ub.chk-gds.pump
-ub.chk-gds.doc-qnty
-ub.bar-code.unit-cli
-ub.chk-gds.price-base
-ub.chk-gds.discnt
-fgds-discnt-pc
-for-gds-price
-for-gds-sum
-ub.chk-gds.road-tax
-v-is-write-off
-WITH FRAME Goods-Frame.
-DOWN STREAM PrnLibStream
-WITH FRAME GOods-Frame.
-DISPLAY STREAM PrnLibStream
-(ACCUM TOTAL ub.chk-gds.doc-qnty) @ ub.chk-gds.doc-qnty
-(ACCUM TOTAL (ub.chk-gds.price-base + ub.chk-gds.price-service) * ub.chk-gds.doc-qnty) @ ub.chk-gds.price-base
-(ACCUM TOTAL ub.chk-gds.discnt * ub.chk-gds.doc-qnty) @ ub.chk-gds.discnt
-((ACCUM TOTAL ub.chk-gds.discnt * ub.chk-gds.doc-qnty) /
-(ACCUM TOTAL (ub.chk-gds.price-base + ub.chk-gds.price-service)  *  ub.chk-gds.doc-qnty) * 100) @ fgds-discnt-pc
-(ACCUM TOTAL (ub.chk-gds.price-base + ub.chk-gds.price-service - ub.chk-gds.discnt) * ub.chk-gds.doc-qnty) @ for-gds-sum
-WITH FRAME Goods-Frame.
-
-HIDE  STREAM PrnLibStream FRAME GOODS-Frame.
-FORM with FRAME PAY-Frame  .
-
-
-PUT STREAM PrnLibStream
-SKIP(1)
-"ОПЛАТЫ ПО ЧЕКУ:" skip(0)
-.
-
-FOR EACH ub.chk-pay No-LOCK WHERE
-        ub.chk-pay.doc-code = ub.chk-doc.doc-code
-by ub.CHk-pay.line-num :
-    FIND FIRST ub.currency No-LOCK WHERE ub.currency.curr-code = ub.chk-pay.curr-code NO-ERROR.
-    FIND FIRST ub.cash-pay No-LOCK WHERE
-                        ub.cash-pay.cdpay-code = ub.chk-pay.pay-code AND
-                        ub.cash-pay.curr-code = ub.chk-pay.curr-code No-ERROR.
-    DISPLAY STREAM PrnLibStream
-    ub.chk-pay.line-num
-    ub.chk-pay.curr-code
-    if avail ub.currency then ub.currency.curr-name else "НЕОПОЗНАННАЯ ВАЛЮТА" @ ub.currency.curr-name
-    ub.chk-pay.pay-code
-    if avail ub.cash-pay then ub.cash-pay.obj-name else "НЕОПОЗНАННАЯ ОПЛАТА" @ ub.cash-pay.obj-name
-    ub.chk-pay.tot-sum
-    ub.chk-pay.tot-base
-    ub.chk-pay.tot-rubl
-    WITH FRAME Pay-Frame.
-    DOWN STREAM PrnLibStream
-    WITH FRAME Pay-Frame.
-    ACCUMULATE
-    ub.chk-pay.tot-sum (TOTAL)
-    ub.chk-pay.tot-base (TOTAL)
-    ub.chk-pay.tot-rubl (TOTAL).
-END.
-UNDERLINE STREAM PrnLibStream
-ub.chk-pay.line-num
-ub.chk-pay.curr-code
-ub.currency.curr-name
-ub.chk-pay.pay-code
-ub.cash-pay.obj-name
-ub.chk-pay.tot-sum
-ub.chk-pay.tot-base
-ub.chk-pay.tot-rubl
-WITH FRAME Pay-Frame.
-DOWN STREAM PrnLibStream
-WITH FRAME Pay-Frame.
-DISPLAY Stream PrnLibStream
-ACCUM TOTAL ub.chk-pay.tot-base @ ub.chk-pay.tot-base
-ACCUM TOTAL ub.chk-pay.tot-rubl @ ub.chk-pay.tot-rubl
-WITH FRAME Pay-Frame.
-
-HIDE  STREAM PrnLibStream FRAME Pay-Frame.
-HIDE  STREAM PrnLibStream FRAME Bottom-Frame.
-
-output  STREAM PrnLibStream CLOSE.
-/*
+      else do:
+         put stream OutStr-html unformatted
+      '<TD text_wrap="true" colspan="2" rowspan="2" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black;"></TD>'
+      .
+      end.      
+      put stream OutStr-html unformatted
+    '<TD text_wrap="true" colspan="2" rowspan="2" style="text-align: center; border-bottom: 1px solid black; border-right: 1px solid black;">' + if avail bar-code then clients.obj-name + '</TD>' else "" + '</td>' skip
+    '<TD text_wrap="true" style="text-align: center;">' +  if chk-gds.nozzle-code <> 0 then string(chk-gds.nozzle-code) + '</TD>' else "" + '</TD>' skip
+    '</TR>' skip  
+    '<TR>' skip
+    '<TD text_wrap="true" style="text-align: center; border-bottom: 1px solid black;">' + if chk-gds.loc1 <> "" then string(chk-gds.loc1) + '</TD>' else "" + '</TD>' skip
+    '</TR>' skip  
+      .
 assign
-g#rep-tblname = ""
-g#rep-tblrid = -117
-g#rep-updflds =  "Чек" + chk-doc.doc-code.
-*/
-run prn-lib-prn-file in this-procedure (
-                                          input parParentProc
-                                          ,input 8
-                                          ).
+itog-doc-qnty = itog-doc-qnty + chk-gds.doc-qnty
+itog-price-service = itog-price-service + ((chk-gds.price-base + chk-gds.price-service) * chk-gds.doc-qnty)
+itog-discnt = itog-discnt + (chk-gds.discnt * chk-gds.doc-qnty)
+itog-gds-sum = itog-gds-sum + ((chk-gds.price-base + chk-gds.price-service - chk-gds.discnt) * chk-gds.doc-qnty)
+.
+END.
+
+put stream OutStr-html unformatted
+   '<TR>' skip
+   '<TD text_wrap="true" colspan="12" style="font-weight: bold; text-align: right;"></TD>' skip
+   '<TD text_wrap="true" colspan="2" style="font-weight: bold; text-align: right;">' + string(itog-doc-qnty,"->>>>>>>>>>>9.99") + '</TD>' skip
+   '<TD text_wrap="true"></TD>' skip
+   '<TD text_wrap="true" colspan="2" style="font-weight: bold; text-align: right;">' + string(itog-price-service,"->>>>>>>>>>>9.99") + '</TD>' skip
+   '<TD text_wrap="true" colspan="2" style="font-weight: bold; text-align: right;">' + string(itog-discnt,"->>>>>>>>>>>9.99") + '</TD>' skip    
+   '<TD text_wrap="true" style="font-weight: bold; text-align: right;">' + string((itog-discnt / (itog-price-service * 100)),"->>>>>>>>>>>9.99") + '</TD>' skip
+   '<TD text_wrap="true"></TD>' skip
+   '<TD text_wrap="true" style="font-weight: bold; text-align: right;">' + string(itog-gds-sum,"->>>>>>>>>>>9.99") + '</TD>' skip
+   '<TD text_wrap="true" colspan="2"></TD>' skip
+   '</TR>'skip   
+   .
+
+put stream OutStr-html unformatted
+   '<TR>'skip
+   '<TD text_wrap="true" colspan="18" style="font-weight: bold;">ОПЛАТЫ ПО ЧЕКУ</TD>' skip
+   '<TD colspan="6"></TD>' skip
+   '</TR>'skip
+   '<TR height: 14px;>'skip
+   '<TD colspan="18" style="font-weight: bold;"></TD>' skip
+   '<TD colspan="6" style="font-weight: bold; 0px solid white;"></TD>' skip
+   '</TR>' skip    
+   '<TR>' skip
+   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">NN</TD>' skip
+   '<TD text_wrap="true" colspan="2" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Код. вал</TD>' skip
+   '<TD text_wrap="true" colspan="2" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Валюта</TD>' skip
+   '<TD text_wrap="true" colspan="2" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Код платежа</TD>' skip
+   '<TD text_wrap="true" colspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Платеж</TD>' skip
+   '<TD text_wrap="true" colspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Сумма в вал. платежа</TD>' skip
+   '<TD text_wrap="true" colspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Сумма в баз.вал</TD>' skip
+   '<TD text_wrap="true" colspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Сумма в рублях</TD>' skip
+   '<TD text_wrap="true" style="border-top: 0px solid white;"></TD>' skip .
+   put stream OutStr-html unformatted   
+   '<TD text_wrap="true" colspan="4" style="border-top: 0px solid white;"></TD>' skip 
+   '</TR>'skip       
+   .
+
+FOR EACH chk-pay No-LOCK WHERE
+   chk-pay.doc-code = chk-doc.doc-code
+   by CHk-pay.line-num :
+   FIND FIRST currency No-LOCK WHERE currency.curr-code = chk-pay.curr-code NO-ERROR.
+   FIND FIRST cash-pay No-LOCK WHERE
+      cash-pay.cdpay-code = chk-pay.pay-code AND
+      cash-pay.curr-code = chk-pay.curr-code No-ERROR.
+   assign
+      itog-tot-sum = itog-tot-sum + chk-pay.tot-sum
+      itog-tot-base = itog-tot-base + chk-pay.tot-base
+      itog-tot-rubl = itog-tot-rubl + chk-pay.tot-rubl
+      .
+      
+   put stream OutStr-html unformatted
+      '<TR>' skip
+      '<TD text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(chk-pay.line-num) + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" style="text-align: center; border: 1px solid black;">' + string(chk-pay.curr-code) + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" style="text-align: center; border: 1px solid black;">' + if available (currency) then currency.curr-name + '</TD>' else "НЕОПОЗНАННАЯ ВАЛЮТА" + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" style="text-align: center; border: 1px solid black;">' + string(chk-pay.pay-code) + '</TD>' skip
+      '<TD text_wrap="true" colspan="3" style="text-align: center; border: 1px solid black;">' + if available (cash-pay) then cash-pay.obj-name + '</TD>' else "НЕОПОНАННАЯ ОПЛАТА" + '</TD>' skip
+      '<TD text_wrap="true" colspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-pay.tot-sum,"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true" colspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-pay.tot-base,"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true" colspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-pay.tot-rubl,"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true"></TD>' skip
+      '<TD text_wrap="true" colspan="4"></TD>' skip
+      '</TR>'skip       
+      .    
+END.
+
+put stream OutStr-html unformatted
+   '<TR>' skip
+   '<TD text_wrap="true" colspan="10" style="text-align: right; font-weight: bold;"></TD>' skip
+   '<TD text_wrap="true" colspan="3" style="text-align: right; font-weight: bold;">' + string(itog-tot-sum,"->>>>>>>>>>>9.99") + '</TD>' skip
+   '<TD text_wrap="true" colspan="3" style="text-align: right; font-weight: bold;">' + string(itog-tot-base,"->>>>>>>>>>>9.99") + '</TD>' skip
+   '<TD text_wrap="true" colspan="3" style="text-align: right; font-weight: bold;">' + string(itog-tot-rubl,"->>>>>>>>>>>9.99") + '</TD>' skip
+   '<TD text_wrap="true"></TD>' skip
+   '<TD text_wrap="true" colspan="4"></TD>' skip
+   '</TR>'skip 
+   '</thead>' skip  
+   '</table>' skip
+   '</body>' skip
+   '</html>' skip   
+   . 
+
+output stream OutStr-html close.   
+
+/*run prn-lib-reportviewer in this-procedure (*/
+/*   input this-procedure                     */
+/*   ,input v-file-name-rep-htm               */
+/*   ,input ""                                */
+/*   ) no-error.                              */
+/*if error-status:error then                  */
+/*do:                                         */
+/*   message return-value view-as alert-box.  */
+/*   return .                                 */
+/*end.                                        */
+
+run prn-lib-reportviewer-report-name in this-procedure (
+   input this-procedure
+   ,input v-file-name-rep-htm
+   ) no-error.
+if error-status:error then
+do:
+   message return-value view-as alert-box.
+   return .
+end.
+
+
+PROCEDURE get-report-num :
+
+    define output parameter p-report-num as integer no-undo .
+
+    do
+        on error undo, return error return-value
+        :
+        run gbl/getrpnum.p (output p-report-num).
+    end.
+
+END PROCEDURE.
