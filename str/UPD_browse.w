@@ -1566,7 +1566,17 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                 view-as alert-box.
             return no-apply .
         end.  
-
+        if c-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or c-type = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB then 
+        do:
+           find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num and 
+              buf_utd-marking-lines.doc-id = buf_utd.doc-id and buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB no-error .
+           if not available (buf_utd-marking-lines) then 
+           do:
+              message "Ни одна марка не просканирована, просканируйте марки или откажите в поставке"
+                 view-as alert-box.
+              return no-apply .
+           end.  
+        end.
         if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
         do:
             /*Проверка МОЛ проверяется только в статусе Ожидает проверку*/
