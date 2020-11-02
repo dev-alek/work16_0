@@ -50,7 +50,15 @@ class ibs.th.bge.atd.dict-atd-exp:
       field objgrade as int64       label "Grade"
       field objname  as character   label "Grade_Name"
       field max-volume  as decimal  label "Max_volume"
+      field water-level as character label "WaterLevel_Allow"
+      field water-alarm as character label "water_alarm"
+      field level-alarm as character label "level_alarm"
    index ndx objnum. 
+   
+   define temp-table ttsched no-undo
+      field water-sched as int64  label "water_sched"
+      field level-sched as int64  label "level_sched"
+   .
    
    constructor public dict-atd-exp (iFilePath as character, 
                                     iDbNum    as int64,
@@ -59,7 +67,6 @@ class ibs.th.bge.atd.dict-atd-exp:
       define variable vPType as character no-undo.
       
       run gbl/conf-rd.p ("atd-reg","","",0,"","","",yes,output pAtdReg,output vPType) no-error.
-     
       assign 
          pFilePath   = iFilePath
          pCurDbNum   = iDbNum
@@ -74,8 +81,7 @@ class ibs.th.bge.atd.dict-atd-exp:
                                     iObjType  as character,
                                     iObjCode  as int64):
       define variable vPType as character no-undo.
-      
-      run gbl/conf-rd.p ("atd-reg","","",0,"","","",yes,output pAtdReg,output vPType) no-error.
+      run gbl/conf-rd.p ("atd-reg","","",0,"","","",no,output pAtdReg,output vPType) no-error.
       
       assign 
          pCurDbNum   = iDbNum
@@ -100,7 +106,6 @@ class ibs.th.bge.atd.dict-atd-exp:
          view-as alert-box.
          return.
       end.
-      
       if pAtdReg = '' or pAtdReg = ? then do:
          message "Выгрузка при выключенном параметре atd-reg не производится!"
          view-as alert-box.
@@ -111,12 +116,14 @@ class ibs.th.bge.atd.dict-atd-exp:
       CrtNObjectTable().
       CrtNCassaTable().
       CrtNTankTable().
-   
+      CrtNSchedTable().
+    
       WriteFile(pFilePath + "\ReCodesTables.tbl",ExpJson(temp-table ttgoods:handle)).
       WriteFile(pFilePath + "\NObject.tbl",ExpJson(temp-table ttclients:handle)).
       WriteFile(pFilePath + "\NCassa.tbl",ExpJson(temp-table ttcashdesks:handle)).
       WriteFile(pFilePath + "\NTank.tbl",ExpJson(temp-table tttanks:handle)).
-
+      WriteFile(pFilePath + "\NSched.tbl",ExpJson(temp-table ttsched:handle)).
+     
       message substitute("Выгрузка в &1 завершена!",pFilePath)
       view-as alert-box.
    end method.
@@ -139,6 +146,11 @@ class ibs.th.bge.atd.dict-atd-exp:
    method public longchar GetNTankTable():
       CrtNTankTable().
       return ExpJson(temp-table tttanks:handle).
+   end method.
+   
+   method public longchar GetNSchedTable():
+      CrtNSchedTable().
+      return ExpJson(temp-table ttsched:handle).
    end method.
    
    method private void CrtReCodesTable():
@@ -259,6 +271,11 @@ class ibs.th.bge.atd.dict-atd-exp:
       define buffer bprod-bc  for ub.prod-bc.
       define buffer bplace    for ub.place.
       define buffer bgoods    for ub.goods.
+      define buffer bshift-obj for ub.shift-obj.
+      define buffer bplace-attr for ub.place-attr.
+      
+      define variable v-attr-shift-date   as date     no-undo .
+      define variable v-attr-shift-num    as integer  no-undo .
       
       for each bplace where bplace.obj-type = pCurObjType
                         and bplace.obj-code = pCurObjCode
@@ -285,7 +302,119 @@ class ibs.th.bge.atd.dict-atd-exp:
                   tttanks.objname   = bgoods.gds-name   
                   tttanks.max-volume = bplace.max-qnty            
                no-error.
+               
+               find first bplace-attr no-lock where bplace-attr.attr-code   = "water-level"
+                                                and bplace-attr.obj-code    = bplace.obj-code
+                                                and bplace-attr.obj-type    = bplace.obj-type
+                                                and bplace-attr.pl-code     = bplace.pl-code
+                                                no-error .
+               if not available bplace-attr
+               or bplace-attr.attr-value = ?
+               or bplace-attr.attr-value = "?"
+               then do :
+                 assign tttanks.water-level = "" .
+               end .
+               else do :
+                 assign tttanks.water-level = bplace-attr.attr-value .
+               end .                               
+               
+               find first bshift-obj where bshift-obj.obj-type = bplace.obj-type
+                                       and bshift-obj.obj-code = bplace.obj-code
+                                       and bshift-obj.status_ = {&sht-current}
+                                       use-index stts no-lock no-error .
+               if not available bshift-obj
+               then do :
+                 assign
+                   tttanks.level-alarm = "enable"
+                   tttanks.water-alarm = "enable"
+                 .
+               end .
+               else do :
+                 find first bplace-attr no-lock where bplace-attr.attr-code   = "disable-water-alarm"
+                                                  and bplace-attr.obj-code    = bplace.obj-code
+                                                  and bplace-attr.obj-type    = bplace.obj-type
+                                                  and bplace-attr.pl-code     = bplace.pl-code
+                                                  no-error .
+                 if not available bplace-attr
+                 or num-entries(bplace-attr.attr-value, {&delim-par}) <> 3
+                 then do :
+                   assign
+                     tttanks.water-alarm = "enable"
+                   .
+                 end .  
+                 else do :
+                   v-attr-shift-date = date(entry(2, bplace-attr.attr-value, {&delim-par})) .
+                   v-attr-shift-num = integer(entry(3, bplace-attr.attr-value, {&delim-par})) .
+                   if v-attr-shift-date = bshift-obj.shift-date
+                   and v-attr-shift-num = bshift-obj.shift-num
+                   then do :
+                     assign
+                       tttanks.water-alarm = entry(1, bplace-attr.attr-value, {&delim-par})
+                     .
+                   end .
+                   else do :
+                     assign
+                       tttanks.water-alarm = "enable"
+                     .
+                   end .
+                 end .   /* water-alarm */
+                 
+                 find first bplace-attr no-lock where bplace-attr.attr-code   = "disable-level-alarm"
+                                                  and bplace-attr.obj-code    = bplace.obj-code
+                                                  and bplace-attr.obj-type    = bplace.obj-type
+                                                  and bplace-attr.pl-code     = bplace.pl-code
+                                                  no-error .
+                 if not available bplace-attr
+                 or num-entries(bplace-attr.attr-value, {&delim-par}) <> 3
+                 then do :
+                   assign
+                     tttanks.level-alarm = "enable"
+                   .
+                 end .  
+                 else do :
+                   v-attr-shift-date = date(entry(2, bplace-attr.attr-value, {&delim-par})) .
+                   v-attr-shift-num = integer(entry(3, bplace-attr.attr-value, {&delim-par})) .
+                   if v-attr-shift-date = bshift-obj.shift-date
+                   and v-attr-shift-num = bshift-obj.shift-num
+                   then do :
+                     assign
+                       tttanks.level-alarm = entry(1, bplace-attr.attr-value, {&delim-par})
+                     .
+                   end .
+                   else do :
+                     assign
+                       tttanks.level-alarm = "enable"
+                     .
+                   end .
+                 end .   /* level-alarm */                            
+               end .
       end.
+   end method.
+   
+   method private void CrtNSchedTable():
+
+      define buffer bclients for ub.clients .
+      define buffer bclients-attr for ub.clients-attr .
+       
+      for first bclients where bclients.obj-type = pCurObjType
+                           and bclients.obj-code = pCurObjCode
+                           and bclients.stts     = 0  
+      no-lock,
+         first bclients-attr where bclients-attr.obj-type = bclients.obj-type
+                               and bclients-attr.obj-code = bclients.obj-code
+                               and bclients-attr.attr-code = {&attr-atd-alarm-schedule}
+                               and bclients-attr.attr-value > ""
+         exclusive-lock:
+            
+            create ttsched .
+            assign 
+               ttsched.water-sched = integer(entry(1, bclients-attr.attr-value)) * 60
+               ttsched.level-sched = integer(entry(2, bclients-attr.attr-value)) * 60
+            .
+            
+            bclients-attr.attr-value = "" .
+      end.
+      
    end method.
    
    method private longchar ExpJson(input hTab as handle):

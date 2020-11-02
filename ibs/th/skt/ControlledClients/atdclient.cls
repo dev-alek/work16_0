@@ -80,6 +80,9 @@ class ibs.th.skt.ControlledClients.atdclient :
         when "GetTank"      
         then 
           vLC = vExp:GetNTankTable().
+        when "GetSched"      
+        then 
+          vLC = vExp:GetNSchedTable().
         otherwise 
         vLC = "".
       end case.

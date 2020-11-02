@@ -86,7 +86,7 @@ tt-place.start-date tt-place.add-qnty tt-place.max-qnty tt-place.PS
 &Scoped-define FIRST-ENABLED-TABLE tt-place
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit B-hist b-help t-place-virtual ~
 rvd-dnstv rvd-lvl rvd-tmp place-type place-locat error-mass place-si ~
-r-sr-izm dead-balance place-diameter place-ratio-error dens-prov ~
+r-sr-izm dead-balance water-level place-diameter place-ratio-error dens-prov ~
 place-twice-code tt-place.chk-max-qnty 
 &Scoped-Define DISPLAYED-FIELDS tt-place.loc1 tt-place.loc2 tt-place.loc3 ~
 tt-place.loc4 tt-place.pl-name tt-place.is-meas tt-place.pl-code ~
@@ -95,7 +95,7 @@ tt-place.PS
 &Scoped-define DISPLAYED-TABLES tt-place
 &Scoped-define FIRST-DISPLAYED-TABLE tt-place
 &Scoped-Define DISPLAYED-OBJECTS t-place-virtual t-asi-srtif rvd-dnstv ~
-rvd-lvl rvd-tmp place-type place-locat error-mass place-si dead-balance ~
+rvd-lvl rvd-tmp place-type place-locat error-mass place-si dead-balance water-level ~
 place-diameter place-ratio-error dens-prov place-twice-code tt-place.chk-max-qnty 
 
 /* Custom List Definitions                                              */
@@ -136,6 +136,11 @@ DEFINE BUTTON r-sr-izm
 
 DEFINE VARIABLE dead-balance AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
      LABEL "Мертвый остаток" 
+     VIEW-AS FILL-IN 
+     SIZE 11.63 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE water-level AS integer FORMAT ">>>>>9":U INITIAL 0 
+     LABEL "Допустимый уровень воды(мм)" 
      VIEW-AS FILL-IN 
      SIZE 11.63 BY 1 NO-UNDO.
 
@@ -271,6 +276,7 @@ DEFINE FRAME d-pl-form
      place-si AT ROW 12.92 COL 75.38 COLON-ALIGNED WIDGET-ID 16
      r-sr-izm AT ROW 12.92 COL 88.5 RIGHT-ALIGNED
      dead-balance AT ROW 13.92 COL 30.63 COLON-ALIGNED WIDGET-ID 18
+     water-level AT ROW 14.92 COL 30.63 COLON-ALIGNED WIDGET-ID 58
      place-diameter AT ROW 13.92 COL 75.38 COLON-ALIGNED WIDGET-ID 18
      place-ratio-error AT ROW 16.25 COL 88 RIGHT-ALIGNED WIDGET-ID 20
      dens-prov AT ROW 17.25 COL 88 RIGHT-ALIGNED
@@ -465,6 +471,10 @@ do :
               do :
                   v-value =  dead-balance:screen-value.
               end.
+          when {&water-level} then 
+              do :
+                  v-value =  water-level:screen-value.
+              end.    
           when {&place-ratio-error} then 
               do :
                   v-value = place-ratio-error:screen-value .
@@ -807,8 +817,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       when {&place-diameter} then do :
         if v-ok then place-diameter = decimal(v-value) .
       end.
-       when {&dead-balance} then do :
+      when {&dead-balance} then do :
         if v-ok then dead-balance = decimal(v-value) .
+      end.
+      when {&water-level} then do :
+        if v-ok then water-level = integer(v-value) .
       end.
       when {&place-ratio-error} then do :
         if v-ok then place-ratio-error = decimal(v-value) .
@@ -895,7 +908,7 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY t-place-virtual t-asi-srtif rvd-dnstv rvd-lvl rvd-tmp place-type 
-          place-locat error-mass place-si dead-balance place-diameter 
+          place-locat error-mass place-si dead-balance water-level place-diameter 
           place-ratio-error dens-prov place-twice-code 
       WITH FRAME d-pl-form.
   IF AVAILABLE tt-place THEN 
@@ -907,7 +920,7 @@ PROCEDURE enable_UI :
          tt-place.loc4 tt-place.pl-name t-place-virtual tt-place.is-meas 
          rvd-dnstv rvd-lvl rvd-tmp tt-place.issue-year place-type 
          tt-place.start-date place-locat tt-place.add-qnty error-mass 
-         tt-place.max-qnty place-si r-sr-izm dead-balance place-diameter 
+         tt-place.max-qnty place-si r-sr-izm dead-balance water-level place-diameter 
          place-ratio-error dens-prov place-twice-code tt-place.chk-max-qnty 
          tt-place.PS 
       WITH FRAME d-pl-form.
@@ -924,7 +937,7 @@ PROCEDURE Myenable :
   assign
     v-tab-order = "loc1,loc2,loc3,loc4,pl-name,is-meas,"
                   + "issue-year,start-date,add-qnty,max-qnty,chk-max-qnty,"
-                  + "ps,place-type,place-SI,r-sr-izm,place-diameter,dead-balance,place-ratio-error,dens-prov,t-place-virtual,place-twice-code,t-sert-urov".
+                  + "ps,place-type,place-SI,r-sr-izm,place-diameter,dead-balance,water-level,place-ratio-error,dens-prov,t-place-virtual,place-twice-code,t-sert-urov".
   if p-mode = {&lookup} then do:
     disable
       all

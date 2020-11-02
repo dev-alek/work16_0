@@ -263,6 +263,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 /* код фирмы для печати накладных - если для объекта задан параметр outhold */
 { cmp/cr-prep.i 1 attr-holdfirm-code          holdfirm-code            " " holdfirm-code }
 
+/* Расписание (интервал повторения) для алармов на воду и уровень АТД */
+{ cmp/cr-prep.i 1 attr-atd-alarm-schedule  atd-alarm-schedule " " atd-alarm-schedule  }
+
 /* Система налогообложения */
 
 

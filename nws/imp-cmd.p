@@ -221,6 +221,19 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             return error.
           end.
         end.
+        when "place-attr":U then do:
+          run utl/fill-pl-attr.p
+            ( input entry(3,rec-full,{&delim-nws})
+             ,input integer(entry(4,rec-full,{&delim-nws}))
+             ,input integer(entry(5,rec-full,{&delim-nws}))
+             ,input entry(6,rec-full,{&delim-nws})
+             ,input entry(7,rec-full,{&delim-nws})
+            )  no-error .
+          if error-status :error then do:
+            run write-to-log( vss-workfile + {&space-char} + "Ошибка при установке атрибута резервуара на удаленке !"  ).
+            return error.
+          end.
+        end.
         when "fin-ob-factur-date":U then do:
           assign v-doc-code    = entry(3,rec-full,{&delim-nws}) no-error .
           assign v-host-code   = int(entry(4,rec-full,{&delim-nws})) no-error .

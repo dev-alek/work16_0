@@ -552,7 +552,18 @@ end.
 &scop manual-edit-attr-pharm  0
 &scop batch-edit-attr-pharm  0
 
-
+/* Расписание (интервал повторения) для алармов на воду и уровень АТД */
+&scop bef-attr-atd-alarm-schedule               atd-alarm-schedule
+&scop type-attr-atd-alarm-schedule              {&type-char}
+&scop format-attr-atd-alarm-schedule            "X(40)"
+&scop label-attr-atd-alarm-schedule             "Расписание алармов АТД"
+&scop tooltip-attr-atd-alarm-schedule           "Интервал повторения для алармов на воду и уровень АТД"
+&scop user-can-edit-attr-atd-alarm-schedule     true
+&scop output-display-attr-atd-alarm-schedule    true
+&scop other-attr-atd-alarm-schedule             '':u
+&scop news-attr-atd-alarm-schedule              true
+&scop manual-edit-attr-atd-alarm-schedule       0
+&scop batch-edit-attr-atd-alarm-schedule        0
 
 /* дата время обновления актуальности информации - при импорте с другой системы */
 &scop bef-attr-cli-upd-date-time              upd-date-time
@@ -1130,6 +1141,8 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-cli-decommissioned
       {&attr-temp-full-code}
+      &scop attr-code attr-atd-alarm-schedule
+      {&attr-temp-full-code}
 
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -1280,6 +1293,8 @@ procedure clntattr-tooltip :
       &scop attr-code attr-cli-clim-grp
       {&attr-temp-code}
       &scop attr-code attr-cli-decommissioned
+      {&attr-temp-code}
+      &scop attr-code attr-atd-alarm-schedule
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -1638,6 +1653,8 @@ procedure clntattr-news :
       &scop attr-code attr-cli-clim-grp
       {&attr-news-code}
       &scop attr-code attr-cli-decommissioned
+      {&attr-news-code}
+      &scop attr-code attr-atd-alarm-schedule
       {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -2195,6 +2212,8 @@ procedure clntattr-manual-edit :
       {&attr-manual-edit-code}
       &scop attr-code attr-cli-decommissioned
       {&attr-manual-edit-code}
+      &scop attr-code attr-atd-alarm-schedule
+      {&attr-manual-edit-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
       otherwise do:
@@ -2259,6 +2278,8 @@ procedure clntattr-batch-edit :
       &scop attr-code attr-cli-clim-grp
       {&attr-batch-edit-code}
       &scop attr-code attr-cli-decommissioned
+      {&attr-batch-edit-code}
+      &scop attr-code attr-atd-alarm-schedule
       {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутво клиентов */
