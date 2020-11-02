@@ -317,17 +317,17 @@ for each t-2-not-sug:
       FOR EACH treal-2 WHERE treal-2.is-pay = v-is-pay AND treal-2.gds-code = t-2-not-sug.gds-code and treal-2.curr-code >= 0 USE-INDEX pi :
         if treal-2.discnt-type = -99 then do:
         assign
-          areal-qnty1 = areal-qnty1 + treal-2.qnty1
-          areal-qnty2 = areal-qnty2 + treal-2.qnty2
-          areal-netto = areal-netto + treal-2.netto
+          areal-qnty1 = areal-qnty1 + round(treal-2.qnty1,2)
+          areal-qnty2 = areal-qnty2 + round(treal-2.qnty2,2)
+          areal-netto = areal-netto + round(treal-2.netto,2)
         .
         end.
         if treal-2.is-pay = yes then do:
           if treal-2.discnt-type = -99 then do:
           assign
-          areal-is-pay-qnty1 = areal-is-pay-qnty1 + treal-2.qnty1
-          areal-is-pay-qnty2 = areal-is-pay-qnty2 + treal-2.qnty2
-          areal-is-pay-netto = areal-is-pay-netto + treal-2.netto.
+          areal-is-pay-qnty1 = areal-is-pay-qnty1 + round(treal-2.qnty1,2)
+          areal-is-pay-qnty2 = areal-is-pay-qnty2 + round(treal-2.qnty2,2)
+          areal-is-pay-netto = areal-is-pay-netto + round(treal-2.netto,2).
           end.
           if p-with-cp-grouping = yes then do:
             /*найдем итоги по группе типов кассовых платежей - если включена галка*/
@@ -368,12 +368,12 @@ for each t-2-not-sug:
               loc-grp-only-not-single = (if grptreal-2.out-name  begins {&delim-par}
                                      then (loc-grp-only-not-single - 1)
                                      else loc-grp-only-not-single)
-                  grptreal-2.out-name     = v-grp-name
-                  grptreal-2.qnty1        = grptreal-2.qnty1 + treal-2.qnty1
-                  grptreal-2.qnty2        = grptreal-2.qnty2 + treal-2.qnty2
-                  grptreal-2.netto        = grptreal-2.netto + treal-2.netto
-                  .
-              end.
+              grptreal-2.out-name = v-grp-name
+              grptreal-2.qnty1 = grptreal-2.qnty1 + round(treal-2.qnty1,2)
+              grptreal-2.qnty2 = grptreal-2.qnty2 + round(treal-2.qnty2,2)
+              grptreal-2.netto = grptreal-2.netto + round(treal-2.netto,2)
+              .
+            end.
             /*в ii пишем кол-во записей по данной группе*/
             /*идем по pi поэтому сначала обработаются те где is-pay = no*/
           end.  /*if p-with-cp-grouping then do:*/
@@ -394,9 +394,9 @@ for each t-2-not-sug:
           treal-2.ii           = curr-real-ii
           curr-real-ii         = curr-real-ii + 1.
           if treal-2.cpay-code <> -4 and treal-2.discnt-type = -99 then do: /* инвентаризацию не включаем */
-            assign areal-no-pay-qnty1 = areal-no-pay-qnty1 + treal-2.qnty1
-                  areal-no-pay-qnty2 = areal-no-pay-qnty2 + treal-2.qnty2
-                  areal-no-pay-netto = areal-no-pay-netto + treal-2.netto.
+            assign areal-no-pay-qnty1 = areal-no-pay-qnty1 + round(treal-2.qnty1,2)
+                  areal-no-pay-qnty2 = areal-no-pay-qnty2 + round(treal-2.qnty2,2)
+                  areal-no-pay-netto = areal-no-pay-netto + round(treal-2.netto,2).
           end.
         end.
       end. /* for each treal-2 */
@@ -456,9 +456,9 @@ for each t-2-not-sug:
       next.
     end.
     assign 
-      aincome-qnty1 = aincome-qnty1 + tincome-2.qnty1
-      aincome-qnty2 = aincome-qnty2 + tincome-2.qnty2
-      aincome-qnty3 = aincome-qnty3 + tincome-2.qnty3
+      aincome-qnty1 = aincome-qnty1 + round(tincome-2.qnty1,2)
+      aincome-qnty2 = aincome-qnty2 + round(tincome-2.qnty2,2)
+      aincome-qnty3 = aincome-qnty3 + round(tincome-2.qnty3,2)
       loc-income-ii = tincome-2.ii
       .
 
@@ -534,17 +534,17 @@ for each t-2-sug:
       FOR EACH treal-2 WHERE treal-2.is-pay = v-is-pay AND treal-2.gds-code = t-2-sug.gds-code and treal-2.curr-code >= 0 USE-INDEX pi :
         if treal-2.discnt-type = -99 then do:
         assign
-          areal-qnty1 = areal-qnty1 + treal-2.qnty1
-          areal-qnty2 = areal-qnty2 + treal-2.qnty2
-          areal-netto = areal-netto + treal-2.netto
+          areal-qnty1 = areal-qnty1 + round(treal-2.qnty1,2)
+          areal-qnty2 = areal-qnty2 + round(treal-2.qnty2,2)
+          areal-netto = areal-netto + round(treal-2.netto,2)
         .
         end.
         if treal-2.is-pay = yes then do:
           if treal-2.discnt-type = -99 then do: 
           assign
-          areal-is-pay-qnty1 = areal-is-pay-qnty1 + treal-2.qnty1
-          areal-is-pay-qnty2 = areal-is-pay-qnty2 + treal-2.qnty2
-          areal-is-pay-netto = areal-is-pay-netto + treal-2.netto.
+          areal-is-pay-qnty1 = areal-is-pay-qnty1 + round(treal-2.qnty1,2)
+          areal-is-pay-qnty2 = areal-is-pay-qnty2 + round(treal-2.qnty2,2)
+          areal-is-pay-netto = areal-is-pay-netto + round(treal-2.netto,2).
           end.
           if p-with-cp-grouping = yes then do:
             /*найдем итоги по группе типов кассовых платежей - если включена галка*/
@@ -586,9 +586,9 @@ for each t-2-sug:
                                      then (loc-grp-only-not-single - 1)
                                      else loc-grp-only-not-single)
               grptreal-2.out-name = v-grp-name
-              grptreal-2.qnty1 = grptreal-2.qnty1 + treal-2.qnty1
-              grptreal-2.qnty2 = grptreal-2.qnty2 + treal-2.qnty2
-              grptreal-2.netto = grptreal-2.netto + treal-2.netto
+              grptreal-2.qnty1 = grptreal-2.qnty1 + round(treal-2.qnty1,2)
+              grptreal-2.qnty2 = grptreal-2.qnty2 + round(treal-2.qnty2,2)
+              grptreal-2.netto = grptreal-2.netto + round(treal-2.netto,2)
               .
             end.
             /*в ii пишем кол-во записей по данной группе*/
@@ -611,9 +611,9 @@ for each t-2-sug:
           treal-2.ii           = curr-real-ii
           curr-real-ii         = curr-real-ii + 1.
           if treal-2.cpay-code <> -4 and treal-2.discnt-type = -99 then do: /* инвентаризацию не включаем */
-            assign areal-no-pay-qnty1 = areal-no-pay-qnty1 + treal-2.qnty1
-                  areal-no-pay-qnty2 = areal-no-pay-qnty2 + treal-2.qnty2
-                  areal-no-pay-netto = areal-no-pay-netto + treal-2.netto.
+            assign areal-no-pay-qnty1 = areal-no-pay-qnty1 + round(treal-2.qnty1,2)
+                  areal-no-pay-qnty2 = areal-no-pay-qnty2 + round(treal-2.qnty2,2)
+                  areal-no-pay-netto = areal-no-pay-netto + round(treal-2.netto,2).
           end.
         end.
 
@@ -669,9 +669,9 @@ for each t-2-sug:
       next.
     end.
     assign 
-      aincome-sug-qnty1 = aincome-sug-qnty1 + tincome-2.qnty1
-      aincome-sug-qnty2 = aincome-sug-qnty2 + tincome-2.qnty2
-      aincome-sug-qnty3 = aincome-sug-qnty3 + tincome-2.qnty3
+      aincome-sug-qnty1 = aincome-sug-qnty1 + round(tincome-2.qnty1,2)
+      aincome-sug-qnty2 = aincome-sug-qnty2 + round(tincome-2.qnty2,2)
+      aincome-sug-qnty3 = aincome-sug-qnty3 + round(tincome-2.qnty3,2)
       loc-income-sug-ii = tincome-2.ii
       .
   END.
@@ -849,9 +849,9 @@ procedure print-total .
 
         ASSIGN 
           pol5      = tincome-2.supp-name
-          pol7      = tincome-2.qnty1
+          pol7      = round(tincome-2.qnty1,2)
           pol8      = tincome-2.density
-          pol9      = tincome-2.qnty2
+          pol9      = round(tincome-2.qnty2,2)
           pol10     = tincome-2.temperature
           supp-line = yes.
         if p-batch > 0
@@ -986,9 +986,9 @@ procedure print-total .
             else 
             do:
               assign 
-                actreal-2.qnty1 = actreal-2.qnty1 + treal-2.qnty1
-                actreal-2.qnty2 = actreal-2.qnty2 + treal-2.qnty2
-                actreal-2.netto = actreal-2.netto + treal-2.netto.
+                actreal-2.qnty1 = actreal-2.qnty1 + round(treal-2.qnty1,2)
+                actreal-2.qnty2 = actreal-2.qnty2 + round(treal-2.qnty2,2)
+                actreal-2.netto = actreal-2.netto + round(treal-2.netto,2).
             end.
           end.
         
@@ -1129,10 +1129,10 @@ procedure print-total .
         if main-line = yes then 
         do:
           assign 
-            accum-4  = accum-4  + pol3
-            accum-5  = accum-5  + pol4
-            accum-17 = accum-17 + pol18
-            accum-18 = accum-18 + pol19.
+            accum-4  = accum-4  + round(pol3,2)
+            accum-5  = accum-5  + round(pol4,2)
+            accum-17 = accum-17 + round(pol18,2)
+            accum-18 = accum-18 + round(pol19,2).
         end.
 
       if supp-line = yes then 
@@ -1140,8 +1140,8 @@ procedure print-total .
         if tincome-2.is-fact = yes then 
         do:
           assign 
-            accum-9  = accum-9  + pol7
-            accum-11 = accum-11 + pol9.
+            accum-9  = accum-9  + round(pol7,2)
+            accum-11 = accum-11 + round(pol9,2).
         end.
       end.
       if pay-line = yes then 
@@ -1153,9 +1153,9 @@ procedure print-total .
           if treal-2.discnt-type = -99 or treal-2.cpay-code < 0 then
           do:
             assign 
-              accum-14 = accum-14 + pol12
-              accum-15 = accum-15 + pol13
-              accum-16 = accum-16 + pol14.
+              accum-14 = accum-14 + round(pol12,2)
+              accum-15 = accum-15 + round(pol13,2)
+              accum-16 = accum-16 + round(pol14,2).
           end.
         end.
       end.
@@ -1275,16 +1275,16 @@ procedure print-total .
           do:
             
             if actreal-2.curr-code >= 0 then
-              assign areal-is-pay-qnty1 = areal-is-pay-qnty1 + actreal-2.qnty1
-                areal-is-pay-qnty2 = areal-is-pay-qnty2 + actreal-2.qnty2
-                areal-is-pay-netto = areal-is-pay-netto + actreal-2.netto.
+              assign areal-is-pay-qnty1 = areal-is-pay-qnty1 + round(actreal-2.qnty1,2)
+                areal-is-pay-qnty2 = areal-is-pay-qnty2 + round(actreal-2.qnty2,2)
+                areal-is-pay-netto = areal-is-pay-netto + round(actreal-2.netto,2).
           end.
           else 
           do:
             assign 
-              areal-no-pay-qnty1 = areal-no-pay-qnty1 + actreal-2.qnty1
-              areal-no-pay-qnty2 = areal-no-pay-qnty2 + actreal-2.qnty2
-              areal-no-pay-netto = areal-no-pay-netto + actreal-2.netto .
+              areal-no-pay-qnty1 = areal-no-pay-qnty1 + round(actreal-2.qnty1,2)
+              areal-no-pay-qnty2 = areal-no-pay-qnty2 + round(actreal-2.qnty2,2)
+              areal-no-pay-netto = areal-no-pay-netto + round(actreal-2.netto,2) .
           end.
 
           assign 
@@ -1531,8 +1531,8 @@ procedure print-sug .
 
         ASSIGN 
           pol5      = tincome-2.supp-name
-          pol7      = tincome-2.qnty1
-          pol9      = tincome-2.qnty3
+          pol7      = round(tincome-2.qnty1,2)
+          pol9      = round(tincome-2.qnty3,2)
           supp-line = yes.
         if p-batch > 0
           and tincome-2.supp-code > 0
@@ -1649,9 +1649,9 @@ procedure print-sug .
             else 
             do:
               assign 
-                actreal-2.qnty1 = actreal-2.qnty1 + treal-2.qnty1
-                actreal-2.qnty2 = actreal-2.qnty2 + treal-2.qnty2
-                actreal-2.netto = actreal-2.netto + treal-2.netto.
+                actreal-2.qnty1 = actreal-2.qnty1 + round(treal-2.qnty1,2)
+                actreal-2.qnty2 = actreal-2.qnty2 + round(treal-2.qnty2,2)
+                actreal-2.netto = actreal-2.netto + round(treal-2.netto,2).
             end.
           end.
         
@@ -1777,10 +1777,10 @@ procedure print-sug .
         if main-line = yes then 
         do:
           assign 
-            accum-sug-4  = accum-sug-4  + pol3
-            accum-sug-5  = accum-sug-5  + pol4
-            accum-sug-17 = accum-sug-17 + pol18
-            accum-sug-18 = accum-sug-18 + pol19.
+            accum-sug-4  = accum-sug-4  + round(pol3,2)
+            accum-sug-5  = accum-sug-5  + round(pol4,2)
+            accum-sug-17 = accum-sug-17 + round(pol18,2)
+            accum-sug-18 = accum-sug-18 + round(pol19,2).
         end.
 
       if supp-line = yes then 
@@ -1788,8 +1788,8 @@ procedure print-sug .
         if tincome-2.is-fact = yes then 
         do:
           assign 
-            accum-sug-9  = accum-sug-9  + pol7
-            accum-sug-11 = accum-sug-11 + pol9.
+            accum-sug-9  = accum-sug-9  + round(pol7,2)
+            accum-sug-11 = accum-sug-11 + round(pol9,2).
         end.
       end.
       if pay-line = yes then 
@@ -1801,9 +1801,9 @@ procedure print-sug .
           if treal-2.discnt-type = -99 or treal-2.cpay-code < 0 then
           do:
             assign 
-              accum-sug-14 = accum-sug-14 + pol12
-              accum-sug-15 = accum-sug-15 + pol13
-              accum-sug-16 = accum-sug-16 + pol14.
+              accum-sug-14 = accum-sug-14 + round(pol12,2)
+              accum-sug-15 = accum-sug-15 + round(pol13,2)
+              accum-sug-16 = accum-sug-16 + round(pol14,2).
           end.
         end.
       end.
@@ -1917,16 +1917,16 @@ procedure print-sug .
           do:
             
             if actreal-2.curr-code >= 0 then
-              assign areal-is-pay-qnty1 = areal-is-pay-qnty1 + actreal-2.qnty1
-                areal-is-pay-qnty2 = areal-is-pay-qnty2 + actreal-2.qnty2
-                areal-is-pay-netto = areal-is-pay-netto + actreal-2.netto.
+              assign areal-is-pay-qnty1 = areal-is-pay-qnty1 + round(actreal-2.qnty1,2)
+                areal-is-pay-qnty2 = areal-is-pay-qnty2 + round(actreal-2.qnty2,2)
+                areal-is-pay-netto = areal-is-pay-netto + round(actreal-2.netto,2).
           end.
           else 
           do:
             assign 
-              areal-no-pay-qnty1 = areal-no-pay-qnty1 + actreal-2.qnty1
-              areal-no-pay-qnty2 = areal-no-pay-qnty2 + actreal-2.qnty2
-              areal-no-pay-netto = areal-no-pay-netto + actreal-2.netto .
+              areal-no-pay-qnty1 = areal-no-pay-qnty1 + round(actreal-2.qnty1,2)
+              areal-no-pay-qnty2 = areal-no-pay-qnty2 + round(actreal-2.qnty2,2)
+              areal-no-pay-netto = areal-no-pay-netto + round(actreal-2.netto,2) .
           end.
 
           assign 
