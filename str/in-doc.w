@@ -248,6 +248,9 @@ define buffer bf-trn-doc for ub.trn-doc.
 define buffer bf_parts for ub.parts.
 define buffer l-doc-line for ub.doc-line. /* дл€ поиска  */
 define buffer bf_sysconf for ub.sysconf.
+define buffer buf_marking for ub.marking.
+define buffer buf_marking-lines for ub.marking-lines.
+
 define variable sort-default       as logical   no-undo .
 define variable del-list           as character no-undo .
 define variable base-abbr          as character format "x(3)":u view-as TEXT size 4 by 1 no-undo.
@@ -1784,17 +1787,19 @@ DO:
     when true then do:
       def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
       run gbl/getobjsrvhndl.p (input-output ObjSrv).
-      for each bf_parts where bf_parts.out-code = t-doc.doc-code and 
+      for each bf_parts no-lock where bf_parts.out-code = t-doc.doc-code and 
       bf_parts.artic = goods.artic and bf_parts.prod-code = goods.prod-code and bf_parts.prod-type = goods.prod-type:
-        for each ub.marking-lines where 
+        for each ub.marking-lines no-lock where 
               ub.marking-lines.obj-type = bf_parts.obj-type
           and ub.marking-lines.obj-code = bf_parts.obj-code
           and ub.marking-lines.in-code = bf_parts.in-code
           and ub.marking-lines.out-code = bf_parts.out-code
-          and ub.marking-lines.gds-code = ub.goods.gds-code:
+          and ub.marking-lines.gds-code = ub.goods.gds-code
+          and ub.marking-lines.part-code = bf_parts.part-code
+          and ub.marking-lines.prt-code = bf_parts.prt-code:
           create tt-marking-lines.
           buffer-copy ub.marking-lines to tt-marking-lines.
-          find first ub.marking where ub.marking.mark = tt-marking-lines.mark no-error.
+          find first ub.marking no-lock where ub.marking.mark = tt-marking-lines.mark no-error.
           if available (ub.marking)
           then do:
             tt-marking-lines.sts = ub.marking.sts.
@@ -1805,6 +1810,42 @@ DO:
             tt-marking-lines.doc-level = ub.marking-lines.doc-level.
             tt-marking-lines.gds-name = ub.goods.gds-name.
             tt-marking-lines.mark-parent = ub.marking.mark-parent.
+
+            if tt-marking-lines.doc-level = 2
+            then do:
+              find first buf_marking-lines no-lock where ub.marking.mark-parent <> "" 
+                and buf_marking-lines.mark = ub.marking.mark-parent 
+                and buf_marking-lines.obj-type = bf_parts.obj-type
+                and buf_marking-lines.obj-code = bf_parts.obj-code
+                and buf_marking-lines.in-code = bf_parts.in-code
+                and buf_marking-lines.out-code = bf_parts.out-code
+                and buf_marking-lines.gds-code = ub.goods.gds-code
+                and buf_marking-lines.part-code = bf_parts.part-code
+                and buf_marking-lines.prt-code = bf_parts.prt-code no-error.
+
+              if not available (buf_marking-lines)
+              then do:
+                
+                find first tt-marking-lines no-lock where tt-marking-lines.mark = ub.marking.mark-parent 
+                  no-error.
+                if not available (tt-marking-lines )
+                then do:
+                  find first buf_marking no-lock where buf_marking.mark = ub.marking.mark-parent.
+                  create tt-marking-lines.
+                  buffer-copy ub.marking-lines except ub.marking-lines.mark ub.marking-lines.sts to tt-marking-lines.
+                  tt-marking-lines.mark = buf_marking.mark.
+                  tt-marking-lines.sts = buf_marking.sts.
+                  tt-marking-lines.box-qnty = buf_marking.box-qnty .
+                  tt-marking-lines.unit = buf_marking.unit .
+                  tt-marking-lines.unit-ext = buf_marking.unit-ext .
+                  tt-marking-lines.doc-level = 1.
+                  tt-marking-lines.gds-name = ub.goods.gds-name.
+                  tt-marking-lines.mark-parent = buf_marking.mark-parent.
+                  tt-marking-lines.stts = objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts).
+                end.
+              end.
+            end.
+
           end.
           else do:
             message "ћарка отсутсвует в справочнике марок - " + tt-marking-lines.mark view-as alert-box error.
