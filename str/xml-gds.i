@@ -236,6 +236,14 @@ end.
       run bgelib-tag-put in this-procedure ( input 3, input "ISEgaisNoPDF", input 1, input 1 ).
     end.  
   end.  
+  
+  find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
+                              and buf_goods-attr.attr-code = "time-coock" 
+                              and buf_goods-attr.attr-value = "yes" no-lock no-error. 
+  if available buf_goods-attr then do:   
+      run bgelib-tag-put in this-procedure ( input 3, input "ISCookStumped", input 1, input 1 ).
+  end.  
+  
       run bgelib-tag-close in this-procedure ( input 3, input "ItemStatus").
   end. /*не инфокиоск*/
 

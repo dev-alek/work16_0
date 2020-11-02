@@ -790,7 +790,16 @@ end.
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-calories}, output v-attr-del).     
   end.
-  
+
+  if p-GdsObj:ISCookStumped <> ?
+  and p-GdsObj:ISCookStumped <> 0
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-time-coock}, "yes").  
+  end.
+  else do :
+    RUN gds-attr-delete (v-nbc, {&attr-time-coock}, output v-attr-del).     
+  end.
+    
   if p-GdsObj:carbohydrates <> ?
   and p-GdsObj:carbohydrates <> 0
   then do :

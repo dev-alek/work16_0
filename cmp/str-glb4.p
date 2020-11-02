@@ -484,6 +484,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* товар фасуется */
 { cmp/cr-prep.i 1 attr-fasovka            fasovka            " " fasovka       }
 
+/* Время приготовления в чеке */
+{ cmp/cr-prep.i 1 attr-time-coock            time-coock            " " time-coock       }
+
 /* требуется обязательная маркировка  */
 { cmp/cr-prep.i 1 attr-mark            mark            " " mark       }
 
@@ -576,6 +579,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-ban-bonus}~
 ,{&bef-attr-null-price}~
 ,{&bef-attr-fasovka}~
+,{&bef-attr-time-coock}~
 ,{&bef-attr-mark}~
 ,{&bef-attr-sum-grp-gl}~
 ,{&bef-attr-mercur_FGIS}~

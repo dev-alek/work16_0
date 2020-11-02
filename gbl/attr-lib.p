@@ -6085,6 +6085,19 @@ end procedure.
 &scop manual-edit-attr-fasovka 1
 &scop batch-edit-attr-fasovka  1
 
+/*Печатать время приготовления в чеке*/
+&glob type-attr-time-coock {&type-log}
+&glob format-attr-time-coock  "+/ "
+&glob label-attr-time-coock   "Печатать время приготовления в чеке"
+&glob tooltip-attr-time-coock   "Печатать время приготовления в чеке"
+&glob user-can-edit-attr-time-coock  true
+&glob output-display-attr-time-coock  true
+&glob other-attr-time-coock  ""
+&glob news-attr-time-coock true
+&glob copy-attr-time-coock  true
+&scop manual-edit-attr-time-coock 1
+&scop batch-edit-attr-time-coock  1
+
 /*Требует обязательной маркировки*/
 &glob type-attr-mark {&type-log}
 &glob format-attr-mark  "+/ "
@@ -6495,6 +6508,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-fasovka
       {&attr-temp-full-code}
+      &scop attr-code attr-time-coock
+      {&attr-temp-full-code}     
       &scop attr-code attr-mark
       {&attr-temp-full-code}
       &scop attr-code attr-mercur_FGIS
@@ -6596,6 +6611,8 @@ do
       &scop attr-code attr-null-price
       {&attr-temp-code}
       &scop attr-code attr-fasovka
+      {&attr-temp-code}
+	  &scop attr-code attr-time-coock
       {&attr-temp-code}
       &scop attr-code attr-mark
       {&attr-temp-code}
@@ -6934,6 +6951,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-fasovka
       {&attr-news-code}
+	  &scop attr-code attr-time-coock
+      {&attr-news-code}
       &scop attr-code attr-mark
       {&attr-news-code}
       &scop attr-code attr-sum-grp-gl
@@ -7029,6 +7048,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-null-price
       {&attr-copy-code}
       &scop attr-code attr-fasovka
+      {&attr-copy-code}
+      &scop attr-code attr-time-coock
       {&attr-copy-code}
       &scop attr-code attr-mark
       {&attr-copy-code}
@@ -7713,6 +7734,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-fasovka
       {&attr-manual-edit-code}
+      &scop attr-code attr-time-coock
+      {&attr-manual-edit-code}
       &scop attr-code attr-mercur_FGIS
       {&attr-manual-edit-code}
       &scop attr-code attr-perishable
@@ -7809,6 +7832,8 @@ do
       &scop attr-code attr-null-price
       {&attr-batch-edit-code}
       &scop attr-code attr-fasovka
+      {&attr-batch-edit-code}
+	  &scop attr-code attr-time-coock
       {&attr-batch-edit-code}
       &scop attr-code attr-mark
       {&attr-batch-edit-code}
