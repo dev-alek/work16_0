@@ -11630,8 +11630,8 @@ end procedure.
 /* Дополнение к альтернативному названию */
 &scop type-attr-dop-alt-name-o {&type-char}
 &scop format-attr-dop-alt-name-o  "X(40)"
-&scop label-attr-dop-alt-name-o   "Дополнение к альтернативному названию"
-&scop tooltip-attr-dop-alt-name-o   "Дополнение к альтернативному названию"
+&scop label-attr-dop-alt-name-o   "Дополнение к названию товара"
+&scop tooltip-attr-dop-alt-name-o   "Дополнение к названию товара"
 &scop user-can-edit-attr-dop-alt-name-o  true
 &scop output-display-attr-dop-alt-name-o  true
 &scop other-attr-dop-alt-name-o "spr=gds-obj-dop-alt-name"
