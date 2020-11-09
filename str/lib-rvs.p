@@ -1727,11 +1727,24 @@ define variable      v-water-qnty as decimal no-undo.
             end.  
           end.
           else do:
-            put stream str-err unformatted
+            if trim( entry( 1, v_string-tmp, '=' ) ) = "ERROR"
+            then do :
+              assign
+                tt-meas-file.is-error = true 
+              .
+              put stream str-err unformatted
+              substitute('&2 Ошибка: &1'
+                         , trim( entry(2, v_string-tmp, '=') )
+                         , cur-time-string-sec()
+                         ) skip .
+            end .
+            else do :
+              put stream str-err unformatted
               substitute('&2 Неизвестный параметр: &1'
                          , trim( entry(1, v_string-tmp, '=') )
                          , cur-time-string-sec()
                          ) skip .
+            end .
           end.
         end. /* читаем данные по резервуару */
       end. /* не номер танка */
@@ -1739,7 +1752,7 @@ define variable      v-water-qnty as decimal no-undo.
 
     if is_FatalError = no then do:
     _recalc:
-    for each tt-meas-file
+    for each tt-meas-file where not tt-meas-file.is-error
           on error undo, return error return-value
           :
             
@@ -2128,25 +2141,52 @@ define variable      v-water-qnty as decimal no-undo.
         
     on error undo, return error return-value
     :
-      assign
-        tt-meas.measure-qnty     = tt-meas-file.measure-qnty
-        tt-meas.brutto-qnty      = tt-meas-file.brutto-qnty
-        tt-meas.measure-cli-qnty = tt-meas-file.measure-cli-qnty
-        tt-meas.brutto-cli-qnty  = tt-meas-file.brutto-cli-qnty
-        tt-meas.density          = tt-meas-file.density
-        tt-meas.temperature      = (if tt-meas-file.temp-not-null then tt-meas-file.temperature else ?)
-        tt-meas.level-total      = tt-meas-file.level-total
-        tt-meas.level-petrol     = tt-meas-file.level-petrol
-        tt-meas.level-water      = tt-meas-file.level-water
-        tt-meas.temp-layer1      = (if tt-meas-file.t1-not-null then tt-meas-file.temp-layer1 else ?)
-        tt-meas.temp-layer2      = (if tt-meas-file.t2-not-null then tt-meas-file.temp-layer2 else ?)
-        tt-meas.temp-layer3      = (if tt-meas-file.t3-not-null then tt-meas-file.temp-layer3 else ?)
-        tt-meas.measure-tc-qnty  = tt-meas-file.measure-tc-qnty
-        tt-meas.brutto-tc-qnty   = tt-meas-file.brutto-tc-qnty
-        tt-meas.vapor-density    = tt-meas-file.vapor-density
-        tt-meas.vapor-pressure   = tt-meas-file.vapor-pressure
-        tt-meas.water-qnty       = tt-meas-file.water-qnty
-      .
+      if tt-meas-file.is-error
+      then do :
+        assign                       
+          tt-meas.measure-qnty     = ?
+          tt-meas.brutto-qnty      = ?
+          tt-meas.measure-cli-qnty = ?
+          tt-meas.brutto-cli-qnty  = ?
+          tt-meas.density          = ?
+          tt-meas.temperature      = ?
+          tt-meas.level-total      = ?
+          tt-meas.level-petrol     = ?
+          tt-meas.level-water      = ?
+          tt-meas.temp-layer1      = ?
+          tt-meas.temp-layer2      = ?
+          tt-meas.temp-layer3      = ?
+          tt-meas.measure-tc-qnty  = ?
+          tt-meas.brutto-tc-qnty   = ?
+          tt-meas.vapor-density    = ?
+          tt-meas.vapor-pressure   = ?
+          tt-meas.water-qnty       = ?
+          tt-meas.is-error         = yes
+        .                            
+      end .
+      else do :
+        assign
+          tt-meas.measure-qnty     = tt-meas-file.measure-qnty
+          tt-meas.brutto-qnty      = tt-meas-file.brutto-qnty
+          tt-meas.measure-cli-qnty = tt-meas-file.measure-cli-qnty
+          tt-meas.brutto-cli-qnty  = tt-meas-file.brutto-cli-qnty
+          tt-meas.density          = tt-meas-file.density
+          tt-meas.temperature      = (if tt-meas-file.temp-not-null then tt-meas-file.temperature else ?)
+          tt-meas.level-total      = tt-meas-file.level-total
+          tt-meas.level-petrol     = tt-meas-file.level-petrol
+          tt-meas.level-water      = tt-meas-file.level-water
+          tt-meas.temp-layer1      = (if tt-meas-file.t1-not-null then tt-meas-file.temp-layer1 else ?)
+          tt-meas.temp-layer2      = (if tt-meas-file.t2-not-null then tt-meas-file.temp-layer2 else ?)
+          tt-meas.temp-layer3      = (if tt-meas-file.t3-not-null then tt-meas-file.temp-layer3 else ?)
+          tt-meas.measure-tc-qnty  = tt-meas-file.measure-tc-qnty
+          tt-meas.brutto-tc-qnty   = tt-meas-file.brutto-tc-qnty
+          tt-meas.vapor-density    = tt-meas-file.vapor-density
+          tt-meas.vapor-pressure   = tt-meas-file.vapor-pressure
+          tt-meas.water-qnty       = tt-meas-file.water-qnty
+          tt-meas.is-error         = no
+/*            tt-meas.loc1 =   tt-meas-file.loc1*/
+        .
+      end .
     end. /* for each */
 end.
   return .
@@ -2247,6 +2287,10 @@ define variabl v-file-name as character no-undo.
       and tt-meas.pl-code  = p-pl-code
     no-error.
   if not available tt-meas then do:
+    return error substitute( 'Ошибка. С приборов не получены данные по резервуару &1 .'
+                           , p-pl-code ) .
+  end.
+  if tt-meas.is-error then do:
     return error substitute( 'Ошибка. С приборов не получены данные по резервуару &1 .'
                            , p-pl-code ) .
   end.
