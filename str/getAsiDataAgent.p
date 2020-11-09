@@ -35,6 +35,8 @@ define temp-table tt-place no-undo
   field mass          as decimal    label "Масса (кг)"
   field vapor-density as decimal    label "Плотность СУГ (кг/л)"
   field vapor-pressure as decimal   label "Давление СУГ (мПа)"
+  field is-error      as logical
+  field error-message as character
   index pi as primary unique
     loc1
 .
@@ -52,6 +54,9 @@ define variable v-log-file-name   as character  no-undo .
 define variable v-asi-ip  as character no-undo .
 define variable v-asi-port as character no-undo .
 define variable v-attr-type as character no-undo .
+
+define variable v-asi-error-code as integer no-undo initial 0 .
+define variable v-asi-error-message as character no-undo .
   
 
 /* ***************************  Main Block  *************************** */
@@ -84,30 +89,36 @@ output to value (p-file-name) .
 
 for each tt-place no-lock :
   put unformatted ("TANK = " + tt-place.loc1 ) skip .
-  if tt-place.level-total <> ? then
-    put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
-  if tt-place.level-water <> ? then
-    put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
-  if (tt-place.level-total - tt-place.level-water) <> ? then
-    put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
-  if tt-place.avrg-temp <> ? then
-    put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
-  if tt-place.density <> ? then
-    put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>9.9<<<")) skip .
-  if tt-place.total-vol <> ? then
-    put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
-  if tt-place.mass <> ? then
-    put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
-  if tt-place.t1 <> ? then
-    put unformatted ("T1 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
-  if tt-place.t2 <> ? then
-    put unformatted ("T2 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
-  if tt-place.t3 <> ? then
-    put unformatted ("T3 = " + string(tt-place.t3, "->>>>>9.9<<<")) skip .
-  if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ? then
-    put unformatted ("VAPOR_DENSITY = " + string(tt-place.vapor-density, ">>>>>9.9<<<")) skip .
-  if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ? then
-    put unformatted ("VAPOR_PRESSURE = " + string(tt-place.vapor-pressure, ">>>>>9.9<<<")) skip .
+  if tt-place.is-error
+  then do :
+    put unformatted ("ERROR = " + tt-place.error-message) skip .
+  end .
+  else do :
+    if tt-place.level-total <> ? then
+      put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
+    if tt-place.level-water <> ? then
+      put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
+    if (tt-place.level-total - tt-place.level-water) <> ? then
+      put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
+    if tt-place.avrg-temp <> ? then
+      put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
+    if tt-place.density <> ? then
+      put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>9.9<<<")) skip .
+    if tt-place.total-vol <> ? then
+      put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
+    if tt-place.mass <> ? then
+      put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
+    if tt-place.t1 <> ? then
+      put unformatted ("T1 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
+    if tt-place.t2 <> ? then
+      put unformatted ("T2 = " + string(tt-place.t2, "->>>>>9.9<<<")) skip .
+    if tt-place.t3 <> ? then
+      put unformatted ("T3 = " + string(tt-place.t3, "->>>>>9.9<<<")) skip .
+    if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ? then
+      put unformatted ("VAPOR_DENSITY = " + string(tt-place.vapor-density, ">>>>>9.9<<<")) skip .
+    if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ? then
+      put unformatted ("VAPOR_PRESSURE = " + string(tt-place.vapor-pressure, ">>>>>9.9<<<")) skip .
+  end .
 end.
 
 output close .
@@ -120,6 +131,11 @@ os-append value(p-file-name) value(v-log-file-name).
 output to value (  v-log-file-name  ) append .
 put unformatted skip .
 output close .
+
+/*if v-asi-error-code > 0             */
+/*then do :                           */
+/*  return error v-asi-error-message .*/
+/*end .                               */
 
 procedure parse-xml :
   define input parameter p-file as character .
@@ -160,6 +176,33 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
     
     hNoderef:GET-CHILD(hText, 1) no-error .    
     
+    IF hNoderef:NAME = "ErrNum"
+    then do :
+      v-asi-error-code = integer(hText:node-value) no-error .
+    end .
+    
+    IF hNoderef:NAME = "ErrMsg"
+    then do :
+      v-asi-error-message = hText:node-value no-error .
+      if v-asi-error-code > 0
+      then do :
+        assign
+          tt-place.t1             = ?
+          tt-place.t2             = ?
+          tt-place.t3             = ?
+          tt-place.level-total    = ?   
+          tt-place.level-water    = ?   
+          tt-place.total-vol      = ? 
+          tt-place.avrg-temp      = ?  
+          tt-place.density        = ? 
+          tt-place.mass           = ?
+          tt-place.vapor-density  = ?
+          tt-place.vapor-pressure = ?
+          tt-place.is-error       = true
+          tt-place.error-message  = v-asi-error-message
+        .
+      end .
+    end .
         
     IF hNoderef:NAME = "Tank"
     then do :
@@ -184,17 +227,20 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
       end.
     end.
     
-    IF hNoderef:NAME = "LevelTotal" then assign tt-place.level-total = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "LevelWater" then assign tt-place.level-water = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "Temperature" then assign tt-place.avrg-temp = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "Density" then assign tt-place.density = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "VolumeTotal" then assign tt-place.total-vol = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "MassTotal" then assign tt-place.mass = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "VaporDensity" then assign tt-place.vapor-density = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "VaporPressure" then assign tt-place.vapor-pressure = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "Temperature1" then assign tt-place.t1 = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "Temperature2" then assign tt-place.t2 = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "Temperature3" then assign tt-place.t3 = decimal(hText:node-value) no-error .
+    if v-asi-error-code = 0
+    then do :
+      IF hNoderef:NAME = "LevelTotal" then assign tt-place.level-total = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "LevelWater" then assign tt-place.level-water = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "Temperature" then assign tt-place.avrg-temp = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "Density" then assign tt-place.density = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "VolumeTotal" then assign tt-place.total-vol = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "MassTotal" then assign tt-place.mass = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "VaporDensity" then assign tt-place.vapor-density = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "VaporPressure" then assign tt-place.vapor-pressure = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "Temperature1" then assign tt-place.t1 = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "Temperature2" then assign tt-place.t2 = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "Temperature3" then assign tt-place.t3 = decimal(hText:node-value) no-error .
+    end .
            
     RUN GetChildren(hNoderef, (level + 1)).
 END.

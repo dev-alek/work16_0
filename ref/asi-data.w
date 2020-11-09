@@ -79,6 +79,8 @@ define temp-table tt-place no-undo
   field mass          as decimal    label "Масса (кг)"
   field vapor-density as decimal decimals 10  label "Плотность СУГ ПФ (кг/л)" format ">>>>>>>>>9.9<<<<<<<<<"
   field vapor-pressure as decimal   label "Давление СУГ (мПа)" format ">>>9.99999"
+  field is-error      as logical 
+  field error-message as character
   index pi as primary unique
     loc1
 .
@@ -121,11 +123,15 @@ define variable v-attr-type as character no-undo .
 
 define variable v-mode    as integer no-undo .
 
-define variable v-status  as character view-as text label "Статус" initial "" format "X(50)".
+define variable v-status  as character view-as text label "Статус" initial "" format "X(80)".
+
+define variable v-asi-error-code as integer no-undo initial 0 .
+define variable v-asi-error-message as character no-undo .
 
 define buffer buf_clients for ub.clients .
 define buffer buf_place for ub.place .
 define buffer buf_pl-gds for ub.pl-gds .
+define buffer buf_tt-place for tt-place .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -526,21 +532,26 @@ RUN disable_UI.
 procedure asi-send-cmd :
   define variable bat-file              as character    no-undo .
   define variable cmd                   as character    no-undo .
-  define variable v-response-file-name  as character    no-undo .
   define variable v-pid                 as integer      no-undo .
   define variable v-addr                as character    no-undo .
   define variable v-file                as character    no-undo .
   v-file = v-temp-dir + "\asiresp_agnt.xml" .
   
-  v-response-file-name = v-temp-dir + "\asiresp_agnt.xml" .
   v-addr = v-asi-ip + ":" + v-asi-port + "/getmeas/?loclist=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22" .
-  cmd = substitute ('&1 --connect-timeout 5 "&3" >&2', search ("exe/curl.exe"), v-response-file-name, v-addr).          
+  cmd = substitute ('&1 --connect-timeout 5 "&3" >&2', search ("exe/curl.exe"), v-file, v-addr).          
   bat-file = v-temp-dir + "\asireq_agnt.bat" .  
   output to value(bat-file) .
   put unformatted cmd skip .
   output close .     
   
   os-delete value(v-file) no-error .
+  v-file = search(v-file) .
+  if v-file = ? or trim(v-file) = ""
+  then do :
+  end . 
+  else do :
+    return error ("Не могу удалить файл " + v-file + " для получения новых данных!") .
+  end .
       
   run gbl/run-gpid.p (  input bat-file
                        ,input '':U
@@ -585,6 +596,7 @@ end procedure .
 procedure asi-read-sts :
   define variable v-file    as character no-undo .
   define variable jj as integer no-undo .
+  define variable err-msg as character no-undo .
   v-file = v-temp-dir + "\asiresp_agnt.xml" .
   v-file = search(v-file) .
   if v-file = ? or trim(v-file) = ""
@@ -610,11 +622,22 @@ procedure asi-read-sts :
   run parse-xml (input v-file,
                  input-output table tt-place) .
                  
-  define buffer buf_tt-place for tt-place .
   find first buf_tt-place no-error .
   if available buf_tt-place
   then
   br-place:refresh () in frame Dialog-Frame no-error . 
+  
+  find first buf_tt-place where buf_tt-place.is-error no-error .
+  if available buf_tt-place
+  then do :
+    err-msg = "Ошибка при получении данных с резервуаров " .
+    for each buf_tt-place where buf_tt-place.is-error :
+      err-msg = err-msg + buf_tt-place.loc1 + ", " .
+    end .
+    err-msg = trim(err-msg) .
+    err-msg = trim(err-msg, ",") .
+    return error err-msg .
+  end .
 end procedure .
 
 procedure parse-xml :
@@ -638,11 +661,11 @@ procedure parse-xml :
   for each tt-place no-lock :
     put unformatted ("TANK = " + tt-place.loc1 ) skip .
     if tt-place.level-total <> ? then
-      put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total / 10, ">>>>>9.9<<<")) skip .
+      put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total, ">>>>>9.9<<<")) skip .
     if tt-place.level-water <> ? then
-      put unformatted ("LEVEL_WATER = " + string(tt-place.level-water / 10, ">>>>>9.9<<<")) skip .
+      put unformatted ("LEVEL_WATER = " + string(tt-place.level-water, ">>>>>9.9<<<")) skip .
     if (tt-place.level-total - tt-place.level-water) <> ? then
-      put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water) / 10, ">>>>>9.9<<<")) skip .
+      put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water), ">>>>>9.9<<<")) skip .
     if tt-place.avrg-temp <> ? then
       put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
     if tt-place.density <> ? then
@@ -688,6 +711,33 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
     
     hNoderef:GET-CHILD(hText, 1) no-error .    
     
+    IF hNoderef:NAME = "ErrNum"
+    then do :
+      v-asi-error-code = integer(hText:node-value) no-error .
+    end .
+    
+    IF hNoderef:NAME = "ErrMsg"
+    then do :
+      v-asi-error-message = hText:node-value no-error .
+      if v-asi-error-code > 0
+      then do :
+        assign
+          tt-place.t1             = ?
+          tt-place.t2             = ?
+          tt-place.t3             = ?
+          tt-place.level-total    = ?   
+          tt-place.level-water    = ?   
+          tt-place.total-vol      = ? 
+          tt-place.avrg-temp      = ?  
+          tt-place.density        = ? 
+          tt-place.mass           = ?
+          tt-place.vapor-density  = ?
+          tt-place.vapor-pressure = ?
+          tt-place.is-error       = true
+          tt-place.error-message  = v-asi-error-message
+        .
+      end .
+    end .
         
     IF hNoderef:NAME = "Tank"
     then do :
@@ -712,17 +762,20 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
       end.
     end.
     
-    IF hNoderef:NAME = "LevelTotal" then assign tt-place.level-total = decimal(hText:node-value) / 10 no-error .
-    IF hNoderef:NAME = "LevelWater" then assign tt-place.level-water = decimal(hText:node-value) / 10 no-error .
-    IF hNoderef:NAME = "Temperature" then assign tt-place.avrg-temp = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "Density" then assign tt-place.density = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "VolumeTotal" then assign tt-place.total-vol = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "MassTotal" then assign tt-place.mass = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "VaporDensity" then assign tt-place.vapor-density = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "VaporPressure" then assign tt-place.vapor-pressure = decimal(hText:node-value) / 1000 no-error .
-    IF hNoderef:NAME = "Temperature1" then assign tt-place.t1 = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "Temperature2" then assign tt-place.t2 = decimal(hText:node-value) no-error .
-    IF hNoderef:NAME = "Temperature3" then assign tt-place.t3 = decimal(hText:node-value) no-error .
+    if v-asi-error-code = 0
+    then do :
+      IF hNoderef:NAME = "LevelTotal" then assign tt-place.level-total = decimal(hText:node-value) / 10 no-error .
+      IF hNoderef:NAME = "LevelWater" then assign tt-place.level-water = decimal(hText:node-value) / 10 no-error .
+      IF hNoderef:NAME = "Temperature" then assign tt-place.avrg-temp = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "Density" then assign tt-place.density = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "VolumeTotal" then assign tt-place.total-vol = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "MassTotal" then assign tt-place.mass = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "VaporDensity" then assign tt-place.vapor-density = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "VaporPressure" then assign tt-place.vapor-pressure = decimal(hText:node-value) / 1000 no-error .
+      IF hNoderef:NAME = "Temperature1" then assign tt-place.t1 = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "Temperature2" then assign tt-place.t2 = decimal(hText:node-value) no-error .
+      IF hNoderef:NAME = "Temperature3" then assign tt-place.t3 = decimal(hText:node-value) no-error .
+    end .
            
     RUN GetChildren(hNoderef, (level + 1)).
 END.

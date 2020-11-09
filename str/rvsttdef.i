@@ -78,6 +78,7 @@ create: Булгаков Андрей Николаевич
     field t1-not-null as logical
     field t2-not-null as logical
     field t3-not-null as logical
+    field is-error    as logical
     index pi        as primary   unique loc1.
     
 &endif
