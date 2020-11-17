@@ -317,7 +317,7 @@ on error undo, return error return-value
     then do:
       run display-chk in p-call-handle (chk-amount, nf-chk-amount).
     end.
-    
+    if X_chk-doc.chk-type <> integer({&rcpt-z-rep}) and X_chk-doc.office <> "" then do:  
     docs-to-reserv = get-inc-sal (
                                   input string(X_chk-doc.chk-type)
                                 , input X_chk-doc.netto
@@ -328,8 +328,9 @@ on error undo, return error return-value
                                 , output office-to-reserv
                                 , output kind-to-reserv
                                 , output add-nf-amount
-                                ).
-    
+                                ) no-error .
+    end.
+  
     /* Создание доп документов */
     
     v-cash-pay-attr = "".
@@ -432,7 +433,17 @@ on error undo, return error return-value
           .
           NEXT _Buf_chk-gds.
         end.
-        
+         if X_chk-doc.chk-type <> integer({&rcpt-z-rep}) and X_chk-doc.office = "" then
+         do:
+         &scop my-message substitute("Чек &1 не имеет тип чека. Чек не будет закачан в продажу&2&3"  ~
+                                  , X_chk-doc.doc-code             ~
+                                  , ~{&new-line~}                  ~
+                                  , return-value                   ~
+                                  )
+
+            {&display-message-laud} .
+            undo _one-check, leave _one-check.
+         end.
         docs-to-reserv-gds = get-inc-sal(
                                       input string(X_chk-doc.chk-type)
                                     , input X_chk-doc.netto
@@ -443,7 +454,7 @@ on error undo, return error return-value
                                     , output office-to-reserv-gds
                                     , output kind-to-reserv-gds
                                     , output add-nf-gds-amount
-                                    ).
+                                    ) no-error.
         
         if X_chk-doc.chk-type = integer({&rcpt-tech-refuell}) then do:
         
@@ -897,7 +908,7 @@ find first t-gds
               end.
             end. /*несуммовой чек*/
           end. /*do dtrg to docs-to-reserv */
-          if t-gds.pump > 0
+          if available (t-gds) and t-gds.pump > 0
           then do:
             assign
               t-gds.density = buf_chk-gds.density
