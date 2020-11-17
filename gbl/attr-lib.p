@@ -6159,6 +6159,18 @@ end procedure.
 &scop manual-edit-attr-mercur_FGIS  1
 &scop batch-edit-attr-mercur_FGIS  1
 
+/* Код номенклатурной классификации */
+&scop type-attr-gds-CommodityCode {&type-char}
+&scop format-attr-gds-CommodityCode  "X(21)"
+&scop label-attr-gds-CommodityCode   "Код номенклатурной классификации"
+&scop tooltip-attr-gds-CommodityCode   "Код номенклатурной классификации"
+&scop user-can-edit-attr-gds-CommodityCode  true
+&scop output-display-attr-gds-CommodityCode  true
+&scop other-attr-gds-CommodityCode ""
+&glob news-attr-gds-CommodityCode true
+&scop copy-attr-gds-CommodityCode  true
+&scop manual-edit-attr-gds-CommodityCode  1
+&scop batch-edit-attr-gds-CommodityCode  1
 /* Является скоропортящейся продукцией */
 &glob type-attr-perishable {&type-log}
 &glob format-attr-perishable  "+/-"
@@ -6563,6 +6575,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-gds-ptrl-densities
       {&attr-temp-full-code}
+      &scop attr-code attr-gds-CommodityCode
+      {&attr-temp-full-code}      
       &scop attr-code attr-length-of
       {&attr-temp-full-code}
       &scop attr-code attr-width-of
@@ -6667,6 +6681,8 @@ do
       {&attr-temp-code}
       &scop attr-code attr-gds-ptrl-densities
       {&attr-temp-code}
+      &scop attr-code attr-gds-CommodityCode
+      {&attr-temp-code}      
       &scop attr-code attr-length-of
       {&attr-temp-code}
       &scop attr-code attr-width-of
@@ -7006,6 +7022,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-gds-ptrl-densities
       {&attr-news-code}
+      &scop attr-code attr-gds-CommodityCode
+      {&attr-news-code}
       &scop attr-code attr-length-of
       {&attr-news-code}
       &scop attr-code attr-width-of
@@ -7104,6 +7122,8 @@ procedure gds-attr-copy :
       {&attr-copy-code}
       &scop attr-code attr-gds-ptrl-densities
       {&attr-copy-code}
+      &scop attr-code attr-gds-CommodityCode
+      {&attr-copy-code}      
       &scop attr-code attr-length-of
       {&attr-copy-code}
       &scop attr-code attr-width-of
@@ -7789,6 +7809,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-gds-ptrl-densities
       {&attr-manual-edit-code}
+      &scop attr-code attr-gds-CommodityCode
+      {&attr-manual-edit-code}
       &scop attr-code attr-length-of
       {&attr-manual-edit-code}
       &scop attr-code attr-width-of
@@ -7881,6 +7903,8 @@ do
       &scop attr-code attr-dflt-insalepr
       {&attr-batch-edit-code}
       &scop attr-code attr-gds-ptrl-densities
+      {&attr-batch-edit-code}
+      &scop attr-code attr-gds-CommodityCode
       {&attr-batch-edit-code}
       &scop attr-code attr-length-of
       {&attr-batch-edit-code}
