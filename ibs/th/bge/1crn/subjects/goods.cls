@@ -30,6 +30,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property gds-type      as character    no-undo get. private set.
   define property mark-type     as integer      no-undo get. private set.
   define property ISCookStumped as integer      no-undo get. private set.
+  define property CommodityCode as character    no-undo get. private set.
   define property img           as longchar     no-undo get. private set.
   define property unit-spl-code as character    no-undo get. private set.
   define property unit-k        as decimal      no-undo get. private set.
@@ -107,6 +108,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
       when "carbohydrates" then carbohydrates = {&attr-dec} .
       when "calories"      then calories      = {&attr-dec} .
       when "ISCookStumped" then ISCookStumped = {&attr-integer} .
+      when "CommodityCode" then CommodityCode = {&attr-str} .
       when "vad-gds"       then vad-gds       = {&attr-integer} .
       when "pay-flag"      then pay-flag       = {&attr-integer} .
     end case.
@@ -186,6 +188,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         carbohydrates = ?
         calories      = ?
         ISCookStumped = ?
+        CommodityCode = ?
         vad-gds       = ?
         pay-flag      = ?
     .   

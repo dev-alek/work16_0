@@ -235,6 +235,20 @@ if p-silent <> true then do:
   end.
 end.
 
+run str/checknakl.p
+     ( input parparentproc
+      ,input p-silent
+      ,input p-curr-obj-type
+      ,input p-curr-obj-code
+      ,input s-date
+      ,input s-num
+      ,input s-name
+      ,output v-cancel
+     ) no-error.
+  if v-cancel = false then do:
+    undo, return error.
+  end.     
+     
 stop-shift:
 do transaction
 on error undo stop-shift, return error return-value

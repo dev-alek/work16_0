@@ -312,6 +312,29 @@ procedure gds-attr_gds-ptrl-densities :
 
 end procedure.
 
+procedure gds-attr_gds-CommodityCode :
+
+  define input  parameter p-gds-code    like ub.goods-attr.gds-code     no-undo .
+  define input-output  parameter p-value as character no-undo .
+  define output parameter p-setted      as logical no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    &scop proc-name gds-attr_gds-CommodityCode
+    {&run_proc_attr-lib}
+      (input  p-gds-code
+      ,input-output p-value
+      ,output p-setted
+      ) no-error .
+    if error-status :error
+    then do:
+      undo, return error return-value .
+    end.
+  end.
+
+end procedure.
+
 procedure gds-attr_check-group-np :
 
   define input  parameter p-gds-code    like ub.goods-attr.gds-code     no-undo .

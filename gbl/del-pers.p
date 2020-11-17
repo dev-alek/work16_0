@@ -22,12 +22,14 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Удаление всех persistent процедур".
 { cmp/vssrevis.i }
-
+define stream LogStream.
+output stream LogStream to "memdump.log".
+output stream LogStream close.
 /* run utl/ttp.p ( input "utl/del-pers.p").
    21/I-2019 - попробуем обойтись без подсчёта удаляемых persistent-procedure
    На очереди - избавиться от utl/ttq.p и от utl/tto.p
 */
-   define stream LogStream.
+
    DEFINE VARIABLE hProc AS HANDLE     NO-UNDO.
    DEFINE VARIABLE iCounter AS INTEGER    NO-UNDO.
    define variable v-procedure-handle as handle    no-undo .

@@ -487,6 +487,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* товар фасуется */
 { cmp/cr-prep.i 1 attr-fasovka            fasovka            " " fasovka       }
 
+/* код номенклатурной классификации */
+{ cmp/cr-prep.i 1 attr-gds-CommodityCode  gds-CommodityCode " " gds-CommodityCode }
+
 /* Время приготовления в чеке */
 { cmp/cr-prep.i 1 attr-time-coock            time-coock            " " time-coock       }
 
@@ -599,6 +602,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-ptrl-as-good}~
 ,{&bef-attr-dflt-insalepr}~
 ,{&bef-attr-gds-ptrl-densities}~
+,{&bef-attr-gds-CommodityCode}~
 ,{&bef-attr-length-of}~
 ,{&bef-attr-width-of}~
 ,{&bef-attr-height-of}~

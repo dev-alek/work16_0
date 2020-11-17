@@ -236,13 +236,13 @@ end.
   v-attr-egais = 1.
   find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "mark" no-lock no-error. 
     if available buf_goods-attr and buf_goods-attr.attr-value = "no" then  do: 
-      run bgelib-tag-put in this-procedure ( input 3, input "ISEgaisNoPDF", input 1, input 1 ). 
+      run bgelib-tag-put in this-procedure ( input 4, input "ISEgaisNoPDF", input 1, input 1 ). 
     end. 
     if available buf_goods-attr and buf_goods-attr.attr-value = "yes" then  do:
-      run bgelib-tag-put in this-procedure ( input 3, input "ISEgaisPDF"      , input 1, input 1 ).
+      run bgelib-tag-put in this-procedure ( input 4, input "ISEgaisPDF"      , input 1, input 1 ).
     end.  
     if not available buf_goods-attr then do:
-      run bgelib-tag-put in this-procedure ( input 3, input "ISEgaisNoPDF", input 1, input 1 ).
+      run bgelib-tag-put in this-procedure ( input 4, input "ISEgaisNoPDF", input 1, input 1 ).
     end.  
   end.  
   
@@ -250,9 +250,9 @@ end.
                               and buf_goods-attr.attr-code = "time-coock" 
                               and buf_goods-attr.attr-value = "yes" no-lock no-error. 
   if available buf_goods-attr then do:   
-      run bgelib-tag-put in this-procedure ( input 3, input "ISCookStumped", input 1, input 1 ).
+      run bgelib-tag-put in this-procedure ( input 4, input "ISCookStumped", input 1, input 1 ).
   end.  
-  
+
       run bgelib-tag-close in this-procedure ( input 3, input "ItemStatus").
   end. /*не инфокиоск*/
 
@@ -485,7 +485,11 @@ find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code
     else do:
       run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "0", input 1 ).
     end. 
-
+    find FIRST buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "gds-CommodityCode" no-error.
+    if available buf_goods-attr then 
+    do:
+      run bgelib-tag-put in this-procedure ( input 4, input "ItemCommodityCode" , input string( buf_goods-attr.attr-value), input 1 ).  
+    end.  
 
 find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
               and buf_goods-attr.attr-code  = {&attr-oper-serv-id} no-error. 

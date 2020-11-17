@@ -23,6 +23,8 @@ enum ibs.th.bge.1crn.enum-chk-type:
     enreturn   =  6 /* возврат */
     enannu     =  8 /* &rcpt-annu  = Аннуляция */
     enzrep     = 12 /* &rcpt-z-rep = Z отчет (12) */
+    enclose    = 13 /* Закрытие Смены */
+    enOpen     = 40 /* Открытие Смены */
   .
   define enum           
     entranscancell  = 14 /* &rcpt-trans-cancell  = сброс топливной транзакции */

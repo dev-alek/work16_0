@@ -153,6 +153,8 @@ case p-chk-type:
   or
   when integer({&rcpt-shft-close})
   or
+  when integer({&rcpt-shft-open})
+  or
   when integer({&pay-transfer})
   then do:
     return 0.
@@ -279,6 +281,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   IF AVAIL buf_shift-cash
   and buf_shift-cash.shift-num <> 0
   and buf_shift-cash.shift-num <> ?
+  and buf_shift-cash.opened eq {&receipt-in}
   then
   assign
   current-cas-shift-num  = buf_shift-cash.shift-num
@@ -293,9 +296,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                     ,input {&prefix}obj-code
                     ,input p-cash-num
                     ,input p-shift-date
-                    ,input (if {&prefix}shift-on then ? else p-shift-name)
+                    ,input (if not {&prefix}shift-on then ? else p-shift-name)
                     ,input p-shift-name
-                    ,input (if {&prefix}shift-on then ? else integer(p-shift-name))
+                    ,input (if not {&prefix}shift-on then ? else integer(p-shift-name))
                     ,input (if p-z-number <> ?
                             then p-shift-open-time
                             else (if p-chk-date = p-shift-date then p-chk-time else ?)
@@ -1228,7 +1231,7 @@ define variable v-cashier-psn-code           like ub.person.psn-code    no-undo 
 define variable v-seller-psn-code            like ub.person.psn-code    no-undo .
 define variable v-is-inventory               as logical                 no-undo .
 define variable v-is-z-rep                   as logical                 no-undo .
-define variable v-is-shft-close              as logical                 no-undo .
+define variable v-is-shft-open-close         as logical                 no-undo .
 define variable v-is-ord-check               as logical                 no-undo .
 define variable v-bc-rcnz-only-bc            as logical                 no-undo .
 define variable v-d-mask                     as character no-undo .
@@ -1419,9 +1422,11 @@ delete object v-tth no-error.
       {&display-message}.
     end.
   end.
-  if buf_chk-doc.chk-type = integer({&rcpt-shft-close}) then do:
+  if    buf_chk-doc.chk-type = integer({&rcpt-shft-close})
+     or buf_chk-doc.chk-type = integer({&rcpt-shft-open}) 
+  then do:
     assign
-    v-is-shft-close = yes.
+    v-is-shft-open-close = yes.
   end.
   /*проверка и дообработка шапки чека*/
   if {&prefix}hnum then do:
@@ -1616,7 +1621,7 @@ delete object v-tth no-error.
     if v-is-petrol-check
     or v-is-inventory
     or v-is-z-rep
-    or v-is-shft-close
+    or v-is-shft-open-close
     then do:
 &scop receipt-code string(buf_chk-doc.chk-type)
 &scop my-message   substitute( ~
@@ -1927,6 +1932,7 @@ delete object v-tth no-error.
     if v-cashier-psn-code = 0
     and buf_chk-doc.chk-type <> integer({&rcpt-z-rep})
     and buf_chk-doc.chk-type <> integer({&rcpt-shft-close})
+    and buf_chk-doc.chk-type <> integer({&rcpt-shft-Open})
     then do:
       assign
       for-chk-type = for-chk-type + {&staff-err} + {&comma-char}
@@ -2613,7 +2619,7 @@ if avail buf_bar-code then do:
       and
       accum-count <> 1) )
   or (v-is-z-rep and accum-count <> 0)
-  or (v-is-shft-close and accum-count <> 0)
+  or (v-is-shft-open-close and accum-count <> 0)
   then do:
 &scop receipt-code string(buf_chk-doc.chk-type)
 &scop my-message  substitute( ~
@@ -2624,7 +2630,7 @@ if avail buf_bar-code then do:
                             , ~{&receipt-name~} ~
                             , (if buf_chk-doc.chk-type = integer(~{&rcpt-trans-transfer~}) ~
                                 then 2 ~
-                                else (if v-is-z-rep or v-is-shft-close then 0 else 1)) ~
+                                else (if v-is-z-rep or v-is-shft-open-close then 0 else 1)) ~
                           )
     {&display-message}.
     assign
@@ -2728,12 +2734,12 @@ if avail buf_bar-code then do:
       and not v-is-annu-check
       and not v-is-inventory
       and not v-is-z-rep
-      and not v-is-shft-close
+      and not v-is-shft-open-close
       and not v-is-ord-check
       and not ({&prefix}is-100-discnt and accum-pay-count > 0)
       )
   or (buf_chk-doc.netto <> 0 and v-is-petrol-check)
-  or (buf_chk-doc.netto <> 0 and v-is-shft-close)
+  or (buf_chk-doc.netto <> 0 and v-is-shft-open-close)
   or (buf_chk-doc.doc-qnty <> 0 and buf_chk-doc.chk-type = integer({&rcpt-trans-transfer}))
   or (buf_chk-doc.doc-qnty = 0
       and v-is-petrol-check
@@ -3285,7 +3291,7 @@ if avail buf_bar-code then do:
         &undefine receipt-code
     end.
     if (v-is-z-rep
-    or  v-is-shft-close)
+    or  v-is-shft-open-close)
     and buf_chk-doc.discnt <> 0 then do:
     &scop receipt-code string(buf_chk-doc.chk-type)
         assign
@@ -3325,7 +3331,7 @@ if avail buf_bar-code then do:
     end. /*v-is-petrol-check*/
     else do:
       if v-is-z-rep
-      or v-is-shft-close
+      or v-is-shft-open-close
       or buf_chk-doc.chk-type = integer({&income-corr}) or buf_chk-doc.chk-type = integer({&expense-corr}) /* Чеки коррекции */
       then do:
       end.

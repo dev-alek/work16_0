@@ -3443,11 +3443,13 @@ if par-mode = {&update} and v-global-err then do:
   {&fatal-errs}
   return error.
 end.
-    if par-mode = {&update} then 
-    do: 
-        run check-dublicate in this-procedure no-error.
-        if error-status:error then return error.
-    end.
+if par-mode = {&update} then do: 
+    run check-dublicate in this-procedure no-error.
+    if error-status:error then return error.
+    run check-manual in this-procedure no-error .
+    if error-status:error then return error.    
+ end.
+
 run proc-save-doc in this-procedure no-error.
 if error-status:error then return error.
 assign

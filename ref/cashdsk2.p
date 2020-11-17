@@ -340,7 +340,7 @@ if l-shift-on then do:
                       ,input t-cash-desk.cash-num
                       ,input v-shift-date
                       ,input v-shift-num
-                      ,input ?
+                      ,input string(v-shift-num)
                       ,input v-shift-name
                       ,input v-time
                       ,input 0

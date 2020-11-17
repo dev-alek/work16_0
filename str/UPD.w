@@ -224,7 +224,8 @@ DEFINE MENU POPUP-MENU-b-servis
     MENU-ITEM m___Token      LABEL "Отключить запрос Token"
     MENU-ITEM m_nakl         LABEL "Формирование накладной"
     MENU-ITEM m_recheck      LABEL "Повторно проверить"
-    MENU-ITEM m_oneUtd       LABEL "Получение данных из Диадок".
+    MENU-ITEM m_oneUtd       LABEL "Получение данных из Диадок"
+    MENU-ITEM m_checknakl    LABEL "Связать с ПН".
 
 
 /* Definitions of the field level widgets                               */
@@ -1755,6 +1756,125 @@ ON CHOOSE OF MENU-ITEM m_recheck /* Повторно проверить */
             end.
             v-rid-list = "" .
         end.
+    END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_checknakl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_checknakl POPUP-MENU-b-servis
+ON CHOOSE OF MENU-ITEM m_checknakl /* Привязать накладную */
+    DO:
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer X_clients for ub.clients .
+    define buffer Nakl_utd  for ub.utd .
+    define variable loc-ref-list as character no-undo . 
+    
+        if available (X_utd) then 
+        do:
+           if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and X_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
+           do:
+              find first buf_trn-doc no-lock where buf_trn-doc.doc-code = X_utd.doc-code no-error .
+              if available (buf_trn-doc) then 
+              do:
+                 if buf_trn-doc.status_ = {&fact} then 
+                 do:
+                    message "Накладная " + string(buf_trn-doc.doc-code)+ " по документу " + X_utd.DocumentNumber + " уже создана."
+                       view-as alert-box.
+                    return no-apply .
+                 end.
+                 if buf_trn-doc.status_ <> {&fact} then 
+                 do:
+                    message "Накладная " + string(buf_trn-doc.doc-code)+ " по документу " + X_utd.DocumentNumber + " уже создана." skip
+                       "Закройте накладную на факт"
+                       view-as alert-box.
+                    return no-apply .
+                 end.  
+              end.
+           end.        
+           else 
+           do:
+              message "Для документа нельзя привязать накладную."
+                 view-as alert-box.
+              return no-apply .
+           end.               
+
+            find first X_clients no-lock where X_clients.obj-code = X_utd.cli-code and 
+                                               X_clients.obj-type = X_utd.cli-type no-error .
+                                               
+           if available (X_clients) then do:   
+
+            run str/all-docs.w
+                (input parparentproc
+                ,input X_utd.host-code
+                ,input X_utd.obj-type 
+                ,input X_utd.obj-code
+                ,input {&client-cmp}
+                ,input {&fact}
+                ,input {&TDEDT_Pri_Vnesh}
+                ,input ?
+                ,input ?
+                ,input "b-sel,b-mark":U
+                ,input ?
+                ,input ?
+                ,input recid(X_clients)
+                ,output loc-ref-list ).
+            if loc-ref-list = "" then 
+            do:
+                message
+                    "Документы не выбраны"
+                    view-as alert-box error.
+                return no-apply.
+            END.
+            else do:
+                find first buf_trn-doc no-lock where recid(buf_trn-doc) = integer(entry(1,loc-ref-list)) and buf_trn-doc.status_ = {&fact} no-error .
+                if not available (buf_trn-doc) then 
+                do:
+                    message
+                        "Документ не закрыт до статуса - факт"
+                        view-as alert-box error.
+                    return no-apply.
+                end.  
+ 
+                find first buf_trn-doc no-lock where recid(buf_trn-doc) = integer(entry(1,loc-ref-list)) and buf_trn-doc.status_ = {&fact} 
+                and buf_trn-doc.fact-date >= X_utd.DocumentDate no-error .
+                if not available (buf_trn-doc) then 
+                do:
+                    message
+                        "Накладная создана раньше документа"
+                        view-as alert-box error.
+                    return no-apply.
+                end.    
+                else do:
+
+                find first Nakl_utd no-lock where Nakl_utd.doc-code = buf_trn-doc.doc-code no-error .
+                if available (Nakl_utd) then do:
+                    message
+                        "Накладная " + string(buf_trn-doc.doc-code) + " привязана к другому документу УПД " + string(Nakl_utd.DocumentNumber)
+                        view-as alert-box error.
+                    return no-apply.                   
+                end.
+                end.   
+            end .    
+            find first buf_trn-doc no-lock where recid(buf_trn-doc) = integer(entry(1,loc-ref-list)) no-error .
+            if available (buf_trn-doc) then do:
+                find first Nakl_utd exclusive-lock where Nakl_utd.doc-id = X_utd.doc-id 
+                                                     and Nakl_utd.db-num = X_utd.db-num no-error . 
+                Nakl_utd.doc-code = buf_trn-doc.doc-code .
+                run init-sort .
+                {&OPEN-QUERY-br-utd}
+            end.    
+            end.
+            else message "Не найден поставщик " + X_utd.cli-type + " " + string(X_utd.cli-code) + "."
+                 view-as alert-box.
+                       
+        end. 
+        else do:
+            message "Не найден документ."
+                 view-as alert-box.
+            
+        end.    
+         
     END.
 
 /* _UIB-CODE-BLOCK-END */

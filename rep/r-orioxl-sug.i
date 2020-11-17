@@ -30,7 +30,7 @@ procedure shapka-inv :
     '<thead>' skip
     .
   put stream OutStr-html unformatted
-    '<tr>' skip
+    '<tr class="set_columns">' skip
     '<td style="width: 6px;"></td>' skip
     '<td style="width: 6px;"></td>' skip
     '<td style="width: 6px;"></td>' skip

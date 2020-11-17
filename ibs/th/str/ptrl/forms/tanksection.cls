@@ -1453,6 +1453,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:dateTimePickerTimeEnd:ShowUpDown = true.
     this-object:dateTimePickerTimeEnd:Size = new System.Drawing.Size(50, 20).
     this-object:dateTimePickerTimeEnd:TabIndex = 38.
+    this-object:dateTimePickerTimeEnd:Enabled = false.
     /*  */
     /* dateTimePickerTimeStart */
     /*  */
@@ -1463,6 +1464,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:dateTimePickerTimeStart:ShowUpDown = true.
     this-object:dateTimePickerTimeStart:Size = new System.Drawing.Size(50, 20).
     this-object:dateTimePickerTimeStart:TabIndex = 36.
+    this-object:dateTimePickerTimeStart:Enabled = false.
     /*  */
     /* dateTimePickerDateEnd */
     /*  */
@@ -1471,6 +1473,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:dateTimePickerDateEnd:Name = "dateTimePickerDateEnd".
     this-object:dateTimePickerDateEnd:Size = new System.Drawing.Size(81, 20).
     this-object:dateTimePickerDateEnd:TabIndex = 37.
+    this-object:dateTimePickerDateEnd:Enabled = false.
     /*  */
     /* dateTimePickerDateStart */
     /*  */
@@ -1479,6 +1482,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:dateTimePickerDateStart:Name = "dateTimePickerDateStart".
     this-object:dateTimePickerDateStart:Size = new System.Drawing.Size(81, 20).
     this-object:dateTimePickerDateStart:TabIndex = 35.
+    this-object:dateTimePickerDateStart:Enabled = false.
     /*  */
     /* label30 */
     /*  */

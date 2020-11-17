@@ -128,7 +128,7 @@ FOR EACH buf_cash-desk No-LOCK WHERE
                       ,INPUT buf_cash-desk.cash-num
                       ,INPUT p-shift-date
                       ,INPUT p-shift-num
-                      ,input ? /*истинный номер мы все равно не знаем*/
+                      ,input string(p-shift-num) /*истинный номер мы все равно не знаем*/
                       ,INPUT p-shift-name
                       ,input v-time
                       ,INPUT 0
