@@ -362,10 +362,10 @@ if get-chkc_context.t-shft > 0 and get-chkc_context.shift-on = yes then do:
   undo, return .
 end.
 if get-chkc_context.is-wth = yes then do:
-  accept-types =  "1,2,3,4,5,6,7,13,43,44":U.
+  accept-types =  "1,2,3,4,5,6,7,13,40,43,44":U.
 end.
 else do:
-  accept-types =  "1,6,13,43,44":U.
+  accept-types =  "1,6,13,40,43,44":U.
 end.
 dflt-cd = p-pos-type.
 if get-chkc_context.is-ptrl
@@ -2274,6 +2274,32 @@ on error undo, return error
 end. /*doe*/
 end procedure. /* proc-13 */
 
+procedure proc-shift-open :
+
+do
+on error undo, return error
+:
+ 
+  if get-chkc_context.cas-shft then do:
+    /*на кассах есть смены*/
+  
+      { str/libchkvl_get-cash-shift.i
+      "buffer get-chkc_context:handle"
+      buf_shift-cash
+      pay-desk_
+      shift-date_
+      shift-name_
+      ?
+      shift-date_
+      shift-open-time_
+      0
+      no-error
+      }
+      
+    
+  end. /*if cas-shft*/
+end. /*doe*/
+end procedure. /* proc-shift-open */
 
 procedure proc-end :
 
@@ -2297,7 +2323,7 @@ define variable netto-sum2_ as decimal no-undo .
                                         ).
     end.
     if v-to-delete[1] = no then do:
-
+     run  proc-shift-open.
      get-chkc_context.ll = lll.
     { str/libchkvl_getcheck.i
       "buffer get-chkc_context:handle"

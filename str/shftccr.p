@@ -44,7 +44,6 @@ define variable v-src-shift-name as character no-undo .
 define variable v-shift-name as character no-undo .
 
 define buffer buf_shift-cash for ub.shift-cash.
-
 do
 on error undo, return error
 :
@@ -192,6 +191,15 @@ on error undo, return error
     end.
   end.
   else do:
+    if      buf_shift-cash.opened     ne {&receipt-in}
+       and act-mess                   eq {&receipt-in}
+    then do:
+       find current buf_shift-cash exclusive-lock.
+       assign
+          buf_shift-cash.opened = act-mess
+          buf_shift-cash.shift-open-time = (if p-shift-open-time <> ? then p-shift-open-time else buf_shift-cash.shift-open-time)
+       .
+    end.
     v-recid = recid(buf_shift-cash).
   end.
 end. /*doe*/
