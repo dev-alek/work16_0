@@ -26,7 +26,7 @@ define input parameter p-obj-code as integer no-undo .
 define input parameter p-shift-date as date no-undo .
 define input parameter p-shift-num like ub.shift-obj.shift-num no-undo .
 define input parameter p-shift-name like ub.shift-obj.shift-name no-undo .
-define output parameter p-cancel    as logical no-undo .
+define output parameter p-cancel    as logical no-undo initial true.
 
 
 define variable vss-revision    as character no-undo initial "$Revision$":U .
@@ -47,6 +47,7 @@ define variable vss-description as character no-undo initial "Проверка незакрыты
 { gbl/prn-lib.i     }
 { rep/html-conv.i }
 { str/is-sug.i }
+{ str/trdcalib.i }
 { str/placelib.i }
 
 define variable g#report-num  as integer no-undo .
@@ -75,92 +76,110 @@ define variable v-mes                as character no-undo .
 define variable v-DocumenNumber      as character no-undo .
 define variable v-DocumenNumber-fact as character no-undo .
 define variable v-file-name          as character no-undo .
-
+define variable v-doc-code           as character no-undo .
   
 def    var      objSrv               as class     ibs.th.gbl.sys.objsrv no-undo.
 run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
 v-date-end = p-shift-date - 35 .
 
-define buffer buf_trn-doc for ub.trn-doc  .
-define buffer buf_utd     for ub.utd .
+define buffer buf_trn-doc  for ub.trn-doc  .
+define buffer buf_utd      for ub.utd .
+define buffer buf_doc-attr for ub.doc-attr .
+define buffer bf_doc-attr  for ub.doc-attr .
 
-for each buf_utd no-lock where buf_utd.obj-code = p-obj-code 
-    and buf_utd.obj-type = p-obj-type
-    and buf_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB
-    and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB
-    and buf_utd.DocumentDate <= p-shift-date
-    and buf_utd.DocumentDate >= v-date-end:
-    if buf_utd.doc-code = "" then 
-    do: 
-        if v-DocumenNumber = "" then v-DocumenNumber = buf_utd.DocumentNumber .
-        else v-DocumenNumber = v-DocumenNumber + "; " + buf_utd.DocumentNumber .
-    end. 
-    else 
-    do:
-        find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_utd.doc-code no-error .
-        if not available (buf_trn-doc) then do:
-        if v-DocumenNumber = "" then v-DocumenNumber = buf_utd.DocumentNumber .
-        else v-DocumenNumber = v-DocumenNumber + "; " + buf_utd.DocumentNumber .
-        end.
-        else do:   
-        find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_utd.doc-code 
+for each buf_utd exclusive-lock where buf_utd.obj-code = p-obj-code 
+   and buf_utd.obj-type = p-obj-type
+   and buf_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB
+   and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB
+   and buf_utd.DocumentDate <= p-shift-date
+   and buf_utd.DocumentDate >= v-date-end:
+   if buf_utd.doc-code = "" then 
+   do: 
+      run schet-factur(input buf_utd.DocumentNumber, 
+                       input buf_utd.DocumentDate, 
+                       output v-doc-code) no-error .
+      if v-doc-code <> "" then buf_utd.doc-code = v-doc-code .
+      else 
+      do:
+         if v-DocumenNumber = "" then v-DocumenNumber = buf_utd.DocumentNumber .
+         else v-DocumenNumber = v-DocumenNumber + "; " + buf_utd.DocumentNumber .
+      end.
+   end. 
+   else 
+   do:
+      find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_utd.doc-code no-error .
+      if not available (buf_trn-doc) then 
+      do:
+         run schet-factur(input buf_utd.DocumentNumber, 
+                          input buf_utd.DocumentDate, 
+                          output v-doc-code) no-error.
+         if v-doc-code <> "" then buf_utd.doc-code = v-doc-code .
+         else 
+         do:
+            if v-DocumenNumber = "" then v-DocumenNumber = buf_utd.DocumentNumber .
+            else v-DocumenNumber = v-DocumenNumber + "; " + buf_utd.DocumentNumber .
+         end.   
+      end.
+      else 
+      do:   
+         find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_utd.doc-code 
             and buf_trn-doc.status_ = {&fact} no-error .
-        if not available (buf_trn-doc) then 
-        do:
-            if v-DocumenNumber-fact = "" then v-DocumenNumber-fact = buf_utd.DocumentNumber .
-            else v-DocumenNumber-fact = v-DocumenNumber-fact + "; " + buf_utd.DocumentNumber .        
-        end.    
-        end.
-    end.    
+         if not available (buf_trn-doc) then 
+         do:
+               if v-DocumenNumber-fact = "" then v-DocumenNumber-fact = buf_utd.DocumentNumber .
+               else v-DocumenNumber-fact = v-DocumenNumber-fact + "; " + buf_utd.DocumentNumber .     
+         end.    
+      end.
+   end.    
 end.
 
 if v-DocumenNumber <> "" or v-DocumenNumber-fact <> "" then 
 do:
-    if v-DocumenNumber <> "" and v-DocumenNumber-fact <> "" then 
-    do:
-        message "Через ЭДО получен(ы) закрытый(е) УПД " skip
+   if v-DocumenNumber <> "" and v-DocumenNumber-fact <> "" then 
+   do:
+      message "Через ЭДО получен(ы) закрытый(е) УПД " skip
+         "" skip
+         v-DocumenNumber + "," skip
+         "Необходимо создать по УПД накладную(ые) и закрыть до статуса Факт." skip
+         "" skip
+         v-DocumenNumber-fact + "," skip
+         "Накладную(ые) нужно закрыть до статуса Факт." skip
+         "" skip
+         "Продолжить закрытие смены?" skip
+         view-as alert-box question buttons yes-no update p-cancel.
+      v-mes = "Через ЭДО получен(ы) закрытый(е) УПД " + {&new-line} + {&new-line} +
+         v-DocumenNumber + ", необходимо создать по УПД накладную(ые) и закрыть до статуса Факт." + {&new-line} + {&new-line} +
+         v-DocumenNumber-fact + ", накладную(ые) нужно закрыть до статуса Факт." .
+   end.
+   else 
+   do:
+      if v-DocumenNumber <> "" then 
+      do:
+         message "Через ЭДО получен(ы) закрытый(е) УПД " skip
             "" skip
             v-DocumenNumber + "," skip
-            "Необходимо создать по УПД накладную(ые) и закрыть до статуса Факт." skip
             "" skip
-            v-DocumenNumber-fact + "," skip
-            "Накладную(ые) нужно закрыть до статуса Факт." skip
+            "Необходимо создать по УПД накладную(ые) и закрыть до статуса Факт." skip
             "" skip
             "Продолжить закрытие смены?" skip
             view-as alert-box question buttons yes-no update p-cancel.
-            v-mes = "Через ЭДО получен(ы) закрытый(е) УПД " + {&new-line} + {&new-line} +
-            v-DocumenNumber + ", необходимо создать по УПД накладную(ые) и закрыть до статуса Факт." + {&new-line} + {&new-line} +
-            v-DocumenNumber-fact + ", накладную(ые) нужно закрыть до статуса Факт." .
-    end.
-    else 
-    do:
-        if v-DocumenNumber <> "" then 
-        do:
-            message "Через ЭДО получен(ы) закрытый(е) УПД " skip
-                "" skip
-                v-DocumenNumber + "," skip
-                "" skip
-                "Необходимо создать по УПД накладную(ые) и закрыть до статуса Факт." skip
-                "" skip
-                "Продолжить закрытие смены?" skip
-                view-as alert-box question buttons yes-no update p-cancel.
-                v-mes = "Через ЭДО получен(ы) закрытый(е) УПД " + {&new-line} + {&new-line} + 
-                v-DocumenNumber + ", необходимо создать по УПД накладную(ые) и закрыть до статуса Факт." .
-        end.
-        else 
-        do:
-            message "Через ЭДО получен(ы) закрытый(е) УПД " skip
-                "" skip
-                v-DocumenNumber-fact + "," skip
-                "" skip
-                "Необходимо накладную(ые) закрыть до статуса Факт." skip
-                "" skip
-                "Продолжить закрытие смены?" skip
-                view-as alert-box question buttons yes-no update p-cancel.
-                v-mes = "Через ЭДО получен(ы) закрытый(е) УПД " + {&new-line} + {&new-line} +
-                v-DocumenNumber-fact + ", накладную(ые) нужно закрыть до статуса Факт." .            
-        end.   
+         v-mes = "Через ЭДО получен(ы) закрытый(е) УПД " + {&new-line} + {&new-line} + 
+            v-DocumenNumber + ", необходимо создать по УПД накладную(ые) и закрыть до статуса Факт." .
+      end.
+      else 
+      do:
+         message "Через ЭДО получен(ы) закрытый(е) УПД " skip
+            "" skip
+            v-DocumenNumber-fact + "," skip
+            "" skip
+            "Необходимо накладную(ые) закрыть до статуса Факт." skip
+            "" skip
+            "Продолжить закрытие смены?" skip
+            view-as alert-box question buttons yes-no update p-cancel.
+         v-mes = "Через ЭДО получен(ы) закрытый(е) УПД " + {&new-line} + {&new-line} +
+            v-DocumenNumber-fact + ", накладную(ые) нужно закрыть до статуса Факт." .            
+      end.   
                  
     end.    
     
@@ -169,4 +188,24 @@ do:
     export v-mes .
     output close .     
 end.      
-                           
+                      
+procedure schet-factur:
+   define input parameter p-DocumentNumber as character no-undo .
+   define input parameter p-DocumentDate as date no-undo .
+   define output parameter p-doc-code as character no-undo .
+
+   find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-nsf} and
+      buf_doc-attr.attr-value = p-DocumentNumber no-error .
+   if available (buf_doc-attr) then 
+   do:
+      find first bf_doc-attr no-lock where bf_doc-attr.attr-code = {&trdcattr-dsf} and
+         bf_doc-attr.attr-value = string(p-DocumentDate,"99/99/9999") and
+         bf_doc-attr.doc-code = buf_doc-attr.doc-code no-error .
+      if available (bf_doc-attr) then 
+      do:
+         p-doc-code = bf_doc-attr.doc-code .
+      end.                                        
+   end.                                                      
+
+      
+end procedure .                              

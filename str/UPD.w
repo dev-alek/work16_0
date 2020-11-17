@@ -1772,7 +1772,7 @@ ON CHOOSE OF MENU-ITEM m_checknakl /* Привязать накладную */
     
         if available (X_utd) then 
         do:
-           if X_utd.doc-code <> "" and X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and X_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
+           if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and X_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
            do:
               find first buf_trn-doc no-lock where buf_trn-doc.doc-code = X_utd.doc-code no-error .
               if available (buf_trn-doc) then 
@@ -2519,7 +2519,6 @@ PROCEDURE enable_UI :
     if varlog then 
     do:
         menu-item m_nakl:sensitive in menu POPUP-MENU-b-servis = yes .
-        menu-item m_checknakl:sensitive in menu POPUP-MENU-b-servis = yes .
     end.
     else 
     do:
