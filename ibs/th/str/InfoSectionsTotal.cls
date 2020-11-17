@@ -1349,7 +1349,7 @@ class ibs.th.str.InfoSectionsTotal:
           end.
           else do :
             assign
-              ToolType               = buf_sr-izmerenia.sr-type
+              ToolType               = buf_sr-izmerenia.sr-type-id
               DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
               DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
               DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens

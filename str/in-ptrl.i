@@ -762,14 +762,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
        end case.
          
         def var ii as int no-undo. 
-          
-        do ii = 1 to infoSectionsTotal:SectionNum :
-          infoSectionsTotal:GetInfoSectionProp(ii).
-          if infoSectionsTotal:InfoSectionCurr:DateStart = ? then infoSectionsTotal:InfoSectionCurr:DateStart = v-prt-start-real-date . 
-          if infoSectionsTotal:InfoSectionCurr:DateEnd = ? then infoSectionsTotal:InfoSectionCurr:DateEnd   = v-prt-end-real-date . 
-          if infoSectionsTotal:InfoSectionCurr:TimeStart = ? or infoSectionsTotal:InfoSectionCurr:TimeStart = 0 then infoSectionsTotal:InfoSectionCurr:TimeStart = v-prt-start-real-time . 
-          if infoSectionsTotal:InfoSectionCurr:TimeEnd = ? or infoSectionsTotal:InfoSectionCurr:TimeEnd = 0 then infoSectionsTotal:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
-        end.
+        if not p-action = {&lookup}
+        then  
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            infoSectionsTotal:GetInfoSectionProp(ii).
+            infoSectionsTotal:InfoSectionCurr:DateStart = v-prt-start-real-date . 
+            infoSectionsTotal:InfoSectionCurr:DateEnd   = v-prt-end-real-date . 
+            infoSectionsTotal:InfoSectionCurr:TimeStart = v-prt-start-real-time . 
+            infoSectionsTotal:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
+          end.
+        infoSectionsTotal:SaveDB().
         
         run placelib_get-attr(input {&place-virtual}
                                  ,input buf_rvs-line.obj-code
