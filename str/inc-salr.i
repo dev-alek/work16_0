@@ -330,6 +330,8 @@ on error undo, return error return-value
                                 , output add-nf-amount
                                 ) no-error .
     end.
+    else docs-to-reserv = 0 .
+
   
     /* Создание доп документов */
     
