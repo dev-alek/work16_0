@@ -30,27 +30,27 @@ Creation date: 07/05/11
 /*---------------------------&end-using-class&---------------------------------*/
 
 
-define input parameter parparentproc as widget-handle no-undo .
-define input parameter p-parent-handle as handle no-undo .
-define input parameter p-log-handle  as handle no-undo .
-define input parameter p-cont-handle  as handle no-undo .
-define input parameter p-codex-id as integer no-undo .
-define input parameter p-ruleset-id as integer no-undo .
-define input parameter p-call-id as character no-undo .
-define input parameter p-order-id as integer no-undo .
-define input parameter p-rule-id as integer no-undo .
-define input parameter p-profile-id as integer no-undo .
-define input parameter p-is-dynamic as logical no-undo .
-define input parameter p-doc-type as character no-undo .
-define input parameter p-host-code like ub.sysconf.host-code no-undo .
-define input parameter p-obj-type like ub.clients.obj-type no-undo .
-define input parameter p-obj-code like ub.clients.obj-code no-undo .
-define input parameter p-doc-code as character no-undo .
-define input parameter p-process-file-name as character no-undo .
-define input parameter p-save       as integer no-undo .
-define input parameter v-curr-r-b   as character no-undo .
-define input parameter p-cmd-proc-handle as handle no-undo .
-define input parameter p-cmd-code  as integer no-undo .
+define input parameter parparentproc   as widget-handle       no-undo .
+define input parameter p-parent-handle as handle              no-undo .
+define input parameter p-log-handle    as handle              no-undo .
+define input parameter p-cont-handle   as handle              no-undo .
+define input parameter p-codex-id      as integer             no-undo .
+define input parameter p-ruleset-id    as integer             no-undo .
+define input parameter p-call-id       as character           no-undo .
+define input parameter p-order-id      as integer             no-undo .
+define input parameter p-rule-id       as integer             no-undo .
+define input parameter p-profile-id    as integer             no-undo .
+define input parameter p-is-dynamic    as logical             no-undo .
+define input parameter p-doc-type      as character           no-undo .
+define input parameter p-host-code  like ub.sysconf.host-code no-undo .
+define input parameter p-obj-type   like ub.clients.obj-type  no-undo .
+define input parameter p-obj-code   like ub.clients.obj-code  no-undo .
+define input parameter p-doc-code      as character           no-undo .
+define input parameter p-process-file-name as character       no-undo .
+define input parameter p-save          as integer             no-undo .
+define input parameter v-curr-r-b      as character           no-undo .
+define input parameter p-cmd-proc-handle as handle            no-undo .
+define input parameter p-cmd-code      as integer             no-undo .
 
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -79,10 +79,10 @@ run create_obj-list(p-obj-type,p-obj-code).
 
 /*переменные контекста*/
 /*это у нас объект 0*/
-define variable v-current-doc-code as character no-undo .
-define variable log-file-name                as character      no-undo init "process-fdoc.txt".
-define variable v-view-log                   as logical        no-undo .
-define variable v-stop                       as logical        no-undo .
+define variable v-current-doc-code   as character no-undo .
+define variable log-file-name        as character no-undo init "process-fdoc.txt".
+define variable v-view-log           as logical   no-undo .
+define variable v-stop               as logical   no-undo .
 define variable v-last-error-message as character no-undo .
 /*****************************/
 define variable file-name    as character no-undo.
@@ -179,11 +179,11 @@ field osnrko     as decimal
 index pi cashbookid.
 
 define temp-table temp-fin-sum no-undo
-field cash-desk  as integer
+field cash-desk as integer
 field curr-code as integer
-field tot-sum as decimal
-field tot-base as decimal
-field tot-rubl as decimal
+field tot-sum   as decimal
+field tot-base  as decimal
+field tot-rubl  as decimal
 field is-petrol as logical
 field cashbookid as int64
 field is-expense_cash as logical
@@ -199,23 +199,23 @@ define temp-table temp-gds no-undo
 field with-vat as logical init yes
 field b-code as integer
 field node-code as integer
-field doc-code as character
-field doc-kind as character
-field gds-code as integer
-field artic as character
+field doc-code  as character
+field doc-kind  as character
+field gds-code  as integer
+field artic     as character
 field prod-type as character
 field prod-code as integer
 field eff-doc-qnty as decimal
-field tot-r-b as decimal
-field tot-rubl as decimal
-field tot-base as decimal
-field tot-doc as decimal
-field vat-base as decimal
-field vat-rubl as decimal
-field vat-doc as decimal
+field tot-r-b   as decimal
+field tot-rubl  as decimal
+field tot-base  as decimal
+field tot-doc   as decimal
+field vat-base  as decimal
+field vat-rubl  as decimal
+field vat-doc   as decimal
 field curr-code as integer
-field cash-desk  as integer
-field pay-type as char
+field cash-desk as integer
+field pay-type  as char
 field is-petrol as logical
 index pi is unique primary
 cash-desk
@@ -228,15 +228,15 @@ pay-type
 define temp-table temp-tax no-undo
 field with-vat as logical init yes
 field curr-code as integer
-field vat-pc as decimal
-field slt-pc as decimal
-field vat-base as decimal
-field vat-rubl as decimal
-field vat-doc as decimal
-field sum-base as decimal
-field sum-rubl as decimal
-field sum-doc as decimal
-field cash-desk  as integer
+field vat-pc    as decimal
+field slt-pc    as decimal
+field vat-base  as decimal
+field vat-rubl  as decimal
+field vat-doc   as decimal
+field sum-base  as decimal
+field sum-rubl  as decimal
+field sum-doc   as decimal
+field cash-desk as integer
 field is-petrol as logical
 field cashbookId as int64
 field is-expense_cash as logical
@@ -439,6 +439,27 @@ define variable v-err               as logical    no-undo .
      assign
      v-tot-r-b-chk = v-tot-r-b-chk  + buf_chk-gds-pay.tot-r-b
      .
+     if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
+     and entry(2, buf_chk-gds-pay.line-type, {&delim-par}) = ""
+     then do :
+       find first buf_chk-gds no-lock where buf_chk-gds.b-code = buf_chk-gds-pay.b-code
+                                        and buf_chk-gds.doc-code = buf_chk-gds-pay.doc-code
+                                        and buf_chk-gds.line-num = buf_chk-gds-pay.line-num
+                                        no-error .
+       if not available buf_chk-gds
+       then do :
+         find first buf_chk-gds no-lock where buf_chk-gds.b-code = buf_chk-gds-pay.b-code
+                                          and buf_chk-gds.doc-code = buf_chk-gds-pay.doc-code .  
+       end. 
+       if num-entries(buf_chk-gds.line-type, {&delim-par}) > 1 
+       then do :                               
+         find first ub.chk-gds-pay exclusive-lock where rowid(ub.chk-gds-pay) = rowid(buf_chk-gds-pay) .
+         assign
+           entry(2, ub.chk-gds-pay.line-type, {&delim-par}) = entry(2, buf_chk-gds.line-type, {&delim-par})
+         .   
+         release ub.chk-gds-pay .
+       end.                             
+     end.
    end. /*for each buf_chk-gds-pay no-lock where*/
    for each buf_inkas no-lock
       where buf_inkas.obj-type   = buf_shift-obj.obj-type
