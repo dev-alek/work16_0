@@ -471,9 +471,9 @@ on error undo, return error
       v-gds-code  = 0
       v-gds-name  = "":U
       .
-      assign
-      v-number = number-from-string( buf_obj-list.obj-name, buf_obj-list.obj-code )
-      .
+/*      assign                                                                       */
+/*      v-number = number-from-string( buf_obj-list.obj-name, buf_obj-list.obj-code )*/
+/*      .                                                                            */
       assign
       .
       create buf_tt-place.
@@ -488,7 +488,7 @@ on error undo, return error
       buf_tt-place.current-sale = v-current-sale
       buf_tt-place.income = v-income
       buf_tt-place.is-meas    = buf_place.is-meas
-      buf_tt-place.obj-number = v-number
+      buf_tt-place.obj-number = buf_place.obj-code
       buf_tt-place.obj-name = buf_obj-list.obj-name
       buf_tt-place.obj-address = ( if v-fmtcli-index <> '':U then ( v-fmtcli-index ) else '':U )
                                 + ( if v-fmtcli-full-addres <> '':U then ( v-fmtcli-full-addres ) else '':U )
