@@ -59,6 +59,7 @@ define variable v-res as character .
 
 define variable ii as integer no-undo .
 DEFINE VARIABLE v-detobj AS logical NO-UNDO.
+DEFINE VARIABLE v-oper AS logical NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -77,8 +78,8 @@ DEFINE VARIABLE v-detobj AS logical NO-UNDO.
 &Scoped-define FRAME-NAME F-Main
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-13 TOG-det t-excel t-TEXT
-&Scoped-Define DISPLAYED-OBJECTS TOG-det t-excel t-TEXT
+&Scoped-Define ENABLED-OBJECTS RECT-13 TOG-det TOG-oper t-excel t-TEXT
+&Scoped-Define DISPLAYED-OBJECTS TOG-det TOG-oper t-excel t-TEXT
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -93,9 +94,13 @@ DEFINE VARIABLE v-detobj AS logical NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE RECTANGLE RECT-13
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 42.5 BY 2.77.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 42.5 BY 4.
 
+DEFINE VARIABLE TOG-det AS LOGICAL INITIAL no 
+     LABEL "С детализацией по объектам" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 30 BY .83 NO-UNDO.
 DEFINE VARIABLE t-excel AS LOGICAL INITIAL no
      LABEL "Excel"
      VIEW-AS TOGGLE-BOX
@@ -106,8 +111,8 @@ DEFINE VARIABLE t-TEXT AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 13 BY 1 NO-UNDO.
 
-DEFINE VARIABLE TOG-det AS LOGICAL INITIAL no
-     LABEL "С детализацией по объектам"
+DEFINE VARIABLE TOG-oper AS LOGICAL INITIAL no 
+     LABEL "Оперативный" 
      VIEW-AS TOGGLE-BOX
      SIZE 30 BY .83 NO-UNDO.
 
@@ -115,12 +120,13 @@ DEFINE VARIABLE TOG-det AS LOGICAL INITIAL no
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
-     TOG-det AT ROW 2.27 COL 4 WIDGET-ID 20
+     TOG-det AT ROW 2.25 COL 4 WIDGET-ID 20
+     TOG-oper AT ROW 3.63 COL 4 WIDGET-ID 26
      t-excel AT ROW 5.27 COL 3.5 WIDGET-ID 24
      t-TEXT AT ROW 5.27 COL 24 WIDGET-ID 22
-     RECT-13 AT ROW 1.27 COL 2 WIDGET-ID 18
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
+     RECT-13 AT ROW 1.25 COL 2 WIDGET-ID 18
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1 SCROLLABLE .
 
 
@@ -140,7 +146,7 @@ DEFINE FRAME F-Main
 &ANALYZE-SUSPEND _CREATE-WINDOW
 /* DESIGN Window definition (used by the UIB)
   CREATE WINDOW s-object ASSIGN
-         HEIGHT             = 16.77
+         HEIGHT             = 16.75
          WIDTH              = 75.
 /* END WINDOW DEFINITION */
                                                                         */
@@ -197,6 +203,21 @@ DO:
 
 assign
   v-detobj = tog-det
+.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME TOG-oper
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL TOG-oper s-object
+ON VALUE-CHANGED OF TOG-oper IN FRAME F-Main /* Оперативный */
+DO:
+  assign tog-oper.
+
+assign
+  v-oper = tog-oper
 .
 END.
 
@@ -369,8 +390,7 @@ PROCEDURE my-report :
   Purpose:     здесь происходит вызов  процедуры отчета с любыми параметрами
 ------------------------------------------------------------------------------*/
 run rep/r-ddinam.p
-    (
-     input my-handle
+    (input my-handle
     ,input this-procedure:handle /*p-parent-handle*/
     ,input this-procedure:handle /*      p-log-handle*/
     ,input this-procedure:handle /*   p-cont-handle*/
@@ -383,6 +403,7 @@ run rep/r-ddinam.p
     ,input 0 /*p-ruleset-id*/
     ,input "" /*p-log-file-name*/
     ,input tog-det
+    ,input TOG-oper
     ,input yes /*t-text*/
     ,input yes /*t-excel*/
     ,input '' /*p-dir-name*/
