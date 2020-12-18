@@ -423,6 +423,13 @@ assign
   
 run report-exec in this-procedure .
 
+if iParam:x-TOG-Shift then do:
+   if iParam:x-Shift-Alone = 1 then v-date-name = "По смене: №" +  string(iParam:x-Shift-Start) + " " + string(iParam:x-Date-Start,"99.99.9999").
+   else v-date-name = "За смены: c №" +  string (iParam:x-Shift-Start) + " " + string (iParam:x-Date-Start,"99.99.9999") + " по №" + string (iParam:x-Shift-End) + " " + string (iParam:x-Date-End,"99.99.9999").
+end.
+else v-date-name = "За период с " +  string (iParam:x-Date-Start) + " по " + string (iParam:x-Date-End).
+
+
 if is-rosneft then 
 do: 
   assign
