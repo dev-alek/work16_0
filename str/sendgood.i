@@ -274,11 +274,41 @@ FUNCTION check-ban-sales-via-cd return logical ( input p-gds-code as integer ) :
           output v-value,
           output v-type
         ).
-        
-        if v-value = "yes" then
-            return true.
-        else
-            v-upper-code = 0.
+
+       if v-value = "yes" then
+          return true.
+       else 
+       do:
+          run ggoattr-value(
+             input lc_gds-grp.node-code,
+             input shop.host-code,
+             input "",
+             input 0,
+             input {&ggoattr-ban-sales-via-cd},
+             output v-value,
+             output v-type
+             ).
+
+          if v-value = "yes" then
+             return true.        
+          else 
+          do:
+             run ggoattr-value(
+                input lc_gds-grp.node-code,
+                input shop.host-code,
+                input {&shop},
+                input i-obj-code,
+                input {&ggoattr-ban-sales-via-cd},
+                output v-value,
+                output v-type
+                ).
+
+             if v-value = "yes" then
+                return true.    
+             else v-upper-code = lc_gds-grp.upper-code.    
+          end .          
+       end.   
+
     end.
 end.
 
