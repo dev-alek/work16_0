@@ -199,8 +199,22 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         then EndDocTrnFuel().
         else EndDocTrn().
     end.
-    else
-      case buf_trn-doc.ext-doc-type:
+    else do:
+      define variable vdoc-type as character no-undo.
+      vdoc-type = buf_trn-doc.ext-doc-type.
+      case vdoc-type:
+         when {&TDEDT_Pri_Vnesh} then do:
+            if buf_trn-doc.cli-type = 'маг' 
+            then
+               vdoc-type = {&TDEDT_Pri_Perem}.
+         end.
+         when {&TDEDT_Vozvrat_Vnesh} then do:
+            if buf_trn-doc.cli-type = 'маг' 
+            then 
+               vdoc-type = {&TDEDT_Vozvrat_Perem}.
+         end.
+      end case.
+      case vdoc-type:
         when {&TDEDT_Pri_Vnesh} then do:
           v-doc-type-ERPRN = "1".
           if v-is-petrol-trn
@@ -274,7 +288,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           return.
         end.
       end.
-    
+    end.
   end.
 
 

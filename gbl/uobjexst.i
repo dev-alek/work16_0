@@ -21,7 +21,14 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &if defined(include_userobjs) = 0 &then
   &message need include gbl/userobjs.i
 &endif
+&if     "{1}" <> "class"
+&then
 run userobjs_object-exist in this-procedure
   (output {1} /* p-user-select   */
   ) {2} .
+&else
+userobjs_object-exist 
+  (output {2} /* p-user-select   */
+  ) {3} .
+&endif
 /* $Workfile$ e n d */

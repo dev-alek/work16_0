@@ -22,12 +22,21 @@ define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
 
 /*==========================================================================*/
+&if "{1}" = "class"
+&then
+method public character grplib-get-full-name (p-node-code as integer):
+   define variable p-full-name as character no-undo.
+   do:
+&else
 procedure grplib-get-full-name :
-do
+   define input parameter p-node-code  as integer      no-undo.
+   define output parameter p-full-name as character    no-undo.
+   do
 on error undo, return error
 :
-define input parameter p-node-code  as integer      no-undo.
-define output parameter p-full-name as character    no-undo.
+&endif
+
+
 
     define variable v-upper-code    as integer           no-undo.
 
@@ -68,12 +77,21 @@ define output parameter p-full-name as character    no-undo.
     p-full-name = p-full-name + (if p-full-name = "":U then "":U else {&delim-grp})
     .
 end.
-end procedure. /* grplib-get-full-name */
+&if "{1}" = "class"
+&then
+return p-full-name.
+&endif
+end . /* grplib-get-full-name */
 
+&if "{1}" = "class"
+&then
+method public integer grplib-get-node-from-full-name (p-full-name as char):
+   define variable p-node-code as integer  no-undo.
+&else
 procedure grplib-get-node-from-full-name :
 define input parameter p-full-name as character no-undo .
 define output parameter p-node-code as integer no-undo .
-
+&endif
 define variable v-ii as integer no-undo .
 define variable v-upper-code as integer no-undo .
 define variable v-root-code as integer no-undo .
@@ -115,8 +133,11 @@ on error undo, return error
     end.
   end.
 end.
-
-end procedure. /* grplib-get-node-from-full-name */
+&if "{1}" = "class"
+&then
+return p-node-code.
+&endif
+end . /* grplib-get-node-from-full-name */
 
 
 /* $Workfile$ e n d */

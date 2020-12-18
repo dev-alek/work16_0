@@ -120,7 +120,7 @@ DEFINE BROWSE br-units QUERY br-units NO-LOCK DISPLAY
       ub.units.long-name FORMAT "X(30)"
       (IF (ub.units.type = "" ) THEN ("") ELSE ({&unit-type-name} + {&unit-type-name-toplivo})) COLUMN-LABEL "Описание типа" FORMAT "x(30)"
       ub.units.type FORMAT "X(12)"
-      ub.units.OKEI COLUMn-LABEL "Код!ОКЕИ"
+      ub.units.OKEI COLUMn-LABEL "Код!ОКЕИ" format "9999"
     WITH SEPARATORS
           &IF '{&WINDOW-SYSTEM}' = 'TTY':U &THEN SIZE 69 BY 13
           &ELSE size 86.25 by 12.58 &ENDIF

@@ -1016,6 +1016,16 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME tt-ext-system.esys-name
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-ext-system.esys-name Dialog-Frame
+ON VALUE-CHANGED OF tt-ext-system.esys-name IN FRAME Dialog-Frame /* Название */
+DO:
+    ASSIGN
+  tt-ext-system.esys-name.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME tt-ext-system.esys-type
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-ext-system.esys-type Dialog-Frame

@@ -18,11 +18,13 @@ define variable vss-date        as character no-undo init "$Date:$":U .
 define variable vss-workfile    as character no-undo init "$Workfile:$":U .
 define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "Процедура обновления str-gbl в автоматическом режиме для разработчиков".
+
 { cmp/vssrevis.i }
 */
-
+{utl/search.i}
 { utl/param.i }
-&global-define fileparam filesize.txt 
+&global-define fileparam filesize.txt
+define variable vFileParam as character no-undo.
 define variable mliststrfile as character no-undo.
 define variable mi           as integer   no-undo.
 define variable changstr     as logical   no-undo.
@@ -50,6 +52,7 @@ field  filever as integer init ?
 
 if search("adm/l-i.r") eq ?
 then do:
+   vFileParam = SearchFile ("{&fileparam}").
    mFileRes = search("utl/mkstrglb.p").
    mFileRes = replace(mFileRes,"mkstrglb.p","mkstrres.txt").
    output stream sOut to value( mFileRes ).
@@ -72,11 +75,11 @@ then do:
          tt-file-ver.filename = entry(mi,mliststrfile)
          tt-file-ver.filesize = mfilesize
       .
-      if search ("{&fileparam}") ne ?
+      if vFileParam ne ?
       then do:
          assign
             msizeinfile = 0  
-            msizeinfile = int(getParam("{&fileparam}",mfile))
+            msizeinfile = int(getParam(vFileParam,mfile))
          no-error.
          if msizeinfile ne mfilesize
          then 
@@ -158,15 +161,15 @@ then do:
       run getverfile (mfile, 
                       output tt-file-ver.filesize,
                       output tt-file-ver.filever).
-      if search ("{&fileparam}") ne ?
+      if vFileParam ne ?
       then do:
          assign
             msizeinfile = 0  
-            msizeinfile = int(getParam("{&fileparam}",mfile))
+            msizeinfile = int(getParam(vFileParam,mfile))
          no-error.
          assign
             mverinfile = 0  
-            mverinfile = int(getParam("{&fileparam}",mfile + "|ver"))
+            mverinfile = int(getParam(vFileParam,mfile + "|ver"))
          no-error.
          if    msizeinfile ne tt-file-ver.filesize
             or mverinfile  ne tt-file-ver.filever
@@ -213,8 +216,12 @@ then do:
       output close.
    end.
    &endif
-   
+   &if "{&iscompil}" eq ""
+   &then
    run utl/crpwd.p(no). 
+   &else
+   run utl/crpwd.p(yes).
+   &endif
    run SaveFileList ("utl/crpwd.p","utl/crpwd.i").  
 end.
 procedure SaveFileList:
@@ -222,6 +229,7 @@ procedure SaveFileList:
    define input  parameter iFileNameNew as character no-undo.
    output stream sOut to value( mFileRes ) append.
    put stream sOut unformatted iFileNameOld  " " iFileNameNew skip.
+   put stream sOut unformatted "utl/chkstrgbl.p " iFileNameNew skip.
    output stream sOut close.
 end. 
   

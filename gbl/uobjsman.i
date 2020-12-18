@@ -21,6 +21,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &if defined(include_userobjs) = 0 &then
   &message need include gbl/userobjs.i
 &endif
+&if     "{1}" <> "class"
+&then
 run userobjs_select-many in this-procedure
   (input  {1} /* parparentproc   */
   ,input  {2} /* p-db-num        */
@@ -30,4 +32,15 @@ run userobjs_select-many in this-procedure
   ,input  {6} /* p-obj-code      */
   ,output {7} /* p-user-select   */
   ) {8} .
+&else
+userobjs_select-many
+  (input  {2} /* parparentproc   */
+  ,input  {3} /* p-db-num        */
+  ,input  {4} /* p-user-id       */
+  ,input  {5} /* p-host-code-obj */
+  ,input  {6} /* p-obj-type      */
+  ,input  {7} /* p-obj-code      */
+  ,output {8} /* p-user-select   */
+  ) {9} .
+&endif
 /* $Workfile$ e n d */

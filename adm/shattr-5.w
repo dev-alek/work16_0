@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,13 +8,13 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_thbj-attr FOR ub.thbj-attr.
-DEFINE BUFFER X_shop FOR ub.shop.
-DEFINE BUFFER X_sysconf FOR ub.sysconf.
+DEFINE BUFFER locked_thbj-attr FOR thbj-attr.
+DEFINE BUFFER X_shop FOR shop.
+DEFINE BUFFER X_sysconf FOR sysconf.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -59,10 +59,16 @@ define variable vss-description as character no-undo init "Редактирование атрибу
 { cmp/showinf.i  }
 { gbl/getcntxt.i def }
 { gbl/dct-algo.i }
+{ gbl/key-rec.i }
 DEFINE VARIABLE v-db-num LIKE ub.db.db-num NO-UNDO.
 DEFINE VARIABLE v-tab-order AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-to-create AS logical NO-UNDO.
 DEFINE VARIABLE l-name-2cd-init AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-rid-list      AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-ok            AS logical   NO-UNDO.
+define variable v-tbl-row       as rowid     no-undo .
+define variable v-tbl-name      as character no-undo .
+define buffer buf_ext-system for ub.ext-system.
 define temp-table temp-thbj-attr no-undo like ub.thbj-attr.
 define variable v-tth as handle no-undo .
 assign
@@ -76,7 +82,7 @@ field prop-value-label as character
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -91,8 +97,8 @@ field prop-value-label as character
 &Scoped-define INTERNAL-TABLES br-thbj-attr
 
 /* Definitions for BROWSE br-how-disc                                   */
-&Scoped-define FIELDS-IN-QUERY-br-how-disc br-thbj-attr.prop-code-label br-thbj-attr.prop-value-label
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-how-disc
+&Scoped-define FIELDS-IN-QUERY-br-how-disc br-thbj-attr.prop-code-label br-thbj-attr.prop-value-label   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-how-disc   
 &Scoped-define SELF-NAME br-how-disc
 &Scoped-define QUERY-STRING-br-how-disc FOR EACH br-thbj-attr where br-thbj-attr.prop-code begins "how"
 &Scoped-define OPEN-QUERY-br-how-disc OPEN QUERY {&SELF-NAME} FOR EACH br-thbj-attr where br-thbj-attr.prop-code begins "how".
@@ -105,13 +111,13 @@ field prop-value-label as character
     ~{&OPEN-QUERY-br-how-disc}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit RECT-dopname RECT-name b-quit B-Help ~
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-dopname RECT-name ~
 t-tax-cass t-nam-2str t-nam-artc t-cod-pcod RS-name-2cd t-cp-is-use ~
-RS-amntdisc b-chg br-how-disc l-no-chk-name l-chk-name l-name-2cd l-no-part ~
-l-part l-amntdisc
+RS-amntdisc code_system b-system b-chg br-how-disc l-no-chk-name l-chk-name ~
+l-name-2cd l-no-part l-part l-amntdisc 
 &Scoped-Define DISPLAYED-OBJECTS t-tax-cass t-nam-2str t-nam-artc ~
-t-cod-pcod RS-name-2cd t-cp-is-use RS-amntdisc l-no-chk-name l-chk-name ~
-l-name-2cd l-no-part l-part l-amntdisc t-cp-is-use-2
+t-cod-pcod RS-name-2cd t-cp-is-use RS-amntdisc code_system l-no-chk-name ~
+l-chk-name l-name-2cd l-no-part l-part l-amntdisc t-cp-is-use-2 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -126,73 +132,85 @@ l-name-2cd l-no-part l-part l-amntdisc t-cp-is-use-2
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE l-amntdisc AS CHARACTER FORMAT "X(256)":U INITIAL "Тип скидки на товар на кассе"
-      VIEW-AS TEXT
+DEFINE BUTTON b-system 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "" 
+     SIZE 3 BY .88.
+
+DEFINE VARIABLE code_system AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Код внешней системы для передачи соответствий на кассу" 
+     VIEW-AS FILL-IN 
+     SIZE 20 BY 1 NO-UNDO.
+
+DEFINE VARIABLE l-amntdisc AS CHARACTER FORMAT "X(256)":U INITIAL "Тип скидки на товар на кассе" 
+      VIEW-AS TEXT 
      SIZE 31.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-chk-name AS CHARACTER FORMAT "X(256)":U
-     LABEL "задано назв. на чеке"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-chk-name AS CHARACTER FORMAT "X(256)":U 
+     LABEL "задано назв. на чеке" 
+      VIEW-AS TEXT 
      SIZE 24.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE l-name-2cd AS CHARACTER FORMAT "X(256)":U INITIAL "Что посылать на кассу как дополн. назв. товара"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-name-2cd AS CHARACTER FORMAT "X(256)":U INITIAL "Что посылать на кассу как дополн. назв. товара" 
+      VIEW-AS TEXT 
      SIZE 92 BY .67 NO-UNDO.
 
-DEFINE VARIABLE l-no-chk-name AS CHARACTER FORMAT "X(256)":U
-     LABEL "не задано название на чеке"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-no-chk-name AS CHARACTER FORMAT "X(256)":U 
+     LABEL "не задано название на чеке" 
+      VIEW-AS TEXT 
      SIZE 18 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE l-no-part AS CHARACTER FORMAT "X(256)":U
-     LABEL "при продаже не по партиям"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-no-part AS CHARACTER FORMAT "X(256)":U 
+     LABEL "при продаже не по партиям" 
+      VIEW-AS TEXT 
      SIZE 18 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE l-part AS CHARACTER FORMAT "X(256)":U
-     LABEL "при продаже по партиям"
-      VIEW-AS TEXT
+DEFINE VARIABLE l-part AS CHARACTER FORMAT "X(256)":U 
+     LABEL "при продаже по партиям" 
+      VIEW-AS TEXT 
      SIZE 19 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE t-cp-is-use-2 AS CHARACTER FORMAT "X(256)":U INITIAL "касс.платежей с атриб-м ИСПОЛЬЗУЕТСЯ"
-      VIEW-AS TEXT
+DEFINE VARIABLE t-cp-is-use-2 AS CHARACTER FORMAT "X(256)":U INITIAL "касс.платежей с атриб-м ИСПОЛЬЗУЕТСЯ" 
+      VIEW-AS TEXT 
      SIZE 37.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE RS-amntdisc AS INTEGER
+DEFINE VARIABLE RS-amntdisc AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Категорийная", 0,
 "Скидка на количество - POS IBM", 1,
 "Категорийная и скидка на кол-во - POS IBM spool = 6", 2,
 "Скидка на количество - POS NCR", 3
      SIZE 55.5 BY 3.5 NO-UNDO.
 
-DEFINE VARIABLE RS-name-2cd AS CHARACTER INITIAL "name"
+DEFINE VARIABLE RS-name-2cd AS CHARACTER INITIAL "name" 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Англ. название", "name",
 "Локальный код/код партии ", "code",
 "Код ГТД", "GTD",
@@ -201,41 +219,41 @@ DEFINE VARIABLE RS-name-2cd AS CHARACTER INITIAL "name"
      SIZE 92.5 BY 1 NO-UNDO.
 
 DEFINE RECTANGLE RECT-dopname
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 96 BY 5.87.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 96 BY 5.88.
 
 DEFINE RECTANGLE RECT-name
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 96 BY 4.43.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 96 BY 4.42.
 
-DEFINE VARIABLE t-cod-pcod AS LOGICAL INITIAL no
-     LABEL "Как дополн. назв. при передаче на кассу - локальный код товара или код партии"
+DEFINE VARIABLE t-cod-pcod AS LOGICAL INITIAL no 
+     LABEL "Как дополн. назв. при передаче на кассу - локальный код товара или код партии" 
      VIEW-AS TOGGLE-BOX
      SIZE 79.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-cp-is-use AS LOGICAL INITIAL no
-     LABEL "На кассу передавать только типы касс. платежей с атрибутом ИСПОЛЬЗУЕТСЯ"
+DEFINE VARIABLE t-cp-is-use AS LOGICAL INITIAL no 
+     LABEL "На кассу передавать только типы касс. платежей с атрибутом ИСПОЛЬЗУЕТСЯ" 
      VIEW-AS TOGGLE-BOX
      SIZE 37 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-nam-2str AS LOGICAL INITIAL no
-     LABEL "Передача основного названия товара на кассу в две строки"
+DEFINE VARIABLE t-nam-2str AS LOGICAL INITIAL no 
+     LABEL "Передача основного названия товара на кассу в две строки" 
      VIEW-AS TOGGLE-BOX
      SIZE 83 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-nam-artc AS LOGICAL INITIAL no
-     LABEL "Как основн. назв. при передаче на кассу - англ. название товара или артикул"
+DEFINE VARIABLE t-nam-artc AS LOGICAL INITIAL no 
+     LABEL "Как основн. назв. при передаче на кассу - англ. название товара или артикул" 
      VIEW-AS TOGGLE-BOX
      SIZE 82 BY 1 NO-UNDO.
 
-DEFINE VARIABLE t-tax-cass AS LOGICAL INITIAL no
-     LABEL "Передача налогов на кассу"
+DEFINE VARIABLE t-tax-cass AS LOGICAL INITIAL no 
+     LABEL "Передача налогов на кассу" 
      VIEW-AS TOGGLE-BOX
      SIZE 83 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY br-how-disc FOR
+DEFINE QUERY br-how-disc FOR 
       br-thbj-attr SCROLLING.
 &ANALYZE-RESUME
 
@@ -256,33 +274,35 @@ DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 95
-     t-tax-cass AT ROW 2.27 COL 3.5
-     t-nam-2str AT ROW 3.43 COL 3.5
+     t-tax-cass AT ROW 2.25 COL 3.5
+     t-nam-2str AT ROW 3.42 COL 3.5
      t-nam-artc AT ROW 4.5 COL 3.5
-     t-cod-pcod AT ROW 8.07 COL 3.5
-     RS-name-2cd AT ROW 10.07 COL 4.5 NO-LABEL
+     t-cod-pcod AT ROW 8.08 COL 3.5
+     RS-name-2cd AT ROW 10.08 COL 4.5 NO-LABEL
      t-cp-is-use AT ROW 14 COL 61
-     RS-amntdisc AT ROW 14.93 COL 4 NO-LABEL
-     b-chg AT ROW 17.5 COL 89 WIDGET-ID 4
-     br-how-disc AT ROW 18.5 COL 1 WIDGET-ID 100
-     l-no-chk-name AT ROW 6.57 COL 29.5 COLON-ALIGNED
-     l-chk-name AT ROW 6.57 COL 70 COLON-ALIGNED
-     l-name-2cd AT ROW 9.3 COL 2 COLON-ALIGNED NO-LABEL
-     l-no-part AT ROW 12.57 COL 30 COLON-ALIGNED
-     l-part AT ROW 12.57 COL 75 COLON-ALIGNED
-     l-amntdisc AT ROW 13.93 COL 2.5 COLON-ALIGNED NO-LABEL
+     RS-amntdisc AT ROW 14.92 COL 4 NO-LABEL
+     code_system AT ROW 18.5 COL 58.13 COLON-ALIGNED WIDGET-ID 10
+     b-system AT ROW 18.5 COL 80.75 WIDGET-ID 8
+     b-chg AT ROW 18.58 COL 89 WIDGET-ID 4
+     br-how-disc AT ROW 19.58 COL 1 WIDGET-ID 100
+     l-no-chk-name AT ROW 6.58 COL 29.5 COLON-ALIGNED
+     l-chk-name AT ROW 6.58 COL 70 COLON-ALIGNED
+     l-name-2cd AT ROW 9.29 COL 2 COLON-ALIGNED NO-LABEL
+     l-no-part AT ROW 12.58 COL 30 COLON-ALIGNED
+     l-part AT ROW 12.58 COL 75 COLON-ALIGNED
+     l-amntdisc AT ROW 13.92 COL 2.5 COLON-ALIGNED NO-LABEL
      t-cp-is-use-2 AT ROW 15 COL 59 COLON-ALIGNED NO-LABEL WIDGET-ID 2
      "При данных настройках на кассу как допл. назв. товара будет передано" VIEW-AS TEXT
-          SIZE 92 BY 1 AT ROW 11.07 COL 4.5
-          FGCOLOR 4
+          SIZE 92 BY 1 AT ROW 11.08 COL 4.5
+          FGCOLOR 4 
      "При данных настройках на кассу как основн. назв. товара будет передано" VIEW-AS TEXT
-          SIZE 92 BY 1 AT ROW 5.43 COL 3.5
-          FGCOLOR 4
-     RECT-dopname AT ROW 7.93 COL 2
-     RECT-name AT ROW 3.27 COL 2
-     SPACE(1.29) SKIP(15.52)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          SIZE 92 BY 1 AT ROW 5.42 COL 3.5
+          FGCOLOR 4 
+     RECT-dopname AT ROW 7.92 COL 2
+     RECT-name AT ROW 3.25 COL 2
+     SPACE(1.24) SKIP(16.57)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Опции передачи данных на кассу"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON b-quit.
 
@@ -309,7 +329,7 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-how-disc b-chg Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -339,7 +359,7 @@ br-thbj-attr.prop-code begins "how".
 */  /* DIALOG-BOX Dialog-Frame */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -426,6 +446,54 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-system
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-system Dialog-Frame
+ON CHOOSE OF b-system IN FRAME Dialog-Frame
+DO:
+    define variable v-ii as integer no-undo .
+    
+    run bge/oxmlexts.p (
+      input parparentproc,
+      input 1,
+      input substitute("esys-type > &1", {&openxml-type-ordinal}),
+      input "",
+      output v-rid-list,
+      output v-ok).
+    if v-rid-list = "" or v-ok <> true then message "Не была выбрана внешняя система." view-as alert-box.
+    
+    if v-ok = true then 
+    do:
+      code_system = "" .
+      do v-ii = 1 to num-entries(v-rid-list):
+        run gen-row-keyr in this-procedure
+          ( input entry(v-ii, v-rid-list)
+          ,input ?
+          ,input "ub"
+          ,input ?
+          ,input no-lock
+          ,output v-tbl-row
+          ,output v-tbl-name
+          ).
+          
+        find first buf_ext-system no-lock where
+          rowid(buf_ext-system) = v-tbl-row.
+      code_system = code_system + "," + entry(2,string(entry(v-ii, v-rid-list)),{&delim-key}) .
+      end.
+    end.
+    else 
+    do:
+      undo, return no-apply .
+    end.
+    code_system = trim(code_system,",") .
+    code_system:screen-value =  code_system no-error.
+
+  /*        code_system = v-rid-list no-error.*/
+  end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME RS-name-2cd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RS-name-2cd Dialog-Frame
 ON VALUE-CHANGED OF RS-name-2cd IN FRAME Dialog-Frame
@@ -488,7 +556,7 @@ END.
 &Scoped-define BROWSE-NAME br-how-disc
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -625,7 +693,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -644,17 +712,17 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-tax-cass t-nam-2str t-nam-artc t-cod-pcod RS-name-2cd t-cp-is-use
-          RS-amntdisc l-no-chk-name l-chk-name l-name-2cd l-no-part l-part
-          l-amntdisc t-cp-is-use-2
+  DISPLAY t-tax-cass t-nam-2str t-nam-artc t-cod-pcod RS-name-2cd t-cp-is-use 
+          RS-amntdisc code_system l-no-chk-name l-chk-name l-name-2cd l-no-part 
+          l-part l-amntdisc t-cp-is-use-2 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit RECT-dopname RECT-name b-quit B-Help t-tax-cass t-nam-2str
-         t-nam-artc t-cod-pcod RS-name-2cd t-cp-is-use RS-amntdisc b-chg
-         br-how-disc l-no-chk-name l-chk-name l-name-2cd l-no-part l-part
-         l-amntdisc
+  ENABLE B-exit b-quit B-Help RECT-dopname RECT-name t-tax-cass t-nam-2str 
+         t-nam-artc t-cod-pcod RS-name-2cd t-cp-is-use RS-amntdisc code_system 
+         b-system b-chg br-how-disc l-no-chk-name l-chk-name l-name-2cd 
+         l-no-part l-part l-amntdisc 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -663,7 +731,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 define variable v-tooltip          as character no-undo .
 define variable v-label          as character no-undo .
@@ -712,6 +780,13 @@ for each thbjattr_thbj-attr:
     rs-amntdisc:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
     .
   END.
+    IF v-entry = {&attr-cd-inf-send_code-system} THEN 
+    DO:
+      ASSIGN
+        code_system                                     = thbjattr_thbj-attr.property-value-character
+        code_system:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+        .
+    END.
   IF v-entry = {&attr-cd-inf-send_cod-pcod} THEN DO:
     ASSIGN
     t-cod-pcod = thbjattr_thbj-attr.property-value-logical
@@ -779,7 +854,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
 define variable dflt-cd as character no-undo .
 define variable conf-attr as character no-undo .
@@ -830,11 +905,17 @@ l-name-2cd
 l-amntdisc
 t-cp-is-use
 t-cp-is-use-2
+b-system
+    code_system
 WITH FRAME {&frame-name}.
 ENABLE
 B-exit WHEN p-mode = {&UPDATE}
 b-quit
 B-Help
+b-system
+    WHEN p-mode = {&UPDATE}
+    code_system
+    WHEN p-mode = {&UPDATE}
 t-tax-cass WHEN p-mode = {&UPDATE}
 t-nam-2str WHEN p-mode = {&UPDATE}
 t-nam-artc WHEN p-mode = {&UPDATE}
@@ -863,7 +944,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -885,6 +966,7 @@ t-cod-pcod
 RS-name-2cd
 RS-amntdisc
 t-cp-is-use
+code_system
 .
 assign
 fh = frame {&frame-name}:first-child
@@ -972,7 +1054,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE view-results-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE view-results-name Dialog-Frame 
 PROCEDURE view-results-name :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1000,7 +1082,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE view-results-name2 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE view-results-name2 Dialog-Frame 
 PROCEDURE view-results-name2 :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1048,3 +1130,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

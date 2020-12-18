@@ -24,13 +24,12 @@ define variable vss-description as character no-undo init "Движение денежных сре
 { cmp/vssrevis.i }
 
 define input  parameter parParentProc  as widget-handle no-undo.
-define NEW SHARED variable is-rosneft as logical no-undo init NO.
 
 { cmp/str-glbl.i }
-{ cmp/r-page1.i new}
-run rep/d-report.w (
+
+run rep/dreport.p (
                 input parParentProc ,
-                input 'rep/e-ddinam.w',"Движение денежных средств",
+                input 'ibs.th.rep.eddinam',"Движение денежных средств",
                 input 4,
                 input "",
                 input "*",

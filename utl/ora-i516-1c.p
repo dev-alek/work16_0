@@ -1444,7 +1444,7 @@ do trans:
       run pcall-log-file in p-log-handle ( input v-end-message ) .
       return.
   end.
-  if new_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}    then do:
+  if new_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and new_trn-doc.cli-type ne 'маг'   then do:
     run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
     if error-status:error then do :
         v-end-message = substitute(" Ошибка при закрытиии внешнего прихода &1 на факт: &2" , error-status :get-message(1)  , return-value) .
