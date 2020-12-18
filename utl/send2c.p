@@ -48,7 +48,7 @@ DEFINE FRAME frame1
   skip
                    v-obj-code format ">>>>>>>>9"  label "Код магазина"
   skip    space(2) v-sht-date format "99/99/9999" label "Дата смены"
-          space(2) v-sht-num                      label "Номер смены"
+          space(2) v-sht-num                      label "Порядок смены"
   skip(1) space(2) btnOk
           space(2) btnCancel
   with
