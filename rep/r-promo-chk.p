@@ -100,28 +100,30 @@ for each buf_obj-list no-lock:
     for each buf_chk-discnt no-lock where buf_chk-discnt.record-type = 5
       and buf_chk-discnt.obj-code = buf_obj-list.obj-code 
       and buf_chk-discnt.obj-type = buf_obj-list.obj-type
-      and buf_chk-discnt.out-code <> ?
-      and buf_chk-discnt.shift-date >= x-Date-Start 
-      and buf_chk-discnt.shift-date <= x-Date-End:   
+      and buf_chk-discnt.out-code <> ?,
+      first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_chk-discnt.doc-code
+      and buf_chk-doc.shift-date >= x-Date-Start 
+      and buf_chk-doc.shift-date <= x-Date-End:   
       /*Кол-во срабатываний*/    
-      if (buf_chk-discnt.shift-date = X-date-Start)
-        and (buf_chk-discnt.shift-num < x-Shift-Start) then next. 
-      if (buf_chk-discnt.shift-date = X-date-End)
-        and (buf_chk-discnt.shift-num > x-Shift-End) then next.
+      if (buf_chk-doc.shift-date = X-date-Start)
+        and (buf_chk-doc.shift-num < x-Shift-Start) then next. 
+      if (buf_chk-doc.shift-date = X-date-End)
+        and (buf_chk-doc.shift-num > x-Shift-End) then next.
 
       find first tt-promo where tt-promo.obj-code = buf_chk-discnt.obj-code and tt-promo.obj-type = buf_chk-discnt.obj-type
-        and tt-promo.shift-date = buf_chk-discnt.shift-date and tt-promo.shift-num = buf_chk-discnt.shift-num and tt-promo.promo-id = buf_chk-discnt.promo-id no-error .
+        and tt-promo.shift-date = buf_chk-doc.shift-date and tt-promo.shift-num = buf_chk-doc.shift-num and tt-promo.promo-id = buf_chk-discnt.promo-id no-error .
       if not available (tt-promo) then 
       do:
         find first buf_PromoAction no-lock where buf_PromoAction.id = integer(buf_chk-discnt.promo-id) no-error .
+        
         create tt-promo .
         assign
           tt-promo.obj-code    = buf_chk-discnt.obj-code
           tt-promo.obj-type    = buf_chk-discnt.obj-type
           tt-promo.object-qnty = buf_chk-discnt.object-sum
           tt-promo.promo-id    = string(buf_chk-discnt.promo-id)
-          tt-promo.shift-date  = buf_chk-discnt.shift-date
-          tt-promo.shift-num   = buf_chk-discnt.shift-num
+          tt-promo.shift-date  = buf_chk-doc.shift-date
+          tt-promo.shift-num   = buf_chk-doc.shift-num
           tt-promo.promo-name  = if available (buf_PromoAction) then buf_PromoAction.nameAction else "".
         .
       end.    
@@ -152,23 +154,23 @@ for each buf_obj-list no-lock:
       and buf_chk-discnt.obj-type = buf_obj-list.obj-type
       and buf_chk-discnt.out-code <> ?
       and buf_chk-discnt.chk-date >= x-Date-Start 
-      and buf_chk-discnt.chk-date <= x-Date-End:   
+      and buf_chk-discnt.chk-date <= x-Date-End,   
+      first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_chk-discnt.doc-code: 
       /*Кол-во срабатываний*/    
-
       find first tt-promo where tt-promo.obj-code = buf_chk-discnt.obj-code and tt-promo.obj-type = buf_chk-discnt.obj-type
-        and tt-promo.shift-date = buf_chk-discnt.shift-date and tt-promo.shift-num = buf_chk-discnt.shift-num and tt-promo.promo-id = buf_chk-discnt.promo-id no-error .
+        and tt-promo.shift-date = buf_chk-doc.shift-date and tt-promo.shift-num = buf_chk-doc.shift-num and tt-promo.promo-id = buf_chk-discnt.promo-id no-error .
       if not available (tt-promo) then 
       do:
         find first buf_PromoAction no-lock where buf_PromoAction.id = integer(buf_chk-discnt.promo-id) no-error .
         create tt-promo .
         assign
-          tt-promo.obj-code    = buf_chk-discnt.obj-code
-          tt-promo.obj-type    = buf_chk-discnt.obj-type
-          tt-promo.object-qnty = buf_chk-discnt.object-sum
-          tt-promo.promo-id    = string(buf_chk-discnt.promo-id)
-          tt-promo.shift-date  = buf_chk-discnt.shift-date
-          tt-promo.shift-num   = buf_chk-discnt.shift-num
-          tt-promo.promo-name  = if available (buf_PromoAction) then buf_PromoAction.nameAction else "".
+            tt-promo.obj-code    = buf_chk-discnt.obj-code
+            tt-promo.obj-type    = buf_chk-discnt.obj-type
+            tt-promo.shift-date = buf_chk-doc.shift-date
+            tt-promo.shift-num  = buf_chk-doc.shift-num
+            tt-promo.object-qnty = buf_chk-discnt.object-sum
+            tt-promo.promo-id    = string(buf_chk-discnt.promo-id)
+            tt-promo.promo-name  = if available (buf_PromoAction) then buf_PromoAction.nameAction else "".
         .
       end.    
       else tt-promo.object-qnty = tt-promo.object-qnty + buf_chk-discnt.object-sum .
@@ -221,7 +223,7 @@ procedure pr-header:
     '<thead>' skip
     .
   put stream OutStr-html unformatted
-    '<tr>' skip
+    '<tr class="set_columns">' skip
     '<td style="width: 40px;"></td>' skip
     '<td style="width: 40px;"></td>' skip
     '<td style="width: 40px;"></td>' skip
@@ -259,7 +261,7 @@ procedure pr-line:
     '</TR>'skip
     .
                             
-  for each tt-promo:
+  for each tt-promo by tt-promo.shift-date:
     put stream OutStr-html unformatted
       '<TR>' skip
       '<TD text_wrap="true" style="text-align: center;">' + STRING (tt-promo.shift-date,"99.99.99") + '</TD>' skip
