@@ -718,7 +718,7 @@ procedure t-beneq.
   for each units no-lock where
     lookup( {&petrolium}, units.type) > 0,
     each buf_goods no-lock where
-    buf_goods.unit-base = units.unit-name  , first bar-code no-lock where bar-code.gds-code  = buf_goods.gds-code
+    buf_goods.unit-base = units.unit-name  , each bar-code no-lock where bar-code.gds-code  = buf_goods.gds-code and bar-code.stts_ = 0
     :
     for each obj-list where obj-list.obj-type = {&shop} no-lock :
       accumulate obj-list.obj-code ( count ) .
