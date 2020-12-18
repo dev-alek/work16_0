@@ -832,6 +832,44 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     shift-open-time_ = 0
   .
 
+   find first ub.cash-desk no-lock where
+                ub.cash-desk.cash-num = pay-desk_
+          AND ub.cash-desk.obj-code = p-obj-code no-error.
+  If not available  ub.cash-desk
+  then do:
+      assign
+          p-view-log = yes
+          .
+      run write-log-and-file in p-log-handle (
+                input 1
+              , input log-file-name
+              , input 1
+              , input substitute( "!!!При обработке файла произошла ошибка. На объекте &1 нет кассы с номером &2", p-obj-code, pay-desk_
+                                                                  
+                                )
+                                                ).
+          undo, return .
+  end.
+              
+  If available  ub.cash-desk and   cash-desk.pos-type = p-pos-type then.
+  else do:       
+      p-pos-type =  ub.cash-desk.pos-type. 
+      run get-ibm-parameters in this-procedure no-error.
+      if error-status:error then do:
+          assign
+          p-view-log = yes
+          .
+          run write-log-and-file in p-log-handle (
+                input 1
+              , input log-file-name
+              , input 1
+              , input substitute( "!!!При обработке файла &1 произошла ошибка при получении значений настроечных параметров"
+                                                                  
+                                )
+                                                ).
+          undo, return .
+        end.
+  end.
   find first temp-cash-desk where
            temp-cash-desk.cash-num = (if p-pos-type = {&cd-type-autotank} then 0 else pay-desk_) no-error.
   if not available temp-cash-desk then do:
