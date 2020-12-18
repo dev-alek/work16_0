@@ -4619,6 +4619,34 @@ procedure m-catalog-corr-exe :
 
 end procedure. /* m-catalog-oss-exe */
 
+procedure m-catalog-petrol-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/sendpetrol.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U)
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка данных по соответствию товаров/кошельков ")
+  ) no-error.
+
+end procedure. /* m-catalog-petrol-exe */
+
+procedure m-cash-petrol-del-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/sendpetrol.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'D':U)
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Удаление данных по соответствию товаров/кошельков ")
+  ) no-error.
+
+end procedure. /* m-catalog-petrol-exe */
+
 procedure m-promo-d-exe :
 
   do

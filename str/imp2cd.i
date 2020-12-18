@@ -31,6 +31,8 @@ define new shared temp-table dc-dis-card-mask-attr no-undo like ub.dis-card-mask
 { str/defc-txr.i "new shared" } /*не должен использоваться в load-rec.p*/
 { str/pdf-list.i pdf-list def "new shared" }
 
+{ str/defc-ext-classif.i "new shared" } /*не должен использоваться в load-rec.p*/
+
 procedure send-to-cash:
   if not can-find(first ub.cash-desk where
                   ub.cash-desk.db-num = ibs.th.gbl.gbl-var:g#db-num AND
@@ -52,7 +54,10 @@ procedure send-to-cash:
     or can-find(first dc-dis-card-mask no-lock)
     or can-find(first stpl-list no-lock)
     or can-find(first pdf-list no-lock)
+    or can-find(first ext-classif-list no-lock)
+    or can-find(first c-ext-classif-list no-lock)
     then do:
+       
       run str/diallog.w (
                          &if "{&imp2cd_parparentproc}" <> '' &then
                          input {&imp2cd_parparentproc}
@@ -175,6 +180,61 @@ on error undo, return error
   end.
 end.
 end procedure. /* fill-dc-list */
+
+procedure fill-ext-classif:
+define input parameter p-db-num as integer no-undo .
+define input parameter p-Key#One  as integer no-undo .
+define input parameter p-Key#Two  as integer no-undo .
+define input parameter p-CharKey_One  as character no-undo .
+
+do
+on error undo, return error
+:
+  if not can-find( ext-classif-list where ext-classif-list.db-num = p-db-num
+                                   and ext-classif-list.Key#One  = p-Key#One
+                                   and ext-classif-list.Key#Two = p-Key#Two
+                                   and ext-classif-list.CharKey_One = p-CharKey_One )
+  then do:
+    create ext-classif-list.
+    assign
+    ext-classif-list.db-num = p-db-num
+    ext-classif-list.Key#One  = p-Key#One
+    ext-classif-list.Key#Two = p-Key#Two
+    ext-classif-list.CharKey_One = p-CharKey_One
+    .
+    release ext-classif-list.
+  end.
+end.
+end procedure. /* fill-ext-classif */
+
+procedure fill-c-ext-classif:
+define input parameter p-db-num as integer no-undo .
+define input parameter p-Key#One  as integer no-undo .
+define input parameter p-Key#Two  as integer no-undo .
+define input parameter p-CharKey_One  as character no-undo .
+define input parameter p-chip-num as integer no-undo .
+
+do
+on error undo, return error
+:
+  if not can-find( c-ext-classif-list where c-ext-classif-list.db-num = p-db-num
+                                   and c-ext-classif-list.Key#One  = p-Key#One
+                                   and c-ext-classif-list.Key#Two = p-Key#Two
+                                   and c-ext-classif-list.CharKey_One = p-CharKey_One
+                                   and c-ext-classif-list.chip-num = p-chip-num )
+  then do:
+    create c-ext-classif-list.
+    assign
+        c-ext-classif-list.db-num = p-db-num
+        c-ext-classif-list.Key#One  = p-Key#One
+        c-ext-classif-list.Key#Two = p-Key#Two
+        c-ext-classif-list.CharKey_One = p-CharKey_One
+        c-ext-classif-list.chip-num = p-chip-num
+    .
+    release c-ext-classif-list.
+  end.
+end.
+end procedure. /* fill-c-ext-classif */
 
 procedure fill-g-list :
 define input parameter p-gds-code as integer no-undo .

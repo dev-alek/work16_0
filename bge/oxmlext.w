@@ -1459,7 +1459,9 @@ CASE p-list-mode:
           WHERE buf_init_ext-system.esys-type > integer({&openxml-type-ordinal})
             AND (buf_init_ext-system.esys-db-num-imp = v-cntxt-db-num
               or buf_init_ext-system.esys-db-num-exp = v-cntxt-db-num
-              or buf_init_ext-system.esys-type = integer({&openxml-type-mercury}) )
+              or buf_init_ext-system.esys-type = integer({&openxml-type-mercury})
+              or buf_init_ext-system.esys-type = integer({&openxml-type-is_motp}) 
+              or buf_init_ext-system.esys-type = integer({&openxml-type-special}))
             and { bge/oxmlext1.i }
         by buf_init_ext-system.esys-date-change descending
         .

@@ -423,7 +423,7 @@ DO:
     then
     v-rid-list = string( recid( ext-classif ) ) .
   end.
-
+p-rid-list = v-rid-list .
 END.
 
 
@@ -643,11 +643,12 @@ ENABLE
 b-quit
 b-cli
 b-print
+B-mark when (lookup("b-mark", bttns) > 0 and not transaction)
 b-add when (v-cntxt-db-num = 0 and lookup("b-add", bttns) > 0 and not transaction)
 b-del when (v-cntxt-db-num = 0 and lookup("b-add", bttns) > 0 and not transaction)
 b-esys
 b-sch
-b-sel when (v-cntxt-db-num = 0 and lookup("b-sel", bttns) > 0 and not transaction)
+b-sel when (lookup("b-sel", bttns) > 0 and not transaction)
 B-Help
 br-esys-gds
 fill-in-code-system

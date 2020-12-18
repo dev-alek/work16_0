@@ -2432,7 +2432,7 @@ end procedure.
 &scop user-can-edit-attr-cd-inf-send true
 &scop output-display-attr-cd-inf-send false
 &scop other-attr-cd-inf-send 'spr-ext=adm\shattr-5.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-cd-inf-send 'logical,logical,logical,logical,character,integer,logical,character,character':U
+&scop prop-type-list-attr-cd-inf-send 'logical,logical,logical,logical,character,integer,logical,character,character,character':U
 &scop prop-label-list-attr-cd-inf-send '~
 Передача налогов на кассу~
 ,Передача основного названия товара на кассу в две строки~
@@ -2443,6 +2443,7 @@ end procedure.
 ,На кассу передавать только типы касс. платежей с атрибутом ИСПОЛЬЗУЕТСЯ~
 ,Способ задания временной скидки~
 ,Способ задания категорийной скидки~
+,Код внешней системы для передачи соответствий на кассу~
 '
 &scop global-attr-cd-inf-send true
 &scop host-attr-cd-inf-send true
@@ -12438,7 +12439,7 @@ on error undo, return error
     .
     else do:
       objNormWast:BeginSummer = 01/03.
-      objNormWast:BeginSummer = 01/10.
+      objNormWast:BeginWinter = 01/10.
     end.
     
     if objNormWast:ParGdsOAttr:OnDate <> ?

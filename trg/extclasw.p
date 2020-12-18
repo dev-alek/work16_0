@@ -115,10 +115,11 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     .
     if lookup(ub.ext-classif.classif-name, {&extclass_extended-data-list}) = 0 then /* Проверка: в списке {&extclass_extended-data-list} - перечень данных без привязки к физическим таблицам ТН. Если находим таковые записи, то обходим формирование ключа, который ищет физические таблицы в ТН. */
         do: /* A-1 */
+
             run gen-key-fv in this-procedure (
                                                 input ub.ext-classif.uniq-key-rec
                                                 ,output v-field-list
-                                                ,output v-value-list).
+                                                ,output v-value-list) no-error.
             if error-status:error then
                 do:
                     undo, return error substitute( "&2&1Ошибка... &1&3&1&4"

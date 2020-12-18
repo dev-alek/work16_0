@@ -283,6 +283,83 @@ PROCEDURE proc-load-buyer-in-buyer-group: /* 6 */
   end.                                                                                 
 END PROCEDURE. /* proc-load-buyer-in-buyer-group 6 */
 
+define temp-table wt-c-ext-classif no-undo like ub.c-ext-classif. 
+PROCEDURE proc-load-c-ext-classif: /* 8 */
+  define input parameter p-imp-handle as handle  no-undo.
+  define input parameter p-pck-num    as integer no-undo.
+  define input parameter l-counter    as integer no-undo.
+  do                                                  
+  on error  undo, return error substitute( "$proc-load-c-ext-classif. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) 
+  on stop   undo, return error substitute( "$proc-load-c-ext-classif. stop" )   
+  on endkey undo, return error substitute( "$proc-load-c-ext-classif. endkey" ) 
+  :              
+    { ref/extclass.i }                                     
+    define buffer tb-c-ext-classif for ub.c-ext-classif.
+    define variable compare-log as logical no-undo.   
+    for each wt-c-ext-classif  
+    on error undo, return error substitute( "$proc-load-c-ext-classif(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  
+    :
+      delete wt-c-ext-classif . 
+    end. 
+    create wt-c-ext-classif.                    
+    run nws-impl in p-imp-handle         
+      ( input {&table_c-ext-classif}          
+       ,input (buffer wt-c-ext-classif:handle)  
+      ) no-error.                        
+    if error-status :error then do:      
+      return error return-value .        
+    end.                                 
+
+    find first tb-c-ext-classif                 
+      where tb-c-ext-classif.db-num = wt-c-ext-classif.db-num
+        and tb-c-ext-classif.classif-subject = {&table_goods}
+        and tb-c-ext-classif.classif-name = {&extclass_goods_esys}
+        and tb-c-ext-classif.Key#_Two = wt-c-ext-classif.Key#_Two
+        and tb-c-ext-classif.Key#_One = wt-c-ext-classif.Key#_One
+        and tb-c-ext-classif.chip-num = wt-c-ext-classif.chip-num
+      exclusive-lock no-error.
+    { nws/inc/imp/c-ext_classif.i } 
+    delete wt-c-ext-classif.                                                                  
+  end.                                                                                 
+END PROCEDURE. /* proc-load-ext-classif 8 */
+define temp-table wt-ext-classif no-undo like ub.ext-classif. 
+PROCEDURE proc-load-ext-classif: /* 8 */
+  define input parameter p-imp-handle as handle  no-undo.
+  define input parameter p-pck-num    as integer no-undo.
+  define input parameter l-counter    as integer no-undo.
+  do                                                  
+  on error  undo, return error substitute( "$proc-load-ext-classif. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) 
+  on stop   undo, return error substitute( "$proc-load-ext-classif. stop" )   
+  on endkey undo, return error substitute( "$proc-load-ext-classif. endkey" ) 
+  :              
+    { ref/extclass.i }                                     
+    define buffer tb-ext-classif for ub.ext-classif.            
+    define variable compare-log as logical no-undo.   
+    for each wt-ext-classif  
+    on error undo, return error substitute( "$proc-load-ext-classif(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  
+    :
+      delete wt-ext-classif . 
+    end. 
+    create wt-ext-classif.                    
+    run nws-impl in p-imp-handle         
+      ( input {&table_ext-classif}          
+       ,input (buffer wt-ext-classif:handle)  
+      ) no-error.                        
+    if error-status :error then do:      
+      return error return-value .        
+    end.                                 
+
+    find first tb-ext-classif                 
+      where tb-ext-classif.db-num = wt-ext-classif.db-num
+        and tb-ext-classif.classif-subject = {&table_goods}
+        and tb-ext-classif.classif-name = {&extclass_goods_esys}
+        and tb-ext-classif.Key#_Two = wt-ext-classif.Key#_Two
+        and tb-ext-classif.Key#_One = wt-ext-classif.Key#_One
+      exclusive-lock no-error.
+    { nws/inc/imp/ext_classif.i } 
+    delete wt-ext-classif.                                                                  
+  end.                                                                                 
+END PROCEDURE. /* proc-load-ext-classif 8 */
 { nws/inc/imp/def-out/c-chk-do.i }
 define temp-table wt-c-chk-doc no-undo like ub.c-chk-doc. 
 PROCEDURE proc-load-c-chk-doc: /* 7 */

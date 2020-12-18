@@ -24,7 +24,7 @@ block-level on error undo, throw.
 class ibs.th.bge.1crn.import.parsesub:
   
   { cmp/str-glbl.i class }
-  
+
   define public event ReceivedSubject signature void (input Subject as class ibs.th.bge.1crn.subjects.isubject, input EventHndlrImpSub as class ibs.th.bge.1crn.import.iimpsubject).
 
   define variable countrySubjectObj                        as class country                     no-undo.
@@ -134,7 +134,7 @@ class ibs.th.bge.1crn.import.parsesub:
 
   define variable normlossSubjectObj                       as class normloss                    no-undo.
   define variable impnormlossEventHndlrObj                 as class impnormloss                 no-undo.
-  
+
   define variable trn-fuel-doc-inSubjectObj      as class trn-fuel-doc-in no-undo.
   define variable trn-gd-fuelSubjectObj          as class trn-gd-fuel     no-undo.
   define variable imptrn-fuel-docEventHndlrObj   as class imptrn-fuel-doc no-undo.
@@ -199,7 +199,10 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable OsnovCurrSubj                         as class osnovcorr               no-undo .
   define variable impOsnocCorr                          as class imposnovcorr            no-undo .
   
-  define variable seasonSubjectObj                      as class season                  no-undo.
+  define variable FuelCodeInfoSubj                         as class fuelcodeinfo               no-undo .
+  define variable impFuelCodeInfo                          as class impfuelcodeinfo            no-undo .
+
+    define variable seasonSubjectObj                      as class season                  no-undo.
   define variable impSeasonEventHndlrObj                as class impseason               no-undo.
   define variable gds-seasonSubjectObj                  as class gds-season              no-undo.
   define variable impGds-SeasonEventHndlrObj            as class impgds-season           no-undo.
@@ -469,6 +472,18 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
+        when "fuelcodeinfo":U then do:
+          if not valid-object(fuelcodeinfoSubj)       then fuelcodeinfoSubj       = new fuelcodeinfo(). // <promotion>
+          if not valid-object(impfuelcodeinfo) then do :
+            impfuelcodeinfo = new impfuelcodeinfo ().
+          end .
+
+          v-iSubject = fuelcodeinfoSubj .
+          v-iImpSub  = impfuelcodeinfo .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.		
         when "promotion":U then do:
           if not valid-object(promotionSubjectObj)       then promotionSubjectObj       = new promotion(). // <promotion>
           if not valid-object(imppromotionEventHndlrObj) then do :

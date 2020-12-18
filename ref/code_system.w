@@ -380,7 +380,7 @@ ON CHOOSE OF b-goods-much IN FRAME Dialog-Frame
        name_goods:screen-value = "".
        
             run ref/gds-ref.p (input parparentproc, 
-                               input "b-sel,b-mark,b-add",
+                               input "b-sel",
                                input ?,
                                input ?, 
                                input ?, 

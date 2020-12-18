@@ -571,6 +571,13 @@ on error undo, return error
 
       {&create-thbj-attr}.
 
+      v-prop-code =  "{&bef-attr-cd-inf-send_code-system}".
+&scop ptype character
+&scop prop-value ""
+&scop prop-code v-prop-code
+
+      {&create-thbj-attr}.
+      
       v-prop-code =  "{&bef-attr-cd-inf-send_how-temp-disc}".
 &scop ptype character
 &scop prop-value ~{&dgr-temp-disc~}

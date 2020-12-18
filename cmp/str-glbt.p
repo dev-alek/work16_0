@@ -98,7 +98,7 @@ attr-cd-sending }
 /*Опции передачи данных на кассу*/
 { cmp/cr-prep.i 1 attr-cd-inf-send              cd-inf-send               " " cd-inf-send }
 { cmp/cr-prepc.i 1 prop-list-attr-cd-inf-send
-"tax-cass,nam-2str,nam-artc,cod-pcod,name-2cd,amntdisc,cp-is-use,how-temp-disc,how-pcnt-kat"
+"tax-cass,nam-2str,nam-artc,cod-pcod,name-2cd,amntdisc,cp-is-use,how-temp-disc,how-pcnt-kat,code-system"
 attr-cd-inf-send }
 
 /*Параметры работы с весами*/

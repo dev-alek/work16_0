@@ -104,7 +104,12 @@ on stop   undo, return error substitute("&1. stop main_block")
   for each stpl-list:
     delete stpl-list.
   end.
-
+   for each ext-classif-list:
+      delete ext-classif-list.
+   end.
+   for each c-ext-classif-list:
+      delete c-ext-classif-list.
+   end.
   assign
     v-err-msg = "":U .
   .
