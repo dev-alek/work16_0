@@ -94,13 +94,6 @@ define {1} shared variable str-obj      as character  no-undo.
 define {1} shared variable link#        as logical  no-undo init false.
 
 /* для параметризации окна */
-&glob g-all 1
-&glob g-grp 2
-&glob g-prod 3
-&glob g-choice 4
-&glob g-one 5
-&glob g-spis 6
-&glob g-grp-prod 7
 
 &glob p-crsa 1
 &glob p-cost 2
@@ -110,52 +103,8 @@ define {1} shared variable link#        as logical  no-undo init false.
 &glob v-base 2
 &glob v-all  3
 
+{cmp\r-page-pre.i}
 
-&glob o-firm     1
-&glob o-currency 2
-&glob o-choice   3
-&glob o-all      4
-
-&glob obj-currency  "currency":U
-&glob obj-choice    "choice":U
-&glob obj-firm      "firm":U
-
-&glob schet-all-firm   1
-&glob schet-firm       2
-&glob schet-choice     3
-&glob schet-one        4
-&glob schet-rubl       5
-&glob schet-no-rubl    6
-&glob schet-choice-val 7
-
-/*  это все в одном параметре в 8 param-UNIVERSAL */
-
-&glob Excel-yes     1       /* Есть галка и експорт в текстовый файл с разделителем таб  */
-&glob Arc-ot-yes    2       /* Есть проверка расчета архива оборотов      */
-&glob Arc-stk-yes   3       /* Есть проверка расчета архива остатков      */
-&glob send-check    4       /* Есть проверка хождения чеков на базу       */
-&glob Show-Crsa     5       /* Есть чекбокс по продажныи ценам            */
-&glob Show-Cost     6       /* Есть чекбокс по учетным ценам              */
-&glob Show-Sale     7       /* Есть чекбокс по цена документов            */
-&glob Arc-supp-yes  8       /* Есть проверка расчета архива поставщиков   */
-&glob Excel-yes-com 9       /* Есть галка и експорт через com             */
-&glob format-folder 10      /* Есть страница с закладкой ФОРМАТ           */
-&glob Arc-hold-yes  11      /* Есть проверка расчета межфирменных архивов */
-&glob Arc-aht-yes   12      /* Есть проверка расчета архива по типу приобретения */
-&glob Customer-yes  13      /* Есть блок ВЫБОР КОНТРАГЕНТА                */
-&glob Schet-yes     14      /* Есть блок ВЫБОР СЧЕТА                      */
-
-&glob hide-schet-all-firm   15
-&glob hide-schet-firm       16
-&glob hide-schet-choice     17
-&glob hide-schet-one        18
-&glob hide-schet-rubl       19
-&glob hide-schet-no-rubl    20
-&glob hide-schet-choice-val 21
-
-&glob Print-List-Hist-yes   22  /* Есть печать истории формирования списков           */
-&glob Arc-fin-yes           23  /* Есть проверка расчета фин архива                   */
-&glob Arc-strong-yes        24  /* Есть Проверка архива жесткая, строго присутствует  */
 
 
 /* Переменные с первой закладке которые передаются не как Shared а как get-attribute */
@@ -195,32 +144,14 @@ or gds-obj.fact-base <> 0 ) ~
 )
 
 /* Для Excel */
-&glob xlMaxCols   256
+
 define {1} shared variable Make-Excel     as logical  no-undo init false. /* Делать или нет экспорт в Excel */
 define {1} shared variable Make-Excel-com as logical  no-undo init false. /* Делать или нет экспорт в Excel через com */
 define {1} shared stream ForExcel.
 define {1} shared variable Use-column   as logical extent {&xlMaxCols} no-undo .
 define {1} shared variable right-column as logical extent {&xlMaxCols} no-undo .
 
-define {1} shared temp-table Sheetf no-undo  /* форматы отдельных листов */
-field Excel-Column-Lable as character      /* список названий полей , через запятую - {&new-line} новая строка*/
-field Excel-Row-Heder    as integer      /* Количество строк под заголовок */
-field Excel-Row-Title    as integer      /* Количество строк под шапку */
-field Sizes              as character      /* spisok размеров полей в Excel */
-field Make-correct       as character      /* spisok полей "true,false" которые доступны для корректировки названия или возможности печати */
-field Rights-column      as character      /* spisok полей "true,false" которые доступны для корректировки названия или возможности печати */
-field MergeCellsH        as character      /* spisok правил для объединения ячеек в Excel по горизонт*/
-field MergeCellsV        as character      /* spisok правил для объединения ячеек в Excel по вертикали*/
-field sheet-num          as integer  /* номер листа*/
-field ColFormat          as character /*формат колонок для каждого листа в виде 1=format1;3=format3 и т.д.*/
-field Bas-FIle           as character /*имя файла содержащего EXcel макросы */
-field Bas-Params         as character /*параметры для вызова главного Excel макроса - он потому вызвать остальные */
-field Bas-Param-Add      as logical   /* передавать доп. параметры */
-field File-name          as character /* имя файла для сохранения */
-field Silent-save        as logical   /* флаг - сохранять без диалогового окна в файл File-name (ИМЯ берется с первого листа!!!)*/
-index pi as primary unique
-      sheet-num
-.
+{cmp\r-sheetf.i {1} shared}
 &if "{1}" = "new" &then
   create Sheetf.
   assign
@@ -252,19 +183,6 @@ define {1} shared  variable v-excel-file        as character no-undo .
   os-delete value( v-excel-file + ".":U + string(number-list)). ~
   Output Stream ForExcel to value( v-excel-file + ".":U + string(number-list ) ) . ~
 end.
-&glob xlMaxRows   64000
-&glob xlGeneral   1
-&glob xlCenter   -4108
-&glob xlNone     -4142
-&glob xlRight    -4152
-&glob xlLeft     -4131
-&glob xlTop      -4160
-&glob xlJustify  -4130
-&glob xlCenter   -4108
-&glob xlContinuous  1
-&glob xlThin        2
-&glob xlAutomatic  -4105
-&glob xlFill        5
 /*Бордюр*/
 &glob xlEdgeTop      8
 &glob xlEdgeBottom   9

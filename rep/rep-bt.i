@@ -17,7 +17,11 @@ Creation date: 03/03/06
 */
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+&if "{1}" eq "class"
+&then
+&else
 { cmp/showinf.i      }
+&endif
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get " " my-handle }
 

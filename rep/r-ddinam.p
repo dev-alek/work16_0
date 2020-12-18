@@ -14,14 +14,18 @@ Author: Ivan Komarov
 Creation date: 04/29/10
 
 */
-
-define input parameter parparentproc as widget-handle no-undo .
-define input parameter p-parent-handle          as handle                  no-undo .
+define input parameter iParam as ibs.th.ref.sobj.sParamObj no-undo .
+define var parparentproc as widget-handle no-undo .
+parparentproc = iParam:my-handle.
+define var p-parent-handle          as handle                  no-undo .
+define var p-rdbh                   as handle                  no-undo . /*destination*/
+define var p-log-handle             as handle                  no-undo .
+/* define input parameter p-parent-handle          as handle                  no-undo .
 define input parameter p-log-handle             as handle                  no-undo .
 define input parameter p-cont-handle            as handle                  no-undo .
 define input parameter p-call-handle            as handle                  no-undo .
 define input parameter p-rebh                   as handle                  no-undo . /*для ошибок*/
-define input parameter p-rdbh                   as handle                  no-undo . /*destination*/
+ */
 define input parameter p-report-id              as character               no-undo .
 define input parameter p-log-file-name          as character               no-undo .
 define input parameter p-batch                  as integer                 no-undo .
@@ -40,9 +44,14 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Движение денежных средств".
 { cmp/vssrevis.i }
+{cmp\r-sheetf.i }
+define variable v-delim as character no-undo.
+{cmp\obj-list.i local} /* obj-list s*/
+iParam:get-obj-list(output table obj-list).
+{ cmp/library.i }
+
 
 { cmp/str-glbl.i }
-{ cmp/r-page1.i  }
    { cmp/r-pril.i new }
    { rep/r-sym.i    }
 { rep/f-fdec.i   }
@@ -75,6 +84,8 @@ define stream OutStr-html.
 
 
 &scop display-message ~
+   if VALID-HANDLe(p-log-handle) ~
+   then do:                        ~
    if p-batch > 0 then do: ~
      run write-log-and-file in p-log-handle ( ~
                 input 1                            ~
@@ -84,7 +95,12 @@ define stream OutStr-html.
    end. ~
    else do: ~
       run write-to-log in p-log-handle ( input ~{&my-message~}). ~
+   end. ~
+   end. ~
+   else do: ~
+      message ~{&my-message~} view-as alert-box. ~
    end
+
 
 define temp-table temp-fin-doc no-undo
     FIELD sheet-num     as integer
@@ -267,8 +283,8 @@ if p-det-oper and obj-list.db-num = g#db-num then do:
 for first ub.shift-obj no-lock where ub.shift-obj.obj-code = obj-list.obj-code and 
                                      ub.shift-obj.obj-type = obj-list.obj-type and
                                      ub.shift-obj.status_ = {&sht-closed} and
-                                     ub.shift-obj.shift-date = X-date-end and
-                                     ub.shift-obj.shift-num = X-shift-end:
+                                     ub.shift-obj.shift-date = iParam:X-date-end and
+                                     ub.shift-obj.shift-num = iParam:X-shift-end:
                                         
            &scop my-message substitute("&1Оперативный отчет снимается ТОЛЬКО за открытую смену" + ~
                                        ~{&new-line~} ~
@@ -276,7 +292,7 @@ for first ub.shift-obj no-lock where ub.shift-obj.obj-code = obj-list.obj-code a
                                        ,error-status:get-message(1) )
          {&display-message}. 
          
-         return no-apply .                                       
+         undo, return error .                                      
 
 end.  
 /*докачать все чеки*/
@@ -326,7 +342,7 @@ end.
       end.
    end.
 end.        
-    if x-tog-shift then 
+    if iparam:x-tog-shift then 
     do :
     { gbl/objat.i
         obj-list.obj-type
@@ -364,7 +380,7 @@ end.
             {&display-message}.
         end.
     end.
-    if v-shift-on or x-tog-shift = no then 
+    if v-shift-on or iparam:x-tog-shift = no then 
         if v-obj-name <> "" then 
         do :
             assign
@@ -465,7 +481,7 @@ put stream OutStr-html unformatted
         '<td colspan="9" style="font-size:16px;font-weight:bold; text-align: center;">Оперативный отчет о движении денежных средств</td>' skip
         '</tr>' skip
         '<tr>' skip
-        '<td colspan="9" style="text-align: center;"> За период с ' + string(x-Date-Start) + ' по ' + string(x-Date-End) + '</td>' skip
+        '<td colspan="9" style="text-align: center;"> За период с ' + string(iparam:x-Date-Start) + ' по ' + string(iparam:x-Date-End) + '</td>' skip
         '</tr>' skip
         '<tr>' skip
         '<td colspan="9">' + v-curr-time + '</td>' skip
@@ -478,7 +494,7 @@ put stream OutStr-html unformatted
     '<td colspan="9" style="font-weight: bold;">ДВИЖЕНИЕ ДЕНЕЖНЫХ СРЕДСТВ</td>' skip
     '</tr>' skip
     '<tr>' skip
-    '<td colspan="9" style="font-weight: bold;"> За период с ' + string(x-Date-Start) + ' по ' + string(x-Date-End) + '</td>' skip
+    '<td colspan="9" style="font-weight: bold;"> За период с ' + string(iparam:x-Date-Start) + ' по ' + string(iparam:x-Date-End) + '</td>' skip
     '</tr>' skip    
  	'<tr>' skip
     '<td colspan="9">' + v-curr-time + '</td>' skip
@@ -1033,11 +1049,11 @@ procedure report-exec :
             input   v-host-code
             ,input   buf_obj-list.obj-code
             ,input   buf_obj-list.obj-type
-            ,input   x-tog-shift
-            ,input   x-date-start - 1
+            ,input   iparam:x-tog-shift
+            ,input   iparam:x-date-start - 1
             ,input   date('')
-            ,input   x-shift-start
-            ,input   X-shift-end
+            ,input   iparam:x-shift-start
+            ,input   iparam:X-shift-end
             ,input   yes /*xTog-obj*/
             ,input   0 /*p-curr-code*/
             ,input   0
@@ -1048,11 +1064,11 @@ procedure report-exec :
             input   v-host-code
             ,input   buf_obj-list.obj-code
             ,input   buf_obj-list.obj-type
-            ,input   x-tog-shift
-            ,input   x-date-end
-            ,input   x-date-end
-            ,input   X-shift-end
-            ,input   X-shift-end
+            ,input   iparam:x-tog-shift
+            ,input   iparam:x-date-end
+            ,input   iparam:x-date-end
+            ,input   iparam:X-shift-end
+            ,input   iparam:X-shift-end
             ,input   yes /*xTog-obj*/
             ,input   0 /*p-curr-code*/
             ,input   0
@@ -1071,7 +1087,7 @@ procedure report-exec :
             and buf_arh-fin-doc-schet-nal-obj.curr-code         = 0
             and buf_arh-fin-doc-schet-nal-obj.fin-ext-doc-type  = "":U
             and buf_arh-fin-doc-schet-nal-obj.calc-curr-code    = 0
-            and buf_arh-fin-doc-schet-nal-obj.sum-type          = (if x-tog-shift then {&arh-fin-doc-schet-nal-obj-shift-obj} else {&arh-fin-doc-schet-nal-obj-obj} )
+            and buf_arh-fin-doc-schet-nal-obj.sum-type          = (if iparam:x-tog-shift then {&arh-fin-doc-schet-nal-obj-shift-obj} else {&arh-fin-doc-schet-nal-obj-obj} )
             and buf_arh-fin-doc-schet-nal-obj.fact-order       > fact-order-1
             and buf_arh-fin-doc-schet-nal-obj.fact-order       <= fact-order-2
             :
@@ -1217,11 +1233,11 @@ else temp-fin-doc.ost-end       = temp-fin-doc.ost-end + (temp-fin-doc.ost-begin
                input   v-host-code
                ,input   buf_obj-list.obj-code
                ,input   buf_obj-list.obj-type
-               ,input   x-tog-shift
-               ,input   x-date-start - 1
+               ,input   iparam:x-tog-shift
+               ,input   iparam:x-date-start - 1
                ,input   date('')
-               ,input   x-shift-start
-               ,input   X-shift-end
+               ,input   iparam:x-shift-start
+               ,input   iparam:X-shift-end
                ,input   yes /*xTog-obj*/
                ,input   0 /*p-curr-code*/
                ,input   buf_cashbook.id
@@ -1232,11 +1248,11 @@ else temp-fin-doc.ost-end       = temp-fin-doc.ost-end + (temp-fin-doc.ost-begin
                input   v-host-code
                ,input   buf_obj-list.obj-code
                ,input   buf_obj-list.obj-type
-               ,input   x-tog-shift
-               ,input   x-date-end
-               ,input   x-date-end
-               ,input   X-shift-end
-               ,input   X-shift-end
+               ,input   iparam:x-tog-shift
+               ,input   iparam:x-date-end
+               ,input   iparam:x-date-end
+               ,input   iparam:X-shift-end
+               ,input   iparam:X-shift-end
                ,input   yes /*xTog-obj*/
                ,input   0 /*p-curr-code*/
                ,input   buf_cashbook.id
@@ -1255,7 +1271,7 @@ else temp-fin-doc.ost-end       = temp-fin-doc.ost-end + (temp-fin-doc.ost-begin
                and buf_arh-fin-doc-schet-nal-obj.curr-code         = 0
                and buf_arh-fin-doc-schet-nal-obj.fin-ext-doc-type  = "":U
                and buf_arh-fin-doc-schet-nal-obj.calc-curr-code    = 0
-               and buf_arh-fin-doc-schet-nal-obj.sum-type          = (if x-tog-shift then {&arh-fin-doc-schet-nal-obj-shift-obj} else {&arh-fin-doc-schet-nal-obj-obj} )
+               and buf_arh-fin-doc-schet-nal-obj.sum-type          = (if iparam:x-tog-shift then {&arh-fin-doc-schet-nal-obj-shift-obj} else {&arh-fin-doc-schet-nal-obj-obj} )
                and buf_arh-fin-doc-schet-nal-obj.fact-order       > fact-order-1
                and buf_arh-fin-doc-schet-nal-obj.fact-order       <= fact-order-2
                :

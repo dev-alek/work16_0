@@ -70,8 +70,53 @@ define {3} temp-table {1} no-undo like ub.goods
 
 &endif
 
-&else
+&elseif  "{2}" = "method"
+&then
+{ cmp/listhist.i {1} {2} }
+method public void empty-{1} ():
+   for each {1} :
+      delete {1}.
+   end.
+end.
+method public void get-glob-{1} ():
+end.
+method public void set-glob-{1} ():
+end.
+method public void get-{1} (output table {1}):
+end.
+method public void set-{1} (input table {1}):
+   define variable ddd as integer no-undo.
+   ddd = 1.
+end.
+method public int get-{1}-count ():
+   define variable vcount as integer no-undo.
+   for each {1} :
+      vcount = vcount + 1 .
+   end.
+   return vcount. 
+end.
 
+method public character  get-{1}-one ():
+   define variable vcount as integer no-undo.
+   define buffer Buf_{1} for {1}.
+   find first {1} no-error.
+   for each Buf_{1} where recid(Buf_{1}) ne recid({1}) :
+      delete Buf_{1}.
+   end.
+   return if available {1} then {1}.gds-name else ? . 
+end.
+method public character  create-{1} (iri-list as character ):
+   define buffer buf_goods for goods.
+   for each gds-list :
+      delete gds-list.
+   end.
+   if iri-list <> "" 
+   then do:
+      find first buf_goods where recid(buf_goods) = integer (iri-list) no-lock.
+      buffer-copy buf_goods to gds-list no-error.
+   end.
+end.
+&else
 find {1}
   where {1}.prod-type = {&buffer-goods}.prod-type
     and {1}.prod-code = {&buffer-goods}.prod-code

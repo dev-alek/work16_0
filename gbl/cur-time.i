@@ -26,14 +26,18 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &if defined(cur-time_i) = 0 &then
 
 &glob cur-time_i
-
+&if "{1}" = "class"
+&then
+method private void cur-time  (output  p-today as date ,output p-time  as integer ):
+&else
 procedure cur-time :
-
+   define output parameter p-today as date      no-undo .
+   define output parameter p-time  as integer   no-undo .
+&endif
   do
   on error undo, return error
   :
-    define output parameter p-today as date      no-undo .
-    define output parameter p-time  as integer   no-undo .
+    
 
     define variable v-date1 as date      no-undo .
     define variable v-date2 as date      no-undo .
@@ -51,8 +55,7 @@ procedure cur-time :
       /* то необходимо сделать повторный запрос */
       assign
         v-date1 = today
-        v-time  = v-time
-        v-date2 = today
+        v-time  = time
       .
     end.
 
@@ -62,9 +65,11 @@ procedure cur-time :
     .
   end.
 
-end procedure. /* cur-time */
+end. /* cur-time */
 
-
+&if "{1}" = "class"
+&then
+&else
 function cur-time-date returns character
 :
   /* возвращает текущую дату */
@@ -294,6 +299,6 @@ function cur-time-datetime returns datetime
 
 
 end function.
-
+&endif
 &endif
 /* $Workfile$ */

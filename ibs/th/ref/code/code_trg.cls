@@ -19,22 +19,26 @@ class ibs.th.ref.code.code_trg final:
     Notes:
    ------------------------------------------------------------------------------*/
    { cmp/str-glbl.i class }
-   define temp-table tt-query
+   define temp-table tt-query no-undo
       field NameQuery as character 
       field hQuery    as handle
   index NameQuery NameQuery.
   
-  define temp-table tt-form
+  define temp-table tt-form no-undo
       field f-level    as integer  
       field f-numfield as integer 
       field f-brwname  as character 
   index indForm f-level f-numfield .
   
-  define temp-table tt-code-brw like code
+  define temp-table tt-code-brw no-undo like code 
     field Frecid as int64 init ?
     field fstatus as character
     field fchange as logical  
     .
+    
+  define temp-table tt-code-frm no-undo like code 
+    field Frecid as int64 init ?.
+  
   {gbl/tmprecid.i }
   define public variable parent as character no-undo.
   define public variable title  as character no-undo init ?.
@@ -313,9 +317,7 @@ class ibs.th.ref.code.code_trg final:
        else
           v-code-brw:defColumn().
     end.
-    define temp-table tt-code-frm like code
-    field Frecid as int64 init ?.
-  
+    
     method public void addcode ( ):
        release code.
        create tt-code-frm.

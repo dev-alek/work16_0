@@ -27,6 +27,21 @@ index pi is unique primary  param-code     param-sub-code
 .
 &endif
 
+&if     "{1}"   <> "run-proc"
+    and "{1}"   <> "proc"
+    and "{1}"   <> "method"
+    and "{1}"   <> "" &then
+  {1}:create-param-to-export
+  ( input {2}  , /* код параметра */
+   input {3}  , /* подкод параметра для списков  */
+   input {4}  , /* тип параметра character integer logical data decimal*/
+   input {5}  , /* значение параметра */
+   input {6} )  /* комментарий по параметру */
+  {7}
+ .
+
+&endif
+
 &if "{1}"   = "run-proc" &then
   run create-param-to-export  in this-procedure
   ( input {2}  , /* код параметра */
@@ -37,6 +52,40 @@ index pi is unique primary  param-code     param-sub-code
   {7}
  .
 
+&endif
+
+&if "{1}"   = "method" &then
+method public void create-param-to-export 
+ ( p1 as character,
+   p2 as character,
+   p3 as character,
+   p4 as character,
+   p5 as character
+  )  
+      
+         
+            :
+ do
+ on error undo, return error return-value
+ :
+
+
+  create  param-to-export.
+  assign
+     param-to-export.param-code     =  p1
+     param-to-export.param-sub-code =  p2
+     param-to-export.param-type     =  p3
+     param-to-export.param-value    =  p4
+     param-to-export.param-comment  =  p5
+  .
+
+ end. /* do */
+end . /* create-param-to-export */
+
+method public void get-param-to-export (output table param-to-export):
+end.
+method public void set-param-to-export (input table param-to-export):
+end.
 &endif
 
 &if "{1}"   = "proc" &then

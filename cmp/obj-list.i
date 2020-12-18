@@ -45,10 +45,13 @@ method public void empty-obj-list ():
       delete obj-list.
    end.
 end.
-method public void get-glob-obj-list ():
+method public logical can-find-obj-list ():
+   return can-find (first obj-list no-lock).
+end.
+/*method public void get-glob-obj-list ():
 end.
 method public void set-glob-obj-list ():
-end.
+end.*/
 method public void get-obj-list (output table obj-list bind):
 end.
 method public void set-obj-list (input table obj-list bind):
