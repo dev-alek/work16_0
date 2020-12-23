@@ -368,6 +368,7 @@ else do:
   accept-types =  "1,6,13,40,43,44":U.
 end.
 dflt-cd = p-pos-type.
+get-chkc_context.pos-type = p-pos-type.
 if get-chkc_context.is-ptrl
 and get-chkc_context.ptrl-check then
 assign
@@ -640,6 +641,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     v-is-petrol-check = no
     cstCode = ""
     cstValue = 0
+    spool-date_ = ?
+    spool-time_ = ?
+
     no-error
     .
     _buf_temp:
@@ -678,6 +682,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           assign
           chk-date_ =  cb-xmlparse-get-date( buf_temp-temp.field-value)
           chk-time_ =  cb-xmlparse-get-time( buf_temp-temp.field-value)
+          spool-date_ = cb-xmlparse-get-date( v-time-char)
+          spool-time_ = cb-xmlparse-get-time( v-time-char)
+
           no-error .
         end.
         when "CHShop":U then do:
@@ -915,40 +922,42 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           string(temp-cash-desk.last-z-count, "99999") +
           string(temp-cash-desk.last-chk-num, "-999999999")
   .
+  assign
+  v-eff-date = if p-pos-type = {&cd-type-autotank} then spool-date_ else chk-date_
+  v-eff-time = if p-pos-type = {&cd-type-autotank} then spool-time_ else chk-time_
+  .
+  /* ¬ св€зи с тем, что стали по€вл€тьс€ запросы о том, что последний чек не всегда корректно закачиваетс€, сделаем так, чтобы врем€ последнего прин€того чека фиксировалось на 60 минуту раньще*/
+/*  v-eff-time = v-eff-time - min(v-eff-time,60).*/
   define variable vTimestring as character no-undo.
-  define variable veffDate as date no-undo.
-  define variable veffTime as integer  no-undo.
-  Vtimestring = string(chk-time_, "HH:MM:SS").
-  veffDate = chk-date_ .
+  Vtimestring = string(v-eff-time, "HH:MM:SS").
   entry(1,Vtimestring,":") = string(int(entry(1,Vtimestring,":")) - 1,"99") no-error. 
   if    vTimestring begins "?"
      or error-status:error
   then do:
      entry(1,Vtimestring,":") = "00".
-     veffDate = chk-date_ - 1. 
+     v-eff-date = v-eff-date - 1. 
   end.
   else
-     veffTime = chk-time_ - 1 * 60 * 60. 
+     v-eff-time = v-eff-time - 1 * 60 * 60.
   assign
-  v-new = string(year(veffDate), "9999") +
-          string(month(veffDate), "99") +
-          string(day(veffDate), "99") +
-          Vtimestring +    /* ¬ св€зи с тем, что стали по€вл€тьс€ запросы о том, что последний чек не всегда корректно закачиваетс€, сделаем так, чтобы врем€ последнего прин€того чека фиксировалось на час раньще, также надо обновить не завершенные чеки пришедшие с “—ќ */ 
+  v-new = string(year(v-eff-date), "9999") +
+          string(month(v-eff-date), "99") +
+          string(day(v-eff-date), "99") +
+          Vtimestring +
           string(integer(shift-name_), "99") +
           string(z-num_, "99999") +
           string(chk-num_, "-999999999")
   .
   if v-new > v-old then do:
     assign
-    temp-cash-desk.last-date       = veffDate
-    temp-cash-desk.last-time       = veffTime
+    temp-cash-desk.last-date       = v-eff-date
+    temp-cash-desk.last-time       = v-eff-time
     temp-cash-desk.last-shift-num  = integer(shift-name_)
     temp-cash-desk.last-z-count    = z-num_
     temp-cash-desk.last-chk-num    = chk-num_
     .
-
   end.
-
+  run  proc-shift-open.
   if can-do("13":U,  gbl-type) then do:
     /*закрыть смену на кассе*/
     run proc-13 in this-procedure no-error .
@@ -2361,7 +2370,7 @@ define variable netto-sum2_ as decimal no-undo .
                                         ).
     end.
     if v-to-delete[1] = no then do:
-     run  proc-shift-open.
+     
      get-chkc_context.ll = lll.
     { str/libchkvl_getcheck.i
       "buffer get-chkc_context:handle"
