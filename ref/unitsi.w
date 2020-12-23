@@ -164,9 +164,9 @@ DEFINE FRAME Dialog-Frame
           SIZE 8 BY 1
      UnitType AT ROW 3.75 COL 35.25 COLON-ALIGNED
      tt-units.OKEI AT ROW 5.33 COL 20 COLON-ALIGNED
-          LABEL "Œ ≈»"
-          VIEW-AS FILL-IN
-          SIZE 4 BY 1
+          LABEL "Œ ≈»" format "9999"
+          VIEW-AS FILL-IN 
+          SIZE 5.5 BY 1
      UnitType-2 AT ROW 5.33 COL 35.25 COLON-ALIGNED
      SPACE(6.12) SKIP(1.17)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER

@@ -274,125 +274,126 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         leave _sc.
       end.
     end.
+  
+     /*если в Ѕќ есть запись о кассовой смене запоминаем в переменные чтобы сравнива
+     с этими переменными последующие приход€щие чеки мы отследили когда придет чек со
+     сменой, о которой мы не знаем*/
+     IF AVAIL buf_shift-cash
+     and buf_shift-cash.shift-num <> 0
+     and buf_shift-cash.shift-num <> ?
+     and buf_shift-cash.opened eq {&receipt-in}
+     then
+     assign
+     current-cas-shift-num  = buf_shift-cash.shift-num
+     current-cas-shift-name = p-shift-name
+     current-cas-shift-date = buf_shift-cash.shift-date
+     current-cas-shift-status_ = buf_shift-cash.status_
+     .
+     else do:
+       /*если нет записи о кассовой смене - то создаем ее с текущим статусом*/
+       run str/shftccr.p (
+                        input {&prefix}obj-type
+                       ,input {&prefix}obj-code
+                       ,input p-cash-num
+                       ,input p-shift-date
+                       ,input (if not {&prefix}shift-on then ? else p-shift-name)
+                       ,input p-shift-name
+                       ,input (if not {&prefix}shift-on then ? else integer(p-shift-name))
+                       ,input (if p-z-number <> ?
+                               then p-shift-open-time
+                               else (if p-chk-date = p-shift-date then p-chk-time else ?)
+                               )
+                       ,input p-z-number
+                       ,input {&receipt-in}
+                       ,output vrecid) no-error.
+       if error-status:error then do:
+         if valid-handle( {&prefix}p-log-handle) then do:
+           run write-log-and-file in {&prefix}p-log-handle (
+                 input 1
+               , input log-file-name
+               , input 1
+               , input substitute( "!!!ѕроизошла ошибка при попытке создани€ записи кассовой смены дл€ кассы &1: смена N&2 за &3"
+                                   , p-cash-num
+                                   , p-shift-name
+                                   , string(p-shift-date, "99/99/9999")
+                                 )
+                                                 ).
+           {&prefix}view-log = yes.
+         end.
+       end.
+       else do:
+         FIND FIRST buf_shift-cash WHERE recid(buf_shift-cash) = vrecid.
+         assign
+         current-cas-shift-name = p-shift-name
+         current-cas-shift-num = buf_shift-cash.shift-num
+         current-cas-shift-date = p-shift-date
+         current-cas-shift-status_ = {&sht-current}
+         .
+       end.
+     end.
+     if avail buf_shift-cash then do:
+       /*включены глобальные смены на объекте*/
+       if {&prefix}shift-on then do:
+         if current-cas-shift-num  = ? then do:
+           run libchkvl_get-shift-num  in this-procedure (
+                                                  input  {&prefix}obj-type
+                                                 ,input  {&prefix}obj-code
+                                                 ,input  current-cas-shift-date
+                                                 ,input  current-cas-shift-name
+                                                 ,output current-cas-shift-num ) no-error .
+         end.
+         if current-cas-shift-num <> ? then do:
+           FIND FIRST buf_shift-obj NO-LOCK WHERE
+                       buf_shift-obj.obj-type = {&prefix}obj-type AND
+                       buf_shift-obj.obj-code = {&prefix}obj-code AND
+                       buf_shift-obj.shift-date = current-cas-shift-date AND
+                       buf_shift-obj.shift-num = current-cas-shift-num No-ERROR.
+         end.
+         else release buf_shift-obj.
+         if avail buf_shift-obj then
+         current-shift-status_ = buf_shift-obj.status_.
+         /*если нет записи о смене объекта считаем что Ѕќ просто опаздывает 0 торговл€ на кассах началась*/
+         else
+         current-shift-status_ = {&sht-current}.
+       end.
+       if p-z-number <> ?  then do:
+         /*пришел чек закрыти€ смены - закроем кассовую смену в Ѕќ*/
+         assign
+         buf_shift-cash.status_ = {&sht-closed}
+         buf_shift-cash.z-num = p-z-number
+         buf_shift-cash.closed = {&receipt-in}
+         buf_shift-cash.shift-num = (if buf_shift-cash.shift-num = ?
+                                 and not can-find(first ub.shift-cash where
+                                                       ub.shift-cash.obj-type = buf_shift-cash.obj-type
+                                                   and  ub.shift-cash.obj-code = buf_shift-cash.obj-code
+                                                   and  ub.shift-cash.cash-num = current-cas-shift-num
+                                                   and  ub.shift-cash.shift-date = buf_shift-cash.shift-date
+                                                   and  ub.shift-cash.shift-num = buf_shift-cash.shift-num
+                                                   and  ub.shift-cash.src-shift-name = buf_shift-cash.src-shift-name
+                                                   and  recid(ub.shift-cash) <> recid(buf_shift-cash)
+                                                   )
+                                 then current-cas-shift-num
+                                 else buf_shift-cash.shift-num)
+         buf_shift-cash.shift-name = if buf_shift-cash.shift-num <> ?
+                                     then current-cas-shift-name
+                                     else buf_shift-cash.shift-name
+         buf_shift-cash.shift-open-time  = (if buf_shift-cash.shift-open-time > p-shift-open-time
+                                             then p-shift-open-time
+                                             else buf_shift-cash.shift-open-time)
+         buf_shift-cash.shift-close-date = (if buf_shift-cash.shift-close-date = ?
+                                             or buf_shift-cash.shift-close-date < p-chk-date
+                                             then p-chk-date
+                                             else buf_shift-cash.shift-close-date)
+         buf_shift-cash.shift-close-time = (if buf_shift-cash.shift-close-time = 0
+                                             or (buf_shift-cash.shift-close-date = p-chk-date
+                                                 and
+                                                 buf_shift-cash.shift-close-time < p-chk-time)
+                                             then p-chk-time
+                                             else buf_shift-cash.shift-close-time)
+         .
+       end.
+     end. /*if avail shift-cash*/
   end. /*p-shift-on*/
-  /*если в Ѕќ есть запись о кассовой смене запоминаем в переменные чтобы сравнива
-  с этими переменными последующие приход€щие чеки мы отследили когда придет чек со
-  сменой, о которой мы не знаем*/
-  IF AVAIL buf_shift-cash
-  and buf_shift-cash.shift-num <> 0
-  and buf_shift-cash.shift-num <> ?
-  and buf_shift-cash.opened eq {&receipt-in}
-  then
-  assign
-  current-cas-shift-num  = buf_shift-cash.shift-num
-  current-cas-shift-name = p-shift-name
-  current-cas-shift-date = buf_shift-cash.shift-date
-  current-cas-shift-status_ = buf_shift-cash.status_
-  .
-  else do:
-    /*если нет записи о кассовой смене - то создаем ее с текущим статусом*/
-    run str/shftccr.p (
-                     input {&prefix}obj-type
-                    ,input {&prefix}obj-code
-                    ,input p-cash-num
-                    ,input p-shift-date
-                    ,input (if not {&prefix}shift-on then ? else p-shift-name)
-                    ,input p-shift-name
-                    ,input (if not {&prefix}shift-on then ? else integer(p-shift-name))
-                    ,input (if p-z-number <> ?
-                            then p-shift-open-time
-                            else (if p-chk-date = p-shift-date then p-chk-time else ?)
-                            )
-                    ,input p-z-number
-                    ,input {&receipt-in}
-                    ,output vrecid) no-error.
-    if error-status:error then do:
-      if valid-handle( {&prefix}p-log-handle) then do:
-        run write-log-and-file in {&prefix}p-log-handle (
-              input 1
-            , input log-file-name
-            , input 1
-            , input substitute( "!!!ѕроизошла ошибка при попытке создани€ записи кассовой смены дл€ кассы &1: смена N&2 за &3"
-                                , p-cash-num
-                                , p-shift-name
-                                , string(p-shift-date, "99/99/9999")
-                              )
-                                              ).
-        {&prefix}view-log = yes.
-      end.
-    end.
-    else do:
-      FIND FIRST buf_shift-cash WHERE recid(buf_shift-cash) = vrecid.
-      assign
-      current-cas-shift-name = p-shift-name
-      current-cas-shift-num = buf_shift-cash.shift-num
-      current-cas-shift-date = p-shift-date
-      current-cas-shift-status_ = {&sht-current}
-      .
-    end.
-  end.
-  if avail buf_shift-cash then do:
-    /*включены глобальные смены на объекте*/
-    if {&prefix}shift-on then do:
-      if current-cas-shift-num  = ? then do:
-        run libchkvl_get-shift-num  in this-procedure (
-                                               input  {&prefix}obj-type
-                                              ,input  {&prefix}obj-code
-                                              ,input  current-cas-shift-date
-                                              ,input  current-cas-shift-name
-                                              ,output current-cas-shift-num ) no-error .
-      end.
-      if current-cas-shift-num <> ? then do:
-        FIND FIRST buf_shift-obj NO-LOCK WHERE
-                    buf_shift-obj.obj-type = {&prefix}obj-type AND
-                    buf_shift-obj.obj-code = {&prefix}obj-code AND
-                    buf_shift-obj.shift-date = current-cas-shift-date AND
-                    buf_shift-obj.shift-num = current-cas-shift-num No-ERROR.
-      end.
-      else release buf_shift-obj.
-      if avail buf_shift-obj then
-      current-shift-status_ = buf_shift-obj.status_.
-      /*если нет записи о смене объекта считаем что Ѕќ просто опаздывает 0 торговл€ на кассах началась*/
-      else
-      current-shift-status_ = {&sht-current}.
-    end.
-    if p-z-number <> ?  then do:
-      /*пришел чек закрыти€ смены - закроем кассовую смену в Ѕќ*/
-      assign
-      buf_shift-cash.status_ = {&sht-closed}
-      buf_shift-cash.z-num = p-z-number
-      buf_shift-cash.closed = {&receipt-in}
-      buf_shift-cash.shift-num = (if buf_shift-cash.shift-num = ?
-                              and not can-find(first ub.shift-cash where
-                                                    ub.shift-cash.obj-type = buf_shift-cash.obj-type
-                                                and  ub.shift-cash.obj-code = buf_shift-cash.obj-code
-                                                and  ub.shift-cash.cash-num = current-cas-shift-num
-                                                and  ub.shift-cash.shift-date = buf_shift-cash.shift-date
-                                                and  ub.shift-cash.shift-num = buf_shift-cash.shift-num
-                                                and  ub.shift-cash.src-shift-name = buf_shift-cash.src-shift-name
-                                                and  recid(ub.shift-cash) <> recid(buf_shift-cash)
-                                                )
-                              then current-cas-shift-num
-                              else buf_shift-cash.shift-num)
-      buf_shift-cash.shift-name = if buf_shift-cash.shift-num <> ?
-                                  then current-cas-shift-name
-                                  else buf_shift-cash.shift-name
-      buf_shift-cash.shift-open-time  = (if buf_shift-cash.shift-open-time > p-shift-open-time
-                                          then p-shift-open-time
-                                          else buf_shift-cash.shift-open-time)
-      buf_shift-cash.shift-close-date = (if buf_shift-cash.shift-close-date = ?
-                                          or buf_shift-cash.shift-close-date < p-chk-date
-                                          then p-chk-date
-                                          else buf_shift-cash.shift-close-date)
-      buf_shift-cash.shift-close-time = (if buf_shift-cash.shift-close-time = 0
-                                          or (buf_shift-cash.shift-close-date = p-chk-date
-                                              and
-                                              buf_shift-cash.shift-close-time < p-chk-time)
-                                          then p-chk-time
-                                          else buf_shift-cash.shift-close-time)
-      .
-    end.
-  end. /*if avail shift-cash*/
 end.
 
 end procedure. /* libchkvl_get-cash-shift */
