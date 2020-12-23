@@ -1258,27 +1258,38 @@ DO:
   end.
   Else do:
       run str/sht-all.w
-      (             input my-handle
-                   ,input v-cntxt-obj-type /*p-curr-obj-type*/
-                   ,input v-cntxt-obj-code /*p-curr-obj-code*/
-                   ,input  "b-sel"
-                   ,input "all":U
-                   ,input '':U  /*p-obj-type*/
-                   ,input 0     /*p-obj-code*/
-                   ,input ReportProc
-                   ,input-output rec-list-2 ).
+        (             input my-handle
+        ,input v-cntxt-obj-type /*p-curr-obj-type*/
+        ,input v-cntxt-obj-code /*p-curr-obj-code*/
+        ,input  "b-sel"
+        ,input "all":U
+        ,input '':U  /*p-obj-type*/
+        ,input 0     /*p-obj-code*/
+        ,input ReportProc
+        ,input-output rec-list-2 ).
     end.
 
-    find first buf_shift-obj where recid (buf_shift-obj) = integer (entry(1,rec-list-2))  no-lock no-error.
-    if AVAILABLE  buf_shift-obj then DO:
-       Assign
-        date-start  = buf_shift-obj.shift-date
-        shift-start = buf_shift-obj.shift-num.
-         enable date-start  shift-start with frame {&frame-name}.
-       Display date-start  shift-start with frame {&frame-name}.
-
-        apply "leave" to shift-start .
-        apply "leave" to date-start .
+    find shift-obj where recid (shift-obj) = integer (entry(1,rec-list-2))  no-lock no-error.
+    if AVAILABLE  shift-obj then 
+    DO:
+      Assign
+        date-start  = shift-obj.shift-date
+        shift-start = shift-obj.shift-num.
+      enable date-start  shift-start with frame {&frame-name}.
+      Display date-start  shift-start with frame {&frame-name}.
+        if TOG-Shift-2 then do:
+            assign
+             Date-End = Date-Start
+             Shift-End = Shift-Start
+             Date-End:SCREEN-VALUE = string(Date-Start)
+             Shift-End:SCREEN-VALUE = string(Shift-Start)
+             x-Date-End  = Date-End
+             x-Shift-End = Shift-End
+            .   
+    Display date-end  shift-end with frame {&frame-name}.              
+        end.    
+      apply "leave" to shift-start .
+      apply "leave" to date-start .
 
     End.
  END.
