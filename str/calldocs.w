@@ -520,7 +520,7 @@ define browse br-docs query br-docs no-lock display
   {&sort-clmn_41-br-dtl}             column-label {&label-clmn_41-br-dtl}
   usrfulnf(c-t-doc.user-name)        column-label "Исправил"
   {&sort-clmn_44-br-dtl}             column-label {&label-clmn_44-br-dtl}
-  {&sort-clmn_42-br-dtl}             column-label {&label-clmn_42-br-dtl}
+  {&sort-clmn_42-br-dtl}             column-label {&label-clmn_42-br-dtl} format ">>>,>>>,>>9"
   {&sort-clmn_43-br-dtl}             column-label {&label-clmn_43-br-dtl}
   {&sort-clmn_9-br-dtl}              column-label {&label-clmn_9-br-dtl}  format "x(6)"
   {&sort-clmn_10-br-dtl}             column-label {&label-clmn_10-br-dtl} format "99"
