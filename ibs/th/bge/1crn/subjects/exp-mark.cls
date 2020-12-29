@@ -79,7 +79,7 @@ method public void CrContentToSW (insw as handle):
       insw:write-data-element (  "unit-ext":U,        marking.unit-ext   ).
       insw:write-data-element (  "qnty-box":U,      string( marking.box-qnty )   ).
       insw:write-data-element (  "stts":U,       ObjSrv:Env:marking:sts:mark:GetKeyStrDB(marking.sts)).
-      insw:write-data-element (  "mark_parent":U,     repSpecSimbforXlm(  addBracketForCode( marking.mark-parent ))  ).
+      insw:write-data-element (  "mark-parent":U,     repSpecSimbforXlm(  addBracketForCode( marking.mark-parent ))  ).
       insw:write-data-element (  "GTIN":U,       marking.gds-ext-id   ).
       insw:write-data-element (  "gds-code":U,       string(marking.gds-code)   ).
       find first marking-attr where marking-attr.mark eq marking.mark
@@ -88,6 +88,8 @@ method public void CrContentToSW (insw as handle):
       if available marking-attr
       then
          insw:write-data-element (  "mrc":U,       marking-attr.attr-value   ).
+      else
+         insw:write-data-element (  "mrc":U,       ""   ).
       insw:end-element ({&tag-mark}) .
 /*      insw:end-element ({&tag-marks}) .*/
    end.
