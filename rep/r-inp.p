@@ -559,7 +559,7 @@ procedure print-titul :
         put stream Out_stream "Примечание   : "  at 10  format "X(15)" (if not( buf_trn-doc.PS BEGinS "@" ) then buf_trn-doc.PS else "" )  format "X(100)" skip(1) .
         run r-inpxl-write-cell-data in this-procedure (
             input {&r-inpxl-h_PS}
-          , input ( If Not ( buf_trn-doc.Ps Begins "@" ) Then  buf_trn-doc.Ps Else " " )
+          , input trim(replace((If (buf_trn-doc.Ps Begins "@") Then buf_trn-doc.Ps Else " "), {&new-line}, " "),"@ ") /* По обращению по почте Заказчика с ошибкой Excell. Введено две проверки на chr(10) и на всякий случай chr(13). Арн. 07.11.2014 */
         ).
       end.
 
