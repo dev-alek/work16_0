@@ -1155,15 +1155,15 @@ DO:
     end.
     if tog-last <> "tog-7" then 
     do:
-    /*          output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.*/
-    /*     put stream OutStr-html unformatted                                                                       */
-    /*        substitute (                                                                                          */
-    /*        '                                                                                                     */
-    /*        </table>                                                                                              */
-    /*        '                                                                                                     */
-    /*            , chr(123), chr(125)                                                                              */
-    /*       ).                                                                                                     */
-    /*      output stream OutStr-html close.                                                                        */
+              output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+         put stream OutStr-html unformatted
+            substitute (
+            '
+            </table>
+            '
+                , chr(123), chr(125)
+           ).
+          output stream OutStr-html close.
     end.
     else
         run last-line-tog-html in this-procedure (
