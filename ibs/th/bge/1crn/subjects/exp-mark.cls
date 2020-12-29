@@ -76,12 +76,12 @@ method public void CrContentToSW (insw as handle):
 /*      insw:start-element ({&tag-marks}) .*/
       insw:start-element ({&tag-mark}) .
       insw:write-data-element (  "mark-code":U,     repSpecSimbforXlm(   addBracketForCode(marking.mark))   ).
-      insw:write-data-element (  "unit-ext":U,        marking.unit-ext   ).
-      insw:write-data-element (  "qnty-box":U,      string( marking.box-qnty )   ).
+      insw:write-data-element (  "unit-ext":U,        if marking.unit-ext eq ? then "" else marking.unit-ext  ).
+      insw:write-data-element (  "qnty-box":U,        if marking.box-qnty eq ? then "" else string( marking.box-qnty )   ).
       insw:write-data-element (  "stts":U,       ObjSrv:Env:marking:sts:mark:GetKeyStrDB(marking.sts)).
       insw:write-data-element (  "mark-parent":U,     repSpecSimbforXlm(  addBracketForCode( marking.mark-parent ))  ).
       insw:write-data-element (  "GTIN":U,       marking.gds-ext-id   ).
-      insw:write-data-element (  "gds-code":U,       string(marking.gds-code)   ).
+      insw:write-data-element (  "gds-code":U,       if marking.gds-code eq ? then "" else string(marking.gds-code)   ).
       find first marking-attr where marking-attr.mark eq marking.mark
                                 and marking-attr.attr-code eq "mrc"  
       no-lock no-error.

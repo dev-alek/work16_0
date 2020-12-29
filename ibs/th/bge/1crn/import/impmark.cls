@@ -121,6 +121,24 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    then
       undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 макрки тносится к товару &2, в файле товар &3",marking.gds-ext-id,getGdsCodeByGtin(marking.gds-ext-id),marking.gds-code)) .
    
+   if     objImp:mrc ne 0 
+      and objImp:mrc ne ?
+   then do:
+      find first marking-attr where marking-attr.mark      eq marking.mark
+                                and marking-attr.attr-code eq "MRC"
+         exclusive-lock no-error.
+      if not avail marking-attr
+      then do:
+         create marking-attr.
+         assign
+            marking-attr.mark =  marking.mark
+            marking-attr.attr-code = "MRC"
+                
+                                 no-error.
+      end.
+      marking-attr.attr-value = string(objImp:mrc).
+      release marking-attr no-error.
+   end.
      
    if marking.sts eq ? then
       undo, throw new Progress.Lang.AppError(substitute("Не известный статус марки &1",objImp:stts)) .
