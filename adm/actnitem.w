@@ -489,85 +489,72 @@ DO:
  run waitfram-show in this-procedure ( input "Ждите...").
   output stream OutStr-html to value(v-act-file) convert target 'UTF-8'/*no-convert*/.
         put stream OutStr-html unformatted
-        substitute(
-        
-                  '<!doctype html>
-                 <html>
-              <head>
-              <meta charset="UTF-8">
-                 <!-- Стили документа --> 
-              <style>
-          table ~{border-collapse: collapse; ~}
-        tbody td, th ~{border: 1px solid black;~}
-        #myid ~{font-weight: bold;~}
-        .class1 ~{font-style: italic;~}
-        .class2 ~{font-family: Arial;~}
-          
-              </style>
-              
-              
-              </head>
-                    <body>
-                  <table orientation="landscape" name="лист1" repeat_rows="1:1" hide_zero="True"> 
-                    <thead> 
-                   <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
-                <tr class="set_columns">                       
-                        <td style="width:200px"></td>
-                        <td style="width:130px"></td>
-                        <td style="width:170px"></td>
-                        <td style="width:140px"></td>
-                        <td style="width:300px"></td>
+    "<!DOCTYPE HTML>" skip
+    ' <html>' skip
+    '  <head>' skip
+    '   <meta charset="utf-8">' skip
+    '    <style type="text/css">' skip
                         
-       
-                 </tr>
-        <tr>
-            <td colspan="5" style="front-weight: bold; text-align: center;">Список прав</td>
-        </tr>
-        </thead>
+    '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+    '   </style>' skip
+    '  </head>' skip
+    .              
+              
+  put stream OutStr-html unformatted
+    '<body>' skip
+    '<table orientation="landscape" name="лист1" repeat_rows="1:1" hide_zero="True">'skip
+    '<thead>' skip
+    .
 
-        <tbody>
-        <tr>
-        <th>Имя права</th>
-        <th>Тема</th>
-        <th>Идентификатор права</th> 
-        <th>Привязка</th>
-        <th>Описания права</th>
-        </tr>').
+        put stream OutStr-html unformatted
+            '<tr class="set_columns">' skip                       
+            '<td style="width:200px"></td>' skip
+            '<td style="width:130px"></td>' skip
+            '<td style="width:170px"></td>' skip
+            '<td style="width:140px"></td>' skip
+            '<td style="width:300px"></td>' skip
+            '</tr>' skip
+            .                    
+                   
+    put stream OutStr-html unformatted
+        '<tr>' skip
+        '<td colspan="5" style="front-weight: bold; text-align: center;">Список прав</td>' skip
+        '</tr>' skip
+        '</thead>' skip
+        '<tbody>' skip
+        '<tr>' skip
+        '<th>Имя права</th>' skip
+        '<th>Тема</th>' skip
+        '<th>Идентификатор права</th>' skip 
+        '<th>Привязка</th>' skip
+        '<th>Описания права</th>' skip
+        '</tr>'
+        .
         
                 get first BROWSE-item.
                 do while available  br_action-item:
                 
-                  put stream OutStr-html unformatted
-        substitute(
-                    '<tr style="height: 60px;">
-               
-                   <td text_wrap="true"> &1 </td>
-                   <td text_wrap="true"> &2 </td>
-                  <td text_wrap="true">  &3 </td>
-           <td text_wrap="true"> &4 </td>
-        <td text_wrap="true"> &5 </td>
-                </tr>
+     put stream OutStr-html unformatted
 
- </tbody>',
-
-
-               
-                
-      br_action-item.action-item-name,
-      br_action-group.action-group-name,
-      br_action-item.action-item-id,
-      context(br_action-item.action-item-context),
-      br_action-item.action-item-description 
-     
-
-           ).       
+     '<tr style="height: 60px;">' skip
+       '<td text_wrap="true">' + br_action-item.action-item-name + '</td>' skip
+       '<td text_wrap="true">' + br_action-group.action-group-name + '</td>' skip
+       '<td text_wrap="true">' + br_action-item.action-item-id + '</td>' skip
+       '<td text_wrap="true">' + context(br_action-item.action-item-context) + '</td>' skip
+       '<td text_wrap="true">' + br_action-item.action-item-description + '</td>' skip
+      '</tr>' skip
+      .       
      get next BROWSE-item.
-        
-                
-        end.
-                           
 
-        
+     end.
+       put stream OutStr-html unformatted
+    '</tbody>' skip
+    '</table>' skip
+    '</body>' skip
+    '</html>' skip
+    .
                 run waitfram-hide in this-procedure. 
                 
     output stream OutStr-html close.   
