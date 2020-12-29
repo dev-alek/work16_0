@@ -247,7 +247,13 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
        then
           sw:write-data-element ("source",  string(tt-fin-doc-attr.source_)).
     end.
-    */ 
+    */
+    find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
+    if     available tt-fin-doc-attr
+       and tt-fin-doc-attr.contr-kb ne ?
+    then do:
+       sw:write-data-element ("contr-kb",  tt-fin-doc-attr.contr-kb).
+    end. 
     sw:start-element ("ndss") .
     for each tt-fin-doc-tax no-lock where tt-fin-doc-tax.fin-doc-code = tt-fin-doc.fin-doc-code:
       sw:start-element ("nds") .
@@ -256,14 +262,7 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
       sw:write-data-element ("sum-nds", string-mth(tt-fin-doc-tax.sum-vat-line-doc)).
       sw:end-element ("nds") .
     end.
-    find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
-    if available (tt-fin-doc-attr) then do:
-    
-       if tt-fin-doc-attr.contr-kb ne ? 
-       then 
-          sw:write-data-element ("contr-kb",  tt-fin-doc-attr.contr-kb).
-    
-    end.
+   
     sw:end-element ("ndss")  .  
     sw:END-ELEMENT ("cash-doc") .  
     
