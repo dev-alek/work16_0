@@ -299,6 +299,7 @@ if ref-list <> "" then do:
   disp ub.clients.obj-type @ t-doc.cli-type with frame {&frame-name}.
 end.
 run check-cli no-error.
+if error-status :error then return no-apply.
 &if "{1}" = "in" &then run fill-mol in this-procedure. &endif
 if error-status :error then return no-apply.
 end.
@@ -612,7 +613,8 @@ if ( varis-fin = "yes":u
           and available buf_contract-attr
           and logical(buf_contract-attr.attr-value) = true 
           then do :
-            message "Договор рассчитан на поставки через ЭДО. Ручной приход по нему невозможен!" view-as alert-box .
+            message "Договор рассчитан на поставки через ЭДО. Ручной приход по нему невозможен!" view-as alert-box error.
+            apply "entry" to t-doc.cli-code in frame {&frame-name}.
             return error.
           end .
         end .

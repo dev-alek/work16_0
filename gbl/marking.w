@@ -75,8 +75,9 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit B-quit RECT-1 t-edo t-manual ~
-cb-gray_zone_qnty S-type 
-&Scoped-Define DISPLAYED-OBJECTS t-edo t-manual cb-gray_zone_qnty S-type 
+cb-gray_zone_qnty S-type S-type-edo 
+&Scoped-Define DISPLAYED-OBJECTS t-edo t-manual cb-gray_zone_qnty ~
+S-type S-type-edo 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -133,6 +134,18 @@ DEFINE VARIABLE S-type AS CHARACTER
                      "Фотокамеры/фотовспышки","photo" 
      SIZE 31 BY 5 NO-UNDO.
 
+DEFINE VARIABLE S-type-edo AS CHARACTER 
+     VIEW-AS SELECTION-LIST MULTIPLE SCROLLBAR-VERTICAL 
+     LIST-ITEM-PAIRS "","",
+                     "Табачная продукция","tabak",
+                     "Обувь","shoes",
+                     "Духи и парфюмерия","perfume",
+                     "Легпром","industry",
+                     "Шины","tires",
+                     "Лекарства","apteka",
+                     "Фотокамеры/фотовспышки","photo" 
+     SIZE 31 BY 5 NO-UNDO.
+
 DEFINE VARIABLE t-edo AS LOGICAL INITIAL no 
      LABEL "Включена работа с ЭДО" 
      VIEW-AS TOGGLE-BOX
@@ -151,12 +164,15 @@ DEFINE FRAME Dialog-Frame
      B-quit AT ROW 1 COL 11
      t-edo AT ROW 2.79 COL 5.75 WIDGET-ID 142
      t-manual AT ROW 3.88 COL 5.75 WIDGET-ID 148
-     cb-gray_zone_qnty AT ROW 5 COL 47.25 COLON-ALIGNED WIDGET-ID 150
-     S-type AT ROW 6.08 COL 46 NO-LABEL WIDGET-ID 144
+     cb-gray_zone_qnty AT ROW 5 COL 49.25 COLON-ALIGNED WIDGET-ID 150
+     S-type AT ROW 7.25 COL 51.5 NO-LABEL WIDGET-ID 144
+     S-type-edo AT ROW 12.46 COL 51.5 NO-LABEL WIDGET-ID 152
      "Типы маркировки для помарочного учета:" VIEW-AS TEXT
-          SIZE 39 BY .67 AT ROW 6.33 COL 6 WIDGET-ID 146
+     SIZE 39 BY .67 AT ROW 7.5 COL 6 WIDGET-ID 146
+     "Типы маркировки для оприходования по ЭДО:" VIEW-AS TEXT
+     SIZE 41.5 BY .67 AT ROW 12.71 COL 6 WIDGET-ID 154
      RECT-1 AT ROW 2.25 COL 1.5 WIDGET-ID 116
-     SPACE(0.62) SKIP(0.41)
+     SPACE(1.87) SKIP(0.41)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для Электронного документооборота"
@@ -230,6 +246,17 @@ END.
 ON VALUE-CHANGED OF S-type IN FRAME Dialog-Frame
 DO:
   assign S-type.
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME S-type-edo
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL S-type-edo Dialog-Frame
+ON VALUE-CHANGED OF S-type-edo IN FRAME Dialog-Frame
+DO:
+  assign S-type-edo.
   
 END.
 
@@ -322,9 +349,10 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-edo t-manual cb-gray_zone_qnty S-type 
+  DISPLAY t-edo t-manual cb-gray_zone_qnty S-type S-type-edo  
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit RECT-1 t-edo t-manual cb-gray_zone_qnty S-type 
+  ENABLE B-exit B-quit RECT-1 t-edo t-manual cb-gray_zone_qnty 
+         S-type S-type-edo  
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -349,11 +377,11 @@ end.
 
   if p-mode = {&update} then 
   do:
-    ENABLE S-type t-edo cb-gray_zone_qnty t-manual
+    ENABLE S-type S-type-edo t-edo cb-gray_zone_qnty t-manual
       WITH FRAME Dialog-Frame.
   end.  
   else do:
-    Display S-type t-edo cb-gray_zone_qnty t-manual
+    Display S-type S-type-edo t-edo cb-gray_zone_qnty t-manual
       WITH FRAME Dialog-Frame.
    end.  
 run adm/shattri.p (
@@ -392,6 +420,10 @@ FOR EACH temp-thbj-attr
     IF temp-thbj-attr.prop-code = {&attr-marking_marking-type} THEN DO:
        S-type = temp-thbj-attr.property-value-character .
        display s-type with frame {&frame-name} .
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} THEN DO:
+       S-type-edo = temp-thbj-attr.property-value-character .
+       display S-type-edo with frame {&frame-name} .
     END.
     IF temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} THEN DO:
        cb-gray_zone_qnty = temp-thbj-attr.property-value-integer .
@@ -443,7 +475,8 @@ IF p-mode = {&LOOKUP} THEN RETURN ERROR.
 
 ASSIGN FRAME {&FRAME-NAME}
     t-edo
-    S-type 
+    S-type
+    S-type-edo
     t-manual
     cb-gray_zone_qnty
     .
@@ -453,6 +486,8 @@ ASSIGN FRAME {&FRAME-NAME}
     temp-thbj-attr.property-value-logical = t-manual.
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type} .
     temp-thbj-attr.property-value-character = trim(s-type,",").
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} .
+    temp-thbj-attr.property-value-character = trim(S-type-edo,",").
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} .
     temp-thbj-attr.property-value-integer = cb-gray_zone_qnty.    
     

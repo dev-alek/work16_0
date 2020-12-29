@@ -1620,6 +1620,7 @@ if pardoc-mode <> {&lookup} then do:
           t-doc.contract-code  = 0.
       end.
   end.
+  run gbl/inidebug.p.
 run UI-on in this-procedure ( input "enable" ).
 END.
 
@@ -4260,7 +4261,7 @@ do while varlns-cnt <= num-entries (varnotes):
                                bf_pl-gds.obj-code = t-doc.obj-code    no-lock no-error.
     if available bf_pl-gds then do:
       message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " резервируется по складским местам." skip
-              "Его нельзя приходывать на ответственное хранение."
+              "Его нельзя приходовать на ответственное хранение."
       view-as alert-box error.
       assign varlns-cnt = varlns-cnt + 1.
       next.
@@ -4281,7 +4282,7 @@ do while varlns-cnt <= num-entries (varnotes):
       next.
     end.
   end.
-  
+  varvalue = "" .
   find first bf_goods where recid(bf_goods) = gds-rec no-lock.
   run gds-attr-value in this-procedure
     (  input bf_goods.gds-code
@@ -4293,12 +4294,13 @@ do while varlns-cnt <= num-entries (varnotes):
   if varvalue = "metan"
   then do:
     message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
-            "нельзя приходывать в ручном режиме."
+            "нельзя приходовать в ручном режиме."
     view-as alert-box error.
     assign varlns-cnt = varlns-cnt + 1.
     next.
   end.
   
+  varvalue = "" .
   run gbl/getobjsrvhndl.p (input-output ObjSrv).
   EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
   RUN gds-attr-value (
@@ -4307,15 +4309,42 @@ do while varlns-cnt <= num-entries (varnotes):
                       OUTPUT varvalue,
                       OUTPUT vartype
                       ).
-  if varvalue > ""
-  and EDOParSec:GetIsMarkingForType(varvalue)
+  if varvalue > "" then do:
+   if EDOParSec:GetIsMarkingForType(varvalue)
   then do :
-    message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
-            "нельзя добавлять в ручном режиме, так как он подлежит маркировке и должен добавляться помарочно."
-    view-as alert-box error.
-    assign varlns-cnt = varlns-cnt + 1.
-    next.
+      if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then 
+      do:
+          message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+              "нельзя добавлять в ручном режиме, так как он подлежит маркировке."
+              view-as alert-box error.
+          assign 
+              varlns-cnt = varlns-cnt + 1.
+          next.          
+      end.
+      else 
+      do:     
+          message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+              "нельзя добавлять в ручном режиме, так как он подлежит маркировке и должен добавляться помарочно."
+              view-as alert-box error.
+          assign 
+              varlns-cnt = varlns-cnt + 1.
+          next.
+      end.
   end .
+   if EDOParSec:GetIsMarkingForTypeEDO(varvalue) and EDOParSec:IsEdo
+  then do :
+      if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then 
+      do:
+          message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+              "нельзя добавлять, так как он подлежит маркировке."
+              view-as alert-box error.
+          assign 
+              varlns-cnt = varlns-cnt + 1.
+          next.          
+      end.
+  end .
+  end.
+  
   
   if can-find (FIRST ub.clients-attr no-lock where (ub.clients-attr.attr-code = {&attr-supp-np} or ub.clients-attr.attr-code = {&attr-supp-lgas})
                                                and ub.clients-attr.attr-value = "yes")

@@ -668,6 +668,18 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME tt-cash-desk.cash-num
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-cash-desk.cash-num Dialog-Frame
+ON LEAVE OF tt-cash-desk.cash-num IN FRAME Dialog-Frame /* Номер */
+DO:
+  assign tt-cash-desk.cash-num .
+  assign tcode = tt-cash-desk.cash-num .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME tt-cash-desk.obj-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-cash-desk.obj-code Dialog-Frame
 ON LEAVE OF tt-cash-desk.obj-code IN FRAME Dialog-Frame /* Магазин */

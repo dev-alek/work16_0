@@ -361,7 +361,7 @@ end.
         "Документ новый" v-new-trn-doc skip
         "Новости" g#news skip
         view-as alert-box error .
-      undo main-block, return error return-value .
+      return error return-value .
     end.
   end.
 

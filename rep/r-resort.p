@@ -346,27 +346,55 @@ on error undo, return error return-value
              bf_parts-out.prod-code = bf_goods-out.prod-code       /*and
              bf_parts-out.in-code   = bf_parts-root.orig-in-code   and
              bf_parts-out.part-code = bf_parts-root.orig-part-code*/ on error undo, return error return-value :
-      assign
-        sum-sale-out  = sum-sale-out  + price-sale-out          * bf_parts-out.fact-qnty
-        sum-cost-out  = sum-cost-out  + bf_parts-out.price-rubl * bf_parts-out.fact-qnty
-        fact-qnty-out = fact-qnty-out + bf_parts-out.fact-qnty
-      .
-    end. /* for each bf_parts-out */
-    for each bf_parts-in   no-lock where
-             bf_parts-in.out-code   = bf_trn-doc.doc-code         and
-             bf_parts-in.obj-type   = bf_trn-doc.obj-type         and
-             bf_parts-in.obj-code   = bf_trn-doc.obj-code         and
-             bf_parts-in.artic      = bf_goods-in.artic           and
-             bf_parts-in.prod-type  = bf_goods-in.prod-type       and
-             bf_parts-in.prod-code  = bf_goods-in.prod-code       /*and
+        if bf_parts-out.part-code = bf_parts-root.orig-part-code then 
+        do:                
+           assign
+              sum-sale-out  = sum-sale-out  + price-sale-out          * bf_parts-out.fact-qnty
+              sum-cost-out  = sum-cost-out  + bf_parts-out.price-rubl * bf_parts-out.fact-qnty 
+              fact-qnty-out = fact-qnty-out + bf_parts-out.fact-qnty
+              .
+        end.
+        else 
+        do:
+           if bf_parts-out.in-code   = bf_parts-root.orig-in-code then 
+           do:
+              assign
+                 sum-sale-out  = sum-sale-out  + price-sale-out          * bf_parts-out.fact-qnty
+                 sum-cost-out  = sum-cost-out  + bf_parts-out.price-rubl * bf_parts-out.fact-qnty 
+                 fact-qnty-out = fact-qnty-out + bf_parts-out.fact-qnty
+                 .            
+           end.   
+        end.   
+     end. /* for each bf_parts-out */
+     for each bf_parts-in   no-lock where
+        bf_parts-in.out-code   = bf_trn-doc.doc-code         and
+        bf_parts-in.obj-type   = bf_trn-doc.obj-type         and
+        bf_parts-in.obj-code   = bf_trn-doc.obj-code         and
+        bf_parts-in.artic      = bf_goods-in.artic           and
+        bf_parts-in.prod-type  = bf_goods-in.prod-type       and
+        bf_parts-in.prod-code  = bf_goods-in.prod-code       /*and
              bf_parts-in.in-code    = bf_parts-root.in-code       and
              bf_parts-in.part-code  = bf_parts-root.part-code */    on error undo, return error return-value :
-      assign
-        sum-sale-in  = sum-sale-in  + price-sale-in          * bf_parts-in.fact-qnty
-        sum-cost-in  = sum-cost-in  + bf_parts-in.price-rubl * bf_parts-in.fact-qnty
-        fact-qnty-in = fact-qnty-in + bf_parts-in.fact-qnty
-      .
-    end.
+        if bf_parts-in.part-code  = bf_parts-root.part-code then 
+        do:                
+           assign
+              sum-sale-in  = sum-sale-in  + price-sale-in          * bf_parts-in.fact-qnty
+              sum-cost-in  = sum-cost-in  + bf_parts-in.price-rubl * bf_parts-in.fact-qnty
+              fact-qnty-in = fact-qnty-in + bf_parts-in.fact-qnty
+              .
+        end.
+        else 
+        do:
+           if bf_parts-in.in-code    = bf_parts-root.in-code then 
+           do:
+              assign
+                 sum-sale-in  = sum-sale-in  + price-sale-in          * bf_parts-in.fact-qnty
+                 sum-cost-in  = sum-cost-in  + bf_parts-in.price-rubl * bf_parts-in.fact-qnty
+                 fact-qnty-in = fact-qnty-in + bf_parts-in.fact-qnty
+                 .            
+           end.   
+        end.   
+     end.
    /* end. */
     find first tt-resort-out where tt-resort-out.artic = bf_goods-out.artic no-error .
     if not available tt-resort-out then do :

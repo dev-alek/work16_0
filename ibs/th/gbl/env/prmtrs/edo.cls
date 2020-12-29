@@ -55,6 +55,10 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
     get.
     private set.
 
+  define public property MarkingTypeEDO as character initial "" no-undo 
+    get.
+    private set.
+
   define public property IsMarking as logical initial false no-undo 
     get.
     private set.
@@ -104,7 +108,23 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingType = v-value-character.
-    
+
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "marking-type-edo"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    MarkingTypeEDO = v-value-character.
+        
     run adm/shattri.p (
       input "get":U
       ,input pObjType
@@ -192,6 +212,13 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
 
   end method.  
   
-  
+  method public logical GetIsMarkingForTypeEDO(pType as char):
+
+    if not MarkingTypeEDO = "" and lookup (pType, MarkingTypeEDO) > 0
+      then return true.
+      else return false.
+
+  end method.  
+    
   
 end class.
