@@ -245,7 +245,7 @@ form header
   ShiftRight( substitute( "Дата печати: &1, время: &2.   Страница: &3."
                         , string( t_today,                 "99.99.9999":U )
                         , string( j_time,                  "HH:MM:SS":U   )
-                        , string( page-number( text_out ), ">>9":U        )
+                        , string( page-number( text_out ), ">>>>9":U      )
                         ) , j_total-length ) format "x({&A4_LS})":U at 1 skip( 0 )
   v_label-line1                              format "x({&A4_LS})":U at 1 skip( 0 )
   v_label-line2                              format "x({&A4_LS})":U at 1 skip( 0 )
