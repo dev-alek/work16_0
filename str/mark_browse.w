@@ -1316,11 +1316,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
   run ActivateKeyboardLayout (input iLang, input 0).
   /*  /*  run gbl/inidebug.p.            */*/
-/*       output to hhhhhhh.txt.*/
-/*       for each tt-marking-lines:    */
-/*           export tt-marking-lines . */
-/*       end.                          */
-/*       output close.                 */
+/*       output to hhhhhhh.txt.       */
+/*       for each tt-marking-lines:   */
+/*           export tt-marking-lines .*/
+/*       end.                         */
+/*       output close.                */
    /*Проверка прав */
   { gbl/chk-actg.i
   v-cntxt-db-num
@@ -1542,8 +1542,8 @@ for each X_marking-line no-lock where X_marking-line.GrayZone = yes:
             ub.marking.obj-type    = X_marking-line.obj-type
             ub.marking.mark-parent = mark-parent
             .
-          ub.marking.unit-ext  = getLevelMotpByDM(X_marking-line.mark) .
-          ub.marking.box-qnty  = getQntyUTDByDM(X_marking-line.mark) .
+          ub.marking.unit-ext  = getLevelMotpByCodId(X_marking-line.mark) .
+          ub.marking.box-qnty  = getQntyUTDByCodId(X_marking-line.mark) .
 /*          ub.marking.unit = getLevelUTDByDM(v-marking) .*/
  
 end.  
@@ -1884,9 +1884,9 @@ define variable v_list      as character no-undo .
             X_marking-line.gds-name    = GdsName(X_marking-line.gds-code) 
             .
             
-            X_marking-line.box-qnty = getQntyUTDByDM(v-marking) .
-            X_marking.unit-ext  = getLevelMotpByDM(v-marking) .
-                
+            X_marking-line.box-qnty = getQntyUTDByCodId(v-marking) .
+            X_marking-line.unit-ext  = getLevelMotpByCodId(v-marking) .
+            X_marking-line.unit       = getLevelUTDByCodId(v-marking) .    
           assign
             X_marking-line.sts-utd = Marking:Checked_:KeyIntDB .
             X_marking-line.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
