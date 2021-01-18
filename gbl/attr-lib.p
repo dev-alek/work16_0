@@ -958,12 +958,12 @@ end.
 &scop format-attr-exp-isPM-last-date "99/99/9999"
 &scop label-attr-exp-isPM-last-date "Последняя выгруженная для ИС ПМ дата"
 &scop tooltip-attr-exp-isPM-last-date "Последняя выгруженная для ИС ПМ дата"
-&scop user-can-edit-attr-exp-isPM-last-date false
+&scop user-can-edit-attr-exp-isPM-last-date true
 &scop output-display-attr-exp-isPM-last-date true
 &scop other-attr-exp-isPM-last-date '':u
 &scop news-attr-exp-isPM-last-date false
-&scop manual-edit-attr-exp-isPM-last-date 0
-&scop batch-edit-attr-exp-isPM-last-date 0
+&scop manual-edit-attr-exp-isPM-last-date 1
+&scop batch-edit-attr-exp-isPM-last-date 1
 
 /* сюда добавлять новые атрибуты клиентов */
 

@@ -148,10 +148,16 @@ class ibs.th.bge.is_PM.is_PM:
     get.
     private set.
     
+  define property oneMoreTime as logical no-undo initial false
+    get.
+    set.
+    
   define buffer buf_clients for ub.clients .
   define buffer buf_clients-attr for ub.clients-attr .
+  define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle . 
   
   define variable v-density       as decimal   no-undo .
+  define variable v-pl-code       as integer   no-undo .
   
   define variable vMoscowDate     as date      no-undo .
   define variable vMoscowTime     as integer   no-undo .
@@ -189,6 +195,10 @@ class ibs.th.bge.is_PM.is_PM:
     toDate = ? .
     otherOneDate = false .
     
+    if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn3)
+    then run str/lib-trn3.p persistent no-error .
+    if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
+    then run str/lib-trn.p persistent no-error .
   end constructor .
   
   constructor public is_PM
@@ -218,6 +228,10 @@ class ibs.th.bge.is_PM.is_PM:
     toDate = pToDate .
     otherOneDate = true .
     
+    if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn3)
+    then run str/lib-trn3.p persistent no-error .
+    if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
+    then run str/lib-trn.p persistent no-error .
   end constructor .
   
   method public void exec_1c () :
@@ -248,6 +262,10 @@ class ibs.th.bge.is_PM.is_PM:
     define buffer buf_pl-gds for ub.pl-gds .
     define buffer buf_goods for ub.goods .
     define buffer buf_goods-attr for ub.goods-attr .
+    
+    empty temp-table tt-gds .
+    empty temp-table tt-place .
+    empty temp-table tt-result .
   
     run write-to-log in p-parent-handle (" START PRESTAGE UTC " + utc-time() ) .
     /* START Определяем список топлив и список резервуаров */
@@ -379,6 +397,8 @@ class ibs.th.bge.is_PM.is_PM:
       else do :
         run write-to-log in p-parent-handle (("Последняя выгруженная дата по московскому времени - " + string(last-exp-date, "99/99/9999"))) .
         is-full-backdate = true .
+        if vMoscowHour > 0 then oneMoreTime = true .
+        
         vMoscowDate = vMoscowDate - 1 .
         vMoscowTimeEnd = 86399 .
         
@@ -572,7 +592,7 @@ class ibs.th.bge.is_PM.is_PM:
         end .
         
         if rvs-time-diff > (rvs-doc-exist-diff * 60)
-        and exec-time-diff > (rvs-doc-create-diff * 60)
+        and exec-time-diff < (rvs-doc-create-diff * 60)
         and not otherOneDate
         then do :
           if is-full
@@ -589,15 +609,22 @@ class ibs.th.bge.is_PM.is_PM:
           end .
         end .
         else do :
-          if not otherOneDate
-          then
-          run write-to-log in p-parent-handle ( "Есть актуальная сверка, создание сверки не требуется" ) .
-          
-          tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
-          tt-place.rvs-doc-code = end_rvs-doc.rvs-code .
-          tt-place.is-calc = false .
-          for first tt-result where tt-result.gds-code = tt-place.gds-code :
-            tt-result.wght-fact-end = tt-result.wght-fact-end + tt-place.end-rvs-fact-qnty .
+          if rvs-time-diff > (rvs-doc-exist-diff * 60)
+          then do :
+            tt-place.use-old-rvs = true .
+            run write-to-log in p-parent-handle ( "Cоздание сверки не требуется" ) .
+          end .
+          else do :
+            if not otherOneDate
+            then
+            run write-to-log in p-parent-handle ( "Есть актуальная сверка, создание сверки не требуется" ) .
+            
+            tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
+            tt-place.rvs-doc-code = end_rvs-doc.rvs-code .
+            tt-place.is-calc = false .
+            for first tt-result where tt-result.gds-code = tt-place.gds-code :
+              tt-result.wght-fact-end = tt-result.wght-fact-end + tt-place.end-rvs-fact-qnty .
+            end .
           end .
         end .
       end . /* for last end_rvs-doc */
@@ -652,16 +679,35 @@ class ibs.th.bge.is_PM.is_PM:
         chk-doc_ :
         for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
                                        and buf_chk-doc.obj-code = obj-code
-                                       and buf_chk-doc.chk-date = date-end
+                                       and buf_chk-doc.chk-date = new_rvs-doc.fact-date
                                        and buf_chk-doc.chk-time >= (if time-end = 86399 then 0 else time-end) 
                                        and buf_chk-doc.chk-time <= new_rvs-doc.fact-time
                                        :
           if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
           
+          chk-gds_ :
           for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
-                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+/*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
+            v-pl-code = 0 .
+            if buf_chk-gds.pl-code > 0
+            then do :
+              v-pl-code = buf_chk-gds.pl-code .
+            end .
+            else do :
+              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
+                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
+                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
+                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
+                                                      no-error .
+              if available buf_pl-pump-nozzle
+              then do :
+                v-pl-code = buf_pl-pump-nozzle.pl-code .    
+              end .
+            end .
+            if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+                                           
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
               v-density = 0 .       
@@ -693,10 +739,10 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&income}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
-                                    and buf_trn-doc.fact-date = date-end
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and buf_trn-doc.fact-date = new_rvs-doc.fact-date
                                     and buf_trn-doc.fact-time >= (if time-end = 86399 then 0 else time-end)
+                                    and buf_trn-doc.fact-time <= new_rvs-doc.fact-time
                                     :
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
@@ -723,10 +769,10 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&expense}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
-                                    and buf_trn-doc.fact-date = date-end
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and buf_trn-doc.fact-date = new_rvs-doc.fact-date
                                     and buf_trn-doc.fact-time >= (if time-end = 86399 then 0 else time-end)
+                                    and buf_trn-doc.fact-time <= new_rvs-doc.fact-time
                                     :
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
@@ -789,10 +835,29 @@ class ibs.th.bge.is_PM.is_PM:
                                        
           if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
           
+          chk-gds_ :
           for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
-                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+/*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
+            v-pl-code = 0 .
+            if buf_chk-gds.pl-code > 0
+            then do :
+              v-pl-code = buf_chk-gds.pl-code .
+            end .
+            else do :
+              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
+                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
+                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
+                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
+                                                      no-error .
+              if available buf_pl-pump-nozzle
+              then do :
+                v-pl-code = buf_pl-pump-nozzle.pl-code .    
+              end .
+            end .
+            if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+                                           
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
               v-density = 0 .       
@@ -824,8 +889,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&income}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
                                     and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end) or
@@ -856,8 +920,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&expense}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
                                     and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end) or
@@ -924,10 +987,29 @@ class ibs.th.bge.is_PM.is_PM:
                                        
           if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
           
+          chk-gds_ :
           for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
-                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+/*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
+            v-pl-code = 0 .
+            if buf_chk-gds.pl-code > 0
+            then do :
+              v-pl-code = buf_chk-gds.pl-code .
+            end .
+            else do :
+              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
+                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
+                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
+                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
+                                                      no-error .
+              if available buf_pl-pump-nozzle
+              then do :
+                v-pl-code = buf_pl-pump-nozzle.pl-code .    
+              end .
+            end .
+            if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+                                           
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
               v-density = 0 .       
@@ -959,8 +1041,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&income}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
                                     and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end) or
@@ -991,8 +1072,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&expense}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
                                     and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end) or
@@ -1105,10 +1185,29 @@ class ibs.th.bge.is_PM.is_PM:
                                        
           if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
           
+          chk-gds_ :
           for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
-                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+/*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
+            v-pl-code = 0 .
+            if buf_chk-gds.pl-code > 0
+            then do :
+              v-pl-code = buf_chk-gds.pl-code .
+            end .
+            else do :
+              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
+                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
+                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
+                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
+                                                      no-error .
+              if available buf_pl-pump-nozzle
+              then do :
+                v-pl-code = buf_pl-pump-nozzle.pl-code .    
+              end .
+            end .
+            if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+            
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
               v-density = 0 .       
@@ -1140,8 +1239,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&income}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
                                     and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-start) or
@@ -1172,8 +1270,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&expense}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
                                     and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-start) or
@@ -1244,10 +1341,29 @@ class ibs.th.bge.is_PM.is_PM:
                                          
             if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
             
+            chk-gds_ :
             for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
                                            and buf_chk-gds.b-code   = buf_bar-code.b-code
-                                           and buf_chk-gds.pl-code  = tt-place.pl-code
+/*                                           and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                            :
+              v-pl-code = 0 .
+              if buf_chk-gds.pl-code > 0
+              then do :
+                v-pl-code = buf_chk-gds.pl-code .
+              end .
+              else do :
+                find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
+                                                        and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
+                                                        and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
+                                                        and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
+                                                        no-error .
+                if available buf_pl-pump-nozzle
+                then do :
+                  v-pl-code = buf_pl-pump-nozzle.pl-code .    
+                end .
+              end .
+              if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+            
               if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
               then do :   
                 v-density = 0 .       
@@ -1263,10 +1379,10 @@ class ibs.th.bge.is_PM.is_PM:
                   v-density
                   no-error
                 }
-                tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * v-density) .
+                tt-place.start-chk-fact-qnty = tt-place.start-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
               end .
               else do :
-                tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+                tt-place.start-chk-fact-qnty = tt-place.start-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
               end . 
             end .
           end .
@@ -1279,8 +1395,7 @@ class ibs.th.bge.is_PM.is_PM:
                                           and buf_doc-line.status_   = {&fact}
                                           ,
           first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                      and buf_trn-doc.doc-type = {&income}
-                                      and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                      and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
                                       and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
                                            (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
                                       and ((buf_trn-doc.fact-date < date-start) or
@@ -1299,7 +1414,7 @@ class ibs.th.bge.is_PM.is_PM:
                                           and buf_doc-pl.out-code = buf_doc-line.doc-code
                                           and buf_doc-pl.gds-code = tt-place.gds-code
                                           :
-              tt-place.start-trn-doc-qnty = tt-place.start-trn-doc-qnty + buf_doc-pl.cli-fact-qnty .                              
+              tt-place.start-trn-fact-qnty = tt-place.start-trn-fact-qnty + buf_doc-pl.cli-fact-qnty .                              
             end .
           end . /* for each income buf_doc-line */
           expense-doc-line_ :
@@ -1311,8 +1426,7 @@ class ibs.th.bge.is_PM.is_PM:
                                           and buf_doc-line.status_   = {&fact}
                                           ,
           first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                      and buf_trn-doc.doc-type = {&expense}
-                                      and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                      and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
                                       and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
                                            (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
                                       and ((buf_trn-doc.fact-date < date-start) or
@@ -1331,7 +1445,7 @@ class ibs.th.bge.is_PM.is_PM:
                                           and buf_doc-pl.out-code = buf_doc-line.doc-code
                                           and buf_doc-pl.gds-code = tt-place.gds-code
                                           :
-              tt-place.start-trn-doc-qnty = tt-place.start-trn-doc-qnty - buf_doc-pl.cli-fact-qnty .                              
+              tt-place.start-trn-fact-qnty = tt-place.start-trn-fact-qnty - buf_doc-pl.cli-fact-qnty .                              
             end .
           end . /* for each expense buf_doc-line */
           for first tt-result where tt-result.gds-code = tt-place.gds-code :
@@ -1422,18 +1536,36 @@ class ibs.th.bge.is_PM.is_PM:
                                    
       if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
       
+      chk-gds_ :
       for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code,
       first buf_bar-code no-lock where buf_bar-code.b-code = buf_chk-gds.b-code,
       first tt-result where tt-result.gds-code = buf_bar-code.gds-code
       :
+        v-pl-code = 0 .
+        if buf_chk-gds.pl-code > 0
+        then do :
+          v-pl-code = buf_chk-gds.pl-code .
+        end .
+        else do :
+          find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
+                                                  and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
+                                                  and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
+                                                  and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
+                                                  no-error .
+          if available buf_pl-pump-nozzle
+          then do :
+            v-pl-code = buf_pl-pump-nozzle.pl-code .    
+          end .
+        end .
+            
         if not valid-density (buf_chk-gds.density, false)
         then do :   
           v-density = 0 .       
           { str/avrgdens.i
-            tt-place.gds-code
+            tt-result.gds-code
             buf_chk-doc.obj-type
             buf_chk-doc.obj-code
-            tt-place.pl-code
+            v-pl-code
             buf_chk-doc.shift-date
             buf_chk-doc.shift-num
             buf_chk-doc.chk-date
@@ -1587,10 +1719,29 @@ class ibs.th.bge.is_PM.is_PM:
                                        
           if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
           
+          chk-gds_ :
           for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
-                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+/*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
+            v-pl-code = 0 .
+            if buf_chk-gds.pl-code > 0
+            then do :
+              v-pl-code = buf_chk-gds.pl-code .
+            end .
+            else do :
+              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
+                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
+                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
+                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
+                                                      no-error .
+              if available buf_pl-pump-nozzle
+              then do :
+                v-pl-code = buf_pl-pump-nozzle.pl-code .    
+              end .
+            end .
+            if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+            
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
               v-density = 0 .       
@@ -1622,8 +1773,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&income}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
                                     and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end) or
@@ -1654,8 +1804,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and buf_trn-doc.doc-type = {&expense}
-                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
                                     and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end) or
@@ -1769,6 +1918,16 @@ class ibs.th.bge.is_PM.is_PM:
   method private memptr create-esys-data () :
     define variable sw as handle no-undo.
     define variable ii as integer no-undo .
+    define variable currMoscowTime as integer no-undo .
+    define variable currMoscowDate as date no-undo .
+    
+    currMoscowTime = time - (timezone-diff * 60) .
+    if currMoscowTime < 0
+    then do :
+      currMoscowTime = currMoscowTime + 86400 .
+    end .
+    
+    currMoscowDate = date(now - (timezone-diff * 60 * 1000)) .
     
     create sax-writer sw.
     sw:set-output-destination ("memptr", Data).
@@ -1778,7 +1937,7 @@ class ibs.th.bge.is_PM.is_PM:
       sw:start-element ("operating-balance") .
         sw:write-data-element ("org-unit-code", string(buf_clients.host-code)).
         sw:write-data-element ("azk-code", string(buf_clients.obj-code)). 
-        sw:write-data-element ("doc-date", (iso-date(vMoscowDate) + "T" + string(vMoscowTime, "HH:MM:SS")) ).
+        sw:write-data-element ("doc-date", (iso-date(currMoscowDate) + "T" + string(currMoscowTime, "HH:MM:SS")) ).
         sw:write-data-element ("start-date", (iso-date(vMoscowDate) + "T" + string(0, "HH:MM:SS")) ).
         sw:write-data-element ("end-date", (iso-date(vMoscowDate) + "T" + string(vMoscowTimeEnd, "HH:MM:SS")) ).
         sw:start-element ("gds") .

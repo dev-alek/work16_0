@@ -31,6 +31,7 @@ define input parameter parparentproc as widget-handle no-undo .
 define variable log-file-name     as character no-undo initial "OB-to-PM.log" .
 define variable is_PM         as class is_PM no-undo .
 define variable curr-exec-date as date no-undo .
+define variable v-pid as int64 no-undo .
 
 { cmp/trg-def.i  }
 { cmp/str-glbl.i }
@@ -39,6 +40,7 @@ define variable curr-exec-date as date no-undo .
 { gbl/waitfram.i }
 { gbl/prn-lib.i  }
 { gbl/getcntxt.i def }
+{ gbl/cur-time.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -264,6 +266,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   { gbl/getcntxt.i get }
   
+  run GetCurrentProcessID (output v-pid) .
+  
   f-timediff = timezone - 180 .
   f-rep-date1 = today - 1 .
   f-rep-date2 = today - 1 .
@@ -281,9 +285,13 @@ RUN disable_UI.
 procedure write-to-log :
   define input param p-str as character no-undo .
   
+  assign
+    p-str = substitute( "&1 (pid: &2) &3 &4&5", g#userid, v-pid, cur-time-string-sec(), p-str, {&new-line} )
+  .
   output to value(log-file-name) append .
-  put unformatted p-str skip .
+  put unformatted p-str .
   output close .
+  
 end procedure .
 
 PROCEDURE write-log-and-file :
@@ -294,6 +302,10 @@ PROCEDURE write-log-and-file :
   define variable v-jj as integer   no-undo .
   run write-to-log (input p-log-string) .
 end procedure .
+
+PROCEDURE GetCurrentProcessId EXTERNAL "kernel32.dll" :
+  DEFINE RETURN PARAMETER RetVal          AS LONG.
+END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :

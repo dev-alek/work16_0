@@ -156,7 +156,7 @@ on error undo, return error
     run write-to-log( "БД " + string(p-db-num) + " выгружается. Пропускаем." ).
     return error .
   end.
-  
+ 
   run write-to-log( "Работа с БД " + string(p-db-num) ) .
   
   run schedule-attr-value in this-procedure
@@ -195,9 +195,24 @@ on error undo, return error
                             no-error .
     if error-status:error
     then do :
-      delete object is_PM .
       run write-to-log( "Ошибка при отправке в 1С. " + return-value ).
     end .   
+    
+    if is_PM:oneMoreTime
+    then do :
+      is_PM:exec_1c() .
+     
+      run str/is_PM-send1c.p (input parparentproc,
+                              input this-procedure,
+                              input parparentproc,
+                              input is_PM:Data) 
+                              no-error .
+      if error-status:error
+      then do :
+        run write-to-log( "Ошибка при отправке в 1С. " + return-value ).
+      end .
+      is_PM:oneMoreTime = false .
+    end .
     delete object is_PM .                                      
   end.
   
