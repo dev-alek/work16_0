@@ -1261,9 +1261,27 @@ if session:debug-alert then output stream OutStr-html close .
                 no-error
               }
               tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * v-density) .
+              if session:debug-alert then 
+              do:
+                put stream OutStr-html unformatted
+                  "tt-place.start-chk-doc-qnty Определение книжного остатка на начало периода" skip
+                  "чек: " + buf_chk-gds.doc-code + " не валидная плотность в чеке"   skip
+                  string(buf_chk-gds.doc-qnty) + " * " +  string (v-density)  skip
+                  string(tt-place.start-chk-doc-qnty) skip.
+                .
+              end.
             end .
             else do :
               tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+              if session:debug-alert then 
+              do:
+                put stream OutStr-html unformatted
+                  "tt-place.start-chk-doc-qnty Определение книжного остатка на начало периода" skip
+                  "чек: " + buf_chk-gds.doc-code + "    валидная плотность в чеке"  skip
+                  string(buf_chk-gds.doc-qnty) + " * " +  string (buf_chk-gds.density)  skip
+                  string(tt-place.start-chk-doc-qnty) skip.
+                .
+              end.
             end .                            
           end .
         end .
