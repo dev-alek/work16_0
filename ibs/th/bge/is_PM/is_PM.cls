@@ -381,7 +381,7 @@ if session:debug-alert then output stream OutStr-html close .
       
       if last-exp-date = (vMoscowDate - 1)
       then do :
-        date-start = vMoscowDate .
+        date-start = vMoscowDate - if is-full then 1 else 0.
         time-start = timezone-diff * 60 .
         if time-start < 0
         then do :
