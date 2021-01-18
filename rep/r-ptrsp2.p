@@ -1440,7 +1440,7 @@ procedure get-print-line :
         when "Z":U
         then do:
           case j_length :
-            when 10
+            when 12
             then do:
               assign
                 p-print-line = p-print-line + " ":U + string( bf_print-line.gds-code, "99999999999":U ) + ":":U
@@ -1600,7 +1600,7 @@ procedure get-lbl-data :
   on error undo, return error return-value
   :
     assign
-      p-list-length = "10,8,10,10,24,5,8,5,13,21,24,15,15,15":U
+      p-list-length = "10,8,12,10,24,5,8,5,13,21,24,15,15,15":U
       p-list-label  = "Дата,Время,Код товара,Артикул,Наименование товара,№ ТРК,Пистолет,Чеков,Количество,":U +
                       "Сумма продаж,Вид оплаты,Номер чека,Сухой чек,№ заказа":U
       p-list-types  = "D,T,Z,C,C,I,I,I,Q,S,C,C,C,C":U
