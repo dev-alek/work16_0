@@ -617,6 +617,8 @@ if varnozzle-code = ? then varnozzle-code = 0.
         assign
           j_row-counter = j_row-counter + 1
           j_total-lines = j_total-lines + 1
+          .
+          if length (v_total-lines) < 6000 then
           v_total-lines = v_total-lines
                         + ( if v_total-lines = "":U then "":U else {&comma-char} )
                         + string( j_row-counter )
@@ -651,6 +653,8 @@ if varnozzle-code = ? then varnozzle-code = 0.
       assign
         j_row-counter = j_row-counter + 1
         j_total-lines = j_total-lines + 1
+        .
+        if length (v_total-lines) < 6000 then
         v_total-lines = v_total-lines
                       + ( if v_total-lines = "":U then "":U else {&comma-char} )
                       + string( j_row-counter )
@@ -663,6 +667,8 @@ if varnozzle-code = ? then varnozzle-code = 0.
   assign
     j_row-counter = j_row-counter + 1
     j_total-lines = j_total-lines + 1
+    .
+    if length (v_total-lines) < 6000 then
     v_total-lines = v_total-lines
                   + ( if v_total-lines = "":U then "":U else {&comma-char} )
                   + string( j_row-counter )
@@ -1437,8 +1443,8 @@ procedure get-print-line :
             when 10
             then do:
               assign
-                p-print-line = p-print-line + " ":U + string( bf_print-line.gds-code, "999999999":U ) + ":":U
-                p-excel-line = p-excel-line         + string( bf_print-line.gds-code, "999999999":U ) + {&tabulation}
+                p-print-line = p-print-line + " ":U + string( bf_print-line.gds-code, "99999999999":U ) + ":":U
+                p-excel-line = p-excel-line         + string( bf_print-line.gds-code, "99999999999":U ) + {&tabulation}
               .
             end.
           end case. /* j_length */
