@@ -534,7 +534,7 @@ end.
                               , return-value
                             )
           ) .
-        undo block_obj, next block_obj .
+/*        undo block_obj, next block_obj .*/
       end.
 
       { str/measpmnz.i
@@ -554,7 +554,7 @@ end.
                               , return-value
                             )
           ) .
-        undo block_obj, next block_obj .
+/*        undo block_obj, next block_obj .*/
       end.
 
       find first tt-pump-nozzle no-error .
@@ -585,7 +585,7 @@ end.
                                 , return-value
                               )
             ) .
-          undo block_obj, next block_obj .
+/*          undo block_obj, next block_obj .*/
         end.
       end.
     end.
