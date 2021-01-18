@@ -1,0 +1,2017 @@
+ 
+ /*------------------------------------------------------------------------
+    File        : is_PM
+    Purpose     : 
+    Syntax      : 
+    Description : 
+    Author(s)   : SSlivenko
+    Created     : Wed Nov 18 18:16:51 AST 2020
+    Notes       : 
+  ----------------------------------------------------------------------*/
+
+using Progress.Lang.*.
+
+
+class ibs.th.bge.is_PM.is_PM: 
+  
+  { cmp/str-glbl.i class }
+  { str/lib-trn.i class }
+  
+  define temp-table tt-result no-undo
+    field gds-code          as integer
+    field gds-name          as character
+    field wght-fact-start   as decimal
+    field wght-fact-end     as decimal
+    field wght-doc-start    as decimal
+    field wght-doc-end      as decimal
+    field delivery          as decimal
+    field direct-delivery   as decimal
+    field fuel-in-transit   as decimal
+    field wght-sale         as decimal
+    field wght-wholesale    as decimal
+    field loss-own-needs    as decimal
+    field Delivery-ned-izl  as decimal
+    field wght-other        as decimal
+  index pi as primary gds-code
+  .
+  
+  define temp-table tt-gds no-undo
+    field gds-code    as integer
+  index pi as primary gds-code
+  .
+  
+  define temp-table tt-place no-undo
+    field pl-code             as integer
+    field pl-name             as character
+    field gds-code            as integer
+    field is-meas             as logical
+    field is-calc             as logical
+    field rvd-level           as logical
+    field is-income           as logical
+    field income-date         as date
+    field income-time         as integer
+    field need-new-rvs        as logical
+    field use-old-rvs         as logical
+    field rvs-doc-code        as character
+    field end-rvs-fact-qnty   as decimal
+    field end-chk-fact-qnty   as decimal
+    field end-trn-fact-qnty   as decimal
+    field start-rvs-fact-qnty as decimal
+    field start-chk-fact-qnty as decimal
+    field start-trn-fact-qnty as decimal
+    field end-rvs-doc-qnty    as decimal
+    field end-chk-doc-qnty    as decimal
+    field end-trn-doc-qnty    as decimal
+    field start-rvs-doc-qnty  as decimal
+    field start-chk-doc-qnty  as decimal
+    field start-trn-doc-qnty  as decimal
+  index pi as primary pl-code gds-code
+  .
+  
+  define property timezone-diff as integer no-undo init ?
+    get.
+    private set.
+    
+  define property rvs-doc-exist-diff as integer no-undo init ?
+    get.
+    private set.
+    
+  define property rvs-doc-create-diff as integer no-undo init ?
+    get.
+    private set.
+    
+  define property db-num  as integer no-undo init ?
+    get.
+    private set.
+    
+  define property obj-code as integer no-undo init ?
+    get.
+    private set.
+    
+  define property obj-type as character no-undo init ""
+    get.
+    private set.
+    
+  define property last-exp-date  as date no-undo init ?
+    get.
+    private set.
+    
+  define property date-start  as date no-undo init ?
+    get.
+    private set.
+    
+  define property time-start  as integer no-undo init ?
+    get.
+    private set.
+    
+  define property date-end  as date no-undo init ?
+    get.
+    private set.
+    
+  define property time-end  as integer no-undo init ?
+    get.
+    private set.
+    
+  define property is-full as logical no-undo init false
+    get.
+    private set.
+    
+  define property is-full-backdate as logical no-undo init false
+    get.
+    private set.
+    
+  define property checks-recieved as logical no-undo init false
+    get.
+    private set.
+    
+  define property parparentproc as widget-handle no-undo
+    get.
+    private set.
+    
+  define property p-parent-handle as widget-handle no-undo
+    get.
+    private set.
+    
+  define property Data  as memptr no-undo
+    get.
+    private set.
+    
+  define property toDate  as date no-undo initial ?
+    get.
+    private set.
+    
+  define property otherOneDate as logical no-undo initial false
+    get.
+    private set.
+    
+  define property rep-file-name as character no-undo
+    get.
+    private set.
+    
+  define buffer buf_clients for ub.clients .
+  define buffer buf_clients-attr for ub.clients-attr .
+  
+  define variable v-density       as decimal   no-undo .
+  
+  define variable vMoscowDate     as date      no-undo .
+  define variable vMoscowTime     as integer   no-undo .
+  define variable vMoscowTimeEnd  as integer   no-undo .
+  define variable cTime           as character no-undo .
+  define variable vHour           as integer   no-undo .
+  define variable cMoscowTime     as character no-undo .
+  define variable vMoscowHour     as integer   no-undo .
+  
+  define stream OutStr-html .
+  
+  constructor public is_PM
+  (
+  input pDbNum  as integer,
+  input pObjCode as integer,
+  input paramList as character,
+  input pParentProc as widget-handle,
+  input pParHandle as widget-handle
+  ) :
+    
+    db-num = pDbNum .
+    obj-code = pObjCode .
+    obj-type = {&shop} .
+    parparentproc = pParentProc .
+    p-parent-handle = pParHandle .
+    
+    find first buf_clients no-lock where buf_clients.obj-code = obj-code
+                                     and buf_clients.obj-type = obj-type
+                                     .
+    
+    timezone-diff = integer(entry(1,paramList)) .
+    rvs-doc-exist-diff = integer(entry(2,paramList)) .
+    rvs-doc-create-diff = integer(entry(3,paramList)) .
+    
+    toDate = ? .
+    otherOneDate = false .
+    
+  end constructor .
+  
+  constructor public is_PM
+  (
+  input pDbNum  as integer,
+  input pObjCode as integer,
+  input paramList as character,
+  input pParentProc as widget-handle,
+  input pParHandle as widget-handle,
+  input pToDate as date
+  ) :
+    
+    db-num = pDbNum .
+    obj-code = pObjCode .
+    obj-type = {&shop} .
+    parparentproc = pParentProc .
+    p-parent-handle = pParHandle .
+    
+    find first buf_clients no-lock where buf_clients.obj-code = obj-code
+                                     and buf_clients.obj-type = obj-type
+                                     .
+    
+    timezone-diff = integer(entry(1,paramList)) .
+    rvs-doc-exist-diff = integer(entry(2,paramList)) .
+    rvs-doc-create-diff = integer(entry(3,paramList)) .
+    
+    toDate = pToDate .
+    otherOneDate = true .
+    
+  end constructor .
+  
+  method public void exec_1c () :
+    
+    stage1() .
+    stage2() .
+    stage3() .
+    stage4() .
+    stage5() .
+    create-esys-data() .
+    
+  end method .
+  
+  method public void exec_rep () :
+    
+    stage1() .
+    stage2() .
+    stage3() .
+    stage4() .
+    stage5() .
+    make-rep() .
+    
+  end method .
+  
+  method private void stage1 () :
+    define buffer buf_place  for ub.place .
+    define buffer buf_place-attr  for ub.place-attr .
+    define buffer buf_pl-gds for ub.pl-gds .
+    define buffer buf_goods for ub.goods .
+    define buffer buf_goods-attr for ub.goods-attr .
+  
+    run write-to-log in p-parent-handle (" START PRESTAGE UTC " + utc-time() ) .
+    /* START Определяем список топлив и список резервуаров */
+    place_ :
+    for each buf_place  no-lock
+      where buf_place.obj-type = obj-type
+        and buf_place.obj-code = obj-code
+        and buf_place.status_  = "",
+    each buf_pl-gds no-lock
+      where buf_pl-gds.obj-type = buf_place.obj-type
+        and buf_pl-gds.obj-code = buf_place.obj-code
+        and buf_pl-gds.pl-code  = buf_place.pl-code
+    on error undo, return error return-value
+    :
+      
+      for first buf_place-attr no-lock where buf_place-attr.obj-type = buf_place.obj-type
+                                         and buf_place-attr.obj-code = buf_place.obj-code
+                                         and buf_place-attr.pl-code  = buf_place.pl-code
+                                         and buf_place-attr.attr-code = "place-virtual"
+                                         :
+        if lookup(buf_place-attr.attr-value, 'true,yes':u) > 0 then next place_ .                                   
+      end .
+        
+      for first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_pl-gds.gds-code
+                                         and buf_goods-attr.attr-code = {&attr-ptrl-without-rvs}
+                                         :
+        if lookup(buf_goods-attr.attr-value, 'true,yes':u) > 0 then next place_ .                                   
+      end .
+
+      
+      find first tt-gds where tt-gds.gds-code = buf_pl-gds.gds-code no-error .
+      if not available tt-gds
+      then do :
+        create tt-gds .
+        assign
+          tt-gds.gds-code = buf_pl-gds.gds-code
+        .
+      end .
+      
+      find first tt-result where tt-result.gds-code = buf_pl-gds.gds-code no-error .
+      if not available tt-result
+      then do :
+        create tt-result .
+        assign
+          tt-result.gds-code = buf_pl-gds.gds-code
+        .
+      end .
+      
+      find first tt-place where tt-place.pl-code  = buf_place.pl-code
+                            and tt-place.gds-code = buf_pl-gds.gds-code
+                            no-error .
+      if not available tt-place
+      then do :
+        create tt-place .
+        assign
+          tt-place.pl-code  = buf_place.pl-code
+          tt-place.pl-name  = buf_place.pl-name
+          tt-place.gds-code = buf_pl-gds.gds-code
+          tt-place.is-meas  = buf_place.is-meas
+          tt-place.is-calc  = no
+        .
+        for first buf_place-attr no-lock where buf_place-attr.obj-type = buf_place.obj-type
+                                           and buf_place-attr.obj-code = buf_place.obj-code
+                                           and buf_place-attr.pl-code  = buf_place.pl-code
+                                           and buf_place-attr.attr-code = "place-rvd-lvl"
+                                           :
+          if lookup(buf_place-attr.attr-value, 'true,yes':u) > 0 then tt-place.rvd-level = yes .                                   
+        end .
+      end .
+    end . /* for each bf_place, each bf_pl-gds */
+    /* END Определяем список топлив и список резервуаров */
+    
+    for each tt-gds,
+    first buf_goods no-lock where buf_goods.gds-code = tt-gds.gds-code
+    :
+      run write-to-log in p-parent-handle (buf_goods.artic + ": " + buf_goods.gds-name) .
+    end .
+    
+    /* START Определение периода и приведение к московскому времени */
+    if not otherOneDate
+    or (otherOneDate and toDate = today)
+    then do :
+      cTime = string(time, "HH:MM:SS") .
+      vHour = integer(substring(cTime, 1, 2)) .
+      
+      vMoscowTime = time - (timezone-diff * 60) .
+      if vMoscowTime < 0
+      then do :
+        vMoscowTime = vMoscowTime + 86400 .
+      end .
+      cMoscowTime = string(vMoscowTime, "HH:MM:SS") .
+      vMoscowHour = integer(substring(cMoscowTime, 1, 2)) .
+      if vMoscowHour = 0
+      then do :
+        is-full = true .
+        vMoscowTimeEnd = 86399 .
+      end .
+      else do :
+        vMoscowTimeEnd = (vMoscowHour - 1) * 3600 + (59 * 60) + 59 .
+      end .
+      
+      vMoscowDate = date(now - (timezone-diff * 60 * 1000)) .
+      
+      last-exp-date = today - 1 .
+      for first buf_clients-attr no-lock where buf_clients-attr.obj-type = buf_clients.obj-type
+                                           and buf_clients-attr.obj-code = buf_clients.obj-code
+                                           and buf_clients-attr.attr-code = {&attr-exp-isPM-last-date}
+                                           :
+        last-exp-date = date(buf_clients-attr.attr-value) .    
+      end .
+      
+      if last-exp-date = (vMoscowDate - 1)
+      then do :
+        date-start = vMoscowDate .
+        time-start = timezone-diff * 60 .
+        if time-start < 0
+        then do :
+          date-start = vMoscowDate - 1 .
+          time-start = time-start + 86400 .
+        end .
+        date-end   = today .
+        time-end   = (vHour - 1) * 3600 + (59 * 60) + 59 .
+        if time-end < 0
+        then do :
+          date-end   = today - 1 .
+          time-end   = time-end + 86400 . 
+        end .
+      end .
+      else do :
+        run write-to-log in p-parent-handle (("Последняя выгруженная дата по московскому времени - " + string(last-exp-date, "99/99/9999"))) .
+        is-full-backdate = true .
+        vMoscowDate = vMoscowDate - 1 .
+        vMoscowTimeEnd = 86399 .
+        
+        date-start = vMoscowDate .
+        time-start = timezone-diff * 60 .
+        if time-start < 0
+        then do :
+          date-start = vMoscowDate - 2 .
+          time-start = time-start + 86400 .
+        end .
+        date-end   = vMoscowDate + 1 .
+        time-end   = timezone-diff * 60 - 1 . 
+        if time-end < 0
+        then do :
+          date-end   = vMoscowDate .
+          time-end   = time-end + 86400 . 
+        end .
+      end .
+    end .
+    else do :
+      is-full = true .
+      vMoscowDate = toDate .
+      vMoscowTimeEnd = 86399 .
+      
+      date-start = toDate .
+      time-start = timezone-diff * 60 .
+      if time-start < 0
+      then do :
+        date-start = toDate - 1 .
+        time-start = time-start + 86400 .
+      end .
+      date-end   = toDate + 1 .
+      time-end   = timezone-diff * 60 - 1 . 
+      if time-end < 0
+      then do :
+        date-end   = toDate .
+        time-end   = time-end + 86400 . 
+      end .
+    end .
+    run write-to-log in p-parent-handle (if is-full-backdate then "Суточная за прошедшие сутки" else  (if is-full then "Суточная" else "Промежуточная")) .
+    run write-to-log in p-parent-handle (string(date-start) + " " + string(time-start, "HH:MM:SS") + " - " + string(date-end) + " " + string(time-end, "HH:MM:SS")) .
+    run write-to-log in p-parent-handle (string(vMoscowDate) + " " + string(0, "HH:MM:SS") + " - " + string(vMoscowDate) + " " + string(vMoscowTimeEnd, "HH:MM:SS")) .
+    /* END Определение периода */
+    run write-to-log in p-parent-handle (" END PRESTAGE UTC " + utc-time() ) .
+    
+  end method . /* stage1 */
+  
+  method private void stage2 () :
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_c-trn-doc for ub.c-trn-doc .
+    define buffer buf_doc-line for ub.doc-line .
+    define buffer buf_doc-pl for ub.doc-pl .
+    define buffer end_rvs-doc for ub.rvs-doc .
+    define buffer end_rvs-line for ub.rvs-line .
+    define buffer new_rvs-doc for ub.rvs-doc .
+    define buffer new_rvs-line for ub.rvs-line .
+    define buffer buf_chk-doc for ub.chk-doc .
+    define buffer buf_chk-gds for ub.chk-gds .
+    define buffer buf_bar-code for ub.bar-code .
+    define buffer buf_goods for ub.goods .
+    define buffer buf_clients-attr for ub.clients-attr .
+    
+    define variable v-found-income as logical no-undo .
+    define variable v-income-doc-code as character no-undo .
+    
+    run write-to-log in p-parent-handle (" START FACT-END UTC " + utc-time() ) .
+    
+    /* START Определяем, по каким резервуарам идёт приёмка */
+    run write-to-log in p-parent-handle ( "Поиск открытых на конец периода приемок" ) .
+    v-found-income = false .
+    v-income-doc-code = "" .
+    trn_ :
+    for each buf_trn-doc no-lock where buf_trn-doc.obj-type = obj-type
+                                   and buf_trn-doc.obj-code = obj-code
+                                   and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+                                   and buf_trn-doc.status_ <> {&fact}
+                                   and buf_trn-doc.sys-date >= date-start
+                                   and buf_trn-doc.sys-date <= date-end 
+                                   :
+      find first buf_c-trn-doc no-lock where buf_c-trn-doc.doc-code = buf_trn-doc.doc-code no-error .
+      if available buf_c-trn-doc 
+      then do :
+        if buf_c-trn-doc.real-date-create = date-start  
+        and buf_c-trn-doc.real-time-create < time-start
+        then next trn_ . 
+        if buf_c-trn-doc.real-date-create = date-end  
+        and buf_c-trn-doc.real-time-create > time-end
+        then next trn_ .   
+        
+        place_ :     
+        for each tt-place,
+        first buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
+                                   and buf_doc-pl.obj-code = buf_trn-doc.obj-code
+                                   and buf_doc-pl.pl-code  = tt-place.pl-code
+                                   and buf_doc-pl.out-code = buf_trn-doc.doc-code
+                                   and buf_doc-pl.gds-code = tt-place.gds-code
+                                   :
+          assign
+            tt-place.is-income = true
+            tt-place.income-date = buf_c-trn-doc.real-date-create
+            tt-place.income-time = buf_c-trn-doc.real-time-create
+            v-found-income = true .
+          .
+          if v-income-doc-code <> buf_trn-doc.doc-code
+          then do :
+            v-income-doc-code = buf_trn-doc.doc-code .
+            run write-to-log in p-parent-handle ( "Найдена приемка по ПН №" + v-income-doc-code ) .
+          end .
+        end . 
+      end .
+      else do :                             
+        if buf_trn-doc.sys-date = date-start  
+        and buf_trn-doc.sys-time-int < time-start
+        then next trn_ . 
+        if buf_trn-doc.sys-date = date-end  
+        and buf_trn-doc.sys-time-int > time-end
+        then next trn_ .   
+        
+        place_ :     
+        for each tt-place,
+        first buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
+                                   and buf_doc-pl.obj-code = buf_trn-doc.obj-code
+                                   and buf_doc-pl.pl-code  = tt-place.pl-code
+                                   and buf_doc-pl.out-code = buf_trn-doc.doc-code
+                                   and buf_doc-pl.gds-code = tt-place.gds-code
+                                   :
+          assign
+            tt-place.is-income = true
+            tt-place.income-date = buf_trn-doc.sys-date
+            tt-place.income-time = buf_trn-doc.sys-time-int
+            v-found-income = true .
+          .
+          if v-income-doc-code <> buf_trn-doc.doc-code
+          then do :
+            v-income-doc-code = buf_trn-doc.doc-code .
+            run write-to-log in p-parent-handle ( "Найдена приемка по ПН №" + v-income-doc-code ) .
+          end .
+        end . 
+      end .                     
+    end .
+    if not v-found-income
+    then do :
+      run write-to-log in p-parent-handle ( "Приемки не найдены" ) .
+    end .
+    /* END Определяем, по каким резервуарам идёт приёмка */
+    
+    /* START Прием чеков */
+    if not otherOneDate
+    then
+    for first tt-place where tt-place.need-new-rvs
+                          or tt-place.is-income
+                          :
+      run write-to-log in p-parent-handle ( "Прием чеков" ) .                      
+      checks-recieved = get-check() .
+    end .
+    
+    /* END Прием чеков */
+    
+    /* START Поиск контрольных сверок на конец периода по резервуарам, которые не учавствуют в приёмке */
+    define variable rvs-time-diff as integer no-undo .
+    define variable exec-time-diff as integer no-undo .
+     
+    for each tt-place where not tt-place.is-income :
+      if not otherOneDate
+      then
+      run write-to-log in p-parent-handle ( "Проверка необходимости создания сверки по резервуару " + string(tt-place.pl-code) + " . Товар " + string(tt-place.gds-code) ) .
+      for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
+                                     and end_rvs-doc.obj-code = obj-code
+                                     and end_rvs-doc.rvs-type = {&rvs-control}
+                                     and end_rvs-doc.status_  = {&fact}
+                                     and ((end_rvs-doc.fact-date < date-end)
+                                       or (end_rvs-doc.fact-date = date-end and end_rvs-doc.fact-time <= time-end))
+                                     ,
+      first end_rvs-line no-lock where end_rvs-line.obj-type  = end_rvs-doc.obj-type
+                                   and end_rvs-line.obj-code  = end_rvs-doc.obj-code
+                                   and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
+                                   and end_rvs-line.pl-code   = tt-place.pl-code
+                                   and end_rvs-line.gds-code  = tt-place.gds-code
+                                   by end_rvs-doc.fact-order
+                                   :
+        rvs-time-diff = time-end - end_rvs-doc.fact-time + ((date-end - end_rvs-doc.fact-date) * 86400) .
+        if rvs-time-diff < 0
+        then do :
+          rvs-time-diff = 86400 - end_rvs-doc.fact-time + time-end .
+        end .
+        
+        exec-time-diff = time - time-end .
+        if exec-time-diff < 0
+        then do :
+          exec-time-diff = 86400 - time-end + time .
+        end .
+        
+        if rvs-time-diff > (rvs-doc-exist-diff * 60)
+        and exec-time-diff > (rvs-doc-create-diff * 60)
+        and not otherOneDate
+        then do :
+          if is-full
+          and tt-place.is-meas
+          and not tt-place.rvd-level
+          and rvs-time-diff > exec-time-diff
+          then do :
+            run write-to-log in p-parent-handle ( "Требуется создание сверки" ) .
+            tt-place.need-new-rvs = true .
+          end .
+          else do :
+            run write-to-log in p-parent-handle (if is-full-backdate then "Выгрузка за прошедшие сутки, сверка не создается" else "Выгрузка промежуточная, сверка не создается" ) .
+            tt-place.use-old-rvs = true .
+          end .
+        end .
+        else do :
+          if not otherOneDate
+          then
+          run write-to-log in p-parent-handle ( "Есть актуальная сверка, создание сверки не требуется" ) .
+          
+          tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
+          tt-place.rvs-doc-code = end_rvs-doc.rvs-code .
+          tt-place.is-calc = false .
+          for first tt-result where tt-result.gds-code = tt-place.gds-code :
+            tt-result.wght-fact-end = tt-result.wght-fact-end + tt-place.end-rvs-fact-qnty .
+          end .
+        end .
+      end . /* for last end_rvs-doc */
+    end . /* for each tt-place */
+    /* END Поиск контрольных сверок на конец периода */
+    
+    /* START Создание новой полной контрольной сверки */
+    define variable new-rvs-doc-code as character no-undo init "" .
+    
+    if not otherOneDate
+    then
+    for first tt-place where tt-place.need-new-rvs :
+      run write-to-log in p-parent-handle ( "Создание контрольной сверки" ) .
+      new-rvs-doc-code = make-rvs-doc() .
+      if new-rvs-doc-code = "error"
+      then do :
+        run write-to-log in p-parent-handle ( "Ошибка при создании контрольной сверки" ) .
+      end .
+      else do :
+        run write-to-log in p-parent-handle ( "Создана сверка №" + new-rvs-doc-code ) .
+      end .
+    end .
+    
+    if new-rvs-doc-code = "error"
+    then do :
+      for each tt-place where tt-place.need-new-rvs :
+        assign
+          tt-place.need-new-rvs = false
+          tt-place.use-old-rvs = true
+        .
+      end .
+    end .
+    /* END Создание новой полной контрольной сверки */
+    
+    
+    /* START Рассчет фактического остатка на конец периода по формулам 1 и 2 */
+    for each tt-place where tt-place.need-new-rvs,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    :
+      for first new_rvs-doc where new_rvs-doc.rvs-code = new-rvs-doc-code :
+        tt-place.is-calc = true .
+        tt-place.rvs-doc-code = new_rvs-doc.rvs-code .
+        for first new_rvs-line no-lock where new_rvs-line.obj-type  = new_rvs-doc.obj-type
+                                         and new_rvs-line.obj-code  = new_rvs-doc.obj-code
+                                         and new_rvs-line.rvs-code  = new_rvs-doc.rvs-code
+                                         and new_rvs-line.pl-code   = tt-place.pl-code
+                                         and new_rvs-line.gds-code  = tt-place.gds-code
+                                         :
+          tt-place.end-rvs-fact-qnty = new_rvs-line.state-measure-cli-qnty + (new_rvs-line.state-add-qnty * new_rvs-line.state-density) . 
+        end .
+        chk-doc_ :
+        for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
+                                       and buf_chk-doc.obj-code = obj-code
+                                       and buf_chk-doc.chk-date = date-end
+                                       and buf_chk-doc.chk-time >= (if time-end = 86399 then 0 else time-end) 
+                                       and buf_chk-doc.chk-time <= new_rvs-doc.fact-time
+                                       :
+          if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
+          
+          for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
+                                         and buf_chk-gds.b-code   = buf_bar-code.b-code
+                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+                                         :
+            if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+            then do :   
+              v-density = 0 .       
+              { str/avrgdens.i
+                tt-place.gds-code
+                buf_chk-doc.obj-type
+                buf_chk-doc.obj-code
+                tt-place.pl-code
+                buf_chk-doc.shift-date
+                buf_chk-doc.shift-num
+                buf_chk-doc.chk-date
+                buf_chk-doc.chk-time
+                v-density
+                no-error
+              }
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
+            end .
+            else do :                     
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+            end .                            
+          end .
+        end .
+        income-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&income}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and buf_trn-doc.fact-date = date-end
+                                    and buf_trn-doc.fact-time >= (if time-end = 86399 then 0 else time-end)
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.end-trn-fact-qnty = tt-place.end-trn-fact-qnty + buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each income buf_doc-line */
+        expense-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&expense}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and buf_trn-doc.fact-date = date-end
+                                    and buf_trn-doc.fact-time >= (if time-end = 86399 then 0 else time-end)
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next expense-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.end-trn-fact-qnty = tt-place.end-trn-fact-qnty - buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each expense buf_doc-line */
+      end . /* for first new_rvs-doc */
+      for first tt-result where tt-result.gds-code = tt-place.gds-code :
+        /* Формула 2 */
+        tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty + tt-place.end-chk-fact-qnty - tt-place.end-trn-fact-qnty) .
+      end .
+    end .
+    
+    for each tt-place where tt-place.use-old-rvs,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    :
+      for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
+                                     and end_rvs-doc.obj-code = obj-code
+                                     and end_rvs-doc.rvs-type = {&rvs-control}
+                                     and end_rvs-doc.status_  = {&fact}
+                                     and ((end_rvs-doc.fact-date < date-end)
+                                       or (end_rvs-doc.fact-date = date-end and end_rvs-doc.fact-time <= time-end))
+                                     by end_rvs-doc.fact-order
+                                     :
+        tt-place.is-calc = true .
+        tt-place.rvs-doc-code = end_rvs-doc.rvs-code .                               
+        for first end_rvs-line no-lock where end_rvs-line.obj-type  = end_rvs-doc.obj-type
+                                         and end_rvs-line.obj-code  = end_rvs-doc.obj-code
+                                         and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
+                                         and end_rvs-line.pl-code   = tt-place.pl-code
+                                         and end_rvs-line.gds-code  = tt-place.gds-code
+                                         :
+          tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
+        end .
+        chk-doc_ :
+        for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
+                                       and buf_chk-doc.obj-code = obj-code
+                                       and buf_chk-doc.chk-date >= end_rvs-doc.fact-date
+                                       and buf_chk-doc.chk-date <= date-end
+                                       :
+          if buf_chk-doc.chk-date = end_rvs-doc.fact-date
+          and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
+          then next chk-doc_ .
+          
+          if buf_chk-doc.chk-date = today
+          and buf_chk-doc.chk-time > time-end
+          then next chk-doc_ .  
+                                       
+          if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
+          
+          for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
+                                         and buf_chk-gds.b-code   = buf_bar-code.b-code
+                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+                                         :
+            if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+            then do :   
+              v-density = 0 .       
+              { str/avrgdens.i
+                tt-place.gds-code
+                buf_chk-doc.obj-type
+                buf_chk-doc.obj-code
+                tt-place.pl-code
+                buf_chk-doc.shift-date
+                buf_chk-doc.shift-num
+                buf_chk-doc.chk-date
+                buf_chk-doc.chk-time
+                v-density
+                no-error
+              }
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
+            end .
+            else do :                     
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+            end .                               
+          end .
+        end .
+        income-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&income}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
+                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-end) or
+                                         (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.end-trn-fact-qnty = tt-place.end-trn-fact-qnty + buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each income buf_doc-line */
+        expense-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&expense}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
+                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-end) or
+                                         (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next expense-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.end-trn-fact-qnty = tt-place.end-trn-fact-qnty - buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each expense buf_doc-line */
+      end . /* for last end_rvs-doc */ 
+      for first tt-result where tt-result.gds-code = tt-place.gds-code :
+        /* Формула 1 */
+        tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) .
+      end .
+    end .
+    
+    for each tt-place where tt-place.is-income,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    :
+      for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
+                                     and end_rvs-doc.obj-code = obj-code
+                                     and end_rvs-doc.rvs-type = {&rvs-control}
+                                     and end_rvs-doc.status_  = {&fact}
+                                     and ((end_rvs-doc.fact-date < tt-place.income-date)
+                                       or (end_rvs-doc.fact-date = tt-place.income-date and end_rvs-doc.fact-time <= tt-place.income-time))
+                                     by end_rvs-doc.fact-order
+                                     :
+        tt-place.is-calc = true .     
+        tt-place.rvs-doc-code = end_rvs-doc.rvs-code .                          
+        for first end_rvs-line no-lock where end_rvs-line.obj-type  = end_rvs-doc.obj-type
+                                         and end_rvs-line.obj-code  = end_rvs-doc.obj-code
+                                         and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
+                                         and end_rvs-line.pl-code   = tt-place.pl-code
+                                         and end_rvs-line.gds-code  = tt-place.gds-code
+                                         :
+          tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
+        end .
+        chk-doc_ :
+        for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
+                                       and buf_chk-doc.obj-code = obj-code
+                                       and buf_chk-doc.chk-date >= end_rvs-doc.fact-date
+                                       and buf_chk-doc.chk-date <= date-end
+                                       :
+          if buf_chk-doc.chk-date = end_rvs-doc.fact-date
+          and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
+          then next chk-doc_ .
+          
+          if buf_chk-doc.chk-date = today
+          and buf_chk-doc.chk-time > time-end
+          then next chk-doc_ .  
+                                       
+          if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
+          
+          for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
+                                         and buf_chk-gds.b-code   = buf_bar-code.b-code
+                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+                                         :
+            if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+            then do :   
+              v-density = 0 .       
+              { str/avrgdens.i
+                tt-place.gds-code
+                buf_chk-doc.obj-type
+                buf_chk-doc.obj-code
+                tt-place.pl-code
+                buf_chk-doc.shift-date
+                buf_chk-doc.shift-num
+                buf_chk-doc.chk-date
+                buf_chk-doc.chk-time
+                v-density
+                no-error
+              }
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
+            end .
+            else do :                     
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+            end .                               
+          end .
+        end .
+        income-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&income}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
+                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-end) or
+                                         (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.end-trn-fact-qnty = tt-place.end-trn-fact-qnty + buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each income buf_doc-line */
+        expense-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&expense}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
+                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-end) or
+                                         (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next expense-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.end-trn-fact-qnty = tt-place.end-trn-fact-qnty - buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each expense buf_doc-line */
+      end . /* for last end_rvs-doc */ 
+      for first tt-result where tt-result.gds-code = tt-place.gds-code :
+        /* Формула 1 */
+        tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) .
+      end .
+    end .
+    
+    for each tt-place :
+      run write-to-log in p-parent-handle ("place " + string(tt-place.pl-code) + ": " + tt-place.pl-name + "; " +
+                                            string(tt-place.is-income) + "; " +
+                                            tt-place.rvs-doc-code + "; " + 
+                                            string(tt-place.is-calc) + 
+                                            (if tt-place.is-calc
+                                             then
+                                              ("; " +
+                                               string(tt-place.end-rvs-fact-qnty) + ": " +
+                                               string(tt-place.end-chk-fact-qnty) + ": " +
+                                               string(tt-place.end-trn-fact-qnty) + "; "
+                                              )
+                                             else "; ") + 
+                                            string(tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) 
+                                            ) .
+    end .
+    
+    for each tt-result,
+    first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
+    :
+      run write-to-log in p-parent-handle ("gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
+                                           string(tt-result.wght-fact-end)
+                                           ) .
+    end .
+    
+    /* END Рассчет фактического остатка на конец периода по формулам 1 и 2 */
+    run write-to-log in p-parent-handle (" END FACT-END UTC " + utc-time() ) .
+    
+  end method . /* stage2 */
+  
+  method private void stage3 () :
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_doc-line for ub.doc-line .
+    define buffer buf_doc-pl for ub.doc-pl .
+    define buffer start_rvs-doc for ub.rvs-doc .
+    define buffer start_rvs-line for ub.rvs-line .
+    define buffer buf_chk-doc for ub.chk-doc .
+    define buffer buf_chk-gds for ub.chk-gds .
+    define buffer buf_bar-code for ub.bar-code .
+    define buffer buf_goods for ub.goods .
+    define buffer buf_clients-attr for ub.clients-attr .
+    
+    define variable rvs-time-diff as integer no-undo .
+    define variable exec-time-diff as integer no-undo .
+    
+    run write-to-log in p-parent-handle (" START FACT-BOOK-START UTC " + utc-time() ) .
+    
+    for each tt-place,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    :
+      /* START Определение книжного остатка на начало периода */
+      for last start_rvs-doc no-lock where start_rvs-doc.obj-type = obj-type
+                                       and start_rvs-doc.obj-code = obj-code
+                                       and start_rvs-doc.rvs-type = {&rvs-shift}
+                                       and start_rvs-doc.status_  = {&fact}
+                                       and ((start_rvs-doc.fact-date < date-start)
+                                         or (start_rvs-doc.fact-date = date-start and start_rvs-doc.fact-time <= time-start))
+                                       by start_rvs-doc.fact-order
+                                       :
+        for first start_rvs-line no-lock where start_rvs-line.obj-type  = start_rvs-doc.obj-type
+                                           and start_rvs-line.obj-code  = start_rvs-doc.obj-code
+                                           and start_rvs-line.rvs-code  = start_rvs-doc.rvs-code
+                                           and start_rvs-line.pl-code   = tt-place.pl-code
+                                           and start_rvs-line.gds-code  = tt-place.gds-code
+                                           :
+          tt-place.start-rvs-doc-qnty = start_rvs-line.system-cli-qnty . 
+        end .
+        chk-doc_ :
+        for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
+                                       and buf_chk-doc.obj-code = obj-code
+                                       and buf_chk-doc.chk-date >= start_rvs-doc.fact-date
+                                       and buf_chk-doc.chk-date <= date-start
+                                       :
+          if buf_chk-doc.chk-date = start_rvs-doc.fact-date
+          and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
+          then next chk-doc_ .
+          
+          if buf_chk-doc.chk-date = date-start
+          and buf_chk-doc.chk-time > time-start
+          then next chk-doc_ .  
+                                       
+          if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
+          
+          for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
+                                         and buf_chk-gds.b-code   = buf_bar-code.b-code
+                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+                                         :
+            if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+            then do :   
+              v-density = 0 .       
+              { str/avrgdens.i
+                tt-place.gds-code
+                buf_chk-doc.obj-type
+                buf_chk-doc.obj-code
+                tt-place.pl-code
+                buf_chk-doc.shift-date
+                buf_chk-doc.shift-num
+                buf_chk-doc.chk-date
+                buf_chk-doc.chk-time
+                v-density
+                no-error
+              }
+              tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * v-density) .
+            end .
+            else do :
+              tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+            end .                            
+          end .
+        end .
+        income-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&income}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
+                                         (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-start) or
+                                         (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.start-trn-doc-qnty = tt-place.start-trn-doc-qnty + buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each income buf_doc-line */
+        expense-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&expense}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
+                                         (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-start) or
+                                         (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next expense-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.start-trn-doc-qnty = tt-place.start-trn-doc-qnty - buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each expense buf_doc-line */
+      end . /* for last start_rvs-doc */
+      for first tt-result where tt-result.gds-code = tt-place.gds-code :
+        /* Формула 3 */
+        tt-result.wght-doc-start = tt-result.wght-doc-start + (tt-place.start-rvs-doc-qnty - tt-place.start-chk-doc-qnty + tt-place.start-trn-doc-qnty) .
+      end .
+      /* END Определение книжного остатка на начало периода */
+      
+      /* START Определение фактического остатка на начало периода */
+      for last start_rvs-doc no-lock where start_rvs-doc.obj-type = obj-type
+                                       and start_rvs-doc.obj-code = obj-code
+                                       and start_rvs-doc.rvs-type = {&rvs-control}
+                                       and start_rvs-doc.status_  = {&fact}
+                                       and ((start_rvs-doc.fact-date < date-start)
+                                         or (start_rvs-doc.fact-date = date-start and start_rvs-doc.fact-time <= time-start))
+                                       ,
+      first start_rvs-line no-lock where start_rvs-line.obj-type  = start_rvs-doc.obj-type
+                                     and start_rvs-line.obj-code  = start_rvs-doc.obj-code
+                                     and start_rvs-line.rvs-code  = start_rvs-doc.rvs-code
+                                     and start_rvs-line.pl-code   = tt-place.pl-code
+                                     and start_rvs-line.gds-code  = tt-place.gds-code
+                                     by start_rvs-doc.fact-order
+                                     :
+        tt-place.rvs-doc-code = start_rvs-doc.rvs-code . 
+        rvs-time-diff = time-start - start_rvs-doc.fact-time .
+        if rvs-time-diff < 0
+        then do :
+          rvs-time-diff = 86400 - start_rvs-doc.fact-time + time-start .
+        end .
+        
+        if rvs-time-diff > (rvs-doc-exist-diff * 60)
+        then do :
+          tt-place.start-rvs-fact-qnty = start_rvs-line.state-measure-cli-qnty + (start_rvs-line.state-add-qnty * start_rvs-line.state-density) .
+          tt-place.is-calc = true .
+          chk-doc_ :
+          for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
+                                         and buf_chk-doc.obj-code = obj-code
+                                         and buf_chk-doc.chk-date >= start_rvs-doc.fact-date
+                                         and buf_chk-doc.chk-date <= date-start
+                                         :
+            if buf_chk-doc.chk-date = start_rvs-doc.fact-date
+            and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
+            then next chk-doc_ .
+            
+            if buf_chk-doc.chk-date = date-start
+            and buf_chk-doc.chk-time > time-start
+            then next chk-doc_ .  
+                                         
+            if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
+            
+            for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
+                                           and buf_chk-gds.b-code   = buf_bar-code.b-code
+                                           and buf_chk-gds.pl-code  = tt-place.pl-code
+                                           :
+              if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+              then do :   
+                v-density = 0 .       
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  buf_chk-doc.shift-date
+                  buf_chk-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+                tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * v-density) .
+              end .
+              else do :
+                tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+              end . 
+            end .
+          end .
+          income-doc-line_ :
+          for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                          and buf_doc-line.obj-code  = obj-code
+                                          and buf_doc-line.artic     = buf_goods.artic
+                                          and buf_doc-line.prod-type = buf_goods.prod-type
+                                          and buf_doc-line.prod-code = buf_goods.prod-code
+                                          and buf_doc-line.status_   = {&fact}
+                                          ,
+          first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                      and buf_trn-doc.doc-type = {&income}
+                                      and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                      and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
+                                           (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
+                                      and ((buf_trn-doc.fact-date < date-start) or
+                                           (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
+                                      :
+            for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                                 and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                                 and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                                 :
+              /* ТехПролив */
+              if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
+            end .
+            for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                          and buf_doc-pl.obj-code = obj-code
+                                          and buf_doc-pl.pl-code  = tt-place.pl-code
+                                          and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                          and buf_doc-pl.gds-code = tt-place.gds-code
+                                          :
+              tt-place.start-trn-doc-qnty = tt-place.start-trn-doc-qnty + buf_doc-pl.cli-fact-qnty .                              
+            end .
+          end . /* for each income buf_doc-line */
+          expense-doc-line_ :
+          for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                          and buf_doc-line.obj-code  = obj-code
+                                          and buf_doc-line.artic     = buf_goods.artic
+                                          and buf_doc-line.prod-type = buf_goods.prod-type
+                                          and buf_doc-line.prod-code = buf_goods.prod-code
+                                          and buf_doc-line.status_   = {&fact}
+                                          ,
+          first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                      and buf_trn-doc.doc-type = {&expense}
+                                      and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                      and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
+                                           (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
+                                      and ((buf_trn-doc.fact-date < date-start) or
+                                           (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
+                                      :
+            for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                                 and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                                 and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                                 :
+              /* ТехПролив */
+              if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next expense-doc-line_ .
+            end .
+            for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                          and buf_doc-pl.obj-code = obj-code
+                                          and buf_doc-pl.pl-code  = tt-place.pl-code
+                                          and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                          and buf_doc-pl.gds-code = tt-place.gds-code
+                                          :
+              tt-place.start-trn-doc-qnty = tt-place.start-trn-doc-qnty - buf_doc-pl.cli-fact-qnty .                              
+            end .
+          end . /* for each expense buf_doc-line */
+          for first tt-result where tt-result.gds-code = tt-place.gds-code :
+            /* Формула 4 */
+            tt-result.wght-fact-start = tt-result.wght-fact-start + (tt-place.start-rvs-fact-qnty - tt-place.start-chk-fact-qnty + tt-place.start-trn-fact-qnty) .
+          end .
+        end .
+        else do :
+          tt-place.is-calc = false .
+          for first tt-result where tt-result.gds-code = tt-place.gds-code :
+            tt-result.wght-fact-start = tt-result.wght-fact-start + start_rvs-line.state-measure-cli-qnty + (start_rvs-line.state-add-qnty * start_rvs-line.state-density) .
+          end .
+        end .
+      end .
+      /* END Определение фактического остатка на начало периода */
+    end . /* for each tt-place */
+    
+    for each tt-place :
+      run write-to-log in p-parent-handle ("fact_place " + string(tt-place.pl-code) + ": " + tt-place.pl-name + "; " +
+                                            string(tt-place.is-income) + "; " +
+                                            tt-place.rvs-doc-code + "; " + 
+                                            string(tt-place.is-calc) + 
+                                            (if tt-place.is-calc
+                                             then
+                                              ("; " +
+                                               string(tt-place.start-rvs-fact-qnty) + ": " +
+                                               string(tt-place.start-chk-fact-qnty) + ": " +
+                                               string(tt-place.start-trn-fact-qnty) + "; "
+                                              )
+                                             else "; ") + 
+                                            string(tt-place.start-rvs-fact-qnty - tt-place.start-chk-fact-qnty + tt-place.start-trn-fact-qnty) 
+                                            ) .
+    end .
+    
+    for each tt-result,
+    first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
+    :
+      run write-to-log in p-parent-handle ("fact_gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
+                                           string(tt-result.wght-fact-start)
+                                           ) .
+    end .
+    
+    for each tt-result,
+    first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
+    :
+      run write-to-log in p-parent-handle ("book_gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
+                                           string(tt-result.wght-doc-start)
+                                           ) .
+    end .
+    
+    run write-to-log in p-parent-handle (" END FACT-BOOK-START UTC " + utc-time() ) .
+    
+  end method . /* stage3 */
+  
+  method private void stage4 () :
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_doc-line for ub.doc-line .
+    define buffer buf_doc-pl for ub.doc-pl .
+    define buffer buf_chk-doc for ub.chk-doc .
+    define buffer buf_chk-gds for ub.chk-gds .
+    define buffer buf_bar-code for ub.bar-code .
+    define buffer buf_goods for ub.goods .
+    define buffer buf_clients-attr for ub.clients-attr .
+    
+    run write-to-log in p-parent-handle (" START TURNOVER UTC " + utc-time() ) .
+    
+    /* START Прием чеков */
+    if not checks-recieved
+    and not otherOneDate
+    then
+      checks-recieved = get-check() .
+    /* END Прием чеков */
+    
+    /* START Расчет реализации */
+    chk-doc_ :
+    for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
+                                   and buf_chk-doc.obj-code = obj-code
+                                   and buf_chk-doc.chk-date >= date-start
+                                   and buf_chk-doc.chk-date <= date-end
+                                   :
+      if buf_chk-doc.chk-date = date-start
+      and buf_chk-doc.chk-time < time-start
+      then next chk-doc_ .
+      
+      if buf_chk-doc.chk-date = date-end
+      and buf_chk-doc.chk-time > time-end
+      then next chk-doc_ .  
+                                   
+      if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
+      
+      for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code,
+      first buf_bar-code no-lock where buf_bar-code.b-code = buf_chk-gds.b-code,
+      first tt-result where tt-result.gds-code = buf_bar-code.gds-code
+      :
+        if not valid-density (buf_chk-gds.density, false)
+        then do :   
+          v-density = 0 .       
+          { str/avrgdens.i
+            tt-place.gds-code
+            buf_chk-doc.obj-type
+            buf_chk-doc.obj-code
+            tt-place.pl-code
+            buf_chk-doc.shift-date
+            buf_chk-doc.shift-num
+            buf_chk-doc.chk-date
+            buf_chk-doc.chk-time
+            v-density
+            no-error
+          }
+          /* Формула 6 */
+          tt-result.wght-sale = tt-result.wght-sale + (buf_chk-gds.doc-qnty * v-density) .
+        end .
+        else do :
+          /* Формула 6 */
+          tt-result.wght-sale = tt-result.wght-sale + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .  
+        end .                             
+      end .
+    end .
+    /* END Расчет реализации */
+    
+    /* START Расчет поступлений */
+    for each tt-result,
+    first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
+    :
+      income-doc-line_ :
+      for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                      and buf_doc-line.obj-code  = obj-code
+                                      and buf_doc-line.artic     = buf_goods.artic
+                                      and buf_doc-line.prod-type = buf_goods.prod-type
+                                      and buf_doc-line.prod-code = buf_goods.prod-code
+                                      and buf_doc-line.status_   = {&fact}
+                                      ,
+      first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                  and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+                                  and ((buf_trn-doc.fact-date > date-start) or
+                                       (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time >= time-start))
+                                  and ((buf_trn-doc.fact-date < date-end) or
+                                       (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                  :
+        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                             and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                             and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                             :
+          /* ТехПролив */
+          if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
+        end .
+        for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                      and buf_doc-pl.obj-code = obj-code
+                                      and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                      and buf_doc-pl.gds-code = tt-result.gds-code
+                                      :
+          /* Формула 7 */
+          tt-result.delivery = tt-result.delivery + buf_doc-pl.cli-fact-qnty .                              
+        end .
+      end . /* for each income buf_doc-line */
+    end .
+    /* END Расчет поступлений */
+    
+    /* START Расчет излишек/недостач */
+    for each tt-result,
+    first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
+    :
+      income-doc-line_ :
+      for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                      and buf_doc-line.obj-code  = obj-code
+                                      and buf_doc-line.artic     = buf_goods.artic
+                                      and buf_doc-line.prod-type = buf_goods.prod-type
+                                      and buf_doc-line.prod-code = buf_goods.prod-code
+                                      and buf_doc-line.status_   = {&fact}
+                                      ,
+      first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                  and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+                                  and ((buf_trn-doc.fact-date > date-start) or
+                                       (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time >= time-start))
+                                  and ((buf_trn-doc.fact-date < date-end) or
+                                       (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                  :
+        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                             and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                             and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                             :
+          /* ТехПролив */
+          if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
+        end .
+        /* Формула 8 */
+        tt-result.Delivery-ned-izl = tt-result.Delivery-ned-izl + buf_doc-line.cli-qnty .                              
+      end . /* for each income buf_doc-line */
+    end .
+    /* END Расчет излишек/недостач */
+    
+    for each tt-result,
+    first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
+    :
+      run write-to-log in p-parent-handle ("gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
+                                           string(tt-result.delivery) + "; " +
+                                           string(tt-result.Delivery-ned-izl) + "; " +
+                                           string(tt-result.wght-sale)
+                                           ) .
+    end .
+    
+    run write-to-log in p-parent-handle (" END TURNOVER UTC " + utc-time() ) .
+    
+  end method . /* stage4 */
+  
+  method private void stage5 () :
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_doc-line for ub.doc-line .
+    define buffer buf_doc-pl for ub.doc-pl .
+    define buffer end_rvs-doc for ub.rvs-doc .
+    define buffer end_rvs-line for ub.rvs-line .
+    define buffer buf_chk-doc for ub.chk-doc .
+    define buffer buf_chk-gds for ub.chk-gds .
+    define buffer buf_bar-code for ub.bar-code .
+    define buffer buf_goods for ub.goods .
+    define buffer buf_clients-attr for ub.clients-attr .
+    
+    run write-to-log in p-parent-handle (" START BOOK-END UTC " + utc-time() ) .
+    
+    /* START Определение книжного остатка на конец периода */
+    for each tt-place,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    :
+      for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
+                                       and end_rvs-doc.obj-code = obj-code
+                                       and end_rvs-doc.rvs-type = {&rvs-shift}
+                                       and end_rvs-doc.status_  = {&fact}
+                                       and ((end_rvs-doc.fact-date < date-end)
+                                         or (end_rvs-doc.fact-date = date-end and end_rvs-doc.fact-time <= time-end))
+                                       by end_rvs-doc.fact-order
+                                       :
+        for first end_rvs-line no-lock where end_rvs-line.obj-type  = end_rvs-doc.obj-type
+                                           and end_rvs-line.obj-code  = end_rvs-doc.obj-code
+                                           and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
+                                           and end_rvs-line.pl-code   = tt-place.pl-code
+                                           and end_rvs-line.gds-code  = tt-place.gds-code
+                                           :
+          tt-place.end-rvs-doc-qnty = end_rvs-line.system-cli-qnty . 
+        end .
+        chk-doc_ :
+        for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
+                                       and buf_chk-doc.obj-code = obj-code
+                                       and buf_chk-doc.chk-date >= end_rvs-doc.fact-date
+                                       and buf_chk-doc.chk-date <= date-end
+                                       :
+          if buf_chk-doc.chk-date = end_rvs-doc.fact-date
+          and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
+          then next chk-doc_ .
+          
+          if buf_chk-doc.chk-date = date-end
+          and buf_chk-doc.chk-time > time-end
+          then next chk-doc_ .  
+                                       
+          if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
+          
+          for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
+                                         and buf_chk-gds.b-code   = buf_bar-code.b-code
+                                         and buf_chk-gds.pl-code  = tt-place.pl-code
+                                         :
+            if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+            then do :   
+              v-density = 0 .       
+              { str/avrgdens.i
+                tt-place.gds-code
+                buf_chk-doc.obj-type
+                buf_chk-doc.obj-code
+                tt-place.pl-code
+                buf_chk-doc.shift-date
+                buf_chk-doc.shift-num
+                buf_chk-doc.chk-date
+                buf_chk-doc.chk-time
+                v-density
+                no-error
+              }
+              tt-place.end-chk-doc-qnty = tt-place.end-chk-doc-qnty + (buf_chk-gds.doc-qnty * v-density) .
+            end .
+            else do :                               
+              tt-place.end-chk-doc-qnty = tt-place.end-chk-doc-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) . 
+            end .                              
+          end .
+        end .
+        income-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&income}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
+                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-end) or
+                                         (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.end-trn-doc-qnty = tt-place.end-trn-doc-qnty + buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each income buf_doc-line */
+        expense-doc-line_ :
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.doc-type = {&expense}
+                                    and (buf_trn-doc.internal = false or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
+                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-end) or
+                                         (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next expense-doc-line_ .
+          end .
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.pl-code  = tt-place.pl-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-place.gds-code
+                                        :
+            tt-place.end-trn-doc-qnty = tt-place.end-trn-doc-qnty - buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end . /* for each expense buf_doc-line */
+      end . /* for last end_rvs-doc */
+      for first tt-result where tt-result.gds-code = tt-place.gds-code :
+        /* Формула 9 */
+        tt-result.wght-doc-end = tt-result.wght-doc-end + (tt-place.end-rvs-doc-qnty - tt-place.end-chk-doc-qnty + tt-place.end-trn-doc-qnty) .
+      end .
+    end .
+    /* END Определение книжного остатка на конец периода */
+    
+    /* START Расчет расхода на прочие нужды */
+    for each tt-result :
+      /* Формула 10 */
+      tt-result.wght-other = tt-result.wght-doc-end - tt-result.wght-doc-start - tt-result.delivery + tt-result.wght-sale .
+      
+      tt-result.loss-own-needs = tt-result.wght-fact-end - tt-result.wght-doc-end .
+    end .
+    /* END Расчет расхода на прочие нужды */
+    
+    for each tt-result,
+    first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
+    :
+      run write-to-log in p-parent-handle ("book_gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
+                                           string(tt-result.wght-doc-end) + "; " +
+                                           string(tt-result.wght-other)
+                                           ) .
+    end .
+    
+    if (is-full or is-full-backdate)
+    and not otherOneDate
+    then do :
+      find first buf_clients-attr exclusive-lock where buf_clients-attr.obj-type = buf_clients.obj-type
+                                                   and buf_clients-attr.obj-code = buf_clients.obj-code
+                                                   and buf_clients-attr.attr-code = {&attr-exp-isPM-last-date}
+                                                   no-error .
+      if not available buf_clients-attr
+      then do :
+        create buf_clients-attr .
+        assign
+          buf_clients-attr.obj-type = buf_clients.obj-type       
+          buf_clients-attr.obj-code = buf_clients.obj-code       
+          buf_clients-attr.attr-code = {&attr-exp-isPM-last-date}
+        .
+      end .
+      buf_clients-attr.attr-value = string(vMoscowDate) .
+      last-exp-date = vMoscowDate .
+    end .
+    
+    run write-to-log in p-parent-handle (" END BOOK-END UTC " + utc-time() ) .
+    
+  end method . /* stage5 */
+  
+  method private character make-rvs-doc () :
+    define variable v-new-rvs-code as character no-undo init ? .
+    run str/rvs-auto-is_PM.p (
+                              input parparentproc,
+                              input obj-type,
+                              input obj-code,
+                              output v-new-rvs-code)
+    no-error .
+    if error-status:error
+    or v-new-rvs-code = ?
+    then do :
+      return "error" .
+    end .
+    
+    return v-new-rvs-code .
+    
+  end method . /* make-rvs-doc */
+  
+  method private logical get-check () :
+    define variable v-parameter as character no-undo .
+    assign
+      v-parameter =
+                     obj-type         + {&delim-par} +
+                     string(obj-code) + {&delim-par} +
+                     string(0)        + {&delim-par} +
+                     string(1)
+    .
+    run str/get-chkf.p (
+                        input parparentproc, /*parparentproc a*/
+                        input p-parent-handle, /*p-parent-handle*/
+                        input parparentproc, /*p-log-handle*/
+                        input v-parameter /*p-parameter*/)
+    no-error .
+    if error-status:error then do:
+      return false .
+    end .
+    return true .
+  end method . /* get-check */
+  
+  method private memptr create-esys-data () :
+    define variable sw as handle no-undo.
+    define variable ii as integer no-undo .
+    
+    create sax-writer sw.
+    sw:set-output-destination ("memptr", Data).
+    sw:encoding = "UTF-8".
+    sw:fragment = true .
+    sw:start-document () .
+      sw:start-element ("operating-balance") .
+        sw:write-data-element ("org-unit-code", string(buf_clients.host-code)).
+        sw:write-data-element ("azk-code", string(buf_clients.obj-code)). 
+        sw:write-data-element ("doc-date", (iso-date(vMoscowDate) + "T" + string(vMoscowTime, "HH:MM:SS")) ).
+        sw:write-data-element ("start-date", (iso-date(vMoscowDate) + "T" + string(0, "HH:MM:SS")) ).
+        sw:write-data-element ("end-date", (iso-date(vMoscowDate) + "T" + string(vMoscowTimeEnd, "HH:MM:SS")) ).
+        sw:start-element ("gds") .
+        ii = 0 .
+        for each tt-result by tt-result.gds-code :
+          sw:start-element ("gd") .
+            ii = ii + 1 .
+            sw:write-data-element ("line-num",  string(ii)).
+            sw:write-data-element ("gd-code",   string(tt-result.gds-code)).
+            sw:write-data-element ("wght-fact-start",   string-mth(tt-result.wght-fact-start)).
+            sw:write-data-element ("wght-fact-end",     string-mth(tt-result.wght-fact-end)).
+            sw:write-data-element ("wght-doc-start",    string-mth(tt-result.wght-doc-start)).
+            sw:write-data-element ("wght-doc-end",      string-mth(tt-result.wght-doc-end)).
+            sw:write-data-element ("delivery",          string-mth(tt-result.delivery)).
+            sw:write-data-element ("direct-delivery",   string-mth(tt-result.direct-delivery)).
+            sw:write-data-element ("fuel-in-transit",   string-mth(tt-result.fuel-in-transit)).
+            sw:write-data-element ("wght-sale",         string-mth(tt-result.wght-sale)).
+            sw:write-data-element ("wght-wholesale",    string-mth(tt-result.wght-wholesale)).
+            sw:write-data-element ("loss-own-needs",    string-mth(tt-result.loss-own-needs)).
+            sw:write-data-element ("Delivery-ned-izl",  string-mth(tt-result.Delivery-ned-izl)).
+            sw:write-data-element ("wght-other",        string-mth(tt-result.wght-other)).
+          sw:end-element ("gd") .
+        end .          
+        sw:end-element ("gds") .
+      sw:end-element ("operating-balance") .
+    sw:end-document () .
+    
+  end method . /* create-esys-data */
+  
+  method private void make-rep () :
+    define variable v-now as datetime no-undo .
+    define variable v-host-code as integer no-undo .
+    define variable v-host-name as character no-undo .
+    
+    define buffer host_clients for ub.clients .
+    define buffer buf_goods for ub.goods .
+    
+    v-host-code = buf_clients.host-code .
+    find first host_clients no-lock where host_clients.obj-code = buf_clients.host-code
+                                      and host_clients.obj-type = {&cmp}
+                                      no-error .
+    if available host_clients
+    then do :
+      v-host-code = host_clients.obj-code .
+      v-host-name = host_clients.obj-name .
+    end .
+    
+    rep-file-name = "PM_" + replace(string(vMoscowDate, "99/99/9999"), "/", "") + "_" + replace(string(vMoscowTimeEnd, "HH:MM:SS"), ":", "") + ".html" .
+    
+    output stream OutStr-html to value(rep-file-name) convert target 'UTF-8' .
+  
+    /* Системная шапка HTML */
+    put stream OutStr-html unformatted
+      "<!DOCTYPE HTML>" skip
+      ' <html>' skip
+      '  <head>' skip
+      '   <meta charset="utf-8">' skip
+      '    <style type="text/css">' skip
+      '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+      '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+      '      tbody, td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+      '   </style>' skip
+      '  </head>' skip
+    .
+    
+    put stream OutStr-html unformatted
+      '<body>' skip
+      '<table name="Лист1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+      '<thead>' skip
+    .
+    put stream OutStr-html unformatted
+        '<tr class="set_columns">' skip
+          '<td style="width: 100px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+        '</tr>' skip
+    .
+                        
+    v-now = now .
+    put stream OutStr-html unformatted
+        '<tr>' skip
+          '<td colspan="20" style="text-align: center; font-weight:bold;">Ежедневный отчет по движению топлива за сутки на АЗС/АЗК </td>' skip
+        '</tr>' skip   
+        '<tr>' skip
+          '<td colspan="20" style="text-align: left; font-weight:bold;">' + string(v-now, "99.99.9999 HH:MM:SS") + '</td>' skip
+        '</tr>' skip 
+      '</thead>' skip
+    .  
+    
+    put stream OutStr-html unformatted
+      '     <tbody>' skip
+      '       <tr>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver; height: 30px">Наименование организации</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Код организации</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Наименование АЗС/АЗК</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Код АЗС/АЗК</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Дата актуальности</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Время актуальности</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Название товара</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Код товара</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Книж. остатки на начало дня, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Книж. остатки на конец дня, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Факт. остатки на начало дня, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Факт. остатки на конец дня, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Поступления, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Прямые поставки, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Нефтепродукты в пути, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">АЗС/АЗК, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Мелкий опт</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Потери и потребление на собственные нужды, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Недостачи и излишки при приеме, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Расход на прочие нужды, кг</th>' skip
+      '       </tr>' skip
+    . /* Точка для закрытия Put */
+    
+    for each tt-result,
+    first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
+    by tt-result.gds-code
+    :
+      put stream OutStr-html unformatted
+        '     <tbody>' skip
+        '       <tr>' skip
+        '         <th style="text-align: left; ">' + v-host-name + '</th>' skip
+        '         <th style="text-align: right;">' + string(v-host-code) + '</th>' skip
+        '         <th style="text-align: left; ">' + buf_clients.obj-name + '</th>' skip
+        '         <th style="text-align: right;">' + string(buf_clients.obj-code) + '</th>' skip
+        '         <th style="text-align: left; ">' + string(vMoscowDate, "99.99.9999") + '</th>' skip
+        '         <th style="text-align: left; ">' + string(vMoscowTimeEnd, "HH:MM:SS") + '</th>' skip
+        '         <th style="text-align: left; ">' + buf_goods.gds-name + '</th>' skip
+        '         <th style="text-align: right;">' + string(buf_goods.gds-code) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-doc-start,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-doc-start,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-doc-end,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-doc-end,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-fact-start,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-fact-start,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-fact-end,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-fact-end,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.delivery,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.delivery,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.direct-delivery,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.direct-delivery,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.fuel-in-transit,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.fuel-in-transit,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-sale,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-sale,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-wholesale,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-wholesale,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.loss-own-needs,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.loss-own-needs,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.Delivery-ned-izl,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.Delivery-ned-izl,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-other,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-other,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '       </tr>' skip
+      . /* Точка для закрытия Put */
+    end .
+    
+    put stream OutStr-html unformatted
+      '     </tbody>' skip
+      '   </table>' skip
+      '  </body>' skip
+      ' </html>' skip
+    . /* Точка для закрытия Put */
+    
+    output stream OutStr-html close.
+    
+  end method . /* make-rep */
+  
+  method private character fnc-convert-dot-to-colon (input p-data as decimal,
+                                                     input p-accur as character,
+                                                     input p-num as integer)
+  :
+  /* Конвертация десятичной точки в запятую с передачей параметра форматирования числа (accuracy - точность) */
+  define variable result       as character no-undo.
+  define variable v-str-result as character no-undo.
+  if p-data = ? then p-data = 0 .
+  p-data = round(p-data, p-num). /* Чтобы не выйти случайно за рамки формата числа при выводе (несоотвесвие формата результата и формата отображения - приводит к ош) */
+  v-str-result = trim(replace(string(p-data, p-accur), ".", ",")).
+    
+  return v-str-result.
+    
+  end method . /* fnc-convert-dot-to-colon */
+  
+  method private character string-mth (inValue as decimal):
+    
+    def var v-str as character no-undo.
+    
+    if inValue = ?
+      then v-str = "0".
+    
+    if string (inValue) begins "."
+      then v-str = "0" + string (inValue).
+      else v-str = string (inValue).
+    return v-str.
+    
+  end method . /* string-mth */
+  
+  method private character utc-time () :
+    define variable v-dt as datetime no-undo .
+    v-dt = now - (timezone * 60 * 1000) .
+    return string(v-dt) .
+  end method . /* utc-time */
+  
+  method private logical valid-density
+  (input p-density as decimal,
+   input p-unit-base-cli-eq as logical
+  ) :
+    define variable v-answ as logical no-undo .
+    if ( p-unit-base-cli-eq = true
+         and p-density = 1.0
+       )
+      or ( p-unit-base-cli-eq = false
+           and p-density <> ?
+           and p-density > 0.0
+           and p-density < 1.0
+         )
+    then do:
+      assign
+        v-answ = true
+      .
+    end.
+    else do:
+      assign
+        v-answ = false
+      .
+    end.
+    return v-answ.
+  end method . /* valid-density */
+
+end class.

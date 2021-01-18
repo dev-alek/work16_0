@@ -953,6 +953,18 @@ end.
 &scop manual-edit-attr-cli-decommissioned  1
 &scop batch-edit-attr-cli-decommissioned  1
 
+/* Атрибут клиента - Последняя выгруженная для ИС ПМ дата:*/
+&scop type-attr-exp-isPM-last-date {&type-date}
+&scop format-attr-exp-isPM-last-date "99/99/9999"
+&scop label-attr-exp-isPM-last-date "Последняя выгруженная для ИС ПМ дата"
+&scop tooltip-attr-exp-isPM-last-date "Последняя выгруженная для ИС ПМ дата"
+&scop user-can-edit-attr-exp-isPM-last-date false
+&scop output-display-attr-exp-isPM-last-date true
+&scop other-attr-exp-isPM-last-date '':u
+&scop news-attr-exp-isPM-last-date false
+&scop manual-edit-attr-exp-isPM-last-date 0
+&scop batch-edit-attr-exp-isPM-last-date 0
+
 /* сюда добавлять новые атрибуты клиентов */
 
 /* ------------------------------------------------------------------- */
@@ -1143,7 +1155,8 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-atd-alarm-schedule
       {&attr-temp-full-code}
-
+      &scop attr-code attr-exp-isPM-last-date
+      {&attr-temp-full-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
       otherwise do:
@@ -1295,6 +1308,8 @@ procedure clntattr-tooltip :
       &scop attr-code attr-cli-decommissioned
       {&attr-temp-code}
       &scop attr-code attr-atd-alarm-schedule
+      {&attr-temp-code}
+      &scop attr-code attr-exp-isPM-last-date
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -1655,6 +1670,8 @@ procedure clntattr-news :
       &scop attr-code attr-cli-decommissioned
       {&attr-news-code}
       &scop attr-code attr-atd-alarm-schedule
+      {&attr-news-code}
+      &scop attr-code attr-exp-isPM-last-date
       {&attr-news-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
@@ -2214,6 +2231,8 @@ procedure clntattr-manual-edit :
       {&attr-manual-edit-code}
       &scop attr-code attr-atd-alarm-schedule
       {&attr-manual-edit-code}
+      &scop attr-code attr-exp-isPM-last-date
+      {&attr-manual-edit-code}
 
       /* сюда добавлять новые параметры атрибутов клиентов */
       otherwise do:
@@ -2280,6 +2299,8 @@ procedure clntattr-batch-edit :
       &scop attr-code attr-cli-decommissioned
       {&attr-batch-edit-code}
       &scop attr-code attr-atd-alarm-schedule
+      {&attr-batch-edit-code}
+      &scop attr-code attr-exp-isPM-last-date
       {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутво клиентов */
@@ -13449,6 +13470,42 @@ end procedure.
 &scop manual-edit-attr-schedule-hdd 0
 &scop batch-edit-attr-schedule-hdd 0
 
+/* Наличие расписания обмена с ИС МОТП для БД */
+&scop type-attr-schedule-motp {&type-log}
+&scop format-attr-schedule-motp "+/-"
+&scop label-attr-schedule-motp "Расписание обмена с ИС МОТП для БД"
+&scop tooltip-attr-schedule-motp "Составлено ли расписание обмена с ИС МОТП для базы данных"
+&scop user-can-edit-attr-schedule-motp false
+&scop output-display-attr-schedule-motp true
+&scop other-attr-schedule-motp '':u
+&scop news-attr-schedule-motp no
+&scop manual-edit-attr-schedule-motp 0
+&scop batch-edit-attr-schedule-motp 0
+
+/* Наличие расписания обмена с ИС Диадок для БД */
+&scop type-attr-schedule-diadoc {&type-log}
+&scop format-attr-schedule-diadoc "+/-"
+&scop label-attr-schedule-diadoc "Расписание обмена с ИС МОТП для БД"
+&scop tooltip-attr-schedule-diadoc "Составлено ли расписание обмена с ИС МОТП для базы данных"
+&scop user-can-edit-attr-schedule-diadoc false
+&scop output-display-attr-schedule-diadoc true
+&scop other-attr-schedule-diadoc '':u
+&scop news-attr-schedule-diadoc no
+&scop manual-edit-attr-schedule-diadoc 0
+&scop batch-edit-attr-schedule-diadoc 0
+
+/* Наличие расписания выгрузки в ИС ПМ для БД */
+&scop type-attr-schedule-isPM {&type-log}
+&scop format-attr-schedule-isPM "+/-"
+&scop label-attr-schedule-isPM "Расписание выгрузки в ИС ПМ для БД"
+&scop tooltip-attr-schedule-isPM "Составлено ли расписание выгрузки в ИС ПМ для базы данных"
+&scop user-can-edit-attr-schedule-isPM false
+&scop output-display-attr-schedule-isPM true
+&scop other-attr-schedule-isPM '':u
+&scop news-attr-schedule-isPM no
+&scop manual-edit-attr-schedule-isPM 0
+&scop batch-edit-attr-schedule-isPM 0
+
  /* Дата по которую усечены документы по БД в ГБД */
 &scop type-attr-cut-date {&type-date}
 &scop format-attr-cut-date "99.99.9999"
@@ -13729,6 +13786,12 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-hdd
       {&attr-temp-full-code}
+      &scop attr-code attr-schedule-motp
+      {&attr-temp-full-code}
+      &scop attr-code attr-schedule-diadoc
+      {&attr-temp-full-code}
+      &scop attr-code attr-schedule-isPM
+      {&attr-temp-full-code}
       &scop attr-code attr-schedule-arc
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-exp
@@ -13805,6 +13868,12 @@ procedure db-attr-tooltip :
       &scop attr-code attr-schedule-merc
       {&attr-temp-code}
       &scop attr-code attr-schedule-hdd
+      {&attr-temp-code}
+      &scop attr-code attr-schedule-motp
+      {&attr-temp-code}
+      &scop attr-code attr-schedule-diadoc
+      {&attr-temp-code}
+      &scop attr-code attr-schedule-isPM
       {&attr-temp-code}
       &scop attr-code attr-schedule-arc
       {&attr-temp-code}
@@ -14071,6 +14140,12 @@ procedure db-attr-news :
       &scop attr-code attr-schedule-merc
       {&attr-news-code}
       &scop attr-code attr-schedule-hdd
+      {&attr-news-code}
+      &scop attr-code attr-schedule-motp
+      {&attr-news-code}
+      &scop attr-code attr-schedule-diadoc
+      {&attr-news-code}
+      &scop attr-code attr-schedule-isPM
       {&attr-news-code}
       &scop attr-code attr-schedule-arc
       {&attr-news-code}

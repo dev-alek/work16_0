@@ -125,6 +125,11 @@ task-type
             buf_temp-autotask.task-name = "ИС Диадок"
             .
           end.
+          when {&btpr-type-is_PM} then do:
+            assign
+            buf_temp-autotask.task-name = "ИС Президентский Мониторинг"
+            .
+          end.
         END CASE.
     END.
 

@@ -433,7 +433,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define barcode-e
 { cmp/cr-prep.i 1 btpr-type-autofree   "autofree" " " "autofree" } /* "Выполнение по расписанию произвольного задания" */
 { cmp/cr-prep.i 1 btpr-type-mercury    "mercury" " " "mercury" } /* "Выполнение по расписанию обмена с ФГИС Меркурий" */
 { cmp/cr-prep.i 1 btpr-type-is_motp    "is_motp" " " "is_motp" } /* "Выполнение по расписанию обмена с ИС МОТП" */
-{ cmp/cr-prep.i 1 btpr-type-is_diadoc    "is_diadoc" " " "is_diadoc" } /* "Выполнение по расписанию обмена с ИС МОТП" */
+{ cmp/cr-prep.i 1 btpr-type-is_diadoc  "is_diadoc" " " "is_diadoc" } /* "Выполнение по расписанию обмена с ИС МОТП" */
 { cmp/cr-prep.i 1 btpr-type-hddtest    "hddtest" " " "hddtest" } /* "Выполнение по расписанию запросов на кассу о состоянии HDD" */
 { cmp/cr-prep.i 1 btpr-type-cutdbs     "cutdbs"  " " "cutdbs"  } /* "Обрезание документов по БД"      */
 { cmp/cr-prep.i 1 btpr-type-lock-route "lkrt"    " " "lkrt"    } /* блокировка маршрутизации          */
@@ -455,6 +455,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define barcode-e
 { cmp/cr-prep.i 1 btpr-type-oxml-new   "oxmlnew" " " "oxmlnew" }
 { cmp/cr-prep.i 1 btpr-type-mt-poslock "mtposlck" " " "mtposlck" }
 { cmp/cr-prep.i 1 btpr-type-sktsrv     "sktsrv" " " "sktsrv"   }
+{ cmp/cr-prep.i 1 btpr-type-is_PM      "is_PM"  " " "is_PM"    } /* "Выполнение по расписанию выгрузку в ИС ПМ" */
 
 &glob btpr-type-gds 'gds':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define btpr-type-gds {&btpr-type-gds}" ).

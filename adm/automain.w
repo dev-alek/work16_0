@@ -979,6 +979,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         .
         run write-to-log ( "Запущен мониторинг состояний HDD" ).
       end.
+      when {&btpr-type-is_PM}
+      then do:
+        assign
+          {&window-name}:title = {&window-name}:title + "Выгрузка в ИС Президентский Мониторинг"
+        .
+        run write-to-log ( "Запущена выгрузка в ИС Президентский Мониторинг" ).
+      end.
       otherwise do:
         assign
           log-exit = yes
@@ -1299,6 +1306,25 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                         ,input v-task-type
                         ,input v-task-num
                         ,input v-db-num
+                        ) no-error.
+                  end. /* do v-ind = 1... */
+               end.
+               when {&btpr-type-is_PM}
+               then do:
+                  do v-ind = 1 to v-num-entries-db-list :
+                     assign
+                        v-db-num     = integer( entry( v-ind, v-list-db, {&comma-char} ) )
+                        v-rec-key    = entry( v-ind, v-list-key, {&delim-nws} )
+                        v-cre-db-num = integer( entry( 1, v-rec-key, {&delim-key} ) )
+                        v-task-type  = entry( 2, v-rec-key, {&delim-key} )
+                        v-task-num   = integer( entry( 3, v-rec-key, {&delim-key} ) )
+                     .
+                     run bge/auto-exp-is_PM.p
+                        (input this-procedure:handle
+                        ,input v-db-num
+                        ,input v-cre-db-num
+                        ,input v-task-type
+                        ,input v-task-num
                         ) no-error.
                   end. /* do v-ind = 1... */
                end.

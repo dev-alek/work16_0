@@ -690,6 +690,7 @@ PROCEDURE fill-temp-table :
       or when {&btpr-type-autogetcd}
       or when {&btpr-type-autooxml}
       or when {&btpr-type-autosuz}
+      or when {&btpr-type-is_PM}
       then do:
         assign
           v-db-num-char = string (p-cre-db-num)

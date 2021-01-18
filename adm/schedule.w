@@ -86,6 +86,8 @@ define variable v-curr-db     as integer   no-undo .
 &scop is_diadoc '{&bef-is_diadoc}':U
 &scop bef-sktsrv Сокет-Сервер
 &scop sktsrv '{&bef-sktsrv}':U
+&scop bef-is_PM Президентский мониторинг
+&scop is_PM '{&bef-is_PM}':U
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -342,6 +344,11 @@ DO:
       {&OPEN-QUERY-br-schedule}
       reposition br-schedule to recid v-recid no-error.
     end.
+    
+    if v-btpr-type = {&btpr-type-is_PM}
+    then do :
+      apply "choose" to bt-param IN FRAME Dialog-Frame .
+    end .
   end.
   else do:
     message
@@ -583,6 +590,26 @@ DO:
     end.
     when {&btpr-type-is_diadoc} then do:
 
+    end.
+    when {&btpr-type-is_PM} then do:
+      run adm/isPM-shdp.w
+        (input  buf_schedule.cre-db-num
+        ,input  buf_schedule.task-type
+        ,input  buf_schedule.task-num
+        ,output v-cancel
+        ) no-error.
+      if error-status :error
+      then do:
+          message
+            vss-workfile vss-revision vss-description
+            skip "Ошибка изменения параметров для строки расписания."
+            skip return-value
+            skip trim(error-status :get-message(1))
+                trim(error-status :get-message(2))
+                trim(error-status :get-message(3))
+          view-as alert-box error.
+          undo, return no-apply.
+      end.
     end.
     when {&btpr-type-autoarh} then do:
       run adm/arc-shdp.w
@@ -844,7 +871,8 @@ DO:
     or when {&btpr-type-autosale}
     or when {&btpr-type-autosuz}
     or when {&btpr-type-autocbnk}
-    or when {&btpr-type-autofree} 
+    or when {&btpr-type-autofree}
+    or when {&btpr-type-is_PM} 
     then do:
       enable bt-param with frame {&frame-name} .
     end.
@@ -908,7 +936,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                    {&mercury} + {&comma-char}  + {&btpr-type-mercury} + {&comma-char} +
                                    {&hddtest} + {&comma-char}  + {&btpr-type-hddtest} + {&comma-char} +
                                    {&is_motp} + {&comma-char}  + {&btpr-type-is_motp} + {&comma-char} +
-                                   {&is_diadoc} + {&comma-char}  + {&btpr-type-is_diadoc}
+                                   {&is_diadoc} + {&comma-char}  + {&btpr-type-is_diadoc} + {&comma-char} +
+                                   {&is_PM} + {&comma-char}  + {&btpr-type-is_PM}
 
     /*"{&bef-autonws},{&bef-autoarh},{&bef-autogcd},{&bef-autosale},{&bef-autosuz},{&bef-autocbnk},{&bef-autofree}":U*/
     v-task-type   = {&btpr-type-autonws}

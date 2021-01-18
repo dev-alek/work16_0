@@ -561,6 +561,8 @@ if p-db-num = v-cntxt-db-num then do:
     { adm/autotask.i ASSIGN {&btpr-type-autogetcd} }
 
     { adm/autotask.i ASSIGN {&btpr-type-autosale} }
+    
+    { adm/autotask.i ASSIGN {&btpr-type-is_PM} }
 end.
 
     { adm/autotask.i ASSIGN {&btpr-type-autosuz} }
