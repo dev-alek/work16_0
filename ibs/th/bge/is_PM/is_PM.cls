@@ -53,6 +53,7 @@ class ibs.th.bge.is_PM.is_PM:
     field need-new-rvs        as logical
     field use-old-rvs         as logical
     field rvs-doc-code        as character
+    field rvs-doc-num         as integer
     field end-rvs-fact-qnty   as decimal
     field end-chk-fact-qnty   as decimal
     field end-trn-fact-qnty   as decimal
@@ -188,7 +189,7 @@ class ibs.th.bge.is_PM.is_PM:
                                      and buf_clients.obj-type = obj-type
                                      .
     
-    timezone-diff = integer(entry(1,paramList)) .
+    timezone-diff = integer(entry(1,paramList)) * 60 .
     rvs-doc-exist-diff = integer(entry(2,paramList)) .
     rvs-doc-create-diff = integer(entry(3,paramList)) .
     
@@ -221,7 +222,7 @@ class ibs.th.bge.is_PM.is_PM:
                                      and buf_clients.obj-type = obj-type
                                      .
     
-    timezone-diff = integer(entry(1,paramList)) .
+    timezone-diff = integer(entry(1,paramList)) * 60 .
     rvs-doc-exist-diff = integer(entry(2,paramList)) .
     rvs-doc-create-diff = integer(entry(3,paramList)) .
     
@@ -347,6 +348,9 @@ if session:debug-alert then output stream OutStr-html close .
     end .
     
     /* START Определение периода и приведение к московскому времени */
+    is-full = false .
+    is-full-backdate = false .
+    
     if not otherOneDate
     or (otherOneDate and toDate = today)
     then do :
@@ -462,6 +466,7 @@ if session:debug-alert then output stream OutStr-html close .
     define buffer buf_bar-code for ub.bar-code .
     define buffer buf_goods for ub.goods .
     define buffer buf_clients-attr for ub.clients-attr .
+    define buffer before_rvs-doc for ub.rvs-doc .
     
     define variable v-found-income as logical no-undo .
     define variable v-income-doc-code as character no-undo .
@@ -486,6 +491,7 @@ if session:debug-alert then output stream OutStr-html close .
         if buf_c-trn-doc.real-date-create = date-start  
         and buf_c-trn-doc.real-time-create < time-start
         then next trn_ . 
+        
         if buf_c-trn-doc.real-date-create = date-end  
         and buf_c-trn-doc.real-time-create > time-end
         then next trn_ .   
@@ -508,6 +514,19 @@ if session:debug-alert then output stream OutStr-html close .
           then do :
             v-income-doc-code = buf_trn-doc.doc-code .
             run write-to-log in p-parent-handle ( "Найдена приемка по ПН №" + v-income-doc-code ) .
+          end .
+          tt-place.rvs-doc-num = 2000000000 .
+          for first before_rvs-doc no-lock where before_rvs-doc.out-code = buf_trn-doc.doc-code
+                                             and before_rvs-doc.rvs-type = {&rvs-before-doc}    
+                                             :
+            tt-place.rvs-doc-num = integer(entry(1, before_rvs-doc.rvs-code, "-")) no-error .
+            if before_rvs-doc.fact-date <> ?
+            then do :
+              assign
+                tt-place.income-date = before_rvs-doc.fact-date
+                tt-place.income-time = before_rvs-doc.fact-time
+              .
+            end .                                 
           end .
         end . 
       end .
@@ -538,8 +557,21 @@ if session:debug-alert then output stream OutStr-html close .
             v-income-doc-code = buf_trn-doc.doc-code .
             run write-to-log in p-parent-handle ( "Найдена приемка по ПН №" + v-income-doc-code ) .
           end .
+          tt-place.rvs-doc-num = 2000000000 .
+          for first before_rvs-doc no-lock where before_rvs-doc.out-code = buf_trn-doc.doc-code
+                                             and before_rvs-doc.rvs-type = {&rvs-before-doc}    
+                                             :
+            tt-place.rvs-doc-num = integer(entry(1, before_rvs-doc.rvs-code, "-")) no-error .
+            if before_rvs-doc.fact-date <> ?
+            then do :
+              assign
+                tt-place.income-date = before_rvs-doc.fact-date
+                tt-place.income-time = before_rvs-doc.fact-time
+              .
+            end .                                 
+          end . 
         end . 
-      end .                     
+      end .  
     end .
     if not v-found-income
     then do :
@@ -567,6 +599,7 @@ if session:debug-alert then output stream OutStr-html close .
       if not otherOneDate
       then
       run write-to-log in p-parent-handle ( "Проверка необходимости создания сверки по резервуару " + string(tt-place.pl-code) + " . Товар " + string(tt-place.gds-code) ) .
+      
       for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
                                      and end_rvs-doc.obj-code = obj-code
                                      and end_rvs-doc.rvs-type = {&rvs-control}
@@ -597,18 +630,18 @@ if session:debug-alert then output stream OutStr-html close .
         and exec-time-diff < (rvs-doc-create-diff * 60)
         and not otherOneDate
         then do :
-          if is-full
-          and tt-place.is-meas
-          and not tt-place.rvd-level
-          and rvs-time-diff > exec-time-diff
-          then do :
-            run write-to-log in p-parent-handle ( "Требуется создание сверки" ) .
-            tt-place.need-new-rvs = true .
-          end .
-          else do :
-            run write-to-log in p-parent-handle (if is-full-backdate then "Выгрузка за прошедшие сутки, сверка не создается" else "Выгрузка промежуточная, сверка не создается" ) .
-            tt-place.use-old-rvs = true .
-          end .
+            if is-full
+            and tt-place.is-meas
+            and not tt-place.rvd-level
+            and rvs-time-diff > exec-time-diff
+            then do :
+              run write-to-log in p-parent-handle ( "Требуется создание сверки" ) .
+              tt-place.need-new-rvs = true .
+            end .
+            else do :
+              run write-to-log in p-parent-handle (if is-full-backdate then "Выгрузка за прошедшие сутки, сверка не создается" else "Выгрузка промежуточная, сверка не создается" ) .
+              tt-place.use-old-rvs = true .
+            end .
         end .
         else do :
           if rvs-time-diff > (rvs-doc-exist-diff * 60)
@@ -678,6 +711,7 @@ if session:debug-alert then output stream OutStr-html close .
       for first new_rvs-doc where new_rvs-doc.rvs-code = new-rvs-doc-code :
         tt-place.is-calc = true .
         tt-place.rvs-doc-code = new_rvs-doc.rvs-code .
+        
         for first new_rvs-line no-lock where new_rvs-line.obj-type  = new_rvs-doc.obj-type
                                          and new_rvs-line.obj-code  = new_rvs-doc.obj-code
                                          and new_rvs-line.rvs-code  = new_rvs-doc.rvs-code
@@ -686,6 +720,7 @@ if session:debug-alert then output stream OutStr-html close .
                                          :
           tt-place.end-rvs-fact-qnty = new_rvs-line.state-measure-cli-qnty + (new_rvs-line.state-add-qnty * new_rvs-line.state-density) . 
         end .
+        
         chk-doc_ :
         for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
                                        and buf_chk-doc.obj-code = obj-code
@@ -700,22 +735,12 @@ if session:debug-alert then output stream OutStr-html close .
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
 /*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
-            v-pl-code = 0 .
-            if buf_chk-gds.pl-code > 0
-            then do :
-              v-pl-code = buf_chk-gds.pl-code .
-            end .
-            else do :
-              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
-                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
-                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
-                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
-                                                      no-error .
-              if available buf_pl-pump-nozzle
-              then do :
-                v-pl-code = buf_pl-pump-nozzle.pl-code .    
-              end .
-            end .
+            v-pl-code = findtank (buf_chk-doc.obj-type,
+                                  buf_chk-doc.obj-code,
+                                  buf_chk-gds.pump,
+                                  buf_chk-gds.nozzle-code,
+                                  buf_chk-gds.pl-code,
+                                  buf_bar-code.gds-code) .
             if v-pl-code <> tt-place.pl-code then next chk-gds_ .
                                            
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
@@ -740,6 +765,7 @@ if session:debug-alert then output stream OutStr-html close .
             end .                            
           end .
         end .
+        
         income-doc-line_ :
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
@@ -770,6 +796,7 @@ if session:debug-alert then output stream OutStr-html close .
             tt-place.end-trn-fact-qnty = tt-place.end-trn-fact-qnty + buf_doc-pl.cli-fact-qnty .                              
           end .
         end . /* for each income buf_doc-line */
+        
         expense-doc-line_ :
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
@@ -820,16 +847,40 @@ if session:debug-alert then output stream OutStr-html close .
     first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
     first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
     :
-      for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
+      end_rvs-doc_ :
+      for each end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
                                      and end_rvs-doc.obj-code = obj-code
                                      and end_rvs-doc.rvs-type = {&rvs-control}
                                      and end_rvs-doc.status_  = {&fact}
                                      and ((end_rvs-doc.fact-date < date-end)
                                        or (end_rvs-doc.fact-date = date-end and end_rvs-doc.fact-time <= time-end))
-                                     by end_rvs-doc.fact-order
+                                     by end_rvs-doc.fact-order desc
                                      :
         tt-place.is-calc = true .
+        
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date)
+                                      or (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >= end_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-end)
+                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    by buf_trn-doc.fact-order                                   
+                                    :
+          if integer(entry(1, end_rvs-doc.rvs-code, "-")) > integer(entry(1, buf_trn-doc.doc-code, "-"))
+          then do :
+            next end_rvs-doc_ .
+          end .
+        end .
+        
         tt-place.rvs-doc-code = end_rvs-doc.rvs-code .                               
+        
         for first end_rvs-line no-lock where end_rvs-line.obj-type  = end_rvs-doc.obj-type
                                          and end_rvs-line.obj-code  = end_rvs-doc.obj-code
                                          and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
@@ -838,6 +889,7 @@ if session:debug-alert then output stream OutStr-html close .
                                          :
           tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
         end .
+        
         chk-doc_ :
         for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
                                        and buf_chk-doc.obj-code = obj-code
@@ -859,46 +911,37 @@ if session:debug-alert then output stream OutStr-html close .
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
 /*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
-            v-pl-code = 0 .
-            if buf_chk-gds.pl-code > 0
-            then do :
-              v-pl-code = buf_chk-gds.pl-code .
-            end .
-            else do :
-              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
-                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
-                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
-                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
-                                                      no-error .
-              if available buf_pl-pump-nozzle
-              then do :
-                v-pl-code = buf_pl-pump-nozzle.pl-code .    
+              v-pl-code = findtank (buf_chk-doc.obj-type,
+                                    buf_chk-doc.obj-code,
+                                    buf_chk-gds.pump,
+                                    buf_chk-gds.nozzle-code,
+                                    buf_chk-gds.pl-code,
+                                    buf_bar-code.gds-code) .
+              if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+                                             
+              if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+              then do :   
+                v-density = 0 .       
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  buf_chk-doc.shift-date
+                  buf_chk-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
               end .
-            end .
-            if v-pl-code <> tt-place.pl-code then next chk-gds_ .
-                                           
-            if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
-            then do :   
-              v-density = 0 .       
-              { str/avrgdens.i
-                tt-place.gds-code
-                buf_chk-doc.obj-type
-                buf_chk-doc.obj-code
-                tt-place.pl-code
-                buf_chk-doc.shift-date
-                buf_chk-doc.shift-num
-                buf_chk-doc.chk-date
-                buf_chk-doc.chk-time
-                v-density
-                no-error
-              }
-              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
-            end .
-            else do :                     
-              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
-            end .                               
+              else do :                     
+                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+              end .                               
           end .
         end .
+        
         income-doc-line_ :
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
@@ -930,6 +973,7 @@ if session:debug-alert then output stream OutStr-html close .
             tt-place.end-trn-fact-qnty = tt-place.end-trn-fact-qnty + buf_doc-pl.cli-fact-qnty .                              
           end .
         end . /* for each income buf_doc-line */
+        
         expense-doc-line_ :
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
@@ -961,7 +1005,8 @@ if session:debug-alert then output stream OutStr-html close .
             tt-place.end-trn-fact-qnty = tt-place.end-trn-fact-qnty - buf_doc-pl.cli-fact-qnty .                              
           end .
         end . /* for each expense buf_doc-line */
-      end . /* for last end_rvs-doc */ 
+        leave end_rvs-doc_ .
+      end . /* for each end_rvs-doc */ 
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 1 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) .
@@ -985,7 +1030,8 @@ if session:debug-alert then output stream OutStr-html close .
                                      and end_rvs-doc.obj-code = obj-code
                                      and end_rvs-doc.rvs-type = {&rvs-control}
                                      and end_rvs-doc.status_  = {&fact}
-                                     and ((end_rvs-doc.fact-date < tt-place.income-date)
+/*                                     and ((end_rvs-doc.fact-date < tt-place.income-date)*/
+                                     and ((integer(entry(1, end_rvs-doc.rvs-code, "-")) < tt-place.rvs-doc-num)
                                        or (end_rvs-doc.fact-date = tt-place.income-date and end_rvs-doc.fact-time <= tt-place.income-time))
                                      by end_rvs-doc.fact-order
                                      :
@@ -1020,22 +1066,12 @@ if session:debug-alert then output stream OutStr-html close .
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
 /*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
-            v-pl-code = 0 .
-            if buf_chk-gds.pl-code > 0
-            then do :
-              v-pl-code = buf_chk-gds.pl-code .
-            end .
-            else do :
-              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
-                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
-                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
-                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
-                                                      no-error .
-              if available buf_pl-pump-nozzle
-              then do :
-                v-pl-code = buf_pl-pump-nozzle.pl-code .    
-              end .
-            end .
+            v-pl-code = findtank (buf_chk-doc.obj-type,
+                                  buf_chk-doc.obj-code,
+                                  buf_chk-gds.pump,
+                                  buf_chk-gds.nozzle-code,
+                                  buf_chk-gds.pl-code,
+                                  buf_bar-code.gds-code) .
             if v-pl-code <> tt-place.pl-code then next chk-gds_ .
                                            
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
@@ -1212,8 +1248,15 @@ if session:debug-alert then output stream OutStr-html close .
                                        and buf_chk-doc.chk-date >= start_rvs-doc.fact-date
                                        and buf_chk-doc.chk-date <= date-start
                                        :
-          if buf_chk-doc.chk-date = start_rvs-doc.fact-date
-          and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
+/*          if buf_chk-doc.chk-date = start_rvs-doc.fact-date  */
+/*          and buf_chk-doc.chk-time <= start_rvs-doc.fact-time*/
+/*          then next chk-doc_ .                               */
+          
+          if buf_chk-doc.shift-date < start_rvs-doc.shift-date
+          then next chk-doc_ .
+          
+          if buf_chk-doc.shift-date = start_rvs-doc.shift-date
+          and buf_chk-doc.shift-num <= start_rvs-doc.shift-num
           then next chk-doc_ .
           
           if buf_chk-doc.chk-date = date-start
@@ -1227,22 +1270,12 @@ if session:debug-alert then output stream OutStr-html close .
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
 /*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
-            v-pl-code = 0 .
-            if buf_chk-gds.pl-code > 0
-            then do :
-              v-pl-code = buf_chk-gds.pl-code .
-            end .
-            else do :
-              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
-                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
-                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
-                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
-                                                      no-error .
-              if available buf_pl-pump-nozzle
-              then do :
-                v-pl-code = buf_pl-pump-nozzle.pl-code .    
-              end .
-            end .
+            v-pl-code = findtank (buf_chk-doc.obj-type,
+                                  buf_chk-doc.obj-code,
+                                  buf_chk-gds.pump,
+                                  buf_chk-gds.nozzle-code,
+                                  buf_chk-gds.pl-code,
+                                  buf_bar-code.gds-code) .
             if v-pl-code <> tt-place.pl-code then next chk-gds_ .
             
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
@@ -1294,12 +1327,16 @@ if session:debug-alert then output stream OutStr-html close .
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
-                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
-                                         (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Inv})
+/*                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or                                                  */
+/*                                         (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-start) or
                                          (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
+                                    and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
+                                         (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
                                     :
+          if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
+          then
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -1326,10 +1363,12 @@ if session:debug-alert then output stream OutStr-html close .
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
-                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
-                                         (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
+/*                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or                                                  */
+/*                                         (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-start) or
                                          (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
+                                    and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
+                                         (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
                                     :
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
@@ -1364,7 +1403,8 @@ if session:debug-alert then output stream OutStr-html close .
       /* END Определение книжного остатка на начало периода */
       
       /* START Определение фактического остатка на начало периода */
-      for last start_rvs-doc no-lock where start_rvs-doc.obj-type = obj-type
+      start_rvs-doc_ :
+      for each start_rvs-doc no-lock where start_rvs-doc.obj-type = obj-type
                                        and start_rvs-doc.obj-code = obj-code
                                        and start_rvs-doc.rvs-type = {&rvs-control}
                                        and start_rvs-doc.status_  = {&fact}
@@ -1376,8 +1416,30 @@ if session:debug-alert then output stream OutStr-html close .
                                      and start_rvs-line.rvs-code  = start_rvs-doc.rvs-code
                                      and start_rvs-line.pl-code   = tt-place.pl-code
                                      and start_rvs-line.gds-code  = tt-place.gds-code
-                                     by start_rvs-doc.fact-order
+                                     by start_rvs-doc.fact-order desc
                                      :
+        
+        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                        and buf_doc-line.obj-code  = obj-code
+                                        and buf_doc-line.artic     = buf_goods.artic
+                                        and buf_doc-line.prod-type = buf_goods.prod-type
+                                        and buf_doc-line.prod-code = buf_goods.prod-code
+                                        and buf_doc-line.status_   = {&fact}
+                                        ,
+        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                    and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date)
+                                      or (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time >= start_rvs-doc.fact-time))
+                                    and ((buf_trn-doc.fact-date < date-end)
+                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    by buf_trn-doc.fact-order                                   
+                                    :
+          if integer(entry(1, start_rvs-doc.rvs-code, "-")) > integer(entry(1, buf_trn-doc.doc-code, "-"))
+          then do :
+            next start_rvs-doc_ .
+          end .
+        end .
+        
         tt-place.rvs-doc-code = start_rvs-doc.rvs-code . 
         rvs-time-diff = time-start - start_rvs-doc.fact-time .
         if rvs-time-diff < 0
@@ -1399,6 +1461,13 @@ if session:debug-alert then output stream OutStr-html close .
             and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
             then next chk-doc_ .
             
+            if buf_chk-doc.shift-date <> start_rvs-doc.shift-date
+            then next chk-doc_ .
+            
+            if buf_chk-doc.shift-date = start_rvs-doc.shift-date
+            and buf_chk-doc.shift-num <= start_rvs-doc.shift-num
+            then next chk-doc_ .
+            
             if buf_chk-doc.chk-date = date-start
             and buf_chk-doc.chk-time > time-start
             then next chk-doc_ .  
@@ -1410,22 +1479,12 @@ if session:debug-alert then output stream OutStr-html close .
                                            and buf_chk-gds.b-code   = buf_bar-code.b-code
 /*                                           and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                            :
-              v-pl-code = 0 .
-              if buf_chk-gds.pl-code > 0
-              then do :
-                v-pl-code = buf_chk-gds.pl-code .
-              end .
-              else do :
-                find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
-                                                        and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
-                                                        and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
-                                                        and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
-                                                        no-error .
-                if available buf_pl-pump-nozzle
-                then do :
-                  v-pl-code = buf_pl-pump-nozzle.pl-code .    
-                end .
-              end .
+              v-pl-code = findtank (buf_chk-doc.obj-type,
+                                    buf_chk-doc.obj-code,
+                                    buf_chk-gds.pump,
+                                    buf_chk-gds.nozzle-code,
+                                    buf_chk-gds.pl-code,
+                                    buf_bar-code.gds-code) .
               if v-pl-code <> tt-place.pl-code then next chk-gds_ .
             
               if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
@@ -1541,6 +1600,7 @@ if session:debug-alert then output stream OutStr-html close .
              end.                  
           end .
         end .
+        leave start_rvs-doc_ .
       end .
       /* END Определение фактического остатка на начало периода */
     end . /* for each tt-place */
@@ -1591,6 +1651,7 @@ if session:debug-alert then output stream OutStr-html close .
     define buffer buf_bar-code for ub.bar-code .
     define buffer buf_goods for ub.goods .
     define buffer buf_clients-attr for ub.clients-attr .
+    define buffer buf_inv-line for ub.inv-line.
     
     run write-to-log in p-parent-handle (" START TURNOVER UTC " + utc-time() ) .
     
@@ -1623,25 +1684,15 @@ if session:debug-alert then output stream OutStr-html close .
       first buf_bar-code no-lock where buf_bar-code.b-code = buf_chk-gds.b-code,
       first tt-result where tt-result.gds-code = buf_bar-code.gds-code
       :
-        v-pl-code = 0 .
-        if buf_chk-gds.pl-code > 0
-        then do :
-          v-pl-code = buf_chk-gds.pl-code .
-        end .
-        else do :
-          find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
-                                                  and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
-                                                  and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
-                                                  and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
-                                                  no-error .
-          if available buf_pl-pump-nozzle
-          then do :
-            v-pl-code = buf_pl-pump-nozzle.pl-code .    
-          end .
-        end .
+        v-pl-code = findtank (buf_chk-doc.obj-type,
+                              buf_chk-doc.obj-code,
+                              buf_chk-gds.pump,
+                              buf_chk-gds.nozzle-code,
+                              buf_chk-gds.pl-code,
+                              buf_bar-code.gds-code) .
             
         if not valid-density (buf_chk-gds.density, false)
-        then do :   
+        then do :
           v-density = 0 .       
           { str/avrgdens.i
             tt-result.gds-code
@@ -1735,7 +1786,7 @@ if session:debug-alert then output stream OutStr-html close .
                                       and buf_doc-line.status_   = {&fact}
                                       ,
       first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                  and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+                                  and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
                                   and ((buf_trn-doc.fact-date > date-start) or
                                        (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time >= time-start))
                                   and ((buf_trn-doc.fact-date < date-end) or
@@ -1749,7 +1800,18 @@ if session:debug-alert then output stream OutStr-html close .
           if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
         end .
         /* Формула 8 */
-        tt-result.Delivery-ned-izl = tt-result.Delivery-ned-izl + buf_doc-line.cli-qnty .                              
+        find first buf_inv-line no-lock where buf_inv-line.doc-code  = buf_doc-line.doc-code
+                                          and buf_inv-line.artic     = buf_doc-line.artic    
+                                          and buf_inv-line.prod-code = buf_doc-line.prod-code
+                                          and buf_inv-line.prod-type = buf_doc-line.prod-type
+                                          no-error .
+        if available buf_inv-line
+        then do :                                
+          tt-result.Delivery-ned-izl = tt-result.Delivery-ned-izl + (buf_inv-line.wast-cli-qnty - buf_doc-line.cli-qnty) .
+        end .       
+        else do :
+          tt-result.Delivery-ned-izl = tt-result.Delivery-ned-izl + ((buf_doc-line.fact-qnty * buf_doc-line.fact-density) - buf_doc-line.cli-qnty) .
+        end .                       
       end . /* for each income buf_doc-line */
     end .
     /* END Расчет излишек/недостач */
@@ -1809,8 +1871,15 @@ if session:debug-alert then output stream OutStr-html close .
                                        and buf_chk-doc.chk-date >= end_rvs-doc.fact-date
                                        and buf_chk-doc.chk-date <= date-end
                                        :
-          if buf_chk-doc.chk-date = end_rvs-doc.fact-date
-          and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
+/*          if buf_chk-doc.chk-date = end_rvs-doc.fact-date  */
+/*          and buf_chk-doc.chk-time <= end_rvs-doc.fact-time*/
+/*          then next chk-doc_ .                             */
+          
+          if buf_chk-doc.shift-date < end_rvs-doc.shift-date
+          then next chk-doc_ .
+          
+          if buf_chk-doc.shift-date = end_rvs-doc.shift-date
+          and buf_chk-doc.shift-num <= end_rvs-doc.shift-num
           then next chk-doc_ .
           
           if buf_chk-doc.chk-date = date-end
@@ -1824,22 +1893,12 @@ if session:debug-alert then output stream OutStr-html close .
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
 /*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
-            v-pl-code = 0 .
-            if buf_chk-gds.pl-code > 0
-            then do :
-              v-pl-code = buf_chk-gds.pl-code .
-            end .
-            else do :
-              find first buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.nozzle-code = buf_chk-gds.nozzle-code
-                                                      and buf_pl-pump-nozzle.pump-code = buf_chk-gds.pump
-                                                      and buf_pl-pump-nozzle.obj-code = buf_chk-doc.obj-code
-                                                      and buf_pl-pump-nozzle.obj-type = buf_chk-doc.obj-type
-                                                      no-error .
-              if available buf_pl-pump-nozzle
-              then do :
-                v-pl-code = buf_pl-pump-nozzle.pl-code .    
-              end .
-            end .
+            v-pl-code = findtank (buf_chk-doc.obj-type,
+                                  buf_chk-doc.obj-code,
+                                  buf_chk-gds.pump,
+                                  buf_chk-gds.nozzle-code,
+                                  buf_chk-gds.pl-code,
+                                  buf_bar-code.gds-code) .
             if v-pl-code <> tt-place.pl-code then next chk-gds_ .
             
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
@@ -1873,12 +1932,14 @@ if session:debug-alert then output stream OutStr-html close .
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Inv})
                                     and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                     :
+          if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
+          then                            
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2087,6 +2148,7 @@ if session:debug-alert then output stream OutStr-html close .
   
   method private void make-rep () :
     define variable v-now as datetime no-undo .
+    define variable v-msk-dt as datetime no-undo .
     define variable v-host-code as integer no-undo .
     define variable v-host-name as character no-undo .
     
@@ -2152,12 +2214,14 @@ if session:debug-alert then output stream OutStr-html close .
     .
                         
     v-now = now .
+    v-msk-dt = now - (timezone-diff * 60 * 1000) .
     put stream OutStr-html unformatted
         '<tr>' skip
           '<td colspan="20" style="text-align: center; font-weight:bold;">Ежедневный отчет по движению топлива за сутки на АЗС/АЗК </td>' skip
         '</tr>' skip   
         '<tr>' skip
-          '<td colspan="20" style="text-align: left; font-weight:bold;">' + string(v-now, "99.99.9999 HH:MM:SS") + '</td>' skip
+          '<td colspan="10" style="text-align: left; font-weight:bold;">' + string(v-msk-dt, "99.99.9999 HH:MM:SS") + '</td>' skip
+          '<td colspan="10" style="text-align: left; font-weight:bold;">' + string(v-now, "99.99.9999 HH:MM:SS") + '</td>' skip
         '</tr>' skip 
       '</thead>' skip
     .  
@@ -2290,5 +2354,116 @@ if session:debug-alert then output stream OutStr-html close .
     end.
     return v-answ.
   end method . /* valid-density */
+  
+  method private integer findtank
+  (
+    input p-obj-type     as character, 
+    input p-obj-code     as integer,   
+    input p-pump-code    as integer,   
+    input p-nozzle-code  as integer,   
+    input p-from-pl-code as integer,   
+    input p-gds-code     as integer   
+  ) :  
+    define variable v-pl-code            like ub.place.pl-code no-undo .
+    define variable p-pl-code            like ub.place.pl-code no-undo .
+    define variable v-dopstr             as character no-undo .
+  
+    define buffer buf_place for ub.place.
+    define buffer buf_pl-gds-pump for ub.pl-gds-pump.
+    define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle.
+    define buffer buf_pl-gds for ub.pl-gds.
+  
+    do
+    on error undo, return error return-value
+    :
+  
+      assign
+        v-pl-code = 0
+        p-pl-code = ?
+      .
+  
+      if p-from-pl-code <> ?
+        and p-from-pl-code <> 0
+      then do:
+        find first buf_pl-gds no-lock
+          where buf_pl-gds.obj-type  = p-obj-type
+            and buf_pl-gds.obj-code  = p-obj-code
+            and buf_pl-gds.pl-code   = p-from-pl-code
+            and buf_pl-gds.gds-code  = p-gds-code
+          no-error.
+        if available buf_pl-gds then do:
+          assign
+            v-pl-code = buf_pl-gds.pl-code
+          .
+        end.
+      end.
+  
+      if v-pl-code <> 0
+        and p-nozzle-code <> ?
+        and p-nozzle-code <> 0
+      then do:
+        find first buf_pl-pump-nozzle no-lock
+          where buf_pl-pump-nozzle.obj-type    = p-obj-type
+            and buf_pl-pump-nozzle.obj-code    = p-obj-code
+            and buf_pl-pump-nozzle.pl-code     = v-pl-code
+            and buf_pl-pump-nozzle.pump-code   = p-pump-code
+            and buf_pl-pump-nozzle.nozzle-code = p-nozzle-code
+  /*          and buf_pl-pump-nozzle.status_     = {&current-status} поле не заполняется*/
+          no-error .
+        if not available buf_pl-pump-nozzle then do:
+          return p-pl-code .
+        end.
+      end.
+  
+      if v-pl-code = 0 then do:
+        if p-nozzle-code = 0 then do:
+          find first buf_pl-gds-pump no-lock
+            where buf_pl-gds-pump.obj-type  = p-obj-type
+              and buf_pl-gds-pump.obj-code  = p-obj-code
+              and buf_pl-gds-pump.pump-code = p-pump-code
+              and buf_pl-gds-pump.gds-code  = p-gds-code
+              and buf_pl-gds-pump.status_   = {&current-status}
+            no-error.
+          if available buf_pl-gds-pump then do:
+            assign
+              v-pl-code = buf_pl-gds-pump.pl-code
+            .
+          end.
+        end.
+        else do:
+          _ppnz:
+          for each buf_pl-pump-nozzle no-lock
+            where buf_pl-pump-nozzle.obj-type = p-obj-type
+              and buf_pl-pump-nozzle.obj-code = p-obj-code
+              and buf_pl-pump-nozzle.pump-code = p-pump-code
+              and buf_pl-pump-nozzle.nozzle-code = p-nozzle-code
+  /*            and buf_pl-pump-nozzle.status_ = {&current-status} поле не заполняется*/
+            ,first buf_pl-gds-pump no-lock
+            where buf_pl-gds-pump.obj-type  = p-obj-type
+              and buf_pl-gds-pump.obj-code  = p-obj-code
+              and buf_pl-gds-pump.pump-code = p-pump-code
+              and buf_pl-gds-pump.gds-code  = p-gds-code
+              and buf_pl-gds-pump.status_   = {&current-status}
+              and buf_pl-gds-pump.pl-code   = buf_pl-pump-nozzle.pl-code
+          on error undo, return error return-value
+          :
+            assign
+              v-pl-code = buf_pl-pump-nozzle.pl-code
+            .
+            leave _ppnz.
+          end.
+        end.
+      end.
+  
+      if v-pl-code <> 0 then do:
+        assign
+          p-pl-code = v-pl-code
+        .
+      end .
+      
+      return p-pl-code .
+  
+    end . /*doe*/
+  end method .
 
-end class.
+end class .

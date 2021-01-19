@@ -88,7 +88,7 @@ DEFINE BUTTON Btn_OK DEFAULT
      BGCOLOR 8 .
 
 DEFINE VARIABLE f-timezone-diff AS integer INITIAL ? format "->>>9"
-     LABEL "–азница с московским часовым по€сом, мин"
+     LABEL "–азница с московским часовым по€сом, ч"
      VIEW-AS fill-in
      SIZE 10 BY 1 NO-UNDO.
 

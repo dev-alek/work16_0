@@ -106,7 +106,7 @@ DEFINE VARIABLE f-rep-date2 AS DATE FORMAT "99/99/9999":U INITIAL ?
      SIZE 12 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-timediff AS INTEGER FORMAT "->>>9":U INITIAL 0 
-     LABEL "–азница с московским часовым по€сом, мин." 
+     LABEL "–азница с московским часовым по€сом, ч." 
      VIEW-AS FILL-IN 
      SIZE 7.2 BY 1 NO-UNDO.
 
@@ -268,7 +268,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   run GetCurrentProcessID (output v-pid) .
   
-  f-timediff = timezone - 180 .
+  f-timediff = (timezone - 180) / 60 .
   f-rep-date1 = today - 1 .
   f-rep-date2 = today - 1 .
   RUN enable_UI.

@@ -92,7 +92,7 @@ DEFINE VARIABLE f-rep-date AS DATE FORMAT "99/99/9999":U INITIAL ?
      SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-timediff AS INTEGER FORMAT "->>>9":U INITIAL 0 
-     LABEL "–азница с московским часовым по€сом, мин." 
+     LABEL "–азница с московским часовым по€сом, ч." 
      VIEW-AS FILL-IN 
      SIZE 7.2 BY 1 NO-UNDO.
 
@@ -216,7 +216,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   { gbl/getcntxt.i get }
   
-  f-timediff = timezone - 180 .
+  f-timediff = (timezone - 180) / 60 .
   f-rep-date = today - 1 .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
