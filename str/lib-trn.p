@@ -1511,19 +1511,24 @@ procedure lib-trn_is-petrl :
   define buffer bf_units for ub.units.
 
   do on error undo, return error
-              substitute( 'lib-trn_is-petrl: ошибка определения товара на топливо: товар &1 (производитель &2 &3).',
+              substitute( 'lib-trn_is-petrl: ошибка определения товара на топливо: товар &1 ' + if parprod-type eq ? then '(код &3).' else '(производитель &2 &3).',
                           parartic, parprod-type, parprod-code ) :
-    find first bf_goods no-lock where
-               bf_goods.artic     = parartic     and
-               bf_goods.prod-type = parprod-type and
-               bf_goods.prod-code = parprod-code no-error.
+    if parprod-type ne ? 
+    then
+       find first bf_goods no-lock where
+                  bf_goods.artic     = parartic     and
+                  bf_goods.prod-type = parprod-type and
+                  bf_goods.prod-code = parprod-code no-error.
+    else
+       find first bf_goods no-lock where
+                  bf_goods.gds-code     = parprod-code no-error.
     if not available bf_goods then do:
-      undo, return error substitute( "lib-trn_is-petrl: не найден товар &1 (производитель &2 &3).",
+      undo, return error substitute( "lib-trn_is-petrl: не найден товар &1 " + if parprod-type eq ? then '(код &3).' else '(производитель &2 &3).',
                                      parartic, parprod-type, parprod-code ).
     end.
     find first bf_units no-lock where bf_units.unit-name = bf_goods.unit-base no-error.
     if not available bf_units then do:
-      return error substitute( 'lib-trn_is-petrl: не найдена базовая ед.изм. "&1" в товаре &2 (производитель &3 &4).',
+      return error substitute( 'lib-trn_is-petrl: не найдена базовая ед.изм. "&1" в товаре &2 ' + if parprod-type eq ? then '(код &4).' else '(производитель &3 &4).',
                                bf_goods.unit-base, parartic, parprod-type, parprod-code ).
 	end.
     assign paris-petrolium = ( if lookup( {&petrolium}, bf_units.type ) > 0 then yes else no ).

@@ -1927,7 +1927,7 @@ sheetf.sizes = "15,16,17,17," +
               "16,13,16"
 sheetf.colformat = "1=0.00;2=0.00;" +
                    "3=0.00;4=0.00;" +
-                   "5=0.00;6=0.000;7=0.00"
+                   "5=0.00;6=0.00;7=0.00"
                     + {&delim-par} + {&delim-par} + sheet-name
 Make-Excel = yes
 reportname = "РАСЧЕТ НАЛОГОВ (РЕАЛИЗАЦИЯ В МАГАЗИНЕ) ИТОГИ"
@@ -1955,43 +1955,6 @@ by d-slt-vat.VAT-pc
   d-slt-vat.uchet-sum (TOTAL by d-slt-vat.vat-pc)
   d-slt-vat.n-u-sum (TOTAL by d-slt-vat.vat-pc)
   .
-  /*
-  PUT STREAM PrnLibStream
-  string( /*"Налог с продаж" + string( d-slt-vat.slt-pc, ">>9.<<%") +
-          " " + */  string( d-slt-vat.VAT-pc, ">9.9<%") + " " +
-          string(d-slt-vat.slt-r-b-brutto, "->>>,>>>,>>9.99" ) +  ":")
-  AT 14 format "X(22)"
-  /*AT 14 format "X(42)"
-  string( string( d-slt-vat.SLT-r-b, "->>>,>>>,>>9.99" ) + ":" )
-  AT 57 format "X(16)"
-  string( string((d-slt-vat.slt-r-b-brutto - d-slt-vat.SLT-r-b),"->>>,>>>,>>9.99" ) + ":" )
-  AT 73 format "X(16)"*/
-  (  string(d-slt-vat.uchet-with-vat-sum, "->>>,>>>,>>9.99" )  +  ":")
-  AT {&at-uchet-sum} format "X(16)"
-  (  string(d-slt-vat.uchet-sum, "->>>,>>>,>>9.99" )  +  ":")
-      AT {&at-vat-r-b} format "X(16)"
-  (  string(d-slt-vat.VAT-r-b, "->>>,>>>,>>9.99" )  +  ":")
-      AT {&at-n-u-sum} format "X(16)"
-  (  string(( d-slt-vat.n-u-sum / d-slt-vat.uchet-sum ) * 100, "->>>,>>9.99" )  +  ":")
-      AT {&at-pcnt-torg-nac}  format "X(16)"
-  (  string(( d-slt-vat.n-u-sum / d-slt-vat.slt-r-b-brutto ) * 100, "->>,>>9.99" )  +  ":")
-      AT {&at-sum-torg-nac} format "X(16)"
-  SKIP.
-
-  {&putexcel}
-  /*string( "НП " + string( d-slt-vat.slt-pc, "99.99%"))  {&tabulation}*/
-  d-slt-vat.VAT-pc {&tabulation}
-  d-slt-vat.slt-r-b-brutto  {&tabulation}
-  /*string( d-slt-vat.SLT-r-b, "->>>,>>>,>>9.99" ) {&tabulation}
-  string((d-slt-vat.slt-r-b-brutto - d-slt-vat.SLT-r-b),"->>>,>>>,>>9.99" )  {&tabulation}
-  */
-  d-slt-vat.uchet-with-vat-sum {&tabulation}
-  d-slt-vat.uchet-sum {&tabulation}
-  d-slt-vat.VAT-r-b {&tabulation}
-  ( d-slt-vat.n-u-sum / d-slt-vat.uchet-sum ) * 100  {&tabulation}
-  ( d-slt-vat.n-u-sum / d-slt-vat.slt-r-b-brutto ) * 100
-  skip.
-  */
 
    IF LAST-OF(d-slt-vat.vat-pc) then do:
        PUT STREAM PrnLibStream
@@ -2121,17 +2084,17 @@ if classify <> "no-grp-totals" then do:
                      "9=0.00" +
                      {&delim-par} + {&delim-par} + sheet-name
   */
-  sheetf.Excel-Column-Lable =  "Группа,Количество," +
+  sheetf.Excel-Column-Lable =  "Группа,Количество,Сумма учетных цен с НДС (вал.продаж)," +
                                 "Сумма учетных цен без НДС (вал.продаж),Сумма продажная (вал. продаж)," +
                                 "Сумма торг. нацен. (вал. продаж),Торг.нацен. %," +
                                 "Сумма НДС (вал. продаж)"
-  sheetf.sizes = "120,12,"  +
+  sheetf.sizes = "120,12,13,"  +
                 "13,13," +
                 "13,8,13"
-  sheetf.colformat = "1=@;2=0.000;" +
-                     "3=0.00;4=0.00;" +
-                     "5=0.00;6=0.00;" +
-                     "7=0.00" +
+  sheetf.colformat = "1=@;2=0.000;3=0.00;" +
+                     "4=0.00;5=0.00;" +
+                     "6=0.00;7=0.00;" +
+                     "8=0.00" +
                      {&delim-par} + {&delim-par} + sheet-name
 
   Make-Excel = yes
@@ -2161,6 +2124,7 @@ if classify <> "no-grp-totals" then do:
     {&putexcel}
     sj-grp.serv-name {&tabulation}
     sj-grp.qnty {&tabulation}
+    sj-grp.uchet-with-vat-sum {&tabulation}
     sj-grp.uchet-sum {&tabulation}
     sj-grp.netto-sum {&tabulation}
     /*sj-grp.slt-r-b {&tabulation}
@@ -2181,7 +2145,7 @@ if classify <> "no-grp-totals" then do:
   ((ACCUM TOTAL sj-goods.netto-sum) -
   (ACCUM TOTAL sj-goods.SLT-r-b  )) {&tabulation}*/
   (ACCUM TOTAL sj-goods.n-u-sum  ) {&tabulation}
- 
+  "" {&tabulation}
   (ACCUM TOTAL sj-goods.VAT-r-b  ) skip
   .
 end.

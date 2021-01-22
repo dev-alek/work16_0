@@ -356,6 +356,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 /* Атрибут клиента - Поставщик СУГ   */
 { cmp/cr-prep.i 1 attr-supp-lgas supp-lgas " " supp-lgas }
 
+/* Атрибут клиента - «Последняя выгруженная для ИС ПМ дата»   */
+{ cmp/cr-prep.i 1 attr-exp-isPM-last-date exp-isPM-last-date " " exp-isPM-last-date }
+
 /* сюда добавлять новые названия атрибутов клиентов */
 
 /* список атрибутов клиентов */
@@ -409,6 +412,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 ,{&bef-attr-cli-for-close-fo}~
 ,{&bef-attr-cli-clim-grp}~
 ,{&bef-attr-cli-decommissioned}~
+,{&bef-attr-exp-isPM-last-date}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-list {&clntattr-list}" ).
 
@@ -1015,8 +1019,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* Наличие расписания обмена с ИС МОТП */
 { cmp/cr-prep.i 1 attr-schedule-motp          schedule-motp         " " schedule-motp        }
 
-/* Наличие расписания обмена с ИС МОТП */
-{ cmp/cr-prep.i 1 attr-schedule-diadoc        schedule-diadoc       " " schedule-diadoc        }
+/* Наличие расписания обмена с ИС Диадок */
+{ cmp/cr-prep.i 1 attr-schedule-diadoc        schedule-diadoc       " " schedule-diadoc      }
+
+/* Наличие расписания выгрузки в ИС ПМ */
+{ cmp/cr-prep.i 1 attr-schedule-isPM          schedule-isPM         " " schedule-isPM        }
 
 /* Дата по которую усечены документы по БД в ГБД */
 { cmp/cr-prep.i 1 attr-cut-date               cut-date              " " cut-date             }

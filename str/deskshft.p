@@ -36,7 +36,7 @@ define variable vss-description as character no-undo init "Проверка корректности
 
 { cmp/str-glbl.i }
 { cmp/library.i }
-{ gbl/getcntxt.i def }
+/*{ gbl/getcntxt.i def } 01/IV-2019 */
 
 define variable last-date like ub.chk-doc.chk-date no-undo.
 define variable last-time like ub.chk-doc.chk-time no-undo.
@@ -170,7 +170,8 @@ for first buf_marking no-lock where
 end.
 end.
 
-/*проверка на всех ли кассах магазина закрыты смены*/
+/* 23/III-2019  исключена проверка на всех ли кассах магазина закрыты смены. Задача #4968.
+                На станции специально выключают кассу, чтобы избежать докачки чеков и проверки закрытия смены на кассе.
 { gbl/getcntxt.i get }
 _cash-desk:
 FOR EACH buf_cash-desk No-LOCK WHERE
@@ -231,18 +232,4 @@ FOR EACH buf_cash-desk No-LOCK WHERE
       end.
   end. 
 END.
-
-/*это не проверяем это делает ИСАКОВ!*/
-/*закрыта ли продажа по данной смены*/
-/*
-FIND FIRST ub.inkas No-LOCK WHERE ub.inkas.obj-type = p-obj-type AND
-                                                           ub.inkas.obj-code = p-obj-code AND
-                                                           ub.inkas.shift-date = p-shift-date AND
-                                                           ub.inkas.shift-num = p-shift-num No-ERROR.
-IF AVAIL ub.inkas and ub.inkas.status_ <> {&fact} then do:
-     vReason = "Продажа по смене N " + string(p-shift-num) +
-                        " за " + string(p-shift-date, "99/99/9999") +
-                        " не закрыта".
-    return error vreason.
-end.
 */

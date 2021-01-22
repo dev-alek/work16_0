@@ -617,6 +617,8 @@ if varnozzle-code = ? then varnozzle-code = 0.
         assign
           j_row-counter = j_row-counter + 1
           j_total-lines = j_total-lines + 1
+          .
+          if length (v_total-lines) < 6000 then
           v_total-lines = v_total-lines
                         + ( if v_total-lines = "":U then "":U else {&comma-char} )
                         + string( j_row-counter )
@@ -651,6 +653,8 @@ if varnozzle-code = ? then varnozzle-code = 0.
       assign
         j_row-counter = j_row-counter + 1
         j_total-lines = j_total-lines + 1
+        .
+        if length (v_total-lines) < 6000 then
         v_total-lines = v_total-lines
                       + ( if v_total-lines = "":U then "":U else {&comma-char} )
                       + string( j_row-counter )
@@ -663,6 +667,8 @@ if varnozzle-code = ? then varnozzle-code = 0.
   assign
     j_row-counter = j_row-counter + 1
     j_total-lines = j_total-lines + 1
+    .
+    if length (v_total-lines) < 6000 then
     v_total-lines = v_total-lines
                   + ( if v_total-lines = "":U then "":U else {&comma-char} )
                   + string( j_row-counter )
@@ -1434,11 +1440,11 @@ procedure get-print-line :
         when "Z":U
         then do:
           case j_length :
-            when 10
+            when 12
             then do:
               assign
-                p-print-line = p-print-line + " ":U + string( bf_print-line.gds-code, "999999999":U ) + ":":U
-                p-excel-line = p-excel-line         + string( bf_print-line.gds-code, "999999999":U ) + {&tabulation}
+                p-print-line = p-print-line + " ":U + string( bf_print-line.gds-code, "99999999999":U ) + ":":U
+                p-excel-line = p-excel-line         + string( bf_print-line.gds-code, "99999999999":U ) + {&tabulation}
               .
             end.
           end case. /* j_length */
@@ -1594,7 +1600,7 @@ procedure get-lbl-data :
   on error undo, return error return-value
   :
     assign
-      p-list-length = "10,8,10,10,24,5,8,5,13,21,24,15,15,15":U
+      p-list-length = "10,8,12,10,24,5,8,5,13,21,24,15,15,15":U
       p-list-label  = "Дата,Время,Код товара,Артикул,Наименование товара,№ ТРК,Пистолет,Чеков,Количество,":U +
                       "Сумма продаж,Вид оплаты,Номер чека,Сухой чек,№ заказа":U
       p-list-types  = "D,T,Z,C,C,I,I,I,Q,S,C,C,C,C":U

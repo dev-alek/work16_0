@@ -311,7 +311,7 @@ put stream OutStr-html unformatted
    '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Цена</TD>' skip
    '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Скидка</TD>' skip    
    '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">% ск</TD>' skip
-   '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Ценна нетто</TD>' skip
+   '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Цена нетто</TD>' skip
    '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Сумма по строке</TD>' skip
    '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Дорожный налог</TD>' skip
    '<TD text_wrap="true" rowspan="3" style="text-align: center; font-weight: bold; background-color: silver; border: 1px solid black;">Спи</TD>' skip
@@ -353,7 +353,7 @@ FOR EACH chk-gds No-LOCK where
       '<TD text_wrap="true" rowspan="3" style="text-align: center; border: 1px solid black;">' + if chk-gds.is-error then "yes" + '</TD>' else "no" + '</TD>' skip
       '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: center; border: 1px solid black;">' + string(chk-gds.src-code) + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center; border-top: 1px solid black;">' + string(chk-gds.pump) + '</TD>' skip
-      '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-gds.doc-qnty,"->>>>>>>>>>>9.99") + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-gds.doc-qnty,"->>>>>>>>>>>9.999") + '</TD>' skip
       '<TD text_wrap="true" rowspan="3" style="text-align: center; border: 1px solid black;">' + if avail bar-code then string(bar-code.unit-cli) + '</TD>' else "" + '</TD>' skip
       '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: right; border: 1px solid black;">' + string((chk-gds.price-base + chk-gds.price-service),"->>>>>>>>>>>9.99") + '</TD>' skip
       '<TD text_wrap="true" colspan="2" rowspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-gds.discnt,"->>>>>>>>>>>9.99") + '</TD>' skip    
@@ -393,7 +393,7 @@ END.
 put stream OutStr-html unformatted
    '<TR>' skip
    '<TD text_wrap="true" colspan="12" style="font-weight: bold; text-align: right;"></TD>' skip
-   '<TD text_wrap="true" colspan="2" style="font-weight: bold; text-align: right;">' + string(itog-doc-qnty,"->>>>>>>>>>>9.99") + '</TD>' skip
+   '<TD text_wrap="true" colspan="2" style="font-weight: bold; text-align: right;">' + string(itog-doc-qnty,"->>>>>>>>>>>9.999") + '</TD>' skip
    '<TD text_wrap="true"></TD>' skip
    '<TD text_wrap="true" colspan="2" style="font-weight: bold; text-align: right;">' + string(itog-price-service,"->>>>>>>>>>>9.99") + '</TD>' skip
    '<TD text_wrap="true" colspan="2" style="font-weight: bold; text-align: right;">' + string(itog-discnt,"->>>>>>>>>>>9.99") + '</TD>' skip    

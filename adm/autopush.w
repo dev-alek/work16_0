@@ -561,6 +561,8 @@ if p-db-num = v-cntxt-db-num then do:
     { adm/autotask.i ASSIGN {&btpr-type-autogetcd} }
 
     { adm/autotask.i ASSIGN {&btpr-type-autosale} }
+    
+    { adm/autotask.i ASSIGN {&btpr-type-is_PM} }
 end.
 
     { adm/autotask.i ASSIGN {&btpr-type-autosuz} }
@@ -845,6 +847,28 @@ define input parameter p-task-type as   character    no-undo .
           undo, leave block_bp.
         end.
       end.
+      when {&btpr-type-is_PM}
+      then do:
+        run adm/isPM-shdp.w
+          (input  buf_sys-ctrl.db-num
+          ,input  p-task-type
+          ,input  -1
+          ,output v-cancel
+          ) no-error.
+        if error-status :error
+        then do:
+          message vss-workfile vss-revision vss-description skip
+            "Ошибка при создании (редактировании) атрибута!"
+            view-as alert-box error.
+          return error.
+        end.
+        if v-cancel = TRUE then do:
+          assign
+            v-msg = "Время очередного сеанса не изменено!"
+          .
+          undo, leave block_bp.
+        end.
+      end .
       when {&btpr-type-autofree}
       then do:
         define variable v-free-id as character no-undo .

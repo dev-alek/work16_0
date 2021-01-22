@@ -20,12 +20,9 @@ Creation date: 11/29/06
 */
 
 define input parameter parparentproc   as widget-handle no-undo.
-define input parameter p-parent-handle as widget-handle no-undo.
-define input parameter p-log-handle    as handle        no-undo.
-define input parameter p-cre-db-num    as integer      no-undo .
-define input parameter p-task-type     as character    no-undo.
-define input parameter p-task-num      as integer      no-undo.
-define input parameter p-db-num        as integer       no-undo.
+define input parameter p-obj-type as character no-undo .
+define input parameter p-obj-code as integer no-undo .
+define output parameter p-rvs-code  as character no-undo .
 
 define variable vss-revision    as character no-undo initial "$Revision$":U.
 define variable vss-author      as character no-undo initial "$Author$":U.
@@ -127,77 +124,38 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
   then do:
     undo Main-Block, return 'Нет учета топлива в системе.' .
   end.
-  publish "getObjList" (output v-obj-list).
-  if v-obj-list eq ""
-  then
-     get-key-value section 'revision' key 'rvs-object' value v-obj-list.
 
-  if v-obj-list = ? or v-obj-list = '':U then do:
-    undo Main-Block, return 'Не указан ни один объект в секции [revision] ini-файла (rvs-object).' .
+
+
+  find first buf_clients no-lock
+    where buf_clients.obj-type = p-obj-type
+      and buf_clients.obj-code = p-obj-code
+    no-error .
+  if not available buf_clients then do:
+    run add-msg in this-procedure
+      ( input true
+      , input substitute( 'Неизвестный объект &1 &2 в списке секции [revision] ini-файла.', v-obj-type, v-obj-code )
+      ) .
   end.
 
-
-  cre_obj-list:
-  do jj = 1 to num-entries( v-obj-list, {&comma-char} )
-  :
-    assign
-      v-curr-obj = entry( jj, v-obj-list,  {&comma-char}   )
-      v-obj-type = entry(  1, v-curr-obj, '{&delim-flt}':U )
-    .
-    assign
-      v-obj-code = integer( entry(  2, v-curr-obj, '{&delim-flt}':U ) ) no-error
-    .
-    if error-status :error
-      or v-obj-code = ?
-      or v-obj-code <= 0
-    then do:
-      run add-msg in this-procedure
-        ( input true
-        , input substitute( 'Неверно указан код объекта &1 в секции [revision] ini-файла.', v-obj-code )
-        ) .
-      next cre_obj-list .
-    end.
-
-    if lookup( v-obj-type, '{&bef-shop},{&bef-stock}':U ) = 0 then do:
-      run add-msg in this-procedure
-        ( input true
-        , input substitute( 'Неверно указан тип объекта &1 в секции [revision] ini-файла.', v-obj-type )
-        ) .
-      next cre_obj-list .
-    end.
-
-    find first buf_clients no-lock
-      where buf_clients.obj-type = v-obj-type
-        and buf_clients.obj-code = v-obj-code
-      no-error .
-    if not available buf_clients then do:
-      run add-msg in this-procedure
-        ( input true
-        , input substitute( 'Неизвестный объект &1 &2 в списке секции [revision] ini-файла.', v-obj-type, v-obj-code )
-        ) .
-      next cre_obj-list .
-    end.
-
-    if g#db-num <> buf_clients.db-num then do:
-      run add-msg in this-procedure
-        ( input true
-        , input substitute( 'Объект &1 &2 не из текущей БД (&3).', v-obj-type, v-obj-code, g#db-num )
-        ) .
-      next cre_obj-list .
-    end.
-
-    create obj-list.
-    assign
-      obj-list.obj-type  = buf_clients.obj-type
-      obj-list.obj-code  = buf_clients.obj-code
-      obj-list.host-code = buf_clients.host-code
-      obj-list.db-num    = g#db-num
-    .
+  if g#db-num <> buf_clients.db-num then do:
+    run add-msg in this-procedure
+      ( input true
+      , input substitute( 'Объект &1 &2 не из текущей БД (&3).', v-obj-type, v-obj-code, g#db-num )
+      ) .
   end.
+
+  create obj-list.
+  assign
+    obj-list.obj-type  = buf_clients.obj-type
+    obj-list.obj-code  = buf_clients.obj-code
+    obj-list.host-code = buf_clients.host-code
+    obj-list.db-num    = g#db-num
+  .
 
 
   block_obj:
-  for each obj-list no-lock
+  for first obj-list no-lock
   on error undo block_obj, retry block_obj
   :
     if retry then do:
@@ -211,7 +169,7 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
     assign
       v-obj-type  = obj-list.obj-type
       v-obj-code  = obj-list.obj-code
-      v-host-code = buf_clients.host-code
+      v-host-code = obj-list.host-code
     .
 
     find first buf_icnt-doc no-lock
@@ -227,26 +185,7 @@ on error undo Main-Block, return error substitute( "&1. &2&3&4", vss-workfile, r
         ) .
       undo block_obj, next block_obj .
     end.
-/*
-    find first buf_rvs-doc no-lock
-      where buf_rvs-doc.obj-type =  v-obj-type
-        and buf_rvs-doc.obj-code =  v-obj-code
-        and buf_rvs-doc.status_  <> {&fact}
-/*        считаю, что ВСЕ документы должны быть закрыты */
-/*        and ( buf_rvs-doc.rvs-type =  {&rvs-shift}*/
-/*              or ( buf_rvs-doc.rvs-type =  {&rvs-control}*/
-/*                   and buf_rvs-doc.is-full  =  yes*/
-/*                 )*/
-/*            )*/
-      no-error .
-    if available buf_rvs-doc then do:
-      run add-msg in this-procedure
-        ( input true
-        , input substitute( 'На объекте &1 &2 имеется не закрытый документ сверки "&3".', v-obj-type, v-obj-code, buf_rvs-doc.rvs-code )
-        ) .
-      undo block_obj, next block_obj .
-    end.
-*/
+ 
     find first cur_shift-obj no-lock
       where cur_shift-obj.obj-type = v-obj-type
         and cur_shift-obj.obj-code = v-obj-code
@@ -785,6 +724,8 @@ end.
                           , v-obj-code
                         )
       ) .
+      
+    p-rvs-code = buf_rvs-doc.rvs-code .
 
   end. /* for each obj-list */
 

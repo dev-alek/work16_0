@@ -74,11 +74,20 @@ define temp-table tt_pmp-nzzl no-undo
   field nozzle-code like ub.pl-pump-nozzle.nozzle-code
 .
 
-find first ctrl_rvs-doc no-lock where
-    recid( ctrl_rvs-doc ) = p-rvs-doc-rec no-error .
+  find first ctrl_rvs-doc no-lock where
+      recid( ctrl_rvs-doc ) = p-rvs-doc-rec no-error .
+  if not available ctrl_rvs-doc then do:
+    {&SetCursorNo}
+    run waitfram-hide in this-procedure .
+    return error 'ОШИБКА! Не найден документ контрольной сверки.' .
+  end.
+
+      
     
-            find first buf_doc-attr where  ctrl_rvs-doc.rvs-code = buf_doc-attr.doc-code and buf_doc-attr.attr-code = "rvs-auto" and buf_doc-attr.attr-value = "Yes" no-error.
-  if  available buf_doc-attr then do:
+  if can-find (first buf_doc-attr
+               where ctrl_rvs-doc.rvs-code = buf_doc-attr.doc-code
+                 and buf_doc-attr.attr-code = "rvs-auto"
+                 and buf_doc-attr.attr-value = "Yes") then do:
  return error substitute( 'Нельзя создать сменную сверку по автоматической!'
                            ) .
       end.
@@ -86,7 +95,6 @@ find first ctrl_rvs-doc no-lock where
     
     
     
-if available ctrl_rvs-doc then do:
   run str/deskshft.p
     ( input parparentproc
     , input no
@@ -97,14 +105,11 @@ if available ctrl_rvs-doc then do:
     , input ctrl_rvs-doc.shift-name
     ) no-error .
   if error-status :error then do:
-    {&SetCursorNo}
-    run waitfram-hide in this-procedure.
     return error substitute( '&1&2&3'
                            , error-status :get-message( 1 )
                            , {&new-line}
                            , return-value ) .
   end.
-end. /* if available ctrl_rvs-doc */
 
 Main-Block:
 do on error undo Main-Block, return error return-value :
@@ -115,15 +120,6 @@ do on error undo Main-Block, return error return-value :
   p-userid  = v-cntxt-userid
   .
 
-  find first ctrl_rvs-doc no-lock where
-      recid( ctrl_rvs-doc ) = p-rvs-doc-rec no-error .
-  if not available ctrl_rvs-doc then do:
-    {&SetCursorNo}
-    run waitfram-hide in this-procedure .
-    return error 'ОШИБКА! Не найден документ контрольной сверки.' .
-  end.
-
-      
   if ctrl_rvs-doc.rvs-type <> {&rvs-control}  then do:
           
     

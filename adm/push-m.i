@@ -89,6 +89,11 @@ def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@
           v-db-attr-code = {&attr-schedule-diadoc}
         .
       end.
+      when {&btpr-type-is_PM} then do:
+        assign
+          v-db-attr-code = {&attr-schedule-isPM}
+        .
+      end.
       otherwise do:
         assign
           v-db-attr-code = ?
@@ -174,6 +179,11 @@ function get-str-type returns character (input p-task-type as character ).
     when {&btpr-type-is_diadoc} then do:
       assign
         v-str = "обмена с ИС Диадок по БД"
+      .
+    end.
+    when {&btpr-type-is_diadoc} then do:
+      assign
+        v-str = "выгрузки в ИС Президентский мониторинг по БД"
       .
     end.
     otherwise do:

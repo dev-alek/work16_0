@@ -12064,6 +12064,12 @@ procedure m-pexcis :
   end.
 end procedure.
 
+procedure m-is_PM-rep :
+  do on error undo, return error return-value  :
+    run rep/g-is_PM-rep.w ( input parparentproc ) .
+  end.
+end procedure.
+
 procedure m-reason-exe :
   define variable j_reason-code like ub.trn-reason.reason-code no-undo.
 

@@ -1076,6 +1076,12 @@ create X_auto-session .
     X_auto-session.session-name = "Мониторинг HDD"
     X_auto-session.proc-name    = "adm/l-i-hddtest.w":U
   .
+  create X_auto-session .
+  assign
+    X_auto-session.session-type = {&btpr-type-is_PM}
+    X_auto-session.session-name = "Выгрузка в ИС Президентский Мониторинг"
+    X_auto-session.proc-name    = "adm/l-i-is_PM.w":U
+  .
 
 END PROCEDURE.
 

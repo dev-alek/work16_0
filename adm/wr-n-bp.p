@@ -312,6 +312,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           or p-session-begin = true
         then do:
           if p-task-type <> {&btpr-type-mercury}
+          and p-task-type <> {&btpr-type-is_PM}
           then
           run write-to-log( substitute( "Для БД &1 &2 не составлено расписание!", v-db-num, if p-for-proc <> "" then "и процесса произвольного задания " + p-for-proc else "") ).
           run db-attr-write ( input v-db-num
