@@ -246,7 +246,15 @@ PROCEDURE ex-file :
         create "excel.application" chexcelapplication connect no-error.
         if error-status:error then 
         do:  
-            create "excel.application" chexcelapplication. 
+            create "excel.application" chexcelapplication no-error.
+           if error-status :error then 
+           do:
+              message
+                 "Ошибка при запуске Excel" skip
+                 error-status :get-message(1) skip
+                 view-as alert-box error .
+              undo, return error .
+           end. 
         end.
         if ff = ""  then 
         do:

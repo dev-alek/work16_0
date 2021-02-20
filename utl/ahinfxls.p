@@ -50,7 +50,14 @@ end.
 
 
 /* create a new Excel Application object */
-CREATE "Excel.Application" chExcelApplication.
+CREATE "Excel.Application" chExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.
 assign
   /* launch Excel so it is visible to the user */
   chExcelApplication:Visible = false

@@ -33,7 +33,14 @@ def var cColumn       as character no-undo .
 def var cRange        as character no-undo .
 
 
-CREATE "Excel.Application" chExcelApplication.
+CREATE "Excel.Application" chExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.
 assign
   chExcelApplication:Visible = false
   chWorkbook = chExcelApplication:Workbooks:Add ()

@@ -69,9 +69,14 @@ class Ibs.Th.Gbl.rep-out:
         define variable ch_office as com-handle no-undo. /* Для обращения с Excel / OO */
         define variable xml_res as character no-undo. /* Отформатированная xml, которую пересохраняем в нужный формат */
         create "Excel.Application":U ch_office no-error.
-        
-        
-        
+      if error-status :error then 
+      do:
+         message
+            "Ошибка при запуске Excel" skip
+            error-status :get-message(1) skip
+            view-as alert-box error .
+         undo, return error .
+      end.
         if integer(ch_office) <> ? then do:  /* Если нашли Excel */
             
             xml_res = xsl-transform(xml, xsl).

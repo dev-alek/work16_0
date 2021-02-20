@@ -1926,7 +1926,14 @@ on error undo, return error return-value
 
   { gbl/working.i }
   /**  Открытие Excel  **/
-  create "Excel.Application" chExcelApplication .
+  create "Excel.Application" chExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.  
   assign
       chExcelApplication:interactive     = false
       chExcelApplication:ScreenUpdating  = false

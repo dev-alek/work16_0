@@ -330,7 +330,7 @@ on error undo, return error
                 chWorkBook :Saved = true
             .
             assign
-                v-ok = chWorkBook :Close
+                v-ok = chWorkBook :close no-error 
             .
             release object chCodeModule no-error .
             release object chWorkBook   no-error .
@@ -388,7 +388,7 @@ on error undo, return error
             chWorkBook :Saved = true
         .
         assign
-            v-ok = chWorkBook :Close
+            v-ok = chWorkBook :close no-error
         .
         release object chCodeModule no-error .
         release object chWorkBook   no-error .
