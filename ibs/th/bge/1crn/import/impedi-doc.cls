@@ -116,6 +116,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                                    and utd-marking-lines.doc-level eq 1
       exclusive-lock:
          addMark(buffer utd-marking-lines ).
+                     find first marking exclusive-lock where marking.mark = utd-marking-lines.mark no-error .
+                       if available (marking) then do:
+                       if marking.unit-ext <> "UNIT" and utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB 
+                       and marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
+                       marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB.
+                       end. 
       end.
    end.
    else do:
@@ -338,6 +344,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   else do:
                      MarkGray(utd-marking-lines.mark).
                      addMark( buffer utd-marking-lines).
+                       find first marking exclusive-lock where marking.mark = utd-marking-lines.mark no-error .
+                       if available (marking) then do:
+                       if marking.unit-ext <> "UNIT" and utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB 
+                       and marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
+                       marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB.
+                       end. 
                   end.
                      
                end.
