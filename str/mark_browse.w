@@ -694,9 +694,11 @@ DO:
     define buffer buf_marking for ub.marking .
     define variable quest-ok as logical no-undo .
     define variable quest-scan as logical no-undo .
+    define buffer buf_utd for ub.utd .
     
     if  p-type = 6 then 
     do:
+       find first buf_utd no-lock where buf_utd.db-num = X_marking.db-num and buf_utd.doc-id = X_marking.doc-id no-error .
       if X_marking.box-qnty = qnty-mark-2 then 
       do:
         find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark and buf_utd-marking-lines.db-num = X_marking.db-num and
@@ -735,9 +737,19 @@ DO:
               find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking-line.mark and buf_utd-marking-lines.db-num = X_marking-line.db-num and
               buf_utd-marking-lines.doc-id = X_marking-line.doc-id no-error .
               if available (buf_utd-marking-lines) then do:
-              buf_utd-marking-lines.sts = Marking:PendingVerification:KeyIntDB .
-              X_marking-line.sts-utd = Marking:PendingVerification:KeyIntDB .
-              X_marking-line.stts-utd = StatusTHName(X_marking-line.sts-utd) .
+                 if available (buf_utd) and buf_utd.EdocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
+                    then 
+                 do:
+                    buf_utd-marking-lines.sts = Marking:DeliveryControl:KeyIntDB .
+                    X_marking-line.sts-utd = Marking:DeliveryControl:KeyIntDB .
+                    X_marking-line.stts-utd = StatusTHName(X_marking-line.sts-utd) .
+                 end .
+                 else 
+                 do:
+                    buf_utd-marking-lines.sts = Marking:PendingVerification:KeyIntDB .
+                    X_marking-line.sts-utd = Marking:PendingVerification:KeyIntDB .
+                    X_marking-line.stts-utd = StatusTHName(X_marking-line.sts-utd) .
+                 end.                  
               end.
               if X_marking-line.GrayZone = yes then 
               do:
