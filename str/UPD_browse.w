@@ -2871,8 +2871,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             return no-apply.
         end.
 
-   
-    WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name}.
+    wait-for go of frame {&frame-name} focus v-mark.
+/*    WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name}.*/
 END.
 run disable_UI in this-procedure .
 
@@ -3600,7 +3600,7 @@ PROCEDURE enable_UI :
     end.
 
     apply "VALUE-CHANGED" to br-utd in frame {&frame-name}.      
-
+/*    WAIT-FOR GO OF FRAME {&FRAME-NAME} focus v-mark.*/
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
