@@ -3125,13 +3125,11 @@ PROCEDURE temp-mark :
   define buffer bf_marking      for ub.marking .
   define variable v-marking as character no-undo .
   empty temp-table tt-marking-lines .
-  
 
   if p-id = 1 then 
   do:
     for each buf_marking-chk no-lock where buf_marking-chk.doc-code = tt-chk-doc.doc-code and buf_marking-chk.line-num = tt-chk-gds.line-num:
-      v-marking = GetCodeIdent(buf_marking-chk.mark).
-      for first buf_marking no-lock where buf_marking.mark begins v-marking :
+      for first buf_marking no-lock where buf_marking.mark begins buf_marking-chk.mark :
         create tt-marking-lines .
         assign
           tt-marking-lines.gds-name    = GdsName(buf_marking.gds-code)
@@ -3169,8 +3167,8 @@ PROCEDURE temp-mark :
   else 
   do:
     for each buf_marking-chk no-lock where buf_marking-chk.doc-code = tt-chk-doc.doc-code:
-      v-marking = GetCodeIdent(buf_marking-chk.mark).
-      for first buf_marking no-lock where buf_marking.mark begins v-marking :
+
+      for first buf_marking no-lock where buf_marking.mark begins buf_marking-chk.mark :
         create tt-marking-lines .
         assign
           tt-marking-lines.gds-name    = GdsName(buf_marking.gds-code)
