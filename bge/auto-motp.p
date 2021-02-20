@@ -78,6 +78,7 @@ on error undo, return error
   define variable v-Msg             as character no-undo .
   
   define variable vToken            as character no-undo .
+  define variable vNewToken            as character no-undo .
   
   define buffer buf_ext-classif       for ub.ext-classif .
   define buffer buf2_ext-classif      for ub.ext-classif .
@@ -244,7 +245,10 @@ on error undo, return error
           g#esys-source-esys = buf_ext-system.esys-id
         .
         
-        assign vToken = "" .
+        assign
+          vToken = ""
+          vNewToken = ""
+        .
         find first buf_ext-system-attr no-lock where buf_ext-system-attr.db-num   = buf_ext-system.db-num
                                                  and buf_ext-system-attr.esys-id  = buf_ext-system.esys-id
                                                  and buf_ext-system-attr.esya-attr-code = {&attr-esys-AuthToken}
@@ -259,6 +263,19 @@ on error undo, return error
         
         if vToken > ""
         then do :
+          if oMotp:needTokenUpd()
+          then do :
+            run write-to-log( "Со времени получения токена прошло более 6 часов. Пробуем обновить токен..." ) .
+            vNewToken = oMotp:updateToken(vToken) .
+            if oMotp:StatusErr
+            then do :
+              run write-to-log( oMotp:Msg ) .
+            end .
+            else do :
+              vToken = vNewToken .
+              run write-to-log( "Токен успешно обновлён" ) .
+            end .
+          end .
           if not oMotp:authTest(vToken)
           then do :
             run write-to-log( oMotp:Msg ) .
