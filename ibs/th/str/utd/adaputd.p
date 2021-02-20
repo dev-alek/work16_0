@@ -138,7 +138,8 @@ do:
         and buf_utd-marking-lines.doc-level = 1
         :
         find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark
-                    and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB and buf_marking.box-qnty <> ? no-lock no-error.
+                    and (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB) 
+					and buf_marking.box-qnty <> ? no-lock no-error.
         if available (buf_marking)
           then v-q = v-q + buf_marking.box-qnty.
       end.      
