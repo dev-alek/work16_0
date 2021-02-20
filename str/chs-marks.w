@@ -875,7 +875,7 @@ PROCEDURE proc-any-key :
     if v-scan-str = ""
       then v-timedelay = etime.
       else
-        if etime - v-timedelay > 500
+        if etime - v-timedelay > 700
           then v-scan-str = "".
   v-scan-str = v-scan-str + last-event:label.
 end.

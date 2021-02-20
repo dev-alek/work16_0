@@ -5182,7 +5182,7 @@ PROCEDURE proc-any-key :
         if v-scan-str = ""
             then etime(yes).
         else
-            if etime > 500
+            if etime > 700
                 then 
             do:
                 v-scan-str = "".
