@@ -1266,8 +1266,25 @@ ON CHOOSE OF b_back-check IN FRAME d-utd /* Продолжить на проверку */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_correct d-utd
 ON CHOOSE OF b_correct IN FRAME d-utd /* Запрос на изменение */
     DO:
-        define variable v-ok as logical no-undo . 
+       define variable v-ok            as logical no-undo . 
+       define variable v-write-correct as logical no-undo init false.
+       define buffer cancel_utd-marking-lines for ub.utd-marking-lines .
+       define buffer cancel_marking           for ub.marking .
+        
+        
+       for each cancel_utd-marking-lines no-lock where cancel_utd-marking-lines.doc-id = p-doc-id and cancel_utd-marking-lines.db-num = p-db-num, 
+          first cancel_marking no-lock where cancel_marking.mark = cancel_utd-marking-lines.mark and cancel_marking.sts <> Marking:MarkError:KeyIntDB
+             and cancel_marking.sts <> Marking:GrayZone:KeyIntDB: 
+          v-write-correct = true .
+          leave .
+       end.
 
+        if not v-write-correct then do:
+           message "Все марки УПД не прошли проверку в ГИС МТ, принять товары в соответствии с данным УПД невозможно." skip
+           "Нажмите Отказать в поставке"
+           view-as alert-box.
+        end.   
+        else do:
         run ref/dialog-upd.w (input buf_utd.comment, input buf_utd.db-num, input buf_utd.doc-id, output v-comment, output v-ok) no-error.
         if  error-status:error then 
         do: 
@@ -1313,6 +1330,7 @@ ON CHOOSE OF b_correct IN FRAME d-utd /* Запрос на изменение */
             b_back-check
             b_deliv-cancel
             with frame {&frame-name} .
+         end.
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2944,7 +2962,9 @@ PROCEDURE enable_BUTTON :
                                  -------------------------------------------------------------------- */
     define buffer cancel_utd-marking-lines for ub.utd-marking-lines .
     define buffer cancel_marking           for ub.marking .
-    define variable v-write-cancel as logical no-undo .
+   define variable vflagEdoc       as logical no-undo .
+   define variable v-write-cancel  as logical no-undo .
+   define variable v-write-correct as logical no-undo .
     v-write-cancel = false .
   
     for each cancel_utd-marking-lines no-lock where cancel_utd-marking-lines.doc-id = p-doc-id and cancel_utd-marking-lines.db-num = p-db-num, 
@@ -2952,6 +2972,14 @@ PROCEDURE enable_BUTTON :
         v-write-cancel = true .
         leave .
     end.
+   v-write-correct = false . 
+   for each cancel_utd-marking-lines no-lock where cancel_utd-marking-lines.doc-id = p-doc-id and cancel_utd-marking-lines.db-num = p-db-num, 
+      first cancel_marking no-lock where cancel_marking.mark = cancel_utd-marking-lines.mark and cancel_marking.sts <> Marking:MarkError:KeyIntDB
+         and cancel_marking.sts <> Marking:GrayZone:KeyIntDB: 
+      v-write-correct = true .
+      leave .
+   end.
+
     if p-mode <> {&lookup} then 
     do:
         if (c-status < ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB or 
@@ -3191,7 +3219,11 @@ PROCEDURE enable_BUTTON :
         b_back-check
         with frame {&frame-name} .
     end.    
- 
+    if not v-write-correct then do:
+       disable
+       b_correct
+       with frame {&frame-name} .
+    end. 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
