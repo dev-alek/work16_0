@@ -78,8 +78,7 @@ class ibs.th.bge.1crn.import.impfuelcodeinfo implements ibs.th.bge.1crn.import.i
          Msg = "Товар с кодом " + string(objfuelcodeinfo:IntCode) + " не найден" .
          return false.
       end.    
-      if objfuelcodeinfo:ExtId = 0 then 
-      do: /*Внешняя система не указана, если не указана привязка идет ко всем внешним системам*/
+ /*Внешняя система не указана, идет ко всем внешним системам*/
          for each buf_ext-system no-lock:
             if objfuelcodeinfo:del-f = 0 then 
             do: /*добавление*/
@@ -98,39 +97,9 @@ class ibs.th.bge.1crn.import.impfuelcodeinfo implements ibs.th.bge.1crn.import.i
                   msg = return-value .
                   return false .
                end.
-
             end.               
          end.   
-      end.      
-      else 
-      do:
-         find first buf_ext-system no-lock where buf_ext-system.esys-id = objfuelcodeinfo:ExtId no-error .
-         if not available (buf_ext-system) then 
-         do:
-            Msg = "Внешняя система " + string(objfuelcodeinfo:ExtId) + " не найдена" .
-            return false.
-         end.
-         if objfuelcodeinfo:del-f = 0 then 
-         do: /*добавление*/
-            proc_create(buf_ext-system.esys-id, objfuelcodeinfo:IntCode, objfuelcodeinfo:ExtCode) no-error.
-            if error-status:error then 
-            do:
-               msg = return-value .
-               return false .
-            end.
-         end.
-         else 
-         do: /*удаление*/
-            proc_delete(buf_ext-system.esys-id, objfuelcodeinfo:IntCode, objfuelcodeinfo:ExtCode) no-error.
-            if error-status:error then 
-            do:
-               msg = return-value .
-               return false .
-            end.
-
-         end.               
-      end.   
-                              
+      
    end method.
    /*   { str/ext-classif-list.i}*/
    method private void proc_create (input p-esys-id   as integer, input p-IntCode as character, input p-ExtCode as character) :
