@@ -2332,6 +2332,13 @@ ON CHOOSE OF r-contr-TH IN FRAME d-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-obj-TH d-utd
 ON CHOOSE OF r-obj-TH IN FRAME d-utd
     DO:
+       define variable v-tth             as handle    no-undo .
+       define variable v-value-character as character no-undo.
+       define variable v-value-date      as date      no-undo.
+       define variable v-value-decimal   as decimal   no-undo.
+       define variable v-value-integer   as integer   no-undo.
+       define variable v-param-type      as character no-undo.
+       define variable v-FlagEdo         as logical   no-undo.       
         run ref/cli-all.w (
             input parparentproc
             ,input "b-sel"
@@ -2346,6 +2353,27 @@ ON CHOOSE OF r-obj-TH IN FRAME d-utd
         FIND FIRST buf_clients NO-LOCK WHERE
             recid(buf_clients) = INTEGER(v-rid-list) NO-ERROR.
         IF NOT AVAILABLE buf_clients THEN RETURN NO-APPLY.
+
+                run adm/shattri.p (
+                    input "get":U
+                    ,input  buf_clients.obj-type /*p-obj-type*/
+                    ,input  buf_clients.obj-code /*p-obj-code*/
+                    ,input  {&attr-marking}
+                    ,input  {&attr-marking_marking-EDO} /*p-param-code*/
+                    ,output v-value-character
+                    ,output v-value-date
+                    ,output v-value-decimal
+                    ,output v-value-integer
+                    ,output v-FlagEdo
+                    ,output v-param-type
+                    ,input-output table-handle v-tth
+                    ) no-error .
+        if not v-FlagEdo then do:
+           message "Сформировать УПД для данного объекта невозможно." skip
+           "Для объекта не включен электронный документооборот"
+           view-as alert-box.
+           return no-apply .
+        end.   
         ASSIGN
             f-obj-type-TH = buf_clients.obj-type
             f-obj-code-TH = buf_clients.obj-code
