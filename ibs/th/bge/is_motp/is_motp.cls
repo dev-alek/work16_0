@@ -1795,6 +1795,15 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                 "CheckMOTP",
                 "MotpMarkErr",
                 (buf_marking.mark + {&delim-par} + MSG)).
+       /*для первоначального ввода, если блок в статусе ошибка присваивать ему статус серая зона*/         
+       if buf_marking.unit-ext <> "UNIT" and buf_utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then 
+       do:
+          assign
+          buf_marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB.
+/*          buf_marking.unit-ext = getLevelMotpByCodId(buf_marking.mark) .*/
+          buf_marking.box-qnty = getQntyUTDByCodId(buf_marking.mark) .
+          buf_marking.unit = getLevelUTDByCodId(buf_marking.mark) .
+       end.
     end .
     
     if pParent <> ""
