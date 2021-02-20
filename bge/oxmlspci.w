@@ -2255,7 +2255,6 @@ for each tt-ext-system-attr:
   end case.
 end.
 
-
 run bge/extsyss1.p ( input p-mode
                     ,input no /*p-silent*/
                     ,input-output v-rec
@@ -2267,12 +2266,27 @@ run bge/extsyss1.p ( input p-mode
                     ,input tt-ext-system.esys-db-num-exp
                     ,input tt-ext-system.esys-send-news-exp
                     ,input tt-ext-system.esys-num-days-keep-exp
+                    ,INPUT tt-ext-system.esys-max-p-size
+                    ,input (IF t-exp-conf-wait
+                            THEN integer({&openxml-exp-conf-wait})
+                            ELSE integer({&openxml-exp-conf-no-wait}))
+                    ,INPUT (IF t-exp-conf-wait
+                            THEN tt-ext-system.max-p-queue
+                            ELSE 1000)
+                    ,INPUT (IF t-exp-conf-wait
+                            THEN tt-ext-system.max-p-time
+                            ELSE 0)
                     ,input tt-ext-system.esys-have-import
                     ,input tt-ext-system.esys-db-num-imp
                     ,input tt-ext-system.esys-send-news-imp
                     ,input tt-ext-system.esys-num-days-keep-imp
+                    ,input (IF t-imp-conf-send
+                            THEN integer({&openxml-imp-conf-send})
+                            ELSE integer({&openxml-imp-conf-no-send}))
                     ,input tt-ext-system.esys-type
-                    ,input tt-ext-system.whole-send-news
+                    ,input tt-ext-system.delivery-method
+                    ,INPUT tt-ext-system.delete-pck-on
+                    ,INPUT tt-ext-system.save-days-pck-num
                     ,input table tt-ext-system-attr
                                         ) no-error.
 if error-status:error then do:
@@ -2406,12 +2420,27 @@ run bge/extsyss1.p ( input p-mode
                     ,input tt-ext-system.esys-db-num-exp
                     ,input tt-ext-system.esys-send-news-exp
                     ,input tt-ext-system.esys-num-days-keep-exp
+                    ,INPUT tt-ext-system.esys-max-p-size
+                    ,input (IF t-exp-conf-wait
+                            THEN integer({&openxml-exp-conf-wait})
+                            ELSE integer({&openxml-exp-conf-no-wait}))
+                    ,INPUT (IF t-exp-conf-wait
+                            THEN tt-ext-system.max-p-queue
+                            ELSE 1000)
+                    ,INPUT (IF t-exp-conf-wait
+                            THEN tt-ext-system.max-p-time
+                            ELSE 0)
                     ,input tt-ext-system.esys-have-import
                     ,input tt-ext-system.esys-db-num-imp
                     ,input tt-ext-system.esys-send-news-imp
                     ,input tt-ext-system.esys-num-days-keep-imp
+                    ,input (IF t-imp-conf-send
+                            THEN integer({&openxml-imp-conf-send})
+                            ELSE integer({&openxml-imp-conf-no-send}))
                     ,input tt-ext-system.esys-type
-                    ,input tt-ext-system.whole-send-news
+                    ,input tt-ext-system.delivery-method
+                    ,INPUT tt-ext-system.delete-pck-on
+                    ,INPUT tt-ext-system.save-days-pck-num
                     ,input table tt-ext-system-attr
                                         ) no-error.
 if error-status:error then do:
