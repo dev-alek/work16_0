@@ -1,0 +1,4 @@
+cd #workdir#
+start #dlc#\bin\prowin32.exe  -basekey "INI" -p #FileName# -ininame d:\wrk\#inipatch#\#port#.ini -debugalert -s 129 #dop_param#
+rem -clientlog  mylog.lg -logginglevel 4 -logentrytypes 4GLTrace 
+EXIT

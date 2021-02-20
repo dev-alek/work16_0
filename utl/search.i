@@ -1,3 +1,6 @@
+&if defined(search_def) eq 0
+&then
+&glob search_def yes
 &if "{1}" = "class"
 &then
 method public character  SearchFile
@@ -36,3 +39,4 @@ function objExists returns character
     return ? .
 
 end.
+&endif

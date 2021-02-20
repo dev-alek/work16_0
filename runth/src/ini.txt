@@ -1,0 +1,784 @@
+;dlc #dlc#
+;work #workdir#
+;conpar -db ub -ld ub -H #host# -S #port# &1
+[Startup]
+V6Display=no
+Use-3D-Size=no
+;ImmediateDisplay=yes
+;MultitaskingInterval=100
+DefaultFont=Fixedsys, size=11
+DefaultFixedFont=Fixedsys, size=11
+DLC=#dlc#
+PROBUILD=#dlc#\PROBUILD
+PROMSGS=#dlc#\PROMSGS
+PROPATH=.,#propatch#
+NoSplash=yes
+UseSourceEditor=no
+[ProxyServ]
+proxy-addr =druban.expertek.local:8080
+;proxy-login
+;proxy-pswd
+proxy-ssl= yes
+[Colors]
+;******************************************************************************
+; THE DEFINITION OF COLOR 0 THROUGH 15 IS PRIVATE TO THE PROGRESS ADE.
+; MODIFYING COLORS 0 THROUGH 15 MAY PREVENT THE PROGRESS ADE FROM RUNNING.
+; The following color definitions correspond to the ADE standards.
+;  0 to 15  - reserved
+color0=0,0,0
+color1=41,58,133
+color2=0,128,0
+color3=0,128,128
+color4=128,0,0
+color5=128,0,128
+color6=128,128,0
+color7=128,128,128
+color8=192,192,192
+color9=0,0,255
+color10=0,255,0
+color11=0,255,255
+color12=255,0,0
+color13=255,0,255
+color14=255,255,0
+color15=255,255,255
+color16=255,255,0
+
+NORMAL=0,15
+INPUT=15,0
+MESSAGES=15,1
+
+[Default Window]
+;x=
+;y=
+;rows=
+;columns=
+
+[fonts]
+;******************************************************************************
+; THE DEFINITION OF FONT 0 THROUGH 7 IS PRIVATE TO THE PROGRESS ADE.
+; MODIFYING FONTS 0 THROUGH 7 MAY PREVENT THE PROGRESS ADE FROM RUNNING.
+; The following fonts definitions correspond to the ADE standards.
+;       ?  - DefaultFont from Startup Section
+;       0  - DefaultFixedFont from Startup Section (1 char per PPU)
+;       1  - Proportional System Font
+;       2  - Editor Font for 4GL program entry
+;       3  - TTY Simulator (should be fixed)
+;       4  - Dynamically-sized widgets, eg status-line, selection-list
+;       5  - Static widgets, eg. combo-boxes
+;       6  - Dynamic, bold (TranMan2)
+;       7  - Reserved
+
+font0=FixedSys
+font1=System
+font2=Courier New, size=8
+font3=Courier New, size=8
+font4=MS Sans Serif, size=8
+font5=System
+font6=System
+font7=CourierARTCTT, size=12
+font8=CourierARTCTT, size=22, bold
+font9=MS Sans Serif, size=16, bold
+font10=Courier New, size=10
+font11=CourierARTCTT, size=12
+font12=CourierARTCTT, size=12
+font13=CourierARTCTT, size=12
+font14=CourierARTCTT, size=12
+font15=CourierARTCTT, size=12
+font16=CourierARTCTT, size=8
+font17=CourierARTCTT, size=10
+
+[Debug-Init]
+;******************************************************************************
+; THE FOLLOWING INFORMATION IS PRIVATE TO THE DEBUGGER. IT SHOULD NEVER BE
+; MODIFIED EXCEPT BY THE DEBUGGER PROGRAM.
+;
+Location=3,22,22,614,386
+Pane0=1,58," "
+Pane1=1,7,""
+Pane2=1,15,"Commands in Queue: 0"
+Pane3=1,21,""
+DebuggerName=PRODEBUG.EXE
+SourceFontHeight=15
+
+[ProADE]
+;DividerFgColor=15
+;DividerBgColor=1
+;OKBoxFgColor=1
+;OKBoxBgColor=8
+;FillinFgColor=0
+;FillinBgColor=8
+;Editor4GLFgColor=DEFAULT
+;Editor4GLBgColor=DEFAULT
+;Editor4GLFgSmallColor=0
+;Editor4GLBgSmallColor=8
+;FixedFont=0
+StandardFont=0
+Editor4GLFont=0
+
+[Proedit]
+SaveSettings=yes
+BufList=CTRL-L
+ExitWarning=yes
+SaveBufList=yes
+MinimizeBeforeRun=no
+RestoreAfterRun=yes
+PauseAfterRun=yes
+AutoCleanup=yes
+EditorFont=Default
+New=SHIFT-F3
+Open=F3
+Close=F8
+NewProcedureWindow=CTRL-F3
+Save=F6
+SaveAs=SHIFT-F6
+Cut=CTRL-X
+Copy=CTRL-C
+Paste=CTRL-V
+Find=CTRL-F
+FindNext=F9
+FindPrevious=SHIFT-F9
+Replace=CTRL-R
+GotoLine=CTRL-G
+List=CTRL-L
+NextBuffer=F7
+PreviousBuffer=SHIFT-F7
+Information=CTRL-F1
+Run=F2
+CheckSyntax=SHIFT-F2
+Debug=SHIFT-F4
+CompilerMessages=CTRL-E
+Contents=
+SearchforHelpOn=
+MenuCommands=
+HowtoUseHelp=
+Undo=CTRL-Z
+
+[ReportBuilderDefaults]
+EngineParameters=-cpinternal 1251 -cpstream 1251 -cpcoll Russian -cpcase Basic
+DB Platform=PROGRESS
+DefMeas=0
+PgLM=1
+BotM=127
+LeftM=127
+RightM=127
+TopM=127
+RulPit=10
+VRulPit=10
+Pts=120
+SnapTo=1
+Color=0
+WidthRep=1
+WidthColor=8
+FaceName=
+LogF=No
+LogT=Yes
+
+[ReportBuilderProgress]
+OIDNetwork=
+OIDHostname=
+OIDServername=
+Database=
+UserID=
+NeedsPassword=N
+Network=
+LogicalName=ub
+HostName=
+Server=
+Schema=
+ConParameters=
+
+[ReportBuilderSaveList]
+NotFirstTime=1
+ActionBar=1
+FormatBar=1
+FieldNames=0
+PasteArgs=1
+ShHzRul=1
+ShVtRul=1
+ShGrd=1
+Maximize=0
+IVer=1
+Library=
+Report=
+
+[ProUIB]
+SaveSettings=yes
+CustomWidgetFile=C:\DLC73D\SRC\TEMPLATE\CUSTOM.TXT
+NewWindowType=GUI
+IconDirectories=c:\work,adeicon
+CodeListDirectories=c:\work,src\template,.
+DefaultLayoutUnit=Pixels
+GridUnitHeight=1
+GridUnitWidth=1
+GridFactorHorizontal=1
+GridFactorVertical=1
+AdvisorSettings=----------
+PropertyEditorPosition=242,153,317,295
+
+[Debug-Macros]
+Macro0=r, run &file
+Macro1=c, continue
+Macro2=s, step
+Macro3=n, next
+Macro4=b, break &file &line
+Macro5=cb, cancel break &file &line
+Macro6=sb, show breaks
+Macro7=ss, show stack
+Macro8=u, up
+Macro9=d, down
+Macro10=di, display &text
+Macro11=sm, show macros
+
+[Debug-Buttons]
+Button0=Run,run &file
+Button1=Cont,continue
+Button2=Step,step
+Button3=Next,next
+Button4=Brk,break &file &line
+Button5=CnlBr,cancel break &file &line
+Button6=ShBr,show breaks
+Button7=ShMa,show macros
+Button8=Stck,show stack
+Button9=Up,up
+Button10=Down,down
+Button11=Disp,display &text
+Button12=Exit,exit
+Button13=Trans,show transaction
+Button14=Wait,run showerr.p
+
+[Procomp]
+SaveSettings=yes
+DefFileSpec=*.p *.w
+LogFile=compile.log
+ShowStatus=yes
+RemoveOldRs=yes
+IfNoR=no
+SubDirs=no
+SaveNewRs=yes
+SaveInto=#workdir#
+XrefAppend=no
+ListAppend=no
+PageLength=60
+PageWidth=80
+V6Frame=No
+StreamIO=no
+
+[Debug-Temp-Macros]
+
+; This section defines the Java environment.
+[JAVA]
+JDKHOME=#dlc#\jdk
+JREHOME=#dlc#\jre
+JRECP=#dlc#\jre\lib\rt.jar;#dlc#\jre\lib\i18n.jar
+JDKCP=#dlc#\jdk\lib\tools.jar
+FATHOMCP=
+REPLCP=
+PROGRESSCP=#dlc#\java\progress.jar;#dlc#\java\messages.jar;
+JVMEXE=java
+JVMARGS=-ms8m
+JAVAPOLICY=#dlc#\java\java.policy
+
+
+
+;*********************************************************************
+;*             Секции настраиваемые под софт у клиентов              *
+;*********************************************************************
+
+[REP-SETS]
+libs_path=\\atlant\v15_0\ver15_0\cmp\
+logdir=c:\wrk\log
+Ticket1=Основной#1#1#
+Ticket2=На упаковки#1#1#уп
+Ticket3=На 100 грамм товара#etik3.ini#0.1#
+lbc_path=c:\lbc_tmp\
+lbc_tmp=c:\lbc_tmp\
+DocsCR1=инв##Инвентаризация1#c:\tr1.rpt
+DocsCR2=инв##Инвентаризация2#c:\tr2.rpt
+;ConPar=#conpar# &1 
+ConPar= -db ub -ld ub -H #host# -S #port# &1
+; ConPar= -db ub -ld ub -H Atlant -S 5071 &1
+StartDate=01/01/1992
+pict_path=\\atlant\v15_0\
+batch-rep=c:\work\hahahah\
+shtReesrt=.\log\
+
+;в секции прописывается имя сервера на который будем звонить (bnews)
+[server_db]
+0=iab
+
+[scales]
+out=c:\spool\out
+digi-sm-out=c:\spool\out\digi
+tiger-spct2-install-dir=\\atlant\temp\nvb\spct2
+
+
+
+
+[kassa-ibm]
+; полный путь к каталогам для обмена данными с кассами
+in=c:\spool\in\
+out=c:\spool\out\
+remote=c:\spool\out\remote\
+; подкаталог в каталоге "in", в котором размещаютс
+; пересылаемые c касс файлы , spl<номер магазина>=<имя подкаталога>,
+; где spl - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+; полный путь к каталогам для обмена данными с кассами
+; подкаталог в каталоге "in", в котором размещаютс
+; пересылаемые на кассы файлы , spl<номер магазина>=<имя подкаталога>,
+; где spl - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+spl20001=20001
+spl7=dir7
+spl11=11
+spl111=111
+spl12=12
+spl10=10
+spl28=28
+spl38=38
+sav20001=20001
+sav7=dir7
+sav11=11sav
+sav111=111
+sav112=11
+sav12=12sav1
+sav10=10sav
+sav38=38sav
+spl3=dir3
+spl20=11
+spl22=22
+spl27=27
+spl999=999
+spl77=11
+;spl7=dir7
+; подкаталог в каталоге "in", в котором размещаютс
+; архивы полученных с касс файлов по дням , sav<номер магазина>=<имя подкаталога>,
+; где sav - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+sav3=sav3
+
+[kassa-pricecheck-Servis+]
+; полный путь к каталогам для выгрузки данных для pricecheck-Servis+
+out=c:\spool\5\
+
+
+[kassa-ncr-gm]
+; полный путь к каталогам для обмена данными с кассами
+;in=k:\cassa\
+;out=k:\cassa\
+in=c:\spool\in\
+out=c:\spool\out\
+out4=c:\spool\out\
+sav20=sav
+sav25=sav25
+;spl20=11
+
+[kassa-ncr-as-r]
+; полный путь к каталогам для обмена данными с кассами
+;in=k:\cassa\
+;out=k:\cassa\
+in=c:\spool\in\
+out=c:\web\mtxwm\gm\hoc\
+out2=c:\server\
+out3=c:\server\
+out4=c:\server\
+sav20=sav
+sav25=sav25
+;spl20=11
+
+
+
+[kassa-magia]
+; полный путь к каталогам для обмена данными с кассами
+in=c:\spool\in\
+out=c:\spool\out\
+remote=c:\spool\out\remote\
+; подкаталог в каталоге "in", в котором размещаютс
+; пересылаемые c касс файлы , spl<номер магазина>=<имя подкаталога>,
+; где spl - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+; полный путь к каталогам для обмена данными с кассами
+; подкаталог в каталоге "in", в котором размещаютс
+; пересылаемые на кассы файлы , spl<номер магазина>=<имя подкаталога>,
+; где spl - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+spl20001=20001
+spl7=dir7
+spl11=11
+spl111=111
+spl12=12
+spl10=10
+spl80=11
+sav20001=20001
+sav7=dir7
+sav11=11sav
+sav80=11sav
+sav20=11sav
+sav111=111
+sav12=12sav1
+sav10=10sav
+spl3=dir3
+spl20=11
+spl22=22
+spl27=27
+spl41=11
+spl77=11
+spl196=11
+sav41=sav
+;spl7=dir7
+; подкаталог в каталоге "in", в котором размещаютс
+; архивы полученных с касс файлов по дням , sav<номер магазина>=<имя подкаталога>,
+; где sav - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+sav3=sav3
+
+[kassa-ibm-xml]
+; полный путь к каталогам для обмена данными с кассами
+in=c:\spool\in\
+out=c:\spool\out\
+remote=c:\spool\out\remote\
+; подкаталог в каталоге "in", в котором размещаютс
+; пересылаемые c касс файлы , spl<номер магазина>=<имя подкаталога>,
+; где spl - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+; полный путь к каталогам для обмена данными с кассами
+; подкаталог в каталоге "in", в котором размещаютс
+; пересылаемые на кассы файлы , spl<номер магазина>=<имя подкаталога>,
+; где spl - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+spl20001=20001
+spl7=dir7
+spl196=11
+spl11=11
+spl1=1
+spl111=111
+spl12=12
+spl10=10
+spl77=11
+spl41=11
+spl38=38
+spl39=39
+sav39=39
+sav20001=20001
+sav7=dir7
+sav11=11sav
+sav111=111
+sav12=12sav1
+sav10=10sav
+sav41=sav
+spl3=dir3
+spl20=11
+spl22=22
+spl27=27
+spl129=129
+sav129=129
+spl233=233
+spl235=235
+spl207=207
+spl305=305
+sav305=305
+sav207=207
+spl101=11
+sav101=11
+sav38=38
+sav1=1
+spl40=11
+;spl7=dir7
+; подкаталог в каталоге "in", в котором размещаютс
+; архивы полученных с касс файлов по дням , sav<номер магазина>=<имя подкаталога>,
+; где sav - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+sav3=sav3
+spl13=13
+sav13=13
+[kassa-autotank]
+; полный путь к каталогам для обмена данными с кассами
+in=c:\spool\in\
+out=c:\spool\out\
+remote=c:\spool\out\remote\
+; подкаталог в каталоге "in", в котором размещаютс
+; пересылаемые c касс файлы , spl<номер магазина>=<имя подкаталога>,
+; где spl - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+; полный путь к каталогам для обмена данными с кассами
+; подкаталог в каталоге "in", в котором размещаютс
+; пересылаемые на кассы файлы , spl<номер магазина>=<имя подкаталога>,
+; где spl - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+spl20001=20001
+spl3=3
+sav3=3
+spl7=dir7
+spl196=11
+spl11=11
+spl111=111
+spl12=12
+spl10=10
+spl77=11
+spl41=11
+sav20001=20001
+sav7=dir7
+sav11=11sav
+sav111=111
+sav12=12sav1
+sav10=10sav
+sav41=sav
+spl3=dir3
+spl20=11
+spl22=22
+spl27=27
+spl233=233
+spl234=234
+spl235=235
+spl25=11
+spl40=11
+spl1=1
+spl100=100
+spl129=129
+;spl7=dir7
+; подкаталог в каталоге "in", в котором размещаютс
+; архивы полученных с касс файлов по дням , sav<номер магазина>=<имя подкаталога>,
+; где sav - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+sav3=sav3
+
+
+[kassa-data-export]
+; полный путь к каталогам для обмена данными с кассами
+out=c:\spool\out\
+spl20=11
+spl190=190
+spl7=dir7
+spl11=11
+spl111=111
+spl12=12
+spl10=10
+sav20001=20001
+sav7=dir7
+sav11=11sav
+sav111=111
+sav112=11
+sav12=12sav1
+sav10=10sav
+spl3=dir3
+spl20=11
+spl22=22
+spl27=27
+;spl7=dir7
+; подкаталог в каталоге "in", в котором размещаютс
+; архивы полученных с касс файлов по дням , sav<номер магазина>=<имя подкаталога>,
+; где sav - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+sav3=sav3
+
+[kassa-data-import]
+; полный путь к каталогам для обмена данными с кассами
+in=c:\spool\in\
+spl200=200
+; подкаталог в каталоге "in", в котором размещаютс
+; архивы полученных с касс файлов по дням , sav<номер магазина>=<имя подкаталога>,
+; где sav - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+sav200=sav200
+
+
+[kassa-r-keeper]
+; полный путь к каталогам для обмена данными с кассами
+out=c:\spool\out\
+in=c:\spool\in\
+spl20=11
+sav20=sav
+spl57=11
+sav57=sav
+spl112=11
+sav112=sav
+; подкаталог в каталоге "in", в котором размещаютс
+; архивы полученных с касс файлов по дням , sav<номер магазина>=<имя подкаталога>,
+; где sav - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+
+[kassa-marketer]
+; полный путь к каталогам для обмена данными с кассами
+out=c:\spool\out\
+remote=c:\spool\out\remote\
+in=c:\spool\in\
+spl20=11
+sav20=sav
+spl57=11
+spl55=11
+sav57=sav
+sav55=sav
+; подкаталог в каталоге "in", в котором размещаютс
+; архивы полученных с касс файлов по дням , sav<номер магазина>=<имя подкаталога>,
+; где sav - строковая константа,
+; <номер магазина> - назначенный в бэк-офисе номер магазина
+
+
+[client-bank-1s]
+;root-директория импорта из системы клиент-банк в виде [БИК_банка]_in
+049805009_in=c:\spool\cl-bank\049805009\in\
+;root директория экспорта в систему клиент-банк в виде [БИК банка]_out
+049805009_out=c:\spool\cl-bank\049805009\out\
+;подкаталог в каталогах "in" и "out", в котором размещаются файлы для фирмы с кодом 285
+049805009_spl73=73
+;подкаталог в каталоге "in", в котором размещаютс
+;архивы полученных из банков файлов по дням , sav<код фирмы>=<имя подкаталога>,
+;где sav - строковая константа,
+;<код фирмы> - назначенный в бэк-офисе код фирмы
+049805009_sav73=sav73
+049805009_adresat=Client RS-Bank for Windows
+
+;root-директория импорта из системы клиент-банк в виде [БИК_банка]_in
+044585337_in=c:\spool\cl-bank\044585337\in\
+;root директория экспорта в систему клиент-банк в виде [БИК банка]_out
+044585337_out=c:\spool\cl-bank\044585337\out\
+;подкаталог в каталогах "in" и "out", в котором размещаются файлы для фирмы с кодом 285
+044585337_spl73=73
+;подкаталог в каталоге "in", в котором размещаютс
+;архивы полученных из банков файлов по дням , sav<код фирмы>=<имя подкаталога>,
+;где sav - строковая константа,
+;<код фирмы> - назначенный в бэк-офисе код фирмы
+044585337_sav73=sav73
+044585337_adresat=Client RS-Bank for Windows
+
+;root-директория импорта из системы клиент-банк в виде [БИК_банка]_in
+044583876_in=c:\spool\cl-bank\044583876\in\
+;root директория экспорта в систему клиент-банк в виде [БИК банка]_out
+044583876_out=c:\spool\cl-bank\044583876\out\
+;подкаталог в каталогах "in" и "out", в котором размещаются файлы для фирмы с кодом 285
+044583876_spl73=73
+;подкаталог в каталоге "in", в котором размещаютс
+;архивы полученных из банков файлов по дням , sav<код фирмы>=<имя подкаталога>,
+;где sav - строковая константа,
+;<код фирмы> - назначенный в бэк-офисе код фирмы
+044583876_sav73=sav73
+044583876_adresat=Client RS-Bank for Windows
+
+
+;root-директория импорта из системы клиент-банк в виде [БИК_банка]_in
+044583219_in=c:\spool\cl-bank\044583219\in\
+;root директория экспорта в систему клиент-банк в виде [БИК банка]_out
+044583219_out=c:\spool\cl-bank\044583219\out\
+;подкаталог в каталогах "in" и "out", в котором размещаются файлы для фирмы с кодом 285
+044583219_spl73=73
+044583219_spl149=149
+;подкаталог в каталоге "in", в котором размещаютс
+;архивы полученных из банков файлов по дням , sav<код фирмы>=<имя подкаталога>,
+;где sav - строковая константа,
+;<код фирмы> - назначенный в бэк-офисе код фирмы
+044583219_sav73=sav73
+044583219_sav149=sav149
+044583219_adresat=Client RS-Bank for Windows
+
+
+
+[fin-print]
+рко1=ркоШаблон первый#1a#3#Доп_информация1
+рко2=ркоШаблон второй#2b#4#Доп_информация2
+рко3=ркоШаблон третий#3c#5#Доп_информация3
+рко4=ркоШаблон четвертый#4d#6#Доп_информация4
+рко5=ркоШаблон пятый#5e#7#Доп_информация5
+пко1=пкоШаблон первый#1a#3#Доп_информация1
+пко2=пкоШаблон второй#2b#4#Доп_информация2
+пко3=пкоШаблон третий#3c#5#Доп_информация3
+пко4=пкоШаблон четвертый#4d#6#Доп_информация4
+пко5=пкоШаблон пятый#5e#7#Доп_информация5
+рпп1=рппШаблон первый#1a#3#Доп_информация1
+рпп2=рппШаблон второй#2b#4#Доп_информация2
+рпп3=рппШаблон третий#3c#5#Доп_информация3
+рпп4=рппШаблон четвертый#4d#6#Доп_информация4
+рпп5=рппШаблон пятый#5e#7#Доп_информация5
+ппп1=пппШаблон первый#1a#3#Доп_информация1
+ппп2=пппШаблон второй#2b#4#Доп_информация2
+ппп3=пппШаблон третий#3c#5#Доп_информация3
+ппп4=пппШаблон четвертый#4d#6#Доп_информация4
+ппп5=пппШаблон пятый#5e#7#Доп_информация5
+
+
+[schedule-free]
+dctxt-e_out=#spool#\out\
+dctxt-i_in=#spool#\in\
+WaitNextRunTime=yes
+;3 секции для новостей - здесь настройка на bnews но формируются и
+;заполняются из системы важно только наличие самих переменных
+;если настроек нет - то система сама предложит их заполнить при вызове новостей
+
+
+;3 секции для новостей - здесь настройка на bnews но формируются и
+;заполняются из системы важно только наличие самих переменных
+;если настроек нет - то система сама предложит их заполнить при вызове новостей
+[news]
+nws-exch-dir=C:\news-dir-15_0\exch
+nws-heap-dir=C:\news-dir-15_0\h-db0
+
+[news-floppy]
+drive=c:
+
+[news-unix]
+uupc-dir=
+unix-news-dir=
+dos-news-dir=m:\bnews
+unix-host=
+uucp-script=
+dos-ftp-host=
+dos-ftp-passw=
+ftp-script=
+ftp-login=
+ftp-passw=
+
+; для утилиты объединение клиентов
+[acc-cli]
+out=t:\work\goods\acc-cli.txt
+
+;для клинтов использующих таможенный учет
+[custom]
+rep-tnved = "cmp/tnved4.txt"
+;сверки
+
+[revision]
+comstr     = "unknown"
+comstrpump = "unknown"
+rvs-object = "маг*38"
+
+[mob_scan]
+scan_com=calc
+[upgrade]
+prev-ver=11_1
+oldver-dir=P:\
+ini-path=\\atlant\v15_0\cust15_0\prog101a.ub0
+upg-dir=R:\tmp
+dir-ver=S:\
+upg-path=c:\12_0
+
+[BGE]
+Dirfrg-acc=#dir_bge#\frg-acc
+outdir=#dir_bge#\frg-acc
+dir-heap=#dir_bge#\frg-acc\heap
+dir-exch=#dir_bge#\frg-acc\exch
+heap-compress=0
+
+[OXML]
+oxml-dir=#dir_oxml#_imp\oxml\heap
+oxml-exch-dir=#dir_oxml#_imp\oxml\exch
+
+
+[AlcPrint]
+ConStrPA=exe\printimg.bat
+
+[radio-terminal]
+exch-dir=c:\test
+rt-ticket=22
+
+[edi]
+edi-desadv-dir=\\mart\temp\edi\deadv
+edi-recadv-dir=\\mart\temp\edi\recalc
+edi-order-dir=\\mart\temp\edi\order
+edi-status-dir=\\mart\temp\edi\status
+
+[THAutoSessions]
+NumAutoSessions=5
+AutoSession1=sn:autonws+r+db:1-3
+AutoSession3=sn:autonws+r+db:6
+AutoSession5=sn:autoarh+h+r+db:1-99
+
+[ProAB]
