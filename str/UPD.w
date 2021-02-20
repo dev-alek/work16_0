@@ -2732,10 +2732,13 @@ PROCEDURE init-sort :
             end.  
         when 2 then 
             do:
-                for each X_utd where X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB or
+                for each X_utd where (X_utd.EDocType <> objSrv:Env:Utd:EDocType:UCD:KeyIntDB and
+                   (X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB or
                     X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Canceled:KeyIntDB or 
                     X_utd.sts = ObjSrv:Env:Utd:Sts:TH:ConfirmedUcd:KeyIntDB or
-                    X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB:
+                    X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB)) or
+                   (X_utd.EDocType = objSrv:Env:Utd:EDocType:UCD:KeyIntDB and
+                    X_utd.sts = ObjSrv:Env:Utd:Sts:TH:PackProcess:KeyIntDB):
                     delete X_utd .
                 end.  
             end.  
@@ -3051,8 +3054,13 @@ FUNCTION EdoTypeName RETURNS CHARACTER
       Purpose:  
         Notes:  
     ------------------------------------------------------------------------------*/
-
-    RETURN EdocType:GetLabel(p-stsTH) .   /* Function return value. */
+    define buffer buf_edoc-attr for ub.utd-attr .
+    find first buf_edoc-attr no-lock where buf_edoc-attr.attr-code = "UtdType" and
+                                           buf_edoc-attr.attr-value = string(objSrv:Env:Utd:EDocType:edoc:KeyIntDB) and
+                                           buf_edoc-attr.db-num = X_utd.db-num and
+                                           buf_edoc-attr.doc-id = X_utd.doc-id no-error .
+    if available (buf_edoc-attr) then RETURN EdocType:GetLabel(p-stsTH) + "_E" .
+    else RETURN EdocType:GetLabel(p-stsTH) .   /* Function return value. */
 
 END FUNCTION.
 

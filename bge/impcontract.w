@@ -184,7 +184,7 @@ DEFINE BROWSE br-contract
     tt-contract.contract-date FORMAT "99/99/9999":U       LABEL "Дата"
     tt-contract.contract-date-beg FORMAT "99/99/9999":U   LABEL "Начало"
     tt-contract.contract-date-end FORMAT "99/99/9999":U   LABEL "Конец"
-    tt-contract.host-code FORMAT "99999999":U WIDTH 13.63    LABEL "Фирма"
+    tt-contract.host-code FORMAT "9999999999":U WIDTH 13.63    LABEL "Фирма"
     (if tt-contract.edi then "+":U else "-":U) format "X(1)":U LABEL "Поставки через ЭДО"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

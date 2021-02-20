@@ -694,6 +694,18 @@ define variable vss-description as character no-undo init "".
   "'Irk-Oil'"
   "yes"
 }
+
+{ gbl/menuload.i
+  {&bef-menuload_service_customs}
+  "'Утилита для привязывания единицы измерения к товарам'"
+  "'utl/unit-goods.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
 { gbl/menuload.i
   {&bef-menuload_service_customs}
   "'Выгрузка данных по реализации в учетных ценах (.dbf)'"

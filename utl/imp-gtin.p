@@ -167,7 +167,14 @@ end.
 run waitfram-show in this-procedure ( "ЖДИТЕ...") .
 
 
-CREATE "Excel.Application":U mExcelApplication.
+CREATE "Excel.Application":U mExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.
 ASSIGN
     mExcelApplication:DisplayAlerts = NO
     mWorkbook                       = mExcelApplication:WorkBooks:Add(v-imp-file)

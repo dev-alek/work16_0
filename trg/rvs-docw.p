@@ -343,8 +343,9 @@ do
         end.
     end.
 
-    if  ub.rvs-doc.status_ = {&fact} then 
-    do: 
+    if  ub.rvs-doc.status_ = {&fact}
+    and not g#news
+    then do: 
         v-mess = return-value.  
         define variable v-person as character no-undo.
         for last  c-rvs-doc no-lock where
@@ -470,8 +471,9 @@ do
     assign
         v-new-rvs-doc = new(ub.rvs-doc)
         .
-    if v-new-rvs-doc = true then 
-    do:
+    if v-new-rvs-doc = true
+    and not g#news
+    then do:
         run trg/userlog.p (
             input {&nwsdochs_action_create}
             , input {&table_rvs-doc}

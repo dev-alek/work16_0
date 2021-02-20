@@ -20,7 +20,8 @@ using ibs.th.gbl.sys.objth.
 
 class ibs.th.skt.ControlledClients.marking inherits objth: 
 
-
+  {cmp\str-glbl.i class}
+  
   define private variable logWrite as class LogWrite no-undo.
 
   define public property SomeStr as longchar no-undo /* сюда писать если что-то отправить*/
@@ -33,8 +34,6 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
      
   end.
   
-  {utl/gtin.i class}
-
   method public void hndler (req as class ibs.th.skt.Commands.SimpleRequest):
     define variable vLC       as longchar  no-undo.
     define variable ii        as integer   no-undo.
@@ -50,8 +49,11 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     define variable val       as character no-undo.
     define variable cashSts   as class     cash                        no-undo.
     define variable thMarkSts as class     ibs.th.str.marking.sts.mark no-undo.
+    define variable shift_tbeg as date no-undo.
+    define variable shift_num  as integer no-undo.
     
     define buffer buf_marking for ub.marking.
+    define buffer buf_marking-attr for ub.marking-attr.
     define buffer buf_marking-l for ub.marking-lines.
     
     cashSts =  new cash().
@@ -64,13 +66,13 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
       req:QueryPar).
   
     n = num-entries (req:QueryPar, "&").
-    if n ne 4 and n ne 3
-      then 
-    do:
-      vLC = chr(123) + '"server_error":"Неверные параметры запроса."' + chr(125).
-      sendContent(vLC).
-      return.
-    end.
+/*    if n ne 4 and n ne 3                                                         */
+/*      then                                                                       */
+/*    do:                                                                          */
+/*      vLC = chr(123) + '"server_error":"Неверные параметры запроса."' + chr(125).*/
+/*      sendContent(vLC).                                                          */
+/*      return.                                                                    */
+/*    end.                                                                         */
     do ii = 1 to n:
       assign
         par = entry (1, entry (ii, req:QueryPar, "&"), "=")
@@ -115,11 +117,19 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
             end. 
             action = val.
           end.
+        when "shift_tbeg" then 
+          do:
+            shift_tbeg = date (integer (substring (val, 03, 2)), integer (substring (val, 01, 2)), integer (substring (val, 05, 4))) no-error.
+          end.
+        when "shift_num" then 
+          do:
+            shift_num = int (val) no-error.
+          end.
         otherwise 
         do:
-          vLC = chr(123) + substitute('"server_error":"Неверный параметр &1 запроса."', par) + chr(125).
-          sendContent(vLC).
-          return.
+/*          vLC = chr(123) + substitute('"server_error":"Неверный параметр &1 запроса."', par) + chr(125).*/
+/*          sendContent(vLC).                                                                             */
+/*          return.                                                                                       */
         end.
       end case.
     end.
@@ -148,7 +158,29 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
             buf_marking.sts = thMarkSts:ReturnLock:KeyIntDB.
           end.
           end case.
-          jj = jj + 1.          
+          jj = jj + 1.
+          if shift_tbeg ne ?
+          then do:
+            find first buf_marking-attr where buf_marking-attr.mark = buf_marking.mark and buf_marking-attr.attr-code = "shift-date" no-error.
+            if not available buf_marking-attr
+            then do:
+              create buf_marking-attr.
+              buf_marking-attr.mark = buf_marking.mark.
+              buf_marking-attr.attr-code = "shift-date".
+            end.
+            buf_marking-attr.attr-value = string (shift_tbeg).
+          end.
+          if shift_num ne ?
+          then do:
+            find first buf_marking-attr where buf_marking-attr.mark = buf_marking.mark and buf_marking-attr.attr-code = "shift-num" no-error.
+            if not available buf_marking-attr
+            then do:
+              create buf_marking-attr.
+              buf_marking-attr.mark = buf_marking.mark.
+              buf_marking-attr.attr-code = "shift-num".
+            end.
+            buf_marking-attr.attr-value = string (shift_num).
+          end.
         end.
         if jj = 0
         then vLC = getJson(0, "По данной кассе не было маркированого товара", mark).
@@ -174,6 +206,28 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
               else buf_marking.sts = thMarkSts:SaleLock:KeyIntDB.
           end.
           end case.
+          if shift_tbeg ne ?
+          then do:
+            find first buf_marking-attr where buf_marking-attr.mark = buf_marking.mark and buf_marking-attr.attr-code = "shift-date" no-error.
+            if not available buf_marking-attr
+            then do:
+              create buf_marking-attr.
+              buf_marking-attr.mark = buf_marking.mark.
+              buf_marking-attr.attr-code = "shift-date".
+            end.
+            buf_marking-attr.attr-value = string (shift_tbeg).
+          end.
+          if shift_num ne ?
+          then do:
+            find first buf_marking-attr where buf_marking-attr.mark = buf_marking.mark and buf_marking-attr.attr-code = "shift-num" no-error.
+            if not available buf_marking-attr
+            then do:
+              create buf_marking-attr.
+              buf_marking-attr.mark = buf_marking.mark.
+              buf_marking-attr.attr-code = "shift-num".
+            end.
+            buf_marking-attr.attr-value = string (shift_num).
+          end.
         end.
         vLC = getJson(1, cashSts:UnlockAll:Label_, mark).
         sendContent(vLC).
@@ -320,6 +374,6 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     return json-str.
   end.
 
-
+  {utl/gtin.i class}
 
 end class.

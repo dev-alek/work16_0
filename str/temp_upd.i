@@ -42,6 +42,8 @@ define temp-table tt-utd-lines like ub.utd-lines
   field TaxRate_  as character
   field fact-qnty as decimal
   field sts_err   as logical
+  field UnitCli   as character
+  field UnitCliQnty as decimal
   index pi  db-num doc-id LineNum
   index gds-code gds-code
   index sts stts sts

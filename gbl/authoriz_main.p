@@ -31,12 +31,12 @@ def var vss-description as character no-undo init "Программа авторизации пользов
 { cmp/str-glbl.i }
 { gbl/cur-time.i }
 
-if ibs.th.gbl.gbl-var:rcode
+if not ibs.th.gbl.gbl-var:rcode  and not session:debug-alert
 then do:
    p-permit = yes.
    return.
 end.
-
+  
 
 define variable v-today as date      no-undo.
 define variable v-time  as integer   no-undo.
@@ -48,7 +48,7 @@ assign
 FUNCTION make-num-string RETURN CHAR
 ( input in-str as character )
 :
-  def var v-out-str as character no-undo .
+  def var v-out-str as character no-undo .                                           
   assign
     v-out-str = ''
   .
@@ -161,29 +161,30 @@ end procedure. /* input-user-and-passwd */
 procedure generate-passwd :
   def var v-passwd as character no-undo .
   def var v-seed as character no-undo .
-
-  run gbl/d-prompt.w (
-      'title=One time password generation\'
-    + 'text1=Enter password\'
-    + 'format=x(40)\'
-    + 'password=yes\'
-    + 'type=char\'
-    ,input-output v-passwd
-    ).
-
-  if encode(v-passwd) <> "idZiiziQdcZKcbba" then do:
-    run trg/userlog.p (
-                input 'one-pwd'
+  if ibs.th.gbl.gbl-var:rcode
+  then do:
+     run gbl/d-prompt.w (
+        'title=One time password generation\'
+      + 'text1=Enter password\'
+      + 'format=x(40)\'
+      + 'password=yes\'
+      + 'type=char\'
+      ,input-output v-passwd
+      ).
+ 
+     if encode(v-passwd) <> "idZiiziQdcZKcbba" then do:
+       run trg/userlog.p (
+                 input 'one-pwd'
                 , input ("Введен неправильный пароль для генерации одноразового пароля"  + {&delim-key} + program-name(3) )
                 , input ?
                 , input ?
                 , input "") no-error.
-    message
-      "Incorrect one time generation password"
-      view-as alert-box error .
-    return . /* --->>>--- */
-  end.
-
+       message
+         "Incorrect one time generation password"
+       view-as alert-box error .
+       return . /* --->>>--- */
+     end.
+  end. 
   run gbl/d-prompt.w (
       'title=One time password\'
     + 'text1=Input client seed\'
@@ -306,7 +307,7 @@ procedure check-passwd :
     return error . /* --->>>--- */
   end.
 
-  if encode(p-password) = buf__User._Password then do:
+  if encode(p-password) = buf__User._Password or not ibs.th.gbl.gbl-var:rcode then do:
      run trg/userlog.p (
                 input 'one-pwd'
                 , input (substitute("Введен пароль для &1", p-user-name)  + {&delim-key} + program-name(3) )

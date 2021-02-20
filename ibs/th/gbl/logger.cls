@@ -24,7 +24,7 @@ class ibs.th.gbl.logger:
     
   constructor public logger ( inOut as class putout ):
     super ().
-    out =  inOut.
+/*    out =  inOut.*/
   end constructor.
 
   /*------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ class ibs.th.gbl.logger:
   ------------------------------------------------------------------------------*/
 
   method public void EventHndlr(inMsg as char):
-    out:PutMessage(inMsg).
+/*    out:PutMessage(inMsg).*/
     return.
   end method.  
   

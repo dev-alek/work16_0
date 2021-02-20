@@ -277,7 +277,8 @@ on error undo, return error return-value :
       buf_temp-tank.artic = buf_doc-line.artic
       buf_temp-tank.prod-type = buf_doc-line.prod-type
       buf_temp-tank.prod-code = buf_doc-line.prod-code
-      buf_temp-tank.cli-base-rate = 1 / buf_doc-line.doc-density
+/*      buf_temp-tank.cli-base-rate = 1 / buf_doc-line.doc-density*/
+      buf_temp-tank.cli-base-rate = buf_temp-tank.fact-qnty / buf_temp-tank.cli-qnty
       buf_temp-tank.unit-type = buf_units.type
       .
       create tt-in_doc-line.
@@ -532,6 +533,7 @@ on error undo, return error return-value :
                                           , error-status:get-message(1)
                                           , return-value ).
     end.
+    
     for each buf_doc-line no-lock where
             buf_doc-line.doc-code = buf_trn-doc.doc-code,
        first  buf_temp-tank where
@@ -561,8 +563,60 @@ on error undo, return error return-value :
           in_doc-line.price-rubl = buf_temp-tank.price-rubl
           .
         end.
+        assign
+          in_doc-line.cli-qnty = buf_temp-tank.cli-qnty
+          in_doc-line.doc-density = in_doc-line.cli-qnty / in_doc-line.fact-qnty
+          in_doc-line.fact-density = in_doc-line.doc-density
+          in_doc-line.cli-base-rate = 1 / in_doc-line.doc-density
+          in_doc-line.price-cli = buf_temp-tank.price-cli
+        .
       end.
     end.
+    for each buf_doc-pl no-lock where
+          buf_doc-pl.out-code = buf_trn-doc.doc-code,
+       first  buf_temp-tank where
+                 buf_temp-tank.gds-code = buf_doc-pl.gds-code
+             AND buf_temp-tank.pl-code = buf_doc-pl.pl-code
+             AND buf_temp-tank.doc-seq  = v-seq
+    on error undo _main, return error return-value :
+      find first in_doc-pl where
+                 in_doc-pl.gds-code = buf_doc-pl.gds-code
+             and in_doc-pl.pl-code  = buf_doc-pl.pl-code
+             and in_doc-pl.out-code = v-doc-code-chip
+             no-error .
+      if available in_doc-pl
+      then do :
+        assign
+          in_doc-pl.cli-qnty = buf_temp-tank.cli-qnty
+          in_doc-pl.cli-doc-qnty = in_doc-pl.cli-qnty
+          in_doc-pl.cli-fact-qnty = in_doc-pl.cli-qnty
+        .
+      end .
+    end .   
+    for each buf_inv-line no-lock where
+            buf_inv-line.doc-code = buf_trn-doc.doc-code,
+       first  buf_temp-tank where
+                 buf_temp-tank.artic = buf_inv-line.artic
+             AND buf_temp-tank.prod-type = buf_inv-line.prod-type
+             AND buf_temp-tank.prod-code = buf_inv-line.prod-code
+             AND buf_temp-tank.doc-seq  = v-seq
+    on error undo _main, return error return-value :
+      find first in_inv-line where
+                in_inv-line.artic = buf_inv-line.artic
+          AND in_inv-line.prod-type = buf_inv-line.prod-type
+          AND in_inv-line.prod-code = buf_inv-line.prod-code
+          AND in_inv-line.doc-code = v-doc-code-chip no-error .
+      if available in_inv-line then do:
+        assign
+          in_inv-line.wast-cli-qnty = buf_temp-tank.cli-qnty
+          in_inv-line.after-cli-qnty = in_inv-line.before-cli-qnty + in_inv-line.wast-cli-qnty
+          in_inv-line.wast-rubl = buf_temp-tank.price-cli
+          in_inv-line.wast-base = buf_temp-tank.price-cli / buf_trn-doc.base-rate * buf_trn-doc.base-scale
+          in_inv-line.unus-wast-rubl = in_inv-line.wast-rubl
+          in_inv-line.unus-wast-base = in_inv-line.wast-base
+        .
+      end .
+    end .
     for each buf_gds-dtl no-lock where
             buf_gds-dtl.doc-code = buf_trn-doc.doc-code,
         first buf_temp-tank where

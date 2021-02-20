@@ -58,6 +58,7 @@ define variable vss-description as character no-undo initial "Печать сменного от
 { rep/real-2cr.i actreal-2      }
 { ref/cp-attr.i }
 define buffer grptreal-2 for treal-2.
+define buffer nottreal-2 for treal-2.
 { rep/real-2cr.i grptreal-2     }
 { rep/rshiftd1.i t "shared"}
 { str/trdcalib.i }
@@ -340,6 +341,11 @@ for each t-2-not-sug:
                           else substitute("(По гр. &1)", string(v-grp-name, "X(9)"))
                           )
             .
+
+             for first nottreal-2 where nottreal-2.gds-code = treal-2.gds-code and
+                nottreal-2.is-pay = treal-2.is-pay and
+                nottreal-2.out-name = treal-2.out-name and
+                (nottreal-2.discnt-type = -99 or nottreal-2.discnt-type = -98):
             FIND FIRST grptreal-2 WHERE
                         grptreal-2.gds-code = treal-2.gds-code AND
                         grptreal-2.cpay-code = - v-grp-code AND
@@ -373,6 +379,7 @@ for each t-2-not-sug:
               grptreal-2.qnty2 = grptreal-2.qnty2 + round(treal-2.qnty2,2)
               grptreal-2.netto = grptreal-2.netto + round(treal-2.netto,2)
               .
+            end.
             end.
             /*в ii пишем кол-во записей по данной группе*/
             /*идем по pi поэтому сначала обработаются те где is-pay = no*/

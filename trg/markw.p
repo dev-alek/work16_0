@@ -56,7 +56,6 @@ if (old-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
   or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
   or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
-  or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
   or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
   or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
   or ub.marking.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB)
@@ -64,6 +63,30 @@ then do:
   ub.marking.sts = old-marking.sts.
 end.
 
+if ub.marking.sts <> old-marking.sts then do:
+   find first ub.marking-attr exclusive-lock where ub.marking-attr.mark = ub.marking.mark and 
+                                                   ub.marking-attr.attr-code = "sts-date" no-error .
+   if available (ub.marking-attr) then ub.marking-attr.attr-value = string(today) .          
+   else do:
+      create ub.marking-attr .
+      assign
+      ub.marking-attr.mark = ub.marking.mark
+      ub.marking-attr.attr-code = "sts-date"
+      ub.marking-attr.attr-value = string(today)
+      .
+   end.  
+   find first ub.marking-attr exclusive-lock where ub.marking-attr.mark = ub.marking.mark and 
+                                                   ub.marking-attr.attr-code = "sts-time" no-error .
+   if available (ub.marking-attr) then ub.marking-attr.attr-value = string(time) .          
+   else do:
+      create ub.marking-attr .
+      assign
+      ub.marking-attr.mark = ub.marking.mark
+      ub.marking-attr.attr-code = "sts-time"
+      ub.marking-attr.attr-value = string(time)
+      .
+   end.                                          
+end .   
 /*define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.       */
 /*run gbl/getobjsrvhndl.p (input-output ObjSrv).                       */
 /*                                                                     */

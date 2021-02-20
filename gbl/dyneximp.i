@@ -468,7 +468,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                               ).
     end.
   end.
-  create "Excel.Application" chExcelApplication .
+  create "Excel.Application" chExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.  
   assign
   chExcelApplication:interactive     = false
   chExcelApplication:ScreenUpdating  = false
@@ -787,7 +794,14 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       return error substitute("Нет поля &1 в таблице &2, буфер которой передан", p-line-num-field, p-bh:name).
     end.
   end.
-  create "Excel.Application" chExcelApplication .
+  create "Excel.Application" chExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.  
   assign
   chExcelApplication:interactive     = false
   chExcelApplication:ScreenUpdating  = false

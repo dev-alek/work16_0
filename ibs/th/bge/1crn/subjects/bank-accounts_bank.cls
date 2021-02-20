@@ -35,7 +35,7 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
     private set.
   define property bank-resive-debit as character    no-undo get. 
     private set.    
-  define property bank-deposit-kredit as character    no-undo get. 
+  define property bank-resive-kredit as character    no-undo get. 
     private set.    
   define override property InitTag as character no-undo init "bank"
     get. 
@@ -72,10 +72,10 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
           assign 
             bank-resive-debit = inValue .
         end.      
-      when "bank-deposit-kredit" then 
+      when "bank-resive-kredit" then 
         do:
           assign 
-            bank-deposit-kredit = inValue .
+            bank-resive-kredit = inValue .
         end.      
     end case.
   end.
@@ -98,7 +98,7 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
       v-str = v-str + ",bank-resive-debit" 
       when bank-resive-debit = ?
       v-str = v-str + ",bank-deposit-kredit" 
-      when bank-deposit-kredit = ?
+      when bank-resive-kredit = ?
       .
     v-str = trim (v-str, ",").
     if v-str > ''
@@ -115,7 +115,7 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
       bik       = ?
       qr-rule   = ?
       bank-resive-debit = ?
-      bank-deposit-kredit = ?
+      bank-resive-kredit = ?
       .
   end.
   

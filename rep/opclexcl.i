@@ -49,7 +49,14 @@ procedure OpenForExcel :
          create "Excel.Application" {1}ch#excelApplication connect no-error.
          if error-status:error 
          then do :
-            create "Excel.Application" {1}ch#excelApplication .
+        create "Excel.Application" {1}ch#excelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.  
          end.
          assign
             {1}num#str#  = 0.

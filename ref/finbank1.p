@@ -37,7 +37,7 @@ define input parameter p-bik             like ub.fin-bank.bik       no-undo .
 define input parameter p-cor-acc         like ub.fin-bank.cor-acc   no-undo .
 define input parameter p-qr-rule         as integer                 no-undo .
 define input parameter p-resive-debit    as character               no-undo .
-define input parameter p-deposit-kredit  as character               no-undo .
+define input parameter p-resive-kredit   as character               no-undo .
 define input parameter p-e-mail          like ub.fin-bank.e-mail    no-undo .
 define input parameter p-fax             like ub.fin-bank.fax       no-undo .
 define input parameter p-inn             like ub.fin-bank.inn       no-undo .
@@ -275,7 +275,7 @@ if p-qr-rule <> ? then do:
   end.  
   ub.fin-bank-attr.attr-value = string (p-resive-debit) .
 end.
-if p-deposit-kredit <> ? then do:
+if p-resive-kredit <> ? then do:
   find first ub.fin-bank-attr exclusive-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank 
     and ub.fin-bank-attr.host-code = p-host-code and ub.fin-bank-attr.attr-code = "collect-credit":U no-error .
   if not available (ub.fin-bank-attr) then 
@@ -287,7 +287,7 @@ if p-deposit-kredit <> ? then do:
       ub.fin-bank-attr.attr-code = "collect-credit":U
       .
   end.  
-  ub.fin-bank-attr.attr-value = string (p-deposit-kredit) .
+  ub.fin-bank-attr.attr-value = string (p-resive-kredit) .
 end.
   release ub.fin-bank no-error.
   if error-status:error then do:

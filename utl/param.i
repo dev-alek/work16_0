@@ -1,3 +1,4 @@
+   {utl\search.i {1}}
    &GLOBAL-DEFINE PARAM-BEG-TAG SUBSTITUTE("<PARAM name='&1'>", iName)
    &GLOBAL-DEFINE PARAM-END-TAG SUBSTITUTE("</PARAM name='&1'>", iName)
    
@@ -19,7 +20,8 @@
       define variable vLob  as longchar no-undo.
       define variable vFrom as int64    no-undo.
       define variable vTo   as int64    no-undo.
-      if search (iFile) eq ? then return ?.
+      iFile = SearchFile (iFile).
+      if iFile eq ? then return ?.
       copy-lob file iFile to vLob no-error.
       vFrom = index(vLob, {&PARAM-BEG-TAG}).
       if vFrom <= 0 then return ?.

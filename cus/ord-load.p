@@ -233,7 +233,14 @@ define input parameter ff as character no-undo .
 define input parameter ex as logical no-undo .
 
   if ex = false then do:
-    create "Excel.Application" chExcelApplication.
+    create "Excel.Application" chExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.    
     if ff = ""  then do:
       chWorkBook   = chExcelApplication:WorkBooks:add( ).
     end.

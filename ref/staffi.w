@@ -896,6 +896,20 @@ end.
 IF f-password:VISIBLE IN FRAME {&FRAME-NAME} THEN DO:
     ASSIGN
     f-password.
+    if f-password = '' or f-password = ? then do:
+        message
+        "Пароль НЕ заполнен!"
+        view-as alert-box ERROR .
+        apply "ENTRY":U to f-password IN frame {&frame-name}.
+        return error.       
+    end.   
+    if integer(f-password) < 1000 or integer(f-password) > 32767 then do:
+        message
+        "Пароль должен быть от 1000 до 32767!"
+        view-as alert-box ERROR .
+        apply "ENTRY":U to f-password IN frame {&frame-name}.
+        return error.          
+    end.   
     if p-password-option > 1
     or f-password <> '':U
     then do:

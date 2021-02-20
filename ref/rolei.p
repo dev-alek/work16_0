@@ -230,7 +230,7 @@ on error undo, return error return-value
         v-staff-code-format = (if v-omron = yes or v-ncr = yes then ">>>9" else ">>9")
         v-password-option = 2
         v-password-label = "Пароль кассира"
-        v-password-format = "X(4)"
+        v-password-format = "X(5)"
         v-notes = substitute("Внимание!&1Диапазон значений <КОДA КАССИРА> и <ПАРОЛЯ> различен для касс и POS разного типа&1"  +
                             "Перед вводом кода и пароля кассира проконсультируйтесь с Вашим администратором"
                             , {&new-line})

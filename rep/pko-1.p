@@ -192,8 +192,8 @@ on error undo, return error return-value
   .
 
   assign
-    v-date-create = (if buf_fin-doc.shift-date = ? or v-uchet = "cal" then buf_fin-doc.doc-date else buf_fin-doc.shift-date)
-    v-doc-date-f = string(v-date-create, "99.99.9999":U) + " ã."
+    v-date-create = buf_fin-doc.doc-date
+    v-doc-date-f = string(buf_fin-doc.doc-date, "99.99.9999":U) + " ã."
   .
   Case buf_fin-doc.str-podr-type :
     when {&shop} then do:

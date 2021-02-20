@@ -2974,7 +2974,18 @@ define input parameter ff as character no-undo .
 define input parameter ex as logical no-undo .
   if ex = false then do:
       create "excel.application" chexcelapplication connect no-error.
-        if error-status:error then do:  create "excel.application" chexcelapplication. end.
+     if error-status:error then 
+     do:  
+        create "excel.application" chexcelapplication no-error.
+        if error-status :error then 
+        do:
+           message
+              "Ошибка при запуске Excel" skip
+              error-status :get-message(1) skip
+              view-as alert-box error .
+           undo, return error .
+        end.
+     end.
     if ff = ""  then do:
       chworkbook   = chexcelapplication:workbooks:add( ).
     end.

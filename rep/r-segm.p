@@ -491,7 +491,14 @@ xml_res   = string(session:temp-directory + "segment-res.xml").
 os-command silent value(xslt_path + " " + xslt + " " + xml_tmp + " " + xml_res).
 /*os-delete VALUE(xml_tmp).*/
 define variable chExcel as com-handle.
-create "Excel.Application" chExcel.
+create "Excel.Application" chExcel no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.
 chExcel:Visible = false.
 chExcel:DisplayAlerts = false. /* Иногда выдаёт ошибку формата, но всё корректно */
 chExcel:Workbooks:open(xml_res).

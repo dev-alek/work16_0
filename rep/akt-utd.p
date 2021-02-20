@@ -103,7 +103,7 @@ do
   /*Продавец*/
   find first buf_clients no-lock where buf_clients.obj-code = buf_utd.cli-code and 
     buf_clients.obj-type = buf_utd.cli-type no-error .
-  v-vendor-name = buf_clients.obj-name .
+   if available (buf_clients) then v-vendor-name = buf_clients.obj-name .
   find first buf_firm no-lock where buf_firm.firm-code = buf_clients.obj-code no-error .
   if available (buf_firm) then 
     v-vendor-inn = "ИНН: " + buf_firm.inn .                                      
@@ -111,6 +111,7 @@ do
   /*Покупатель*/
   find first buf_clients no-lock where buf_clients.obj-code = buf_utd.obj-code and 
     buf_clients.obj-type = buf_utd.obj-type no-error .
+  if available (buf_clients) then   
   v-obj-info = buf_clients.obj-name .
   find first buf_firm no-lock where buf_firm.firm-code = buf_clients.obj-code no-error .
   if available (buf_firm) then 
@@ -246,7 +247,7 @@ put stream OutStr-html unformatted
   '</tr>' skip
 
   '<tr><td colspan="15" style="text-align: center; font-weight: bold;">АКТ</td></tr>'
-  '<tr><td colspan="15" style="text-align: center; font-weight: bold;">приему-передачи товара</td></tr>'
+  '<tr><td colspan="15" style="text-align: center; font-weight: bold;">приема-передачи товара</td></tr>'
   '<tr><td colspan="15" style="text-align: center; font-weight: bold;">№' + string(buf_utd.DocumentNumber) + '</td></tr>'
   '<tr>' skip
   '<td colspan="4" style="text-align: center;">АЗК № ' + string(buf_utd.obj-code) + '</td>' skip

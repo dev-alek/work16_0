@@ -3095,7 +3095,11 @@ pobj-type = p-obj-type .
 
 { rep/r-shftfo.i attr-arh-detail-date }
 v-fact-order-start = prev-fo.
+
+if fo > 0 then
 v-fact-order-end = fo .
+else v-fact-order-end = 99999999999999.
+
     
 end procedure .    
 procedure display-title :

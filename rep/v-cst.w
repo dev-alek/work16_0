@@ -301,7 +301,14 @@ DEFINE VARIABLE iColumn                 AS INTEGER INITIAL 1.
 DEFINE VARIABLE cColumn                 AS CHARACTER.
 DEFINE VARIABLE cRange                  AS CHARACTER.
 /* create a new Excel Application object */
-CREATE "Excel.Application" chExcelApplication.
+CREATE "Excel.Application" chExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        return no-apply .
+    end.
 /* launch Excel so it is visible to the user */
 chExcelApplication:Visible = TRUE.
 /* create a new Workbook */

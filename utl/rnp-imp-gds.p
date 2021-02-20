@@ -221,6 +221,13 @@ if substring(f-name, length(f-name) - 2) = "xls"
 or substring(f-name, length(f-name) - 3) = "xlsx"
 then do :
     CREATE "Excel.Application":U mExcelApplication.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.    
     ASSIGN
         mExcelApplication:DisplayAlerts = NO
         mWorkbook                       = mExcelApplication:WorkBooks:Add(f-name)

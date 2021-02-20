@@ -87,7 +87,14 @@ procedure proc-main:
   if vFileName <> ? then .
   else return error substitute("Не найден файл &1", mFileName).
     
-  create "Excel.Application":U mExcelApplication.
+  create "Excel.Application":U mExcelApplication no-error.
+      if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        undo, return error .
+    end.
   assign
     mExcelApplication:DisplayAlerts = no
     mWorkbook                       = mExcelApplication:WorkBooks:Add(vFileName)

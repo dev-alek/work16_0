@@ -75,8 +75,6 @@ class ibs.th.bge.1crn.subjects.fuelcodeinfo inherits ibs.th.bge.1crn.subjects.as
       assign
          v-str = "ExtCode" 
          when ExtCode = ?
-         v-str = v-str + ",ExtId" 
-         when ExtId = ?
          v-str = v-str + ",IntCode"
          when IntCode = ?
          .

@@ -72,7 +72,16 @@ for buf_c-user-log
   , buf_temp_userlog-bush
 on error undo, return error
 :
-    if p-action = 'report':U then do:
+   find last  buf_c-user-log where buf_c-user-log.corr-user-db-num = g#db-num
+                             /*   and buf_c-user-log.cusr-id          = next-value( s-user-history ) */
+   no-lock no-error.
+   if     avail buf_c-user-log
+      and buf_c-user-log.cusr-id          > current-value( s-user-history )
+   then
+      current-value( s-user-history ) = buf_c-user-log.cusr-id.
+   release buf_c-user-log. 
+             
+   if p-action = 'report':U then do:
         run cur-time in this-procedure(output v-corr-date, output v-corr-time).
         create buf_c-user-log.
         assign
@@ -205,24 +214,6 @@ on error undo, return error
          no-error.      
         return.
     end.
-    if   p-action = 'MEASURER_PAR':U then do:      
-        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
-        create buf_c-user-log.
-        assign
-            buf_c-user-log.corr-user-db-num = g#db-num
-            buf_c-user-log.cusr-id          = next-value( s-user-history )
-            buf_c-user-log.chip-num         = 0
-            buf_c-user-log.corr-date        = v-corr-date
-            buf_c-user-log.corr-time        = v-corr-time
-            buf_c-user-log.corr-user-name   = g#userid 
-            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
-            buf_c-user-log.have-screen      = yes
-            buf_c-user-log.head-table-key   = entry(2,p-tbl-name,{&delim-key})
-            buf_c-user-log.head-table       = 'MEASURER_PAR':U
-            buf_c-user-log.uniq-key-rec     = entry(2,p-tbl-name,{&delim-key})
-         no-error.      
-        return.
-    end.
     
     if   p-action = 'one-pwd':U then do:      
         run cur-time in this-procedure(output v-corr-date, output v-corr-time).
@@ -238,6 +229,24 @@ on error undo, return error
             buf_c-user-log.have-screen      = yes
             buf_c-user-log.head-table-key   = entry(2,p-tbl-name,{&delim-key})
             buf_c-user-log.head-table       = 'one-pwd':U
+            buf_c-user-log.uniq-key-rec     = entry(2,p-tbl-name,{&delim-key})
+         no-error.      
+        return.
+    end.
+    if   p-action = 'MEASURER_PAR':U then do:      
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid 
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = entry(2,p-tbl-name,{&delim-key})
+            buf_c-user-log.head-table       = 'MEASURER_PAR':U
             buf_c-user-log.uniq-key-rec     = entry(2,p-tbl-name,{&delim-key})
          no-error.      
         return.

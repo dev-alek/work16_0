@@ -85,7 +85,7 @@ class ibs.th.gbl.gbl-var:
       ibs.th.gbl.gbl-var:g#passwd = in_g#passwd
       ibs.th.gbl.gbl-var:g#esys = in_g#esys
     . 
-    rcode = search("gbl\library2.r") eq ?.
+    rcode = search("gbl\library2.r") ne ?.
     ibs.th.gbl.gbl-var:isInit =  true.
     
   end method.

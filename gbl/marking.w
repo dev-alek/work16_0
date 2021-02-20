@@ -406,7 +406,7 @@ if error-status:error then do:
   undo, return error .
 end.
 
-FOR EACH temp-thbj-attr
+FOR EACH temp-thbj-attr where temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type
   :
     IF temp-thbj-attr.prop-code = {&attr-marking_marking-EDO} THEN DO:
       t-edo = temp-thbj-attr.property-value-logical .
@@ -480,16 +480,16 @@ ASSIGN FRAME {&FRAME-NAME}
     t-manual
     cb-gray_zone_qnty
     .
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-edo} .
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-logical = t-edo.
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-manual} .
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-manual} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-logical = t-manual.
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type} .
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-character = trim(s-type,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} .
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-character = trim(S-type-edo,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} .
-    temp-thbj-attr.property-value-integer = cb-gray_zone_qnty.    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+    temp-thbj-attr.property-value-integer = cb-gray_zone_qnty.
     
     do transaction:
         RUN thbjattr_set-section IN THIS-PROCEDURE (

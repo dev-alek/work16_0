@@ -161,9 +161,16 @@ define variable Current-ROW  as integer no-undo .
           run rep/wp-rub.p ( B-Sum , output PropisSum, output abbr).
 
 
-CREATE "Excel.Application" chExcelApplication.
-assign
-  chExcelApplication:Visible = false
+CREATE "Excel.Application" chExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        return no-apply .
+    end.
+ASSIGN
+  chExcelApplication:Visible = FALSE
   chWorkbook  = chExcelApplication:Workbooks:Add ( ub.ord-blank.file-name )
   chWorkSheet = chExcelApplication:Sheets:Item (1)
   chExcelApplication:Interactive    = false
@@ -783,9 +790,16 @@ v-sum = 0 .
           run rep/wp-rub.p ( B-Sum , output PropisSum, output abbr).
 
 
-CREATE "Excel.Application" chExcelApplication.
-assign
-  chExcelApplication:Visible = false
+CREATE "Excel.Application" chExcelApplication no-error.
+    if error-status :error then do:
+        message
+        "Ошибка при запуске Excel" skip
+        error-status :get-message(1) skip
+        view-as alert-box error .
+        return no-apply .
+    end.
+ASSIGN
+  chExcelApplication:Visible = FALSE
   chWorkbook  = chExcelApplication:Workbooks:Add ( ub.ord-blank.file-name )
   chWorkSheet = chExcelApplication:Sheets:Item (1)
   chExcelApplication:Interactive    = false
