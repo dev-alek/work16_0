@@ -636,7 +636,8 @@ DEFINE BROWSE br-utd
     X_utd-lines.qnty-mark COLUMN-LABEL "Кол-во!марок" FORMAT "->>>9":U
     X_utd-lines.qnty-scan COLUMN-LABEL "Кол-во!проскан." FORMAT "->>>9":U
     X_utd-lines.stts COLUMN-LABEL "Статус" FORMAT "x(20)":U WIDTH 18.13
-    X_utd-lines.UnitCode COLUMN-LABEL "ед.!изм" FORMAT "x(5)":U
+    X_utd-lines.UnitCliQnty COLUMN-LABEL "Кол-во в!ед.изм постав-ка" FORMAT "->>>>>9":U
+    X_utd-lines.UnitCode COLUMN-LABEL "Ед.!изм" FORMAT "x(5)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 147.5 BY 10.88 FIT-LAST-COLUMN.
@@ -1107,6 +1108,7 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
                         X_utd-lines.ProductCode:fGCOLOR in browse br-utd = CYAN_COLOR.
                         X_utd-lines.Gds-Name:fGCOLOR in browse br-utd = CYAN_COLOR.
                         X_utd-lines.UnitCode:fGCOLOR in browse br-utd = CYAN_COLOR.
+                        X_utd-lines.UnitCliQnty:fGCOLOR in browse br-utd = CYAN_COLOR.
                         X_utd-lines.Quantity:fGCOLOR in browse br-utd = CYAN_COLOR.
                         X_utd-lines.price:fGCOLOR in browse br-utd = CYAN_COLOR.
                         X_utd-lines.total:fGCOLOR in browse br-utd = CYAN_COLOR.
@@ -1143,6 +1145,7 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
                     X_utd-lines.ProductCode:fGCOLOR in browse br-utd = red_COLOR.
                     X_utd-lines.Gds-Name:fGCOLOR in browse br-utd = red_COLOR.
                     X_utd-lines.UnitCode:fGCOLOR in browse br-utd = red_COLOR.
+                    X_utd-lines.UnitCliQnty:fGCOLOR in browse br-utd = red_COLOR.
                     X_utd-lines.Quantity:fGCOLOR in browse br-utd = red_COLOR.
                     X_utd-lines.price:fGCOLOR in browse br-utd = red_COLOR.
                     X_utd-lines.total:fGCOLOR in browse br-utd = red_COLOR.
@@ -3922,6 +3925,8 @@ PROCEDURE mark-temp :
     define buffer buf_marking           for ub.marking .
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
     define buffer buf_utd-lines-attr    for ub.utd-lines-attr .
+    define buffer buf_goods             for ub.goods .
+    define buffer buf_bar-code          for ub.bar-code .
     define variable v-db-num       as integer   no-undo .
     define variable v-doc-id       as integer   no-undo .
     define variable vRecKeyLine    as character no-undo .
@@ -3941,6 +3946,22 @@ PROCEDURE mark-temp :
                 X_utd-lines.fact-qnty = integer(buf_utd-lines-attr.attr-value) . 
             end.
         end.    
+            for first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.db-num = X_utd-lines.db-num and
+                buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
+                buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
+                buf_utd-lines-attr.attr-code = "Quantity":
+ 
+                X_utd-lines.UnitCliQnty = integer(buf_utd-lines-attr.attr-value) . 
+            end.     
+            if X_utd-lines.UnitCliQnty = 0 then X_utd-lines.UnitCliQnty = X_utd-lines.Quantity .   
+/*   for first buf_goods no-lock where buf_goods.gds-code = buf_utd-lines.gds-code:*/
+/*      X_utd-lines.UnitCli = buf_goods.unit-cli .                                 */
+/*   end.                                                                          */
+   
+   for first buf_bar-code no-lock where buf_bar-code.gds-code = buf_utd-lines.gds-code and
+                                         buf_bar-code.unit-cli = buf_utd-lines.UnitCode:
+      X_utd-lines.Price = buf_utd-lines.Price / buf_bar-code.cli-base-rate .                                      
+   end.                                            
 
         run gen-key-rec ("utd-lines", 
             input  buffer X_utd-lines:handle, 
@@ -4199,7 +4220,8 @@ PROCEDURE save_mark :
             return no-apply.  
         end.
     end.
-    mMRCCode  = yes.
+
+/*    mMRCCode  = yes.*/
     v-marking = GetCodeIdent(v-mark) .
     mMRCCode = no.
     if v-marking = "" or v-marking = ? then 
