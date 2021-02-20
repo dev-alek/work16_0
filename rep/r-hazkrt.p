@@ -473,6 +473,7 @@ define buffer buf_tt-fuel-chk     for tt-fuel-chk.
 define buffer sch_tt-fuel-chk     for tt-fuel-chk.
 define buffer buf_tt-price        for tt-price.
 define buffer buf_tt-fuel-density for tt-fuel-density.
+define buffer bf_tt-fuel-density  for tt-fuel-density.
 define buffer buf_tt-report       for tt-report.
 define buffer buf_tt-gds-sale     for tt-gds-sale .
 define buffer buf_tt-fuel-goods   for tt-fuel-goods.
@@ -488,76 +489,128 @@ do
 on error undo, return error return-value
 :
 
-  for each buf_tt-fuel-chk
-  break by buf_tt-fuel-chk.db-num
-        by buf_tt-fuel-chk.b-code
-  :
-    if first-of(buf_tt-fuel-chk.db-num) or first-of(buf_tt-fuel-chk.b-code) then do:
-      run waitfram-show in this-procedure ("Расчет по базе " + string( buf_tt-fuel-chk.db-num ) + " ..." ).
-      /* были ли разные продажные цены? */
-      find first sch_tt-fuel-chk no-lock
-        where sch_tt-fuel-chk.db-num      = buf_tt-fuel-chk.db-num
-          and sch_tt-fuel-chk.b-code      = buf_tt-fuel-chk.b-code
-          and sch_tt-fuel-chk.price-base <> buf_tt-fuel-chk.price-base
-      no-error .
-      create buf_tt-price.
-      assign
-        buf_tt-price.db-num    = buf_tt-fuel-chk.db-num
-        buf_tt-price.b-code    = buf_tt-fuel-chk.b-code
-        buf_tt-price.price     = buf_tt-fuel-chk.price-base
-        buf_tt-price.is-unique = if available sch_tt-fuel-chk then no else yes
-        v-unique-price         = if available sch_tt-fuel-chk then no else yes
-      .
-    end. /* if first-of(buf_tt-fuel-chk.db-num) or first-of(buf_tt-fuel-chk.gds-code) */
-
-    if not v-unique-price then do :
-      assign
-        v-sum1 = v-sum1 + ( buf_tt-fuel-chk.price-base * buf_tt-fuel-chk.doc-qnty )
-        v-sum2 = v-sum2 + buf_tt-fuel-chk.doc-qnty
-      .
-    end.
-
-    if last-of(buf_tt-fuel-chk.db-num) or last-of(buf_tt-fuel-chk.b-code) then do:
-      if not v-unique-price then do :
-          find first buf_tt-price
-            where buf_tt-price.db-num    = buf_tt-fuel-chk.db-num
-              and buf_tt-price.b-code  = buf_tt-fuel-chk.b-code
-          no-error .
-          if available buf_tt-price then do:
-            assign
-              buf_tt-price.price = if v-sum2 > 0 then ( v-sum1 / v-sum2 ) else 0
+   for each buf_tt-fuel-chk
+      break by buf_tt-fuel-chk.db-num
+      by buf_tt-fuel-chk.b-code
+      :
+      if first-of(buf_tt-fuel-chk.db-num) or first-of(buf_tt-fuel-chk.b-code) then 
+      do:
+         run waitfram-show in this-procedure ("Расчет по базе " + string( buf_tt-fuel-chk.db-num ) + " ..." ).
+         /* были ли разные продажные цены? */
+         find first sch_tt-fuel-chk no-lock
+            where sch_tt-fuel-chk.db-num      = buf_tt-fuel-chk.db-num
+            and sch_tt-fuel-chk.b-code      = buf_tt-fuel-chk.b-code
+            and sch_tt-fuel-chk.price-base <> buf_tt-fuel-chk.price-base
+            no-error .
+         create buf_tt-price.
+         assign
+            buf_tt-price.db-num    = buf_tt-fuel-chk.db-num
+            buf_tt-price.b-code    = buf_tt-fuel-chk.b-code
+            buf_tt-price.price     = buf_tt-fuel-chk.price-base
+            buf_tt-price.is-unique = if available sch_tt-fuel-chk then no else yes
+            v-unique-price         = if available sch_tt-fuel-chk then no else yes
             .
-          end.
+      end. /* if first-of(buf_tt-fuel-chk.db-num) or first-of(buf_tt-fuel-chk.gds-code) */
+
+      if not v-unique-price then 
+      do :
+         assign
+            v-sum1 = v-sum1 + ( buf_tt-fuel-chk.price-base * buf_tt-fuel-chk.doc-qnty )
+            v-sum2 = v-sum2 + buf_tt-fuel-chk.doc-qnty
+            .
       end.
-      assign
-        v-sum1 = 0
-        v-sum2 = 0
-      .
-    end.
-    /* считаем плотности по объектам топливам и датам */
-    find first buf_tt-fuel-density
-      where buf_tt-fuel-density.obj-type  = buf_tt-fuel-chk.obj-type
-        and buf_tt-fuel-density.obj-code  = buf_tt-fuel-chk.obj-code
-        and buf_tt-fuel-density.den-date  = buf_tt-fuel-chk.chk-date
-        and buf_tt-fuel-density.b-code    =  buf_tt-fuel-chk.b-code
-    no-error .
-    if not available buf_tt-fuel-density then do:
-      run find-density in this-procedure ( input buf_tt-fuel-chk.obj-type
-                                         , input buf_tt-fuel-chk.obj-code
-                                         , input buf_tt-fuel-chk.chk-date
-                                         , input buf_tt-fuel-chk.b-code
-                                         , output v-density
-                                         ) .
-      create buf_tt-fuel-density .
-      assign
-        buf_tt-fuel-density.obj-type = buf_tt-fuel-chk.obj-type
-        buf_tt-fuel-density.obj-code = buf_tt-fuel-chk.obj-code
-        buf_tt-fuel-density.den-date = buf_tt-fuel-chk.chk-date
-        buf_tt-fuel-density.b-code   = buf_tt-fuel-chk.b-code
-        buf_tt-fuel-density.density  = v-density
-      .
-    end. /* if not available buf_tt-fuel-density then do: */
-  end. /* for each buf_tt-fuel-chk no-lock */
+
+      if last-of(buf_tt-fuel-chk.db-num) or last-of(buf_tt-fuel-chk.b-code) then 
+      do:
+         if not v-unique-price then 
+         do :
+            find first buf_tt-price
+               where buf_tt-price.db-num    = buf_tt-fuel-chk.db-num
+               and buf_tt-price.b-code  = buf_tt-fuel-chk.b-code
+               no-error .
+            if available buf_tt-price then 
+            do:
+               assign
+                  buf_tt-price.price = if v-sum2 > 0 then ( v-sum1 / v-sum2 ) else 0
+                  .
+            end.
+         end.
+         assign
+            v-sum1 = 0
+            v-sum2 = 0
+            .
+      end.
+      /* считаем плотности по объектам топливам и датам */
+      find first buf_tt-fuel-density
+         where buf_tt-fuel-density.obj-type  = buf_tt-fuel-chk.obj-type
+         and buf_tt-fuel-density.obj-code  = buf_tt-fuel-chk.obj-code
+         and buf_tt-fuel-density.den-date  = buf_tt-fuel-chk.chk-date
+         and buf_tt-fuel-density.b-code    = buf_tt-fuel-chk.b-code
+         no-error .
+      if not available buf_tt-fuel-density then 
+      do:
+         run find-density in this-procedure ( input buf_tt-fuel-chk.obj-type
+            , input buf_tt-fuel-chk.obj-code
+            , input buf_tt-fuel-chk.chk-date
+            , input buf_tt-fuel-chk.b-code
+            , output v-density
+            ) .
+         if v-density <> 0 then 
+         do:
+            create buf_tt-fuel-density .
+            assign
+               buf_tt-fuel-density.obj-type = buf_tt-fuel-chk.obj-type
+               buf_tt-fuel-density.obj-code = buf_tt-fuel-chk.obj-code
+               buf_tt-fuel-density.den-date = buf_tt-fuel-chk.chk-date
+               buf_tt-fuel-density.b-code   = buf_tt-fuel-chk.b-code
+               buf_tt-fuel-density.density  = v-density
+               .
+         end. /*if v-density <> 0 then do:*/
+         else 
+         do: /*Если по чекам за дату не найдена плотность и по накладной, тогда ищем за другую дату по чекам*/
+            find first bf_tt-fuel-density
+               where bf_tt-fuel-density.obj-type  = buf_tt-fuel-chk.obj-type
+               and bf_tt-fuel-density.obj-code  = buf_tt-fuel-chk.obj-code
+               and bf_tt-fuel-density.b-code    = buf_tt-fuel-chk.b-code
+               no-error .
+            if available (bf_tt-fuel-density) then 
+            do:
+               create buf_tt-fuel-density .
+               assign
+                  buf_tt-fuel-density.obj-type = buf_tt-fuel-chk.obj-type
+                  buf_tt-fuel-density.obj-code = buf_tt-fuel-chk.obj-code
+                  buf_tt-fuel-density.den-date = buf_tt-fuel-chk.chk-date
+                  buf_tt-fuel-density.b-code   = buf_tt-fuel-chk.b-code
+                  buf_tt-fuel-density.density  = bf_tt-fuel-density.density
+                  .       
+            end.
+            else 
+            do: /*Нет информации по плотности. Берем ее равной нулю*/
+               for first ub.bar-code no-lock where ub.bar-code.b-code = buf_tt-fuel-density.b-code,
+                  first ub.goods no-lock where ub.goods.gds-code = ub.bar-code.gds-code:
+                  message
+                     substitute( "Для объекта &5 &6 не найден ни один документ &4 для товара артикул: &2 , наименование: &3 . &4 Плотность для товара будет равно 0 ."
+                     , ""
+                     , ub.goods.artic
+                     , ub.goods.gds-name
+                     , {&new-line}
+                     , buf_tt-fuel-chk.obj-type
+                     , buf_tt-fuel-chk.obj-code
+                     )
+                     view-as alert-box information.
+               end.
+               create buf_tt-fuel-density .
+               assign
+                  buf_tt-fuel-density.obj-type = buf_tt-fuel-chk.obj-type
+                  buf_tt-fuel-density.obj-code = buf_tt-fuel-chk.obj-code
+                  buf_tt-fuel-density.den-date = buf_tt-fuel-chk.chk-date
+                  buf_tt-fuel-density.b-code   = buf_tt-fuel-chk.b-code
+                  buf_tt-fuel-density.density  = v-density
+                  .
+            end.      
+         end.   
+      end. /* if not available buf_tt-fuel-density then do: */
+   end. /* for each buf_tt-fuel-chk no-lock */
 
   for each buf_tt-fuel-chk
   break by buf_tt-fuel-chk.db-num
@@ -807,16 +860,6 @@ on error undo, return error return-value
     .
   end.
   else do:
-    message
-      substitute( "Для объекта &5 &6 не найден ни один приходный документ до даты &1 &4 для товара артикул: &2 , наименование: &3"
-                , p-date
-                , buf_goods.artic
-                , buf_goods.gds-name
-                , {&new-line}
-                , p-obj-type
-                , p-obj-code
-                )
-    view-as alert-box information.
     assign
       p-density = 0
     .
