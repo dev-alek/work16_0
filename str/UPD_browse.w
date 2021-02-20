@@ -1651,7 +1651,8 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                     for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.doc-id = bf_utd-lines.doc-id and
                         bf_utd-marking-lines.db-num = bf_utd-lines.db-num and
                         bf_utd-marking-lines.gds-code = bf_utd-lines.gds-code and
-                        bf_utd-marking-lines.LineNum = bf_utd-lines.LineNum,
+                        bf_utd-marking-lines.LineNum = bf_utd-lines.LineNum and
+                        bf_utd-marking-lines.doc-level = 1,
                         first bf_marking no-lock where bf_marking.mark = bf_utd-marking-lines.mark:
                                                          
                         /*          for each bf_marking no-lock where bf_marking.gds-code = bf_utd-lines.gds-code and*/
@@ -3036,16 +3037,29 @@ PROCEDURE enable_BUTTON :
                             with frame {&frame-name} .
                     end.   
                 end. 
-            /*      when ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB then /*Отказ*/*/
-            /*        do:                                                       */
-            /*          enable                                                  */
-            /*            b_back-check                                          */
-            /*            with frame {&frame-name} .                            */
-            /*        end.                                                      */
+                  when ObjSrv:Env:Utd:Sts:TH:ConfirmedUcd:KeyIntDB then /*Подтвердить*/
+                    do:
+                    if c-type = objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
+                    do:
+                        enable
+                            b_write-cancel
+                            with frame {&frame-name} .                        
+                    end.
+                    else 
+                    do:
+                        disable
+                            b_write-cancel
+                            with frame {&frame-name} .
+                    end.
+                    end.
             when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB then /*Требует подписания*/
                 do:
                     if c-type = objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
                     do:
+                        if c-status = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB then 
+                        enable
+                            b_recheck
+                            with frame {&frame-name} .                              
                         enable
                             b_write-cancel
                             with frame {&frame-name} .                        
@@ -3068,7 +3082,12 @@ PROCEDURE enable_BUTTON :
                 end.     
             when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB then /*Требует подписать*/
                 do:
-
+                   if c-type = objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
+                   do:
+                      enable
+                        b_write-cancel
+                        with frame {&frame-name} .
+                   end.
                 end.                              
             otherwise 
             do:
@@ -3130,12 +3149,18 @@ PROCEDURE enable_BUTTON :
             b_prov-finish
             with frame {&frame-name} .
     end.    
-    if c-status <> objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
+    if c-type <> objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
     do:
         enable
             b_recheck
             with frame {&frame-name} .         
     end.     
+    else do:
+        disable
+        b_back-check
+        with frame {&frame-name} .
+    end.    
+ 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -4517,7 +4542,8 @@ PROCEDURE save_mark :
             if buf_marking.loc-key <> "" 
                 or buf_marking.sts = Marking:Reserved:KeyIntDB 
                 or buf_marking.sts = Marking:FreeZone:KeyIntDB 
-                or buf_marking.sts = Marking:Checked_:KeyIntDB then 
+                or buf_marking.sts = Marking:Checked_:KeyIntDB
+                or buf_marking.sts = Marking:Ungrouped:KeyIntDB then 
             do:
                 F-text = "        Марка зарегистрирована в системе. Статус марки " +  StatusTHName(buf_marking.sts).
                 display F-text with frame {&frame-name}.
@@ -4725,6 +4751,15 @@ PROCEDURE save_mark :
                     v-mark = "" .
                     return.
                 end.
+                if buf_marking.sts = Marking:MarkError:KeyIntDB and c-type <> objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
+                do:
+
+                    F-text = "                      Марка находится в статусе –" + StatusTHName(buf_marking.sts) .
+                    display F-text with frame {&frame-name}.
+                    v-mark:screen-value = "" .
+                    v-mark = "" .
+                    return.
+                end.
                 if buf_marking.sts = Marking:DeliveryControl:KeyIntDB and c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
                 do:
                     F-text = "               Найдено УПД на поставку данной марки. Марка не может быть принята по Акту" .
@@ -4733,7 +4768,7 @@ PROCEDURE save_mark :
                     v-mark = "" .    
                     return.              
                 end.
-                if buf_marking.sts <> Marking:UnknowSts:KeyIntDB then 
+                if buf_marking.sts <> Marking:UnknowSts:KeyIntDB and c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
                 do:
                     F-text = "        Марка зарегистрирована в системе. Статус марки " +  StatusTHName(buf_marking.sts).
                     display F-text with frame {&frame-name}.
@@ -4901,6 +4936,10 @@ PROCEDURE save_mark :
             f-text:screen-value = "" .
             display F-text with frame {&frame-name} .
         end.  
+        find first X_utd-lines no-lock where recid (X_utd-lines) = recid_utd and X_utd-lines.stts = "Проверен" no-error .
+        if available (X_utd-lines) then do:
+           {&OPEN-QUERY-br-utd}
+        end.   
     end. 
     display F-text with frame {&frame-name}.
     v-mark:screen-value = "" .
