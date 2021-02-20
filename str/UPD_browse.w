@@ -2989,22 +2989,31 @@ PROCEDURE enable_BUTTON :
                     do:
                         DISABLE
                             b_correct
-/*                            b_write-cancel*/
+                            /*                            b_write-cancel*/
                             with frame {&frame-name} .
                     end.    
                 end. 
             when ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or /*Несоответствие договору поставки*/
             when ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB then /*Ошибка загрузки*/
                 do:
-                    enable
-                        b_correct
-                        b_write-cancel
-                        b_recheck
-                        with frame {&frame-name} .
+                    if c-type = objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
+                    do:
+                        enable
+                            b_write-cancel
+                            with frame {&frame-name} .                        
+                    end.
+                    else 
+                    do:
+                        enable
+                            b_correct
+                            b_write-cancel
+                            b_recheck
+                            with frame {&frame-name} .
+                    end.    
                     if v-write-cancel then 
                     do:
                         DISABLE
-/*                            b_write-cancel*/
+                            /*                            b_write-cancel*/
                             b_correct
                             with frame {&frame-name} .
                     end.   
@@ -3022,7 +3031,7 @@ PROCEDURE enable_BUTTON :
                     if v-write-cancel then 
                     do:
                         DISABLE
-/*                            b_write-cancel*/
+                            /*                            b_write-cancel*/
                             b_correct
                             with frame {&frame-name} .
                     end.   
@@ -3035,10 +3044,32 @@ PROCEDURE enable_BUTTON :
             /*        end.                                                      */
             when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB then /*Требует подписания*/
                 do:
-                    disable
-                        b_write-cancel
-                        with frame {&frame-name} .
-                end.  
+                    if c-type = objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
+                    do:
+                        enable
+                            b_write-cancel
+                            with frame {&frame-name} .                        
+                    end.
+                    else 
+                    do:
+                        disable
+                            b_write-cancel
+                            with frame {&frame-name} .
+                    end.
+                end.
+            when ObjSrv:Env:Utd:Sts:TH:ReceivedFromSupplier:KeyIntDB then /*Получен от поставщика*/
+                do:
+                    if c-type = objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
+                    do:
+                        enable
+                            b_write-cancel
+                            with frame {&frame-name} .                        
+                    end.
+                end.     
+            when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB then /*Требует подписать*/
+                do:
+
+                end.                              
             otherwise 
             do:
                 display
@@ -3098,6 +3129,12 @@ PROCEDURE enable_BUTTON :
             /*      b_back-check */
             b_prov-finish
             with frame {&frame-name} .
+    end.    
+    if c-status <> objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
+    do:
+        enable
+            b_recheck
+            with frame {&frame-name} .         
     end.     
 END PROCEDURE.
 

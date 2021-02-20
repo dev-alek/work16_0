@@ -37,6 +37,7 @@ class ibs.th.str.utd.sts.th inherits objth:
   define public property  edocError as class propmap no-undo get.  protected set.
   define public property  RejectionUtd as class propmap no-undo get.  protected set.
   define public property  ConfirmedUcd as class propmap no-undo get.  protected set.
+  define public property  PackProcess as class propmap no-undo get.  protected set.
   define public property  Rejection as class propmap no-undo get. 
     protected set.    
 
@@ -69,6 +70,7 @@ class ibs.th.str.utd.sts.th inherits objth:
     CancellationRequest  = crProp(9, "CancellationRequest", "Запрос аннуляции").
     Canceled             = crProp(10, "Canceled", "Аннулирован").
     Rejection            = crProp(11, "Rejection", "Отказ").
+    PackProcess          = crProp(12, "PackProcess", "Пакетная обработка").
     LackOfMarkingCodesInCirculation = crProp(31, "LackOfMarkingCodesInCirculation", "Отсутствие КМ в обороте").
     DeliveryCodeMismatch = crProp(32, "DeliveryCodeMismatch", "Частичная приемка").
     InconsistencyWithSupplyContract = crProp(33, "InconsistencyWithTheSupplyContract", "Несоответсвие договору поставки ").
