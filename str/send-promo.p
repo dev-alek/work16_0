@@ -205,6 +205,7 @@ procedure putc-16 :
 
 end procedure. /* putc-16 */
 
+
 /*PROCEDURE for-cash-cycle*/
 /*пройдем цикл по всем кассам одного типа*/
 

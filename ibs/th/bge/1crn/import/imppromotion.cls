@@ -99,7 +99,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable v-obj-type as character no-undo .
     define variable v-obj-code as integer no-undo .
     define variable v-db-num   as integer no-undo .
-    
+    define variable v-message  as logical no-undo .
     define variable v-storage        as class ibs.th.gbl.storage.promoactionstorage no-undo .
     define buffer buf_PromoAction for ub.PromoAction .
     define buffer buf_PromoSched  for ub.promo-schedule .
@@ -135,7 +135,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     v-promo-action:refreshChildObj(). // - создаёт пустые экземпляры всех дочерних объектов
     v-promo-action:ext-code = v-promotion-code .
     
-do: // заголок промо-акции    
+do: // заголок промо-акции  
+
     find first buf_PromoAction no-lock where buf_PromoAction.ext-code = v-promotion-code no-error .
     if available buf_PromoAction then do:
       v-promo-delete = new ibs.th.ref.promo.promoactionsub () .
@@ -184,7 +185,10 @@ do: // заголок промо-акции
      // v-promo-action:paymenttype = objImp:pmnt-types
         v-promo-action:paymenttype = replace(objImp:pmnt-types, ",",{&delim-key} + "0" + {&delim-par}) +  {&delim-key}+ "0"
       .
-      
+
+      if available (buf_PromoAction) and (buf_PromoAction.beg-date <> v-promo-action:beg-date or buf_PromoAction.end-date <> v-promo-action:end-date) then do:
+         v-message = true .
+      end.   
 /* для текста сообщений об ошибках: */
 define variable v-txt-typedisc      as character extent 2 no-undo initial ["временная скидка", "промо-набор"] .
 /* типы значения скидки dscnt-value-type -> methodCalc согласно протоколу обмена с 1с:
@@ -620,7 +624,18 @@ end. // end_of_gifts
        mAction = "D".
     else
        mAction = "U".
-    
+       
+       
+     if v-message then 
+     do:
+        create ub.PromoAttr .
+        assign
+           ub.PromoAttr.tablename  = "PromoAction"
+           ub.PromoAttr.p-key      = string(v-promo-action:ID) + {&delim-key} + string(v-promo-action:db-num)
+           ub.PromoAttr.attr-code  = "promo-message"
+           ub.PromoAttr.attr-value = "Внимание!!! Перезагрузите кассу, для обновления промоакций!"
+           .
+     end.
     run str/diallog.w (
         input parparentproc
       , input p-parent-handle
