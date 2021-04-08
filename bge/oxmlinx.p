@@ -97,6 +97,7 @@ define variable v-analys-ack        as integer no-undo .
 define variable v-err-msg as character no-undo .
 define variable v-ver-num as character no-undo .
 define variable add-log-file-name0 as character no-undo .
+define variable m-add-log-file-name as character no-undo .
 define variable v-err-type as character no-undo .
 define variable v-cmd-proc-handle as handle no-undo .
 define variable v-cmd-code as integer no-undo .
@@ -233,6 +234,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         assign
         add-log-file-name  = substring( log-file-name, 1, r-index( log-file-name, '.':u) - 1 ) + substitute( "-&1.LOG", buf_ext-system.esys-id )
         g#esys-source-esys = buf_ext-system.esys-id
+        m-add-log-file-name = add-log-file-name
         .
         
           if buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
@@ -939,6 +941,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                       view-as alert-box error .
                       return error substitute( "&1. Вызов процедуры в действующей транзакции недопустим", vss-workfile ) .
                     end.
+                    if add-log-file-name = ? and m-add-log-file-name > "" then
+                       add-log-file-name = m-add-log-file-name.
+
                   run bge/cmdeigen.p (
                                         input parparentproc
                                         ,input this-procedure:handle
