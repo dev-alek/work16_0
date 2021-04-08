@@ -65,7 +65,7 @@ class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
       sw:write-data-element ("ind-el" , string-mth(buf_icnt-line.state-el-cnt)).
       sw:write-data-element ("ind-meh" , string-mth(buf_icnt-line.state-mh-cnt)).
       sw:write-data-element ("dif" , string-mth(buf_icnt-line.state-el-cnt - buf_icnt-line.state-mh-cnt)).
-      sw:write-data-element ("ind-auto" , string-mth(buf_icnt-line.meas-el-cnt)).
+      sw:write-data-element ("ind-auto" , string-mth(if buf_icnt-line.meas-el-cnt = ? then 0 else buf_icnt-line.meas-el-cnt)).
       sw:end-element ("trk-ind")  .  
     end.
     sw:end-element ("trk-inds")  .  
