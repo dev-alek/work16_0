@@ -101,7 +101,7 @@ define buffer doc-line for ub.doc-line  .
 &global-define is-fuel 1
 &global-define is-lgas 2
 &global-define is-lgas-corr 3
-&global-define is-gds 0
+&global-define is-gds 4
 
 &global-define store-type v-cntxt-obj-type
 &global-define store-code v-cntxt-obj-code
@@ -2776,6 +2776,21 @@ do on error undo main-block, leave main-block :
      assign
        trn-type = {&is-lgas-corr}.
    end.
+   
+   { str/tdat-val.i
+     t-doc.doc-code
+     {&trdcattr-trn-is-gds}
+     varvalue
+     vartype
+     no-error
+   }
+   
+   if varvalue = "yes" then do:
+     assign
+       trn-type = {&is-gds}.
+   end.
+
+
 
    display varinplnsum m-inc with frame {&frame-name}.
    if pardoc-mode <> {&lookup} then line-rec = ?. /* указатель на ту строку, на которую надо встать */
@@ -2879,6 +2894,11 @@ do on error undo main-block, leave main-block :
       end.
       when 4
       then do:
+        { str/tdat-wrt.i                                    
+           t-doc.doc-code
+           {&trdcattr-trn-is-gds}
+           "yes" 
+        no-error} 
         trn-type = {&is-gds}.
       end.
       when 5 then do:
@@ -4301,6 +4321,34 @@ do while varlns-cnt <= num-entries (varnotes):
     view-as alert-box error.
     assign varlns-cnt = varlns-cnt + 1.
     next.
+  end.
+  
+  if trn-type = {&is-gds}
+  then do:
+    run gds-attr-value in this-procedure
+      (  input bf_goods.gds-code
+        ,input {&attr-fuel-type}
+        ,output varvalue
+        ,output vartype
+       ) .
+    if varvalue = "lgas" and not (trn-type = {&is-lgas} or trn-type = {&is-lgas-corr})then 
+    do:
+      message "Товар СУГ:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+              'нельзя приходовать в накладной типа "ТНП" или "Топливо".'
+      view-as alert-box error.
+      assign varlns-cnt = varlns-cnt + 1.
+      next.
+    end.
+    if varvalue = "petrol" and not (trn-type = {&is-fuel})then 
+    do:
+      message "Топливный товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+              'нельзя приходовать в накладной типа "ТНП" или "СУГ".'
+      view-as alert-box error.
+      assign varlns-cnt = varlns-cnt + 1.
+      next.
+    end.
+
+
   end.
   
   varvalue = "" .
