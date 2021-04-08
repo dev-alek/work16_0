@@ -1,8 +1,28 @@
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 {cmp\str-glbl.i {1}}
-{gbl\xmlchar.i {1}}
+ {gbl\xmlchar.i {1}} 
 define variable mMRCCode as logical no-undo.
+
+&if "{1}" = "class"
+&then
+method private character repTegforDm
+&else
+function repTegforDm return char 
+&endif
+(iDM as char ):
+    define variable vTeglist as character no-undo init "01,02,11,13,17,21,8005".
+    define variable vteg as character no-undo.
+    define variable oDM as character no-undo. 
+    define variable vi as integer no-undo.
+    oDM = iDm.
+    do vi = 1 to num-entries(vTeglist):
+       vTeg = entry(vi,vTeglist).
+       oDM = replace(oDM,"(" + vTeg + ")",vTeg).
+    end.
+    return oDM.
+end.
+
 &if "{1}" = "class"
 &then
 method private character repSpecSimbforDm
@@ -10,43 +30,16 @@ method private character repSpecSimbforDm
 function repSpecSimbforDm return char 
 &endif
 (iDM as char ):
-    define variable vTeglist as character no-undo init "01,02,11,13,17,21,8005".
-    define variable vteg as character no-undo.
-    define variable oDM as character no-undo. 
-    define variable vi as integer no-undo.
     
+    define variable oDM as character no-undo.
   &if "{1}" <> "class"
   &then
   run
   &endif 
-    xmlchar-encode(iDM, output oDM).
-    do vi = 1 to num-entries(vTeglist):
-       vTeg = entry(vi,vTeglist).
-       oDM = replace(oDM,"(" + vTeg + ")",vTeg).
-    end.
-    return oDM.
-        
+    xmlchar-decode(iDM, output oDM).
+    
+  return repTegforDm (oDM).
 end.
-
-&if "{1}" = "class"
-&then
-method private character repSpecSimbforDm1C
-&else
-function repSpecSimbforDm1C return char 
-&endif
-(iDM like marking.mark ):
-/*(iDM as char ):*/
-define variable vTeglist as character no-undo init "01,02,11,13,17,21,8005".
-    define variable vteg as character no-undo.
-    define variable vi as integer no-undo.
-    do vi = 1 to num-entries(vTeglist):
-       vTeg = entry(vi,vTeglist).
-       iDM = replace(iDM,"(" + vTeg + ")",vTeg).
-    end.
-    return iDM.
-        
-end.
-
 
 &if "{1}" = "class"
 &then
@@ -60,15 +53,11 @@ function repSpecSimbforXlm return char
     define variable vReplist_old as character no-undo init "&,>,<,~',~"".
     define variable vi as integer no-undo.
     
-  /* не требуется экранинование так как оно происходит дальше  
-    do vi = 1 to num-entries(vReplist_old):
-        iDM = replace(iDM,entry(vi,vReplist_old),entry(vi,vReplist_new)).
-    end.
-*/
     iDM = replace(iDM,chr(29),"").
     return iDM.
         
 end.
+
 &if "{1}" = "class"
 &then
 method private character getGtinByDM
@@ -86,8 +75,10 @@ function getGtinByDM return char
              or vtxt begins "(02)"   
       then
          vGtin = substring(vtxt,5,14).
-      else if   vtxt begins "01"
-             or vtxt begins "02"   
+      else if   (vtxt begins "01"
+             or vtxt begins "02" )
+             and substring(iDm,17,2) eq "21"
+             and length(vtxt) >= 25  
       then
          vGtin = substring(vtxt,3,14).
       else if     length(vtxt) eq 14 + 7 + 4 + 4
@@ -104,6 +95,20 @@ function getGtinByDM return char
       then 
          vGtin = ?.*/
    end.
+     
+  
+   if length(vGtin) eq 14
+   then do:
+      define variable bar_code as character no-undo.
+      bar_code = substr (vGtin, 1, length (vGtin) - 1).
+      run str/chk-sum.p
+       (input-output bar_code ) no-error .
+      if vGtin ne  bar_code
+      then
+         vGtin = "".
+   end.
+   else 
+      vGtin = "". 
    return vgtin.    
 end.
 
@@ -251,10 +256,16 @@ function GetCodeIdent return character
    then
       
       oCodeIdent = substring(iDm,1,if mMRCCode then 25 else 21 ).
-   else  if     length(iDm) eq 25
-            and not iDm begins "01"
-            and not iDm begins "02"
+   else  if     (   length(iDm) eq 25
+                 or length(iDm) eq 29
+                 or length(iDm) eq 21)
+            and ((not iDm begins "01"
+            and not iDm begins "02")
+            or   substring(iDm,17,2) ne "21")
    then
+      oCodeIdent = substring(iDm,1,21).
+   else if getGtinByDM (iDm) eq ""
+   then 
       oCodeIdent = substring(iDm,1,21).
    else do while Velement ne "" and idm ne "":
       Velement = GetNextElement(output vteg, output vtegval, input-output idm).
