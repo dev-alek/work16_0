@@ -3706,7 +3706,10 @@ assign frame {&frame-name}
   t-doc.shift-date
   t-doc.shift-num
   t-doc.shift-name.
-assign t-doc.fact-time = (24 * 60 * 60).
+if t-doc.fact-date <> today
+then
+  t-doc.fact-time = if (time < (12 * 60 * 60)) then time else (12 * 60 * 60) .
+if t-doc.fact-date = ? then t-doc.fact-time = ? .
 end.
 
 END PROCEDURE.
@@ -6248,10 +6251,17 @@ define buffer bf_shift-obj   for ub.shift-obj.
           t-doc.shift-name = bf_shift-obj.shift-name.
         display t-doc.shift-date t-doc.shift-num t-doc.shift-name with frame {&frame-name}.
         if t-doc.fact-date = ? then do:
-          assign
-            t-doc.fact-date = t-doc.shift-date
-            t-doc.fact-time = (24 * 60 * 60).
-          display t-doc.fact-date with frame {&frame-name}.
+          t-doc.fact-time = ? .
+          if bf_shift-obj.status_ = {&sht-closed}
+          then do :
+            assign
+              t-doc.fact-date = t-doc.shift-date
+            .
+            if t-doc.fact-date <> today
+            then
+              t-doc.fact-time = if (time < (12 * 60 * 60)) then time else (12 * 60 * 60) .
+            display t-doc.fact-date with frame {&frame-name}.
+          end.
         end.
       end.
     end.
@@ -6299,7 +6309,19 @@ procedure proc-shift-name :
           t-doc.shift-date = varshift-date
           t-doc.shift-num  = varshift-num.
         display t-doc.shift-date t-doc.shift-num t-doc.shift-name with frame {&frame-name}.
-        if t-doc.fact-date = ? then do: assign t-doc.fact-date = t-doc.shift-date t-doc.fact-time = (24 * 60 * 60). display t-doc.fact-date with frame {&frame-name}. end.
+        if t-doc.fact-date = ? then do:
+          t-doc.fact-time = ? .
+          if bf_shift-obj.status_ = {&sht-closed}
+          then do :
+            assign
+              t-doc.fact-date = t-doc.shift-date
+            .
+            if t-doc.fact-date <> today
+            then
+              t-doc.fact-time = if (time < (12 * 60 * 60)) then time else (12 * 60 * 60) .
+            display t-doc.fact-date with frame {&frame-name}.
+          end.
+        end.
       end.
     end.
   end.
@@ -6332,10 +6354,17 @@ define buffer bf_shift-obj   for ub.shift-obj.
         t-doc.shift-name = bf_shift-obj.shift-name.
       display t-doc.shift-date t-doc.shift-num t-doc.shift-name with frame {&frame-name}.
       if t-doc.fact-date = ? then do:
-        assign
-          t-doc.fact-date = t-doc.shift-date
-          t-doc.fact-time = (24 * 60 * 60).
-        display t-doc.fact-date with frame {&frame-name}.
+        t-doc.fact-time = ? .
+        if bf_shift-obj.status_ = {&sht-closed}
+        then do :
+          assign
+            t-doc.fact-date = t-doc.shift-date
+          .
+          if t-doc.fact-date <> today
+          then
+            t-doc.fact-time = if (time < (12 * 60 * 60)) then time else (12 * 60 * 60) .
+          display t-doc.fact-date with frame {&frame-name}.
+        end.
       end.
     end.
   end.
