@@ -138,6 +138,7 @@ on error undo, return error return-value :
     delete buf_temp-tank.
   end.
   /*придется делать несколько накладных так как в один приходит оп одному топливу влезает только один бак*/
+  
   for each buf_doc-pl no-lock where
           buf_doc-pl.out-code = buf_trn-doc.doc-code
   break
@@ -559,17 +560,21 @@ on error undo, return error return-value :
         }
         if v-insalepr = false then do:
           assign
-          in_doc-line.price-base = buf_temp-tank.price-base
-          in_doc-line.price-rubl = buf_temp-tank.price-rubl
+            in_doc-line.price-base = buf_temp-tank.price-base
+            in_doc-line.price-rubl = buf_temp-tank.price-rubl
           .
         end.
-        assign
-          in_doc-line.cli-qnty = buf_temp-tank.cli-qnty
-          in_doc-line.doc-density = in_doc-line.cli-qnty / in_doc-line.fact-qnty
-          in_doc-line.fact-density = in_doc-line.doc-density
-          in_doc-line.cli-base-rate = 1 / in_doc-line.doc-density
-          in_doc-line.price-cli = buf_temp-tank.price-cli
-        .
+        if in_doc-line.price-rubl = buf_temp-tank.price-rubl
+        then do :
+          assign
+            in_doc-line.cli-qnty = buf_temp-tank.cli-qnty
+            in_doc-line.doc-density = in_doc-line.cli-qnty / in_doc-line.fact-qnty
+            in_doc-line.fact-density = in_doc-line.doc-density
+            in_doc-line.cli-base-rate = 1 / in_doc-line.doc-density
+            in_doc-line.price-cli = buf_temp-tank.price-cli
+          .
+        end .
+        
       end.
     end.
     for each buf_doc-pl no-lock where
