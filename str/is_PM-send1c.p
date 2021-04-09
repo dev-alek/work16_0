@@ -130,18 +130,23 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   define variable v-datetimechar as character no-undo .
   define variable v-dump-ord-int64 as int64 no-undo .
 
-
-  define buffer buf_ext-system for ub.ext-system.  
-
-  find first buf_ext-system no-lock where buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
-                                      and buf_ext-system.esys-have-export = yes
-                                      no-error .
-  if not available buf_ext-system
+  define buffer buf_ext-system for ub.ext-system .  
+  define buffer buf_sys-ctrl for ub.sys-ctrl .
+  
+  find first buf_sys-ctrl no-lock .
+  
+  v-esys-id-list = "" .
+  for each buf_ext-system no-lock where buf_ext-system.delivery-method = integer({&esys-dm-erp-1C-RN})
+                                    and buf_ext-system.esys-have-export = yes
+                                    and buf_ext-system.esys-db-num-exp = buf_sys-ctrl.db-num :
+    v-esys-id-list = v-esys-id-list + string(buf_ext-system.esys-id) + {&delim-nws} .                               
+  end.                                    
+  v-esys-id-list = trim(v-esys-id-list, {&delim-nws}) .                                  
+  if v-esys-id-list = ""
   then do :
     run write-to-log in p-log-handle ( "Ќет внешней системы с методом доставки 1C-RN." ) .
     return .
   end.
-  v-esys-id-list = string(buf_ext-system.esys-id) .
 
   if  context_begin-esys-command( input v-esys-id-list, input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) = false
   then do:

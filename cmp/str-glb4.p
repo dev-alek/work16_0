@@ -1415,6 +1415,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Корр. СУГ */
 { cmp/cr-prep.i 1 trdcattr-is-lgas-corr "is-lgas-corr" " " "is-lgas-corr" }
 
+/* Документ источник для ТПН */
+{ cmp/cr-prep.i 1 trdcattr-trn-is-gds "trn-is-gds" " " "trn-is-gds" }
+
 /* Документ источник для корр. СУГ */
 { cmp/cr-prep.i 1 trdcattr-trn-lgas-corr "trn-lgas-corr" " " "trn-lgas-corr" }
 

@@ -987,6 +987,10 @@ PROCEDURE proc-save :
 ------------------------------------------------------------------------------*/
 define variable v-ident as logical no-undo .
 define buffer buf_fbr-gds-grp for ub.fbr-gds-grp.
+define buffer buf_inkas for ub.inkas .
+define buffer buf_bar-code for ub.bar-code .
+define buffer buf_chk-gds for ub.chk-gds .
+
 assign
 tt-fbr-gds-obj.is-cd                frame {&frame-name}
 tt-fbr-gds-obj.is-menu
@@ -1024,6 +1028,34 @@ else do:
     end.
   end.
 end.
+
+for each buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code,                             
+first buf_chk-gds no-lock where (buf_chk-gds.out-code = "" or buf_chk-gds.out-code = ?)
+                            and buf_chk-gds.b-code = buf_bar-code.b-code
+                            :
+  message
+    ("Есть неучтенный чек с этим товаром " + string(buf_chk-gds.doc-code) + {&new-line} +
+     "Невозможно изменить атрибуты РЕСТОРАН на товаре. Сначала удалите неучтенный чек." + {&new-line} +
+     "После этого установите атрибуты РЕСТОРАН на товаре и заново примите чек с кассы.")
+  view-as alert-box error .
+  return error .                             
+end .
+
+for each buf_inkas no-lock where buf_inkas.obj-type = v-cntxt-obj-type
+                             and buf_inkas.obj-code = v-cntxt-obj-code
+                             and buf_inkas.status_ <> {&fact},
+each buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code,                             
+first buf_chk-gds no-lock where buf_chk-gds.out-code = buf_inkas.inkas-code
+                            and buf_chk-gds.b-code = buf_bar-code.b-code
+                            :
+  message
+    ("Есть незакрытая продажа " + string(buf_inkas.inkas-code) + 
+     " с этим товаром. Чек " + string(buf_chk-gds.doc-code) + {&new-line} +
+     "Невозможно изменить атрибуты РЕСТОРАН на товаре. Сначала исключите чек из незакрытой продажи и удалите его." + {&new-line} +
+     "После этого установите атрибуты РЕСТОРАН на товаре и заново примите чек с кассы.")
+  view-as alert-box error .
+  return error .                             
+end .
 
 if available tt-fbr-gds-obj
 then do:

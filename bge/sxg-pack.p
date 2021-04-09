@@ -52,6 +52,7 @@ define variable vss-description as character no-undo init "отправка и прием паке
 { gbl/cur-time.i }
 { rul/ora-rcpt.i proc }
 { bge/esysattr.i } // ext-system-attr-value для проверки сертификатов
+{ utl/search.i }
 DEFINE VARIABLE v-today as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
 
@@ -820,7 +821,7 @@ procedure file-s-g private :
           end .
           else do :
             if lookup( p-file-ext, "zip") <> 0 then v-unzip-command =
-              substitute("&1 -extract -silent -over=all &2 &3":U
+              substitute("&1 -extract -silent -nofix -over=all &2 &3":U
                         , v-arh-name
                         , p-fullfile-name
                         , p-target-dir
@@ -836,11 +837,18 @@ procedure file-s-g private :
                                                             , p-file-ext, v-unzip-command)  ) .
             os-command silent value( v-unzip-command ) .
   
-            /* @FUTU обосновать, что удаление архива произойдёт только после удачной распаковки */
-            run del-file ( input p-fullfile-name ) no-error .
-            if error-status :error then do:
-              return error return-value .
-            end.
+            if searchfile(p-target-dir + {&back-slash-char} + p-file-name-no-ext + ".xml":U) = ?
+            then do :
+              run write-to-log in p-parent-handle ( substitute("Ошибка при распаковке! Файл &1 не является архивом, либо архив битый. Пропускаем..."
+                                                            , p-fullfile-name)  ) .
+            end .
+            else do :
+              /* @FUTU обосновать, что удаление архива произойдёт только после удачной распаковки */
+              run del-file ( input p-fullfile-name ) no-error .
+              if error-status :error then do:
+                return error return-value .
+              end.
+            end .
           end.
         end. /*if v-arch then do:*/
         else do :
@@ -879,7 +887,7 @@ procedure file-s-g private :
 
         if v-arch then do:
         if lookup( p-file-ext, "zip") <> 0 then do:
-          v-unzip-command = substitute("&1 -extract -silent -over=all &2 &3":U
+          v-unzip-command = substitute("&1 -extract -silent -nofix -over=all &2 &3":U
                                       , v-arh-name
                                       , v-file-target
                                       , p-target-dir

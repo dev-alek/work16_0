@@ -2693,7 +2693,7 @@ return no-apply.
 end.
 
 ON value-changed OF br-gds do:
- { gbl/stdbtn.i }
+/* { gbl/stdbtn.i }*/
 end.
 
 ON LEAVE OF tt-chk-gds.src-qnty IN BROWSE br-gds,

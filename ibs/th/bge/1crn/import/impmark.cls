@@ -74,7 +74,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       undo, throw new Progress.Lang.AppError(substitute("Загрузка &1 не предусмотрена",objImp:obj-load)) .
    define variable vmark as character no-undo.
   
-   vmark = repSpecSimbforDm1C(objImp:mark-code).
+   vmark = repTegforDm(objImp:mark-code).
    find first marking where marking.mark eq vmark
    exclusive-lock no-error.
    if not available marking
@@ -105,7 +105,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    assign
       marking.gds-code     = objImp:gds-code
       marking.gds-ext-id   = objImp:GTIN
-      marking.mark-parent  = repSpecSimbforDm1C(objImp:mark-parent) when objImp:mark-parent ne ? 
+      marking.mark-parent  = repTegforDm(objImp:mark-parent) when objImp:mark-parent ne ? 
       marking.box-qnty     = objImp:qnty-box
       marking.sts          = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts)
       marking.unit-ext     = objImp:unit-ext

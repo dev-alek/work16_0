@@ -4004,7 +4004,11 @@ procedure ie-date:
   
      if bf_trn-doc.fact-time = 0 or bf_trn-doc.fact-time = ? then
         bf_trn-doc.fact-time = time.
-      if bf_trn-doc.fact-date = ? and bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
+      if bf_trn-doc.fact-date = ?
+      and (bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Object}
+        or bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+        or bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem})
+      then do :
         { gbl/curobjdt.i bf_trn-doc.obj-type bf_trn-doc.obj-code bf_trn-doc.fact-date }    
       end.
       

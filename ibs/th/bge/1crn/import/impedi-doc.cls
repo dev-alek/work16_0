@@ -278,7 +278,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   v-objlistmark:Get(v-i-num2) .
                   v-marks-mark = cast(v-objlistmark:SubjectObjCurr, ibs.th.bge.1crn.subjects.mark) .
                   define variable vmark as character no-undo.
-                  vmark = repSpecSimbforDm1C(v-marks-mark:mark-code).
+                  vmark = repTegforDm(v-marks-mark:mark-code).
                   find first utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
                                                  and utd-marking-lines.doc-id  eq utd-lines.doc-id
                                                  and utd-marking-lines.LineNum eq utd-lines.LineNum
