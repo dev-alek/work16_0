@@ -48,6 +48,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable v-recipe-code as character no-undo . /* like ub.recipe.recipe-code */
     define variable v-recipe-name as character no-undo . /* like up.recipe.recipe-name */
     define variable v-gds-code    as integer no-undo .   /* like ub.goods.gds-code */
+    define variable v-stts        as integer no-undo init 0 .
     
     define buffer buf_recipe     for ub.recipe .
     define buffer buf_recipe-gds for ub.recipe-gds .
@@ -120,8 +121,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     end . /* end_of create */
 
     /* 06/XII-2017 Если придет статус 2, то в начало названия добавляем ЗАКРЫТ.  Это закрытие рецепта в 1С. */    
-    if objImp:status_ = enum-recipe-status:enclose then v-recipe-name = "ЗАКРЫТ." + v-recipe-name .
-    
+    if objImp:status_ = enum-recipe-status:enclose
+    then do :
+      assign
+        v-recipe-name = "ЗАКРЫТ." + v-recipe-name
+        v-stts = 2  
+      .
+    end .
       
     /* ----- создание/обновление рецепта ----- */
     define variable proc-fbrlib   as class ibs.th.str.fbrlib no-undo .
@@ -140,6 +146,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     ,input objImp:qnty-netto /* p-qnty-netto decimal Количество нетто */
     ,input objImp:qnty       /* p-portion-qnty integer Количество порций */
     ,input objImp:weight     /* p-portion-weight Вес порции */
+    ,input v-stts
     ) .
       
       /* делать рецепт установленным по умолчанию? */

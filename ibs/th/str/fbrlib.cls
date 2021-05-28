@@ -292,7 +292,8 @@ class ibs.th.str.fbrlib:
     input p-gds-code        as integer,   /* код товара */
     input p-qnty-netto      as decimal,   /* Количество товара */  
     input p-portion-qnty    as integer,   /* Количество порций товара */
-    input p-portion-weight  as decimal   /* Вес порции */
+    input p-portion-weight  as decimal,   /* Вес порции */
+    input p-stts            as integer    /* Статус */
   ):
   define buffer buf_recipe for ub.recipe .
   define buffer buf_goods  for ub.goods .
@@ -365,6 +366,8 @@ class ibs.th.str.fbrlib:
       buf_recipe.qnty           = p-qnty-netto
       buf_recipe.portion-qnty   = p-portion-qnty
       buf_recipe.portion-weight = p-portion-weight
+      
+      buf_recipe.stts           = p-stts
   
       /* остались незаполненными:
       whole-send-news

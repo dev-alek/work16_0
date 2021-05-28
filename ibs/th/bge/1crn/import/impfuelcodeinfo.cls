@@ -80,7 +80,9 @@ class ibs.th.bge.1crn.import.impfuelcodeinfo implements ibs.th.bge.1crn.import.i
       end.    
  /*Внешняя система не указана, идет ко всем внешним системам*/
          for each buf_ext-system no-lock:
-            if objfuelcodeinfo:del-f = 0 then 
+            if    objfuelcodeinfo:del-f = 0 
+               or objfuelcodeinfo:del-f = ?
+            then 
             do: /*добавление*/
                proc_create(buf_ext-system.esys-id, objfuelcodeinfo:IntCode, objfuelcodeinfo:ExtCode) no-error.
                if error-status:error then 

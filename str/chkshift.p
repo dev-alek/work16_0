@@ -252,7 +252,7 @@ on error undo, return error
                 , input-output v-chip-num
                 , output v-is-update).
   bf_chk-doc.ps = if v-is-update
-                  then (if index("!shift!", bf_chk-doc.ps) > 0
+                  then (if index(bf_chk-doc.ps, "shift!") > 0
                         then bf_chk-doc.ps
                         else ("!shift!":U +  left-trim(bf_chk-doc.PS, "!":U))
                         )

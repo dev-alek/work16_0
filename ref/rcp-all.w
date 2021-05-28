@@ -1061,6 +1061,12 @@ do:
 end.
 on choose of b-sel in frame dialog-frame /* Выбор */
 do:
+  if available ub.recipe
+  and ub.recipe.stts = 2 /*Закрыт/Не действует */
+  then do :
+    message "Данный рецепт НЕ действует и не может быть использован!" view-as alert-box .
+    return no-apply .
+  end .
   if ( available ub.recipe ) and ( rid-list = "" ) then
     rid-list = string( recid( ub.recipe ) ) .
 end.

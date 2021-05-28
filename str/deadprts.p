@@ -147,8 +147,8 @@ for each bf-in_doc-line where bf-in_doc-line.doc-code = bf-in_trn-doc.doc-code o
                                 bf-minus_parts.artic     = bf-in_doc-line.artic     and
                                 bf-minus_parts.prod-type = bf-in_doc-line.prod-type and
                                 bf-minus_parts.prod-code = bf-in_doc-line.prod-code and
-                                bf-minus_parts.supp-type = bf-in_trn-doc.obj-type   and
-                                bf-minus_parts.supp-code = bf-in_trn-doc.obj-code   and
+/*                                bf-minus_parts.supp-type = bf-in_trn-doc.obj-type   and*/
+/*                                bf-minus_parts.supp-code = bf-in_trn-doc.obj-code   and*/
                                 bf-minus_parts.fact-qnty < 0                        on error undo, return error return-value :
     find first tt-minus-doc-line where tt-minus-doc-line.doc-code  = bf-in_doc-line.doc-code  and
                                        tt-minus-doc-line.artic     = bf-in_doc-line.artic     and

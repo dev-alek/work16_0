@@ -945,10 +945,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     
     if inValue = ?
       then v-str = "0".
-    
-    if string (inValue) begins "."
-      then v-str = "0" + string (inValue).
-      else v-str = string (inValue).
+    else
+      if string (inValue) begins "."
+        then v-str = "0" + string (inValue).
+        else v-str = string (inValue).
     return v-str.
     
   end.

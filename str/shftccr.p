@@ -101,6 +101,9 @@ on error undo, return error
       return.
     end.
   end.
+  run process-all-check in this-procedure ( input p-shift-date
+                                          , input p-shift-name
+                                          , input p-shift-num) no-error.
   if avail buf_shift-cash then do:
     if buf_shift-cash.status_ = {&sht-closed}
     AND not act-mess = {&cash-desk-on}
@@ -219,7 +222,7 @@ define buffer buf_chk-doc for ub.chk-doc.
       and buf_chk-doc.obj-code = p-obj-code
       and buf_chk-doc.shift-date = p-shift-date
       and buf_chk-doc.shift-num = 0
-      and buf_chk-doc.out-code = ? or buf_chk-doc.out-code = '':U
+      and (buf_chk-doc.out-code = ? or buf_chk-doc.out-code = '':U)
    on error undo, next _chk-doc
    on stop undo, next _chk-doc:
       if buf_chk-doc.src-shift-name = p-shift-name then do:

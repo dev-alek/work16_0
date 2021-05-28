@@ -1019,6 +1019,12 @@ PROCEDURE enable_UI :
          v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt 
          v-shft-qty v-alcgrpgd v-cplot v-cdens 
       WITH FRAME Dialog-Frame.
+  if p-type <> 'obj' then do:
+     disable
+     shft-qty
+     with frame {&frame-name} .
+  end.    
+      
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
