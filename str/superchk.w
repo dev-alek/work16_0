@@ -3383,29 +3383,34 @@ create buf_chk-doc-attr.
 end.         
 find first buf_chk-doc-attr exclusive-lock where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code
 and buf_chk-doc-attr.attr-code  = "create-time" no-error .  
+if not available (buf_chk-doc-attr) then do:
 create buf_chk-doc-attr.
         assign
            buf_chk-doc-attr.doc-code   = tt-chk-doc.doc-code
            buf_chk-doc-attr.attr-code  = "create-time"
            buf_chk-doc-attr.attr-value = string(v-time,"HH:MM:SS")
            .
+end.
 find first buf_chk-doc-attr exclusive-lock where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code
 and buf_chk-doc-attr.attr-code  = "create-shift-num" no-error .           
+if not available (buf_chk-doc-attr) then do:
 create buf_chk-doc-attr.
         assign
            buf_chk-doc-attr.doc-code   = tt-chk-doc.doc-code
            buf_chk-doc-attr.attr-code  = "create-shift-num"
            buf_chk-doc-attr.attr-value = string(shift-num_)
-           .                      
+           .
+end.
 find first buf_chk-doc-attr exclusive-lock where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code
-and buf_chk-doc-attr.attr-code  = "create-shift-date" no-error .           
+and buf_chk-doc-attr.attr-code  = "create-shift-date" no-error .
+if not available (buf_chk-doc-attr) then do:
 create buf_chk-doc-attr.
         assign
            buf_chk-doc-attr.doc-code   = tt-chk-doc.doc-code
            buf_chk-doc-attr.attr-code  = "create-shift-date"
            buf_chk-doc-attr.attr-value = string(shift-date_)
            .   
-           
+end.
 for first ub.cash-pay no-lock where ub.cash-pay.obj-name = "Наличные",
 first ub.chk-pay no-lock where ub.chk-pay.pay-code = ub.cash-pay.pay-code and ub.chk-pay.doc-code = tt-chk-doc.doc-code :
 
@@ -5756,7 +5761,8 @@ end.
 
 for first buf_chk-doc-attr where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code 
 and buf_chk-doc-attr.attr-code = "corr-osnov":
-  v-doc-osnov = OsnovCorr(int(buf_chk-doc-attr.attr-value)) .
+  v-corr-osnov1 = integer(buf_chk-doc-attr.attr-value).
+  v-doc-osnov = OsnovCorr(v-corr-osnov1) .
 end.   
 for first buf_chk-doc-attr where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code 
 and buf_chk-doc-attr.attr-code = "corr-date":
