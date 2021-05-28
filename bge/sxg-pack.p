@@ -677,6 +677,44 @@ procedure file-s-g private :
             return error return-value .
           end.
         end.
+        if p-delivery-method = integer({&esys-dm-erp-1C-RN})
+        then do :
+          /* Проверим, что созданный архив валиден */
+          v-unzip-command = substitute("&1 -extract -silent -nofix -over=all &2 &3":U
+                                      , search('exe/pkzipc.exe':U)
+                                      , v-file-temp
+                                      , p-temp-dir
+                                      ) .
+          os-command silent value( v-unzip-command ) .
+
+          if searchfile(p-temp-dir + {&back-slash-char} + p-file-name-no-ext + ".xml":U) = ?
+          then do :
+            find first buf_esys-pck-sent exclusive-lock where
+                      buf_esys-pck-sent.esys-id = p-esys-id
+                  and buf_esys-pck-sent.db-num = p-db-num
+                  and buf_esys-pck-sent.esps-cr-db-num = p-cr-db-num
+                  and buf_esys-pck-sent.esps-pack-num = p-pck-num.
+            assign
+              buf_esys-pck-sent.esps-SendTxtDate = ?
+              buf_esys-pck-sent.esps-sendtxttime = ""
+              buf_esys-pck-sent.esps-sendtxttimeint = 0
+              buf_esys-pck-sent.esps-crenum = buf_esys-pck-sent.esps-crenum - 1
+              buf_esys-pck-sent.esps-total-recs = 0
+            .
+            run del-file ( input v-file-temp ) no-error .
+            if error-status :error then do:
+              return error return-value .
+            end.
+            run write-to-log in p-parent-handle (  substitute( "&1. Невозможно разархивировать созданный файл &2 . Ошибка архивации", vss-workfile, v-file-temp ) ).
+            return . /* Не возвращаем ошибку, чтобы не было undo и в записи buf_esys-pck-sent.esps-SendTxtDate = ? сохранилось, чтобы при следующем сеансе пакет заново формировался */
+          end .
+          else do :
+            run del-file ( input searchfile(p-temp-dir + {&back-slash-char} + p-file-name-no-ext + ".xml":U) ) no-error .
+            if error-status :error then do:
+              return error return-value .
+            end.
+          end .
+        end .
       end.
 
       run write-to-log in p-parent-handle ( substitute( "Перенос файла из временной папки &1 в &2)", v-file-temp, v-file-target ) ).
