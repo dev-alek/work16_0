@@ -224,7 +224,7 @@ DEFINE MENU POPUP-MENU-b-servis
     MENU-ITEM m___Token      LABEL "Отключить запрос Token"
     MENU-ITEM m_nakl         LABEL "Формирование накладной"
     MENU-ITEM m_recheck      LABEL "Повторно проверить"
-    MENU-ITEM m_oneUtd       LABEL "Получение данных из Диадок"
+    MENU-ITEM m_recEDI       LABEL "Получение данных ЭДО"
     MENU-ITEM m_checknakl    LABEL "Связать с ПН".
 
 
@@ -318,8 +318,8 @@ DEFINE BUTTON b_anul
     LABEL "Аннуляция" 
     SIZE 27 BY 1.13.
 
-DEFINE BUTTON b_recEDI 
-    LABEL "Получить данные ЭДО" 
+DEFINE BUTTON b_oneUtd
+    LABEL "Получить данные из Диадок" 
     SIZE 27 BY 1.13.
 
 DEFINE VARIABLE c-status         AS CHARACTER FORMAT "X(256)":U INITIAL "0" 
@@ -478,7 +478,7 @@ DEFINE FRAME d-utd
     B-write-sertif AT ROW 26.38 COL 4 WIDGET-ID 236
     B-write-cancel AT ROW 26.38 COL 36.25 WIDGET-ID 70
     b_anul AT ROW 26.38 COL 68.75 WIDGET-ID 246
-    b_recEDI AT ROW 26.38 COL 101.63 WIDGET-ID 254
+    b_oneUtd AT ROW 26.38 COL 101.63 WIDGET-ID 254
     B-write-Token AT ROW 27.67 COL 4 WIDGET-ID 240
     F-timeToken AT ROW 27.67 COL 128 RIGHT-ALIGNED NO-LABEL WIDGET-ID 294
     mark-num AT ROW 7.21 COL 1.5 NO-LABEL WIDGET-ID 8
@@ -1653,9 +1653,9 @@ ON CHOOSE OF menu-item m_nakl /* Формирование накладной */
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b_recEDI
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_recEDI d-utd
-ON CHOOSE OF b_recEDI IN FRAME d-utd /* Получить данные ЭДО */
+&Scoped-define SELF-NAME m_recEDI
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_recEDI POPUP-MENU-b-servis
+ON CHOOSE OF menu-item m_recEDI /* Получить данные ЭДО */
     DO:
         define variable Log-Res as logical no-undo.
 
@@ -1686,6 +1686,29 @@ ON CHOOSE OF b_recEDI IN FRAME d-utd /* Получить данные ЭДО */
             {&OPEN-QUERY-br-utd}
         end.    
         v-rid-list = "" .
+    END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b_oneUtd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_oneUtd IN FRAME d-utd
+ON CHOOSE OF b_oneUtd IN FRAME d-utd /* Повторно проверить */
+    DO:
+
+        if available (X_utd) then 
+        do:
+            recid_utd = recid (X_utd) .
+            find first x_utd where recid (x_utd) = recid_utd .
+            run updOneUTD(X_utd.db-num, X_utd.doc-id ) no-error  .       
+            if  error-status:error then 
+            do: 
+                return return-value .
+            end.
+            run init-id (X_utd.doc-id, X_utd.db-num).  
+        end.  
+  
+        {&OPEN-QUERY-br-utd}
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1875,29 +1898,6 @@ ON CHOOSE OF MENU-ITEM m_checknakl /* Привязать накладную */
             
         end.    
          
-    END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME m_oneUtd
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_oneUtd POPUP-MENU-b-servis
-ON CHOOSE OF MENU-ITEM m_oneUtd /* Повторно проверить */
-    DO:
-
-        if available (X_utd) then 
-        do:
-            recid_utd = recid (X_utd) .
-            find first x_utd where recid (x_utd) = recid_utd .
-            run updOneUTD(X_utd.db-num, X_utd.doc-id ) no-error  .       
-            if  error-status:error then 
-            do: 
-                return return-value .
-            end.
-            run init-id (X_utd.doc-id, X_utd.db-num).  
-        end.  
-  
-        {&OPEN-QUERY-br-utd}
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2360,8 +2360,8 @@ PROCEDURE enable_BUTTON :
      
     end.         
     if mDiadocConnection <> ? 
-        then enable  b_recEDI with frame {&frame-name} .
-    else disable b_recEDI with frame {&frame-name} .
+        then enable  b_oneUtd with frame {&frame-name} .
+    else disable b_oneUtd with frame {&frame-name} .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2447,7 +2447,7 @@ PROCEDURE enable_UI :
             B-write-Token
             b_anul
             B-write-cancel
-            b_recEDI
+            b_oneUtd
             B-write-sertif
             F-sertif
             mark-num
@@ -2492,7 +2492,7 @@ PROCEDURE enable_UI :
             B-write-Token
             b_anul
             B-write-cancel
-            b_recEDI
+            b_oneUtd
             B-write-sertif
             F-sertif
             mark-num
