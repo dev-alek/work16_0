@@ -3223,6 +3223,9 @@ PROCEDURE enable_BUTTON :
        disable
        b_correct
        with frame {&frame-name} .
+       enable
+       b_deliv-cancel
+       with frame {&frame-name} .
     end. 
 END PROCEDURE.
 

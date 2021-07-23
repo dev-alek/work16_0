@@ -29,6 +29,9 @@ define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер изменение {&main-tbl}". 
 { trg/trghistnws.i} 
+
+if g#news then return.
+
 if new-{&main-tbl}.CountValue ne old-{&main-tbl}.CountValue + 1
 then do:
    if new-{&main-tbl}.file-name eq "cashbookrule"

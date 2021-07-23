@@ -590,7 +590,7 @@ if session:debug-alert then output stream OutStr-html close .
     end .
     
     /* END Прием чеков */
-    
+ 
     /* START Поиск контрольных сверок на конец периода по резервуарам, которые не учавствуют в приёмке */
     define variable rvs-time-diff as integer no-undo .
     define variable exec-time-diff as integer no-undo .
@@ -600,7 +600,8 @@ if session:debug-alert then output stream OutStr-html close .
       then
       run write-to-log in p-parent-handle ( "Проверка необходимости создания сверки по резервуару " + string(tt-place.pl-code) + " . Товар " + string(tt-place.gds-code) ) .
       
-      for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
+      end_rvs-doc_ :
+      for each end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
                                      and end_rvs-doc.obj-code = obj-code
                                      and end_rvs-doc.rvs-type = {&rvs-control}
                                      and end_rvs-doc.status_  = {&fact}
@@ -612,7 +613,7 @@ if session:debug-alert then output stream OutStr-html close .
                                    and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
                                    and end_rvs-line.pl-code   = tt-place.pl-code
                                    and end_rvs-line.gds-code  = tt-place.gds-code
-                                   by end_rvs-doc.fact-order
+                                   by end_rvs-doc.fact-order desc
                                    :
         rvs-time-diff = time-end - end_rvs-doc.fact-time + ((date-end - end_rvs-doc.fact-date) * 86400) .
         if rvs-time-diff < 0
@@ -670,6 +671,7 @@ if session:debug-alert then output stream OutStr-html close .
             end .
           end .
         end .
+        leave end_rvs-doc_ .
       end . /* for last end_rvs-doc */
     end . /* for each tt-place */
     /* END Поиск контрольных сверок на конец периода */
@@ -705,8 +707,13 @@ if session:debug-alert then output stream OutStr-html close .
     
     /* START Рассчет фактического остатка на конец периода по формулам 1 и 2 */
     for each tt-place where tt-place.need-new-rvs,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       for first new_rvs-doc where new_rvs-doc.rvs-code = new-rvs-doc-code :
         tt-place.is-calc = true .
@@ -844,8 +851,13 @@ if session:debug-alert then output stream OutStr-html close .
     end .
     
     for each tt-place where tt-place.use-old-rvs,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       end_rvs-doc_ :
       for each end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
@@ -857,6 +869,17 @@ if session:debug-alert then output stream OutStr-html close .
                                      by end_rvs-doc.fact-order desc
                                      :
         tt-place.is-calc = true .
+        
+        find first end_rvs-line no-lock where end_rvs-line.obj-type  = end_rvs-doc.obj-type
+                                         and end_rvs-line.obj-code  = end_rvs-doc.obj-code
+                                         and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
+                                         and end_rvs-line.pl-code   = tt-place.pl-code
+                                         and end_rvs-line.gds-code  = tt-place.gds-code
+                                         no-error .
+        if not available end_rvs-line                                
+        then do :
+          next end_rvs-doc_ .
+        end .
         
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
@@ -881,14 +904,7 @@ if session:debug-alert then output stream OutStr-html close .
         
         tt-place.rvs-doc-code = end_rvs-doc.rvs-code .                               
         
-        for first end_rvs-line no-lock where end_rvs-line.obj-type  = end_rvs-doc.obj-type
-                                         and end_rvs-line.obj-code  = end_rvs-doc.obj-code
-                                         and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
-                                         and end_rvs-line.pl-code   = tt-place.pl-code
-                                         and end_rvs-line.gds-code  = tt-place.gds-code
-                                         :
-          tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
-        end .
+        tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
         
         chk-doc_ :
         for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
@@ -1023,8 +1039,13 @@ if session:debug-alert then output stream OutStr-html close .
     end .
     
     for each tt-place where tt-place.is-income,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
                                      and end_rvs-doc.obj-code = obj-code
@@ -1222,8 +1243,13 @@ if session:debug-alert then output stream OutStr-html close .
     run write-to-log in p-parent-handle (" START FACT-BOOK-START UTC " + utc-time() ) .
     
     for each tt-place,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       /* START Определение книжного остатка на начало периода */
       for last start_rvs-doc no-lock where start_rvs-doc.obj-type = obj-type
@@ -1761,13 +1787,19 @@ if session:debug-alert then output stream OutStr-html close .
           /* ТехПролив */
           if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
         end .
-        for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
-                                      and buf_doc-pl.obj-code = obj-code
-                                      and buf_doc-pl.out-code = buf_doc-line.doc-code
-                                      and buf_doc-pl.gds-code = tt-result.gds-code
-                                      :
+        if ABS((buf_doc-line.fact-qnty * buf_doc-line.fact-density) - buf_doc-line.cli-qnty) < 0.002
+        then do :
           /* Формула 7 */
-          tt-result.delivery = tt-result.delivery + buf_doc-pl.cli-fact-qnty .                              
+          tt-result.delivery = tt-result.delivery + buf_doc-line.cli-qnty .
+        end .
+        else do :
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-result.gds-code
+                                        :
+            tt-result.delivery = tt-result.delivery + buf_doc-pl.cli-fact-qnty .
+          end .
         end .
       end . /* for each income buf_doc-line */
     end .
@@ -1811,7 +1843,11 @@ if session:debug-alert then output stream OutStr-html close .
         end .       
         else do :
           tt-result.Delivery-ned-izl = tt-result.Delivery-ned-izl + ((buf_doc-line.fact-qnty * buf_doc-line.fact-density) - buf_doc-line.cli-qnty) .
-        end .                       
+        end .       
+        if abs(tt-result.Delivery-ned-izl) < 0.002
+        then do :
+          tt-result.Delivery-ned-izl = 0 .
+        end .                
       end . /* for each income buf_doc-line */
     end .
     /* END Расчет излишек/недостач */
@@ -1846,8 +1882,13 @@ if session:debug-alert then output stream OutStr-html close .
     
     /* START Определение книжного остатка на конец периода */
     for each tt-place,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
                                        and end_rvs-doc.obj-code = obj-code

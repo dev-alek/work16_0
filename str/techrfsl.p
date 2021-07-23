@@ -67,6 +67,7 @@ define variable v-exist           as logical   no-undo .
 define variable v-pl-code         as integer no-undo.
 define variable v-value           as character no-undo.
 define variable v-ok              as logical no-undo.
+define variable v-gds-list-diff-place as character no-undo .
 
 define buffer buf_doc-line      for ub.doc-line.
 define buffer buf_doc-line-attr for ub.doc-line-attr.
@@ -138,7 +139,7 @@ on error undo, return error return-value :
     delete buf_temp-tank.
   end.
   /*придется делать несколько накладных так как в один приходит оп одному топливу влезает только один бак*/
-  
+  v-gds-list-diff-place = "" .
   for each buf_doc-pl no-lock where
           buf_doc-pl.out-code = buf_trn-doc.doc-code
   break
@@ -157,7 +158,12 @@ on error undo, return error return-value :
     buf_temp-tank.doc-seq = v-seq
     v-seq-max = (if v-seq > v-seq-max then v-seq else v-seq-max)
     .
+    if v-seq > 1
+    then do :
+      v-gds-list-diff-place = v-gds-list-diff-place + string(buf_doc-pl.gds-code) + "," .
+    end .
   end.
+  v-gds-list-diff-place = trim(v-gds-list-diff-place, ",") .
   run doc-code in this-procedure
       (input "chip"
 /*      input "stock-up"*/
@@ -558,7 +564,9 @@ on error undo, return error return-value :
           "'insalepr=request'":U
           v-insalepr
         }
-        if v-insalepr = false then do:
+        if v-insalepr = false
+        or (can-do(v-gds-list-diff-place, string(buf_temp-tank.gds-code)) and in_doc-line.fact-qnty = buf_temp-tank.fact-qnty)
+        then do:
           assign
             in_doc-line.price-base = buf_temp-tank.price-base
             in_doc-line.price-rubl = buf_temp-tank.price-rubl

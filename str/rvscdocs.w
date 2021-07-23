@@ -55,7 +55,7 @@ define variable vss-description as character no-undo initial "Список истории изм
 define buffer buf_changes  for temp-changes.
 define buffer buf_c-rvs-doc  for ub.c-rvs-doc.
 define buffer buf_sch_hist for ub.c-rvs-doc.
-define buffer buf_source   for ub.rvs-doc.
+define buffer buf_source   for ub.c-rvs-doc.
 
 define variable filter-point     as character no-undo.
 define variable filter-point0    as character no-undo.

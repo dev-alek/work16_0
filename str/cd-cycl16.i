@@ -71,8 +71,10 @@ define buffer for-cash-desk for ub.cash-desk.
 if available (ub.PromoAttr) then 
 do:
    { str/putc-mes16.i } 
-for each ub.PromoAttr no-lock where ub.PromoAttr.attr-code = "promo-message" and 
-                                      ub.PromoAttr.tablename  = "PromoAction":
+for each ub.PromoAttr  where ub.PromoAttr.attr-code = "promo-message" 
+                         and ub.PromoAttr.tablename  = "PromoAction"
+exclusive-lock:
+
 delete ub.PromoAttr .
 end.                                         
 end.
