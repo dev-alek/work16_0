@@ -1761,13 +1761,19 @@ if session:debug-alert then output stream OutStr-html close .
           /* ТехПролив */
           if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
         end .
-        for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
-                                      and buf_doc-pl.obj-code = obj-code
-                                      and buf_doc-pl.out-code = buf_doc-line.doc-code
-                                      and buf_doc-pl.gds-code = tt-result.gds-code
-                                      :
+        if ABS((buf_doc-line.fact-qnty * buf_doc-line.fact-density) - buf_doc-line.cli-qnty) < 0.002
+        then do :
           /* Формула 7 */
-          tt-result.delivery = tt-result.delivery + buf_doc-pl.cli-fact-qnty .                              
+          tt-result.delivery = tt-result.delivery + buf_doc-line.cli-qnty .
+        end .
+        else do :
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-result.gds-code
+                                        :
+            tt-result.delivery = tt-result.delivery + buf_doc-pl.cli-fact-qnty .
+          end .
         end .
       end . /* for each income buf_doc-line */
     end .
@@ -1811,7 +1817,11 @@ if session:debug-alert then output stream OutStr-html close .
         end .       
         else do :
           tt-result.Delivery-ned-izl = tt-result.Delivery-ned-izl + ((buf_doc-line.fact-qnty * buf_doc-line.fact-density) - buf_doc-line.cli-qnty) .
-        end .                       
+        end .       
+        if abs(tt-result.Delivery-ned-izl) < 0.002
+        then do :
+          tt-result.Delivery-ned-izl = 0 .
+        end .                
       end . /* for each income buf_doc-line */
     end .
     /* END Расчет излишек/недостач */
