@@ -590,7 +590,7 @@ if session:debug-alert then output stream OutStr-html close .
     end .
     
     /* END Прием чеков */
-    
+ 
     /* START Поиск контрольных сверок на конец периода по резервуарам, которые не учавствуют в приёмке */
     define variable rvs-time-diff as integer no-undo .
     define variable exec-time-diff as integer no-undo .
@@ -600,7 +600,8 @@ if session:debug-alert then output stream OutStr-html close .
       then
       run write-to-log in p-parent-handle ( "Проверка необходимости создания сверки по резервуару " + string(tt-place.pl-code) + " . Товар " + string(tt-place.gds-code) ) .
       
-      for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
+      end_rvs-doc_ :
+      for each end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
                                      and end_rvs-doc.obj-code = obj-code
                                      and end_rvs-doc.rvs-type = {&rvs-control}
                                      and end_rvs-doc.status_  = {&fact}
@@ -612,7 +613,7 @@ if session:debug-alert then output stream OutStr-html close .
                                    and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
                                    and end_rvs-line.pl-code   = tt-place.pl-code
                                    and end_rvs-line.gds-code  = tt-place.gds-code
-                                   by end_rvs-doc.fact-order
+                                   by end_rvs-doc.fact-order desc
                                    :
         rvs-time-diff = time-end - end_rvs-doc.fact-time + ((date-end - end_rvs-doc.fact-date) * 86400) .
         if rvs-time-diff < 0
@@ -670,6 +671,7 @@ if session:debug-alert then output stream OutStr-html close .
             end .
           end .
         end .
+        leave end_rvs-doc_ .
       end . /* for last end_rvs-doc */
     end . /* for each tt-place */
     /* END Поиск контрольных сверок на конец периода */
@@ -858,6 +860,17 @@ if session:debug-alert then output stream OutStr-html close .
                                      :
         tt-place.is-calc = true .
         
+        find first end_rvs-line no-lock where end_rvs-line.obj-type  = end_rvs-doc.obj-type
+                                         and end_rvs-line.obj-code  = end_rvs-doc.obj-code
+                                         and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
+                                         and end_rvs-line.pl-code   = tt-place.pl-code
+                                         and end_rvs-line.gds-code  = tt-place.gds-code
+                                         no-error .
+        if not available end_rvs-line                                
+        then do :
+          next end_rvs-doc_ .
+        end .
+        
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
                                         and buf_doc-line.artic     = buf_goods.artic
@@ -881,14 +894,7 @@ if session:debug-alert then output stream OutStr-html close .
         
         tt-place.rvs-doc-code = end_rvs-doc.rvs-code .                               
         
-        for first end_rvs-line no-lock where end_rvs-line.obj-type  = end_rvs-doc.obj-type
-                                         and end_rvs-line.obj-code  = end_rvs-doc.obj-code
-                                         and end_rvs-line.rvs-code  = end_rvs-doc.rvs-code
-                                         and end_rvs-line.pl-code   = tt-place.pl-code
-                                         and end_rvs-line.gds-code  = tt-place.gds-code
-                                         :
-          tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
-        end .
+        tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
         
         chk-doc_ :
         for each buf_chk-doc no-lock where buf_chk-doc.obj-type = obj-type
