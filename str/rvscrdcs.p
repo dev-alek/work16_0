@@ -280,6 +280,19 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         v-without-mt-err = ptrlprop-rvsnmter
       .
     end.
+            logger:StrLogPut = 
+               "Настройки секции для " + buf_rvs-doc.obj-type + " " + string(buf_rvs-doc.obj-code) + ": " + {&new-line} + 
+               " - Расхождение в инвентаризации по сверке делать без учета погрешности измерения: " + string(ptrlprop-rvsnmter) + {&new-line} +
+               " - Настройки инвентаризации по сверке: " + string(ptrlprop-algoincome) + {&new-line} +
+               " - Температура к которой приводится плотность и объем (°С): " + string(ptrlprop-temp-for-pomi) + {&new-line} +
+               /*            " - При воде в сверке отправлять сообщения на список адресов: " skip*/
+               /*            " - Допустимый % расхождения массы в резервуаре: " skip             */
+               " - Алгоритм принятия топлива к учету: " + string(ptrlprop-algrvspt) + {&new-line} +
+               " - Обязательный выбор автотранспорта из справочника: " + string(ptrlprop-mand-choice-autocar) + {&new-line} +
+               " - Погрешность изм массы для горизонтальных резер: " + string(ptrlprop-Delta-mass-horiz) + {&new-line} +
+               " - Погрешность изм массы для вертикальных резер: " + string(ptrlprop-Delta-mass-vert) + {&new-line} .
+            /*            " - Допустимый % расхождения массы при приеме СУГ: " skip*/
+            
 
     assign
       v-cre-add-docs = false
@@ -330,6 +343,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       buf_trn-doc.boss     = buf_rvs-doc.boss
       buf_trn-doc.out-code = buf_rvs-doc.rvs-code
       .
+
+            logger:StrLogPut = 
+               "Создается инвентаризация: " + string(v-inv-code) + {&new-line} .
 
     /* Заполняем инвентаризацию товарами */
     block_rvs-line:
@@ -421,6 +437,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           view-as alert-box.
         undo block_cre-inv, retry block_cre-inv .
       end.
+               logger:StrLogPut =
+                  "Конфигурационный параметр: " + {&new-line} + 
+                  " - Определение работы с фактическим количеством бензина во внешнем приходе: " + stfactplvalue + {&new-line}.
       if varrevision = yes then do:
         assign
           K1 = varpercrev.
@@ -466,6 +485,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       do:
         v-lgas-gds = true.
       end.
+               logger:StrLogPut =
+                  "Товар: " + string(buf_goods.gds-code) + " " + buf_goods.gds-name .    
       
       K1 = K1-all.
       
@@ -508,7 +529,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       end.
       
       v-normal-wastage = oNormWast:NormalWastageDate.
-      
+               logger:StrLogPut =
+                  " Норма естественной убыли = " + string(v-normal-wastage) .    
       if v-normal-wastage = ? then do:
         assign
           K2 = 0.0
@@ -526,11 +548,13 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         ,input buf_rvs-line.pl-code
         ,output v-value
         ,output v-ok      ) no-error.
-      
-      if v-ok then K3 = decimal(v-value) .
 
-
-      { str/reclcinv.i
+      if v-ok then do:
+          K3 = decimal(v-value). 
+          logger:StrLogPut =
+          " Погрешность измерения массы = " + string(K3) .    
+       end.
+        { str/reclcinv.i
         "'old'":U
         recid(buf_doc-line)
         v-inv-code
@@ -554,6 +578,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         buf_inv-line.wast-cli-qnty  = buf_inv-line.before-cli-qnty
         buf_inv-line.after-cli-qnty = buf_inv-line.before-cli-qnty
       .
+               logger:StrLogPut =
+                  " Количество естеств. убыли в единицах клиента = " + string(buf_inv-line.wast-cli-qnty) + {&new-line} + 
+                  " Количество после инвентаризации в единицах клиента = " + string(buf_inv-line.after-cli-qnty) + {&new-line}.    
+      
       find first buf_gds-prt no-lock
         where buf_gds-prt.upper-code = buf_goods.prt-root
         .
@@ -648,8 +676,16 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             v-normal-tp           = 0.0
             v-normal-tp-auto      = 0.0
             v-normal-tp-pl        = 0.0
-          .
-          
+          .          
+                     logger:StrLogPut =
+                        " Складское место - " + string(buf_doc-pl.pl-code) + {&new-line} + 
+                        "  - Объем расчетно-книжный (л) = " + string(if O_PKH-base <> ? then O_PKH-base else 0) + {&new-line} +
+                        "  - Объем НП, включая трубопровод (л) = " + string(if O_FACT-base <> ? then O_FACT-base else 0) + {&new-line} +
+                        "  - Масса расчетно-книжная (кг) = " + string(if O_PKH-cli <> ? then O_PKH-cli else 0) + {&new-line} +
+                        "  - Масса НП, включая трубопровод (кг) = " + string(if O_FACT-cli <> ? then O_FACT-cli else 0) + {&new-line} 
+                     /*      "  - v-normal-wastage-dens = " + string(v-normal-wastage-dens) + {&new-line}*/
+                     .  
+                 
           if not v-lgas-gds
           then do:
             assign
@@ -665,7 +701,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               v-metering-error-dens = 0
             .            
           end.
-          
+                     logger:StrLogPut =
+                        "    Погрешность:" + {&new-line} + 
+                        "    - в литрах: " + string(if v-metering-error-base <> ? then v-metering-error-base else 0) + {&new-line} +
+                        "    - в кг: " + string(if v-metering-error-cli <> ? then v-metering-error-cli else 0) + {&new-line} 
+                     .  
+                
           if ptrlprop-expptrl = {&calc-petrol-weight} then do:
             /* работаем относительно килограммов */
             assign
@@ -673,6 +714,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               O_PKH            = O_PKH-cli
               v-metering-error = v-metering-error-cli
             .
+                        logger:StrLogPut =
+                           "Работаем относительно килограммов" + {&new-line} 
+                           /*      "    - остаток = " + string(O_FACT) + {&new-line} +            */
+                           /*      "    - кол-во = " + string(O_PKH) + {&new-line} +              */
+                           /*      "    - погрешность = " + string(v-metering-error) + {&new-line}*/
+                           .              
           end.
           else do:
             /* работаем относительно литров */
@@ -681,13 +728,23 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               O_PKH            = O_PKH-base
               v-metering-error = v-metering-error-base
             .
+
+                        logger:StrLogPut =
+                           "Работаем относительно литров" + {&new-line}  
+                           /*      "    - остаток = " + string(O_FACT) + {&new-line} +            */
+                           /*      "    - кол-во = " + string(O_PKH) + {&new-line} +              */
+                           /*      "    - погрешность = " + string(v-metering-error) + {&new-line}*/
+                           .                   
           end.
 
           if not v-lgas-gds
           then do:
 
             if (O_PKH - O_FACT) <= 0  then do:
-            /* излишки */
+                           /* излишки */
+                           logger:StrLogPut =
+                              "Излишки" + {&new-line} 
+                              .   
               if (O_FACT - O_PKH) - v-metering-error <= 0 then do:
               /* все укладывается в погрешность */
                 assign
@@ -695,6 +752,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   v-metering-qnty-base = v-metering-error-base
                   v-metering-qnty-cli  = v-metering-error-cli
                 .
+                              logger:StrLogPut =
+                                 "Все укладывается в погрешность " + string(if v-metering-error <> ? then v-metering-error else 0) + {&new-line} + 
+                                 "погрешность в кг   " + string(if v-metering-qnty-base <> ? then v-metering-qnty-base else 0) + {&new-line} +
+                                 "погрешность в литрах   " + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line}.
+      
                 case ptrlprop-algrvspt :
                   when 1 then do:
                   end.
@@ -706,12 +768,20 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                           v-metering-error-cli  = (O_FACT-cli - O_PKH-cli)
                           v-metering-error-base = v-metering-error-cli / v-metering-error-dens
                         .
+                                             logger:StrLogPut =                          
+                                                "Алгоритм №2 для литров" + {&new-line} + 
+                                                "погрешность в кг   " + string(if v-metering-qnty-base <> ? then v-metering-qnty-base else 0) + {&new-line} +
+                                                "погрешность в литрах   " + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line} .
                       end.
                       else do:
                         assign
                           v-metering-error-base = (O_FACT-base - O_PKH-base)
                           v-metering-error-cli  = v-metering-error-base * v-metering-error-dens
                         .
+                                             logger:StrLogPut =
+                                                "Алгоритм №2 для кг" + {&new-line} + 
+                                                "погрешность в кг   " + string(if v-metering-qnty-base <> ? then v-metering-qnty-base else 0) + {&new-line} +
+                                                "погрешность в литрах   " + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line} .
                       end.
                     end.
                   end.
@@ -724,6 +794,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   v-metering-qnty-base = (if v-without-mt-err = true then 0 else v-metering-error-base)
                   v-metering-qnty-cli  = (if v-without-mt-err = true then 0 else v-metering-error-cli )
                 .
+                              logger:StrLogPut =
+                                 "В погрешность не укладывается, пересчитываем по алгоритму" + {&new-line} + 
+                                 "кол-во   " + string(if v-rsrv-qnty <> ? then v-rsrv-qnty else 0) + {&new-line} +
+                                 "погрешность в кг   " + string(if v-metering-qnty-base <> ? then v-metering-qnty-base else 0) + {&new-line} +
+                                 "погрешность в литрах   " + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line} .
               end.
             end. /* излишки */
             else do:
@@ -734,6 +809,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   WST-base = 0.0
                   WST-cli  = 0.0
                 .
+                              logger:StrLogPut =
+                                 "Недостача" + {&new-line} + 
+                                 "Ищем предыдущую инвентарзацию" + {&new-line}
+                                 .   
                 /* ищем предыдущую инвентаризацию */
                 find last bf-prev_doc-line no-lock
                   where bf-prev_doc-line.obj-type     = buf_doc-line.obj-type
@@ -767,7 +846,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                     oNormWast:ParGdsOAttr:PlCode = buf_rvs-line.pl-code.
                     oNormWast:FillNormWast().
                   end.
-                  
+                                 logger:StrLogPut =
+                                    "Алгоритм " + string(ptrlprop-algrvspt) + {&new-line} + 
+                                    "Естественная убыль - " + string(oNormWast:IsDecommissioned) + {&new-line}
+                                    .                     
                 end.
                 else do:
                   assign
@@ -914,6 +996,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   v-normal-wastage-cli  = WST-cli  * K2 / 1000
                   v-normal-wastage-dens = WST-cli / WST-base
                 .
+                              logger:StrLogPut =
+                                 "Норма естественной убыли" + {&new-line} +
+                                 "в килограммах: " + string(if v-normal-wastage-cli <> ? then v-normal-wastage-cli else 0) + {&new-line} +
+                                 "в литрах: " + string(if v-normal-wastage-base <> ? then v-normal-wastage-base else 0) + {&new-line} +
+                                 "плотность: " + string(if v-normal-wastage-dens <> ? then v-normal-wastage-dens else 0) + {&new-line}
+                                 .
               end.
   
               if ptrlprop-expptrl = {&calc-petrol-weight} then do:
@@ -965,6 +1053,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 when 1 then do:
                   if (O_PKH - O_FACT) - v-metering-error - v-normal-wastage <= 0 then do:
                     /* все укладывается в погрешность + естественная убыль */
+                                       logger:StrLogPut =
+                                          "Все укладывается в погрешность " + string(if v-metering-error <> ? then v-metering-error else 0) + " + естественную убыль: "
+                                           +  string(if v-normal-wastage <> ? then v-normal-wastage else 0) + {&new-line} .
+                                       .
                     assign
                       v-rsrv-qnty          = 0.0
                       v-metering-qnty-base = v-metering-error-base
@@ -973,24 +1065,38 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                     if v-normal-wastage > 0 then do:
                       if (O_PKH - O_FACT) - v-metering-error > 0 then do:
                         /* в погрешность не укладывается, поэтому учитываем естественную убыль */
+
+                                             logger:StrLogPut =
+                                                "В погрешность не укладывается, поэтому учитываем естественную убыль " +  string(if v-normal-wastage <> ? then v-normal-wastage else 0) + {&new-line} .
+                                             .
                         if v-normal-wastage > (O_PKH - O_FACT) - v-metering-error then do:
                           /* уменьшим естественную убыль, чтобы дельта РКН и ФАКТ была равна погрешности измерения */
+                                                logger:StrLogPut =
+                                                   "Уменьшим естественную убыль, чтобы дельта РКН и ФАКТ была равна погрешности измерения " + {&new-line} .
                           if ptrlprop-expptrl = {&calc-petrol-weight} then do:
                             assign
                               v-normal-wastage-cli  = (O_PKH-cli - O_FACT-cli) - v-metering-error-cli
                               v-normal-wastage-base = v-normal-wastage-cli / v-normal-wastage-dens
                             .
+                                                   logger:StrLogPut =
+                                                      "Естественная убыль: " + string(if v-normal-wastage-cli <> ? then v-normal-wastage-cli else 0) + " " 
+                                                      + string(if v-normal-wastage-base <> ? then v-normal-wastage-base else 0) + {&new-line} .
                           end.
                           else do:
                             assign
                               v-normal-wastage-base = (O_PKH-base - O_FACT-base) - v-metering-error-base
                               v-normal-wastage-cli  = v-normal-wastage-base * v-normal-wastage-dens
                             .
+                                                   logger:StrLogPut =
+                                                      "Естественная убыль: " + string(if v-normal-wastage-cli <> ? then v-normal-wastage-cli else 0) + " " 
+                                                      + string(if v-normal-wastage-base <> ? then v-normal-wastage-base else 0) + {&new-line} .
                           end.
                         end.
                       end.
                       else do:
                         /* все укладывается в погрешность */
+                                             logger:StrLogPut =
+                                                "Все укладывается в погрешность" + {&new-line} .
                         assign
                           v-normal-wastage-cli  = 0.0
                           v-normal-wastage-base = 0.0
@@ -1000,6 +1106,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   end.
                   else do:
                     /* в погрешность не укладывается, пересчитываем по алгоритму */
+                                       logger:StrLogPut =
+                                          "В погрешность не укладывается, пересчитываем по алгоритму" .
                     assign
                       v-rsrv-qnty          = - ( (O_PKH - O_FACT)
                                                   - (if v-cre-add-docs   = true then v-normal-wastage else 0.0)
@@ -1008,6 +1116,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                       v-metering-qnty-base = (if v-without-mt-err = true then 0 else v-metering-error-base)
                       v-metering-qnty-cli  = (if v-without-mt-err = true then 0 else v-metering-error-cli )
                     .
+                                       logger:StrLogPut =
+                                          "Кол-во: v-rsrv-qnty " + string(if v-rsrv-qnty <> ? then v-rsrv-qnty else 0) + {&new-line} +
+                                          "Погрешность v-metering-qnty-base " + string(if v-metering-qnty-base <> ? then v-metering-qnty-base else 0) + {&new-line} +
+                                          "Погрешность v-metering-qnty-cli" + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line} 
+                                          .
                   end.
                 end.
                 when 2 then do:
@@ -1020,10 +1133,19 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                       v-metering-qnty-base = 0.0
                       v-metering-qnty-cli  = 0.0
                     .
+                                       logger:StrLogPut =
+                                          "Естественная убыль покрыла разницу" + string(if v-normal-wastage <> ? then v-normal-wastage else 0) + {&new-line} +
+                                          "Кол-во: v-rsrv-qnty " + string(if v-rsrv-qnty <> ? then v-rsrv-qnty else 0) + {&new-line} +
+                                          "Погрешность v-metering-qnty-base " + string(if v-metering-qnty-base <> ? then v-metering-qnty-base else 0) + {&new-line} +
+                                          "Погрешность v-metering-qnty-cli " + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line} 
+                                          .
                   end.
                   else do:
                     if (O_PKH - O_FACT) - v-metering-error - v-normal-wastage <= 0 then do:
                       /* все укладывается в погрешность + естественная убыль */
+                                          logger:StrLogPut =
+                                             "Все укладывается в погрешность " + string(if v-metering-error <> ? then v-metering-error else 0) + " + естественную убыль: " +  
+                                             string(if v-normal-wastage <> ? then v-normal-wastage else 0) + {&new-line} .
                       if v-metering-error > (O_PKH - O_FACT) - v-normal-wastage  then do:
                         /* уменьшим погрешность измерения, чтобы она была не больше дельты РКН и ФАКТ с учетом ЕУ */
                         if ptrlprop-expptrl = {&calc-petrol-weight} then do:
@@ -1040,6 +1162,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                             v-metering-error      = v-metering-error-base
                           .
                         end.
+                                             logger:StrLogPut =
+                                                "уменьшим погрешность измерения, чтобы она была не больше дельты РКН и ФАКТ с учетом ЕУ" + {&new-line} +
+                                                "Погрешность v-metering-error-base " + string(if v-metering-error-base <> ? then v-metering-error-base else 0) + {&new-line} +
+                                                "Погрешность v-metering-error-cli " + string(if v-metering-error-cli <> ? then v-metering-error-cli else 0) + {&new-line} +
+                                                "Погрешность v-metering-error " + string(if v-metering-error <> ? then v-metering-error else 0) + {&new-line} 
+                                                .
                       end.
                       assign
                         v-rsrv-qnty = - ( (O_PKH - O_FACT)
@@ -1049,6 +1177,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                         v-metering-qnty-base = v-metering-error-base
                         v-metering-qnty-cli  = v-metering-error-cli
                       .
+                                          logger:StrLogPut =
+                                             "Кол-во: v-rsrv-qnty " + string(if v-rsrv-qnty <> ? then v-rsrv-qnty else 0) + {&new-line} +
+                                             "Погрешность v-metering-qnty-base " + string(if v-metering-qnty-base <> ? then v-metering-qnty-base else 0) + {&new-line} +
+                                             "Погрешность v-metering-qnty-cli" + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line} 
+                                             .
                     end. /* if (O_PKH - O_FACT) - v-metering-error - v-normal-wastage <= 0 then */
                     else do:
                       /* в погрешность не укладывается, пересчитываем по алгоритму */
@@ -1060,6 +1193,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                         v-metering-qnty-base = (if v-without-mt-err = true then 0 else v-metering-error-base)
                         v-metering-qnty-cli  = (if v-without-mt-err = true then 0 else v-metering-error-cli )
                       .
+                                          logger:StrLogPut =
+                                             "в погрешность не укладывается, пересчитываем по алгоритму " + {&new-line} +
+                                             "Кол-во: v-rsrv-qnty " + string(if v-rsrv-qnty <> ? then v-rsrv-qnty else 0) + {&new-line} +
+                                             "Погрешность v-metering-qnty-base " + string(if v-metering-qnty-base <> ? then v-metering-qnty-base else 0) + {&new-line} + 
+                                             "Погрешность v-metering-qnty-cli" + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line} 
+                                             .
                     end.
                   end.
                 end.
@@ -1102,6 +1241,21 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               rvsinvsubObj:Diff = MFO - MKN.
               
               dM = MFO - MKN.
+              
+                           logger:StrLogPut =
+                              "Алгоритм: " + string(ptrlprop-algrvspt) + {&new-line} +
+                              "Номер сверки: " + string(rvsinvsubObj:RvsCode) + {&new-line} +
+                              "Номер резервуара: " + string(rvsinvsubObj:PlCode) + {&new-line} +
+                              "Код товара: " + string(rvsinvsubObj:GdsCode) + {&new-line} +        
+                              "MKN: " + string(MKN) + {&new-line} +        
+                              "MFO: " + string(MFO) + {&new-line}  +       
+                              "MFOR: " + string(MFOR) + {&new-line}  +       
+                              "MFOT: " + string(MFOT) + {&new-line}   +      
+                              "beta1: " + string(beta1) + {&new-line} +        
+                              "beta2: " + string(beta2) + {&new-line} +        
+                              "dMMBd: " + string(dMMBd) + {&new-line}  +                      
+                              "rvsinvsubObj:Diff: " + string(beta2) + {&new-line} +        
+                              "dM: " + string(dMMBd) + {&new-line}   .
               if absolute (dM) <= dMMBd
               then do:
                 v-rsrv-qnty = 0.
@@ -1114,6 +1268,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   MI = dM - dMMBd. 
                   MKKN = MKN + MI.
                   v-rsrv-qnty = (MI) / buf_rvs-line.state-density.
+                                 logger:StrLogPut =
+                                    "Излишки: " + {&new-line} +
+                                    "MI: " + string(MI) + {&new-line} +
+                                    "MKKN: " + string(MKKN) + {&new-line} +
+                                    "v-rsrv-qnty: " + string(v-rsrv-qnty) + {&new-line}         
+                                    .
                 end.
                 else do: /*недостача*/
                   dMPT = v-normal-tp.
@@ -1128,6 +1288,15 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   /*                  MNED = MKN - MFO - dMMBd - dMPOT.*/
                   end.
                   v-rsrv-qnty = (MKKN - MKN) / buf_rvs-line.state-density.
+                 
+                                 logger:StrLogPut =
+                                    "Недостача: " + {&new-line} +
+                                    "dMPT: " + string(dMPT) + {&new-line} +
+                                    "dMPOT: " + string(dMPOT) + {&new-line} +
+                                    "MPOT: " + string(MPOT) + {&new-line} +
+                                    "MKKN: " + string(MKKN) + {&new-line} +
+                                    "v-rsrv-qnty: " + string(v-rsrv-qnty) + {&new-line}         
+                                    .
                 end.
                 
               end.
@@ -1209,12 +1378,20 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   assign
                     v-reserv-qnty-base = ( v-fact-cli-qnty + v-reserv-qnty-cli - (if v-cre-add-docs = true then v-normal-wastage-cli else 0.0)
                                           ) / buf_rvs-line.state-density - ( v-fact-qnty - (if v-cre-add-docs = true then v-normal-wastage-base else 0.0) )
-                  .
+                                    .
+                                 logger:StrLogPut =
+                                    "Установлен параметр, выставляем кол-ва по плотности" + {&new-line} +
+                                    "Кол-во : " + string(if v-reserv-qnty-base <> ? then v-reserv-qnty-base else 0) + {&new-line}    
+                                    .
                 end.
                 else do:
                   assign
                     v-reserv-qnty-base = v-reserv-qnty-cli / buf_rvs-line.state-density
                   .
+                                 logger:StrLogPut =
+                        
+                                    "Кол-во : " + string(if v-reserv-qnty-base <> ? then v-reserv-qnty-base else 0) + {&new-line}    
+                                    .
                 end.
               end.
               else do:
@@ -1225,12 +1402,21 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   assign
                     v-reserv-qnty-cli = ( v-fact-qnty + v-reserv-qnty-base - (if v-cre-add-docs = true then v-normal-wastage-base else 0.0)
                                         ) * buf_rvs-line.state-density - ( v-fact-cli-qnty - (if v-cre-add-docs = true then v-normal-wastage-cli else 0.0) )
+                                    .
+                                 logger:StrLogPut =
+                                    "Установлен параметр, выставляем кол-ва по плотности" + {&new-line} +
+                                    "Кол-во : " + string(if v-reserv-qnty-cli <> ? then v-reserv-qnty-cli else 0) + {&new-line}    
                   .
                 end.
                 else do:
                   assign
                     v-reserv-qnty-cli = v-reserv-qnty-base * buf_rvs-line.state-density
                   .
+
+                                 logger:StrLogPut =
+                        
+                                    "Кол-во : " + string(if v-reserv-qnty-cli <> ? then v-reserv-qnty-cli else 0) + {&new-line}    
+                                    .
                 end.
               end.
               else do:
@@ -1238,6 +1424,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 assign
                   v-reserv-qnty-cli = v-reserv-qnty-base * buf_rvs-line.state-density
                 .
+
+                           logger:StrLogPut =
+                        
+                              "Кол-во : " + string(v-reserv-qnty-cli) + {&new-line}    
+                              .
               end.
           end.
           else do:
@@ -1245,6 +1436,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               v-reserv-qnty-cli = O_FACT-cli - O_PKH-cli
               v-reserv-qnty-base = O_FACT-base - O_PKH-base 
             .
+
+                        logger:StrLogPut =
+                           "Кол-во кг: " + string(v-reserv-qnty-cli) + {&new-line} +   
+                           "Кол-во литры: " + string(v-reserv-qnty-base) + {&new-line}    
+                           .
           end.
           if v-reserv-qnty-base <> 0 then do:
             assign
