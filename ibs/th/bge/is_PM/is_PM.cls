@@ -707,8 +707,13 @@ if session:debug-alert then output stream OutStr-html close .
     
     /* START Рассчет фактического остатка на конец периода по формулам 1 и 2 */
     for each tt-place where tt-place.need-new-rvs,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       for first new_rvs-doc where new_rvs-doc.rvs-code = new-rvs-doc-code :
         tt-place.is-calc = true .
@@ -846,8 +851,13 @@ if session:debug-alert then output stream OutStr-html close .
     end .
     
     for each tt-place where tt-place.use-old-rvs,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       end_rvs-doc_ :
       for each end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
@@ -1029,8 +1039,13 @@ if session:debug-alert then output stream OutStr-html close .
     end .
     
     for each tt-place where tt-place.is-income,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
                                      and end_rvs-doc.obj-code = obj-code
@@ -1228,8 +1243,13 @@ if session:debug-alert then output stream OutStr-html close .
     run write-to-log in p-parent-handle (" START FACT-BOOK-START UTC " + utc-time() ) .
     
     for each tt-place,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       /* START Определение книжного остатка на начало периода */
       for last start_rvs-doc no-lock where start_rvs-doc.obj-type = obj-type
@@ -1862,8 +1882,13 @@ if session:debug-alert then output stream OutStr-html close .
     
     /* START Определение книжного остатка на конец периода */
     for each tt-place,
-    first buf_bar-code no-lock where buf_bar-code.gds-code = tt-place.gds-code,
-    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code
+    first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
+    first gds-prt no-lock where gds-prt.upper-code = buf_goods.prt-root,
+    first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code
+                                 and buf_bar-code.node-code = gds-prt.node-code
+                                 and buf_bar-code.in-code = ""
+                                 and buf_bar-code.part-code = ""
+                                 and buf_bar-code.unit-cli = buf_goods.unit-base
     :
       for last end_rvs-doc no-lock where end_rvs-doc.obj-type = obj-type
                                        and end_rvs-doc.obj-code = obj-code
