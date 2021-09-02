@@ -645,7 +645,7 @@ PROCEDURE enter-on-object :
             else do:
                 message
                     "Это первый вход в систему на этом объекте."
-                    skip (1) "Установите пожалуйста дату на объекте."
+                    skip (1) "Установите, пожалуйста, дату на объекте."
                 view-as alert-box information.
                 run get-date-from-admin in this-procedure(
                         input "is-obj-date"
@@ -709,7 +709,7 @@ PROCEDURE enter-on-object :
                             message
                                 "Дата на объекте " p-obj-type p-obj-code " не определена"
                                 skip "или на объект не входили более 10 дней."
-                                skip (1) "Установите пожалуйста дату на объекте."
+                                skip (1) "Установите, пожалуйста, дату на объекте."
                             view-as alert-box information.
                         end.
                         run get-date-from-admin in this-procedure(
