@@ -1284,16 +1284,20 @@ class ibs.th.bge.is_PM.is_PM:
                                        and buf_chk-doc.chk-date >= start_rvs-doc.fact-date
                                        and buf_chk-doc.chk-date <= date-start
                                        :
-/*          if buf_chk-doc.chk-date = start_rvs-doc.fact-date  */
-/*          and buf_chk-doc.chk-time <= start_rvs-doc.fact-time*/
-/*          then next chk-doc_ .                               */
-          
-          if buf_chk-doc.shift-date < start_rvs-doc.shift-date
-          then next chk-doc_ .
-          
-          if buf_chk-doc.shift-date = start_rvs-doc.shift-date
-          and buf_chk-doc.shift-num <= start_rvs-doc.shift-num
-          then next chk-doc_ .
+          if lookup({&shift-err}, buf_chk-doc.office) > 0
+          then do :
+            if buf_chk-doc.chk-date = start_rvs-doc.fact-date
+            and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
+            then next chk-doc_ .
+          end .
+          else do :
+            if buf_chk-doc.shift-date < start_rvs-doc.shift-date
+            then next chk-doc_ .
+            
+            if buf_chk-doc.shift-date = start_rvs-doc.shift-date
+            and buf_chk-doc.shift-num <= start_rvs-doc.shift-num
+            then next chk-doc_ .
+          end .
           
           if buf_chk-doc.chk-date = date-start
           and buf_chk-doc.chk-time > time-start
@@ -1931,16 +1935,20 @@ class ibs.th.bge.is_PM.is_PM:
                                        and buf_chk-doc.chk-date >= end_rvs-doc.fact-date
                                        and buf_chk-doc.chk-date <= date-end
                                        :
-/*          if buf_chk-doc.chk-date = end_rvs-doc.fact-date  */
-/*          and buf_chk-doc.chk-time <= end_rvs-doc.fact-time*/
-/*          then next chk-doc_ .                             */
-          
-          if buf_chk-doc.shift-date < end_rvs-doc.shift-date
-          then next chk-doc_ .
-          
-          if buf_chk-doc.shift-date = end_rvs-doc.shift-date
-          and buf_chk-doc.shift-num <= end_rvs-doc.shift-num
-          then next chk-doc_ .
+          if lookup({&shift-err}, buf_chk-doc.office) > 0
+          then do :                               
+            if buf_chk-doc.chk-date = end_rvs-doc.fact-date
+            and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
+            then next chk-doc_ .
+          end .
+          else do :
+            if buf_chk-doc.shift-date < end_rvs-doc.shift-date
+            then next chk-doc_ .
+            
+            if buf_chk-doc.shift-date = end_rvs-doc.shift-date
+            and buf_chk-doc.shift-num <= end_rvs-doc.shift-num
+            then next chk-doc_ .
+          end .
           
           if buf_chk-doc.chk-date = date-end
           and buf_chk-doc.chk-time > time-end
