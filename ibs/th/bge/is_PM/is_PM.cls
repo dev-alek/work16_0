@@ -1441,7 +1441,7 @@ class ibs.th.bge.is_PM.is_PM:
         end.          
       end .
       /* END Определение книжного остатка на начало периода */
-      
+  
       /* START Определение фактического остатка на начало периода */
       start_rvs-doc_ :
       for each start_rvs-doc no-lock where start_rvs-doc.obj-type = obj-type
