@@ -713,6 +713,10 @@ procedure file-s-g private :
             if error-status :error then do:
               return error return-value .
             end.
+            if p-cert-enabled
+            then do :
+              run del-file ( input searchfile(p-temp-dir + {&back-slash-char} + p-file-name-no-ext + ".p7s":U) ) no-error .
+            end .
           end .
         end .
       end.

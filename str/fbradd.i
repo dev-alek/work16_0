@@ -1505,12 +1505,14 @@ define variable v-default-recipe-code   as character    no-undo.
            and buf_recipe.artic     = buf_goods.artic
            and buf_recipe.prod-type = buf_goods.prod-type
            and buf_recipe.prod-code = buf_goods.prod-code
+           and buf_recipe.stts      <> 2
           )
           or ( buf_recipe.obj-type = ""
            and buf_recipe.obj-code = 0
            and buf_recipe.artic     = buf_goods.artic
            and buf_recipe.prod-type = buf_goods.prod-type
            and buf_recipe.prod-code = buf_goods.prod-code
+           and buf_recipe.stts      <> 2
           )
 /*    by buf_recipe.recipe-order*/
     :

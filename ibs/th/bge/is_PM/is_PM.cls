@@ -236,25 +236,25 @@ class ibs.th.bge.is_PM.is_PM:
   end constructor .
   
   method public void exec_1c () :
-if session:debug-alert then output stream OutStr-html to PM_wght_lc.txt append convert target 'UTF-8'. 
+    if session:debug-alert then output stream OutStr-html to PM_wght_lc.txt append convert target 'UTF-8'. 
     stage1() .
     stage2() .
     stage3() .
     stage4() .
     stage5() .
     create-esys-data() .
-if session:debug-alert then output stream OutStr-html close .    
+    if session:debug-alert then output stream OutStr-html close .    
   end method .
   
   method public void exec_rep () :
 
-if session:debug-alert then output stream OutStr-html to PM_wght_rep.txt append convert target 'UTF-8'. 
+    if session:debug-alert then output stream OutStr-html to PM_wght_rep.txt append convert target 'UTF-8'. 
     stage1() .
     stage2() .
     stage3() .
     stage4() .
     stage5() .
-if session:debug-alert then output stream OutStr-html close .
+    if session:debug-alert then output stream OutStr-html close .
     make-rep() .
 
   end method .
@@ -660,13 +660,14 @@ if session:debug-alert then output stream OutStr-html close .
             tt-place.is-calc = false .
             for first tt-result where tt-result.gds-code = tt-place.gds-code :
               tt-result.wght-fact-end = tt-result.wght-fact-end + tt-place.end-rvs-fact-qnty .
-              if session:debug-alert then do:
-                 put stream OutStr-html unformatted
-                 "wght-fact-end Поиск контрольных сверок на конец периода" skip
-                 "Резервуар " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
-                 string(tt-place.end-rvs-fact-qnty) skip
-                 string (tt-result.wght-fact-end) skip.
-                 .
+              if session:debug-alert
+              then do:
+                put stream OutStr-html unformatted
+                  "wght-fact-end Поиск контрольных сверок на конец периода" skip
+                  "Резервуар " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
+                  string(tt-place.end-rvs-fact-qnty) skip
+                  string (tt-result.wght-fact-end) skip
+                .
               end.   
             end .
           end .
@@ -838,15 +839,15 @@ if session:debug-alert then output stream OutStr-html close .
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 2 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty + tt-place.end-chk-fact-qnty - tt-place.end-trn-fact-qnty) .
-         if session:debug-alert then 
-         do:
-            put stream OutStr-html unformatted
-               "wght-fact-end Формула 2" skip
-               "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
-               string(tt-place.end-rvs-fact-qnty) + " + " +  string (tt-place.end-chk-fact-qnty) +  " - " + string(tt-place.end-trn-fact-qnty) skip
-               string(tt-result.wght-fact-end) skip.
-            .
-         end.  
+        if session:debug-alert 
+        then do:
+          put stream OutStr-html unformatted
+            "wght-fact-end Формула 2" skip
+            "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
+            string(tt-place.end-rvs-fact-qnty) + " + " +  string (tt-place.end-chk-fact-qnty) +  " - " + string(tt-place.end-trn-fact-qnty) skip
+            string(tt-result.wght-fact-end) skip
+          .
+        end.  
       end .
     end .
     
@@ -881,6 +882,7 @@ if session:debug-alert then output stream OutStr-html close .
           next end_rvs-doc_ .
         end .
         
+        doc-line_ :
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
                                         and buf_doc-line.artic     = buf_goods.artic
@@ -890,12 +892,20 @@ if session:debug-alert then output stream OutStr-html close .
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
-                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date)
+                                    and (( ((buf_trn-doc.fact-date > end_rvs-doc.fact-date)
                                       or (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >= end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end)
-                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end)) )
+                                    or (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num = end_rvs-doc.shift-num))
                                     by buf_trn-doc.fact-order                                   
                                     :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next doc-line_ .
+          end .
           if integer(entry(1, end_rvs-doc.rvs-code, "-")) > integer(entry(1, buf_trn-doc.doc-code, "-"))
           then do :
             next end_rvs-doc_ .
@@ -1026,15 +1036,15 @@ if session:debug-alert then output stream OutStr-html close .
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 1 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) .
-                 if session:debug-alert then 
-         do:
-            put stream OutStr-html unformatted
-               "wght-fact-end Формула 1" skip
-               "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
-               string(tt-place.end-rvs-fact-qnty) + " - " +  string (tt-place.end-chk-fact-qnty) +  " + " + string(tt-place.end-trn-fact-qnty) skip
-               string(tt-result.wght-fact-end) skip.
-            .
-         end.  
+        if session:debug-alert
+        then do:
+          put stream OutStr-html unformatted
+            "wght-fact-end Формула 1" skip
+            "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
+            string(tt-place.end-rvs-fact-qnty) + " - " +  string (tt-place.end-chk-fact-qnty) +  " + " + string(tt-place.end-trn-fact-qnty) skip
+            string(tt-result.wght-fact-end) skip
+          .
+        end.  
       end .
     end .
     
@@ -1183,15 +1193,15 @@ if session:debug-alert then output stream OutStr-html close .
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 1 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) .
-         if session:debug-alert then 
-         do:
-            put stream OutStr-html unformatted
-               "wght-fact-end Формула 1" skip
-               "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
-               string(tt-place.end-rvs-fact-qnty) + " - " +  string (tt-place.end-chk-fact-qnty) +  " + " + string(tt-place.end-trn-fact-qnty) skip
-               string(tt-result.wght-fact-end) skip.
-            .
-         end.          
+        if session:debug-alert 
+        then do:
+          put stream OutStr-html unformatted
+            "wght-fact-end Формула 1" skip
+            "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
+            string(tt-place.end-rvs-fact-qnty) + " - " +  string (tt-place.end-chk-fact-qnty) +  " + " + string(tt-place.end-trn-fact-qnty) skip
+            string(tt-result.wght-fact-end) skip
+          .
+        end.          
       end .
     end .
     
@@ -1274,16 +1284,20 @@ if session:debug-alert then output stream OutStr-html close .
                                        and buf_chk-doc.chk-date >= start_rvs-doc.fact-date
                                        and buf_chk-doc.chk-date <= date-start
                                        :
-/*          if buf_chk-doc.chk-date = start_rvs-doc.fact-date  */
-/*          and buf_chk-doc.chk-time <= start_rvs-doc.fact-time*/
-/*          then next chk-doc_ .                               */
-          
-          if buf_chk-doc.shift-date < start_rvs-doc.shift-date
-          then next chk-doc_ .
-          
-          if buf_chk-doc.shift-date = start_rvs-doc.shift-date
-          and buf_chk-doc.shift-num <= start_rvs-doc.shift-num
-          then next chk-doc_ .
+          if lookup({&shift-err}, buf_chk-doc.office) > 0
+          then do :
+            if buf_chk-doc.chk-date = start_rvs-doc.fact-date
+            and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
+            then next chk-doc_ .
+          end .
+          else do :
+            if buf_chk-doc.shift-date < start_rvs-doc.shift-date
+            then next chk-doc_ .
+            
+            if buf_chk-doc.shift-date = start_rvs-doc.shift-date
+            and buf_chk-doc.shift-num <= start_rvs-doc.shift-num
+            then next chk-doc_ .
+          end .
           
           if buf_chk-doc.chk-date = date-start
           and buf_chk-doc.chk-time > time-start
@@ -1320,25 +1334,25 @@ if session:debug-alert then output stream OutStr-html close .
                 no-error
               }
               tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * v-density) .
-              if session:debug-alert then 
-              do:
+              if session:debug-alert 
+              then do:
                 put stream OutStr-html unformatted
                   "tt-place.start-chk-doc-qnty Определение книжного остатка на начало периода" skip
                   "чек: " + buf_chk-gds.doc-code + " не валидная плотность в чеке"   skip
                   string(buf_chk-gds.doc-qnty) + " * " +  string (v-density)  skip
-                  string(tt-place.start-chk-doc-qnty) skip.
+                  string(tt-place.start-chk-doc-qnty) skip
                 .
               end.
             end .
             else do :
               tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
-              if session:debug-alert then 
-              do:
+              if session:debug-alert 
+              then do:
                 put stream OutStr-html unformatted
                   "tt-place.start-chk-doc-qnty Определение книжного остатка на начало периода" skip
                   "чек: " + buf_chk-gds.doc-code + "    валидная плотность в чеке"  skip
                   string(buf_chk-gds.doc-qnty) + " * " +  string (buf_chk-gds.density)  skip
-                  string(tt-place.start-chk-doc-qnty) skip.
+                  string(tt-place.start-chk-doc-qnty) skip
                 .
               end.
             end .                            
@@ -1416,18 +1430,18 @@ if session:debug-alert then output stream OutStr-html close .
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 3 */
         tt-result.wght-doc-start = tt-result.wght-doc-start + (tt-place.start-rvs-doc-qnty - tt-place.start-chk-doc-qnty + tt-place.start-trn-doc-qnty) .
-         if session:debug-alert then 
-         do:
-            put stream OutStr-html unformatted
-               "wght-doc-start Определение книжного остатка на начало периода" skip
-               "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
-               string(tt-place.start-rvs-doc-qnty) + " - " +  string (tt-place.start-chk-doc-qnty) +  " + " + string(tt-place.end-trn-doc-qnty) skip
-               string(tt-result.wght-doc-start) skip.
-            .
-         end.          
+        if session:debug-alert 
+        then do:
+          put stream OutStr-html unformatted
+            "wght-doc-start Определение книжного остатка на начало периода" skip
+            "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
+            string(tt-place.start-rvs-doc-qnty) + " - " +  string (tt-place.start-chk-doc-qnty) +  " + " + string(tt-place.end-trn-doc-qnty) skip
+            string(tt-result.wght-doc-start) skip
+          .
+        end.          
       end .
       /* END Определение книжного остатка на начало периода */
-      
+  
       /* START Определение фактического остатка на начало периода */
       start_rvs-doc_ :
       for each start_rvs-doc no-lock where start_rvs-doc.obj-type = obj-type
@@ -1445,6 +1459,7 @@ if session:debug-alert then output stream OutStr-html close .
                                      by start_rvs-doc.fact-order desc
                                      :
         
+        doc-line_ :
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
                                         and buf_doc-line.artic     = buf_goods.artic
@@ -1454,12 +1469,20 @@ if session:debug-alert then output stream OutStr-html close .
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
-                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date)
+                                    and (( ((buf_trn-doc.fact-date > start_rvs-doc.fact-date)
                                       or (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time >= start_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end)
-                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end)) )
+                                    or (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num = start_rvs-doc.shift-num) )
                                     by buf_trn-doc.fact-order                                   
                                     :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next doc-line_ .
+          end .
           if integer(entry(1, start_rvs-doc.rvs-code, "-")) > integer(entry(1, buf_trn-doc.doc-code, "-"))
           then do :
             next start_rvs-doc_ .
@@ -1487,11 +1510,11 @@ if session:debug-alert then output stream OutStr-html close .
             and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
             then next chk-doc_ .
             
-            if buf_chk-doc.shift-date <> start_rvs-doc.shift-date
+            if buf_chk-doc.shift-date < start_rvs-doc.shift-date
             then next chk-doc_ .
-            
+
             if buf_chk-doc.shift-date = start_rvs-doc.shift-date
-            and buf_chk-doc.shift-num <= start_rvs-doc.shift-num
+            and buf_chk-doc.shift-num < start_rvs-doc.shift-num
             then next chk-doc_ .
             
             if buf_chk-doc.chk-date = date-start
@@ -1600,30 +1623,30 @@ if session:debug-alert then output stream OutStr-html close .
           for first tt-result where tt-result.gds-code = tt-place.gds-code :
             /* Формула 4 */
             tt-result.wght-fact-start = tt-result.wght-fact-start + (tt-place.start-rvs-fact-qnty - tt-place.start-chk-fact-qnty + tt-place.start-trn-fact-qnty) .
-             if session:debug-alert then 
-             do:
-                put stream OutStr-html unformatted
-                   "wght-fact-start Формула 4 Определение фактического остатка на начало периода is-calc = true" skip
-                   "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
-                   string(tt-place.start-rvs-fact-qnty) + " - " +  string (tt-place.start-chk-fact-qnty) +  " + " + string(tt-place.start-trn-fact-qnty) skip
-                   string(tt-result.wght-fact-start) skip.
-                .
-             end.          
+            if session:debug-alert 
+            then do:
+              put stream OutStr-html unformatted
+                "wght-fact-start Формула 4 Определение фактического остатка на начало периода is-calc = true" skip
+                "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
+                string(tt-place.start-rvs-fact-qnty) + " - " +  string (tt-place.start-chk-fact-qnty) +  " + " + string(tt-place.start-trn-fact-qnty) skip
+                string(tt-result.wght-fact-start) skip
+              .
+            end.          
           end .
         end .
         else do :
           tt-place.is-calc = false .
           for first tt-result where tt-result.gds-code = tt-place.gds-code :
             tt-result.wght-fact-start = tt-result.wght-fact-start + start_rvs-line.state-measure-cli-qnty + (start_rvs-line.state-add-qnty * start_rvs-line.state-density) .
-             if session:debug-alert then 
-             do:
-                put stream OutStr-html unformatted
-                   "wght-fact-start Формула 4 Определение фактического остатка на начало периода is-calc = false" skip
-                   "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
-                   string(start_rvs-line.state-measure-cli-qnty) + " + (" +  string (start_rvs-line.state-add-qnty) +  " * " + string(start_rvs-line.state-density) + ")" skip
-                   string(tt-result.wght-fact-start) skip.
-                .
-             end.                  
+            if session:debug-alert 
+            then do:
+              put stream OutStr-html unformatted
+                "wght-fact-start Формула 4 Определение фактического остатка на начало периода is-calc = false" skip
+                "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
+                string(start_rvs-line.state-measure-cli-qnty) + " + (" +  string (start_rvs-line.state-add-qnty) +  " * " + string(start_rvs-line.state-density) + ")" skip
+                string(tt-result.wght-fact-start) skip
+              .
+            end.                  
           end .
         end .
         leave start_rvs-doc_ .
@@ -1734,28 +1757,28 @@ if session:debug-alert then output stream OutStr-html close .
           }
           /* Формула 6 */
           tt-result.wght-sale = tt-result.wght-sale + (buf_chk-gds.doc-qnty * v-density) .
-             if session:debug-alert then 
-             do:
-                put stream OutStr-html unformatted
-                   "wght-sale Формула 6 Расчет реализации" skip
-                   "Чек: " + string(buf_chk-gds.doc-code) + " " +  string(buf_chk-doc.chk-type) + " " + string(buf_chk-gds.b-code) skip
-                   string(buf_chk-gds.doc-qnty) + " * " +  string (v-density) skip
-                   string(tt-result.wght-sale) skip.
-                .
-             end.                
+          if session:debug-alert
+          then do:
+            put stream OutStr-html unformatted
+              "wght-sale Формула 6 Расчет реализации" skip
+              "Чек: " + string(buf_chk-gds.doc-code) + " " +  string(buf_chk-doc.chk-type) + " " + string(buf_chk-gds.b-code) skip
+              string(buf_chk-gds.doc-qnty) + " * " +  string (v-density) skip
+              string(tt-result.wght-sale) skip
+            .
+          end.                
         end .
         else do :
           /* Формула 6 */
           tt-result.wght-sale = tt-result.wght-sale + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .  
-             if session:debug-alert then 
-             do:
-                put stream OutStr-html unformatted
-                   "wght-sale Формула 6 Расчет реализации" skip
-                   "Чек: " + string(buf_chk-gds.doc-code) + " " +  string(buf_chk-doc.chk-type) + " " + string(buf_chk-gds.b-code) skip
-                   string(buf_chk-gds.doc-qnty) + " * " +  string (buf_chk-gds.density) skip
-                   string(tt-result.wght-sale) skip.
-                .
-             end.                
+          if session:debug-alert 
+          then do:
+            put stream OutStr-html unformatted
+              "wght-sale Формула 6 Расчет реализации" skip
+              "Чек: " + string(buf_chk-gds.doc-code) + " " +  string(buf_chk-doc.chk-type) + " " + string(buf_chk-gds.b-code) skip
+              string(buf_chk-gds.doc-qnty) + " * " +  string (buf_chk-gds.density) skip
+              string(tt-result.wght-sale) skip
+            .
+          end.                
         end .                             
       end .
     end .
@@ -1912,16 +1935,20 @@ if session:debug-alert then output stream OutStr-html close .
                                        and buf_chk-doc.chk-date >= end_rvs-doc.fact-date
                                        and buf_chk-doc.chk-date <= date-end
                                        :
-/*          if buf_chk-doc.chk-date = end_rvs-doc.fact-date  */
-/*          and buf_chk-doc.chk-time <= end_rvs-doc.fact-time*/
-/*          then next chk-doc_ .                             */
-          
-          if buf_chk-doc.shift-date < end_rvs-doc.shift-date
-          then next chk-doc_ .
-          
-          if buf_chk-doc.shift-date = end_rvs-doc.shift-date
-          and buf_chk-doc.shift-num <= end_rvs-doc.shift-num
-          then next chk-doc_ .
+          if lookup({&shift-err}, buf_chk-doc.office) > 0
+          then do :                               
+            if buf_chk-doc.chk-date = end_rvs-doc.fact-date
+            and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
+            then next chk-doc_ .
+          end .
+          else do :
+            if buf_chk-doc.shift-date < end_rvs-doc.shift-date
+            then next chk-doc_ .
+            
+            if buf_chk-doc.shift-date = end_rvs-doc.shift-date
+            and buf_chk-doc.shift-num <= end_rvs-doc.shift-num
+            then next chk-doc_ .
+          end .
           
           if buf_chk-doc.chk-date = date-end
           and buf_chk-doc.chk-time > time-end
@@ -2032,15 +2059,15 @@ if session:debug-alert then output stream OutStr-html close .
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 9 */
         tt-result.wght-doc-end = tt-result.wght-doc-end + (tt-place.end-rvs-doc-qnty - tt-place.end-chk-doc-qnty + tt-place.end-trn-doc-qnty) .
-             if session:debug-alert then 
-             do:
-                put stream OutStr-html unformatted
-                   "wght-doc-end Формула 9 Определение книжного остатка на конец периода" skip
-                   "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
-                   string(tt-place.end-rvs-doc-qnty) + " - " +  string (tt-place.end-chk-doc-qnty) +  " + " + string(tt-place.end-trn-doc-qnty) skip
-                   string(tt-result.wght-doc-end) skip.
-                .
-             end.               
+        if session:debug-alert 
+        then  do:
+          put stream OutStr-html unformatted
+            "wght-doc-end Формула 9 Определение книжного остатка на конец периода" skip
+            "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
+            string(tt-place.end-rvs-doc-qnty) + " - " +  string (tt-place.end-chk-doc-qnty) +  " + " + string(tt-place.end-trn-doc-qnty) skip
+            string(tt-result.wght-doc-end) skip
+          .
+        end.               
       end .
     end .
     /* END Определение книжного остатка на конец периода */
@@ -2049,15 +2076,15 @@ if session:debug-alert then output stream OutStr-html close .
     for each tt-result :
       /* Формула 10 */
       tt-result.wght-other = tt-result.wght-doc-end - tt-result.wght-doc-start - tt-result.delivery + tt-result.wght-sale .
-       if session:debug-alert then 
-       do:
-          put stream OutStr-html unformatted
-             "wght-other Формула 10 Расчет расхода на прочие нужды" skip
-             "Товар: " + string(tt-result.gds-code) + " " +  string(tt-result.gds-name) skip
-             string(tt-result.wght-doc-end) + " - " +  string (tt-result.wght-doc-start) +  " - " + string(tt-result.delivery) + " + " + string (tt-result.wght-sale) skip
-             string(tt-result.wght-other) skip .
-          .
-       end.               
+      if session:debug-alert 
+      then do:
+        put stream OutStr-html unformatted
+          "wght-other Формула 10 Расчет расхода на прочие нужды" skip
+          "Товар: " + string(tt-result.gds-code) + " " +  string(tt-result.gds-name) skip
+          string(tt-result.wght-doc-end) + " - " +  string (tt-result.wght-doc-start) +  " - " + string(tt-result.delivery) + " + " + string (tt-result.wght-sale) skip
+          string(tt-result.wght-other) skip
+        .
+      end.               
       tt-result.loss-own-needs = tt-result.wght-fact-end - tt-result.wght-doc-end .
     end .
     /* END Расчет расхода на прочие нужды */

@@ -342,7 +342,6 @@ FOR EACH  ub.trn-doc  NO-LOCK
 
   if v-value <> "yes" then 
   do:
-
     CREATE tincome-2.
     assign
       tincome-2.gds-code     = t-2.gds-code
@@ -383,9 +382,9 @@ FOR EACH  ub.trn-doc  NO-LOCK
         tincome-2.supp-code    = ub.trn-doc.cli-code
         tincome-2.doc-code     = v-doc-code + "/" + v-InfoSectionsTotal:InfoSectionCurr:SectionName
         tincome-2.doc-code-trn = ub.trn-doc.doc-code
-        tincome-2.qnty1       = v-InfoSectionsTotal:InfoSectionCurr:FactQnty
+        tincome-2.qnty1       = v-InfoSectionsTotal:InfoSectionCurr:DocQnty
         tincome-2.qnty3        = ub.doc-line.cli-qnty
-        tincome-2.qnty2        = ( IF AVAILABLE ub.inv-line THEN v-InfoSectionsTotal:InfoSectionCurr:FactKgQnty ELSE 0 )
+        tincome-2.qnty2        = ( IF AVAILABLE ub.inv-line THEN (v-InfoSectionsTotal:InfoSectionCurr:DocQnty * v-InfoSectionsTotal:InfoSectionCurr:DocDensity) ELSE 0 )
         tincome-2.temperature  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):DensTemp
         tincome-2.density      = ( IF tincome-2.qnty2 / tincome-2.qnty1 = ? THEN 0 ELSE tincome-2.qnty2 / tincome-2.qnty1 )
         tincome-2.naturalloss  = v-InfoSectionsTotal:InfoSectionCurr:NaturalLoss
@@ -393,7 +392,7 @@ FOR EACH  ub.trn-doc  NO-LOCK
         tincome-2.ii           = loc-ii
         loc-ii                 = loc-ii + 1.
       if is-sug(t-2.gds-code) then tincome-2.qnty1       = ub.doc-line.fact-qnty * tincome-2.density .
-      else tincome-2.qnty1       = v-InfoSectionsTotal:InfoSectionCurr:FactQnty .
+      else tincome-2.qnty1       = v-InfoSectionsTotal:InfoSectionCurr:DocQnty .
       v-qnty1               = v-qnty1 + tincome-2.qnty1 .
       v-qnty2               = v-qnty2 + tincome-2.qnty2 .
       v-qnty3               = v-qnty3 + tincome-2.qnty3

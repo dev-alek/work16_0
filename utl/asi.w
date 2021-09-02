@@ -71,6 +71,7 @@ input from value (search('procarch')) no-convert.
     if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
       then assign is-ProcArch64 = true.
     input close.
+is-ProcArch64 = false.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -200,7 +201,7 @@ DEFINE VARIABLE fbit AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE fchet AS CHARACTER FORMAT "X(256)":U 
      LABEL "Четность" 
      VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEM-PAIRS "Чет","Evev",
+     LIST-ITEM-PAIRS "Чет","Even",
                      "Нечет","Odd",
                      "Нет","NONE",
                      "Маркер","Mark",

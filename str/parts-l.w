@@ -85,7 +85,7 @@ define variable mark                    as character                no-undo colu
 define variable parts-part-code         as character                no-undo column-label "Партия"           format "x(40)" .
 define variable parts-out-code          as character                no-undo column-label "Статус"           format "x(18)" .
 define variable parts-object            as character                no-undo column-label "Объект"           format "x(10)" .
-define variable parts-b-code            like ub.bar-code.b-code     no-undo column-label "Бар-код"           .
+define variable parts-b-code            as integer                  no-undo column-label "Бар-код"          format "9999999999" .
 define variable parts-purch-code        as character                no-undo column-label "Тип приобретения" format "x(20)" .
 define variable parts-contract-prn-code as character                no-undo column-label "Договор"          format "x(16)" .
 define variable in-code-date as character no-undo .

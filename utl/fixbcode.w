@@ -473,17 +473,26 @@ END.
 ON VALUE-CHANGED OF sel-type-code-range IN FRAME D-Dialog /* Диапазоны */
 DO:
   assign sel-type-code-range .
-mode-erprn = yes.
   if mode-erprn 
      and can-do("{&bef-gbl-bc-code},{&bef-gbl-fm-code},{&bef-gbl-pn-code},{&bef-gbl-fd-code},{&bef-gbl-ct-code},{&bef-gbl-dr-code},{&bef-loc-sc-code},{&bef-loc-ss-code},{&bef-loc-pg-code},{&bef-gbl-ca-code}",sel-type-code-range)
-  then
-     assign
-        b-active:SENSITIVE = no
-        b-gen-free:SENSITIVE = no
-        b-f-u:SENSITIVE = no
-        b-coderg:SENSITIVE = no
+  then do:
+     if sel-type-code-range = {&gbl-bc-code} then 
+     enable 
+     b-active
+     b-gen-free
+     b-f-u
+     b-coderg
+     with frame {&frame-name} .
 
-     .
+     else
+     disable 
+     b-active
+     b-gen-free
+     b-f-u
+     b-coderg
+     with frame {&frame-name} .
+
+  end.   
   else
      assign
         b-active:SENSITIVE = yes
@@ -526,7 +535,6 @@ END.
           if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
           else mode-erprn = no.
        
-
 define buffer buf_sys-ctrl for ub.sys-ctrl .
 assign
   sel-type-code-range:list-item-pairs  in frame {&frame-name} =
