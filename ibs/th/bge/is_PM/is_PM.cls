@@ -666,7 +666,7 @@ class ibs.th.bge.is_PM.is_PM:
                   "wght-fact-end Поиск контрольных сверок на конец периода" skip
                   "Резервуар " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
                   string(tt-place.end-rvs-fact-qnty) skip
-                  string (tt-result.wght-fact-end) skip.
+                  string (tt-result.wght-fact-end) skip
                 .
               end.   
             end .
@@ -845,7 +845,7 @@ class ibs.th.bge.is_PM.is_PM:
             "wght-fact-end Формула 2" skip
             "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
             string(tt-place.end-rvs-fact-qnty) + " + " +  string (tt-place.end-chk-fact-qnty) +  " - " + string(tt-place.end-trn-fact-qnty) skip
-            string(tt-result.wght-fact-end) skip.
+            string(tt-result.wght-fact-end) skip
           .
         end.  
       end .
@@ -882,6 +882,7 @@ class ibs.th.bge.is_PM.is_PM:
           next end_rvs-doc_ .
         end .
         
+        doc-line_ :
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
                                         and buf_doc-line.artic     = buf_goods.artic
@@ -891,12 +892,20 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
-                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date)
+                                    and (( ((buf_trn-doc.fact-date > end_rvs-doc.fact-date)
                                       or (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >= end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end)
-                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end)) )
+                                    or (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num = end_rvs-doc.shift-num))
                                     by buf_trn-doc.fact-order                                   
                                     :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next doc-line_ .
+          end .
           if integer(entry(1, end_rvs-doc.rvs-code, "-")) > integer(entry(1, buf_trn-doc.doc-code, "-"))
           then do :
             next end_rvs-doc_ .
@@ -1033,7 +1042,7 @@ class ibs.th.bge.is_PM.is_PM:
             "wght-fact-end Формула 1" skip
             "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
             string(tt-place.end-rvs-fact-qnty) + " - " +  string (tt-place.end-chk-fact-qnty) +  " + " + string(tt-place.end-trn-fact-qnty) skip
-            string(tt-result.wght-fact-end) skip.
+            string(tt-result.wght-fact-end) skip
           .
         end.  
       end .
@@ -1190,7 +1199,7 @@ class ibs.th.bge.is_PM.is_PM:
             "wght-fact-end Формула 1" skip
             "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
             string(tt-place.end-rvs-fact-qnty) + " - " +  string (tt-place.end-chk-fact-qnty) +  " + " + string(tt-place.end-trn-fact-qnty) skip
-            string(tt-result.wght-fact-end) skip.
+            string(tt-result.wght-fact-end) skip
           .
         end.          
       end .
@@ -1327,7 +1336,7 @@ class ibs.th.bge.is_PM.is_PM:
                   "tt-place.start-chk-doc-qnty Определение книжного остатка на начало периода" skip
                   "чек: " + buf_chk-gds.doc-code + " не валидная плотность в чеке"   skip
                   string(buf_chk-gds.doc-qnty) + " * " +  string (v-density)  skip
-                  string(tt-place.start-chk-doc-qnty) skip.
+                  string(tt-place.start-chk-doc-qnty) skip
                 .
               end.
             end .
@@ -1339,7 +1348,7 @@ class ibs.th.bge.is_PM.is_PM:
                   "tt-place.start-chk-doc-qnty Определение книжного остатка на начало периода" skip
                   "чек: " + buf_chk-gds.doc-code + "    валидная плотность в чеке"  skip
                   string(buf_chk-gds.doc-qnty) + " * " +  string (buf_chk-gds.density)  skip
-                  string(tt-place.start-chk-doc-qnty) skip.
+                  string(tt-place.start-chk-doc-qnty) skip
                 .
               end.
             end .                            
@@ -1423,7 +1432,7 @@ class ibs.th.bge.is_PM.is_PM:
             "wght-doc-start Определение книжного остатка на начало периода" skip
             "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
             string(tt-place.start-rvs-doc-qnty) + " - " +  string (tt-place.start-chk-doc-qnty) +  " + " + string(tt-place.end-trn-doc-qnty) skip
-            string(tt-result.wght-doc-start) skip.
+            string(tt-result.wght-doc-start) skip
           .
         end.          
       end .
@@ -1446,6 +1455,7 @@ class ibs.th.bge.is_PM.is_PM:
                                      by start_rvs-doc.fact-order desc
                                      :
         
+        doc-line_ :
         for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
                                         and buf_doc-line.obj-code  = obj-code
                                         and buf_doc-line.artic     = buf_goods.artic
@@ -1455,12 +1465,20 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
-                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date)
+                                    and (( ((buf_trn-doc.fact-date > start_rvs-doc.fact-date)
                                       or (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time >= start_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end)
-                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end)) )
+                                    or (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num = start_rvs-doc.shift-num) )
                                     by buf_trn-doc.fact-order                                   
                                     :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next doc-line_ .
+          end .
           if integer(entry(1, start_rvs-doc.rvs-code, "-")) > integer(entry(1, buf_trn-doc.doc-code, "-"))
           then do :
             next start_rvs-doc_ .
@@ -1607,7 +1625,7 @@ class ibs.th.bge.is_PM.is_PM:
                 "wght-fact-start Формула 4 Определение фактического остатка на начало периода is-calc = true" skip
                 "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
                 string(tt-place.start-rvs-fact-qnty) + " - " +  string (tt-place.start-chk-fact-qnty) +  " + " + string(tt-place.start-trn-fact-qnty) skip
-                string(tt-result.wght-fact-start) skip.
+                string(tt-result.wght-fact-start) skip
               .
             end.          
           end .
@@ -1622,7 +1640,7 @@ class ibs.th.bge.is_PM.is_PM:
                 "wght-fact-start Формула 4 Определение фактического остатка на начало периода is-calc = false" skip
                 "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
                 string(start_rvs-line.state-measure-cli-qnty) + " + (" +  string (start_rvs-line.state-add-qnty) +  " * " + string(start_rvs-line.state-density) + ")" skip
-                string(tt-result.wght-fact-start) skip.
+                string(tt-result.wght-fact-start) skip
               .
             end.                  
           end .
@@ -1741,7 +1759,7 @@ class ibs.th.bge.is_PM.is_PM:
               "wght-sale Формула 6 Расчет реализации" skip
               "Чек: " + string(buf_chk-gds.doc-code) + " " +  string(buf_chk-doc.chk-type) + " " + string(buf_chk-gds.b-code) skip
               string(buf_chk-gds.doc-qnty) + " * " +  string (v-density) skip
-              string(tt-result.wght-sale) skip.
+              string(tt-result.wght-sale) skip
             .
           end.                
         end .
@@ -1754,7 +1772,7 @@ class ibs.th.bge.is_PM.is_PM:
               "wght-sale Формула 6 Расчет реализации" skip
               "Чек: " + string(buf_chk-gds.doc-code) + " " +  string(buf_chk-doc.chk-type) + " " + string(buf_chk-gds.b-code) skip
               string(buf_chk-gds.doc-qnty) + " * " +  string (buf_chk-gds.density) skip
-              string(tt-result.wght-sale) skip.
+              string(tt-result.wght-sale) skip
             .
           end.                
         end .                             
@@ -2039,7 +2057,7 @@ class ibs.th.bge.is_PM.is_PM:
             "wght-doc-end Формула 9 Определение книжного остатка на конец периода" skip
             "Резервуар: " + string(tt-place.gds-code) + " " +  string(tt-place.pl-code) + " " +  string(tt-place.pl-name) skip
             string(tt-place.end-rvs-doc-qnty) + " - " +  string (tt-place.end-chk-doc-qnty) +  " + " + string(tt-place.end-trn-doc-qnty) skip
-            string(tt-result.wght-doc-end) skip.
+            string(tt-result.wght-doc-end) skip
           .
         end.               
       end .
@@ -2056,7 +2074,7 @@ class ibs.th.bge.is_PM.is_PM:
           "wght-other Формула 10 Расчет расхода на прочие нужды" skip
           "Товар: " + string(tt-result.gds-code) + " " +  string(tt-result.gds-name) skip
           string(tt-result.wght-doc-end) + " - " +  string (tt-result.wght-doc-start) +  " - " + string(tt-result.delivery) + " + " + string (tt-result.wght-sale) skip
-          string(tt-result.wght-other) skip .
+          string(tt-result.wght-other) skip
         .
       end.               
       tt-result.loss-own-needs = tt-result.wght-fact-end - tt-result.wght-doc-end .
