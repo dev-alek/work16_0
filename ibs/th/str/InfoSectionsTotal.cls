@@ -1396,14 +1396,15 @@ class ibs.th.str.InfoSectionsTotal:
 /*              f-size              = string (decimal (f-size))*/
 /*              f-size:screen-value = string (decimal (f-size))*/
 /*              no-error.                                      */
+            decimal(InfoSectionCurr:Diameter) no-error .
             if error-status:error then 
             do:
               assign
                 NeckType = 1
-                NeckWidth = decimal (entry (1,InfoSectionCurr:Diameter, "/")) 
-                NeckHeight = decimal (entry (2,InfoSectionCurr:Diameter, "/"))
+                NeckWidth = decimal (entry (1, replace(InfoSectionCurr:Diameter, "\", "/"), "/")) 
+                NeckHeight = decimal (entry (2, replace(InfoSectionCurr:Diameter, "\", "/"), "/"))
                 Dgor = 0
-                no-error.
+              no-error .
             end.
             else do: 
             assign 
