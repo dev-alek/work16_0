@@ -1360,6 +1360,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxTests:Name = "maskedTextBoxTests".
     this-object:maskedTextBoxTests:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxTests:TabIndex = 39.
+    this-object:maskedTextBoxTests:KeyPress:Subscribe(this-object:KeyPressMaskTBInt).
     /*  */
     /* label34 */
     /*  */
@@ -2515,7 +2516,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     
     def var v-dec as decimal no-undo.
     def var v-str as character no-undo.
-    v-str = "Не заполенено обязательное поле ".
+    v-str = "Не заполнено обязательное поле ".
     
     if infoSecsObj:FlagTrn
     then do:
