@@ -343,11 +343,20 @@ if available tt-minus-doc-line then do:
             varneed-rsrv-parts = varneed-rsrv-line.
         end.
         /*сначала резервируем отрицательную партию*/
+        release ub.pl-gds no-error .
+        integer(tt-minus-parts.part-code) no-error .
+        if not error-status:error
+        then do :
+          find first ub.pl-gds no-lock where ub.pl-gds.pl-code = integer(tt-minus-parts.part-code)
+                                         and ub.pl-gds.gds-code = bf_goods.gds-code
+                                         no-error .
+        end .
         run trg/rsrv-dtl.p ( parmainmenu-handle,
                       {&rsrv-dtl_action_reserv}
                 + "," + {&rsrv-dtl_rsrv-single-part}
                 + "," + {&rsrv-dtl_rsrv-in-code}   + "=" + str-encode(tt-minus-parts.in-code,   "", ",=":u)
                 + "," + {&rsrv-dtl_rsrv-part-code} + "=" + str-encode(tt-minus-parts.part-code, "", ",=":u)
+                + (if available ub.pl-gds then ("," + {&rsrv-dtl_pl-code} + "=" + str-encode(tt-minus-parts.part-code, "", ",=":u)) else "")
                 ,
                 buffer bf_gds-dtl,
                 input-output varneed-rsrv-parts,
@@ -379,13 +388,26 @@ if available tt-minus-doc-line then do:
             end.
             assign
               varneed-rsrv-parts-in-mem   = varneed-rsrv-parts-in.
+            
+            release ub.pl-gds no-error .  
+            integer(tt-in-parts.part-code) no-error .
+            if not error-status:error
+            then do :
+              find first ub.pl-gds no-lock where ub.pl-gds.pl-code = integer(tt-in-parts.part-code)
+                                             and ub.pl-gds.gds-code = bf_goods.gds-code
+                                             no-error .
+            end .
             run trg/rsrv-dtl.p ( parmainmenu-handle,
                            {&rsrv-dtl_action_reserv}
                 + "," + {&rsrv-dtl_rsrv-single-part}
                 + "," + {&rsrv-dtl_rsrv-in-code}   + "=" + str-encode(tt-in-parts.in-code,   "":u, ",=":u)
                 + "," + {&rsrv-dtl_rsrv-part-code} + "=" + str-encode(tt-in-parts.part-code, "":u, ",=":u)
-                , buffer bf_gds-dtl, input-output varneed-rsrv-parts-in,
-                input-output bf_doc-line.price-base, input-output bf_doc-line.price-rubl,-1, "") no-error.
+                + (if available ub.pl-gds then ("," + {&rsrv-dtl_pl-code} + "=" + str-encode(tt-in-parts.part-code, "", ",=":u)) else "")
+                , buffer bf_gds-dtl,
+                input-output varneed-rsrv-parts-in,
+                input-output bf_doc-line.price-base,
+                input-output bf_doc-line.price-rubl,
+                -1, "") no-error.
             if error-status:error then do:
               undo, return error substitute ("ќшибка при резервировании свободной зоны &1", return-value ).
             end.
@@ -436,16 +458,30 @@ if available tt-minus-doc-line then do:
           bf_doc-line.doc-density  = bf-in_doc-line.fact-density
           bf_doc-line.fact-density = bf-in_doc-line.fact-density
         .
-        create bf_inv-line.
-        assign
-          bf_inv-line.doc-code        = bf_doc-line.doc-code
-          bf_inv-line.artic           = bf_doc-line.artic
-          bf_inv-line.prod-type       = bf_doc-line.prod-type
-          bf_inv-line.prod-code       = bf_doc-line.prod-code
-          bf_inv-line.wast-cli-qnty   = 0
-          bf_inv-line.after-cli-qnty  = bf-in_inv-line.after-cli-qnty
-          bf_inv-line.before-cli-qnty = bf-in_inv-line.before-cli-qnty
-        .
+        find first bf_inv-line exclusive-lock where bf_inv-line.doc-code        = bf_doc-line.doc-code 
+                                                and bf_inv-line.artic           = bf_doc-line.artic    
+                                                and bf_inv-line.prod-type       = bf_doc-line.prod-type
+                                                and bf_inv-line.prod-code       = bf_doc-line.prod-code
+                                                no-error .
+        if not available bf_inv-line
+        then do :                                       
+          create bf_inv-line.
+          assign
+            bf_inv-line.doc-code        = bf_doc-line.doc-code
+            bf_inv-line.artic           = bf_doc-line.artic
+            bf_inv-line.prod-type       = bf_doc-line.prod-type
+            bf_inv-line.prod-code       = bf_doc-line.prod-code
+            bf_inv-line.wast-cli-qnty   = 0
+            bf_inv-line.after-cli-qnty  = bf-in_inv-line.after-cli-qnty
+            bf_inv-line.before-cli-qnty = bf-in_inv-line.before-cli-qnty
+          .
+        end .
+        else do :
+          assign
+            bf_inv-line.after-cli-qnty  = bf_inv-line.after-cli-qnty + bf-in_inv-line.after-cli-qnty
+            bf_inv-line.before-cli-qnty =  bf_inv-line.before-cli-qnty + bf-in_inv-line.before-cli-qnty
+          .
+        end .
       end.
       /*«аполним дополнительные суммы излишек и недостач по парти€м*/
       create bf-expp_doc-line-sum.
