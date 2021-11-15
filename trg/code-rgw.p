@@ -76,7 +76,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   .
 
   if new ub.code-range
-    and g#db-num <> 0
+    and g#db-num <> 0 
+    and ub.code-range.range-type <> {&gbl-ca-code}
     and g#news   <> true
   then do:
     message

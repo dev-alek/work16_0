@@ -476,7 +476,7 @@ DO:
   if mode-erprn 
      and can-do("{&bef-gbl-bc-code},{&bef-gbl-fm-code},{&bef-gbl-pn-code},{&bef-gbl-fd-code},{&bef-gbl-ct-code},{&bef-gbl-dr-code},{&bef-loc-sc-code},{&bef-loc-ss-code},{&bef-loc-pg-code},{&bef-gbl-ca-code}",sel-type-code-range)
   then do:
-     if sel-type-code-range = {&gbl-bc-code} then 
+     if sel-type-code-range = {&gbl-ca-code} then 
      enable 
      b-active
      b-gen-free

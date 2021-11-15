@@ -368,7 +368,7 @@ procedure new-bcod-gen-code-range :
 
     find first buf_sys-ctrl no-lock .
 
-    if buf_sys-ctrl.db-num <> 0 then do:
+    if buf_sys-ctrl.db-num <> 0 and type-code <> {&gbl-ca-code} then do:
       undo, return error substitute("&1 &2 &3&4Диапазоны кодов можно создавать только в ГБД&4База данных &5"
                                     ,vss-workfile
                                     ,vss-revision
