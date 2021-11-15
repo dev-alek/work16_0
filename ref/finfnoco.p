@@ -600,12 +600,28 @@ do:
   if buf_payer.obj-type = {&cmp} then 
   do:
     find first buf_payer-firm no-lock where
-      buf_payer-firm.firm-code = buf_payer.obj-code.
+      buf_payer-firm.firm-code = buf_payer.obj-code no-error.
+    if not avail buf_payer-firm then do:
+      undo, return error substitute("&1 &2 &3&4 Не найдена запись с кодом &5 в справочнике организаций"
+                                    ,vss-workfile
+                                    ,vss-revision
+                                    ,vss-description
+                                    ,{&new-line}
+                                    ,string(buf_payer.obj-code)).
+    end.
   end.
   else 
   do:
     find first buf_payer-person no-lock where
-      buf_payer-person.psn-code = buf_payer.obj-code.
+      buf_payer-person.psn-code = buf_payer.obj-code no-error.
+    if not avail buf_payer-person then do:
+      undo, return error substitute("&1 &2 &3&4 Не найдена запись с кодом &5 в справочнике физических лиц"
+                                    ,vss-workfile
+                                    ,vss-revision
+                                    ,vss-description
+                                    ,{&new-line}
+                                    ,string(buf_payer.obj-code)).
+    end.
   end.
 end.
 if (p-mode = {&add-def}
@@ -639,12 +655,28 @@ do:
   if buf_receiver.obj-type = {&cmp} then 
   do:
     find first buf_receiver-firm no-lock where
-      buf_receiver-firm.firm-code = buf_receiver.obj-code.
+      buf_receiver-firm.firm-code = buf_receiver.obj-code no-error. 
+    if not avail buf_receiver-firm then do:
+      undo, return error substitute("&1 &2 &3&4 Не найдена запись с кодом &5 в справочнике организаций"
+                                    ,vss-workfile
+                                    ,vss-revision
+                                    ,vss-description
+                                    ,{&new-line}
+                                    ,string(buf_receiver.obj-code)).
+    end.
   end.
   else 
   do:
     find first buf_receiver-person no-lock where
       buf_receiver-person.psn-code = buf_receiver.obj-code.
+    if not avail buf_receiver-person then do:
+      undo, return error substitute("&1 &2 &3&4 Не найдена запись с кодом &5 в справочнике физических лиц"
+                                    ,vss-workfile
+                                    ,vss-revision
+                                    ,vss-description
+                                    ,{&new-line}
+                                    ,string(buf_receiver.obj-code)).
+    end.
   end.
 
 end.

@@ -50,7 +50,7 @@ do
 on error undo, return error return-value
 :
 
-  find first buf_db where buf_db.db-num = g#db-num.
+  find first buf_db where buf_db.db-num = g#db-num no-lock.
   find prev_esys-pck-sent no-lock
     where prev_esys-pck-sent.esys-id  = p-esys-id
       and prev_esys-pck-sent.db-num   = p-db-num

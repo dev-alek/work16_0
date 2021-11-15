@@ -54,6 +54,7 @@ define variable vss-description as character no-undo init "Генерация переоценки 
 { str/getctxtp.i def }
 { gbl/getcntxt.i def }
 { str/lvldsc.i       }
+{ cmp/trg-def.i      }
 
 define variable line-mode    as character no-undo . /* проверить выше */
 define variable line-rec     as recid     no-undo . /* проверить выше */
@@ -163,6 +164,7 @@ define variable p-type-rmethod        as logical   no-undo .
 { str/alt-calc.i ver-pr-equ-dq }
 define variable v1-b-code as integer   no-undo .
 define variable new-rec as recid no-undo .
+define variable v-msg as character no-undo .
 define buffer n1_price-list for ub.price-list  .
 
 /*-----------------------------------------------------------------------------------------------------------------------*/
@@ -202,13 +204,19 @@ on error undo, return error return-value
         ,input  ub.trn-doc.obj-type
         ,input  ub.trn-doc.obj-code
       ) no-error .
-          if error-status :error then message
-            vss-workfile vss-revision vss-description skip
-            error-status :get-message(1) skip
-            return-value skip
-            "chec-par"
-            view-as alert-box error
-          .
+          if error-status :error then do:
+              v-msg = vss-workfile + " " + vss-revision  + " " + vss-description + "~n" +
+                      error-status :get-message(1) + "~n" +
+                      return-value + "~n" +
+                      "chec-par"
+                      .
+              if not g#news and
+                 not g#auto and
+                 not g#esys
+              then
+                 message v-msg view-as alert-box error.
+
+          end.
     { gbl/partmrgn.i
         parparentproc
         ub.trn-doc.obj-type
@@ -366,16 +374,19 @@ if not ( par-pr-parex = "yes" and
 
         if v-cntxp-no-eq /* запрещен приход при отсутствии цен */ and
           gp-price-sale = ? then do:
+          v-msg = "Артикул: " + ub.goods.artic + "~n" +
+                  "Производитель: " + ub.goods.prod-type + " " + string(ub.goods.prod-code) + "~n" +
+                  ub.goods.gds-name + "~n" +
+                  "Продажная цена отсутствует." + "~n" + "~n" +
+                  "Для " + v-cntxt-obj-type + " " + string(v-cntxt-obj-code) + " запрещено закрывать такой приход." + "~n" +
+                  "Сделайте переоценку по этой накладной.".
+          if not g#news and
+             not g#auto and
+             not g#esys
+          then
+             message v-msg view-as alert-box error.
 
-          message
-            "Артикул:" ub.goods.artic skip
-            "Производитель:" ub.goods.prod-type ub.goods.prod-code skip
-            ub.goods.gds-name skip
-            "Продажная цена отсутствует." skip (2)
-            "Для" v-cntxt-obj-type v-cntxt-obj-code "запрещено закрывать такой приход."
-            "Сделайте переоценку по этой накладной."
-            view-as alert-box error.
-          undo cre-pr, return error.
+          undo cre-pr, return error v-msg.
         end.
         find ub.prt-obj where
             ub.prt-obj.obj-type  = ub.gds-dtl.obj-type and
@@ -397,27 +408,33 @@ if not ( par-pr-parex = "yes" and
           /* если по товару есть остаток или уже установлена цена, переоценивать нельзя */
           if v-cntxp-price-calc then do:
             if gp-price-sale <> ? then do:
-              message
-                "Артикул:" ub.goods.artic skip
-                "Производитель:" ub.goods.prod-type ub.goods.prod-code skip
-                ub.goods.gds-name skip
-                "Приходная цена отличается от продажной." skip (2)
-                "Для" v-cntxt-obj-type v-cntxt-obj-code "запрещено закрывать такой приход."
-                "Сделайте переоценку по этой накладной."
-                view-as alert-box error.
+              v-msg = "Артикул: " + ub.goods.artic + "~n" +
+                      "Производитель: " + ub.goods.prod-type + " " + string(ub.goods.prod-code) + "~n" +
+                      ub.goods.gds-name + "~n" +
+                      "Приходная цена отличается от продажной." + "~n" + "~n" +
+                      "Для " + v-cntxt-obj-type + " " + string(v-cntxt-obj-code) + " запрещено закрывать такой приход." + "~n" +
+                      "Сделайте переоценку по этой накладной.".
+              if not g#news and
+                 not g#auto and
+                 not g#esys
+              then
+                 message v-msg view-as alert-box error.
             end.
             else do:
-              message
-                "Артикул:" ub.goods.artic skip
-                "Производитель:" ub.goods.prod-type ub.goods.prod-code skip
-                ub.goods.gds-name skip
-                "Продажная цена отсутствует, но остаток ненулевой." skip (2)
-                "Для" v-cntxt-obj-type v-cntxt-obj-code "запрещено закрывать приход,"
-                "если приходные цены отличаются от продажных." skip
-                "Сделайте переоценку по этой накладной."
-                view-as alert-box error.
+              v-msg = "Артикул: " + ub.goods.artic + "~n" +
+                      "Производитель: " + ub.goods.prod-type + " " + string(ub.goods.prod-code) + "~n" +
+                      ub.goods.gds-name + "~n" +
+                      "Продажная цена отсутствует, но остаток ненулевой." + "~n" + "~n" +
+                      "Для " + v-cntxt-obj-type + " " + string(v-cntxt-obj-code) + " запрещено закрывать приход, " +
+                      "если приходные цены отличаются от продажных." + "~n" +
+                      "Сделайте переоценку по этой накладной.".
+              if not g#news and
+                 not g#auto and
+                 not g#esys
+              then
+                 message v-msg view-as alert-box error.
             end.
-            undo cre-pr, return error.
+            undo cre-pr, return error v-msg.
           end.
           /* переоценку делать по этому товару нельзя - идем дальше */
           next . /* --->>>--- */
@@ -470,10 +487,15 @@ if not ( par-pr-parex = "yes" and
            no-error.
           l-d-n = ub.price-doc.doc-num.
         if error-status:error then do:
-          message "Ошибка при генерации номера документа" skip
-          return-value
-          view-as alert-box error.
-          undo cre-pr, return error.
+          v-msg = "Ошибка при генерации номера документа" + "~n" +
+                  return-value.
+          if not g#news and
+             not g#auto and
+             not g#esys
+          then
+             message v-msg view-as alert-box error.         
+
+          undo cre-pr, return error v-msg.
         end.
         assign
           ub.price-doc.plt-id     = v-plt-id
@@ -789,11 +811,17 @@ if not ( par-pr-parex = "yes" and
       /* проверка параметра pr-equ-dq */
       run ver-pr-equ-dq  ( input ub.price-doc.doc-num, input 1, input "" ) no-error .
       if error-status :error then do:
-            message  vss-workfile vss-revision vss-description skip
-                "Ошибка при удалении строки переоценки " skip
-                ub.price-doc.doc-num  skip
-                error-status :get-message(1) view-as alert-box information .
-                undo cre-pr, return error .
+            v-msg = vss-workfile + " " + vss-revision  + " " + vss-description + "~n" +
+                    "Ошибка при удалении строки переоценки " + "~n" +
+                    ub.price-doc.doc-num  + "~n" +
+                    error-status :get-message(1).
+            if not g#news and
+               not g#auto and
+               not g#esys
+            then
+               message v-msg view-as alert-box information.
+
+            undo cre-pr, return error v-msg.
       end.
 
       /* может его и не быть, если нечего было переоценивать */
@@ -840,14 +868,18 @@ if not ( par-pr-parex = "yes" and
                              , input true
                              , input false  ) no-error .
           if error-status :error then do:
-              message
-                vss-workfile vss-revision vss-description skip
-                error-status :get-message(1) skip
-                return-value skip
-                "Расчет и закрытие переоценки до АКТ"
-                view-as alert-box error
-              .
-              undo cre-pr, return error .
+              v-msg = vss-workfile + " " + vss-revision  + " " + vss-description + "~n" +
+                      error-status :get-message(1) + "~n" +
+                      return-value + "~n" +
+                      "Расчет и закрытие переоценки до АКТ"
+                      .
+              if not g#news and
+                 not g#auto and
+                 not g#esys
+              then
+                 message v-msg view-as alert-box error.
+
+              undo cre-pr, return error v-msg.
           end.
         end.
       end case .
@@ -856,10 +888,13 @@ if not ( par-pr-parex = "yes" and
       tt =  recid (price-doc) .
 
       if not can-find (first ub.price-list where ub.price-list.doc-num = l-d-n no-lock ) then do:
-            message
-          "Обратите ВНИМАНИЕ !!! В документе  переоценки " l-d-n " нет ни одной строки. " skip
-          "документ удаляется " caps({&g___new})
-            view-as alert-box .
+         v-msg = "Обратите ВНИМАНИЕ !!! В документе  переоценки " + l-d-n + " нет ни одной строки. " + "~n" +
+                 "документ удаляется " + caps({&g___new}).
+         if not g#news and
+            not g#auto and
+            not g#esys
+         then
+            message v-msg view-as alert-box error.
 
           undo cre-pr, return.
       end.

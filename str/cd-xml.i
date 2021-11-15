@@ -73,7 +73,7 @@ if p-write-header then do:
   run bgelib-tag-put( 3, "ExportDate", string(today, "99.99.9999":U), 1).
   run bgelib-tag-put( 3, "ExportTime", string(time, "hh:mm:ss":U), 1).
   run bgelib-tag-put( 3, "objList",             p-obj-list                    , 1).
-  find first buf_db where buf_db.db-num = g#db-num.
+  find first buf_db where buf_db.db-num = g#db-num no-lock.
   run bgelib-tag-put( 3, "dbEncKey",            buf_db.db-key-enc, 1).
   run bgelib-tag-close( 2, "Header" ).
 end.
