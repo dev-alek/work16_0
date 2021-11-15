@@ -262,7 +262,8 @@ class ibs.th.bge.is_PM.is_PM:
   method private void stage1 () :
     define buffer buf_place  for ub.place .
     define buffer buf_place-attr  for ub.place-attr .
-    define buffer buf_pl-gds for ub.pl-gds .
+    define buffer buf_c-pl-gds for ub.c-pl-gds .
+    define buffer buf2_c-pl-gds for ub.c-pl-gds .
     define buffer buf_goods for ub.goods .
     define buffer buf_goods-attr for ub.goods-attr .
     
@@ -271,81 +272,6 @@ class ibs.th.bge.is_PM.is_PM:
     empty temp-table tt-result .
   
     run write-to-log in p-parent-handle (" START PRESTAGE UTC " + utc-time() ) .
-    /* START Определяем список топлив и список резервуаров */
-    place_ :
-    for each buf_place  no-lock
-      where buf_place.obj-type = obj-type
-        and buf_place.obj-code = obj-code
-        and buf_place.status_  = "",
-    each buf_pl-gds no-lock
-      where buf_pl-gds.obj-type = buf_place.obj-type
-        and buf_pl-gds.obj-code = buf_place.obj-code
-        and buf_pl-gds.pl-code  = buf_place.pl-code
-    on error undo, return error return-value
-    :
-      
-      for first buf_place-attr no-lock where buf_place-attr.obj-type = buf_place.obj-type
-                                         and buf_place-attr.obj-code = buf_place.obj-code
-                                         and buf_place-attr.pl-code  = buf_place.pl-code
-                                         and buf_place-attr.attr-code = "place-virtual"
-                                         :
-        if lookup(buf_place-attr.attr-value, 'true,yes':u) > 0 then next place_ .                                   
-      end .
-        
-      for first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_pl-gds.gds-code
-                                         and buf_goods-attr.attr-code = {&attr-ptrl-without-rvs}
-                                         :
-        if lookup(buf_goods-attr.attr-value, 'true,yes':u) > 0 then next place_ .                                   
-      end .
-
-      
-      find first tt-gds where tt-gds.gds-code = buf_pl-gds.gds-code no-error .
-      if not available tt-gds
-      then do :
-        create tt-gds .
-        assign
-          tt-gds.gds-code = buf_pl-gds.gds-code
-        .
-      end .
-      
-      find first tt-result where tt-result.gds-code = buf_pl-gds.gds-code no-error .
-      if not available tt-result
-      then do :
-        create tt-result .
-        assign
-          tt-result.gds-code = buf_pl-gds.gds-code
-        .
-      end .
-      
-      find first tt-place where tt-place.pl-code  = buf_place.pl-code
-                            and tt-place.gds-code = buf_pl-gds.gds-code
-                            no-error .
-      if not available tt-place
-      then do :
-        create tt-place .
-        assign
-          tt-place.pl-code  = buf_place.pl-code
-          tt-place.pl-name  = buf_place.pl-name
-          tt-place.gds-code = buf_pl-gds.gds-code
-          tt-place.is-meas  = buf_place.is-meas
-          tt-place.is-calc  = no
-        .
-        for first buf_place-attr no-lock where buf_place-attr.obj-type = buf_place.obj-type
-                                           and buf_place-attr.obj-code = buf_place.obj-code
-                                           and buf_place-attr.pl-code  = buf_place.pl-code
-                                           and buf_place-attr.attr-code = "place-rvd-lvl"
-                                           :
-          if lookup(buf_place-attr.attr-value, 'true,yes':u) > 0 then tt-place.rvd-level = yes .                                   
-        end .
-      end .
-    end . /* for each bf_place, each bf_pl-gds */
-    /* END Определяем список топлив и список резервуаров */
-    
-    for each tt-gds,
-    first buf_goods no-lock where buf_goods.gds-code = tt-gds.gds-code
-    :
-      run write-to-log in p-parent-handle (buf_goods.artic + ": " + buf_goods.gds-name) .
-    end .
     
     /* START Определение периода и приведение к московскому времени */
     is-full = false .
@@ -444,10 +370,151 @@ class ibs.th.bge.is_PM.is_PM:
         time-end   = time-end + 86400 . 
       end .
     end .
+    /* END Определение периода */
+    
+    /* START Определяем список топлив и список резервуаров */
+    place_ :
+    for each buf_place  no-lock
+      where buf_place.obj-type = obj-type
+        and buf_place.obj-code = obj-code
+        and buf_place.status_  = ""
+    on error undo, return error return-value
+    :
+      
+      for first buf_place-attr no-lock where buf_place-attr.obj-type = buf_place.obj-type
+                                         and buf_place-attr.obj-code = buf_place.obj-code
+                                         and buf_place-attr.pl-code  = buf_place.pl-code
+                                         and buf_place-attr.attr-code = "place-virtual"
+                                         :
+        if lookup(buf_place-attr.attr-value, 'true,yes':u) > 0 then next place_ .                                   
+      end .
+      
+      c-pl-gds_ :
+      for each buf_c-pl-gds no-lock
+          where buf_c-pl-gds.obj-type = buf_place.obj-type
+            and buf_c-pl-gds.obj-code = buf_place.obj-code
+            and buf_c-pl-gds.pl-code  = buf_place.pl-code
+            and (buf_c-pl-gds.corr-date < date-end
+             or (buf_c-pl-gds.corr-date = date-end and buf_c-pl-gds.corr-time <= time-end) )
+             by buf_c-pl-gds.chip-num desc
+      on error undo, return error return-value
+      :
+        for first buf2_c-pl-gds no-lock where buf2_c-pl-gds.obj-type = buf_c-pl-gds.obj-type
+                                          and buf2_c-pl-gds.obj-code = buf_c-pl-gds.obj-code
+                                          and buf2_c-pl-gds.pl-code  = buf_c-pl-gds.pl-code
+                                          and buf2_c-pl-gds.gds-code <> buf_c-pl-gds.gds-code
+                                          and buf2_c-pl-gds.corr-date = buf_c-pl-gds.corr-date
+                                          and buf2_c-pl-gds.corr-date >= date-start
+                                          :
+          for first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf2_c-pl-gds.gds-code
+                                             and buf_goods-attr.attr-code = {&attr-ptrl-without-rvs}
+                                             :
+            if lookup(buf_goods-attr.attr-value, 'true,yes':u) > 0 then next c-pl-gds_ .                                   
+          end .
+    
+          
+          find first tt-gds where tt-gds.gds-code = buf2_c-pl-gds.gds-code no-error .
+          if not available tt-gds
+          then do :
+            create tt-gds .
+            assign
+              tt-gds.gds-code = buf2_c-pl-gds.gds-code
+            .
+          end .
+          
+          find first tt-result where tt-result.gds-code = buf2_c-pl-gds.gds-code no-error .
+          if not available tt-result
+          then do :
+            create tt-result .
+            assign
+              tt-result.gds-code = buf2_c-pl-gds.gds-code
+            .
+          end .
+          
+          find first tt-place where tt-place.pl-code  = buf_place.pl-code
+                                and tt-place.gds-code = buf2_c-pl-gds.gds-code
+                                no-error .
+          if not available tt-place
+          then do :
+            create tt-place .
+            assign
+              tt-place.pl-code  = buf_place.pl-code
+              tt-place.pl-name  = buf_place.pl-name
+              tt-place.gds-code = buf2_c-pl-gds.gds-code
+              tt-place.is-meas  = buf_place.is-meas
+              tt-place.is-calc  = no
+            .
+            for first buf_place-attr no-lock where buf_place-attr.obj-type = buf_place.obj-type
+                                               and buf_place-attr.obj-code = buf_place.obj-code
+                                               and buf_place-attr.pl-code  = buf_place.pl-code
+                                               and buf_place-attr.attr-code = "place-rvd-lvl"
+                                               :
+              if lookup(buf_place-attr.attr-value, 'true,yes':u) > 0 then tt-place.rvd-level = yes .                                   
+            end .
+          end .                                  
+        end .
+        for first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_c-pl-gds.gds-code
+                                           and buf_goods-attr.attr-code = {&attr-ptrl-without-rvs}
+                                           :
+          if lookup(buf_goods-attr.attr-value, 'true,yes':u) > 0 then next c-pl-gds_ .                                   
+        end .
+  
+        
+        find first tt-gds where tt-gds.gds-code = buf_c-pl-gds.gds-code no-error .
+        if not available tt-gds
+        then do :
+          create tt-gds .
+          assign
+            tt-gds.gds-code = buf_c-pl-gds.gds-code
+          .
+        end .
+        
+        find first tt-result where tt-result.gds-code = buf_c-pl-gds.gds-code no-error .
+        if not available tt-result
+        then do :
+          create tt-result .
+          assign
+            tt-result.gds-code = buf_c-pl-gds.gds-code
+          .
+        end .
+        
+        find first tt-place where tt-place.pl-code  = buf_place.pl-code
+                              and tt-place.gds-code = buf_c-pl-gds.gds-code
+                              no-error .
+        if not available tt-place
+        then do :
+          create tt-place .
+          assign
+            tt-place.pl-code  = buf_place.pl-code
+            tt-place.pl-name  = buf_place.pl-name
+            tt-place.gds-code = buf_c-pl-gds.gds-code
+            tt-place.is-meas  = buf_place.is-meas
+            tt-place.is-calc  = no
+          .
+          for first buf_place-attr no-lock where buf_place-attr.obj-type = buf_place.obj-type
+                                             and buf_place-attr.obj-code = buf_place.obj-code
+                                             and buf_place-attr.pl-code  = buf_place.pl-code
+                                             and buf_place-attr.attr-code = "place-rvd-lvl"
+                                             :
+            if lookup(buf_place-attr.attr-value, 'true,yes':u) > 0 then tt-place.rvd-level = yes .                                   
+          end .
+        end .
+        
+        leave c-pl-gds_ .
+      end . /* for each bf_c-pl-gds */
+    end . /* for each bf_place */
+    /* END Определяем список топлив и список резервуаров */
+    
+    for each tt-gds,
+    first buf_goods no-lock where buf_goods.gds-code = tt-gds.gds-code
+    :
+      run write-to-log in p-parent-handle (buf_goods.artic + ": " + buf_goods.gds-name) .
+    end .
+    
     run write-to-log in p-parent-handle (if is-full-backdate then "Суточная за прошедшие сутки" else  (if is-full then "Суточная" else "Промежуточная")) .
     run write-to-log in p-parent-handle (string(date-start) + " " + string(time-start, "HH:MM:SS") + " - " + string(date-end) + " " + string(time-end, "HH:MM:SS")) .
     run write-to-log in p-parent-handle (string(vMoscowDate) + " " + string(0, "HH:MM:SS") + " - " + string(vMoscowDate) + " " + string(vMoscowTimeEnd, "HH:MM:SS")) .
-    /* END Определение периода */
+    
     run write-to-log in p-parent-handle (" END PRESTAGE UTC " + utc-time() ) .
     
   end method . /* stage1 */
@@ -1220,6 +1287,12 @@ class ibs.th.bge.is_PM.is_PM:
                                              else "; ") + 
                                             string(tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) 
                                             ) .
+    end .
+    
+    for each tt-result where tt-result.wght-fact-end = 0
+                          or tt-result.wght-fact-end = ?
+                          :
+      delete tt-result .    
     end .
     
     for each tt-result,
