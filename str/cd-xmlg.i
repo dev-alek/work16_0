@@ -789,7 +789,7 @@ then do:
       assign
       v-db-key-enc = p-tag-value
       .
-      find first buf_db where buf_db.db-num = g#db-num.
+      find first buf_db where buf_db.db-num = g#db-num no-lock.
       if buf_db.db-key-enc = v-db-key-enc then do:
         return error
         substitute("Кодир. значение ключа БД-приемника &1 совпадает с кодир. значением ключа БД-источника &2&3- импорт данных со своей БД на свою БД невозможен"
