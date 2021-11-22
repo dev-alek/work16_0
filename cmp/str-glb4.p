@@ -1062,7 +1062,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 { cmp/cr-prep.i 1 attr-int-point              int-point             " " int-point            }
 
 /* верси€ code.xml  */
-{ cmp/cr-prep.i 1 attr-ver-code               ver-code              " " ver-code            }
+{ cmp/cr-prep.i 1 attr-ver-code               ver-code              " " ver-code             }
+
+/* верси€ методанных  */
+{ cmp/cr-prep.i 1 attr-ver-met                ver-met               " " ver-met              }
 
 /* Ќомер MessageID дл€ видеонаблюдени€ */
 { cmp/cr-prep.i 1 attr-asiip          asiip         " " asiip        }

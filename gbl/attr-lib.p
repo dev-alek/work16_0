@@ -13487,8 +13487,8 @@ end procedure.
 /* Наличие расписания обмена с ИС Диадок для БД */
 &scop type-attr-schedule-diadoc {&type-log}
 &scop format-attr-schedule-diadoc "+/-"
-&scop label-attr-schedule-diadoc "Расписание обмена с ИС МОТП для БД"
-&scop tooltip-attr-schedule-diadoc "Составлено ли расписание обмена с ИС МОТП для базы данных"
+&scop label-attr-schedule-diadoc "Расписание обмена с Диадок для БД"
+&scop tooltip-attr-schedule-diadoc "Составлено ли расписание обмена с Диадок для базы данных"
 &scop user-can-edit-attr-schedule-diadoc false
 &scop output-display-attr-schedule-diadoc true
 &scop other-attr-schedule-diadoc '':u
@@ -13670,6 +13670,19 @@ end procedure.
 &scop manual-edit-attr-ver-code 0
 &scop batch-edit-attr-ver-code 0
 
+ /* Версия метаданных */
+&scop type-attr-ver-met {&type-int}
+&scop format-attr-ver-met "999999999"
+&scop label-attr-ver-met "Версия метаданных"
+&scop tooltip-attr-ver-met "Версия метаданных"
+&scop user-can-edit-attr-ver-met false
+&scop output-display-attr-ver-met true
+&scop other-attr-ver-met '':u
+&scop news-attr-ver-met no
+&scop manual-edit-attr-ver-met 0
+&scop batch-edit-attr-ver-met 0
+
+
 /* Исторический код объекта */
 &scop type-attr-hist-code {&type-char}
 &scop format-attr-hist-code "x(50)"
@@ -13792,6 +13805,8 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-diadoc
       {&attr-temp-full-code}
+      &scop attr-code attr-ver-met
+      {&attr-temp-full-code}
       &scop attr-code attr-schedule-isPM
       {&attr-temp-full-code}
       &scop attr-code attr-schedule-arc
@@ -13874,6 +13889,8 @@ procedure db-attr-tooltip :
       &scop attr-code attr-schedule-motp
       {&attr-temp-code}
       &scop attr-code attr-schedule-diadoc
+      {&attr-temp-code}
+      &scop attr-code attr-ver-met
       {&attr-temp-code}
       &scop attr-code attr-schedule-isPM
       {&attr-temp-code}
@@ -14146,6 +14163,8 @@ procedure db-attr-news :
       &scop attr-code attr-schedule-motp
       {&attr-news-code}
       &scop attr-code attr-schedule-diadoc
+      {&attr-news-code}
+      &scop attr-code attr-ver-met
       {&attr-news-code}
       &scop attr-code attr-schedule-isPM
       {&attr-news-code}
