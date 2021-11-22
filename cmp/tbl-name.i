@@ -147,6 +147,9 @@ Creation date: 04/05/06
 &glob table_assortment-matrix-goods 'assortment-matrix-goods':U
 &glob table_assortment-matrix-goods-attr 'assortment-matrix-goods-attr':U
 &glob table_attr-prop 'attr-prop':U
+&glob table_auto-section 'auto-section':U
+&glob table_auto-section-attr 'auto-section-attr':U
+&glob table_auto-section-table 'auto-section-table':U
 &glob table_auto-tank 'auto-tank':U
 &glob table_auto-tank-attr 'auto-tank-attr':U
 &glob table_auto-tank-meas 'auto-tank-meas':U
@@ -176,6 +179,9 @@ Creation date: 04/05/06
 &glob table_c-alc-type-gds 'c-alc-type-gds':U
 &glob table_c-assortment-matrix 'c-assortment-matrix':U
 &glob table_c-assortment-matrix-goods 'c-assortment-matrix-goods':U
+&glob table_c-auto-section 'c-auto-section':U
+&glob table_c-auto-section-attr 'c-auto-section-attr':U
+&glob table_c-auto-section-table 'c-auto-section-table':U
 &glob table_c-auto-tank 'c-auto-tank':U
 &glob table_c-auto-tank-attr 'c-auto-tank-attr':U
 &glob table_c-auto-tank-meas-attr 'c-auto-tank-meas-attr':U
@@ -217,6 +223,7 @@ Creation date: 04/05/06
 &glob table_c-contract 'c-contract':U
 &glob table_c-contract-line 'c-contract-line':U
 &glob table_c-contract-specif 'c-contract-specif':U
+&glob table_c-contract-specif-attr 'c-contract-specif-attr':U
 &glob table_c-counter 'c-counter':U
 &glob table_c-country 'c-country':U
 &glob table_c-country-attr 'c-country-attr':U
@@ -351,7 +358,7 @@ Creation date: 04/05/06
 &glob table_c-nzl-hist 'c-nzl-hist':U
 &glob table_c-obj-grp-obj-price 'c-obj-grp-obj-price':U
 &glob table_c-OperServ 'c-OperServ':U
-&glob table_c-OperServAttr 'c-OperServAttr':U
+&glob table_c-operServAttr 'c-operServAttr':U
 &glob table_c-ord-doc 'c-ord-doc':U
 &glob table_c-ord-doc-attr 'c-ord-doc-attr':U
 &glob table_c-ord-dtl 'c-ord-dtl':U
@@ -461,6 +468,7 @@ Creation date: 04/05/06
 &glob table_c-shop 'c-shop':U
 &glob table_c-sht-hist 'c-sht-hist':U
 &glob table_c-sr-izmerenia 'c-sr-izmerenia':U
+&glob table_c-sr-izmerenia-attr 'c-sr-izmerenia-attr':U
 &glob table_c-staff 'c-staff':U
 &glob table_c-stop-list 'c-stop-list':U
 &glob table_c-stop-list-line 'c-stop-list-line':U
@@ -1151,6 +1159,7 @@ Creation date: 04/05/06
 &glob table_some-lk 'some-lk':U
 &glob table_some-lk-attr 'some-lk-attr':U
 &glob table_sr-izmerenia 'sr-izmerenia':U
+&glob table_sr-izmerenia-attr 'sr-izmerenia-attr':U
 &glob table_staff 'staff':U
 &glob table_staff-attr 'staff-attr':U
 &glob table_stk-line 'stk-line':U
@@ -1289,6 +1298,9 @@ Creation date: 04/05/06
 &glob table_wth-pobj-attr 'wth-pobj-attr':U
 &glob table_wth-ser 'wth-ser':U
 &glob table_wth-ser-attr 'wth-ser-attr':U
+&glob table_Xattr 'Xattr':U
+&glob table_xGroupObj 'xGroupObj':U
+&glob table_xstatus 'xstatus':U
 &glob table_xyz-analysis 'xyz-analysis':U
 &glob table_xyz-analysis-attr 'xyz-analysis-attr':U
 &glob table_xyz-analysis-cli 'xyz-analysis-cli':U

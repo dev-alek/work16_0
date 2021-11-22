@@ -30,7 +30,7 @@ define new shared temp-table dc-dis-card-mask-attr no-undo like ub.dis-card-mask
 { str/defc-txn.i "new shared" } /*не должен использоваться в load-rec.p*/
 { str/defc-txr.i "new shared" } /*не должен использоваться в load-rec.p*/
 { str/pdf-list.i pdf-list def "new shared" }
-
+{ str/defc-pay-list.i "new shared" } /*не должен использоваться в load-rec.p*/
 { str/defc-ext-classif.i "new shared" } /*не должен использоваться в load-rec.p*/
 
 procedure send-to-cash:
@@ -54,10 +54,10 @@ procedure send-to-cash:
     or can-find(first dc-dis-card-mask no-lock)
     or can-find(first stpl-list no-lock)
     or can-find(first pdf-list no-lock)
+    or can-find(first cash-pay-list no-lock)
     or can-find(first ext-classif-list no-lock)
     or can-find(first c-ext-classif-list no-lock)
     then do:
-       
       run str/diallog.w (
                          &if "{&imp2cd_parparentproc}" <> '' &then
                          input {&imp2cd_parparentproc}
@@ -177,6 +177,26 @@ on error undo, return error
     dc-list.emitent-host-code = p-emitent-host-code
     .
     release dc-list.
+  end.
+end.
+end procedure. /* fill-dc-list */
+
+procedure fill-cash-pay :
+define input parameter p-cdpay-code as integer no-undo .
+define input parameter p-curr-code  as integer no-undo .
+
+do
+on error undo, return error
+:
+  if not can-find( cash-pay-list where cash-pay-list.cdpay-code = p-cdpay-code
+                                   and cash-pay-list.curr-code  = p-curr-code )
+  then do:
+    create cash-pay-list.
+    assign
+       cash-pay-list.cdpay-code = p-cdpay-code
+       cash-pay-list.curr-code  = p-curr-code
+    .
+    release cash-pay-list.
   end.
 end.
 end procedure. /* fill-dc-list */

@@ -35,17 +35,17 @@ define variable vss-description as character no-undo init "процедура импорта пак
 { gbl/pck-attr.i } /* используется в imp-pck.p */
 { str/imp2cd.i   }
 { nws/imp-pck.i new }
-{ gbl/key-rec.i }
+{ gbl/key-rec.i  }
 { gbl/gate-clb.i }
-{ nws/lib-nws.i }
+{ nws/lib-nws.i  }
 { nws/imp-pck1.i }
 
 
 define stream imp-stream.
 
-define temp-table tt_pck-rcvd no-undo like ub.pck-rcvd.
+define temp-table tt_pck-rcvd      no-undo like ub.pck-rcvd .
 define temp-table tt_pck-rcvd-attr no-undo like ub.pck-rcvd-attr .
-define temp-table tt_pck-sent no-undo like ub.pck-sent .
+define temp-table tt_pck-sent      no-undo like ub.pck-sent .
 
 define variable v-sub-rec-cnt as integer   no-undo.
 define variable v-rec-cnt     as integer   no-undo.
@@ -72,7 +72,7 @@ end.
 
 main_block:
 do
-on error  undo, return error substitute("&1. error main_block. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
+on error  undo, return error substitute("&1. error main_block. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
 on endkey undo, return error substitute("&1. endkey main_block")
 on stop   undo, return error substitute("&1. stop main_block")
 :
@@ -104,6 +104,9 @@ on stop   undo, return error substitute("&1. stop main_block")
   for each stpl-list:
     delete stpl-list.
   end.
+  for each cash-pay-list:
+    delete cash-pay-list.
+  end.
    for each ext-classif-list:
       delete ext-classif-list.
    end.
@@ -133,7 +136,7 @@ on stop   undo, return error substitute("&1. stop main_block")
   if error-status:error then do: /* это не глобальная ошибка поэтому отката не будет */
     run write-to-log("Ошибка при отправке на кассу" + {&new-line}
                      + return-value
-                    ).
+                    ) no-error.
   end.
   assign
     g#news-source-db = -1
@@ -150,7 +153,7 @@ return .
 procedure local-imp-pck :
 
   do
-  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
+  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
   on stop   undo, return error substitute( "&1. stop", vss-workfile )
   on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   :
@@ -165,35 +168,36 @@ procedure local-imp-pck :
 
     define variable v-ver-num     as character no-undo .
 
-    define variable v-rec-full      as character no-undo.
-    define variable v-rec-name      as character no-undo.
-    define variable v-sub-rec-num   as integer   no-undo.
-    define variable v-curr-rowid    as rowid     no-undo .
-    define variable v-uniq-gate-rec as character no-undo .
-    define variable v-uniq-key-rt   as character no-undo .
-    define variable Ok              as logical   no-undo.
-    define variable pck-name-bad    as character no-undo.
-    define variable v-present       as logical   no-undo .
-    define variable v-ind           as integer   no-undo.
-    define variable v-qnty-skip     as integer   no-undo.
+    define variable v-rec-full       as character no-undo.
+    define variable v-rec-name       as character no-undo.
+    define variable v-sub-rec-num    as integer   no-undo.
+    define variable v-curr-rowid     as rowid     no-undo .
+    define variable v-uniq-gate-rec  as character no-undo .
+    define variable v-uniq-key-rt    as character no-undo .
+    define variable Ok               as logical   no-undo.
+    define variable pck-name-bad     as character no-undo.
+    define variable v-present        as logical   no-undo .
+    define variable v-ind            as integer   no-undo.
+    define variable v-qnty-skip      as integer   no-undo.
 
-    define variable v-today         as date      no-undo .
-    define variable v-time          as integer   no-undo .
+    define variable v-today          as date      no-undo .
+    define variable v-time           as integer   no-undo .
+
+    define variable v-prev-crc       as character no-undo .
+    define variable v-pos            as integer   no-undo .
+    define variable v-temp-str       as character no-undo .
+    define variable v-temp-all       as character extent 1000 no-undo .
 
     define variable v-beg-date      as character no-undo .
     define variable v-beg-time      as character no-undo .
     define variable v-type          as character no-undo .
     define variable v-deleted       as logical   no-undo .
 
-    define variable v-prev-crc      as character no-undo .
-    define variable v-pos           as integer   no-undo .
-    define variable v-temp-str      as character no-undo .
-    define variable v-temp-all      as character extent 1000 no-undo .
-
+    
     define variable v-pck-attr-exist as logical   no-undo .
 
-    define variable v-del-pck-num as integer   no-undo.
-    define variable v-del-cnt     as integer   no-undo.
+    define variable v-del-pck-num    as integer   no-undo.
+    define variable v-del-cnt        as integer   no-undo.
 
     define frame del-route
       v-del-pck-num   label "Пакет N" format ">>>>>>>>>9" skip
@@ -215,7 +219,7 @@ procedure local-imp-pck :
       where buf-dst_db.db-num = buf_sys-ctrl.db-num
     .
 
-    run write-to-log( substitute("Разбор пакета N &1 из БД N &2", p-pck-num, p-db-src ) ).
+    run write-to-log( substitute("Разбор пакета N &1 из БД N &2", p-pck-num, p-db-src ) ) no-error.
 
     view frame imp-pck.
 
