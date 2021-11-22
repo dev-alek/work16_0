@@ -41,6 +41,9 @@ class ibs.th.bge.1crn.subjects.good-grps inherits ibs.th.bge.1crn.subjects.asubj
   define property r-mat as integer no-undo 
     get. 
     private set.  
+  define property Prohibition-sale as integer no-undo 
+    get. 
+    private set.  
 
   define override property InitTag as character no-undo init "good-grp"
     get. 
@@ -82,6 +85,11 @@ class ibs.th.bge.1crn.subjects.good-grps inherits ibs.th.bge.1crn.subjects.asubj
           assign 
             r-mat = integer(inValue).
         end.
+      when "Prohibition-sale" then 
+        do:
+          assign 
+            Prohibition-sale = integer(inValue).
+        end.
     end case.
   end .
 
@@ -116,6 +124,7 @@ class ibs.th.bge.1crn.subjects.good-grps inherits ibs.th.bge.1crn.subjects.asubj
       /*      upper-code = ?*/
       rn-code = ?
       r-mat   = ?
+      Prohibition-sale = ?
       .
   end.
   
