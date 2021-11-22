@@ -27,11 +27,10 @@ class ibs.th.ref.ostcashbook inherits UserControl:
    define private variable dataGridView1 as System.Windows.Forms.DataGridView no-undo.
    define private variable ostraschDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
    define public  variable trgOst as ibs.th.ref.ostcashbook_trg no-undo. 
-   define variable mFLAG as logical no-undo.
+   define variable mFLAG as logical no-undo .
    
    constructor public ostcashbook (  ):
-      
-      
+
       super().
       //mtrgOst = new ibs.th.ref.ostcashbook_trg().
       InitializeComponent().
@@ -62,7 +61,7 @@ class ibs.th.ref.ostcashbook inherits UserControl:
 	@VisualDesigner.
 	method private void button1_Click( input sender as System.Object, input e as System.EventArgs ):
 		mFLAG = not mFLAG.
-		button1:text = if mFLAG then "Отметить все" else "Снять все".
+		button1:text = if not mFLAG then "Отметить все" else "Снять все".
 		fitog:text = string(trgOst:cangCashbookall(mFLAG)).
 		bindOst:RefreshAll().
 		return.
