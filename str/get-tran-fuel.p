@@ -262,25 +262,21 @@ procedure pGetLastTStamp:
    define variable v-last-z-count   as integer  no-undo .
    define variable v-last-chk-num   as integer  no-undo .
    
-   find first tran-fuel no-lock no-error.
-   if avail tran-fuel then do:
-      run get-last-check-params in this-procedure ( input g#db-num
-                                                   ,input p-obj-code
-                                                   ,input p-pos-type
-                                                   ,input p-cash-num
-                                                   ,output v-last-date
-                                                   ,output v-last-time
-                                                   ,output v-last-shift-num
-                                                   ,output v-last-z-count
-                                                   ,output v-last-chk-num
-                                                   ) no-error.
-      if v-last-date <> ? and v-last-time <> ? then
-         oTStamp = string( ( v-last-date - date( "01/01/1970" ) ) * 24 * 3600 + v-last-time - Timezone * 60 - 1 * 60 * 60, ">>>>>>>>>9" ). /* Дополнительно сдвинем на 1 час назад */
-      else
-         oTStamp = "0".
-    end.
-    else
-       oTStamp = "0".
+   run get-last-check-params in this-procedure ( input g#db-num
+                                                ,input p-obj-code
+                                                ,input p-pos-type
+                                                ,input p-cash-num
+                                                ,output v-last-date
+                                                ,output v-last-time
+                                                ,output v-last-shift-num
+                                                ,output v-last-z-count
+                                                ,output v-last-chk-num
+                                                ) no-error.
+   if v-last-date <> ? and v-last-time <> ? then
+      oTStamp = string( ( v-last-date - date( "01/01/1970" ) ) * 24 * 3600 + v-last-time - Timezone * 60 - 1 * 60 * 60, ">>>>>>>>>9" ). /* Дополнительно сдвинем на 1 час назад */
+   else
+      oTStamp = "0".
+
 end procedure.
 
 procedure SaxWriter:
