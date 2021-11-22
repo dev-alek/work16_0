@@ -133,6 +133,27 @@ DEFINE BUTTON r-sr-izm
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "r-sr-izm" 
      SIZE 3 BY .88.
+     
+DEFINE BUTTON r-sr-izm-dens 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "r-sr-izm-dens" 
+     SIZE 3 BY .88.
+     
+DEFINE BUTTON r-sr-izm-temp 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "r-sr-izm-temp" 
+     SIZE 3 BY .88.
+     
+DEFINE BUTTON r-sr-izm-level 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "r-sr-izm-level" 
+     SIZE 3 BY .88.
 
 DEFINE VARIABLE dead-balance AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
      LABEL "Мертвый остаток" 
@@ -163,9 +184,34 @@ DEFINE VARIABLE place-ratio-error AS DECIMAL FORMAT "9.99":U INITIAL 0.25
      LABEL "Относительная погрешность составления калибровочной таблицы" 
      VIEW-AS FILL-IN 
      SIZE 18 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE place-temp-coef AS DECIMAL FORMAT "9.9999999999":U INITIAL 0.0000125 
+     LABEL "Темп. коэф. линейного расширения материала стенки рез-ра(1/°С)" 
+     VIEW-AS FILL-IN 
+     SIZE 18 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE place-dead-high AS DECIMAL FORMAT ">,>>>,>>9":U INITIAL 0 
+     LABEL "Высота мертвой полости(мм)" 
+     VIEW-AS FILL-IN 
+     SIZE 11.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE place-si AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
-     LABEL "Средство измерения" 
+     LABEL "Основное средство измерения" 
+     VIEW-AS FILL-IN 
+     SIZE 8.63 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE place-si-dens AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
+     LABEL "" 
+     VIEW-AS FILL-IN 
+     SIZE 8.63 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE place-si-temp AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
+     LABEL "" 
+     VIEW-AS FILL-IN 
+     SIZE 8.63 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE place-si-level AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
+     LABEL "" 
      VIEW-AS FILL-IN 
      SIZE 8.63 BY 1 NO-UNDO.
 
@@ -173,6 +219,16 @@ DEFINE VARIABLE place-twice-code AS CHARACTER FORMAT "x(8)"
      LABEL "Коды связанных резервуаров" 
      VIEW-AS FILL-IN 
      SIZE 18 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE place-passp-num AS CHARACTER FORMAT "x(256)" 
+     LABEL "Номер резервуара по паспорту" 
+     VIEW-AS FILL-IN 
+     SIZE 45 BY 1 NO-UNDO.
+
+DEFINE VARIABLE place-passp-type AS CHARACTER FORMAT "x(256)" 
+     LABEL "Тип резервуара по паспорту" 
+     VIEW-AS FILL-IN 
+     SIZE 45 BY 1 NO-UNDO.
 
 DEFINE VARIABLE place-locat AS INTEGER INITIAL 2 
      VIEW-AS RADIO-SET HORIZONTAL
@@ -254,6 +310,14 @@ DEFINE FRAME d-pl-form
      rvd-dnstv AT ROW 6.75 COL 35.5 WIDGET-ID 40
      rvd-lvl AT ROW 6.75 COL 51.38 WIDGET-ID 44
      rvd-tmp AT ROW 6.75 COL 66.88 WIDGET-ID 46
+     "Доп. средства измерения:" VIEW-AS TEXT
+          SIZE 24 BY .75 AT ROW 7.7 COL 7 WIDGET-ID 50
+     place-si-dens AT ROW 7.7 COL 35.5 COLON-ALIGNED WIDGET-ID 52 no-label
+     r-sr-izm-dens AT ROW 7.7 COL 48 RIGHT-ALIGNED
+     place-si-level AT ROW 7.7 COL 51.4 COLON-ALIGNED WIDGET-ID 52 no-label
+     r-sr-izm-level AT ROW 7.7 COL 63 RIGHT-ALIGNED
+     place-si-temp AT ROW 7.7 COL 66.9 COLON-ALIGNED WIDGET-ID 52 no-label
+     r-sr-izm-temp AT ROW 7.7 COL 78 RIGHT-ALIGNED
      tt-place.issue-year AT ROW 8.71 COL 21.63 COLON-ALIGNED
           LABEL "Год выпуска"
           VIEW-AS FILL-IN 
@@ -265,7 +329,7 @@ DEFINE FRAME d-pl-form
           SIZE 11.63 BY 1
      place-locat AT ROW 9.71 COL 88 RIGHT-ALIGNED NO-LABEL WIDGET-ID 30
      tt-place.add-qnty AT ROW 11.92 COL 30.63 COLON-ALIGNED
-          LABEL "Доп. кол-во (в трубопроводе)"
+          LABEL "Объем трубопровода"
           VIEW-AS FILL-IN 
           SIZE 11.63 BY 1
      error-mass AT Y 262 X 703 RIGHT-ALIGNED WIDGET-ID 38
@@ -278,14 +342,18 @@ DEFINE FRAME d-pl-form
      dead-balance AT ROW 13.92 COL 30.63 COLON-ALIGNED WIDGET-ID 18
      water-level AT ROW 14.92 COL 30.63 COLON-ALIGNED WIDGET-ID 58
      place-diameter AT ROW 13.92 COL 75.38 COLON-ALIGNED WIDGET-ID 18
-     place-ratio-error AT ROW 16.25 COL 88 RIGHT-ALIGNED WIDGET-ID 20
-     dens-prov AT ROW 17.25 COL 88 RIGHT-ALIGNED
-     place-twice-code AT ROW 18.25 COL 88 RIGHT-ALIGNED WIDGET-ID 24
-     tt-place.chk-max-qnty AT ROW 20.25 COL 3 WIDGET-ID 2
+     place-dead-high at row 15.25 COL 88 RIGHT-ALIGNED
+     place-temp-coef at row 16.25 COL 88 RIGHT-ALIGNED
+/*     place-ratio-error AT ROW 17.25 COL 88 RIGHT-ALIGNED WIDGET-ID 20*/
+     dens-prov AT ROW 18.25 COL 88 RIGHT-ALIGNED
+     place-twice-code AT ROW 19.25 COL 88 RIGHT-ALIGNED WIDGET-ID 24
+     place-passp-num at row 20.5 col 88 right-aligned
+     place-passp-type at row 21.5 col 88 right-aligned
+     tt-place.chk-max-qnty AT ROW 23 COL 3 WIDGET-ID 2
           LABEL "Проверять макс. допустимое кол-во товара на месте хранения" 
           VIEW-AS TOGGLE-BOX
           SIZE 62.63 BY .83 
-     tt-place.PS AT ROW 22.58 COL 2 NO-LABEL
+     tt-place.PS AT ROW 24 COL 2 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 87 BY 4
      "Тип резервуара:" VIEW-AS TEXT
@@ -350,8 +418,8 @@ ASSIGN
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN place-ratio-error IN FRAME d-pl-form
    ALIGN-R                                                              */
-ASSIGN 
-       place-ratio-error:READ-ONLY IN FRAME d-pl-form        = TRUE.
+/*ASSIGN                                                              */
+/*       place-ratio-error:READ-ONLY IN FRAME d-pl-form        = TRUE.*/
 
 /* SETTINGS FOR FILL-IN place-twice-code IN FRAME d-pl-form
    ALIGN-R                                                              */
@@ -386,6 +454,9 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-pl-form
 ON CHOOSE OF b-exit IN FRAME d-pl-form /* Ввод */
 DO:
+  define variable vOk as logical no-undo .
+  
+  
   { gbl/stdbtn.i }
   assign
     tt-place.pl-name
@@ -423,6 +494,100 @@ do:
 
   assign frame {&frame-name} dens-prov.
 end.
+
+
+if place-si = ? or place-si = 0
+then do :
+  message "Не указано основное средство измерения! Вы уверены, что хотите закончить настройку складского места?"
+  view-as alert-box question buttons yes-no update vOk .
+  if not vOk
+  then
+    return no-apply .
+end .
+else do :
+  find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si .
+  if sr-izmerenia.sr-level
+  and sr-izmerenia.sr-density
+  and sr-izmerenia.sr-temperature
+  and sr-izmerenia.sr-Weight
+  then do : end .
+  else do :
+    message "Выбранное основное средство измерения не настроено на измерение всех параметров! Вы уверены, что хотите закончить настройку складского места?"
+    view-as alert-box question buttons yes-no update vOk .
+    if not vOk
+    then
+      return no-apply .
+  end .
+end .
+
+if rvd-dnstv
+then do :
+  if place-si-dens = ? or place-si-dens = 0
+  then do :
+    message "Не указано вспомогательное средство измерения плотности. Вы уверены, что хотите закончить настройку складского места?"
+    view-as alert-box question buttons yes-no update vOk .
+    if not vOk
+    then
+      return no-apply .
+  end .
+  else do :
+    find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si-dens .
+    if not sr-izmerenia.sr-density
+    then do :
+      message "Выбранное дополнительно средство измерения для плотности не настроено на измерение плотности! Вы уверены, что хотите закончить настройку складского места?"
+      view-as alert-box question buttons yes-no update vOk .
+      if not vOk
+      then
+        return no-apply .
+    end .
+  end .
+end .
+
+if rvd-tmp
+then do :
+  if place-si-temp = ? or place-si-temp = 0
+  then do :
+    message "Не указано вспомогательное средство измерения температуры. Вы уверены, что хотите закончить настройку складского места?"
+    view-as alert-box question buttons yes-no update vOk .
+    if not vOk
+    then
+      return no-apply .
+  end .
+  else do :
+    find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si-temp .
+    if not sr-izmerenia.sr-temperature
+    then do :
+      message "Выбранное дополнительно средство измерения для температуры не настроено на измерение температуры! Вы уверены, что хотите закончить настройку складского места?"
+      view-as alert-box question buttons yes-no update vOk .
+      if not vOk
+      then
+        return no-apply .
+    end .
+  end .
+end .
+
+if rvd-lvl
+then do :
+  if place-si-level = ? or place-si-level = 0
+  then do :
+    message "Не указано вспомогательное средство измерения уровня. Вы уверены, что хотите закончить настройку складского места?"
+    view-as alert-box question buttons yes-no update vOk .
+    if not vOk
+    then
+      return no-apply .
+  end .
+  else do :
+    find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si-level .
+    if not sr-izmerenia.sr-level
+    then do :
+      message "Выбранное дополнительно средство измерения для уровня не настроено на измерение уровня! Вы уверены, что хотите закончить настройку складского места?"
+      view-as alert-box question buttons yes-no update vOk .
+      if not vOk
+      then
+        return no-apply .
+    end .
+  end .
+end .
 
 run ref/place01.p
   ( input-output p-rep-rec
@@ -475,10 +640,10 @@ do :
               do :
                   v-value =  water-level:screen-value.
               end.    
-          when {&place-ratio-error} then 
-              do :
-                  v-value = place-ratio-error:screen-value .
-              end.
+/*          when {&place-ratio-error} then                    */
+/*              do :                                          */
+/*                  v-value = place-ratio-error:screen-value .*/
+/*              end.                                          */
           when {&place-dens-prov} then 
               do :
                   v-value = dens-prov:screen-value .
@@ -519,7 +684,34 @@ do :
               do: 
                   v-value = rvd-tmp:screen-value .
               end.       
-                                                           
+          when {&place-SI-dens} then 
+              do: 
+                  v-value = place-si-dens:screen-value .
+              end.
+          when {&place-SI-temp} then 
+              do: 
+                  v-value = place-si-temp:screen-value .
+              end.
+          when {&place-SI-level} then 
+              do: 
+                  v-value = place-si-level:screen-value .
+              end.
+          when {&place-passp-num} then 
+              do: 
+                  v-value = place-passp-num:screen-value .
+              end.
+          when {&place-passp-type} then 
+              do: 
+                  v-value = place-passp-type:screen-value .
+              end. 
+          when {&place-dead-high} then 
+              do: 
+                  v-value = place-dead-high:screen-value .
+              end.
+          when {&place-temp-coef} then 
+              do: 
+                  v-value = place-temp-coef:screen-value .
+              end.                                                
       end case.
     find first ub.place no-lock where recid(ub.place) = p-rep-rec .
     run placelib_write-attr  (input v-code
@@ -648,7 +840,52 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME tt-place.is-meas
+&Scoped-define SELF-NAME rvd-dnstv
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rvd-dnstv d-pl-form
+ON VALUE-CHANGED OF rvd-dnstv IN FRAME d-pl-form /* Измеряется приборами */
+DO:
+  if rvd-dnstv:screen-value = "yes" then do:
+    enable place-si-dens r-sr-izm-dens with frame {&frame-name} .
+  end.  
+  else do:
+    disable place-si-dens r-sr-izm-dens with frame {&frame-name} .
+  end.  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME rvd-lvl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rvd-lvl d-pl-form
+ON VALUE-CHANGED OF rvd-lvl IN FRAME d-pl-form /* Измеряется приборами */
+DO:
+  if rvd-lvl:screen-value = "yes" then do:
+    enable place-si-level r-sr-izm-level with frame {&frame-name} .
+  end.  
+  else do:
+    disable place-si-level r-sr-izm-level with frame {&frame-name} .
+  end.  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME rvd-tmp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rvd-tmp d-pl-form
+ON VALUE-CHANGED OF rvd-tmp IN FRAME d-pl-form /* Измеряется приборами */
+DO:
+  if rvd-tmp:screen-value = "yes" then do:
+    enable place-si-temp r-sr-izm-temp with frame {&frame-name} .
+  end.  
+  else do:
+    disable place-si-temp r-sr-izm-temp with frame {&frame-name} .
+  end.  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-place.is-meas d-pl-form
 ON VALUE-CHANGED OF tt-place.is-meas IN FRAME d-pl-form /* Измеряется приборами */
 DO:
@@ -664,17 +901,17 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME place-locat
-&Scoped-define SELF-NAME place-type
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL place-type d-pl-form
-ON value-changed OF place-type IN FRAME d-pl-form
-DO:
-    if place-type:screen-value = "1" then place-ratio-error:screen-value = "0.20" .
-    if place-type:screen-value = "2" then place-ratio-error:screen-value = "0.25" .
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&Scoped-define SELF-NAME place-locat                                               */
+/*&Scoped-define SELF-NAME place-type                                                */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL place-type d-pl-form                     */
+/*ON value-changed OF place-type IN FRAME d-pl-form                                  */
+/*DO:                                                                                */
+/*    if place-type:screen-value = "1" then place-ratio-error:screen-value = "0.20" .*/
+/*    if place-type:screen-value = "2" then place-ratio-error:screen-value = "0.25" .*/
+/*  END.                                                                             */
+/*                                                                                   */
+/*/* _UIB-CODE-BLOCK-END */                                                          */
+/*&ANALYZE-RESUME                                                                    */
 
 
 &Scoped-define SELF-NAME r-sr-izm
@@ -685,13 +922,76 @@ DO:
   define variable v-sr-type as character no-undo.
   v-node-code = 0 .
   run ref/sr-izm.w (input parparentproc ,
-                    input ""            ,
+                    input "b-sel"       ,
                     input {&lookup}     ,
                     input-output v-node-code,
                     output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
     place-si = v-node-code.
     place-si:screen-value = string(v-node-code).
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME r-sr-izm-dens
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sr-izm-dens d-pl-form
+ON CHOOSE OF r-sr-izm-dens IN FRAME d-pl-form /* r-sr-izm */
+DO:
+  define variable v-node-code as integer no-undo.
+  define variable v-sr-type as character no-undo.
+  v-node-code = 0 .
+  run ref/sr-izm.w (input parparentproc ,
+                    input "b-sel"       ,
+                    input {&lookup}     ,
+                    input-output v-node-code,
+                    output v-sr-type) no-error.
+  if v-node-code <> 0 and v-node-code <> ? then do :
+    place-si-dens = v-node-code.
+    place-si-dens:screen-value = string(v-node-code).
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME r-sr-izm-level
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sr-izm-level d-pl-form
+ON CHOOSE OF r-sr-izm-level IN FRAME d-pl-form /* r-sr-izm */
+DO:
+  define variable v-node-code as integer no-undo.
+  define variable v-sr-type as character no-undo.
+  v-node-code = 0 .
+  run ref/sr-izm.w (input parparentproc ,
+                    input "b-sel"       ,
+                    input {&lookup}     ,
+                    input-output v-node-code,
+                    output v-sr-type) no-error.
+  if v-node-code <> 0 and v-node-code <> ? then do :
+    place-si-level = v-node-code.
+    place-si-level:screen-value = string(v-node-code).
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME r-sr-izm-temp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sr-izm-temp d-pl-form
+ON CHOOSE OF r-sr-izm-temp IN FRAME d-pl-form /* r-sr-izm */
+DO:
+  define variable v-node-code as integer no-undo.
+  define variable v-sr-type as character no-undo.
+  v-node-code = 0 .
+  run ref/sr-izm.w (input parparentproc ,
+                    input "b-sel"       ,
+                    input {&lookup}     ,
+                    input-output v-node-code,
+                    output v-sr-type) no-error.
+  if v-node-code <> 0 and v-node-code <> ? then do :
+    place-si-temp = v-node-code.
+    place-si-temp:screen-value = string(v-node-code).
   end.
 END.
 
@@ -823,9 +1123,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       when {&water-level} then do :
         if v-ok then water-level = integer(v-value) .
       end.
-      when {&place-ratio-error} then do :
-        if v-ok then place-ratio-error = decimal(v-value) .
-      end.
+/*      when {&place-ratio-error} then do :                  */
+/*        if v-ok then place-ratio-error = decimal(v-value) .*/
+/*      end.                                                 */
       when {&place-dens-prov} then do :
         if v-ok then dens-prov = decimal(v-value) .
       end.
@@ -865,7 +1165,28 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.        
       when {&place-rvd-tmp} then do :
         if v-ok then rvd-tmp = logical(v-value) .
-      end.                
+      end.  
+      when {&place-SI-dens} then do :
+        if v-ok then place-si-dens = integer(v-value) .
+      end.
+      when {&place-SI-level} then do :
+        if v-ok then place-si-level = integer(v-value) .
+      end.
+      when {&place-SI-temp} then do :
+        if v-ok then place-si-temp = integer(v-value) .
+      end.
+      when {&place-passp-num} then do: 
+        if v-ok then place-passp-num = v-value .
+      end.  
+      when {&place-passp-type} then do: 
+        if v-ok then place-passp-type = v-value .
+      end.
+      when {&place-dead-high} then do: 
+        if v-ok then place-dead-high = decimal(v-value) .
+      end.  
+      when {&place-temp-coef} then do: 
+        if v-ok then place-temp-coef = decimal(v-value) .
+      end.            
     end case.
   end.
   run Myenable in this-procedure .
@@ -909,7 +1230,9 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY t-place-virtual t-asi-srtif rvd-dnstv rvd-lvl rvd-tmp place-type 
           place-locat error-mass place-si dead-balance water-level place-diameter 
-          place-ratio-error dens-prov place-twice-code 
+          dens-prov place-twice-code place-si-dens
+          place-si-level place-si-temp place-passp-num place-passp-type
+          place-dead-high place-temp-coef
       WITH FRAME d-pl-form.
   IF AVAILABLE tt-place THEN 
     DISPLAY tt-place.loc1 tt-place.loc2 tt-place.loc3 tt-place.loc4 
@@ -921,8 +1244,8 @@ PROCEDURE enable_UI :
          rvd-dnstv rvd-lvl rvd-tmp tt-place.issue-year place-type 
          tt-place.start-date place-locat tt-place.add-qnty error-mass 
          tt-place.max-qnty place-si r-sr-izm dead-balance water-level place-diameter 
-         place-ratio-error dens-prov place-twice-code tt-place.chk-max-qnty 
-         tt-place.PS 
+         dens-prov place-twice-code tt-place.chk-max-qnty 
+         tt-place.PS place-passp-num place-passp-type place-dead-high place-temp-coef
       WITH FRAME d-pl-form.
   {&OPEN-BROWSERS-IN-QUERY-d-pl-form}
 END PROCEDURE.
@@ -936,8 +1259,9 @@ PROCEDURE Myenable :
   run enable_UI in this-procedure .
   assign
     v-tab-order = "loc1,loc2,loc3,loc4,pl-name,is-meas,"
-                  + "issue-year,start-date,add-qnty,max-qnty,chk-max-qnty,"
-                  + "ps,place-type,place-SI,r-sr-izm,place-diameter,dead-balance,water-level,place-ratio-error,dens-prov,t-place-virtual,place-twice-code,t-sert-urov".
+                  + "issue-year,start-date,add-qnty,max-qnty,"
+                  + "ps,place-type,place-SI,r-sr-izm,place-SI-dens,r-sr-izm=dens,place-SI-level,r-sr-izm-level,place-SI-temp,r-sr-izm-temp,"
+                  + "place-diameter,dead-balance,place-dead-high,place-temp-coef,dens-prov,t-place-virtual,place-twice-code,t-sert-urov,place-passp-num,place-passp-type".
   if p-mode = {&lookup} then do:
     disable
       all
@@ -962,6 +1286,15 @@ PROCEDURE Myenable :
   if tt-place.is-meas then do:
     enable t-asi-srtif with frame {&frame-name} .
   end.  
+  if rvd-dnstv then do:
+    enable place-si-dens r-sr-izm-dens with frame {&frame-name} .
+  end.
+  if rvd-lvl then do:
+    enable place-si-level r-sr-izm-level with frame {&frame-name} .
+  end.
+  if rvd-tmp then do:
+    enable place-si-temp r-sr-izm-temp with frame {&frame-name} .
+  end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
