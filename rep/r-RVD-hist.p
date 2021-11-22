@@ -635,7 +635,7 @@ procedure print-rep :
       '<td colspan="17" style="text-align: left; font-weight:bold;"></td>' skip
       '</tr>' skip
       '<tr>' skip
-      '<td colspan="6" style="text-align: left; font-weight:bold;">Отчет "История изменения режимов измерения в резервуарах"</td>' skip
+      '<td colspan="6" style="text-align: left; font-weight:bold;">Отчет "История изменения режима ввода данных по резервуарам"</td>' skip
       '<td colspan="11" style="text-align: left;;">' + v-legend1 + '</td>' skip
       '</tr>' skip   
       '<tr>' skip

@@ -26,7 +26,7 @@ def var vss-description as character no-undo init "Главная программа запуска отч
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/r-page1.i new }
-&scop tt-l " Состояние режимов измерения резервуаров"
+&scop tt-l " Состояние изменения режима ввода данных по резервуарам"
 run rep/d-report.w (
                 input parParentProc ,
                 input 'rep/e-RVD-state.w',

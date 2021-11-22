@@ -458,7 +458,7 @@ procedure print-rep :
       '<td colspan="6" style="text-align: left; font-weight:bold;"></td>' skip
       '</tr>' skip
       '<tr>' skip
-      '<td colspan="5" style="text-align: left; font-weight:bold;">Стандартный вариант отчёта "Состояния режимов измерения резервуаров"</td>' skip
+      '<td colspan="5" style="text-align: left; font-weight:bold;">Стандартный вариант отчёта "Состояние изменения режима ввода данных по резервуарам"</td>' skip
       '<td colspan="9" style="text-align: left;;">' + v-legend1 + '</td>' skip
       '</tr>' skip   
       '<tr>' skip
@@ -987,7 +987,7 @@ procedure print-rep-ext :
       '<td colspan="14" style="text-align: left; font-weight:bold;"></td>' skip
       '</tr>' skip
       '<tr>' skip
-      '<td colspan="5" style="text-align: left; font-weight:bold;">Развернутый вариант отчёта "Состояния режимов измерения резервуаров""</td>' skip
+      '<td colspan="5" style="text-align: left; font-weight:bold;">Развернутый вариант отчёта "Состояние изменения режима ввода данных по резервуарам"</td>' skip
       '<td colspan="9" style="text-align: left;;">' + v-legend1 + '</td>' skip
       '</tr>' skip   
       '<tr>' skip

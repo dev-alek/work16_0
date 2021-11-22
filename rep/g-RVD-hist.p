@@ -28,7 +28,7 @@ def var vss-description as character no-undo init "Главная программа запуска отч
 { cmp/r-page1.i new }
 { gbl/getcntxt.i def  }
 { gbl/getcntxt.i get  }
-&scop tt-l " История изменения режимов измерения в резервуарах"
+&scop tt-l " История изменения режима ввода данных по резервуарам"
 define variable v-value    as character no-undo .
 define variable v-type     as character no-undo .
 
