@@ -448,8 +448,8 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
       buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
       buf_goods-attr.attr-value <> "") then 
    do:
-/*      v-promo-action:changeDate = today.*/
       v-promo-action:end-date = today - 1 .
+      v-promo-action:status_ = 2 .
    end.        
    end.    
           v-promo-gifts:AddItem (v-promo-gift) .
@@ -617,8 +617,8 @@ if valid-object (v-objlist9) then do: // gifts - подарки на всю акцию
       buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
       buf_goods-attr.attr-value <> "") then 
    do:
-/*      v-promo-action:changeDate = today.*/
       v-promo-action:end-date = today - 1 .
+      v-promo-action:status_ = 2 .
    end.        
    end.       
       v-promo-gifts:AddItem (v-promo-gift) .
@@ -640,7 +640,7 @@ end. // end_of_gifts
     end.
     
     v-storage:insertDB(v-promo-action) .
-    
+
     define variable mAction as character no-undo.
     if     (v-promo-action:changeDate <> ? 
        and v-promo-action:changeDate <= today)
@@ -649,7 +649,7 @@ end. // end_of_gifts
        mAction = "D".
     else
        mAction = "U".
- 
+   if v-ban-recipes then mAction = "U".
      if v-message then 
      do:
         create ub.PromoAttr .
