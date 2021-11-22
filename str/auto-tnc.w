@@ -845,6 +845,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       C-neck         = ub.auto-tank.type-neck.
     if available error_auto-tank-attr then f-error = decimal(error_auto-tank-attr.attr-value).
     if available temp_auto-tank-attr then f-temp = decimal(temp_auto-tank-attr.attr-value) .
+    if varauto-firm = "" or varauto-firm = ? then do:
+       FOR first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
+       and auto-tank-attr.auto-num = ub.auto-tank.auto-num:
+          varauto-firm = auto-tank-attr.attr-value .
+       end.   
+    end.   
+
   end.
 
   run init-proc in this-procedure .

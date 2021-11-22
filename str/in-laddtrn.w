@@ -887,19 +887,34 @@ DO:
    apply "entry" to f-car-num in frame {&frame-name} .
    return no-apply .
   end.
-  if available auto-tank
-  then do :
-    assign
-      f-autoent-obj-type = auto-tank.firm-type
-      f-autoent-obj-code = integer (auto-tank.firm-code).
+   if available auto-tank
+      then 
+   do :
+      if auto-tank.firm-type <> "" then 
+      do:
+         assign
+            f-autoent-obj-type = auto-tank.firm-type
+            f-autoent-obj-code = integer (auto-tank.firm-code).
+      end.
+      else 
+      do:
+         find first auto-tank-attr where auto-tank-attr.attr-code = "auto-firm" and auto-tank-attr.auto-num = auto-tank.auto-num no-error.
+         if available (auto-tank-attr)
+            then 
+         do:
+            assign
+               f-autoent-obj-type = substring (auto-tank-attr.attr-value, 1, 3)
+               f-autoent-obj-code = integer (substring (auto-tank-attr.attr-value, 4)).
+         end.       
+      end.     
       f-autoent-obj-type:screen-value = f-autoent-obj-type.
       f-autoent-obj-code:screen-value = string (f-autoent-obj-code).
-    assign
-      v-autoent-obj-type = f-autoent-obj-type
-      v-autoent-obj-code =  f-autoent-obj-code
-    .
-    run disp-obj-name.
-  end .
+      assign
+         v-autoent-obj-type = f-autoent-obj-type
+         v-autoent-obj-code = f-autoent-obj-code
+         .
+      run disp-obj-name.
+   end .
   
 /*  apply "entry" to f-car-vol in frame {&frame-name}.*/
 
