@@ -386,6 +386,12 @@ define variable v-error-code        as character no-undo .
 /*     view-as alert-box error.             */
 /*     return no-apply.                     */
 /*  end.                                    */
+  if temp-attr.code = {&attr-item-matter-mark} then do:
+    message
+    "Атрибут нельзя удалить"
+    view-as alert-box error .
+    return no-apply.     
+  end.   
   run gds-attr-name in this-procedure (
                                         input  temp-attr.code           /* p-code           */
                                         ,output attr-type           /* p-type           */

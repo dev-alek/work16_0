@@ -2795,8 +2795,22 @@ if mode = {&add-def} then do:
   find first goods share-lock where recid(goods) = gds-rec .
   if not AVAILABLE goods then return no-apply.
   else do:
-/*  if temp-goods.alc-prod <> logical (v-gds-attr-value-old) then*/
-/*  do:                                                          */
+     if not v-loc-update-attr-gbl then 
+     do:
+        message "Не задан атрибут Признак предмета расчета!"
+           view-as alert-box.
+        undo _main, return error .                            
+     end.
+     else 
+     do:    
+        find first tt0-goods-attr no-lock where tt0-goods-attr.attr-code = {&attr-item-matter-mark} no-error .
+        if not available (tt0-goods-attr) then
+        do:
+           message "Не задан атрибут Признак предмета расчета!"
+              view-as alert-box.
+           undo _main, return error .
+        end.
+     end.
     if temp-goods.alc-prod = yes then 
     do:
       run gds-attr-write IN THIS-PROCEDURE(
@@ -2911,6 +2925,14 @@ end.
 end. /*if mode = {&add-def} then do:*/
 
 if mode <> {&add-def} and mode <> {&lookup} then do:
+   find first tt0-goods-attr no-lock where tt0-goods-attr.attr-code = {&attr-item-matter-mark} no-error .
+   if not available (tt0-goods-attr) then
+   do:
+      message "Не задан атрибут Признак предмета расчета!"
+         view-as alert-box.
+      undo _main, return error .
+   end.
+   
 find first goods share-lock where recid(goods) = gds-rec .
   if temp-goods.alc-prod <> logical (v-gds-attr-value-old) then 
   do:
