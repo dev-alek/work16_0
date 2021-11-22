@@ -1379,7 +1379,7 @@ class ibs.th.str.InfoSectionsTotal:
           find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = InfoSectionCurr:PlaceSi no-error.
           if not available buf_sr-izmerenia then do :
             message
-              substitute( 'Не найдено средство измерения с кодом &1', InfoSectionCurr:PlaceSi ) skip
+              substitute( 'Не найдено средство измерения плотности с кодом &1', InfoSectionCurr:PlaceSi ) skip
             view-as alert-box error.
             undo _trpomi, return no-apply  .
           end.
@@ -1387,10 +1387,23 @@ class ibs.th.str.InfoSectionsTotal:
             assign
               ToolType               = buf_sr-izmerenia.sr-type-id
               DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+            .
+          end.
+          
+          find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = InfoSectionCurr:PlaceSiTemp no-error.
+          if not available buf_sr-izmerenia then do :
+            message
+              substitute( 'Не найдено средство измерения температуры с кодом &1', InfoSectionCurr:PlaceSiTemp ) skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply  .
+          end.
+          else do :
+            assign
               DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
               DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
-              .
+            .
           end.
+          
           /*..........................................*/
           v-proc = "ADMM.CMethodOfMetering31N" .
     
@@ -1506,10 +1519,10 @@ class ibs.th.str.InfoSectionsTotal:
             then do:
               assign v-auto-error = decimal (ub.auto-tank-attr.attr-value) no-error.
               if error-status:error
-                then v-auto-error = 0.
+                then v-auto-error = 0.4 .
             end.
             else do:
-              v-auto-error = 0.
+              v-auto-error = 0.4 .
             end.
 
             if infoSectionCurr:Pour = "Нижний налив"
@@ -1531,7 +1544,7 @@ class ibs.th.str.InfoSectionsTotal:
               v-mm:Tcy                    = TempForPomi
               v-mm:ToolType               = ToolType
 /*              v-mm:A_Reservoir            = 0.0000125*/
-              v-mm:DeltaOtn_V             = v-auto-error
+              v-mm:DeltaOtn_V             = 0.4
               v-mm:DeltaAbs_R             = DeltaAbs_R
               v-mm:DeltaAbs_Tv            = DeltaAbs_Tv
               v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
@@ -1571,7 +1584,7 @@ class ibs.th.str.InfoSectionsTotal:
               'Tcy                    = ' TempForPomi skip
               'ToolType               = ' ToolType                skip
               'A_Reservoir            = ' string (0.0000125)      skip
-              'DeltaOtn_V             = ' 0.4                     skip
+              'DeltaOtn_V             = ' string (v-auto-error)   skip
               'DeltaAbs_R             = ' DeltaAbs_R              skip
               'DeltaAbs_Tv            = ' DeltaAbs_Tv             skip
               'DeltaAbs_Tr            = ' DeltaAbs_Tr             skip
@@ -1585,6 +1598,7 @@ class ibs.th.str.InfoSectionsTotal:
               'CTL_obs_base           = ' v-mm:CTL_obs_base      skip
               'CPL_obs_base           = ' v-mm:CPL_obs_base      skip
               'CTPL_obs_base          = ' v-mm:CTPL_obs_base     skip
+              'VolumetricExpansion    = ' v-mm:VolumetricExpansion skip
               'Fp_obs_base            = ' v-mm:Fp_obs_base       skip
               'Rv                     = ' v-mm:Rv                skip
               'DeltaOtn_Vcy           = ' v-mm:DeltaOtn_Vcy      skip 

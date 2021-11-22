@@ -563,16 +563,18 @@ PROCEDURE local-enable_UI :
      case RS-status_:
         when {&all} then 
            do:  
-              FOR EACH ub.auto-tank NO-LOCK, first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
-                 and (auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) or auto-tank-attr.attr-value = par-obj-type + " " + string(par-obj-code)) and auto-tank-attr.auto-num = ub.auto-tank.auto-num:
+              FOR EACH ub.auto-tank no-lock where ub.auto-tank.firm-type = par-obj-type
+                                              and ub.auto-tank.firm-code = par-obj-code
+                                              :
                  create tt-auto-tank .
                  buffer-copy ub.auto-tank to tt-auto-tank .
               end.
            end.
         otherwise 
         do:
-           FOR EACH ub.auto-tank where ub.auto-tank.status_ = RS-status_ NO-LOCK, first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
-              and (auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) or auto-tank-attr.attr-value = par-obj-type + " " + string(par-obj-code)) and auto-tank-attr.auto-num = ub.auto-tank.auto-num:
+           FOR EACH ub.auto-tank no-lock where ub.auto-tank.status_ = RS-status_
+                                           and ub.auto-tank.firm-type = par-obj-type
+                                           and ub.auto-tank.firm-code = par-obj-code:
               create tt-auto-tank .
               buffer-copy ub.auto-tank to tt-auto-tank .
            end.

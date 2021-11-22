@@ -887,18 +887,19 @@ DO:
    apply "entry" to f-car-num in frame {&frame-name} .
    return no-apply .
   end.
-
-  assign
-    f-autoent-obj-type = auto-tank.firm-type
-    f-autoent-obj-code = integer (auto-tank.firm-code).
-    f-autoent-obj-type:screen-value = f-autoent-obj-type.
-    f-autoent-obj-code:screen-value = string (f-autoent-obj-code).
-  assign
-    v-autoent-obj-type = f-autoent-obj-type
-    v-autoent-obj-code =  f-autoent-obj-code
-  .
-  run disp-obj-name.
-
+  if available auto-tank
+  then do :
+    assign
+      f-autoent-obj-type = auto-tank.firm-type
+      f-autoent-obj-code = integer (auto-tank.firm-code).
+      f-autoent-obj-type:screen-value = f-autoent-obj-type.
+      f-autoent-obj-code:screen-value = string (f-autoent-obj-code).
+    assign
+      v-autoent-obj-type = f-autoent-obj-type
+      v-autoent-obj-code =  f-autoent-obj-code
+    .
+    run disp-obj-name.
+  end .
   
 /*  apply "entry" to f-car-vol in frame {&frame-name}.*/
 
@@ -1289,6 +1290,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               f-autoent-obj-type = entry (1, buf_doc-attr.attr-value, ";")
               f-autoent-obj-code = integer (entry (2, buf_doc-attr.attr-value, ";"))
             no-error.
+            assign
+              v-autoent-obj-type = f-autoent-obj-type
+              v-autoent-obj-code = f-autoent-obj-code
+            .
             find first ub.clients no-lock
               where ub.clients.obj-type = f-autoent-obj-type
                 and ub.clients.obj-code = f-autoent-obj-code

@@ -352,12 +352,12 @@ class ibs.th.str.InfoSection:
       end.
       when 1 then do:
         diameter = string (ub.auto-section.add-volume) + "/" + string (ub.auto-section.section-depth) + 
-          "/" + string (ub.auto-section.diameter-min) + "/" + string (ub.auto-section.diameter-max) 
+          "/" + string (ub.auto-section.length) + "/" + string (ub.auto-section.width) 
           .
       end.
       when 2 then do:
         diameter = string (ub.auto-section.add-volume) + "/" + string (ub.auto-section.section-depth) + 
-          "/" + string (ub.auto-section.length) + "/" + string (ub.auto-section.width) 
+          "/" + string (ub.auto-section.diameter-max) + "/" + string (ub.auto-section.diameter-min) 
           .
       end.
       when 3 then do:

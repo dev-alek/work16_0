@@ -301,8 +301,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     run ref/sr-izm.w (input infoSecsObj:Parentproc ,
                       input ""            ,
                       input {&lookup}     ,
-                      input "",
-                      input "",
+                      input "0,1",
+                      input "dnst",
                       input-output v-node-code,
                       output v-sr-type) no-error.   
     if v-node-code <> 0 and v-node-code <> ? then do :
@@ -416,8 +416,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     run ref/sr-izm.w (input infoSecsObj:Parentproc ,
                       input ""            ,
                       input {&lookup}     ,
-                      input "",
-                      input "",
+                      input "0,1",
+                      input "tmp",
                       input-output v-node-code,
                       output v-sr-type) no-error.   
     if v-node-code <> 0 and v-node-code <> ? then do :
