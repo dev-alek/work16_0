@@ -318,7 +318,7 @@ define input parameter p-have-store             as logical          no-undo.  /*
             end.
             if buf_obj_recipe.recipe-type = {&alternative} and v-ban-altr then
             do:
-               if not check-ban-sales-via-cd(ub.goods.gds-code) then 
+               if not check-ban-sales-via-cd(buf_goods.gds-code) then 
                do:
                   message "Рецепт альтернатива " + buf_obj_recipe.recipe-code + " " + buf_obj_recipe.recipe-name + {&new-line} + "входит в группу, у которой не установлен атрибут: " + {&new-line} + "Запрет передачи на кассу."
                      view-as alert-box.
