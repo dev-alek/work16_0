@@ -17,7 +17,7 @@ Creation date: 10/30/05
 
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
-
+{utl\parsjson.i}
 procedure proc-03 :
 define input parameter par-mode as integer no-undo .
 define input parameter loc-exist as logical no-undo .
@@ -33,7 +33,8 @@ define variable c-attr-code   as character no-undo.
 define variable c-attr-value  as character no-undo.
 define variable vCPAgreement  as character no-undo.
 define variable vCPWithdrawal as character no-undo.
-
+define variable vsbpstat as character no-undo.
+define variable vsbprrn as character no-undo.
   _proc-03:
   do
   on error undo, return error
@@ -47,13 +48,13 @@ define variable vCPWithdrawal as character no-undo.
 
         CASE buf_temp-temp.field-name:
           when "CPCode":U then do:
-
-		  if p-pos-type = {&cd-type-IBM-XML} then do:
+            if p-pos-type = {&cd-type-IBM-XML}
+            then do:
               if integer(buf_temp-temp.field-value) = ibm-ccm then do:
                    assign pay_code = 1
                    c-attr-code  = "IBM-CCM".
                    c-attr-value = 'yes'.
-              end.
+              end.     
               else assign pay_code = integer(buf_temp-temp.field-value)      no-error .
             end.
             else do:
@@ -62,8 +63,9 @@ define variable vCPWithdrawal as character no-undo.
               no-error .
             end.
           end.
-          when "CPCurr":U then do:	
-            if p-pos-type = {&cd-type-IBM-XML} then
+          when "CPCurr":U then do:
+            if p-pos-type = {&cd-type-IBM-XML}
+            then
             assign
             curr_code = if kassa-rub-code = integer(buf_temp-temp.field-value)
                         then 0
@@ -129,19 +131,13 @@ define variable vCPWithdrawal as character no-undo.
           when "CPAgreement" then do:
              vCPAgreement = buf_temp-temp.field-value.
           end.
+          when "CPMisc" then do:
+             vsbpstat = gettegjson(buf_temp-temp.field-value,"SBpStat").
+             vsbprrn  = gettegjson(buf_temp-temp.field-value,"SBPRRN").
+          end.
           when "CPWithdrawal" then do:
              vCPWithdrawal = buf_temp-temp.field-value.
           end.
-            
-/*            if buf_temp-temp.field-value begins "RRN"                           */
-/*                then do:                                                        */
-/*                    c-attr-code  = "RRN-VBRR".                                  */
-/*                    c-attr-value = replace(buf_temp-temp.field-value,"RRN=","").*/
-/*                end.                                                            */
-/*                else do:                                                        */
-/*                    c-attr-code  = "CPDOC".                                     */
-/*                    c-attr-value = buf_temp-temp.field-value.                   */
-/*                end.                                                            */
           otherwise do:
             error-status:error = no.
           end.
@@ -158,7 +154,7 @@ define variable vCPWithdrawal as character no-undo.
       if error-status:error then do:
         {&error-in-file-format}
       end.
-      
+
       find first ub.chk-pay-attr where 
             ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
         and ub.chk-pay-attr.line-num   = lnp-spl
@@ -219,7 +215,6 @@ define variable vCPWithdrawal as character no-undo.
               ub.chk-pay-attr.attr-value = c-attr-value
               no-error.
             end.
-            
             if vCPAgreement ne "" and vCPAgreement ne ? 
             then do:
               create ub.chk-pay-attr.
@@ -229,6 +224,26 @@ define variable vCPWithdrawal as character no-undo.
               ub.chk-pay-attr.attr-code  = "CPAgreement"
               ub.chk-pay-attr.attr-value = vCPAgreement
               no-error.
+            end.
+            if vsbpstat ne "" and vsbpstat ne ? 
+            then do:
+               create ub.chk-pay-attr.
+               assign 
+               ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
+               ub.chk-pay-attr.line-num   = lnp-spl
+               ub.chk-pay-attr.attr-code  = "SBPStat"
+               ub.chk-pay-attr.attr-value = vsbpstat
+               no-error.
+            end.
+            if vsbprrn ne "" and vsbprrn ne ? 
+            then do:
+               create ub.chk-pay-attr.
+               assign 
+               ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
+               ub.chk-pay-attr.line-num   = lnp-spl
+               ub.chk-pay-attr.attr-code  = "SBPRRN"
+               ub.chk-pay-attr.attr-value = vsbprrn
+               no-error.
             end.
             if vCPWithdrawal ne "" and vCPWithdrawal ne ? and dec(vCPWithdrawal) ne 0  
             then do:
@@ -246,7 +261,7 @@ define variable vCPWithdrawal as character no-undo.
           chk-pay.tot-sum = chk-pay.tot-sum + tot_sum
           .
         end.
-
+        
 
       END CASE.
     end. /* if not loc-exist */
