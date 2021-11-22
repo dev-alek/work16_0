@@ -44,6 +44,7 @@ define variable v-cntxt-db-num as integer no-undo .
 define variable v-cntxt-userid as character no-undo .
 define variable v-cntxt-obj-type as character no-undo .
 define variable v-cntxt-obj-code as integer no-undo .
+define variable v-cntxt-host-code-obj  as integer no-undo .
 { str/fbrrest.i  }
 { str/fbrlib.i   }
 { str/fbrpln.i   }

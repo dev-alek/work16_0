@@ -25,7 +25,7 @@ Required:
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
 
-
+               { str/checkGroupAttr.i }
 define temp-table temp_goods-qnty no-undo
     field gds-code      as integer
     field artic         as character
@@ -318,43 +318,11 @@ define input parameter p-have-store             as logical          no-undo.  /*
             end.
             if buf_obj_recipe.recipe-type = {&alternative} and v-ban-altr then
             do:
-               for first buf_goods no-lock where buf_goods.gds-code = buf_obj_recipe.gds-code,
-                  first ub.gds-grp exclusive-lock where ub.gds-grp.node-code = buf_goods.grp-code:
-                  run ggoattr-value (
-                     input   ub.gds-grp.node-code
-                     ,input   buf_obj_recipe.host-code
-                     ,input   buf_obj_recipe.obj-type
-                     ,input   buf_obj_recipe.obj-code
-                     ,input   {&ggoattr-ban-sales-via-cd}
-                     ,output   v-value
-                     ,output   v-type
-                     ) no-error .
-                  if error-status :error then
-                  do:
-                     undo, return error.
-                  end.
-                  if v-value <> "yes" and v-value <> "true" then
-                  do:
-                     run ggoattr-value (
-                        input   ub.gds-grp.node-code
-                        ,input   0
-                        ,input   ""
-                        ,input   0
-                        ,input   {&ggoattr-ban-sales-via-cd}
-                        ,output   v-value
-                        ,output   v-type
-                        ) no-error .
-                     if error-status :error then
-                     do:
-                        undo, return error.
-                     end.
-                     if v-value <> "yes" and v-value <> "true" then
-                     do:
-                        message "Рецепт альтернатива " + buf_obj_recipe.recipe-code + " " + buf_obj_recipe.recipe-name + {&new-line} + "входит в группу, у которой не установлен атрибут: " + {&new-line} + "Запрет передачи на кассу."
-                           view-as alert-box.
-                        return .
-                     end.
-                  end.
+               if not check-ban-sales-via-cd(ub.goods.gds-code) then 
+               do:
+                  message "Рецепт альтернатива " + buf_obj_recipe.recipe-code + " " + buf_obj_recipe.recipe-name + {&new-line} + "входит в группу, у которой не установлен атрибут: " + {&new-line} + "Запрет передачи на кассу."
+                     view-as alert-box.
+                  return .
                end.
             end.
             if buf_obj_recipe.recipe-type = {&gathering} and v-ban-recipes then

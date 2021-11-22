@@ -545,7 +545,7 @@ run bgelib-tag-close in this-procedure ( input 2, input "Item").
 
 &scop output-phrase  ~
     run bgelib-tag-open in this-procedure ( input 2, input "ItemBarCode", input substitute("ctrl='&1' tms='&2' code='&3'" ~
-                                          , (if action = "U" ~
+                                          , (if vaction = "U" ~
                                              then if avail buf_cash-gds ~
 					     	  then if buf_cash-gds.bc-on eq yes then "ADD":U  else "DEL":U  ~
                                                   else if     cash-gds.bc-on eq yes then "ADD":U  else "DEL":U  ~
@@ -662,7 +662,7 @@ for each buf_cash-gds no-lock where
     else do: /* vGdsTabak = NO */
       v-cli-base = if cash-gds.cli-base-rate = 1 then "01" else "02".
       run bgelib-tag-open in this-procedure ( input 2, input "ItemBarCode", input substitute("ctrl='&1' tms='&2' code='&3'" 
-                                          , (if action = "U" 
+                                          , (if vaction = "U" 
                                              then "ADD":U    
                                              else "DEL":U)   
                                           , OS2-time         

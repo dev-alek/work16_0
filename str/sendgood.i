@@ -854,6 +854,10 @@ def buffer t-cash-gds for cash-gds.
 { str/del-gds.i }
 &endif
 
+/*часть кода, ответственная за удаление товаров группы*/
+&if "{&called}" = "del-grp" &then
+{ str/del-grp.i }
+&endif
 
 /*часть кода, ответственная за пересылку prod-bc*/
 &if "{&called}" = "s-prodbc" or "{&called}" = "s-prodbcn" &then

@@ -68,7 +68,7 @@ define variable line-rec   as recid        no-undo.
 { gbl/ggoattr.i  }
 { gbl/nutro.i      }
 { gbl/fbrnutro.i   }
-
+{ str/checkGroupAttr.i }
 define stream ListStream.
 define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
 
@@ -2127,43 +2127,10 @@ define output parameter p-error-text        as character    no-undo.
 
    if buf_recipe.recipe-type = {&alternative} and v-ban-altr then
    do:
-      for first buf_goods no-lock where buf_goods.gds-code = buf_recipe.gds-code,
-         first ub.gds-grp exclusive-lock where ub.gds-grp.node-code = buf_goods.grp-code:
-         run ggoattr-value (
-            input   ub.gds-grp.node-code
-            ,input   buf_recipe.host-code
-            ,input   buf_recipe.obj-type
-            ,input   buf_recipe.obj-code
-            ,input   {&ggoattr-ban-sales-via-cd}
-            ,output   v-value
-            ,output   v-type
-            ) no-error .
-         if error-status :error then 
-         do:
-            undo, return error.
-         end.
-         if v-value <> "yes" and v-value <> "true" then 
-         do:
-            run ggoattr-value (
-               input   ub.gds-grp.node-code
-               ,input   0
-               ,input   ""
-               ,input   0
-               ,input   {&ggoattr-ban-sales-via-cd}
-               ,output   v-value
-               ,output   v-type
-               ) no-error .
-            if error-status :error then 
-            do:
-               undo, return error.
-            end.
-            if v-value <> "yes" and v-value <> "true" then 
-            do:
-               message "Товар " + buf_goods.gds-name + " входит в группу, у которой не установлен запрет передачи на кассу."
+      if not check-ban-sales-via-cd(buf_recipe.gds-code) then do:
+               message "Товар " + buf_recipe.recipe-name + " входит в группу, у которой не установлен запрет передачи на кассу."
                   view-as alert-box.
                return error .
-            end.   
-         end.
       end.
    end.
 
