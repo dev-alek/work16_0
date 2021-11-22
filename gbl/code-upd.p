@@ -20,6 +20,23 @@ define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { gbl/db-attr.i  }
+
+define buffer buf_sys-ctrl for ub.sys-ctrl.
+define buffer buf_db for ub.db.
+find first buf_sys-ctrl no-lock no-error.
+if available buf_sys-ctrl
+then do:
+   find first buf_db no-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
+   define variable updschmObj      as class ibs.th.adm.upd.updschm no-undo.
+   updschmObj = new ibs.th.adm.upd.updschm ().
+   if updschmObj:CurrDBShm ne int(buf_db.reserve1-char)
+   then do trans:
+      find first buf_db exclusive-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
+      buf_db.reserve1-char = string(updschmObj:CurrDBShm). 
+   end.
+   delete object updschmObj no-error.
+end.
+
 define variable mfile    as character no-undo.
 define variable mfilemd5 as character no-undo.
 define variable v-md5-signature  as character no-undo.

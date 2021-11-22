@@ -1067,6 +1067,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* версия методанных  */
 { cmp/cr-prep.i 1 attr-ver-met                ver-met               " " ver-met              }
 
+/* подмена версии Бд  */
+{ cmp/cr-prep.i 1 attr-ver-db                 ver-db                " " ver-db               }
+
 /* Номер MessageID для видеонаблюдения */
 { cmp/cr-prep.i 1 attr-asiip          asiip         " " asiip        }
 

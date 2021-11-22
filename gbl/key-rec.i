@@ -247,9 +247,11 @@ procedure gen-where-keyr-tab :
          if VfieldKeyTable eq ?
          then next block_where.
       end.
-        assign
-          o-where = substitute( "&1 &2 &3.&4 =", o-where, v-word-link,v-full-tbl-name, v-field-name )
-        .
+      if v-full-tbl-name ne "" and v-full-tbl-name ne ?
+      then
+         o-where = substitute( "&1 &2 &3.&4 =", o-where, v-word-link,v-full-tbl-name, v-field-name ).
+      else
+         o-where = substitute( "&1 &2 &3 =", o-where, v-word-link, v-field-name ).
 /*      if p-tt-handle = ? then do:*/
 /*        assign*/
 /*          o-where = substitute( "&1 &2 &3.&4 =", o-where, v-word-link, v-full-tbl-name, v-field-name )*/

@@ -21,7 +21,13 @@ using ibs.th.adm.upd.*.
 
 
 class ibs.th.adm.upd.observupd:
-  
+  define variable vss-revision    as character no-undo init "$Revision$":U .
+  define variable vss-author      as character no-undo init "$Author$":U .
+  define variable vss-date        as character no-undo init "$Date$":U .
+  define variable vss-workfile    as character no-undo init "$Workfile$":U .
+  define variable vss-archive     as character no-undo init "$Archive$":U .
+  define variable vss-description as character no-undo init "Модуль обновления БД".
+
   {cmp/str-glbl.i class}
   {utl/setpwd.i class}
   
@@ -173,14 +179,14 @@ class ibs.th.adm.upd.observupd:
     end.
     
     CurrDBShm = max(vVerDB,vVerStuct).
-    if     avail buf_db 
+    /*if     avail buf_db 
        and string(CurrDBShm) ne buf_db.reserve1-char
     THEN DO TRANS:
-       on write of ub.db override do: end.
+/*       on write of ub.db override do: end.*/
        find first buf_db EXCLUSIVE-lock where buf_db.db-num = DbNum no-error.
        buf_db.reserve1-char = string(CurrDBShm).
     
-    END.
+    END. */
    /* CurrDBShm = 8.*/
     find first buf_db no-lock where buf_db.db-num = 0 no-error.
     CurrDB0Shm = integer (buf_db.reserve1-char) no-error.
@@ -307,7 +313,7 @@ class ibs.th.adm.upd.observupd:
     on write of ub.db override do: end.
     if inShm > 0
     then do:
-    VTestStr = m-upd-list-chk[inShm] + if m-upd-list-chk[inShm   ] begins "proc:" then "" else (",Initial:db.reserve1-char=" + string(inShm)).
+    VTestStr = m-upd-list-chk[inShm] /* + if m-upd-list-chk[inShm   ] begins "proc:" then "" else (",Initial:db.reserve1-char=" + string(inShm)) */.
     
        do vi = 1 to num-entries(VTestStr):
          assign
@@ -384,15 +390,33 @@ class ibs.th.adm.upd.observupd:
        if available buf_sys-ctrl 
        then do:
           find first buf_db exclusive-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
-          buf_db.reserve1-char = string (inShm).
+/*          buf_db.reserve1-char = string (inShm).*/
           CurrDBShm = inShm.
           buf_db.reserve2-char = "deferred-callnews".
           release buf_db.
+          release buf_sys-ctrl.
+          find first _file no-lock where _file._file-name = "db"  no-error.
+          if available _file
+          then do:
+             find first _field of _file where _field._Field-Name =  "reserve1-char" no-lock no-error.
+             if available (_field)
+             then do:
+                find first _field of _file where _field._Field-Name =  "reserve1-char" exclusive-lock no-error.
+               _field._initial = string (inShm).
+               release _field.
+             end.
+             release _file.
+          end.
        end.
     end.
     CurrDBShm = inShm.
     isUpdShm = true.
     
+  end.
+  method public logical isneedupg (input flag as logical):
+    
+    
+    return CurrDBShm < TargetDBShm .
   end.
   
   method public logical isneedupg ():

@@ -29,6 +29,11 @@ class ibs.th.adm.upd.analisdf final:
     define property IsComp as logical no-undo
     get.
     set.
+
+    define property Msg as character no-undo
+    get.
+    private set.
+
     
     define public variable mFileDf   as character no-undo.
     define public variable mUpdateTo as integer   no-undo.
@@ -258,6 +263,13 @@ define temp-table {&prefixtt}INDEX
       
       do vi = 1 to num-entries(iFileDf):
          vfiledf = search (entry(vi,iFileDf)).
+         if vfiledf eq ?
+         then do:
+            Msg = substitute("Не найден файл &1" , entry(vi,iFileDf)).
+            message msg view-as alert-box.
+            
+            return yes.
+         end.
          input STREAM sReadfile FROM  VALUE(vfiledf).
          block-file:
          repeat:
@@ -299,8 +311,9 @@ define temp-table {&prefixtt}INDEX
       then do:
          mBufferName = entry(2,istr, " ") no-error.
          if error-status:error
-         then do: 
-            message "Ошибка структуре df файла не задан объект для метода " vMode
+         then do:
+            msg = substitute("Ошибка структуре df файла не задан объект для метода &1", vMode).
+            message msg
                view-as alert-box.
             return yes.
          end.
@@ -308,8 +321,9 @@ define temp-table {&prefixtt}INDEX
          then do:  
              mBufferName = entry(3,istr, " ") no-error.
              if error-status:error
-             then do: 
-                message "Ошибка структуре df файла не задан объект для метода " vMode
+             then do:
+                msg = substitute( "Ошибка структуре df файла не задан объект для метода &1", vMode).
+                message msg
                    view-as alert-box.
                 return yes.
              end.
@@ -324,8 +338,10 @@ define temp-table {&prefixtt}INDEX
             
          create buffer mBuffer for table "{&prefixtt}" + mBufferName no-error.
          if error-status:error
-         then do: 
-            message "Не известный буфер " "{&prefixtt}" + mBufferName
+         then do:
+            msg = substitute( "Не известный буфер &1" , "{&prefixtt}" + mBufferName).
+                 
+            message msg
                view-as alert-box.
             return yes.
          end.
@@ -333,7 +349,8 @@ define temp-table {&prefixtt}INDEX
          mName = entry(3 + vSdvig,istr, " ") no-error.
          if error-status:error
          then do: 
-            message "Ошибка структуре df файла не задан объект для метода " vMode " для таблицы " "{&prefixtt}" + mBufferName
+            msg = substitute( "Ошибка структуре df файла не задан объект для метода &1  для таблицы &2" ,vMode , "{&prefixtt}" + mBufferName).
+            message msg
                view-as alert-box.
             return yes.
          end.
@@ -342,7 +359,8 @@ define temp-table {&prefixtt}INDEX
             vTableWhere = if vMode eq "rename" then entry(5,istr, " ") else entry(5 + vSdvig,istr, " ") no-error.
             if error-status:error
             then do: 
-               message "Ошибка структуре df файла не задан таблица для " mBufferName mName
+               msg = substitute( "Ошибка структуре df файла не задан таблица для &1 &2", mBufferName, mName).
+               message msg
                   view-as alert-box.
                return yes.
             end.
@@ -357,7 +375,8 @@ define temp-table {&prefixtt}INDEX
             vTableWhere = if vMode eq "rename" then entry(7,istr, " ") else entry(5 + vSdvig,istr, " ") no-error.
             if error-status:error
             then do: 
-               message "Ошибка структуре df файла не задан таблица для " mBufferName mName
+               msg = substitute( "Ошибка структуре df файла не задан таблица для &1 &2", mBufferName, mName).
+               message msg
                   view-as alert-box.
                return yes.
             end.
@@ -394,7 +413,8 @@ define temp-table {&prefixtt}INDEX
             end.    
             else if vmode eq "add" 
             then do: 
-               message "Ошибка структуре df файла объект создан рание " vmode mBufferName mName vTableWhere
+               msg = substitute( "Ошибка структуре df файла объект создан рание &1 &2 &3 &4", vmode, mBufferName, mName, vTableWhere).
+               message msg
                   view-as alert-box.
                return yes.
             end.
@@ -438,7 +458,8 @@ define temp-table {&prefixtt}INDEX
             if     error-status:error
                and vMode eq "add"
             then do: 
-               message "Ошибка структуре df файла не задан таблица для " mBufferName mName
+               msg = substitute( "Ошибка структуре df файла не задан таблица для &1 &2", mBufferName, mName).
+               message msg
                   view-as alert-box.
                return yes. 
             end.
@@ -452,8 +473,9 @@ define temp-table {&prefixtt}INDEX
          then do:
                vFieldName = "{&prefixfil}" + vMode no-error.
                if error-status:error
-               then do: 
-                  message "Ошибка структуре df  объекта " mBufferName mName "нет поля в таблице" "{&prefixfil}" + vMode
+               then do:
+                  msg = substitute( "Ошибка структуре df  объекта &1 &2 нет поля в таблице &3", mBufferName, mName, "{&prefixfil}" + vMode). 
+                  message msg
                      view-as alert-box.
                   return yes.
                end.
@@ -471,7 +493,8 @@ define temp-table {&prefixtt}INDEX
                   mBuffer:buffer-field(vFieldName):BUFFER-VALUE () = "{&logicalfield}".
                if error-status:error
                then do: 
-                  message "2 Ошибка структуре df  объекта " mBufferName mName 
+                  msg = substitute( "2 Ошибка структуре df  объекта &1 &2", mBufferName, mName). 
+                  message  msg
                      view-as alert-box.
                   return yes.
                end.
@@ -484,7 +507,8 @@ define temp-table {&prefixtt}INDEX
              
          end.       
          else do:
-            message "Ошибка структуре df  объекта " mBufferName mName  "неизвестное выражение" vMode
+            msg = substitute( "Ошибка структуре df  объекта &1 &2 неизвестное выражение &3",mBufferName, mName, vMode). 
+            message msg
                      view-as alert-box.
                return yes.
          end.
@@ -532,8 +556,8 @@ define temp-table {&prefixtt}INDEX
    output to value(ifile) append.
    create query vQuery.
    vQuery:add-buffer(vBuffer).
-   if not vQuery:query-prepare("for EACH " + vBuffer:name) then message "ERROR 1" error-status:get-message(1) view-as alert-box.
-   if not vQuery:query-open()                              then message "ERROR 2" error-status:get-message(1) view-as alert-box.
+   if not vQuery:query-prepare("for EACH " + vBuffer:name) then  do: msg = substitute( "ERROR 1 ", error-status:get-message(1)).  message msg view-as alert-box. end.
+   if not vQuery:query-open()                              then  do: msg = substitute( "ERROR 2 ", error-status:get-message(1)).  message msg view-as alert-box. end.
    vQuery:get-first().
    if vBuffer:available
    then do: 
@@ -627,18 +651,21 @@ method private logical CheckOneTable(iTable as  handle):
    vQuery:add-buffer(vBuffer).
    if not vQuery:query-prepare("PRESELECT EACH " + vBuffer:name) 
    then do: 
-      message "ERROR 1" error-status:get-message(1) view-as alert-box.
+      msg = substitute( "ERROR 1 ", error-status:get-message(1)).  
+      message msg view-as alert-box. 
       verror = yes.
    end.   
    if not vQuery:query-open()                              
    then do:
-      message "ERROR 2" error-status:get-message(1) view-as alert-box.
+      msg = substitute( "ERROR 2 ", error-status:get-message(1)).  
+      message msg view-as alert-box.
       verror = yes.
    end.   
    vQuery:get-first().
    if vBuffer:available
    then do:
-      
+      define variable vCheck as logical no-undo.
+      vCheck = yes.
       if  vBuffer:name eq "{&prefixtt}TABLE"
       then
          vBufferName = "_file".
@@ -678,8 +705,13 @@ method private logical CheckOneTable(iTable as  handle):
          vFieldValue = trim(  vBuffer::{&prefixfil}table, '"').
          find first _file no-lock where _file._file-name = vFieldValue  no-error.
          if available _file
-         then 
+         then do:
             vWhere      = substitute ("where _field._file-recid eq &1 and _field._Field-Name eq &2 ",recid(_file),if vBuffer::{&prefixfil}mode eq "rename" then vBuffer::{&prefixfil}NewName else  vBuffer::{&prefixfil}name).
+            if     vFieldValue = "db"
+               and trim(vBuffer::{&prefixfil}name,'"') eq "reserve1-char"
+            then
+               vCheck = no. 
+         end.   
       end.   
       else if  vBuffer:name eq "{&prefixtt}Index"
       then do:
@@ -697,12 +729,15 @@ method private logical CheckOneTable(iTable as  handle):
          vBufferDB:find-last(vWhere, no-lock) no-error.
          vOk = no.
          if vBufferDB:available
-            and vBuffer::{&prefixfil}mode ne "drop"          
+            and vBuffer::{&prefixfil}mode ne "drop"
+            and vCheck          
          then do:
             vOk = yes.
             if vCheckField then         
             block-field:
             do vItm = 1 to vBuffer:num-fields:
+               define variable vValuelog as logical no-undo.   
+               vValuelog = yes.
                vField = vBuffer:buffer-field(vItm).
                vFieldName = "_" + substring(vField:name,vFieldPref).
                if vFieldName eq "_DESCRIPTION"
@@ -720,7 +755,13 @@ method private logical CheckOneTable(iTable as  handle):
                else if vFieldName eq "_CASE-SENSITIVE"
                then
                   vFieldName = "_fld-case".
-                  
+               else if vFieldName eq "_NULL-ALLOWED"
+               then
+                  assign
+                     vValuelog  = no
+                     vFieldName = "_MANDATORY"
+                  .
+               
                
                if     not can-do("_mode,_name,_table,_localindex,_NewName",vFieldName)
                   and vField:buffer-value ne "" 
@@ -730,7 +771,7 @@ method private logical CheckOneTable(iTable as  handle):
                   vValuedb = replace(vBufferDB:buffer-field(vFieldName):buffer-value,'"','').
                   vFlagEQ = if vFieldValue eq "{&logicalfield}" 
                         then 
-                           logical (vValuedb) eq yes
+                           logical (vValuedb) eq vValuelog
                         else
                            vValuedb eq vFieldValue.
                    if vFlagEQ
@@ -742,8 +783,9 @@ method private logical CheckOneTable(iTable as  handle):
             end.
              
          end.
-         else if     not vBufferDB:available
-                 and vBuffer::{&prefixfil}mode eq "drop"
+         else if    ( not vBufferDB:available
+                 and vBuffer::{&prefixfil}mode eq "drop")
+                 or not vCheck
          then          
             vOk = yes.
            

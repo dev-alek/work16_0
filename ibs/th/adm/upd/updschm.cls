@@ -86,8 +86,22 @@ class ibs.th.adm.upd.updschm:
   define private variable m-FileDf            as character no-undo.
   define private variable m-Batch             as logical   no-undo.
   define variable mDfUpdaLL as character no-undo.
-  
+
+  constructor public updschm ():
+     obsrvdbObj = new observupd ().
+     isNeedUpd = obsrvdbObj:isneedupg(yes).
+     CurrDBShm   = obsrvdbObj:CurrDBShm.  
+     CurrDB0Shm  = obsrvdbObj:CurrDB0Shm. 
+     DbNum       = obsrvdbObj:DbNum.      
+     TargetDBShm = obsrvdbObj:TargetDBShm.
+     if not isNeedUpd
+     then
+        run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
+     
+     delete object obsrvdbObj.
     
+  end constructor.
+
   constructor public updschm (input inConPar as char):
     obsrvdbObj = new observupd ().
     ConPar      = inConPar.
@@ -105,13 +119,19 @@ class ibs.th.adm.upd.updschm:
     if loadDFProcFile <> ?
     then isRcode = true.
     else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
-    if not IsComp and not isRcode and CurrDBShm < TargetDBShm 
+    isNeedUpd = obsrvdbObj:isneedupg(yes).
+    if not isNeedUpd
+    then
+       run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
+    if not IsComp and not isRcode and isNeedUpd 
     then do:
        message "Обновить базу с версии " CurrDBShm  " до " TargetDBShm "?" view-as alert-box question 
           buttons yes-no title "[ ВНИМАНИЕ! ]" update vupd.
        if not vupd
-       then
+       then do:
+          isNeedUpd = no.
           return.
+       end.
     end.
     isNeedUpd = obsrvdbObj:isneedupg().
     if obsrvdbObj:IsErr
@@ -119,6 +139,20 @@ class ibs.th.adm.upd.updschm:
       Msg = obsrvdbObj:Msg.
       IsErr = true.
     end.
+    define variable vok as logical no-undo.
+    run utl\chekupd.p (no, TargetDBShm , output vok).
+    if not vok
+    then do:
+       msg = return-value.
+       IsErr = true.
+    end.
+    /* else do:
+       delete object obsrvdbObj.
+       obsrvdbObj = new observupd ().
+       CurrDBShm  = obsrvdbObj:CurrDBShm.
+       isNeedUpd  = obsrvdbObj:isneedupg().
+    end. */
+       
     assign
       m-user-passwd = substitute("-U &1 -P &2":U
                                 ,"sysadm"
@@ -212,16 +246,24 @@ class ibs.th.adm.upd.updschm:
       end.
       else
          isErr = yes. 
-      
+      if isErr then 
+      do:
+        Msg =
+          substitute("Ошибка при обновлении схемы базы данных &1&2",  {&new-line} ,
+          analisdfObj:msg)
+          .
+        IsErr = true.
+        return.
+      end.
       delete object analisdfObj no-error.
       disconnect value ('ub').
       upddbshm-1(m-FileDf).
       if isErr then 
       do:
         Msg =
-          substitute("Ошибка при обновлении схемы базы данных") + {&new-line} +
-          error-status :get-message(1) + {&new-line} +
-          return-value
+          substitute("Ошибка при обновлении схемы базы данных&1&2&1&3",  {&new-line} ,
+          error-status :get-message(1) ,
+          return-value)
           .
         IsErr = true.
         return.
@@ -280,6 +322,15 @@ class ibs.th.adm.upd.updschm:
       end.
       else
          isErr = yes.
+      if isErr then 
+      do:
+        Msg =
+          substitute("Ошибка при обновлении схемы базы данных&1&2",  {&new-line} ,
+          analisdfObj:msg)
+          .
+        IsErr = true.
+        return.
+      end.
       if not m-FileDf begins "proc:"
       then 
          m-FileDf = analisdfObj:addDFNumUpd(m-FileDf,CurrDBShm + 1). 
@@ -289,9 +340,9 @@ class ibs.th.adm.upd.updschm:
       if isErr then 
       do:
         Msg =
-          substitute("Ошибка при обновлении схемы базы данных") + {&new-line} +
-          error-status :get-message(1) + {&new-line} +
-          return-value
+          substitute("Ошибка при обновлении схемы базы данных&1&2&1&3",  {&new-line} ,
+          error-status :get-message(1) ,
+          return-value)
           .
         IsErr = true.
         return.
