@@ -462,7 +462,12 @@ do:
     apply "entry" to sr-izmerenia.sr-abs-err-water in frame {&frame-name} .
     return no-apply .
   end.
-  v-delta = 0.5 .
+  
+  case sr-izmerenia.sr-type-izm:
+     when 1 then v-delta = 3.
+     when 2 then v-delta = 0.5.
+     when 3 then v-delta = 1.5.
+  end case.
   if sr-izmerenia.sr-abs-err-dens > v-delta or sr-izmerenia.sr-abs-err-dens < (-1) * v-delta then do :
     message substitute("&1 &2&3(+/-)&4 êã/ì3",
                  sr-izmerenia.sr-abs-err-dens:label in frame {&frame-name}, v-msg2, {&new-line}, string(v-delta, "9.9") )
@@ -470,6 +475,7 @@ do:
     apply "entry" to sr-izmerenia.sr-abs-err-dens in frame {&frame-name} .
     return no-apply .
   end.
+  
   if sr-izmerenia.sr-abs-err-temp-vol > v-delta or sr-izmerenia.sr-abs-err-temp-vol < (-1) * v-delta then do :
     message substitute("&1 &2&3(+/-)&4 °Ñ",
                  sr-izmerenia.sr-abs-err-temp-vol:label in frame {&frame-name}, v-msg2, {&new-line}, string(v-delta, "9.9") )
