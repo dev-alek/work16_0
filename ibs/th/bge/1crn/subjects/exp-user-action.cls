@@ -137,7 +137,7 @@ method public void CrContentToSW (insw as handle):
           for first buf_user-account no-lock where buf_user-account.user-id = c-user-log.corr-user-name :
             insw:write-data-element ("usr-nik", buf_user-account.nik ) .
           end .
-          if v-rvs-code > "" then insw:write-data-element ("doc-num", v-rvs-code ).
+/*          if v-rvs-code > "" then insw:write-data-element ("doc-num", v-rvs-code ).*/
           insw:start-element ("tank-actions") .
             insw:start-element ("tank-action") .
               insw:write-data-element ("tank-code", string(v-pl-code) ).
@@ -160,31 +160,31 @@ method public void CrContentToSW (insw as handle):
               insw:write-data-element ("rvd-reason", v-rvd-reason-code ).
               insw:write-data-element ("itsm-num", v-ITSM-num ).
               insw:write-data-element ("operator", v-operator ).
-              if v-maim-mi-old <> v-maim-mi-new
-              then do :
-                insw:write-data-element ("maim-mi-old", v-maim-mi-old ).
-                insw:write-data-element ("maim-mi-new", v-maim-mi-new ).
-              end .
-              if v-dnst-mi-old <> v-dnst-mi-new
-              then do :
-                insw:write-data-element ("dnst-mi-old", v-dnst-mi-old ).
-                insw:write-data-element ("dnst-mi-new", v-dnst-mi-new ).
-              end .
-              if v-lvl-mi-old <> v-lvl-mi-new
-              then do :
-                insw:write-data-element ("lvl-mi-old", v-lvl-mi-old ).
-                insw:write-data-element ("lvl-mi-new", v-lvl-mi-new ).
-              end .
-              if v-tmp-mi-old <> v-tmp-mi-new
-              then do :
-                insw:write-data-element ("tmp-mi-old", v-tmp-mi-old ).
-                insw:write-data-element ("tmp-mi-new", v-tmp-mi-new ).
-              end .
+/*              if v-maim-mi-old <> v-maim-mi-new                         */
+/*              then do :                                                 */
+/*                insw:write-data-element ("maim-mi-old", v-maim-mi-old ).*/
+/*                insw:write-data-element ("maim-mi-new", v-maim-mi-new ).*/
+/*              end .                                                     */
+/*              if v-dnst-mi-old <> v-dnst-mi-new                         */
+/*              then do :                                                 */
+/*                insw:write-data-element ("dnst-mi-old", v-dnst-mi-old ).*/
+/*                insw:write-data-element ("dnst-mi-new", v-dnst-mi-new ).*/
+/*              end .                                                     */
+/*              if v-lvl-mi-old <> v-lvl-mi-new                           */
+/*              then do :                                                 */
+/*                insw:write-data-element ("lvl-mi-old", v-lvl-mi-old ).  */
+/*                insw:write-data-element ("lvl-mi-new", v-lvl-mi-new ).  */
+/*              end .                                                     */
+/*              if v-tmp-mi-old <> v-tmp-mi-new                           */
+/*              then do :                                                 */
+/*                insw:write-data-element ("tmp-mi-old", v-tmp-mi-old ).  */
+/*                insw:write-data-element ("tmp-mi-new", v-tmp-mi-new ).  */
+/*              end .                                                     */
             insw:end-element ("tank-action") .
           insw:end-element ("tank-actions") .
         insw:end-element ("user-action") .
       end . /* rvd-reasons */
-      when "mi-change-1C"
+/*      when "mi-change-1C"
       then do :
         v-shift-date = date(entry(3, c-user-log.head-table-key, {&delim-cmd})) .
         v-shift-num = integer(entry(4, c-user-log.head-table-key, {&delim-cmd})) .
@@ -241,7 +241,7 @@ method public void CrContentToSW (insw as handle):
             insw:end-element ("tank-action") .
           insw:end-element ("tank-actions") .
         insw:end-element ("user-action") .
-      end .
+      end . */
 /*      when "schedule"                                                                                                               */
 /*      then do :                                                                                                                     */
 /*        v-shift-date = date(entry(3, c-user-log.head-table-key, {&delim-cmd})) .                                                    */

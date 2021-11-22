@@ -2451,6 +2451,56 @@ define buffer buf_doc-pl-attr for doc-pl-attr .
       rvs-line-attr.attr-value = string(v-mi-tmp) .
     end.
   end .
+  
+  find first rvs-line-attr exclusive-lock
+       where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+         and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+         and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+         and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+         and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+         and rvs-line-attr.attr-code = "input-type" no-error.
+  if not available rvs-line-attr then do :
+    create rvs-line-attr.
+    assign
+      rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+      rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+      rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+      rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+      rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+      rvs-line-attr.attr-code = "input-type"
+    .
+  end.
+  if buf_rvs-line.density = ? or buf_rvs-line.density = 0
+  then do :
+    rvs-line-attr.attr-value = "р" .
+  end.
+  else do :
+    if v-hand-input-dnst /* ѕлотность редактировалась */
+    then do :
+      if rvs-line-attr.attr-value = "а" then rvs-line-attr.attr-value = "ак" .
+      if rvs-line-attr.attr-value = "ф" then rvs-line-attr.attr-value = "фк" .
+    end.
+    else do :
+      find first olddens-rvs-line-attr no-lock
+           where olddens-rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and olddens-rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and olddens-rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and olddens-rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and olddens-rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and olddens-rvs-line-attr.attr-code = "is-olddens" no-error.
+      if available olddens-rvs-line-attr
+      then do :
+        v-is-olddens = logical(olddens-rvs-line-attr.attr-value) no-error.
+        if error-status:error then v-is-olddens = no .
+      end.
+      else do :
+        v-is-olddens = no .
+      end.
+      if v-is-olddens and 
+      (rvs-line-attr.attr-value = "а" or rvs-line-attr.attr-value = "ф")
+      then rvs-line-attr.attr-value = "п" .
+    end.
+  end.
  
   find first rvs-line-attr exclusive-lock
        where rvs-line-attr.obj-code  = tt-rvs-line.obj-code

@@ -876,6 +876,25 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
              and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
              and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
              and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "input-type" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+          rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+          rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+          rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+          rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+          rvs-line-attr.attr-code = "input-type"
+          rvs-line-attr.attr-value = ''
+        .
+      end.
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+             and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+             and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+             and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
              and rvs-line-attr.attr-code = "input-type-p" no-error.
       if not available rvs-line-attr then do :
         create rvs-line-attr.
