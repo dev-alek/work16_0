@@ -69,7 +69,9 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { str/is-sug.i }
 { gbl/db-attr.i }
 {utl\search.i}
-define stream str-anl.
+{bge/place-def.i}
+{str/revis.i }
+
 define stream str-err.
 define stream str-log.
 define stream outstream.
@@ -77,6 +79,7 @@ define stream sinp .
 define VARIABLE ii as integer no-undo .
     DEFINE VARIABLE rdc-value AS CHARACTER NO-UNDO INITIAL ?.
     DEFINE VARIABLE rdc-type  AS CHARACTER NO-UNDO INITIAL ?.
+    
 if valid-handle( g#lib-rvs ) and
    g#lib-rvs <> this-procedure :handle and
    g#lib-rvs :get-signature( 'lib-rvs_place-sh':U ) <> ''
@@ -1220,7 +1223,7 @@ procedure lib-rvs_crrvslnp : /* create-rvs-line-pump */
   end. /* on error */
   return .
 end procedure. /* lib-rvs_crrvslnp */
-
+define variable is_FatalError as   logical       no-undo.
 procedure lib-rvs_rvsplace : /* revision-place */
 
   define input        parameter           p-obj-type   like ub.rvs-doc.obj-type no-undo.
@@ -1238,47 +1241,43 @@ procedure lib-rvs_rvsplace : /* revision-place */
   on stop   undo, return error substitute( "&1(lib-rvs_rvsplace). stop", vss-workfile )
   on endkey undo, return error substitute( "&1(lib-rvs_rvsplace). endkey", vss-workfile )
   :
-
-    
-
-      define variable v-value       as character no-undo.
-      define variable v-ok          as logical   no-undo.
-      define variable pl-twice-code as character no-undo.
-      define variable place-asi-sertif  as logical no-undo.
-      define variable v-pl-code     as integer   no-undo.
-      
+    define variable v-value       as character no-undo.
+    define variable v-ok          as logical   no-undo.
+    define variable pl-twice-code as character no-undo.
+    is_FatalError = no.
     define variable anl-loc       like ub.place.loc1 no-undo.
     define variable v_string-tmp  as   character     no-undo.
     define variable v_command     as   character     no-undo.
     define variable v_File-Name   as   character     no-undo.
-    define variable v-err-file-name as character no-undo .
-    define variable v-log-file-name as character no-undo .
-    define variable is_FatalError as   logical       no-undo.
-    define variable l_read        as   logical       no-undo.
+    define variable v-err-file-name as character     no-undo .
+    define variable v-log-file-name as character     no-undo .
+    
     define variable j_num         as   integer       no-undo.
     define variable v_DirFilervs  as   character     no-undo.
     define variable l_log         as   logical       no-undo.
-    define variable v_comstring   as   character     no-undo.
-    define variable v_comment     as   character     no-undo.
-    define variable v_StartString as   character     no-undo.
     define variable vartarirvalue as   character     no-undo.
     define variable vartarirtype  as   character     no-undo.
     define variable varlevel-sm   as   integer       no-undo.
-    define variable ii            as   integer       no-undo.
-    
+    define variable Vrevis        as   longchar      no-undo.
 
- define variable tt-level-water as integer no-undo.
- define variable tt-level-water-dec as decimal no-undo.
-define variable      v-water-qnty as decimal no-undo. 
-    define variable v-bh as handle    no-undo .
-    define variable v-fh as handle    no-undo .
-    define buffer   bf-water-nxt_pl-level for pl-level.
-      define variable varlevel-sm-water as decimal no-undo.
-    define buffer bf_place for ub.place.
-    define buffer buf_place for ub.place.
-    define buffer buf_pl-gds for ub.pl-gds .
+      define variable tt-level-water     as integer no-undo.
+      define variable tt-level-water-dec as decimal no-undo.
+      define variable v-water-qnty       as decimal no-undo . 
+      define variable v-bh               as handle  no-undo .
+      define variable v-fh               as handle  no-undo .
+      define buffer bf-water-nxt_pl-level for pl-level.
+      define variable varlevel-sm-water as decimal no-undo. 
+      define buffer bf_place for ub.place.
+      define buffer buf_place for ub.place .
+      define buffer buf_pl-gds for ub.pl-gds .
+
     run gbl/conf-rd.p ("tarir", "", "", 0, "", "", "", no, output vartarirvalue, output vartarirtype) no-error.
+    output stream str-err to     "revis.err" .
+    output stream str-err to     close .
     
+    define variable v_comstring   as   character     no-undo.
+    define variable v_comment     as   character     no-undo.
+    define variable v_StartString as   character     no-undo.
     { str/crtt-rvs.i
         tt-param
         v_comstring
@@ -1293,7 +1292,12 @@ define variable      v-water-qnty as decimal no-undo.
                             , return-value ) .
     end.
 
-    empty temp-table tt-meas-file .
+    for each tt-meas-file :
+      delete tt-meas-file .
+    end.
+    for each tt-place:
+      delete tt-place.
+    end.
     
     /* Если запрос по одному баку */
     if p-one-place = yes then do:
@@ -1314,45 +1318,11 @@ define variable      v-water-qnty as decimal no-undo.
     else do:
       assign
         anl-loc = '0':U
-      .
+      . 
     end.
-/*    if p-read-cur = ? then do:                                                             */
-/*      if p-message-on = no then do:                                                        */
-/*        assign                                                                             */
-/*          p-read-cur = yes                                                                 */
-/*        .                                                                                  */
-/*      end.                                                                                 */
-/*      else do:                                                                             */
-/*        run gbl/d-askw.w                                                                   */
-/*          (  input 'Выбор источника данных с информацией по резервуарам'                   */
-/*          ,  input 'Будем читать текущие данные с резервуаров или возьмем данные из файла?'*/
-/*          ,  input '|^'                                                                    */
-/*          ,  input 'Текущие данные|Из файлов|Отмена'                                       */
-/*          ,  input 'Запускается программа для обращения к датчикам резервуаров|'           */
-/*          +        'Берутся уже сохраненные данные из файла|Ничего не делаем'              */
-/*          ,  input 1                                                                       */
-/*          ,  input 3                                                                       */
-/*          , output j_num                                                                   */
-/*          ) .                                                                              */
-/*        case j_num :                                                                       */
-/*          when 3 then do:                                                                  */
-/*            return error .                                                                 */
-/*          end.                                                                             */
-/*          when 2 then do:                                                                  */
-/*            assign                                                                         */
-/*              p-read-cur = yes                                                             */
-/*            .                                                                              */
-/*          end.                                                                             */
-/*          when 1 then do:                                                                  */
-/*            assign                                                                         */
-/*              p-read-cur = no                                                              */
-/*            .                                                                              */
-/*          end.                                                                             */
-/*        end case.                                                                          */
-/*      end.                                                                                 */
-/*    end.                                                                                   */
-    
     v-log-file-name = substitute('&1rvs.log', ibs.th.gbl.gbl-inipar:logDir) .
+    v-err-file-name = './rvs-err.log' .
+    
     case p-read-cur :
       when 0
       then do :
@@ -1373,388 +1343,38 @@ define variable      v-water-qnty as decimal no-undo.
         if l_log <> yes then do:
           return error .
         end.
-        
+        run readfiletxt (v_File-Name, output Vrevis).
+        run readrevisetxt (Vrevis,v_StartString,v_comment).
       end.
       when 1
       then do :
-        assign
-          v_File-Name = 'revis.txt':U
-        .
-        os-delete value( v_File-Name ) .
-        if v_comstring = '':U
-          or v_comstring = ?
-        then do:
-          return error 'Не задан парам. comstr в секции revision ini файла.' .
+        run get-from-struna (v-log-file-name,p-obj-code )no-error.
+        if error-status:error
+        then do :
+          return error return-value .
         end.
-        assign
-          anl-loc = '0':U
-        .
-        assign
-          v_command = substitute( "&1 &2 &3 &4", v_comstring, string( anl-loc ), v_File-Name, p-obj-code)
-        .
-        os-command silent value( v_command ) .
-        run gbl/fileapnd.p
-          ( v-log-file-name
-          ,substitute("&1 &2  Запрос &3&4", string(today),string(time, "HH:MM:SS"), v_command, {&carriage-return} + {&new-line})
-          ,input 10 /* время ожинания освобождения файла */
-          ) no-error .
-        if searchfile( v_File-Name ) = ? then do:
-          return error 'Файл с прибора не получен.' .
-        end.
-        else do: 
-          v_File-Name  = searchfile( v_File-Name ) . 
-        end.
-        run gbl/fileapnd.p
-          ( v-log-file-name
-          ,substitute("&1 &2  Данные &3", string(today),string(time, "HH:MM:SS"), {&carriage-return} + {&new-line})
-          ,input 10 /* время ожинания освобождения файла */
-          ) no-error .
-        os-append value(v_File-Name) value(v-log-file-name).
-        
-        run gbl/fileapnd.p
-          ( v-log-file-name
-          , {&carriage-return} + {&new-line}
-          ,input 10 /* время ожинания освобождения файла */
-          ) no-error .
-        
-        
       end.
       when 2 /* Агент */
       then do :
-        run str/getAsiDataAgent.p (output v_File-Name) no-error.
+        run str/getAsiDataAgent.p (input anl-loc, output table tt-place ) no-error.
         if error-status:error
         then do :
           return error return-value .
         end.
-        
       end.
       when 3 /* ifsf */
       then do :
-        run get-from-ifsf no-error.
+        run get-from-ifsf (v-log-file-name,?,? )no-error.
         if error-status:error
         then do :
           return error return-value .
         end.
-        v_File-Name = "revis.ifsf" .
-        run gbl/fileapnd.p
-          ( v-log-file-name
-          ,substitute("&1 &2  Данные &3", string(today),string(time, "HH:MM:SS"), {&carriage-return} + {&new-line})
-          ,input 10 /* время ожинания освобождения файла */
-          ) no-error .
-       /* if error-status:error then do:
-          return error return-value .
-        end.*/
-        os-append value(v_File-Name) value(v-log-file-name).
-        
-        run gbl/fileapnd.p
-          ( v-log-file-name
-          , {&carriage-return} + {&new-line}
-          ,input 10 /* время ожинания освобождения файла */
-          ) no-error .
-        
       end.
     end case .
-    /*
-    if p-read-cur = yes then do:
-      assign
-        v_File-Name = 'revis.txt':U
-      .
-      os-delete value( v_File-Name ) .
-      if v_comstring = '':U
-        or v_comstring = ?
-      then do:
-        return error substitute('Не задан параметр &1', ibs.th.gbl.gbl-inipar:comstrKeyName) .
-      end.
-      assign
-        anl-loc = '0':U
-      .
-      assign
-        v_command = substitute( "&1 &2 &3 &4", v_comstring, string( anl-loc ), v_File-Name, p-obj-code)
-      .
-      os-command silent value( v_command ) .
-      if search( v_File-Name ) = ? then do:
-        return error 'Файл с прибора не получен.' .
-      end.
-      else do: 
-     v_File-Name  = search( v_File-Name ) . 
-     end.
-
-    end.
-    else do:
-      
-      v_DirFilervs = ibs.th.gbl.gbl-inipar:dirflrvs .
-      if v_DirFilervs = '':U
-        or v_DirFilervs = ?
-      then do:
-        assign
-          v_DirFilervs = '.':U
-        .
-      end.
-      system-dialog get-file v_File-Name
-        initial-dir v_DirFilervs
-        title 'Выберите файл с данными из резервуаров'
-        update l_log.
-      if l_log <> yes then do:
-        return error .
-      end.
-    end.
-*/
-    v-err-file-name = substitute('&1revis.err', ibs.th.gbl.gbl-inipar:logDir) .
-    
-    input  stream str-anl from  value (v_File-Name)   .
-    output stream str-err to     'revis.err' .
-    rpt:
-    repeat :
-         is_FatalError = no.
-        pl-twice-code = "" . 
-      import stream str-anl unformatted v_string-tmp.
-      /* Отсекем комментарий */
-      if index( v_string-tmp, v_comment ) > 0 then do:
-          
-        assign
-          v_string-tmp = substring( v_string-tmp, 1, index( v_string-tmp, v_comment ) - 1 )
-        .
-      end.
-      if v_string-tmp = '':U then next rpt .
-      
-      if index( v_string-tmp, v_StartString ) > 0 then do:
-        /* перешли к новому баку, следует в старом баке проставить */
-        assign
-          l_read = no
-        .
-        /* Ищем бак в нашей системе */
-        find first bf_place no-lock
-          where bf_place.obj-type = p-obj-type
-            and bf_place.obj-code = p-obj-code
-            and bf_place.loc1     = trim( entry( 2, v_string-tmp, '=' ) )
-            and bf_place.status_ = ""
-          no-error.
-          
-          
-          if not available bf_place  then 
-          do:
-              v-pl-code = ? .
-              twice-code:  for each  place where place.obj-code =  p-obj-code and place.obj-type = p-obj-type and place.is-meas = yes : 
-                  run placelib_get-attr  ( input {&place-twice-code}
-                      ,input p-obj-code
-                      ,input p-obj-type
-                      ,input place.pl-code
-                      ,output v-value
-                      ,output v-ok      ) no-error.   
-        
-                  if v-ok then pl-twice-code = v-value .
-                  if num-entries(pl-twice-code) > 1
-                  then do :
-                    do ii = 1 to num-entries(pl-twice-code) :
-                      if trim( entry( ii, pl-twice-code ) ) = trim( entry( 2, v_string-tmp, '=' ) )
-                      then do :
-                        pl-twice-code = trim( entry( ii, pl-twice-code ) ) .
-                        v-pl-code = place.pl-code .
-                        leave twice-code.
-                      end.
-                    end.
-                  end.
-                  else do :
-                    if pl-twice-code =  trim( entry( 2, v_string-tmp, '=' ) )
-                    then do :
-                      v-pl-code = place.pl-code .
-                      leave twice-code.
-                    end.
-                  end.
-                  pl-twice-code = "" .
-                  v-pl-code = ? .
-              end.
-              
-              if pl-twice-code = ""  then 
-              do: 
-          put stream str-err unformatted
-            substitute( '&2 Не найден резервуар по системе с локальным кодом(коорд1) &1 .'
-                      , trim( entry( 2, v_string-tmp, '=' ) )
-                      , cur-time-string-sec()
-                      ) skip .
-          assign
-            is_FatalError = yes
-          .
-          next rpt .
-        end.
-          end.
-          
-          if   pl-twice-code = "" and available bf_place then 
-          do: 
-            if bf_place.is-meas = no   then 
-            do:
-              put stream str-err unformatted
-                substitute( '&3 Получены данные с приборов по резервуару &1 '
-                          + 'с локальным кодом(коорд1) &2, определенного в системе как неизмеряемый.'
-                          , bf_place.pl-code
-                          , trim( entry( 2, v_string-tmp, '=' ) ) 
-                          , cur-time-string-sec()
-                          ) skip .
-              assign
-                is_FatalError = yes
-              .
-              next rpt .
-            end.
-          end.
-          if   pl-twice-code = "" then 
-          do: 
-              create tt-meas-file.
-              assign
-                  tt-meas-file.obj-type = p-obj-type
-                  tt-meas-file.obj-code = p-obj-code
-                  tt-meas-file.pl-code  = bf_place.pl-code
-                  tt-meas-file.loc1     = bf_place.loc1
-              no-error .
-              if error-status:error then do:
-                put stream str-err unformatted
-                  substitute( '&4 Ошибка принятия к обработке резервуара id &1 с локальным кодом(коорд1) &2 &3'
-                       , bf_place.pl-code
-                       , bf_place.loc1
-                       , error-status:get-message(1)
-                       , cur-time-string-sec()
-                  )
-                  skip
-                .
-                is_FatalError = yes.
-                undo, leave rpt .
-              end .
-              l_read = yes .
-          end.
-          else 
-          do: 
-              create tt-meas-file.
-              assign
-                  tt-meas-file.obj-type = p-obj-type
-                  tt-meas-file.obj-code = p-obj-code
-                  /*          tt-meas-file.pl-code  = bf_place.pl-code*/
-                  tt-meas-file.loc1     = pl-twice-code
-              no-error .
-              if error-status:error then do:
-                put stream str-err unformatted
-                  substitute( '&3 Ошибка принятия к обработке резервуара с локальным кодом(коорд1) &1 &2'
-                       , pl-twice-code
-                       , error-status:get-message(1)
-                       , cur-time-string-sec()
-                  )
-                  skip
-                .
-                is_FatalError = yes.
-                undo, leave rpt .
-              end .
-              l_read = yes .
-          end.
-      end.
-      else do:
-        /* если резервуар корректный, то читаем по нему данные */
-        if l_read = yes then do:
-          find first tt-param
-            where tt-param.strfrfile = trim( entry( 1, v_string-tmp, '=' ) )
-            no-error.
-          if available tt-param then do:
-            assign
-              v-bh = buffer tt-meas-file:handle
-            .
-            case tt-param.flddb :
-              when 'measure-qnty':U
-              or when 'brutto-qnty':U
-              or when 'measure-cli-qnty':U
-              or when 'brutto-cli-qnty':U
-              or when 'density':U
-              or when 'temperature':U
-              or when 'level-total':U
-              or when 'level-petrol':U
-              or when 'level-water':U
-              or when 'temp-layer1':U
-              or when 'temp-layer2':U
-              or when 'temp-layer3':U
-              or when 'measure-tc-qnty':U
-              or when 'brutto-tc-qnty':U
-              or when 'water-qnty':U
-              or when 'vapor-density':U
-              or when 'vapor-pressure':U
-              then do:
-                assign
-                  v-fh                = v-bh:buffer-field( tt-param.flddb )
-                  v-fh:buffer-value() = decimal( trim( entry( 2, v_string-tmp, '=' ) ) )
-                .
-              end.
-            end case.
-            if tt-param.strfrfile = 'temperature':U   then do:
-              assign
-                tt-meas-file.temp-not-null   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'temp-layer1':U   then do:
-              assign
-                tt-meas-file.t1-not-null   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'temp-layer2':U   then do:
-              assign
-                tt-meas-file.t2-not-null   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'temp-layer3':U   then do:
-              assign
-                tt-meas-file.t3-not-null   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'volume_oil':U   then do:
-              assign
-                tt-meas-file.meas-vol-oil   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'volume_water':U then do:
-              assign
-                tt-meas-file.meas-vol-water = yes
-              .
-            end.
-            if tt-param.strfrfile = 'mass_total':U  then 
-            do: 
-              run placelib_get-attr  ( input {&place-asi-sertif}
-                ,input p-obj-code
-                ,input p-obj-type
-                ,input (if tt-meas-file.pl-code <> 0 then tt-meas-file.pl-code else v-pl-code)
-                ,output v-value
-                ,output v-ok      ) no-error.
-              if v-ok and v-value = "yes" then do: 
-                if trim( entry( 2, v_string-tmp, '=' ) )  <> "-" and trim( entry( 2, v_string-tmp, '=' ) )  <> "" then 
-                do:
-                  assign
-                    tt-meas-file.log-brutto       = yes
-                    tt-meas-file.measure-cli-qnty = decimal( trim( entry( 2, v_string-tmp, '=' ) ) )
-                    . 
-                end.
-              end.
-            end.  
-          end.
-          else do:
-            if trim( entry( 1, v_string-tmp, '=' ) ) = "ERROR"
-            then do :
-              assign
-                tt-meas-file.is-error = true 
-              .
-              put stream str-err unformatted
-              substitute('&2 Ошибка: &1'
-                         , trim( entry(2, v_string-tmp, '=') )
-                         , cur-time-string-sec()
-                         ) skip .
-            end .
-            else do :
-              put stream str-err unformatted
-              substitute('&2 Неизвестный параметр: &1'
-                         , trim( entry(1, v_string-tmp, '=') )
-                         , cur-time-string-sec()
-                         ) skip .
-            end .
-          end.
-        end. /* читаем данные по резервуару */
-      end. /* не номер танка */
-    end. /* repeat rpt */
-
-    if is_FatalError = no then do:
-    _recalc:
-    for each tt-meas-file where not tt-meas-file.is-error
+    run creatett-meas-file(p-obj-type, p-obj-code).
+    output stream str-err to     "revis.err" append .
+      _recalc:                
+      for each tt-meas-file where not tt-meas-file.is-error
           on error undo, return error return-value
           :
             
@@ -1805,12 +1425,12 @@ define variable      v-water-qnty as decimal no-undo.
             if available buf_pl-gds
             and is-sug(buf_pl-gds.gds-code) then next _recalc.                                
           end.  
-          
+          define variable place-asi-sertif  as logical no-undo.
           place-asi-sertif = no .  
           run placelib_get-attr  ( input {&place-asi-sertif}
                                 ,input p-obj-code
                                 ,input p-obj-type
-                                ,input (if tt-meas-file.pl-code <> 0 then tt-meas-file.pl-code else v-pl-code)
+                                ,input tt-meas-file.pl-code
                                 ,output v-value
                                 ,output v-ok      ) no-error.
           if v-ok then place-asi-sertif = logical(v-value) .                      
@@ -2127,13 +1747,18 @@ define variable      v-water-qnty as decimal no-undo.
       end.
       end.
     end. /* tt-meas-file */
-    end . /* end of if_is_FatalError = no  */
-    input  stream str-anl close.
+   
+    output stream str-err close.
+    
+    output to value(v-err-file-name) append.
+    put unformatted string(today) ' ' string(time, "HH:MM:SS") skip .
+    output close .
+    
+    OS-APPEND value("revis.err") value(v-err-file-name).
 
     if is_FatalError = yes then do:
       return error 'При считывании данных с резервуаров произошли ошибки НЕПОЗВОЛЯЮЩИЕ ЗАГРУЗИТЬ ДАННЫЕ.' .
     end.
-
     for  each tt-meas,
       first tt-meas-file
       where tt-meas-file.obj-type = tt-meas.obj-type
@@ -2194,10 +1819,6 @@ end.
   return .
   
   finally:
-    input  stream str-anl close.
-    put stream str-err unformatted skip(0) .
-    output stream str-err close.
-
     define variable v-save-file-name as character no-undo .
     v-save-file-name = substitute("&1rvs-err.log", ibs.th.gbl.gbl-inipar:logDir) .
     OS-APPEND value(v-err-file-name) value(v-save-file-name).
@@ -2550,7 +2171,7 @@ then do:
                              "T3:              " + (if tt-meas.temp-layer3 = ? then "?" else string(tt-meas.temp-layer3)) + {&new-line} +
                              "Вода:            " + string(tt-meas.water-qnty) + {&new-line} +
                              "Плотность ПФ:    " + string(tt-meas.vapor-density, ">>>9.9<<<") + {&new-line} +
-                             "Давление:        " + string(tt-meas.vapor-pressure / 1000, ">>>9.9<<<")
+                             "Давление:        " + string(tt-meas.vapor-pressure, ">>>9.9<<<")
                              .
           find first rvs-line-attr exclusive-lock
                 where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -2612,7 +2233,7 @@ then do:
                                    "Уровень воды:    " + string(buf_tt-meas.level-water) + {&new-line} +
                                    "Вода:            " + string(buf_tt-meas.water-qnty) + {&new-line} +
                                    "Плотность ПФ:    " + string(buf_tt-meas.vapor-density, ">>>9.9<<<") + {&new-line} +
-                                   "Давление:        " + string(buf_tt-meas.vapor-pressure / 1000, ">>>9.9<<<")
+                                   "Давление:        " + string(buf_tt-meas.vapor-pressure , ">>>9.9<<<")
                                    .
                 find first rvs-line-attr exclusive-lock
                       where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -2764,7 +2385,7 @@ then do:
                                  "Уровень воды:    " + string(buf_tt-meas.level-water) + {&new-line} +
                                  "Вода:            " + string(buf_tt-meas.water-qnty) + {&new-line} +
                                  "Плотность ПФ:    " + string(buf_tt-meas.vapor-density, ">>>9.9<<<") + {&new-line} +
-                                 "Давление:        " + string(buf_tt-meas.vapor-pressure / 1000, ">>>9.9<<<")
+                                 "Давление:        " + string(buf_tt-meas.vapor-pressure , ">>>9.9<<<")
                                  .
               find first rvs-line-attr exclusive-lock
                     where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -3584,7 +3205,7 @@ then do:
               and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
               and rvs-line-attr.attr-code = "pressure-sug" no-error.
       if available rvs-line-attr then do :
-        rvs-line-attr.attr-value = string(vapor-pressure / 1000) .
+        rvs-line-attr.attr-value = string(vapor-pressure ) .
       end.
       else do :
         create rvs-line-attr.
@@ -3595,7 +3216,7 @@ then do:
           rvs-line-attr.pl-code   = bf_rvs-line.pl-code
           rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
           rvs-line-attr.attr-code = "pressure-sug"
-          rvs-line-attr.attr-value = string(vapor-pressure / 1000)
+          rvs-line-attr.attr-value = string(vapor-pressure )
         .
       end.
       
@@ -4371,7 +3992,6 @@ THEN DO:
           output stream outstream close.
           undo _trpomi, return error substitute('Ошибка работы библиотеки ПО МИ &1',error-string).
         end.
-
         else do :
           if is-sug(bf_rvs-line.gds-code)
           then do :
@@ -5405,6 +5025,7 @@ procedure lib-rvs_crtt-rvs : /* cr-tt-param */
   define variable rvsvalue       as character no-undo initial ?.
   define variable rvstype        as character no-undo initial ?.
   define variable StrFrFile-list as character no-undo initial '':U.
+  define variable StrFrAsi-list  as character no-undo initial '':U.
   define variable FldDb-list     as character no-undo initial '':U.
   define variable jj             as integer   no-undo.
 
@@ -5423,10 +5044,9 @@ procedure lib-rvs_crtt-rvs : /* cr-tt-param */
   }
   assign
     rvsvalue       = trim( rvsvalue )
-    StrFrFile-list = 'level_total,level_water,level_oil,t1,t2,t3,temperature,density,'
-                   + 'volume_total,volume_total_tc,mass_total,volume_oil,volume_water,vapor_density,vapor_pressure'
-    FldDb-list     = 'level-total,level-water,level-petrol,temp-layer1,temp-layer2,temp-layer3,temperature,density,'
-                   + 'brutto-qnty,brutto-qnty-tc,brutto-cli-qnty,measure-qnty,water-qnty,vapor-density,vapor-pressure'
+    StrFrFile-list = "level_total" + ",level_water" + ",level_oil-"     + ",t1"          + ",t2"          + ",t3"          + ",temperature" + ",density" + ",volume_total" + ",volume_total_tc" + ",mass_total"      + ",volume_oil"   + ",volume_water" + ",vapor_density" + ",vapor_pressure"
+    StrFrASi-list  = "level-total" + ",level-water" + ",level-total-"    + ",t1"          + ",t2"          + ",t3"          + ",avrg-temp"   + ",density" + ",total-vol"    + ",volume_total_tc" + ",mass"            + ",volume_oil"   + ",volume_water" + ",vapor-density" + ",vapor-pressure"
+    FldDb-list     = "level-total" + ",level-water" + ",level-petrol"   + ",temp-layer1" + ",temp-layer2" + ",temp-layer3" + ",temperature" + ",density" + ",brutto-qnty"  + ",brutto-qnty-tc"  + ",brutto-cli-qnty" + ",measure-qnty" + ",water-qnty"   + ",vapor-density" + ",vapor-pressure"
   .
   if rvsvalue = ? then do:
     assign
@@ -5434,10 +5054,9 @@ procedure lib-rvs_crtt-rvs : /* cr-tt-param */
     .
   end.
 
-  p-comstring = ibs.th.gbl.gbl-inipar:comstr .
-  if p-comstring <> ?    and
-     p-comstring <> '':U
-  then do:
+  get-key-value section 'revision'
+                key     'comstr'
+                value   p-comstring.
     case rvsvalue :
       when 'struna'     or
       when 'vedee-root'
@@ -5449,10 +5068,11 @@ procedure lib-rvs_crtt-rvs : /* cr-tt-param */
           p-comment     = '#'
           p-StartString = 'tank'
         .
-        do jj = 1 to min( num-entries( StrFrFile-list ), num-entries( FldDb-list ) ) :
+        do jj = 1 to min( num-entries( StrFrFile-list ), num-entries( FldDb-list ), num-entries(StrFrASi-list)) :
           create tt-param.
           assign
                  tt-param.strfrfile = entry( jj, StrFrFile-list )
+                 tt-param.strasi    = entry( jj, StrFrASi-list )
                  tt-param.flddb     = entry( jj, FldDb-list     )
           .
         end.
@@ -5461,7 +5081,7 @@ procedure lib-rvs_crtt-rvs : /* cr-tt-param */
         return error 'Неизвестный тип прибора в параметре revision.' .
       end.
     end case.
-  end.
+  
   return .
 end procedure. /* lib-rvs_crtt-rvs */
 
@@ -5532,7 +5152,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   define variable j_num         as   integer                   no-undo.
   define variable l_log         as   logical                   no-undo.
   define variable v_CommandPump as   character                 no-undo initial ?.
-
+  
+  define variable vPump as longchar no-undo.
+  
   define buffer bf_goods      for ub.goods.
   define buffer bf_goods-file for ub.goods.
   define buffer bf_bar-code   for ub.bar-code.
@@ -5544,6 +5166,8 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       v_CommandPump
       no-error
   }
+  
+  
   if error-status :error then do:
     {&SetCursorNo}
     return error substitute( 'Ошибка при установке параметров для считывания данных с ТРК.&1&2&1&3'
@@ -5593,14 +5217,37 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       v_File-Name = './pump.txt'
       v_File-Err  = substitute('&1pump.err', ibs.th.gbl.gbl-inipar:logDir) .
     .
-    os-delete value( v_File-Name ) .
+    define variable vi as integer no-undo.
+    v_File-Name = searchfile('pump.txt').
+    if v_File-Name ne ?
+    then do:
+      block-del-file: 
+      do vi = 1 to 5:
+         os-delete value( v_File-Name ) .
+         v_File-Name = searchfile('pump.txt').
+         if v_File-Name eq ?
+         then
+            leave block-del-file.
+      end.
+    end.
+    if v_File-Name ne ?
+    then
+       return error 'Файл pump.txt заблокирован удалите файл и попробуйте еще раз. ' + v_File-Name .
+    v_File-Name = "wpump" + string(random(100000,999999)) + ".tmp".
+    if searchfile(v_File-Name) ne ?
+    then
+      return error "Удалите все файлы wpump*.tmp".
     assign
       v_command = v_CommandPump + ' ':U + v_File-Name
     .
     os-command silent value( v_command ) .
-    if search( v_File-Name ) = ? then do:
+    if searchfile( v_File-Name ) = ? then do:
       return /* error */ 'Файл с данными ТРК не получен.' . /* технологи сказали, что это не должно стопорить создание сверки */
     end.
+    run readfiletxt(v_File-Name,output vPump).
+/*    os-append value(v_File-Name) value(i-log-file-name).*/
+    os-rename value( v_File-Name ) 'pump.txt'.
+    os-delete value( v_File-Name ) .
   end.
   else do:
     v_DirFilePump = ibs.th.gbl.gbl-inipar:dirflpmp .
@@ -5619,6 +5266,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       return error .
     end.
     v_File-Err  = substitute("&1.err":U,  entry(1, v_File-Name, '.':U)) .
+    output to value (v_File-Err).
+    output close.
+    run readfiletxt(v_File-Name,output vPump).
   end.
 
   &scop pf-put-err  output stream str-err to value( v_File-Err ) append.~
@@ -5637,10 +5287,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     delete tt-pump-nozzle-file .
   end.
 
-  input stream str-anl from value( v_File-Name ) .
   main-cycle:
-  repeat :
-    import stream str-anl unformatted v_String-Temp.
+  do vi = 1 to num-entries(vPump,{&new-line}) :
+     v_String-Temp = entry(vi,vPump,{&new-line}).
     /* Отсекем комментарий */
     if trim( v_String-Temp ) = '':U then next main-cycle .
     if substring( v_String-Temp, 1, 3 ) <> '212' then next main-cycle .
@@ -5846,7 +5495,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       tt-pump-nozzle-file.meas-cf-cnt = decimal( tt-param-pump.meaning )
     .
   end. /* конец чтения из файла */
-  input stream str-anl close.
+ 
 
   /* Считаные и запрошенные таблицы должны совпадать */
   for each tt-pump-nozzle-file :
@@ -6244,104 +5893,204 @@ procedure lib-rvs_hstc-rvs :
   return .
 end procedure.
 
-procedure get-from-ifsf :
-  define variable v-asi-ip  as character no-undo .
-  define variable v-asi-port as character no-undo .
-  define variable v-attr-type as character no-undo .
-  define variable v_command     as   character     no-undo.
-  define variable v_File-Name   as   character     no-undo.
-  define variable v-log     as logical no-undo .
-  define variable v-bytes   as integer no-undo .
-  define variable v-out-data as character no-undo .
-  define variable v-line-str as character no-undo .
-  define variable ii        as integer no-undo .
-  define variable str       as character no-undo .
-  define variable str1      as character no-undo .
-  
-  define variable hSocket   as handle no-undo .
-  define variable mDataIn   as memptr no-undo .
-  define variable mDataout  as memptr no-undo .
-  define variable cmd       as character no-undo .
-  define variable connStr   as character no-undo .
-  
-  define variable v-log-file-name as character no-undo .
-  
-  define variable StrFrFile-list as character no-undo initial '':U.
-  
-  StrFrFile-list = 'tank,level_total,level_water,level_oil,t1,t2,t3,temperature,density,'
-                   + 'volume_total,volume_total_tc,mass_total,volume_oil,volume_water,vapor_density,vapor_pressure' .
-  
-  v-log-file-name = substitute('&1rvs.log', ibs.th.gbl.gbl-inipar:logDir) .
-  
-  assign
-    v_File-Name = 'revis.ifsf':U
-  .
-  os-delete value( v_File-Name ) .
-  
-  cmd = 'KOI8-R 1 0 1' + {&new-line} .
-  set-size(mDataIn) = 0 .
-  set-size(mDataIn) = length(cmd , "RAW":U) + 1 .
-  put-string(mDataIn,1) = cmd .
-  
-  find first sys-ctrl no-lock.
-  run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
-  run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
-  
-  create socket hSocket .
-  connStr = '-H ' + v-asi-ip + ' -S ' + v-asi-port .
-  hSocket:connect(connStr) no-error.
-  
-  output to value (  v-log-file-name  ) append .
-  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  connStr='-H " v-asi-ip " -S " v-asi-port "'  cmd='KOI8-R 1 0 1'" skip .
-  output close .
-  
-  if hSocket:connected() = false
-  then do :
-    return error "Не могу подключиться к IFSF серверу." .
-  end.
-  
-  hSocket:set-socket-option('TCP-NODELAY', 'true').
-  hSocket:set-socket-option('SO-KEEPALIVE', 'true').
-  hSocket:set-socket-option('SO-REUSEADDR', 'true').
-  
-  v-log = hSocket:write(mDataIn, 1, get-size(mDataIn)) no-error.
-  if v-log = false or error-status:get-message(1) <> ''
-  then do:
-    return error "Не могу отправить команду на IFSF сервер." .
-  end.
-  run sleep (1000) .
-  
-  set-size(mDataOut) = 0 .
-  v-bytes = hSocket:get-bytes-available() .
-  set-size(mDataOut) = v-bytes + 1 .
-  
-  v-log = hSocket:read(mDataOut, 1, v-bytes, 2) no-error.
-  if v-log = false or error-status:get-message(1) <> ''
-  then do:
-    return error "Не могу прочитать ответ от IFSF сервера." .
-  end.
-  
-  v-out-data = get-string(mDataOut,1) .
-  
-  hSocket:disconnect() no-error.
-  delete object hSocket.
-  set-size(mDataIn) = 0.
-  set-size(mDataOut)   = 0.
-  
-  output to value(v_File-Name) .
-  
-  do ii = 1 to num-entries(v-out-data, {&new-line}) :
-    str = entry(ii, v-out-data, {&new-line}) .
-    str1 = trim(entry(1, str, "=")) .
-    if can-do(StrFrFile-list, str1)
-    then do :
-      put unformatted str skip .
-    end.
-  end.
-  
-  output close.
 
-end procedure .
+
+procedure creatett-meas-file:
+   define input  parameter i-obj-type as character no-undo.
+   define input  parameter i-obj-code as integer no-undo.
+   define variable v-bhasi               as handle  no-undo .
+   define variable v-fhasi               as handle  no-undo .
+   
+   define variable v-bh                as handle  no-undo .
+   define variable v-fh                as handle  no-undo .
+   define variable pl-twice-code       as character no-undo.
+   define variable v-value             as character no-undo.
+   define variable v-ok                as logical   no-undo.
+   define variable vi                  as integer no-undo.      
+   define buffer bf_place for ub.place.
+   
+   
+   block-Place:
+   for each tt-place :
+      pl-twice-code = "" . 
+      /* Ищем бак в нашей системе */
+      find first bf_place no-lock 
+         where bf_place.obj-type = i-obj-type
+           and bf_place.obj-code = i-obj-code
+           and bf_place.loc1     = tt-place.loc1
+           and bf_place.status_ <> {&deleted-status}
+      no-error.
+      if not available bf_place  
+      then do:
+         twice-code:  
+         for each  place where place.obj-code = i-obj-code 
+                           and place.obj-type = i-obj-type 
+                           and place.is-meas = yes 
+         no-lock: 
+            run placelib_get-attr  ( input {&place-twice-code}
+                                    ,input i-obj-code
+                                    ,input i-obj-type
+                                    ,input place.pl-code
+                                    ,output v-value
+                                    ,output v-ok      ) no-error.   
+        
+            if v-ok 
+            then 
+               pl-twice-code = v-value .
+            if num-entries(pl-twice-code) > 1
+            then do :
+               do ii = 1 to num-entries(pl-twice-code) :
+                  if trim( entry( ii, pl-twice-code ) ) = tt-place.loc1
+                  then do :
+                     pl-twice-code = trim( entry( ii, pl-twice-code ) ) .
+                     leave twice-code.
+                  end.
+               end.
+            end.
+            else do :
+               if pl-twice-code =  tt-place.loc1 
+               then 
+                  leave twice-code.
+            end.
+            pl-twice-code = "" .
+         end.
+         if pl-twice-code = ""  
+         then do: 
+            put stream str-err unformatted substitute( 'Не найден резервуар по системе с локальным кодом(коорд1) &1 .'
+                                                      , tt-place.loc1 ) skip .
+/*            is_FatalError = yes.*/
+            next block-Place .
+         end.
+      end.
+      if     pl-twice-code = "" 
+         and available bf_place 
+      then do: 
+         if bf_place.is-meas = no   
+         then do:
+            put stream str-err unformatted substitute( 'Получены данные с приборов по резервуару &1 '
+                      + 'с локальным кодом(коорд1) &2, определенного в системе как '
+                      + 'неизмеряемый.'
+                      , bf_place.pl-code
+                      , tt-place.loc1 ) skip .
+/*            is_FatalError = yes.*/
+            next block-Place .
+         end.
+      end.
+      if   pl-twice-code = "" 
+      then do: 
+         create tt-meas-file.
+         assign
+            tt-meas-file.obj-type = i-obj-type
+            tt-meas-file.obj-code = i-obj-code
+            tt-meas-file.pl-code  = bf_place.pl-code
+            tt-meas-file.loc1     = bf_place.loc1
+         .
+      end.
+      else do: 
+         create tt-meas-file.
+         assign
+            tt-meas-file.obj-type = i-obj-type
+            tt-meas-file.obj-code = i-obj-code
+            /*          tt-meas-file.pl-code  = bf_place.pl-code*/
+            tt-meas-file.loc1     = pl-twice-code
+         .            
+      end.
+      /* если резервуар корректный, то читаем по нему данные */
+      v-bhasi = buffer tt-place:handle.
+      v-bh = buffer tt-meas-file:handle.
+      block-field:
+      do vi = 1 to v-bhasi:num-fields:
+         v-fhasi = v-bhasi:buffer-field(vi).
+         find first tt-param where tt-param.strasi = v-fhasi:name no-error.
+         if available tt-param 
+         then do:
+            
+            assign
+               v-fh                = v-bh:buffer-field( tt-param.flddb )
+               v-fh:buffer-value() = decimal( v-fhasi:buffer-value() )
+            no-error.
+            if error-status:error
+            then 
+               next block-field.
+            if v-fh:buffer-value() ne ?
+            then do:
+            if tt-param.strfrfile = 'temperature':U   then do:
+              assign
+                tt-meas-file.temp-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'temp-layer1':U   then do:
+              assign
+                tt-meas-file.t1-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'temp-layer2':U   then do:
+              assign
+                tt-meas-file.t2-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'temp-layer3':U   then do:
+              assign
+                tt-meas-file.t3-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'volume_oil':U   then do:
+              assign
+                tt-meas-file.meas-vol-oil   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'volume_water':U then do:
+              assign
+                tt-meas-file.meas-vol-water = yes
+              .
+            end.
+            if tt-param.strfrfile = 'mass_total':U  
+            then do: 
+               if tt-meas-file.pl-code <> 0 
+               then do:
+                  run placelib_get-attr  ( input {&place-asi-sertif}
+                                          ,input i-obj-code
+                                          ,input i-obj-type
+                                          ,input tt-meas-file.pl-code 
+                                          ,output v-value
+                                          ,output v-ok      ) no-error.
+                  
+               end.
+               else do:
+
+                  run placelib_get-attr  ( input {&place-asi-sertif}
+                                          ,input i-obj-code
+                                          ,input i-obj-type
+                                          ,input place.pl-code 
+                                          ,output v-value
+                                          ,output v-ok      ) no-error.
+                  
+               end.
+               if v-ok and v-value = "yes" 
+               then do: 
+                  if     trim( v-fh:buffer-value() )  <> "-" 
+                     and trim( v-fh:buffer-value() )  <> "" 
+                  then do:
+                     assign
+                        tt-meas-file.log-brutto       = yes
+                        tt-meas-file.measure-cli-qnty = decimal( trim( v-fh:buffer-value() ) )
+                     . 
+                  end.
+               end.
+            end.  
+            end.
+         end.
+         else do: /* not available tt-param*/
+          /*  if lookup("loc1", v-fhasi:name) eq 0
+            then 
+               put stream str-err unformatted 'Неизвестный параметр: ' v-fhasi:name skip .
+           */
+         end .
+      end. /* перебираем все поля */
+   end. /* for each tt-place */
+   
+end procedure. 
+ 
 
 PROCEDURE Sleep EXTERNAL "kernel32.DLL":
   DEFINE INPUT PARAMETER intMilliseconds AS LONG.

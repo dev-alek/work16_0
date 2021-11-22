@@ -28,9 +28,11 @@ create: Булгаков Андрей Николаевич
                                '{&temp-table_list}'   = 'rvs'  or
       lookup( '{&self-name}',  '{&temp-table_list}' ) > 0      &then
   define temp-table tt-param no-undo
-    field strfrfile as character
-    field flddb     as character
-    index pi        as primary   unique strfrfile.
+    field strfrfile as character /* revise.txt */
+    field strasi    as character /* Agent Asm */
+    field flddb     as character /* meas-file */
+    index pi        as primary   unique strfrfile
+    index asi strasi.
 &endif
 
 &scop self-name tt-param-pump
@@ -80,7 +82,6 @@ create: Булгаков Андрей Николаевич
     field t3-not-null as logical
     field is-error    as logical
     index pi        as primary   unique loc1.
-    
 &endif
 
 &scop self-name tt-meas-file
@@ -90,8 +91,7 @@ create: Булгаков Андрей Николаевич
                                '{&temp-table_list}'   = 'rvs'  or
                                '{&temp-table_list}'   = 'file' or
       lookup( '{&self-name}',  '{&temp-table_list}' ) > 0      &then
-  define temp-table tt-meas-file no-undo like tt-meas
-  .
+  define temp-table tt-meas-file no-undo like tt-meas.
 &endif
 
 &scop self-name tt-pump-nozzle
