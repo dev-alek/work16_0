@@ -10,7 +10,7 @@ $Archive$
 
 Автор: Морозов Александр Сергеевич
 Дата создания: 09/29/2015
-Author: Alexandr Morozov
+Author: Alexandr Morozovч
 Creation date: 09/29/2015
 
 */ 
@@ -19,6 +19,14 @@ using Progress.Lang.*.
 using ibs.th.str.*.
 
 class ibs.th.str.InfoSection:
+  &global-define list-shape "Без горловины,Квадратная/прямоугольная,Эллиптическая,Круглая"
+  { cmp/str-glbl.i class}
+
+  define temp-table tt-section no-undo 
+      field dif     as integer
+      field volume1 as decimal
+      index pi dif
+   .
   
   define property infoSectionTotal as InfoSectionsTotal no-undo
     get.
@@ -63,6 +71,18 @@ class ibs.th.str.InfoSection:
     set.
 
   define property NumPlotn as character no-undo
+    get.
+    set.
+
+  define property PassportPlotnTemp as character no-undo
+    get.
+    set.
+
+  define property DatePovPlotnTemp as date no-undo
+    get.
+    set.
+
+  define property NumPlotnTemp as character no-undo
     get.
     set.
 
@@ -133,6 +153,26 @@ class ibs.th.str.InfoSection:
       end.
       release buf_sr-izmerenia.
     end.
+    
+  define property PlSiNameTemp as character no-undo
+    get.
+    private set.
+
+  define property PlaceSiTemp as integer no-undo
+    get.
+    set (a as int):
+      def buffer buf_sr-izmerenia for ub.sr-izmerenia.
+      find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = a no-error.
+      if available buf_sr-izmerenia then do:
+        PlaceSiTemp = a.
+        PlSiNameTemp = buf_sr-izmerenia.sr-model.
+      end.
+      else do:
+/*        if UserMode = true and infoSectionTotal:FlagTrn and infoSectionTotal:RdcDnstvalue = "pomi-rn"*/
+/*          then message "Введено неизвестное стредство измерения" view-as alert-box.                  */
+      end.
+      release buf_sr-izmerenia.
+    end.
 
   define property TankDensityPomi as decimal no-undo
     get.
@@ -150,7 +190,6 @@ class ibs.th.str.InfoSection:
     get.
     set (arg as char):
       SectionName = arg.
-      SetCarVol (arg).
     end.
 
   define property DocQnty as decimal no-undo
@@ -254,6 +293,22 @@ class ibs.th.str.InfoSection:
   define property idSec as integer no-undo
     get.
     set.
+    
+  define property Pour as character no-undo
+    get.
+    set.
+
+  define property Shape as character no-undo
+    get.
+    set.
+
+  define property DopVolume as decimal no-undo
+    get.
+    set.
+    
+  define property NeckArea as decimal no-undo
+    get.
+    set.
 
   /*------------------------------------------------------------------------------
  Purpose:
@@ -266,21 +321,78 @@ class ibs.th.str.InfoSection:
   end constructor.
 
 
-  method private void SetCarVol (arg as char):
+  method public void SetCarVol (arg as char):
     
-    find first ub.auto-tank no-lock where ub.auto-tank.auto-num = infoSectionTotal:CarNum + "#" + SectionName no-error.
-    if available (ub.auto-tank) and UserMode
-    then do: 
+    def var ii as int no-undo.
+    def var varauto-tank-par as character no-undo.
+    empty temp-table tt-section.
+    find first ub.auto-tank no-lock where ub.auto-tank.auto-num = infoSectionTotal:CarNum no-error.
+    if not available (ub.auto-tank)
+      then return.
+    for each ub.auto-section no-lock where ub.auto-section.auto-num = infoSectionTotal:CarNum and ub.auto-section.section-num = integer (arg) :
       assign
-        Diameter = entry(3, auto-tank.name, chr(4))
-        CarVol =  ub.auto-tank.brutto-qnty
-        DocQnty = ub.auto-tank.brutto-qnty
+        CarVol =  ub.auto-section.brutto-qnty
+        DopVolume =  ub.auto-section.add-volume
+        Shape = entry (ub.auto-tank.type-neck + 1, {&list-shape})
       .
+      case ub.auto-tank.type-neck:
+      when 0 then do:
+        assign
+          Pour = "Нижний налив".
+        diameter = string (ub.auto-section.add-volume).
+        for each ub.auto-section-table  no-lock where
+          ub.auto-section-table.auto-num = ub.auto-section.auto-num and ub.auto-section-table.section-num = ub.auto-section.section-num:
+          create tt-section.
+          assign
+            tt-section.dif     = ub.auto-section-table.error  
+            tt-section.volume1 = ub.auto-section-table.volume-error no-error
+          .
+          diameter =  diameter + "/" + string (ub.auto-section-table.error) + {&delim-cmd} + string (ub.auto-section-table.volume-error).
+        end.
+      end.
+      when 1 then do:
+        diameter = string (ub.auto-section.add-volume) + "/" + string (ub.auto-section.section-depth) + 
+          "/" + string (ub.auto-section.diameter-min) + "/" + string (ub.auto-section.diameter-max) 
+          .
+      end.
+      when 2 then do:
+        diameter = string (ub.auto-section.add-volume) + "/" + string (ub.auto-section.section-depth) + 
+          "/" + string (ub.auto-section.length) + "/" + string (ub.auto-section.width) 
+          .
+      end.
+      when 3 then do:
+        diameter = string (ub.auto-section.add-volume) + "/" + string (ub.auto-section.diameter-min) +
+          "/" + string (ub.auto-section.diameter-max) + "/" + string (ub.auto-section.length)  + "/" + string (ub.auto-section.section-depth)
+          .
+      end.
+      end case.
+
     end.
     release ub.auto-tank.
+    release ub.auto-section.
+    release ub.auto-tank-attr. 
     
   end.
 	
+  method public void FillTTSection (input inPar as char):
+    def var ii as int no-undo.
+    def var v-section as char no-undo.
+    empty temp-table tt-section.
+    DopVolume = decimal (entry(1, inPar, "/")) no-error .
+    if error-status:error 
+      then DopVolume = 0.
+    if lookup (Shape, {&list-shape}) = 1 
+    then do:
+      do ii = 2 to num-entries (inPar, "/"):
+          v-section = entry(ii, inPar, "/") .
+          create tt-section .
+          assign
+              tt-section.dif     = integer(entry (1,v-section,{&delim-cmd})) no-error .  
+              tt-section.volume1 = decimal(entry (2,v-section,{&delim-cmd})) no-error . 
+              .
+      end.
+    end.
+  end.
 	
   /*------------------------------------------------------------------------------
    Purpose:
@@ -539,10 +651,78 @@ class ibs.th.str.InfoSection:
           assign
             TPNormPL = decimal (inAttrValue) no-error.
         end.
+      when 'passport-plotn-temp' then 
+        do:
+          assign
+            PassportPlotnTemp = inAttrValue no-error.
+        end.
+      when 'place-si-temp' then 
+        do:
+          assign
+            PlaceSiTemp = integer (inAttrValue) no-error.
+        end.
+      when 'date-pov-plotn-temp' then 
+        do:
+          assign
+            DatePovPlotnTemp = date (inAttrValue) no-error.
+        end.
+      when 'num-plotn-temp' then 
+        do:
+          assign
+            NumPlotnTemp = inAttrValue no-error.
+        end.        
+      when 'pour' then 
+        do:
+          assign
+            Pour = inAttrValue no-error.
+        end.
+      when 'shape' then 
+        do:
+          assign
+            Shape = inAttrValue no-error.
+        end.
     end case.
 		
 
-  end method.    
+  end method.
+  
+  method public decimal getMouth ( input inABTarir as decimal,  input inArea as decimal ):
+    
+  def var v-mouth as decimal no-undo.
+  def var v-diff as decimal no-undo.
+  def var v-vol2 as decimal no-undo.
+  
+  if Shape = entry (1, {&list-shape})
+  then do:
+    if inABTarir = 0
+      then v-mouth = 0.
+    else do:
+      find first tt-section where decimal (tt-section.dif) > decimal (inABTarir) / 10 no-error.
+      if error-status:error
+      then do:
+        message "Не найдено соответствие уровня относительно тарировочной планки и объема." view-as alert-box.
+        return 0.
+      end. 
+      v-vol2 = tt-section.volume1.
+      find last tt-section where decimal (tt-section.dif) <= decimal (inABTarir) / 10 no-error.
+      if error-status:error
+      then do:
+        message "Не найдено соответствие уровня относительно тарировочной планки и объема." view-as alert-box.
+        return 0.
+      end.
+      v-diff = decimal (inABTarir) - decimal (tt-section.dif) * 10. 
+      v-mouth = tt-section.volume1 + (v-vol2 - tt-section.volume1) / 10 * v-diff.
+      return v-mouth.
+    end.  
+  end.
+  else do:
+    v-mouth = round ((inABTarir) * inArea, 2).
+    return v-mouth.
+  end.
+  finally:
+    return v-mouth.
+  end.
+  end method.
 
   /*------------------------------------------------------------------------------
    Purpose:

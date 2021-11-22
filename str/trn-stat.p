@@ -661,7 +661,7 @@ then do:
     infoSectionsTotal = new InfoSectionsTotal().
     infoSectionsTotal:Initialization(bf_trn-doc.doc-code, bf_doc-line-attr.gds-code).
     infoSectionsTotal:GetDBAllAttr().
-    infoSectionsTotal:CalculateTotal().
+/*    infoSectionsTotal:CalculateTotal().*/
     find first bf_goods no-lock where bf_goods.gds-code = bf_doc-line-attr.gds-code. 
     find first bf_doc-line no-lock where
                                bf_doc-line.doc-code = bf_trn-doc.doc-code
@@ -684,9 +684,9 @@ then do:
       infoSectionsTotal:SaveDB().
     end.
     else do:
-      if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 0.01
-        or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 0.01
-        or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 0.01
+      if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 1
+        or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 1
+        or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 1
         then do:
           v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    по ТТН - &3&1    плотность - &4&1    по накл. - &5&1По доп. инфо:&1    по ТТН - &6&1    плотность - &7&1    по накл. - &8",
                                           {&new-line}, 
@@ -702,8 +702,8 @@ then do:
           undo, return error v-mess.
         end.
         if varstatus = {&fact} then do:
-          if (infoSectionsTotal:FactQntyTotal = ? or infoSectionsTotal:FactKgQntyTotal = ? ) or (absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 0.001
-           or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 0.01)
+          if (infoSectionsTotal:FactQntyTotal = ? or infoSectionsTotal:FactKgQntyTotal = ? ) or (absolute (infoSectionsTotal:FactQntyTotal - bf_doc-line.fact-qnty) > 1
+           or absolute (infoSectionsTotal:FactKgQntyTotal - bf_doc-line.fact-density * bf_doc-line.fact-qnty) > 1)
           then do:
             v-mess = substitute("Кол-во по линии накладной не совпадает с общим кол-вом по доп. инфо! Артикул : &2.&1По линии накладной:&1    факт. кол-во - &3&1    Факт. кол-во, вес - &4&1По доп. инфо:&1    факт. кол-во - &5&1    Факт. кол-во, вес - &6",
                                             {&new-line}, 

@@ -609,8 +609,11 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("cap-doc", string-mth (infoSecObj:DocQnty)).
           write-data-element ("dnsty-doc", string-mth (infoSecObj:DocDensity)).
           write-data-element ("wght-doc", string-mth (infoSecObj:CliQnty)).
+          write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
           write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
           write-data-element ("sz-nck", string (infoSecObj:Diameter)).
+          write-data-element ("filling-method", string (infoSecObj:Pour)).
+          write-data-element ("pipe-vlm", string (infoSecObj:Pour)).
           write-data-element ("lvl", string-mth (infoSecObj:ABTarir)).
           write-data-element ("cap-nck", string-mth (infoSecObj:Mouth)).
           write-data-element ("cap", string-mth (infoSecObj:TankVol)).
@@ -618,12 +621,16 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("cap-wtr", string-mth (infoSecObj:TankWater)).
           write-data-element ("t-cap", string-mth (infoSecObj:TankTemp)).
           write-data-element ("t-dnsty", string-mth (infoSecObj:DensTemp)).
-          write-data-element ("ms-code", string-mth (infoSecObj:PlaceSi)).
+          write-data-element ("msd-code", string-mth (infoSecObj:PlaceSi)).
+          write-data-element ("mst-code", string-mth (infoSecObj:PlaceSi)).
           write-data-element ("pv-date", string (iso-date (infoSecObj:DatePovPlotn))).
           write-data-element ("dnsty-pr", string-mth (infoSecObj:TankDensityPomi)).
           write-data-element ("cap-pr", string-mth (infoSecObj:TankVolPomi)).
           write-data-element ("wght-pr", string-mth (infoSecObj:TankWeight)).
           write-data-element ("wght-eu", string-mth (infoSecObj:NaturalLoss)).
+          write-data-element ("tp-norm", string (infoSecObj:TPNorm)).
+          write-data-element ("tp-tank-norm", string-mth (infoSecObj:TPNormPL)).
+          write-data-element ("tp-nsn-norm", string-mth (infoSecObj:TPNormAuto)).
           write-data-element ("wght-vpr", string-mth (infoSecObj:AccAbsFact)).
           write-data-element ("ned", string-mth (infoSecObj:Deficit)).
           write-data-element ("izl", string-mth (infoSecObj:Excess)).
@@ -654,10 +661,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("prob-date", iso-date (infoSecObj:DateProb)).
           /*время отбора пробы часы/минут HourProb MinProb*/
           write-data-element ("prob-time", string (infoSecObj:HourProb, "99") + ":" + string (infoSecObj:MinProb, "99")).
-          write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
-          write-data-element ("tp-norm", string (infoSecObj:TPNorm)).
-          write-data-element ("tp-tank-norm", string-mth (infoSecObj:TPNormPL)).
-          write-data-element ("tp-nsn-norm", string-mth (infoSecObj:TPNormAuto)).
 /*            end.*/
           sw:end-element ("sc").
         end.
@@ -683,6 +686,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("dnsty", string-mth ( buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty)).
           write-data-element ("cap", string-mth (buf_doc-pl.fact-qnty)).
           write-data-element ("wght", string-mth (buf_doc-pl.cli-fact-qnty)).
+          write-data-element ("excess-free", string(0)).
         sw:end-element ("tank").
       end.
     end.
@@ -887,7 +891,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
             if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:
             write-data-element ("prt-id", buf_parts.part-code).
             end.
-            write-data-element ("mark-code", repSpecSimbforXlm( addBracketForCode(buf_marking-lines.mark))).
+            write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
             sw:end-element ("mark").
           end.
         end.

@@ -2963,15 +2963,15 @@ if varrvs-place = yes then do:
         infoSectionsTotal:CliQntyInput = varcli-qnty-input
         infoSectionsTotal:DensityInput = vardensity-input
         infoSectionsTotal:DocQntyInput = vardoc-qnty-input
-      infoSectionsTotal:NormalWastage = NormWast:NormalWastageTransDate
+        infoSectionsTotal:NormalWastage = NormWast:NormalWastageTransDate
         infoSectionsTotal:IsRNAlgo = if ptrlprop-algoincome = 2 then true else false
         infoSectionsTotal:PercAcc = varpercauto
         infoSectionsTotal:AccShip = varrn-acc-ship
         infoSectionsTotal:CarNum = varcar-num
-      infoSectionsTotal:FlagTrn = t-doc.flag_
-      infoSectionsTotal:Sts = t-doc.status_
-      infoSectionsTotal:Parentproc = parparentproc
-    .
+        infoSectionsTotal:FlagTrn = t-doc.flag_
+        infoSectionsTotal:Sts = t-doc.status_
+        infoSectionsTotal:Parentproc = parparentproc
+      .
   
       if parline-mode <> {&add-def} then do:
         infoSectionsTotal:GetDBAllAttr().

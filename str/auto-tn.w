@@ -1,11 +1,11 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -57,6 +57,8 @@ define variable varauto-tank-rec as recid no-undo.
 define variable v-log as logical no-undo .
 define variable v-status_ like ub.auto-tank.status_ no-undo .
 
+define buffer auto-tank-sec for ub.auto-tank .
+
 assign parrec-tank      = ?
        varauto-tank-rec = ?.
 
@@ -64,7 +66,7 @@ assign parrec-tank      = ?
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -81,7 +83,7 @@ assign parrec-tank      = ?
 /* Definitions for BROWSE brw-auto-tank                                 */
 &Scoped-define FIELDS-IN-QUERY-brw-auto-tank auto-tank.auto-num ~
 auto-tank.name auto-tank.brutto-qnty 
-&Scoped-define ENABLED-FIELDS-IN-QUERY-brw-auto-tank
+&Scoped-define ENABLED-FIELDS-IN-QUERY-brw-auto-tank 
 &Scoped-define QUERY-STRING-brw-auto-tank FOR EACH ub.auto-tank ~
       where index(ub.auto-tank.auto-num, "#") = 0 NO-LOCK.
 &Scoped-define OPEN-QUERY-brw-auto-tank OPEN QUERY brw-auto-tank FOR EACH ub.auto-tank ~
@@ -89,16 +91,16 @@ auto-tank.name auto-tank.brutto-qnty
 &Scoped-define TABLES-IN-QUERY-brw-auto-tank ub.auto-tank
 &Scoped-define FIRST-TABLE-IN-QUERY-brw-auto-tank ub.auto-tankr
 
-/* Definitions for BROWSE brw-auto-tank-2                                 */
+/* Definitions for BROWSE brw-auto-tank-2                               */
 &Scoped-define FIELDS-IN-QUERY-brw-auto-tank-2 auto-tank.auto-num auto-tank.name auto-tank.brutto-qnty   
-&Scoped-define ENABLED-FIELDS-IN-QUERY-brw-auto-tank-2
+&Scoped-define ENABLED-FIELDS-IN-QUERY-brw-auto-tank-2   
 &Scoped-define SELF-NAME brw-auto-tank-2
 &Scoped-define QUERY-STRING-brw-auto-tank-2 FOR EACH ub.auto-tank WHERE INDEX(ub.auto-tank.auto-num, ~
        CHR(35)) = 0 NO-LOCK, ~
-            first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"           and auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) and auto-tank-attr.auto-num = ub.auto-tank.auto-num
+            first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"           and (auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) or auto-tank-attr.attr-value = par-obj-type + " " + string(par-obj-code)) and auto-tank-attr.auto-num = ub.auto-tank.auto-num
 &Scoped-define OPEN-QUERY-brw-auto-tank-2 OPEN QUERY brw-auto-tank-2 FOR EACH ub.auto-tank WHERE INDEX(ub.auto-tank.auto-num, ~
        CHR(35)) = 0 NO-LOCK, ~
-            first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"           and auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) and auto-tank-attr.auto-num = ub.auto-tank.auto-num.
+            first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"           and (auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) or auto-tank-attr.attr-value = par-obj-type + " " + string(par-obj-code)) and auto-tank-attr.auto-num = ub.auto-tank.auto-num.
 &Scoped-define TABLES-IN-QUERY-brw-auto-tank-2 auto-tank auto-tank-attr
 &Scoped-define FIRST-TABLE-IN-QUERY-brw-auto-tank-2 auto-tank
 &Scoped-define SECOND-TABLE-IN-QUERY-brw-auto-tank-2 auto-tank-attr
@@ -109,7 +111,7 @@ auto-tank.name auto-tank.brutto-qnty
     ~{&OPEN-QUERY-brw-auto-tank}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-view B-hist b-help brw-auto-tank ~
+&Scoped-Define ENABLED-OBJECTS b-exit b-view b-help brw-auto-tank ~
 brw-auto-tank-2 varps RS-status_ 
 &Scoped-Define DISPLAYED-OBJECTS varps 
 
@@ -135,46 +137,41 @@ FUNCTION get-auto-firm RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-exit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-exit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "&Помощь"
+DEFINE BUTTON b-help 
+     LABEL "&Помощь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-hist
-     LABEL "Ис&тория"
-     SIZE 10 BY 1
-     BGCOLOR 8 .
-
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "&Выбор"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "&Выбор" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-view
-     LABEL "&Просмотр"
+DEFINE BUTTON b-view 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
-
+     
 DEFINE BUTTON b-del 
      LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE varps AS CHARACTER
+DEFINE VARIABLE varps AS CHARACTER 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL LARGE
      SIZE 87 BY 2.25
      BGCOLOR 8  DROP-TARGET NO-UNDO.
-
+     
 DEFINE VARIABLE RS-status_ AS CHARACTER
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS
@@ -185,10 +182,10 @@ DEFINE VARIABLE RS-status_ AS CHARACTER
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY brw-auto-tank FOR
+DEFINE QUERY brw-auto-tank FOR 
       auto-tank SCROLLING.
 
-DEFINE QUERY brw-auto-tank-2 FOR
+DEFINE QUERY brw-auto-tank-2 FOR 
       auto-tank, 
       auto-tank-attr SCROLLING.
 &ANALYZE-RESUME
@@ -226,15 +223,14 @@ DEFINE FRAME Dialog-Frame
      b-chg AT ROW 1 COL 32
      b-view AT ROW 1 COL 42
      b-del AT ROW 1 COL 52
-     b-hist at row 1 col 63
      b-help AT ROW 1 COL 68
      RS-status_ AT ROW 2 COL 2 NO-LABEL
      brw-auto-tank AT ROW 3.1 COL 2
      brw-auto-tank-2 AT ROW 3.1 COL 2
      varps AT ROW 17 COL 2 NO-LABEL
      SPACE(0.87) SKIP(0.44)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Справочник автотранспорта"
          CANCEL-BUTTON b-exit.
 
@@ -257,7 +253,7 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB brw-auto-tank b-help Dialog-Frame */
 /* BROWSE-TAB brw-auto-tank-2 brw-auto-tank Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -267,7 +263,7 @@ ASSIGN
    NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON b-sel IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        varps:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -301,7 +297,7 @@ OPEN QUERY brw-auto-tank-2 FOR EACH ub.auto-tank WHERE INDEX(ub.auto-tank.auto-n
 */  /* BROWSE brw-auto-tank-2 */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -330,6 +326,13 @@ DO:
      ,input {&add-def}
      ,input-output varauto-tank-rec
     ) no-error.
+  if varauto-tank-rec <> ? then do :
+      find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
+      ub.auto-tank.brutto-qnty = 0 .
+      for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :
+          ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .    
+      end.
+  end.    
   run local-enable_ui.
 END.
 
@@ -350,10 +353,14 @@ DO:
        ,input {&update}
        ,input-output varauto-tank-rec
       ) no-error.
-    // find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
-      run local-enable_ui.
-    end.
-    else do:
+    find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
+    ub.auto-tank.brutto-qnty = 0 .
+    for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :
+        ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .    
+    end.    
+    run local-enable_ui.
+  end.
+  else do:
     message "Не выбран автотранспорт." view-as alert-box error.
   end.
 END.
@@ -369,33 +376,11 @@ DO:
   if available ub.auto-tank then do:
     assign
       parrec-tank = recid(ub.auto-tank).
- end.
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME B-hist
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-hist Dialog-Frame
-ON CHOOSE OF B-hist IN FRAME Dialog-Frame /* История */
-DO:
-  DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
-  IF AVAILABLE auto-tank THEN DO:
-
-  run str/c-auto-tn.w (
-                    INPUT parParentProc
-                   ,input '':U /*bttns*/
-                   ,input 'one':U /*p-mode*/
-                   ,INPUT auto-tank.auto-num
-                   ,INPUT-OUTPUT v-rid-list) NO-ERROR.
-
-  END.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 
 
 &Scoped-define SELF-NAME b-view
@@ -421,11 +406,11 @@ DO:
     if ub.auto-tank.status_ = {&current-status} then do :
         message "Вы действительно хотите удалить автотранспорт?" view-as alert-box question buttons yes-no update v-log.
         if v-log then ub.auto-tank.status_ = {&deleted-status} .
-    end.
-    else do:
+    end.    
+    else do :
         message "Восстановить автотранспорт?" view-as alert-box question buttons yes-no update v-log. 
         if v-log then ub.auto-tank.status_ = {&current-status} .
-    end.
+    end.  
     brw-auto-tank:refresh().    
   end.
   else do:
@@ -443,7 +428,7 @@ DO:
   ASSIGN
   rs-status_
   v-status_ = rs-status_
-    .
+  .
   RUN openbr IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR  THEN RETURN NO-APPLY.
 END.
@@ -505,7 +490,7 @@ END.
 &Scoped-define BROWSE-NAME brw-auto-tank
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -539,7 +524,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -558,12 +543,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY varps 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-view b-hist b-help brw-auto-tank brw-auto-tank-2 varps RS-status_
+  ENABLE b-exit b-view b-help brw-auto-tank brw-auto-tank-2 varps RS-status_
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -572,7 +557,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-enable_UI Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-enable_UI Dialog-Frame 
 PROCEDURE local-enable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     Override standard ADM method
@@ -590,18 +575,18 @@ PROCEDURE local-enable_UI :
                             "Удаленные&-" + {&comma-char} + {&deleted-status}
     rs-status_ = {&current-status}
   .  
-  if lookup ("b-sel", parbuttons) > 0 then do:
+
     enable b-sel with frame {&frame-name}.
-  end.
-  if lookup ("b-add", parbuttons) > 0 then do:
+
+
     enable b-add with frame {&frame-name}.
-  end.
-  if lookup ("b-chg", parbuttons) > 0 then do:
+
+
     enable b-chg with frame {&frame-name}.
-  end.
-  if lookup ("b-del", parbuttons) > 0 then do:
+
+
     enable b-del with frame {&frame-name}.
-  end.
+
   apply "value-changed" to brw-auto-tank in frame dialog-frame.
   disable brw-auto-tank-2 WITH FRAME {&frame-name}.
   brw-auto-tank-2:visible = false.
@@ -613,11 +598,11 @@ PROCEDURE local-enable_UI :
     enable brw-auto-tank-2 WITH FRAME Dialog-Frame.
     disable rs-status_ WITH FRAME Dialog-Frame.
     OPEN QUERY brw-auto-tank-2 FOR EACH ub.auto-tank where ub.auto-tank.status_ = {&current-status} NO-LOCK, first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
-          and auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) and auto-tank-attr.auto-num = ub.auto-tank.auto-num.
+          and (auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) or auto-tank-attr.attr-value = par-obj-type + " " + string(par-obj-code)) and auto-tank-attr.auto-num = ub.auto-tank.auto-num.
     if varauto-tank-rec <> ? then do:
       reposition brw-auto-tank-2 to recid varauto-tank-rec.
-      end.
     end.
+  end.
   ASSIGN
     v-status_ = rs-status_
   .  

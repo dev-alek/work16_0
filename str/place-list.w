@@ -45,7 +45,7 @@ define buffer buf_doc-pl for ub.doc-pl.
 
 
 define temp-table tt-pl
-  field mark as character label "*"
+/*  field mark as character label "*"*/
   field pl-code as integer label "Место хранения"
   field pl-name as character label "Название"
   field pl-coord as character label "Коорд1".
@@ -112,7 +112,7 @@ define temp-table tt-pl
     ~{&OPEN-QUERY-BROWSE-2}~
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS Btn_OK btn_mark btn_cancel BROWSE-2  
+&Scoped-Define ENABLED-OBJECTS Btn_OK btn_cancel BROWSE-2  
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -148,7 +148,7 @@ DEFINE QUERY BROWSE-2 FOR
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame Dialog-Frame _FREEFORM
     QUERY BROWSE-2 DISPLAY
-  tt-pl.mark format "*"
+/*  tt-pl.mark format "*"*/
   tt-pl.pl-code format "99999999999"
   tt-pl.pl-name
   tt-pl.pl-coord
@@ -162,7 +162,6 @@ DEFINE BROWSE BROWSE-2
 
 DEFINE FRAME Dialog-Frame
      Btn_OK AT ROW 1.08 COL 1.63
-     btn_mark AT ROW 1.08 COL 7.75 WIDGET-ID 4
      btn_cancel AT ROW 1.08 COL 10.88 WIDGET-ID 2
      BROWSE-2 AT ROW 2.25 COL 1.5 WIDGET-ID 200
      SPACE(0.49) SKIP(0.24)
@@ -225,31 +224,23 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME Btn_mark
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_mark Dialog-Frame
-ON choose OF Btn_mark IN FRAME Dialog-Frame /* * */
-do:
-
-  def buffer bf_tt-pl for tt-pl.
-
-  if available (tt-pl)
-  then do:
-     tt-pl.mark = if tt-pl.mark = "*" then "" else "*".
-     for each bf_tt-pl where bf_tt-pl.mark = "*" and bf_tt-pl.pl-coord <> tt-pl.pl-coord:
-       
-       bf_tt-pl.mark = "".
-     
-     end.
-     
-     BROWSE-2:refresh ().
-     BROWSE-2:select-next-row( ).
-  end.
-
-
-end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&Scoped-define SELF-NAME Btn_mark                              */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_mark Dialog-Frame*/
+/*ON choose OF Btn_mark IN FRAME Dialog-Frame /* * */            */
+/*do:                                                            */
+/*                                                               */
+/*  if available (tt-pl)                                         */
+/*  then do:                                                     */
+/*/*     tt-pl.mark = if tt-pl.mark = "*" then "" else "*".*/    */
+/*     BROWSE-2:refresh ().                                      */
+/*     BROWSE-2:select-next-row( ).                              */
+/*  end.                                                         */
+/*                                                               */
+/*                                                               */
+/*end.                                                           */
+/*                                                               */
+/*/* _UIB-CODE-BLOCK-END */                                      */
+/*&ANALYZE-RESUME                                                */
 
 &Scoped-define SELF-NAME Btn_ok
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_ok Dialog-Frame
@@ -257,12 +248,12 @@ ON choose OF Btn_ok IN FRAME Dialog-Frame /* * */
 do:
 
   p-list-tank = "".
-  for each tt-pl where tt-pl.mark = "*" :
-    p-list-tank = p-list-tank + "," + string (tt-pl.pl-coord).
-  end.
-  p-list-tank = left-trim (p-list-tank, ",").
+/*  for each tt-pl where tt-pl.mark = "*" :                     */
+/*    p-list-tank = p-list-tank + "," + string (tt-pl.pl-coord).*/
+/*  end.                                                        */
+  p-list-tank = left-trim (tt-pl.pl-coord).
 
-end.
+  end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -288,17 +279,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
   
-  for each buf_doc-pl where buf_doc-pl.out-code = p-trn-code and buf_doc-pl.gds-code = p-gds-code:
+  for each buf_doc-pl no-lock where buf_doc-pl.out-code = p-trn-code and buf_doc-pl.gds-code = p-gds-code:
     find first ub.place no-lock where ub.place.pl-code = buf_doc-pl.pl-code no-error.
     create tt-pl.
     assign
       tt-pl.pl-code = ub.place.pl-code
       tt-pl.pl-name = ub.place.pl-name
       tt-pl.pl-coord = ub.place.loc1.
-    if lookup (string (tt-pl.pl-coord), p-list-tank) > 0
-    then do:
-      tt-pl.mark = "*".
-    end.
+/*    if lookup (string (tt-pl.pl-coord), p-list-tank) > 0*/
+/*    then do:                                            */
+/*      tt-pl.mark = "*".                                 */
+/*    end.                                                */
     
   end.
 

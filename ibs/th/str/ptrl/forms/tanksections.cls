@@ -168,7 +168,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabControl:Location = new System.Drawing.Point(3, 45).
     this-object:tabControl:Name = "tabControl".
     this-object:tabControl:SelectedIndex = 0.
-    this-object:tabControl:Size = new System.Drawing.Size(710, 745).
+    this-object:tabControl:Size = new System.Drawing.Size(710, 785).
     if (infoSecsObj:Mode = "»«Ã≈Õ≈Õ»≈" or infoSecsObj:Mode = "ƒŒ¡¿¬À≈Õ»≈")
       then do:
         this-object:tabControl:Deselecting:Subscribe(tabControlCancelEvntHndl).
@@ -294,7 +294,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabPageSum:Location = new System.Drawing.Point(4, 23).
     this-object:tabPageSum:Name = "tabPageSum".
     this-object:tabPageSum:Padding = new System.Windows.Forms.Padding(3).
-    this-object:tabPageSum:Size = new System.Drawing.Size(702, 718).
+    this-object:tabPageSum:Size = new System.Drawing.Size(702, 765).
 /*    this-object:tabPageSum:TabIndex = 0.*/
     this-object:tabPageSum:Text = "»ÚÓ„Ó".
     this-object:tabPageSum:UseVisualStyleBackColor = true.
@@ -305,7 +305,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tankSectionSumControl:BackgroundImage = cast(resources:GetObject("tankSectionSumControl.BackgroundImage"), System.Drawing.Image).
     this-object:tankSectionSumControl:Location = new System.Drawing.Point(0, 0).
     this-object:tankSectionSumControl:Name = "tankSectionSumControl".
-    this-object:tankSectionSumControl:Size = new System.Drawing.Size(700, 720).
+    this-object:tankSectionSumControl:Size = new System.Drawing.Size(700, 765).
 /*    this-object:tankSectionSumControl:TabIndex = 0.*/
     /*  */
     /* tabPageAdd */
@@ -313,7 +313,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabPageAdd:Location = new System.Drawing.Point(4, 23).
     this-object:tabPageAdd:Name = "tabPageAdd".
     this-object:tabPageAdd:Padding = new System.Windows.Forms.Padding(3).
-    this-object:tabPageAdd:Size = new System.Drawing.Size(702, 718).
+    this-object:tabPageAdd:Size = new System.Drawing.Size(702, 765).
 /*    this-object:tabPageAdd:TabIndex = 1.*/
     this-object:tabPageAdd:Text = "+".
     this-object:tabPageAdd:Enter:Subscribe(this-object:tabPageAdd_Enter).
@@ -321,7 +321,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     /*  */
     /* tanksections */
     /*  */
-    this-object:ClientSize = new System.Drawing.Size(715, 793).
+    this-object:ClientSize = new System.Drawing.Size(715, 785).
     this-object:Controls:Add(this-object:tableLayoutPanel1).
     this-object:Controls:Add(this-object:tabControl).
     this-object:Icon = cast(resources:GetObject("$this.Icon"), System.Drawing.Icon).
@@ -517,7 +517,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabPageAdd:Location = new System.Drawing.Point(4, 23).
     this-object:tabPageAdd:Name = "tabPageAdd".
     this-object:tabPageAdd:Padding = new System.Windows.Forms.Padding(3).
-    this-object:tabPageAdd:Size = new System.Drawing.Size(702, 718).
+    this-object:tabPageAdd:Size = new System.Drawing.Size(702, 765).
     this-object:tabPageAdd:TabIndex = 1.
     this-object:tabPageAdd:Text = "+".
     this-object:tabPageAdd:Enter:Subscribe(this-object:tabPageAdd_Enter).

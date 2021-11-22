@@ -146,7 +146,7 @@ class ibs.th.str.ptrl.forms.tanksum inherits UserControl:
     this-object:Controls:Add(this-object:maskedTextBoxTankVol).
     this-object:Controls:Add(this-object:maskedTextBoxCarVolSum).
     this-object:Name = "tanksum".
-    this-object:Size = new System.Drawing.Size(700, 720).
+    this-object:Size = new System.Drawing.Size(700, 820).
     this-object:ResumeLayout(false).
     this-object:PerformLayout().
     catch e as Progress.Lang.Error:

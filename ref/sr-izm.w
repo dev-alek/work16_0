@@ -554,7 +554,7 @@ assign
     UNDO, RETURN ERROR.
   end.
 */
-if (lookup("b-add", bttns) > 0 AND v-cntxt-db-num = 0 AND NOT TRANSACTION AND p-mode = {&UPDATE}) then do:
+if p-mode = {&UPDATE} then do:
   v-edit-mode = yes.
 end.
 v-action-mode = "":U .
