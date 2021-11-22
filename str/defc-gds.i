@@ -86,6 +86,7 @@ FIELD GTD              as character format "X(31)"
 FIELD alpha1           like ub.goods.alpha
 FIELD node-code        like ub.bar-code.node-code
 FIELD okei             like ub.units.okei
+FIELD kkt              as integer
 FIELD is-gas           as logical
 FIELD ptrl-as-good     as logical
 FIELD taracode         as character

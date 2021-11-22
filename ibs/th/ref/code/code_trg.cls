@@ -61,7 +61,13 @@ class ibs.th.ref.code.code_trg final:
    set.
   
   define variable v-code-brw as class ibs.th.ref.code.browsecode no-undo .
-  
+
+  define property parparentproc as handle no-undo
+    private get.
+    set(input iH as handle):
+      parparentproc = ih.
+    end.
+
    constructor public code_trg (  ):
       this-object({&update}).
    end constructor.
@@ -432,7 +438,7 @@ class ibs.th.ref.code.code_trg final:
        vproc = getprocedit(ibuffertt).
        if searchlocal(vproc) ne ?
        then
-          run value(vproc) (Imode  ,ibuffertt,output Vsave ).
+          run value(vproc) (parparentproc, this-object, Imode  ,ibuffertt,output Vsave ).
        else do:
           v-code-frm = new ibs.th.ref.code.frmcode(ibuffertt,this-object).
           for each tt-form where tt-form.f-level eq num-entries(parent,{&delim-par}):
@@ -468,6 +474,20 @@ class ibs.th.ref.code.code_trg final:
         return error.
      end.
         
+  end method. // end_of_checkPromoAction 
+  
+  method public void CheckCodeInt () :
+    define buffer buf_code for code.
+    find first buf_code where buf_code.parent eq parent
+                          and int(buf_code.code)   eq int(tt-code-frm.code)
+                          and if tt-code-frm.frecid ne ? then recid(buf_code) ne tt-code-frm.frecid else yes
+                          no-lock no-error.
+     if available buf_code
+     then do:
+        message "”же есть запись с кодом " tt-code-frm.code
+        view-as alert-box.
+        return error.
+     end.
   end method. // end_of_checkPromoAction 
   
   method public void codeexport (file as character  ):

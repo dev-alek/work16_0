@@ -3269,7 +3269,7 @@ procedure m-smart-ref :
   on error undo, return error
   :
     
-  run ref/codelay.p ( "", "", "SpravAttrSmart", "Справочник атрибутов SMART") no-error.
+  run ref/codelay.p (parparentproc, "", "", "SpravAttrSmart", "Справочник атрибутов SMART") no-error.
   
   end.
 
@@ -3529,6 +3529,18 @@ procedure m-units-merc-exe :
       ,input  no
       ,output rid#
       ) .
+  end.
+
+end procedure. /* m-units-exe */
+
+procedure m-okei-kkt-exe:
+
+  define variable rid#          as recid     no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run ref/codelay.p (parparentproc, "", "", "okei-kkt", "Код ОКЕИ код ККТ") no-error.
   end.
 
 end procedure. /* m-units-exe */
@@ -4739,7 +4751,7 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
-    run ref/codelay.p ("", "", "platsys", "Платежные системы") no-error.
+    run ref/codelay.p (parparentproc, "", "", "platsys", "Платежные системы") no-error.
     
   end.
 
@@ -4751,7 +4763,7 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
-    run ref/codelay.p ( "", "", "OsnovCorr", "Основание коррекции") no-error.
+    run ref/codelay.p (parparentproc, "", "", "OsnovCorr", "Основание коррекции") no-error.
     
   end.
 
@@ -4764,7 +4776,7 @@ define variable v-rid-list as character no-undo .
   on error undo, return error
   :
     
-    run ref/codelay.p ( "", "", "SpravDevice", "Справочник устройств") no-error.
+    run ref/codelay.p (parparentproc, "", "", "SpravDevice", "Справочник устройств") no-error.
     
   end.
 

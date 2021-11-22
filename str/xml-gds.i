@@ -102,7 +102,8 @@ if vaction = "U":U then do:
   run bgelib-tag-put in this-procedure ( input 3, input "ItemDisc"  , input string( std-disc-dec), input 1 ).
   run bgelib-tag-put in this-procedure ( input 3, input "ItemDiscReason"  , input string( std-disc-reason), input 1 ).
   if pos-type <> {&cd-type-infokiosk} then do:
-    run bgelib-tag-put in this-procedure ( input 3, input "ItemOKEI"          , input string( cash-gds.okei), input 1 ).
+    run bgelib-tag-put in this-procedure ( input 3, input "ItemOKEI"         , input string( cash-gds.okei), input 1 ).
+    run bgelib-tag-put in this-procedure ( input 3, input "ItemKKTEICode"    , input string( cash-gds.kkt), input 1 ).
   end.
   run bgelib-tag-put in this-procedure ( input 3, input "ItemMeasure"      , input string( cash-gds.unit-cli), input 1 ).
   find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 

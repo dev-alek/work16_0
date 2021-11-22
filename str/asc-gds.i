@@ -68,7 +68,7 @@ define variable v-gds-null-price as character no-undo .
 define variable iii as integer no-undo .
 define variable v-mask-full as character no-undo .
 define variable v-mask-short as character no-undo .
-
+define variable vKKT as integer no-undo.
 
 DEFine BUFFER BUF_BAR-CODE FOR UB.BAR-CODE.
 define buffer buf_price-list for ub.price-list.
@@ -76,6 +76,7 @@ define buffer buf_price-doc-forming-gds FOR UB.PRICE-doc-forming-gds.
 define buffer buf_temp-dis-gds-rule for temp-dis-gds-rule.
 define buffer main-prt-bar-code  for ub.bar-code.
 define buffer buf_goods-attr for goods-attr.
+define buffer b-code for code.
 
 &if  "{&called}" <> "send-codes-only" &then
 /*цена нам не нужна если мы только создаем массив кодов*/
@@ -323,6 +324,16 @@ cash-gds.is-main-code = (if cash-gds.b-str = ""
 cash-gds.obj-type = parobj-type
 cash-gds.obj-code = parobj-code
 .
+vKKT = 255.
+find first b-code where
+           b-code.parent  = "okei-kkt"
+       and b-code.code    = string(cash-gds.okei)
+       and b-code.status_ = 0
+no-lock no-error.
+if avail b-code then
+   vKKT = integer(b-code.CodeName) no-error.
+if error-status:error then vKKT = 255.
+cash-gds.kkt = vKKT.
 if (lookup({&petrolium}, loc-units.type) > 0 AND lookup({&divisional}, loc-units.type) > 0) then do:
    /*проверим на газ*/
    run gds-attr-value in this-procedure  (
