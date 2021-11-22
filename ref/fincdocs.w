@@ -363,7 +363,7 @@ DEFINE BROWSE br-c-fin-doc
       X_c-fin-doc.host-code COLUMN-LABEL "Код!фирмы" FORMAT "999999999":U
       X_c-fin-doc.prn-doc-code FORMAT "X(16)":U
       X_c-fin-doc.doc-date FORMAT "99/99/9999":U
-      get-shift(BUFFER X_c-fin-doc, OUTPUT v-fin-doc-shift-name-num)
+      get-shift(BUFFER X_c-fin-doc, OUTPUT v-fin-doc-shift-name-num) COLUMN-LABEL "Дата!смены"
       v-fin-doc-shift-name-num COLUMN-LABEL "Смена" format "X(6)"
       usrfulnf(X_c-fin-doc.user-name-doc) COLUMN-LABEL "Создал" FORMAT "X(8)":U
       X_c-fin-doc.fin-doc-type FORMAT "X(8)":U
@@ -2234,6 +2234,10 @@ define variable v-contract as character no-undo.
 define variable v-curr-abbr as character no-undo.
 define variable v-obj as character no-undo .
 DEFINE VARIABLE v-for-user-name AS CHARACTER NO-UNDO.
+
+run rep/g-fin-doc-list.p (parParentProc) no-error.
+
+/*
 DEFINE FRAME c-fin-doc-list
 X_c-fin-doc.host-code COLUMN-LABEL "Код!фирмы"
 X_c-fin-doc.prn-doc-code FORMAT "X(16)"
@@ -2343,6 +2347,7 @@ run prn-lib-prn-file in this-procedure (
                                           input parParentProc
                                           ,input 8
                                           ).
+*/                                          
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
