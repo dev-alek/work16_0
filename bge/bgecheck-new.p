@@ -488,6 +488,12 @@ end .
         if avail buf_chk-doc-attr
         then
            run wp-xmltagput( input 3, input "CHNumberKKT", input buf_chk-doc-attr.attr-value, input 2 ).
+        find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq buf_chk-doc.doc-code
+                                      and buf_chk-doc-attr.attr-code eq "CHNumberFN"
+             no-lock no-error.
+        if avail buf_chk-doc-attr
+        then
+           run wp-xmltagput( input 3, input "CHNumberFN", input buf_chk-doc-attr.attr-value, input 2 ).
         run wp-xmltagclose in this-procedure ( input 2, input "checkHead").
         /* end_of заголовок чека */      
     

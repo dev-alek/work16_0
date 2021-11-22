@@ -579,6 +579,7 @@ define variable v-step as integer   no-undo .
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_chk-doc for ub.chk-doc.
 define variable vCHNumberKKT       as character no-undo.
+define variable vCHNumberFN        as character no-undo.
 define variable vCHFiscalDocSign   as character no-undo . /* Фискальный признак документа. Тег 1077. Строка из 6 символов. */
 define variable vCHFiscalDocNumber as integer no-undo .   /* Номер фискального документа. Тег 1040. Целое число, порядковый номер ФД с момента регистрации (перерегистрации) ККТ. */
 
@@ -785,6 +786,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         end.
         when "CHNumberKKT":U then do:
           vCHNumberKKT = buf_temp-temp.field-value no-error .
+        end.
+        when "CHNumberFN":U then do:
+          vCHNumberFN = buf_temp-temp.field-value no-error .
         end.
         when "CHFiscalDocSign":U then do :
           vCHFiscalDocSign = buf_temp-temp.field-value no-error .
@@ -1048,6 +1052,15 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.attr-value = vCHNumberKKT
         .
       end.
+      if vCHNumberFN ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHNumberFN"
+           chk-doc-attr.attr-value = vCHNumberFN
+        .
+      end.      
       if vCHFiscalDocSign > "" then do:
         create chk-doc-attr.
         assign
@@ -1242,6 +1255,15 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.attr-value = vCHNumberKKT
         .
       end.
+      if vCHNumberFN ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHNumberFN"
+           chk-doc-attr.attr-value = vCHNumberFN
+        .
+      end.      
       if vCHFiscalDocSign > "" then do:
         create chk-doc-attr.
         assign

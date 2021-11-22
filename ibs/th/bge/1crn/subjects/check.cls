@@ -328,6 +328,12 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     if avail buf_chk-doc-attr
     then
        insw:write-data-element( "CHNumberKKT",  buf_chk-doc-attr.attr-value).
+    find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
+                                  and buf_chk-doc-attr.attr-code eq "CHNumberFN"
+             no-lock no-error.
+    if avail buf_chk-doc-attr
+    then
+       insw:write-data-element( "CHNumberFN",  buf_chk-doc-attr.attr-value).
        
     if "" > "" then insw:write-data-element ( "term-num", "" ).  /* Номер терминала POS (Строка) */
 
