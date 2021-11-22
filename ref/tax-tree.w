@@ -185,6 +185,13 @@ FUNCTION get-types RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-marktax-rate Dialog-Frame
+FUNCTION get-envd RETURNS CHARACTER
+  ( input i-tax-code as integer, i-rate-code as integer)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -327,6 +334,7 @@ DEFINE BROWSE BR-tax-rate
       tax-rate.rate-code
       tax-rate.rate-name FORMAT "X(20)"
       tax-rate.status_
+      get-envd(tax-rate.tax-code, tax-rate.rate-code) COLUMN-LABEL "áåç ÍÄÑ" FORMAT "X(1)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 43 BY 10.67.
@@ -1894,6 +1902,29 @@ END PROCEDURE.
 
 
 /* ************************  Function Implementations ***************** */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-marktax-rate Dialog-Frame
+FUNCTION get-envd RETURNS CHARACTER
+  ( input i-tax-code as integer, i-rate-code as integer) :
+/*------------------------------------------------------------------------------
+  Purpose:
+    Notes:
+------------------------------------------------------------------------------*/
+define buffer tax-rate-attr for tax-rate-attr.
+
+define variable vIsENVD as logical no-undo.
+
+find first tax-rate-attr where
+           tax-rate-attr.tax-code  = i-tax-code
+       and tax-rate-attr.rate-code = i-rate-code
+       and tax-rate-attr.attr-code = "envd"
+no-lock no-error.
+vIsENVD =  AVAILABLE tax-rate-attr.
+return string(vIsENVD, "+/").
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-marktax-rate Dialog-Frame
 FUNCTION get-marktax-rate RETURNS CHARACTER
