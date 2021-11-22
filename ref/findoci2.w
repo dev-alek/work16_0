@@ -884,9 +884,15 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-pre-vedom Dialog-Frame
 ON CHOOSE OF B-pre-vedom IN FRAME Dialog-Frame /* Препровод. ведомость */
 DO:
+  define buffer bf_fin-doc-attr for ub.fin-doc-attr . 
   find first tt-fin-doc no-error .
   if available (tt-fin-doc) then do:
   run ref/cover_sheet.p (input parParentProc, input p-host-code, input tt-fin-doc.fin-doc-code, input tt-fin-doc.CashBookId, input tt-fin-doc.sum-doc, input p-mode) no-error .
+      find first bf_fin-doc-attr exclusive-lock where bf_fin-doc-attr.attr-code = "pre-vedom" and bf_fin-doc-attr.host-code = tt-fin-doc.host-code
+      and bf_fin-doc-attr.fin-doc-code = tt-fin-doc.fin-doc-code no-error . 
+    if available (bf_fin-doc-attr) then 
+        tt-fin-doc.enclosure     = tt-fin-doc.enclosure + " " + entry(1,bf_fin-doc-attr.attr-value,";") .
+    display tt-fin-doc.enclosure with frame {&frame-name} .       
   end.
 END.
 
