@@ -136,7 +136,9 @@ FOR EACH buf_cash-desk WHERE
    run bgelib-tag-close in this-procedure ( input 2, input "Param").
    run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='KKT_SCHEMA'":U).
    run bgelib-tag-close in this-procedure ( input 2, input "Param").
-   run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='GISMT_TIMEOUT'":U).
+   run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='GISMT_CHECK_TIMEOUT'":U).
+   run bgelib-tag-close in this-procedure ( input 2, input "Param").
+   run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='GISMT_OPENCON_TIMEOUT'":U).
    run bgelib-tag-close in this-procedure ( input 2, input "Param").
    run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='GISMT_FAST_ANSWER'":U).
    run bgelib-tag-close in this-procedure ( input 2, input "Param").

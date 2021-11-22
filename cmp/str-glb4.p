@@ -689,7 +689,7 @@ cda-MAGIA-XML_operative
 
 /* Параметры последнего принятого чека */
 { cmp/cr-prepc.i 1 prop-list-cda-IBM-XML_operative
-"last-check-params,fo-version,device-kind,USE_FFD_VERSION,KKT_FFD_VERSION,KKT_SCHEMA,last-time-polls,last-date-polls,GISMT_FAST_ANSWER,GISMT_TIMEOUT"
+"last-check-params,fo-version,device-kind,USE_FFD_VERSION,KKT_FFD_VERSION,KKT_SCHEMA,last-time-polls,last-date-polls,GISMT_FAST_ANSWER,GISMT_TIMEOUT,GISMT_CHECK_TIMEOUT,GISMT_OPENCON_TIMEOUT"
 cda-IBM-XML_operative
 }
 

@@ -2266,16 +2266,22 @@ FUNCTION get-GISMT_TIMEOUT RETURNS INTEGER
     ,INPUT p-pos-type AS CHARACTER
     ,INPUT  p-cash-num AS INTEGER) :
 DEFINE VARIABLE v-dop AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-GISMT_CHECK_TIMEOUT AS INTEGER no-undo init ?.
+DEFINE VARIABLE v-GISMT_OPENCON_TIMEOUT AS INTEGER no-undo init ?.
 DEFINE VARIABLE v-GISMT_TIMEOUT AS INTEGER no-undo init ?.
-
-find first ub.cash-desk-attr no-lock where ub.cash-desk-attr.attr-code = {&cda-IBM-XML_operative_GISMT_TIMEOUT} and
+find first ub.cash-desk-attr no-lock where ub.cash-desk-attr.attr-code = {&cda-IBM-XML_operative_GISMT_CHECK_TIMEOUT} and
                                            ub.cash-desk-attr.cash-num = p-cash-num and
                                            ub.cash-desk-attr.db-num = p-db-num and
                                            ub.cash-desk-attr.obj-code = p-obj-code no-error .
-if available (ub.cash-desk-attr) then v-GISMT_TIMEOUT = integer(ub.cash-desk-attr.attr-value-character) .                                            
+if available (ub.cash-desk-attr) then v-GISMT_CHECK_TIMEOUT = integer(ub.cash-desk-attr.attr-value-character) .                                            
 
-     
+find first ub.cash-desk-attr no-lock where ub.cash-desk-attr.attr-code = {&cda-IBM-XML_operative_GISMT_OPENCON_TIMEOUT} and
+                                           ub.cash-desk-attr.cash-num = p-cash-num and
+                                           ub.cash-desk-attr.db-num = p-db-num and
+                                           ub.cash-desk-attr.obj-code = p-obj-code no-error .
+if available (ub.cash-desk-attr) then v-GISMT_OPENCON_TIMEOUT = integer(ub.cash-desk-attr.attr-value-character) .        
 
+v-GISMT_TIMEOUT = v-GISMT_OPENCON_TIMEOUT + v-GISMT_CHECK_TIMEOUT .
 RETURN v-GISMT_TIMEOUT.   /* Function return value. */
 
 END FUNCTION.
