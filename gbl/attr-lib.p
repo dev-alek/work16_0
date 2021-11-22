@@ -8548,38 +8548,94 @@ false'
 &scop user-can-edit-list-cda-IBM-XML_operative '~
 true~
 ,false~
+,false~
+,false~
+,false~
+,false~
+,false~
+,false~
+,false~
 ,false'
 &scop output-display-list-cda-IBM-XML_operative '~
 true~
 ,true~
+,true~
+,true~
+,true~
+,true~
+,true~
+,true~
+,true~
 ,true'
 &scop other-cda-IBM-XML_operative 'spr=cd-attr-last-check-params,,'
-&scop prop-type-list-cda-IBM-XML_operative 'character,character,integer'
-&scop prop-format-list-cda-IBM-XML_operative 'X(19)|X(255)|9'
+&scop prop-type-list-cda-IBM-XML_operative 'character,character,integer,character,character,character,character,character,character,character'
+&scop prop-format-list-cda-IBM-XML_operative 'X(19)|X(255)|9|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)'
 &scop prop-label-list-cda-IBM-XML_operative '~
 Параметры последнего принятого чека/док-та~
 ,Версия кассовой программы~
-,Признак исполнения кассы'
-&scop manual-edit-cda-IBM-XML_operative  '1,0,0'
-&scop batch-edit-cda-IBM-XML_operative  '0,0,0'
+,Признак исполнения кассы~
+,ФФД версия~
+,ККТ версия~
+,Схема интеграции ККТ~
+,Время последнего опроса касс~
+,Дата последнего опроса касс~
+,Быстрый ответ ГИСМТ~
+,Таймаут ответа ГИСМТ'
+&scop manual-edit-cda-IBM-XML_operative  '1,0,0,0,0,0,0,0,0,0'
+&scop batch-edit-cda-IBM-XML_operative  '0,0,0,0,0,0,0,0,0,0'
 &scop news-cda-IBM-XML_operative '~
 false~
+,true~
+,true~
+,true~
+,true~
+,true~
+,true~
+,true~
 ,true~
 ,true'
 &scop from-gbd-cda-IBM-XML_operative '~
 false~
 ,false~
+,false~
+,false~
+,false~
+,false~
+,false~
+,false~
+,false~
 ,false'
 &scop from-ubd-cda-IBM-XML_operative '~
 true~
+,true~
+,true~
+,true~
+,true~
+,true~
+,true~
+,true~
 ,true~
 ,true'
 &scop hist-cda-IBM-XML_operative '~
 false~
 ,true~
+,true~
+,true~
+,true~
+,true~
+,true~
+,true~
+,true~
 ,true'
 &scop send-param-cda-IBM-XML_operative  '~
 false~
+,false~
+,false~
+,false~
+,false~
+,false~
+,false~
+,false~
 ,false~
 ,false'
 /**/
@@ -8857,8 +8913,6 @@ false~
 &scop manual-edit-cd-attr-periodic-tasks 0
 &scop batch-edit-cd-attr-periodic-tasks  0
 &scop send-param-cd-attr-periodic-tasks  true
-
-
 
 /* настройки кассы INFOKIOSK  */
 &scop label-cda-INFOKIOSK_operative "Оперативные параметры"
@@ -9661,6 +9715,7 @@ procedure cd-attr-code :
       &scop section-code cda-IBS-TH-MOB_rec-print
       {&section-temp-full-code}
 
+
       /* сюда добавлять новые параметры атрибутов касс  */
       otherwise do:
         undo, return error substitute("неизвестная секция настроек кассы &1", p-ucode ).
@@ -9719,6 +9774,7 @@ procedure cd-attr-tooltip :
       {&section-temp-code}
       &scop section-code cda-IBS-TH-MOB_rec-print
       {&section-temp-code}
+
 
       /* сюда добавлять новые параметры атрибутов касс */
       otherwise do:

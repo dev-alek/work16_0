@@ -1006,6 +1006,34 @@ For each buf_cash-desk-attr where
       end.
     end case.
 
+    case Temp-hattr.code:
+       when {&cda-IBM-XML_operative_USE_FFD_VERSION} then do:
+          case Temp-hattr.attr-value-character :
+             when "0" then Temp-hattr.attr-value-character = "авт" .
+             when "2" then Temp-hattr.attr-value-character = "1.05" .
+             when "3" then Temp-hattr.attr-value-character = "1.1" .
+             when "4" then Temp-hattr.attr-value-character = "1.2" .
+             otherwise Temp-hattr.attr-value-character = " " .
+          end case .
+       end.
+       when {&cda-IBM-XML_operative_KKT_FFD_VERSION} then do:
+          case Temp-hattr.attr-value-character :
+             when "0" then Temp-hattr.attr-value-character = "авт" .
+             when "2" then Temp-hattr.attr-value-character = "1.05" .
+             when "3" then Temp-hattr.attr-value-character = "1.1" .
+             when "4" then Temp-hattr.attr-value-character = "1.2" .
+             otherwise Temp-hattr.attr-value-character = " " .
+          end case .
+       end.       
+       when {&cda-IBM-XML_operative_KKT_SCHEMA} then do:
+          case Temp-hattr.attr-value-character :
+             when "0" then Temp-hattr.attr-value-character = "с ожиданием ответа" .
+             when "1" then Temp-hattr.attr-value-character = "без ожидания ответа" .
+             otherwise Temp-hattr.attr-value-character = " " .
+          end case .          
+       end.   
+    end case .   
+
     run cd-attr-send-param in this-procedure ( input Temp-hattr.upper-attr-code
                                               ,input Temp-hattr.code
                                               ,output Temp-hattr.to-send).

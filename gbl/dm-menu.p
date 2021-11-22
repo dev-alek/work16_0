@@ -42,6 +42,8 @@ define variable vss-description as character no-undo initial "Создание динамичес
 { gbl/thbjattr.i }
 { gbl/cur-time.i }
 { str/lib-farh.i }
+{ gbl/cd-attr.i }
+
 define temp-table temp-menu-toggle no-undo
   field item-code      as integer
   field item-handle    as widget-handle
@@ -2848,6 +2850,44 @@ run proc-cash-gds in this-procedure ('qnty').
 end procedure. /* m_lst-inv-exe */
 
 
+procedure m-cash-KKT-with-exe :
+   
+   
+   run str/diallog.w (
+      input parparentproc
+      , input this-procedure
+      , input "str/sendkkt.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + "0")
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка схемы интеграции ККТ ")
+      ) no-error.   
+   if error-status:error then 
+   do:
+      message "Не удалось отправить схему интеграции ККТ на кассу"
+         view-as alert-box.
+   end.      
+
+end procedure. /* m-cash-KKT-with-exe */
+
+procedure m-cash-KKT-without-exe :
+   
+   run str/diallog.w (
+      input parparentproc
+      , input this-procedure
+      , input "str/sendkkt.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + "1")
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка схемы интеграции ККТ ")
+      ) no-error.   
+   if error-status:error then 
+   do:
+      message "Не удалось отправить схему интеграции ККТ на кассу"
+         view-as alert-box.
+   end.      
+
+end procedure. /* m-cash-KKT-without-exe */
 
 procedure m-cash-pay-exe :
 

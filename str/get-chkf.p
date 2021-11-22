@@ -2175,6 +2175,23 @@ with frame a :
   END. /*First-of cash-desk.pos-type*/
 END.
 
+
+run str/get-ffd.p(parparentproc,
+                        p-parent-handle,
+                        p-log-handle,
+                        log-file-name,
+                        p-obj-type,
+                        p-obj-code,
+                        output v-value-logical) no-error.
+if error-status:error then do:
+   run write-log-and-file in p-log-handle (
+                input 1
+              , input log-file-name
+              , input 1
+              , input return-value).
+
+end.
+
 run write-log-and-file in p-log-handle (
       input 1
     , input log-file-name

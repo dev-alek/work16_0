@@ -70,6 +70,9 @@ define variable vss-description as character no-undo init "Справочник касс" .
 { gbl/fltopend.i defproc }
 { gbl/key-rec.i }
 { gbl/cd-attr.i }
+   { rep/html-conv.i }
+define stream Out-Stream .
+define stream OutStr-html.
 define variable log-res as log no-undo.
 define variable rr as recid no-undo.
 define variable jj as integer no-undo .
@@ -119,7 +122,11 @@ define variable v-rid-list as character no-undo .
 &Scoped-define INTERNAL-TABLES X_cash-desk
 
 /* Definitions for BROWSE BR-cash-desk                                  */
-&Scoped-define FIELDS-IN-QUERY-BR-cash-desk mark-string( recid(X_cash-desk), v-rid-list ) X_cash-desk.cash-on X_cash-desk.obj-code X_cash-desk.db-num X_cash-desk.cash-num {&cd-type-name} cash-desk-auto(X_cash-desk.autonomy) if X_cash-desk.pos-type = {&cd-type-ibm-xml} or X_cash-desk.pos-type = {&cd-type-autotank} then (if num-entries(X_cash-desk.addr-path, {&delim-par}) > 1 then (entry(1, X_cash-desk.addr-path, {&delim-par}) + ":\\":U + entry(2, X_cash-desk.addr-path, {&delim-par})) else X_cash-desk.addr-path) else X_cash-desk.addr-path X_cash-desk.cash-os string(if X_cash-desk.is-del then {&deleted-status} else {&current-status}) (if X_cash-desk.remote = 1 then yes else no) X_cash-desk.version get-fo-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)
+&Scoped-define FIELDS-IN-QUERY-BR-cash-desk mark-string( recid(X_cash-desk), v-rid-list ) X_cash-desk.cash-on X_cash-desk.obj-code X_cash-desk.db-num X_cash-desk.cash-num {&cd-type-name} cash-desk-auto(X_cash-desk.autonomy) if X_cash-desk.pos-type = {&cd-type-ibm-xml} or X_cash-desk.pos-type = {&cd-type-autotank} then (if num-entries(X_cash-desk.addr-path, {&delim-par}) > 1 then (entry(1, X_cash-desk.addr-path, {&delim-par}) + ":\\":U + entry(2, X_cash-desk.addr-path, {&delim-par})) else X_cash-desk.addr-path) else X_cash-desk.addr-path X_cash-desk.cash-os string(if X_cash-desk.is-del then {&deleted-status} else {&current-status}) (if X_cash-desk.remote = 1 then yes else no) X_cash-desk.version get-ffd-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) get-kkt-schema(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) ~
+get-fo-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)~
+get-GISMT_TIMEOUT(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)~
+get-GISMT_FAST(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)~
+get-date(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) + " " + get-time(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-cash-desk
 &Scoped-define SELF-NAME BR-cash-desk
 &Scoped-define QUERY-STRING-BR-cash-desk FOR EACH X_cash-desk NO-LOCK
@@ -162,7 +169,66 @@ FUNCTION get-fo-version RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-ffd-version Dialog-Frame
+FUNCTION get-ffd-version RETURNS CHARACTER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER)  FORWARD.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-kkt-schema Dialog-Frame
+FUNCTION get-kkt-schema RETURNS CHARACTER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-date Dialog-Frame
+FUNCTION get-date RETURNS CHARACTER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-time Dialog-Frame
+FUNCTION get-time RETURNS CHARACTER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-GISMT_FAST Dialog-Frame
+FUNCTION get-GISMT_FAST RETURNS INTEGER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-GISMT_TIMEOUT Dialog-Frame
+FUNCTION get-GISMT_TIMEOUT RETURNS INTEGER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
@@ -296,9 +362,14 @@ X_cash-desk.cash-os FORMAT "X(12)":U
 string(if X_cash-desk.is-del then {&deleted-status} else {&current-status}) COLUMN-LABEL "Статус" FORMAT "X(8)":U
 (if X_cash-desk.remote = 1 then yes else no) COLUMN-LABEL "Удаленная!дистанционно" FORMAT "+/":U
 X_cash-desk.version COLUMN-LABEL "Версия!протокола" FORMAT "X(17)":U
-get-fo-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Версия кассовой программы" FORMAT "X(27)":U
+get-fo-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Версия кассовой программы" FORMAT "X(35)":U
+get-ffd-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Версия ФФД" FORMAT "X(15)":U
+get-kkt-schema(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Схема интеграции ККТ" FORMAT "X(20)":U
+string(get-GISMT_TIMEOUT(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num))  COLUMN-LABEL "Таймаут ответа! ГИСМТ" FORMAT "X(15)":U
+string(get-GISMT_FAST(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num))  COLUMN-LABEL "Быстрый ответ! ГИСМТ" FORMAT "X(15)":U
+string(get-date(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)) + " " + string(get-time(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num))  COLUMN-LABEL "Дата/время!последнего опроса касс" FORMAT "X(20)":U
 X_cash-desk.registration-code COLUMN-LABEL "Регистрационный номер" FORMAT "X(30)":U
-X_cash-desk.serial-code       COLUMN-LABEL "Номер производител "   FORMAT "X(30)":U
+X_cash-desk.serial-code       COLUMN-LABEL "Номер производителя"   FORMAT "X(30)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS DROP-TARGET SIZE 98 BY 18.3.
@@ -1594,108 +1665,221 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-print Dialog-Frame
 PROCEDURE proc-b-print :
-define variable sym1 as char init ":"   no-undo.
-define variable sym2 as char init ":"   no-undo.
-define variable sym3 as char init ":"   no-undo.
-define variable sym4 as char init ":"   no-undo.
-define variable sym5 as char init ":"   no-undo.
-define variable sym6 as char init ":"   no-undo.
-define variable sym7 as char init ":"   no-undo.
-define variable sym8 as char init ":"   no-undo.
-define variable sym9 as char init ":"   no-undo.
-define variable sym10 as char init ":"   no-undo.
 
-define variable Line                    as char         no-undo.
+   define VARIABLE p-report-id         as character no-undo .
+   define variable v-file-name-rep-htm as character no-undo .
 
-define variable ii      as integer   no-undo.
-define variable StartRecid    as integer   no-undo.
-define variable v-fo-version  as CHARACTER no-undo.
-DEFINE FRAME List
-sym1 column-label ":" format "x(1)"
-X_cash-desk.obj-code COLUMN-LABEL "Магазин" format ">>>>9"
-sym2 column-label ":" format "x(1)"
-X_cash-desk.cash-num column-label "Номер" format ">>>9"
-sym8 column-label ":" format "x(1)"
-/*X_cash-desk.db-num column-label "БД" format ">9"*/
-X_cash-desk.db-num column-label "БД" format ">>>>9"
-sym3 column-label ":" format "x(1)"
-X_cash-desk.pos-type column-label "Тип POS" format "x(20)"
-sym4 column-label ":" format "x(1)"
-X_cash-desk.addr-path column-label "Адрес" format "x(20)"
-sym5 column-label ":" format "x(1)"
-X_cash-desk.cash-os COLUMN-LABEL "Тип ОС" format "x(12)"
-sym6 column-label ":" format "x(1)"
-X_cash-desk.version COLUMN-LABEL "Версия протокола" format "x(17)"
-sym7 column-label ":" format "x(1)"
-/*X_cash-desk.registration-code COLUMN-LABEL "Регистр. №" format "x(30)"*/
-X_cash-desk.registration-code COLUMN-LABEL "Регистр. №" format "x(28)"
-sym9 column-label ":" format "x(1)"
-/*X_cash-desk.serial-code COLUMN-LABEL "Сер. №" format "x(30)"*/
-X_cash-desk.serial-code COLUMN-LABEL "Сер. №" format "x(28)"
-sym10 column-label ":" format "x(1)"
-v-fo-version COLUMN-LABEL "Версия кассовой программы" format "x(27)"
-HEADER
-cur-time-print() AT 5 format "x(35)"
-    string( "Страница " + string( PAGE-NUMBER( PrnLibStream ) , ">>9") )
-        AT 66 format "X(15)" SKIP
-Line format "x(198)" AT 1
-with width {&DOS_CW_2} down use-text stream-io no-box .
+   /*печать*/
+   run get-report-num (output p-report-id).
+    
+   v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
+    
+   define variable ii           as integer   no-undo.
+   define variable StartRecid   as integer   no-undo.
+   define variable v-fo-version as CHARACTER no-undo.
+   define variable v-ffd-version as CHARACTER no-undo.
+   define variable v-GISMT_TIMEOUT as CHARACTER no-undo.
+   define variable v-GISMT_FAST as CHARACTER no-undo.
+   define variable v-date as CHARACTER no-undo.
+   define variable v-time as CHARACTER no-undo.
+   define variable v-kkt-schema as CHARACTER no-undo.
+   define variable v-autonomy   as character no-undo .
+   define variable v-addr-path  as character no-undo .
 
-if num-results( "br-cash-desk" ) = 0 then  do:
-  message "Список  П У С Т !" skip view-as alert-box information .
-  return no-apply .
-end.
 
-if session:set-wait-state( "compiler" ) then .
-Line = fill( "-" , 198 ) .
-StartRecid = recid( X_cash-desk ) .
-DO WHILE available X_cash-desk :
-    GET prev br-cash-desk NO-LOCK .
-END.
-GET next br-cash-desk NO-LOCK .
-ii = 1 .
+   output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
+   put stream OutStr-html unformatted
+      "<!DOCTYPE HTML>" skip
+      ' <html>' skip
+      '  <head>' skip
+      '   <meta charset="utf-8">' skip
+      '    <style type="text/css">' skip
+                        
+      '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+      '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+      '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+      '   </style>' skip
+      '  </head>' skip
+      .
 
-run prn-lib-open-stream  in this-procedure (
-                                             input parParentProc
-                                            ,input {&LS_PS_A4}
-                                            ,input yes /*p-is-stream*/
-                                            ,input no /*p-append*/
-                                            ).
-FORM HEADER
-Line format "X(198)" SKIP
-"Продолжение - на следующей странице" AT 30 SKIP
-with FRAME CliBottomFrame width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS no-box.
-VIEW stream PrnLibStream FRAME CliBottomFrame .
-PUT stream PrnLibStream space(20) "С П И С О К   К А С С" format "X(40)" SKIP(2) .
-FORM with frame List .
-DO WHILE available X_cash-desk :
-    DISPLAY stream PrnLibStream
-    sym1 X_cash-desk.obj-code
-    sym8 X_cash-desk.db-num
-    sym2 X_cash-desk.cash-num
-    sym3 {&cd-type-name}  @ X_cash-desk.pos-type
-    sym4 X_cash-desk.addr-path
-    sym5 X_cash-desk.cash-os
-    sym6 X_cash-desk.version
-    sym7 X_cash-desk.registration-code
-    sym9 X_cash-desk.serial-code
-    sym10 get-fo-version( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) @ v-fo-version
-    with frame List .
-    DOWN stream PrnLibStream 1 with frame List .
-    ii =  ii + 1 .
-    if ( ( ii modulo 10 ) = 0 ) AND ( ii >= 10 ) then do:
-        run waitfram-show in this-procedure ( "Просмотрено строк : " + string( ii ) ) .
-    end.
-    GET next br-cash-desk .
-END.
-PUT stream PrnLibStream Line format "X(198)" SKIP.
-HIDE stream PrnLibStream FRAME CliBottomFrame .
-output stream PrnLibStream close .
-run prn-lib-prn-file in this-procedure (
-                                          input parParentProc
-                                          ,input 8
-                                          ).
-reposition br-cash-desk to recid StartRecid NO-ERROR .
+   put stream OutStr-html unformatted
+      '<body>' skip
+      /*Первая таблица*/
+      '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
+      '<thead>' skip
+      .
+
+   put stream OutStr-html unformatted
+      '<tr class="set_columns">' skip
+      '<td style="width: 60px;"></td>' skip
+      '<td style="width: 20px;"></td>' skip
+      '<td style="width: 40px;"></td>' skip
+      '<td style="width: 60px;"></td>' skip
+      '<td style="width: 80px;"></td>' skip
+      '<td style="width: 100px;"></td>' skip
+      '<td style="width: 50px;"></td>' skip
+      '<td style="width: 50px;"></td>' skip
+      '<td style="width: 100px;"></td>' skip
+      '<td style="width: 70px;"></td>' skip
+      '<td style="width: 120px;"></td>' skip
+      '<td style="width: 100px;"></td>' skip
+      '<td style="width: 70px;"></td>' skip
+      '<td style="width: 70px;"></td>' skip
+      '<td style="width: 70px;"></td>' skip
+      '<td style="width: 70px;"></td>' skip
+      '<td style="width: 70px;"></td>' skip
+      '</tr>' skip
+
+      .     
+        
+   put stream OutStr-html unformatted
+      '<TR><TD colspan="17"></TD></TR>' skip
+      '<TR>' skip
+      '<Td colspan="17" style="height: 14px; text-align: center; font-weight: bold;">СПРАВОЧНИК КАСС</Td>' skip
+      '</TR>'skip
+      '</thead>' skip
+      '<tbody>' skip
+      '<tr>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Магазин</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">БД</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Номер</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Тип POS</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Активность</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Адрес (путь к кассе)</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Тип ОС</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Статус</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Удаленная дистанционно</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Версия протокола</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Версия кассовой программы</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Схема интеграции ККТ</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Версия ФФД</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Таймаут ответа ГИСМТ</th>' skip
+      '<th rowspan="2" text_wrap="true" style="text-align: center;">Быстрый ответ ГИСМТ</th>' skip
+      '<th colspan="2" text_wrap="true" style="text-align: center;">Дата/время последнего опроса касс</th>' skip
+      '</tr>' skip
+      '<tr>' skip
+         '<td text_wrap="true" style="text-align: center;">Дата</td>' skip
+         '<td text_wrap="true" style="text-align: center;">Время</td>' skip
+      '</tr>' skip   
+      .                           
+   put stream OutStr-html unformatted
+      '<tr>' skip
+      '<td style="text-align: center;">1</td>' skip
+      '<td style="text-align: center;">2</td>' skip
+      '<td style="text-align: center;">3</td>' skip
+      '<td style="text-align: center;">4</td>' skip
+      '<td style="text-align: center;">5</td>' skip
+      '<td style="text-align: center;">6</td>' skip
+      '<td style="text-align: center;">7</td>' skip
+      '<td style="text-align: center;">8</td>' skip
+      '<td style="text-align: center;">9</td>' skip
+      '<td style="text-align: center;">10</td>' skip
+      '<td style="text-align: center;">11</td>' skip
+      '<td style="text-align: center;">12</td>' skip
+      '<td style="text-align: center;">13</td>' skip
+      '<td style="text-align: center;">14</td>' skip
+      '<td style="text-align: center;">15</td>' skip
+      '<td style="text-align: center;">16</td>' skip
+      '<td style="text-align: center;">17</td>' skip
+      '</tr>' skip
+
+      .     
+   for each X_cash-desk :
+
+      put stream OutStr-html unformatted
+         '<tr>' skip
+         '<td text_wrap="true" style="text-align: center;">' + string(X_cash-desk.obj-code) + '</td>' skip
+         '<td text_wrap="true" style="text-align: center;">' + string(X_cash-desk.db-num) + '</td>' skip
+         '<td text_wrap="true" style="text-align: center;">' + string(X_cash-desk.cash-num) + '</td>' skip
+         '<td text_wrap="true" style="text-align: center;">' + string(X_cash-desk.pos-type) + '</td>' skip
+         .
+         case X_cash-desk.autonomy:
+          when 0 then v-autonomy = {&cd-self-full} .
+          when 0 then v-autonomy = {&cd-slave-full} .
+          when 0 then v-autonomy = {&cd-manager-full} .
+         end case .
+         put stream OutStr-html unformatted
+         '<td text_wrap="true" style="text-align: center;">' + string(v-autonomy) + '</td>' skip .
+         if X_cash-desk.pos-type = {&cd-type-ibm-xml} or X_cash-desk.pos-type = {&cd-type-autotank} then do:
+         if num-entries(X_cash-desk.addr-path, {&delim-par}) > 1 then 
+         v-addr-path = (entry(1, X_cash-desk.addr-path, {&delim-par}) + ":\\":U + entry(2, X_cash-desk.addr-path, {&delim-par})) .
+         else v-addr-path = X_cash-desk.addr-path .
+         end. 
+         else v-addr-path = X_cash-desk.addr-path .
+
+         put stream OutStr-html unformatted
+         '<td text_wrap="true" style="text-align: center;">' + string(v-addr-path) + '</td>' skip
+         '<td text_wrap="true" style="text-align: center;">' + string(X_cash-desk.cash-os) + '</td>' skip
+         '<td text_wrap="true" style="text-align: center;">' + string(if X_cash-desk.is-del then {&deleted-status} else {&current-status}) + '</td>' skip
+         '<td text_wrap="true" style="text-align: center;">' + string((if X_cash-desk.remote = 1 then '+' else ' ')) + '</td>' skip
+         '<td text_wrap="true" style="text-align: center;">' + if X_cash-desk.version <> ? then string(X_cash-desk.version) + '</td>' else "" + '</td>'skip
+/*         '<td text_wrap="true" rowspan="2" style="text-align: right;">' + string(X_cash-desk.registration-code) + '</td>' skip*/
+/*         '<td text_wrap="true" rowspan="2" style="text-align: right;">' + string(X_cash-desk.serial-code) + '</td>' skip      */
+         .
+      v-fo-version = get-fo-version( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) .
+      if v-fo-version = ? then v-fo-version = "" .
+      put stream OutStr-html unformatted    
+         '<td text_wrap="true" style="text-align: center;">' + string(v-fo-version) + '</td>' skip
+      .
+      v-kkt-schema = get-kkt-schema( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) .
+      if v-kkt-schema = ? then v-kkt-schema = " - " .
+      put stream OutStr-html unformatted    
+         '<td text_wrap="true" style="text-align: center;">' + string(v-kkt-schema) + '</td>' skip
+      .
+      v-ffd-version = get-ffd-version( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) .
+      if v-ffd-version = ? then v-ffd-version = " - " .
+      put stream OutStr-html unformatted    
+         '<td text_wrap="true" style="text-align: center;">' + string(v-ffd-version) + '</td>' skip
+      .
+      v-GISMT_TIMEOUT = string(get-GISMT_TIMEOUT( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)) .
+      if v-GISMT_TIMEOUT = ? then v-GISMT_TIMEOUT = " - " .
+      put stream OutStr-html unformatted    
+         '<td text_wrap="true" style="text-align: center;">' + string(v-GISMT_TIMEOUT) + '</td>' skip
+      .
+      v-GISMT_FAST = string(get-GISMT_FAST( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)) .
+      if v-GISMT_FAST = ? then v-GISMT_FAST = " - " .
+      put stream OutStr-html unformatted    
+         '<td text_wrap="true" style="text-align: center;">' + string(v-GISMT_FAST) + '</td>' skip
+      .
+      v-date = get-date( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) .
+      if v-date = "" then v-date = " - " .
+      put stream OutStr-html unformatted    
+         '<td text_wrap="true" style="text-align: center;">' + string(v-date) + '</td>' skip
+      .
+      v-time = get-time( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) .
+      if v-time = "" then v-time = " - " .
+      put stream OutStr-html unformatted    
+         '<td text_wrap="true" style="text-align: center;">' + string(v-time) + '</td>' skip
+      .                  
+      put stream OutStr-html unformatted                   
+         '</tr>' skip
+         .
+      ii =  ii + 1 .
+      if ( ( ii modulo 10 ) = 0 ) AND ( ii >= 10 ) then 
+      do:
+         run waitfram-show in this-procedure ( "Просмотрено строк : " + string( ii ) ) .
+      end.
+   END.
+
+
+   put stream OutStr-html unformatted 
+      '</tbody>' skip                                                     
+      '</table>' skip
+      '</body>' skip
+      '</html>' skip                                                                                                                                                                                    
+      .                                                                                                    
+   output stream OutStr-html close.
+        
+   run prn-lib-reportviewer-report-name in this-procedure (
+      input parparentproc
+      ,input v-file-name-rep-htm
+      ) .
+   if error-status:error then
+   do:
+      message return-value view-as alert-box.
+      return .
+   end.
+
 run waitfram-hide in this-procedure .
 END PROCEDURE.
 
@@ -1788,6 +1972,18 @@ run gen-key-rec in this-procedure ( input {&table_cash-desk}
 run OpenBr in this-procedure  ( input yes, input no, input '':U).
 END PROCEDURE.
 
+PROCEDURE get-report-num :
+
+    define output parameter p-report-num as integer no-undo .
+
+    do
+        on error undo, return error return-value
+        :
+        run gbl/getrpnum.p (output p-report-num).
+    end.
+
+END PROCEDURE.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -1837,6 +2033,250 @@ run cd-attr-value in this-procedure (
                                     ,output v-dop) no-error.
 
 RETURN v-fo-version.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-ffd-version Dialog-Frame
+FUNCTION get-ffd-version RETURNS CHARACTER
+   ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+   ,INPUT p-pos-type AS CHARACTER
+   ,INPUT  p-cash-num AS INTEGER) :
+   DEFINE VARIABLE v-dop          AS CHARACTER NO-UNDO.
+   DEFINE VARIABLE v-ffd-version  AS CHARACTER NO-UNDO.
+   DEFINE VARIABLE v-kkt-version  AS CHARACTER NO-UNDO.
+   DEFINE VARIABLE v-ffd-version_ AS CHARACTER NO-UNDO.
+
+define variable v-date as date no-undo .
+define variable v-decimal as decimal no-undo .
+define variable v-integer as integer no-undo .
+define variable v-logical as logical no-undo .
+    
+    run cd-attr-value in this-procedure (
+        input   p-db-num
+        ,input  p-obj-code
+        ,input  p-pos-type
+        ,input  p-cash-num
+        ,input  (if p-pos-type = {&cd-type-IBM-XML}
+        then {&cda-IBM-XML_operative}
+        else {&cda-AUTOTANK_operative})
+        ,input  {&cda-IBM-XML_operative_USE_FFD_VERSION}
+        ,output v-ffd-version
+        ,output v-date
+        ,output v-decimal
+        ,output v-integer
+        ,output v-logical
+        ,output v-dop) no-error.
+
+                            
+   case v-ffd-version :
+      when "0" then 
+         do:
+    run cd-attr-value in this-procedure (
+        input   p-db-num
+        ,input  p-obj-code
+        ,input  p-pos-type
+        ,input  p-cash-num
+        ,input  (if p-pos-type = {&cd-type-IBM-XML}
+        then {&cda-IBM-XML_operative}
+        else {&cda-AUTOTANK_operative})
+        ,input  {&cda-IBM-XML_operative_KKT_FFD_VERSION}
+        ,output v-kkt-version
+        ,output v-date
+        ,output v-decimal
+        ,output v-integer
+        ,output v-logical
+        ,output v-dop) no-error.             
+
+            if error-status:error or v-kkt-version = "0" or v-kkt-version = "" then v-ffd-version_ = "авт" .
+            else 
+            do:
+               case v-kkt-version:
+                  when "2" then 
+                     v-ffd-version_ = "1.05(авт)" .
+                  when "3" then 
+                     v-ffd-version_ = "1.1(авт)" .
+                  when "4" then 
+                     v-ffd-version_ = "1.2(авт)" .
+               end case.
+            end.   
+         end.
+      when "2" then 
+         v-ffd-version_ = "1.05" .
+      when "3" then 
+         v-ffd-version_ = "1.1" .
+      when "4" then 
+         v-ffd-version_ = "1.2" .
+      otherwise 
+      v-ffd-version_ = " - " .
+   end case .
+   RETURN v-ffd-version_.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-kkt-schema Dialog-Frame
+FUNCTION get-kkt-schema RETURNS CHARACTER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER) :
+DEFINE VARIABLE v-dop AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-kkt-schema AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-kkt-schema_ AS CHARACTER NO-UNDO.
+define variable v-date as date no-undo .
+define variable v-decimal as decimal no-undo .
+define variable v-integer as integer no-undo .
+define variable v-logical as logical no-undo .
+    run cd-attr-value in this-procedure (
+        input   p-db-num
+        ,input  p-obj-code
+        ,input  p-pos-type
+        ,input  p-cash-num
+        ,input  (if p-pos-type = {&cd-type-IBM-XML}
+        then {&cda-IBM-XML_operative}
+        else {&cda-AUTOTANK_operative})
+        ,input  {&cda-IBM-XML_operative_KKT_SCHEMA}
+        ,output v-kkt-schema
+        ,output v-date
+        ,output v-decimal
+        ,output v-integer
+        ,output v-logical
+        ,output v-dop) no-error.  
+
+          case v-kkt-schema :
+             when "0" then v-kkt-schema_ = "с ожиданием ответа" .
+             when "1" then v-kkt-schema_ = "без ожидания ответа" .
+             otherwise v-kkt-schema_ = " - " .
+          end case .          
+
+RETURN v-kkt-schema_.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-date Dialog-Frame
+FUNCTION get-date RETURNS CHARACTER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER) :
+DEFINE VARIABLE v-dop AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-last-date-polls AS CHARACTER NO-UNDO.
+define variable v-date as date no-undo .
+define variable v-decimal as decimal no-undo .
+define variable v-integer as integer no-undo .
+define variable v-logical as logical no-undo .
+
+    run cd-attr-value in this-procedure (
+        input   p-db-num
+        ,input  p-obj-code
+        ,input  p-pos-type
+        ,input  p-cash-num
+        ,input  (if p-pos-type = {&cd-type-IBM-XML}
+        then {&cda-IBM-XML_operative}
+        else {&cda-AUTOTANK_operative})
+        ,input  {&cda-IBM-XML_operative_last-date-polls}
+        ,output v-last-date-polls
+        ,output v-date
+        ,output v-decimal
+        ,output v-integer
+        ,output v-logical
+        ,output v-dop) no-error.  
+RETURN v-last-date-polls.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-time Dialog-Frame
+FUNCTION get-time RETURNS CHARACTER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER) :
+DEFINE VARIABLE v-dop AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-last-time-polls AS CHARACTER NO-UNDO.
+define variable v-date as date no-undo .
+define variable v-decimal as decimal no-undo .
+define variable v-integer as integer no-undo .
+define variable v-logical as logical no-undo .
+
+    run cd-attr-value in this-procedure (
+        input   p-db-num
+        ,input  p-obj-code
+        ,input  p-pos-type
+        ,input  p-cash-num
+        ,input  (if p-pos-type = {&cd-type-IBM-XML}
+        then {&cda-IBM-XML_operative}
+        else {&cda-AUTOTANK_operative})
+        ,input  {&cda-IBM-XML_operative_last-time-polls}
+        ,output v-last-time-polls
+        ,output v-date
+        ,output v-decimal
+        ,output v-integer
+        ,output v-logical
+        ,output v-dop) no-error.  
+
+RETURN v-last-time-polls.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-GISMT_FAST Dialog-Frame
+FUNCTION get-GISMT_FAST RETURNS INTEGER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER) :
+DEFINE VARIABLE v-dop AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-GISMT_FAST_ANSWER AS INTEGER no-undo init ?.
+
+find first ub.cash-desk-attr no-lock where ub.cash-desk-attr.attr-code = {&cda-IBM-XML_operative_GISMT_FAST_ANSWER} and
+                                           ub.cash-desk-attr.cash-num = p-cash-num and
+                                           ub.cash-desk-attr.db-num = p-db-num and
+                                           ub.cash-desk-attr.obj-code = p-obj-code no-error .
+if available (ub.cash-desk-attr) then v-GISMT_FAST_ANSWER = integer(ub.cash-desk-attr.attr-value-character) .                                            
+        
+
+RETURN v-GISMT_FAST_ANSWER.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-GISMT_TIMEOUT Dialog-Frame
+FUNCTION get-GISMT_TIMEOUT RETURNS INTEGER
+  ( INPUT p-db-num AS INTEGER
+   ,INPUT p-obj-code AS INTEGER
+    ,INPUT p-pos-type AS CHARACTER
+    ,INPUT  p-cash-num AS INTEGER) :
+DEFINE VARIABLE v-dop AS CHARACTER NO-UNDO.
+DEFINE VARIABLE v-GISMT_TIMEOUT AS INTEGER no-undo init ?.
+
+find first ub.cash-desk-attr no-lock where ub.cash-desk-attr.attr-code = {&cda-IBM-XML_operative_GISMT_TIMEOUT} and
+                                           ub.cash-desk-attr.cash-num = p-cash-num and
+                                           ub.cash-desk-attr.db-num = p-db-num and
+                                           ub.cash-desk-attr.obj-code = p-obj-code no-error .
+if available (ub.cash-desk-attr) then v-GISMT_TIMEOUT = integer(ub.cash-desk-attr.attr-value-character) .                                            
+
+     
+
+RETURN v-GISMT_TIMEOUT.   /* Function return value. */
 
 END FUNCTION.
 
