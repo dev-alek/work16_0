@@ -179,8 +179,8 @@ end function.
 
 
 /* Definitions for BROWSE BR-pbc                                        */
-&Scoped-define FIELDS-IN-QUERY-BR-pbc X_prod-bc.bc-on X_prod-bc.b-str X_prod-bc.cr-db-num is-global(buffer X_prod-bc)
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-pbc X_prod-bc.b-str
+&Scoped-define FIELDS-IN-QUERY-BR-pbc X_prod-bc.bc-on X_prod-bc.b-str X_prod-bc.cr-db-num X_prod-bc.bc-on-type eq {&gtin} or is-global(buffer X_prod-bc) if X_prod-bc.bc-on-type eq {&gtin} then {&gtin} else "" IS-NeedMark (buffer X_prod-bc)   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-pbc X_prod-bc.b-str   
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-pbc X_prod-bc
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-pbc X_prod-bc
 &Scoped-define SELF-NAME BR-pbc
@@ -191,16 +191,20 @@ end function.
 
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
-
+&Scoped-define OPEN-BROWSERS-IN-QUERY-Dialog-Frame ~
+    ~{&OPEN-QUERY-br-bc}~
+    ~{&OPEN-QUERY-br-bc-attr}~
+    ~{&OPEN-QUERY-BR-pbc}
+    
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-FIELDS X_goods.artic X_goods.gds-name ~
 X_prod-bc.b-str
 &Scoped-define ENABLED-TABLES X_goods X_prod-bc
 &Scoped-define FIRST-ENABLED-TABLE X_goods
 &Scoped-define SECOND-ENABLED-TABLE X_prod-bc
-&Scoped-Define ENABLED-OBJECTS b-quit B-Help b-add b-chg b-del b-print-2 ~
-b-hist-0 b-on b-dpl b-add-1 b-del-1 b-gtin-1 b-print-1 b-hist-2 br-bc BR-pbc ~
-Rs-attr-mode b-add-attr b-chg-attr b-del-attr br-bc-attr
+&Scoped-Define ENABLED-OBJECTS b-quit B-Help b-chg-1 b-add b-chg b-del ~
+b-print-2 b-hist-0 b-on b-dpl b-add-1 b-del-1 b-gtin-1 b-print-1 b-hist-2 ~
+br-bc BR-pbc Rs-attr-mode b-add-attr b-chg-attr b-del-attr br-bc-attr 
 &Scoped-Define DISPLAYED-FIELDS X_goods.artic X_goods.gds-name ~
 X_prod-bc.b-str
 &Scoped-define DISPLAYED-TABLES X_goods X_prod-bc
@@ -221,20 +225,24 @@ X_prod-bc.b-str
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-add-1
-     LABEL "&Добавить"
+DEFINE BUTTON b-add-1 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-add-attr
-     LABEL "Добавить"
+DEFINE BUTTON b-add-attr 
+     LABEL "Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON b-chg-1 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-chg-attr
@@ -364,9 +372,10 @@ DEFINE FRAME Dialog-Frame
           SIZE 17 BY 1
           BGCOLOR 8 FGCOLOR 4
      X_goods.gds-name AT ROW 3 COL 1 NO-LABEL WIDGET-ID 36 FORMAT "X(48)"
-          VIEW-AS FILL-IN
-          SIZE 54.3 BY 1
-          BGCOLOR 8 FGCOLOR 4
+          VIEW-AS FILL-IN 
+          SIZE 54.25 BY 1
+          BGCOLOR 8 FGCOLOR 4 
+     b-chg-1 AT ROW 3 COL 81 WIDGET-ID 42
      b-add AT ROW 4 COL 1 WIDGET-ID 2
      b-chg AT ROW 4 COL 11 WIDGET-ID 4
      b-del AT ROW 4 COL 21 WIDGET-ID 6
@@ -390,7 +399,7 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN 
           SIZE 66.6 BY 1
           BGCOLOR 8 FGCOLOR 4 
-     SPACE(32.39) SKIP(0.23)
+     SPACE(32.97) SKIP(0.23)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE ""
@@ -902,6 +911,7 @@ DO:
   end.
   run ref/pbc-form.w
     (input parparentproc
+    ,input {&add-def}
     ,input X_bar-code.b-code
     ,input trim(voutput)
     ,input is-ean
@@ -953,6 +963,82 @@ run ref/bc-form.w
   ).
 display X_bar-code.cli-base-rate with browse br-bc.
 apply "entry" to br-bc in frame {&frame-name}.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-chg-1
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg-1 Dialog-Frame
+ON CHOOSE OF b-chg-1 IN FRAME Dialog-Frame /* Изменить */
+DO:
+
+  DEFINE VARIABLE case-num as integer no-undo .
+  DEFINE VARIABLE vattr-codes as character no-undo .
+  DEFINE VARIABLE vattr-labels as character no-undo .
+  DEFINE VARIABLE voutput as character no-undo .
+  DEFINE VARIABLE is-ean as logical no-undo init yes.
+  DEFINE VARIABLE v-on as logical no-undo .
+  DEFINE VARIABLE v-b-str like ub.prod-bc.b-str no-undo .
+  define variable glog as logical no-undo .
+  define variable glog2 as logical no-undo .
+  define variable glog3 as logical no-undo .
+  define variable conf-par as character no-undo .
+  define variable par-type as character no-undo .
+  define variable unq-artc as logical no-undo .
+  define variable v-cdrg-type as character no-undo .
+  define variable v-main-b-code as integer no-undo .
+  define variable X_rid as recid no-undo .
+  define buffer buf_code-range for ub.code-range.
+  define buffer buf2_code-range for ub.code-range.
+  define buffer goods_units for ub.units.
+  DEFINE BUFFER buf_units FOR ub.units.
+  { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_alt-barcode_preparation':U
+  {&cntxt-global}
+  0
+  '':U
+  0
+  0
+  0
+  0
+  true
+  glog
+  }
+  if not glog then return no-apply.
+  if available (X_prod-bc) then do:   
+     if X_prod-bc.bc-on-type = {&GTIN} then 
+     do:
+        message "Бар-код с типом GTIN изменить нельзя"
+           view-as alert-box.
+        return no-apply .
+     end.   
+  { gbl/gdsbcode.i X_goods.gds-code ? v-main-b-code }
+  run ref/pbc-form.w
+    (input parparentproc
+    ,input {&update}
+    ,input X_prod-bc.b-code
+    ,input X_prod-bc.b-str
+    ,input is-ean
+    ,input v-cdrg-type
+    ,input-output rid
+    ).
+  if rid = ? then
+    return no-apply.
+  find first ub.prod-bc where recid (ub.prod-bc) = rid .
+  find first X_prod-bc where X_prod-bc.b-code = ub.prod-bc.b-code and X_prod-bc.b-str = ub.prod-bc.b-str no-error . 
+  X_rid = recid (X_prod-bc) .
+    
+  apply "entry" to br-pbc in frame {&frame-name}.
+  apply "value-changed" to br-bc.
+  BR-pbc:refresh () .
+  reposition br-pbc to recid X_rid no-error.
+  end.
 
 END.
 
@@ -1371,6 +1457,7 @@ DO:
   if not glog then return no-apply.
 run ref/pbc-form.w
     (input parparentproc
+    ,input {&add-def}
     ,input X_bar-code.b-code
     ,input ""
     ,input no
@@ -1724,10 +1811,10 @@ PROCEDURE enable_UI :
   IF AVAILABLE X_prod-bc THEN
     DISPLAY X_prod-bc.b-str
       WITH FRAME Dialog-Frame.
-  ENABLE b-quit B-Help X_goods.artic X_goods.gds-name b-add b-chg b-del
-         b-print-2 b-hist-0 b-on b-dpl b-add-1 b-del-1 b-gtin-1 b-print-1 b-hist-2 br-bc
-         BR-pbc Rs-attr-mode b-add-attr b-chg-attr b-del-attr br-bc-attr
-         X_prod-bc.b-str
+  ENABLE b-quit B-Help X_goods.artic X_goods.gds-name b-chg-1 b-add b-chg b-del 
+         b-print-2 b-hist-0 b-on b-dpl b-add-1 b-chg-1 b-del-1 b-gtin-1 b-print-1 
+         b-hist-2 br-bc BR-pbc Rs-attr-mode b-add-attr b-chg-attr b-del-attr 
+         br-bc-attr X_prod-bc.b-str 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1833,6 +1920,7 @@ b-print-2 br-bc br-pbc b-quit b-help b-hist-2 b-hist-0 /*b-dpl - перенёс (см. ни
 b-add-1 when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
 b-gtin-1 when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
 b-del-1 when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
+b-chg-1 when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
 b-on    when v-cntxt-level = {&cntxt-object} and v-chg-bcod = no
 b-dpl   when v-chg-bcod = no
 b-print-1 WITH FRAME {&frame-name}.
@@ -1907,10 +1995,10 @@ else do:
   rs-attr-mode in frame {&frame-name}
   .
 end.
-b-gtin-1:visible = can-find (first buf_goods-attr
-               where buf_goods-attr.gds-code   = X_goods.gds-code
-                 and buf_goods-attr.attr-code  = {&attr-mark-type} 
-                 and buf_goods-attr.attr-value <> {&attr-mark-type_not-type} ).
+/*b-gtin-1:visible = can-find (first buf_goods-attr                              */
+/*               where buf_goods-attr.gds-code   = X_goods.gds-code              */
+/*                 and buf_goods-attr.attr-code  = {&attr-mark-type}             */
+/*                 and buf_goods-attr.attr-value <> {&attr-mark-type_not-type} ).*/
 if base-bar-code.in-code = "" then
   if X_gds-prt.upper-code = X_goods.prt-root then
     frame {&frame-name}:title = "Коды: ТОВАР".

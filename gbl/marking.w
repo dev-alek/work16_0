@@ -74,11 +74,10 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit RECT-1 t-edo t-manual ~
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit t-edo t-manual t-ban_recipes ~
+t-ban-altr cb-gray_zone_qnty S-type S-type-edo  
+&Scoped-Define DISPLAYED-OBJECTS t-edo t-manual t-ban_recipes t-ban-altr ~
 cb-gray_zone_qnty S-type S-type-edo 
-&Scoped-Define DISPLAYED-OBJECTS t-edo t-manual cb-gray_zone_qnty ~
-S-type S-type-edo 
-
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
 
@@ -100,6 +99,7 @@ DEFINE BUTTON B-quit AUTO-END-KEY
      LABEL "&Отмена" 
      SIZE 10 BY 1.
 
+
 DEFINE VARIABLE cb-gray_zone_qnty AS INTEGER FORMAT "->>9":U INITIAL 0 
      LABEL "Допустимое отсутствие КМ для ~"Серой зоны~"" 
      VIEW-AS COMBO-BOX INNER-LINES 6
@@ -118,9 +118,9 @@ DEFINE VARIABLE cb-gray_zone_qnty AS INTEGER FORMAT "->>9":U INITIAL 0
      DROP-DOWN-LIST
      SIZE 27.75 BY 1 NO-UNDO.
 
-DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 85 BY 9.75.
+
+
+
 
 DEFINE VARIABLE S-type AS CHARACTER 
      VIEW-AS SELECTION-LIST MULTIPLE SCROLLBAR-VERTICAL 
@@ -131,7 +131,9 @@ DEFINE VARIABLE S-type AS CHARACTER
                      "Легпром","industry",
                      "Шины","tires",
                      "Лекарства","apteka",
-                     "Фотокамеры/фотовспышки","photo" 
+                     "Фотокамеры/фотовспышки","photo",
+                     "Молочная продукция","milk",
+                     "Упакованная вода","water" 
      SIZE 31 BY 5 NO-UNDO.
 
 DEFINE VARIABLE S-type-edo AS CHARACTER 
@@ -143,8 +145,25 @@ DEFINE VARIABLE S-type-edo AS CHARACTER
                      "Легпром","industry",
                      "Шины","tires",
                      "Лекарства","apteka",
-                     "Фотокамеры/фотовспышки","photo" 
+                     "Фотокамеры/фотовспышки","photo",
+                     "Молочная продукция","milk",
+                     "Упакованная вода","water" 
      SIZE 31 BY 5 NO-UNDO.
+
+DEFINE VARIABLE t-ban-altr AS LOGICAL INITIAL no 
+     LABEL "Запрет на создание рецептов «Альтернатива»" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 74.75 BY .83 NO-UNDO.
+
+DEFINE VARIABLE t-ban_recipes AS LOGICAL INITIAL no 
+     LABEL "Запрет на создание рецептов и маркетинговых акций без учета" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 79.25 BY .83 NO-UNDO.
+
+
+
+
+
 
 DEFINE VARIABLE t-edo AS LOGICAL INITIAL no 
      LABEL "Включена работа с ЭДО" 
@@ -164,15 +183,18 @@ DEFINE FRAME Dialog-Frame
      B-quit AT ROW 1 COL 11
      t-edo AT ROW 2.79 COL 5.75 WIDGET-ID 142
      t-manual AT ROW 3.88 COL 5.75 WIDGET-ID 148
-     cb-gray_zone_qnty AT ROW 5 COL 49.25 COLON-ALIGNED WIDGET-ID 150
-     S-type AT ROW 7.25 COL 51.5 NO-LABEL WIDGET-ID 144
-     S-type-edo AT ROW 12.46 COL 51.5 NO-LABEL WIDGET-ID 152
+     t-ban_recipes AT ROW 4.92 COL 5.75 WIDGET-ID 156
+     t-ban-altr AT ROW 6.63 COL 5.75 WIDGET-ID 160
+     cb-gray_zone_qnty AT ROW 9.58 COL 49.38 COLON-ALIGNED WIDGET-ID 150
+     S-type AT ROW 11.83 COL 51.5 NO-LABEL WIDGET-ID 144
+     S-type-edo AT ROW 17.04 COL 51.5 NO-LABEL WIDGET-ID 152
+     "маркировки молочной продукции" VIEW-AS TEXT
+          SIZE 33 BY .67 AT ROW 5.75 COL 8 WIDGET-ID 158
      "Типы маркировки для помарочного учета:" VIEW-AS TEXT
-     SIZE 39 BY .67 AT ROW 7.5 COL 6 WIDGET-ID 146
+          SIZE 39 BY .67 AT ROW 11.96 COL 6 WIDGET-ID 146
      "Типы маркировки для оприходования по ЭДО:" VIEW-AS TEXT
-     SIZE 41.5 BY .67 AT ROW 12.71 COL 6 WIDGET-ID 154
-     RECT-1 AT ROW 2.25 COL 1.5 WIDGET-ID 116
-     SPACE(1.87) SKIP(0.41)
+          SIZE 41.5 BY .67 AT ROW 17.17 COL 6 WIDGET-ID 154
+     SPACE(40.87) SKIP(4.61)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для Электронного документооборота"
@@ -264,6 +286,39 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME t-ban-altr
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-ban-altr Dialog-Frame
+ON VALUE-CHANGED OF t-ban-altr IN FRAME Dialog-Frame /* Запрет на создание рецептов «Альтернатива» */
+DO:
+  assign t-ban-altr .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME t-ban_recipes
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-ban_recipes Dialog-Frame
+ON VALUE-CHANGED OF t-ban_recipes IN FRAME Dialog-Frame /* Запрет на создание рецептов и маркетинговых акций без учета */
+DO:
+  assign t-ban_recipes .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
+
+
+
+
+
+
+
+
+
+
 &Scoped-define SELF-NAME t-edo
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-edo Dialog-Frame
 ON VALUE-CHANGED OF t-edo IN FRAME Dialog-Frame /* Включена работа с ЭДО */
@@ -349,10 +404,11 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-edo t-manual cb-gray_zone_qnty S-type S-type-edo  
+  DISPLAY t-edo t-manual t-ban_recipes t-ban-altr  cb-gray_zone_qnty 
+          S-type S-type-edo 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit RECT-1 t-edo t-manual cb-gray_zone_qnty 
-         S-type S-type-edo  
+  ENABLE B-exit B-quit t-edo t-manual t-ban_recipes t-ban-altr 
+         cb-gray_zone_qnty S-type S-type-edo 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -377,12 +433,12 @@ end.
 
   if p-mode = {&update} then 
   do:
-    ENABLE S-type S-type-edo t-edo cb-gray_zone_qnty t-manual
+    ENABLE S-type S-type-edo t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr
       WITH FRAME Dialog-Frame.
   end.  
   else do:
-    Display S-type S-type-edo t-edo cb-gray_zone_qnty t-manual
-      WITH FRAME Dialog-Frame.
+    Display S-type S-type-edo t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr
+      WITH FRAME Dialog-Frame. 
    end.  
 run adm/shattri.p (
     input "init":U
@@ -429,8 +485,30 @@ FOR EACH temp-thbj-attr where temp-thbj-attr.obj-code = p-obj-code and temp-thbj
        cb-gray_zone_qnty = temp-thbj-attr.property-value-integer .
        display cb-gray_zone_qnty with frame {&frame-name} .
     END.
+    IF temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} THEN DO:
+       t-ban_recipes = temp-thbj-attr.property-value-logical .
+       display t-ban_recipes with frame {&frame-name} .
+    END.    
+    IF temp-thbj-attr.prop-code = {&attr-marking_ban-altr} THEN DO:
+       t-ban-altr = temp-thbj-attr.property-value-logical .
+       display t-ban-altr with frame {&frame-name} .
+    END.    
+
+
+
+
+
+
+
+  
 END.
 
+
+
+
+
+
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -479,6 +557,10 @@ ASSIGN FRAME {&FRAME-NAME}
     S-type-edo
     t-manual
     cb-gray_zone_qnty
+    t-ban_recipes
+    t-ban-altr
+
+
     .
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-logical = t-edo.
@@ -489,8 +571,16 @@ ASSIGN FRAME {&FRAME-NAME}
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-character = trim(S-type-edo,",").
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-    temp-thbj-attr.property-value-integer = cb-gray_zone_qnty.
-    
+    temp-thbj-attr.property-value-integer = cb-gray_zone_qnty.    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+    temp-thbj-attr.property-value-logical = t-ban_recipes.    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_ban-altr} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+    temp-thbj-attr.property-value-logical = t-ban-altr. 
+
+
+
+
+
     do transaction:
         RUN thbjattr_set-section IN THIS-PROCEDURE (
              input p-obj-type

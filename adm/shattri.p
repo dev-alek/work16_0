@@ -1407,6 +1407,21 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+     v-prop-code = "{&bef-attr-marking_ban-recipes}".
+&scop ptype logical
+&scop prop-value no
+&scop prop-code  entry(v-ii,v-prop-code)
+     do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+     end. 
+     v-prop-code = "{&bef-attr-marking_ban-altr}".
+&scop ptype logical
+&scop prop-value no
+&scop prop-code  entry(v-ii,v-prop-code)
+     do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+     end.       
+
     end.    
     
     when {&attr-ord-global} then do:

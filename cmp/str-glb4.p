@@ -627,7 +627,7 @@ attr-office-type
 
 /* типы маркировки */
 { cmp/cr-prepc.i 1 prop-list-attr-mark-type
-"not-type,tabak,shoes,perfume,industry,tires,apteka,photo"
+"not-type,tabak,shoes,perfume,industry,tires,apteka,photo,milk,water"
 attr-mark-type
 }
 

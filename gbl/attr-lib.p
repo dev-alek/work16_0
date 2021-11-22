@@ -3903,9 +3903,9 @@ logical~
 &scop user-can-edit-attr-marking   true
 &scop output-display-attr-marking  true
 &scop other-attr-marking           'spr-ext=gbl\marking.w':U
-&scop prop-type-list-attr-marking  'logical,character,logical,integer,character':U
-&scop prop-label-list-attr-marking 'Включена работа с ЭДО,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО'
-&scop prop-list-attr-marking       'marking-EDO,marking-type,marking-manual,gray_zone_qnty,marking-type-edo'
+&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical':U
+&scop prop-label-list-attr-marking 'Включена работа с ЭДО,Включена работа с ЭДО Диадок,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций,Запрет на создание рецептов «Альтернатива»'
+&scop prop-list-attr-marking       'marking-EDO,marking-EDO-Diadok,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr'
 &scop global-attr-marking true
 &scop host-attr-marking false
 &scop shop-attr-marking true

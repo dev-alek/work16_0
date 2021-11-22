@@ -43,6 +43,14 @@ class ibs.th.gbl.env.conf.markingtype inherits objth.
     get.
     private set.      
 
+  define public property Milk as logical initial false no-undo 
+    get.
+    private set.      
+    
+  define public property Water as logical initial false no-undo 
+    get.
+    private set.      
+        
   define public property NotType as logical initial false no-undo 
     get.
     private set.
@@ -82,6 +90,12 @@ class ibs.th.gbl.env.conf.markingtype inherits objth.
         end.
         when  lookup (conf_val, "apteka") > 0 then do:
           Apteka = true.
+        end.
+        when  lookup (conf_val, "milk") > 0 then do:
+          Milk = true.
+        end.
+        when  lookup (conf_val, "water") > 0 then do:
+          Water = true.
         end.
         when  lookup (conf_val, "photo") > 0 then do:
           Photo = true.

@@ -27,6 +27,9 @@ class ibs.th.gbl.env.prmtrs.section inherits objth:
     def var vMarkingType as character no-undo.
     def var vIsEDO as logical no-undo.
     def var vIsManual as logical no-undo.
+    def var vIsBanRecipes as logical no-undo.
+    def var vIsBanAltr as logical no-undo.
+    def var vIsBarCode as logical no-undo.
     if valid-object (edo) and edo:ObjType = pObjType and edo:ObjCode = pObjCode
     then do:
       return edo.
