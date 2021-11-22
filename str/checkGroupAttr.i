@@ -76,6 +76,7 @@ FUNCTION check-ban-sales-via-cd return logical ( input p-gds-code as integer ) :
        end.   
       end.
     end.
+    if v-value = "" or logical(v-value) = false then return false .
 end.
 
 FUNCTION check-ban-sales-via-cd-grp return logical ( input p-grp-code as integer ) :

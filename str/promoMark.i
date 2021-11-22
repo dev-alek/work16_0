@@ -29,6 +29,7 @@ for each buf_PromoGift no-lock:
       if available (buf_PromoAction) then 
       do:
          buf_PromoAction.end-date = today - 1 .
+         buf_PromoAction.Status_ = 1 .
 
          /*Удаление с кассы*/
     find first buf_clients no-lock
