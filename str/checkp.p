@@ -120,16 +120,16 @@ find first buf_chk-pay-attr no-lock where buf_chk-pay-attr.attr-code = "sbprrn" 
                                           and buf_chk-pay-attr.attr-value <> "" no-error .
                                           
 if available (buf_chk-pay-attr) then do:
-      os-command silent value (v-arc + ' -size=128 -content="' + buf_chk-pay-attr.attr-value + '"' + ' -filename="' + string(session :temp-directory) + 'qr-code_sbprnn"') .
-      v-attr-sbprrn = string(session :temp-directory) + "qr-code_sbprnn" + ".png" .
+      os-command silent value (v-arc + ' -size=128 -content="' + buf_chk-pay-attr.attr-value + '"' + ' -filename="' + string(session :temp-directory) + 'qr-code_sbprrn"') .
+      v-attr-sbprrn = string(session :temp-directory) + "qr-code_sbprrn" + ".png" .
 
 end.                                          
-find first buf_chk-pay-attr no-lock where (buf_chk-pay-attr.attr-code = "RNN" or buf_chk-pay-attr.attr-code = "cpdoc") and
+find first buf_chk-pay-attr no-lock where (buf_chk-pay-attr.attr-code = "RRN" or buf_chk-pay-attr.attr-code = "cpdoc") and
                                           buf_chk-pay-attr.doc-code = chk-doc.doc-code 
                                           and buf_chk-pay-attr.attr-value <> "" no-error .
 if available (buf_chk-pay-attr) then do:
-      os-command silent value (v-arc + ' -size=128 -content="' + buf_chk-pay-attr.attr-value + '"' + ' -filename="' + string(session :temp-directory) + 'qr-code_rnn"') .
-      v-attr-rnn = string(session :temp-directory) + "qr-code_rnn" + ".png" .   
+      os-command silent value (v-arc + ' -size=128 -content="' + buf_chk-pay-attr.attr-value + '"' + ' -filename="' + string(session :temp-directory) + 'qr-code_rrn"') .
+      v-attr-rnn = string(session :temp-directory) + "qr-code_rrn" + ".png" .   
 end.   
                                           
 /*Line = fill("-", 198).*/
@@ -196,8 +196,8 @@ put stream OutStr-html unformatted
    '<TR>'skip
    '<TD colspan="14" style="font-weight: bold;">' + string(date_string) + '</TD>' skip
    '<TD colspan="4" style="text-align: center;">Фискальные данные</TD>' skip
-   '<TD colspan="3" style="text-align: center;">RNN</TD>' skip
-   '<TD colspan="3" style="text-align: center;">SBPRNN</TD>' skip
+   '<TD colspan="3" style="text-align: center;">RRN</TD>' skip
+   '<TD colspan="3" style="text-align: center;">SBPRRN</TD>' skip
    '</TR>' skip 
    '<TR>'skip
    '<TD colspan="14" style="font-weight: bold;">Чек N ' + string(chk-doc.doc-code) + ' Магазин N ' + string(chk-doc.obj-code) + ' Дата: ' + string(chk-doc.chk-date, "99/99/9999") + ' Время: ' + string(chk-doc.chk-time, "HH:MM") + ' Дата смены: ' + string(chk-doc.shift-date, "99/99/9999") + ' Номер смены: ' + shift-name-no-err(buffer chk-doc) + '</TD>' skip
