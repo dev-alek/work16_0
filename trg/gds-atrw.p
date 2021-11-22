@@ -14,6 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 04/12/04
 
 */
+using ibs.th.gbl.sys.objsrv.
 
 TRIGGER PROCEDURE FOR WRITE OF ub.goods-attr OLD old-goods-attr .
  
@@ -40,6 +41,13 @@ define buffer buf_c-goods-attr-any for ub.c-goods-attr-any.
 define buffer buf_c-gds-hist for ub.c-gds-hist.
 define buffer locked_goods-attr for ub.goods-attr.
 
+    
+    define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+    define variable v-ban-recipes as logical no-undo init false.
+
+
+    run gbl/getobjsrvhndl.p (input-output ObjSrv).
+    
 main-block:
 do
 on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
@@ -247,11 +255,17 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
             end.
          end.
       end.
+    find first ub.clients no-lock where ub.clients.obj-type = {&shop} and ub.clients.db-num = g#db-num no-error .
+    if available (ub.clients) then do:  
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ub.clients.obj-type, ub.clients.obj-code):IsBanRecipes then v-ban-recipes = true .
+    end.
+    if v-ban-recipes then do:
     if ub.goods-attr.attr-code = {&attr-mark-type} and ub.goods-attr.attr-value <> "not-type" and 
        ub.goods-attr.attr-value <> "" then 
          do:
 { str/promoMark.i }
-         end.    
+         end. 
+     end.       
     end.
     run gds-attr-news in this-procedure(input ub.goods-attr.attr-code,
                                         output p-news) no-error.

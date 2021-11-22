@@ -2600,14 +2600,14 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
     run gbl/getobjsrvhndl.p (input-output ObjSrv).
    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
    if v-ban-recipes then do:
-      for each buf_PromoGoods no-lock where buf_PromoGoods.idAction = v-sub:ID and buf_PromoGoods.db-num = v-sub:db-num:
-         if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_PromoGoods.gds-code and 
-            buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
-            buf_goods-attr.attr-value <> "") then 
-         do:
-            return true.
-         end.         
-      end.           
+/*      for each buf_PromoGoods no-lock where buf_PromoGoods.idAction = v-sub:ID and buf_PromoGoods.db-num = v-sub:db-num:*/
+/*         if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_PromoGoods.gds-code and          */
+/*            buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and                */
+/*            buf_goods-attr.attr-value <> "") then                                                                       */
+/*         do:                                                                                                            */
+/*            return true.                                                                                                */
+/*         end.                                                                                                           */
+/*      end.                                                                                                              */
       for each buf_PromoGift no-lock where buf_PromoGift.idaction = v-sub:ID and buf_PromoGift.db-num = v-sub:db-num:
          if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_PromoGift.gds-code and 
             buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 

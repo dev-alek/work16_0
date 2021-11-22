@@ -17,6 +17,7 @@ define buffer buf_PromoAction for ub.PromoAction .
 define buffer buf_PromoGoods  for ub.PromoGoods .
 define buffer buf_PromoGift   for ub.PromoGift .
 define buffer buf_goods-attr  for ub.goods-attr .
+define buffer buf_clients     for ub.clients .
 
 for each buf_PromoGift no-lock:
    if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_PromoGift.gds-code and 
@@ -28,6 +29,26 @@ for each buf_PromoGift no-lock:
       if available (buf_PromoAction) then 
       do:
          buf_PromoAction.end-date = today - 1 .
+
+         /*Удаление с кассы*/
+    find first buf_clients no-lock
+         where buf_clients.db-num   = buf_PromoAction.db-num
+           and buf_clients.obj-type = {&shop} no-error .
+    if available (buf_clients) then do:
+    
+        run str/diallog.w (
+        input this-procedure
+      , input this-procedure
+      , input "str/promosendoxml.p":U  + {&delim-par} +
+                "1":U  + {&delim-par} +  /*error-message-option*/
+                "1":U + {&delim-par} +  /*auto-go-option*/
+                "1":U                  /*return-value-option*/
+      , input ({&cd-type-IBm-XML} + {&delim-par} + buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + "D" + {&delim-par} + string(buf_clients.db-num) + {&delim-par} + string(buf_PromoAction.id))
+      , input yes /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка промоакций на кассы &1", {&cd-type-IBm-XML})
+  ) no-error.
+  end.
       end.   
    end.   
 end.   
