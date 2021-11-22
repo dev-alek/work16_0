@@ -239,7 +239,16 @@ do
       end.
     if is-petrolium then
     do:
-
+       run gds-attr-value in this-procedure
+          (  input buf_goods.gds-code
+          ,input {&attr-fuel-type}
+          ,output v-attr-value
+          ,output v-attr-type
+          ) .
+       if v-attr-value = "lgas" then 
+       do:
+          return error return-value .
+       end.
         run get-DD-month-YYYY(input buf_trn-doc.doc-date, output v-DD-Month-YYYY).
 
 /*        run get-DD-MM-YYYY(input buf_trn-doc.doc-date, output v-DD-MM-YYYY).*/
@@ -458,6 +467,8 @@ do
 /*              input {&apn-xl-spisok-doc-not}          */
 /*            , input v-validity-certif                 */
 /*        ).                                            */
+  run sr-izmerenia_fill-sr-izm in this-procedure ( input {&lookup}
+                                               , buffer buf_clob-bind).
   find first sr-izmerenia no-lock where sr-izmerenia.node-code = integer(v-place-si) no-error.
       if available sr-izmerenia then do:
           if sr-izmerenia.sr-type-id = 1 or sr-izmerenia.sr-type-id = 2 then do:
@@ -1431,6 +1442,7 @@ procedure proc-calc-library-pomi:
             _trpomi:
                 do on error undo, return no-apply:
                     /*данные по средству измерения резервуара для ПО МИ*/
+                    run sr-izmerenia_fill-sr-izm in this-procedure (input {&lookup}, buffer buf_clob-bind).
                     find first sr-izmerenia no-lock where sr-izmerenia.node-code = p-place-si no-error.
                     if error-status :error or not available sr-izmerenia then
                     do:
@@ -1460,12 +1472,12 @@ procedure proc-calc-library-pomi:
                         if ptrlprop-temp-for-pomi = 1 then temp-for-pomi = 15.
                                                       else temp-for-pomi = 20.
                     end.
-                    v-proc = "Rosneft.MethodOfMetering31" .
+                    v-proc = "ADMM.MethodOfMetering31N" .
     
                     release object v-mm no-error.
                     v-mm = ?.
     
-                    create value("Rosneft.MethodOfMetering31") v-mm no-error.
+                    create value("ADMM.MethodOfMetering31N") v-mm no-error.
                     if error-status:error or not valid-handle(v-mm) then
                     do:
                         release object v-mm no-error.
@@ -1527,20 +1539,20 @@ procedure proc-calc-library-pomi:
 /*                        apply "entry" to p-tank-density in frame {&frame-name}.             */
 /*                        undo _trpomi, return no-apply.                                      */
 /*                    end.                                                                    */
-                        assign
-                            v-mm:V_real         = p-car-vol
-                            v-mm:DeltaH         = p-a-b-tarir
-                            v-mm:Dgor           = p-diameter
-                            v-mm:Tv             = p-tank-temp
-                            v-mm:Tr             = p-dens-temp
-                            v-mm:R              = (p-tank-density * 1000)
-                            v-mm:Tcy            = temp-for-pomi
-                            v-mm:ToolType       = ToolType
-                            v-mm:A_Reservoir    = 0.0000125
-                            v-mm:DeltaOtn_V     = 0.4
-                            v-mm:DeltaAbs_R     = DeltaAbs_R
-                            v-mm:DeltaAbs_Tv    = DeltaAbs_Tv
-                            v-mm:DeltaAbs_Tr    = DeltaAbs_Tr
+
+                            v-mm:V_real         = if p-car-vol <> ? then p-car-vol else 0.
+                            v-mm:DeltaH         = if p-a-b-tarir <> ? then p-a-b-tarir else 0 .
+                            v-mm:Dgor           = if p-diameter <> ? then p-diameter else 0 .
+                            v-mm:Tv             = if p-tank-temp <> ? then p-tank-temp else 0 .
+                            v-mm:Tr             = if p-dens-temp <> ? then p-dens-temp else 0 .
+                            v-mm:R              = if p-tank-density <> ? then (p-tank-density * 1000) else 0 .
+                            v-mm:Tcy            = if temp-for-pomi <> ? then temp-for-pomi else 0 .
+                            v-mm:ToolType       = if ToolType <> ? then ToolType else 0 .
+/*                            v-mm:A_Reservoir    = 0.0000125 .*/
+                            v-mm:DeltaOtn_V     = 0.4 .
+                            v-mm:DeltaAbs_R     = if DeltaAbs_R <> ? then DeltaAbs_R else 0 .
+                            v-mm:DeltaAbs_Tv    = if DeltaAbs_Tv <> ? then DeltaAbs_Tv else 0 .
+                            v-mm:DeltaAbs_Tr    = if DeltaAbs_Tr <> ? then DeltaAbs_Tr else 0 .
                         .
 /*                output stream outstream to value ("pomi.log") append.*/
 /*                put stream outstream                                 */

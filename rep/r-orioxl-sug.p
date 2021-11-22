@@ -243,6 +243,7 @@ do
     ).
                 
 procedure data-print :
+  next_:
   for each  bf_rvs-line no-lock where
     bf_rvs-line.rvs-code = bf_rvs-doc.rvs-code  and
     bf_rvs-line.obj-type = bf_rvs-doc.obj-type  and
@@ -288,6 +289,7 @@ procedure data-print :
         end.
       end. /* if first-of( bf_rvs-line.gds-code ) */
     end.
+    else next next_ .
     /* **************************************************************************************** *\
      *                                                                                          *
      * state-measure- (state-measure-qnty, state-measure-cli-qnty) - фактический отстаток;      *
