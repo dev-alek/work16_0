@@ -27,29 +27,38 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
 &global-define place-type        "place-type"                /*тип резервуара(вертикальный,горизонтальный)*/
 &global-define place-SI          "place-SI"                    /*средство измерения*/
 &global-define place-diameter    "place-diameter"        /*диаметр резервуара(мм)*/
-&global-define dead-balance       "dead-balance"        /*мертвый остаток*/
+&global-define dead-balance      "dead-balance"        /*мертвый остаток*/
 &global-define place-ratio-error "place-ratio-error"  /*относительная погрешность составления калибровочной таблицы резервуара*/
-&global-define place-dens-prov         "dens-prov"         /*плотность при поверке резервуара*/
+&global-define place-dens-prov   "dens-prov"         /*плотность при поверке резервуара*/
 &global-define place-virtual     "place-virtual"     /*виртуальный резервуар*/
-&global-define place-twice-code   "place-twice-code" /*Код сдвоенного резервуара*/
-&global-define place-local        "place-local"     /*Расположение резервуара*/
-&global-define place-error-mass   "place-error-mass" /*Погрешность измерения массы*/
-&global-define place-asi-sertif   "place-asi-sertif" /*АСИ сертифицированно*/
-&global-define place-rvd-dnsty    "place-rvd-dnsty" /*РВД плотности*/
-&global-define place-rvd-lvl      "place-rvd-lvl" /*РВД уровня*/
-&global-define place-rvd-tmp      "place-rvd-tmp" /*РВД температуры*/
+&global-define place-twice-code  "place-twice-code" /*Код сдвоенного резервуара*/
+&global-define place-local       "place-local"     /*Расположение резервуара*/
+&global-define place-error-mass  "place-error-mass" /*Погрешность измерения массы*/
+&global-define place-asi-sertif  "place-asi-sertif" /*АСИ сертифицированно*/
+&global-define place-rvd-dnsty   "place-rvd-dnsty" /*РВД плотности*/
+&global-define place-rvd-lvl     "place-rvd-lvl" /*РВД уровня*/
+&global-define place-rvd-tmp     "place-rvd-tmp" /*РВД температуры*/
+&global-define place-dead-high   "place-dead-high" /*Высота мертвой полости(мм)*/
+&global-define place-temp-coef   "place-temp-coef" /*Темп. коэф. линейного расширения материала стенки рез-ра(1/°С)*/
+&global-define place-SI-dens     "place-SI-dens" /*Вспомогательное средство измерения Плотность*/
+&global-define place-SI-level    "place-SI-level" /*Вспомогательное средство измерения Уровень*/
+&global-define place-SI-temp     "place-SI-temp" /*Вспомогательное средство измерения Температура*/
+&global-define place-passp-num   "place-passp-num" /*Номер резервуара по паспорту*/
+&global-define place-passp-type  "place-passp-type" /*Тип резервуара по паспорту*/
 
-&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp':u /*список атрибутов резервуара*/
+&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-dead-high,place-temp-coef,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type':u /*список атрибутов резервуара*/
 
   define buffer buf_place      for ub.place .
   define buffer buf_c-place    for ub.c-place .
   define buffer buf_place-attr for ub.place-attr .
   define buffer buf_pl-level   for ub.pl-level .
   define buffer buf_c-pl-level for ub.c-pl-level .
+  define buffer buf_pl-level-attr for ub.pl-level-attr .
   define buffer buf_pl-gds     for ub.pl-gds .
   define temp-table tt-place like ub.c-place 
   field gds-code as integer.
-  define temp-table tt-pl-level like ub.c-pl-level .
+  define temp-table tt-pl-level like ub.c-pl-level 
+  field comp-err  as decimal.
   
   define variable ii      as integer   no-undo .
   define variable v-code  as character no-undo .
@@ -57,24 +66,31 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
   define variable v-ok    as logical   no-undo .
   define variable v-del   as logical   no-undo . 
   
-  define temp-table tt-place-attr
-    field pl-code         like place.pl-code
-    field place-type      as character
-    field place-Si        as integer
-    field place-diameter  as decimal
-    field dead-balance    as decimal
-    field place-rel-error as decimal
-    field pl-twice-code   like place.loc1
-    field place-dens-prov as decimal
-    field place-local     as integer
-    field place-asi-sertif  as integer
-    field place-error-mass  as decimal
-    field place-rvd-dnsty   as integer
-    field place-rvd-lvl     as integer
-    field place-rvd-tmp     as integer
-    index pi as primary unique
-    pl-code
-    .
+   define temp-table tt-place-attr
+      field pl-code             like place.pl-code
+      field place-type          as character
+      field place-Si            as integer
+      field place-diameter      as decimal
+      field dead-balance        as decimal
+      field place-rel-error     as decimal
+      field pl-twice-code       like place.loc1
+      field place-dens-prov     as decimal
+      field place-local         as integer
+      field place-asi-sertif    as integer
+      field place-error-mass    as decimal
+      field place-rvd-dnsty     as integer
+      field place-rvd-lvl       as integer
+      field place-rvd-tmp       as integer
+      field place-dc-height     as integer
+      field place-tank-tk       as decimal
+      field place-dnst-mi-code  as character
+      field place-lvl-mi-code   as character
+      field place-tmp-mi-code   as character
+      field place-passport-num  as character
+      field place-passport-type as character
+      index pi as primary unique
+      pl-code
+      .
   
   define property Msg as character no-undo
     get.
@@ -139,7 +155,14 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         buf_pl-level.obj-type = tt-place.obj-type:
         create tt-pl-level .
         buffer-copy buf_pl-level to tt-pl-level .
-      end.      
+     find first buf_pl-level-attr no-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+                                            and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+                                            and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
+                                            and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+                                            and buf_pl-level-attr.attr-code = "tarir-delta"
+                                            no-error .
+     if available buf_pl-level-attr then tt-pl-level.comp-err = decimal (buf_pl-level-attr.attr-value) .
+     end .           
     end .
     else 
     do:
@@ -148,6 +171,13 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         buf_c-pl-level.obj-type = tt-place.obj-type:
         create tt-pl-level .
         buffer-copy buf_c-pl-level to tt-pl-level .
+     find first buf_pl-level-attr no-lock where buf_pl-level-attr.obj-type  = buf_c-pl-level.obj-type
+                                            and buf_pl-level-attr.obj-code  = buf_c-pl-level.obj-code
+                                            and buf_pl-level-attr.pl-code   = buf_c-pl-level.pl-code
+                                            and buf_pl-level-attr.pl-level  = buf_c-pl-level.pl-level
+                                            and buf_pl-level-attr.attr-code = "tarir-delta"
+                                            no-error .
+     if available buf_pl-level-attr then tt-pl-level.comp-err = decimal (buf_pl-level-attr.attr-value) .        
       end.      
     end.        
     
@@ -167,79 +197,133 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
             ,input tt-place.pl-code
             ,output v-value
             ,output v-ok      ) no-error.
-          case v-code :
-            when {&place-type} then 
-              do :
-                if v-ok then 
-                do :
-                  if integer(v-value) = 1 then tt-place-attr.place-type = "1"  .
-                  if integer(v-value) = 2 then tt-place-attr.place-type = "2"  .
-                end.
-              end.
-            when {&place-SI} then 
-              do :
-                if v-ok then tt-place-attr.place-Si = integer(v-value) .
-              end.
-            when {&place-diameter} then 
-              do :
-                if v-ok then tt-place-attr.place-diameter = decimal(v-value) .
-              end.
-            when {&dead-balance} then 
-              do :
-                if v-ok then tt-place-attr.dead-balance = decimal(v-value) .
-              end.
-            when {&place-ratio-error} then 
-              do :
-                if v-ok then tt-place-attr.place-rel-error = decimal(v-value) .
-              end.
-            when {&place-dens-prov} then 
-              do :
-                if v-ok then tt-place-attr.place-dens-prov = decimal(v-value) .
-              end.
-            when {&place-twice-code} then 
-              do:
-                if v-ok then tt-place-attr.pl-twice-code = v-value .
-              end.
-            when {&place-error-mass} then 
-              do: 
-                  if v-ok then tt-place-attr.place-error-mass = decimal(v-value) .
-              end.
-          when {&place-local} then 
-              do: 
-                  if v-ok then do:
-                    if v-value = "1" then tt-place-attr.place-local = 0 .
-                    else tt-place-attr.place-local = 1 .
-                  end.
-              end.
-          when {&place-asi-sertif} then 
-              do: 
-                  if v-ok then do:
-                    if v-value = "yes" then tt-place-attr.place-asi-sertif = 1 .
-                    else tt-place-attr.place-asi-sertif = 0 .
-                  end.
-              end.                                        
-          when {&place-rvd-dnsty} then 
-              do: 
-                  if v-ok then do:
-                    if v-value = "yes" then tt-place-attr.place-rvd-dnsty = 1 .
-                    else tt-place-attr.place-rvd-dnsty = 0 .
-                  end.
-              end.                                        
-          when {&place-rvd-lvl} then 
-              do: 
-                  if v-ok then do:
-                    if v-value = "yes" then tt-place-attr.place-rvd-lvl = 1 .
-                    else tt-place-attr.place-rvd-lvl = 0 .
-                  end.
-              end.                                    
-          when {&place-rvd-tmp} then 
-              do: 
-                  if v-ok then do:
-                    if v-value = "yes" then tt-place-attr.place-rvd-tmp = 1 .
-                    else tt-place-attr.place-rvd-tmp = 0 .
-                  end.
-              end.                                                  
-          end case.
+           case v-code :
+              when {&place-type} then 
+                 do :
+                    if v-ok then 
+                    do :
+                       if integer(v-value) = 1 then tt-place-attr.place-type = "1"  .
+                       if integer(v-value) = 2 then tt-place-attr.place-type = "2"  .
+                    end.
+                 end.
+              when {&place-SI} then 
+                 do :
+                    if v-ok then tt-place-attr.place-Si = integer(v-value) .
+                 end.
+              when {&place-diameter} then 
+                 do :
+                    if v-ok then tt-place-attr.place-diameter = decimal(v-value) .
+                 end.
+              when {&dead-balance} then 
+                 do :
+                    if v-ok then tt-place-attr.dead-balance = decimal(v-value) .
+                 end.
+              when {&place-ratio-error} then 
+                 do :
+                    if v-ok then tt-place-attr.place-rel-error = decimal(v-value) .
+                 end.
+              when {&place-dens-prov} then 
+                 do :
+                    if v-ok then tt-place-attr.place-dens-prov = decimal(v-value) .
+                 end.
+              when {&place-twice-code} then 
+                 do:
+                    if v-ok then tt-place-attr.pl-twice-code = v-value .
+                 end.
+              when {&place-error-mass} then 
+                 do: 
+                    if v-ok then tt-place-attr.place-error-mass = decimal(v-value) .
+                 end.
+              when {&place-local} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       if v-value = "1" then tt-place-attr.place-local = 0 .
+                       else tt-place-attr.place-local = 1 .
+                    end.
+                 end.
+              when {&place-asi-sertif} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       if v-value = "yes" then tt-place-attr.place-asi-sertif = 1 .
+                       else tt-place-attr.place-asi-sertif = 0 .
+                    end.
+                 end.                                        
+              when {&place-rvd-dnsty} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       if v-value = "yes" then tt-place-attr.place-rvd-dnsty = 1 .
+                       else tt-place-attr.place-rvd-dnsty = 0 .
+                    end.
+                 end.                                        
+              when {&place-rvd-lvl} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       if v-value = "yes" then tt-place-attr.place-rvd-lvl = 1 .
+                       else tt-place-attr.place-rvd-lvl = 0 .
+                    end.
+                 end.                                    
+              when {&place-rvd-tmp} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       if v-value = "yes" then tt-place-attr.place-rvd-tmp = 1 .
+                       else tt-place-attr.place-rvd-tmp = 0 .
+                    end.
+                 end.                                                  
+              when {&place-dead-high} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       tt-place-attr.place-dc-height = integer(v-value).
+                    end.
+                 end. 
+              when {&place-temp-coef} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       tt-place-attr.place-tank-tk = decimal(v-value).
+                    end.
+                 end. 
+              when {&place-SI-dens} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       tt-place-attr.place-dnst-mi-code = v-value .
+                    end.
+                 end. 
+              when {&place-SI-level} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       tt-place-attr.place-lvl-mi-code = v-value .
+                    end.
+                 end. 
+              when {&place-SI-temp} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       tt-place-attr.place-tmp-mi-code = v-value.
+                    end.
+                 end. 
+              when {&place-passp-num} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       tt-place-attr.place-passport-num = v-value .
+                    end.
+                 end.      
+              when {&place-passp-type} then 
+                 do: 
+                    if v-ok then 
+                    do:
+                       tt-place-attr.place-passport-type = v-value .
+                    end.
+                 end.                                                                                                 
+           end case.
         end.
       end.
       
@@ -256,15 +340,28 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("max-qnty" , string(tt-place.max-qnty)).
         sw:write-data-element ("d-qnty"   , string(tt-place-attr.dead-balance)).
         sw:write-data-element ("tank-d"   , string(tt-place-attr.place-diameter)).
+        sw:write-data-element ("dc-height" , string(tt-place-attr.place-dc-height)).        
         sw:write-data-element ("rel-er"   , string-mth (tt-place-attr.place-rel-error)).
         sw:write-data-element ("dnsty"    , string-mth (tt-place-attr.place-dens-prov)).
-        sw:write-data-element ("mi-code"  , string(tt-place-attr.place-Si)).
+        sw:write-data-element ("main-mi-code"  , string(tt-place-attr.place-Si)).
         sw:write-data-element ("position"  , string(tt-place-attr.place-local)).
         sw:write-data-element ("certified"  , string(tt-place-attr.place-asi-sertif)).
         sw:write-data-element ("pipe-er"  , string-mth(tt-place-attr.place-error-mass)).
+        sw:write-data-element ("tank-tk" , string(tt-place-attr.place-tank-tk)).  
         sw:write-data-element ("rvd-dnsty"  , string(tt-place-attr.place-rvd-dnsty)).
+        if tt-place-attr.place-rvd-dnsty = 1 then
+        sw:write-data-element ("dnst-mi-code" , string(tt-place-attr.place-dnst-mi-code)).  
+        else sw:write-data-element ("dnst-mi-code" , "").
         sw:write-data-element ("rvd-lvl"  , string(tt-place-attr.place-rvd-lvl)).
+        if tt-place-attr.place-rvd-lvl = 1 then
+        sw:write-data-element ("lvl-mi-code" , string(tt-place-attr.place-lvl-mi-code)).
+        else sw:write-data-element ("lvl-mi-code" , "").  
         sw:write-data-element ("rvd-tmp"  , string(tt-place-attr.place-rvd-tmp)).
+        if tt-place-attr.place-rvd-tmp = 1 then 
+        sw:write-data-element ("tmp-mi-code" , string(tt-place-attr.place-tmp-mi-code)). 
+        else sw:write-data-element ("tmp-mi-code" , "").  
+        sw:write-data-element ("passport-num" , string(tt-place-attr.place-passport-num)).  
+        sw:write-data-element ("passport-type" , string(tt-place-attr.place-passport-type)). 
       end.
       sw:write-data-element ("gd-code", string(tt-place.gds-code)).
       sw:write-data-element ("izm-pr", if tt-place.is-meas = yes then "1" else "0").
@@ -280,6 +377,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
           sw:start-element ("cal-tbl-line") .
           sw:write-data-element ("lvl"  , string(tt-pl-level.pl-level)).
           sw:write-data-element ("amnt" , string(tt-pl-level.pl-qnty)).
+          sw:write-data-element ("comp-err" , string(tt-pl-level.comp-err)).
           sw:end-element ("cal-tbl-line")  .
         end.
         sw:end-element ("cal-tbl")  .  
