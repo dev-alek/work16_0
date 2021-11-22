@@ -80,6 +80,8 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define variable v-dnst-mi               as character no-undo .
   define variable v-lvl-mi                as character no-undo .
   define variable v-tmp-mi                as character no-undo .
+  define variable varmeasure-water-qnty   as decimal no-undo.
+  define variable varstate-water-qnty     as decimal no-undo.
   
 
   define property Msg as character no-undo
@@ -450,6 +452,11 @@ sw = insw .
                 v-POkMI-water-vol       = decimal(entry(2, entry(6, v-POkMI-result-attr, {&new-line}), ":")) no-error .
               end .
             end .
+          when "sug-water-qnty" then
+            do:
+              varmeasure-water-qnty = decimal(buf_rvs-line-attr.attr-value) .
+              varstate-water-qnty = varmeasure-water-qnty .
+            end.
         end case .
       end.
       if v-dens-sug-fact = 0 or v-dens-sug-fact = ? then v-dens-sug-fact = v-dens-sug .
@@ -473,7 +480,7 @@ sw = insw .
       sw:write-data-element ("pipeline-qnty" , if tt-rvs-line.add-qnty = ? then "0" else string-mth(tt-rvs-line.add-qnty)) no-error .
       sw:write-data-element ("tank-ost-br" , if tt-rvs-line.brutto-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-qnty)) no-error .
       sw:write-data-element ("tank-ost-br-tc" , if tt-rvs-line.brutto-tc-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-tc-qnty)) no-error .
-      sw:write-data-element ("tank-wtr" , if (tt-rvs-line.brutto-qnty - tt-rvs-line.measure-qnty) = ? then "0" else string-mth(tt-rvs-line.brutto-qnty - tt-rvs-line.measure-qnty)) no-error .
+      sw:write-data-element ("tank-wtr" , if varmeasure-water-qnty = ? then "0" else string-mth(varmeasure-water-qnty)) no-error .
       sw:write-data-element ("tank-wght" , if tt-rvs-line.measure-cli-qnty = ? then "0" else string-mth(tt-rvs-line.measure-cli-qnty)) no-error .
       sw:write-data-element ("tank-wght-br" , if tt-rvs-line.brutto-cli-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-cli-qnty)) no-error .
       sw:write-data-element ("tank-wtr-wght" , if (tt-rvs-line.brutto-cli-qnty - tt-rvs-line.measure-cli-qnty) = ? then "0" else string-mth(tt-rvs-line.brutto-cli-qnty - tt-rvs-line.measure-cli-qnty)) no-error .
@@ -517,7 +524,7 @@ sw = insw .
       sw:write-data-element ("er-wght-pipeline" , if er-wght-pipeline = ? then "0" else string-mth(er-wght-pipeline)) no-error .
       sw:write-data-element ("tank-ost-br-fact" , if tt-rvs-line.state-brutto-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-qnty)) no-error .
       sw:write-data-element ("tank-ost-br-tc-fact" , if tt-rvs-line.state-brutto-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-tc-qnty)) no-error .
-      sw:write-data-element ("tank-wtr-fact" , if (tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty) = ? then "0" else string-mth(tt-rvs-line.state-brutto-qnty - tt-rvs-line.state-measure-qnty)) no-error .
+      sw:write-data-element ("tank-wtr-fact" , if varstate-water-qnty = ? then "0" else string-mth(varstate-water-qnty)) no-error .
       sw:write-data-element ("tank-wght-fact" , if tt-rvs-line.state-measure-cli-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-cli-qnty)) no-error .
       sw:write-data-element ("tank-wght-br-fact" , if tt-rvs-line.state-brutto-cli-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-cli-qnty)) no-error .
       sw:write-data-element ("tank-wtr-wght-fact" , if (tt-rvs-line.state-brutto-cli-qnty - tt-rvs-line.state-measure-cli-qnty) = ? then "0" else string-mth(tt-rvs-line.state-brutto-cli-qnty - tt-rvs-line.state-measure-cli-qnty)) no-error .
