@@ -185,7 +185,6 @@ procedure CreateOneRec:
                v-cash-pay-code  = (if chk-doc.chk-type = 8 then 0 else tran-fuel.pay-code) /* Для чеков аннуляций тип оплаты берем только с чека */
                .
 
-
          find first cash-pay where
                     cash-pay.cdpay-code = v-cash-pay-code
          no-lock no-error.
@@ -242,7 +241,7 @@ procedure CreateOneRec:
             tt-rep.gds-name        = goods.gds-name
             tt-rep.volume          = tt-pay.volume
             tt-rep.price           = tran-fuel.price
-            tt-rep.money           = tt-pay.money
+            tt-rep.money           = if tt-pay.multi-pay then tt-pay.money else tt-pay.volume * tran-fuel.price
             tt-rep.cash-pay-code   = tt-pay.cash-pay-code
             tt-rep.cash-pay-name   = tt-pay.cash-pay-name
             tt-rep.pay-card        = tt-pay.pay-card
@@ -302,7 +301,7 @@ method private void InitTT
           i-Shift-Start     as integer,
           i-Shift-End       as integer,
           iChkTypeCodeList  as character,
-          iProdBcStrList    as character,
+          iGdsCodeList      as character,
           iTRKList          as character):
 &else
 procedure InitTT:
@@ -312,7 +311,7 @@ procedure InitTT:
    define input parameter i-Shift-Start     as integer   no-undo.
    define input parameter i-Shift-End       as integer   no-undo.
    define input parameter iChkTypeCodeList  as character no-undo.
-   define input parameter iProdBcStrList    as character no-undo.
+   define input parameter iGdsCodeList      as character no-undo.
    define input parameter iTRKList          as character no-undo.
 &endif   
    define buffer chk-doc      for chk-doc.
@@ -321,6 +320,8 @@ procedure InitTT:
    define buffer goods        for goods.
    define buffer cash-pay     for cash-pay.
    define buffer prod-bc      for prod-bc.
+   
+   define variable v-gds-code as integer no-undo.
    
    if i-tog-shift then do:
       for 
@@ -343,19 +344,41 @@ procedure InitTT:
       no-lock,
          each tran-fuel where
               tran-fuel.uuid-cheq = chk-doc-attr.attr-value
-          and can-do(iProdBcStrList, string(tran-fuel.fuel-code))
+          /* and can-do(iProdBcStrList, string(tran-fuel.fuel-code)) */
           and can-do(iTRKList, string(tran-fuel.trk-num + 1))
-      no-lock,
-         first prod-bc where
-               prod-bc.b-str = string(tran-fuel.fuel-code)
-      no-lock,
-         first chk-gds  where
-               chk-gds.doc-code = chk-doc.doc-code
-           and chk-gds.b-code   = prod-bc.b-code
-      no-lock,
-        first goods where
-              goods.gds-code = chk-gds.b-code
       no-lock:
+         v-gds-code = tran-fuel.fuel-code.
+         if v-gds-code < 100 then do: /* Если короткий код, то ищем полный код */
+            find first prod-bc where
+                       prod-bc.b-str = string(v-gds-code)
+            no-lock no-error.
+            if avail prod-bc then do:
+               find first chk-gds where
+                          chk-gds.doc-code = chk-doc.doc-code
+                      and chk-gds.b-code   = prod-bc.b-code
+               no-lock no-error.
+               find first goods where
+                          goods.gds-code = prod-bc.b-code
+               no-lock no-error.
+               if not avail chk-gds or not avail goods
+               then
+                  next.
+               v-gds-code = goods.gds-code.
+            end.
+         end.
+         else do:
+            find first chk-gds where
+                       chk-gds.doc-code = chk-doc.doc-code
+                   and chk-gds.b-code   = v-gds-code
+            no-lock no-error.
+            find first goods where
+                       goods.gds-code = v-gds-code
+            no-lock no-error.
+            if not avail chk-gds or not avail goods
+            then
+               next.
+         end.
+         if not can-do(iGdsCodeList, string(v-gds-code)) then next.
          if (chk-doc.shift-date = i-date-start and chk-doc.shift-num < i-Shift-Start) or
             (chk-doc.shift-date = i-date-end   and chk-doc.shift-num > i-Shift-End) 
          then
@@ -380,7 +403,7 @@ procedure InitTT:
       for each tran-fuel where
                tran-fuel.date-beg >= datetime(string(i-date-start) + " 00:00:00") - Timezone * 60000
            and tran-fuel.date-beg <= datetime(string(i-date-end + 2) + " 23:59:59") - Timezone * 60000 /* Отберем транзакции за 2 дня вперед. Отфильтруем после корректировки даты начала транзакции */
-           and can-do(iProdBcStrList, string(tran-fuel.fuel-code))
+           /* and can-do(iProdBcStrList, string(tran-fuel.fuel-code)) */
            and can-do(iTRKList, string(tran-fuel.trk-num + 1))
       no-lock,
          first chk-doc-attr where
@@ -390,23 +413,47 @@ procedure InitTT:
          first chk-doc where
                chk-doc.doc-code = chk-doc-attr.doc-code
            and can-do(iChkTypeCodeList, string(chk-doc.chk-type))
-      no-lock,
+      no-lock
       &if "{1}" <> "class" &then
+      ,
          first obj-list where
                obj-list.obj-type = chk-doc.obj-type
            and obj-list.obj-code = chk-doc.obj-code
-      no-lock,
+      no-lock
       &endif
-         first prod-bc where
-               prod-bc.b-str = string(tran-fuel.fuel-code)
-      no-lock,
-         first chk-gds  where
-               chk-gds.doc-code = chk-doc.doc-code
-           and chk-gds.b-code   = prod-bc.b-code
-      no-lock,
-        first goods where
-              goods.gds-code = chk-gds.b-code
-      no-lock:
+      :
+         v-gds-code = tran-fuel.fuel-code.
+         if v-gds-code < 100 then do: /* Если короткий код, то ищем полный код */
+            find first prod-bc where
+                       prod-bc.b-str = string(v-gds-code)
+            no-lock no-error.
+            if avail prod-bc then do:
+               find first chk-gds where
+                          chk-gds.doc-code = chk-doc.doc-code
+                      and chk-gds.b-code   = prod-bc.b-code
+               no-lock no-error.
+               find first goods where
+                          goods.gds-code = prod-bc.b-code
+               no-lock no-error.
+               if not avail chk-gds or not avail goods
+               then
+                  next.
+               v-gds-code = goods.gds-code.
+            end.
+         end.
+         else do:
+            find first chk-gds where
+                       chk-gds.doc-code = chk-doc.doc-code
+                   and chk-gds.b-code   = v-gds-code
+            no-lock no-error.
+            find first goods where
+                       goods.gds-code = v-gds-code
+            no-lock no-error.
+            if not avail chk-gds or not avail goods
+            then
+               next.
+         end.
+         if not can-do(iGdsCodeList, string(v-gds-code)) then next.
          &if "{1}" = "class" &then
          CreateOneRec(buffer chk-doc,
                       buffer tran-fuel,
@@ -461,56 +508,8 @@ procedure AfterCalc:
    define variable vRowId               as rowid     no-undo.
    define variable vRowIdList           as character no-undo.
    define variable vUuidList            as character no-undo.
-   
-   
-   /* Для чека ПеревТрнзкц создаем вторую транзакцию */
-   repeat preselect each tt-rep where
-                         tt-rep.chk-type-desc = "ПеревТрнзкц":
-      /* Перевод откуда */                           
-      find next tt-rep.
-      find first b-chk-gds where
-                 b-chk-gds.doc-code =  tt-rep.doc-code
-             and b-chk-gds.line-num <> chk-gds.line-num
-      no-lock no-error.
-      if avail b-chk-gds then do:
-         /* Первоначальная продажа */
-         find first b-tt-rep where
-                    b-tt-rep.uuid      =  tt-rep.uuid
-                and b-tt-rep.uuid-cheq <> tt-rep.uuid-cheq
-         no-error.
-         if avail b-tt-rep then do:
-            /* Конечная продажа */
-            find first b2-tt-rep where
-                       b2-tt-rep.uuid-cheq =  b-tt-rep.uuid-cheq
-                   and b2-tt-rep.uuid      <> b-tt-rep.uuid
-            no-lock no-error.
-            if avail b2-tt-rep then do:
-               /* Перевод куда */
-               create b-tt-rep.
-               buffer-copy b2-tt-rep to b-tt-rep
-                  assign
-                     b-tt-rep.chk-date        = tt-rep.chk-date
-                     b-tt-rep.chk-time        = tt-rep.chk-time
-                     b-tt-rep.doc-code        = tt-rep.doc-code
-                     b-tt-rep.chk-num         = tt-rep.chk-num
-                     b-tt-rep.line-num        = b-chk-gds.line-num
-                     b-tt-rep.doc-num2        = tt-rep.doc-num2
-                     b-tt-rep.z-number        = tt-rep.z-number
-                     b-tt-rep.chk-type-desc   = tt-rep.chk-type-desc 
-                     b-tt-rep.resume-tran     = no
-                     b-tt-rep.uuid-cheq       = tt-rep.uuid-cheq
-                     /*
-                     b-tt-rep.datetime-beg    = tt-rep.datetime-beg
-                     b-tt-rep.date-beg        = tt-rep.date-beg
-                     b-tt-rep.time-beg        = tt-rep.time-beg
-                     b-tt-rep.time-length     = (b2-tt-rep.datetime-end - b2-tt-rep.datetime-beg) / 1000
-                     b-tt-rep.all-time-length = b2-tt-rep.time-length
-                     */
-                     .
-            end.
-         end.
-      end.
-   end.
+   define variable v-gds-code           as integer   no-undo.
+   define variable vTrkNum              as integer   no-undo.
    
    /* Постобработка данных по фильтру */   
    for each tt-rep where
@@ -532,23 +531,46 @@ procedure AfterCalc:
          no-lock,
              first chk-doc where
                    chk-doc.doc-code = chk-doc-attr.doc-code
-         no-lock,
+         no-lock
          &if "{1}" <> "class" &then
+	 ,
              first obj-list where
                    obj-list.obj-type = chk-doc.obj-type
                and obj-list.obj-code = chk-doc.obj-code
-         no-lock,
+         no-lock
          &endif
-             first prod-bc where
-                   prod-bc.b-str = string(tran-fuel.fuel-code)
-         no-lock,
-             first chk-gds  where
-                   chk-gds.doc-code = chk-doc.doc-code
-               and chk-gds.b-code   = prod-bc.b-code
-         no-lock,
-            first goods where
-                  goods.gds-code = chk-gds.b-code
-         no-lock:
+	 :
+            v-gds-code = tran-fuel.fuel-code.
+            if v-gds-code < 100 then do: /* Если короткий код, то ищем полный код */
+               find first prod-bc where
+                          prod-bc.b-str = string(tran-fuel.fuel-code)
+               no-lock no-error.
+               if avail prod-bc then do:
+                  find first chk-gds where
+                             chk-gds.doc-code = chk-doc.doc-code
+                         and chk-gds.b-code   = prod-bc.b-code
+                  no-lock no-error.
+                  find first goods where
+                             goods.gds-code = prod-bc.b-code
+                  no-lock no-error.
+                  if not avail chk-gds or not avail goods
+                  then
+                     next.
+                  v-gds-code = goods.gds-code.
+               end.
+            end.
+            else do:
+               find first chk-gds where
+                          chk-gds.doc-code = chk-doc.doc-code
+                      and chk-gds.b-code   = v-gds-code
+               no-lock no-error.
+               find first goods where
+                          goods.gds-code = v-gds-code
+               no-lock no-error.
+               if not avail chk-gds or not avail goods
+               then
+                  next.
+            end.
    
             find first chk-pay where
                        chk-pay.doc-code = chk-gds.doc-code
@@ -606,29 +628,30 @@ procedure AfterCalc:
    break
       by tt-rep.obj-code
       by tt-rep.grp-num
-      by tt-rep.datetime-beg
       by tt-rep.chk-date
-      by tt-rep.chk-time:
+      by tt-rep.chk-time
+      by tt-rep.datetime-beg:
 
       if first-of(tt-rep.grp-num) then do:
          assign
             vUuidCheq          = ""
             vResumeTran        = no
             vConfirmResumeTran = no
-            vFirstRecId        = ?
             .
          if tt-rep.chk-type-desc = "Продажа" then
             assign
                vUuidCheq   = tt-rep.uuid-cheq
                vResumeTran = yes
-               vFirstRecId = recid(tt-rep)
+               vTrkNum     = tt-rep.trk-num
                .
+            find first b-tt-rep where recid(b-tt-rep) = vFirstRecId no-error.
       end.
       else do:
          if tt-rep.chk-type-desc = "Продажа" and 
             tt-rep.uuid-cheq     = vUuidCheq and
             tt-rep.multi-pay     = no        and /* Транзакции со смешанной оплатой не помечаем как продолжение налива */
-            vResumeTran          = yes
+            vResumeTran          = yes       and
+            tt-rep.trk-num       = vTrkNum       /* Продолжение налива может быть только на той же ТРК */
          then
             assign
                tt-rep.resume-tran = yes
@@ -639,19 +662,14 @@ procedure AfterCalc:
                tt-rep.uuid-cheq     = vUuidCheq and
                tt-rep.multi-pay     = no            /* Транзакции со смешанной оплатой не помечаем как продолжение налива */
             then
-               vResumeTran = yes.
+               assign
+                  vResumeTran = yes
+                  vTrkNum     = tt-rep.trk-num
+                  .
          else
             vResumeTran = no.
       end.
 
-      /* Отмечаем первую запись как продолжение налива - отключено 02.09.2021
-      if last-of(tt-rep.grp-num) and not first-of(tt-rep.grp-num) and vConfirmResumeTran then do:
-         for first b-tt-rep where recid(b-tt-rep) = vFirstRecId:
-             b-tt-rep.resume-tran = yes.
-         end.
-      end. 
-      */
-      
       if last-of(tt-rep.grp-num) and not first-of(tt-rep.grp-num) and vConfirmResumeTran then do:
          for first tt-grp where tt-grp.grp-num = tt-rep.grp-num:
             tt-grp.resume-tran = yes.
@@ -687,6 +705,55 @@ procedure AfterCalc:
          end.
          
          vRecId = recid(tt-rep).
+      end.
+   end.
+   
+   /* Для чека ПеревТрнзкц создаем вторую транзакцию */
+   repeat preselect each tt-rep where
+                         tt-rep.chk-type-desc = "ПеревТрнзкц":
+      /* Перевод откуда */                           
+      find next tt-rep.
+      find first b-chk-gds where
+                 b-chk-gds.doc-code =  tt-rep.doc-code
+             and b-chk-gds.line-num <> chk-gds.line-num
+      no-lock no-error.
+      if avail b-chk-gds then do:
+         /* Первоначальная продажа */
+         find first b-tt-rep where
+                    b-tt-rep.uuid      =  tt-rep.uuid
+                and b-tt-rep.uuid-cheq <> tt-rep.uuid-cheq
+         no-error.
+         if avail b-tt-rep then do:
+            /* Конечная продажа */
+            find first b2-tt-rep where
+                       b2-tt-rep.uuid-cheq =  b-tt-rep.uuid-cheq
+                   and b2-tt-rep.uuid      <> b-tt-rep.uuid
+            no-lock no-error.
+            if avail b2-tt-rep then do:
+               /* Перевод куда */
+               create b-tt-rep.
+               buffer-copy b2-tt-rep to b-tt-rep
+                  assign
+                     b-tt-rep.chk-date        = tt-rep.chk-date
+                     b-tt-rep.chk-time        = tt-rep.chk-time
+                     b-tt-rep.doc-code        = tt-rep.doc-code
+                     b-tt-rep.chk-num         = tt-rep.chk-num
+                     b-tt-rep.line-num        = b-chk-gds.line-num
+                     b-tt-rep.doc-num2        = tt-rep.doc-num2
+                     b-tt-rep.z-number        = tt-rep.z-number
+                     b-tt-rep.chk-type-desc   = tt-rep.chk-type-desc 
+                     b-tt-rep.resume-tran     = no
+                     b-tt-rep.uuid-cheq       = tt-rep.uuid-cheq
+                     /*
+                     b-tt-rep.datetime-beg    = tt-rep.datetime-beg
+                     b-tt-rep.date-beg        = tt-rep.date-beg
+                     b-tt-rep.time-beg        = tt-rep.time-beg
+                     b-tt-rep.time-length     = (b2-tt-rep.datetime-end - b2-tt-rep.datetime-beg) / 1000
+                     b-tt-rep.all-time-length = b2-tt-rep.time-length
+                     */
+                     .
+            end.
+         end.
       end.
    end.
    
@@ -769,7 +836,23 @@ procedure AfterCalc:
             .
       end. 
    end.
-
+   
+   /* Корректировка времени начала и продолжительности для транзакций техпролива */
+   for each tt-rep where
+            tt-rep.chk-type-desc = "ТехПролив":
+      find first tran-fuel where
+                 tran-fuel.uuid      =  tt-rep.uuid
+             and tran-fuel.uuid-cheq <> tt-rep.uuid-cheq
+      no-lock no-error.
+      if avail tran-fuel then do:
+         assign
+            tt-rep.datetime-beg = tran-fuel.date-beg + Timezone * 60000
+            tt-rep.date-beg     = date(tt-rep.datetime-beg)
+            tt-rep.time-beg     = mtime(tt-rep.datetime-beg) / 1000
+            tt-rep.time-length  = (tt-rep.datetime-end - tt-rep.datetime-beg) / 1000
+            .
+      end. 
+   end.
    
    /* Корректировка времени окончания и продолжительности транзакций, где следующей строкой идет Сброс или Возврат */
    for each tt-rep
@@ -917,9 +1000,12 @@ procedure AfterCalc:
    break
       by tt-rep.obj-type
       by tt-rep.obj-code
-      by tt-rep.obj-name
-      by tt-rep.uuid-cheq:
-      if first-of(tt-rep.obj-name) then do:
+      by tt-rep.chk-date
+      by tt-rep.chk-time
+      by tt-rep.uuid-cheq
+      by tt-rep.datetime-beg:
+
+      if first-of(tt-rep.obj-code) then do:
          create tt-total-rep.
          assign
             tt-total-rep.obj-type = tt-rep.obj-type
@@ -931,7 +1017,6 @@ procedure AfterCalc:
          vCheck = no.
          tt-total-rep.qty-chk = tt-total-rep.qty-chk + 1.
       end.
-
       if can-do(vUuidList, tt-rep.uuid) = no
       then do:
          vCheck = yes.
@@ -972,7 +1057,11 @@ procedure AfterCalc:
    break
       by tt-rep.obj-type
       by tt-rep.obj-code
-      by tt-rep.uuid-cheq:
+      by tt-rep.chk-date
+      by tt-rep.chk-time
+      by tt-rep.uuid-cheq
+      by tt-rep.datetime-beg:
+
       if first-of(tt-rep.obj-code) then do:
          create tt-all-total-rep.
          assign

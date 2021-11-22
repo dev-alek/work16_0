@@ -256,20 +256,26 @@ procedure pGetLastTStamp:
    
    define buffer tran-fuel for tran-fuel.
    
-   define variable vBegDateTime as datetime no-undo.
-   define variable vDate        as date no-undo.
-   define variable vTime        as integer no-undo.
+   define variable v-last-date      as date     no-undo .
+   define variable v-last-time      as integer  no-undo .
+   define variable v-last-shift-num as integer  no-undo .
+   define variable v-last-z-count   as integer  no-undo .
+   define variable v-last-chk-num   as integer  no-undo .
    
    find first tran-fuel no-lock no-error.
    if avail tran-fuel then do:
-      run get-last-check-date-time in this-procedure ( input g#db-num
-                                                      ,input p-obj-code
-                                                      ,input p-pos-type
-                                                      ,input p-cash-num
-                                                      ,output vDate
-                                                      ,output vTime) no-error.
-      if vDate <> ? and vTime <> ? then
-         oTStamp = string( ( vDate - date( "01/01/1970" ) ) * 24 * 3600 + vTime - Timezone * 60, ">>>>>>>>>9" ).
+      run get-last-check-params in this-procedure ( input g#db-num
+                                                   ,input p-obj-code
+                                                   ,input p-pos-type
+                                                   ,input p-cash-num
+                                                   ,output v-last-date
+                                                   ,output v-last-time
+                                                   ,output v-last-shift-num
+                                                   ,output v-last-z-count
+                                                   ,output v-last-chk-num
+                                                   ) no-error.
+      if v-last-date <> ? and v-last-time <> ? then
+         oTStamp = string( ( v-last-date - date( "01/01/1970" ) ) * 24 * 3600 + v-last-time - Timezone * 60 - 1 * 60 * 60, ">>>>>>>>>9" ). /* Дополнительно сдвинем на 1 час назад */
       else
          oTStamp = "0".
     end.
@@ -406,6 +412,11 @@ PROCEDURE EndElement:
    DEFINE INPUT PARAMETER localName AS CHARACTER.
    DEFINE INPUT PARAMETER qName AS CHARACTER.
    
+   define buffer prod-bc for prod-bc.
+   define buffer chk-gds for chk-gds.
+   define buffer goods   for goods.
+
+   define variable v-gds-code as integer no-undo.
    
    if qName = "TranFuel" then do:
       find first tt-tranfuel where
@@ -414,8 +425,23 @@ PROCEDURE EndElement:
              and tt-tranfuel.uuid-cheq = tt-one-tranfuel.uuid-cheq
       no-lock no-error.
       if not avail tt-tranfuel then do:
+         v-gds-code = tt-one-tranfuel.fuel-code.
+         find first prod-bc where
+                    prod-bc.b-str = string(v-gds-code)
+         no-lock no-error.
+         if avail prod-bc then do:
+            find first goods where
+                       goods.gds-code = prod-bc.b-code
+            no-lock no-error.
+            if avail goods then
+               v-gds-code = goods.gds-code.
+         end.
+
          create tt-tranfuel.
-         buffer-copy tt-one-tranfuel to tt-tranfuel.
+         buffer-copy tt-one-tranfuel to tt-tranfuel
+            assign
+               tt-tranfuel.fuel-code = v-gds-code
+               .
       end.
    end.
 

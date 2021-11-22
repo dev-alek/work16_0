@@ -46,6 +46,22 @@ define variable mProdBcStrList  as character     no-undo.
 
 define stream sOutStr-html.
 
+function f_disp_time returns character
+   (input iTime as integer):
+   define variable vHour    as integer   no-undo.
+   define variable vMinute  as integer   no-undo.
+   define variable vSec     as integer   no-undo.
+   define variable vTimeStr as character no-undo.
+   
+   vHour = truncate(iTime / 3600, 0).
+   vMinute = truncate((iTime - vHour * 3600) / 60, 0).
+   vSec = iTime - vHour * 3600 - vMinute * 60.
+   vTimeStr = trim(string(vHour, ">>>99")) + ":" +
+              string(vMinute, "99")  + ":" +
+              string(vSec,    "99").
+   return vTimeStr.
+end function.
+
 function fDate2Str returns character
    (input idate as date,
     input iformat as char):
@@ -96,7 +112,7 @@ run initTT(x-tog-shift,
            X-Shift-Start,
            X-Shift-End,
            iChkTypeCodeList,
-           mProdBcStrList,
+           iGdsCodeList,
            iTRKList).
 run AfterCalc(x-tog-shift,
               X-date-end,
@@ -355,7 +371,7 @@ procedure PrintTT:
             .
          put stream sOutStr-html unformatted
             '<TR ' vLevel '>' skip
-                '<TD style="text-align: center">'                  fStrNvl(tt-rep.obj-name, "")                                '</TD>' skip
+                '<TD text_wrap="true" style="text-align: center">' fStrNvl(tt-rep.obj-name, "")                                '</TD>' skip
                 '<TD style="text-align: center">'                  fdate2str(tt-rep.chk-date, "99.99.9999")                    '</TD>' skip
                 '<TD style="text-align: center">'                  fStrNvl(string(tt-rep.chk-time, "HH:MM:SS"), "")            '</TD>' skip
                 '<TD style="text-align: center">'                  fdate2str(tt-rep.shift-date, "99.99.9999")                  '</TD>' skip
@@ -379,8 +395,8 @@ procedure PrintTT:
                 '<TD style="text-align: center">'                  fStrNvl(string(tt-rep.time-beg, "HH:MM:SS"), "")            '</TD>' skip
                 '<TD style="text-align: center">'                  fdate2str(tt-rep.date-end, "99.99.9999")                    '</TD>' skip
                 '<TD style="text-align: center">'                  fStrNvl(string(tt-rep.time-end, "HH:MM:SS"), "")            '</TD>' skip
-                '<TD style="text-align: center">'                  fStrNvl(string(tt-rep.time-length, "HH:MM:SS"), "")         '</TD>' skip
-                '<TD style="text-align: center">'                  fStrNvl(string(tt-rep.all-time-length-2, "HH:MM:SS"), "")   '</TD>' skip
+                '<TD style="text-align: center">'                  fStrNvl(f_disp_time(tt-rep.time-length), "")                '</TD>' skip
+                '<TD style="text-align: center">'                  fStrNvl(f_disp_time(tt-rep.all-time-length-2), "")          '</TD>' skip
                 '<TD style="text-align: center">'                  string(tt-rep.resume-tran, "+/-")                           '</TD>' skip
             '</TR>' skip.
          if last-of(tt-rep.obj-code) then do:
@@ -390,20 +406,20 @@ procedure PrintTT:
                   and tt-total-rep.obj-name = tt-rep.obj-name:
                put stream sOutStr-html unformatted
                   '<TR >' skip
-                      '<TD style="text-align: left; font-weight:bold">'                   "Итого по:"                                                       '</TD>' skip
-                      '<TD style="text-align: left; font-weight:bold">'                   fStrNvl(tt-total-rep.obj-name, "")                                '</TD>' skip
-                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество чеков"                                                '</TD>' skip
-                      '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-total-rep.qty-chk, ">>>9")                           '</TD>' skip
-                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество транзакций"                                           '</TD>' skip
-                      '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-total-rep.qty-tran, ">>>9")                          '</TD>' skip
-                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество  чеков с транзакциями"                                 '</TD>' skip
-                      '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-total-rep.qty-chk-fuel, ">>>9")                      '</TD>' skip
-                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Общая продолжительность"                                         '</TD>' skip
-                      '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(string(tt-total-rep.full-time-tran, "HH:MM:SS"), "")     '</TD>' skip
-                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Средняя продолжительность"                                       '</TD>' skip
-                      '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(string(tt-total-rep.avg-time-tran, "HH:MM:SS"), "")      '</TD>' skip
-                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Средняя длительность жизненного цикла заказа НП"                 '</TD>' skip
-                      '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(string(tt-total-rep.avg-time-tran-fuel, "HH:MM:SS"), "") '</TD>' skip
+                      '<TD style="text-align: left; font-weight:bold">'                   "Итого по:"                                                '</TD>' skip
+                      '<TD style="text-align: left; font-weight:bold">'                   fStrNvl(tt-total-rep.obj-name, "")                         '</TD>' skip
+                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество чеков"                                         '</TD>' skip
+                      '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-total-rep.qty-chk, ">>>9")                    '</TD>' skip
+                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество транзакций"                                    '</TD>' skip
+                      '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-total-rep.qty-tran, ">>>9")                   '</TD>' skip
+                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество  чеков с транзакциями"                         '</TD>' skip
+                      '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-total-rep.qty-chk-fuel, ">>>9")               '</TD>' skip
+                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Общая продолжительность"                                  '</TD>' skip
+                      '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(f_disp_time(tt-total-rep.full-time-tran), "")     '</TD>' skip
+                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Средняя продолжительность"                                '</TD>' skip
+                      '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(f_disp_time(tt-total-rep.avg-time-tran), "")      '</TD>' skip
+                      '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Средняя длительность жизненного цикла заказа НП"          '</TD>' skip
+                      '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(f_disp_time(tt-total-rep.avg-time-tran-fuel), "") '</TD>' skip
                       .
             end.
             do vI = 1 to 13:
@@ -419,20 +435,20 @@ procedure PrintTT:
       for first tt-all-total-rep:
          put stream sOutStr-html unformatted
             '<TR >' skip
-                '<TD style="text-align: left; font-weight:bold">'                   "Итого по:"                                                          '</TD>' skip
-                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Всем выбранным объектам"                                            '</TD>' skip
-                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество чеков"                                                   '</TD>' skip
-                '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-all-total-rep.qty-chk, ">>>9")                          '</TD>' skip
-                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество транзакций"                                              '</TD>' skip
-                '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-all-total-rep.qty-tran, ">>>9")                         '</TD>' skip
-                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество  чеков с отпуском НП"                                    '</TD>' skip
-                '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-all-total-rep.qty-chk-fuel, ">>>9")                     '</TD>' skip
-                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Общая продолжительность"                                            '</TD>' skip
-                '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(string(tt-all-total-rep.full-time-tran, "HH:MM:SS"), "")    '</TD>' skip
-                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Средняя продолжительность"                                          '</TD>' skip
-                '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(string(tt-all-total-rep.avg-time-tran, "HH:MM:SS"), "")     '</TD>' skip
-                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Средняя длительность жизненного цикла заказа НП"                    '</TD>' skip
-                '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(string(tt-all-total-rep.avg-time-tran-fuel, "HH:MM:SS"), "") '</TD>' skip
+                '<TD style="text-align: left; font-weight:bold">'                   "Итого по:"                                                    '</TD>' skip
+                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Всем выбранным объектам"                                      '</TD>' skip
+                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество чеков"                                             '</TD>' skip
+                '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-all-total-rep.qty-chk, ">>>9")                    '</TD>' skip
+                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество транзакций"                                        '</TD>' skip
+                '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-all-total-rep.qty-tran, ">>>9")                   '</TD>' skip
+                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Количество  чеков с транзакциями"                             '</TD>' skip
+                '<TD style="text-align: left; font-weight:bold">'                    fInt2Str(tt-all-total-rep.qty-chk-fuel, ">>>9")               '</TD>' skip
+                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Общая продолжительность"                                      '</TD>' skip
+                '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(f_disp_time(tt-all-total-rep.full-time-tran), "")     '</TD>' skip
+                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Средняя продолжительность"                                    '</TD>' skip
+                '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(f_disp_time(tt-all-total-rep.avg-time-tran), "")      '</TD>' skip
+                '<TD text_wrap="true" style="text-align: left; font-weight:bold">'  "Средняя длительность жизненного цикла заказа НП"              '</TD>' skip
+                '<TD style="text-align: left; font-weight:bold">'                    fStrNvl(f_disp_time(tt-all-total-rep.avg-time-tran-fuel), "") '</TD>' skip
                 .
          do vI = 1 to 13:
             put stream sOutStr-html unformatted

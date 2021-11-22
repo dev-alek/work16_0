@@ -30,24 +30,28 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
   { ref/chk-type-desc.i }
   { rep/r-tranfuel.i class private}
 
-   define private temp-table ttTranFuel no-undo
-      field line-num     as integer
-      field trn-num      as integer
-      field db-num       as integer
-      field uuid         as character
-      field uuid-cheq    as character
-      field chk-type     as integer
-      field chk-date     as date
-      field chk-time     as integer
-      field trk-num      as integer
-      field trn-start    as datetime
-      field trn-end      as datetime
-      field trn-prnt     as integer
-      field trn-prnt-trk as integer
-      field trn-chld     as integer
-      field trn-chld-trk as integer
+define private temp-table ttTranFuel no-undo
+   field line-num     as integer
+   field trn-num      as integer
+   field db-num       as integer
+   field uuid         as character
+   field uuid-cheq    as character
+   field chk-type     as integer
+   field chk-date     as date
+   field chk-time     as integer
+   field trk-num      as integer
+   field trn-start    as datetime
+   field trn-end      as datetime
+   field trn-prnt     as integer
+   field trn-prnt-trk as integer
+   field trn-chld     as integer
+   field trn-chld-trk as integer
 index pi db-num uuid uuid-cheq
 index si trn-start trn-end chk-date chk-time
+.
+
+define private temp-table tt-recid-TranFuel no-undo
+   field rec-id as recid
 .
 
   define property Msg as character no-undo
@@ -265,18 +269,37 @@ index si trn-start trn-end chk-date chk-time
       if can-find(first ttTranFuel where ttTranFuel.uuid-cheq = chk-doc-attr.attr-value) then
          next.
 
+      empty temp-table tt-recid-TranFuel.
       for first bar-code where
                 bar-code.b-code = chk-gds.b-code
       no-lock,
           first goods where
                 goods.gds-code = bar-code.gds-code
-      no-lock,
-          first prod-bc where
-                prod-bc.b-code = chk-gds.b-code
-      no-lock,
-          each tran-fuel where
-               tran-fuel.uuid-cheq = chk-doc-attr.attr-value
-           and tran-fuel.fuel-code = integer(prod-bc.b-str)
+      no-lock:
+         /* Находим транзакции с коротким кодом товара */
+         for first prod-bc where
+                   prod-bc.b-code = chk-gds.b-code
+         no-lock,
+             each tran-fuel where
+                  tran-fuel.uuid-cheq = chk-doc-attr.attr-value
+              and tran-fuel.fuel-code = integer(prod-bc.b-str)
+         no-lock:
+            create tt-recid-TranFuel.
+            tt-recid-TranFuel.rec-id = recid(tran-fuel).
+         end.
+         /* Находим транзакции с полным кодом товара */
+         for each tran-fuel where
+                  tran-fuel.uuid-cheq = chk-doc-attr.attr-value
+              and tran-fuel.fuel-code = goods.gds-code
+         no-lock:
+            create tt-recid-TranFuel.
+            tt-recid-TranFuel.rec-id = recid(tran-fuel).
+         end.
+      end.
+      
+      for each tt-recid-TranFuel,
+         first tran-fuel where
+               recid(tran-fuel) = tt-recid-TranFuel.rec-id
       no-lock:
 
          find first tt-rep where
