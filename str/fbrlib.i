@@ -1076,6 +1076,24 @@ on error undo, return error
 end.
 end procedure. /* fbrlib-get-trn-type */
 
+procedure fbrlib-get-mark :
+define input parameter p-recipe-code    as character    no-undo.
+define output parameter p-mark          as logical    no-undo.
+
+define buffer buf_goods-attr     for ub.goods-attr.
+define buffer buf_recipe-gds for ub.recipe-gds .
+
+    for each buf_recipe-gds no-lock where buf_recipe-gds.recipe-code = p-recipe-code,
+         first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_recipe-gds.gds-code and
+                                            buf_goods-attr.attr-code = {&attr-mark-type}:
+         if buf_goods-attr.attr-value <> "" and buf_goods-attr.attr-value <> "not-type" then do:
+            p-mark = true .
+            return .
+         end.                                                  
+    end.   
+
+
+end procedure. /* fbrlib-get-mark */
 /*==========================================================================*/
 procedure fbrlib-check-temp-tables :
 do

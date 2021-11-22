@@ -209,19 +209,31 @@ define input parameter p-have-store             as logical          no-undo.  /*
     define variable v-add-good              as logical       no-undo.
     define variable v-cancel                as logical       no-undo.
 
-    define buffer buf_obj_recipe            for ub.recipe.
-    define buffer buf_obj_recipe-gds        for ub.recipe-gds.
-    define buffer buf_fbr-recipe            for ub.fbr-recipe.
-    define buffer buf_fbr-recipe-gds        for ub.fbr-recipe-gds.
-    define buffer buf_goods                 for ub.goods.
-    define buffer buf_fbr-doc               for ub.fbr-doc.
-    define buffer buf_fbr-line              for ub.fbr-line.
-    define buffer buf_comp_fbr-line         for ub.fbr-line.
+   define variable v-value          as character no-undo .
+   define variable v-type           as character no-undo .
+   define variable v-attr-value     as character no-undo .
+   define variable v-attr-value-rec as character no-undo .
+   define variable v-attr-type      as character no-undo .
+
+    define buffer buf_obj_recipe            for recipe.
+    define buffer buf_obj_recipe-gds        for recipe-gds.
+    define buffer buf_fbr-recipe            for fbr-recipe.
+    define buffer buf_fbr-recipe-gds        for fbr-recipe-gds.
+    define buffer buf_goods                 for goods.
+    define buffer buf_fbr-doc               for fbr-doc.
+    define buffer buf_fbr-line              for fbr-line.
+    define buffer buf_comp_fbr-line         for fbr-line.
     define buffer buf_temp_goods-qnty       for temp_goods-qnty.
     define buffer buf_new_temp_goods-qnty   for temp_goods-qnty.
     define buffer buf_start_temp_goods-qnty for temp_goods-qnty.
     define buffer buf_del_temp_goods-qnty   for temp_goods-qnty.
+    define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
 
+   define variable v-ban-recipes as logical no-undo .
+   define variable v-ban-altr    as logical no-undo .
+    run gbl/getobjsrvhndl.p (input-output ObjSrv).
+   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
+   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanAltr then v-ban-altr = true .
     find first buf_fbr-doc no-lock
          where buf_fbr-doc.doc-code = p-fbr-doc-doc-code
     .
@@ -284,6 +296,94 @@ define input parameter p-have-store             as logical          no-undo.  /*
                     .
                 end.
                 else do:
+      if v-ban-altr or v-ban-recipes then 
+      do:
+          /*проверка */
+         for each buf_obj_recipe no-lock where recid (buf_obj_recipe) = integer(v-recipe-recid-list):
+            if buf_obj_recipe.recipe-type = {&manufacturing} and v-ban-recipes then
+            do:
+               for each ub.recipe-gds no-lock where ub.recipe-gds.recipe-code = buf_obj_recipe.recipe-code:
+                  run gds-attr-value in this-procedure  ( input  ub.recipe-gds.gds-code
+                     , input  {&attr-mark-type}
+                     , output v-attr-value
+                     , output v-attr-type
+                     ) no-error .
+                  if v-attr-value <> "" and v-attr-value <> "not-type" then
+                  do:
+                     message "Рецепт производства " + buf_obj_recipe.recipe-code + " " + buf_obj_recipe.recipe-name + " содержит маркированный товар."
+                        view-as alert-box.
+                     return .
+                  end.
+               end.
+            end.
+            if buf_obj_recipe.recipe-type = {&alternative} and v-ban-altr then
+            do:
+               for first buf_goods no-lock where buf_goods.gds-code = buf_obj_recipe.gds-code,
+                  first ub.gds-grp exclusive-lock where ub.gds-grp.node-code = buf_goods.grp-code:
+                  run ggoattr-value (
+                     input   ub.gds-grp.node-code
+                     ,input   buf_obj_recipe.host-code
+                     ,input   buf_obj_recipe.obj-type
+                     ,input   buf_obj_recipe.obj-code
+                     ,input   {&ggoattr-ban-sales-via-cd}
+                     ,output   v-value
+                     ,output   v-type
+                     ) no-error .
+                  if error-status :error then
+                  do:
+                     undo, return error.
+                  end.
+                  if v-value <> "yes" and v-value <> "true" then
+                  do:
+                     run ggoattr-value (
+                        input   ub.gds-grp.node-code
+                        ,input   0
+                        ,input   ""
+                        ,input   0
+                        ,input   {&ggoattr-ban-sales-via-cd}
+                        ,output   v-value
+                        ,output   v-type
+                        ) no-error .
+                     if error-status :error then
+                     do:
+                        undo, return error.
+                     end.
+                     if v-value <> "yes" and v-value <> "true" then
+                     do:
+                        message "Рецепт альтернатива " + buf_obj_recipe.recipe-code + " " + buf_obj_recipe.recipe-name + {&new-line} + "входит в группу, у которой не установлен атрибут: " + {&new-line} + "Запрет передачи на кассу."
+                           view-as alert-box.
+                        return .
+                     end.
+                  end.
+               end.
+            end.
+            if buf_obj_recipe.recipe-type = {&gathering} and v-ban-recipes then
+            do:
+               for each ub.recipe-gds no-lock where ub.recipe-gds.recipe-code = buf_obj_recipe.recipe-code:
+                  run gds-attr-value in this-procedure  ( input  ub.recipe-gds.gds-code
+                     , input  {&attr-mark-type}
+                     , output v-attr-value
+                     , output v-attr-type
+                     ) no-error .
+                  if v-attr-value <> "" and v-attr-value <> "not-type" then
+                  do:
+                     run gds-attr-value in this-procedure  ( input  buf_obj_recipe.gds-code
+                        , input  {&attr-mark-type}
+                        , output v-attr-value-rec
+                        , output v-attr-type
+                        ) no-error .
+                     if v-attr-value-rec = "" or v-attr-value-rec = "not-type" then
+                     do:
+                        message "Рецепт комплектации " + buf_obj_recipe.recipe-code + " " + buf_obj_recipe.recipe-name + " должен быть маркированным"
+                           view-as alert-box.
+                        return .
+                     end.
+                     else leave.
+                  end.
+               end.
+            end.
+         end.
+      end.                         
                     assign
                         v-add-good = yes
                     .
