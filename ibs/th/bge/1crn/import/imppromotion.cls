@@ -448,7 +448,7 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
       buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
       buf_goods-attr.attr-value <> "") then 
    do:
-      v-promo-action:changeDate = today.
+/*      v-promo-action:changeDate = today.*/
       v-promo-action:end-date = today - 1 .
    end.        
    end.    
@@ -617,7 +617,7 @@ if valid-object (v-objlist9) then do: // gifts - подарки на всю акцию
       buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
       buf_goods-attr.attr-value <> "") then 
    do:
-      v-promo-action:changeDate = today.
+/*      v-promo-action:changeDate = today.*/
       v-promo-action:end-date = today - 1 .
    end.        
    end.       

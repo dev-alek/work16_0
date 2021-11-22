@@ -43,7 +43,7 @@ for each buf_PromoGift no-lock:
                 "1":U  + {&delim-par} +  /*error-message-option*/
                 "1":U + {&delim-par} +  /*auto-go-option*/
                 "1":U                  /*return-value-option*/
-      , input ({&cd-type-IBm-XML} + {&delim-par} + buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + "D" + {&delim-par} + string(buf_clients.db-num) + {&delim-par} + string(buf_PromoAction.id))
+      , input ({&cd-type-IBm-XML} + {&delim-par} + buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + "U":U + {&delim-par} + string(buf_clients.db-num) + {&delim-par} + string(buf_PromoAction.id))
       , input yes /*p-auto-go*/
       , input "":U
       , input substitute("Отсылка промоакций на кассы &1", {&cd-type-IBm-XML})
