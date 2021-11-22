@@ -27,6 +27,28 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
   { cmp/library.i  class }
   { utl/gtin.i class }
   { ref/extclass.i }
+  { ref/chk-type-desc.i }
+  { rep/r-tranfuel.i class private}
+
+   define private temp-table ttTranFuel no-undo
+      field line-num     as integer
+      field trn-num      as integer
+      field db-num       as integer
+      field uuid         as character
+      field uuid-cheq    as character
+      field chk-type     as integer
+      field chk-date     as date
+      field chk-time     as integer
+      field trk-num      as integer
+      field trn-start    as datetime
+      field trn-end      as datetime
+      field trn-prnt     as integer
+      field trn-prnt-trk as integer
+      field trn-chld     as integer
+      field trn-chld-trk as integer
+index pi db-num uuid uuid-cheq
+index si trn-start trn-end chk-date chk-time
+.
 
   define property Msg as character no-undo
     get:
@@ -49,6 +71,10 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     set.
 
   define private variable libFindtank as class ibs.th.str.findtank no-undo . /* обёртка для findtank.i */
+  
+  define private variable mRepShiftNum  as integer no-undo.
+  define private variable mRepShiftDate as date    no-undo.
+  
         
   &scop tag-shift     'shift':U
   &scop tag-checks    'checks':U
@@ -56,6 +82,8 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
   &scop tag-message   'check':U
   &scop tag-section1  'chk-gds':U
   &scop tag-item1     'chk-gd':U
+  &scop tag-section1-a 'chk-trns':U
+  &scop tag-item1-a    'chk-trn':U
   &scop tag-section2  'chk-pays':U
   &scop tag-item2     'chk-pay':U
   &scop tag-section3  'chk-discnts':U
@@ -206,7 +234,166 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
     end finally .
   end method . /* end_of CrContentToSW */
 
+  /*------------------------------------------------------------------------------
+   Purpose: выгружает содержимое чека и вложенные секции в контекст контейнера SAX-writer
+   Param:   insw = create sax-writer
+  ------------------------------------------------------------------------------*/
+  method private void CrTTFuelTran (buffer p-buf_chk-doc for ub.chk-doc):
+   
+   define buffer chk-doc-attr  for chk-doc-attr.
+   define buffer chk-gds       for chk-gds.
+   define buffer b-chk-gds     for chk-gds.
+   define buffer bar-code      for bar-code.
+   define buffer goods         for goods.
+   define buffer prod-bc       for prod-bc.
+   define buffer tran-fuel     for tran-fuel.
+   define buffer b-tran-fuel   for tran-fuel.
+   define buffer b2-tran-fuel  for tran-fuel.
+   define buffer b-ttTranFuel  for ttTranFuel.
 
+   define variable vRecId as recid   no-undo.
+      
+   empty temp-table ttTranFuel.
+   for each chk-doc-attr where
+            chk-doc-attr.doc-code  = p-buf_chk-doc.doc-code
+        and chk-doc-attr.attr-code = "CheckId"
+   no-lock,
+       each chk-gds where
+            chk-gds.doc-code = p-buf_chk-doc.doc-code
+   no-lock:
+      /* Обрабатываем только строку чека */
+      if can-find(first ttTranFuel where ttTranFuel.uuid-cheq = chk-doc-attr.attr-value) then
+         next.
+
+      for first bar-code where
+                bar-code.b-code = chk-gds.b-code
+      no-lock,
+          first goods where
+                goods.gds-code = bar-code.gds-code
+      no-lock,
+          first prod-bc where
+                prod-bc.b-code = chk-gds.b-code
+      no-lock,
+          each tran-fuel where
+               tran-fuel.uuid-cheq = chk-doc-attr.attr-value
+           and tran-fuel.fuel-code = integer(prod-bc.b-str)
+      no-lock:
+
+         find first tt-rep where
+                    tt-rep.uuid      = tran-fuel.uuid
+                and tt-rep.uuid-cheq = tran-fuel.uuid-cheq
+         no-error.
+         
+         create ttTranFuel.
+         assign
+            ttTranFuel.line-num     = chk-gds.line-num
+            ttTranFuel.trn-num      = tran-fuel.tran-num
+            ttTranFuel.trn-start    = if avail tt-rep then
+                                         tt-rep.datetime-beg
+                                      else
+                                         tran-fuel.date-beg + Timezone * 60000
+            ttTranFuel.trn-end      = if avail tt-rep then
+                                         tt-rep.datetime-end
+                                      else
+                                         tran-fuel.date-end + Timezone * 60000
+            ttTranFuel.trk-num      = tran-fuel.trk-num + 1
+            ttTranFuel.db-num       = tran-fuel.db-num
+            ttTranFuel.uuid         = tran-fuel.uuid
+            ttTranFuel.uuid-cheq    = tran-fuel.uuid-cheq
+            ttTranFuel.chk-type     = p-buf_chk-doc.chk-type
+            ttTranFuel.chk-date     = p-buf_chk-doc.chk-date
+            ttTranFuel.chk-time     = p-buf_chk-doc.chk-time
+            .
+
+         /* Для чека ПеревТрнзкц создаем вторую транзакцию */
+         if p-buf_chk-doc.chk-type = 16 then do:
+            find first b-chk-gds where
+                       b-chk-gds.doc-code =  p-buf_chk-doc.doc-code
+                   and b-chk-gds.line-num <> chk-gds.line-num
+            no-lock no-error.
+            if avail b-chk-gds then do:
+               find first b-tran-fuel where
+                          b-tran-fuel.db-num    =  tran-fuel.db-num
+                      and b-tran-fuel.uuid      =  tran-fuel.uuid
+                      and b-tran-fuel.uuid-cheq <> tran-fuel.uuid-cheq
+               no-lock no-error.
+               if avail b-tran-fuel then do:
+                  find first b2-tran-fuel where
+                             b2-tran-fuel.db-num    =  b-tran-fuel.db-num
+                         and b2-tran-fuel.uuid-cheq =  b-tran-fuel.uuid-cheq
+                         and b2-tran-fuel.uuid      <> b-tran-fuel.uuid
+                  no-lock no-error.
+                  if avail b2-tran-fuel then do:
+                     find first tt-rep where
+                                tt-rep.uuid      = b2-tran-fuel.uuid
+                            and tt-rep.uuid-cheq = b2-tran-fuel.uuid-cheq
+                     no-error.
+                     
+                     create ttTranFuel.
+                     assign
+                        ttTranFuel.line-num     = b-chk-gds.line-num
+                        ttTranFuel.trn-num      = b2-tran-fuel.tran-num
+                        ttTranFuel.trn-start    = if avail tt-rep then
+                                                     tt-rep.datetime-beg
+                                                  else
+                                                     b2-tran-fuel.date-beg + Timezone * 60000
+                        ttTranFuel.trn-end      = if avail tt-rep then
+                                                     tt-rep.datetime-end
+                                                  else
+                                                     b2-tran-fuel.date-end + Timezone * 60000
+                        ttTranFuel.trk-num      = b2-tran-fuel.trk-num + 1
+                        ttTranFuel.db-num       = b2-tran-fuel.db-num
+                        ttTranFuel.uuid         = b2-tran-fuel.uuid
+                        ttTranFuel.uuid-cheq    = tran-fuel.uuid-cheq
+                        ttTranFuel.chk-type     = p-buf_chk-doc.chk-type
+                        ttTranFuel.chk-date     = p-buf_chk-doc.chk-date
+                        ttTranFuel.chk-time     = p-buf_chk-doc.chk-time
+                        .
+                  end.
+               end.
+            end.
+         end.
+      end.
+   end.
+   
+   for each ttTranFuel:
+      find first tt-rep where
+                 tt-rep.uuid      = ttTranFuel.uuid
+             and tt-rep.uuid-cheq = ttTranFuel.uuid-cheq
+      no-error.
+      if avail tt-rep then
+         assign
+            ttTranFuel.trn-start = tt-rep.datetime-beg
+            ttTranFuel.trn-end   = tt-rep.datetime-end
+            .
+   end.
+   
+   /* Заполнение cвязей родительских и дочерних транзакций */
+   vRecId = ?.
+   for each ttTranFuel
+   break
+      by ttTranFuel.trn-start
+      by ttTranFuel.trn-end
+      by ttTranFuel.chk-date
+      by ttTranFuel.chk-time:
+      if vRecId <> ? then do:
+         find first b-ttTranFuel where
+                    recid(b-ttTranFuel) = vRecId
+         no-error.
+         if avail b-ttTranFuel then do:
+            assign
+               b-ttTranFuel.trn-chld     = ttTranFuel.trn-num
+               b-ttTranFuel.trn-chld-trk = ttTranFuel.trk-num
+               ttTranFuel.trn-prnt       = b-ttTranFuel.trn-num
+               ttTranFuel.trn-prnt-trk   = b-ttTranFuel.trk-num
+               .
+         end.
+      end.
+      
+      vRecId = recid(ttTranFuel).
+   end.
+   
+  end method.
   /*------------------------------------------------------------------------------
    Purpose: выгружает содержимое чека и вложенные секции в контекст контейнера SAX-writer
    Param:   insw = create sax-writer
@@ -601,6 +788,62 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
       insw:write-empty-element ({&tag-item1}) .
     end .
     */
+    
+    /* Топливные транзакции */
+    if mRepShiftDate = ? or 
+       (mRepShiftDate <> p-buf_chk-doc.shift-date and mRepShiftNum <> p-buf_chk-doc.shift-num) then do:
+      
+       empty temp-table tt-rep.
+       empty temp-table tt-all-total-rep.
+       empty temp-table tt-total-rep.
+       empty temp-table tt-grp.
+       empty temp-table tt-pay.
+
+       assign
+          mRepShiftNum  = p-buf_chk-doc.shift-num
+          mRepShiftDate = p-buf_chk-doc.shift-date
+          .
+
+       initTT(yes,
+              mRepShiftDate,
+              mRepShiftDate,
+              mRepShiftNum,
+              mRepShiftNum,
+              "*",
+              "*",
+              "*").
+       AfterCalc(yes,
+                 mRepShiftDate,
+                 "*",
+                 "*",
+                 0).
+    end.
+    
+    CrTTFuelTran(buffer p-buf_chk-doc).
+
+    for each ttTranFuel
+    break
+      by ttTranFuel.trn-start
+      by ttTranFuel.trn-end
+      by ttTranFuel.chk-date
+      by ttTranFuel.chk-time:
+         
+      if first(ttTranFuel.trn-start) then
+         insw:start-element ({&tag-section1-a}) .
+            
+      insw:start-element ({&tag-item1-a}) .
+      insw:write-data-element ("line-num",     string(ttTranFuel.line-num)).
+      insw:write-data-element ("trn-num",      string(ttTranFuel.trn-num)).
+      insw:write-data-element ("trn-start",    iso-date(ttTranFuel.trn-start)).
+      insw:write-data-element ("trn-end",      iso-date(ttTranFuel.trn-end)).
+      insw:write-data-element ("trn-prnt",     string(ttTranFuel.trn-prnt)).
+      insw:write-data-element ("trn-prnt-trk", string(ttTranFuel.trn-prnt-trk)).
+      insw:write-data-element ("trn-chld",     string(ttTranFuel.trn-chld)).
+      insw:write-data-element ("trn-chld-trk", string(ttTranFuel.trn-chld-trk)).
+      insw:end-element ({&tag-item1-a}) .
+      if last(ttTranFuel.trn-start) then
+         insw:end-element ({&tag-section1-a}) .
+    end.
 
     /* section2 обязательность 0-1 */
     for each buf_chk-pay no-lock
