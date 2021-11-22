@@ -466,41 +466,45 @@ procedure AfterCalc:
    /* Для чека ПеревТрнзкц создаем вторую транзакцию */
    repeat preselect each tt-rep where
                          tt-rep.chk-type-desc = "ПеревТрнзкц":
+      /* Перевод откуда */                           
       find next tt-rep.
       find first b-chk-gds where
                  b-chk-gds.doc-code =  tt-rep.doc-code
              and b-chk-gds.line-num <> chk-gds.line-num
       no-lock no-error.
       if avail b-chk-gds then do:
+         /* Первоначальная продажа */
          find first b-tt-rep where
                     b-tt-rep.uuid      =  tt-rep.uuid
                 and b-tt-rep.uuid-cheq <> tt-rep.uuid-cheq
          no-error.
          if avail b-tt-rep then do:
+            /* Конечная продажа */
             find first b2-tt-rep where
                        b2-tt-rep.uuid-cheq =  b-tt-rep.uuid-cheq
                    and b2-tt-rep.uuid      <> b-tt-rep.uuid
             no-lock no-error.
             if avail b2-tt-rep then do:
+               /* Перевод куда */
                create b-tt-rep.
                buffer-copy b2-tt-rep to b-tt-rep
                   assign
-                     b2-tt-rep.chk-date        = tt-rep.chk-date
-                     b2-tt-rep.chk-time        = tt-rep.chk-time
-                     b2-tt-rep.doc-code        = tt-rep.doc-code
-                     b2-tt-rep.chk-num         = tt-rep.chk-num
-                     b2-tt-rep.line-num        = b-chk-gds.line-num
-                     b2-tt-rep.doc-num2        = tt-rep.doc-num2
-                     b2-tt-rep.z-number        = tt-rep.z-number
-                     b2-tt-rep.chk-type-desc   = tt-rep.chk-type-desc 
-                     b2-tt-rep.resume-tran     = no
-                     b2-tt-rep.uuid-cheq       = tt-rep.uuid-cheq
+                     b-tt-rep.chk-date        = tt-rep.chk-date
+                     b-tt-rep.chk-time        = tt-rep.chk-time
+                     b-tt-rep.doc-code        = tt-rep.doc-code
+                     b-tt-rep.chk-num         = tt-rep.chk-num
+                     b-tt-rep.line-num        = b-chk-gds.line-num
+                     b-tt-rep.doc-num2        = tt-rep.doc-num2
+                     b-tt-rep.z-number        = tt-rep.z-number
+                     b-tt-rep.chk-type-desc   = tt-rep.chk-type-desc 
+                     b-tt-rep.resume-tran     = no
+                     b-tt-rep.uuid-cheq       = tt-rep.uuid-cheq
                      /*
-                     b2-tt-rep.datetime-beg    = tt-rep.datetime-beg
-                     b2-tt-rep.date-beg        = tt-rep.date-beg
-                     b2-tt-rep.time-beg        = tt-rep.time-beg
-                     b2-tt-rep.time-length     = (b2-tt-rep.datetime-end - b2-tt-rep.datetime-beg) / 1000
-                     b2-tt-rep.all-time-length = b2-tt-rep.time-length
+                     b-tt-rep.datetime-beg    = tt-rep.datetime-beg
+                     b-tt-rep.date-beg        = tt-rep.date-beg
+                     b-tt-rep.time-beg        = tt-rep.time-beg
+                     b-tt-rep.time-length     = (b2-tt-rep.datetime-end - b2-tt-rep.datetime-beg) / 1000
+                     b-tt-rep.all-time-length = b2-tt-rep.time-length
                      */
                      .
             end.
@@ -731,6 +735,41 @@ procedure AfterCalc:
             .
       end. 
    end.
+   
+   /* Корректировка времени начала и продолжительности для транзакций сброса */
+   for each tt-rep where
+            tt-rep.chk-type-desc = "СбросТрнзкц":
+      find last b-tt-rep where
+                b-tt-rep.uuid          = tt-rep.uuid
+            and b-tt-rep.chk-type-desc = "Продажа"
+      no-error.
+      if avail b-tt-rep then do:
+         assign
+            tt-rep.datetime-beg = b-tt-rep.datetime-beg
+            tt-rep.date-beg     = b-tt-rep.date-beg
+            tt-rep.time-beg     = b-tt-rep.time-beg
+            tt-rep.time-length  = (tt-rep.datetime-end - tt-rep.datetime-beg) / 1000
+            .
+      end. 
+   end.
+   
+   /* Корректировка времени начала и продолжительности для транзакций перевода */
+   for each tt-rep where
+            tt-rep.chk-type-desc = "ПеревТрнзкц":
+      find first b-tt-rep where
+                 b-tt-rep.uuid          = tt-rep.uuid
+             and b-tt-rep.chk-type-desc = "Продажа"
+      no-error.
+      if avail b-tt-rep then do:
+         assign
+            tt-rep.datetime-beg = b-tt-rep.datetime-beg
+            tt-rep.date-beg     = b-tt-rep.date-beg
+            tt-rep.time-beg     = b-tt-rep.time-beg
+            tt-rep.time-length  = (tt-rep.datetime-end - tt-rep.datetime-beg) / 1000
+            .
+      end. 
+   end.
+
    
    /* Корректировка времени окончания и продолжительности транзакций, где следующей строкой идет Сброс или Возврат */
    for each tt-rep
