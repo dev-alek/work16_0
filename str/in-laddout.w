@@ -773,7 +773,7 @@ DO:
       end.
       else do :
         assign
-          ToolType               = buf_sr-izmerenia.sr-type
+          ToolType               = buf_sr-izmerenia.sr-type-id
           DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
           DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
           DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
@@ -1520,6 +1520,8 @@ DO:
   run ref/sr-izm.w (input parparentproc ,
                     input ""            ,
                     input {&lookup}     ,
+                    input ""            ,
+                    input ""            ,
                     input-output v-node-code,
                     output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :

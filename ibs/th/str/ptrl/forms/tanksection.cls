@@ -16,19 +16,40 @@ using OpenEdge.Core.* from propath.
 using System.Windows.Forms.* from assembly.
 using ibs.th.str.ptrl.forms.* from propath.
 
+&global-define list-shape "Без горловины,Квадратная/прямоугольная,Эллиптическая,Круглая"
+&global-define list-shape-num 4
 
 class ibs.th.str.ptrl.forms.tanksection inherits UserControl: 
   
   { cmp/str-glbl.i class}
   
+  define temp-table tt-section no-undo 
+      field dif     as integer
+      field volume1 as decimal
+      index pi dif
+      .
+  
   define property idSecTabPage as integer no-undo
     get.
     private set.
   
+  define private variable button1 as System.Windows.Forms.Button no-undo.
+  define private variable buttonCopyPSTemp as System.Windows.Forms.Button no-undo.
   define private variable buttonPl as System.Windows.Forms.Button no-undo.
+  define private variable buttonPlSiTemp as System.Windows.Forms.Button no-undo.
+  define private variable comboBoxPour as System.Windows.Forms.ComboBox no-undo.
+  define private variable comboBoxShape as System.Windows.Forms.ComboBox no-undo.
+  define private variable dateTimePickerDatePovTemp as System.Windows.Forms.DateTimePicker no-undo.
+  define private variable groupBox8 as System.Windows.Forms.GroupBox no-undo.
   define public variable infoSecsObj  as class ibs.th.str.InfoSectionsTotal no-undo.
   
-  
+  define private variable label43 as System.Windows.Forms.Label no-undo.
+  define private variable label42 as System.Windows.Forms.Label no-undo.
+  define private variable label41 as System.Windows.Forms.Label no-undo.
+  define private variable label40 as System.Windows.Forms.Label no-undo.
+  define private variable maskedTextBoxPassportTemp as System.Windows.Forms.MaskedTextBox no-undo.
+  define private variable maskedTextBoxNumTemp as System.Windows.Forms.MaskedTextBox no-undo.
+  define private variable maskedTextBoxPlaceSiTemp as System.Windows.Forms.MaskedTextBox no-undo.
   define private variable tanksecsObj as class tanksections                 no-undo. 
   
   
@@ -123,6 +144,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable groupBox3                    as System.Windows.Forms.GroupBox       no-undo.
   define private variable groupBox2                    as System.Windows.Forms.GroupBox       no-undo.
   define private variable groupBox1                    as System.Windows.Forms.GroupBox       no-undo.
+  define private variable textBoxPlSiNameTemp as System.Windows.Forms.TextBox no-undo.
   define private variable TimeProb                     as System.Windows.Forms.DateTimePicker no-undo.
 
   define private variable setFocusMaskTextDoc          as System.Windows.Forms.MaskedTextBox  no-undo.
@@ -131,12 +153,18 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable DateTimePickerDateArr        as System.Windows.Forms.DateTimePicker extent 4 no-undo.
   define private variable DateTimePickerTimeArr        as System.Windows.Forms.DateTimePicker extent 3 no-undo.
   
-  define private variable maskedTextBoxArr             as System.Windows.Forms.MaskedTextBox  extent 18 no-undo.
+  define private variable maskedTextBoxArr             as System.Windows.Forms.MaskedTextBox  extent 19 no-undo.
   
   define private variable maskedTextBoxDocArr          as System.Windows.Forms.MaskedTextBox  extent 6 no-undo.
   
-  define private variable maskedTextBoxOnlyReadOnlyArr as System.Windows.Forms.MaskedTextBox  extent 8 no-undo.
+  define private variable maskedTextBoxOnlyReadOnlyArr as System.Windows.Forms.MaskedTextBox  extent 9 no-undo.
 
+  define variable v-dop-volume as decimal no-undo.
+  define variable var-list-shape as character no-undo init {&list-shape}.
+  
+  define variable v-cli-qnty    as decimal no-undo .
+  define variable v-doc-qnty    as decimal no-undo .
+  define variable v-doc-density as decimal no-undo .
     
   constructor public tanksection ( infoSecs as class InfoSectionsTotal, idSec as int, inTanksecs as class tanksections):
     
@@ -153,6 +181,95 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end catch.
 
   end constructor.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void button1_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+    define variable ii as integer no-undo.
+    define variable v-section as character no-undo.
+    define variable v-mode as character no-undo.
+    define variable varauto-tank-par as character no-undo.
+    define variable inum-ComboBoxShape as integer no-undo.
+    
+    if ComboBoxShape:Text = ""
+    then do:
+      message
+        "Вначале задайте тип горловины."  skip
+      view-as alert-box error.
+      undo, return no-apply.
+    end.
+    varauto-tank-par = replace(maskedTextBoxDiameter:Text, "/", {&delim-par}). 
+    if (infoSecsObj:Mode = {&update} or infoSecsObj:Mode = {&add-def}) and not infoSecsObj:FlagTrn and maskedTextBoxCarVol:Enabled = true
+    then v-mode = {&update}.
+    else v-mode = {&lookup}.
+    
+    inum-ComboBoxShape = lookup (comboBoxShape:Text, var-list-shape, ",") - 1.
+    
+    run str/autotncs.w
+      ( input        v-mode
+       ,input-output varauto-tank-par
+       ,input        1
+       ,input        decimal (maskedTextBoxCarVol:Text)
+       ,input        inum-ComboBoxShape
+       ,input        integer (maskedTextBoxSecName:Text)
+      ) no-error.
+    
+    if integer (ComboBoxShape) = 0
+    then do:
+      v-dop-volume = decimal(ENTRY(1, varauto-tank-par, {&delim-par}) ) no-error.
+      do ii = 2 to num-entries (varauto-tank-par,{&delim-par}):
+          v-section = entry(ii, varauto-tank-par, {&delim-par}) .
+          create tt-section .
+          assign
+              tt-section.dif     = integer(entry (1,v-section,{&delim-cmd})) no-error .  
+              tt-section.volume1 = decimal(entry (2,v-section,{&delim-cmd})) no-error . 
+              .
+      end.
+    end.
+  
+    maskedTextBoxDiameter:Text = replace(varauto-tank-par,{&delim-par}, "/").
+		
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void buttonCopyPSTemp_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+    define variable v-place-si as integer no-undo.
+    define variable v-num-temp as character no-undo.
+    define variable v-date-pov-temp as date no-undo.
+    define variable v-passport-temp as character no-undo.
+    define buffer buf_sr-izmerenia for ub.sr-izmerenia .    
+
+    run str/in-copy-iz.w
+      ( input        infoSecsObj:Parentproc
+       ,input        infoSecsObj:Mode
+       ,input        infoSecsObj:GdsCode
+       ,output       v-place-si
+       ,output       v-num-temp
+       ,output       v-passport-temp
+       ,output       v-date-pov-temp       
+      ) no-error.
+    
+    if v-place-si <> 0 and v-place-si <> ? 
+    then
+      assign
+        maskedTextBoxNumTemp:Text = v-num-temp
+        maskedTextBoxPlaceSiTemp:Text = string (v-place-si)
+        dateTimePickerDatePovTemp:Text = string (v-date-pov-temp)
+        maskedTextBoxPassportTemp:Text = v-passport-temp.
+    return.
+
+	end method.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -187,6 +304,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     run ref/sr-izm.w (input infoSecsObj:Parentproc ,
                       input ""            ,
                       input {&lookup}     ,
+                      input "0,1",
+                      input "dnst",
                       input-output v-node-code,
                       output v-sr-type) no-error.   
     if v-node-code <> 0 and v-node-code <> ? then do :
@@ -194,6 +313,21 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       infoSecsObj:InfoSectionCurr:PlaceSi = v-node-code.
       textBoxPlSiName:Text = infoSecsObj:InfoSectionCurr:PlSiName.
       maskedTextBoxPlaceSi:Text = string (infoSecsObj:InfoSectionCurr:PlaceSi).
+      
+      infoSecsObj:GetInfoSectionProp(idSecTabPage).
+      infoSecsObj:InfoSectionCurr:PlaceSi = v-node-code .
+      textBoxPlSiName:Text = infoSecsObj:InfoSectionCurr:PlSiName.
+  
+      find first ub.sr-izmerenia no-lock where ub.sr-izmerenia.node-code = v-node-code no-error.
+      if available (ub.sr-izmerenia)
+      and (ub.sr-izmerenia.sr-temperature)
+      and (textBoxPlSiNameTemp:text = "0" or textBoxPlSiNameTemp:text = "")
+      then do:
+        infoSecsObj:GetInfoSectionProp(idSecTabPage).
+        maskedTextBoxPlaceSiTemp:Text = string(v-node-code).
+        infoSecsObj:InfoSectionCurr:PlaceSiTemp = v-node-code.
+        textBoxPlSiNameTemp:Text = infoSecsObj:InfoSectionCurr:PlSiNameTemp.
+      end.
     end.
     
     return.
@@ -273,6 +407,84 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
   end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void buttonPlSiTemp_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+    define variable v-node-code as integer no-undo.
+    define variable v-sr-type as integer no-undo.
+    run ref/sr-izm.w (input infoSecsObj:Parentproc ,
+                      input ""            ,
+                      input {&lookup}     ,
+                      input "0,1",
+                      input "tmp",
+                      input-output v-node-code,
+                      output v-sr-type) no-error.   
+    if v-node-code <> 0 and v-node-code <> ? then do :
+      infoSecsObj:GetInfoSectionProp(idSecTabPage).
+      infoSecsObj:InfoSectionCurr:PlaceSiTemp = v-node-code.
+      textBoxPlSiNameTemp:Text = infoSecsObj:InfoSectionCurr:PlSiNameTemp.
+      maskedTextBoxPlaceSiTemp:Text = string (infoSecsObj:InfoSectionCurr:PlaceSiTemp).
+      
+      infoSecsObj:GetInfoSectionProp(idSecTabPage).
+      infoSecsObj:InfoSectionCurr:PlaceSiTemp = v-node-code.
+      textBoxPlSiNameTemp:Text = infoSecsObj:InfoSectionCurr:PlSiNameTemp.
+      
+      find first ub.sr-izmerenia no-lock where ub.sr-izmerenia.node-code = v-node-code no-error.
+      if available (ub.sr-izmerenia)
+      and (ub.sr-izmerenia.sr-density)
+      and (textBoxPlSiName:text = "0" or textBoxPlSiName:text = "")
+      then do:
+        infoSecsObj:GetInfoSectionProp(idSecTabPage).
+        maskedTextBoxPlaceSi:Text = string(v-node-code).
+        infoSecsObj:InfoSectionCurr:PlaceSi = v-node-code.
+        textBoxPlSiName:Text = infoSecsObj:InfoSectionCurr:PlSiName.
+      end.
+    end.
+    
+    return.
+
+	end method.
+
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void comboBox1_SelectedIndexChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void comboBox2_SelectedIndexChanged( input sender as System.Object, input e as System.EventArgs ):
+
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void comboBoxShape_SelectedValueChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+/*		if comboBoxShape:Text = "Без горловины"    */
+/*		  then comboBoxPour:Text = "Нижний налив" .*/
+		return.
+
+	end method.
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -332,12 +544,29 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   end method.
 
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void groupBox4_Enter( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
   method private void InitializeComponentCust(  ):
 
     def var ii as int no-undo.
     
+    define variable arrayShape as System.Object extent {&list-shape-num} no-undo.
+    do ii = 1 to {&list-shape-num}:
+      arrayShape[ii] = entry (ii, {&list-shape}).
+    end.
+    this-object:comboBoxShape:Items:AddRange(arrayShape).
+    
     SetControls().
-
+    
     assign
       maskedTextBoxArr[1] = this-object:maskedTextBoxNumPassport
       maskedTextBoxArr[2] = this-object:maskedTextBoxNormDoc    
@@ -357,7 +586,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxArr[16] = this-object:maskedTextBoxTests          
       maskedTextBoxArr[17] = this-object:maskedTextBoxKolProb        
       maskedTextBoxArr[18] = this-object:maskedTextBoxNumPrintProb
-   
+      maskedTextBoxArr[19] = this-object:maskedTextBoxPlaceSiTemp
       .
     assign    
       maskedTextBoxDocArr[1] = this-object:maskedTextBoxDocDens
@@ -376,7 +605,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxOnlyReadOnlyArr[5 ] = this-object:maskedTextBoxAccWeight    
       maskedTextBoxOnlyReadOnlyArr[6 ] = this-object:maskedTextBoxTankWeight
       maskedTextBoxOnlyReadOnlyArr[7 ] = this-object:maskedTextBoxTankVol
-      maskedTextBoxOnlyReadOnlyArr[8 ] = this-object:maskedTextBoxMouth          
+      maskedTextBoxOnlyReadOnlyArr[8 ] = this-object:maskedTextBoxMouth
+      maskedTextBoxOnlyReadOnlyArr[9 ] = this-object:maskedTextBoxDiameter          
     .
     
     assign
@@ -414,7 +644,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     if infoSecsObj:RdcDnstvalue = "not"
     then do:
       groupBox7:Visible = false.
-      
+      groupBox8:Visible = false.
       
       groupBox6:Visible = false.
       
@@ -431,7 +661,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       buttonCalcWeight:Visible = false.
       label20:Visible = false.      
 
-    
+      maskedTextBoxTankWater:Enabled = false.
     end.
 
     if infoSecsObj:RdcDnstvalue = "manual"
@@ -447,15 +677,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       label24:Visible = false.
       
       //groupBox4:Location = groupBox7:Location.
-    
+      maskedTextBoxTankWater:Enabled = false.
     end.
 
-    if infoSecsObj:Mode = "ПРОСМОТР"
+    if infoSecsObj:Mode = {&lookup}
       then 
     do:
       
       maskedTextBoxTankVolPomi:Enabled = false.
       maskedTextBoxTankDensityPomi:Enabled = false.
+      comboBoxShape:Enabled = false.
+      comboBoxPour:Enabled = false.
       
       do ii = 1 to extent (maskedTextBoxArr):
         this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
@@ -481,6 +713,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       buttonCopySec:Visible = false.
       buttonPl:Visible = false.
       buttonPlSi:Visible = false.
+      buttonPlSiTemp:Visible = false.
+      buttonCopyPSTemp:Visible = false.
       
     end.
     
@@ -492,20 +726,36 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       groupBox5:Visible = false.
       groupBox6:Visible = false.
       groupBox7:Visible = false.
+      groupBox8:Visible = false.
     end.
     
     if (infoSecsObj:Mode = "ДОБАВЛЕНИЕ" or infoSecsObj:Mode = "ИЗМЕНЕНИЕ") and not infoSecsObj:FlagTrn
     then do:
+      
+      find first ub.auto-tank no-lock where ub.auto-tank.auto-num = infoSecsObj:CarNum no-error.
+      if available (ub.auto-tank)
+      then do:
+        comboBoxShape:Enabled = false.
+        /*comboBoxPour:Enabled = false.*/ 
+        maskedTextBoxCarVol:Enabled = false.       
+      end.
+      else do:
+        comboBoxShape:Enabled = true.
+        /*comboBoxPour:Enabled = true.*/
+        maskedTextBoxCarVol:Enabled = true.
+      end.
+
+      comboBoxPour:Enabled = true.
       
       do ii = 1 to extent (maskedTextBoxDocArr):
         
         this-object:maskedTextBoxDocArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
         maskedTextBoxDocArr[ii]:ReadOnly = false.
 /*        maskedTextBoxDocArr[ii]:TextChanged:Subscribe(this-object:ValueChgMaskTBox_5_3).*/
-        this-object:maskedTextBoxCarVol:Visible = false.
-        this-object:maskedTextBoxDiameter:Visible = false.
-        label2:Visible = false.
-        label6:Visible = false.
+/*        this-object:maskedTextBoxCarVol:Visible = false.*/
+/*        this-object:maskedTextBoxDiameter:Visible = false.*/
+/*        label2:Visible = false.                           */
+/*        label6:Visible = false.                           */
       end.
       
       if not infoSecsObj:CliQntyInput
@@ -516,7 +766,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           this-object:maskedTextBoxDocQnty:TextChanged:Subscribe(this-object:CalcDoc).
         end.
       if not infoSecsObj:DocQntyInput
-        then do: 
+        then do:
           this-object:maskedTextBoxDocQnty:Enabled = false.
           this-object:maskedTextBoxDocQnty:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
           this-object:maskedTextBoxDocDens:TextChanged:Subscribe(this-object:CalcDoc).
@@ -529,9 +779,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           this-object:maskedTextBoxDocQnty:TextChanged:Subscribe(this-object:CalcDoc).
           this-object:maskedTextBoxCliQnty:TextChanged:Subscribe(this-object:CalcDoc).
         end.
-      
-
-            
     end.  
     if (infoSecsObj:Mode = "ДОБАВЛЕНИЕ" or infoSecsObj:Mode = "ИЗМЕНЕНИЕ") and infoSecsObj:FlagTrn
     then do:
@@ -543,12 +790,57 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxTankTemp:TextChanged:Subscribe(this-object:ClWght).
       maskedTextBoxDensTemp:TextChanged:Subscribe(this-object:ClWght).
       maskedTextBoxPlaceSi:TextChanged:Subscribe(this-object:ClWght).
+      maskedTextBoxPlaceSiTemp:TextChanged:Subscribe(this-object:ClWght).
+      comboBoxShape:Enabled = false.
+      comboBoxPour:Enabled = false.
+      maskedTextBoxCarVol:Enabled = false.
       
       do ii = 1 to extent (maskedTextBoxDocArr):
         this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
         this-object:maskedTextBoxDocArr[ii]:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
         maskedTextBoxDocArr[ii]:Enabled = false.
       end.
+      
+      if infoSecsObj:RdcDnstvalue = "not"
+      then do:
+        this-object:maskedTextBoxTankVol:Leave:Subscribe(this-object:calc-weight-vol).
+        this-object:maskedTextBoxTankVol:Enabled = false.
+        this-object:maskedTextBoxTankVol:ReadOnly = true.
+        this-object:maskedTextBoxTankWeight:ForeColor = System.Drawing.Color:Red.
+        this-object:maskedTextBoxTankVol:ForeColor = System.Drawing.Color:Red.
+        this-object:maskedTextBoxTankWeight:Enabled = false.
+        this-object:maskedTextBoxTankWater:Enabled = false.
+/*        if not infoSecsObj:CliQntyInput                                                                                                                                                                                                     */
+/*          then do:                                                                                                                                                                                                                          */
+/*            this-object:maskedTextBoxTankWeight:ForeColor = System.Drawing.Color:Maroon.                                                                                                                                                    */
+/*            this-object:maskedTextBoxTankWeight:Enabled = false.                                                                                                                                                                            */
+/*            this-object:maskedTextBoxTankWeight:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).*/
+/*            this-object:maskedTextBoxTankWeight:Leave:Unsubscribe(this-object:calc-weight-vol).                                                                                                                                             */
+/*/*          this-object:maskedTextBoxDocDens:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                                  */
+/*/*          this-object:maskedTextBoxDocQnty:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                                  */
+/*          end.                                                                                                                                                                                                                              */
+/*        if not infoSecsObj:DocQntyInput                                                                                                                                                                                                     */
+/*          then do:                                                                                                                                                                                                                          */
+/*            this-object:maskedTextBoxTankVol:Enabled = false.                                                                                                                                                                               */
+/*            this-object:maskedTextBoxTankVol:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).   */
+/*            this-object:maskedTextBoxTankVol:Leave:Unsubscribe(this-object:calc-weight-vol).                                                                                                                                                */
+/*/*          this-object:maskedTextBoxDocDens:TextChanged:Subscribe(this-object:CalcDoc).   */                                                                                                                                               */
+/*/*          this-object:maskedTextBoxTankWeight:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                               */
+/*          end.                                                                                                                                                                                                                              */
+/*        if not infoSecsObj:DensityInput                                                                                                                                                                                                     */
+/*          then do:                                                                                                                                                                                                                          */
+/*            this-object:maskedTextBoxTankDens:Enabled = false.                                                                                                                                                                              */
+/*            this-object:maskedTextBoxTankDens:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).  */
+/*            this-object:maskedTextBoxTankDens:Leave:Unsubscribe(this-object:calc-weight-vol).                                                                                                                                               */
+/*/*          this-object:maskedTextBoxDocQnty:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                                  */
+/*/*          this-object:maskedTextBoxCliQnty:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                                  */
+/*          end.                                                                                                                                                                                                                              */
+      end.
+      else do :
+        this-object:maskedTextBoxTankWater:Visible = false.
+        this-object:label18:Visible = false.
+      end .
+      maskedTextBoxListTank:Enabled = false.
     end.
 
     
@@ -581,6 +873,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label14 = new System.Windows.Forms.Label().
     this-object:label13 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxTankVol = new System.Windows.Forms.MaskedTextBox().
+    this-object:maskedTextBoxDiameter = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxTankDens = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxDensTemp = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxListTank = new System.Windows.Forms.MaskedTextBox().
@@ -588,8 +881,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxTankWater = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxABTArir = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxMouth = new System.Windows.Forms.MaskedTextBox().
-    this-object:maskedTextBoxAccWeight = new System.Windows.Forms.MaskedTextBox().
-    this-object:maskedTextBoxTankWeight = new System.Windows.Forms.MaskedTextBox().
     this-object:groupBox2 = new System.Windows.Forms.GroupBox().
     this-object:buttonCopySec = new System.Windows.Forms.Button().
     this-object:maskedTextBoxValidityCertif = new System.Windows.Forms.MaskedTextBox().
@@ -601,6 +892,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxNumPassport = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxNormDoc = new System.Windows.Forms.MaskedTextBox().
     this-object:groupBox1 = new System.Windows.Forms.GroupBox().
+    this-object:button1 = new System.Windows.Forms.Button().
+    this-object:comboBoxPour = new System.Windows.Forms.ComboBox().
+    this-object:comboBoxShape = new System.Windows.Forms.ComboBox().
     this-object:label8 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxAccShip = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxSecName = new System.Windows.Forms.MaskedTextBox().
@@ -612,7 +906,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label2 = new System.Windows.Forms.Label().
     this-object:label1 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxCliQnty = new System.Windows.Forms.MaskedTextBox().
-    this-object:maskedTextBoxDiameter = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxDocQnty = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxCarVol = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxTTNTemp = new System.Windows.Forms.MaskedTextBox().
@@ -629,34 +922,48 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:buttonPlSi = new System.Windows.Forms.Button().
     this-object:maskedTextBoxPlaceSi = new System.Windows.Forms.MaskedTextBox().
     this-object:label26 = new System.Windows.Forms.Label().
-    this-object:groupBox6 = new System.Windows.Forms.GroupBox().
-    this-object:maskedTextBoxNumPrintProb = new System.Windows.Forms.MaskedTextBox().
-    this-object:label35 = new System.Windows.Forms.Label().
-    this-object:maskedTextBoxTests = new System.Windows.Forms.MaskedTextBox().
-    this-object:label34 = new System.Windows.Forms.Label().
-    this-object:maskedTextBoxKolProb = new System.Windows.Forms.MaskedTextBox().
-    this-object:label33 = new System.Windows.Forms.Label().
-    this-object:DateTimeDateProb = new System.Windows.Forms.DateTimePicker().
-    this-object:label32 = new System.Windows.Forms.Label().
-    this-object:TimeProb = new System.Windows.Forms.DateTimePicker().
     this-object:label31 = new System.Windows.Forms.Label().
-    this-object:groupBox5 = new System.Windows.Forms.GroupBox().
-    this-object:dateTimePickerTimeEnd = new System.Windows.Forms.DateTimePicker().
-    this-object:dateTimePickerTimeStart = new System.Windows.Forms.DateTimePicker().
-    this-object:dateTimePickerDateEnd = new System.Windows.Forms.DateTimePicker().
-    this-object:dateTimePickerDateStart = new System.Windows.Forms.DateTimePicker().
-    this-object:label30 = new System.Windows.Forms.Label().
-    this-object:label29 = new System.Windows.Forms.Label().
-    this-object:label28 = new System.Windows.Forms.Label().
+    this-object:TimeProb = new System.Windows.Forms.DateTimePicker().
+    this-object:label32 = new System.Windows.Forms.Label().
+    this-object:DateTimeDateProb = new System.Windows.Forms.DateTimePicker().
+    this-object:label33 = new System.Windows.Forms.Label().
+    this-object:maskedTextBoxKolProb = new System.Windows.Forms.MaskedTextBox().
+    this-object:label34 = new System.Windows.Forms.Label().
+    this-object:maskedTextBoxTests = new System.Windows.Forms.MaskedTextBox().
+    this-object:label35 = new System.Windows.Forms.Label().
+    this-object:maskedTextBoxNumPrintProb = new System.Windows.Forms.MaskedTextBox().
+    this-object:groupBox6 = new System.Windows.Forms.GroupBox().
     this-object:label27 = new System.Windows.Forms.Label().
-    this-object:groupBox4 = new System.Windows.Forms.GroupBox().
-    this-object:buttonCalcWeight = new System.Windows.Forms.Button().
-    this-object:label25 = new System.Windows.Forms.Label().
-    this-object:label24 = new System.Windows.Forms.Label().
-    this-object:label23 = new System.Windows.Forms.Label().
-    this-object:label22 = new System.Windows.Forms.Label().
-    this-object:maskedTextBoxTankDensityPomi = new System.Windows.Forms.MaskedTextBox().
+    this-object:label28 = new System.Windows.Forms.Label().
+    this-object:label29 = new System.Windows.Forms.Label().
+    this-object:label30 = new System.Windows.Forms.Label().
+    this-object:dateTimePickerDateStart = new System.Windows.Forms.DateTimePicker().
+    this-object:dateTimePickerDateEnd = new System.Windows.Forms.DateTimePicker().
+    this-object:dateTimePickerTimeStart = new System.Windows.Forms.DateTimePicker().
+    this-object:dateTimePickerTimeEnd = new System.Windows.Forms.DateTimePicker().
+    this-object:groupBox5 = new System.Windows.Forms.GroupBox().
+    this-object:maskedTextBoxAccWeight = new System.Windows.Forms.MaskedTextBox().
+    this-object:maskedTextBoxTankWeight = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxTankVolPomi = new System.Windows.Forms.MaskedTextBox().
+    this-object:maskedTextBoxTankDensityPomi = new System.Windows.Forms.MaskedTextBox().
+    this-object:label22 = new System.Windows.Forms.Label().
+    this-object:label23 = new System.Windows.Forms.Label().
+    this-object:label24 = new System.Windows.Forms.Label().
+    this-object:label25 = new System.Windows.Forms.Label().
+    this-object:buttonCalcWeight = new System.Windows.Forms.Button().
+    this-object:groupBox4 = new System.Windows.Forms.GroupBox().
+    this-object:groupBox8 = new System.Windows.Forms.GroupBox().
+    this-object:textBoxPlSiNameTemp = new System.Windows.Forms.TextBox().
+    this-object:dateTimePickerDatePovTemp = new System.Windows.Forms.DateTimePicker().
+    this-object:buttonCopyPSTemp = new System.Windows.Forms.Button().
+    this-object:label40 = new System.Windows.Forms.Label().
+    this-object:maskedTextBoxPassportTemp = new System.Windows.Forms.MaskedTextBox().
+    this-object:label41 = new System.Windows.Forms.Label().
+    this-object:label42 = new System.Windows.Forms.Label().
+    this-object:maskedTextBoxNumTemp = new System.Windows.Forms.MaskedTextBox().
+    this-object:buttonPlSiTemp = new System.Windows.Forms.Button().
+    this-object:maskedTextBoxPlaceSiTemp = new System.Windows.Forms.MaskedTextBox().
+    this-object:label43 = new System.Windows.Forms.Label().
     this-object:groupBox3:SuspendLayout().
     this-object:groupBox2:SuspendLayout().
     this-object:groupBox1:SuspendLayout().
@@ -664,6 +971,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox6:SuspendLayout().
     this-object:groupBox5:SuspendLayout().
     this-object:groupBox4:SuspendLayout().
+    this-object:groupBox8:SuspendLayout().
     this-object:SuspendLayout().
     /*  */
     /* groupBox3 */
@@ -682,6 +990,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox3:Controls:Add(this-object:label14).
     this-object:groupBox3:Controls:Add(this-object:label13).
     this-object:groupBox3:Controls:Add(this-object:maskedTextBoxTankVol).
+    this-object:groupBox3:Controls:Add(this-object:maskedTextBoxDiameter).
     this-object:groupBox3:Controls:Add(this-object:maskedTextBoxTankDens).
     this-object:groupBox3:Controls:Add(this-object:maskedTextBoxDensTemp).
     this-object:groupBox3:Controls:Add(this-object:maskedTextBoxListTank).
@@ -719,11 +1028,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     this-object:label39:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:label39:ForeColor = System.Drawing.Color:Red.
-    this-object:label39:Location = new System.Drawing.Point(68, 63).
+    this-object:label39:Location = new System.Drawing.Point(23, 63).
     this-object:label39:Name = "label39".
-    this-object:label39:Size = new System.Drawing.Size(117, 20).
+    this-object:label39:Size = new System.Drawing.Size(162, 20).
     this-object:label39:TabIndex = 25.
-    this-object:label39:Text = "Плотность топлива:".
+    this-object:label39:Text = "Плотность топлива,г/см3:".
     this-object:label39:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label39:UseCompatibleTextRendering = true.
     /*  */
@@ -735,7 +1044,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label21:Name = "label21".
     this-object:label21:Size = new System.Drawing.Size(117, 27).
     this-object:label21:TabIndex = 26.
-    this-object:label21:Text = "Температура замера плотности:".
+    this-object:label21:Text = "Температура замера плотности,C:".
     this-object:label21:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label21:UseCompatibleTextRendering = true.
     /*  */
@@ -747,12 +1056,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label20:Name = "label20".
     this-object:label20:Size = new System.Drawing.Size(117, 26).
     this-object:label20:TabIndex = 27.
-    this-object:label20:Text = "Температура замера объема:".
+    this-object:label20:Text = "Температура замера объема,C:".
     this-object:label20:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label20:UseCompatibleTextRendering = true.
     /*  */
     /* label19 */
     /*  */
+    this-object:label19:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label19:ForeColor = System.Drawing.Color:Red.
     this-object:label19:Location = new System.Drawing.Point(297, 113).
     this-object:label19:Name = "label19".
     this-object:label19:Size = new System.Drawing.Size(117, 20).
@@ -828,7 +1139,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label13:Name = "label13".
     this-object:label13:Size = new System.Drawing.Size(179, 28).
     this-object:label13:TabIndex = 34.
-    this-object:label13:Text = "Уровень цистерны относит. тарировочной планки, мм:".
+    this-object:label13:Text = "Отклонение от тарировочной планки, мм:".
     this-object:label13:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label13:UseCompatibleTextRendering = true.
     /*  */
@@ -839,6 +1150,16 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxTankVol:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxTankVol:TabIndex = 16.
     this-object:maskedTextBoxTankVol:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
+    /*  */
+    /* maskedTextBoxDiameter */
+    /*  */
+    this-object:maskedTextBoxDiameter:ForeColor = System.Drawing.Color:Red.
+    this-object:maskedTextBoxDiameter:Location = new System.Drawing.Point(570, 38).
+    this-object:maskedTextBoxDiameter:Name = "maskedTextBoxDiameter".
+    this-object:maskedTextBoxDiameter:Size = new System.Drawing.Size(100, 20).
+    this-object:maskedTextBoxDiameter:TabIndex = 8.
+    this-object:maskedTextBoxDiameter:Visible = false.
+    this-object:maskedTextBoxDiameter:Leave:Subscribe(this-object:calc-weight-vol).
     /*  */
     /* maskedTextBoxTankDens */
     /*  */
@@ -892,7 +1213,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxABTArir:Name = "maskedTextBoxABTArir".
     this-object:maskedTextBoxABTArir:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxABTArir:TabIndex = 14.
-    this-object:maskedTextBoxABTArir:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimalNegNum_5_2).
+    this-object:maskedTextBoxABTArir:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_2).
     this-object:maskedTextBoxABTArir:Leave:Subscribe(this-object:calc-weight-vol).
     /*  */
     /* maskedTextBoxMouth */
@@ -903,23 +1224,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxMouth:TabIndex = 15.
     this-object:maskedTextBoxMouth:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
     this-object:maskedTextBoxMouth:Leave:Subscribe(this-object:calc-weight-vol).
-    /*  */
-    /* maskedTextBoxAccWeight */
-    /*  */
-    this-object:maskedTextBoxAccWeight:Location = new System.Drawing.Point(373, 35).
-    this-object:maskedTextBoxAccWeight:Name = "maskedTextBoxAccWeight".
-    this-object:maskedTextBoxAccWeight:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxAccWeight:TabIndex = 33.
-    this-object:maskedTextBoxAccWeight:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_1_2).
-    /*  */
-    /* maskedTextBoxTankWeight */
-    /*  */
-    this-object:maskedTextBoxTankWeight:ForeColor = System.Drawing.Color:Maroon.
-    this-object:maskedTextBoxTankWeight:Location = new System.Drawing.Point(373, 10).
-    this-object:maskedTextBoxTankWeight:Name = "maskedTextBoxTankWeight".
-    this-object:maskedTextBoxTankWeight:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxTankWeight:TabIndex = 31.
-    this-object:maskedTextBoxTankWeight:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
     /*  */
     /* groupBox2 */
     /*  */
@@ -932,7 +1236,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox2:Controls:Add(this-object:label9).
     this-object:groupBox2:Controls:Add(this-object:maskedTextBoxNumPassport).
     this-object:groupBox2:Controls:Add(this-object:maskedTextBoxNormDoc).
-    this-object:groupBox2:Location = new System.Drawing.Point(10, 95).
+    this-object:groupBox2:Location = new System.Drawing.Point(10, 97).
     this-object:groupBox2:Name = "groupBox2".
     this-object:groupBox2:Size = new System.Drawing.Size(682, 155).
     this-object:groupBox2:TabIndex = 1.
@@ -1021,6 +1325,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* groupBox1 */
     /*  */
     this-object:groupBox1:AccessibleName = "".
+    this-object:groupBox1:Controls:Add(this-object:button1).
+    this-object:groupBox1:Controls:Add(this-object:comboBoxPour).
+    this-object:groupBox1:Controls:Add(this-object:comboBoxShape).
     this-object:groupBox1:Controls:Add(this-object:label8).
     this-object:groupBox1:Controls:Add(this-object:maskedTextBoxAccShip).
     this-object:groupBox1:Controls:Add(this-object:maskedTextBoxSecName).
@@ -1032,17 +1339,58 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox1:Controls:Add(this-object:label2).
     this-object:groupBox1:Controls:Add(this-object:label1).
     this-object:groupBox1:Controls:Add(this-object:maskedTextBoxCliQnty).
-    this-object:groupBox1:Controls:Add(this-object:maskedTextBoxDiameter).
     this-object:groupBox1:Controls:Add(this-object:maskedTextBoxDocQnty).
     this-object:groupBox1:Controls:Add(this-object:maskedTextBoxCarVol).
     this-object:groupBox1:Controls:Add(this-object:maskedTextBoxTTNTemp).
     this-object:groupBox1:Controls:Add(this-object:maskedTextBoxDocDens).
     this-object:groupBox1:Location = new System.Drawing.Point(10, 3).
     this-object:groupBox1:Name = "groupBox1".
-    this-object:groupBox1:Size = new System.Drawing.Size(682, 86).
+    this-object:groupBox1:Size = new System.Drawing.Size(682, 90).
     this-object:groupBox1:TabIndex = 0.
     this-object:groupBox1:TabStop = false.
     this-object:groupBox1:UseCompatibleTextRendering = true.
+    /*  */
+    /* button1 */
+    /*  */
+        this-object:button1:BackgroundImage = cast(resources:GetObject("button1.BackgroundImage"), System.Drawing.Image).
+        this-object:button1:ImageAlign = System.Drawing.ContentAlignment:MiddleRight.
+        this-object:button1:Location = new System.Drawing.Point(648, 55).
+    this-object:button1:Name = "button1".
+        this-object:button1:Size = new System.Drawing.Size(27, 27).
+    this-object:button1:TabIndex = 14.
+    this-object:button1:UseCompatibleTextRendering = true.
+    this-object:button1:UseVisualStyleBackColor = true.
+    this-object:button1:Click:Subscribe(this-object:button1_Click).
+    /*  */
+    /* comboBoxPour */
+    /*  */
+    this-object:comboBoxPour:FormattingEnabled = true.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar0 as System.Object extent 2 no-undo.
+    arrayvar0[1] = "Верхний налив".
+    arrayvar0[2] = "Нижний налив".
+    this-object:comboBoxPour:Items:AddRange(arrayvar0).
+    this-object:comboBoxPour:Location = new System.Drawing.Point(367, 57).
+    this-object:comboBoxPour:Name = "comboBoxPour".
+    this-object:comboBoxPour:Size = new System.Drawing.Size(100, 21).
+    this-object:comboBoxPour:TabIndex = 13.
+    this-object:comboBoxPour:Text = "Верхний налив".
+    this-object:comboBoxPour:SelectedIndexChanged:Subscribe(this-object:comboBox2_SelectedIndexChanged).
+    /*  */
+    /* comboBoxShape */
+    /*  */
+    this-object:comboBoxShape:FormattingEnabled = true.
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar1 as System.Object extent 1 no-undo.
+    arrayvar1[1] = "".
+    this-object:comboBoxShape:Items:AddRange(arrayvar1).
+    this-object:comboBoxShape:Location = new System.Drawing.Point(474, 58).
+    this-object:comboBoxShape:Name = "comboBoxShape".
+    this-object:comboBoxShape:Size = new System.Drawing.Size(172, 21).
+    this-object:comboBoxShape:TabIndex = 12.
+    this-object:comboBoxShape:Text = "Квадратная/прямоугольная".
+    this-object:comboBoxShape:SelectedIndexChanged:Subscribe(this-object:comboBox1_SelectedIndexChanged).
+    this-object:comboBoxShape:SelectedValueChanged:Subscribe(this-object:comboBoxShape_SelectedValueChanged).
     /*  */
     /* label8 */
     /*  */
@@ -1064,7 +1412,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxSecName */
     /*  */
-    this-object:maskedTextBoxSecName:Location = new System.Drawing.Point(136, 10).
+    this-object:maskedTextBoxSecName:Location = new System.Drawing.Point(131, 10).
     this-object:maskedTextBoxSecName:Name = "maskedTextBoxSecName".
     this-object:maskedTextBoxSecName:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxSecName:TabIndex = 1.
@@ -1073,7 +1421,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label7 */
     /*  */
-    this-object:label7:Location = new System.Drawing.Point(9, 10).
+    this-object:label7:Location = new System.Drawing.Point(4, 10).
     this-object:label7:Name = "label7".
     this-object:label7:Size = new System.Drawing.Size(126, 15).
     this-object:label7:TabIndex = 4.
@@ -1083,27 +1431,27 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label6 */
     /*  */
-    this-object:label6:Location = new System.Drawing.Point(239, 58).
+    this-object:label6:Location = new System.Drawing.Point(236, 58).
     this-object:label6:Name = "label6".
-    this-object:label6:Size = new System.Drawing.Size(126, 20).
+    this-object:label6:Size = new System.Drawing.Size(129, 20).
     this-object:label6:TabIndex = 5.
-    this-object:label6:Text = "Размер горловины,мм:".
+    this-object:label6:Text = "Параметры горловины:".
     this-object:label6:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label6:UseCompatibleTextRendering = true.
     /*  */
     /* label5 */
     /*  */
-    this-object:label5:Location = new System.Drawing.Point(246, 10).
+    this-object:label5:Location = new System.Drawing.Point(236, 10).
     this-object:label5:Name = "label5".
-    this-object:label5:Size = new System.Drawing.Size(120, 20).
+    this-object:label5:Size = new System.Drawing.Size(130, 20).
     this-object:label5:TabIndex = 6.
-    this-object:label5:Text = "Температура по ТТН:".
+    this-object:label5:Text = "Температура по ТТН,C:".
     this-object:label5:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label5:UseCompatibleTextRendering = true.
     /*  */
     /* label4 */
     /*  */
-    this-object:label4:Location = new System.Drawing.Point(28, 34).
+    this-object:label4:Location = new System.Drawing.Point(23, 34).
     this-object:label4:Name = "label4".
     this-object:label4:Size = new System.Drawing.Size(106, 20).
     this-object:label4:TabIndex = 7.
@@ -1123,7 +1471,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label2 */
     /*  */
-    this-object:label2:Location = new System.Drawing.Point(9, 58).
+    this-object:label2:Location = new System.Drawing.Point(4, 58).
     this-object:label2:Name = "label2".
     this-object:label2:Size = new System.Drawing.Size(126, 20).
     this-object:label2:TabIndex = 9.
@@ -1133,31 +1481,22 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label1 */
     /*  */
-    this-object:label1:Location = new System.Drawing.Point(245, 34).
+    this-object:label1:Location = new System.Drawing.Point(225, 34).
     this-object:label1:Name = "label1".
-    this-object:label1:Size = new System.Drawing.Size(120, 20).
+    this-object:label1:Size = new System.Drawing.Size(140, 20).
     this-object:label1:TabIndex = 10.
-    this-object:label1:Text = "Плотность по док.:".
+    this-object:label1:Text = "Плотность по док.,г/см3:".
     this-object:label1:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label1:UseCompatibleTextRendering = true.
     /*  */
     /* maskedTextBoxCliQnty */
     /*  */
     this-object:maskedTextBoxCliQnty:ForeColor = System.Drawing.Color:Red.
-    this-object:maskedTextBoxCliQnty:Location = new System.Drawing.Point(136, 34).
+    this-object:maskedTextBoxCliQnty:Location = new System.Drawing.Point(131, 34).
     this-object:maskedTextBoxCliQnty:Name = "maskedTextBoxCliQnty".
     this-object:maskedTextBoxCliQnty:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxCliQnty:TabIndex = 4.
     this-object:maskedTextBoxCliQnty:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
-    /*  */
-    /* maskedTextBoxDiameter */
-    /*  */
-    this-object:maskedTextBoxDiameter:ForeColor = System.Drawing.Color:Red.
-    this-object:maskedTextBoxDiameter:Location = new System.Drawing.Point(367, 58).
-    this-object:maskedTextBoxDiameter:Name = "maskedTextBoxDiameter".
-    this-object:maskedTextBoxDiameter:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxDiameter:TabIndex = 8.
-    this-object:maskedTextBoxDiameter:Leave:Subscribe(this-object:calc-weight-vol).
     /*  */
     /* maskedTextBoxDocQnty */
     /*  */
@@ -1170,7 +1509,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxCarVol */
     /*  */
     this-object:maskedTextBoxCarVol:ForeColor = System.Drawing.Color:Red.
-    this-object:maskedTextBoxCarVol:Location = new System.Drawing.Point(136, 58).
+    this-object:maskedTextBoxCarVol:Location = new System.Drawing.Point(131, 58).
     this-object:maskedTextBoxCarVol:Name = "maskedTextBoxCarVol".
     this-object:maskedTextBoxCarVol:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxCarVol:TabIndex = 7.
@@ -1207,9 +1546,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox7:Controls:Add(this-object:buttonPlSi).
     this-object:groupBox7:Controls:Add(this-object:maskedTextBoxPlaceSi).
     this-object:groupBox7:Controls:Add(this-object:label26).
-    this-object:groupBox7:Location = new System.Drawing.Point(10, 402).
+    this-object:groupBox7:Location = new System.Drawing.Point(10, 399).
     this-object:groupBox7:Name = "groupBox7".
-    this-object:groupBox7:Size = new System.Drawing.Size(682, 97).
+    this-object:groupBox7:Size = new System.Drawing.Size(682, 70).
     this-object:groupBox7:TabIndex = 3.
     this-object:groupBox7:TabStop = false.
     this-object:groupBox7:UseCompatibleTextRendering = true.
@@ -1218,7 +1557,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     this-object:textBoxPlSiName:Enabled = false.
     this-object:textBoxPlSiName:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:textBoxPlSiName:Location = new System.Drawing.Point(255, 17).
+    this-object:textBoxPlSiName:Location = new System.Drawing.Point(243, 17).
     this-object:textBoxPlSiName:Name = "textBoxPlSiName".
     this-object:textBoxPlSiName:Size = new System.Drawing.Size(265, 20).
     this-object:textBoxPlSiName:TabIndex = 0.
@@ -1226,14 +1565,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* dateTimePickerDatePovPlotn */
     /*  */
     this-object:dateTimePickerDatePovPlotn:Format = System.Windows.Forms.DateTimePickerFormat:Short.
-    this-object:dateTimePickerDatePovPlotn:Location = new System.Drawing.Point(148, 69).
+    this-object:dateTimePickerDatePovPlotn:Location = new System.Drawing.Point(370, 43).
     this-object:dateTimePickerDatePovPlotn:Name = "dateTimePickerDatePovPlotn".
     this-object:dateTimePickerDatePovPlotn:Size = new System.Drawing.Size(81, 20).
     this-object:dateTimePickerDatePovPlotn:TabIndex = 28.
     /*  */
     /* buttonCopy */
     /*  */
-    this-object:buttonCopy:Location = new System.Drawing.Point(595, 30).
+    this-object:buttonCopy:Location = new System.Drawing.Point(596, 14).
     this-object:buttonCopy:Name = "buttonCopy".
     this-object:buttonCopy:Size = new System.Drawing.Size(75, 23).
     this-object:buttonCopy:TabIndex = 32.
@@ -1244,26 +1583,26 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label38 */
     /*  */
-    this-object:label38:Location = new System.Drawing.Point(271, 68).
+    this-object:label38:Location = new System.Drawing.Point(455, 42).
     this-object:label38:Name = "label38".
-    this-object:label38:Size = new System.Drawing.Size(143, 20).
+    this-object:label38:Size = new System.Drawing.Size(134, 20).
     this-object:label38:TabIndex = 33.
-    this-object:label38:Text = "Паспорт полтномера №:".
+    this-object:label38:Text = "Паспорт ср. изм. №:".
     this-object:label38:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label38:UseCompatibleTextRendering = true.
     /*  */
     /* maskedTextBoxPassportPlotn */
     /*  */
-    this-object:maskedTextBoxPassportPlotn:Location = new System.Drawing.Point(420, 69).
+    this-object:maskedTextBoxPassportPlotn:Location = new System.Drawing.Point(589, 42).
     this-object:maskedTextBoxPassportPlotn:Name = "maskedTextBoxPassportPlotn".
-    this-object:maskedTextBoxPassportPlotn:Size = new System.Drawing.Size(100, 20).
+    this-object:maskedTextBoxPassportPlotn:Size = new System.Drawing.Size(81, 20).
     this-object:maskedTextBoxPassportPlotn:TabIndex = 29.
     /*  */
     /* label37 */
     /*  */
-    this-object:label37:Location = new System.Drawing.Point(58, 69).
+    this-object:label37:Location = new System.Drawing.Point(286, 43).
     this-object:label37:Name = "label37".
-    this-object:label37:Size = new System.Drawing.Size(86, 20).
+    this-object:label37:Size = new System.Drawing.Size(80, 20).
     this-object:label37:TabIndex = 34.
     this-object:label37:Text = "Дата поверки:".
     this-object:label37:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
@@ -1273,7 +1612,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     this-object:label36:Location = new System.Drawing.Point(9, 43).
     this-object:label36:Name = "label36".
-    this-object:label36:Size = new System.Drawing.Size(135, 20).
+    this-object:label36:Size = new System.Drawing.Size(42, 20).
     this-object:label36:TabIndex = 35.
     this-object:label36:Text = "Номер:".
     this-object:label36:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
@@ -1281,14 +1620,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxNumPlot */
     /*  */
-    this-object:maskedTextBoxNumPlot:Location = new System.Drawing.Point(148, 43).
+    this-object:maskedTextBoxNumPlot:Location = new System.Drawing.Point(51, 43).
     this-object:maskedTextBoxNumPlot:Name = "maskedTextBoxNumPlot".
-    this-object:maskedTextBoxNumPlot:Size = new System.Drawing.Size(372, 20).
+    this-object:maskedTextBoxNumPlot:Size = new System.Drawing.Size(229, 20).
     this-object:maskedTextBoxNumPlot:TabIndex = 27.
     /*  */
     /* buttonPlSi */
     /*  */
-    this-object:buttonPlSi:Location = new System.Drawing.Point(191, 16).
+    this-object:buttonPlSi:Location = new System.Drawing.Point(179, 16).
     this-object:buttonPlSi:Name = "buttonPlSi".
     this-object:buttonPlSi:Size = new System.Drawing.Size(57, 23).
     this-object:buttonPlSi:TabIndex = 26.
@@ -1300,7 +1639,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxPlaceSi */
     /*  */
     this-object:maskedTextBoxPlaceSi:ForeColor = System.Drawing.Color:Red.
-    this-object:maskedTextBoxPlaceSi:Location = new System.Drawing.Point(148, 17).
+    this-object:maskedTextBoxPlaceSi:Location = new System.Drawing.Point(136, 17).
     this-object:maskedTextBoxPlaceSi:Name = "maskedTextBoxPlaceSi".
     this-object:maskedTextBoxPlaceSi:Size = new System.Drawing.Size(37, 20).
     this-object:maskedTextBoxPlaceSi:TabIndex = 25.
@@ -1310,13 +1649,104 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     this-object:label26:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:label26:ForeColor = System.Drawing.Color:Red.
-    this-object:label26:Location = new System.Drawing.Point(7, 16).
+    this-object:label26:Location = new System.Drawing.Point(9, 13).
     this-object:label26:Name = "label26".
-    this-object:label26:Size = new System.Drawing.Size(135, 20).
+    this-object:label26:Size = new System.Drawing.Size(120, 27).
     this-object:label26:TabIndex = 36.
-    this-object:label26:Text = "Средство измерения:".
+    this-object:label26:Text = "Средство измерения плотности:".
     this-object:label26:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label26:UseCompatibleTextRendering = true.
+    /*  */
+    /* label31 */
+    /*  */
+    this-object:label31:Location = new System.Drawing.Point(95, 9).
+    this-object:label31:Name = "label31".
+    this-object:label31:Size = new System.Drawing.Size(105, 20).
+    this-object:label31:TabIndex = 45.
+    this-object:label31:Text = "№ печати (пробы):".
+    this-object:label31:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label31:UseCompatibleTextRendering = true.
+    /*  */
+    /* TimeProb */
+    /*  */
+    this-object:TimeProb:CustomFormat = "".
+    this-object:TimeProb:Format = System.Windows.Forms.DateTimePickerFormat:Time.
+    this-object:TimeProb:Location = new System.Drawing.Point(488, 9).
+    this-object:TimeProb:Name = "TimeProb".
+    this-object:TimeProb:ShowUpDown = true.
+    this-object:TimeProb:Size = new System.Drawing.Size(50, 20).
+    this-object:TimeProb:TabIndex = 43.
+    /*  */
+    /* label32 */
+    /*  */
+    this-object:label32:Location = new System.Drawing.Point(401, 8).
+    this-object:label32:Name = "label32".
+    this-object:label32:Size = new System.Drawing.Size(85, 20).
+    this-object:label32:TabIndex = 44.
+    this-object:label32:Text = "Время отбора:".
+    this-object:label32:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label32:UseCompatibleTextRendering = true.
+    /*  */
+    /* DateTimeDateProb */
+    /*  */
+    this-object:DateTimeDateProb:Format = System.Windows.Forms.DateTimePickerFormat:Short.
+    this-object:DateTimeDateProb:Location = new System.Drawing.Point(315, 9).
+    this-object:DateTimeDateProb:Name = "DateTimeDateProb".
+    this-object:DateTimeDateProb:Size = new System.Drawing.Size(81, 20).
+    this-object:DateTimeDateProb:TabIndex = 41.
+    /*  */
+    /* label33 */
+    /*  */
+    this-object:label33:Location = new System.Drawing.Point(236, 9).
+    this-object:label33:Name = "label33".
+    this-object:label33:Size = new System.Drawing.Size(75, 20).
+    this-object:label33:TabIndex = 43.
+    this-object:label33:Text = "Дата отбора:".
+    this-object:label33:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label33:UseCompatibleTextRendering = true.
+    /*  */
+    /* maskedTextBoxKolProb */
+    /*  */
+    this-object:maskedTextBoxKolProb:Location = new System.Drawing.Point(634, 8).
+    this-object:maskedTextBoxKolProb:Name = "maskedTextBoxKolProb".
+    this-object:maskedTextBoxKolProb:Size = new System.Drawing.Size(36, 20).
+    this-object:maskedTextBoxKolProb:TabIndex = 42.
+    this-object:maskedTextBoxKolProb:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_2_2).
+    /*  */
+    /* label34 */
+    /*  */
+    this-object:label34:Location = new System.Drawing.Point(538, 8).
+    this-object:label34:Name = "label34".
+    this-object:label34:Size = new System.Drawing.Size(93, 20).
+    this-object:label34:TabIndex = 42.
+    this-object:label34:Text = "Кол-во пробы,л:".
+    this-object:label34:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label34:UseCompatibleTextRendering = true.
+    /*  */
+    /* maskedTextBoxTests */
+    /*  */
+    this-object:maskedTextBoxTests:Location = new System.Drawing.Point(68, 10).
+    this-object:maskedTextBoxTests:Name = "maskedTextBoxTests".
+    this-object:maskedTextBoxTests:Size = new System.Drawing.Size(23, 20).
+    this-object:maskedTextBoxTests:TabIndex = 39.
+    this-object:maskedTextBoxTests:KeyPress:Subscribe(this-object:KeyPressMaskTBInt).
+    /*  */
+    /* label35 */
+    /*  */
+    this-object:label35:Location = new System.Drawing.Point(12, 9).
+    this-object:label35:Name = "label35".
+    this-object:label35:Size = new System.Drawing.Size(55, 20).
+    this-object:label35:TabIndex = 41.
+    this-object:label35:Text = "№ пробы:".
+    this-object:label35:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label35:UseCompatibleTextRendering = true.
+    /*  */
+    /* maskedTextBoxNumPrintProb */
+    /*  */
+    this-object:maskedTextBoxNumPrintProb:Location = new System.Drawing.Point(202, 10).
+    this-object:maskedTextBoxNumPrintProb:Name = "maskedTextBoxNumPrintProb".
+    this-object:maskedTextBoxNumPrintProb:Size = new System.Drawing.Size(29, 20).
+    this-object:maskedTextBoxNumPrintProb:TabIndex = 40.
     /*  */
     /* groupBox6 */
     /*  */
@@ -1330,190 +1760,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox6:Controls:Add(this-object:label32).
     this-object:groupBox6:Controls:Add(this-object:TimeProb).
     this-object:groupBox6:Controls:Add(this-object:label31).
-    this-object:groupBox6:Location = new System.Drawing.Point(10, 644).
+    this-object:groupBox6:Location = new System.Drawing.Point(10, 672).
     this-object:groupBox6:Name = "groupBox6".
-    this-object:groupBox6:Size = new System.Drawing.Size(682, 68).
+    this-object:groupBox6:Size = new System.Drawing.Size(682, 33).
     this-object:groupBox6:TabIndex = 6.
     this-object:groupBox6:TabStop = false.
     this-object:groupBox6:UseCompatibleTextRendering = true.
-    /*  */
-    /* maskedTextBoxNumPrintProb */
-    /*  */
-    this-object:maskedTextBoxNumPrintProb:Location = new System.Drawing.Point(391, 14).
-    this-object:maskedTextBoxNumPrintProb:Name = "maskedTextBoxNumPrintProb".
-    this-object:maskedTextBoxNumPrintProb:Size = new System.Drawing.Size(41, 20).
-    this-object:maskedTextBoxNumPrintProb:TabIndex = 40.
-    /*  */
-    /* label35 */
-    /*  */
-    this-object:label35:Location = new System.Drawing.Point(9, 14).
-    this-object:label35:Name = "label35".
-    this-object:label35:Size = new System.Drawing.Size(135, 20).
-    this-object:label35:TabIndex = 41.
-    this-object:label35:Text = "Номер пробы:".
-    this-object:label35:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label35:UseCompatibleTextRendering = true.
-    /*  */
-    /* maskedTextBoxTests */
-    /*  */
-    this-object:maskedTextBoxTests:Location = new System.Drawing.Point(149, 15).
-    this-object:maskedTextBoxTests:Name = "maskedTextBoxTests".
-    this-object:maskedTextBoxTests:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxTests:TabIndex = 39.
-    this-object:maskedTextBoxTests:KeyPress:Subscribe(this-object:KeyPressMaskTBInt).
-    /*  */
-    /* label34 */
-    /*  */
-    this-object:label34:Location = new System.Drawing.Point(9, 39).
-    this-object:label34:Name = "label34".
-    this-object:label34:Size = new System.Drawing.Size(135, 20).
-    this-object:label34:TabIndex = 42.
-    this-object:label34:Text = "Кол-во пробы,л:".
-    this-object:label34:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label34:UseCompatibleTextRendering = true.
-    /*  */
-    /* maskedTextBoxKolProb */
-    /*  */
-    this-object:maskedTextBoxKolProb:Location = new System.Drawing.Point(149, 40).
-    this-object:maskedTextBoxKolProb:Name = "maskedTextBoxKolProb".
-    this-object:maskedTextBoxKolProb:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxKolProb:TabIndex = 42.
-    this-object:maskedTextBoxKolProb:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_2_2).
-    /*  */
-    /* label33 */
-    /*  */
-    this-object:label33:Location = new System.Drawing.Point(458, 12).
-    this-object:label33:Name = "label33".
-    this-object:label33:Size = new System.Drawing.Size(125, 20).
-    this-object:label33:TabIndex = 43.
-    this-object:label33:Text = "Дата отбора пробы:".
-    this-object:label33:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label33:UseCompatibleTextRendering = true.
-    /*  */
-    /* DateTimeDateProb */
-    /*  */
-    this-object:DateTimeDateProb:Format = System.Windows.Forms.DateTimePickerFormat:Short.
-    this-object:DateTimeDateProb:Location = new System.Drawing.Point(589, 12).
-    this-object:DateTimeDateProb:Name = "DateTimeDateProb".
-    this-object:DateTimeDateProb:Size = new System.Drawing.Size(81, 20).
-    this-object:DateTimeDateProb:TabIndex = 41.
-    /*  */
-    /* label32 */
-    /*  */
-    this-object:label32:Location = new System.Drawing.Point(463, 40).
-    this-object:label32:Name = "label32".
-    this-object:label32:Size = new System.Drawing.Size(120, 20).
-    this-object:label32:TabIndex = 44.
-    this-object:label32:Text = "Время отбора пробы:".
-    this-object:label32:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label32:UseCompatibleTextRendering = true.
-    /*  */
-    /* TimeProb */
-    /*  */
-    this-object:TimeProb:CustomFormat = "".
-    this-object:TimeProb:Format = System.Windows.Forms.DateTimePickerFormat:Time.
-    this-object:TimeProb:Location = new System.Drawing.Point(589, 39).
-    this-object:TimeProb:Name = "TimeProb".
-    this-object:TimeProb:ShowUpDown = true.
-    this-object:TimeProb:Size = new System.Drawing.Size(50, 20).
-    this-object:TimeProb:TabIndex = 43.
-    /*  */
-    /* label31 */
-    /*  */
-    this-object:label31:Location = new System.Drawing.Point(255, 14).
-    this-object:label31:Name = "label31".
-    this-object:label31:Size = new System.Drawing.Size(130, 20).
-    this-object:label31:TabIndex = 45.
-    this-object:label31:Text = "Номер печати (пробы):".
-    this-object:label31:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label31:UseCompatibleTextRendering = true.
-    /*  */
-    /* groupBox5 */
-    /*  */
-    this-object:groupBox5:Controls:Add(this-object:dateTimePickerTimeEnd).
-    this-object:groupBox5:Controls:Add(this-object:dateTimePickerTimeStart).
-    this-object:groupBox5:Controls:Add(this-object:dateTimePickerDateEnd).
-    this-object:groupBox5:Controls:Add(this-object:dateTimePickerDateStart).
-    this-object:groupBox5:Controls:Add(this-object:label30).
-    this-object:groupBox5:Controls:Add(this-object:label29).
-    this-object:groupBox5:Controls:Add(this-object:label28).
-    this-object:groupBox5:Controls:Add(this-object:label27).
-    this-object:groupBox5:Location = new System.Drawing.Point(10, 574).
-    this-object:groupBox5:Name = "groupBox5".
-    this-object:groupBox5:Size = new System.Drawing.Size(682, 64).
-    this-object:groupBox5:TabIndex = 5.
-    this-object:groupBox5:TabStop = false.
-    this-object:groupBox5:UseCompatibleTextRendering = true.
-    /*  */
-    /* dateTimePickerTimeEnd */
-    /*  */
-    this-object:dateTimePickerTimeEnd:CustomFormat = "".
-    this-object:dateTimePickerTimeEnd:Format = System.Windows.Forms.DateTimePickerFormat:Time.
-    this-object:dateTimePickerTimeEnd:Location = new System.Drawing.Point(373, 37).
-    this-object:dateTimePickerTimeEnd:Name = "dateTimePickerTimeEnd".
-    this-object:dateTimePickerTimeEnd:ShowUpDown = true.
-    this-object:dateTimePickerTimeEnd:Size = new System.Drawing.Size(50, 20).
-    this-object:dateTimePickerTimeEnd:TabIndex = 38.
-    this-object:dateTimePickerTimeEnd:Enabled = false.
-    /*  */
-    /* dateTimePickerTimeStart */
-    /*  */
-    this-object:dateTimePickerTimeStart:CustomFormat = "".
-    this-object:dateTimePickerTimeStart:Format = System.Windows.Forms.DateTimePickerFormat:Time.
-    this-object:dateTimePickerTimeStart:Location = new System.Drawing.Point(373, 10).
-    this-object:dateTimePickerTimeStart:Name = "dateTimePickerTimeStart".
-    this-object:dateTimePickerTimeStart:ShowUpDown = true.
-    this-object:dateTimePickerTimeStart:Size = new System.Drawing.Size(50, 20).
-    this-object:dateTimePickerTimeStart:TabIndex = 36.
-    this-object:dateTimePickerTimeStart:Enabled = false.
-    /*  */
-    /* dateTimePickerDateEnd */
-    /*  */
-    this-object:dateTimePickerDateEnd:Format = System.Windows.Forms.DateTimePickerFormat:Short.
-    this-object:dateTimePickerDateEnd:Location = new System.Drawing.Point(150, 37).
-    this-object:dateTimePickerDateEnd:Name = "dateTimePickerDateEnd".
-    this-object:dateTimePickerDateEnd:Size = new System.Drawing.Size(81, 20).
-    this-object:dateTimePickerDateEnd:TabIndex = 37.
-    this-object:dateTimePickerDateEnd:Enabled = false.
-    /*  */
-    /* dateTimePickerDateStart */
-    /*  */
-    this-object:dateTimePickerDateStart:Format = System.Windows.Forms.DateTimePickerFormat:Short.
-    this-object:dateTimePickerDateStart:Location = new System.Drawing.Point(150, 10).
-    this-object:dateTimePickerDateStart:Name = "dateTimePickerDateStart".
-    this-object:dateTimePickerDateStart:Size = new System.Drawing.Size(81, 20).
-    this-object:dateTimePickerDateStart:TabIndex = 35.
-    this-object:dateTimePickerDateStart:Enabled = false.
-    /*  */
-    /* label30 */
-    /*  */
-    this-object:label30:Location = new System.Drawing.Point(255, 37).
-    this-object:label30:Name = "label30".
-    this-object:label30:Size = new System.Drawing.Size(112, 20).
-    this-object:label30:TabIndex = 39.
-    this-object:label30:Text = "Время конца слива:".
-    this-object:label30:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label30:UseCompatibleTextRendering = true.
-    /*  */
-    /* label29 */
-    /*  */
-    this-object:label29:Location = new System.Drawing.Point(249, 10).
-    this-object:label29:Name = "label29".
-    this-object:label29:Size = new System.Drawing.Size(118, 20).
-    this-object:label29:TabIndex = 40.
-    this-object:label29:Text = "Время начала слива:".
-    this-object:label29:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label29:UseCompatibleTextRendering = true.
-    /*  */
-    /* label28 */
-    /*  */
-    this-object:label28:Location = new System.Drawing.Point(8, 36).
-    this-object:label28:Name = "label28".
-    this-object:label28:Size = new System.Drawing.Size(135, 20).
-    this-object:label28:TabIndex = 41.
-    this-object:label28:Text = "Дата конца слива:".
-    this-object:label28:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label28:UseCompatibleTextRendering = true.
     /*  */
     /* label27 */
     /*  */
@@ -1525,67 +1777,124 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label27:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label27:UseCompatibleTextRendering = true.
     /*  */
-    /* groupBox4 */
+    /* label28 */
     /*  */
-    this-object:groupBox4:Controls:Add(this-object:buttonCalcWeight).
-    this-object:groupBox4:Controls:Add(this-object:label25).
-    this-object:groupBox4:Controls:Add(this-object:label24).
-    this-object:groupBox4:Controls:Add(this-object:label23).
-    this-object:groupBox4:Controls:Add(this-object:label22).
-    this-object:groupBox4:Controls:Add(this-object:maskedTextBoxTankDensityPomi).
-    this-object:groupBox4:Controls:Add(this-object:maskedTextBoxTankVolPomi).
-    this-object:groupBox4:Controls:Add(this-object:maskedTextBoxTankWeight).
-    this-object:groupBox4:Controls:Add(this-object:maskedTextBoxAccWeight).
-    this-object:groupBox4:Location = new System.Drawing.Point(10, 505).
-    this-object:groupBox4:Name = "groupBox4".
-    this-object:groupBox4:Size = new System.Drawing.Size(682, 63).
-    this-object:groupBox4:TabIndex = 4.
-    this-object:groupBox4:TabStop = false.
-    this-object:groupBox4:UseCompatibleTextRendering = true.
+    this-object:label28:Location = new System.Drawing.Point(8, 36).
+    this-object:label28:Name = "label28".
+    this-object:label28:Size = new System.Drawing.Size(135, 20).
+    this-object:label28:TabIndex = 41.
+    this-object:label28:Text = "Дата конца слива:".
+    this-object:label28:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label28:UseCompatibleTextRendering = true.
     /*  */
-    /* buttonCalcWeight */
+    /* label29 */
     /*  */
-    this-object:buttonCalcWeight:Location = new System.Drawing.Point(595, 19).
-    this-object:buttonCalcWeight:Name = "buttonCalcWeight".
-    this-object:buttonCalcWeight:Size = new System.Drawing.Size(75, 23).
-    this-object:buttonCalcWeight:TabIndex = 34.
-    this-object:buttonCalcWeight:Text = "Рассчитать".
-    this-object:buttonCalcWeight:UseCompatibleTextRendering = true.
-    this-object:buttonCalcWeight:UseVisualStyleBackColor = true.
-    this-object:buttonCalcWeight:Click:Subscribe(this-object:buttonCalcWeight_Click).
+    this-object:label29:Location = new System.Drawing.Point(249, 10).
+    this-object:label29:Name = "label29".
+    this-object:label29:Size = new System.Drawing.Size(118, 20).
+    this-object:label29:TabIndex = 40.
+    this-object:label29:Text = "Время начала слива:".
+    this-object:label29:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label29:UseCompatibleTextRendering = true.
     /*  */
-    /* label25 */
+    /* label30 */
     /*  */
-    this-object:label25:ForeColor = System.Drawing.SystemColors:HotTrack.
-    this-object:label25:Location = new System.Drawing.Point(256, 8).
-    this-object:label25:Name = "label25".
-    this-object:label25:Size = new System.Drawing.Size(111, 20).
-    this-object:label25:TabIndex = 35.
-    this-object:label25:Text = "Масса топлива,кг:".
-    this-object:label25:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label25:UseCompatibleTextRendering = true.
+    this-object:label30:Location = new System.Drawing.Point(255, 37).
+    this-object:label30:Name = "label30".
+    this-object:label30:Size = new System.Drawing.Size(112, 20).
+    this-object:label30:TabIndex = 39.
+    this-object:label30:Text = "Время конца слива:".
+    this-object:label30:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label30:UseCompatibleTextRendering = true.
     /*  */
-    /* label24 */
+    /* dateTimePickerDateStart */
     /*  */
-    this-object:label24:ForeColor = System.Drawing.SystemColors:HotTrack.
-    this-object:label24:Location = new System.Drawing.Point(266, 33).
-    this-object:label24:Name = "label24".
-    this-object:label24:Size = new System.Drawing.Size(101, 20).
-    this-object:label24:TabIndex = 36.
-    this-object:label24:Text = "Погр.изм.массы:".
-    this-object:label24:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label24:UseCompatibleTextRendering = true.
+    this-object:dateTimePickerDateStart:Enabled = false.
+    this-object:dateTimePickerDateStart:Format = System.Windows.Forms.DateTimePickerFormat:Short.
+    this-object:dateTimePickerDateStart:Location = new System.Drawing.Point(150, 10).
+    this-object:dateTimePickerDateStart:Name = "dateTimePickerDateStart".
+    this-object:dateTimePickerDateStart:Size = new System.Drawing.Size(81, 20).
+    this-object:dateTimePickerDateStart:TabIndex = 35.
     /*  */
-    /* label23 */
+    /* dateTimePickerDateEnd */
     /*  */
-    this-object:label23:ForeColor = System.Drawing.SystemColors:HotTrack.
-    this-object:label23:Location = new System.Drawing.Point(9, 9).
-    this-object:label23:Name = "label23".
-    this-object:label23:Size = new System.Drawing.Size(135, 20).
-    this-object:label23:TabIndex = 37.
-    this-object:label23:Text = "Плотность приведенная:".
-    this-object:label23:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:label23:UseCompatibleTextRendering = true.
+    this-object:dateTimePickerDateEnd:Enabled = false.
+    this-object:dateTimePickerDateEnd:Format = System.Windows.Forms.DateTimePickerFormat:Short.
+    this-object:dateTimePickerDateEnd:Location = new System.Drawing.Point(150, 37).
+    this-object:dateTimePickerDateEnd:Name = "dateTimePickerDateEnd".
+    this-object:dateTimePickerDateEnd:Size = new System.Drawing.Size(81, 20).
+    this-object:dateTimePickerDateEnd:TabIndex = 37.
+    /*  */
+    /* dateTimePickerTimeStart */
+    /*  */
+    this-object:dateTimePickerTimeStart:CustomFormat = "".
+    this-object:dateTimePickerTimeStart:Enabled = false.
+    this-object:dateTimePickerTimeStart:Format = System.Windows.Forms.DateTimePickerFormat:Time.
+    this-object:dateTimePickerTimeStart:Location = new System.Drawing.Point(373, 10).
+    this-object:dateTimePickerTimeStart:Name = "dateTimePickerTimeStart".
+    this-object:dateTimePickerTimeStart:ShowUpDown = true.
+    this-object:dateTimePickerTimeStart:Size = new System.Drawing.Size(50, 20).
+    this-object:dateTimePickerTimeStart:TabIndex = 36.
+    /*  */
+    /* dateTimePickerTimeEnd */
+    /*  */
+    this-object:dateTimePickerTimeEnd:CustomFormat = "".
+    this-object:dateTimePickerTimeEnd:Enabled = false.
+    this-object:dateTimePickerTimeEnd:Format = System.Windows.Forms.DateTimePickerFormat:Time.
+    this-object:dateTimePickerTimeEnd:Location = new System.Drawing.Point(373, 37).
+    this-object:dateTimePickerTimeEnd:Name = "dateTimePickerTimeEnd".
+    this-object:dateTimePickerTimeEnd:ShowUpDown = true.
+    this-object:dateTimePickerTimeEnd:Size = new System.Drawing.Size(50, 20).
+    this-object:dateTimePickerTimeEnd:TabIndex = 38.
+    /*  */
+    /* groupBox5 */
+    /*  */
+    this-object:groupBox5:Controls:Add(this-object:dateTimePickerTimeEnd).
+    this-object:groupBox5:Controls:Add(this-object:dateTimePickerTimeStart).
+    this-object:groupBox5:Controls:Add(this-object:dateTimePickerDateEnd).
+    this-object:groupBox5:Controls:Add(this-object:dateTimePickerDateStart).
+    this-object:groupBox5:Controls:Add(this-object:label30).
+    this-object:groupBox5:Controls:Add(this-object:label29).
+    this-object:groupBox5:Controls:Add(this-object:label28).
+    this-object:groupBox5:Controls:Add(this-object:label27).
+    this-object:groupBox5:Location = new System.Drawing.Point(10, 612).
+    this-object:groupBox5:Name = "groupBox5".
+    this-object:groupBox5:Size = new System.Drawing.Size(682, 56).
+    this-object:groupBox5:TabIndex = 5.
+    this-object:groupBox5:TabStop = false.
+    this-object:groupBox5:UseCompatibleTextRendering = true.
+    /*  */
+    /* maskedTextBoxAccWeight */
+    /*  */
+    this-object:maskedTextBoxAccWeight:Location = new System.Drawing.Point(373, 35).
+    this-object:maskedTextBoxAccWeight:Name = "maskedTextBoxAccWeight".
+    this-object:maskedTextBoxAccWeight:Size = new System.Drawing.Size(100, 20).
+    this-object:maskedTextBoxAccWeight:TabIndex = 33.
+    this-object:maskedTextBoxAccWeight:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_1_2).
+    /*  */
+    /* maskedTextBoxTankWeight */
+    /*  */
+    this-object:maskedTextBoxTankWeight:ForeColor = System.Drawing.Color:Maroon.
+    this-object:maskedTextBoxTankWeight:Location = new System.Drawing.Point(373, 10).
+    this-object:maskedTextBoxTankWeight:Name = "maskedTextBoxTankWeight".
+    this-object:maskedTextBoxTankWeight:Size = new System.Drawing.Size(100, 20).
+    this-object:maskedTextBoxTankWeight:TabIndex = 31.
+    this-object:maskedTextBoxTankWeight:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_1).
+    /*  */
+    /* maskedTextBoxTankVolPomi */
+    /*  */
+    this-object:maskedTextBoxTankVolPomi:Location = new System.Drawing.Point(150, 34).
+    this-object:maskedTextBoxTankVolPomi:Name = "maskedTextBoxTankVolPomi".
+    this-object:maskedTextBoxTankVolPomi:Size = new System.Drawing.Size(100, 20).
+    this-object:maskedTextBoxTankVolPomi:TabIndex = 32.
+    this-object:maskedTextBoxTankVolPomi:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
+    /*  */
+    /* maskedTextBoxTankDensityPomi */
+    /*  */
+    this-object:maskedTextBoxTankDensityPomi:Location = new System.Drawing.Point(150, 9).
+    this-object:maskedTextBoxTankDensityPomi:Name = "maskedTextBoxTankDensityPomi".
+    this-object:maskedTextBoxTankDensityPomi:Size = new System.Drawing.Size(100, 20).
+    this-object:maskedTextBoxTankDensityPomi:TabIndex = 30.
     /*  */
     /* label22 */
     /*  */
@@ -1598,34 +1907,207 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label22:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label22:UseCompatibleTextRendering = true.
     /*  */
-    /* maskedTextBoxTankDensityPomi */
+    /* label23 */
     /*  */
-    this-object:maskedTextBoxTankDensityPomi:Location = new System.Drawing.Point(150, 9).
-    this-object:maskedTextBoxTankDensityPomi:Name = "maskedTextBoxTankDensityPomi".
-    this-object:maskedTextBoxTankDensityPomi:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxTankDensityPomi:TabIndex = 30.
+    this-object:label23:ForeColor = System.Drawing.SystemColors:HotTrack.
+    this-object:label23:Location = new System.Drawing.Point(-10, 15).
+    this-object:label23:Name = "label23".
+    this-object:label23:Size = new System.Drawing.Size(155, 20).
+    this-object:label23:TabIndex = 37.
+    this-object:label23:Text = "Плотность приведенная,г/см3:".
+    this-object:label23:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label23:UseCompatibleTextRendering = true.
     /*  */
-    /* maskedTextBoxTankVolPomi */
+    /* label24 */
     /*  */
-    this-object:maskedTextBoxTankVolPomi:Location = new System.Drawing.Point(150, 34).
-    this-object:maskedTextBoxTankVolPomi:Name = "maskedTextBoxTankVolPomi".
-    this-object:maskedTextBoxTankVolPomi:Size = new System.Drawing.Size(100, 20).
-    this-object:maskedTextBoxTankVolPomi:TabIndex = 32.
-    this-object:maskedTextBoxTankVolPomi:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
+    this-object:label24:ForeColor = System.Drawing.SystemColors:HotTrack.
+    this-object:label24:Location = new System.Drawing.Point(266, 33).
+    this-object:label24:Name = "label24".
+    this-object:label24:Size = new System.Drawing.Size(101, 20).
+    this-object:label24:TabIndex = 36.
+    this-object:label24:Text = "Погр.изм.массы:".
+    this-object:label24:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label24:UseCompatibleTextRendering = true.
+    /*  */
+    /* label25 */
+    /*  */
+    this-object:label25:ForeColor = System.Drawing.SystemColors:HotTrack.
+    this-object:label25:Location = new System.Drawing.Point(256, 8).
+    this-object:label25:Name = "label25".
+    this-object:label25:Size = new System.Drawing.Size(111, 20).
+    this-object:label25:TabIndex = 35.
+    this-object:label25:Text = "Масса топлива,кг:".
+    this-object:label25:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label25:UseCompatibleTextRendering = true.
+    /*  */
+    /* buttonCalcWeight */
+    /*  */
+    this-object:buttonCalcWeight:Location = new System.Drawing.Point(595, 19).
+    this-object:buttonCalcWeight:Name = "buttonCalcWeight".
+    this-object:buttonCalcWeight:Size = new System.Drawing.Size(75, 23).
+    this-object:buttonCalcWeight:TabIndex = 34.
+    this-object:buttonCalcWeight:Text = "Рассчитать".
+    this-object:buttonCalcWeight:UseCompatibleTextRendering = true.
+    this-object:buttonCalcWeight:UseVisualStyleBackColor = true.
+    this-object:buttonCalcWeight:Click:Subscribe(this-object:buttonCalcWeight_Click).
+    /*  */
+    /* groupBox4 */
+    /*  */
+    this-object:groupBox4:Controls:Add(this-object:buttonCalcWeight).
+    this-object:groupBox4:Controls:Add(this-object:label25).
+    this-object:groupBox4:Controls:Add(this-object:label24).
+    this-object:groupBox4:Controls:Add(this-object:label23).
+    this-object:groupBox4:Controls:Add(this-object:label22).
+    this-object:groupBox4:Controls:Add(this-object:maskedTextBoxTankDensityPomi).
+    this-object:groupBox4:Controls:Add(this-object:maskedTextBoxTankVolPomi).
+    this-object:groupBox4:Controls:Add(this-object:maskedTextBoxTankWeight).
+    this-object:groupBox4:Controls:Add(this-object:maskedTextBoxAccWeight).
+    this-object:groupBox4:Location = new System.Drawing.Point(10, 546).
+    this-object:groupBox4:Name = "groupBox4".
+    this-object:groupBox4:Size = new System.Drawing.Size(682, 63).
+    this-object:groupBox4:TabIndex = 4.
+    this-object:groupBox4:TabStop = false.
+    this-object:groupBox4:UseCompatibleTextRendering = true.
+    this-object:groupBox4:Enter:Subscribe(this-object:groupBox4_Enter).
+    /*  */
+    /* groupBox8 */
+    /*  */
+    this-object:groupBox8:Controls:Add(this-object:textBoxPlSiNameTemp).
+    this-object:groupBox8:Controls:Add(this-object:dateTimePickerDatePovTemp).
+    this-object:groupBox8:Controls:Add(this-object:buttonCopyPSTemp).
+    this-object:groupBox8:Controls:Add(this-object:label40).
+    this-object:groupBox8:Controls:Add(this-object:maskedTextBoxPassportTemp).
+    this-object:groupBox8:Controls:Add(this-object:label41).
+    this-object:groupBox8:Controls:Add(this-object:label42).
+    this-object:groupBox8:Controls:Add(this-object:maskedTextBoxNumTemp).
+    this-object:groupBox8:Controls:Add(this-object:buttonPlSiTemp).
+    this-object:groupBox8:Controls:Add(this-object:maskedTextBoxPlaceSiTemp).
+    this-object:groupBox8:Controls:Add(this-object:label43).
+    this-object:groupBox8:Location = new System.Drawing.Point(10, 473).
+    this-object:groupBox8:Name = "groupBox8".
+    this-object:groupBox8:Size = new System.Drawing.Size(682, 70).
+    this-object:groupBox8:TabIndex = 37.
+    this-object:groupBox8:TabStop = false.
+    this-object:groupBox8:UseCompatibleTextRendering = true.
+    /*  */
+    /* textBoxPlSiNameTemp */
+    /*  */
+    this-object:textBoxPlSiNameTemp:Enabled = false.
+    this-object:textBoxPlSiNameTemp:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:textBoxPlSiNameTemp:Location = new System.Drawing.Point(243, 17).
+    this-object:textBoxPlSiNameTemp:Name = "textBoxPlSiNameTemp".
+    this-object:textBoxPlSiNameTemp:Size = new System.Drawing.Size(265, 20).
+    this-object:textBoxPlSiNameTemp:TabIndex = 0.
+    /*  */
+    /* dateTimePickerDatePovTemp */
+    /*  */
+    this-object:dateTimePickerDatePovTemp:Format = System.Windows.Forms.DateTimePickerFormat:Short.
+    this-object:dateTimePickerDatePovTemp:Location = new System.Drawing.Point(370, 40).
+    this-object:dateTimePickerDatePovTemp:Name = "dateTimePickerDatePovTemp".
+    this-object:dateTimePickerDatePovTemp:Size = new System.Drawing.Size(81, 20).
+    this-object:dateTimePickerDatePovTemp:TabIndex = 28.
+    /*  */
+    /* buttonCopyPSTemp */
+    /*  */
+    this-object:buttonCopyPSTemp:Location = new System.Drawing.Point(596, 15).
+    this-object:buttonCopyPSTemp:Name = "buttonCopyPSTemp".
+    this-object:buttonCopyPSTemp:Size = new System.Drawing.Size(75, 23).
+    this-object:buttonCopyPSTemp:TabIndex = 32.
+    this-object:buttonCopyPSTemp:Text = "Копировать".
+    this-object:buttonCopyPSTemp:UseCompatibleTextRendering = true.
+    this-object:buttonCopyPSTemp:UseVisualStyleBackColor = true.
+    this-object:buttonCopyPSTemp:Click:Subscribe(this-object:buttonCopyPSTemp_Click).
+    /*  */
+    /* label40 */
+    /*  */
+    this-object:label40:Location = new System.Drawing.Point(454, 42).
+    this-object:label40:Name = "label40".
+    this-object:label40:Size = new System.Drawing.Size(134, 20).
+    this-object:label40:TabIndex = 33.
+    this-object:label40:Text = "Паспорт ср. изм. №:".
+    this-object:label40:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label40:UseCompatibleTextRendering = true.
+    /*  */
+    /* maskedTextBoxPassportTemp */
+    /*  */
+    this-object:maskedTextBoxPassportTemp:Location = new System.Drawing.Point(589, 43).
+    this-object:maskedTextBoxPassportTemp:Name = "maskedTextBoxPassportTemp".
+    this-object:maskedTextBoxPassportTemp:Size = new System.Drawing.Size(81, 20).
+    this-object:maskedTextBoxPassportTemp:TabIndex = 29.
+    /*  */
+    /* label41 */
+    /*  */
+    this-object:label41:Location = new System.Drawing.Point(286, 41).
+    this-object:label41:Name = "label41".
+    this-object:label41:Size = new System.Drawing.Size(80, 20).
+    this-object:label41:TabIndex = 34.
+    this-object:label41:Text = "Дата поверки:".
+    this-object:label41:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label41:UseCompatibleTextRendering = true.
+    /*  */
+    /* label42 */
+    /*  */
+    this-object:label42:Location = new System.Drawing.Point(9, 43).
+    this-object:label42:Name = "label42".
+    this-object:label42:Size = new System.Drawing.Size(42, 20).
+    this-object:label42:TabIndex = 35.
+    this-object:label42:Text = "Номер:".
+    this-object:label42:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label42:UseCompatibleTextRendering = true.
+    /*  */
+    /* maskedTextBoxNumTemp */
+    /*  */
+    this-object:maskedTextBoxNumTemp:Location = new System.Drawing.Point(51, 43).
+    this-object:maskedTextBoxNumTemp:Name = "maskedTextBoxNumTemp".
+    this-object:maskedTextBoxNumTemp:Size = new System.Drawing.Size(229, 20).
+    this-object:maskedTextBoxNumTemp:TabIndex = 27.
+    /*  */
+    /* buttonPlSiTemp */
+    /*  */
+    this-object:buttonPlSiTemp:Location = new System.Drawing.Point(179, 16).
+    this-object:buttonPlSiTemp:Name = "buttonPlSiTemp".
+    this-object:buttonPlSiTemp:Size = new System.Drawing.Size(57, 23).
+    this-object:buttonPlSiTemp:TabIndex = 26.
+    this-object:buttonPlSiTemp:Text = "Выбор".
+    this-object:buttonPlSiTemp:UseCompatibleTextRendering = true.
+    this-object:buttonPlSiTemp:UseVisualStyleBackColor = true.
+    this-object:buttonPlSiTemp:Click:Subscribe(this-object:buttonPlSiTemp_Click).
+    /*  */
+    /* maskedTextBoxPlaceSiTemp */
+    /*  */
+    this-object:maskedTextBoxPlaceSiTemp:ForeColor = System.Drawing.Color:Red.
+    this-object:maskedTextBoxPlaceSiTemp:Location = new System.Drawing.Point(136, 17).
+    this-object:maskedTextBoxPlaceSiTemp:Name = "maskedTextBoxPlaceSiTemp".
+    this-object:maskedTextBoxPlaceSiTemp:Size = new System.Drawing.Size(37, 20).
+    this-object:maskedTextBoxPlaceSiTemp:TabIndex = 25.
+    this-object:maskedTextBoxPlaceSiTemp:Leave:Subscribe(this-object:maskedTextBoxPlaceSiTemp_Leave).
+    /*  */
+    /* label43 */
+    /*  */
+    this-object:label43:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label43:ForeColor = System.Drawing.Color:Red.
+    this-object:label43:Location = new System.Drawing.Point(7, 12).
+    this-object:label43:Name = "label43".
+    this-object:label43:Size = new System.Drawing.Size(120, 27).
+    this-object:label43:TabIndex = 36.
+    this-object:label43:Text = "Средство измерения температуры:".
+    this-object:label43:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label43:UseCompatibleTextRendering = true.
     /*  */
     /* tanksection */
     /*  */
     this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
     this-object:BackgroundImage = cast(resources:GetObject("$this.BackgroundImage"), System.Drawing.Image).
+    this-object:Controls:Add(this-object:groupBox7).
+    this-object:Controls:Add(this-object:groupBox8).
     this-object:Controls:Add(this-object:groupBox1).
     this-object:Controls:Add(this-object:groupBox2).
     this-object:Controls:Add(this-object:groupBox3).
-    this-object:Controls:Add(this-object:groupBox7).
     this-object:Controls:Add(this-object:groupBox4).
     this-object:Controls:Add(this-object:groupBox5).
     this-object:Controls:Add(this-object:groupBox6).
     this-object:Name = "tanksection".
-    this-object:Size = new System.Drawing.Size(700, 720).
+    this-object:Size = new System.Drawing.Size(700, 715).
     this-object:groupBox3:ResumeLayout(false).
     this-object:groupBox3:PerformLayout().
     this-object:groupBox2:ResumeLayout(false).
@@ -1639,22 +2121,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox5:ResumeLayout(false).
     this-object:groupBox4:ResumeLayout(false).
     this-object:groupBox4:PerformLayout().
+    this-object:groupBox8:ResumeLayout(false).
+    this-object:groupBox8:PerformLayout().
     this-object:ResumeLayout(false).
     catch e as Progress.Lang.Error:
       undo, throw e.
     end catch.
   end method.
   
-  /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
-  @VisualDesigner.
-  method private void EnableChangedMaskTBox( input sender as System.Object, input e as System.EventArgs ):
-    
-    return.
-
-  end method.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -1672,10 +2146,57 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     textBoxPlSiName:Text = infoSecsObj:InfoSectionCurr:PlSiName.
     v-maskTextBox:Text = string(infoSecsObj:InfoSectionCurr:PlaceSi). /* если не удачно вернется старое значение*/.
 
+
+    find first ub.sr-izmerenia no-lock where ub.sr-izmerenia.node-code = integer (v-maskTextBox:Text) no-error.
+    if available (ub.sr-izmerenia)
+    and (ub.sr-izmerenia.sr-temperature)
+    and (textBoxPlSiNameTemp:text = "0" or textBoxPlSiNameTemp:text = "")
+    then do:
+      infoSecsObj:GetInfoSectionProp(idSecTabPage).
+      maskedTextBoxPlaceSiTemp:Text = v-maskTextBox:Text.
+      infoSecsObj:InfoSectionCurr:PlaceSiTemp = integer (v-maskTextBox:Text).
+      textBoxPlSiNameTemp:Text = infoSecsObj:InfoSectionCurr:PlSiNameTemp.
+      
+      v-maskTextBox:Text = string(infoSecsObj:InfoSectionCurr:PlaceSiTemp).
+    end.
     
     return.
 
   end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void maskedTextBoxPlaceSiTemp_Leave( input sender as System.Object, input e as System.EventArgs ):
+		
+    def var v-maskTextBox as System.Windows.Forms.MaskedTextBox no-undo.
+    
+    v-maskTextBox = cast(sender, System.Windows.Forms.MaskedTextBox).
+
+    infoSecsObj:GetInfoSectionProp(idSecTabPage).
+    infoSecsObj:InfoSectionCurr:PlaceSiTemp = integer (v-maskTextBox:Text).
+    textBoxPlSiNameTemp:Text = infoSecsObj:InfoSectionCurr:PlSiNameTemp.
+    v-maskTextBox:Text = string(infoSecsObj:InfoSectionCurr:PlaceSiTemp). /* если не удачно вернется старое значение*/.
+    
+    find first ub.sr-izmerenia no-lock where ub.sr-izmerenia.node-code = integer (v-maskTextBox:Text) no-error.
+    if available (ub.sr-izmerenia)
+    and (ub.sr-izmerenia.sr-density)
+    and (textBoxPlSiName:text = "0" or textBoxPlSiName:text = "")
+    then do:
+      infoSecsObj:GetInfoSectionProp(idSecTabPage).
+      maskedTextBoxPlaceSi:Text = v-maskTextBox:Text.
+      infoSecsObj:InfoSectionCurr:PlaceSi = integer (v-maskTextBox:Text).
+      textBoxPlSiName:Text = infoSecsObj:InfoSectionCurr:PlSiName.
+      
+      v-maskTextBox:Text = string(infoSecsObj:InfoSectionCurr:PlaceSi).
+    end.
+
+    
+    return.
+
+	end method.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -1704,14 +2225,28 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       v-maskTextBox:Focus().
       return.
     end.
+    find first ub.auto-section no-lock where ub.auto-section.auto-num = infoSecsObj:InfoSectionCurr:infoSectionTotal:CarNum
+                                         and ub.auto-section.section-num = integer(v-maskTextBox:Text)
+                                         no-error .
+    if available ub.auto-section   
+    then do : 
+      infoSecsObj:GetInfoSectionProp(idSecTabPage).  
+      comboBoxShape:Text = infoSecsObj:InfoSectionCurr:Shape.
+      infoSecsObj:InfoSectionCurr:SetCarVol(maskedTextBoxSecName:Text).
+      comboBoxShape:Text = infoSecsObj:InfoSectionCurr:Shape.
+      maskedTextBoxDiameter:Text = infoSecsObj:InfoSectionCurr:Diameter.
+      maskedTextBoxCarVol:Enabled = false.
+      comboBoxShape:Enabled = false.
+      maskedTextBoxSecName:Enabled = false.
+      /*if infoSecsObj:DocQntyInput
+        then maskedTextBoxDocQnty:Text = format_round_3(infoSecsObj:InfoSectionCurr:DocQnty).*/
+      maskedTextBoxCarVol:Text = format_round_3(infoSecsObj:InfoSectionCurr:CarVol).
+    end .
     
-    infoSecsObj:GetInfoSectionProp(idSecTabPage).    
-    maskedTextBoxDiameter:Text = infoSecsObj:InfoSectionCurr:Diameter.
-    /*if infoSecsObj:DocQntyInput
-      then maskedTextBoxDocQnty:Text = format_round_3(infoSecsObj:InfoSectionCurr:DocQnty).*/
-    maskedTextBoxCarVol:Text = format_round_3(infoSecsObj:InfoSectionCurr:CarVol).
     tanksecsObj:SetSecName (v-maskTextBox:Text).
+    
 
+    
     return.
 
   end method.
@@ -1721,22 +2256,24 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     def var infoSecObj as class InfoSection no-undo.
     infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage).
     infoSecObj:UserMode = true.
-    
     this-object:maskedTextBoxSecName:Text         = infoSecObj:SectionName.
-    this-object:maskedTextBoxCarVol:Text          = format_round_3 (infoSecObj:CarVol).
+    this-object:maskedTextBoxCarVol:Text          = format_round_0 (infoSecObj:CarVol).
     this-object:maskedTextBoxDocDens:Text         = format_dens (infoSecObj:DocDensity).
-    this-object:maskedTextBoxDocQnty:Text         = format_round_3 (infoSecObj:DocQnty).
+    v-doc-density = infoSecObj:DocDensity no-error .
+    this-object:maskedTextBoxDocQnty:Text         = format_round_0 (infoSecObj:DocQnty).
+    v-doc-qnty = infoSecObj:DocQnty no-error .
     this-object:maskedTextBoxTTNTemp:Text         = if infoSecObj:TTNTemp = ? then "" else format_temper (infoSecObj:TTNTemp).
-    this-object:maskedTextBoxAccShip:Text         = format_round_3 (infoSecObj:AccShip).
+    this-object:maskedTextBoxAccShip:Text         = format_round_3 (if infoSecObj:AccShip > 0 then infoSecObj:AccShip else 0.25).
     this-object:maskedTextBoxDiameter:Text        = (infoSecObj:Diameter).
-    this-object:maskedTextBoxCliQnty:Text         = format_round_3 (infoSecObj:CliQnty).
+    this-object:maskedTextBoxCliQnty:Text         = format_round_1 (infoSecObj:CliQnty).
+    v-cli-qnty = infoSecObj:CliQnty no-error .
     this-object:maskedTextBoxNumPassport:Text     = (infoSecObj:NumPassport).
     this-object:maskedTextBoxNormDoc:Text         = (infoSecObj:NormDoc).
     this-object:maskedTextBoxCertifFuel:Text      = (infoSecObj:CertifFuel).
     this-object:maskedTextBoxValidityCertif:Text  = (infoSecObj:ValidityCertif).
-    this-object:maskedTextBoxABTArir:Text         = format_round_3 (infoSecObj:ABTarir).
-    this-object:maskedTextBoxMouth:Text           = format_round_3 (infoSecObj:Mouth).
-    this-object:maskedTextBoxTankVol:Text         = format_round_3 (infoSecObj:TankVol).
+    this-object:maskedTextBoxABTArir:Text         = format_int (integer (infoSecObj:ABTarir)).
+    this-object:maskedTextBoxMouth:Text           = format_round_0 (infoSecObj:Mouth).
+    this-object:maskedTextBoxTankVol:Text         = format_round_0 (infoSecObj:TankVol).
     this-object:maskedTextBoxTankDens:Text        = format_dens (infoSecObj:TankDensity).
     this-object:maskedTextBoxNaturLoss:Text       = format_round_3 (infoSecObj:NaturalLoss).
     this-object:maskedTextBoxTPNorm:Text          = format_int (integer (infoSecObj:TPNorm)).
@@ -1751,11 +2288,16 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxKolProb:Text         = format_round_3 (infoSecObj:KolProb).
     this-object:maskedTextBoxNumPrintProb:Text    = (infoSecObj:NumPrintProb).
     this-object:textBoxPlSiName:Text              =  infoSecObj:PlSiName.
+    this-object:maskedTextBoxPlaceSiTemp:Text     = format_int (infoSecObj:PlaceSiTemp).
+    this-object:textBoxPlSiNameTemp:Text          =  infoSecObj:PlSiNameTemp.
+
 
     this-object:maskedTextBoxAccWeight:Text       = format_round_3 (infoSecObj:AccPomi).
     this-object:maskedTextBoxTankDensityPomi:Text = format_dens (infoSecObj:TankDensityPomi).
-    this-object:maskedTextBoxTankVolPomi:Text     = format_round_3 (infoSecObj:TankVolPomi).
-    this-object:maskedTextBoxTankWeight:Text      = format_round_3 (infoSecObj:TankWeight).
+    this-object:maskedTextBoxTankVolPomi:Text     = format_round_0 (infoSecObj:TankVolPomi).
+    this-object:maskedTextBoxTankWeight:Text      = format_round_1 (infoSecObj:TankWeight).
+    this-object:comboBoxPour:Text                 = infoSecObj:Pour.
+    this-object:comboBoxShape:Text                = infoSecObj:Shape.
 
     this-object:TimeProb:Text                     = string (infoSecObj:HourProb) + ":" + string (infoSecObj:MinProb) + ":00" no-error.
     if error-status:error or string (infoSecObj:HourProb) + string (infoSecObj:MinProb) = "" or string (infoSecObj:HourProb) + string (infoSecObj:MinProb) = ?
@@ -1800,12 +2342,46 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     do:
       blank_datetime (DateTimeDateProb).
     end.
+    infoSecObj:FillTTSection(infoSecObj:Diameter).
+    if infoSecsObj:FlagTrn and ((infoSecsObj:Mode = "ДОБАВЛЕНИЕ" or infoSecsObj:Mode = "ИЗМЕНЕНИЕ") 
+      and (maskedTextBoxListTank:Text = ""))
+    then do:
+      def var v-bool as log no-undo.
+      def buffer buf_doc-pl for ub.doc-pl.
+      v-bool = false.
+      for each buf_doc-pl no-lock where buf_doc-pl.out-code = infoSecsObj:TrnDocNum and buf_doc-pl.gds-code = infoSecsObj:GdsCode:
+        if v-bool
+          then do: 
+            v-bool = false. 
+            leave. 
+          end.
+        v-bool = true.
+      end.
+      if v-bool
+      then do:
+        for each buf_doc-pl no-lock where buf_doc-pl.out-code = infoSecsObj:TrnDocNum and buf_doc-pl.gds-code = infoSecsObj:GdsCode:
+          find first ub.place no-lock where ub.place.pl-code = buf_doc-pl.pl-code no-error.
+          maskedTextBoxListTank:Text = ub.place.loc1.
+        end.
+      end.
+    end.
     
     catch e as Progress.Lang.AppError:
       undo, throw e.
     end catch.
     
   end.
+  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void KeyPressMaskTBDecimal_5_1( input sender as System.Object, input e as System.Windows.Forms.KeyPressEventArgs):
+
+    KeyPressMaskTBDecimal (sender, e, 5, 1).
+
+  end method.
   
   /*------------------------------------------------------------------------------
    Purpose:
@@ -2173,6 +2749,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     return true.
   end.
 
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -2284,12 +2861,15 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
     infoSecObj:SectionName = (this-object:maskedTextBoxSecName:Text).                        
     infoSecObj:CarVol          = decimal(this-object:maskedTextBoxCarVol:Text).          
-    infoSecObj:DocDensity      = decimal(this-object:maskedTextBoxDocDens:Text).         
-    infoSecObj:DocQnty         = decimal(this-object:maskedTextBoxDocQnty:Text).         
+/*    infoSecObj:DocDensity      = decimal(this-object:maskedTextBoxDocDens:Text).*/
+    infoSecObj:DocDensity      = v-doc-density .         
+/*    infoSecObj:DocQnty         = decimal(this-object:maskedTextBoxDocQnty:Text).*/
+    infoSecObj:DocQnty         = v-doc-qnty .      
     infoSecObj:TTNTemp         = (if trim (this-object:maskedTextBoxTTNTemp:Text) = "" then ? else decimal(this-object:maskedTextBoxTTNTemp:Text) ).         
     infoSecObj:AccShip         = decimal(this-object:maskedTextBoxAccShip:Text).         
     infoSecObj:Diameter        = (this-object:maskedTextBoxDiameter:Text).        
-    infoSecObj:CliQnty         = decimal(this-object:maskedTextBoxCliQnty:Text).         
+/*    infoSecObj:CliQnty         = decimal(this-object:maskedTextBoxCliQnty:Text).*/
+    infoSecObj:CliQnty         = v-cli-qnty .    
     infoSecObj:NumPassport     = (this-object:maskedTextBoxNumPassport:Text).     
     infoSecObj:NormDoc         = (this-object:maskedTextBoxNormDoc:Text).         
     infoSecObj:CertifFuel      = (this-object:maskedTextBoxCertifFuel:Text).      
@@ -2298,7 +2878,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     infoSecObj:Mouth           = decimal(this-object:maskedTextBoxMouth:Text).           
     infoSecObj:TankVol         = decimal(this-object:maskedTextBoxTankVol:Text).         
     infoSecObj:TankDensity     = decimal(this-object:maskedTextBoxTankDens:Text).        
-    infoSecObj:NaturalLoss     = decimal(this-object:maskedTextBoxNaturLoss:Text).       
+    infoSecObj:NaturalLoss     = decimal(this-object:maskedTextBoxNaturLoss:Text).
     infoSecObj:TankWater       = decimal(this-object:maskedTextBoxTankWater:Text).       
     infoSecObj:TankTemp        = (if trim (this-object:maskedTextBoxTankTemp:Text) = "" then ? else decimal(this-object:maskedTextBoxTankTemp:Text) ).        
     infoSecObj:DensTemp        = (if trim (this-object:maskedTextBoxDensTemp:Text) = "" then ? else decimal(this-object:maskedTextBoxDensTemp:Text) ).        
@@ -2313,7 +2893,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     infoSecObj:Tests           = (this-object:maskedTextBoxTests:Text).           
     infoSecObj:KolProb         = decimal(this-object:maskedTextBoxKolProb:Text).         
     infoSecObj:NumPrintProb    = (this-object:maskedTextBoxNumPrintProb:Text).    
-
+    infoSecObj:PlaceSiTemp     = decimal(this-object:maskedTextBoxPlaceSiTemp:Text).
+    infoSecObj:Shape           = this-object:comboBoxShape:Text.
+    infoSecObj:Pour            = this-object:comboBoxPour:Text.
+        
     infoSecObj:DateProb        = date ((this-object:DateTimeDateProb:Text)).
     infoSecObj:DateStart       = date ((this-object:dateTimePickerDateStart:Text)).
     infoSecObj:DateEnd         = date ((this-object:dateTimePickerDateEnd:Text)).
@@ -2344,17 +2927,26 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     b = decimal (maskedTextBoxDocDens:Text) no-error.
     c = decimal (maskedTextBoxCliQnty:Text) no-error.
     
+    assign
+      v-doc-qnty      = a
+      v-doc-density   = b
+      v-cli-qnty      = c
+    no-error .
+    
     if not infoSecsObj:CliQntyInput
-      then do: 
-        this-object:maskedTextBoxCliQnty:Text = format_round_3(a * b) no-error.  
+      then do:
+        this-object:maskedTextBoxCliQnty:Text = format_round_1(a * b) no-error.
+        v-cli-qnty = a * b .
       end.
     if not infoSecsObj:DocQntyInput
-      then do: 
-        this-object:maskedTextBoxDocQnty:Text = format_round_3(c / b) no-error.
+      then do:
+        this-object:maskedTextBoxDocQnty:Text = format_round_0(c / b) no-error.
+        v-doc-qnty = c / b .
       end.
     if not infoSecsObj:DensityInput
-      then do: 
+      then do:
         this-object:maskedTextBoxDocDens:Text = format_dens(c / a) no-error.
+        v-doc-density = c / a .
       end.
     
   end.
@@ -2362,6 +2954,18 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   method private char format_round_3 (arg as decimal):
     def var str as char no-undo.
     str = trim (string (round(arg, 3), "->>>>>>>>9.999")).
+    return str.
+  end.
+
+  method private char format_round_1 (arg as decimal):
+    def var str as char no-undo.
+    str = trim (string (round(arg, 1), "->>>>>>>>9.9")).
+    return str.
+  end.
+
+  method private char format_round_0 (arg as decimal):
+    def var str as char no-undo.
+    str = trim (string (round(arg, 0), "->>>>>>>>9")).
     return str.
   end.
 
@@ -2373,7 +2977,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
   method private char format_dens (arg as decimal):
     def var str as char no-undo.
-    str = trim (string (round(arg, 4), "9.9999")) no-error.
+    str = trim (string (round(arg, 4), "->>>>>>>>9.9999")) no-error.
     if error-status:error
       then return "".
     return str.
@@ -2419,7 +3023,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end.
     return ?.
 
-    
   end.  
 
   method private void calc-weight-vol ( input sender as System.Object, input e as System.EventArgs ):
@@ -2429,43 +3032,74 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   method private void calc-weight-vol ( ):
   
     define variable v-area as decimal no-undo.
+    define variable inum-ComboBoxShape as integer no-undo.
 
     if not infoSecsObj:FlagTrn 
       then return.
     
-    maskedTextBoxMouth:Text = string (decimal (maskedTextBoxMouth:Text)) no-error.
     
     /*  assign                                                                              */
     /*    maskedTextBoxMouth:Text = string (decimal (maskedTextBoxMouth:Text))              */
     /*    maskedTextBoxMouth:Text:screen-value  = string (decimal (maskedTextBoxMouth:Text))*/
     /*    no-error.                                                                         */
+
+    inum-ComboBoxShape = lookup (comboBoxShape:Text, var-list-shape, ",") - 1 no-error.
+    
+    infoSecsObj:GetArea (output v-area, input inum-ComboBoxShape, input maskedTextBoxDiameter:Text)
+      no-error.
     if error-status:error then 
     do:
-      assign
-        v-area = decimal (entry (1,maskedTextBoxDiameter:Text, "/")) * decimal (entry (2,maskedTextBoxDiameter:Text, "/")) * 0.000001
-      no-error.
-      if error-status:error then 
-      do:
-        message "Неверно указан размер горловины (либо значение диаметра, либо значение сторон для прямоугольной горловины в виде a/b). Берется по умолчанию 0" view-as alert-box.
+      message "Неверно указан размер горловины. Берется по умолчанию 0" view-as alert-box.
+      maskedTextBoxDiameter:Text = "0".
+      v-area = 0.
+    end.
+    infoSecsObj:InfoSectionCurr:NeckArea = v-area.
+    
+    if inum-ComboBoxShape = 0
+    and infoSecsObj:RdcDnstvalue = "not"
+    then do :
+      maskedTextBoxMouth:Text = "0" .
+    end .
+    else do :
+      maskedTextBoxMouth:Text = format_round_0 (   infoSecsObj:InfoSectionCurr:getMouth(decimal (maskedTextBoxABTArir:Text), v-area)) no-error.
+      if error-status:error
+      then do:
+        message "Неверно указано отклонение от планки. Берется по умолчанию 0" view-as alert-box.
         maskedTextBoxDiameter:Text = "0".
         v-area = 0.
       end.
+    end .
+    
+    if not infoSecsObj:RdcDnstvalue = "not"
+    then do: 
+      maskedTextBoxTankVol:Text = format_round_0 ((decimal (maskedTextBoxCarVol:Text)) + decimal (maskedTextBoxMouth:Text) - decimal(maskedTextBoxTankWater:Text) + (if comboBoxPour:Text = "Нижний налив" then infoSecsObj:InfoSectionCurr:DopVolume else 0)).
     end.
-    else 
-    do:
-      v-area = 3.14159 * decimal (maskedTextBoxDiameter:Text) * decimal (maskedTextBoxDiameter:Text) * 0.000001 / 4 no-error.
-    end.
-     
-    maskedTextBoxMouth:Text = string (   round (decimal (maskedTextBoxABTArir:Text) * v-area, 2) ) .
     
     /*  if maskedTextBoxMouth:Text <> decimal (maskedTextBoxMouth:Text) then      */
     /*    apply "value-changed" to maskedTextBoxMouth:Text in frame {&FRAME-NAME}.*/
       
-    maskedTextBoxTankVol:Text = format_round_3 (decimal (maskedTextBoxCarVol:Text) + decimal (maskedTextBoxMouth:Text) - decimal(maskedTextBoxTankWater:Text)).
 
     if infoSecsObj:RdcDnstvalue = "not" then 
     do:
-      maskedTextBoxTankWeight:Text = format_round_3 (decimal(maskedTextBoxTankVol:Text) * decimal ( maskedTextBoxTankDens:Text)).
+      maskedTextBoxTankVol:Text = format_round_0 ((decimal (maskedTextBoxCarVol:Text)) + decimal (maskedTextBoxMouth:Text) - decimal(maskedTextBoxTankWater:Text) + (if comboBoxPour:Text = "Нижний налив" then infoSecsObj:InfoSectionCurr:DopVolume else 0)).
+      if infoSecsObj:RdcDnstvalue = "not"
+      then do:
+        maskedTextBoxTankWeight:Text = format_round_3 (decimal(maskedTextBoxTankVol:Text) * decimal ( maskedTextBoxTankDens:Text)).
+/*        this-object:maskedTextBoxTankWeight:Enabled = true.                                                                            */
+/*        this-object:maskedTextBoxTankVol:ReadOnly = false.                                                                             */
+/*        if not infoSecsObj:CliQntyInput                                                                                                */
+/*          then do:                                                                                                                     */
+/*            maskedTextBoxTankWeight:Text = format_round_3 (decimal(maskedTextBoxTankVol:Text) * decimal ( maskedTextBoxTankDens:Text)).*/
+/*          end.                                                                                                                         */
+/*        if not infoSecsObj:DocQntyInput                                                                                                */
+/*          then do:                                                                                                                     */
+/*            maskedTextBoxTankVol:Text = format_round_0 (decimal(maskedTextBoxTankWeight:Text) / decimal ( maskedTextBoxTankDens:Text)).*/
+/*          end.                                                                                                                         */
+/*        if not infoSecsObj:DensityInput                                                                                                */
+/*          then do:                                                                                                                     */
+/*            maskedTextBoxTankDens:Text = format_round_3 (decimal(maskedTextBoxTankWeight:Text) / decimal ( maskedTextBoxTankVol:Text)).*/
+/*          end.                                                                                                                         */
+      end.
     end.
     else 
     do:
@@ -2517,18 +3151,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     def var v-dec as decimal no-undo.
     def var v-str as character no-undo.
     v-str = "Не заполнено обязательное поле ".
-    
+
     if infoSecsObj:FlagTrn
     then do:
       if not infoSecsObj:RdcDnstvalue = "not"
       then do:
-        v-dec = decimal (maskedTextBoxDiameter:Text) no-error.
-        if trim (maskedTextBoxDiameter:Text) = ""
-        then do:
-          ShowMsg( v-str + "размер горловины" ).
-          setFocusMaskTextDoc = maskedTextBoxDiameter.
-          return false.
-        end.
         
         v-dec = decimal (maskedTextBoxCarVol:Text) no-error.
         if (error-status:error or v-dec = 0)
@@ -2540,7 +3167,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   
         if trim (maskedTextBoxABTArir:Text) = ""
         then do:
-          ShowMsg( v-str + "уровень цистерны отност. тарировочной пл." ).
+          ShowMsg( v-str + "отклонение от тарировочной пл." ).
           setFocusMaskTextDoc = maskedTextBoxABTArir.
           return false.
         end.
@@ -2572,19 +3199,21 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         v-dec = decimal (maskedTextBoxPlaceSi:Text) no-error.
         if (error-status:error or v-dec = 0)
         then do:
-          ShowMsg( v-str + "средство измерения" ).
+          ShowMsg( v-str + "средство измерения плотности" ).
           setFocusMaskTextDoc = maskedTextBoxPlaceSi.
           return false.
         end.
-      end.
-      else do:
-        v-dec = decimal (maskedTextBoxDiameter:Text) no-error.
-        if trim (maskedTextBoxDiameter:Text) = ""
+        
+        v-dec = decimal (maskedTextBoxPlaceSiTemp:Text) no-error.
+        if (error-status:error or v-dec = 0)
         then do:
-          ShowMsg( v-str + "размер горловины" ).
-          setFocusMaskTextDoc = maskedTextBoxDiameter.
+          ShowMsg( v-str + "средство измерения температуры" ).
+          setFocusMaskTextDoc = maskedTextBoxPlaceSiTemp.
           return false.
         end.
+        
+      end.
+      else do:
         
         v-dec = decimal (maskedTextBoxCarVol:Text) no-error.
         if (error-status:error or v-dec = 0)
@@ -2596,7 +3225,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   
         if trim (maskedTextBoxABTArir:Text) = ""
         then do:
-          ShowMsg( v-str + "уровень цистерны отност. тарировочной пл." ).
+          ShowMsg( v-str + "отклонение от тарировочной пл." ).
           setFocusMaskTextDoc = maskedTextBoxABTArir.
           return false.
         end.
@@ -2621,6 +3250,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       calc-weight-vol().
     end.
     else do:
+      v-dec = decimal (maskedTextBoxDiameter:Text) no-error.
+      if trim (maskedTextBoxDiameter:Text) = ""
+      then do:
+        ShowMsg( v-str + "размер горловины" ).
+        setFocusMaskTextDoc = maskedTextBoxDiameter.
+        return false.
+      end.
 
       if trim (maskedTextBoxSecName:Text) = "" or int (maskedTextBoxSecName:Text) = 0
       then do:
@@ -2653,6 +3289,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         setFocusMaskTextDoc = maskedTextBoxDocDens.
         return false.
       end.
+      
+      if trim (comboBoxShape:Text) = ""
+      then do:
+        ShowMsg( v-str + "тип горловины" ).
+        maskedTextBoxSecName:Focus().
+        return false.
+      end.
+      
     end.
     
   end.

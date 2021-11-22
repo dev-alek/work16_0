@@ -261,6 +261,7 @@ DO:
   run ref/cashpays.w (
                    input my-handle
                   ,input "b-sel":U
+                  ,input {&all}
                   ,input v-cntxt-host-code-obj
                   ,input v-cntxt-obj-type
                   ,input v-cntxt-obj-code

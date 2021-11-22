@@ -399,7 +399,7 @@ find first buf_goods where buf_goods.gds-code = p-gds-code.
 
           p-date-pov-plotn = date(buf_doc-line-attr.attr-value) no-error.
 
-          if buf_sr-izmerenia.sr-type = 3 or buf_sr-izmerenia.sr-type = 4 then 
+          if buf_sr-izmerenia.sr-type-id = 3 or buf_sr-izmerenia.sr-type-id = 4 then 
           do:
 
             find first buf_doc-line-attr where buf_doc-line-attr.attr-code = "passport-plotn" 

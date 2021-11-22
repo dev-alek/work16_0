@@ -277,7 +277,13 @@ Creation date: 01/29/07
 &glob table_assortment-matrix-goods-attr-full '{&bef-table_assortment-matrix-goods-attr-full}':U
 &glob bef-table_attr-prop-full Свойства атрибутов
 &glob table_attr-prop-full '{&bef-table_attr-prop-full}':U
-&glob bef-table_auto-tank-full auto-tank
+&glob bef-table_auto-section-full Секция автотранспорта
+&glob table_auto-section-full '{&bef-table_auto-section-full}':U
+&glob bef-table_auto-section-attr-full Атрибуты для auto-section
+&glob table_auto-section-attr-full '{&bef-table_auto-section-attr-full}':U
+&glob bef-table_auto-section-table-full auto-section-table
+&glob table_auto-section-table-full '{&bef-table_auto-section-table-full}':U
+&glob bef-table_auto-tank-full Автотранспорт
 &glob table_auto-tank-full '{&bef-table_auto-tank-full}':U
 &glob bef-table_auto-tank-attr-full Атрибуты для auto-tank
 &glob table_auto-tank-attr-full '{&bef-table_auto-tank-attr-full}':U
@@ -335,6 +341,12 @@ Creation date: 01/29/07
 &glob table_c-assortment-matrix-full '{&bef-table_c-assortment-matrix-full}':U
 &glob bef-table_c-assortment-matrix-goods-full c-assortment-matrix-goods
 &glob table_c-assortment-matrix-goods-full '{&bef-table_c-assortment-matrix-goods-full}':U
+&glob bef-table_c-auto-section-full Секция автотранспорта
+&glob table_c-auto-section-full '{&bef-table_c-auto-section-full}':U
+&glob bef-table_c-auto-section-attr-full Атрибуты для auto-section
+&glob table_c-auto-section-attr-full '{&bef-table_c-auto-section-attr-full}':U
+&glob bef-table_c-auto-section-table-full c-auto-section-table
+&glob table_c-auto-section-table-full '{&bef-table_c-auto-section-table-full}':U
 &glob bef-table_c-auto-tank-full c-auto-tank
 &glob table_c-auto-tank-full '{&bef-table_c-auto-tank-full}':U
 &glob bef-table_c-auto-tank-attr-full Иcтория для auto-tank-attr
@@ -417,6 +429,8 @@ Creation date: 01/29/07
 &glob table_c-contract-line-full '{&bef-table_c-contract-line-full}':U
 &glob bef-table_c-contract-specif-full c-contract-specif
 &glob table_c-contract-specif-full '{&bef-table_c-contract-specif-full}':U
+&glob bef-table_c-contract-specif-attr-full Атрибуты для contract-specif
+&glob table_c-contract-specif-attr-full '{&bef-table_c-contract-specif-attr-full}':U
 &glob bef-table_c-counter-full c-counter
 &glob table_c-counter-full '{&bef-table_c-counter-full}':U
 &glob bef-table_c-country-full история стран
@@ -685,8 +699,8 @@ Creation date: 01/29/07
 &glob table_c-obj-grp-obj-price-full '{&bef-table_c-obj-grp-obj-price-full}':U
 &glob bef-table_c-OperServ-full Операторы
 &glob table_c-OperServ-full '{&bef-table_c-OperServ-full}':U
-&glob bef-table_c-OperServAttr-full атрибуты кассовой книги
-&glob table_c-OperServAttr-full '{&bef-table_c-OperServAttr-full}':U
+&glob bef-table_c-operServAttr-full атрибуты кассовой книги
+&glob table_c-operServAttr-full '{&bef-table_c-operServAttr-full}':U
 &glob bef-table_c-ord-doc-full История заказа
 &glob table_c-ord-doc-full '{&bef-table_c-ord-doc-full}':U
 &glob bef-table_c-ord-doc-attr-full История атрибутов заказа
@@ -905,6 +919,8 @@ Creation date: 01/29/07
 &glob table_c-sht-hist-full '{&bef-table_c-sht-hist-full}':U
 &glob bef-table_c-sr-izmerenia-full c-sr-izmerenia
 &glob table_c-sr-izmerenia-full '{&bef-table_c-sr-izmerenia-full}':U
+&glob bef-table_c-sr-izmerenia-attr-full c-sr-izmerenia-attr
+&glob table_c-sr-izmerenia-attr-full '{&bef-table_c-sr-izmerenia-attr-full}':U
 &glob bef-table_c-staff-full c-staff
 &glob table_c-staff-full '{&bef-table_c-staff-full}':U
 &glob bef-table_c-stop-list-full История стоплистов
@@ -2285,6 +2301,8 @@ Creation date: 01/29/07
 &glob table_some-lk-attr-full '{&bef-table_some-lk-attr-full}':U
 &glob bef-table_sr-izmerenia-full sr-izmerenia
 &glob table_sr-izmerenia-full '{&bef-table_sr-izmerenia-full}':U
+&glob bef-table_sr-izmerenia-attr-full sr-izmerenia-attr
+&glob table_sr-izmerenia-attr-full '{&bef-table_sr-izmerenia-attr-full}':U
 &glob bef-table_staff-full Персонал
 &glob table_staff-full '{&bef-table_staff-full}':U
 &glob bef-table_staff-attr-full Атрибуты для staff
@@ -2393,6 +2411,8 @@ Creation date: 01/29/07
 &glob table_tnved-item-full '{&bef-table_tnved-item-full}':U
 &glob bef-table_tnved-item-attr-full Атрибуты для tnved-item
 &glob table_tnved-item-attr-full '{&bef-table_tnved-item-attr-full}':U
+&glob bef-table_tran-fuel-full Топливные транзакции
+&glob table_tran-fuel-full '{&bef-table_tran-fuel-full}':U
 &glob bef-table_trn-doc-full trn-doc
 &glob table_trn-doc-full '{&bef-table_trn-doc-full}':U
 &glob bef-table_trn-doc-sum-full trn-doc-sum
@@ -2559,6 +2579,12 @@ Creation date: 01/29/07
 &glob table_wth-ser-full '{&bef-table_wth-ser-full}':U
 &glob bef-table_wth-ser-attr-full wth-ser-attr
 &glob table_wth-ser-attr-full '{&bef-table_wth-ser-attr-full}':U
+&glob bef-table_Xattr-full Словарь реквизитов
+&glob table_Xattr-full '{&bef-table_Xattr-full}':U
+&glob bef-table_xGroupObj-full Словарь групп объектов
+&glob table_xGroupObj-full '{&bef-table_xGroupObj-full}':U
+&glob bef-table_xstatus-full Статусы класса
+&glob table_xstatus-full '{&bef-table_xstatus-full}':U
 &glob bef-table_xyz-analysis-full XYZ анализ
 &glob table_xyz-analysis-full '{&bef-table_xyz-analysis-full}':U
 &glob bef-table_xyz-analysis-attr-full Атрибуты шапки XYZ анализа

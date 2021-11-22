@@ -35,6 +35,7 @@ define input parameter p-pay-desk       as logical          no-undo. /* надо ли 
 define input parameter p-pay-desk-cards as logical          no-undo. /* надо ли экспортировать разброс по префиксам карт */
 define input parameter p-deleted        as logical          no-undo. /* надо ли экспортировать удаленные документы */
 define input parameter p-chk            as logical          no-undo. /* надо ли экспортировать чеки */
+define input parameter p-doc-rvs        as logical          no-undo. /* надо ли выгружать сверки до/после слива по топливным приходным накладным */
 define input parameter p-opened-docs    as logical          no-undo. /* надо ли экспортировать не закрытые документы */
 define input parameter hedt             as handle           no-undo.
 define input parameter hcnt             as handle           no-undo.
@@ -422,6 +423,7 @@ on error undo, return error
                 , input 6
                 , input substitute( "Смена: N &1 за &2 ...", v-shift-name-num-to, buf_shift-obj.shift-date  )
             ).
+            
             assign
                 v-prefix = substitute( "d_&1&2&3&4&5&6_"
                                         , substring( string( year( buf_shift-obj.shift-date ), "9999":U ), 3, 2 )
@@ -490,18 +492,18 @@ on error undo, return error
                           v-date-from = 01/01/1990.
                         end.
                         else do:
-                        run factord-to-date in this-procedure ( input v-fact-order-from
-                                                              , output v-date-from
-                                                              ) .
+                          run factord-to-date in this-procedure ( input v-fact-order-from
+                                                                , output v-date-from
+                                                                ) .
                         end.
                         if v-fact-order-to = 0 then do:
                           assign
                           v-date-to = 01/01/1990.
                         end.
                         else do:
-                        run factord-to-date in this-procedure ( input v-fact-order-to
-                                                              , output v-date-to
-                                                              ) .
+                          run factord-to-date in this-procedure ( input v-fact-order-to
+                                                                , output v-date-to
+                                                                ) .
                         end.
                         run bge/doc-oper.p (
                               input p-host-code
@@ -520,6 +522,7 @@ on error undo, return error
                             , input p-pay-desk
                             , input p-pay-desk-cards
                             , input p-chk
+                            , input p-doc-rvs
                             , input v-xml-file-name
                             , input p-log-file-name
                             , input this-procedure

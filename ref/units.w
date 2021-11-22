@@ -48,6 +48,8 @@ define variable vss-description as character no-undo init "Справочник единиц изм
 
 define variable ri as recid no-undo.
 define variable glog as logical no-undo .
+define variable mKKT as integer no-undo.
+define variable mText as character no-undo.
 
 &scop unit-type-code units.type
 
@@ -70,7 +72,8 @@ define variable glog as logical no-undo .
 /* Definitions for BROWSE br-units                                      */
 &Scoped-define FIELDS-IN-QUERY-br-units ub.units.unit-name ~
 ub.units.long-name ub.units.OKEI~
-(IF (ub.units.type = "" ) THEN ("") ELSE ({&unit-type-name} + {&unit-type-name-toplivo}))
+(IF (ub.units.type = "" ) THEN ("") ELSE ({&unit-type-name} + {&unit-type-name-toplivo})) ~
+mKKT mText
 &Scoped-define OPEN-QUERY-br-units OPEN QUERY br-units FOR EACH ub.units NO-LOCK.
 &Scoped-define FIRST-TABLE-IN-QUERY-br-units ub.units
 &Scoped-define TABLES-IN-QUERY-br-units ub.units
@@ -121,6 +124,8 @@ DEFINE BROWSE br-units QUERY br-units NO-LOCK DISPLAY
       (IF (ub.units.type = "" ) THEN ("") ELSE ({&unit-type-name} + {&unit-type-name-toplivo})) COLUMN-LABEL "Описание типа" FORMAT "x(30)"
       ub.units.type FORMAT "X(12)"
       ub.units.OKEI COLUMn-LABEL "Код!ОКЕИ" format "9999"
+      mKKT COLUMN-LABEL "Код!ККТ" FORMAT ">>>>9"
+      mText COLUMN-LABEL "Текст!в чеке ККТ" FORMAT "X(10)"
     WITH SEPARATORS
           &IF '{&WINDOW-SYSTEM}' = 'TTY':U &THEN SIZE 69 BY 13
           &ELSE size 86.25 by 12.58 &ENDIF
@@ -176,6 +181,10 @@ ASSIGN
      _FldNameList[3]   = "(IF (ub.units.type = """" ) THEN ("""") ELSE ({&unit-type-name}))"
      _FldLabelList[3]  = "Тип"
      _FldFormatList[3] = "x(30)"
+     _FldNameList[4]   > "_<CALC>"
+"mKKT" "Calc" ">>>>>" ? ? ? ? ? ? ? no ? no no "15" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[5]   > "_<CALC>"
+"mText" "Calc" "x(12)" ? ? ? ? ? ? ? no ? no no "20" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is OPENED
 */  /* BROWSE br-units */
 &ANALYZE-RESUME
@@ -185,6 +194,36 @@ ASSIGN
 
 
 /* ************************  Control Triggers  ************************ */
+&Scoped-define BROWSE-NAME br-units
+&Scoped-define SELF-NAME br-units
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-units d-units
+ON ROW-DISPLAY OF br-units IN FRAME d-units
+DO:
+   define buffer code for code.
+   assign
+      mKKT  = 255
+      mText = "-".
+   find first code where
+              code.parent = "okei-kkt"
+          and int(code.code)  = units.OKEI
+          and code.status_ = 0 
+   no-lock no-error.
+   if avail code then
+      assign
+         mKKT  = integer(code.CodeName)
+         mText = code.misc1
+         mKKT:bgcolor  in browse br-units = 10
+         mText:bgcolor in browse br-units = 10
+         .
+   else
+      assign
+         mKKT:bgcolor  in browse br-units = 14
+         mText:bgcolor in browse br-units = 14
+        .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-add-unit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add-unit d-units

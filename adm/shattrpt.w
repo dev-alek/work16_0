@@ -99,12 +99,14 @@ RECT-4 RECT-5 RECT-6 t-autopump-izm t-autopump t-avtinvpm t-olddens ~
 r-expptrl r-inpptrl dop-info rvs-wt-email B-set_dop-info r-algrvspt ~
 t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc ~
 mass-proc r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz ~
-delta-vert otkl-temp otkl-density otkl-water mass-proc-in-lgas v-dop-info 
+delta-vert otkl-temp otkl-density otkl-water mass-proc-in-lgas ~
+t-calc-free-vol v-dop-info 
 &Scoped-Define DISPLAYED-OBJECTS t-autopump-izm t-autopump t-avtinvpm ~
 t-olddens r-expptrl r-inpptrl dop-info rvs-wt-email r-algrvspt t-rvsnmter ~
 t-invclipt f-invclipt r-temp-for-pomi r-denstclc mass-proc r-algoincptrl ~
 t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp ~
-otkl-density otkl-water mass-proc-in-lgas v-dop-info f-invclipt-name 
+otkl-density otkl-water mass-proc-in-lgas t-calc-free-vol v-dop-info ~
+f-invclipt-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -171,7 +173,7 @@ DEFINE VARIABLE mass-proc AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 14.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE mass-proc-in-lgas AS decimal FORMAT ">9.99":U 
+DEFINE VARIABLE mass-proc-in-lgas AS DECIMAL FORMAT ">9.99":U INITIAL 0 
      LABEL "Допустимый % расхождения массы при приеме СУГ" 
      VIEW-AS FILL-IN 
      SIZE 14.5 BY 1 NO-UNDO.
@@ -212,12 +214,13 @@ DEFINE VARIABLE r-algoincptrl AS INTEGER
      SIZE 37 BY 1 NO-UNDO.
 
 DEFINE VARIABLE r-algrvspt AS INTEGER 
-     VIEW-AS RADIO-SET VERTICAL
+     VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
           "Алгоритм N1", 1,
 "Алгоритм N2", 2,
-"Алгоритм N3", 3
-     SIZE 16 BY 1.75 NO-UNDO.
+"Алгоритм N3", 3,
+"Алгоритм N4", 4
+     SIZE 92.5 BY 1.75 NO-UNDO.
 
 DEFINE VARIABLE r-denstclc AS CHARACTER 
      VIEW-AS RADIO-SET VERTICAL
@@ -291,6 +294,11 @@ DEFINE VARIABLE t-avtinvpm AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 82.5 BY .83 TOOLTIP "если включено, то контроль и создание происходит при закрытии сверки" NO-UNDO.
 
+DEFINE VARIABLE t-calc-free-vol AS LOGICAL INITIAL no 
+     LABEL "Контроль свободной емкости при приходе" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60.5 BY .79 NO-UNDO.
+
 DEFINE VARIABLE t-invclipt AS LOGICAL INITIAL no 
      LABEL "Контрагент для списания ЕУ при инвентаризации топлива по сверке:" 
      VIEW-AS TOGGLE-BOX
@@ -345,46 +353,47 @@ DEFINE FRAME shattrpt
      otkl-density AT ROW 34.71 COL 72.63 COLON-ALIGNED WIDGET-ID 510
      otkl-water AT ROW 35.79 COL 72.63 COLON-ALIGNED WIDGET-ID 512
      mass-proc-in-lgas AT ROW 38.25 COL 1.5 WIDGET-ID 518
+     t-calc-free-vol AT ROW 39.29 COL 3.5 WIDGET-ID 524
      v-dop-info AT ROW 13 COL 3.5 NO-LABEL WIDGET-ID 498
      f-invclipt-name AT ROW 19.83 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
-     "горизонтальных" VIEW-AS TEXT
-          SIZE 17.5 BY .67 AT ROW 31.88 COL 3.5 WIDGET-ID 126
-     "Температура, к которой приводиться плотность и объем °С :" VIEW-AS TEXT
-          SIZE 58 BY .83 AT ROW 21.25 COL 3.5 WIDGET-ID 516
      "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
           SIZE 64.5 BY .96 AT ROW 10.08 COL 3.5 WIDGET-ID 92
      "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
           SIZE 50.5 BY .63 AT ROW 22.58 COL 3.5 WIDGET-ID 36
-     "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
-          SIZE 49 BY .83 AT ROW 7.92 COL 3.5 WIDGET-ID 48
+     "горизонтальных" VIEW-AS TEXT
+          SIZE 17.5 BY .67 AT ROW 31.88 COL 3.5 WIDGET-ID 126
      "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
           SIZE 62.5 BY .96 AT ROW 10.79 COL 3.5 WIDGET-ID 94
      "Погрешность изм. массы для резервуаров" VIEW-AS TEXT
           SIZE 42 BY .67 AT ROW 30.92 COL 3.5 WIDGET-ID 112
-     "Максимально допустимые отклонения:" VIEW-AS TEXT
-          SIZE 33.75 BY .79 AT ROW 31.25 COL 82.63 RIGHT-ALIGNED WIDGET-ID 504
-     "Алгоритм принятия топлива к учету:" VIEW-AS TEXT
-          SIZE 34.5 BY 1 AT ROW 28.38 COL 3.63 WIDGET-ID 116
-     "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
-          SIZE 52 BY .63 AT ROW 27.63 COL 3.5 WIDGET-ID 86
-     "Тип ввода топлива во всех документах кроме прихода внешнего :" VIEW-AS TEXT
-          SIZE 63 BY .83 AT ROW 7.13 COL 3.5 WIDGET-ID 514
+     "вертикальных" VIEW-AS TEXT
+          SIZE 17.5 BY .67 AT ROW 31.88 COL 25 WIDGET-ID 124
      "Настройки инвентаризации по сверке" VIEW-AS TEXT
           SIZE 35.5 BY .67 AT ROW 15.08 COL 3 WIDGET-ID 78
+     "Тип ввода топлива во всех документах кроме прихода внешнего :" VIEW-AS TEXT
+          SIZE 63 BY .83 AT ROW 7.13 COL 3.5 WIDGET-ID 514
+     "Источник для фактического количества топлива в ПН :" VIEW-AS TEXT
+          SIZE 52 BY .63 AT ROW 27.63 COL 3.5 WIDGET-ID 86
+     "Алгоритм принятия топлива к учету:" VIEW-AS TEXT
+          SIZE 34.5 BY 1 AT ROW 28.38 COL 3.63 WIDGET-ID 116
+     "Максимально допустимые отклонения:" VIEW-AS TEXT
+          SIZE 33.75 BY .79 AT ROW 31.25 COL 82.63 RIGHT-ALIGNED WIDGET-ID 504
+     "Тип ввода топлива в документах прихода внешнего :" VIEW-AS TEXT
+          SIZE 49 BY .83 AT ROW 7.92 COL 3.5 WIDGET-ID 48
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE  WIDGET-ID 100.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME shattrpt
-     "вертикальных" VIEW-AS TEXT
-          SIZE 17.5 BY .67 AT ROW 31.88 COL 25 WIDGET-ID 124
+     "Температура, к которой приводиться плотность и объем °С :" VIEW-AS TEXT
+          SIZE 58 BY .83 AT ROW 21.25 COL 3.5 WIDGET-ID 516
      RECT-1 AT ROW 22.33 COL 2.5 WIDGET-ID 38
      RECT-2 AT ROW 14.71 COL 2.5 WIDGET-ID 64
      RECT-3 AT ROW 7 COL 2.5 WIDGET-ID 66
      RECT-4 AT ROW 26.33 COL 2.5 WIDGET-ID 84
      RECT-5 AT ROW 30.75 COL 2.63 WIDGET-ID 500
      RECT-6 AT ROW 30.75 COL 46.5 WIDGET-ID 502
-     SPACE(1.24) SKIP(1.57)
+     SPACE(1.24) SKIP(2.09)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки работы с ТОПЛИВНЫМ товаром" WIDGET-ID 100.
@@ -859,7 +868,8 @@ PROCEDURE enable_UI :
           dop-info rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt 
           r-temp-for-pomi r-denstclc mass-proc r-algoincptrl 
           t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp 
-          otkl-density otkl-water mass-proc-in-lgas v-dop-info f-invclipt-name 
+          otkl-density otkl-water mass-proc-in-lgas t-calc-free-vol v-dop-info 
+          f-invclipt-name 
       WITH FRAME shattrpt.
   ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 RECT-5 RECT-6 
          t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
@@ -867,7 +877,7 @@ PROCEDURE enable_UI :
          f-invclipt b-invclipt r-temp-for-pomi r-denstclc mass-proc 
          r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz 
          delta-vert otkl-temp otkl-density otkl-water mass-proc-in-lgas 
-         v-dop-info 
+         t-calc-free-vol v-dop-info 
       WITH FRAME shattrpt.
   {&OPEN-BROWSERS-IN-QUERY-shattrpt}
 END PROCEDURE.
@@ -1081,6 +1091,13 @@ on error undo, return error return-value
             assign 
               mass-proc-in-lgas = thbjattr_thbj-attr.property-value-decimal 
               mass-proc-in-lgas :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .  
+          end.
+      when {&attr-petrol_calc-free-vol} then 
+          do: 
+            assign
+              t-calc-free-vol = thbjattr_thbj-attr.property-value-logical 
+              t-calc-free-vol :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
             .  
           end.
     end case.

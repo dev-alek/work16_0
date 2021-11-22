@@ -16,6 +16,7 @@ using ibs.th.bge.1crn.subjects.{&impclass}.
 using ibs.th.ref.promo.enum-type-discount .
 using ibs.th.ref.promo.enum-promo-status .
 using ibs.th.ref.promo.enum-sched-status .
+using ibs.th.gbl.sys.objsrv.
 
 block-level on error undo, throw.
 
@@ -76,7 +77,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define variable v-PaymentSystem  as class ibs.th.bge.1crn.subjects.payment-system no-undo . // imp:payment-systems:payment-system[]
     define variable v-bins-tokens    as class ibs.th.bge.1crn.subjects.subjects no-undo . // imp:payment-systems:payment-system:bins-tokens[]
     define variable v-bin-token      as class ibs.th.bge.1crn.subjects.bin-token no-undo . // imp:payment-systems:payment-system:bins-tokens:bin-token[]
-    
+
     define variable v-promotion-code as character no-undo . /* like ub.PromoAction.ext-code */
     define variable v-schedule-code  as character no-undo . /* like ub.promo-schedule.ext-code-sched */
     define variable v-promo-delete   as class ibs.th.ref.promo.promoactionsub no-undo .
@@ -105,7 +106,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define buffer buf_PromoSched  for ub.promo-schedule .
     define buffer buf_goods       for ub.goods .
     define buffer buf_clients     for ub.clients .
+    define buffer buf_goods-attr  for ub.goods-attr .
+    
+    define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+    define variable v-ban-recipes as logical no-undo init false.
 
+    run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
     objImp = cast (subjectObj, {&impclass}).
     assign
@@ -300,7 +306,7 @@ do: // объекты
     .
     v-promo-objs = v-promo-action:Objects .
     v-promo-objs:AddItem (v-promo-obj) .
-    
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-obj-type, v-obj-code):IsBanRecipes then v-ban-recipes = true .
 end . // end_of объекты
 
 
@@ -415,6 +421,7 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
           v-promo-gift:Mode = v-promo-crit:Mode
         .
         v-promo-gifts:AddItem (v-promo-gift) .
+        
       end . 
       v-objlist3 = v-threshold:Gifts .
       if valid-object(v-objlist3) then do :
@@ -436,6 +443,15 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
             v-promo-gift:qnty    = v-gift-gd:gd-qnty
             v-promo-gift:Mode    = v-promo-crit:Mode
           .
+   if v-ban-recipes then do:       
+   if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = v-promo-gift:GdsCode and 
+      buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
+      buf_goods-attr.attr-value <> "") then 
+   do:
+      v-promo-action:end-date = today - 1 .
+      v-promo-action:status_ = 2 .
+   end.        
+   end.    
           v-promo-gifts:AddItem (v-promo-gift) .
         end . // end_of_threshold:gifts[]
       end .
@@ -596,6 +612,15 @@ if valid-object (v-objlist9) then do: // gifts - подарки на всю акцию
         v-promo-gift:qnty    = v-gift-gd:gd-qnty
         v-promo-gift:Mode    = {&h-create}
       .
+   if v-ban-recipes then do:       
+   if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = v-promo-gift:GdsCode and 
+      buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
+      buf_goods-attr.attr-value <> "") then 
+   do:
+      v-promo-action:end-date = today - 1 .
+      v-promo-action:status_ = 2 .
+   end.        
+   end.       
       v-promo-gifts:AddItem (v-promo-gift) .
     end . // end_of_gifts[]
 end. // end_of_gifts
@@ -615,7 +640,7 @@ end. // end_of_gifts
     end.
     
     v-storage:insertDB(v-promo-action) .
-    
+
     define variable mAction as character no-undo.
     if     (v-promo-action:changeDate <> ? 
        and v-promo-action:changeDate <= today)
@@ -624,8 +649,7 @@ end. // end_of_gifts
        mAction = "D".
     else
        mAction = "U".
-       
-       
+   if v-ban-recipes then mAction = "U".
      if v-message then 
      do:
         create ub.PromoAttr .
@@ -636,6 +660,7 @@ end. // end_of_gifts
            ub.PromoAttr.attr-value = "Внимание!!! Перезагрузите кассу, для обновления промоакций!"
            .
      end.
+
     run str/diallog.w (
         input parparentproc
       , input p-parent-handle
@@ -654,7 +679,7 @@ end. // end_of_gifts
            "Ошибку при отправке акции '&1' на кассу &2"
            , v-promo-action:NameAction , return-value
         ) ) .
-    
+
 do: // предыдущая версия (ранее 24/VI-2018)
 /*    
       define variable v-profile             as integer          no-undo .

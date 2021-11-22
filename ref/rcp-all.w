@@ -15,7 +15,7 @@ Creation date: 09/09/05
 
 */
 /* ***************************  definitions  ************************** */
-
+define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
 /* parameters definitions ---                                           */
 define input  parameter p-mainmenu-handle as handle       no-undo.
 define input  parameter bttns             as character    no-undo.
@@ -41,9 +41,10 @@ define variable vss-description as character no-undo init "Справочник рецептов".
 { str/fbrtest.i     }
 { str/fbrcode.i     }
 { trg/partslib.i    }
+{ gbl/ggoattr.i }
 { str/fbrlib.i      }
 { gbl/getcntxt.i def }
-
+{ str/checkGroupAttr.i }
 &scoped-define frame-name dialog-frame
 /* local variable definitions ---                                       */
 define variable ri                   as recid                    no-undo .
@@ -65,6 +66,8 @@ define buffer b-recipe     for ub.recipe .
 define buffer b-recipe-gds for ub.recipe-gds .
 define buffer b-goods      for ub.goods.
 define variable varobj-date as date no-undo.
+define variable v-ban-altr      as logical      no-undo .
+
 function get-ingr-qnty returns decimal
   ( input  v-browse-type     as  character,
     input  p-qnty-type       as  integer,
@@ -126,6 +129,7 @@ function get-browse-field returns character
 
     define variable v-output-string    as character      no-undo.
     define variable v-recipe-code      as character    no-undo.
+    define variable v-mark as logical no-undo .
 
     define buffer buf_recipe        for ub.recipe.
     define buffer buf_fbr-gds-obj   for ub.fbr-gds-obj.
@@ -175,6 +179,23 @@ function get-browse-field returns character
             else do:
                 assign
                     v-output-string = " -"
+                .
+            end.
+        end.        /* when 3 */
+        when 4
+        then do:
+            run fbrlib-get-mark (
+                  input p-recipe-code
+                , output v-mark
+            ).
+            if v-mark then do:
+                assign
+                    v-output-string = "+"
+                .
+            end.
+            else do:
+                assign
+                    v-output-string = "-"
                 .
             end.
         end.        /* when 3 */
@@ -285,7 +306,7 @@ define variable good-name like ub.goods.gds-name
 
 define variable good-prod like ub.clients.obj-name
       view-as text
-     size 19.5 by 1 fgcolor 4 no-undo.
+     size 25 by 1 fgcolor 4 no-undo.
 
 define rectangle rect-1
      edge-chars 0.25 graphic-edge  no-fill
@@ -308,6 +329,7 @@ define browse br-recipe
   query br-recipe no-lock display
       get-browse-field ( input 3, input ub.recipe.recipe-code, input ub.goods.gds-code ) column-label "Осн" format "x(3)"
       get-browse-field ( input 1, input ub.recipe.recipe-code, input ub.goods.gds-code ) column-label "Гл" format "x(2)"
+      get-browse-field ( input 4, input ub.recipe.recipe-code, input ub.goods.gds-code ) column-label "М" format "x(1)"
       ub.recipe.recipe-code format "x(12)"
       ub.recipe.recipe-name column-label "Наименование рецепта" format "x(30)"
       ub.recipe.recipe-type column-label "Т" format "x(1)"
@@ -340,7 +362,7 @@ define frame dialog-frame
       "Наим.товара: " view-as text
           size 13.75 by 1 at row 8.83 col 1.13
           fgcolor 0
-     table-find   at row 5.5 col 80 colon-aligned no-label
+     table-find   at row 6 col 80 colon-aligned no-label
      good-name at row 8.83 col 14.88 no-label
      "Произ-ль: " view-as text
           size 13.75 by 1 at row 8.83 col 44.75
@@ -3306,9 +3328,11 @@ procedure add-recipe :
     define variable v-fbr-gds-obj-recid as recid        no-undo.
     define variable v-goods-recid       as recid        no-undo.
     define variable v-goods-recid-list  as character    no-undo.
-
+  define variable v-value   as character    no-undo.
+  define variable v-type    as character    no-undo.
     define buffer buf_goods         for ub.goods.
     define buffer buf_fbr-gds-obj   for ub.fbr-gds-obj.
+    define buffer buf_recipe        for ub.recipe.
 do
 for buf_goods
   , buf_fbr-gds-obj
@@ -3331,25 +3355,44 @@ on error undo, return error
             , input ?
             , output v-goods-recid-list
         ).
-        if v-goods-recid-list <> ''
-        then do:
-            assign
-                v-goods-recid = integer( entry( 1, v-goods-recid-list ) )
-            .
-        end.
-        else do:
-            message
-                "Не выбран товар"
-                skip "для создания рецепта."
+       if v-goods-recid-list <> ''
+          then 
+       do:
+          assign
+             v-goods-recid = integer( entry( 1, v-goods-recid-list ) )
+             .
+          run gbl/getobjsrvhndl.p (input-output ObjSrv).
+
+          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanAltr then v-ban-altr = true .
+          if v-ban-altr then 
+          do:       
+             if recipetype = {&alternative} or new-type = {&alternative} then 
+             do:    
+                for first ub.goods no-lock where recid (ub.goods) = v-goods-recid:
+                   if check-ban-sales-via-cd(ub.goods.gds-code) then 
+                   do:
+
+                   end.
+               end.
+            end.
+         end.
+      end.
+      else 
+      do:
+         message
+            "Не выбран товар"
+            skip 
+            "для создания рецепта."
             view-as alert-box error.
-            undo, return.
-        end.
-    end.
-    else do:
-        assign
-            v-goods-recid = p-goods-recid
-        .
-    end.
+         undo, return.
+      end.
+   end.
+   else 
+   do:
+      assign
+         v-goods-recid = p-goods-recid
+         .
+   end.
     find first buf_goods no-lock
          where recid( buf_goods ) = v-goods-recid
     .
@@ -3663,3 +3706,4 @@ END PROCEDURE. /* set-default-recipe */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

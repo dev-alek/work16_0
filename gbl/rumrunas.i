@@ -282,6 +282,15 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
       .
       { gbl/curr-r-b.i v-curr-r-b }
     end.
+    when {&edoc-proc_event_user-action}
+    then do:
+      assign
+      v-codex-id-list = string(18)
+      v-ruleset-id-list[1] = string(170)
+      v-prop-code = {&attr-rum_edoc}
+      .
+      { gbl/curr-r-b.i v-curr-r-b }
+    end.
 
     otherwise do:
       undo _main, return error substitute("&1 &2 &3&4Ошибка входных параметров процедуры rum-run.p&4Невернoе значение p-process = &5"

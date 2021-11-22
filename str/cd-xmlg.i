@@ -42,6 +42,18 @@ field attr-value as character
 index iid id
 index icr is unique primary cr cra
 .
+define temp-table temp-param no-undo
+field desk as character
+field cr as integer
+field group-name as character
+field record-name as character
+field key-name as character
+field attr-value as character
+field field-name as character
+field field-value as character
+index ifile record-name field-name key-name group-name
+index icr is unique primary cr
+.
 
 define variable v-mail-parameters-start     as logical        no-undo.
 define variable v-date-format as character no-undo .
@@ -57,6 +69,7 @@ define variable v-db-key-enc as character no-undo .
 define variable cri as integer no-undo .
 define variable crai as integer no-undo .
 define variable v-id as character no-undo .
+define variable v-desk as character no-undo .
 define variable v-ctrl as character no-undo .
 define variable v-time as integer no-undo .
 define variable v-time-char as character no-undo .
@@ -65,7 +78,8 @@ define variable v-cd-fatal-message as character no-undo .
 define variable v-errorSeverity as integer no-undo .
 define variable v-errormessage as character no-undo .
 define variable v-errornum as character no-undo .
-
+define variable v-group as character no-undo .
+define variable v-key as character no-undo .
 
 PROCEDURE get-xml-ibm-c.
 define input parameter p-filename as char no-undo.
@@ -375,6 +389,45 @@ on error undo, return error
     .
       if v-from begins ({&shop} + string(p-obj-code) + "_" + "касса") then do:
         v-pay-desk = integer(replace(v-from, ({&shop} + string(p-obj-code) + "_" + "касса"), "")) no-error.
+v-desk = string(v-pay-desk) .
+
+         do transaction :
+/*Дата последнего опроса касс*/
+            run cd-attr-write in this-procedure (
+                                                    input g#db-num
+                                                  ,input p-obj-code
+                                                  ,input p-pos-type
+                                                  ,input v-pay-desk
+                                                  ,input  (if p-pos-type = {&cd-type-ibm-xml}
+                                                           then {&cda-IBM-XML_operative}
+                                                           else {&cda-AUTOTANK_operative})
+                                                  ,input {&cda-IBM-XML_operative_last-date-polls}
+                                                  ,input string (today,"99.99.9999")
+                                                  ,input ? /*p-date*/
+                                                  ,input 0 /*p-decimal*/
+                                                  ,input 0 /*p-integer*/
+                                                  ,input no /*p-logical*/
+                                                  ) .
+
+/*Время последнего опроса касс*/
+            run cd-attr-write in this-procedure (
+                                                    input g#db-num
+                                                  ,input p-obj-code
+                                                  ,input p-pos-type
+                                                  ,input v-pay-desk
+                                                  ,input  (if p-pos-type = {&cd-type-ibm-xml}
+                                                           then {&cda-IBM-XML_operative}
+                                                           else {&cda-AUTOTANK_operative})
+                                                  ,input {&cda-IBM-XML_operative_last-time-polls}
+                                                  ,input string (time,"HH:MM:SS") 
+                                                  ,input ? /*p-date*/
+                                                  ,input 0 /*p-decimal*/
+                                                  ,input 0 /*p-integer*/
+                                                  ,input no /*p-logical*/
+                                                  ) .
+
+          end. /*  do transaction :*/
+
         run cd-attr-value in this-procedure (
                                               input  g#db-num
                                               ,input  p-obj-code
@@ -392,7 +445,7 @@ on error undo, return error
                                               ,output v-integer
                                               ,output v-logical
                                               ,output v-dop) no-error.
-       if v-old-fo-version <> v-fo-version
+       if v-old-fo-version <> v-fo-version and v-FO-version <> ?
        and can-find(first ub.cash-desk where
                          ub.cash-desk.db-num = g#db-num
                      and ub.cash-desk.obj-code = p-obj-code
@@ -811,6 +864,28 @@ define input parameter p-field-value as character no-undo .
   do
   on error undo, return error
   :
+     
+    if p-record-name = "Param" then do:
+    find first temp-param where
+               temp-param.cr = cri + 1 no-error .
+    if not avail temp-param then do:
+      create
+      temp-param.
+      assign
+      temp-param.cr = cri + 1
+      .
+    end.
+    assign
+    temp-param.record-name = p-record-name
+    temp-param.field-name  = p-field-name
+    temp-param.field-value = p-field-value
+    temp-param.desk        = v-desk
+    temp-param.key-name    = v-key
+    temp-param.group-name  = v-group
+    cri                   = cri + 1
+    .       
+    end.
+    else do:    
     find first temp-temp where
                temp-temp.cr = cri + 1 no-error .
     if not avail temp-temp then do:
@@ -828,13 +903,8 @@ define input parameter p-field-value as character no-undo .
     temp-temp.ctime       = v-time
     cri                   = cri + 1
     .
-    /*
-    if index(p-field-value, '<':U) > 0 then do:
     end.
-    output to jj.txt append.
-    export temp-temp .
-    output close.
-    */
+
   end.
 
 end procedure. /* create-temp-table-record */

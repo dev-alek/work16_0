@@ -42,7 +42,7 @@ p-time-to-wait-seconds максимальное время ожидания в секундах
 */
 
 define input  parameter p-file-name            as character no-undo .
-define input  parameter p-write-string         as character no-undo .
+define input  parameter p-write-string         as longchar  no-undo .
 define input  parameter p-time-to-wait-seconds as integer   no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .

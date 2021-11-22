@@ -949,6 +949,7 @@ define variable v-counter           as integer          no-undo.
         , output v-void-logical
         , output v-void-logical
         , output v-void-logical
+        , output v-void-logical
         , output v-cancel
     ) no-error .
     if error-status :error

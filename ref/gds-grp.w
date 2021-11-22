@@ -287,7 +287,7 @@ DEFINE BROWSE br-list
       temp_grplib_grp.round-method  format "X(22)"  label " Метод округления"
       if temp_grplib_grp.notcorr = 'yes'  then "да" else ""  format "X(17)"  label "Запрет кор.заказ"
       string(temp_grplib_grp.cli-type + ' ' + string(temp_grplib_grp.cli-code,">>>>>")) @ v-cli-name format "X(12)" label "Вн.Поставщик"
-      temp_grplib_grp.node-code     FORMAT ">,>>>,>>9" LABEL "Вн №"
+      temp_grplib_grp.node-code     FORMAT ">>>>>>>>>>9" LABEL "Вн №"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 97.5 BY 16.63.

@@ -30,12 +30,12 @@ define variable varlevel         as integer   no-undo.
 define variable varvolume        as DECIMAL   no-undo.
 define variable varprev-level    as integer   no-undo.
 define variable varprev-volume   as DECIMAL   no-undo.
-define variable varkoeff         as decimal   no-undo.
+define variable vardelta         as decimal   no-undo.
 
 define temp-table tt-tarir
    field level   as   integer
    field volume  as   DECIMAL
-
+   field delta   as   decimal
    index pi is unique primary
          level
          .
@@ -43,6 +43,7 @@ define temp-table tt-tarir
 define buffer buf_clients  for ub.clients .
 define buffer buf_place    for ub.place .
 define buffer buf_pl-level for ub.pl-level .
+define buffer buf_pl-level-attr for ub.pl-level-attr .
 
 define stream str-in.
 
@@ -100,6 +101,7 @@ on error undo, return error return-value :
          varcode   = integer(entry (1, varstring, chr(9)))
          varlevel  = integer(entry (2, varstring, chr(9)))
          varvolume = DECIMAL(entry (3, varstring, chr(9)))
+         vardelta  = DECIMAL(entry (4, varstring, chr(9)))
       no-error.
 
       if error-status:error = no
@@ -109,6 +111,7 @@ on error undo, return error return-value :
             assign
                tt-tarir.level  = varlevel
                tt-tarir.volume = varvolume
+               tt-tarir.delta  = vardelta
             .
       end.
    end. /* repeat */
@@ -164,18 +167,45 @@ on error undo, return error return-value :
        on error undo, return error return-value
        :
       delete buf_pl-level.
+      for first buf_pl-level-attr exclusive-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+                                                    and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+                                                    and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
+                                                    and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+                                                    and buf_pl-level-attr.attr-code = "tarir-delta"
+                                                    :
+        delete buf_pl-level-attr .                                              
+      end .
    end.
 
    /*Создаем новые*/
    for each tt-tarir
    :
-   create buf_pl-level.
-   assign
-      buf_pl-level.obj-type = buf_place.obj-type
-      buf_pl-level.obj-code = buf_place.obj-code
-      buf_pl-level.pl-code  = buf_place.pl-code
-      buf_pl-level.pl-level = tt-tarir.level
-      buf_pl-level.pl-qnty  = tt-tarir.volume.
+     create buf_pl-level.
+     assign
+       buf_pl-level.obj-type = buf_place.obj-type
+       buf_pl-level.obj-code = buf_place.obj-code
+       buf_pl-level.pl-code  = buf_place.pl-code
+       buf_pl-level.pl-level = tt-tarir.level
+       buf_pl-level.pl-qnty  = tt-tarir.volume
+     .
+     find first buf_pl-level-attr exclusive-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+                                                   and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+                                                   and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
+                                                   and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+                                                   and buf_pl-level-attr.attr-code = "tarir-delta" 
+                                                   no-error .
+     if not available buf_pl-level-attr
+     then do :                                                     
+     create buf_pl-level-attr .
+       assign
+         buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+         buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+         buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
+         buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+         buf_pl-level-attr.attr-code = "tarir-delta"        
+       .
+     end .
+     assign buf_pl-level-attr.attr-value = string(tt-tarir.delta) .
    end.
 end. /* do on error */
 

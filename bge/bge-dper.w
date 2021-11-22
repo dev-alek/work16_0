@@ -71,6 +71,7 @@ define output parameter p-pay-desk          as logical   INIT no    no-undo.
 define output parameter p-pay-desk-cards    as logical   INIT no    no-undo.
 define output parameter p-deleted           as logical   INIT no    no-undo.
 define output parameter p-chk               as logical   INIT no    no-undo.
+define output parameter p-doc-rvs           as logical   INIT no    no-undo.
 define output parameter p-cancel            as logical   INIT no    no-undo.
 /*define output parameter p-gds-grp-list      as character            no-undo.*/
 
@@ -126,13 +127,13 @@ define temp-table temp_obj-list no-undo
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-2 RECT-1 RECT-3 RECT-gds Btn_OK ~
 Btn_Cancel b-help date_from date_to rs-1 bt-sel-obj ed-doc-type ~
-bt-sel-doc-type tb-inkass-pay-code tb-deleted tb-cst-code tb-exp-checks ~
+bt-sel-doc-type tb-inkass-pay-code tb-deleted tb-cst-code tb-exp-checks tb-exp-doc-rvs ~
 tb-parts tb-chk-pay-code rs-cash-pay tb-pay-desk bt-cash-pay ~
 tb-pay-desk-cards EDITOR-gds-grp RADIO-SET-gds-grp bt-sel-gds-grp ~
 v-text-goods 
 &Scoped-Define DISPLAYED-OBJECTS date_from date_to ed-object rs-1 ~
 ed-doc-type ed-doc-type-label tb-inkass-pay-code tb-deleted tb-cst-code ~
-tb-exp-checks tb-parts tb-chk-pay-code rs-cash-pay tb-pay-desk ~
+tb-exp-checks tb-parts tb-chk-pay-code rs-cash-pay tb-pay-desk tb-exp-doc-rvs ~
 tb-pay-desk-cards EDITOR-gds-grp RADIO-SET-gds-grp v-text-goods 
 
 /* Custom List Definitions                                              */
@@ -279,6 +280,11 @@ DEFINE VARIABLE tb-exp-checks AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 20.63 BY .79 NO-UNDO.
 
+DEFINE VARIABLE tb-exp-doc-rvs AS LOGICAL INITIAL no 
+     LABEL "Сверки до/после слива" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 26.38 BY .79 NO-UNDO.
+     
 DEFINE VARIABLE tb-inkass-pay-code AS LOGICAL INITIAL no 
      LABEL "По виду оплаты" 
      VIEW-AS TOGGLE-BOX
@@ -324,6 +330,7 @@ DEFINE FRAME Dialog-Frame
      tb-deleted AT ROW 11.5 COL 36.63
      tb-cst-code AT ROW 12.25 COL 2.63
      tb-exp-checks AT ROW 12.25 COL 36.63 WIDGET-ID 2
+     tb-exp-doc-rvs AT ROW 13 COL 36.63
      tb-parts AT ROW 13 COL 2.63
      tb-chk-pay-code AT ROW 13.75 COL 2.63
      rs-cash-pay AT ROW 13.79 COL 40 NO-LABEL
@@ -643,6 +650,7 @@ DO:
         tb-deleted
         tb-supp
         tb-exp-checks
+        tb-exp-doc-rvs
         rs-1
         tb-chk-pay-code
         tb-pay-desk
@@ -653,6 +661,7 @@ DO:
     .
     assign
       p-chk = tb-exp-checks
+      p-doc-rvs = tb-exp-doc-rvs
     .
     if date_from > date_to
     and p-output-type <> 4
@@ -1071,12 +1080,12 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY date_from date_to ed-object rs-1 ed-doc-type ed-doc-type-label 
           tb-inkass-pay-code tb-deleted tb-cst-code tb-exp-checks tb-parts 
-          tb-chk-pay-code rs-cash-pay tb-pay-desk tb-pay-desk-cards 
+          tb-chk-pay-code rs-cash-pay tb-pay-desk tb-pay-desk-cards tb-exp-doc-rvs
           EDITOR-gds-grp RADIO-SET-gds-grp v-text-goods 
       WITH FRAME Dialog-Frame.
   ENABLE RECT-2 RECT-1 RECT-3 RECT-gds Btn_OK Btn_Cancel b-help date_from 
          date_to rs-1 bt-sel-obj ed-doc-type bt-sel-doc-type tb-inkass-pay-code 
-         tb-deleted tb-cst-code tb-exp-checks tb-parts tb-chk-pay-code 
+         tb-deleted tb-cst-code tb-exp-checks tb-parts tb-chk-pay-code tb-exp-doc-rvs
          rs-cash-pay tb-pay-desk bt-cash-pay tb-pay-desk-cards EDITOR-gds-grp 
          RADIO-SET-gds-grp bt-sel-gds-grp v-text-goods 
       WITH FRAME Dialog-Frame.
@@ -1125,7 +1134,7 @@ on error undo, return error return-value
     , output  v-type-price
     , output  v-type-val
     ) .
-  if num-entries(v-naim) = 11
+  if num-entries(v-naim) = 12
   then do:
     assign
       date_from           = date(    entry( 1, v-naim ) )
@@ -1139,6 +1148,7 @@ on error undo, return error return-value
       tb-pay-desk         = logical( entry( 9, v-naim ) )
       tb-pay-desk-cards   = logical( entry(10, v-naim ) )
       tb-supp             = logical( entry(11, v-naim ) )
+      tb-exp-doc-rvs      = logical( entry(12, v-naim ) )
     .
     if tb-chk-pay-code = yes
     then do:
@@ -1147,7 +1157,6 @@ on error undo, return error return-value
         tb-pay-desk-cards
       with frame {&frame-name}.
     end.
-    end.
     display
       date_from    when not( p-output-type = 4 or p-output-type = 5)
       date_to
@@ -1155,13 +1164,14 @@ on error undo, return error return-value
       tb-cst-code
       tb-deleted
       tb-exp-checks
+      tb-exp-doc-rvs
       tb-inkass-pay-code
       tb-parts
       tb-pay-desk
       tb-pay-desk-cards
       tb-supp           when p-output-type = 2
     with frame {&frame-name}.
-  
+  end.
   if num-entries(v-list,';') = 2
   then do:
     assign
@@ -1284,6 +1294,7 @@ on error undo, return error return-value
     tb-cst-code
     tb-deleted
     tb-exp-checks
+    tb-exp-doc-rvs
     tb-inkass-pay-code
     tb-parts
     tb-pay-desk
@@ -1337,7 +1348,8 @@ on error undo, return error return-value
                    string(tb-parts          ) + "," +
                    string(tb-pay-desk       ) + "," +
                    string(tb-pay-desk-cards ) + "," +
-                   string(tb-supp           )
+                   string(tb-supp           ) + "," +
+                   string(tb-exp-doc-rvs    )
     v-list       = substitute( "&1:&2;&3"
                              , v-obj-range
                              , v-obj-list

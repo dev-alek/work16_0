@@ -35,6 +35,7 @@ define variable vss-description as character no-undo initial "Переход по статуса
 { cmp/library.i  }
 { str/lib-trn.i  }
 { str/lib-rvs.i  }
+{ str/placelib.i }
 {str/autorvs.i}
 { gbl/getsect.i def }
 
@@ -59,6 +60,7 @@ do transaction
     define variable v-abs-critdif   as decimal   no-undo.
     define variable v-dif-res-count as integer   no-undo.
     define variable v-dif-res       as character no-undo.
+    define variable v-ok            as logical no-undo .
     
     define variable v-first-volue as decimal  no-undo .
     define variable v-first-density    as decimal  no-undo .
@@ -378,7 +380,43 @@ do transaction
                                         end.
                                     end.
                                 end.  
-                                
+                                find first rvs-line-attr no-lock
+                                      where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                                      and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                      and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                      and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                      and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                      and rvs-line-attr.attr-code = "hand-save" no-error.
+                                if available rvs-line-attr
+                                and logical(rvs-line-attr.attr-value) = yes
+                                then do :
+                                  run placelib_write-attr  (input {&place-need-RVD-rvs}
+                                                            ,input buf_rvs-line.obj-code
+                                                            ,input buf_rvs-line.obj-type
+                                                            ,input buf_rvs-line.pl-code
+                                                            ,input string(no)
+                                                            ,output v-ok      ) no-error.
+                                end .
+                                for first rvs-line-attr no-lock
+				                    where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+				                    and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+				                    and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+				                    and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+				                    and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+				                    and rvs-line-attr.attr-code = "rvd-reason"
+				                :
+				                  run trg/userlog.p (
+				                        input 'rvd-reasons'
+				                      , input rvs-line-attr.attr-value
+				                      , input ?
+				                      , input ?
+				                      , input ""
+				                      ) no-error.
+				                  if error-status :error
+				                  then do:
+				                      message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+				                  end.
+				                end . 
                             end.
                             if buf_rvs-doc.rvs-type =  {&rvs-shift} then 
                             do: 

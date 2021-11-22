@@ -15,6 +15,7 @@ Creation date: 06/18/09
 
 */
 
+define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-rec as recid no-undo .
 define input parameter p-silent as logical no-undo .
 
@@ -29,16 +30,21 @@ define variable vss-description as character no-undo init "Удаление строки распи
 { cmp/str-glbl.i }
 { gbl/key-rec.i }
 { ref/shd-attr.i }
+{ gbl/getcntxt.i def }
 
 define variable v-mess as character no-undo .
 define variable v-uniq-key-rec as character no-undo .
 define variable v-free-id as character no-undo .
 define variable v-rum-type as character no-undo .
-
+define variable v-shift-num as integer no-undo .
+define variable v-shift-date as date no-undo .
+  
+define buffer buf_shift-obj for ub.shift-obj .
 define buffer buf_schedule for ub.schedule.
 define buffer buf-del_schedule-attr   for ub.schedule-attr .
 define buffer buf_schedule-attr       for ub.schedule-attr .
 define buffer buf-del_schedule        for ub.schedule .
+define temp-table tt-sched no-undo like ub.schedule .
 DEFINE TEMP-TABLE tt0-rp-by-call NO-UNDO LIKE ub.rp-by-call.
 DEFINE TEMP-TABLE tt0-rule-by-call NO-UNDO LIKE ub.rule-by-call.
 DEFINE TEMP-TABLE tt0-rule-call-param NO-UNDO LIKE ub.rule-call-param.
@@ -50,6 +56,8 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
+  { gbl/getcntxt.i get }
+
   find first buf_schedule exclusive-lock where
           recid(buf_schedule) = p-rec .
 
@@ -110,6 +118,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     .
     delete buf-del_schedule-attr.
   end.      /* for each buf-del_schedule-attr */
+  create tt-sched .
+  buffer-copy buf_schedule to tt-sched .
   delete buf_schedule no-error.
   if error-status:error then do:
     v-mess = substitute("Ошибка при удалении: &1&2&3"
@@ -119,6 +129,61 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
    run err-mess in this-procedure ( input-output v-mess) .
    undo main-block, return error (if p-silent = yes then v-mess else '':U).
   end.
+  
+  v-shift-num = 0 .
+  v-shift-date = ? .
+  for first buf_shift-obj
+      where buf_shift-obj.obj-type = v-cntxt-obj-type
+        and buf_shift-obj.obj-code = v-cntxt-obj-code
+        and buf_shift-obj.status_ = {&sht-current}
+      use-index stts :
+    assign
+      v-shift-date = buf_shift-obj.shift-date
+      v-shift-num  = buf_shift-obj.shift-num
+    .
+  end.
+  if v-shift-date = ? then v-shift-date = today .
+  run trg/userlog.p (
+          input 'schedule'
+        , input ("Удаление расписания автозаданий на объекте " +
+                v-cntxt-obj-type + string(v-cntxt-obj-code) + ";" + 
+                tt-sched.task-type + ";" +
+                (if tt-sched.task-type = {&btpr-type-autofree} then v-free-id else "0") + ";" +
+                  string(tt-sched.task-num) + "|" +
+                  (if tt-sched.active then "1" else "0") + "|" +
+                  tt-sched.task-year + "|" +
+                  tt-sched.task-month + "|" +
+                  tt-sched.task-day + "|" +
+                  tt-sched.task-weekday + "|" +
+                  tt-sched.task-hour + "|" +
+                  tt-sched.task-minute +
+                {&delim-key} +
+                v-cntxt-obj-type + {&delim-cmd} +
+                string(v-cntxt-obj-code) + {&delim-cmd} +
+                string(v-shift-date) + {&delim-cmd} +
+                string(v-shift-num) + {&delim-cmd} +
+                tt-sched.task-type + {&delim-cmd} +
+                (if tt-sched.task-type = {&btpr-type-autofree} then v-free-id else "0") + {&delim-cmd} + 
+                string(tt-sched.task-num) + {&delim-cmd} +
+                (if tt-sched.active then "1" else "0") + {&delim-cmd} +
+                tt-sched.task-year + {&delim-cmd} +
+                tt-sched.task-month + {&delim-cmd} +
+                tt-sched.task-day + {&delim-cmd} +
+                tt-sched.task-weekday + {&delim-cmd} +
+                tt-sched.task-hour + {&delim-cmd} +
+                tt-sched.task-minute + {&delim-cmd} +
+                "del" + {&delim-cmd} +
+                tt-sched.db-num-char  )
+        , input ?
+        , input ?
+        , input ""
+        ) no-error.
+  if error-status :error
+  then do:
+      message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+  end.
+  delete tt-sched no-error .
+  
 end. /*doe*/
 
 

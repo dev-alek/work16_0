@@ -25,6 +25,7 @@ Creation date: 21/06/18
 using Progress.Lang.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.ref.promo.*.
+using ibs.th.gbl.sys.objsrv.
 block-level on error undo, throw.
 &glob promoTrackingChanges no and
 class ibs.th.ref.promo.promo_trg :
@@ -96,7 +97,6 @@ class ibs.th.ref.promo.promo_trg :
   end destructor.
 
 /* --- 1 вызовы из списка --- */
-     
 /* 1.1 получить таблицу акций для отображения в data-grid */
 define variable mDate   as date     no-undo.
 define variable mStatus as integer  no-undo.
@@ -664,9 +664,9 @@ end . /* end_of низ таблицы и html-файла */
   v-listact-brw = new ibs.th.ref.promo.wListActions (input this-object
   //, input table tt-promoaction by-reference 
   ). 
-  /* v-listact-brw:SetPromoBind(input table tt-promoaction by-reference
-   )
-   .*/.
+      /* v-listact-brw:SetPromoBind(input table tt-promoaction by-reference
+       )
+       .*/.
  //  v-listact-brw:SetPromoTrg(this-object ).
   /* Display and wait for this non-modal form to close. */
   wait-for System.Windows.Forms.Application:Run ( v-listact-brw ) .
@@ -736,6 +736,9 @@ end . /* end_of низ таблицы и html-файла */
   if     vFlag
      and available tt-promoaction 
   then do:
+    if refPromoMark() then        message "Правила акции нарушают закон о маркировке продукции. Редактирование не возможно." 
+       view-as alert-box.
+    else do: 
     refOnePromo().
     if  v-obj-date > tt-promoaction.end-date
     then
@@ -784,6 +787,7 @@ end . /* end_of низ таблицы и html-файла */
       end.
       else      
          formOnePromo ({&update}) .
+    end.
     end.
   end.  
   end method .
@@ -884,13 +888,14 @@ end . /* end_of низ таблицы и html-файла */
   
   define variable v-sub   as class promoActionsub no-undo .
       dataset ds-promoaction-one:empty-dataset ( ) .   
-      
+
       if (  p-mode eq {&add-def}
          or p-mode eq {&update} )
          and  chek1CERP ()
       then
          undo, throw new Progress.Lang.AppError("Создание/изменение акций невозможно при интеграции с 1С-ERP") .
-      
+     if p-mode = {&update} and refPromoMark() then
+        undo, throw new Progress.Lang.AppError("Создание/изменение акции невозможно. Правила акции нарушают закон о маркировке продукции.") .
       // вызвать в storage создание экземпляра класса sub и его заполнение или инициализацию
       if p-mode eq {&add-def} and not modecopy then do:
          v-sub = new promoActionsub().
@@ -904,9 +909,13 @@ end . /* end_of низ таблицы и html-файла */
            
           v-sub = cast(tt-promoaction.sub, ibs.th.ref.promo.PromoActionSub) .
           
-          if modecopy
-          then
-             v-sub = this-object:m-storage:CopyObject(v-sub).
+           if modecopy
+              then 
+           do:
+              v-sub = this-object:m-storage:CopyObject(v-sub).
+              if refPromoMark() then
+                 undo, throw new Progress.Lang.AppError("Создание/изменение акции невозможно. Правила акции нарушают закон о маркировке продукции.") .
+           end.   
           else 
              v-sub:refreshChildObj().    
         end .
@@ -2321,7 +2330,15 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
          no-lock no-error.
          if available ub.goods
          then do:
-           case iName:
+         if can-find (first ub.goods-attr no-lock where ub.goods-attr.gds-code = ub.goods.gds-code and 
+            ub.goods-attr.attr-code = {&attr-mark-type} and ub.goods-attr.attr-value <> "not-type" and 
+            ub.goods-attr.attr-value <> "") then 
+         do:
+            message "Правила акции нарушают закон о маркировке продукции. Добавление маркированных товаров запрещено."
+            view-as alert-box.
+         end.   
+         else do:
+         case iName:
              when "PromoGoodsAppl" 
              then do:
                 find first tt-PromoGoodsappl where  tt-PromoGoodsAppl.gds-code = ub.goods.gds-code no-error.
@@ -2409,7 +2426,7 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
              end. 
                     
     end case.
-            
+         end.   
          end.   
      end.             
   end  method.
@@ -2569,5 +2586,39 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
        
        return mode-erprn .
     end method.
+
+   method private logical refPromoMark ():
+      define variable v-sub as class promoActionsub no-undo .
+      define buffer buf_PromoGift  for ub.PromoGift .
+      define buffer buf_PromoGoods for ub.PromoGoods .
+      define buffer buf_goods-attr for ub.goods-attr .
+      define variable v-ban-recipes as logical no-undo .
+      v-sub = cast(tt-promoaction.sub, ibs.th.ref.promo.PromoActionSub) .
+      m-storage:refreshObj(v-sub).
+      define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
     
+    run gbl/getobjsrvhndl.p (input-output ObjSrv).
+   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
+   if v-ban-recipes then do:
+/*      for each buf_PromoGoods no-lock where buf_PromoGoods.idAction = v-sub:ID and buf_PromoGoods.db-num = v-sub:db-num:*/
+/*         if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_PromoGoods.gds-code and          */
+/*            buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and                */
+/*            buf_goods-attr.attr-value <> "") then                                                                       */
+/*         do:                                                                                                            */
+/*            return true.                                                                                                */
+/*         end.                                                                                                           */
+/*      end.                                                                                                              */
+      for each buf_PromoGift no-lock where buf_PromoGift.idaction = v-sub:ID and buf_PromoGift.db-num = v-sub:db-num:
+         if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_PromoGift.gds-code and 
+            buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
+            buf_goods-attr.attr-value <> "") then 
+         do:
+            return true.
+         end.         
+      end.  
+   end.
+   else return false .      
+   end.
+   
+  
 end class .

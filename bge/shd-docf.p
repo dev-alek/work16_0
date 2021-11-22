@@ -31,6 +31,7 @@ define input parameter p-chk-pay-code   as logical    no-undo. /* надо ли экспор
 define input parameter p-pay-desk       as logical    no-undo. /* надо ли экспортировать разброс по кассам */
 define input parameter p-pay-desk-cards as logical    no-undo. /* надо ли экспортировать разброс по префиксам карт */
 define input parameter p-opened-docs    as logical    no-undo. /* надо ли экспортировать не закрытые документы */
+define input parameter p-doc-rvs        as logical    no-undo. /* надо ли выгружать сверки до/после слива по топливным приходным накладным */
 define input parameter hedt             as handle     no-undo.
 define input parameter hcnt             as handle     no-undo.
 
@@ -496,6 +497,7 @@ on error undo, return error
                     , input p-pay-desk
                     , input p-pay-desk-cards
                     , input no
+                    , input p-doc-rvs
                     , input v-xml-file-name
                     , input v-log-file-name
                     , input this-procedure

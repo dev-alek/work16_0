@@ -36,7 +36,7 @@ define variable v-field-chg as character no-undo .
 define variable v-date      as date      no-undo .
 define variable v-time      as integer   no-undo .
 
-
+   new-sr-izmerenia.node-code = if new-sr-izmerenia.node-code eq 0 then next-value (s-sr-izmerenia, {&db-name_schema}) else new-sr-izmerenia.node-code .
    buffer-compare new-sr-izmerenia to old-sr-izmerenia CASE-SENSITIVE save result in v-field-chg.
    if v-field-chg > "":U then . else return .
 

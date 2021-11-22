@@ -87,7 +87,9 @@ REPEAT :
                            , path
                            )
                                         ).
-    if p-spool-or-data = "spool" then do:
+    if p-spool-or-data = "spool" 
+    or p-spool-or-data = "config"
+    then do:
       run str/get-xibm.p (
                     input parparentproc
                     ,input p-log-handle
@@ -142,7 +144,8 @@ REPEAT :
     if v-need-save
     or v-need-save-2
     or p-view-log
-    or p-spool-or-data = "spool" then do:
+    or p-spool-or-data = "spool"
+    or p-spool-or-data = "config" then do:
       run gbl/filename.p (
                     input path
                     ,output v-full-path

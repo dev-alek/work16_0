@@ -27,6 +27,7 @@ class ibs.th.str.InfoSectionsTotal:
 
 { cmp/str-glbl.i class}
 { gbl/attr-lib.i class}
+&global-define list-shape "Без горловины,Квадратная/прямоугольная,Эллиптическая,Круглая"
 
   define private buffer buf_doc-line  for ub.doc-line.
   define private buffer buf_doc-line-attr for ub.doc-line-attr.
@@ -396,6 +397,7 @@ class ibs.th.str.InfoSectionsTotal:
     idSecCurr = SectionNum.
     InfoSectionCurr:idSec = SectionNum.
     InfoSectionCurr:infoSectionTotal = this-object.
+    InfoSectionCurr:AccShip = 0.25.
 
   end method.
 
@@ -705,6 +707,30 @@ class ibs.th.str.InfoSectionsTotal:
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'place-si-temp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:PlaceSiTemp).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'passport-plotn-temp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = InfoSectionCurr:PassportPlotnTemp.
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'date-pov-plotn-temp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:DatePovPlotnTemp).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'num-plotn-temp' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = InfoSectionCurr:NumPlotnTemp.
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'date-start' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string (InfoSectionCurr:DateStart).
       create buf_doc-line-attr.
@@ -875,8 +901,19 @@ class ibs.th.str.InfoSectionsTotal:
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tp-norm-auto' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
-      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TPNormAuto).      
-      
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TPNormAuto).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'pour' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:Pour).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'shape' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:Shape).
       release buf_doc-line-attr.
       
     end.
@@ -966,8 +1003,8 @@ class ibs.th.str.InfoSectionsTotal:
 
     if not InfoSectionCurr:IsKP and not isManual
     then do: 
-      message substitute ("Выявлено сверхнормативное расхождение Данных ТТН с данными в АЦ. Требуется комиссионный прием. Продолжить (необходимо подать заявку в соответсвии с принятой схемой обращения)?")
-      view-as alert-box question buttons yes-no title "Вопрос" update v-ok .
+      message substitute ("Имеются расхождения с документарным количеством больше допустимого. Требуется комиссионный прием нефтепродукта. Продолжить (для секции &1 будет установлен флаг комиссионного приема)?", ii)
+      view-as alert-box question buttons yes-no update v-ok .
       if not v-ok
       then do:
         MP = ?.
@@ -1325,14 +1362,13 @@ class ibs.th.str.InfoSectionsTotal:
 /*    f-car-vol     */
 /*    f-tank-vol    */
 /*    f-a-b-tarir   */
-/*    f-size        */
+/*    v-size        */
 /*    f-tank-temp   */
 /*    f-tank-density*/
 /*    f-dens-temp   */
 /*    f-place-si    */
 /*    .             */
-  
-  
+
     case RdcDnstvalue:
       when "pomi-rn" then do:
         _trpomi :
@@ -1343,7 +1379,7 @@ class ibs.th.str.InfoSectionsTotal:
           find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = InfoSectionCurr:PlaceSi no-error.
           if not available buf_sr-izmerenia then do :
             message
-              substitute( 'Не найдено средство измерения с кодом &1', InfoSectionCurr:PlaceSi ) skip
+              substitute( 'Не найдено средство измерения плотности с кодом &1', InfoSectionCurr:PlaceSi ) skip
             view-as alert-box error.
             undo _trpomi, return no-apply  .
           end.
@@ -1351,17 +1387,30 @@ class ibs.th.str.InfoSectionsTotal:
             assign
               ToolType               = buf_sr-izmerenia.sr-type-id
               DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+            .
+          end.
+          
+          find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = InfoSectionCurr:PlaceSiTemp no-error.
+          if not available buf_sr-izmerenia then do :
+            message
+              substitute( 'Не найдено средство измерения температуры с кодом &1', InfoSectionCurr:PlaceSiTemp ) skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply  .
+          end.
+          else do :
+            assign
               DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
               DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
-              .
+            .
           end.
+          
           /*..........................................*/
-          v-proc = "Rosneft.MethodOfMetering31" .
+          v-proc = "ADMM.CMethodOfMetering31N" .
     
           release object v-mm no-error.
           v-mm = ?.
     
-          create value("Rosneft.MethodOfMetering31") v-mm no-error.
+          create value(v-proc) v-mm no-error.
           if error-status:error
           or not VALID-HANDLE(v-mm)
           then do:
@@ -1373,6 +1422,21 @@ class ibs.th.str.InfoSectionsTotal:
             undo _trpomi, return no-apply .
           end.
           else do :
+            if InfoSectionCurr:Pour = "" then do :
+              message 
+                "Заполнены не все поля, необходимые " skip
+                "для работы библиотеки ПО МИ"         skip
+                "Введите тип налива"  skip
+              view-as alert-box error.
+            end.
+            
+            if InfoSectionCurr:Shape = "" then do :
+              message
+                "Заполнены не все поля, необходимые " skip
+                "для работы библиотеки ПО МИ"         skip
+                "Укажите форму горловины"  skip
+              view-as alert-box error.
+            end.
             if InfoSectionCurr:CarVol = ? or InfoSectionCurr:CarVol = 0 then do :
               message
                 "Заполнены не все поля, необходимые " skip
@@ -1435,71 +1499,113 @@ class ibs.th.str.InfoSectionsTotal:
                 "для работы библиотеки ПО МИ"         skip
                 "Введите Плотность топлива для ПО МИ"  skip
               view-as alert-box error.
-/*              apply "entry" to f-tank-density in frame {&frame-name} .*/
-/*              undo _trpomi, return no-apply  .                        */
             end.
-            v-TankVol-m3 = (InfoSectionCurr:CarVol / 1000) .
+
+            if  InfoSectionCurr:ListTank = "" then do :
+              message
+                "Заполнены не все поля, необходимые " skip
+                "для работы библиотеки ПО МИ"         skip
+                "Выберите резервуар"  skip
+              view-as alert-box error.
+
+            end.
+
+            define variable v-auto-error as decimal no-undo.
+            find first ub.auto-tank-attr no-lock
+                 where ub.auto-tank-attr.auto-num = CarNum
+                   and ub.auto-tank-attr.attr-code = "auto-error" no-error.
+            
+            if available (ub.auto-tank-attr)
+            then do:
+              assign v-auto-error = decimal (ub.auto-tank-attr.attr-value) no-error.
+              if error-status:error
+                then v-auto-error = 0.4 .
+            end.
+            else do:
+              v-auto-error = 0.4 .
+            end.
+
+            if infoSectionCurr:Pour = "Нижний налив"
+            then do:
+              assign
+                v-mm:V_real = (InfoSectionCurr:CarVol + (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then InfoSectionCurr:Mouth else 0) + InfoSectionCurr:DopVolume) / 1000.
+            end.
+            else do:
+              assign
+                v-mm:V_real = (InfoSectionCurr:CarVol + (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then InfoSectionCurr:Mouth else 0)) / 1000.
+            end.
+
             assign
-              v-mm:V_real                 = v-TankVol-m3
-              v-mm:DeltaH                 = InfoSectionCurr:ABTarir
-              v-mm:Dgor                   = Dgor
-              v-mm:NeckType               = NeckType 
-              v-mm:NeckWidth              = NeckWidth  
-              v-mm:NeckHeight             = NeckHeight  
-              v-mm:Tv                     = InfoSectionCurr:TankTemp
+              v-mm:DeltaH                 = if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:ABTarir
+              v-mm:NeckArea               = if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:NeckArea
+              v-mm:Tv                     = infoSectionCurr:TankTemp
               v-mm:Tr                     = InfoSectionCurr:DensTemp
               v-mm:R                      = ( InfoSectionCurr:TankDensity * 1000 )
               v-mm:Tcy                    = TempForPomi
               v-mm:ToolType               = ToolType
-              v-mm:A_Reservoir            = 0.0000125
+/*              v-mm:A_Reservoir            = 0.0000125*/
               v-mm:DeltaOtn_V             = 0.4
               v-mm:DeltaAbs_R             = DeltaAbs_R
               v-mm:DeltaAbs_Tv            = DeltaAbs_Tv
               v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
             .
             v-mm:Exec() .
+
+/*            assign                                                                */
+/*              v-mm:V_real                 = v-TankVol-m3                          */
+/*              v-mm:DeltaH                 = InfoSectionCurr:ABTarir               */
+/*              v-mm:Dgor                   = Dgor                                  */
+/*              v-mm:NeckType               = NeckType                              */
+/*              v-mm:NeckWidth              = NeckWidth                             */
+/*              v-mm:NeckHeight             = NeckHeight                            */
+/*              v-mm:Tv                     = InfoSectionCurr:TankTemp              */
+/*              v-mm:Tr                     = InfoSectionCurr:DensTemp              */
+/*              v-mm:R                      = ( InfoSectionCurr:TankDensity * 1000 )*/
+/*              v-mm:Tcy                    = TempForPomi                           */
+/*              v-mm:ToolType               = ToolType                              */
+/*              v-mm:A_Reservoir            = 0.0000125                             */
+/*              v-mm:DeltaOtn_V             = 0.4                                   */
+/*              v-mm:DeltaAbs_R             = DeltaAbs_R                            */
+/*              v-mm:DeltaAbs_Tv            = DeltaAbs_Tv                           */
+/*              v-mm:DeltaAbs_Tr            = DeltaAbs_Tr                           */
+/*            .                                                                     */
+/*            v-mm:Exec() .                                                         */
             output stream outstream to value ("pomi.log") append.
             put stream outstream unformatted
               {&new-line}
-              "-----------------------------------------------"
-              {&new-line}
                                          now                     skip
-              'Номер документа:'         TrnDocNum              skip
-              'Секция:'                  InfoSectionCurr:SectionName         skip
-              'Процедура'                v-proc                  skip
-              'V_real                 =' v-TankVol-m3 skip
-              'DeltaH                 =' InfoSectionCurr:ABTarir skip
-              'Dgor                   =' Dgor                    skip
-              'NeckType               =' NeckType                skip 
-              'NeckWidth              =' NeckWidth               skip
-              'NeckHeight             =' NeckHeight              skip
-              'Tv                     =' InfoSectionCurr:TankTemp             skip
-              'Tr                     =' InfoSectionCurr:DensTemp             skip
-              'R                      =' ( InfoSectionCurr:TankDensity * 1000 ) skip
-              'Tcy                    =' TempForPomi           skip
-              'ToolType               =' ToolType                skip
-              'A_Reservoir            =' string (0.0000125)      skip
-              'DeltaOtn_V             =' 0.4                     skip
-              'DeltaAbs_R             =' DeltaAbs_R              skip
-              'DeltaAbs_Tv            =' DeltaAbs_Tv             skip
-              'DeltaAbs_Tr            =' DeltaAbs_Tr             skip
-              'Vcy                    =' v-mm:Vcy               skip 
-              'Rcy                    =' v-mm:Rcy               skip
-              'V                      =' v-mm:V                 skip
-              'CTL_base_alt           =' v-mm:CTL_base_alt      skip 
-              'CPL_base_alt           =' v-mm:CPL_base_alt      skip 
-              'CTPL_base_alt          =' v-mm:CTPL_base_alt     skip
-              'Fp_base_alt            =' v-mm:Fp_base_alt       skip
-              'CTL_obs_base           =' v-mm:CTL_obs_base      skip
-              'CPL_obs_base           =' v-mm:CPL_obs_base      skip
-              'CTPL_obs_base          =' v-mm:CTPL_obs_base     skip
-              'Fp_obs_base            =' v-mm:Fp_obs_base       skip
-              'Rv                     =' v-mm:Rv                skip
-              'DeltaOtn_Vcy           =' v-mm:DeltaOtn_Vcy      skip 
-              'M                      =' v-mm:M                 skip
-              'Mcy                    =' v-mm:Mcy               skip
-              'DeltaOtn_M             =' v-mm:DeltaOtn_M        skip
-            .
+              'Процедура: '              v-proc                  skip
+              'V_real                 = ' v-mm:V_real            skip
+              'DeltaH                 = ' (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:ABTarir) skip
+              'NeckArea               = ' (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:NeckArea) skip
+              'Tv                     = ' InfoSectionCurr:TankTemp skip
+              'Tr                     = ' InfoSectionCurr:DensTemp skip
+              'R                      = ' ( InfoSectionCurr:TankDensity ) skip
+              'Tcy                    = ' TempForPomi skip
+              'ToolType               = ' ToolType                skip
+              'A_Reservoir            = ' string (0.0000125)      skip
+              'DeltaOtn_V             = ' string (v-auto-error)   skip
+              'DeltaAbs_R             = ' DeltaAbs_R              skip
+              'DeltaAbs_Tv            = ' DeltaAbs_Tv             skip
+              'DeltaAbs_Tr            = ' DeltaAbs_Tr             skip
+              'Vcy                    = ' v-mm:Vcy               skip 
+              'Rcy                    = ' v-mm:Rcy               skip
+              'V                      = ' v-mm:V                 skip
+              'CTL_base_alt           = ' v-mm:CTL_base_alt      skip 
+              'CPL_base_alt           = ' v-mm:CPL_base_alt      skip 
+              'CTPL_base_alt          = ' v-mm:CTPL_base_alt     skip
+              'Fp_base_alt            = ' v-mm:Fp_base_alt       skip
+              'CTL_obs_base           = ' v-mm:CTL_obs_base      skip
+              'CPL_obs_base           = ' v-mm:CPL_obs_base      skip
+              'CTPL_obs_base          = ' v-mm:CTPL_obs_base     skip
+              'VolumetricExpansion    = ' v-mm:VolumetricExpansion skip
+              'Fp_obs_base            = ' v-mm:Fp_obs_base       skip
+              'Rv                     = ' v-mm:Rv                skip
+              'DeltaOtn_Vcy           = ' v-mm:DeltaOtn_Vcy      skip 
+              'M                      = ' v-mm:M                 skip
+              'Mcy                    = ' v-mm:Mcy               skip
+              'DeltaOtn_M             = ' v-mm:DeltaOtn_M        skip
+            .    
             output stream outstream close.
             if v-mm:Result <> 0 then do :
               error-string = v-mm:ResultDetail .
@@ -1516,8 +1622,8 @@ class ibs.th.str.InfoSectionsTotal:
             else do :
               assign
                 InfoSectionCurr:TankDensityPomi    = decimal(v-mm:Rcy) / 1000
-                InfoSectionCurr:TankVolPomi        = v-mm:Vcy * 1000 
-                InfoSectionCurr:TankWeight     = v-mm:Mcy * 1000
+                InfoSectionCurr:TankVolPomi        = v-mm:Vcy * 1000
+                InfoSectionCurr:TankWeight     = v-mm:M
                 InfoSectionCurr:AccPomi = round (v-mm:DeltaOtn_M, 3)
               .
 /*              display                  */
@@ -1666,6 +1772,148 @@ class ibs.th.str.InfoSectionsTotal:
         and trim (arg2) = trim (buf_doc-line-attr.attr-value)).
     
   end.
+  
+  method public void GetArea ( output NeckArea as decimal, input v-boxshape as integer, input v-size as character ):
+  
+    define variable v-mm as com-handle.
+    define variable v-proc as character no-undo.
+    define variable error-string as character no-undo.
+    
+    if not RdcDnstvalue = "pomi-rn" 
+    then do:
+      case v-boxshape:
+        when 1 then do:
+          NeckArea = decimal(entry(3, v-size, "/")) * decimal(entry(4, v-size, "/")) * 0.000001 no-error.
+        end .
+        when 3 then do:
+          NeckArea = 3.14159 * decimal(entry(2, v-size, "/")) * decimal(entry(2, v-size, "/")) * 0.000001 / 4 no-error .
+        end .
+        otherwise do :
+          NeckArea = 0 .
+        end .
+      end case .
+      if NeckArea = ? then NeckArea = 0 .
+      return.
+    end.
+    
+    v-proc = "ADMM.CMethodOfMetering26A" .
+  
+    create value(v-proc) v-mm no-error.
+    if error-status:error
+    or not VALID-HANDLE(v-mm)
+    then do:
+      release object v-mm no-error.
+      v-mm = ?.
+      message
+        substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) skip
+      view-as alert-box error.
+      undo, return no-apply .
+    end.
+    def var v-diameter as decimal no-undo.
+    def var v-circumference as decimal no-undo.
+    def var v-wall as decimal no-undo.
+    case v-boxshape:
+      when 1 then do:
+        assign
+          v-mm:Diameter      = 0.0
+          v-mm:Length        = decimal (entry (3, v-size, "/"))
+          v-mm:Width         = decimal (entry (4, v-size, "/"))
+          v-mm:Circumference = 0.0
+          v-mm:Wall          = decimal (entry (2, v-size, "/"))
+          .
+      end.
+      when 2 then do:
+        assign
+          v-mm:Diameter      = 0.0
+          v-mm:Length        = decimal (entry (3, v-size, "/"))
+          v-mm:Width         = decimal (entry (4, v-size, "/"))
+          v-mm:Circumference = 0.0
+          v-mm:Wall          = decimal (entry (2, v-size, "/"))
+          .
+      end.
+      when 3 then do:
+        case true:
+          when decimal (entry (3, v-size, "/")) > 0 and decimal (entry (5, v-size, "/")) > 0 then do:
+            v-diameter = decimal (entry (3, v-size, "/")).
+            v-wall = decimal (entry (5, v-size, "/")).
+            v-circumference = 0.
+          end.
+          when decimal (entry (2, v-size, "/")) > 0 then do:
+            v-diameter = decimal (entry (2, v-size, "/")).
+            v-wall = 0.
+            v-circumference = 0.
+          end.
+          when decimal (entry (4, v-size, "/")) > 0 then do:
+            v-diameter = 0.
+            v-wall = decimal (entry (5, v-size, "/")).
+            v-circumference = decimal (entry (4, v-size, "/")).
+            v-boxshape = 4.     
+          end.
+          otherwise do:
+            v-diameter = if decimal (entry (3, v-size, "/")) > 0 then decimal (entry (3, v-size, "/")) else decimal (entry (2, v-size, "/")).
+            v-wall = decimal (entry (5, v-size, "/")).
+            v-circumference = decimal (entry (4, v-size, "/")).   
+          end.
+        end case.
+  
+        assign
+          v-mm:Diameter      = v-diameter
+          v-mm:Length        = 0.0
+          v-mm:Width         = 0.0
+          v-mm:Circumference = v-circumference
+          v-mm:Wall          = v-wall
+          .
+      end.
+      when 0 then do:
+        NeckArea = 0.
+        return.
+      end.
+      otherwise do:
+        message
+          substitute('Неверный тип горловины')
+        view-as alert-box error.
+        undo, return no-apply .
+      end.
+    end case.
+    v-mm:Type = v-boxshape.
+    output stream outstream to value ("pomi.log") append.
+    v-mm:Exec() .
+    put stream outstream unformatted
+      {&new-line}
+      now
+      'Процедура: '             v-proc             skip
+      'Type                 = ' v-boxshape         skip
+      'Diameter             = ' v-mm:Diameter      skip
+      'Length               = ' v-mm:Length        skip
+      'Width                = ' v-mm:Width         skip
+      'Circumference        = ' v-mm:Circumference skip
+      'Wall                 = ' v-mm:Wall          skip
+    .
+    output stream outstream close.
+    if v-mm:Result <> 0 then do :
+      error-string = v-mm:ResultDetail .
+      output stream outstream to value ("pomi.log") append.
+        put stream outstream error-string format "x(1024)" skip.
+      output stream outstream close.
+      release object v-mm no-error.
+      v-mm = ?.
+      message
+        substitute('Ошибка работы библиотеки ПО МИ &1',error-string) skip
+      view-as alert-box error.
+      undo, return no-apply  .
+    end.
+    else do :
+    
+      NeckArea = v-mm:Area.
+      output stream outstream to value ("pomi.log") append.
+        put stream outstream
+        "v-mm:Area             = " string (NeckArea)      skip.
+      output stream outstream close.
+      release object v-mm no-error.
+      v-mm = ?.
+    end.
+    
+  end method.
   
   /*------------------------------------------------------------------------------
    Purpose:

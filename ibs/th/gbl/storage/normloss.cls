@@ -105,6 +105,7 @@ class ibs.th.gbl.storage.normloss:
     def buffer bf_gds-attr for ub.goods-attr.
     def buffer bf_cli-attr for ub.clients-attr.
     def buffer buf_auto-tank for ub.auto-tank.
+    def buffer buf_auto-section for ub.auto-section.
     
     def var plnlValue as decimal init 0 no-undo.
     def var autonlValue as decimal init 0 no-undo.
@@ -148,7 +149,7 @@ class ibs.th.gbl.storage.normloss:
         dateSeason2 = date (entry (3,bf_cli-attr.attr-value)  + "/" + string (year (parTPforNorm:OnDate))).
         if dateSeason1 < parTPforNorm:OnDate and parTPforNorm:OnDate < dateSeason2
         then
-          season = 2.
+          season = 0.
         else
           season = 1.
       end.
@@ -168,9 +169,11 @@ class ibs.th.gbl.storage.normloss:
     def var maxlvl1 as decimal no-undo.
     def var maxlvl2 as decimal no-undo. 
      
-    for first buf_auto-tank no-lock where buf_auto-tank.auto-num = ( parTPforNorm:AutoNum + chr(35) + parTPforNorm:SecNum ):
+    for first buf_auto-section no-lock where buf_auto-section.auto-num = parTPforNorm:AutoNum 
+                                         and buf_auto-section.section-num = integer(parTPforNorm:SecNum)
+                                         :
       assign 
-        maxlvl = buf_auto-tank.brutto-qnty / 1000
+        maxlvl = buf_auto-section.brutto-qnty / 1000
       no-error. 
     end.
     
@@ -180,7 +183,7 @@ class ibs.th.gbl.storage.normloss:
         and 
         (
           ((bf_norm-loss.sec-vol1) < maxlvl
-          and (bf_norm-loss.sec-vol2) > maxlvl)
+          and (bf_norm-loss.sec-vol2) >= maxlvl)
           or
           ((bf_norm-loss.sec-vol1) < maxlvl
           and (bf_norm-loss.sec-vol2) = ?)

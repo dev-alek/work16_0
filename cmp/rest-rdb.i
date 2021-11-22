@@ -111,9 +111,13 @@ assortment-matrix~
 ,arh-wth-cli-tot~
 ,attr-prop~
 ,auto-tank~
+,auto-section~
+,auto-section-table~
 ,bar-code-attr~
 ,c-bar-code-attr~
 ,c-auto-tank~
+,c-auto-section~
+,c-auto-section-table-
 ,auto-tank-meas~
 ,buyer-group~
 ,c-buyer-group~

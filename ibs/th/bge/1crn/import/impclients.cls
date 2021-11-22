@@ -411,7 +411,7 @@ class ibs.th.bge.1crn.import.impclients implements ibs.th.bge.1crn.import.iimpsu
             and buf_clients-attr.obj-type = {&cmp} no-error .
           if AVAILABLE (buf_clients-attr) then 
           do:
-            if lookup(buf_clients-attr.attr-value,(bf_clients.obj-type + string(bf_clients.obj-code))) = 0 then 
+            if lookup((bf_clients.obj-type + string(bf_clients.obj-code)), buf_clients-attr.attr-value) = 0 then 
             buf_clients-attr.attr-value = buf_clients-attr.attr-value + "," + bf_clients.obj-type + string(bf_clients.obj-code) .
           end.
           else 

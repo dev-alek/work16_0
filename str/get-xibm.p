@@ -579,6 +579,7 @@ define variable v-step as integer   no-undo .
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_chk-doc for ub.chk-doc.
 define variable vCHNumberKKT       as character no-undo.
+define variable vCHNumberFN        as character no-undo.
 define variable vCHFiscalDocSign   as character no-undo . /* Фискальный признак документа. Тег 1077. Строка из 6 символов. */
 define variable vCHFiscalDocNumber as integer no-undo .   /* Номер фискального документа. Тег 1040. Целое число, порядковый номер ФД с момента регистрации (перерегистрации) ККТ. */
 
@@ -785,6 +786,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         end.
         when "CHNumberKKT":U then do:
           vCHNumberKKT = buf_temp-temp.field-value no-error .
+        end.
+        when "CHNumberFN":U then do:
+          vCHNumberFN = buf_temp-temp.field-value no-error .
         end.
         when "CHFiscalDocSign":U then do :
           vCHFiscalDocSign = buf_temp-temp.field-value no-error .
@@ -1048,6 +1052,23 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.attr-value = vCHNumberKKT
         .
       end.
+      if v-id > "" then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CheckId"
+           chk-doc-attr.attr-value = v-id
+        .
+      end.      
+      if vCHNumberFN ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHNumberFN"
+           chk-doc-attr.attr-value = vCHNumberFN
+        .
+      end.      
       if vCHFiscalDocSign > "" then do:
         create chk-doc-attr.
         assign
@@ -1242,6 +1263,23 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.attr-value = vCHNumberKKT
         .
       end.
+      if v-id > "" then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CheckId"
+           chk-doc-attr.attr-value = v-id
+        .
+      end.
+      if vCHNumberFN ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHNumberFN"
+           chk-doc-attr.attr-value = vCHNumberFN
+        .
+      end.      
       if vCHFiscalDocSign > "" then do:
         create chk-doc-attr.
         assign
@@ -1305,6 +1343,42 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
   end. /*товарные чеки*/
 end.
 end procedure .
+
+procedure proc-Parameter :
+define buffer buf_temp-param for temp-param.
+define buffer buf_chk-doc for ub.chk-doc.
+define buffer buf_shift-obj for ub.shift-obj.
+define variable v-ffd-version as character no-undo .
+define variable v-KKT_SCHEMA as character no-undo .
+do
+on error undo, return error
+:
+    for each buf_temp-param where
+            buf_temp-param.record-name = "Param":U
+            AND buf_temp-param.desk = v-desk
+            and buf_temp-param.field-name = "ParamValue":
+            run cd-attr-write in this-procedure (
+                                                    input g#db-num
+                                                  ,input p-obj-code
+                                                  ,input p-pos-type
+                                                  ,input buf_temp-param.desk
+                                                  ,input  (if p-pos-type = {&cd-type-ibm-xml}
+                                                           then {&cda-IBM-XML_operative}
+                                                           else {&cda-AUTOTANK_operative})
+                                                  ,input buf_temp-param.key-name
+                                                  ,input buf_temp-param.field-value
+                                                  ,input ? /*p-date*/
+                                                  ,input 0 /*p-decimal*/
+                                                  ,input 0 /*p-integer*/
+                                                  ,input no /*p-logical*/
+                                                  ) no-error.
+      if error-status:error then do:
+        {&error-in-file-format}
+      end.
+    end.  
+    END.
+
+end procedure. /* proc-Parameter */
 
 procedure proc-CAuthorization :
 define buffer buf_temp-temp for temp-temp.
@@ -3225,6 +3299,13 @@ define input parameter p-parameters as character    no-undo.
 define variable v-id-loc as character no-undo .
 define variable v-time-loc as integer no-undo .
 define variable v-time-loc-char as character no-undo .
+
+define variable v-group-loc as character no-undo .
+define variable v-key-char as character no-undo .
+define buffer first_temp-temp for temp-temp.
+define buffer slave_temp-temp for temp-temp.
+define buffer buf_cash-desk-attr for ub.cash-desk-attr .
+
   case p-type
   :
     when "tag-end" then do:
@@ -3335,6 +3416,9 @@ define variable v-time-loc-char as character no-undo .
         when "CDisc":U then do:
           if v-start-check = 1 then
           run proc-disc in this-procedure no-error .
+        end.
+        when "Param":U then do:
+            run proc-Parameter in this-procedure no-error .
         end.
         when "Invent":U then do:
           if v-start-check = 1 then
@@ -3570,8 +3654,60 @@ define variable v-time-loc-char as character no-undo .
             end.
           end. /*if v-start-check*/
         end.
-        
-         
+        when "Param":U
+        then do:
+            assign
+            v-record-name = p-value
+            CRI = 0
+            CRAI = 0
+            .
+            assign
+            v-key-char = ?
+            v-group-loc = ? .
+            v-group-loc = cb-xmlparse-get-attr(
+                                          input this-procedure:handle
+                                         ,input p-value
+                                         ,input p-parameters
+                                         ,input "group":U
+                                         ,input yes) .
+            v-key-char = cb-xmlparse-get-attr(
+                                          input this-procedure:handle
+                                         ,input p-value
+                                         ,input p-parameters
+                                         ,input "key":U
+                                         ,input no) .
+                            
+
+            if v-group-loc = ?
+            or v-key-char = ?
+            then do:
+              assign
+              v-start-check = v-start-check - 1
+              .
+              run write-log-and-file in p-log-handle (
+                    input 1
+                  , input log-file-name
+                  , input 1
+                  , input substitute( "!!!Тэг &1 - отсутствует необходимый атрибут &2"
+                                      , p-value
+                                      , (if v-group-loc = ? then "group" else "key")
+                                      )
+                                                    ).
+              assign
+              v-cd-fatal-error = yes
+              v-cd-fatal-message = "нарушение протокола обмена"
+              p-view-log = yes
+              .
+              return "error".
+            end.
+            else do:
+              assign
+              v-group = v-group-loc
+              v-key = v-key-char
+              .
+            end.
+
+        end.   
         otherwise do:
           error-status:error = no.
         end.

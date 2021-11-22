@@ -81,8 +81,12 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,sum-grp~
 ,c-sum-grp~
 ,auto-tank~
+,auto-section~
+,auto-section-table~
 ,auto-tank-meas~
 ,c-auto-tank~
+,c-auto-section~
+,c-auto-section-table~
 ,sr-izmerenia~
 ,c-sr-izmerenia~
 ,parts-attr~
@@ -295,6 +299,7 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,c-user-log~
 ,marking-lines~
 ,marking~
+,tran-fuel~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -319,6 +324,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,goods~
 ,goods-attr~
 ,auto-tank-attr~
+,auto-section-attr~
 ,bar-code~
 ,bar-code-attr~
 ,prod-bc~
@@ -411,6 +417,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,promo-schedule~
 ,marking~
 ,marking-attr~
+,code~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -736,6 +743,9 @@ v-custom-except-list-erprn =
 ,c-assortment-matrix-goods~
 ,c-auto-tank~
 ,c-auto-tank-attr~
+,c-auto-section~
+,c-auto-section-attr~
+,c-auto-section-table~
 ,c-auto-tank-meas-attr~
 ,c-bar-code~
 ,c-bar-code-attr~
@@ -1237,6 +1247,7 @@ v-custom-except-list-erprn =
 ,utd-lines-attr~
 ,utd-marking-lines~
 ,utd-marking-lines-attr~
+,tran-fuel~
 ":U.
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/

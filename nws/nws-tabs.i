@@ -305,6 +305,12 @@ abc-analysis~
 ,c-auto-tank~
 ,auto-tank-meas~
 ,auto-tank-attr~
+,auto-section~
+,c-auto-section~
+,auto-section-attr~
+,c-auto-section-attr~
+,auto-section-table~
+,c-auto-section-table~
 ,bar-code~
 ,c-bar-code~
 ,bar-code-attr~
@@ -691,6 +697,8 @@ abc-analysis~
 ,some-lk~
 ,sr-izmerenia~
 ,c-sr-izmerenia~
+,sr-izmerenia-attr~
+,c-sr-izmerenia-attr~
 ,staff~
 ,c-staff~
 ,stop-list~
@@ -807,8 +815,9 @@ abc-analysis~
 ,c-goods-attr-any~
 ,c-promo-head~
 ,code~
-,devisPC~
-,devisPC-attr~
+,c-code~
+,devisPc~
+,devisPc-attr~
 ,utd~
 ,c-utd-head~
 ,c-utd~
@@ -821,7 +830,11 @@ abc-analysis~
 ,c-utd-marking-lines-attr~
 ,c-utd-err-attr~
 ,marking-attr
+,Xattr~
+,xGroupObj~
+,xstatus~
 ,c-contract-specif-attr~
+,tran-fuel
 ':U .
 
 

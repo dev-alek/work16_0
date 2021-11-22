@@ -122,17 +122,17 @@ then do:
    end.
    
    /* MD5*/
-   mliststrfile = "cmp/code.xml,cmp/procasunc.xml".
+   mliststrfile = "upd/code.xml,cmp/procasunc.xml".
    block-md5:
    do mi = 1 to num-entries(mliststrfile):
      /* пересоздаем всегда так как точно также провека происходин при загрузке */ 
       mfile = entry(mi,mliststrfile).
       mfileNew = mFile.
       entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
-      run SaveFileList (mfile,mfileNew).
       if search (mfile) eq ?
       then
          next block-md5.
+      run SaveFileList (mfile,mfileNew).
       do:
          mfileNew = search (mfile).
          entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
@@ -140,11 +140,28 @@ then do:
          run gbl/md5.p(mfile,output v-md5-signature).
         
          output stream sOut to value(mfileNew).
-         put stream sOut unformatted v-md5-signature.
+         put stream sOut unformatted string({utl/chekmd5.i v-md5-signature })  skip.
          output stream sOut close.
          
       end.
    end.
+
+   define variable mdbver as integer no-undo.
+   block-upd:
+   do mdbver = 1 to 999999999:
+      mfile    = search(substitute("upd/&1.xml",string(mdbver ,"999999999"))).
+      if    mfile    eq ? 
+      then 
+         leave block-upd.
+      run SaveFileList (mfile,mfileNew).
+      mfileNew = mFile.
+      entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
+      run gbl/md5.p(mfile,output v-md5-signature).
+      output stream sOut to value(mfileNew).
+      put stream sOut unformatted {utl/chekmd5.i v-md5-signature }  skip.
+      output stream sOut close.
+   end.
+   
    mliststrfile = "cmp/actn.txt,cmp/menu.txt".
    do mi = 1 to num-entries(mliststrfile):
       

@@ -45,6 +45,8 @@ define variable vss-description as character no-undo init "создание топливных до
 { str/placelib.i     }
 { gbl/attr-lib.i     }
 { ref/gds-attr.i     }
+{ str/is-sug.i       }
+{ str/is-gas.i       }
 
 do
 on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
@@ -80,6 +82,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define buffer bf-wst_inv-line  for ub.inv-line.
   define buffer bf-wst_doc-pl    for ub.doc-pl.
   define buffer buf_sale-doc     for ub.sale-doc .
+  define buffer buf_place        for ub.place .
 
   define temp-table tt-line-for-doc no-undo
     field gds-code      like ub.rvs-line.gds-code
@@ -203,6 +206,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
   define variable v-log              as logical   no-undo .
   define variable v-type              as character no-undo .
+  
+  define variable v-input-type-p      as character no-undo .
+  define variable v-input-type-T      as character no-undo .
+  define variable v-input-type-l      as character no-undo .
+  define variable v-input-type-err-msg as character no-undo .
+  
+  define variable rdc-value as character no-undo .
+  define variable rdc-type  as character no-undo .
 
   { gbl/getcntxt.i get }
   find first buf_rvs-doc
@@ -230,9 +241,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   .
   message
     "Вы хотите сделать инвентаризацию по сверке?"    skip
-    "Да     - по всем товарам из сверки"             skip
-    "Нет    - не делать инвентаризацию"              skip
-    "Отмена - опционально по товарам и бакам"
+    "ДА     - по всем товарам из сверки"             skip
+    "НЕТ    - не делать инвентаризацию"              skip
+    "ОТМЕНА - опционально по товарам и резервуарам"
     view-as alert-box buttons yes-no-cancel update v-log.
   if v-log = no then do:
     return no-apply.
@@ -242,6 +253,82 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     chs-gds-inv = v-log
     p-docs-info = "":U
   .
+  /* Проверки типа ввода  */
+  RUN gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-value, output rdc-type) no-error .
+  
+  v-input-type-err-msg = "" .
+  if chs-gds-inv
+  and rdc-value = "pomi-rn"
+  then do :
+    for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code,
+    first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
+                              and buf_place.obj-code = buf_rvs-doc.obj-code
+                              and buf_place.pl-code = buf_rvs-line.pl-code,
+    first buf_goods no-lock where buf_goods.gds-code = buf_rvs-line.gds-code :
+      if is-sug(buf_goods.gds-code)
+      or is-gas(buf_goods.gds-code)
+      then next .
+      assign
+        v-input-type-p = "" 
+        v-input-type-T = ""
+        v-input-type-l = ""
+      .
+      for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                    and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                    and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
+                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                    and buf_rvs-line-attr.attr-code = "input-type-p"
+                                    :
+        v-input-type-p = buf_rvs-line-attr.attr-value .                              
+      end .
+      for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                    and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                    and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
+                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                    and buf_rvs-line-attr.attr-code = "input-type-T"
+                                    :
+        v-input-type-T = buf_rvs-line-attr.attr-value .                              
+      end .
+      for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                    and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                    and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
+                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                    and buf_rvs-line-attr.attr-code = "input-type-l"
+                                    :
+        v-input-type-l = buf_rvs-line-attr.attr-value .                              
+      end .
+      if ((v-input-type-p = "р" or v-input-type-p = "ак" or v-input-type-p = "фк")
+      and (v-input-type-T = "р" or v-input-type-T = "ак" or v-input-type-T = "фк")
+      and (v-input-type-l = "р" or v-input-type-l = "ак" or v-input-type-l = "фк"))
+      then do : end .
+      else do :
+        v-input-type-err-msg = v-input-type-err-msg + " Резервуар " + string(buf_place.pl-code) + " " + buf_place.pl-name + " с " + buf_goods.gds-name + {&new-line} .
+        if not (v-input-type-p = "р" or v-input-type-p = "ак" or v-input-type-p = "фк")
+        then do :
+          v-input-type-err-msg = v-input-type-err-msg + "   - Плотность" + {&new-line} .
+        end .
+        if not (v-input-type-T = "р" or v-input-type-T = "ак" or v-input-type-T = "фк")
+        then do :
+          v-input-type-err-msg = v-input-type-err-msg + "   - Температура" + {&new-line} .
+        end .
+        if not (v-input-type-l = "р" or v-input-type-l = "ак" or v-input-type-l = "фк")
+        then do :
+          v-input-type-err-msg = v-input-type-err-msg + "   - Уровень" + {&new-line} .
+        end .
+      end .
+    end .
+  end .
+  
+  if v-input-type-err-msg > ""
+  then do :
+    v-input-type-err-msg = "Невозможно создать инвентаризацию по сверке. Отсутствуют ручные замеры по резервуарам:" + {&new-line} + v-input-type-err-msg .
+    message v-input-type-err-msg view-as alert-box .
+    return no-apply .
+  end .
+  
   /* создание документа инвентаризации */
   
   block_cre-inv :
@@ -349,12 +436,17 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
     /* Заполняем инвентаризацию товарами */
     block_rvs-line:
-    for each buf_rvs-line no-lock
-      where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-      ,first buf_goods no-lock
-      where buf_goods.gds-code = buf_rvs-line.gds-code
+    for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code,
+    first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
+                              and buf_place.obj-code = buf_rvs-doc.obj-code
+                              and buf_place.pl-code = buf_rvs-line.pl-code,
+    first buf_goods no-lock where buf_goods.gds-code = buf_rvs-line.gds-code
     on error undo block_cre-inv, retry block_cre-inv
     :
+      if is-gas(buf_goods.gds-code)
+      then do :
+        next block_rvs-line.
+      end .
       if chs-gds-inv <> yes then do:
         assign
           v-log = no
@@ -368,7 +460,79 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         if v-log <> yes then do:
           next block_rvs-line.
         end.
-      end.
+        else do :
+          if rdc-value = "pomi-rn"
+          and not is-sug(buf_goods.gds-code)
+          then do :
+            assign
+              v-input-type-p = "" 
+              v-input-type-T = ""
+              v-input-type-l = ""
+            .
+            for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "input-type-p"
+                                          :
+              v-input-type-p = buf_rvs-line-attr.attr-value .                              
+            end .
+            for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "input-type-T"
+                                          :
+              v-input-type-T = buf_rvs-line-attr.attr-value .                              
+            end .
+            for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "input-type-l"
+                                          :
+              v-input-type-l = buf_rvs-line-attr.attr-value .                              
+            end .
+            if ((v-input-type-p = "р" or v-input-type-p = "ак" or v-input-type-p = "фк")
+            and (v-input-type-T = "р" or v-input-type-T = "ак" or v-input-type-T = "фк")
+            and (v-input-type-l = "р" or v-input-type-l = "ак" or v-input-type-l = "фк"))
+            then do : end .
+            else do :
+              v-input-type-err-msg = "Невозможно добавить строку. Отсутствуют ручные замеры резервуара "
+                                   + string(buf_place.pl-code) + " " + buf_place.pl-name + " с " + buf_goods.gds-name
+                                   + " по параметрам:" + {&new-line} .
+              if not (v-input-type-p = "р" or v-input-type-p = "ак" or v-input-type-p = "фк")
+              then do :
+                v-input-type-err-msg = v-input-type-err-msg + "   - Плотность" + {&new-line} .
+              end .
+              if not (v-input-type-T = "р" or v-input-type-T = "ак" or v-input-type-T = "фк")
+              then do :
+                v-input-type-err-msg = v-input-type-err-msg + "   - Температура" + {&new-line} .
+              end .
+              if not (v-input-type-l = "р" or v-input-type-l = "ак" or v-input-type-l = "фк")
+              then do :
+                v-input-type-err-msg = v-input-type-err-msg + "   - Уровень" + {&new-line} .
+              end .                    
+              v-input-type-err-msg = v-input-type-err-msg + {&new-line}
+                                   + "Продолжить создание инвентаризации?"
+                                   .
+              message
+                v-input-type-err-msg
+              view-as alert-box buttons yes-no update v-log.
+              if not v-log
+              then do :
+                undo block_cre-inv, return .
+              end .
+              else do :
+                next block_rvs-line .
+              end .
+            end .
+          end . /* if rdc-value = "pomi-rn" and not sug and not gas */
+        end .
+      end. /* if chs-gds-inv <> yes */
 
       { str/adinvlin.i
         parparentproc
@@ -391,6 +555,13 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         buf_doc-line.fact-density = buf_doc-line.doc-density
       .
     end. /* each buf_rvs-line */
+    
+    find first buf_doc-line no-lock where buf_doc-line.doc-code = v-inv-code no-error .
+    if not available buf_doc-line
+    then do :
+      message "В инвентаризацию не добавлен ни один товар!" view-as alert-box .
+      undo block_cre-inv, leave block_cre-inv .
+    end .
 
     /* инвентаризация накл- - разр+ */
     run close-doc in this-procedure
@@ -517,7 +688,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       oNormWast:ParGdsOAttr:OnDate = if buf_trn-doc.fact-date <> ? then buf_trn-doc.fact-date else buf_trn-doc.doc-date.
       oNormWast:FillNormWast().
       
-      if error-status:error and not v-lgas-gds
+      if error-status:error
+      and not v-lgas-gds
+      and not is-gas(buf_goods.gds-code)
       then do:
         message
           "ОШИБКА при определние нормы естественной убыли." skip
@@ -687,6 +860,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                      .  
                  
           if not v-lgas-gds
+          and not is-gas(buf_goods.gds-code)
           then do:
             assign
               v-metering-error-base = K1 / 100 * buf_rvs-line.state-measure-qnty
@@ -738,6 +912,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           end.
 
           if not v-lgas-gds
+          and not is-gas(buf_goods.gds-code)
+          and not ptrlprop-algrvspt = 4 
           then do:
 
             if (O_PKH - O_FACT) <= 0  then do:
@@ -784,6 +960,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                                 "погрешность в литрах   " + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line} .
                       end.
                     end.
+                  end.
+when 4 then do:
                   end.
                 end case.
               end.
@@ -895,9 +1073,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                           and bf-wst_doc-pl.out-code = bf-wst_doc-line.doc-code
                           and bf-wst_doc-pl.gds-code = buf_rvs-line.gds-code
                         no-error.
-                      if bf-wst_trn-doc.doc-type = {&income}
-                      then oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, bf-wst_doc-pl.cli-fact-qnty).
-                      else oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, - bf-wst_doc-pl.cli-fact-qnty).
+                      if available (bf-wst_doc-pl)
+                      then do:
+                        if bf-wst_trn-doc.doc-type = {&income}
+                        then oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, bf-wst_doc-pl.cli-fact-qnty).
+                        else oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, - bf-wst_doc-pl.cli-fact-qnty).
+                      end.
                     end.
                     
                     if  bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} 
@@ -1442,6 +1623,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                            "Кол-во литры: " + string(v-reserv-qnty-base) + {&new-line}    
                            .
           end.
+          if v-reserv-qnty-cli = ? then v-reserv-qnty-cli = 0 .
+          if v-reserv-qnty-base = ? then v-reserv-qnty-base = 0 .
+          
           if v-reserv-qnty-base <> 0 then do:
             assign
               v-chg-qnty = v-reserv-qnty-base

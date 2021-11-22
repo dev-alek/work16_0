@@ -298,7 +298,7 @@ DEFINE BROWSE br-line
 {&sort-clmn_6-br-dtl}  @ v-delta-line COLUMN-LABEL {&label-clmn_6-br-dtl} FORMAT "->>>,>>>,>>>,>>9.999"
 {&sort-clmn_7-br-dtl}                 COLUMN-LABEL {&label-clmn_7-br-dtl} FORMAT "->>>,>>>,>>>,>>9.999"
 {&sort-clmn_8-br-dtl}                 COLUMN-LABEL {&label-clmn_8-br-dtl}
-{&sort-clmn_9-br-dtl}                 COLUMN-LABEL {&label-clmn_9-br-dtl}
+{&sort-clmn_9-br-dtl}                 COLUMN-LABEL {&label-clmn_9-br-dtl} FORMAT "999999999999"
 ENABLE
 {&sort-clmn_4-br-dtl}
 {&sort-clmn_5-br-dtl}

@@ -5672,6 +5672,9 @@ define variable v-contract as character no-undo.
 define variable v-curr-abbr as character no-undo.
 define variable v-obj as character no-undo .
 
+run rep/g-fin-doc-list.p (parParentProc) no-error.
+
+/*
 DEFINE FRAME fin-doc-list
 X_fin-doc.host-code COLUMN-LABEL "Код!фирмы" format "99999999999999"
 X_fin-doc.prn-doc-code FORMAT "X(16)"
@@ -5784,6 +5787,7 @@ run prn-lib-prn-file in this-procedure (
                                           input parParentProc
                                           ,input 8
                                           ).
+*/
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

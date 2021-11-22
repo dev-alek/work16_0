@@ -633,6 +633,58 @@ find first buf_c-fin-doc-attr no-lock where
  end. /* do */
 end procedure. /* c-fin-doc-attr-value */
 
+procedure c-fin-doc-attr-value-nextchip :
+ do
+ on error undo, return error return-value
+ :
+define input  parameter p-host-code    like ub.c-fin-doc-attr.host-code    no-undo .
+define input  parameter p-fin-doc-code like ub.c-fin-doc-attr.fin-doc-code     no-undo .
+define input parameter p-corr-user-db-num  like ub.c-fin-doc-attr.corr-user-db-num   no-undo .
+define input parameter p-chip-num      like ub.c-fin-doc-attr.chip-num   no-undo .
+define input  parameter p-attr-code    like ub.c-fin-doc-attr.attr-code    no-undo .
+define output parameter p-attr-value   like ub.c-fin-doc-attr.attr-value   no-undo .
+
+define variable  v-format         as character no-undo .
+define variable  v-label          as character no-undo .
+define variable  v-user-can-edit  as logical   no-undo .
+define variable  v-output-display as logical   no-undo .
+define variable  v-other          as character no-undo .
+define variable  v-type           as character no-undo .
+define buffer buf_c-fin-doc-attr for ub.c-fin-doc-attr.
+
+run fd-attr-code in this-procedure
+  (input  p-attr-code       /* p-code           */
+  ,output v-type           /* p-type           */
+  ,output v-format         /* p-format         */
+  ,output v-label          /* p-label          */
+  ,output v-user-can-edit  /* p-user-can-edit  */
+  ,output v-output-display /* p-output-display */
+  ,output v-other          /* p-other          */
+  ) no-error .
+if error-status :error then do:
+  undo, return error return-value .
+end.
+
+find first buf_c-fin-doc-attr no-lock where
+          buf_c-fin-doc-attr.attr-code    = p-attr-code
+      and buf_c-fin-doc-attr.fin-doc-code      = p-fin-doc-code
+      and buf_c-fin-doc-attr.host-code      = p-host-code
+      and buf_c-fin-doc-attr.corr-user-db-num = p-corr-user-db-num
+      and buf_c-fin-doc-attr.chip-num         > p-chip-num      no-error .
+
+  if available  buf_c-fin-doc-attr then do:
+    assign
+    p-attr-value = buf_c-fin-doc-attr.attr-value
+    .
+  end.
+  else do:
+    p-attr-value = ? .
+  end.
+
+
+ end. /* do */
+end procedure. /* c-fin-doc-attr-value */
+
 
 &if "{2}" <> "" &then
 procedure fin-doc-temp-attr-write :

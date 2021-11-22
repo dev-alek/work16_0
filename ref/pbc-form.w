@@ -33,6 +33,7 @@ Creation date: 10/07/98
 
 /* Parameters Definitions ---                                           */
 define input        parameter parparentproc as   widget-handle      no-undo .
+define input        parameter p-mode        as character            no-undo .
 define input        parameter bc            like ub.bar-code.b-code no-undo .
 define input        parameter par-shbl      like ub.prod-bc.b-str   no-undo .
 define input        parameter par-EAN       as   logical            no-undo .
@@ -328,6 +329,7 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
    VIEW FRAME d-bc-form.
+   define buffer buf_prod-bc-attr for ub.prod-bc-attr.
   find ub.bar-code no-lock
     where ub.bar-code.b-code = bc
     .
@@ -346,10 +348,25 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   find ub.units no-lock
     where ub.units.unit-name = ub.bar-code.unit-cli
     .
+  if p-mode = {&update} then do:  
+  find first ub.prod-bc no-lock
+    where ub.prod-bc.b-code = bc and ub.prod-bc.b-str = par-shbl
+    .   
+  end.
   assign
     t-EAN = p-cdrg-type ne {&Gtin}
     t-NEDEMark = no
   .
+  if p-mode = {&add-def} then do:
+     t-NEdeMark = no .
+  end.
+  else do:
+     display ub.prod-bc.b-str with frame {&frame-name} .
+      find first buf_prod-bc-attr exclusive-lock where buf_prod-bc-attr.b-str = ub.prod-bc.b-str and 
+         buf_prod-bc-attr.b-code = ub.prod-bc.b-code and buf_prod-bc-attr.attr-code = {&mark} no-error .
+      if available (buf_prod-bc-attr) then t-NEdeMark = logical(buf_prod-bc-attr.attr-value).
+      else t-NEdeMark = no .
+  end.       
   display
     ub.bar-code.unit-cli
     t-EAN when p-cdrg-type ne {&Gtin}
@@ -358,6 +375,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ub.units.long-name
     ub.goods.unit-base
     with frame {&frame-name}.
+   if p-mode <> {&update} then do:    
   enable
     ub.prod-bc.b-str
     t-EAN when p-cdrg-type ne {&Gtin}
@@ -366,6 +384,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     b-help
     b-quit
     with frame {&frame-name} .
+  end.
+  else do:
+  enable
+    t-NEDEMark when p-cdrg-type ne {&Gtin}
+    b-exit
+    b-help
+    b-quit
+    with frame {&frame-name} .
+  end.     
+  if p-mode = {&add-def} then do:
   if par-EAN = no
   then do:
     assign
@@ -375,23 +403,27 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       t-EAN when p-cdrg-type ne {&Gtin}
       with frame {&frame-name} .
   end.
-  if p-cdrg-type eq {&Gtin}
+  end.
+  if p-cdrg-type eq {&Gtin} 
   then assign
      t-EAN:visible = no
      t-NEDEMark:visible = no.
   else do:
-      define buffer buf_prod-bc for prod-bc.
-      define buffer buf_gtin_bar for bar-code.
-      t-NEdeMark:visible = no. 
-      for each buf_gtin_bar where buf_gtin_bar.gds-code  = ub.goods.gds-code
-                              and can-find (first buf_prod-bc
-                                            where buf_prod-bc.b-code =  buf_gtin_bar.b-code
-                                              and buf_prod-bc.bc-on-type = {&GTIN} )
-      no-lock: 
-          t-NEdeMark:visible = yes. 
-          t-NEdeMark = yes.
-          disp t-NEdeMark with frame {&frame-name} .
-      end.
+     if p-mode = {&add-def} then 
+     do:
+        define buffer buf_prod-bc  for prod-bc.
+        define buffer buf_gtin_bar for bar-code.
+        /*      t-NEdeMark:visible = no.*/
+        for each buf_gtin_bar where buf_gtin_bar.gds-code  = ub.goods.gds-code
+           and can-find (first buf_prod-bc
+           where buf_prod-bc.b-code =  buf_gtin_bar.b-code
+           and buf_prod-bc.bc-on-type = {&GTIN} )
+           no-lock:
+           t-NEdeMark = yes.
+        end.
+        t-NEdeMark:visible = yes. 
+        disp t-NEdeMark with frame {&frame-name} .
+     end.          
   end.    
   if par-shbl <> ""
   then do:
@@ -406,7 +438,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   assign
     rid = ?
   .
-  assign frame {&frame-name} :title = "ƒŒœŒÀÕ»“≈À‹Õ€… " + (if p-cdrg-type eq {&Gtin} then {&Gtin} else "·‡-ÍÓ‰ ") + "              ƒŒ¡¿¬À≈Õ»≈".
+  assign frame {&frame-name} :title = "ƒŒœŒÀÕ»“≈À‹Õ€… " + (if p-cdrg-type eq {&Gtin} then {&Gtin} + "                " else "·‡-ÍÓ‰                ") + p-mode.
 
   wait-for go of frame {&frame-name}  focus ub.prod-bc.b-str.
 END.
@@ -417,6 +449,116 @@ RUN disable_UI.
 
 
 /* **********************  Internal Procedures  *********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE create-bar-code d-bc-form 
+PROCEDURE create-bar-code :
+   define variable v-b-str as character no-undo .
+   define buffer buf_prod-bc for ub.prod-bc.
+   define variable v-send as logical no-undo .
+   v-b-str = input frame {&frame-name} ub.prod-bc.b-str.
+   ASSIGN frame {&frame-name} t-NEdeMark.
+   rid = ?.
+   if p-mode = {&add-def} then 
+   do:
+      run trg/prod-bc2.p (
+         input  parparentproc
+         ,input no /*p-silent*/
+         ,input no /* dif-pdbc */
+         ,input no /*pbc-veto*/
+         ,input send-ref
+         ,input p-cdrg-type
+         ,input (if logical(t-EAN:screen-value) then "EAN" else "")
+         ,buffer goods
+         ,input bar-code.b-code
+         ,input logical(t-NEDEMark:screen-value)
+         ,input-output v-b-str
+         ,output rid
+         ) no-error.
+      if error-status :error
+         or rid = ? then 
+      do:
+         apply "entry" to ub.prod-bc.b-str in frame {&frame-name}.
+         undo, return error return-value .
+      end.
+      else 
+      do:
+         find first buf_prod-bc no-lock
+            where recid(buf_prod-bc) = rid.
+         if  buf_prod-bc.bc-on
+            and send-ref
+            then 
+         do:
+            run str/diallog.w
+               (input parparentproc
+               ,input this-procedure
+               ,input 'str/s-prodbc.p':U
+               ,input string(rid) + {&delim-par} + "U":U
+               ,input yes /*p-auto-go*/
+               ,input '':U
+               ,input "œÂÂÒ˚ÎÍ‡ ƒÓÔ¡  Ì‡ Í‡ÒÒ˚"
+               ) .
+         end.
+      end.
+   end.
+   else 
+   do:
+      if t-NEdeMark 
+         then 
+      do:
+         find first buf_prod-bc-attr exclusive-lock where buf_prod-bc-attr.b-str = ub.prod-bc.b-str and 
+            buf_prod-bc-attr.b-code = ub.prod-bc.b-code and buf_prod-bc-attr.attr-code = {&mark} no-error .
+         if available (buf_prod-bc-attr) then 
+         do:
+            if logical (buf_prod-bc-attr.attr-value) <> t-NEdeMark then v-send = true .
+            buf_prod-bc-attr.attr-value = "yes" .
+         end.
+         else 
+         do:
+            create buf_prod-bc-attr.
+            assign
+               buf_prod-bc-attr.b-str      = ub.prod-bc.b-str
+               buf_prod-bc-attr.b-code     = ub.prod-bc.b-code
+               buf_prod-bc-attr.attr-code  = {&mark}
+               buf_prod-bc-attr.attr-value = "yes"
+               .
+            v-send = true .
+         end.
+      end.   
+      else 
+      do:
+         find first buf_prod-bc-attr exclusive-lock where buf_prod-bc-attr.b-str = ub.prod-bc.b-str and 
+            buf_prod-bc-attr.b-code = ub.prod-bc.b-code and buf_prod-bc-attr.attr-code = {&mark} no-error .
+         if available (buf_prod-bc-attr) then 
+         do: 
+            delete buf_prod-bc-attr . 
+            v-send = true . 
+         end.
+      end. 
+      if v-send then 
+      do:  
+         rid = recid(ub.prod-bc) .
+         find first buf_prod-bc no-lock
+            where recid(buf_prod-bc) = rid.
+         if  buf_prod-bc.bc-on
+            and send-ref
+            then 
+         do:
+            run str/diallog.w
+               (input parparentproc
+               ,input this-procedure
+               ,input 'str/s-prodbc.p':U
+               ,input string(rid) + {&delim-par} + "U":U
+               ,input yes /*p-auto-go*/
+               ,input '':U
+               ,input "œÂÂÒ˚ÎÍ‡ ƒÓÔ¡  Ì‡ Í‡ÒÒ˚"
+               ) .
+         end.
+      end.
+   end.   
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI d-bc-form  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
@@ -435,52 +577,3 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE create-bar-code W-Win
-PROCEDURE create-bar-code :
-define variable v-b-str as character no-undo .
-define buffer buf_prod-bc for ub.prod-bc.
-v-b-str = input frame {&frame-name} ub.prod-bc.b-str.
-rid = ?.
-run trg/prod-bc2.p (
-                     input  parparentproc
-                    ,input no /*p-silent*/
-                    ,input no /* dif-pdbc */
-                    ,input no /*pbc-veto*/
-                    ,input send-ref
-                    ,input p-cdrg-type
-                    ,input (if logical(t-EAN:screen-value) then "EAN" else "")
-                    ,buffer ub.goods
-                    ,input ub.bar-code.b-code
-                    ,input logical(t-NEDEMark:screen-value)
-                    ,input-output v-b-str
-                    ,output rid
-                    ) no-error.
-   
-if error-status :error
-or rid = ? then do:
-  apply "entry" to ub.prod-bc.b-str in frame {&frame-name}.
-  undo, return error return-value .
-end.
-else do:
-  find first buf_prod-bc no-lock
-        where recid(buf_prod-bc) = rid.
-  if  buf_prod-bc.bc-on
-  and send-ref
-  then do:
-    run str/diallog.w
-      (input parparentproc
-      ,input this-procedure
-      ,input 'str/s-prodbc.p':U
-      ,input string(rid) + {&delim-par} + "U":U
-      ,input yes /*p-auto-go*/
-      ,input '':U
-      ,input "œÂÂÒ˚ÎÍ‡ ƒÓÔ¡  Ì‡ Í‡ÒÒ˚"
-      ) .
-  end.
-end.
-
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME

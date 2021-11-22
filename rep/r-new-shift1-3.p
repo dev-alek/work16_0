@@ -1184,7 +1184,7 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
                 bf_temp-rvs-line.pol14 = bf_temp-rvs-line.state-level-total * 10
                 bf_temp-rvs-line.pol15 = bf_temp-rvs-line.state-level-water * 10
                 bf_temp-rvs-line.pol16 = bf_temp-rvs-line.state-brutto-qnty
-                bf_temp-rvs-line.pol19 = bf_temp-rvs-line.temperature
+                bf_temp-rvs-line.pol19 = bf_temp-rvs-line.state-temperature
                 .
             /*Итоги по резервуару*/
             put stream OutStr-html unformatted

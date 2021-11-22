@@ -157,6 +157,7 @@ define variable v-curr-r-b as character no-undo .
 { ref/gds-attr.i }
 { ref/gdshattr.i }
 { ref/gdsoattr.i }
+{ gbl/ggoattr.i  }
 { gbl/usr-flt.i }
 { ref/gdsreffi.i {1} gds-ref }
 { ref/gdsrefto.i }
@@ -168,7 +169,7 @@ define variable v-curr-r-b as character no-undo .
 { gbl/prepnamc.i }
 { gbl/key-rec.i }
 { cmp/ini-lib.i }
-
+{ str/checkGroupAttr.i }
 define buffer g-producer for ub.clients .
 
 define variable g#log as logical no-undo .
@@ -3580,6 +3581,12 @@ PROCEDURE proc-b-grp:
                                            output v-ok    ) .
 
     if v-ok then loc-goo-doc.grp-code = buf_gds-grp.node-code. 
+     /*проверка на запрет продажи группы*/
+         if check-ban-sales-via-cd-grp(loc-goo-doc.grp-code) then do:
+           run str/diallog.w (parparentproc, this-procedure, 'str/del-grp.p':U, string(v-cntxt-obj-code) + {&delim-par} + string(loc-goo-doc.grp-code), no,
+                             'Прервать', 'Удаление товаров с касс') .
+        end.   
+
   END .
   { gbl/working.i }
   assign

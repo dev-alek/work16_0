@@ -23,7 +23,7 @@ class ibs.th.bge.1crn.subjects.transport_section_ct-lvl inherits ibs.th.bge.1crn
 
   define property sec-num    as integer    no-undo get. 
     private set.
-  define property lvl_  as decimal      no-undo get. 
+  define property deviation  as integer     no-undo get. 
     private set.
   define property amount    as decimal      no-undo get. 
     private set.
@@ -39,10 +39,10 @@ class ibs.th.bge.1crn.subjects.transport_section_ct-lvl inherits ibs.th.bge.1crn
           assign 
             sec-num = integer(inValue) .
         end.
-      when "lvl" then 
+      when "deviation" then 
         do:
           assign 
-            lvl_ = decimal(inValue) .
+            deviation = integer(inValue) .
         end.
       when "amount" then 
         do:
@@ -60,8 +60,8 @@ class ibs.th.bge.1crn.subjects.transport_section_ct-lvl inherits ibs.th.bge.1crn
     assign
       v-str = v-str + ",sec-mum" 
       when sec-num = ?
-      v-str = v-str + ",lvl" 
-      when lvl_ = ?
+      v-str = v-str + ",deviation" 
+      when deviation = ?
       v-str = v-str + ",amount" 
       when amount = ?
       .
@@ -75,8 +75,8 @@ class ibs.th.bge.1crn.subjects.transport_section_ct-lvl inherits ibs.th.bge.1crn
   method override protected void ClearSub():
     assign 
       sec-num   = ?
-      lvl_ = ?
-      amount   = ?
+      deviation = ?
+      amount    = ?
       .
   end.
 

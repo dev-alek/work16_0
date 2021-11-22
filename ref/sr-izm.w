@@ -29,6 +29,8 @@ block-level on error undo, throw.
 DEFINE INPUT PARAMETER parparentproc AS WIDGET-HANDLE NO-UNDO.
 DEFINE INPUT PARAMETER bttns AS character NO-UNDO.
 DEFINE INPUT PARAMETER p-mode AS character NO-UNDO.
+DEFINE INPUT PARAMETER p-type-izm-list AS character NO-UNDO.
+DEFINE INPUT PARAMETER p-izm-par AS character NO-UNDO.
 DEFINE INPUT-OUTPUT PARAMETER p-node-code AS INTEGER NO-UNDO.
 define output parameter p-sr-type as character no-undo.
 
@@ -49,10 +51,13 @@ define variable vss-description as character no-undo init "Справочник средств из
 { ref/sr-izm.i dop-sr-izm }
 /*{ ref/sr-izm.i " " proc }*/
 
+define shared variable g#db-num as integer no-undo .
+
 DEFINE VARIABLE v-max-node-code AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-node-code AS INTEGER NO-UNDO.
 define variable v-edit-mode as logical no-undo .
 define variable v-action-mode as character no-undo . /* что с редактируемой записью: {&add-def}, {&update} */ 
+define variable mNotUsedStr as character no-undo fgcolor 12.
 define buffer buf_clob-bind for ub.clob-bind.
 
 define variable cb-sr-type-id as integer column-label "Тип"
@@ -67,17 +72,10 @@ define variable cb-sr-type-id as integer column-label "Тип"
   inner-lines 5 drop-down-list size-chars 55 by 1
 .
 
-define variable cb-sr-temp-line as decimal column-label "Температурный коэффициент линейного! расширения материала средства! измерения уровня "
-  format "-9.9999999" label "Температурный коэффициент линейного расширения материала средства измерения уровня "
-  view-as combo-box list-item-pairs
-    "Сталь",0.0000125,
-    "Алюминий",0.000023
-  inner-lines 2 drop-down-list size-chars 10 by 1
-.
-
 &scoped-define view-dop-sr-izm ~
 DISPLAY ~
 dop-sr-izm.node-code             AT ROW 18 COL 5 LEFT-ALIGNED  SKIP ~
+mNotUsedStr                      AT ROW 18 COL 45 LEFT-ALIGNED format "x(42)" no-label SKIP  ~
 dop-sr-izm.sr-model              AT ROW 19 COL 5 LEFT-ALIGNED  SKIP ~
 dop-sr-izm.sr-type               AT ROW 20 COL 5 LEFT-ALIGNED  SKIP ~
 dop-sr-izm.sr-abs-err-neft-water AT ROW 21 COL 5 LEFT-ALIGNED  SKIP ~
@@ -94,6 +92,7 @@ hide ~
 dop-sr-izm.node-code             ~
 in FRAME {&FRAME-NAME} ~
 dop-sr-izm.sr-model              ~
+mNotUsedStr                      ~
 dop-sr-izm.sr-type               ~
 dop-sr-izm.sr-abs-err-neft-water ~
 dop-sr-izm.sr-abs-err-water      ~
@@ -128,7 +127,6 @@ dop-sr-izm.sr-abs-err-dens       ~
 dop-sr-izm.sr-abs-err-temp-vol   ~
 dop-sr-izm.sr-abs-err-temp-dens  ~
 dop-sr-izm.sr-otnos              ~
-cb-sr-temp-line          ~
 with FRAME {&FRAME-NAME}
 
 /* _UIB-CODE-BLOCK-END */
@@ -185,6 +183,10 @@ DEFINE BUTTON b-add
      LABEL "&Добавить"
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-look
+     LABEL "&Просмотр"
+     SIZE 10 BY 1.
+
 DEFINE BUTTON b-cancel
      LABEL "Отмена"
      SIZE 10 BY 1.
@@ -209,10 +211,6 @@ DEFINE BUTTON B-Help
 DEFINE BUTTON B-hist
      LABEL "Ис&тория"
      SIZE 3 BY 1.
-
-DEFINE BUTTON b-ok
-     LABEL "&Ввод"
-     SIZE 10 BY 1.
 
 DEFINE BUTTON b-quit AUTO-GO
      LABEL "&Закрыть"
@@ -253,10 +251,10 @@ DEFINE FRAME Dialog-Frame
      b-add AT ROW 1 COL 45 WIDGET-ID 14
      b-cng AT ROW 1 COL 55 WIDGET-ID 4
      b-del AT ROW 1 COL 65 WIDGET-ID 22
+     b-look AT ROW 1 COL 75 WIDGET-ID 22
      B-hist AT ROW 1 COL 137
      B-Help AT ROW 1 COL 140.5
      BR-sr-izm AT ROW 4.25 COL 1.5 WIDGET-ID 200
-     b-ok AT ROW 18 COL 78 WIDGET-ID 30
      b-cancel AT ROW 18 COL 88 WIDGET-ID 26
      SPACE(45.87) SKIP(8.74)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
@@ -291,10 +289,6 @@ ASSIGN
 ASSIGN
        b-cancel:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
-/* SETTINGS FOR BUTTON b-ok IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
-ASSIGN
-       b-ok:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -321,8 +315,10 @@ END.
 ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
 DO:
   v-action-mode = {&add-def} .
-  RUN proc-b-add IN THIS-PROCEDURE NO-ERROR.
+  RUN ref\sr-izm-frm.w ({&add-def}, ?) no-error.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  {&OPEN-QUERY-{&BROWSE-NAME}}
+    APPLY "value-changed" TO BROWSE br-sr-izm.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -358,10 +354,16 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cng Dialog-Frame
 ON CHOOSE OF b-cng IN FRAME Dialog-Frame /* Изменить */
 DO:
+  define variable vnode-code as integer  no-undo.
   IF NOT AVAILABLE sr-izmerenia THEN RETURN NO-APPLY.
-  v-action-mode = {&update} .
-  RUN proc-b-cng IN THIS-PROCEDURE NO-ERROR.
+  vnode-code = sr-izmerenia.node-code.
+  RUN ref\sr-izm-frm.w ({&update}, sr-izmerenia.node-code) no-error.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  run reopen-query .
+  find first sr-izmerenia where sr-izmerenia.node-code eq  vnode-code no-lock.
+  reposition {&BROWSE-NAME} to rowid rowid(sr-izmerenia) no-error .
+    APPLY "value-changed" TO BROWSE br-sr-izm.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -375,6 +377,26 @@ DO:
   IF NOT AVAILABLE sr-izmerenia  THEN RETURN NO-APPLY.
   RUN proc-b-del IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  run reopen-query .
+    APPLY "value-changed" TO BROWSE br-sr-izm.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-cng
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-look Dialog-Frame
+ON CHOOSE OF b-look IN FRAME Dialog-Frame /* Просмотр */
+DO:
+  define variable vnode-code as integer  no-undo.
+  IF NOT AVAILABLE sr-izmerenia THEN RETURN NO-APPLY.
+  vnode-code = sr-izmerenia.node-code.
+  RUN ref\sr-izm-frm.w ({&lookup}, sr-izmerenia.node-code) .
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  run reopen-query .
+  find first sr-izmerenia where sr-izmerenia.node-code eq  vnode-code no-lock.
+  reposition {&BROWSE-NAME} to rowid rowid(sr-izmerenia) no-error .
+  APPLY "value-changed" TO BROWSE br-sr-izm.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -386,6 +408,11 @@ END.
 ON CHOOSE OF B-sel IN FRAME Dialog-Frame /* Выбор */
 DO:
   if available sr-izmerenia then do :
+    if sr-izmerenia.sr-not-used then do:
+      message "Средство измерения отмечено как неиспользуемое. Выбор запрещен."
+      view-as alert-box warning.
+      return no-apply.
+    end.
     p-node-code = sr-izmerenia.node-code. 
     p-sr-type = string(sr-izmerenia.sr-type-id).
   end.
@@ -420,33 +447,13 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
-&Scoped-define SELF-NAME b-ok
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-ok Dialog-Frame
-ON CHOOSE OF b-ok IN FRAME Dialog-Frame /* Ввод */
-DO:
-  RUN proc-save-record (input v-action-mode) NO-ERROR.
-  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
-  v-action-mode = "":U .
-  enable
-  b-add when v-edit-mode
-  b-cng when v-edit-mode
-  b-del when v-edit-mode
-  with frame {&frame-name} .
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define BROWSE-NAME BR-sr-izm
 &Scoped-define SELF-NAME BR-sr-izm
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BR-sr-izm Dialog-Frame
 ON VALUE-CHANGED OF BR-sr-izm IN FRAME Dialog-Frame
 DO:
-  if b-ok:visible in frame {&frame-name}
-  or b-cancel:visible in frame {&frame-name}  then do:
+  define variable vNotUsedStr as character no-undo.
+  if b-cancel:visible in frame {&frame-name}  then do:
     return no-apply.
   end.
   IF AVAILABLE sr-izmerenia THEN do:
@@ -467,10 +474,11 @@ DO:
     */
     assign
       cb-sr-type-id   = sr-izmerenia.sr-type-id
-      cb-sr-temp-line = sr-izmerenia.sr-temp-line
+      vNotUsedStr     = if sr-izmerenia.sr-not-used then "!!! СРЕДСТВО ИЗМЕРЕНИЯ НЕ ИСПОЛЬЗУЕТСЯ !!!"  else ""
     . 
     DISPLAY
       sr-izmerenia.node-code @ dop-sr-izm.node-code AT ROW 18 COL 5 LEFT-ALIGNED  SKIP
+      vNotUsedStr @ mNotUsedStr  AT ROW 18 COL 45 LEFT-ALIGNED format "x(42)" no-label SKIP
       sr-izmerenia.sr-model  @ dop-sr-izm.sr-model  AT ROW 19 COL 5 LEFT-ALIGNED  SKIP
       cb-sr-type-id    AT ROW 20 COL 5 LEFT-ALIGNED  SKIP
       sr-izmerenia.sr-abs-err-neft-water @ dop-sr-izm.sr-abs-err-neft-water AT ROW 21 COL 5 LEFT-ALIGNED  SKIP
@@ -479,7 +487,6 @@ DO:
       sr-izmerenia.sr-abs-err-temp-vol   @ dop-sr-izm.sr-abs-err-temp-vol   AT ROW 24 COL 5 LEFT-ALIGNED  SKIP
       sr-izmerenia.sr-abs-err-temp-dens  @ dop-sr-izm.sr-abs-err-temp-dens  AT ROW 25 COL 5 LEFT-ALIGNED  SKIP
       sr-izmerenia.sr-otnos              @ dop-sr-izm.sr-otnos              AT ROW 26 COL 5 LEFT-ALIGNED  SKIP
-      cb-sr-temp-line  AT ROW 27 COL 5 LEFT-ALIGNED
     with FRAME {&FRAME-NAME} .
   END.
   /*
@@ -592,16 +599,17 @@ assign
     UNDO, RETURN ERROR.
   end.
 */
-if (lookup("b-add", bttns) > 0 AND v-cntxt-db-num = 0 AND NOT TRANSACTION AND p-mode = {&UPDATE}) then do:
+if p-mode = {&UPDATE} then do:
   v-edit-mode = yes.
 end.
 v-action-mode = "":U .
 /* FIND FIRST dop-sr-izm. */
 enable
 br-sr-izm
-b-add WHEN v-edit-mode
-b-cng WHEN v-edit-mode
-b-del WHEN v-edit-mode
+b-add WHEN v-edit-mode and g#db-num = 0
+b-cng WHEN v-edit-mode and g#db-num = 0
+b-del WHEN v-edit-mode and g#db-num = 0
+b-look
 b-hist
 b-help
 b-quit
@@ -612,116 +620,13 @@ IF p-mode <> {&UPDATE} THEN DO:
   b-quit:COLUMN  = 1.
   b-quit:label in frame {&frame-name} = "&Выход".
 END.
-{&OPEN-QUERY-{&BROWSE-NAME}}
+run reopen-query .
 APPLY "value-changed" TO BROWSE br-sr-izm.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add Dialog-Frame
-PROCEDURE proc-b-add :
-DEFINE VARIABLE v-node-code AS INTEGER NO-UNDO.
-DEFINE BUFFER buf_sr-izm FOR sr-izmerenia.
-/*
-FIND LAST buf_sr-izm NO-ERROR.
-IF AVAILABLE buf_sr-izm  THEN DO:
-    ASSIGN
-   v-node-code = buf_sr-izm.node-code + 1.
-END.
-ELSE DO:
-   v-node-code = 1.
-END.
-*/
-/*  DISPLAY b-ok b-cancel WITH FRAME {&FRAME-NAME}.*/
-/*  ENABLE b-ok b-cancel WITH FRAME {&FRAME-NAME}.*/
-  disable b-add b-cng b-del with frame {&frame-name} .
-/*  delete dop-sr-izm. */
-  CREATE dop-sr-izm.
-  ASSIGN
-/*  dop-sr-izm.node-code = v-node-code */
-  dop-sr-izm.node-code = 0
-  cb-sr-type-id        = 1
-  cb-sr-temp-line      = 0.0000125 /* to-do: переопределить на выбор первого значения из перечня */  
-  .
-HIDE  
- dop-sr-izm.node-code
-IN FRAME {&FRAME-NAME} .
-DISPLAY
-  b-ok
-  b-cancel
-/* dop-sr-izm.node-code */
-  dop-sr-izm.sr-model
-  cb-sr-type-id
-  dop-sr-izm.sr-abs-err-neft-water
-  dop-sr-izm.sr-abs-err-water
-  dop-sr-izm.sr-abs-err-dens
-  dop-sr-izm.sr-abs-err-temp-vol
-  dop-sr-izm.sr-abs-err-temp-dens
-  dop-sr-izm.sr-otnos
-  cb-sr-temp-line
-WITH FRAME {&FRAME-NAME} .
-enable
-  b-ok
-  b-cancel
-dop-sr-izm.sr-model
-  cb-sr-type-id
-dop-sr-izm.sr-abs-err-neft-water
-dop-sr-izm.sr-abs-err-water
-dop-sr-izm.sr-abs-err-dens
-dop-sr-izm.sr-abs-err-temp-vol
-dop-sr-izm.sr-abs-err-temp-dens
-dop-sr-izm.sr-otnos
-  cb-sr-temp-line
-WITH FRAME {&FRAME-NAME} .
-
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-cng Dialog-Frame
-PROCEDURE proc-b-cng :
-  
-  disable b-add b-cng b-del with frame {&frame-name} .
-  create dop-sr-izm.
-  buffer-copy sr-izmerenia to dop-sr-izm no-error .
-  assign
-    cb-sr-type-id        = dop-sr-izm.sr-type-id
-    cb-sr-temp-line      = dop-sr-izm.sr-temp-line  
-  .
-  display
-  b-ok
-  b-cancel
-  dop-sr-izm.node-code
-  dop-sr-izm.sr-model
-  cb-sr-type-id
-  dop-sr-izm.sr-abs-err-neft-water
-  dop-sr-izm.sr-abs-err-water
-  dop-sr-izm.sr-abs-err-dens
-  dop-sr-izm.sr-abs-err-temp-vol
-  dop-sr-izm.sr-abs-err-temp-dens
-  dop-sr-izm.sr-otnos
-  cb-sr-temp-line
-  WITH FRAME {&FRAME-NAME} .
-  enable
-  b-ok
-  b-cancel
-dop-sr-izm.sr-model
-  cb-sr-type-id
-dop-sr-izm.sr-abs-err-neft-water
-dop-sr-izm.sr-abs-err-water
-dop-sr-izm.sr-abs-err-dens
-dop-sr-izm.sr-abs-err-temp-vol
-dop-sr-izm.sr-abs-err-temp-dens
-dop-sr-izm.sr-otnos
-  cb-sr-temp-line
-  WITH FRAME {&FRAME-NAME} .
-  
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-del Dialog-Frame
 PROCEDURE proc-b-del :
@@ -782,6 +687,40 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reopen-query Dialog-Frame
+PROCEDURE reopen-query :
+  if p-type-izm-list = ""
+  then do :
+    if p-izm-par = ""
+    then do :
+      {&OPEN-QUERY-{&BROWSE-NAME}}
+    end .
+    else do :
+      open query BR-sr-izm for each sr-izmerenia no-lock where (sr-izmerenia.sr-level and p-izm-par = "lvl")
+                                                            or (sr-izmerenia.sr-density and p-izm-par = "dnst")
+                                                            or (sr-izmerenia.sr-temperature and p-izm-par = "tmp")
+                                                            .
+    end .
+  end .
+  else do :
+    if p-izm-par = ""
+    then do :
+      open query BR-sr-izm for each sr-izmerenia no-lock where can-do(p-type-izm-list, string(sr-izmerenia.sr-type-izm)) .
+    end .
+    else do :
+      open query BR-sr-izm for each sr-izmerenia no-lock where can-do(p-type-izm-list, string(sr-izmerenia.sr-type-izm))
+                                                           and ((sr-izmerenia.sr-level and p-izm-par = "lvl")
+                                                            or (sr-izmerenia.sr-density and p-izm-par = "dnst")
+                                                            or (sr-izmerenia.sr-temperature and p-izm-par = "tmp"))
+                                                            .
+    end .
+  end .
+  
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save-record Dialog-Frame
 PROCEDURE proc-save-record :
 define input parameter p-action as character no-undo.
@@ -802,7 +741,6 @@ dop-sr-izm.sr-abs-err-dens
 dop-sr-izm.sr-abs-err-temp-vol
 dop-sr-izm.sr-abs-err-temp-dens
 dop-sr-izm.sr-otnos
-cb-sr-temp-line
 .
 
 /* проверки значений */
@@ -868,7 +806,6 @@ define variable v-delta as decimal decimals 2 no-undo . /* границы допустимого д
 
   assign
     dop-sr-izm.sr-type-id   = cb-sr-type-id
-    dop-sr-izm.sr-temp-line = cb-sr-temp-line
     v-node-code = if p-action = {&add-def} then next-value (s-sr-izmerenia, {&db-name_schema}) else dop-sr-izm.node-code
     Msg = "":U
     v-retfl = false
@@ -916,7 +853,7 @@ define variable v-delta as decimal decimals 2 no-undo . /* границы допустимого д
   end . /* end_of transaction */
 
 {&disable-dop-sr-izm}.
-HIDE b-ok b-cancel IN FRAME {&FRAME-NAME}.
+HIDE b-cancel IN FRAME {&FRAME-NAME}.
 {&OPEN-QUERY-{&BROWSE-NAME}}
 REPOSITION br-sr-izm TO RECID v-rec.
 APPLY "value-changed" TO br-sr-izm.
@@ -934,7 +871,7 @@ RELEASE dop-sr-izm.
 FIND FIRST dop-sr-izm.
 */
 {&disable-dop-sr-izm}.
-HIDE b-ok b-cancel IN FRAME {&FRAME-NAME}.
+HIDE b-cancel IN FRAME {&FRAME-NAME}.
 APPLY "VALUE-CHANGED" TO br-sr-izm IN FRAME {&FRAME-NAME}.
 END PROCEDURE.
 

@@ -261,7 +261,7 @@ DEFINE BROWSE br-pl
   tt-place-attr.place-Si        COLUMN-LABEL "Средство!измерения" Format ">>>,>>9":U
   tt-place-attr.place-diameter  COLUMN-LABEL "Диаметр резервуара (мм)" format ">,>>>,>>9":U
   tt-place-attr.dead-balance  COLUMN-LABEL "Мертвый остаток" format "->>,>>>,>>9.<<<":U
-  tt-place-attr.place-rel-error COLUMN-LABEL "Относительная погрешность!составлениия калибровочной таблицы " FORMAT "9.99":U
+  /*tt-place-attr.place-rel-error COLUMN-LABEL "Относительная погрешность!составлениия калибровочной таблицы " FORMAT "9.99":U*/
   tt-place-attr.place-dens-prov COLUMN-LABEL "Плотность при! поверке резервуара" FORMAT "9.999999999"
 ENABLE
 X_place.pl-name
@@ -1184,10 +1184,10 @@ PROCEDURE OpenBr :
               do :
                 if v-ok then tt-place-attr.dead-balance = decimal(v-value) .
               end.
-            when {&place-ratio-error} then 
+            /*when {&place-ratio-error} then 
               do :
                 if v-ok then tt-place-attr.place-rel-error = decimal(v-value) .
-              end.
+              end.*/
             when {&place-dens-prov} then 
               do :
                 if v-ok then tt-place-attr.place-dens-prov = decimal(v-value) .
@@ -1245,10 +1245,10 @@ PROCEDURE OpenBr :
               do :
                 if v-ok then tt-place-attr.dead-balance = decimal(v-value) .
               end.
-            when {&place-ratio-error} then 
+            /*when {&place-ratio-error} then 
               do :
                 if v-ok then tt-place-attr.place-rel-error = decimal(v-value) .
-              end.
+              end.*/
             when {&place-dens-prov} then 
               do :
                 if v-ok then tt-place-attr.place-dens-prov = decimal(v-value) .

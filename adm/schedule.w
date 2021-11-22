@@ -483,7 +483,8 @@ DO:
     return no-apply.
   end.
   else do:
-    run adm/schedul3.p ( input recid( buf_schedule )
+    run adm/schedul3.p (  input parparentproc
+                         ,input recid( buf_schedule )
                          ,input no /*p-silent*/
                         ) no-error.
     if error-status:error then do:

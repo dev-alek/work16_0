@@ -41,6 +41,7 @@ define variable vss-description as character no-undo init "Отсылка на кассу пара
 { cmp/vssrevis.i }
 
 { cmp/trg-def.i }
+{ str/get-chk-share.i new }
 { gbl/key-rec.i }
 { nws/bintrnpr.i "new shared" }
 

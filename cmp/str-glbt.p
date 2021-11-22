@@ -537,7 +537,7 @@ attr-fbrattr
 { cmp/cr-prep.i 1 attr-petrol petrol " " petrol }
 
 { cmp/cr-prepc.i 1 prop-list-attr-petrol
-"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info,otkl-fact-volue,otkl-temp,otkl-density,otkl-water,CriticalDifInLgas"
+"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info,otkl-fact-volue,otkl-temp,otkl-density,otkl-water,CriticalDifInLgas,calc-free-vol"
 attr-petrol
 }
 
@@ -573,7 +573,7 @@ attr-egais-host }
 /*Ёлектронный документооборот*/
 { cmp/cr-prep.i 1 attr-marking marking " " marking }
 { cmp/cr-prepc.i 1 prop-list-attr-marking
-"marking-EDO,marking-type,marking-manual,gray_zone_qnty,marking-type-edo"
+"marking-EDO,marking-EDO-Diadok,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,control-date"
 attr-marking }
 
 /*набор опций работы с документами ћ÷*/

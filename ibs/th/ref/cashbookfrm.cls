@@ -594,6 +594,17 @@ class ibs.th.ref.cashbookfrm inherits Form :
 
 	end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void lbankrec_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
    /*------------------------------------------------------------------------------
     Purpose:
     Notes:
@@ -696,9 +707,13 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:label19 = new System.Windows.Forms.Label().
       this-object:groupBox1 = new System.Windows.Forms.GroupBox().
       this-object:groupBox2 = new System.Windows.Forms.GroupBox().
+      this-object:textBox1 = new System.Windows.Forms.TextBox().
+      this-object:label20 = new System.Windows.Forms.Label().
       this-object:groupBox3 = new System.Windows.Forms.GroupBox().
       this-object:label18 = new System.Windows.Forms.Label().
       this-object:groupBox4 = new System.Windows.Forms.GroupBox().
+      this-object:textBox2 = new System.Windows.Forms.TextBox().
+      this-object:label24 = new System.Windows.Forms.Label().
       this-object:fosntrans = new System.Windows.Forms.ComboBox().
       this-object:lclitrans = new System.Windows.Forms.Label().
       this-object:button2 = new System.Windows.Forms.Button().
@@ -707,10 +722,6 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:fcorrtrans = new System.Windows.Forms.TextBox().
       this-object:label22 = new System.Windows.Forms.Label().
       this-object:label23 = new System.Windows.Forms.Label().
-      this-object:label20 = new System.Windows.Forms.Label().
-      this-object:textBox1 = new System.Windows.Forms.TextBox().
-      this-object:label24 = new System.Windows.Forms.Label().
-      this-object:textBox2 = new System.Windows.Forms.TextBox().
       cast(this-object:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
       this-object:groupBox1:SuspendLayout().
       this-object:groupBox2:SuspendLayout().
@@ -1124,6 +1135,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:lbankrec:Size = new System.Drawing.Size(272, 15).
       this-object:lbankrec:TabIndex = 47.
       this-object:lbankrec:UseCompatibleTextRendering = true.
+      this-object:lbankrec:Click:Subscribe(this-object:lbankrec_Click).
       /*  */
       /* btbankdep */
       /*  */
@@ -1287,6 +1299,23 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox2:UseCompatibleTextRendering = true.
       this-object:groupBox2:Enter:Subscribe(this-object:groupBox2_Enter).
       /*  */
+      /* textBox1 */
+      /*  */
+      this-object:textBox1:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "rule-payer-rko", true)).
+      this-object:textBox1:Location = new System.Drawing.Point(121, 67).
+      this-object:textBox1:Name = "textBox1".
+      this-object:textBox1:Size = new System.Drawing.Size(292, 20).
+      this-object:textBox1:TabIndex = 39.
+      /*  */
+      /* label20 */
+      /*  */
+      this-object:label20:Location = new System.Drawing.Point(6, 70).
+      this-object:label20:Name = "label20".
+      this-object:label20:Size = new System.Drawing.Size(103, 15).
+      this-object:label20:TabIndex = 44.
+      this-object:label20:Text = "Выдать:".
+      this-object:label20:UseCompatibleTextRendering = true.
+      /*  */
       /* groupBox3 */
       /*  */
       this-object:groupBox3:Controls:Add(this-object:label18).
@@ -1344,6 +1373,23 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox4:TabStop = false.
       this-object:groupBox4:Text = "ПКО/РКО (перемещения ДС)".
       this-object:groupBox4:UseCompatibleTextRendering = true.
+      /*  */
+      /* textBox2 */
+      /*  */
+      this-object:textBox2:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "rule-payer-transf", true)).
+      this-object:textBox2:Location = new System.Drawing.Point(121, 69).
+      this-object:textBox2:Name = "textBox2".
+      this-object:textBox2:Size = new System.Drawing.Size(292, 20).
+      this-object:textBox2:TabIndex = 45.
+      /*  */
+      /* label24 */
+      /*  */
+      this-object:label24:Location = new System.Drawing.Point(6, 72).
+      this-object:label24:Name = "label24".
+      this-object:label24:Size = new System.Drawing.Size(109, 15).
+      this-object:label24:TabIndex = 45.
+      this-object:label24:Text = "Выдать\Принято от:".
+      this-object:label24:UseCompatibleTextRendering = true.
       /*  */
       /* fosntrans */
       /*  */
@@ -1421,40 +1467,6 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:label23:TabIndex = 10.
       this-object:label23:Text = "Правило заполнения графы ~"Основание~":".
       this-object:label23:UseCompatibleTextRendering = true.
-      /*  */
-      /* label20 */
-      /*  */
-      this-object:label20:Location = new System.Drawing.Point(6, 70).
-      this-object:label20:Name = "label20".
-      this-object:label20:Size = new System.Drawing.Size(103, 15).
-      this-object:label20:TabIndex = 44.
-      this-object:label20:Text = "Выдать:".
-      this-object:label20:UseCompatibleTextRendering = true.
-      /*  */
-      /* textBox1 */
-      /*  */
-      this-object:textBox1:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "rule-payer-rko", true)).
-      this-object:textBox1:Location = new System.Drawing.Point(121, 67).
-      this-object:textBox1:Name = "textBox1".
-      this-object:textBox1:Size = new System.Drawing.Size(292, 20).
-      this-object:textBox1:TabIndex = 39.
-      /*  */
-      /* label24 */
-      /*  */
-      this-object:label24:Location = new System.Drawing.Point(6, 72).
-      this-object:label24:Name = "label24".
-      this-object:label24:Size = new System.Drawing.Size(109, 15).
-      this-object:label24:TabIndex = 45.
-      this-object:label24:Text = "Выдать\Принято от:".
-      this-object:label24:UseCompatibleTextRendering = true.
-      /*  */
-      /* textBox2 */
-      /*  */
-      this-object:textBox2:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "rule-payer-transf", true)).
-      this-object:textBox2:Location = new System.Drawing.Point(121, 69).
-      this-object:textBox2:Name = "textBox2".
-      this-object:textBox2:Size = new System.Drawing.Size(292, 20).
-      this-object:textBox2:TabIndex = 45.
       /*  */
       /* cashbookfrm */
       /*  */
@@ -1544,7 +1556,6 @@ class ibs.th.ref.cashbookfrm inherits Form :
       do :
          this-object:lclitrans:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
       end.
-    
       find first fin-bank where fin-bank.host-code = tt-cashbook.BankRecip-host  
          and fin-bank.code-bank = tt-cashbook.BankRecip-code  no-lock no-error.
       if available fin-bank 

@@ -26,7 +26,8 @@ Input:
     p-pay-desk        as logical    -  надо ли экспортировать разброс по кассам
     p-pay-desk-cards  as logical    -  надо ли экспортировать разброс по префиксам карт
     p-deleted         as logical    -  надо ли экспортировать удаленные документы
-    p-chk             as logiocal   -  надо ли экспортировать чеки
+    p-chk             as logical    -  надо ли экспортировать чеки
+    p-doc-rvs         as logical    -  надо ли выгружать сверки до/после слива по топливным приходным накладным
     p-opened-docs     as logical    -  надо ли экспортировать не закрытые документы
     hedt              as handle     -
     hcnt              as handle     -
@@ -47,7 +48,8 @@ define input parameter p-chk-pay-code   as logical              no-undo.
 define input parameter p-pay-desk       as logical              no-undo.
 define input parameter p-pay-desk-cards as logical              no-undo.
 define input parameter p-deleted        as logical              no-undo.
-define input parameter p-chk            as logical              no-undo .
+define input parameter p-chk            as logical              no-undo.
+define input parameter p-doc-rvs        as logical              no-undo. 
 define input parameter p-opened-docs    as logical              no-undo.
 define input parameter hedt             as handle               no-undo.
 define input parameter hcnt             as handle               no-undo.
@@ -558,6 +560,7 @@ on error undo, return error
                     , input p-pay-desk
                     , input p-pay-desk-cards
                     , input p-chk
+                    , input p-doc-rvs
                     , input v-xml-file-name
                     , input v-log-file-name
                     , input this-procedure

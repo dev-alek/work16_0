@@ -39,4 +39,31 @@ function objExists returns character
     return ? .
 
 end.
+
+&if "{1}" = "class"
+&then
+method private character  SearchPFile 
+&else
+function SearchPFile returns character 
+&endif 
+ (input inFile as char):
+     define variable oFile       as character no-undo.
+     define variable vFileSearch as character no-undo.
+     define variable vNumEntry   as integer no-undo.
+     vNumEntry = num-entries(inFile,".").
+     vFileSearch = inFile.
+     if    entry(vNumEntry,inFile,".") eq "p"
+        or entry(vNumEntry,inFile,".") eq "w"
+     then do:
+        entry(vNumEntry,vFileSearch, ".") = "r". 
+        oFile = search(vFileSearch ).
+        if oFile eq ?
+        then
+           oFile = search(inFile).
+     end.
+     else
+        oFile = search(vFileSearch).
+     return oFile.
+     
+  end.
 &endif

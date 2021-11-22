@@ -53,6 +53,8 @@ define variable vss-description as character no-undo init "Толкач выгрузки на пр
 { gbl/waitfram.i }
 { str/placelib.i }
 
+
+
 function f-int-to-chr returns character (input v-int as integer) :
   if v-int = 0 or v-int = ? then return "" .
   return string(v-int) .
@@ -63,27 +65,12 @@ function f-dec-to-chr returns character (input v-dec as decimal) :
   return string(v-dec, "->>>>>>>9.99<<<") .
 end function .
 
-define temp-table tt-place no-undo
-  field loc1          as character  label "№ резервуара"
-  field pl-code       as integer    label "Код резервуара" format ">>>>>>>>>9"
-  field gds-code      as integer    label "Код продукта" format ">>>>>>>>>9"
-  field gds-name      as character  label "НАИМЕНОВАНИЕ ПРОДУКТА" format "X(20)"
-  field level-total   as decimal    label "Общий уровень (см)"
-  field level-water   as decimal    label "Уровень воды (см)"
-  field total-vol     as decimal    label "Общий объем (л)"
-  field avrg-temp     as decimal    label "Средняя Т"
-  field t1            as decimal    label "T1"
-  field t2            as decimal    label "T2"
-  field t3            as decimal    label "T3"
-  field density       as decimal decimals 10  label "Плотность (кг/л)" format ">>>>>>>>>9.9<<<<<<<<<"
-  field mass          as decimal    label "Масса (кг)"
-  field vapor-density as decimal decimals 10  label "Плотность СУГ ПФ (кг/л)" format ">>>>>>>>>9.9<<<<<<<<<"
-  field vapor-pressure as decimal   label "Давление СУГ (мПа)" format ">>>9.99999"
-  field is-error      as logical 
-  field error-message as character
-  index pi as primary unique
-    loc1
-.
+{ str/lib-rvs.i }
+{ bge/socet.i}
+{ bge/place-def.i}
+{ str/rvsttdef.i }
+{ utl/search.i}
+{ str/revis.i }
 
 define temp-table tt-pids no-undo
   field pid as integer
@@ -121,12 +108,14 @@ define variable v-asi-port as character no-undo .
 define variable v-asi-type as character no-undo .
 define variable v-attr-type as character no-undo .
 
+define variable v-date  as date no-undo init ? .
+define variable v-time  as integer no-undo .
+
 define variable v-mode    as integer no-undo .
 
-define variable v-status  as character view-as text label "Статус" initial "" format "X(80)".
+define variable mclose        as logical no-undo .
 
-define variable v-asi-error-code as integer no-undo initial 0 .
-define variable v-asi-error-message as character no-undo .
+define variable v-status  as character view-as text label "Статус" initial "" format "X(80)".
 
 define buffer buf_clients for ub.clients .
 define buffer buf_place for ub.place .
@@ -187,7 +176,7 @@ define browse br-place
   query br-place no-lock display
     tt-place.loc1
     f-int-to-chr(tt-place.pl-code)  label "Код резервуара"
-    tt-place.gds-name
+    tt-place.gds-name format "x(30)"
     f-int-to-chr(tt-place.gds-code)  label "Код продукта"
     tt-place.level-total
     tt-place.level-water
@@ -262,55 +251,8 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-req Dialog-Frame
 ON CHOOSE OF b-req IN FRAME Dialog-Frame 
 DO:
-  case v-mode :
-    when 1
-    then do :
-      run get-from-struna no-error .
-      if error-status:error
-      then do :
-        v-status = return-value .
-      end .
-      else do :
-        v-status = "Данные получены " + string(NOW) .
-      end.
-    end .
-    when 2
-    then do :
-      run asi-send-cmd no-error .
-      if error-status:error
-      then do :
-        v-status = return-value .
-      end .
-      else do :
-        v-status = "Запрос отправлен " + string(NOW) .
-        display v-status with frame {&frame-name} .
-      end.
-    end .
-    when 3
-    then do :
-      run get-from-ifsf no-error .
-      if error-status:error
-      then do :
-        v-status = return-value .
-      end .
-      else do :
-        v-status = "Данные получены " + string(NOW) .
-      end.
-    end .
-  end case .
+  run getreqAsi.
   
-  if v-mode = 2
-  then do :
-    run sleep (500) .
-    run asi-read-sts no-error .
-    if error-status:error
-    then do :
-      v-status = return-value .
-    end .
-    else do :
-      v-status = "Данные получены " + string(NOW) .
-    end.
-  end.
   open query br-place for each tt-place indexed-reposition .
   display v-status with frame {&frame-name} .
 END.
@@ -322,42 +264,12 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print Dialog-Frame
 ON CHOOSE OF b-print IN FRAME Dialog-Frame 
 DO:
-  case v-mode :
-    when 1
-    then do :
-      run get-from-struna no-error .
-      if error-status:error
-      then do :
-        message return-value view-as alert-box .
-        return no-apply .
-      end .
-    end .
-    when 2
-    then do :
-      run asi-send-cmd no-error .
-      if error-status:error
-      then do :
-        message return-value view-as alert-box .
-        return no-apply .
-      end .
-      run sleep (500) .
-      run asi-read-sts no-error .
-      if error-status:error
-      then do :
-        message return-value view-as alert-box .
-        return no-apply .
-      end .
-    end .
-    when 3
-    then do :
-      run get-from-ifsf no-error .
-      if error-status:error
-      then do :
-        message return-value view-as alert-box .
-        return no-apply .
-      end .
-    end .
-  end case .
+/*  run getreqAsi.*/
+  if v-date = ?
+  then do :
+    message "Нет данных для печати!" view-as alert-box .
+    return no-apply .
+  end .
   
   run My-Rep.
   
@@ -393,6 +305,7 @@ DO:
   
   assign
     log-exit = true
+    mclose   = yes
   .
   
 END.
@@ -422,6 +335,7 @@ end.
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+
 
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
@@ -466,59 +380,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   run init-tt .
   
-  case v-mode :
-    when 1
-    then do :
-      run get-from-struna no-error .
-      if error-status:error
-      then do :
-        v-status = return-value .
-      end .
-      else do :
-        v-status = "Данные получены " + string(NOW) .
-      end.
-    end .
-    when 2
-    then do :
-      run asi-send-cmd no-error .
-      if error-status:error
-      then do :
-        v-status = return-value .
-      end .
-      else do :
-        v-status = "Запрос отправлен " + string(NOW) .
-      end.
-      run sleep (500) .
-    end .
-    when 3
-    then do :
-      run get-from-ifsf no-error .
-      if error-status:error
-      then do :
-        v-status = return-value .
-      end .
-      else do :
-        v-status = "Данные получены " + string(NOW) .
-      end.
-    end .
-  end case .
-  
   RUN enable_UI.
-  if v-mode = 2
-  then do :
-    run asi-read-sts no-error .
-    if error-status:error
-    then do :
-      v-status = return-value .
-    end .
-    else do :
-      v-status = "Данные получены " + string(NOW) .
-    end.
-  end.
+  run getreqAsi.
   open query br-place for each tt-place indexed-reposition .
-  display v-status with frame {&frame-name} .
   
-  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+  if not mclose
+  then
+     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
    
 END.
 RUN disable_UI.
@@ -529,104 +397,177 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
+procedure getreqAsi:
+  run waitfram-show in this-procedure ("Получаем данные с АСИ ...").
+  
+  case v-mode :
+    when 1
+    then do :
+      run get-from-struna (v-log-file-name, v-cntxt-obj-code )no-error.
+      if error-status:error
+      then do :
+        v-status = return-value .
+        message v-status
+        view-as alert-box.
+      end .
+      else do:
+         run  checkttPlace no-error.
+         if error-status:error
+         then do :
+           v-status = return-value .
+           message v-status
+           view-as alert-box.
+         end .
+         else do :
+           v-status = "Данные получены " + string(NOW).
+           v-date = date(now) .
+           v-time = time .
+         end.
+      end.
+    end .
+    when 2
+    then do :
+      run waitfram-hide in this-procedure no-error .
+      display v-status with frame {&frame-name} .
+      run asi-send-cmd no-error .
+      if error-status:error
+      then do :
+        v-status = return-value .
+        message v-status
+           view-as alert-box.
+        display v-status with frame {&frame-name} .
+           
+      end .
+      
+    end .
+    when 3
+    then do :
+      run get-from-ifsf (v-log-file-name,v-asi-ip,v-asi-port )no-error.
+      if error-status:error
+      then do :
+        v-status = return-value .
+        message v-status
+           view-as alert-box.
+      end .
+      else do:
+         run  checkttPlace no-error.
+         if error-status:error
+         then do :
+           v-status = return-value .
+           message v-status
+           view-as alert-box.
+         end .
+         else do :
+           v-status = "Данные получены " + string(NOW) .
+           v-date = date(now) .
+           v-time = time .
+         end.
+       end.
+    end .
+  end case .
+  run waitfram-hide in this-procedure no-error .
+  display v-status with frame {&frame-name} .
+end procedure. 
+
+define variable mFlagRes as logical no-undo.
 procedure asi-send-cmd :
   define variable bat-file              as character    no-undo .
   define variable cmd                   as character    no-undo .
   define variable v-pid                 as integer      no-undo .
   define variable v-addr                as character    no-undo .
-  define variable v-file                as character    no-undo .
-  v-file = v-temp-dir + "\asiresp_agnt.xml" .
-  
-  v-addr = v-asi-ip + ":" + v-asi-port + "/getmeas/?loclist=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22" .
-  cmd = substitute ('&1 --connect-timeout 5 "&3" >&2', search ("exe/curl.exe"), v-file, v-addr).          
-  bat-file = v-temp-dir + "\asireq_agnt.bat" .  
-  output to value(bat-file) .
-  put unformatted cmd skip .
-  output close .     
-  
-  os-delete value(v-file) no-error .
-  v-file = search(v-file) .
-  if v-file = ? or trim(v-file) = ""
-  then do :
-  end . 
-  else do :
-    return error ("Не могу удалить файл " + v-file + " для получения новых данных!") .
-  end .
-      
-  run gbl/run-gpid.p (  input bat-file
-                       ,input '':U
-                       ,output v-pid).
-                       
-  output to value (  v-log-file-name  ) append .
-  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  " cmd skip .
-  output close .     
-                  
-  run sleep (500) .
-  rv = IsProcessRunning(v-pid). 
-  if rv >= 0 then do :
+  run SendReqSocet (v-asi-ip,v-asi-port,"/getmeas/?loclist=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22","","xml","getResponseMy").
+  if oErrMsg ne ""
+  then do:
+     v-status = oErrMsg.
+     return.
   end.
-  else do :
-    os-delete value(bat-file) .
-  end.                     
-  find first tt-pids no-lock where tt-pids.pid = v-pid no-error .
-  if not available tt-pids
-  then do :
-    create tt-pids.
-    tt-pids.pid = v-pid .
-  end.                      
-  
-  v-file = search(v-file) .
-  if v-file = ? or trim(v-file) = ""
-  then do :
-  end .
-  else do :
-    file-info:file-name = v-file .
-    if file-info:file-size = 0
-    then do :
-    end.
-    else do :
-      run parse-xml (input v-file,
-                     input-output table tt-place) .
-      
-    end.
+  define variable mTimeOut as decimal no-undo init 180.
+  if     mTimeOut ne ? 
+     and mTimeOut ne 0
+  then 
+     v-status = substitute("Запрос отправлен &1 ожидаем ответ &2 секунд...", string(NOW), mTimeOut).
+  else
+     v-status = "Запрос отправлен " + string(NOW) + " ожидаем ответ..." .
+  mFlagRes = no.
+   
+  display v-status with frame {&frame-name} .
+  etime(yes).
+  b-req:sensitive = no.
+  WAIT-FOR CHOOSE OF b-exit IN FRAME Dialog-Frame or read-response of mHSocket pause mTimeOut.
+  b-req:sensitive = yes.
+ 
+  if mHSocket:connected() 
+  then do:
+     mHSocket:disconnect() no-error.
+     
   end.
-  
+  delete object mHSocket no-error. 
+  if not mFlagRes
+  then do:
+     if     mTimeOut ne ? 
+        and mTimeOut ne 0 
+        and etime / 1000 > mTimeOut - 0.1 /* вычтем 0.1 так как при тайм ауте 30 сек  по etime проходит всего 29.997 сек */ 
+     then
+        v-status = "Данные не получены. Вышло вмремя ожидания ответа".
+     else
+        v-status = "Данные не получены. Операция прервана пользователем".
+  end.
+  if mclose
+  then
+     APPLY "GO" TO FRAME {&FRAME-NAME}.     
 end procedure .
 
+procedure getResponseMy:
+   mFlagRes = yes.
+   run getResponse.
+   run asi-read-sts no-error .
+   if error-status:error
+   then do :
+     v-status = return-value .
+     message v-status
+     view-as alert-box.
+   end .
+   else do :
+     v-status = "Данные получены " + string(NOW) .
+     v-date = date(now) .
+     v-time = time .
+   end.
+end. 
 procedure asi-read-sts :
   define variable v-file    as character no-undo .
-  define variable jj as integer no-undo .
   define variable err-msg as character no-undo .
-  v-file = v-temp-dir + "\asiresp_agnt.xml" .
-  v-file = search(v-file) .
-  if v-file = ? or trim(v-file) = ""
-  then return error "Не могу получить данные от агента АСИ".
   
-  jj_ :
-  do jj = 1 to 20 :
-    file-info:file-name = v-file .
-    if file-info:file-size = 0
-    then do :
-      run sleep(500) .
-    end.
-    else leave .
-  end.
-  
-  file-info:file-name = v-file .
-  if file-info:file-size = 0
+  if length(mWebResp) = 0
   then do :
-    os-delete value(v-file) .
     return error "Пустой ответ от агента АСИ".
   end.
   
-  run parse-xml (input v-file,
-                 input-output table tt-place) .
-                 
+  run parse-xml (input mWebResp) .
+  
   find first buf_tt-place no-error .
   if available buf_tt-place
   then
   br-place:refresh () in frame Dialog-Frame no-error . 
+  run  checkttPlace no-error.
+  if error-status:error
+  then
+     return error return-value.
+
+
+end procedure .
+
+procedure checkttPlace :
+  define variable err-msg as character no-undo.
   
+  find first buf_tt-place where buf_tt-place.locint eq ? no-error .
+  if available buf_tt-place
+  then do :
+    for each buf_tt-place:
+      if buf_tt-place.locint eq ?
+      then
+         buf_tt-place.locint = integer (buf_tt-place.loc1) no-error.
+    end .
+  end .
   find first buf_tt-place where buf_tt-place.is-error no-error .
   if available buf_tt-place
   then do :
@@ -638,152 +579,7 @@ procedure asi-read-sts :
     err-msg = trim(err-msg, ",") .
     return error err-msg .
   end .
-end procedure .
-
-procedure parse-xml :
-  define input parameter p-file as character .
-  define input-output parameter table for tt-place .
-  
-  CREATE X-DOCUMENT hDoc.
-  CREATE X-NODEREF hRoot.
-     
-  hDoc:LOAD("file",p-file,FALSE).
-     
-  hDoc:GET-DOCUMENT-ELEMENT(hRoot).
-      
-  RUN GetChildren(hRoot, 1).
-  
-  DELETE OBJECT hDoc.
-  DELETE OBJECT hRoot.
-  
-  output to value (  v-log-file-name  ) append .
-  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
-  for each tt-place no-lock :
-    put unformatted ("TANK = " + tt-place.loc1 ) skip .
-    if tt-place.level-total <> ? then
-      put unformatted ("LEVEL_TOTAL = " + string(tt-place.level-total, ">>>>>9.9<<<")) skip .
-    if tt-place.level-water <> ? then
-      put unformatted ("LEVEL_WATER = " + string(tt-place.level-water, ">>>>>9.9<<<")) skip .
-    if (tt-place.level-total - tt-place.level-water) <> ? then
-      put unformatted ("LEVEL_OIL = " + string((tt-place.level-total - tt-place.level-water), ">>>>>9.9<<<")) skip .
-    if tt-place.avrg-temp <> ? then
-      put unformatted ("TEMPERATURE = " + string(tt-place.avrg-temp, "->>>>>9.9<<<")) skip .
-    if tt-place.density <> ? then
-      put unformatted ("DENSITY = " + string(tt-place.density, ">>>>>>>>>9.9<<<<<<<<<")) skip .
-    if tt-place.total-vol <> ? then
-      put unformatted ("VOLUME_TOTAL = " + string(tt-place.total-vol, ">>>>>9.9<<<")) skip .
-    if tt-place.mass <> ? then
-      put unformatted ("MASS_TOTAL = " + string(tt-place.mass, ">>>>>9.9<<<")) skip .
-    if tt-place.t1 <> ? then
-      put unformatted ("T1 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
-    if tt-place.t2 <> ? then
-      put unformatted ("T2 = " + string(tt-place.t1, "->>>>>9.9<<<")) skip .
-    if tt-place.t3 <> ? then
-      put unformatted ("T3 = " + string(tt-place.t3, "->>>>>9.9<<<")) skip .
-    if tt-place.vapor-density <> 0 and tt-place.vapor-density <> ? then
-      put unformatted ("VAPOR_DENSITY = " + string(tt-place.vapor-density, ">>>>>>>>>9.9<<<<<<<<<")) skip .
-    if tt-place.vapor-pressure <> 0 and tt-place.vapor-pressure <> ? then
-      put unformatted ("VAPOR_PRESSURE = " + string(tt-place.vapor-pressure, ">>>>>9.9<<<")) skip .
-  end.
-  output close .
-  
-end procedure .
-
-PROCEDURE GetChildren:
-DEFINE INPUT PARAMETER hParent AS HANDLE NO-UNDO.
-DEFINE INPUT PARAMETER level AS INTEGER NO-UNDO.
-
-DEFINE VARIABLE i AS INTEGER NO-UNDO.
-DEFINE VARIABLE hNoderef AS HANDLE NO-UNDO.
-DEFINE VARIABLE hText AS HANDLE NO-UNDO.
-define variable client as character no-undo.
-
-CREATE X-NODEREF hNoderef.
-CREATE X-NODEREF hText .
-
-
-REPEAT i = 1 TO hParent:NUM-CHILDREN:
-    good = hParent:GET-CHILD(hNoderef,i).
-    IF NOT good THEN 
-        LEAVE.
-    IF hNoderef:SUBTYPE <> "element" THEN
-        NEXT.
-    
-    hNoderef:GET-CHILD(hText, 1) no-error .    
-    
-    IF hNoderef:NAME = "ErrNum"
-    then do :
-      v-asi-error-code = integer(hText:node-value) no-error .
-    end .
-    
-    IF hNoderef:NAME = "ErrMsg"
-    then do :
-      v-asi-error-message = hText:node-value no-error .
-      if v-asi-error-code > 0
-      then do :
-        assign
-          tt-place.t1             = ?
-          tt-place.t2             = ?
-          tt-place.t3             = ?
-          tt-place.level-total    = ?   
-          tt-place.level-water    = ?   
-          tt-place.total-vol      = ? 
-          tt-place.avrg-temp      = ?  
-          tt-place.density        = ? 
-          tt-place.mass           = ?
-          tt-place.vapor-density  = ?
-          tt-place.vapor-pressure = ?
-          tt-place.is-error       = true
-          tt-place.error-message  = v-asi-error-message
-        .
-      end .
-    end .
-        
-    IF hNoderef:NAME = "Tank"
-    then do :
-      find first tt-place where tt-place.loc1 = hText:node-value no-error .
-      if not available tt-place
-      then do :
-        create tt-place .
-        assign tt-place.loc1 = hText:node-value no-error .
-        assign
-          tt-place.t1             = ?
-          tt-place.t2             = ?
-          tt-place.t3             = ?
-          tt-place.level-total    = ?   
-          tt-place.level-water    = ?   
-          tt-place.total-vol      = ? 
-          tt-place.avrg-temp      = ?  
-          tt-place.density        = ? 
-          tt-place.mass           = ?
-          tt-place.vapor-density  = ?
-          tt-place.vapor-pressure = ?
-        .
-      end.
-    end.
-    
-    if v-asi-error-code = 0
-    then do :
-      IF hNoderef:NAME = "LevelTotal" then assign tt-place.level-total = decimal(hText:node-value) / 10 no-error .
-      IF hNoderef:NAME = "LevelWater" then assign tt-place.level-water = decimal(hText:node-value) / 10 no-error .
-      IF hNoderef:NAME = "Temperature" then assign tt-place.avrg-temp = decimal(hText:node-value) no-error .
-      IF hNoderef:NAME = "Density" then assign tt-place.density = decimal(hText:node-value) no-error .
-      IF hNoderef:NAME = "VolumeTotal" then assign tt-place.total-vol = decimal(hText:node-value) no-error .
-      IF hNoderef:NAME = "MassTotal" then assign tt-place.mass = decimal(hText:node-value) no-error .
-      IF hNoderef:NAME = "VaporDensity" then assign tt-place.vapor-density = decimal(hText:node-value) no-error .
-      IF hNoderef:NAME = "VaporPressure" then assign tt-place.vapor-pressure = decimal(hText:node-value) / 1000 no-error .
-      IF hNoderef:NAME = "Temperature1" then assign tt-place.t1 = decimal(hText:node-value) no-error .
-      IF hNoderef:NAME = "Temperature2" then assign tt-place.t2 = decimal(hText:node-value) no-error .
-      IF hNoderef:NAME = "Temperature3" then assign tt-place.t3 = decimal(hText:node-value) no-error .
-    end .
-           
-    RUN GetChildren(hNoderef, (level + 1)).
-END.
-
-DELETE OBJECT hNoderef.
-DELETE OBJECT hText.
-END PROCEDURE.
-
+end.
 procedure init-tt :
   define variable pl-twice-code as character no-undo initial "" .
   define variable v-value       as character no-undo .
@@ -801,7 +597,8 @@ procedure init-tt :
       assign
         tt-place.loc1     = buf_place.loc1
         tt-place.pl-code  = buf_place.pl-code
-      .
+        tt-place.locint   = int(buf_place.loc1) 
+      no-error.
       assign
         tt-place.t1             = ?
         tt-place.t2             = ?
@@ -843,7 +640,8 @@ procedure init-tt :
           end.
           assign
             buf_tt-place.loc1 = trim( entry( ii, pl-twice-code ) )
-          .
+            buf_tt-place.locint   = int(buf_tt-place.loc1) 
+          no-error.
           assign  
             buf_tt-place.gds-code = tt-place.gds-code
             buf_tt-place.gds-name = tt-place.gds-name
@@ -870,7 +668,9 @@ procedure init-tt :
           create buf_tt-place .
         end.
         assign
-          buf_tt-place.loc1 = pl-twice-code
+          buf_tt-place.loc1     = pl-twice-code
+          buf_tt-place.locint   = int(buf_tt-place.loc1) 
+        no-error.
         .
         assign  
           buf_tt-place.gds-code = tt-place.gds-code
@@ -896,279 +696,8 @@ procedure init-tt :
   
 end procedure.
 
-procedure get-from-struna :
-  define variable v-comstring as character no-undo .
-  define variable v_File-Name as character no-undo .
-  define variable v_command as character no-undo .
-  
-  define variable str       as character no-undo .
-  define variable str1      as character no-undo .
-  define variable str2      as character no-undo .
-  
-  define variable StrFrFile-list as character no-undo initial '':U.
-  
-  StrFrFile-list = 'tank,level_total,level_water,level_oil,t1,t2,t3,temperature,density,'
-                 + 'volume_total,volume_total_tc,mass_total,volume_oil,volume_water,vapor_density,vapor_pressure' .
-  
-  get-key-value section 'revision'
-                key     'comstr'
-                value   v-comstring.
-  
-  assign
-    v_File-Name = 'revis.txt':U
-  .
-  os-delete value( v_File-Name ) .
-  if v-comstring = '':U
-    or v-comstring = ?
-  then do:
-    return error 'Не задан парам. comstr в секции revision ini файла.' .
-  end.
-  
-  assign
-    v_command = substitute( "&1 &2 &3 &4", v-comstring, string(0), v_File-Name, v-cntxt-obj-code)
-  .
-  os-command silent value( v_command ) .
-  
-  output to value (  v-log-file-name  ) append .
-  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  " v_command skip .
-  
-  if search( v_File-Name ) = ? then do:
-    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Файл с прибора не получен.  " v_command skip .
-    output close .
-    return error 'Файл с прибора не получен.' .
-  end.
-  else do: 
-    v_File-Name  = search( v_File-Name ) . 
-  end.
-  
-  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
-  output close .
-  os-append value(v_File-Name) value(v-log-file-name).
-  output to value (  v-log-file-name  ) append .
-  put unformatted skip .
-  output close .
-  
-  input from value(v_File-Name) .
-  repeat :
-    import unformatted str .  
-    if index( str, "#" ) > 0
-    then do:
-      assign
-        str = substring( str, 1, index( str, "#" ) - 1 )
-      .
-    end.
-    if str = '':U then next .
-    str1 = trim(entry(1, str, "=")) .
-    str2 = trim(entry(2, str, "=")) .
-    if can-do(StrFrFile-list, str1)
-    then do :
-      case str1 :
-        when "tank"
-        then do :
-          find first tt-place where tt-place.loc1 = str2 no-error .
-          if not available tt-place
-          then do :
-            create tt-place .
-            assign tt-place.loc1 = str2 no-error .
-            assign
-              tt-place.t1             = ?
-              tt-place.t2             = ?
-              tt-place.t3             = ?
-              tt-place.level-total    = ?   
-              tt-place.level-water    = ?   
-              tt-place.total-vol      = ? 
-              tt-place.avrg-temp      = ?  
-              tt-place.density        = ? 
-              tt-place.mass           = ?
-              tt-place.vapor-density  = ?
-              tt-place.vapor-pressure = ?
-            .
-          end.
-        end .
-        when "level_total" then assign tt-place.level-total = decimal(str2) no-error .
-        when "level_water" then assign tt-place.level-water = decimal(str2) no-error .
-/*        when "level_oil" then assign tt-place.*/
-        when "temperature" then assign tt-place.avrg-temp = decimal(str2) no-error .
-        when "t1" then assign tt-place.t1 = decimal(str2) no-error .
-        when "t2" then assign tt-place.t2 = decimal(str2) no-error .
-        when "t3" then assign tt-place.t3 = decimal(str2) no-error .
-        when "density" then assign tt-place.density = decimal(str2) no-error .
-        when "volume_total" then assign tt-place.total-vol = decimal(str2) no-error .
-        when "mass_total" then assign tt-place.mass = decimal(str2) no-error .
-/*        when "volume_oil" then assign tt-place.*/
-/*        when "volume_water" then assign tt-place.*/
-        when "vapor_density" then assign tt-place.vapor-density = decimal(str2) no-error .
-        when "vapor_pressure" then assign tt-place.vapor-pressure = decimal(str2) / 1000 no-error .
-      end case .
-    end .
-  end.
-  input close .
-  
-end procedure .
 
-procedure get-from-ifsf :
-/*  define variable v-asi-ip  as character no-undo .  */
-/*  define variable v-asi-port as character no-undo . */
-/*  define variable v-attr-type as character no-undo .*/
-  define variable v_command     as   character     no-undo.
-  define variable v-log     as logical no-undo .
-  define variable v-bytes   as integer no-undo .
-  define variable v-out-data as character no-undo .
-  define variable v-line-str as character no-undo .
-  define variable ii        as integer no-undo .
-  define variable str       as character no-undo .
-  define variable str1      as character no-undo .
-  define variable str2      as character no-undo .
-  
-  define variable hSocket   as handle no-undo .
-  define variable mDataIn   as memptr no-undo .
-  define variable mDataout  as memptr no-undo .
-  define variable cmd       as character no-undo .
-  define variable connStr   as character no-undo .
-  
-  define variable StrFrFile-list as character no-undo initial '':U.
-  
-  StrFrFile-list = 'tank,level_total,level_water,level_oil,t1,t2,t3,temperature,density,'
-                 + 'volume_total,volume_total_tc,mass_total,volume_oil,volume_water,vapor_density,vapor_pressure' .
-  
-  
-  cmd = 'KOI8-R 1 0 1' + {&new-line} .
-  set-size(mDataIn) = 0 .
-  set-size(mDataIn) = length(cmd , "RAW":U) + 1 .
-  put-string(mDataIn,1) = cmd .
-  
-/*  find first sys-ctrl no-lock.                                                  */
-/*  run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).    */
-/*  run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).*/
-  
-  create socket hSocket .
-  hSocket:disconnect() no-error.
-  connStr = '-H ' + v-asi-ip + ' -S ' + v-asi-port .
-  hSocket:connect(connStr) no-error.
-  
-  output to value (  v-log-file-name  ) append .
-  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Запрос  connStr='-H " v-asi-ip " -S " v-asi-port "'  cmd='KOI8-R 1 0 1'" skip .
-  output close .
-  
-  if hSocket:connected() = false
-  then do :
-    return error "Не могу подключиться к IFSF серверу." .
-  end.
-  
-  hSocket:set-socket-option('TCP-NODELAY', 'true').
-  hSocket:set-socket-option('SO-KEEPALIVE', 'true').
-  hSocket:set-socket-option('SO-REUSEADDR', 'true').
-  
-  v-log = hSocket:write(mDataIn, 1, get-size(mDataIn)) no-error.
-  if v-log = false or error-status:get-message(1) <> ''
-  then do:
-    hSocket:disconnect() no-error.
-    output to value (  v-log-file-name  ) append .
-    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Не могу отправить команду на IFSF сервер.  " skip .
-    output close .
-    return error "Не могу отправить команду на IFSF сервер." .
-  end.
-  
-  run sleep (1000) .
-  
-  set-size(mDataOut) = 0 .
-  v-bytes = hSocket:get-bytes-available() .
-  set-size(mDataOut) = v-bytes + 1 .
-  
-  v-log = hSocket:read(mDataOut, 1, v-bytes, 2) no-error.
-  if v-log = false or error-status:get-message(1) <> ''
-  then do:
-    hSocket:disconnect() no-error.
-    output to value (  v-log-file-name  ) append .
-    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Не могу прочитать ответ от IFSF сервера.  " skip .
-    output close .
-    return error "Не могу прочитать ответ от IFSF сервера." .
-  end.
-  
-  v-out-data = get-string(mDataOut,1) .
-  if v-out-data = ""
-  then do :
-    hSocket:disconnect() no-error.
-    output to value (  v-log-file-name  ) append .
-    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Не могу получить данные от IFSF сервера.  " skip .
-    output close .
-    return error "Не могу получить данные от IFSF сервера." .
-  end.
-  if index(v-out-data, "Bad Request") > 0
-  then do :
-    hSocket:disconnect() no-error.
-    output to value (  v-log-file-name  ) append .
-    put unformatted string(today) ' ' string(time, "HH:MM:SS") "  " v-out-data skip .
-    output close .
-    return error v-out-data .
-  end.
-  
-  hSocket:disconnect() no-error.
-  delete object hSocket.
-  set-size(mDataIn) = 0.
-  set-size(mDataOut)   = 0.
-  
-  output to value (  v-log-file-name  ) append .
-  put unformatted string(today) ' ' string(time, "HH:MM:SS") "  Данные  " skip .
-  put unformatted v-out-data skip .
-  output close .
-  
-  do ii = 1 to num-entries(v-out-data, {&new-line}) :
-    str = entry(ii, v-out-data, {&new-line}) .
-    if index( str, "#" ) > 0
-    then do:
-      assign
-        str = substring( str, 1, index( str, "#" ) - 1 )
-      .
-    end.
-    if str = '':U then next .
-    str1 = trim(entry(1, str, "=")) .
-    str2 = trim(entry(2, str, "=")) .
-    if can-do(StrFrFile-list, str1)
-    then do :
-      case str1 :
-        when "tank"
-        then do :
-          find first tt-place where tt-place.loc1 = str2 no-error .
-          if not available tt-place
-          then do :
-            create tt-place .
-            assign tt-place.loc1 = str2 no-error .
-            assign
-              tt-place.t1             = ?
-              tt-place.t2             = ?
-              tt-place.t3             = ?
-              tt-place.level-total    = ?   
-              tt-place.level-water    = ?   
-              tt-place.total-vol      = ? 
-              tt-place.avrg-temp      = ?  
-              tt-place.density        = ? 
-              tt-place.mass           = ?
-              tt-place.vapor-density  = ?
-              tt-place.vapor-pressure = ?
-            .
-          end.
-        end .
-        when "level_total" then assign tt-place.level-total = decimal(str2) no-error .
-        when "level_water" then assign tt-place.level-water = decimal(str2) no-error .
-/*        when "level_oil" then assign tt-place.*/
-        when "temperature" then assign tt-place.avrg-temp = decimal(str2) no-error .
-        when "t1" then assign tt-place.t1 = decimal(str2) no-error .
-        when "t2" then assign tt-place.t2 = decimal(str2) no-error .
-        when "t3" then assign tt-place.t3 = decimal(str2) no-error .
-        when "density" then assign tt-place.density = decimal(str2) no-error .
-        when "volume_total" then assign tt-place.total-vol = decimal(str2) no-error .
-        when "mass_total" then assign tt-place.mass = decimal(str2) no-error .
-/*        when "volume_oil" then assign tt-place.*/
-/*        when "volume_water" then assign tt-place.*/
-        when "vapor_density" then assign tt-place.vapor-density = decimal(str2) no-error .
-        when "vapor_pressure" then assign tt-place.vapor-pressure = decimal(str2) / 1000 no-error .
-      end case .
-    end .
-  end .
-  
 
-end procedure .
 
 procedure My-Rep:
 
@@ -1248,10 +777,10 @@ define variable Lines_Counter as integer no-undo .
     '<td colspan="15" style="text-align: center; font-weight:bold;">Оперативный отчет по показаниям АСИ</td>' skip
     '</tr>' skip   
     '<tr>' skip
-    '<td colspan="7" style="text-align: left; font-weight:bold;">Дата: ' + string(date(now)) + '</td>' skip
+    '<td colspan="7" style="text-align: left; font-weight:bold;">Дата: ' + string(v-date) + '</td>' skip
     '</tr>' skip  
     '<tr>' skip
-    '<td colspan="7" style="text-align: left; font-weight:bold;">Время: ' + string(time, 'HH:MM:SS') + '</td>' skip
+    '<td colspan="7" style="text-align: left; font-weight:bold;">Время: ' + string(v-time, 'HH:MM:SS') + '</td>' skip
     '</tr>' skip 
     '<tr>' skip
     '<td colspan="7" style="text-align: left; font-weight:bold;"><br></td>' skip

@@ -151,7 +151,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       end .
     end.
     
-
+    message v-mode tt-cashbook.id tt-cashbook.ext-code  tt-cashbook.basic-kb SKIP objImp:name_ view-as alert-box.
     if v-mode = {&deletion} then do :
       if tt-cashbook.Status_ = 0 /* 0:"Текущий" */ then do : 
         for each buf_goods-attr exclusive-lock
@@ -243,7 +243,26 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           , {&cmp}, objImp:code-payer, v-code, objImp:name_
         ) ) .
     end .
-
+    define variable vbank-resive as integer no-undo.
+    find first fin-bank where fin-bank.bik eq objImp:bank-resive
+    no-lock no-error.
+    if available fin-bank
+    then
+       vbank-resive = fin-bank.code-bank.
+    else
+       undo, throw new Progress.Lang.AppError( substitute(
+          "Не известный банк-получатель с БИК  &1.",objImp:bank-resive)).
+    
+    define variable vbank-deposit as integer no-undo.
+    find first fin-bank where fin-bank.bik eq objImp:bank-deposit
+    no-lock no-error.
+    if available fin-bank
+    then
+       vbank-deposit = fin-bank.code-bank.
+    else
+       undo, throw new Progress.Lang.AppError( substitute(
+          "Не известный банк-вноситель с БИК  &1.",objImp:bank-deposit)).
+        
     assign
       tt-cashbook.CashBookName       = objImp:name_               when objImp:name_ <> ?
       tt-cashbook.CorrPko            = objImp:kredit              when objImp:kredit <> ? 
@@ -257,8 +276,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       tt-cashbook.FlagSepCash        = (objImp:ind-kass-pko = 1)  when objImp:ind-kass-pko <> ?
       tt-cashbook.FlagSepFull        = (objImp:apart-np-tnp = 1)  when objImp:apart-np-tnp <> ?
       tt-cashbook.SourceCode         = string(objImp:code-symbol) when objImp:code-symbol <> ?
-      tt-cashbook.BankRecip-code     = objImp:bank-resive         when objImp:bank-resive <> ?
-      tt-cashbook.BankDepos-code     = objImp:bank-deposit        when objImp:bank-deposit <> ?
+      tt-cashbook.BankRecip-code     = vbank-resive               when vbank-resive <> ?
+      tt-cashbook.BankDepos-code     = vbank-deposit              when vbank-deposit <> ?
       tt-cashbook.CountCollect-type  = {&cmp}                     when  objImp:cont-inkass <> ? 
       tt-cashbook.CountCollect-Code  = objImp:cont-inkass         when objImp:cont-inkass <> ?
       tt-cashbook.CountCash-type     = {&cmp}                     when objImp:contr-code-rko <> ?
@@ -272,7 +291,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       tt-cashbook.BankRecip-acct     = objImp:bank-resive-acc     when objImp:bank-resive-acc  <> ?
       tt-cashbook.CorrAcctIncas      = objImp:Corr-incass         when objImp:Corr-incass  <> ?
       tt-cashbook.BasisIncas         = objImp:rule-osn-incass     when objImp:rule-osn-incass  <> ?
-       
+      tt-cashbook.Status_            = objImp:del-l
    /* tt-cashbook.Status_      = 0:"Текущий", 1:"Удаленный"
       - при создании заполняется значением по умолчанию, при обновлении остаётся в прежнем значении */
     .

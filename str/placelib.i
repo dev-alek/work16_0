@@ -20,7 +20,7 @@ Creation date: 12/22/11
 &global-define place-diameter     "place-diameter"        /*диаметр резервуара(мм)*/
 &global-define dead-balance       "dead-balance"        /*мертвый остаток*/
 &global-define water-level        "water-level"        /*Допустимый уровень воды(мм)*/
-&global-define place-ratio-error  "place-ratio-error"  /*относительная погрешность составления калибровочной таблицы резервуара*/
+/*&global-define place-ratio-error  "place-ratio-error"  /*относительная погрешность составления калибровочной таблицы резервуара*/*/
 &global-define place-dens-prov    "dens-prov"         /*плотность при поверке резервуара*/
 &global-define place-virtual      "place-virtual"     /*виртуальный резервуар*/
 &global-define place-twice-code   "place-twice-code" /*Код сдвоенного резервуара*/
@@ -31,10 +31,18 @@ Creation date: 12/22/11
 &global-define place-rvd-dnsty    "place-rvd-dnsty" /*РВД плотности*/
 &global-define place-rvd-lvl      "place-rvd-lvl" /*РВД уровня*/
 &global-define place-rvd-tmp      "place-rvd-tmp" /*РВД температуры*/
+&global-define place-SI-dens      "place-SI-dens"                    /*средство измерения плотности*/
+&global-define place-SI-level     "place-SI-level"                    /*средство измерения уровня*/
+&global-define place-SI-temp      "place-SI-temp"                    /*средство измерения температуры*/
+&global-define place-passp-num    "place-passp-num"                    /*номер по паспорту*/
+&global-define place-passp-type   "place-passp-type"                    /*тип по паспорту*/
+&global-define place-dead-high    "place-dead-high"                    /*высота мертвой полости*/
+&global-define place-temp-coef    "place-temp-coef"                    /*Температурный коэффициент линейного расширения материала стенки резервуара,*/
 &global-define disable-water-alarm   "disable-water-alarm" /*Отключить сообщения по воде*/
 &global-define disable-level-alarm   "disable-level-alarm" /*Отключить сообщения по уровню*/
+&global-define place-need-RVD-rvs "place-need-RVD-rvs" /* Необходимо сделать сверку с РВД (в список не добавлять!) */
 
-&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,place-ratio-error,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,disable-water-alarm,disable-level-alarm':u /*список атрибутов резервуара*/
+&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm':u /*список атрибутов резервуара*/
 
 
 procedure placelib_write-attr:

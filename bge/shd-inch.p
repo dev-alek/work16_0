@@ -22,6 +22,7 @@ define input parameter p-db-num         as integer    no-undo. /* БД, по объктам
 define input parameter p-range          as integer    no-undo. /* Диапазон: 1 - глобально, 2 - по тек. фирме, 3 - список объектов */
 define input parameter p-obj-list       as character  no-undo. /* Список объектов для p-range = 3 */
 define input parameter p-need-checks    as logical    no-undo. /* надо ли экспортировать чеки по документам */
+define input parameter p-doc-rvs        as logical    no-undo. /* надо ли выгружать сверки до/после слива по топливным приходным накладным */
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -491,6 +492,7 @@ define variable v-is-found as logical no-undo .
                         , input yes
                         , input yes
                         , input p-need-checks
+                        , input p-doc-rvs
                         , input v-xml-file-name
                         , input p-log-file-name
                         , input this-procedure

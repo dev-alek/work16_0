@@ -102,7 +102,50 @@ class ibs.th.gbl.keyrec:
     end.
     
   end.
+
+   method public void GenHnKeyrTab
+   (input  i-tableSerach as character,
+    input  i-tablekey    as character,  
+    input  p-key-rec     as character,
+    input  p-key-handle  as handle, /* буфер записи которую будем искать. если ищем по key-rec то ? */
+    input  p-db-name    as character,
+    input  p-tt-handle  as handle, /* буфер таблицы - если надо найти во временной таблице. если ищем в БД то ? */
+    input  p-stts-lock  as integer,  /* этот параметр игнорируется для временных таблиц */
+    output o-hn         as handle )
+   
+    :
+       run gen-hn-keyr-tab in hndl-proc-key-rec (
+               input  i-tableSerach,
+               input  i-tablekey ,    
+               input  p-key-rec,    
+               input  p-key-handle , /* буфер записи которую будем искать. если ищем по key-rec то ? */
+               input  p-db-name  ,  
+               input  p-tt-handle,   /* буфер таблицы - если надо найти во временной таблице. если ищем в БД то ? */
+               input  p-stts-lock ,  /* этот параметр игнорируется для временных таблиц */
+               output o-hn   ).      
+
+   end method.
   
+   method public void GenWhereKeyrTab
+   (input  i-tableSerach as character,
+    input  i-tablekey    as character,  
+    input  p-key-rec     as character,
+    input  p-key-handle  as handle, /* буфер записи которую будем искать. если ищем по key-rec то ? */
+    input  p-db-name    as character,
+    input  p-tt-handle  as handle, /* буфер таблицы - если надо найти во временной таблице. если ищем в БД то ? */
+    output o-where      as character  )
+   
+    :
+       run gen-Where-keyr-tab in hndl-proc-key-rec (
+               input  i-tableSerach,
+               input  i-tablekey ,    
+               input  p-key-rec,    
+               input  p-key-handle , /* буфер записи которую будем искать. если ищем по key-rec то ? */
+               input  p-db-name  ,  
+               input  p-tt-handle,   /* буфер таблицы - если надо найти во временной таблице. если ищем в БД то ? */
+               output o-where   ).      
+
+   end method.
   destructor public keyrec ():
     
     delete object hndl-proc-key-rec no-error.

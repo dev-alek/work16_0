@@ -42,6 +42,8 @@ define variable vss-description as character no-undo initial "Создание динамичес
 { gbl/thbjattr.i }
 { gbl/cur-time.i }
 { str/lib-farh.i }
+{ gbl/cd-attr.i }
+
 define temp-table temp-menu-toggle no-undo
   field item-code      as integer
   field item-handle    as widget-handle
@@ -2848,6 +2850,44 @@ run proc-cash-gds in this-procedure ('qnty').
 end procedure. /* m_lst-inv-exe */
 
 
+procedure m-cash-KKT-with-exe :
+   
+   
+   run str/diallog.w (
+      input parparentproc
+      , input this-procedure
+      , input "str/sendkkt.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + "0")
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка схемы интеграции ККТ ")
+      ) no-error.   
+   if error-status:error then 
+   do:
+      message "Не удалось отправить схему интеграции ККТ на кассу"
+         view-as alert-box.
+   end.      
+
+end procedure. /* m-cash-KKT-with-exe */
+
+procedure m-cash-KKT-without-exe :
+   
+   run str/diallog.w (
+      input parparentproc
+      , input this-procedure
+      , input "str/sendkkt.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + "1")
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка схемы интеграции ККТ ")
+      ) no-error.   
+   if error-status:error then 
+   do:
+      message "Не удалось отправить схему интеграции ККТ на кассу"
+         view-as alert-box.
+   end.      
+
+end procedure. /* m-cash-KKT-without-exe */
 
 procedure m-cash-pay-exe :
 
@@ -3269,7 +3309,7 @@ procedure m-smart-ref :
   on error undo, return error
   :
     
-  run ref/codelay.p ( "", "", "SpravAttrSmart", "Справочник атрибутов SMART") no-error.
+  run ref/codelay.p (parparentproc, "", "", "SpravAttrSmart", "Справочник атрибутов SMART") no-error.
   
   end.
 
@@ -3529,6 +3569,18 @@ procedure m-units-merc-exe :
       ,input  no
       ,output rid#
       ) .
+  end.
+
+end procedure. /* m-units-exe */
+
+procedure m-okei-kkt-exe:
+
+  define variable rid#          as recid     no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run ref/codelay.p (parparentproc, "", "", "okei-kkt", "Код ОКЕИ код ККТ") no-error.
   end.
 
 end procedure. /* m-units-exe */
@@ -4101,6 +4153,51 @@ procedure m-pay-type-exe :
 
 end procedure. /* m-pay-type-exe */
 
+procedure m-rvd-reason-exe :
+
+  define variable rid#             as character no-undo .
+  define variable v-value    as character no-undo .
+  define variable v-type     as character no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
+    
+    if v-value = "no"
+    then do:
+      if v-cntxt-db-num = 0
+      then do:
+        run ref/rvd-reason.w
+          (input  parparentproc
+          ,input  'b-add,b-upd,b-del'
+          ,input {&all}
+          ,input -1
+          ,output rid#
+          ) .
+      end.
+      else do:
+        run ref/rvd-reason.w
+          (input  parparentproc
+          ,input  ''
+          ,input {&all}
+          ,input -1
+          ,output  rid#
+          ) .
+      end.
+    end .
+    else do :
+      run ref/rvd-reason.w
+        (input  parparentproc
+        ,input  ''
+        ,input {&all}
+        ,input -1
+        ,output  rid#
+        ) .
+    end .
+  end.
+
+end procedure.
 procedure m-cashpay-exe :
 
   define variable ri-list          as character no-undo .
@@ -4694,7 +4791,7 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
-    run ref/codelay.p ("", "", "platsys", "Платежные системы") no-error.
+    run ref/codelay.p (parparentproc, "", "", "platsys", "Платежные системы") no-error.
     
   end.
 
@@ -4706,7 +4803,7 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
-    run ref/codelay.p ( "", "", "OsnovCorr", "Основание коррекции") no-error.
+    run ref/codelay.p (parparentproc, "", "", "OsnovCorr", "Основание коррекции") no-error.
     
   end.
 
@@ -4719,7 +4816,7 @@ define variable v-rid-list as character no-undo .
   on error undo, return error
   :
     
-    run ref/codelay.p ( "", "", "SpravDevice", "Справочник устройств") no-error.
+    run ref/codelay.p (parparentproc, "", "", "SpravDevice", "Справочник устройств") no-error.
     
   end.
 
@@ -5365,6 +5462,8 @@ PROCEDURE m_sr-izmeren :
    run ref/sr-izm.w (input parparentproc
                     ,input "b-add"
                     ,input {&UPDATE}
+                    ,input ""
+                    ,input ""
                     ,input-output v-node-code
                     ,output v-sr-type
                     ).

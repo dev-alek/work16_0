@@ -28,6 +28,7 @@ Input:
     p-pay-desk          - надо ли выгружать разбивку по кассам
     p-pay-desk-cards    - надо ли выгружать разбивку по префиксам карт
     p-need-chk          - надо ли выгружать чеки
+    p-need-doc-rvs      - надо ли выгружать сверки до/после слива по топливным приходным накладным
     sOutFile            - имя файла .xm1 для вывода (вызывающая программа создает и по завершении
                             экспорта переименовывает этот файл в .xml. Сделано для синхронизации с
                             блоком импорта во внешней бухгалтерии.
@@ -53,6 +54,7 @@ define input parameter p-chk-pay-code    as logical                 no-undo.
 define input parameter p-pay-desk        as logical                 no-undo.
 define input parameter p-pay-desk-cards  as logical                 no-undo.
 define input parameter p-need-chk        as logical                 no-undo.
+define input parameter p-need-doc-rvs    as logical                 no-undo.
 define input parameter sOutFile          as character               no-undo.
 define input parameter sLogFile          as character               no-undo.
 define input parameter p-parent-handle   as handle                  no-undo.
@@ -1202,6 +1204,9 @@ define input parameter p-is-envd_               as logical          no-undo.
                     run wp-xmltagput in this-procedure ( input 4, input "petrolAbsDiffQnty":U , input string( v-abs-diff-qnty   ), input 1 ).
                 end.
                 
+                define buffer buf_rvs-line      for ub.rvs-line .
+                define buffer buf_rvs-doc       for ub.rvs-doc .
+                  
                 for each buf_doc-pl where buf_doc-pl.obj-type = buf_doc-line.obj-type
                                       and buf_doc-pl.obj-code = buf_doc-line.obj-code
                                       and buf_doc-pl.out-code = buf_doc-line.doc-code
@@ -1213,6 +1218,32 @@ define input parameter p-is-envd_               as logical          no-undo.
                 run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).
                 run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).
                 run wp-xmltagput( 5, "PLDensity",  string((buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty),"->>>>>>>>>9.9999999999") , 0 ).
+                
+                if p-need-doc-rvs
+                and (p-ext-doc-type = {&TDEDT_Pri_Vnesh} or p-ext-doc-type = {&TDEDT_Pri_Perem})
+                then do :
+                  for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                                  and buf_rvs-doc.rvs-type = {&rvs-before-doc},
+                  first buf_rvs-line where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                       and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                       and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                       and buf_rvs-line.pl-code = buf_doc-pl.pl-code
+                                       and buf_rvs-line.gds-code = buf_doc-pl.gds-code :
+                    run wp-xmltagput( 5, "PLQntyBeforeDoc",  string(buf_rvs-line.state-measure-qnty) , 0 ).
+                    run wp-xmltagput( 5, "PLWeigthBeforeDoc",  string(buf_rvs-line.state-measure-cli-qnty) , 0 ).
+                  end .
+                  for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                                  and buf_rvs-doc.rvs-type = {&rvs-after-doc},
+                  first buf_rvs-line where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                       and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                       and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                       and buf_rvs-line.pl-code = buf_doc-pl.pl-code
+                                       and buf_rvs-line.gds-code = buf_doc-pl.gds-code :
+                    run wp-xmltagput( 5, "PLQntyAfterDoc",  string(buf_rvs-line.state-measure-qnty) , 0 ).
+                    run wp-xmltagput( 5, "PLWeigthAfterDoc",  string(buf_rvs-line.state-measure-cli-qnty) , 0 ).
+                  end .
+                end .
+                    
                 run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).                                          
                                           
                 end.                                          
@@ -4599,6 +4630,13 @@ on error undo, return error
         if avail buf_chk-doc-attr
         then
            run wp-xmltagput( input 4, input "CHNumberKKT", input buf_chk-doc-attr.attr-value, input 2 ).
+        find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq buf_chk-doc.doc-code
+                                      and buf_chk-doc-attr.attr-code eq "CHNumberFN"
+             no-lock no-error.
+        if avail buf_chk-doc-attr
+        then
+           run wp-xmltagput( input 4, input "CHNumberFN", input buf_chk-doc-attr.attr-value, input 2 ).
+
         if buf_chk-doc.d-card <> "":U
         then do:
             if available buf_dis-card

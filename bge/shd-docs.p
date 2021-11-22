@@ -44,6 +44,7 @@ define input parameter p-chk-pay-code   as logical    no-undo.
 define input parameter p-pay-desk       as logical    no-undo.
 define input parameter p-pay-desk-cards as logical    no-undo.
 define input parameter p-opened-docs    as logical    no-undo.
+define input parameter p-doc-rvs        as logical    no-undo. 
 define input parameter hedt             as handle     no-undo.
 define input parameter hcnt             as handle     no-undo.
 
@@ -383,6 +384,7 @@ on error undo, return error
                     , input p-pay-desk
                     , input p-pay-desk-cards
                     , input no
+                    , input p-doc-rvs
                     , input v-xml-file-name
                     , input v-log-file-name
                     , input this-procedure

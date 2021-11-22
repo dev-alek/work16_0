@@ -62,7 +62,8 @@ define variable jj                   as integer   no-undo .
 define variable v-producer           as character no-undo .
 define variable v-obj-name           as character no-undo .
 define variable v-driver             as character no-undo .       
-define variable v-car-num            as character no-undo .          
+define variable v-car-num            as character no-undo . 
+define variable v-car-type           as character no-undo .          
 define VARIABLE v-gds-name           as character no-undo .        
 define VARIABLE v-num-prob           as character no-undo .
 DEFINE VARIABLE v-norm-doc           as character no-undo .
@@ -446,9 +447,9 @@ do
         .
     put stream OutStr-html unformatted
         '<tr>' skip
-        '<td style="width: 84px;"></td>' skip
         '<td style="width: 64px;"></td>' skip
         '<td style="width: 64px;"></td>' skip
+        '<td style="width: 74px;"></td>' skip
         '<td style="width: 112px;"></td>' skip
         '<td style="width: 56px;"></td>' skip
         '<td style="width: 21px;"></td>' skip
@@ -505,11 +506,23 @@ do
                 + substring(string(date(buf_trn-doc.doc-date), "99/99/9999") , 1, 3)
                 + substring(string(date(buf_trn-doc.doc-date), "99/99/9999") , 7, 4).
     end.
-    /*Тип АЦ - не известно*/
     
     /*Номер АЦ*/
     run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-car-num},OUTPUT v-car-num) no-error .
-        
+    
+    /*Тип АЦ - не известно*/
+     for first ub.auto-tank-attr no-lock where ub.auto-tank-attr.auto-num = v-car-num and
+                                               ub.auto-tank-attr.attr-code = "autotype-AC":
+        case ub.auto-tank-attr.attr-value:
+           when "1" then do:
+              v-car-type = "Бензовоз" .
+           end.   
+           when "2" then do:
+              v-car-type = "Газовоз" .
+           end.  
+        end case .   
+     end.                                             
+next_:
     for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code :  
 
         { str/is-petrl.i
@@ -538,9 +551,18 @@ do
                     .
                 if buf_goods.engl-name = "" or buf_goods.engl-name = ? then v-gds-name = buf_goods.gds-name . 
                 else v-gds-name = buf_goods.engl-name .
-                         
-                               
-                                      
+                
+               run gds-attr-value in this-procedure
+                  (  input buf_goods.gds-code
+                  ,input {&attr-fuel-type}
+                  ,output v-attr-value
+                  ,output v-attr-type
+                  ) .
+               if v-attr-value = "lgas" then 
+               do:
+                  next next_  .
+               end.
+               
                 v-InfoSectionsTotal:Initialization(v-doc-code, buf_goods.gds-code).
                 v-InfoSectionsTotal:GetDBAllAttr().
 
@@ -567,6 +589,7 @@ do
                         tt-petrol.num-TH      = v-nakl
                         tt-petrol.date-TH     = v-date
                         tt-petrol.num-AC      = v-car-num
+                        tt-petrol.type-AC     = v-car-type
                         tt-petrol.num-section = v-InfoSectionsTotal:SectionNum
                         .
                     assign
@@ -885,7 +908,7 @@ procedure print-table1:
         put stream OutStr-html unformatted
             '<TR>' skip
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.num-TH) + " " + string(tt-petrol.date-TH) + '</TD>' skip
-            '<TD text_wrap="true" style="text-align: center;">' '</TD>' skip
+            '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.type-AC) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.num-AC) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-petrol.name-gds <> ? then string(tt-petrol.name-gds) + '</TD>' else " "  + '</TD>' skip
             '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.99",2) + '</TD>' skip
@@ -947,7 +970,7 @@ procedure print-table2:
         put stream OutStr-html unformatted
             '<TR>' skip
             '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.num-TH + " " + tt-petrol.date-TH + '</TD>' skip
-            '<TD text_wrap="true" style="text-align: center;">' '</TD>' skip
+            '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.type-AC) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.num-AC + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.name-gds + '</TD>' skip
             '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.passport + '</TD>' skip

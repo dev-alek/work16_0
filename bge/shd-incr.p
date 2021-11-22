@@ -22,6 +22,7 @@ define input parameter p-db-num         as integer    no-undo.    /* БД, по обък
 define input parameter p-range          as integer    no-undo. /* Диапазон: 1 - глобально, 2 - по тек. фирме, 3 - список объектов */
 define input parameter p-obj-list       as character  no-undo. /* Список объектов для p-range = 3 */
 define input parameter p-need-checks    as logical    no-undo. /* надо ли экспортировать чеки по документам */
+define input parameter p-doc-rvs        as logical    no-undo. /* надо ли выгружать сверки до/после слива по топливным приходным накладным */
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -120,6 +121,11 @@ on error undo, return error
           , input 1
           , input substitute( "................с параметрами: ... надо ли выгружать чеки: &1", p-need-checks )
       ).
+      run wp-XMLWriteLog in this-procedure (
+          input v-log-file-name
+          , input 1
+          , input substitute( "................с параметрами: ... надо ли выгружать сверки до/после слива: &1", p-doc-rvs )
+      ).
       RUN init-temphost.
       assign
           v-log-string = ", по всем фирмам"
@@ -189,7 +195,7 @@ on error undo, return error
       ).
       object-of-list:
       for each temp-obj
-      :
+      :   
           run bge/lock-bge-incr.p (input temp-obj.obj-type, input temp-obj.obj-code, buffer buf_clients-attr) no-error.
           if error-status:error then do:
             run wp-XMLWriteLog in this-procedure (
@@ -390,6 +396,7 @@ define input parameter p-obj-code   as integer      no-undo.
         , input yes   /* p-pay-desk     */
         , input yes   /* p-pay-desk-cards     */
         , input p-need-checks
+        , input p-doc-rvs
         , input v-xml-file-name
         , input v-log-file-name
         , input this-procedure :handle

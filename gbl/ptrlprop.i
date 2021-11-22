@@ -34,6 +34,7 @@ define variable ptrlprop-algoincome as integer no-undo init 0.
 define variable ptrlprop-mand-choice-autocar as logical no-undo init false.
 define variable ptrlprop-Delta-mass-horiz      as character no-undo .
 define variable ptrlprop-Delta-mass-vert       as character no-undo .
+define variable ptrlprop-calc-free-vol as logical no-undo init false.
 
 procedure get-ptrl-prop :
   define input  parameter p-obj-type as character no-undo .
@@ -173,6 +174,13 @@ procedure get-ptrl-prop :
           if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-character} then do:
             assign
               ptrlprop-Delta-mass-vert = thbjattr_thbj-attr.property-value-character
+            .
+          end.
+        end.
+        when {&attr-petrol_calc-free-vol} then do:
+          if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-logical} then do:
+            assign
+              ptrlprop-calc-free-vol = thbjattr_thbj-attr.property-value-logical
             .
           end.
         end.

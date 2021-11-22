@@ -61,7 +61,13 @@ class ibs.th.ref.code.code_trg final:
    set.
   
   define variable v-code-brw as class ibs.th.ref.code.browsecode no-undo .
-  
+
+  define property parparentproc as handle no-undo
+    private get.
+    set(input iH as handle):
+      parparentproc = ih.
+    end.
+
    constructor public code_trg (  ):
       this-object({&update}).
    end constructor.
@@ -72,8 +78,8 @@ class ibs.th.ref.code.code_trg final:
       if mode eq {&select}
       then
       rid-keep ().
-      formLable(0, 2, "Код ").
-      formLable(0, 3, "Наименование").
+      formLable(0, 1, "Код ").
+      formLable(0, 2, "Наименование").
    end constructor.
    
    destructor public code_trg ( ):
@@ -352,7 +358,7 @@ class ibs.th.ref.code.code_trg final:
        find first code where recid(code) eq tt-code-brw.Frecid no-lock no-error.
        if available code 
        then do:
-          if searchlocal(Code.procdel) ne ?
+          if SearchPFile(Code.procdel) ne ?
           then 
              run value (Code.procdel) (recid(code)).
           else do:
@@ -430,9 +436,9 @@ class ibs.th.ref.code.code_trg final:
        define buffer buf_code for code.
        define variable vproc as character no-undo.
        vproc = getprocedit(ibuffertt).
-       if searchlocal(vproc) ne ?
+       if SearchPFile(vproc) ne ?
        then
-          run value(vproc) (Imode  ,ibuffertt,output Vsave ).
+          run value(vproc) (parparentproc, this-object, Imode  ,ibuffertt,output Vsave ).
        else do:
           v-code-frm = new ibs.th.ref.code.frmcode(ibuffertt,this-object).
           for each tt-form where tt-form.f-level eq num-entries(parent,{&delim-par}):
@@ -468,6 +474,20 @@ class ibs.th.ref.code.code_trg final:
         return error.
      end.
         
+  end method. // end_of_checkPromoAction 
+  
+  method public void CheckCodeInt () :
+    define buffer buf_code for code.
+    find first buf_code where buf_code.parent eq parent
+                          and int(buf_code.code)   eq int(tt-code-frm.code)
+                          and if tt-code-frm.frecid ne ? then recid(buf_code) ne tt-code-frm.frecid else yes
+                          no-lock no-error.
+     if available buf_code
+     then do:
+        message "Уже есть запись с кодом " tt-code-frm.code
+        view-as alert-box.
+        return error.
+     end.
   end method. // end_of_checkPromoAction 
   
   method public void codeexport (file as character  ):
@@ -530,21 +550,6 @@ class ibs.th.ref.code.code_trg final:
                 tt-code-brw.fchange = vFlag.
                
    end.
-   method public character  searchlocal(ifile as character  ):
-       define variable vFile as character no-undo.
-       define variable vendfile as character no-undo.
-       if iFile <> "" and iFile <> ? then 
-       vendfile = entry(num-entries(ifile,"."),ifile,".").
-       if    vendfile eq "r"
-          or vendfile eq "p"
-       then
-          entry(num-entries(ifile,"."),ifile,".") = "".
-       vFile = search(ifile + "p" ).
-       if vFile ne ?
-       then
-          return vFile.
-       else 
-          return search(ifile + "r" ).
-       
-   end.
+   {utl/search.i class}
+   
 end class.

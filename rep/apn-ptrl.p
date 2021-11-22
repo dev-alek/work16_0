@@ -425,7 +425,7 @@ do
 
         find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = integer(v-place-si) no-error.
         if available buf_sr-izmerenia then do:
-          if buf_sr-izmerenia.sr-type = 1 or buf_sr-izmerenia.sr-type = 2 then do:
+          if buf_sr-izmerenia.sr-type-id = 1 or buf_sr-izmerenia.sr-type-id = 2 then do:
             /* Поле-25 "Нефтеденсиметр (ареометр) АНТ-1, ГОСТ 18481-81 № " (из строки ТоплНакл > ДопИнф > поле "Ареометр №") */
             run apn-xl-write-cell-data in this-procedure (
                   input {&apn-xl-num_areom}
@@ -438,7 +438,7 @@ do
                 , input fnc-DD-MM-YYYY(v-date-pov-plotn) 
             ).
           end.
-          if buf_sr-izmerenia.sr-type = 3 or buf_sr-izmerenia.sr-type = 4 then do:
+          if buf_sr-izmerenia.sr-type-id = 3 or buf_sr-izmerenia.sr-type-id = 4 then do:
             /* Поле-27 "Плотномер: ПЛОТ-3Б-1П, ГОСТ  АУТП.414122.006 ТУ(1)  №" (из строки ТоплНакл > ДопИнф > поле "Плотномер №") */
             run apn-xl-write-cell-data in this-procedure (
                   input {&apn-xl-num_plotn}
@@ -1332,7 +1332,7 @@ procedure proc-calc-library-pomi:
                     else
                     do:
                         assign
-                            ToolType    = buf_sr-izmerenia.sr-type
+                            ToolType    = buf_sr-izmerenia.sr-type-id
                             DeltaAbs_R  = buf_sr-izmerenia.sr-abs-err-dens
                             DeltaAbs_Tv = buf_sr-izmerenia.sr-abs-err-temp-vol
                             DeltaAbs_Tr = buf_sr-izmerenia.sr-abs-err-temp-dens

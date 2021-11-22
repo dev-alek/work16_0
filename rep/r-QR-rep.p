@@ -87,6 +87,7 @@ define temp-table tt-rep
     field summ-QR      as decimal
     field dt-QR        as datetime
     field azk          as character
+    field azk-disp     as character
     index pi as primary
     obj-type obj-code RRN-TH
     .
@@ -240,6 +241,7 @@ procedure make-rep :
                                              and buf_chk-doc.obj-code = obj-list.obj-code
                                              and buf_chk-doc.shift-date >= X-date-start
                                              and buf_chk-doc.shift-date <= X-date-end
+                                             and buf_chk-doc.out-code > ""
                                              :
                 if ((buf_chk-doc.shift-date = x-date-Start and buf_chk-doc.shift-num < X-shift-start)
                 or (buf_chk-doc.shift-date = x-date-End and  buf_chk-doc.shift-num > X-shift-end) )
@@ -258,7 +260,7 @@ procedure make-rep :
                     
         
                   find first tt-trans exclusive-lock where  tt-trans.RRN > ""
-                      and int64(tt-trans.RRN) = int64(v-RRN)
+                      and trim(tt-trans.RRN) = trim(v-RRN)
                       and not tt-trans.taken
                       no-error .
         
@@ -269,7 +271,7 @@ procedure make-rep :
                     tt-rep.obj-name   = obj-list.obj-name
                     tt-rep.summ-TH    = buf_chk-pay.tot-rubl
                     tt-rep.chk-date   = buf_chk-doc.chk-date
-                    tt-rep.chk-time   = string(truncate (buf_chk-doc.chk-time / 3600, 0)) + ":" + string((buf_chk-doc.chk-time modulo 3600) / 60,"99") + ":" + string((buf_chk-doc.chk-time modulo 3600) / 360,"99")
+                    tt-rep.chk-time   = string(buf_chk-doc.chk-time, "HH:MM:SS")
                     tt-rep.chk-doc-code = buf_chk-doc.doc-code
                     tt-rep.shift-date = buf_chk-doc.shift-date
                     tt-rep.shift-num  = buf_chk-doc.shift-num
@@ -311,6 +313,7 @@ procedure make-rep :
                                              and buf_chk-doc.obj-code = obj-list.obj-code
                                              and buf_chk-doc.chk-date >= X-date-start
                                              and buf_chk-doc.chk-date <= X-date-end
+                                             and buf_chk-doc.out-code > ""
                                              :
                                       
                 for each buf_chk-pay-attr no-lock where buf_chk-pay-attr.doc-code = buf_chk-doc.doc-code
@@ -326,7 +329,7 @@ procedure make-rep :
                     
         
                   find first tt-trans exclusive-lock where  tt-trans.RRN > ""
-                      and int64(tt-trans.RRN) = int64(v-RRN)
+                      and trim(tt-trans.RRN) = trim(v-RRN)
                       and not tt-trans.taken
                       no-error .
         
@@ -337,7 +340,7 @@ procedure make-rep :
                     tt-rep.obj-name   = obj-list.obj-name
                     tt-rep.summ-TH    = buf_chk-pay.tot-rubl
                     tt-rep.chk-date   = buf_chk-doc.chk-date
-                    tt-rep.chk-time   = string(truncate (buf_chk-doc.chk-time / 3600, 0)) + ":" + string((buf_chk-doc.chk-time modulo 3600) / 60,"99") + ":" + string((buf_chk-doc.chk-time modulo 3600) / 360,"99")
+                    tt-rep.chk-time   = string(buf_chk-doc.chk-time, "HH:MM:SS")
                     tt-rep.chk-doc-code = buf_chk-doc.doc-code
                     tt-rep.shift-date = buf_chk-doc.shift-date
                     tt-rep.shift-num  = buf_chk-doc.shift-num
@@ -350,6 +353,7 @@ procedure make-rep :
                   if available tt-trans
                   then do :
                     assign
+                      tt-rep.azk-disp     = tt-trans.azk
                       tt-rep.dt-QR        = tt-trans.dt
                       tt-rep.summ-QR      = tt-trans.summ
                       tt-rep.RRN-QR       = tt-trans.RRN
@@ -481,8 +485,8 @@ procedure imp-QR :
             .
     
 
-        v-RRN = mWorkSheet:Range("J" + vChLine):FORMULA NO-ERROR.  
-        if v-RRN = ? then v-RRN = mWorkSheet:Range("J" + vChLine):VALUE NO-ERROR.
+        v-RRN = mWorkSheet:Range("I" + vChLine):FORMULA NO-ERROR.  
+        if v-RRN = ? then v-RRN = mWorkSheet:Range("I" + vChLine):VALUE NO-ERROR.
     
         v-azk = mWorkSheet:Range("H" + vChLine):VALUE NO-ERROR.  
         if v-azk = ? then v-azk = mWorkSheet:Range("H" + vChLine):FORMULA NO-ERROR. 
@@ -542,9 +546,7 @@ end procedure .
     
 procedure my-rep :
   
-    run get-full-path-RepViewer(output v-full-path-RepView).    /* Перед работой с "Просмотровщиком отчёта" (main.exe) - убедимся, что он существует и получим полный путь к нему. */
-
-    run get-report-num in parParentProc(output g#report-num).   /* Получим СТАНДАРТНЫМ МЕТОДОМ ТН номер файла отчёта. */
+    run gbl/getrpnum.p (output g#report-num).  /* Получим СТАНДАРТНЫМ МЕТОДОМ ТН номер файла отчёта. */
 
     run define-full-path-Report(input g#report-num, output v-file-name-rep-htm).   /* Сформируем стандартизованное в ТН имя файла отчёта. */
 
@@ -682,7 +684,7 @@ procedure my-rep :
     for first tt-itog:
 
         put stream OutStr-html unformatted
-            '       <tr>' skip
+            '       <tr level="1">' skip
             '         <th colspan = "4" style="text-align: center; font-weight:bold; background-color: green;">Итого по всем объектам</th>' skip
             '         <th style="text-align: center; font-weight:bold; background-color: green;"></th>' skip
             '         <th style="text-align: center; font-weight:bold; background-color: green;"></th>' skip
@@ -704,7 +706,7 @@ procedure my-rep :
 
     for each tt-obj :
         put stream OutStr-html unformatted
-            '       <tr>' skip
+            '       <tr level="1">' skip
             '         <th colspan = "4" style="text-align: center; font-weight:bold;">Итого по ' + tt-obj.obj-name + '</th>' skip
             '         <th style="text-align: center; font-weight:bold;"></th>' skip
             '         <th style="text-align: center; font-weight:bold;"></th>' skip
@@ -732,11 +734,11 @@ procedure my-rep :
             if tt-shift.summ-TH = tt-shift.summ-QR
             then do :
               put stream OutStr-html unformatted
-                '       <tr>' skip
+                '       <tr level="2">' skip
                 '         <th style="text-align: center; font-weight:bold;">' + tt-obj.obj-name + '</th>' skip
                 '         <th style="text-align: center; font-weight:bold;">' + string(tt-shift.shift-num) + '</th>' skip
                 '         <th style="text-align: center; font-weight:bold;">' + string(buf_shift-obj.open-date, "99.99.9999") + " " + string(buf_shift-obj.open-time, "HH:MM:SS") + '</th>' skip
-                '         <th style="text-align: center; font-weight:bold;">' + string(buf_shift-obj.close-date, "99.99.9999") + " " + string(buf_shift-obj.close-time, "HH:MM:SS") + '</th>' skip
+                '         <th style="text-align: center; font-weight:bold;">' + (if buf_shift-obj.close-date <> ? then (string(buf_shift-obj.close-date, "99.99.9999") + " " + string(buf_shift-obj.close-time, "HH:MM:SS")) else "") + '</th>' skip
                 '         <th style="text-align: center; font-weight:bold;"></th>' skip
                 '         <th style="text-align: center; font-weight:bold;"></th>' skip
                 '         <th style="text-align: center; font-weight:bold;"></th>' skip
@@ -756,11 +758,11 @@ procedure my-rep :
             end .
             else do :
               put stream OutStr-html unformatted
-                '       <tr>' skip
+                '       <tr level="2">' skip
                 '         <th style="text-align: center; font-weight:bold; background-color: red;">' + tt-obj.obj-name + '</th>' skip
                 '         <th style="text-align: center; font-weight:bold; background-color: red;">' + string(tt-shift.shift-num) + '</th>' skip
                 '         <th style="text-align: center; font-weight:bold; background-color: red;">' + string(buf_shift-obj.open-date, "99.99.9999") + " " + string(buf_shift-obj.open-time, "HH:MM:SS") + '</th>' skip
-                '         <th style="text-align: center; font-weight:bold; background-color: red;">' + string(buf_shift-obj.close-date, "99.99.9999") + " " + string(buf_shift-obj.close-time, "HH:MM:SS") + '</th>' skip
+                '         <th style="text-align: center; font-weight:bold; background-color: red;">' + (if buf_shift-obj.close-date <> ? then (string(buf_shift-obj.close-date, "99.99.9999") + " " + string(buf_shift-obj.close-time, "HH:MM:SS")) else "") + '</th>' skip
                 '         <th style="text-align: center; font-weight:bold; background-color: red;"></th>' skip
                 '         <th style="text-align: center; font-weight:bold; background-color: red;"></th>' skip
                 '         <th style="text-align: center; font-weight:bold; background-color: red;"></th>' skip
@@ -783,20 +785,22 @@ procedure my-rep :
                               and tt-rep.obj-code   = tt-shift.obj-code
                               and tt-rep.shift-date = tt-shift.shift-date
                               and tt-rep.shift-num  = tt-shift.shift-num
-              :
+            :
+              if tt-rep.summ-TH = tt-rep.summ-QR
+              then do :
                 put stream OutStr-html unformatted
-                  '       <tr>' skip
-                  '         <th style="text-align: center; font-weight:bold;"></th>' skip
-                  '         <th style="text-align: center; font-weight:bold;"></th>' skip
-                  '         <th style="text-align: center; font-weight:bold;"></th>' skip
-                  '         <th style="text-align: center; font-weight:bold;"></th>' skip
+                  '       <tr level="3">' skip
+                  '         <th style="text-align: center; font-weight:bold;">' + tt-obj.obj-name + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold;">' + string(tt-shift.shift-num) + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold;">' + string(buf_shift-obj.open-date, "99.99.9999") + " " + string(buf_shift-obj.open-time, "HH:MM:SS") + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold;">' + (if buf_shift-obj.close-date <> ? then (string(buf_shift-obj.close-date, "99.99.9999") + " " + string(buf_shift-obj.close-time, "HH:MM:SS")) else "") + '</th>' skip
                   '         <th style="text-align: center; font-weight:bold;">' + tt-rep.RRN-TH + '</th>' skip
                   '         <th style="text-align: center; font-weight:bold;">' + string(tt-rep.chk-date, "99.99.9999") + '</th>' skip
                   '         <th style="text-align: center; font-weight:bold;">' + tt-rep.chk-time + '</th>' skip
                   '         <th style="text-align: center; font-weight:bold;">' + tt-rep.chk-doc-code + '</th>' skip
                   '         <th style="text-align: center; font-weight:bold;"></th>' skip
                   '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-rep.summ-TH,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: center; font-weight:bold;">' + fnc-convert-dot-to-colon(tt-rep.summ-TH,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
-                  '         <th style="text-align: center; font-weight:bold;"></th>' skip
+                  '         <th style="text-align: center; font-weight:bold;">' + tt-rep.azk-disp + '</th>' skip
                   '         <th style="text-align: center; font-weight:bold;">' + tt-rep.RRN-QR + '</th>' skip
                   '         <th style="text-align: center; font-weight:bold;">' + (if tt-rep.dt-QR <> ? then string(tt-rep.dt-QR, "99.99.9999") else " ") + '</th>' skip
                   '         <th style="text-align: center; font-weight:bold;">' + (if tt-rep.dt-QR <> ? then string(INTEGER(truncate(MTIME(tt-rep.dt-QR) / 1000, 0)), "HH:MM:SS") else " ") + '</th>' skip
@@ -805,7 +809,32 @@ procedure my-rep :
                   '         <th style="text-align: center; font-weight:bold;"></th>' skip
                   '         <th style="text-align: center; font-weight:bold;"></th>' skip
                   '       </tr>' skip               
-                . /* Точка для закрытия Put */                     
+                . /* Точка для закрытия Put */      
+              end .
+              else do :
+                put stream OutStr-html unformatted
+                  '       <tr level="3">' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + tt-obj.obj-name + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + string(tt-shift.shift-num) + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + string(buf_shift-obj.open-date, "99.99.9999") + " " + string(buf_shift-obj.open-time, "HH:MM:SS") + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + (if buf_shift-obj.close-date <> ? then (string(buf_shift-obj.close-date, "99.99.9999") + " " + string(buf_shift-obj.close-time, "HH:MM:SS")) else "") + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + tt-rep.RRN-TH + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + string(tt-rep.chk-date, "99.99.9999") + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + tt-rep.chk-time + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + tt-rep.chk-doc-code + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;"></th>' skip
+                  '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-rep.summ-TH,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: center; font-weight:bold; background-color: red;">' + fnc-convert-dot-to-colon(tt-rep.summ-TH,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + tt-rep.azk-disp + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + tt-rep.RRN-QR + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + (if tt-rep.dt-QR <> ? then string(tt-rep.dt-QR, "99.99.9999") else " ") + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;">' + (if tt-rep.dt-QR <> ? then string(INTEGER(truncate(MTIME(tt-rep.dt-QR) / 1000, 0)), "HH:MM:SS") else " ") + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;"></th>' skip
+                  '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-rep.summ-QR,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: center; font-weight:bold; background-color: red;">' + fnc-convert-dot-to-colon(tt-rep.summ-QR,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;"></th>' skip
+                  '         <th style="text-align: center; font-weight:bold; background-color: red;"></th>' skip
+                  '       </tr>' skip               
+                . /* Точка для закрытия Put */ 
+              end .               
             end . /* tt-rep */ 
         end . /* tt-shift */
     end . /* tt-obj */
@@ -814,7 +843,7 @@ procedure my-rep :
     then do :
       /* Расхождения */
       put stream OutStr-html unformatted
-        '       <tr>' skip
+        '       <tr level="1">' skip
         '         <th style="text-align: center; font-weight:bold;">Транзакциии, не найденные в системе:</th>' skip
         '         <th style="text-align: center; font-weight:bold;"></th>' skip
         '         <th style="text-align: center; font-weight:bold;"></th>' skip
@@ -837,7 +866,7 @@ procedure my-rep :
       . /* Точка для закрытия Put */ 
       for each tt-rep where tt-rep.azk > "" :
         put stream OutStr-html unformatted
-          '       <tr>' skip
+          '       <tr level="3">' skip
           '         <th style="text-align: center; font-weight:bold;"></th>' skip
           '         <th style="text-align: center; font-weight:bold;"></th>' skip
           '         <th style="text-align: center; font-weight:bold;"></th>' skip
@@ -880,50 +909,12 @@ procedure my-rep :
   
 end procedure .
 
-procedure get-full-path-RepViewer:
-    /* Получение полного пути к exe-файлу просмотровщика отчётов */
-    define output parameter p-fill-path-RepView as character no-undo.
-
-    if search("exe\ReportViewer\reportviewer.exe") <> ? then
-    do:
-        p-fill-path-RepView = search("exe\ReportViewer\reportviewer.exe").
-    end.
-    else
-    do:
-        message "Не найдена программа просмотра отчёта!" view-as alert-box error.
-    end.
-end procedure.
-
 procedure define-full-path-Report:
     /* Получение полного пути к отчёту html */
     define input parameter p-rep-num as integer no-undo.
     define output parameter p-file-name-rep-htm as character no-undo.
 
     p-file-name-rep-htm = session:temp-directory + {&DF_Name} + string(p-rep-num) + ".html".
-
-end procedure.
-
-procedure search-full-path-Report:
-    /* Поиск файла */
-    define input parameter p-file-name as character no-undo.
-
-    if search(p-file-name) = ? then
-    do:
-        message "Не найден файл отчёта: " p-file-name view-as alert-box error.
-    end.
-    else
-    do:
-        p-file-name = search(p-file-name).
-    end.
-
-end procedure.
-
-procedure Report-Viewer:
-    /* Запуск программы "Просмотровщик Отчётов" - ReportViewer. */
-    define input parameter p-full-path-RepView as character no-undo.
-    define input parameter p-file-name-rep-htm as character no-undo.
-
-    os-command no-wait value(p-full-path-RepView + " true " + search(p-file-name-rep-htm)).
 
 end procedure.
 

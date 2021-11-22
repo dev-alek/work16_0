@@ -53,8 +53,9 @@ define variable v-pl-qnty-next     as decimal      no-undo.
 define variable v-pl-qnty-prev     as decimal      no-undo.
 define variable v-new           as logical      no-undo.
 
-define buffer buf_pl-level    for ub.pl-level .
-define buffer buf_place    for ub.place .
+define buffer buf_pl-level    for pl-level .
+define buffer buf_pl-level-attr    for pl-level-attr .
+define buffer buf_place    for place .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -134,6 +135,10 @@ DEFINE VARIABLE v-pl-qnty-prev-str AS CHARACTER FORMAT "X(10)":U INITIAL "-"
       VIEW-AS TEXT
      SIZE 11 BY .67 NO-UNDO.
 
+DEFINE VARIABLE v-pl-tarir-delta AS DECIMAL FORMAT "9.999":U INITIAL 0
+     LABEL "Погрешность составления, %"
+     VIEW-AS FILL-IN
+     SIZE 9 BY 1 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -143,6 +148,7 @@ DEFINE FRAME Dialog-Frame
      b-help AT ROW 1 COL 61
      v-pl-level AT ROW 3.5 COL 20.5 COLON-ALIGNED WIDGET-ID 2
      v-pl-qnty AT ROW 3.5 COL 53.5 COLON-ALIGNED WIDGET-ID 4
+     v-pl-tarir-delta AT ROW 3.5 COL 96.5 COLON-ALIGNED WIDGET-ID 14
      v-pl-level-prev-str AT ROW 2.5 COL 20.5 COLON-ALIGNED WIDGET-ID 6
      v-pl-qnty-prev-str AT ROW 2.5 COL 53.5 COLON-ALIGNED WIDGET-ID 10
      v-pl-level-next-str AT ROW 4.79 COL 20.5 COLON-ALIGNED WIDGET-ID 8
@@ -204,6 +210,7 @@ DO:
    assign
       v-pl-level
       v-pl-qnty
+      v-pl-tarir-delta
    .
    IF v-pl-level < 0
    OR v-pl-level = ?
@@ -301,10 +308,22 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             return error "Не найдена запись в градуировочной таблице".
          end.
       END.
+      
+      find first buf_pl-level-attr exclusive-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+                                                    and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+                                                    and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
+                                                    and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+                                                    and buf_pl-level-attr.attr-code = "tarir-delta"
+                                                    no-error .
+      if not available buf_pl-level-attr
+      then do :
+        return error "Не найдена запись атрибута с погрешностью составления в градуировочной таблице".
+      end .                                     
 
       assign
          v-pl-level = buf_pl-level.pl-level
          v-pl-qnty  = buf_pl-level.pl-qnty
+         v-pl-tarir-delta = decimal(buf_pl-level-attr.attr-value)
          FRAME Dialog-Frame:TITLE = SUBSTITUTE  ( "Изменение строки градуировочной таблицы для резервуара &1 (&2) &3 &4"
                                                 , p-pl-code
                                                 , buf_place.loc1
@@ -349,7 +368,7 @@ RUN disable_UI.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-pl-level Dialog-Frame
 PROCEDURE check-pl-level :
-define buffer bf_pl-level    for ub.pl-level .
+define buffer bf_pl-level    for pl-level .
 
 do
 on error undo, return error
@@ -451,10 +470,10 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY v-pl-level v-pl-qnty v-pl-level-prev-str v-pl-qnty-prev-str v-pl-level-next-str v-pl-qnty-next-str
+  DISPLAY v-pl-level v-pl-qnty v-pl-level-prev-str v-pl-qnty-prev-str v-pl-level-next-str v-pl-qnty-next-str v-pl-tarir-delta
       WITH FRAME Dialog-Frame.
   ENABLE b-exit b-quit b-help v-pl-level v-pl-qnty v-pl-level-prev-str v-pl-qnty-prev-str
-         v-pl-level-next-str v-pl-qnty-next-str
+         v-pl-level-next-str v-pl-qnty-next-str v-pl-tarir-delta
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -470,18 +489,36 @@ transaction
 on error undo, return error
 :
    IF v-new THEN DO:
-      create buf_pl-level.
+      create buf_pl-level .
       assign
          buf_pl-level.obj-type = p-obj-type
          buf_pl-level.obj-code = p-obj-code
          buf_pl-level.pl-code  = p-pl-code
       .
+      
    END.
    assign
       buf_pl-level.pl-level = v-pl-level
       buf_pl-level.pl-qnty  = v-pl-qnty
    .
-
+   find first buf_pl-level-attr exclusive-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+                                                 and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+                                                 and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
+                                                 and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+                                                 and buf_pl-level-attr.attr-code = "tarir-delta" 
+                                                 no-error .
+   if not available buf_pl-level-attr
+   then do :
+     create buf_pl-level-attr .
+     assign
+       buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+       buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+       buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
+       buf_pl-level-attr.attr-code = "tarir-delta" 
+       buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+     .
+   end .
+   assign buf_pl-level-attr.attr-value = string(v-pl-tarir-delta) .
 end. /* do on error */
 
 END PROCEDURE.

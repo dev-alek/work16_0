@@ -80,13 +80,13 @@ define temp-table temp_db-num no-undo
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS rct-dates rct-obj rct-doc-type ~
-rct-doc-options RECT-5 Btn_OK Btn_Cancel tb-incr b-help tb-exp-doc ~
+rct-doc-options RECT-5 Btn_OK Btn_Cancel tb-incr b-help tb-exp-doc tb-exp-doc-rvs ~
 tb-exp-ref tb-exp-fo tb-exp-day tb-exp-checks tb-exp-ref-ext tb-exp-fp ~
 tb-exp-way tb-exp-stk tb-exp-s-f tb-exp-stk-supp fi-days-amount rs-date ~
 fi-days-ago fi-date-from fi-date-to rs-1 bt-sel-obj ed-doc-type ~
 bt-sel-doc-type tb-inkass-pay-code tb-cst-code tb-chk-pay-code tb-parts ~
 tb-pay-desk tb-not-fact-docs tb-pay-desk-cards 
-&Scoped-Define DISPLAYED-OBJECTS tb-incr tb-exp-doc tb-exp-ref tb-exp-fo ~
+&Scoped-Define DISPLAYED-OBJECTS tb-incr tb-exp-doc tb-exp-doc-rvs tb-exp-ref tb-exp-fo ~
 tb-exp-day tb-exp-checks tb-exp-ref-ext tb-exp-fp tb-exp-way tb-exp-stk ~
 tb-exp-s-f tb-exp-stk-supp fi-days-amount rs-date fi-days-ago fi-date-from ~
 fi-date-to rs-1 ed-object ed-doc-type ed-doc-type-title tb-inkass-pay-code ~
@@ -234,7 +234,12 @@ DEFINE VARIABLE tb-exp-day AS LOGICAL INITIAL no
 DEFINE VARIABLE tb-exp-doc AS LOGICAL INITIAL no 
      LABEL "Документы" 
      VIEW-AS TOGGLE-BOX
-     SIZE 16.25 BY .83 NO-UNDO.
+     SIZE 16.2 BY .81 NO-UNDO.
+     
+DEFINE VARIABLE tb-exp-doc-rvs AS LOGICAL INITIAL no 
+     LABEL "Сверки до/после слива" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 28.4 BY .81 NO-UNDO.
 
 DEFINE VARIABLE tb-exp-fo AS LOGICAL INITIAL no 
      LABEL "Фин.обязательства" 
@@ -320,13 +325,14 @@ DEFINE FRAME Dialog-Frame
      tb-incr AT ROW 1.25 COL 23
      b-help AT ROW 1.25 COL 71
      tb-exp-doc AT ROW 3.5 COL 3.75
+     tb-exp-doc-rvs at row 4.29 col 6.75
      tb-exp-ref AT ROW 3.5 COL 30.25
      tb-exp-fo AT ROW 3.5 COL 59.75
-     tb-exp-day AT ROW 4.29 COL 3.75
-     tb-exp-checks AT ROW 4.29 COL 6.75
+     tb-exp-day AT ROW 5.08 COL 3.75
+     tb-exp-checks AT ROW 5.08 COL 6.75
      tb-exp-ref-ext AT ROW 4.29 COL 33.25
      tb-exp-fp AT ROW 4.5 COL 59.75
-     tb-exp-way AT ROW 5.08 COL 3.75
+     tb-exp-way AT ROW 5.92 COL 3.75
      tb-exp-stk AT ROW 5.08 COL 30.25
      tb-exp-s-f AT ROW 5.63 COL 59.75 WIDGET-ID 2
      tb-exp-stk-supp AT ROW 5.92 COL 33.25
@@ -643,6 +649,7 @@ DO:
         tb-pay-desk-cards
         tb-not-fact-docs
         tb-exp-doc
+        tb-exp-doc-rvs
         tb-exp-ref
         tb-exp-day
         tb-exp-way
@@ -729,6 +736,7 @@ DO:
         , input tb-pay-desk-cards
         , input tb-not-fact-docs
         , input tb-exp-doc
+        , input tb-exp-doc-rvs
         , input tb-exp-ref
         , input tb-exp-day
         , input tb-exp-way
@@ -1031,6 +1039,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         , output tb-pay-desk-cards
         , output tb-not-fact-docs
         , output tb-exp-doc
+        , output tb-exp-doc-rvs
         , output tb-exp-ref
         , output tb-exp-day
         , output tb-exp-way
@@ -1117,6 +1126,7 @@ on error undo, return error
     define input parameter p-tb-pay-desk-cards  as logical      no-undo.
     define input parameter p-tb-not-fact-docs   as logical      no-undo.
     define input parameter p-tb-exp-doc         as logical      no-undo.
+    define input parameter p-tb-exp-doc-rvs     as logical      no-undo.
     define input parameter p-tb-exp-ref         as logical      no-undo.
     define input parameter p-tb-exp-day         as logical      no-undo.
     define input parameter p-tb-exp-way         as logical      no-undo.
@@ -1177,6 +1187,7 @@ on error undo, return error
                         + "," + ( if tb-exp-fp            = yes then "yes" else "no" )
                         + "," + ( if tb-pay-desk-cards    = yes then "yes" else "no" )
                         + "," + ( if tb-exp-s-f           = yes then "yes" else "no" )
+                        + "," + ( if p-tb-exp-doc-rvs     = yes then "yes" else "no" )
     .
     run schedule-attr-write in this-procedure (
           input p-cre-db-num
@@ -1324,7 +1335,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY tb-incr tb-exp-doc tb-exp-ref tb-exp-fo tb-exp-day tb-exp-checks 
+  DISPLAY tb-incr tb-exp-doc tb-exp-doc-rvs tb-exp-ref tb-exp-fo tb-exp-day tb-exp-checks 
           tb-exp-ref-ext tb-exp-fp tb-exp-way tb-exp-stk tb-exp-s-f 
           tb-exp-stk-supp fi-days-amount rs-date fi-days-ago fi-date-from 
           fi-date-to rs-1 ed-object ed-doc-type ed-doc-type-title 
@@ -1332,7 +1343,7 @@ PROCEDURE enable_UI :
           tb-not-fact-docs tb-pay-desk-cards fi-dates-title fi-doc-options 
       WITH FRAME Dialog-Frame.
   ENABLE rct-dates rct-obj rct-doc-type rct-doc-options RECT-5 Btn_OK 
-         Btn_Cancel tb-incr b-help tb-exp-doc tb-exp-ref tb-exp-fo tb-exp-day 
+         Btn_Cancel tb-incr b-help tb-exp-doc tb-exp-doc-rvs tb-exp-ref tb-exp-fo tb-exp-day 
          tb-exp-checks tb-exp-ref-ext tb-exp-fp tb-exp-way tb-exp-stk 
          tb-exp-s-f tb-exp-stk-supp fi-days-amount rs-date fi-days-ago 
          fi-date-from fi-date-to rs-1 bt-sel-obj ed-doc-type bt-sel-doc-type 
@@ -1494,6 +1505,7 @@ define output parameter p-tb-pay-desk           as logical      no-undo.
 define output parameter p-tb-pay-desk-cards     as logical      no-undo.
 define output parameter p-tb-not-fact-docs      as logical      no-undo.
 define output parameter p-tb-exp-doc            as logical      no-undo.
+define output parameter p-tb-exp-doc-rvs        as logical      no-undo.
 define output parameter p-tb-exp-ref            as logical      no-undo.
 define output parameter p-tb-exp-day            as logical      no-undo.
 define output parameter p-tb-exp-way            as logical      no-undo.
@@ -1558,6 +1570,7 @@ define output parameter p-tb-exp-s-f            as logical      no-undo.
             p-tb-pay-desk           = no
             p-tb-pay-desk-cards     = no
             p-tb-exp-doc            = no
+            p-tb-exp-doc-rvs        = no
             p-tb-exp-ref            = no
             p-tb-exp-day            = no
             p-tb-exp-way            = no
@@ -1675,7 +1688,13 @@ define output parameter p-tb-exp-s-f            as logical      no-undo.
             , input v-param-list
             , output p-tb-exp-s-f
         ).
-
+                
+        run schedule-attr-extract-logical in this-procedure (
+              input 23
+            , input v-param-list
+            , output p-tb-exp-doc-rvs
+        ).
+        
     end.
     run schedule-attr-value in this-procedure (
           input p-cre-db-num
@@ -1769,11 +1788,13 @@ on error undo, return error
         then do:
             enable
                 tb-exp-checks
+                tb-exp-doc-rvs
             with frame {&frame-name} .
         end.        /* if tb-exp-doc = yes  */
         else do:
             disable
                 tb-exp-checks
+                tb-exp-doc-rvs
             with frame {&frame-name} .
         end.        /* NOT ( if tb-exp-doc = yes  ) */
     end.        /* if tb-incr = yes  */
@@ -1806,7 +1827,15 @@ on error undo, return error
                 tb-parts            :visible in frame {&frame-name} = yes
                 tb-not-fact-docs    :visible in frame {&frame-name} = yes
             .
+            enable
+                tb-exp-doc-rvs
+            with frame {&frame-name} .
         end.
+        else do :
+            disable
+                tb-exp-doc-rvs
+            with frame {&frame-name} .
+        end .
         if tb-exp-doc = yes
         or tb-exp-fp = yes
         or tb-exp-fo = yes

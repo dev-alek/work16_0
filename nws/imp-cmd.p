@@ -112,6 +112,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-nws-to-cd as integer no-undo .
   DEFINE VARIABLE v-prn-doc-code as character no-undo .
   define variable v-last-pack as integer   no-undo .
+  define variable v-attr-code as character no-undo.
 
   case entry(1,rec-full,{&delim-nws}):
     when "command" then do:
@@ -1162,6 +1163,47 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 delete ub.config .
               end. /*if avail*/
             end. /* when {&table_config} then do:*/
+            
+            when {&table_clients-attr} then do:
+              find first ub.clients-attr
+                where rowid( ub.clients-attr ) = v-tbl-row
+                no-error .
+              if avail ub.clients-attr then
+                 assign
+                    v-attr-code = ub.clients-attr.attr-code
+                    v-obj-type  = ub.clients-attr.obj-type
+                    v-obj-code  = ub.clients-attr.obj-code
+                    .
+              else
+                 assign
+                    v-attr-code = ""
+                    v-obj-type  = ""
+                    v-obj-code  = 0
+                    .
+              run nws/del-rec.p
+                ( input v-key-rec
+                 ,input false
+                ) no-error .
+              if error-status :error then do:
+                run write-to-log( substitute( "&1&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status:get-message( 1 ) ) ).
+                return error.
+              end.
+
+              if v-attr-code = "envd" then do:
+                 for each tax-rate-attr where
+                          tax-rate-attr.attr-code = v-attr-code
+                 no-lock,
+                     each tax-rate-gds where
+                          tax-rate-gds.tax-code  = tax-rate-attr.tax-code
+                      and tax-rate-gds.rate-code = tax-rate-attr.rate-code
+                      and tax-rate-gds.fact-date <= today 
+                 no-lock:
+                    run fill-g-list in p-imp-handle (tax-rate-gds.gds-code,
+                                                     v-obj-type,
+                                                     v-obj-code).
+                 end.
+              end.
+            end.
 
             when {&table_db}
             or when {&table_db-attr}
@@ -1194,7 +1236,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_arh-trn-doc-contract}
             or when {&table_contract-specif}
             or when {&table_cash-desk-attr}
-            or when {&table_clients-attr}
             or when {&table_cli-grp}
             or when {&table_cash-desk}
             or when {&table_cash-pay-attr}
@@ -1383,6 +1424,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_devisPC-attr}
             or when {&table_utd}
             or when {&table_marking-lines}
+            or when {&table_code}
             then do:
               run nws/del-rec.p
                 ( input v-key-rec

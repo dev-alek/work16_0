@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.bge.1crn.import.*.
+using ibs.th.gbl.env.prmtrs.section from propath.
 
 block-level on error undo, throw.
 
@@ -113,7 +114,7 @@ class ibs.th.bge.1crn.import.parsesub:
 
   define variable transportSubjectObj                      as class transport                   no-undo.
   define variable transport_sectionSubjectObj              as class transport_section           no-undo.
-  define variable transport_section_ct-lvlSubjectObj       as class transport_section_ct-lvl    no-undo.
+  define variable transport_section_ct-lvlSubjectObj       as class transport_section_calibration-table    no-undo.
   define variable imptransportEventHndlrObj                as class imptransport                no-undo.
   define variable transport_section-listSubjectsObj        as class subjects                    no-undo.
   define variable transport_section_ct-lvl-listSubjectsObj as class subjects                    no-undo.
@@ -196,6 +197,9 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable mark-SubjectObj          as class mark                    no-undo. // edi-doc:gds:gd:marks:mark
   define variable impmarkEventHndlrObj         as class impmark              no-undo.
 
+  define variable oks-SubjectObj          as class Oks                    no-undo. 
+  define variable impOKSEventHndlrObj     as class impOks                 no-undo.
+  
   define variable OsnovCurrSubj                         as class osnovcorr               no-undo .
   define variable impOsnocCorr                          as class imposnovcorr            no-undo .
   
@@ -207,9 +211,14 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable gds-seasonSubjectObj                  as class gds-season              no-undo.
   define variable impGds-SeasonEventHndlrObj            as class impgds-season           no-undo.
   
+  define variable Rvd-ReasonSubj                        as class rvd-reason              no-undo .
+  define variable impRvd-Reason                         as class imprvd-reason           no-undo .
+  
   define variable good             as logical   no-undo.
   define variable nameChildrenCurr as character no-undo.
   define variable iNum             as integer   no-undo. /* примерный счетчик элемента */
+  
+  define variable v-longchar       as longchar no-undo .
 
   define private variable parparentproc   as handle no-undo .
   define private variable p-parent-handle as handle no-undo .
@@ -544,7 +553,22 @@ class ibs.th.bge.1crn.import.parsesub:
               ReceivedSubjectPublish(v-iSubject, v-iImpSub).
            end.
         end.
-        
+        when "ok":U 
+        then do:
+           &glob subname oks
+           if not valid-object({&subname}-SubjectObj)       
+           then 
+              {&subname}-SubjectObj       = new {&subname}(). 
+           if not valid-object(imp{&subname}EventHndlrObj) 
+           then do :
+              imp{&subname}EventHndlrObj = new imp{&subname} ().
+           end .
+           v-iSubject = {&subname}-SubjectObj .
+           v-iImpSub  = imp{&subname}EventHndlrObj .
+                // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
         when "contr-price-doc":U then do:
           if not valid-object(contr-price-docsSubjectObj) then contr-price-docsSubjectObj = new contr-price-docs (). // <contr-price-doc>
           if not valid-object(impcontr-price-docsEventHndlrObj) then do :
@@ -596,6 +620,17 @@ class ibs.th.bge.1crn.import.parsesub:
           end .
           v-iSubject = trn-fuel-doc-inSubjectObj .
           v-iImpSub  = imptrn-fuel-docEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "rvd-reason":U then do:
+          if not valid-object(Rvd-ReasonSubj)       then Rvd-ReasonSubj       = new rvd-reason(). // <promotion>
+          if not valid-object(impRvd-Reason) then do :
+            impRvd-Reason = new imprvd-reason ().
+          end .
+          v-iSubject = Rvd-ReasonSubj .
+          v-iImpSub  = impRvd-Reason .
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
@@ -974,8 +1009,8 @@ class ibs.th.bge.1crn.import.parsesub:
           case true : 
             when transportSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
               if not valid-object(transport_section_ct-lvl-listSubjectsObj) then transport_section_ct-lvl-listSubjectsObj = new subjects ("calibration-table") .        
-              transport_section_ct-lvl-listSubjectsObj:Add(new transport_section_ct-lvl()). /* а вот здесь уже создаем объект сущнности*/
-              transport_section_ct-lvlSubjectObj = cast (transport_section_ct-lvl-listSubjectsObj:SubjectObjCurr, transport_section_ct-lvl).
+              transport_section_ct-lvl-listSubjectsObj:Add(new transport_section_calibration-table()). /* а вот здесь уже создаем объект сущнности*/
+              transport_section_ct-lvlSubjectObj = cast (transport_section_ct-lvl-listSubjectsObj:SubjectObjCurr, transport_section_calibration-table).
               GetChildrenSub (hNoderef, (level + 1), transport_section_ct-lvlSubjectObj).
               transportSubjectObj:SetProp (transport_section_ct-lvl-listSubjectsObj).
             end.
@@ -1381,7 +1416,15 @@ class ibs.th.bge.1crn.import.parsesub:
         /* ----- конечный уровень
                  (не коллекции, не классы, только сами пол€ классов скал€рного типа) ----- */
         otherwise do:
-          if valid-object(subjectObj) then subjectObj:SetProp( hNoderef:name, hText:node-value).
+          if valid-object(subjectObj)
+          then do :
+            subjectObj:SetProp( hNoderef:name, hText:node-value) no-error .
+            if error-status:error
+            then do :
+              hText:node-value-to-longchar(v-longchar) .
+              subjectObj:SetProp( hNoderef:name, v-longchar) .
+            end .
+          end .
         end.
       end case.
     end.

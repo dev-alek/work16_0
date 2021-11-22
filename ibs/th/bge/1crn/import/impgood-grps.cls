@@ -145,7 +145,20 @@ class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimp
             ,{&ggoattr-no-inc-auto-rep}
             ,"yes"
             ).
-            
+        end.
+        else 
+        do:
+          ggoattr:ggoattr-delete(
+            varnode-code
+            ,0
+            ,""
+            ,0
+            ,{&ggoattr-no-inc-auto-rep}
+            ,v-value
+            ).
+        end.    
+        if objGood-Grps:Prohibition-sale = 1 or objGood-Grps:r-mat = 1 then 
+        do:
           ggoattr:ggoattr-write(
             varnode-code
             ,0
@@ -158,15 +171,6 @@ class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimp
         end.
         else 
         do:
-          ggoattr:ggoattr-delete(
-            varnode-code
-            ,0
-            ,""
-            ,0
-            ,{&ggoattr-no-inc-auto-rep}
-            ,v-value
-            ).
-            
           ggoattr:ggoattr-delete(
             varnode-code
             ,0

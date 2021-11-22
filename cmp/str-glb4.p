@@ -627,7 +627,7 @@ attr-office-type
 
 /* типы маркировки */
 { cmp/cr-prepc.i 1 prop-list-attr-mark-type
-"not-type,tabak,shoes,perfume,industry,tires,apteka,photo"
+"not-type,tabak,shoes,perfume,industry,tires,apteka,photo,milk,water"
 attr-mark-type
 }
 
@@ -689,7 +689,7 @@ cda-MAGIA-XML_operative
 
 /* Параметры последнего принятого чека */
 { cmp/cr-prepc.i 1 prop-list-cda-IBM-XML_operative
-"last-check-params,fo-version,device-kind"
+"last-check-params,fo-version,device-kind,USE_FFD_VERSION,KKT_FFD_VERSION,KKT_SCHEMA,last-time-polls,last-date-polls,GISMT_FAST_ANSWER,GISMT_TIMEOUT,GISMT_CHECK_TIMEOUT,GISMT_OPENCON_TIMEOUT"
 cda-IBM-XML_operative
 }
 
@@ -812,8 +812,12 @@ cda-IBS-TH_fisreg
 cda-IBS-TH_rec-print
 }
 
+/* ФФД версия */
+{ cmp/cr-prep.i 1 cd-attr-ffd-version USE_FFD_VERSION " " USE_FFD_VERSION }
 
 /* базовые IBS-TH*/
+/* ККТ версия */
+{ cmp/cr-prep.i 1 cd-attr-kkt-version KKT_FFD_VERSION " " KKT_FFD_VERSION }
 
 { cmp/cr-prep.i 1 cda-IBS-TH_main                      IBS-TH_main                        " " IBS-TH_main }
 
@@ -1062,7 +1066,13 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 { cmp/cr-prep.i 1 attr-int-point              int-point             " " int-point            }
 
 /* версия code.xml  */
-{ cmp/cr-prep.i 1 attr-ver-code               ver-code              " " ver-code            }
+{ cmp/cr-prep.i 1 attr-ver-code               ver-code              " " ver-code             }
+
+/* версия методанных  */
+{ cmp/cr-prep.i 1 attr-ver-met                ver-met               " " ver-met              }
+
+/* подмена версии Бд  */
+{ cmp/cr-prep.i 1 attr-ver-db                 ver-db                " " ver-db               }
 
 /* Номер MessageID для видеонаблюдения */
 { cmp/cr-prep.i 1 attr-asiip          asiip         " " asiip        }

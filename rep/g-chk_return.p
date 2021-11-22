@@ -34,12 +34,12 @@ DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Очет по возвратным оп
 
 RUN rep/d-report.w (
   INPUT parparentproc
-  ,INPUT 'rep/r-chk_return.p'
-  ,INPUT ('Очет по возвратным операциям')
+  ,INPUT 'rep/e-chk_return.w'
+  ,INPUT ('Отчет по возвратным операциям')
   ,INPUT 4
   ,INPUT ""
   ,INPUT "*"
   ,INPUT ""
   ,INPUT ""
   ,INPUT ""
-  ,INPUT yes).
+  ,INPUT no).

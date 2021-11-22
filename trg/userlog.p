@@ -135,6 +135,62 @@ on error undo, return error
          no-error.      
         return.
     end.
+    if p-action = 'schedule':U then do:
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = entry(2,p-tbl-name,{&delim-key}) 
+            buf_c-user-log.head-table       = 'schedule':U
+            buf_c-user-log.uniq-key-rec     = entry(2,p-tbl-name,{&delim-key}) 
+         no-error.      
+        return.
+    end.
+    if p-action = 'rvd-reasons':U then do:
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = entry(2,p-tbl-name,{&delim-key}) 
+            buf_c-user-log.head-table       = 'rvd-reasons':U
+            buf_c-user-log.uniq-key-rec     = entry(2,p-tbl-name,{&delim-key}) 
+         no-error.      
+        return.
+    end.
+    if p-action = 'mi-change':U
+    or p-action = 'mi-change-1C':U
+    then do:
+        run cur-time in this-procedure(output v-corr-date, output v-corr-time).
+        create buf_c-user-log.
+        assign
+            buf_c-user-log.corr-user-db-num = g#db-num
+            buf_c-user-log.cusr-id          = next-value( s-user-history )
+            buf_c-user-log.chip-num         = 0
+            buf_c-user-log.corr-date        = v-corr-date
+            buf_c-user-log.corr-time        = v-corr-time
+            buf_c-user-log.corr-user-name   = g#userid
+            buf_c-user-log.des              = entry(1,p-tbl-name,{&delim-key})
+            buf_c-user-log.have-screen      = yes
+            buf_c-user-log.head-table-key   = entry(2,p-tbl-name,{&delim-key}) 
+            buf_c-user-log.head-table       = p-action
+            buf_c-user-log.uniq-key-rec     = entry(2,p-tbl-name,{&delim-key}) 
+         no-error.      
+        return.
+    end.
     if p-action = 'printdoc':U then do:      
         run cur-time in this-procedure(output v-corr-date, output v-corr-time).
         create buf_c-user-log.

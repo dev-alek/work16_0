@@ -11,7 +11,7 @@
 
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
-
+using ibs.th.gbl.env.conf.markingtype.
 
 
 class ibs.th.gbl.env.prmtrs.edo inherits objth. 
@@ -47,6 +47,14 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
     get.
     private set.      
 
+  define public property Milk as logical initial false no-undo 
+    get.
+    private set.   
+    
+  define public property Water as logical initial false no-undo 
+    get.
+    private set.   
+        
   define public property NotType as logical initial false no-undo 
     get.
     private set.
@@ -70,7 +78,20 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
   define public property IsManual as logical initial false no-undo 
     get.
     private set.
-    
+
+
+  define public property IsBanRecipes as logical initial false no-undo 
+    get.
+    private set.
+        
+  define public property IsBanAltr as logical initial false no-undo 
+    get.
+    private set.
+
+  define public property IsBarCode as logical initial false no-undo 
+    get.
+    private set.
+            
   define public property ObjType as character no-undo 
     get.
     private set.
@@ -161,6 +182,59 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       then IsManual = true.
       else IsManual = false.
 
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "ban-recipes"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    if v-value-logical = true
+      then IsBanRecipes = true.
+      else IsBanRecipes = false.
+
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "ban-altr"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    if v-value-logical = true
+      then IsBanAltr = true.
+      else IsBanAltr = false.      
+
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "bar-code"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    if v-value-logical = true
+      then IsBarCode = true.
+      else IsBarCode = false.   
 
     if MarkingType = ""
     then IsMarking = false.
@@ -191,6 +265,12 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
         when  lookup (MarkingType, "photo") > 0 then do:
           Photo = true.
         end.
+        when  lookup (MarkingType, "milk") > 0 then do:
+          Milk = true.
+        end.
+        when  lookup (MarkingType, "water") > 0 then do:
+          Water = true.
+        end.        
         otherwise do:
           IsMarking = false.
         end.

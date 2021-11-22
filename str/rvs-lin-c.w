@@ -700,9 +700,9 @@ define buffer buf_place     for ub.place.
         when {&place-diameter} then do :
           if v-ok then place-diameter = decimal(v-value) .
         end.
-        when {&place-ratio-error} then do :
-          if v-ok then place-ratio-error = decimal(v-value) .
-        end.
+/*        when {&place-ratio-error} then do :                  */
+/*          if v-ok then place-ratio-error = decimal(v-value) .*/
+/*        end.                                                 */
         when {&place-dens-prov} then do :
           if v-ok then dens-prov = decimal(v-value) .
         end.
@@ -749,7 +749,7 @@ define buffer buf_place     for ub.place.
       end.
       else do :
         assign
-          ToolType               = buf_sr-izmerenia.sr-type
+          ToolType               = buf_sr-izmerenia.sr-type-id
           A_LevelMeasurementTool = buf_sr-izmerenia.sr-temp-line
           DeltaAbs_H             = buf_sr-izmerenia.sr-abs-err-neft-water
           DeltaAbs_H_Water       = buf_sr-izmerenia.sr-abs-err-water

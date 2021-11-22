@@ -71,6 +71,7 @@ define variable vss-description as character no-undo init "Ёкспорт по расписанию
     define variable v-exp-stk-supp              as logical      no-undo.
     define variable v-incr                      as logical      no-undo.
     define variable v-exp-checks                as logical      no-undo.
+    define variable v-exp-doc-rvs               as logical      no-undo.
     define variable v-exp-fo                    as logical      no-undo.
     define variable v-exp-fp                    as logical      no-undo.
     define variable v-exp-s-f                   as logical      no-undo.
@@ -296,9 +297,14 @@ on error undo, return error
         , input v-param-list
         , output v-exp-s-f
     ).
-    end . /* end_of —писок параметров дл€ всех типов выгрузки. */
-
-    /*v-gds-grp-list = entry(23,v-param-list,{&comma-char}) no-error.*/
+        
+    run schedule-attr-extract-logical in this-procedure (
+          input 23
+        , input v-param-list
+        , output v-exp-doc-rvs
+    ).
+    
+    end .
 
     if v-incr = no
     then do:
@@ -403,6 +409,7 @@ on error undo, return error
                     , input v-pay-desk
                     , input no                /* pay-desk-cards   */
                     , input v-opened-docs     /*  p-opened-docs   */
+                    , input v-exp-doc-rvs
                     , input ?
                     , input ?
                 ) no-error.
@@ -432,6 +439,7 @@ on error undo, return error
                         , input v-pay-desk
                         , input no                /* pay-desk-cards   */
                         , input v-opened-docs     /*  p-opened-docs   */
+                        , input v-exp-doc-rvs
                         , input ?
                         , input ?
                     ) no-error.
@@ -459,6 +467,7 @@ on error undo, return error
                         , input v-pay-desk
                         , input no                /* pay-desk-cards   */
                         , input v-opened-docs     /*  p-opened-docs   */
+                        , input v-exp-doc-rvs
                         , input ?
                         , input ?
                     ) no-error.
@@ -713,6 +722,7 @@ on error undo, return error
                     , input v-range
                         , input v-obj-list-shift
                         , input v-exp-checks
+                        , input v-exp-doc-rvs
                     ) no-error.
                     if error-status :error
                     then do:
@@ -731,17 +741,18 @@ on error undo, return error
                           input p-db-num
                         , input v-range
                         , input v-obj-list-noshift
-                    , input v-exp-checks
-                ) no-error.
-                if error-status :error
-                then do:
-                    run write-to-log ( vss-workfile + {&space-char}
-                                    + substitute( " ќшибка выгрузки по расписанию. &1 "
-                                                    , return-value
-                                                )
-                                    ) .
-                    undo, return error .
-                end.
+                        , input v-exp-checks
+                        , input v-exp-doc-rvs
+                    ) no-error.
+                    if error-status :error
+                    then do:
+                        run write-to-log ( vss-workfile + {&space-char}
+                                        + substitute( " ќшибка выгрузки по расписанию. &1 "
+                                                        , return-value
+                                                    )
+                                        ) .
+                        undo, return error .
+                    end.
                 end. /* if v-obj-list-noshift <> "" */
             end.        /* if v-shift-mode-on = yes */
             else do:
@@ -750,6 +761,7 @@ on error undo, return error
                     , input v-range
                     , input v-obj-list
                     , input v-exp-checks
+                    , input v-exp-doc-rvs
                 ) no-error.
                 if error-status :error
                 then do:

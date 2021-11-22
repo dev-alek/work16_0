@@ -56,11 +56,24 @@ on end-key undo, return error return-value
   connect value(substitute(p-connect, v-user-passwd, v-user-passwd)) no-error .
   if error-status :error
   then do:
-    return error substitute( "Не удалось подключиться к основной БД с параметрами: &2&1&2&3"
-                             ,p-connect
+     def var vtext as char no-undo.
+     vtext =  substitute( "Не удалось подключиться к основной БД с параметрами: &2&1&2&3 Неизвестный пользователь или пароль"
+                             ,substitute(p-connect)
                              ,{&new-line}
-                             ,error-status :get-message(1)
+                      /*       ,error-status :get-message(1)      */
                            ).
+
+     connect value(substitute(p-connect)) no-error .
+     IF error-status :error
+     then
+        vtext =  substitute( "Не удалось подключиться к основной БД с параметрами: &2&1&2&3 Не найдена база данных."
+                             ,substitute(p-connect)
+                             ,{&new-line}
+                           /*  ,error-status :get-message(1)  */
+                           ).
+
+ 
+    return error vtext.
   end.
   if p-fltConnect <> ?
   then do:

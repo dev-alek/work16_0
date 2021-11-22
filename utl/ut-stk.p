@@ -148,6 +148,7 @@ on error undo, return error
         , output v-void-logical             /* p-cancel           */
         , output v-void-logical             /* p-pay-desk         */
         , output v-void-logical             /* p-chk              */
+        , output v-void-logical             /* p-doc-rvs          */
         , output v-void-logical             /* p-cancel           */
     ).
     if v-date-from = ? or v-date-to = ? then return error. /* отказ */

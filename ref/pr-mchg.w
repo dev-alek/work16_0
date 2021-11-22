@@ -77,7 +77,7 @@ define variable v-marg-pr-paraf    as character  no-undo .
 define variable v-level-dis-attr   as character  no-undo .
 define variable v-no-inc-auto-rep  as character  no-undo . 
 define variable v-ban-sales-via-cd as character  no-undo .
-
+define variable v-table-menu       as character  no-undo .
 define variable v-alchol           as character  no-undo .
 define variable v-mark             as character  no-undo .
 define variable v-sum-grp          as integer    no-undo .
@@ -2386,7 +2386,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-load Dialog-Frame 
 PROCEDURE proc-load :
-define variable v-list-names as character no-undo init "Не определен,Табачная продукция,Обувь,Духи и парфюмерия,Легпром,Шины,Лекарства,Фотокамеры/фотовспышки".
+define variable v-list-names as character no-undo init "Не определен,Табачная продукция,Обувь,Духи и парфюмерия,Легпром,Шины,Лекарства,Фотокамеры/фотовспышки,Молочная продукция,Упакованная вода".
 define variable v-list as character no-undo.
 define variable i as integer no-undo.
 define variable v-val as character no-undo.

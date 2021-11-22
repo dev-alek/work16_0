@@ -862,7 +862,7 @@ do:
         end.
         else do :
           assign
-            ToolType               = buf_sr-izmerenia.sr-type
+            ToolType               = buf_sr-izmerenia.sr-type-id
             DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
             DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
             DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
@@ -1166,7 +1166,7 @@ do:
     if available buf_sr-izmerenia then do:
       assign
         f-place-si-name:screen-value = buf_sr-izmerenia.sr-model
-        v-sr-type = buf_sr-izmerenia.sr-type.
+        v-sr-type = buf_sr-izmerenia.sr-type-id.
     end.
     else
       assign
@@ -1797,7 +1797,7 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
     end.
     v-node-code = f-place-si.
     f-place-si-name:screen-value = buf_sr-izmerenia.sr-model.
-    v-sr-type = buf_sr-izmerenia.sr-type.
+    v-sr-type = buf_sr-izmerenia.sr-type-id.
   end.
 
 
@@ -2166,6 +2166,8 @@ do:
   run ref/sr-izm.w (input parparentproc ,
                     input ""            ,
                     input {&lookup}     ,
+                    input ""            ,
+                    input ""            ,
                     input-output v-node-code,
                     output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
@@ -2809,7 +2811,7 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
   if available buf_sr-izmerenia then do:
     assign
       f-place-si-name:screen-value = buf_sr-izmerenia.sr-model
-      v-sr-type = buf_sr-izmerenia.sr-type.                           
+      v-sr-type = buf_sr-izmerenia.sr-type-id.                           
   end.
   else
     assign
@@ -3191,7 +3193,7 @@ display {&list-1} with frame {&frame-name}.
     if available buf_sr-izmerenia then do:
       assign
         f-place-si-name:screen-value = buf_sr-izmerenia.sr-model
-        v-sr-type = buf_sr-izmerenia.sr-type.
+        v-sr-type = buf_sr-izmerenia.sr-type-id.
     end.
     else
       assign

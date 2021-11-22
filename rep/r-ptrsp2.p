@@ -139,6 +139,7 @@ define temp-table tt_line no-undo
   field chk-num     as character                /* 21) Номер чека на кассе:номер z-отчета */
   field pass-gds    as character                /* 22) Сухой чек                */
   field doc-num2    like ub.chk-doc.doc-num2    /* 23) № заказа                 */
+  field desk-num    like ub.chk-doc.pay-desk    /* 24) № кассы                 */
 
   index upi         is   unique primary order
   index ui1         is   unique   gds-code pump-code nozzle-code pay-code curr-code chk-date chk-time
@@ -159,7 +160,7 @@ define buffer bf_pl-pump-nozzle for ub.pl-pump-nozzle .
 define buffer bf_place          for ub.place          .
 define buffer bf_cash-pay       for ub.cash-pay       .
 define buffer bf_line           for tt_line           .
-define buffer buf_bar-code      for ub.bar-code.
+define buffer buf_bar-code      for ub.bar-code       .
 define buffer buf_cash-pay      for ub.cash-pay       .
 
 
@@ -557,6 +558,7 @@ if varnozzle-code = ? then varnozzle-code = 0.
           tt_line.chk-num     = string(chk-doc.chk-num) + ":" + (if chk-doc.z-number <> ? then string(chk-doc.z-number) else "")
           tt_line.pass-gds    = if bf_chk-gds.pass-gds = 1 then "+" else "-"
           tt_line.doc-num2    = if chk-doc.doc-num2 <> ? then chk-doc.doc-num2 else " "
+          tt_line.desk-num    = chk-doc.pay-desk
         .
       end. /* if not available tt_line */
       assign
@@ -595,7 +597,7 @@ if varnozzle-code = ? then varnozzle-code = 0.
         , output j_hour-till
         ) .
 
-      do vari = 0 to 23 :
+      do vari = 0 to 24 :
         assign
           j_chk-count = 0.
         for each bf_line where
@@ -662,7 +664,7 @@ if varnozzle-code = ? then varnozzle-code = 0.
     end. /* last-of range */
     assign
       j_row-counter = j_row-counter + 1
-    .
+    no-error.
   end. /* for each tt_line */
   assign
     j_row-counter = j_row-counter + 1
@@ -672,7 +674,7 @@ if varnozzle-code = ? then varnozzle-code = 0.
     v_total-lines = v_total-lines
                   + ( if v_total-lines = "":U then "":U else {&comma-char} )
                   + string( j_row-counter )
-  .
+  no-error.
   assign
     t_tmp-date      = ?
     j_hour-from     = 0
@@ -707,6 +709,8 @@ if varnozzle-code = ? then varnozzle-code = 0.
                       +         v_total-lines   + {&delim-par}
                       +         v-column-list
   .
+
+
   assign
     Under_Line = fill( '-', j_total-length )
   .
@@ -1479,14 +1483,6 @@ procedure get-print-line :
                         p-excel-line = p-excel-line + string( bf_print-line.pass-gds, "x(15)":U ) + {&tabulation}
                         .
                     end.
-                  when 14
-                  then 
-                    do:
-                      assign
-                        p-print-line = p-print-line + "  ":U + string( bf_print-line.doc-num2, "x(12)":U ) + " ":U + ":":U
-                        p-excel-line = p-excel-line          + string( bf_print-line.doc-num2, "x(12)":U ) + {&tabulation}
-                        .
-                    end.
                 end case.     
               end.       
             when 17
@@ -1519,15 +1515,33 @@ procedure get-print-line :
                     p-excel-line = p-excel-line + string( bf_print-line.gds-name, "x(24)":U ) + {&tabulation}
                   .
                 end.
+              end case. /* jj */
+            end.
+            when 16
+            then do:
+              case jj :
                 when 11
                 then do:
                   assign
-                    p-print-line = p-print-line + string( bf_print-line.pay-name, "x(24)":U ) + ":":U
-                    p-excel-line = p-excel-line + string( bf_print-line.pay-name, "x(24)":U ) + {&tabulation}
+                    p-print-line = p-print-line + string( bf_print-line.pay-name, "x(16)":U ) + ":":U
+                    p-excel-line = p-excel-line + string( bf_print-line.pay-name, "x(16)":U ) + {&tabulation}
                   .
                 end.
               end case. /* jj */
             end.
+            when 12
+            then do:
+              case jj :
+                  when 14
+                  then 
+                    do:
+                      assign
+                        p-print-line = p-print-line + "  ":U + string( bf_print-line.doc-num2, "x(9)":U ) + " ":U + ":":U
+                        p-excel-line = p-excel-line          + string( bf_print-line.doc-num2, "x(9)":U ) + {&tabulation}
+                        .
+                    end.
+              end case. /* jj */
+            end.            
           end case. /* j_length */
         end.
         when "I":U
@@ -1554,6 +1568,14 @@ procedure get-print-line :
                 p-excel-line = p-excel-line + string( bf_print-line.chk-count, ">>>>9":U ) + {&tabulation}
               .
             end.
+             when 15
+             then 
+                do:
+                   assign
+                      p-print-line = p-print-line + "  ":U + string( bf_print-line.desk-num, ">>>9":U ) + " ":U + ":":U
+                      p-excel-line = p-excel-line          + string( bf_print-line.desk-num, ">>>9":U ) + {&tabulation}
+                      .
+                end.
           end case. /* jj */
         end.
         when "Q":U
@@ -1600,10 +1622,10 @@ procedure get-lbl-data :
   on error undo, return error return-value
   :
     assign
-      p-list-length = "10,8,12,10,24,5,8,5,13,21,24,15,15,15":U
+      p-list-length = "10,8,12,10,24,5,8,5,13,21,16,15,15,12,7":U
       p-list-label  = "Дата,Время,Код товара,Артикул,Наименование товара,№ ТРК,Пистолет,Чеков,Количество,":U +
-                      "Сумма продаж,Вид оплаты,Номер чека,Сухой чек,№ заказа":U
-      p-list-types  = "D,T,Z,C,C,I,I,I,Q,S,C,C,C,C":U
+                      "Сумма продаж,Вид оплаты,Номер чека,Сухой чек,№ заказа,№ кассы":U
+      p-list-types  = "D,T,Z,C,C,I,I,I,Q,S,C,C,C,C,I":U
     .
     if num-entries( p-list-length ) <> num-entries( p-list-label ) or
        num-entries( p-list-length ) <> num-entries( p-list-types )

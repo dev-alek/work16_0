@@ -39,7 +39,9 @@ define variable vss-description as character no-undo init "Окно входа в систему"
 &global-define db-name_schema ub
 /*{ cmp/str-glbl.i }*/
 { cmp/showinf.i }
+&glob defonly yes
 
+{ adm/auto-def.i new}
 define variable v-cConnect          as character no-undo .
 define variable v-fltConnect        as character no-undo .
 define variable v-user-entered      as logical   no-undo init false .
@@ -272,6 +274,92 @@ then do:
 end.
 */
 
+define variable v-num-entries as integer no-undo.
+define variable ind as integer no-undo.
+define variable v-param as character no-undo.
+define variable v-param-name as character no-undo.
+define variable v-param-value as character no-undo.
+define variable vAutolog as logical no-undo.
+define variable v-preconnection as logical no-undo. 
+if SESSION:PARAMETER <> "":U
+  and SESSION:PARAMETER <> ?
+then do:
+  assign
+    v-num-entries = num-entries( SESSION:PARAMETER, ",":U )
+  .
+  do ind = 1 to v-num-entries :
+    assign
+      v-param = entry( ind, SESSION:PARAMETER, ",":U )
+    .
+    if num-entries( v-param, ":":U ) > 1 then do:
+      assign
+        v-param-name  = entry( 1, v-param, ":":U )
+        v-param-value = substring( v-param, length( v-param-name ) + 2 )
+      .
+      case v-param-name :
+        when "U":U then do:
+          if vAutolog
+          then
+          assign
+            name = v-param-value
+          .
+        end.
+        when "P":U then do:
+           if vAutolog
+           then
+          assign
+            password = v-param-value
+          .
+        end.
+        when "M":U then do:
+         /* assign
+            v-mode = replace( v-param-value, {&delim-par}, ",":U )
+          .*/
+        end.
+        when "A":U then do:
+           if v-param-value = "admsys"
+           then
+           vAutolog = yes.
+           
+        end.
+        otherwise do:
+          message
+            substitute("Неизвестный параметр сессии СПН: &1", v-param) skip
+            substitute("Параметр игнорируется.") skip
+            view-as alert-box information .
+        end.
+      end case.
+    end.
+    else do:
+      message
+        substitute("Неизвестный параметр сессии СПН: &1", v-param) skip
+        substitute("Параметр игнорируется.") skip
+        view-as alert-box information .
+    end.
+  end.
+  if name <> "":U
+    and password <> "":U
+  then do:
+    run utl/chkstrgbl.p.
+    run adm/autoinit.p ( input name
+                    ,input password
+                  ) no-error.
+    run adm/autoconn.p no-error.
+    if error-status :error then do:
+      assign
+        password = "":U
+      .
+    end.
+    else do:
+      assign
+        v-preconnection = TRUE
+      .
+    end.
+    run gbl/dbdiscon.p no-error.
+  end.
+end.
+
+
 do1:
 do
 on error  undo, leave
@@ -328,14 +416,17 @@ on stop   undo, leave
       propath = v-new-propath
     .
   end.
-
-  run enable_ui in this-procedure .
-
-  WAIT-FOR GO OF frame {&FRAME-NAME} focus name.
-  assign
-    name
-    password .
-  run utl/chkstrgbl.p.
+  if v-preconnection = FALSE then do:
+     run enable_ui in this-procedure .
+   
+     WAIT-FOR GO OF frame {&FRAME-NAME} focus name.
+     assign
+       name
+       password .
+  end.
+  if v-preconnection = FALSE 
+  then
+      run utl/chkstrgbl.p.
   
   v-cConnect = ibs.th.gbl.gbl-inipar:conPar.
    
@@ -401,17 +492,19 @@ on stop   undo, leave
     ,input name
     ,input password
     ,input-output v-user-entered
-    ) .
+    ) no-error.
   if userid('{&db-name_schema}':U) = '':U
   then do:
-    v-vid-param = "Login=" + name + {&delim-par} + "RESULT=103" + {&delim-par} + "Description=Ошибка при подключении к базе данных. Неизвестный пользователь".
+    def var vtext as char no-undo.
+    vtext = return-value.
+    v-vid-param = "Login=" + name + {&delim-par} + "RESULT=103" + {&delim-par} + "Description=Ошибка при подключении к базе данных. " + vtext.
     run trg/video-action.p (input 50,
                             input v-vid-param,
                             output v-vid-ok,
                             output v-vid-mes) .
     message
       "Ошибка при подключении к базе данных" skip
-      "Неизвестный пользователь" skip
+      vtext skip
       view-as alert-box error .
     disconnect ub no-error .
     quit.
@@ -452,8 +545,8 @@ on stop   undo, leave
       quit.
     end.
   end.
+  
 end. /* do1 */
-
 
 assign
   session :data-entry-return = no
@@ -466,22 +559,25 @@ then
 DO2:
 do
 :
+   
   run adm/unloaddb.w
     (input  name
     ,input  password
     ,output v-is-copy
     ) .
+  def var v-msg as character no-undo.
   if v-is-copy = false
   then do:
     run adm/chk-db.p no-error .
     if error-status :error then do:
-      v-vid-param = "Login=" + name + {&delim-par} + "RESULT=104" + {&delim-par} + "Description=" + error-status :get-message(1) .
+      v-msg = return-value.
+      v-vid-param = "Login=" + name + {&delim-par} + "RESULT=104" + {&delim-par} + "Description=" + error-status :get-message(1) + ";" + v-msg .
       run trg/video-action.p (input 50,
                             input v-vid-param,
                             output v-vid-ok,
                             output v-vid-mes) .
       message
-        error-status :get-message(1) skip
+        error-status :get-message(1) skip v-msg skip
         return-value skip
         view-as alert-box error .
     end.

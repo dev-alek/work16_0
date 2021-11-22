@@ -42,6 +42,9 @@ define variable vss-description as character no-undo initial "Производство блюд 
 /*НЕ МЕНЯТЬ НА g e t c n t x t . i def!!!! процедра вызывается в автомате а g e t c n t x t . i get там не работает!!!*/
 define variable v-cntxt-db-num as integer no-undo .
 define variable v-cntxt-userid as character no-undo .
+define variable v-cntxt-obj-type as character no-undo .
+define variable v-cntxt-obj-code as integer no-undo .
+define variable v-cntxt-host-code-obj  as integer no-undo .
 { str/fbrrest.i  }
 { str/fbrlib.i   }
 { str/fbrpln.i   }

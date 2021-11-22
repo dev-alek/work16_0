@@ -24,13 +24,13 @@ class ibs.th.bge.1crn.subjects.season inherits ibs.th.bge.1crn.subjects.asubject
   define property del-l       as integer      no-undo get. private set.
   define property del-f       as integer      no-undo get. private set.
   define property Tb-name     as character    no-undo get. private set.
-  define property Tb-image    as character    no-undo get. private set.
+  define property Tb-image    as longchar     no-undo get. private set.
 
   define override property InitTag as character no-undo init "Tb-group"
     get. 
 
 
-  method OVERRIDE PROTECTED void SetPropProtected (inTag as char, inValue as char):
+  method override protected void SetPropProtected (inTag as char, inValue as char):
     case inTag:
       when "Tbg-code" then do:
         assign Tbg-code = inValue .
@@ -50,6 +50,14 @@ class ibs.th.bge.1crn.subjects.season inherits ibs.th.bge.1crn.subjects.asubject
     end case.
   end.
 
+  method override protected void SetPropProtected (inTag as char, inValue as longchar):
+    case inTag:
+      when "Tb-image" then do:
+        assign Tb-image = inValue .
+      end.
+    end case.
+  end.
+  
   method override protected void CheckData ():
 
     def var v-str as char no-undo.

@@ -95,7 +95,8 @@ define temp-table temp_testXML-entity no-undo
 .
 
 define stream xmldom-out.
-define variable mverfile as integer  no-undo.
+define variable mverfile_text as character   no-undo.
+define variable mverfile      as integer  no-undo.
 define variable v-xmldom-key       as integer      no-undo.
 
 /*==========================================================================*/
@@ -337,18 +338,21 @@ function  xmldom-load-next-level returns logical
       .
       
       v-field-handle :get-child ( v-text-handle, 1 ).
-      if     ifilever ne ? 
-         and IParent:name         eq "file-info"
-         and v-field-handle :name eq "version" 
+      if     IParent:name         eq "file-info"
+         and v-field-handle :name eq "version"
       then do:
          mverfile = int(v-text-handle :node-value)no-error.
-         if  mverfile  eq ifilever
+         if     ifilever ne ? 
          then do:
-            for each buf_temp_testXML-entity:
-               delete buf_temp_testXML-entity.
-            end.
             
-            return yes.
+            if  mverfile  eq ifilever
+            then do:
+               for each buf_temp_testXML-entity:
+                  delete buf_temp_testXML-entity.
+               end.
+               
+               return yes.
+            end.
          end.
       end.
       assign
@@ -371,77 +375,70 @@ function  xmldom-load-ver returns character
 &endif
  (i-full-filename    as character ,
    ifilever as integer ):
-    define variable v-doc-handle    as handle           no-undo.
-    define variable v-root-handle   as handle           no-undo.
-    define variable v-table-handle  as handle           no-undo.
+   define variable v-doc-handle    as handle           no-undo.
+   define variable v-root-handle   as handle           no-undo.
+   define variable v-table-handle  as handle           no-undo.
     
-    define variable v-table-counter as integer      no-undo.
-    define variable v-table-amount  as integer      no-undo.
-    define buffer buf_temp_testXML-node         for temp_testXML-node.
-    mverfile = ?.
-do
-for buf_temp_testXML-node
-on error undo, return error
-:
-    assign
-        i-full-filename = search( i-full-filename )
-    .
-    if i-full-filename = ?
-    then do:        /* Если файл не найден, ничего не предпринимать. */
-        undo, return "Загружаемый файл не найден.".
-    end.
-    create x-document v-doc-handle.
-    assign
-        v-doc-handle :encoding = "windows-1251":U
-    .
-    create x-noderef v-root-handle.
-    create x-noderef v-table-handle.
-   
-    
-    v-doc-handle :load ( "file", i-full-filename, true ) no-error.
-    if error-status :error
-    or not valid-handle ( v-doc-handle )
-    or v-doc-handle = ?
-    then do:
-        undo, return error vss-description + substitute( "Ошибка загрузки XML-файла &1", i-full-filename ).
-    end.
-    v-doc-handle :get-document-element ( v-root-handle ) no-error.
-    if error-status :error
-    or not valid-handle ( v-root-handle )
-    or v-root-handle = ?
-    then do:
-        undo, return error vss-description + substitute( "Ошибка чтения корневого тэга XML-файла &1", i-full-filename ).
-    end.
-    assign
-        v-table-amount = v-root-handle :num-children
-    no-error.
-    if error-status :error
-    or v-table-amount = ?
-    then do:
-        undo, return error vss-description + substitute( ".&1Неверная структура XML-файла &2", {&new-line}, i-full-filename ).
-    end.
-    m-xme-key = v-table-amount +  1.
-    repeat v-table-counter = 1 to v-table-amount
-    :
-        v-root-handle :get-child ( v-table-handle, v-table-counter ).
-        create buf_temp_testXML-node.
-        assign
+   define variable v-table-counter as integer      no-undo.
+   define variable v-table-amount  as integer      no-undo.
+   define buffer buf_temp_testXML-node         for temp_testXML-node.
+   mverfile = ?.
+   mverfile_text = ?.
+   do
+   for buf_temp_testXML-node
+   on error undo, return error
+   :
+      assign
+         i-full-filename = search( i-full-filename )
+      .
+      if i-full-filename = ?
+      then do:        /* Если файл не найден, ничего не предпринимать. */
+         undo, return "Загружаемый файл не найден.".
+      end.
+      create x-document v-doc-handle.
+      v-doc-handle :encoding = "windows-1251":U.
+      create x-noderef v-root-handle.
+      create x-noderef v-table-handle.
+      v-doc-handle :load ( "file", i-full-filename, true ) no-error.
+      if    error-status :error
+         or not valid-handle ( v-doc-handle )
+         or v-doc-handle = ?
+      then do:
+         undo, return error vss-description + substitute( "Ошибка загрузки XML-файла &1", i-full-filename ).
+      end.
+      v-doc-handle :get-document-element ( v-root-handle ) no-error.
+      if    error-status :error
+         or not valid-handle ( v-root-handle )
+         or v-root-handle = ?
+      then do:
+         undo, return error vss-description + substitute( "Ошибка чтения корневого тэга XML-файла &1", i-full-filename ).
+      end.
+      assign
+         v-table-amount = v-root-handle :num-children
+      no-error.
+      if    error-status :error
+         or v-table-amount = ?
+      then do:
+         undo, return error vss-description + substitute( ".&1Неверная структура XML-файла &2", {&new-line}, i-full-filename ).
+      end.
+      m-xme-key = v-table-amount +  1.
+    	repeat v-table-counter = 1 to v-table-amount:
+         v-root-handle :get-child ( v-table-handle, v-table-counter ).
+         create buf_temp_testXML-node.
+         assign
             buf_temp_testXML-node.xmh-key       = v-table-counter
             buf_temp_testXML-node.xmhNodName    = v-table-handle :name
-        .
+         .
 /*        cust-num = integer (hTable :GET-ATTRIBUTE ("Cust-num")).*/
 /*        NAME = hTable :GET-ATTRIBUTE ("Name").*/
-        if xmldom-load-next-level (v-table-handle,buf_temp_testXML-node.xmh-key,ifilever)
-        then do:
-           for each buf_temp_testXML-node:
-              delete buf_temp_testXML-node.
-           end.
-           
-           undo, return "Данные уже загружены.".
-           
-        end.
-       
-    end.
+         if xmldom-load-next-level (v-table-handle,buf_temp_testXML-node.xmh-key,ifilever)
+         then do:
+            for each buf_temp_testXML-node:
+               delete buf_temp_testXML-node.
+            end.
+            undo, return "Данные уже загружены.".
+         end.
+      end.
    
 /*    output to D:/test.txt.*/
 /*    for each buf_temp_testXML-node*/
@@ -456,11 +453,10 @@ on error undo, return error
 /*    end.*/
 /*    output close.*/
     
-    delete object v-root-handle.
-    delete object v-doc-handle.
-    return string( mverfile).
-end.
-
+      delete object v-root-handle.
+      delete object v-doc-handle.
+      return mverfile_text.
+   end.
 end . /* xmldom-load */
 /*==========================================*/
 

@@ -45,8 +45,9 @@ define input parameter parparentproc   as widget-handle  no-undo .
 define input parameter p-obj-type      as character      no-undo .
 define input parameter p-obj-code      as integer        no-undo .
 define input parameter p-pl-code       as integer        no-undo .
-
+define variable v_ok as LOGICAL no-undo .
 define buffer buf_pl-level for ub.pl-level .
+define buffer buf_pl-level-attr for ub.pl-level-attr .
 define buffer buf_place    for ub.place .
 define VARIABLE v-ok-level as logical no-undo INIT no .
 define variable v-chk-act-host-code as integer   no-undo .
@@ -72,18 +73,28 @@ define variable glog                as logical   no-undo .
 &Scoped-define INTERNAL-TABLES buf_pl-level
 
 /* Definitions for BROWSE BROWSE-2                                      */
-&Scoped-define FIELDS-IN-QUERY-BROWSE-2 buf_pl-level.pl-level pl-qnty 
+&Scoped-define FIELDS-IN-QUERY-BROWSE-2 buf_pl-level.pl-level buf_pl-level.pl-qnty buf_pl-level-attr.attr-value 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-2 
 &Scoped-define QUERY-STRING-BROWSE-2 FOR EACH buf_pl-level ~
       WHERE buf_pl-level.obj-type = p-obj-type ~
  AND buf_pl-level.obj-code = p-obj-code ~
- AND buf_pl-level.pl-code = p-pl-code NO-LOCK INDEXED-REPOSITION
+ AND buf_pl-level.pl-code = p-pl-code NO-LOCK, ~
+ first buf_pl-level-attr where buf_pl-level-attr.obj-type = p-obj-type ~
+ and buf_pl-level-attr.obj-code = p-obj-code ~
+ and buf_pl-level-attr.pl-code = p-pl-code ~
+ and buf_pl-level-attr.pl-level = buf_pl-level.pl-level ~
+ and buf_pl-level-attr.attr-code = "tarir-delta" no-lock INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BROWSE-2 OPEN QUERY BROWSE-2 FOR EACH buf_pl-level ~
       WHERE buf_pl-level.obj-type = p-obj-type ~
  AND buf_pl-level.obj-code = p-obj-code ~
- AND buf_pl-level.pl-code = p-pl-code NO-LOCK INDEXED-REPOSITION.
-&Scoped-define TABLES-IN-QUERY-BROWSE-2 buf_pl-level
-&Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-2 buf_pl-level
+ AND buf_pl-level.pl-code = p-pl-code NO-LOCK, ~
+ first buf_pl-level-attr where buf_pl-level-attr.obj-type = p-obj-type ~
+ and buf_pl-level-attr.obj-code = p-obj-code ~
+ and buf_pl-level-attr.pl-code = p-pl-code ~
+ and buf_pl-level-attr.pl-level = buf_pl-level.pl-level ~
+ and buf_pl-level-attr.attr-code = "tarir-delta" no-lock INDEXED-REPOSITION.
+&Scoped-define TABLES-IN-QUERY-BROWSE-2 buf_pl-level buf_pl-level-attr
+&Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-2 buf_pl-level buf_pl-level-attr
 
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
@@ -108,47 +119,48 @@ b-help BROWSE-2
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-add 
-    LABEL "&Добавить" 
-    SIZE 10 BY 1.
+     LABEL "&Добавить" 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-chg 
-    LABEL "&Изменить" 
-    SIZE 10 BY 1.
+     LABEL "&Изменить" 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-del 
-    LABEL "&Удалить" 
-    SIZE 10 BY 1.
+     LABEL "&Удалить" 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-delete 
-    LABEL "Очистить" 
-    SIZE 9 BY 1.
+     LABEL "Очистить" 
+     SIZE 9 BY 1.
 
 DEFINE BUTTON b-exit AUTO-GO 
-    LABEL "&Выход" 
-    SIZE 10 BY 1
-    BGCOLOR 8 .
+     LABEL "&Выход" 
+     SIZE 10 BY 1
+     BGCOLOR 8 .
 
 DEFINE BUTTON b-help 
-    LABEL "Помо&щь" 
-    SIZE 10 BY 1
-    BGCOLOR 8 .
+     LABEL "Помо&щь" 
+     SIZE 10 BY 1
+     BGCOLOR 8 .
 
 DEFINE BUTTON b-load 
-    LABEL "&Загрузить" 
-    SIZE 10 BY 1.
+     LABEL "&Загрузить" 
+     SIZE 10 BY 1.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BROWSE-2 FOR 
-    buf_pl-level SCROLLING.
+      buf_pl-level, buf_pl-level-attr SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _STRUCTURED
-    QUERY BROWSE-2 NO-LOCK DISPLAY
-    buf_pl-level.pl-level COLUMN-LABEL "Уровень, см"
-    pl-qnty WIDTH 41.5
+  QUERY BROWSE-2 NO-LOCK DISPLAY
+      buf_pl-level.pl-level COLUMN-LABEL "Уровень, см"
+      buf_pl-level.pl-qnty WIDTH 15.5
+      decimal(buf_pl-level-attr.attr-value) WIDTH 26 format "9.999" label "Погрешность составления,%"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 66 BY 17.5 FIT-LAST-COLUMN.
@@ -157,18 +169,18 @@ DEFINE BROWSE BROWSE-2
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-    b-exit AT ROW 1 COL 1
-    b-add AT ROW 1 COL 11 WIDGET-ID 2
-    b-chg AT ROW 1 COL 21 WIDGET-ID 4
-    b-del AT ROW 1 COL 31 WIDGET-ID 6
-    b-load AT ROW 1 COL 41 WIDGET-ID 8
-    b-delete AT ROW 1 COL 51 WIDGET-ID 10
-    b-help AT ROW 1 COL 57
-    BROWSE-2 AT ROW 2.25 COL 1 WIDGET-ID 200
+     b-exit AT ROW 1 COL 1
+     b-add AT ROW 1 COL 11 WIDGET-ID 2
+     b-chg AT ROW 1 COL 21 WIDGET-ID 4
+     b-del AT ROW 1 COL 31 WIDGET-ID 6
+     b-load AT ROW 1 COL 41 WIDGET-ID 8
+     b-delete AT ROW 1 COL 51 WIDGET-ID 10
+     b-help AT ROW 1 COL 57
+     BROWSE-2 AT ROW 2.25 COL 1 WIDGET-ID 200
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-    TITLE "Градуировочная таблица"
-    DEFAULT-BUTTON b-exit WIDGET-ID 100.
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         TITLE "Градуировочная таблица"
+         DEFAULT-BUTTON b-exit WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -190,8 +202,8 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB BROWSE-2 b-help Dialog-Frame */
 ASSIGN 
-    FRAME Dialog-Frame:SCROLLABLE = FALSE
-    FRAME Dialog-Frame:HIDDEN     = TRUE.
+       FRAME Dialog-Frame:SCROLLABLE       = FALSE
+       FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -223,9 +235,9 @@ ASSIGN
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Градуировочная таблица */
-    DO:
-        APPLY "END-ERROR":U TO SELF.
-    END.
+DO:
+  APPLY "END-ERROR":U TO SELF.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -234,10 +246,9 @@ ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Градуировочная таблица */
 &Scoped-define SELF-NAME b-add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add Dialog-Frame
 ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
-    DO:
-        define variable v-level as integer no-undo.
-        define variable v-ok    as logical no-undo.
-        
+DO:
+   define variable v-level    as integer      no-undo.
+   define variable v-ok       as logical      no-undo.
         { gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
@@ -254,33 +265,29 @@ ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
         glog
         }
         if NOT glog then return no-apply.
-        
-        assign
-            v-level = ?
-            .
-        run ref/pl-lvl.w
-            ( input parparentproc
-            , input p-obj-type
-            , input p-obj-code
-            , input p-pl-code
-            , input-output v-level
-            , output v-ok
-            ) no-error.
-        if error-status:error then 
-        do:
-            message
-                error-status:get-message(1) skip
-                return-value
-                view-as alert-box error .
+   assign
+      v-level = ?
+   .
+   run ref/pl-lvl.w   ( input parparentproc
+                        , input p-obj-type
+                        , input p-obj-code
+                        , input p-pl-code
+                        , input-output v-level
+                        , output v-ok
+                        ) no-error.
+      IF ERROR-STATUS:ERROR then do:
+         message
+            error-status:get-message(1) skip
+            return-value
+         view-as alert-box error .
 
-            return no-apply .
-        end.
-        IF v-ok then 
-        do:
-            run enable_UI in this-procedure.
-            v-ok-level = yes .
-        end.
-    END.
+         return no-apply .
+      end.
+   IF v-ok then do:
+      run enable_UI in this-procedure.
+      v_ok = yes .
+   end.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -289,9 +296,10 @@ ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
 &Scoped-define SELF-NAME b-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg Dialog-Frame
 ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
-    DO:
-        define variable v-level as integer no-undo.
-        define variable v-ok    as logical no-undo.
+DO:
+   define variable v-level    as integer      no-undo.
+   define variable v-ok       as logical      no-undo.
+
         { gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
@@ -308,36 +316,31 @@ ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
         glog
         }
         if NOT glog then return no-apply.
-        
-        if available buf_pl-level then 
-        do:
-            assign
-                v-level = buf_pl-level.pl-level
-                .
-            run ref/pl-lvl.w
-                ( input parparentproc
-                , input buf_pl-level.obj-type
-                , input buf_pl-level.obj-code
-                , input buf_pl-level.pl-code
-                , input-output v-level
-                , output v-ok
-                ) no-error.
-            if error-status:error then 
-            do:
-                message
-                    error-status:get-message(1) skip
-                    return-value
-                    view-as alert-box error .
+   if available buf_pl-level then do:
+   assign
+      v-level = buf_pl-level.pl-level
+   .
+   run ref/pl-lvl.w   ( input parparentproc
+                        , input buf_pl-level.obj-type
+                        , input buf_pl-level.obj-code
+                        , input buf_pl-level.pl-code
+                        , input-output v-level
+                        , output v-ok
+                        ) no-error.
+      IF ERROR-STATUS:ERROR then do:
+         message
+            error-status:get-message(1) skip
+            return-value
+         view-as alert-box error .
 
-                return no-apply .
-            end.
-        end.
-        if v-ok then 
-        do:
-            run enable_ui in this-procedure.
-            v-ok-level = yes .
-        end.
-    END.
+         return no-apply .
+      end.
+   end.
+   IF v-ok THEN DO:
+      run enable_UI in this-procedure.
+      v_ok = yes .
+   end.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -346,7 +349,7 @@ ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
 &Scoped-define SELF-NAME b-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
-    DO:
+DO:
         { gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
@@ -639,7 +642,31 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                              , p-obj-code
                                              , p-obj-type
                                              )
-        .
+   .
+   
+   for each buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                   and buf_pl-level.obj-code = p-obj-code
+                                   and buf_pl-level.pl-code  = p-pl-code
+                                   :
+     find first buf_pl-level-attr no-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+                                            and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+                                            and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
+                                            and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+                                            and buf_pl-level-attr.attr-code = "tarir-delta"
+                                            no-error .
+     if not available buf_pl-level-attr
+     then do :
+       create buf_pl-level-attr .
+       assign
+         buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+         buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+         buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
+         buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+         buf_pl-level-attr.attr-code = "tarir-delta"        
+         buf_pl-level-attr.attr-value = string(0.25)
+       .
+     end .                                                                      
+   end .
 
     RUN enable_UI.
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.

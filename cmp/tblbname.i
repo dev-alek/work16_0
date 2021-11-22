@@ -147,6 +147,9 @@ Creation date: 01/29/07
 &glob bef-table_assortment-matrix-goods assortment-matrix-goods
 &glob bef-table_assortment-matrix-goods-attr assortment-matrix-goods-attr
 &glob bef-table_attr-prop attr-prop
+&glob bef-table_auto-section auto-section
+&glob bef-table_auto-section-attr auto-section-attr
+&glob bef-table_auto-section-table auto-section-table
 &glob bef-table_auto-tank auto-tank
 &glob bef-table_auto-tank-attr auto-tank-attr
 &glob bef-table_auto-tank-meas auto-tank-meas
@@ -176,6 +179,9 @@ Creation date: 01/29/07
 &glob bef-table_c-alc-type-gds c-alc-type-gds
 &glob bef-table_c-assortment-matrix c-assortment-matrix
 &glob bef-table_c-assortment-matrix-goods c-assortment-matrix-goods
+&glob bef-table_c-auto-section c-auto-section
+&glob bef-table_c-auto-section-attr c-auto-section-attr
+&glob bef-table_c-auto-section-table c-auto-section-table
 &glob bef-table_c-auto-tank c-auto-tank
 &glob bef-table_c-auto-tank-attr c-auto-tank-attr
 &glob bef-table_c-auto-tank-meas-attr c-auto-tank-meas-attr
@@ -217,6 +223,7 @@ Creation date: 01/29/07
 &glob bef-table_c-contract c-contract
 &glob bef-table_c-contract-line c-contract-line
 &glob bef-table_c-contract-specif c-contract-specif
+&glob bef-table_c-contract-specif-attr c-contract-specif-attr
 &glob bef-table_c-counter c-counter
 &glob bef-table_c-country c-country
 &glob bef-table_c-country-attr c-country-attr
@@ -351,7 +358,7 @@ Creation date: 01/29/07
 &glob bef-table_c-nzl-hist c-nzl-hist
 &glob bef-table_c-obj-grp-obj-price c-obj-grp-obj-price
 &glob bef-table_c-OperServ c-OperServ
-&glob bef-table_c-OperServAttr c-OperServAttr
+&glob bef-table_c-operServAttr c-operServAttr
 &glob bef-table_c-ord-doc c-ord-doc
 &glob bef-table_c-ord-doc-attr c-ord-doc-attr
 &glob bef-table_c-ord-dtl c-ord-dtl
@@ -461,6 +468,7 @@ Creation date: 01/29/07
 &glob bef-table_c-shop c-shop
 &glob bef-table_c-sht-hist c-sht-hist
 &glob bef-table_c-sr-izmerenia c-sr-izmerenia
+&glob bef-table_c-sr-izmerenia-attr c-sr-izmerenia-attr
 &glob bef-table_c-staff c-staff
 &glob bef-table_c-stop-list c-stop-list
 &glob bef-table_c-stop-list-line c-stop-list-line
@@ -1151,6 +1159,7 @@ Creation date: 01/29/07
 &glob bef-table_some-lk some-lk
 &glob bef-table_some-lk-attr some-lk-attr
 &glob bef-table_sr-izmerenia sr-izmerenia
+&glob bef-table_sr-izmerenia-attr sr-izmerenia-attr
 &glob bef-table_staff staff
 &glob bef-table_staff-attr staff-attr
 &glob bef-table_stk-line stk-line
@@ -1205,6 +1214,7 @@ Creation date: 01/29/07
 &glob bef-table_tnved-head-attr tnved-head-attr
 &glob bef-table_tnved-item tnved-item
 &glob bef-table_tnved-item-attr tnved-item-attr
+&glob bef-table_tran-fuel tran-fuel
 &glob bef-table_trn-doc trn-doc
 &glob bef-table_trn-doc-sum trn-doc-sum
 &glob bef-table_trn-reason trn-reason
@@ -1288,6 +1298,9 @@ Creation date: 01/29/07
 &glob bef-table_wth-pobj-attr wth-pobj-attr
 &glob bef-table_wth-ser wth-ser
 &glob bef-table_wth-ser-attr wth-ser-attr
+&glob bef-table_Xattr Xattr
+&glob bef-table_xGroupObj xGroupObj
+&glob bef-table_xstatus xstatus
 &glob bef-table_xyz-analysis xyz-analysis
 &glob bef-table_xyz-analysis-attr xyz-analysis-attr
 &glob bef-table_xyz-analysis-cli xyz-analysis-cli

@@ -23,128 +23,198 @@ block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.imptransport implements ibs.th.bge.1crn.import.iimpsubject: 
   
-  { cmp/str-glbl.i class }
-  { cmp/str-glbl.i }
+   { cmp/str-glbl.i class }
+   { cmp/str-glbl.i }
    
    
-  define property Msg as character no-undo
-    get. 
-    set.
+   define property Msg as character no-undo
+      get. 
+      set.
 
-  /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
-  method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
 
-    define variable v-transport  as class   transport                no-undo.
-    define variable v-section    as class   transport_section        no-undo.
-    define variable v-ct-lvl     as class   transport_section_ct-lvl no-undo.
-    define variable v_sections   as class   subjects                 no-undo.
-    define variable v_CalibTable as class   subjects                 no-undo.
+      define variable v-transport  as class   transport                           no-undo.
+      define variable v-section    as class   transport_section                   no-undo.
+      define variable v-ct-lvl     as class   transport_section_calibration-table no-undo.
+      define variable v_sections   as class   subjects                            no-undo.
+      define variable v_CalibTable as class   subjects                            no-undo.
     
-    define variable ii           as integer no-undo .
-    define variable jj           as integer no-undo .
-    define variable is-create    as logical no-undo .
+      define variable ii           as integer no-undo .
+      define variable jj           as integer no-undo .
+      define variable kk           as integer no-undo .
+      define variable is-create    as logical no-undo .
     
-    define buffer buf_auto-tank      for ub.auto-tank .
-    define buffer bf_auto-tank       for ub.auto-tank .
-    define buffer buf_auto-tank-attr for ub.auto-tank-attr .
-    define buffer buf_auto-tank-meas for ub.auto-tank-meas .
-    define buffer buf_clients        for ub.clients .
+      define buffer buf_auto-tank          for ub.auto-tank .
+      define buffer buf_auto-section       for ub.auto-section .
+      define buffer buf_auto-tank-attr     for ub.auto-tank-attr .
+      define buffer buf_auto-section-table for ub.auto-section-table .
+      define buffer buf_clients            for ub.clients .
     
-    v-transport = cast (subjectObj, transport).
-    v_sections = v-transport:sections .
-    v_CalibTable = v-transport:calibration-table .
+      v-transport = cast (subjectObj, transport).
+      v_sections = v-transport:sections .
+      v_CalibTable = v-transport:calibration-table .
     
-    if v-transport:del-f = 1 then 
-    do:
-      /*провер€ть не используетс€ ли данные где-то в другом месте - не сделано*/
-      Msg = "Ќет физического удалени€ автотранспорта".
-    end.  
-    else 
-    do:
-      find first buf_auto-tank EXCLUSIVE-LOCK where buf_auto-tank.auto-num = v-transport:reg-num no-error .
-      if not AVAILABLE (buf_auto-tank) then 
+      if v-transport:del-f = 1 then 
       do:
-        create buf_auto-tank .
-        buf_auto-tank.auto-num = v-transport:reg-num .
-      end.
-      assign
-        buf_auto-tank.status_ = if v-transport:del-l = 1 then {&deleted-status} else {&current-status} 
-        buf_auto-tank.name    = v-transport:name_
-        .
-      
-      find first buf_clients no-lock where buf_clients.obj-code = integer(v-transport:tr-owner) and buf_clients.obj-type = {&cmp} no-error .
-      if not AVAILABLE (buf_clients) then 
-      do:
-        Msg = "¬ справочнике нет автопредпри€ти€ с кодом:" + v-transport:tr-owner. 
-        return error .
-      end.
-      
+         /*провер€ть не используетс€ ли данные где-то в другом месте - не сделано*/
+         Msg = "Ќет физического удалени€ автотранспорта".
+      end.  
       else 
       do:
-        find first buf_auto-tank-attr EXCLUSIVE-LOCK where buf_auto-tank-attr.auto-num = buf_auto-tank.auto-num and buf_auto-tank-attr.attr-code = "auto-firm" no-error .
-        if not AVAILABLE (buf_auto-tank-attr) then 
-        do:
-          create buf_auto-tank-attr.
-          assign
-            buf_auto-tank-attr.attr-code = "auto-firm"
-            buf_auto-tank-attr.auto-num  = buf_auto-tank.auto-num 
+         find first buf_auto-tank EXCLUSIVE-LOCK where buf_auto-tank.auto-num = v-transport:reg-num no-error .
+         if not AVAILABLE (buf_auto-tank) then 
+         do:
+            create buf_auto-tank .
+            buf_auto-tank.auto-num = v-transport:reg-num .
+         end.
+         assign
+            buf_auto-tank.status_   = if v-transport:del-l = 1 then {&deleted-status} else {&current-status} 
+            buf_auto-tank.name      = v-transport:name_
+            buf_auto-tank.firm-type = {&cmp}
+            buf_auto-tank.firm-code = integer(v-transport:tr-owner)
+            buf_auto-tank.type-AC   = v-transport:ac-type
+            buf_auto-tank.type-neck = v-transport:neck-type
             .
-        end.
-        buf_auto-tank-attr.attr-value = buf_clients.obj-type + string(buf_clients.obj-code) .
-        
-        for each bf_auto-tank where bf_auto-tank.auto-num BEGINS (v-transport:reg-num + chr(35)):
-          
-          delete bf_auto-tank .
-          
-        end.  
-        for each buf_auto-tank-meas where buf_auto-tank-meas.auto-num begins (v-transport:reg-num):
-          
-          delete buf_auto-tank-meas .
-          
-        end.   
-        if VALID-OBJECT (v_sections) then 
-        do:
-          buf_auto-tank.brutto-qnty = 0 .
-          do ii = 1 to v_sections:Get(ii):
-            v-section = cast(v_sections:SubjectObjCurr, transport_section) .
-            
-            find first bf_auto-tank EXCLUSIVE-LOCK where bf_auto-tank.auto-num = (v-transport:reg-num + chr(35) + string(v-section:sec-num)) no-error .
-            if not AVAILABLE (bf_auto-tank) then 
-            do:
-              create bf_auto-tank.
-              bf_auto-tank.auto-num = (v-transport:reg-num + chr(35) + STRING (v-section:sec-num)) .
-            end.  
-            ASSIGN 
-              bf_auto-tank.brutto-qnty = v-section:capacity
-              bf_auto-tank.name        = STRING (v-section:min-of-lvl) + {&delim-par} + STRING (v-section:max-of-lvl) + {&delim-par} + STRING (v-section:throat-diameter)
-              buf_auto-tank.brutto-qnty = buf_auto-tank.brutto-qnty + bf_auto-tank.brutto-qnty .
-              .
-          end.  
-        end.
-        if VALID-OBJECT (v_CalibTable) then 
-        do:
-          do jj = 1 to v_CalibTable:Get(jj):
-            v-ct-lvl = cast(v_CalibTable:SubjectObjCurr, transport_section_ct-lvl) .
-            find first buf_auto-tank-meas EXCLUSIVE-LOCK where buf_auto-tank-meas.auto-num = (v-transport:reg-num + chr(35) + string(v-ct-lvl:sec-num)) and
-              buf_auto-tank-meas.meas-label = STRING (v-ct-lvl:lvl_) no-error .
-            IF NOT AVAILABLE (buf_auto-tank-meas) THEN 
-            DO:
-              create buf_auto-tank-meas .
-              assign
-                buf_auto-tank-meas.auto-num   = (v-transport:reg-num + chr(35) + string(v-ct-lvl:sec-num)) 
-                buf_auto-tank-meas.meas-label = STRING (v-ct-lvl:lvl_)
-                .
-            end.
+      
+         /*      find first buf_clients no-lock where buf_clients.obj-code = integer(v-transport:tr-owner) and buf_clients.obj-type = {&cmp} no-error .*/
+         /*      if not AVAILABLE (buf_clients) then                                                                                                   */
+         /*      do:                                                                                                                                   */
+         /*        Msg = "¬ справочнике нет автопредпри€ти€ с кодом:" + v-transport:tr-owner.                                                          */
+         /*        return error .                                                                                                                      */
+         /*      end.                                                                                                                                  */
+      
+         /*      else*/
+         /*      do: */
+         find first buf_auto-tank-attr EXCLUSIVE-LOCK where buf_auto-tank-attr.auto-num = buf_auto-tank.auto-num and buf_auto-tank-attr.attr-code = "auto-error" no-error .
+         if not AVAILABLE (buf_auto-tank-attr) then 
+         do:
+            create buf_auto-tank-attr.
             assign
-              buf_auto-tank-meas.meas-qnty = v-ct-lvl:amount
-              .
-          end.  
-        end.
-      end.  
-    end.
+               buf_auto-tank-attr.attr-code = "auto-error"
+               buf_auto-tank-attr.auto-num  = buf_auto-tank.auto-num 
+               .
+         end.
+         buf_auto-tank-attr.attr-value = string(v-transport:me-vlm) .
 
-  end method.
+         find first buf_auto-tank-attr EXCLUSIVE-LOCK where buf_auto-tank-attr.auto-num = buf_auto-tank.auto-num and buf_auto-tank-attr.attr-code = "auto-temp" no-error .
+         if not AVAILABLE (buf_auto-tank-attr) then 
+         do:
+            create buf_auto-tank-attr.
+            assign
+               buf_auto-tank-attr.attr-code = "auto-temp"
+               buf_auto-tank-attr.auto-num  = buf_auto-tank.auto-num 
+               .
+         end.
+         buf_auto-tank-attr.attr-value = string(v-transport:ac-tk) .
+                
+         for each buf_auto-section where buf_auto-section.auto-num = v-transport:reg-num:
+          
+            delete buf_auto-section .
+          
+         end.  
+         for each buf_auto-section-table where buf_auto-section-table.auto-num = v-transport:reg-num:
+          
+            delete buf_auto-section-table .
+          
+         end.   
+ 
+         if VALID-OBJECT (v_sections) then 
+         do:
+            buf_auto-tank.brutto-qnty = 0 .
+            do ii = 1 to v_sections:Get(ii):
+               v-section = cast(v_sections:SubjectObjCurr, transport_section) .
+            
+               find first buf_auto-section EXCLUSIVE-LOCK where buf_auto-section.auto-num = v-transport:reg-num and 
+                  buf_auto-section.section-num = v-section:sec-num no-error .
+               if not AVAILABLE (buf_auto-section) then 
+               do:
+                  create buf_auto-section.
+                  buf_auto-section.auto-num = v-transport:reg-num .
+                  buf_auto-section.section-num = v-section:sec-num .
+               end.  
+               ASSIGN 
+                  buf_auto-section.brutto-qnty = v-section:capacity
+                  buf_auto-section.add-volume  = v-section:pipe-vlm
+                  buf_auto-tank.brutto-qnty    = buf_auto-tank.brutto-qnty + v-section:capacity.
+               .
+               case buf_auto-tank.type-neck:
+                  when 1 then 
+                     do:
+                        assign
+                           buf_auto-section.length        = v-section:length_
+                           buf_auto-section.width         = v-section:width_
+                           buf_auto-section.section-depth = v-section:wall
+                           .  
+                     end.  
+                  when 2 then 
+                     do:
+                        assign
+                           buf_auto-section.diameter-max  = v-section:length_
+                           buf_auto-section.diameter-min  = v-section:width_
+                           buf_auto-section.section-depth = v-section:wall
+                           .  
+                     end.  
+                  when 3 then 
+                     do:
+                        assign
+                           buf_auto-section.diameter-min  = v-section:diameter
+                           buf_auto-section.length  = v-section:circumference
+                           buf_auto-section.section-depth = v-section:wall
+                           .  
+                     end. 
+                  when 0 then 
+                     do:
+                        if buf_auto-tank.type-AC = 1 then 
+                        do:
+                           if VALID-OBJECT (v_CalibTable) then 
+                           do:
+                              do jj = 1 to v_CalibTable:Get(jj):
+                                 v-ct-lvl = cast(v_CalibTable:SubjectObjCurr, transport_section_calibration-table) .
+                                 if v-ct-lvl:sec-num = v-section:sec-num then 
+                                 do:
+                                    find first buf_auto-section-table EXCLUSIVE-LOCK where buf_auto-section-table.auto-num = v-transport:reg-num and
+                                       buf_auto-section-table.section-num = v-ct-lvl:sec-num and
+                                       buf_auto-section-table.error = v-ct-lvl:deviation no-error .
+                                    IF NOT AVAILABLE (buf_auto-section-table) THEN 
+                                    DO:
+                                       create buf_auto-section-table .
+                                       assign
+                                          buf_auto-section-table.auto-num    = v-transport:reg-num
+                                          buf_auto-section-table.section-num = v-ct-lvl:sec-num
+                                          buf_auto-section-table.error       = v-ct-lvl:deviation
+                                          .
+                                    end.
+                                    assign
+                                       buf_auto-section-table.volume-error = v-ct-lvl:amount
+                                       .                     
+                                 end.
+                              end. 
+                           end. 
+                           do kk = -10 to 10:
+                              find first ub.auto-section-table exclusive-lock where ub.auto-section-table.auto-num = v-transport:reg-num
+                                 and ub.auto-section-table.section-num = v-section:sec-num 
+                                 and ub.auto-section-table.error = kk no-error .
+                              if not available (ub.auto-section-table) then 
+                              do:
+                                 create ub.auto-section-table .
+                                 assign
+                                    ub.auto-section-table.auto-num     = v-transport:reg-num
+                                    ub.auto-section-table.section-num  = v-section:sec-num
+                                    ub.auto-section-table.error        = kk
+                                    ub.auto-section-table.volume-error = 0
+                                    .
+                              end.
+
+                           end.  
+                        end.
+                     end.                   
+               end case .  
+            end.  
+         end.
+      end.  
+   end method.
 end class.

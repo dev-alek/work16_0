@@ -1,11 +1,11 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -54,8 +54,11 @@ define variable vss-description as character no-undo init "Справочник автотрансп
 { gbl/fltopend.i defproc }
 define variable v-auto-firm as character no-undo format "x(14)":U.
 define variable varauto-tank-rec as recid no-undo.
+define variable tt-varauto-tank-rec as recid no-undo.
 define variable v-log as logical no-undo .
 define variable v-status_ like ub.auto-tank.status_ no-undo .
+define temp-table tt-auto-tank like ub.auto-tank .
+define buffer auto-tank-sec for ub.auto-tank .
 
 assign parrec-tank      = ?
        varauto-tank-rec = ?.
@@ -64,7 +67,7 @@ assign parrec-tank      = ?
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -76,41 +79,26 @@ assign parrec-tank      = ?
 &Scoped-define BROWSE-NAME brw-auto-tank
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES auto-tank auto-tank-attr
+&Scoped-define INTERNAL-TABLES tt-auto-tank
 
 /* Definitions for BROWSE brw-auto-tank                                 */
-&Scoped-define FIELDS-IN-QUERY-brw-auto-tank auto-tank.auto-num ~
-auto-tank.name auto-tank.brutto-qnty 
-&Scoped-define ENABLED-FIELDS-IN-QUERY-brw-auto-tank
-&Scoped-define QUERY-STRING-brw-auto-tank FOR EACH ub.auto-tank ~
-      where index(ub.auto-tank.auto-num, "#") = 0 NO-LOCK.
-&Scoped-define OPEN-QUERY-brw-auto-tank OPEN QUERY brw-auto-tank FOR EACH ub.auto-tank ~
-      where index(ub.auto-tank.auto-num, "#") = 0 NO-LOCK.
-&Scoped-define TABLES-IN-QUERY-brw-auto-tank ub.auto-tank
-&Scoped-define FIRST-TABLE-IN-QUERY-brw-auto-tank ub.auto-tankr
-
-/* Definitions for BROWSE brw-auto-tank-2                                 */
-&Scoped-define FIELDS-IN-QUERY-brw-auto-tank-2 auto-tank.auto-num auto-tank.name auto-tank.brutto-qnty   
-&Scoped-define ENABLED-FIELDS-IN-QUERY-brw-auto-tank-2
-&Scoped-define SELF-NAME brw-auto-tank-2
-&Scoped-define QUERY-STRING-brw-auto-tank-2 FOR EACH ub.auto-tank WHERE INDEX(ub.auto-tank.auto-num, ~
-       CHR(35)) = 0 NO-LOCK, ~
-            first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"           and auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) and auto-tank-attr.auto-num = ub.auto-tank.auto-num
-&Scoped-define OPEN-QUERY-brw-auto-tank-2 OPEN QUERY brw-auto-tank-2 FOR EACH ub.auto-tank WHERE INDEX(ub.auto-tank.auto-num, ~
-       CHR(35)) = 0 NO-LOCK, ~
-            first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"           and auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) and auto-tank-attr.auto-num = ub.auto-tank.auto-num.
-&Scoped-define TABLES-IN-QUERY-brw-auto-tank-2 auto-tank auto-tank-attr
-&Scoped-define FIRST-TABLE-IN-QUERY-brw-auto-tank-2 auto-tank
-&Scoped-define SECOND-TABLE-IN-QUERY-brw-auto-tank-2 auto-tank-attr
-
+&Scoped-define FIELDS-IN-QUERY-brw-auto-tank tt-auto-tank.auto-num ~
+tt-auto-tank.name tt-auto-tank.brutto-qnty 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-brw-auto-tank 
+&Scoped-define QUERY-STRING-brw-auto-tank FOR EACH tt-auto-tank ~
+      where index(tt-auto-tank.auto-num, "#") = 0 EXCLUSIVE-LOCK.
+&Scoped-define OPEN-QUERY-brw-auto-tank OPEN QUERY brw-auto-tank FOR EACH tt-auto-tank ~
+      where index(tt-auto-tank.auto-num, "#") = 0 EXCLUSIVE-LOCK.
+&Scoped-define TABLES-IN-QUERY-brw-auto-tank tt-auto-tank
+&Scoped-define FIRST-TABLE-IN-QUERY-brw-auto-tank tt-auto-tankr
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 &Scoped-define OPEN-BROWSERS-IN-QUERY-Dialog-Frame ~
     ~{&OPEN-QUERY-brw-auto-tank}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-view B-hist b-help brw-auto-tank ~
-brw-auto-tank-2 varps RS-status_ 
+&Scoped-Define ENABLED-OBJECTS b-exit b-view b-help brw-auto-tank ~
+varps RS-status_ 
 &Scoped-Define DISPLAYED-OBJECTS varps 
 
 /* Custom List Definitions                                              */
@@ -124,7 +112,7 @@ brw-auto-tank-2 varps RS-status_
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-auto-firm Dialog-Frame 
 FUNCTION get-auto-firm RETURNS CHARACTER
-  ( BUFFER buf_auto-tank FOR ub.auto-tank )  FORWARD.
+  ( BUFFER buf_auto-tank FOR tt-auto-tank )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -135,46 +123,41 @@ FUNCTION get-auto-firm RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-exit AUTO-END-KEY
-     LABEL "&Выход"
+DEFINE BUTTON b-exit AUTO-END-KEY 
+     LABEL "&Выход" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "&Помощь"
+DEFINE BUTTON b-help 
+     LABEL "&Помощь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-hist
-     LABEL "Ис&тория"
-     SIZE 10 BY 1
-     BGCOLOR 8 .
-
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "&Выбор"
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "&Выбор" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-view
-     LABEL "&Просмотр"
+DEFINE BUTTON b-view 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
-
+     
 DEFINE BUTTON b-del 
      LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE varps AS CHARACTER
+DEFINE VARIABLE varps AS CHARACTER 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL LARGE
      SIZE 87 BY 2.25
      BGCOLOR 8  DROP-TARGET NO-UNDO.
-
+     
 DEFINE VARIABLE RS-status_ AS CHARACTER
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS
@@ -185,37 +168,22 @@ DEFINE VARIABLE RS-status_ AS CHARACTER
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY brw-auto-tank FOR
-      auto-tank SCROLLING.
+DEFINE QUERY brw-auto-tank FOR 
+      tt-auto-tank SCROLLING.
 
-DEFINE QUERY brw-auto-tank-2 FOR
-      auto-tank, 
-      auto-tank-attr SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE brw-auto-tank
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS brw-auto-tank Dialog-Frame _STRUCTURED
   QUERY brw-auto-tank DISPLAY
-      auto-tank.auto-num FORMAT "X(20)":U Column-label "Гос.номер "
-      auto-tank.name FORMAT "X(40)":U Column-label "Марка"
-      auto-tank.brutto-qnty FORMAT "->>,>>>,>>9.<<<":U
-      auto-tank.status_ FORMAT "X(10)":U
+      tt-auto-tank.auto-num FORMAT "X(20)":U Column-label "Гос.номер "
+      tt-auto-tank.name FORMAT "X(40)":U Column-label "Марка"
+      tt-auto-tank.brutto-qnty FORMAT "->>,>>>,>>9.<<<":U
+      tt-auto-tank.status_ FORMAT "X(10)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 87 BY 13.75.
-
-DEFINE BROWSE brw-auto-tank-2
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS brw-auto-tank-2 Dialog-Frame _FREEFORM
-  QUERY brw-auto-tank-2 NO-LOCK DISPLAY
-      auto-tank.auto-num FORMAT "X(20)":U
-      auto-tank.name FORMAT "X(40)":U
-      auto-tank.brutto-qnty FORMAT "->>,>>>,>>9.<<<":U
-      auto-tank.status_ FORMAT "X(10)":U
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 87 BY 13.75 ROW-HEIGHT-CHARS .58.
-
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -226,15 +194,13 @@ DEFINE FRAME Dialog-Frame
      b-chg AT ROW 1 COL 32
      b-view AT ROW 1 COL 42
      b-del AT ROW 1 COL 52
-     b-hist at row 1 col 63
      b-help AT ROW 1 COL 68
      RS-status_ AT ROW 2 COL 2 NO-LABEL
      brw-auto-tank AT ROW 3.1 COL 2
-     brw-auto-tank-2 AT ROW 3.1 COL 2
      varps AT ROW 17 COL 2 NO-LABEL
      SPACE(0.87) SKIP(0.44)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Справочник автотранспорта"
          CANCEL-BUTTON b-exit.
 
@@ -257,7 +223,7 @@ DEFINE FRAME Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB brw-auto-tank b-help Dialog-Frame */
 /* BROWSE-TAB brw-auto-tank-2 brw-auto-tank Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -267,7 +233,7 @@ ASSIGN
    NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON b-sel IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        varps:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -301,7 +267,7 @@ OPEN QUERY brw-auto-tank-2 FOR EACH ub.auto-tank WHERE INDEX(ub.auto-tank.auto-n
 */  /* BROWSE brw-auto-tank-2 */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -330,6 +296,13 @@ DO:
      ,input {&add-def}
      ,input-output varauto-tank-rec
     ) no-error.
+  if varauto-tank-rec <> ? then do :
+      find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
+      ub.auto-tank.brutto-qnty = 0 .
+      for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :
+          ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .    
+      end.
+  end.    
   run local-enable_ui.
 END.
 
@@ -341,19 +314,24 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg Dialog-Frame
 ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
 DO:
-  if available ub.auto-tank then do:
+  if available tt-auto-tank then do:
+     for first ub.auto-tank no-lock where ub.auto-tank.auto-num = tt-auto-tank.auto-num :
     assign
-      varauto-tank-rec = recid(ub.auto-tank)
-    .
+      varauto-tank-rec = recid(ub.auto-tank).
+     end. 
     run str/auto-tnc.w
       (input parparentproc
        ,input {&update}
        ,input-output varauto-tank-rec
       ) no-error.
-    // find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
-      run local-enable_ui.
-    end.
-    else do:
+    find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
+    ub.auto-tank.brutto-qnty = 0 .
+    for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :
+        ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .    
+    end.    
+    run local-enable_ui.
+  end.
+  else do:
     message "Не выбран автотранспорт." view-as alert-box error.
   end.
 END.
@@ -366,45 +344,27 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel Dialog-Frame
 ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор */
 DO:
-  if available ub.auto-tank then do:
+  if available tt-auto-tank then do:
+     for first ub.auto-tank no-lock where ub.auto-tank.auto-num = tt-auto-tank.auto-num :
     assign
       parrec-tank = recid(ub.auto-tank).
- end.
+     end.      
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME B-hist
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-hist Dialog-Frame
-ON CHOOSE OF B-hist IN FRAME Dialog-Frame /* История */
-DO:
-  DEFINE VARIABLE v-rid-list AS CHARACTER NO-UNDO.
-  IF AVAILABLE auto-tank THEN DO:
-
-  run str/c-auto-tn.w (
-                    INPUT parParentProc
-                   ,input '':U /*bttns*/
-                   ,input 'one':U /*p-mode*/
-                   ,INPUT auto-tank.auto-num
-                   ,INPUT-OUTPUT v-rid-list) NO-ERROR.
-
-  END.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 
 
 &Scoped-define SELF-NAME b-view
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-view Dialog-Frame
 ON CHOOSE OF b-view IN FRAME Dialog-Frame /* Просмотр */
 DO:
-  if available ub.auto-tank then do:
+  if available tt-auto-tank then do:
+     for first ub.auto-tank no-lock where ub.auto-tank.auto-num = tt-auto-tank.auto-num :
     assign
       varauto-tank-rec = recid(ub.auto-tank).
+     end. 
     run str/auto-tnc.w (input parparentproc,input {&lookup}, input-output varauto-tank-rec) no-error.
   end.
   else do:
@@ -416,17 +376,27 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Просмотр */
 DO:
-  if available ub.auto-tank then do:
-    find current ub.auto-tank exclusive-lock.
-    if ub.auto-tank.status_ = {&current-status} then do :
+  if available tt-auto-tank then do:
+    find current tt-auto-tank exclusive-lock.
+    if tt-auto-tank.status_ = {&current-status} then do :
         message "Вы действительно хотите удалить автотранспорт?" view-as alert-box question buttons yes-no update v-log.
-        if v-log then ub.auto-tank.status_ = {&deleted-status} .
-    end.
-    else do:
+        if v-log then tt-auto-tank.status_ = {&deleted-status} .
+        find first ub.auto-tank exclusive-lock where ub.auto-tank.auto-num = tt-auto-tank.auto-num no-error .
+        if available (ub.auto-tank) then do:
+        ub.auto-tank.status_ = {&deleted-status} .
+/*        release ub.auto-tank .*/
+        end.
+    end.    
+    else do :
         message "Восстановить автотранспорт?" view-as alert-box question buttons yes-no update v-log. 
-        if v-log then ub.auto-tank.status_ = {&current-status} .
-    end.
-    brw-auto-tank:refresh().    
+        if v-log then tt-auto-tank.status_ = {&current-status} .
+        find first ub.auto-tank exclusive-lock where ub.auto-tank.auto-num = tt-auto-tank.auto-num no-error .
+        if available (ub.auto-tank) then do:
+        ub.auto-tank.status_ = {&current-status} .
+/*        release ub.auto-tank.*/
+        end.        
+    end.  
+    run local-enable_ui.
   end.
   else do:
     message "Не выбрана автотранспорта." view-as alert-box error.
@@ -443,7 +413,8 @@ DO:
   ASSIGN
   rs-status_
   v-status_ = rs-status_
-    .
+  .
+  run local-enable_UI .
   RUN openbr IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR  THEN RETURN NO-APPLY.
 END.
@@ -457,9 +428,9 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL brw-auto-tank Dialog-Frame
 ON VALUE-CHANGED OF brw-auto-tank IN FRAME Dialog-Frame
 DO:
-  if available ub.auto-tank then do:
+  if available tt-auto-tank then do:
     assign
-      varps = ub.auto-tank.ps
+      varps = tt-auto-tank.ps
     .
   end.
   else do:
@@ -477,35 +448,13 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define BROWSE-NAME brw-auto-tank-2
-&Scoped-define SELF-NAME brw-auto-tank-2
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL brw-auto-tank-2 Dialog-Frame
-ON VALUE-CHANGED OF brw-auto-tank-2 IN FRAME Dialog-Frame
-DO:
-  if available ub.auto-tank then do:
-    assign
-      varps = ub.auto-tank.ps
-    .
-  end.
-  else do:
-    assign
-      varps = "":U
-    .
-  end.
-  display
-    varps
-    with frame {&frame-name}
-  .
-END.
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 
 &Scoped-define BROWSE-NAME brw-auto-tank
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -521,6 +470,14 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  ASSIGN
+    rs-status_:RADIO-BUTTONS IN FRAME {&FRAME-NAME}
+                           = "Текущие&+" + {&comma-char} +  {&current-status} + {&comma-char} +
+                           "Все&!" + {&comma-char} + {&all} + {&comma-char} +
+                            "Удаленные&-" + {&comma-char} + {&deleted-status}
+    rs-status_ = {&current-status}
+  .  
+
   RUN local-enable_UI.
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -539,7 +496,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -558,12 +515,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY varps 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-view b-hist b-help brw-auto-tank brw-auto-tank-2 varps RS-status_
+  ENABLE b-exit b-view b-help brw-auto-tank varps RS-status_
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -572,7 +529,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-enable_UI Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-enable_UI Dialog-Frame 
 PROCEDURE local-enable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     Override standard ADM method
@@ -583,13 +540,6 @@ PROCEDURE local-enable_UI :
 
   /* Dispatch standard ADM method.                             */
   RUN enable_ui IN THIS-PROCEDURE.
-  ASSIGN
-    rs-status_:RADIO-BUTTONS IN FRAME {&FRAME-NAME}
-                           = "Текущие&+" + {&comma-char} +  {&current-status} + {&comma-char} +
-                           "Все&!" + {&comma-char} + {&all} + {&comma-char} +
-                            "Удаленные&-" + {&comma-char} + {&deleted-status}
-    rs-status_ = {&current-status}
-  .  
   if lookup ("b-sel", parbuttons) > 0 then do:
     enable b-sel with frame {&frame-name}.
   end.
@@ -603,21 +553,61 @@ PROCEDURE local-enable_UI :
     enable b-del with frame {&frame-name}.
   end.
   apply "value-changed" to brw-auto-tank in frame dialog-frame.
-  disable brw-auto-tank-2 WITH FRAME {&frame-name}.
-  brw-auto-tank-2:visible = false.
   display brw-auto-tank WITH FRAME {&frame-name}.
   /* Code placed here will execute AFTER standard behavior.    */
+    brw-auto-tank:visible = true .
+    enable brw-auto-tank WITH FRAME Dialog-Frame.
+    empty temp-table tt-auto-tank .
   if par-obj-type <> "" and par-obj-code <> 0 then do :
-    brw-auto-tank:visible = false .
-    brw-auto-tank-2:visible = true.
-    enable brw-auto-tank-2 WITH FRAME Dialog-Frame.
-    disable rs-status_ WITH FRAME Dialog-Frame.
-    OPEN QUERY brw-auto-tank-2 FOR EACH ub.auto-tank where ub.auto-tank.status_ = {&current-status} NO-LOCK, first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
-          and auto-tank-attr.attr-value = par-obj-type + string(par-obj-code) and auto-tank-attr.auto-num = ub.auto-tank.auto-num.
-    if varauto-tank-rec <> ? then do:
-      reposition brw-auto-tank-2 to recid varauto-tank-rec.
-      end.
-    end.
+     disable rs-status_ WITH FRAME Dialog-Frame.
+     case RS-status_:
+        when {&all} then 
+           do:  
+              FOR EACH ub.auto-tank no-lock where ub.auto-tank.firm-type = par-obj-type
+                                              and ub.auto-tank.firm-code = par-obj-code
+                                              :
+                 create tt-auto-tank .
+                 buffer-copy ub.auto-tank to tt-auto-tank .
+              end.
+           end.
+        otherwise 
+        do:
+           FOR EACH ub.auto-tank no-lock where ub.auto-tank.status_ = RS-status_
+                                           and ub.auto-tank.firm-type = par-obj-type
+                                           and ub.auto-tank.firm-code = par-obj-code:
+              create tt-auto-tank .
+              buffer-copy ub.auto-tank to tt-auto-tank .
+           end.
+        end.  
+     end case.           
+  end.
+  else do:
+     enable rs-status_ WITH FRAME Dialog-Frame.
+     case RS-status_:
+        when {&all} then 
+           do:
+              FOR EACH ub.auto-tank NO-LOCK:
+                 create tt-auto-tank .
+                 buffer-copy ub.auto-tank to tt-auto-tank .
+              end.         
+           end.
+        otherwise 
+        do:
+           FOR EACH ub.auto-tank no-lock where ub.auto-tank.status_ = RS-status_ :
+              create tt-auto-tank .
+              buffer-copy ub.auto-tank to tt-auto-tank .
+           end.         
+        end.
+     end case .   
+  end.   
+    OPEN QUERY brw-auto-tank FOR EACH tt-auto-tank .
+      for first ub.auto-tank no-lock where recid (ub.auto-tank) = varauto-tank-rec:
+         for first tt-auto-tank where tt-auto-tank.auto-num = ub.auto-tank.auto-num:
+            tt-varauto-tank-rec = recid (tt-auto-tank) .
+            reposition brw-auto-tank to recid tt-varauto-tank-rec no-error.
+         end.   
+      end.    
+
   ASSIGN
     v-status_ = rs-status_
   .  
@@ -625,7 +615,7 @@ PROCEDURE local-enable_UI :
   RUN openbr IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR  THEN RETURN NO-APPLY.
   if varauto-tank-rec <> ? then do:
-    reposition brw-auto-tank to recid varauto-tank-rec.
+    reposition brw-auto-tank to recid tt-varauto-tank-rec no-error.
   end.
 END PROCEDURE.
 
@@ -636,7 +626,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-auto-firm Dialog-Frame 
 FUNCTION get-auto-firm RETURNS CHARACTER
-  ( BUFFER buf_auto-tank FOR ub.auto-tank ) :
+  ( BUFFER buf_auto-tank FOR tt-auto-tank ) :
 /*------------------------------------------------------------------------------
    Purpose:
     Notes:
@@ -644,7 +634,7 @@ FUNCTION get-auto-firm RETURNS CHARACTER
 
   define variable v-return-value as character no-undo .
   find first ub.auto-tank-attr no-lock where ub.auto-tank-attr.attr-code = "auto-firm"
-                                         and ub.auto-tank-attr.auto-num = ub.auto-tank.auto-num  no-error.
+                                         and ub.auto-tank-attr.auto-num = tt-auto-tank.auto-num  no-error.
   if available ub.auto-tank-attr then do :
     v-return-value = ub.auto-tank-attr.attr-value.
   end.
@@ -665,9 +655,9 @@ run waitfram-show in this-procedure ("Ждите...").
 define variable sort-column-phrase as character no-undo .
 
 
-&scop flt-open-open-query OPEN QUERY brw-auto-tank FOR EACH ub.auto-tank
+&scop flt-open-open-query OPEN QUERY brw-auto-tank FOR EACH tt-auto-tank
 
-&scop flt-open-dyn_open-query FOR EACH ub.auto-tank
+&scop flt-open-dyn_open-query FOR EACH tt-auto-tank
 
 &scop flt-open-query-handle QUERY brw-auto-tank:handle
 
@@ -685,7 +675,7 @@ define variable sort-column-phrase as character no-undo .
 
 &scop flt-open-query yes
 
-&scop flt-open-table-name ub.auto-tank
+&scop flt-open-table-name tt-auto-tank
 
 &scop flt-open-search-option no-lock
 
@@ -695,7 +685,7 @@ define variable sort-column-phrase as character no-undo .
 
 &scop flt-open-find-condition ""
 
-&scop flt-open-find-buffer-name ub.auto-tank
+&scop flt-open-find-buffer-name tt-auto-tank
 
 &scop flt-open-waitfram yes
 
@@ -706,15 +696,15 @@ define variable v-num as characte no-undo initial "#" .
 
  IF v-status_ = {&all} THEN DO:
      { gbl/fltopend.i
-        &where-cond = " index(ub.auto-tank.auto-num, v-num) = 0 "
+        &where-cond = " index(tt-auto-tank.auto-num, v-num) = 0 "
         &use-ind    = "  "
         &by         = "  " }
 
  END.
  ELSE DO:
    { gbl/fltopend.i
-   &where-cond = " ub.auto-tank.status_ = v-status_ and index(ub.auto-tank.auto-num, v-num) = 0 "
-   &dyn_where-cond = " substitute('ub.auto-tank.status_ = &1&2&1 and index(ub.auto-tank.auto-num, &1&3&1) = 0', ~{&double-quote~}, v-status_, v-num) "
+   &where-cond = " tt-auto-tank.status_ = v-status_ and index(tt-auto-tank.auto-num, v-num) = 0 "
+   &dyn_where-cond = " substitute('tt-auto-tank.status_ = &1&2&1 and index(tt-auto-tank.auto-num, &1&3&1) = 0', ~{&double-quote~}, v-status_, v-num) "
    &use-ind    = "  "
    &by         = "  " }
 

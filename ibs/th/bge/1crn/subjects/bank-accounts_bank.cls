@@ -97,7 +97,7 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
       when qr-rule = ?
       v-str = v-str + ",bank-resive-debit" 
       when bank-resive-debit = ?
-      v-str = v-str + ",bank-deposit-kredit" 
+      v-str = v-str + ",bank-resive-kredit" 
       when bank-resive-kredit = ?
       .
     v-str = trim (v-str, ",").

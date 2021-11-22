@@ -258,7 +258,7 @@ FUNCTION check-ban-sales-via-cd return logical ( input p-gds-code as integer ) :
 
     define buffer lc_gds-grp for ub.gds-grp.
     define buffer lc_goods for ub.goods.
-    
+   if p-gds-code <> 0 then do:
     find first lc_goods where lc_goods.gds-code = p-gds-code.
     v-upper-code = lc_goods.grp-code.
     
@@ -308,7 +308,7 @@ FUNCTION check-ban-sales-via-cd return logical ( input p-gds-code as integer ) :
              else v-upper-code = lc_gds-grp.upper-code.    
           end .          
        end.   
-
+      end.
     end.
 end.
 
@@ -854,6 +854,10 @@ def buffer t-cash-gds for cash-gds.
 { str/del-gds.i }
 &endif
 
+/*часть кода, ответственная за удаление товаров группы*/
+&if "{&called}" = "del-grp" &then
+{ str/del-grp.i }
+&endif
 
 /*часть кода, ответственная за пересылку prod-bc*/
 &if "{&called}" = "s-prodbc" or "{&called}" = "s-prodbcn" &then

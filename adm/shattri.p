@@ -1407,6 +1407,21 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+     v-prop-code = "{&bef-attr-marking_ban-recipes}".
+&scop ptype logical
+&scop prop-value no
+&scop prop-code  entry(v-ii,v-prop-code)
+     do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+     end. 
+     v-prop-code = "{&bef-attr-marking_ban-altr}".
+&scop ptype logical
+&scop prop-value no
+&scop prop-code  entry(v-ii,v-prop-code)
+     do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+     end.       
+
     end.    
     
     when {&attr-ord-global} then do:
@@ -2919,7 +2934,7 @@ end.
           {&create-thbj-attr}.
       end.
 
-      v-prop-code = "{&bef-attr-petrol_autopump-izm},{&bef-attr-petrol_autopump},{&bef-attr-petrol_avtinvpm},{&bef-attr-petrol_rvsnmter},{&bef-attr-petrol_olddens}".
+      v-prop-code = "{&bef-attr-petrol_autopump-izm},{&bef-attr-petrol_autopump},{&bef-attr-petrol_avtinvpm},{&bef-attr-petrol_rvsnmter},{&bef-attr-petrol_olddens},{&bef-attr-petrol_calc-free-vol}".
 &scop ptype logical
 &scop prop-value no
 &scop prop-code entry(v-ii, v-prop-code)

@@ -47,10 +47,12 @@ define variable p-db-num like ub.db.db-num no-undo .
 { cmp/stpllist.i stpl-list  def "shared" }
 { str/defc-cli.i "new shared" }
 { str/pdf-list.i pdf-list def "shared" }
+{ str/defc-pay-list.i "shared" }
 { str/defc-ext-classif.i "shared" }
 { ref/extclass.i }     
 { str/cdsnddef.i }  
 define shared temp-table dc-dis-card-mask no-undo like ub.dis-card-mask.
+
 
 define buffer buf_clients for ub.clients.
 define buffer buf_shop for ub.shop.
@@ -64,6 +66,27 @@ if error-status:error then return error.
 
 define variable vrec-cur      as character no-undo.
 define variable vrec-del      as character no-undo.
+/*define variable log-file-name as character no-undo init "send-cd.txt":U .*/
+/*define variable v-view-log    as logical   no-undo.*/
+
+for each cash-pay-list no-lock:
+   find first cash-pay where cash-pay.cdpay-code eq cash-pay-list.cdpay-code
+                         and cash-pay.curr-code  eq cash-pay-list.curr-code
+   no-lock no-error.
+   if available cash-pay
+   then do:
+      if      cash-pay.status_ eq {&current-status}
+      then
+         vrec-cur = vrec-cur + "," + string(recid(cash-pay)).
+      else if cash-pay.status_ eq {&deleted-status}
+      then
+         vrec-del = vrec-del + "," + string(recid(cash-pay)).
+   end.
+end.
+
+vrec-cur = trim(vrec-cur,",").
+vrec-del = trim(vrec-del,",").
+
 for each buf_clients no-lock
       where buf_clients.obj-type = {&shop}
         and buf_clients.db-num   = g#db-num,
@@ -73,35 +96,44 @@ for each buf_clients no-lock
        AND buf_cash-desk.cash-on = yes
   on error undo, return error
   :
-for each ext-classif-list no-lock:
-
-   find first ext-classif where ext-classif.db-num = ext-classif-list.db-num and
-                                ext-classif.Key#_One = ext-classif-list.Key#One and
-                                ext-classif.Key#_Two = ext-classif-list.Key#Two and
-                                ext-classif.CharKey_One = ext-classif-list.CharKey_One and
-                                ext-classif.classif-subject = {&table_goods} and 
-                                ext-classif.classif-name = {&extclass_goods_esys}
-   no-lock no-error.
-   if available ext-classif
-   then vrec-cur = vrec-cur + "," + string(recid(ext-classif)).
-end.
-
-vrec-cur = trim(vrec-cur,",").
-
    if  vrec-cur ne ""
    then
-    run str/send-petrol.p (
-                    input parparentproc
-                   ,input p-parent-handle
-                   ,input p-log-handle
-                   ,input buf_clients.obj-code
-                   ,input buf_clients.obj-type
-                   ,input "U"
-                   ,input 0
-                  , input vrec-cur
-                  , input log-file-name
-                  , input-output v-view-log
-                  ) no-error .
+      run str/send-pay.p (
+                       input parparentproc
+                      ,input p-parent-handle
+                      ,input p-log-handle
+                      ,input buf_clients.obj-code
+                      ,input "U"
+                      ,input 1
+                     , input vrec-cur
+                     , input log-file-name
+                     , input-output v-view-log
+                     ) no-error .
+   if  vrec-del ne ""
+   then
+      run str/send-pay.p (
+                       input parparentproc
+                      ,input p-parent-handle
+                      ,input p-log-handle
+                      ,input buf_clients.obj-code
+                      ,input "U"
+                      ,input 1
+                     , input vrec-del
+                     , input log-file-name
+                     , input-output v-view-log
+                     ) no-error .
+end.
+
+for each buf_clients no-lock
+      where buf_clients.obj-type = {&shop}
+        and buf_clients.db-num   = g#db-num,
+      first buf_cash-desk no-lock where
+           buf_cash-desk.db-num = p-db-num
+       AND buf_cash-desk.obj-code = buf_clients.obj-code
+       AND buf_cash-desk.cash-on = yes
+  on error undo, return error
+  :
+
 
 for each c-ext-classif-list no-lock:
 
@@ -139,6 +171,37 @@ end.
                   , input log-file-name
                   , input-output v-view-log
                   ) no-error .
+
+for each ext-classif-list no-lock:
+
+   find first ext-classif where ext-classif.db-num = ext-classif-list.db-num and
+                                ext-classif.Key#_One = ext-classif-list.Key#One and
+                                ext-classif.Key#_Two = ext-classif-list.Key#Two and
+                                ext-classif.CharKey_One = ext-classif-list.CharKey_One and
+                                ext-classif.classif-subject = {&table_goods} and 
+                                ext-classif.classif-name = {&extclass_goods_esys}
+   no-lock no-error.
+   if available ext-classif
+   then vrec-cur = vrec-cur + "," + string(recid(ext-classif)).
+end.
+
+vrec-cur = trim(vrec-cur,",").
+
+   if  vrec-cur ne ""
+   then
+    run str/send-petrol.p (
+                    input parparentproc
+                   ,input p-parent-handle
+                   ,input p-log-handle
+                   ,input buf_clients.obj-code
+                   ,input buf_clients.obj-type
+                   ,input "U"
+                   ,input 0
+                  , input vrec-cur
+                  , input log-file-name
+                  , input-output v-view-log
+                  ) no-error .
+                
 end.
 if can-find(first gds-list no-lock)
 or can-find(first gdsolist no-lock) then do:

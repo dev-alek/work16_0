@@ -192,6 +192,7 @@ class ibs.th.bge.1crn.import.imppayment-type implements ibs.th.bge.1crn.import.i
           buf_cash-pay-attr.attr-code  = "cash-prop"
           .
       end.
+
       case objPaymentType:pay-type_:
         when 0 then 
           do:
@@ -217,9 +218,13 @@ class ibs.th.bge.1crn.import.imppayment-type implements ibs.th.bge.1crn.import.i
           do:
             buf_cash-pay-attr.attr-value = "13" .
           end.  
+        when 6 then 
+          do:
+            buf_cash-pay-attr.attr-value = "6" .
+          end.           
       end case.  
       if objPaymentType:pay-type_ <> 0 and objPaymentType:pay-type_ <> 1 and objPaymentType:pay-type_ <> 2
-        and objPaymentType:pay-type_ <> 3 and objPaymentType:pay-type_ <> 4 and objPaymentType:pay-type_ <> 5 then 
+        and objPaymentType:pay-type_ <> 3 and objPaymentType:pay-type_ <> 4 and objPaymentType:pay-type_ <> 5 and objPaymentType:pay-type_ <> 6 then 
       do:
         
         buf_cash-pay-attr.attr-value = "0" .

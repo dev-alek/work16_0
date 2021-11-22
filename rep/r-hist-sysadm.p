@@ -113,11 +113,30 @@ for each bf_c-user-log no-lock where bf_c-user-log.corr-date >= x-Date-Start
     tt-usr-hist.head-table       = v-user-table-name 
     tt-usr-hist.des              = bf_c-user-log.des
     tt-usr-hist.table_           = v-user-table.
-  tt-usr-hist.uniq-key-rec     = get-unique-key(bf_c-user-log.head-table,bf_c-user-log.uniq-key-rec) .
+    tt-usr-hist.uniq-key-rec     = get-unique-key(bf_c-user-log.head-table,bf_c-user-log.uniq-key-rec)
+  .
     
   tt-usr-hist.name-bd = if bf_c-user-log.corr-user-db-num = 0 then "ГБД" else "АЗК " + string (bf_c-user-log.corr-user-db-num) .
-  find first ub.user-account no-lock where ub.user-account.user-id = bf_c-user-log.corr-user-name no-error .
-  if available (ub.user-account) then tt-usr-hist.user-name = ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name .     
+  for first ub.user-account no-lock where ub.user-account.user-id = bf_c-user-log.corr-user-name :
+    tt-usr-hist.user-name = ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name .
+  end .    
+  
+  if bf_c-user-log.head-table = 'schedule':U
+  then do :
+    assign
+      tt-usr-hist.des           = "Изменение расписания автоматического задания"
+      tt-usr-hist.head-table    = entry(5, bf_c-user-log.head-table-key, {&delim-cmd}) 
+      tt-usr-hist.uniq-key-rec  = entry(4, bf_c-user-log.des, ";")
+    .
+    if entry(5, bf_c-user-log.head-table-key, {&delim-cmd}) = {&btpr-type-autofree}
+    then 
+      tt-usr-hist.head-table = tt-usr-hist.head-table + " - " + entry(6, bf_c-user-log.head-table-key, {&delim-cmd})
+    .
+    if entry(15, bf_c-user-log.head-table-key, {&delim-cmd}) = "del"
+    then
+      tt-usr-hist.des = "Удаление расписания автоматического задания"
+    .
+  end .
 end.  
 if p-obj-list <> "-1" and p-obj-list <> "" then 
 do:

@@ -652,7 +652,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                    and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
                    and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
                    and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                   and rvs-line-attr.attr-code = "input-type" no-error.
+                   and rvs-line-attr.attr-code = "input-type-p" no-error.
             if not available rvs-line-attr then do :
               create rvs-line-attr.
               assign
@@ -661,7 +661,49 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 rvs-line-attr.gds-code  = buf_rvs-line.gds-code
                 rvs-line-attr.pl-code   = buf_rvs-line.pl-code
                 rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                rvs-line-attr.attr-code = "input-type"
+                rvs-line-attr.attr-code = "input-type-p"
+              .
+            end.
+            if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+            else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+            
+            find first rvs-line-attr exclusive-lock
+                 where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                   and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                   and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                   and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                   and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                   and rvs-line-attr.attr-code = "input-type-t" no-error.
+            if not available rvs-line-attr then do :
+              create rvs-line-attr.
+              assign
+                rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                rvs-line-attr.attr-code = "input-type-t"
+              .
+            end.
+            if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+            else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+            
+            find first rvs-line-attr exclusive-lock
+                 where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                   and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                   and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                   and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                   and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                   and rvs-line-attr.attr-code = "input-type-l" no-error.
+            if not available rvs-line-attr then do :
+              create rvs-line-attr.
+              assign
+                rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                rvs-line-attr.attr-code = "input-type-l"
               .
             end.
             if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
@@ -1237,16 +1279,28 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               if v-new-fact-qnty <> p-new-fact-qnty
                 or v-new-density <> p-new-density
               then do:
-                message
-                  substitute( "По результатам измерения фактическое кол-во товара изменяется на &1 (&2),", infoSectionsTotal:FactKgQntyTotal, buf_goods.unit-cli ) skip
-                  substitute( "фактическая плотность на &1.", v-new-density ) skip
-                  view-as alert-box information .
+                if p-fact-edit = true then do:
+                  message
+                    substitute( "По результатам измерения автоцистерны фактическое кол-во необходимо изменить." ) skip
+                    substitute( "Будем менять фактические" ) skip
+                    substitute( "количество на &1 (&2),", v-new-fact-qnty, buf_goods.unit-base ) skip
+                    substitute( "плотность на &1 ?", v-new-density ) skip
+                    view-as alert-box question buttons yes-no update v-log .
+                end.
+                else do:
+                  message
+                    substitute( "По результатам измерения фактическое кол-во товара изменяется на &1 (&2),", v-new-fact-qnty, buf_goods.unit-base ) skip
+                    substitute( "фактическая плотность на &1.", v-new-density ) skip
+                    view-as alert-box information .
+                end.
               end.
-              assign
-                p-new-fact-qnty     = v-new-fact-qnty
-                p-new-density       = v-new-density
-                p-new-cli-fact-qnty = p-new-fact-qnty * p-new-density
-              .
+              if v-log = yes then do:
+                assign
+                  p-new-fact-qnty     = v-new-fact-qnty
+                  p-new-density       = v-new-density
+                  p-new-cli-fact-qnty = p-new-fact-qnty * p-new-density
+                .
+              end.
             end.
           end.
         end.
@@ -1524,6 +1578,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       :
 
+        define buffer buf-after_rvs-doc   for ub.rvs-doc  .
+        
         define variable v-rvs-qnty-before     like ub.rvs-line.state-measure-qnty     no-undo .
         define variable v-rvs-qnty-after      like ub.rvs-line.state-measure-qnty     no-undo .
         define variable v-rvs-cli-qnty-before like ub.rvs-line.state-measure-cli-qnty no-undo .
@@ -1534,12 +1590,14 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-tot-qnty-pl   as decimal   no-undo .
         define variable v-tot-qnty-rvs  as decimal   no-undo .
 
-        define variable v-add-option-bt   as character no-undo .
-        define variable v-add-option-ps   as character no-undo .
-        define variable v-answ-num        as integer   no-undo .
-        define variable v-edit-doc-pl     as integer   no-undo .
-        define variable v-set-doc-pl      as integer   no-undo .
-        define variable v-delta-mass-qnty as decimal   no-undo .
+        define variable v-add-option-bt as character no-undo .
+        define variable v-add-option-ps as character no-undo .
+        define variable v-answ-num      as integer   no-undo .
+        define variable v-edit-doc-pl   as integer   no-undo .
+        define variable v-set-doc-pl    as integer   no-undo .
+        define variable v-delta-mass-qnty as decimal no-undo.
+        define variable rdc-dnstvalue as character no-undo.
+        define variable rdc-dnsttype  as character no-undo.
         define variable v-attr-type       as character no-undo .
         define variable v-attr-value      as character no-undo .
         
@@ -1587,34 +1645,56 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             v-tot-qnty-rvs = v-tot-qnty-rvs + ( v-rvs-qnty-after - v-rvs-qnty-before )
             v-tot-qnty-pl  = v-tot-qnty-pl  + tt-doc-pl.fact-qnty
           .
-          if absolute( ( v-rvs-qnty-after - v-rvs-qnty-before ) - tt-doc-pl.fact-qnty ) > tt-doc-pl.fact-qnty * v-delta-mass-qnty / 100 then do:
-/*            if v-message = "":U then do:                                               */
-/*              assign                                                                   */
-/*                v-message = "Факт. кол-во по местам хранения и по сверкам:".           */
-/*              .                                                                        */
-/*            end.                                                                       */
-/*            assign                                                                     */
-/*              v-message = v-message                                                    */
-/*                          + {&new-line}                                                */
-/*                          + substitute( "по месту хр. &1 (&4): &2, по сверкам: &3"     */
-/*                                      ,tt-doc-pl.pl-code                               */
-/*                                      ,tt-doc-pl.cli-fact-qnty                         */
-/*                                      ,( v-rvs-cli-qnty-after - v-rvs-cli-qnty-before )*/
-/*                                      ,buf_goods.unit-cli                              */
-/*                                      ) .                                              */
-/*            .                                                                          */
-            v-message = substitute ("Факт. кол-во по сверкам по месту хр. &6: &1 &2 &3не совпадает с факт. кол-вом по ТТН: &4 &2.&3Расхождение после слива НП превышает погрешность измерения резервуара &5 &2." 
-              ,( v-rvs-cli-qnty-after - v-rvs-cli-qnty-before )
-              ,buf_goods.unit-cli
-              ,{&new-line}
-              ,tt-doc-pl.cli-fact-qnty
-              ,round (tt-doc-pl.cli-fact-qnty * v-delta-mass-qnty / 100, 3)
-              ,tt-doc-pl.pl-code
-              ).
-            
-            message v-message view-as alert-box information title "Сообщение".
-            
-            
+          run gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-dnstvalue, output rdc-dnsttype) no-error.
+          if error-status:error
+          then do:
+            rdc-dnstvalue = 'not'.
+          end.
+          else do:
+            rdc-dnstvalue = rdc-dnstvalue.
+          end.
+          if not (varauto-tank and rdc-dnstvalue = "pomi-rn")
+          then do:
+            if absolute( ( v-rvs-qnty-after - v-rvs-qnty-before ) - tt-doc-pl.fact-qnty ) > tt-doc-pl.fact-qnty * 0.0065 then do:
+              if v-message = "":U then do:
+                assign
+                  v-message = "Факт. кол-во по местам хранения и по сверкам:".
+                .
+              end.
+              assign
+                v-message = v-message
+                            + {&new-line}
+                            + substitute( "по месту хр. &1 (&4): &2, по сверкам: &3"
+                                        ,tt-doc-pl.pl-code
+                                        ,tt-doc-pl.fact-qnty
+                                        ,( v-rvs-qnty-after - v-rvs-qnty-before )
+                                        ,buf_goods.unit-base
+                                        ) .
+              .
+            end.
+          end.
+          else do:
+            v-delta-mass-qnty = tt-doc-pl.cli-fact-qnty * v-delta-mass-qnty / 100.
+            if absolute( ( v-rvs-cli-qnty-after - v-rvs-cli-qnty-before ) - tt-doc-pl.cli-fact-qnty ) > v-delta-mass-qnty
+            then do:
+              if v-message = "":U then do:
+                assign
+                  v-message = substitute ("Факт. кол-во по сверкам не совпадает с факт. кол-вом по местам хранения :").
+                .
+              end.
+              assign
+                v-message = v-message
+                            + {&new-line}
+                            + substitute( "по месту хр. &1 (&4): &2, по сверкам: &3, погрешность измерения: &5."
+                                        ,tt-doc-pl.pl-code
+                                        ,tt-doc-pl.cli-fact-qnty
+                                        ,( v-rvs-cli-qnty-after - v-rvs-cli-qnty-before )
+                                        ,buf_goods.unit-cli
+                                        ,round (v-delta-mass-qnty, 3)
+                                        ) .
+                message v-message view-as alert-box warning title "Внимание!".
+                v-message = "".
+            end.
             
           end.
         end. /* for each tt-doc-pl */

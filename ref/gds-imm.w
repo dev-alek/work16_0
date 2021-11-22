@@ -79,7 +79,7 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      BGCOLOR 8 .
 
 DEFINE VARIABLE cb-item-matter-mark AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Тип услуги" 
+     LABEL "Признак" 
      VIEW-AS COMBO-BOX INNER-LINES 5
      LIST-ITEM-PAIRS "Реализуемый товар кроме подакцизного","1",
                      "Реализуемый подакцизный товар","2",
@@ -113,7 +113,7 @@ DEFINE FRAME Dialog-Frame
      SKIP(1.42)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Типы услуги" WIDGET-ID 100.
+         TITLE "Признак предмета расчета" WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */

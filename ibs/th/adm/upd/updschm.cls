@@ -41,16 +41,39 @@ class ibs.th.adm.upd.updschm:
     get.
     private set.
     
-  define property IsComp as logical no-undo
+  
+  define private property QuestionUpd as logical no-undo  init yes /* вопрос обновлять базу или нет */
     get.
     set.
+  
+  define private property UpdAllDB as logical no-undo init yes /* Загружать df которые всегда грузятся */
+    get.
+    set.
+  
+  define private property UpdPart as  logical no-undo init yes /* Обновление по частям */
+    get.
+    set.
+    
+  define private property silent as logical no-undo
+    get.
+    set.
+    
+  define private property ModeUpd as character  no-undo
+    get.
+    set (iarg as character ):
+       modeupd = iarg.
+       QuestionUpd = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
+       UpdAllDB    = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
+       UpdPart     = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
+       silent      = lookup("updblank",iarg) ne 0.
+    end.
     
   define property ConPar as character no-undo /*без &1*/ 
     get.
     set (arg as char):
       if arg begins "iscomp|"
       then do:
-         iscomp = yes.
+         modeupd = "iscomp".
          arg = entry(2,arg,"|").
       end.
       ConPar = replace (arg, "&1", ""). 
@@ -61,6 +84,10 @@ class ibs.th.adm.upd.updschm:
     private set.
     
   define property isNeedUpd as logical no-undo 
+    get.
+    private set.
+
+  define property PublisHandle as handle  no-undo 
     get.
     private set.
 
@@ -86,12 +113,32 @@ class ibs.th.adm.upd.updschm:
   define private variable m-FileDf            as character no-undo.
   define private variable m-Batch             as logical   no-undo.
   define variable mDfUpdaLL as character no-undo.
-  
+
+  constructor public updschm ():
+     obsrvdbObj = new observupd ().
+     obsrvdbObj:ModeUpd = modeupd.
+     obsrvdbObj:PublisHandle = PublisHandle.
+     
+     isNeedUpd = obsrvdbObj:isneedupg(yes).
+     CurrDBShm   = obsrvdbObj:CurrDBShm.  
+     CurrDB0Shm  = obsrvdbObj:CurrDB0Shm. 
+     DbNum       = obsrvdbObj:DbNum.      
+     TargetDBShm = obsrvdbObj:TargetDBShm.
+     if not isNeedUpd
+     then
+        run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
+     
+     delete object obsrvdbObj.
     
-  constructor public updschm (input inConPar as char):
+  end constructor.
+
+  constructor public updschm (input inConPar as char,input iMode as character,ipubhan as handle):
+    modeupd = iMode.
+    PublisHandle = iPubHan. 
     obsrvdbObj = new observupd ().
     ConPar      = inConPar.
-    obsrvdbObj:IsComp = IsComp. 
+    obsrvdbObj:modeupd = modeupd.
+    obsrvdbObj:PublisHandle = PublisHandle. 
     CurrDBShm   = obsrvdbObj:CurrDBShm.  
     CurrDB0Shm  = obsrvdbObj:CurrDB0Shm. 
     DbNum       = obsrvdbObj:DbNum.      
@@ -105,13 +152,19 @@ class ibs.th.adm.upd.updschm:
     if loadDFProcFile <> ?
     then isRcode = true.
     else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
-    if not IsComp and not isRcode and CurrDBShm < TargetDBShm 
+    isNeedUpd = obsrvdbObj:isneedupg(yes).
+    if not isNeedUpd
+    then
+       run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
+    if QuestionUpd and not isRcode and isNeedUpd 
     then do:
        message "Обновить базу с версии " CurrDBShm  " до " TargetDBShm "?" view-as alert-box question 
           buttons yes-no title "[ ВНИМАНИЕ! ]" update vupd.
        if not vupd
-       then
+       then do:
+          isNeedUpd = no.
           return.
+       end.
     end.
     isNeedUpd = obsrvdbObj:isneedupg().
     if obsrvdbObj:IsErr
@@ -119,6 +172,21 @@ class ibs.th.adm.upd.updschm:
       Msg = obsrvdbObj:Msg.
       IsErr = true.
     end.
+    define variable vok as logical no-undo.
+    run utl\chekupd.p (no, TargetDBShm , output vok).
+    if not vok
+    then do:
+       msg = return-value.
+       IsErr = true.
+    end.
+    /* else do:
+       delete object obsrvdbObj.
+       obsrvdbObj = new observupd ().
+       obsrvdbObj:IsComp = IsComp. 
+       CurrDBShm  = obsrvdbObj:CurrDBShm.
+       isNeedUpd  = obsrvdbObj:isneedupg().
+    end. */
+       
     assign
       m-user-passwd = substitute("-U &1 -P &2":U
                                 ,"sysadm"
@@ -131,6 +199,14 @@ class ibs.th.adm.upd.updschm:
     
   end constructor.
 
+  constructor public updschm (input inConPar as char ):
+     this-object(input inConPar,"").
+  end. 
+  
+  constructor public updschm (input inConPar as char,input iMode as character):
+     this-object(input inConPar,"",?).
+  end.
+  
   method public void upddbshm ():
     define variable vI as integer no-undo.
     define variable vdbconect as logical no-undo.
@@ -141,7 +217,7 @@ class ibs.th.adm.upd.updschm:
     upddbshmall().
     /* загрузка df файлов */
     if isUpdShm  /* загрузка df файлов коректировки выполняется всегда*/
-       and not IsComp
+       and UpdAllDB
     then do:
       /* if vdbconect
          
@@ -172,13 +248,11 @@ class ibs.th.adm.upd.updschm:
     end.
     if isErr 
     then do:
-       if IsComp 
+       if not UpdPart 
        then 
-          message "Ошибка обновления БД."
-            view-as alert-box.
+          putmes("Ошибка обновления БД.").
        else do:
-          message "Ошибка обновления БД. Попробуем обновить по частям"
-          view-as alert-box.
+          putmes("Ошибка обновления БД. Попробуем обновить по частям").
           isErr = no.
           Block-UpdOneTry:
           do while CurrDBShm < TargetDBShm :
@@ -202,7 +276,8 @@ class ibs.th.adm.upd.updschm:
     if CurrDBShm < TargetDBShm
     then do:
       analisdfObj = new analisdf ().
-      analisdfObj:IsComp = IsComp.
+      analisdfObj:modeupd = modeupd.
+      analisdfObj:PublisHandle = PublisHandle.
       if  analisdfObj:createDF(CurrDBShm)
       then do:
          assign
@@ -212,16 +287,24 @@ class ibs.th.adm.upd.updschm:
       end.
       else
          isErr = yes. 
-      
+      if isErr then 
+      do:
+        Msg =
+          substitute("Ошибка при обновлении схемы базы данных &1&2",  {&new-line} ,
+          analisdfObj:msg)
+          .
+        IsErr = true.
+        return.
+      end.
       delete object analisdfObj no-error.
       disconnect value ('ub').
       upddbshm-1(m-FileDf).
       if isErr then 
       do:
         Msg =
-          substitute("Ошибка при обновлении схемы базы данных") + {&new-line} +
-          error-status :get-message(1) + {&new-line} +
-          return-value
+          substitute("Ошибка при обновлении схемы базы данных&1&2&1&3",  {&new-line} ,
+          error-status :get-message(1) ,
+          return-value)
           .
         IsErr = true.
         return.
@@ -231,7 +314,8 @@ class ibs.th.adm.upd.updschm:
     
     
      analisdfObj = new analisdf ().
-     analisdfObj:IsComp = IsComp.
+     analisdfObj:modeupd = modeupd.
+     analisdfObj:PublisHandle = PublisHandle.
      def var m-FileDf_new as char no-undo.
      if analisdfObj:createDF(CurrDBShm)
      then do:
@@ -242,14 +326,14 @@ class ibs.th.adm.upd.updschm:
         then do:
            IsErr = true.
            delete object analisdfObj no-error.
-           message "Поля не прошедшие проверку выгружены в файл" m-FileDf_new 
-           
-           view-as alert-box.
+           putmes (substitute ("Поля не прошедшие проверку выгружены в файл &1",m-FileDf_new)).
            return.
         end.   
      end.
      delete object analisdfObj no-error. 
      obsrvdbObj = new observupd ().
+    obsrvdbObj:ModeUpd = ModeUpd.
+    obsrvdbObj:PublisHandle = PublisHandle. 
     obsrvdbObj:writeResult(NewCurrDBShm).
     if obsrvdbObj:IsErr
     then do:
@@ -267,10 +351,12 @@ class ibs.th.adm.upd.updschm:
     
    /* message CurrDBShm
     view-as alert-box. */
+/*    connect value(substitute(ConPar + " &1", m-user-passwd)).*/
     if CurrDBShm < TargetDBShm
     then do:
       analisdfObj = new analisdf ().
-      analisdfObj:IsComp = IsComp.
+      analisdfObj:modeupd = modeupd.
+      analisdfObj:PublisHandle = PublisHandle.
       if  analisdfObj:createDF(CurrDBShm,CurrDBShm + 1)
       then do:
          assign
@@ -280,6 +366,15 @@ class ibs.th.adm.upd.updschm:
       end.
       else
          isErr = yes.
+      if isErr then 
+      do:
+        Msg =
+          substitute("Ошибка при обновлении схемы базы данных&1&2",  {&new-line} ,
+          analisdfObj:msg)
+          .
+        IsErr = true.
+        return.
+      end.
       if not m-FileDf begins "proc:"
       then 
          m-FileDf = analisdfObj:addDFNumUpd(m-FileDf,CurrDBShm + 1). 
@@ -289,9 +384,9 @@ class ibs.th.adm.upd.updschm:
       if isErr then 
       do:
         Msg =
-          substitute("Ошибка при обновлении схемы базы данных") + {&new-line} +
-          error-status :get-message(1) + {&new-line} +
-          return-value
+          substitute("Ошибка при обновлении схемы базы данных&1&2&1&3",  {&new-line} ,
+          error-status :get-message(1) ,
+          return-value)
           .
         IsErr = true.
         return.
@@ -302,6 +397,8 @@ class ibs.th.adm.upd.updschm:
     view-as alert-box. */ 
     NewCurrDBShm = CurrDBShm + 1.
     obsrvdbObj = new observupd ().
+    obsrvdbObj:ModeUpd = ModeUpd.
+    obsrvdbObj:PublisHandle = PublisHandle. 
     obsrvdbObj:writeResult(NewCurrDBShm).
     if obsrvdbObj:IsErr
     then do:
@@ -329,10 +426,9 @@ class ibs.th.adm.upd.updschm:
           vproc  = entry(1,iparam,";")
           vparam = entry(2,iparam,";")
        no-error.
-       vproc = SearchPFile (vproc).
-       if vproc ne ?
-       then
-          runsession (vproc,vparam,yes).
+       if vproc ne ""
+       then 
+       runsession (vproc,vparam,yes).
     end.
     else do:
        
@@ -342,16 +438,6 @@ class ibs.th.adm.upd.updschm:
       then return.
   end method.
   
-  method private character  SearchPFile (input inFile as char):
-     define variable oFile as character no-undo.
-     inFile = entry(1,inFile,".").
-     oFile = search(inFile + ".r" ).
-     if oFile eq ?
-     then
-        oFile = search(inFile + ".p" ).
-     return oFile.
-     
-  end.
   method private void loaddf (input inFileDF as char):
     
     def var v-filedfname as character no-undo.
@@ -376,6 +462,16 @@ class ibs.th.adm.upd.updschm:
      then do:
          vParamStart = " -ininame "  + GetStartupParam("-ininame").
      end.
+     if SearchPFile (iProc) eq ?
+     then do:
+        Msg = substitute ( "Не найден файл &1 !", iProc).
+        putmes(msg).
+        IsErr = true.
+        return.
+     end.
+     else
+        iProc = SearchPFile (iProc).
+       
      if iproc eq loadDFprocFile and isRcode
      then 
         vParamStart = vParamStart + " -rx " .
@@ -383,6 +479,7 @@ class ibs.th.adm.upd.updschm:
      if isRcode
      then v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
      else v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
+     
     os-command silent value (v-cmd-comm).
   end method.
    
@@ -408,4 +505,18 @@ class ibs.th.adm.upd.updschm:
    end.
    return vList.
    end method.  
+   
+   method public void putmes (input itext as char):
+    if not silent 
+    then do:
+       message itext
+       view-as alert-box.
+    end.
+   end.
+   method public void putstat (input itext as char):
+      if valid-handle(PublisHandle)
+     then
+        publish "putstat" from PublisHandle (itext ).
+   end.
+   {utl\search.i class}
 end class.

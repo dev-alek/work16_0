@@ -678,48 +678,49 @@ DO:
               output v-rec-tank,
               output v-rec-meas) no-error.
   
-/*  if v-autoent-obj-code <> 0 and v-autoent-obj-code <> ?
-  and can-find (first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
-                                               and auto-tank-attr.attr-value = v-autoent-obj-type + string(v-autoent-obj-code))
-  then do :
-    run str/auto-tn.w (input parparentproc,
-                  input "b-sel",
-                  input v-autoent-obj-type,
-                  input v-autoent-obj-code,
-                  output v-rec-tank,
-                  output v-rec-meas) no-error.
-  end.
-  else do :
-    message
-    "Вы не указали автопредприятие или для " skip
-    "указанного автопредприятия нет автоцистерн."   skip
-    "Справочник будет открыт для всех автоцистерн." skip
-    view-as alert-box information.
-    run str/auto-tn.w (input parparentproc,
-                  input "b-sel",
-                  input "",
-                  input 0,
-                  output v-rec-tank,
-                  output v-rec-meas) no-error.
-  end.*/
+/*  if v-autoent-obj-code <> 0 and v-autoent-obj-code <> ?                                                                             */
+/*  and can-find (first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"                                            */
+/*                                               and (auto-tank-attr.attr-value = v-autoent-obj-type + string(v-autoent-obj-code)      */
+/*                                               or auto-tank-attr.attr-value = v-autoent-obj-type + " " + string(v-autoent-obj-code)))*/
+/*  then do :                                                                                                                          */
+/*    run str/auto-tn.w (input parparentproc,                                                                                          */
+/*                  input "b-sel",                                                                                                     */
+/*                  input v-autoent-obj-type,                                                                                          */
+/*                  input v-autoent-obj-code,                                                                                          */
+/*                  output v-rec-tank,                                                                                                 */
+/*                  output v-rec-meas) no-error.                                                                                       */
+/*  end.                                                                                                                               */
+/*  do :                                                                                                                               */
+/*    message                                                                                                                          */
+/*    "Вы не указали автопредприятие или для " skip                                                                                    */
+/*    "указанного автопредприятия нет автоцистерн."   skip                                                                             */
+/*    "Справочник будет открыт для всех автоцистерн." skip                                                                             */
+/*    view-as alert-box information.                                                                                                   */
+/*    run str/auto-tn.w (input parparentproc,                                                                                          */
+/*                  input "b-sel",                                                                                                     */
+/*                  input "",                                                                                                          */
+/*                  input 0,                                                                                                           */
+/*                  output v-rec-tank,                                                                                                 */
+/*                  output v-rec-meas) no-error.                                                                                       */
+/*  end.                                                                                                                               */
   if v-rec-tank <> ? then do:
     find first auto-tank where recid (auto-tank) = v-rec-tank no-lock.
     assign
         f-car-num    = auto-tank.auto-num
     .
-    find first auto-tank-attr where auto-tank-attr.attr-code = "auto-firm" and auto-tank-attr.auto-num = auto-tank.auto-num no-error.
-    if available (auto-tank-attr)
-    then do:
-      assign
-        f-autoent-obj-type = substring (auto-tank-attr.attr-value, 1, 3)
-        f-autoent-obj-code = integer (substring (auto-tank-attr.attr-value, 4)).
-        f-autoent-obj-type:screen-value = f-autoent-obj-type.
-        f-autoent-obj-code:screen-value = string (f-autoent-obj-code).
-        assign
-          v-autoent-obj-type = f-autoent-obj-type
-          v-autoent-obj-code =  f-autoent-obj-code
-        .
-    end.
+/*    find first auto-tank-attr where auto-tank-attr.attr-code = "auto-firm" and auto-tank-attr.auto-num = auto-tank.auto-num no-error.*/
+/*    if available (auto-tank-attr)                                                                                                    */
+/*    then do:                                                                                                                         */
+    assign
+      f-autoent-obj-type = auto-tank.firm-type
+      f-autoent-obj-code = integer (auto-tank.firm-code).
+      f-autoent-obj-type:screen-value = f-autoent-obj-type.
+      f-autoent-obj-code:screen-value = string (f-autoent-obj-code).
+    assign
+      v-autoent-obj-type = f-autoent-obj-type
+      v-autoent-obj-code =  f-autoent-obj-code
+    .
+/*    end.*/
           
     display f-car-num with frame {&frame-name}.
   end.
@@ -886,22 +887,34 @@ DO:
    apply "entry" to f-car-num in frame {&frame-name} .
    return no-apply .
   end.
-  
-  find first auto-tank-attr where auto-tank-attr.attr-code = "auto-firm" and auto-tank-attr.auto-num = auto-tank.auto-num no-error.
-  if available (auto-tank-attr)
-  then do:
-    assign
-      f-autoent-obj-type = substring (auto-tank-attr.attr-value, 1, 3)
-      f-autoent-obj-code = integer (substring (auto-tank-attr.attr-value, 4)).
+   if available auto-tank
+      then 
+   do :
+      if auto-tank.firm-type <> "" then 
+      do:
+         assign
+            f-autoent-obj-type = auto-tank.firm-type
+            f-autoent-obj-code = integer (auto-tank.firm-code).
+      end.
+      else 
+      do:
+         find first auto-tank-attr where auto-tank-attr.attr-code = "auto-firm" and auto-tank-attr.auto-num = auto-tank.auto-num no-error.
+         if available (auto-tank-attr)
+            then 
+         do:
+            assign
+               f-autoent-obj-type = substring (auto-tank-attr.attr-value, 1, 3)
+               f-autoent-obj-code = integer (substring (auto-tank-attr.attr-value, 4)).
+         end.       
+      end.     
       f-autoent-obj-type:screen-value = f-autoent-obj-type.
       f-autoent-obj-code:screen-value = string (f-autoent-obj-code).
       assign
-        v-autoent-obj-type = f-autoent-obj-type
-        v-autoent-obj-code =  f-autoent-obj-code
-      .
+         v-autoent-obj-type = f-autoent-obj-type
+         v-autoent-obj-code = f-autoent-obj-code
+         .
       run disp-obj-name.
-  end.
-  
+   end .
   
 /*  apply "entry" to f-car-vol in frame {&frame-name}.*/
 
@@ -1292,6 +1305,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               f-autoent-obj-type = entry (1, buf_doc-attr.attr-value, ";")
               f-autoent-obj-code = integer (entry (2, buf_doc-attr.attr-value, ";"))
             no-error.
+            assign
+              v-autoent-obj-type = f-autoent-obj-type
+              v-autoent-obj-code = f-autoent-obj-code
+            .
             find first ub.clients no-lock
               where ub.clients.obj-type = f-autoent-obj-type
                 and ub.clients.obj-code = f-autoent-obj-code
