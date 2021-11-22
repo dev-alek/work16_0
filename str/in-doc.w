@@ -2927,31 +2927,32 @@ do on error undo main-block, leave main-block :
   /*end.*/
    
   if not (trn-type = {&is-lgas} or trn-type = {&is-lgas-corr} or trn-type = {&is-fuel}) 
-    then 
-  do:
+  then do:
     hide b-in-attr-fuel in frame {&frame-name}.
   end.
-   
-   if pardoc-mode = {&update}
-     then run fill-mol in this-procedure. 
-   
-   IF mImagePh THEN
-DO:
+  else do :
+    t-doc.cli-qnty:label = "КолТТН(кг)" .
+    t-doc.doc-qnty:label = "Док.кол-во(л)" .
+    t-doc.fact-qnty:label = "Факт.кол-во(л)" .
+  end .
+  
+  IF mImagePh THEN
+  DO:
     DEFINE VARIABLE vImageList AS LONGCHAR    NO-UNDO.
     DEFINE VARIABLE vCh        AS CHARACTER   NO-UNDO.
-if AVAILABLE goods then do:
-    RUN gds-attr-value ( goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
-    RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, goods.gds-code, OUTPUT vImageList).
-    vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
-    g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
-    ASSIGN
+    if AVAILABLE goods then do:
+      RUN gds-attr-value ( goods.gds-code, "image-list":U, OUTPUT vImageList, OUTPUT vCh).
+      RUN imagelist_decode IN THIS-PROCEDURE (INPUT vImageList, goods.gds-code, OUTPUT vImageList).
+      vCh = ENTRY (1, vImageList, {&ImageDelimiter}).
+      g-image:LOAD-IMAGE (ENTRY (1, vCh)) NO-ERROR.
+      ASSIGN
         g-image:HIDDEN     = NO
         g-image:VISIBLE    = YES
         g-image:SENSITIVE  = YES
         .
-end.        
-END.
-ELSE
+    end.        
+  END.
+  ELSE
     ASSIGN
         g-image:HIDDEN     = YES
         g-image:VISIBLE    = NO

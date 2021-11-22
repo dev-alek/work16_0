@@ -876,7 +876,7 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
              and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
              and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
              and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-             and rvs-line-attr.attr-code = "input-type" no-error.
+             and rvs-line-attr.attr-code = "input-type-p" no-error.
       if not available rvs-line-attr then do :
         create rvs-line-attr.
         assign
@@ -885,10 +885,49 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
           rvs-line-attr.gds-code  = buf_rvs-line.gds-code
           rvs-line-attr.pl-code   = buf_rvs-line.pl-code
           rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-          rvs-line-attr.attr-code = "input-type"
+          rvs-line-attr.attr-code = "input-type-p"
           rvs-line-attr.attr-value = ''
         .
       end.
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+             and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+             and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+             and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "input-type-t" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+          rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+          rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+          rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+          rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+          rvs-line-attr.attr-code = "input-type-t"
+          rvs-line-attr.attr-value = ''
+        .
+      end.
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+             and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+             and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+             and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "input-type-l" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+          rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+          rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+          rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+          rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+          rvs-line-attr.attr-code = "input-type-l"
+          rvs-line-attr.attr-value = ''
+        .
+      end.
+      release rvs-line-attr .
  
   end. /* on error */
   return .
@@ -1373,6 +1412,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
     end case .
     run creatett-meas-file(p-obj-type, p-obj-code).
     output stream str-err to     "revis.err" append .
+    
       _recalc:                
       for each tt-meas-file where not tt-meas-file.is-error
           on error undo, return error return-value
@@ -1423,7 +1463,15 @@ procedure lib-rvs_rvsplace : /* revision-place */
                                             and buf_pl-gds.status_      = {&current-status}
                                             no-error .
             if available buf_pl-gds
-            and is-sug(buf_pl-gds.gds-code) then next _recalc.                                
+            and is-sug(buf_pl-gds.gds-code)
+            then do :
+              if tt-meas-file.level-petrol  = 0 and
+                 tt-meas-file.level-total  <> 0 then do:
+                assign
+                  tt-meas-file.level-petrol = tt-meas-file.level-total - (if tt-meas-file.level-water <> ? then tt-meas-file.level-water else 0) .
+              end.
+              next _recalc. 
+            end .                               
           end.  
           define variable place-asi-sertif  as logical no-undo.
           place-asi-sertif = no .  
@@ -1560,7 +1608,10 @@ procedure lib-rvs_rvsplace : /* revision-place */
           end.
         if vartarirvalue = "no" or vartarirvalue = "" then 
         do:
-          if tt-meas-file.log-brutto = yes then 
+          if tt-meas-file.log-brutto = yes
+          and tt-meas-file.density > 0
+          and tt-meas-file.density < 1
+          then 
           do:
               if place-asi-sertif
               then do :
@@ -1586,13 +1637,13 @@ procedure lib-rvs_rvsplace : /* revision-place */
               end.    
           end.  
         end.  
-
-                if tt-meas-file.level-petrol  = 0 and
-                   tt-meas-file.level-total  <> 0 then do:
-                  assign
-                    tt-meas-file.level-petrol = tt-meas-file.level-total - tt-meas-file.level-water.
-                end.
         
+        if tt-meas-file.level-petrol  = 0 and
+           tt-meas-file.level-total  <> 0 then do:
+          assign
+            tt-meas-file.level-petrol = tt-meas-file.level-total - (if tt-meas-file.level-water <> ? then tt-meas-file.level-water else 0) .
+        end.
+
         if tt-meas-file.meas-vol-oil   = no
             and tt-meas-file.meas-vol-water = no
             then 
@@ -1600,13 +1651,13 @@ procedure lib-rvs_rvsplace : /* revision-place */
             /* Если один из трех счетных параметров не задан, то зададим его */
             if tt-meas-file.density <> 0 and
                 tt-meas-file.density <> ?
-                then 
+                then
             do:
                 if ( tt-meas-file.brutto-cli-qnty =  0   or
                     tt-meas-file.brutto-cli-qnty =  ? ) and
                     tt-meas-file.brutto-qnty     <> 0   and
                     tt-meas-file.brutto-qnty     <> ?
-                    then 
+                    then
                 do:
                     assign
                         tt-meas-file.brutto-cli-qnty = tt-meas-file.density * tt-meas-file.brutto-qnty
@@ -1616,42 +1667,47 @@ procedure lib-rvs_rvsplace : /* revision-place */
                     tt-meas-file.brutto-qnty     =  ? ) and
                     tt-meas-file.brutto-cli-qnty <> 0   and
                     tt-meas-file.brutto-cli-qnty <> ?
-                    then 
+                    then
                 do:
                     assign
                         tt-meas-file.brutto-qnty = tt-meas-file.brutto-cli-qnty / tt-meas-file.density
                         .
                 end.
             end.
-            else 
+            else
             do:
-                if tt-meas-file.brutto-cli-qnty <> 0 and
-                    tt-meas-file.brutto-cli-qnty <> ? and
-                    tt-meas-file.brutto-qnty     <> 0 and
-                    tt-meas-file.brutto-qnty     <> ?
-                    then 
-                do:
-                    assign
-                        tt-meas-file.density = tt-meas-file.brutto-cli-qnty / tt-meas-file.brutto-qnty
-                        .
-                end.
+/*                if tt-meas-file.brutto-cli-qnty <> 0 and                                              */
+/*                    tt-meas-file.brutto-cli-qnty <> ? and                                             */
+/*                    tt-meas-file.brutto-qnty     <> 0 and                                             */
+/*                    tt-meas-file.brutto-qnty     <> ?                                                 */
+/*                    then                                                                              */
+/*                do:                                                                                   */
+/*                    assign                                                                            */
+/*                        tt-meas-file.density = tt-meas-file.brutto-cli-qnty / tt-meas-file.brutto-qnty*/
+/*                        .                                                                             */
+/*                end.                                                                                  */
             end.
-            if tt-meas-file.log-brutto
+            if tt-meas-file.density > 0
+            and tt-meas-file.density < 1
+            and tt-meas-file.density <> ?
             then do :
-              tt-meas-file.measure-qnty = tt-meas-file.measure-cli-qnty / tt-meas-file.density .
-              tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty  .
-              if tt-meas-file.water-qnty < 0
+              if tt-meas-file.log-brutto
               then do :
-                tt-meas-file.water-qnty = 0 .
-                tt-meas-file.brutto-qnty = tt-meas-file.measure-qnty .
+                tt-meas-file.measure-qnty = tt-meas-file.measure-cli-qnty / tt-meas-file.density .
+                tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty  .
+                if tt-meas-file.water-qnty < 0
+                then do :
+                  tt-meas-file.water-qnty = 0 .
+                  tt-meas-file.brutto-qnty = tt-meas-file.measure-qnty .
+                end.
               end.
-            end.
-            else do : 
-              assign
-                tt-meas-file.measure-qnty = tt-meas-file.brutto-qnty -  tt-meas-file.water-qnty
-                tt-meas-file.measure-cli-qnty = tt-meas-file.measure-qnty * tt-meas-file.density
-              .
-            end.
+              else do : 
+                assign
+                  tt-meas-file.measure-qnty = tt-meas-file.brutto-qnty -  tt-meas-file.water-qnty
+                  tt-meas-file.measure-cli-qnty = tt-meas-file.measure-qnty * tt-meas-file.density
+                .
+              end.
+            end .
          
         end.
         else 
@@ -1668,21 +1724,26 @@ procedure lib-rvs_rvsplace : /* revision-place */
                     tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty
                     .
             end.  
-            if tt-meas-file.log-brutto
+            if tt-meas-file.density > 0
+            and tt-meas-file.density < 1
+            and tt-meas-file.density <> ?
             then do :
-              tt-meas-file.measure-qnty = tt-meas-file.measure-cli-qnty / tt-meas-file.density .
-              tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty  .
-              if tt-meas-file.water-qnty < 0
+              if tt-meas-file.log-brutto
               then do :
-                tt-meas-file.water-qnty = 0 .
-                tt-meas-file.brutto-qnty = tt-meas-file.measure-qnty .
+                tt-meas-file.measure-qnty = tt-meas-file.measure-cli-qnty / tt-meas-file.density .
+                tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty  .
+                if tt-meas-file.water-qnty < 0
+                then do :
+                  tt-meas-file.water-qnty = 0 .
+                  tt-meas-file.brutto-qnty = tt-meas-file.measure-qnty .
+                end.
               end.
-            end.
-            else do : 
-              assign
-                tt-meas-file.measure-cli-qnty = tt-meas-file.measure-qnty * tt-meas-file.density
-              .
-            end.
+              else do : 
+                assign
+                  tt-meas-file.measure-cli-qnty = tt-meas-file.measure-qnty * tt-meas-file.density
+                .
+              end.
+            end .
         end.
 /*    end.*/
       /* Если уровень воды нулевой, но при этом вес общий, который пришел с видерута, меньше, чем то, что мы расчитали исходя из плотности, то подставляем расчетное значение.  Иначе вода лезет в минус */
@@ -1759,6 +1820,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
     if is_FatalError = yes then do:
       return error 'При считывании данных с резервуаров произошли ошибки НЕПОЗВОЛЯЮЩИЕ ЗАГРУЗИТЬ ДАННЫЕ.' .
     end.
+    
     for  each tt-meas,
       first tt-meas-file
       where tt-meas-file.obj-type = tt-meas.obj-type
@@ -1934,7 +1996,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable  v-cardif as integer no-undo.
 
   define variable v-delta-mas-qnty as decimal no-undo.
-  define variable v-is-olddens as logical no-undo .
+  define variable v-is-olddens as logical no-undo init no .
   
   define variable twice-num   as integer no-undo.
   define variable twice-place-data as character no-undo .
@@ -1946,6 +2008,8 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable state-vapor-pressure as decimal no-undo .
   define variable sug-volume as decimal no-undo .
   define variable sug-pf-volume as decimal no-undo .
+  
+  define variable v-prev-temp as logical no-undo .
 
   find first bf_rvs-line exclusive-lock
     where recid( bf_rvs-line ) = p-rec-line
@@ -1999,15 +2063,15 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
     bf_rvs-line.state-measure-tc-qnty  = bf_rvs-line.measure-tc-qnty
     bf_rvs-line.state-brutto-tc-qnty   = bf_rvs-line.brutto-tc-qnty
   .
-
-
+  
+  
   find first rvs-line-attr exclusive-lock
        where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
          and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
          and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
          and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
          and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-         and rvs-line-attr.attr-code = "input-type" no-error.
+         and rvs-line-attr.attr-code = "input-type-p" no-error.
   if not available rvs-line-attr then do :
     create rvs-line-attr.
     assign
@@ -2016,12 +2080,50 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
       rvs-line-attr.gds-code  = bf_rvs-line.gds-code
       rvs-line-attr.pl-code   = bf_rvs-line.pl-code
       rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-      rvs-line-attr.attr-code = "input-type"
+      rvs-line-attr.attr-code = "input-type-p"
     .
   end.
   rvs-line-attr.attr-value = 'а' .
-
-
+  
+  find first rvs-line-attr exclusive-lock
+       where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+         and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+         and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+         and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+         and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+         and rvs-line-attr.attr-code = "input-type-t" no-error.
+  if not available rvs-line-attr then do :
+    create rvs-line-attr.
+    assign
+      rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+      rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+      rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+      rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+      rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+      rvs-line-attr.attr-code = "input-type-t"
+    .
+  end.
+  rvs-line-attr.attr-value = 'а' .
+  
+  find first rvs-line-attr exclusive-lock
+       where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+         and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+         and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+         and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+         and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+         and rvs-line-attr.attr-code = "input-type-l" no-error.
+  if not available rvs-line-attr then do :
+    create rvs-line-attr.
+    assign
+      rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+      rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+      rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+      rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+      rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+      rvs-line-attr.attr-code = "input-type-l"
+    .
+  end.
+  rvs-line-attr.attr-value = 'а' .
 
 
 
@@ -2036,14 +2138,13 @@ run placelib_get-attr  ( input {&place-asi-sertif}
                       ,output v-ok      ) no-error.
 if v-ok then place-asi-sertif = logical(v-value) .
 
-
+/*run gbl/inidebug.p .*/
 
 if ptrlprop-olddens = true
 /*  and not is-sug(bf_rvs-line.gds-code)*/
 then do:
   if tt-meas.density = 0 then do:
     assign
-      tt-meas.temperature                = bf_rvs-line.state-temperature
       tt-meas.density                    = bf_rvs-line.state-density  
     .
     find first rvs-line-attr exclusive-lock
@@ -2087,9 +2188,9 @@ then do:
     end.
     rvs-line-attr.attr-value = 'no' .
   end.
-  if tt-meas.temperature = 0 then do:
-      tt-meas.temperature                = bf_rvs-line.state-temperature .      
-  end. 
+/*  if tt-meas.temperature = ? then do:                                     */
+/*      tt-meas.temperature                = bf_rvs-line.state-temperature .*/
+/*  end.                                                                    */
  end.    
  
   assign
@@ -2109,6 +2210,11 @@ then do:
       bf_rvs-line.density                = tt-meas.density
       bf_rvs-line.state-density          = if bf_rvs-line.density > 0 then bf_rvs-line.density else bf_rvs-line.state-density
     .
+    if bf_rvs-line.level-petrol = 0
+    or bf_rvs-line.level-petrol = ?
+    then do :
+      bf_rvs-line.level-petrol = bf_rvs-line.level-total - (if bf_rvs-line.level-water <> ? then bf_rvs-line.level-water else 0) .
+    end .
     assign
       bf_rvs-line.measure-qnty           = tt-meas.brutto-qnty
       bf_rvs-line.measure-tc-qnty        = bf_rvs-line.measure-qnty
@@ -2137,6 +2243,18 @@ then do:
       bf_rvs-line.state-measure-cli-qnty = bf_rvs-line.state-measure-qnty * bf_rvs-line.state-density
       bf_rvs-line.state-brutto-cli-qnty  = bf_rvs-line.state-brutto-qnty  * bf_rvs-line.state-density
     .
+    if bf_rvs-line.measure-qnty = 0 then bf_rvs-line.measure-qnty = tt-meas.brutto-qnty .
+    find first rvs-line-attr exclusive-lock
+        where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+          and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+          and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+          and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+          and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+          and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
+    if available rvs-line-attr
+    then do :
+      rvs-line-attr.attr-value = string(?) .
+    end .
   end .
     run placelib_get-attr  ( input {&place-twice-code}
         ,input p-obj-code
@@ -2696,10 +2814,69 @@ then do:
                     NO-ERROR .
                 IF AVAILABLE prev_rvs-line THEN 
                 DO:
+                    v-prev-temp = no .
                     if bf_rvs-line.state-density > 1 or bf_rvs-line.state-density = ? or bf_rvs-line.state-density = 0 then 
                     do:    
-                        bf_rvs-line.state-temperature = prev_rvs-line.state-temperature. 
-                        bf_rvs-line.temperature  = prev_rvs-line.temperature.
+                        if bf_rvs-line.state-temperature <> ?
+                        then do :
+                          find first rvs-line-attr exclusive-lock
+                             where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                               and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                               and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                               and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                               and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                               and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
+                          if not available rvs-line-attr then do :
+                            create rvs-line-attr.
+                            assign
+                              rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                              rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                              rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                              rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                              rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                              rvs-line-attr.attr-code = "temp-izm-vol"
+                            .
+                          end.
+                          rvs-line-attr.attr-value = string(bf_rvs-line.state-temperature) .
+                        end .
+                      
+                        find first prev_rvs-line-attr no-lock 
+                             where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
+                               and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
+                               and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
+                               and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
+                               and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
+                               and prev_rvs-line-attr.attr-code = "mi-dnst" no-error.
+                        if available prev_rvs-line-attr
+                        then do :
+                          find first rvs-line-attr exclusive-lock
+                             where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                               and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                               and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                               and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                               and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                               and rvs-line-attr.attr-code = "mi-dnst" no-error.
+                          if not available rvs-line-attr then do :
+                            create rvs-line-attr.
+                            assign
+                              rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                              rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                              rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                              rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                              rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                              rvs-line-attr.attr-code = "mi-dnst"
+                            .
+                          end.
+                          rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
+                          
+                          for first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = integer(prev_rvs-line-attr.attr-value)
+                                                               and buf_sr-izmerenia.sr-type-izm = 1 /* 1 - Неавтоматизированное СИ */
+                                                               :
+                            bf_rvs-line.state-temperature = prev_rvs-line.state-temperature. 
+                            bf_rvs-line.temperature  = prev_rvs-line.temperature.       
+                            v-prev-temp = yes .                              
+                          end .
+                        end .
                            
                         bf_rvs-line.state-density = prev_rvs-line.state-density .
                         bf_rvs-line.density = prev_rvs-line.density .
@@ -2735,36 +2912,6 @@ then do:
                           rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
                         end .
                         
-                        find first prev_rvs-line-attr no-lock 
-                             where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
-                               and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
-                               and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
-                               and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
-                               and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
-                               and prev_rvs-line-attr.attr-code = "temp-izm-vol" no-error.
-                        if available prev_rvs-line-attr
-                        then do :
-                          find first rvs-line-attr exclusive-lock
-                             where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                               and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                               and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                               and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                               and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                               and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
-                          if not available rvs-line-attr then do :
-                            create rvs-line-attr.
-                            assign
-                              rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                              rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                              rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                              rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                              rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                              rvs-line-attr.attr-code = "temp-izm-vol"
-                            .
-                          end.
-                          rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
-                        end .
-                        
                         find first rvs-line-attr exclusive-lock
                              where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
                                and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
@@ -2784,41 +2931,79 @@ then do:
                           .
                         end.
                         rvs-line-attr.attr-value = 'yes' .
+                        v-is-olddens = yes .
                     end.
-                    if bf_rvs-line.state-temperature = ? then 
-                    do:
-                        bf_rvs-line.state-temperature = prev_rvs-line.state-temperature. 
-                        bf_rvs-line.temperature  = prev_rvs-line.temperature.
-                        p-prev-rvs-date = YES.  
-                        
-                        find first prev_rvs-line-attr no-lock 
-                             where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
-                               and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
-                               and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
-                               and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
-                               and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
-                               and prev_rvs-line-attr.attr-code = "temp-izm-vol" no-error.
-                        if available prev_rvs-line-attr
+                    if tt-meas.temperature = ?
+                    or v-prev-temp
+                    then do:
+                        if not v-prev-temp
                         then do :
-                          find first rvs-line-attr exclusive-lock
-                             where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                               and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                               and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                               and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                               and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                               and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
-                          if not available rvs-line-attr then do :
-                            create rvs-line-attr.
-                            assign
-                              rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                              rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                              rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                              rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                              rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                              rvs-line-attr.attr-code = "temp-izm-vol"
-                            .
-                          end.
-                          rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
+                          bf_rvs-line.state-temperature = prev_rvs-line.state-temperature. 
+                          bf_rvs-line.temperature  = prev_rvs-line.temperature.
+                          p-prev-rvs-date = YES.  
+                        end .
+                        
+                        if tt-meas.temperature = ?
+                        then do :
+                          find first prev_rvs-line-attr no-lock 
+                               where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
+                                 and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
+                                 and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
+                                 and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
+                                 and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
+                                 and prev_rvs-line-attr.attr-code = "temp-izm-vol" no-error.
+                          if available prev_rvs-line-attr
+                          then do :
+                            find first rvs-line-attr exclusive-lock
+                               where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                 and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                 and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                 and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                 and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                 and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
+                            if not available rvs-line-attr then do :
+                              create rvs-line-attr.
+                              assign
+                                rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                rvs-line-attr.attr-code = "temp-izm-vol"
+                              .
+                            end.
+                            rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
+                          end .
+                          
+                          find first prev_rvs-line-attr no-lock 
+                               where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
+                                 and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
+                                 and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
+                                 and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
+                                 and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
+                                 and prev_rvs-line-attr.attr-code = "mi-tmp" no-error.
+                          if available prev_rvs-line-attr
+                          then do :
+                            find first rvs-line-attr exclusive-lock
+                               where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                 and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                 and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                 and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                 and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                 and rvs-line-attr.attr-code = "mi-tmp" no-error.
+                            if not available rvs-line-attr then do :
+                              create rvs-line-attr.
+                              assign
+                                rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                rvs-line-attr.attr-code = "mi-tmp"
+                              .
+                            end.
+                            rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
+                          end .
                         end .
                     end.    
                     if bf_rvs-line.temperature = ? then 
@@ -2912,13 +3097,73 @@ then do:
                         prev_rvs-line.gds-code = bf_rvs-line.gds-code      NO-ERROR .
                     IF AVAILABLE prev_rvs-line THEN 
                     DO:
+                        v-prev-temp = no .
                         if bf_rvs-line.state-density > 1 or bf_rvs-line.state-density = ? or bf_rvs-line.state-density = 0 then 
                         do:
+                            if bf_rvs-line.state-temperature <> ?
+                            then do :
+                              find first rvs-line-attr exclusive-lock
+                                 where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                   and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                   and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                   and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                   and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                   and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
+                              if not available rvs-line-attr then do :
+                                create rvs-line-attr.
+                                assign
+                                  rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                  rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                  rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                  rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                  rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                  rvs-line-attr.attr-code = "temp-izm-vol"
+                                .
+                              end.
+                              rvs-line-attr.attr-value = string(bf_rvs-line.state-temperature) .
+                            end .
+                          
+                            find first prev_rvs-line-attr no-lock 
+                                 where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
+                                   and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
+                                   and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
+                                   and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
+                                   and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
+                                   and prev_rvs-line-attr.attr-code = "mi-dnst" no-error.
+                            if available prev_rvs-line-attr
+                            then do :
+                              find first rvs-line-attr exclusive-lock
+                                 where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                   and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                   and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                   and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                   and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                   and rvs-line-attr.attr-code = "mi-dnst" no-error.
+                              if not available rvs-line-attr then do :
+                                create rvs-line-attr.
+                                assign
+                                  rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                  rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                  rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                  rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                  rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                  rvs-line-attr.attr-code = "mi-dnst"
+                                .
+                              end.
+                              rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
+                              
+                              for first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = integer(prev_rvs-line-attr.attr-value)
+                                                                   and buf_sr-izmerenia.sr-type-izm = 1 /* 1 - Неавтоматизированное СИ */
+                                                                   :
+                                bf_rvs-line.state-temperature = prev_rvs-line.state-temperature. 
+                                bf_rvs-line.temperature  = prev_rvs-line.temperature.       
+                                v-prev-temp = yes .                              
+                              end .
+                            end .
+                            
                             ASSIGN
                                 bf_rvs-line.density           = prev_rvs-line.density
                                 bf_rvs-line.state-density     = prev_rvs-line.state-density
-                                bf_rvs-line.temperature       = prev_rvs-line.temperature
-                                bf_rvs-line.state-temperature = prev_rvs-line.state-temperature
                             .
                                 
                             find first prev_rvs-line-attr no-lock 
@@ -2951,36 +3196,6 @@ then do:
                               rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
                             end .
                             
-                            find first prev_rvs-line-attr no-lock 
-                                 where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
-                                   and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
-                                   and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
-                                   and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
-                                   and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
-                                   and prev_rvs-line-attr.attr-code = "temp-izm-vol" no-error.
-                            if available prev_rvs-line-attr
-                            then do :
-                              find first rvs-line-attr exclusive-lock
-                                 where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                                   and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                                   and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                                   and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                                   and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                                   and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
-                              if not available rvs-line-attr then do :
-                                create rvs-line-attr.
-                                assign
-                                  rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                                  rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                                  rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                                  rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                                  rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                                  rvs-line-attr.attr-code = "temp-izm-vol"
-                                .
-                              end.
-                              rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
-                            end .
-                            
                             find first rvs-line-attr exclusive-lock
                                  where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
                                    and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
@@ -3000,40 +3215,78 @@ then do:
                               .
                             end.
                             rvs-line-attr.attr-value = 'yes' .
+                            v-is-olddens = yes .
                         END.
-                        if bf_rvs-line.state-temperature = ? then 
-                        do:
-                            bf_rvs-line.temperature            = prev_rvs-line.temperature.
-                            bf_rvs-line.state-temperature      = prev_rvs-line.state-temperature.
-                            
-                            find first prev_rvs-line-attr no-lock 
-                                 where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
-                                   and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
-                                   and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
-                                   and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
-                                   and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
-                                   and prev_rvs-line-attr.attr-code = "temp-izm-vol" no-error.
-                            if available prev_rvs-line-attr
+                        if tt-meas.temperature = ?
+                        or v-prev-temp
+                        then do:
+                            if not v-prev-temp
                             then do :
-                              find first rvs-line-attr exclusive-lock
-                                 where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                                   and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                                   and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                                   and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                                   and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                                   and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
-                              if not available rvs-line-attr then do :
-                                create rvs-line-attr.
-                                assign
-                                  rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                                  rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                                  rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                                  rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                                  rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                                  rvs-line-attr.attr-code = "temp-izm-vol"
-                                .
-                              end.
-                              rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
+                              bf_rvs-line.temperature            = prev_rvs-line.temperature.
+                              bf_rvs-line.state-temperature      = prev_rvs-line.state-temperature.
+                            end .
+                            
+                            if tt-meas.temperature = ?
+                            then do :
+                              find first prev_rvs-line-attr no-lock 
+                                   where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
+                                     and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
+                                     and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
+                                     and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
+                                     and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
+                                     and prev_rvs-line-attr.attr-code = "temp-izm-vol" no-error.
+                              if available prev_rvs-line-attr
+                              then do :
+                                find first rvs-line-attr exclusive-lock
+                                   where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                     and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                     and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                     and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                     and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                     and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
+                                if not available rvs-line-attr then do :
+                                  create rvs-line-attr.
+                                  assign
+                                    rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                    rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                    rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                    rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                    rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                    rvs-line-attr.attr-code = "temp-izm-vol"
+                                  .
+                                end.
+                                rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
+                              end .
+                              
+                              find first prev_rvs-line-attr no-lock 
+                                   where prev_rvs-line-attr.obj-code  = prev_rvs-line.obj-code
+                                     and prev_rvs-line-attr.obj-type  = prev_rvs-line.obj-type
+                                     and prev_rvs-line-attr.gds-code  = prev_rvs-line.gds-code
+                                     and prev_rvs-line-attr.pl-code   = prev_rvs-line.pl-code
+                                     and prev_rvs-line-attr.rvs-code  = prev_rvs-line.rvs-code
+                                     and prev_rvs-line-attr.attr-code = "mi-tmp" no-error.
+                              if available prev_rvs-line-attr
+                              then do :
+                                find first rvs-line-attr exclusive-lock
+                                   where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                     and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                     and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                     and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                     and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                     and rvs-line-attr.attr-code = "mi-tmp" no-error.
+                                if not available rvs-line-attr then do :
+                                  create rvs-line-attr.
+                                  assign
+                                    rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                                    rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                                    rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                                    rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                                    rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                                    rvs-line-attr.attr-code = "mi-tmp"
+                                  .
+                                end.
+                                rvs-line-attr.attr-value = prev_rvs-line-attr.attr-value .
+                              end .
                             end .
                         END.
                         
@@ -3339,8 +3592,9 @@ THEN DO:
 
   RUN gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", NO, OUTPUT rdc-dnstvalue, OUTPUT rdc-dnsttype) NO-ERROR.
 
-  IF rdc-dnstvalue = "pomi-rn" THEN 
-  DO :
+  IF rdc-dnstvalue = "pomi-rn"
+  and bf_rvs-line.state-level-total > 0
+  then do :
     _trpomi :
     do on error undo, return error :
     /*данные по резервуару для ПО МИ*/
@@ -3580,40 +3834,107 @@ THEN DO:
       define buffer temp_sr-izmerenia for sr-izmerenia .
       define buffer level_sr-izmerenia for sr-izmerenia .
       
-      if pl-rvd-lvl
-      and pl-rvd-dens
-      and pl-rvd-temp
-      then do : end .
-      else do :                                      
-        find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si no-error.
-        if error-status :error or not available sr-izmerenia then do :
-          find first bf_goods no-lock where bf_goods.gds-code = bf_rvs-line.gds-code no-error .
-          find first bf_place no-lock where bf_place.pl-code = p-pl-code no-error .
-          undo _trpomi, return error substitute( 'Для резервуара &1 (&2) не указано основное средство измерения. Создание сверки не возможно.'
-                                               ,(if available bf_place then bf_place.loc1 else "?")
-                                               ,(if available bf_goods then bf_goods.gds-name else "?") ) .
-  
-        end.
+/*      if pl-rvd-lvl  */
+/*      and pl-rvd-dens*/
+/*      and pl-rvd-temp*/
+/*      then do : end .*/
+/*      else do :      */
+      find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si no-error.
+      if error-status :error or not available sr-izmerenia then do :
+        find first bf_goods no-lock where bf_goods.gds-code = bf_rvs-line.gds-code no-error .
+        find first bf_place no-lock where bf_place.pl-code = p-pl-code no-error .
+        undo _trpomi, return error substitute( 'Для резервуара &1 (&2) не указано основное средство измерения. Создание сверки не возможно.'
+                                             ,(if available bf_place then bf_place.loc1 else "?")
+                                             ,(if available bf_goods then bf_goods.gds-name else "?") ) .
+
+      end.
+      else do :
+        assign
+          ToolType               = sr-izmerenia.sr-type-id
+          LevelToolType          = sr-izmerenia.sr-type-level-measuring
+          A_LevelMeasurementTool = sr-izmerenia.sr-temp-line
+          DeltaAbs_H             = sr-izmerenia.sr-abs-err-neft-water
+          DeltaAbs_H_Water       = sr-izmerenia.sr-abs-err-water
+          DeltaAbs_R             = sr-izmerenia.sr-abs-err-dens
+          DeltaAbs_Tv            = sr-izmerenia.sr-abs-err-temp-vol
+          DeltaAbs_Tr            = sr-izmerenia.sr-abs-err-temp-dens
+          DeltaOtn_N             = 0.05
+          DeltaOtn_H             = sr-izmerenia.sr-relative-err-neft-water
+          DeltaOtn_H_Water       = sr-izmerenia.sr-relative-err-water
+          DeltaOtn_R             = sr-izmerenia.sr-relative-err-dens
+          DeltaAbs_R_Sug         = sr-izmerenia.sr-abs-err-dens-lgas-liquid
+          DeltaAbs_R_Sug-vapor   = sr-izmerenia.sr-abs-err-dens-lgas-vapor
+        .
+      end.
+/*      end .*/
+      if v-is-olddens
+      then do :
+        find first rvs-line-attr no-lock
+              where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                and rvs-line-attr.attr-code = "mi-dnst" no-error.
+        if available rvs-line-attr
+        then do :
+          pl-dens-sr-izm = integer(rvs-line-attr.attr-value) .
+        end .
         else do :
-          assign
-            ToolType               = sr-izmerenia.sr-type-id
-            LevelToolType          = sr-izmerenia.sr-type-level-measuring
-            A_LevelMeasurementTool = sr-izmerenia.sr-temp-line
-            DeltaAbs_H             = sr-izmerenia.sr-abs-err-neft-water
-            DeltaAbs_H_Water       = sr-izmerenia.sr-abs-err-water
-            DeltaAbs_R             = sr-izmerenia.sr-abs-err-dens
-            DeltaAbs_Tv            = sr-izmerenia.sr-abs-err-temp-vol
-            DeltaAbs_Tr            = sr-izmerenia.sr-abs-err-temp-dens
-            DeltaOtn_N             = 0.05
-            DeltaOtn_H             = sr-izmerenia.sr-relative-err-neft-water
-            DeltaOtn_H_Water       = sr-izmerenia.sr-relative-err-water
-            DeltaOtn_R             = sr-izmerenia.sr-relative-err-dens
-            DeltaAbs_R_Sug         = sr-izmerenia.sr-abs-err-dens-lgas-liquid
-            DeltaAbs_R_Sug-vapor   = sr-izmerenia.sr-abs-err-dens-lgas-vapor
-          .
-        end.
+          pl-dens-sr-izm = 0 .
+        end .
+        if pl-dens-sr-izm > 0
+        and pl-dens-sr-izm <> place-si
+        then do :
+          find first dens_sr-izmerenia no-lock where dens_sr-izmerenia.node-code = pl-dens-sr-izm no-error.
+          if not available dens_sr-izmerenia then do :
+            undo _trpomi, return error substitute( 'Не найдено средство измерения с кодом &1', pl-dens-sr-izm )  .
+          end.
+          else do :
+            assign
+              ToolType               = dens_sr-izmerenia.sr-type-id
+              DeltaAbs_R             = dens_sr-izmerenia.sr-abs-err-dens
+              DeltaOtn_R             = dens_sr-izmerenia.sr-relative-err-dens
+            .
+          end.
+        end .
+        
+        if pl-rvd-dens
+        then do :
+          DeltaAbs_R_Sug         = 0 .
+          DeltaAbs_R_Sug-vapor   = 0 .
+        end .
+        
+        find first rvs-line-attr no-lock
+          where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+            and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+            and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+            and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+            and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+            and rvs-line-attr.attr-code = "mi-tmp" no-error.
+        if available rvs-line-attr
+        then do :
+          pl-temp-sr-izm = integer(rvs-line-attr.attr-value) .
+        end .
+        else do :
+          pl-temp-sr-izm = 0 .
+        end .
+        if pl-temp-sr-izm > 0
+        and pl-temp-sr-izm <> place-si 
+        then do :
+          find first temp_sr-izmerenia no-lock where temp_sr-izmerenia.node-code = pl-temp-sr-izm no-error.
+          if not available temp_sr-izmerenia then do :
+            undo _trpomi, return error substitute( 'Не найдено средство измерения с кодом &1', pl-temp-sr-izm ) .
+          end.
+          else do :
+            assign
+              DeltaAbs_Tv            = temp_sr-izmerenia.sr-abs-err-temp-vol
+              DeltaAbs_Tr            = temp_sr-izmerenia.sr-abs-err-temp-dens
+            .
+          end.
+        end .
       end .
-      
+/*      
       if pl-rvd-lvl
       then do :
         if pl-level-sr-izm = 0
@@ -3704,7 +4025,7 @@ THEN DO:
         LevelToolType = level_sr-izmerenia.sr-type-level-measuring .
       else
         LevelToolType = sr-izmerenia.sr-type-level-measuring .
-      
+*/      
       if available dens_sr-izmerenia
       and dens_sr-izmerenia.sr-type-izm = 3
       and dens_sr-izmerenia.sr-temperature
@@ -3813,6 +4134,22 @@ THEN DO:
         temp-izm-vol = ? .
       end.
       
+      if bf_rvs-line.state-density > 0
+      and not v-is-olddens
+      then do :
+        find first rvs-line-attr exclusive-lock
+            where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+              and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+              and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+              and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+              and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+              and rvs-line-attr.attr-code = "izmer-density" no-error.
+        if available rvs-line-attr
+        then do :
+          rvs-line-attr.attr-value = string(bf_rvs-line.state-density) .
+        end .
+      end .
+      
       find first rvs-line-attr no-lock
           where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
             and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
@@ -3826,6 +4163,7 @@ THEN DO:
       else do :
         izmer-density = ? .
       end.
+      
       /*......................................................*/
       { gbl/ptrlprop.i
         run
@@ -4273,6 +4611,28 @@ THEN DO:
                 bf_rvs-line.state-brutto-cli-qnty  = bf_rvs-line.state-measure-cli-qnty + tt-meas-file.water-qnty
               .
             end .
+            find first rvs-line-attr exclusive-lock
+                  where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                    and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                    and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                    and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                    and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                    and rvs-line-attr.attr-code = "pokmi-water-qnty" no-error.
+            if available rvs-line-attr then do :
+              rvs-line-attr.attr-value = string(v-mm:V_water * 1000) .
+            end.
+            else do :
+              create rvs-line-attr.
+                assign
+                    rvs-line-attr.obj-code   = bf_rvs-line.obj-code
+                    rvs-line-attr.obj-type   = bf_rvs-line.obj-type
+                    rvs-line-attr.gds-code   = bf_rvs-line.gds-code
+                    rvs-line-attr.pl-code    = bf_rvs-line.pl-code
+                    rvs-line-attr.rvs-code   = bf_rvs-line.rvs-code
+                    rvs-line-attr.attr-code  = "pokmi-water-qnty"
+                    rvs-line-attr.attr-value = string(v-mm:V_water * 1000)
+                    .
+            END.
             assign
               v-POkMI-result =
                 "MM:V_total             = " + v-mm:V_total     + {&new-line} +
@@ -4335,6 +4695,8 @@ THEN DO:
               .
             end.
           end .
+          
+          release rvs-line-attr no-error .
 
           RELEASE OBJECT v-mm NO-ERROR.
           v-mm = ?.
@@ -6014,70 +6376,70 @@ procedure creatett-meas-file:
                next block-field.
             if v-fh:buffer-value() ne ?
             then do:
-            if tt-param.strfrfile = 'temperature':U   then do:
-              assign
-                tt-meas-file.temp-not-null   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'temp-layer1':U   then do:
-              assign
-                tt-meas-file.t1-not-null   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'temp-layer2':U   then do:
-              assign
-                tt-meas-file.t2-not-null   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'temp-layer3':U   then do:
-              assign
-                tt-meas-file.t3-not-null   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'volume_oil':U   then do:
-              assign
-                tt-meas-file.meas-vol-oil   = yes
-              .
-            end.
-            if tt-param.strfrfile = 'volume_water':U then do:
-              assign
-                tt-meas-file.meas-vol-water = yes
-              .
-            end.
-            if tt-param.strfrfile = 'mass_total':U  
-            then do: 
-               if tt-meas-file.pl-code <> 0 
-               then do:
-                  run placelib_get-attr  ( input {&place-asi-sertif}
-                                          ,input i-obj-code
-                                          ,input i-obj-type
-                                          ,input tt-meas-file.pl-code 
-                                          ,output v-value
-                                          ,output v-ok      ) no-error.
-                  
-               end.
-               else do:
-
-                  run placelib_get-attr  ( input {&place-asi-sertif}
-                                          ,input i-obj-code
-                                          ,input i-obj-type
-                                          ,input place.pl-code 
-                                          ,output v-value
-                                          ,output v-ok      ) no-error.
-                  
-               end.
-               if v-ok and v-value = "yes" 
-               then do: 
-                  if     trim( v-fh:buffer-value() )  <> "-" 
-                     and trim( v-fh:buffer-value() )  <> "" 
-                  then do:
-                     assign
-                        tt-meas-file.log-brutto       = yes
-                        tt-meas-file.measure-cli-qnty = decimal( trim( v-fh:buffer-value() ) )
-                     . 
-                  end.
-               end.
-            end.  
+              if tt-param.strfrfile = 'temperature':U   then do:
+                assign
+                  tt-meas-file.temp-not-null   = yes
+                .
+              end.
+              if tt-param.strfrfile = 'temp-layer1':U   then do:
+                assign
+                  tt-meas-file.t1-not-null   = yes
+                .
+              end.
+              if tt-param.strfrfile = 'temp-layer2':U   then do:
+                assign
+                  tt-meas-file.t2-not-null   = yes
+                .
+              end.
+              if tt-param.strfrfile = 'temp-layer3':U   then do:
+                assign
+                  tt-meas-file.t3-not-null   = yes
+                .
+              end.
+              if tt-param.strfrfile = 'volume_oil':U   then do:
+                assign
+                  tt-meas-file.meas-vol-oil   = yes
+                .
+              end.
+              if tt-param.strfrfile = 'volume_water':U then do:
+                assign
+                  tt-meas-file.meas-vol-water = yes
+                .
+              end.
+              if tt-param.strfrfile = 'mass_total':U  
+              then do: 
+                 if tt-meas-file.pl-code <> 0 
+                 then do:
+                    run placelib_get-attr  ( input {&place-asi-sertif}
+                                            ,input i-obj-code
+                                            ,input i-obj-type
+                                            ,input tt-meas-file.pl-code 
+                                            ,output v-value
+                                            ,output v-ok      ) no-error.
+                    
+                 end.
+                 else do:
+  
+                    run placelib_get-attr  ( input {&place-asi-sertif}
+                                            ,input i-obj-code
+                                            ,input i-obj-type
+                                            ,input place.pl-code 
+                                            ,output v-value
+                                            ,output v-ok      ) no-error.
+                    
+                 end.
+                 if v-ok and v-value = "yes" 
+                 then do: 
+                    if     trim( v-fh:buffer-value() )  <> "-" 
+                       and trim( v-fh:buffer-value() )  <> "" 
+                    then do:
+                       assign
+                          tt-meas-file.log-brutto       = yes
+                          tt-meas-file.measure-cli-qnty = decimal( trim( v-fh:buffer-value() ) )
+                       . 
+                    end.
+                 end.
+              end.  
             end.
          end.
          else do: /* not available tt-param*/

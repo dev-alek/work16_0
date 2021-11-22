@@ -43,7 +43,7 @@ end .
 
 run rep/d-report.w (
                 input parParentProc ,
-                input 'rep/r-RVD-hist.p',
+                input 'rep/e-RVD-hist.w',
                 {&tt-l},
                 input 4,
                 input "{&g-one},{&g-choice}",
@@ -51,4 +51,4 @@ run rep/d-report.w (
                 input "",
                 input "",
                 input "all,{&Excel-yes}",
-                input yes).
+                input no).

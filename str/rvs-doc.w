@@ -94,56 +94,54 @@ define variable v-ref-rec as recid no-undo .
 &scop sort-clmn_1-br-line   get-mark (buffer ub.rvs-line)
 &scop label-clmn_2-br-line  'Артикул'
 &scop sort-clmn_2-br-line   ub.goods.artic
-&scop label-clmn_3-br-line  'тв'
-&scop sort-clmn_3-br-line   get-input-type (buffer ub.rvs-line)
-&scop label-clmn_4-br-line  'Название'
-&scop sort-clmn_4-br-line   ub.goods.gds-name
-&scop label-clmn_5-br-line  'Скл.место'
-&scop sort-clmn_5-br-line   ub.rvs-line.pl-code
-&scop label-clmn_6-br-line  'Номер резервуара'
-&scop sort-clmn_6-br-line   place.loc1
-&scop label-clmn_7-br-line  'Факт остаток'
-&scop sort-clmn_7-br-line   ub.rvs-line.state-measure-qnty
-&scop label-clmn_8-br-line  'Измер. остаток'
-&scop sort-clmn_8-br-line   ub.rvs-line.measure-qnty
-&scop label-clmn_9-br-line  'Учет'
-&scop sort-clmn_9-br-line   ub.rvs-line.system-qnty
-&scop label-clmn_10-br-line  'Первонач.учет'
-&scop sort-clmn_10-br-line   ub.rvs-line.orig-system-qnty
-&scop label-clmn_11-br-line 'Факт в!трубопроводе'
-&scop sort-clmn_11-br-line  ub.rvs-line.state-add-qnty
-&scop label-clmn_12-br-line 'Отклонение(факт)'
-&scop sort-clmn_12-br-line  deviation-fact(buffer ub.rvs-line)
-&scop label-clmn_13-br-line 'Отклонение(измер)'
-&scop sort-clmn_13-br-line  deviation-measure(buffer ub.rvs-line)
-&scop label-clmn_14-br-line 'Допустимое!отклонение'
-&scop sort-clmn_14-br-line  ub.rvs-line.tolerance
-&scop label-clmn_15-br-line 'Факт брутто'
-&scop sort-clmn_15-br-line  ub.rvs-line.state-brutto-qnty
-&scop sort-clmn_16-br-line  ub.rvs-line.brutto-qnty
-&scop sort-clmn_17-br-line  ub.rvs-line.state-density
-&scop sort-clmn_18-br-line  ub.rvs-line.density
-&scop sort-clmn_19-br-line  ub.rvs-line.state-measure-cli-qnty
-&scop sort-clmn_20-br-line  ub.rvs-line.measure-cli-qnty
-&scop sort-clmn_21-br-line  ub.rvs-line.system-cli-qnty
-&scop sort-clmn_22-br-line  ub.rvs-line.orig-system-cli-qnty
-&scop sort-clmn_23-br-line  ub.rvs-line.state-brutto-cli-qnty
-&scop sort-clmn_24-br-line  ub.rvs-line.brutto-cli-qnty
-&scop sort-clmn_25-br-line  ub.rvs-line.state-mh-qnty
-&scop sort-clmn_26-br-line  ub.rvs-line.meas-mh-qnty
-&scop sort-clmn_27-br-line  ub.rvs-line.state-am-qnty
-&scop sort-clmn_28-br-line  ub.rvs-line.meas-am-qnty
-&scop sort-clmn_29-br-line  ub.rvs-line.state-cf-qnty
-&scop sort-clmn_30-br-line  ub.rvs-line.meas-cf-qnty
-&scop sort-clmn_31-br-line  ub.rvs-line.state-level-total
-&scop sort-clmn_32-br-line  ub.rvs-line.level-total
-&scop sort-clmn_33-br-line  ub.rvs-line.state-level-petrol
-&scop sort-clmn_34-br-line  ub.rvs-line.level-petrol
-&scop sort-clmn_35-br-line  ub.rvs-line.state-level-water
-&scop sort-clmn_36-br-line  ub.rvs-line.level-water
-&scop sort-clmn_37-br-line  ub.rvs-line.state-temperature
-&scop sort-clmn_38-br-line  ub.rvs-line.temperature
-&scop enabled-clmn          {&sort-clmn_38-br-line}
+&scop label-clmn_3-br-line  'Название'
+&scop sort-clmn_3-br-line   ub.goods.gds-name
+&scop label-clmn_4-br-line  'Скл.место'
+&scop sort-clmn_4-br-line   ub.rvs-line.pl-code
+&scop label-clmn_5-br-line  'Номер резервуара'
+&scop sort-clmn_5-br-line   place.loc1
+&scop label-clmn_6-br-line  'Факт остаток'
+&scop sort-clmn_6-br-line   ub.rvs-line.state-measure-qnty
+&scop label-clmn_7-br-line  'Измер. остаток'
+&scop sort-clmn_7-br-line   ub.rvs-line.measure-qnty
+&scop label-clmn_8-br-line  'Учет'
+&scop sort-clmn_8-br-line   ub.rvs-line.system-qnty
+&scop label-clmn_9-br-line  'Первонач.учет'
+&scop sort-clmn_9-br-line   ub.rvs-line.orig-system-qnty
+&scop label-clmn_10-br-line 'Факт в!трубопроводе'
+&scop sort-clmn_10-br-line  ub.rvs-line.state-add-qnty
+&scop label-clmn_11-br-line 'Отклонение(факт)'
+&scop sort-clmn_11-br-line  deviation-fact(buffer ub.rvs-line)
+&scop label-clmn_12-br-line 'Отклонение(измер)'
+&scop sort-clmn_12-br-line  deviation-measure(buffer ub.rvs-line)
+&scop label-clmn_13-br-line 'Допустимое!отклонение'
+&scop sort-clmn_13-br-line  ub.rvs-line.tolerance
+&scop label-clmn_14-br-line 'Факт брутто'
+&scop sort-clmn_14-br-line  ub.rvs-line.state-brutto-qnty
+&scop sort-clmn_15-br-line  ub.rvs-line.brutto-qnty
+&scop sort-clmn_16-br-line  ub.rvs-line.state-density
+&scop sort-clmn_17-br-line  ub.rvs-line.density
+&scop sort-clmn_18-br-line  ub.rvs-line.state-measure-cli-qnty
+&scop sort-clmn_19-br-line  ub.rvs-line.measure-cli-qnty
+&scop sort-clmn_20-br-line  ub.rvs-line.system-cli-qnty
+&scop sort-clmn_21-br-line  ub.rvs-line.orig-system-cli-qnty
+&scop sort-clmn_22-br-line  ub.rvs-line.state-brutto-cli-qnty
+&scop sort-clmn_23-br-line  ub.rvs-line.brutto-cli-qnty
+&scop sort-clmn_24-br-line  ub.rvs-line.state-mh-qnty
+&scop sort-clmn_25-br-line  ub.rvs-line.meas-mh-qnty
+&scop sort-clmn_26-br-line  ub.rvs-line.state-am-qnty
+&scop sort-clmn_27-br-line  ub.rvs-line.meas-am-qnty
+&scop sort-clmn_28-br-line  ub.rvs-line.state-cf-qnty
+&scop sort-clmn_29-br-line  ub.rvs-line.meas-cf-qnty
+&scop sort-clmn_30-br-line  ub.rvs-line.state-level-total
+&scop sort-clmn_31-br-line  ub.rvs-line.level-total
+&scop sort-clmn_32-br-line  ub.rvs-line.state-level-petrol
+&scop sort-clmn_33-br-line  ub.rvs-line.level-petrol
+&scop sort-clmn_34-br-line  ub.rvs-line.state-level-water
+&scop sort-clmn_35-br-line  ub.rvs-line.level-water
+&scop sort-clmn_36-br-line  ub.rvs-line.state-temperature
+&scop sort-clmn_37-br-line  ub.rvs-line.temperature
+&scop enabled-clmn          {&sort-clmn_37-br-line}
 
 &scop label-clmn_1-br-line-pump 'ТРК'
 &scop sort-clmn_1-br-line-pump  ub.rvs-line-pump.pump-code
@@ -286,24 +284,6 @@ function get-mark return character (buffer local-rvs-line for ub.rvs-line ).
                                                                  else return "".
 end function.
 
-function get-input-type return character (buffer local-rvs-line for ub.rvs-line ).
-   find first rvs-line-attr no-lock where rvs-line-attr.obj-code  = local-rvs-line.obj-code
-                                     and rvs-line-attr.obj-type  = local-rvs-line.obj-type
-                                     and rvs-line-attr.gds-code  = local-rvs-line.gds-code
-                                     and rvs-line-attr.pl-code   = local-rvs-line.pl-code
-                                     and rvs-line-attr.rvs-code  = local-rvs-line.rvs-code
-                                     and rvs-line-attr.attr-code = "input-type" no-error. 
-   if available rvs-line-attr
-   then do :
-     if length(rvs-line-attr.attr-value) = 2
-     then
-       return substring(rvs-line-attr.attr-value, 2 , 1) .
-     else 
-      return rvs-line-attr.attr-value .
-   end.
-   else return "" .                                  
-end function.
-
 function deviation-fact    return decimal (buffer local-rvs-line for ub.rvs-line ).
    return (local-rvs-line.state-measure-qnty   + local-rvs-line.state-add-qnty - local-rvs-line.system-qnty).
 end function.
@@ -317,9 +297,9 @@ define query {&browse-name-pump} for ub.rvs-line-pump                scrolling.
 define browse {&browse-name} query {&browse-name} no-lock display
       {&sort-clmn_1-br-line}  column-label {&label-clmn_1-br-line}  format "x(1)"
       {&sort-clmn_2-br-line}  column-label {&label-clmn_2-br-line}
-      {&sort-clmn_3-br-line}  column-label {&label-clmn_3-br-line}  format "x(2)"
-      {&sort-clmn_4-br-line}  column-label {&label-clmn_4-br-line}  format "x(15)"
-      {&sort-clmn_5-br-line}  column-label {&label-clmn_5-br-line}  FORMAT "99999999999":U
+      {&sort-clmn_3-br-line}  column-label {&label-clmn_3-br-line}  format "x(15)"
+      {&sort-clmn_4-br-line}  column-label {&label-clmn_4-br-line}  FORMAT "99999999999":U
+      {&sort-clmn_5-br-line}  column-label {&label-clmn_5-br-line}
       {&sort-clmn_6-br-line}  column-label {&label-clmn_6-br-line}
       {&sort-clmn_7-br-line}  column-label {&label-clmn_7-br-line}
       {&sort-clmn_8-br-line}  column-label {&label-clmn_8-br-line}
@@ -329,7 +309,6 @@ define browse {&browse-name} query {&browse-name} no-lock display
       {&sort-clmn_12-br-line} column-label {&label-clmn_12-br-line}
       {&sort-clmn_13-br-line} column-label {&label-clmn_13-br-line}
       {&sort-clmn_14-br-line} column-label {&label-clmn_14-br-line}
-      {&sort-clmn_15-br-line} column-label {&label-clmn_15-br-line}
       {&sort-clmn_15-br-line}
       {&sort-clmn_16-br-line}
       {&sort-clmn_17-br-line}
@@ -353,7 +332,6 @@ define browse {&browse-name} query {&browse-name} no-lock display
       {&sort-clmn_35-br-line}
       {&sort-clmn_36-br-line}
       {&sort-clmn_37-br-line}
-      {&sort-clmn_38-br-line}
       enable {&enabled-clmn}
     with size 98.75 by 6 separators.
 
@@ -1309,7 +1287,6 @@ case pardoc-mode :
                   varcur-data = 1.
             end.
           end.
-/*run gbl/inidebug.p.*/
           if can-find(first tt-meas) then do:
              run waitfram-show  in this-procedure ( input "Делаем сверку по всем резервуарам" ).
              { str/rvsplace.i
@@ -1359,7 +1336,7 @@ case pardoc-mode :
                      and rvs-line-attr.gds-code  = bf_r-line.gds-code
                      and rvs-line-attr.pl-code   = bf_r-line.pl-code
                      and rvs-line-attr.rvs-code  = bf_r-line.rvs-code
-                     and rvs-line-attr.attr-code = "input-type" no-error.
+                     and rvs-line-attr.attr-code = "input-type-p" no-error.
               if not available rvs-line-attr then do :
                 create rvs-line-attr.
                 assign
@@ -1368,7 +1345,49 @@ case pardoc-mode :
                   rvs-line-attr.gds-code  = bf_r-line.gds-code
                   rvs-line-attr.pl-code   = bf_r-line.pl-code
                   rvs-line-attr.rvs-code  = bf_r-line.rvs-code
-                  rvs-line-attr.attr-code = "input-type"
+                  rvs-line-attr.attr-code = "input-type-p"
+                .
+              end.
+              if varcur-data > 0 then rvs-line-attr.attr-value = 'а' .
+              else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+              
+              find first rvs-line-attr exclusive-lock
+                   where rvs-line-attr.obj-code  = bf_r-line.obj-code
+                     and rvs-line-attr.obj-type  = bf_r-line.obj-type
+                     and rvs-line-attr.gds-code  = bf_r-line.gds-code
+                     and rvs-line-attr.pl-code   = bf_r-line.pl-code
+                     and rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+                     and rvs-line-attr.attr-code = "input-type-t" no-error.
+              if not available rvs-line-attr then do :
+                create rvs-line-attr.
+                assign
+                  rvs-line-attr.obj-code  = bf_r-line.obj-code
+                  rvs-line-attr.obj-type  = bf_r-line.obj-type
+                  rvs-line-attr.gds-code  = bf_r-line.gds-code
+                  rvs-line-attr.pl-code   = bf_r-line.pl-code
+                  rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+                  rvs-line-attr.attr-code = "input-type-t"
+                .
+              end.
+              if varcur-data > 0 then rvs-line-attr.attr-value = 'а' .
+              else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+              
+              find first rvs-line-attr exclusive-lock
+                   where rvs-line-attr.obj-code  = bf_r-line.obj-code
+                     and rvs-line-attr.obj-type  = bf_r-line.obj-type
+                     and rvs-line-attr.gds-code  = bf_r-line.gds-code
+                     and rvs-line-attr.pl-code   = bf_r-line.pl-code
+                     and rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+                     and rvs-line-attr.attr-code = "input-type-l" no-error.
+              if not available rvs-line-attr then do :
+                create rvs-line-attr.
+                assign
+                  rvs-line-attr.obj-code  = bf_r-line.obj-code
+                  rvs-line-attr.obj-type  = bf_r-line.obj-type
+                  rvs-line-attr.gds-code  = bf_r-line.gds-code
+                  rvs-line-attr.pl-code   = bf_r-line.pl-code
+                  rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+                  rvs-line-attr.attr-code = "input-type-l"
                 .
               end.
               if varcur-data > 0 then rvs-line-attr.attr-value = 'а' .
@@ -1694,16 +1713,35 @@ assign rvs-line-rec = recid(ub.rvs-line)
                    ub.place.pl-code  = ub.rvs-line.pl-code
         no-error. 
         if available ub.place then do :
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_rvs-on-doc_upd-revision':U
+            {&cntxt-object}
+            r-doc.host-code
+            r-doc.obj-type
+            r-doc.obj-code
+            0
+            0
+            0
+            false
+            varlog
+          }
+          if not varlog
+          then do :
             if ub.place.is-meas
             and not pl-rvd-dens
             and not pl-rvd-lvl
             and not pl-rvd-temp
             then do :
+            end .
+            else do :
               { gbl/chk-actg.i
                 v-cntxt-db-num
                 v-cntxt-userid
                 {&action-head-code-main}
-                'actn_rvs-shift_upd-revision':U
+                'actn_rvs-control_upd-immeas':U
                 {&cntxt-object}
                 r-doc.host-code
                 r-doc.obj-type
@@ -1711,9 +1749,43 @@ assign rvs-line-rec = recid(ub.rvs-line)
                 0
                 0
                 0
-                true
+                false
                 varlog
-              }
+              } 
+            end .
+          end .
+        end .
+    end.
+    when {&rvs-shift}
+    then do:
+        find first ub.place no-lock where
+                   ub.place.obj-code = ub.rvs-line.obj-code and
+                   ub.place.obj-type = ub.rvs-line.obj-type and
+                   ub.place.pl-code  = ub.rvs-line.pl-code
+        no-error. 
+        if available ub.place then do :
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_rvs-shift_upd-revision':U
+            {&cntxt-object}
+            r-doc.host-code
+            r-doc.obj-type
+            r-doc.obj-code
+            0
+            0
+            0
+            false
+            varlog
+          }
+          if not varlog
+          then do :
+            if ub.place.is-meas
+            and not pl-rvd-dens
+            and not pl-rvd-lvl
+            and not pl-rvd-temp
+            then do :
             end.
             else do :
               { gbl/chk-actg.i
@@ -1728,10 +1800,11 @@ assign rvs-line-rec = recid(ub.rvs-line)
                 0
                 0
                 0
-                true
+                false
                 varlog
               }
-            end.      
+            end.  
+          end .    
         end.  
     end.
     when {&rvs-control}
@@ -1742,26 +1815,28 @@ assign rvs-line-rec = recid(ub.rvs-line)
                    ub.place.pl-code  = ub.rvs-line.pl-code
         no-error.
         if available ub.place then do :
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_rvs-control_upd-revision':U
+            {&cntxt-object}
+            r-doc.host-code
+            r-doc.obj-type
+            r-doc.obj-code
+            0
+            0
+            0
+            false
+            varlog
+          }
+          if not varlog
+          then do :
             if ub.place.is-meas
             and not pl-rvd-dens
             and not pl-rvd-lvl
             and not pl-rvd-temp
             then do :
-              { gbl/chk-actg.i
-                v-cntxt-db-num
-                v-cntxt-userid
-                {&action-head-code-main}
-                'actn_rvs-control_upd-revision':U
-                {&cntxt-object}
-                r-doc.host-code
-                r-doc.obj-type
-                r-doc.obj-code
-                0
-                0
-                0
-                true
-                varlog
-              }
             end.
             else do :
               { gbl/chk-actg.i
@@ -1776,10 +1851,11 @@ assign rvs-line-rec = recid(ub.rvs-line)
                 0
                 0
                 0
-                true
+                false
                 varlog
               } 
             end.
+          end .
         end.         
     end.
     otherwise do:
@@ -1793,7 +1869,10 @@ assign rvs-line-rec = recid(ub.rvs-line)
     end.
   end case .
 
-if varlog <> yes then do: return no-apply. end.
+if varlog <> yes then do:
+  message "Недостаточно прав для редактирования!" view-as alert-box error .
+  return no-apply.
+end.
 find first buf_goods where buf_goods.gds-code = ub.rvs-line.gds-code no-lock.
 
 if not error-status :error 
@@ -1832,44 +1911,44 @@ else do:
       if available buf_goods
       and is-sug(buf_goods.gds-code) then do:
         
-        run placelib_get-attr  ( input {&place-SI-temp}
-                                ,input rvs-line.obj-code
-                                ,input rvs-line.obj-type
-                                ,input rvs-line.pl-code
-                                ,output v-value
-                                ,output v-ok      ) no-error.
-        if v-ok
-        then pl-temp-sr-izm = integer(v-value) .
-        else pl-temp-sr-izm = ? .
-        
-        run placelib_get-attr  ( input {&place-SI-level}
-                                ,input rvs-line.obj-code
-                                ,input rvs-line.obj-type
-                                ,input rvs-line.pl-code
-                                ,output v-value
-                                ,output v-ok      ) no-error.
-        if v-ok
-        then pl-level-sr-izm = integer(v-value) .
-        else pl-level-sr-izm = ? .
-        
-        v-sug-sr-izm-err = no .
-        
-        if pl-rvd-lvl
-        and (pl-level-sr-izm = ? or pl-level-sr-izm = 0)
-        then do :
-          v-sug-sr-izm-err = yes .
-          message "Для показателя 'уровень' не установлено средство измерения. Обратитесь в службу поддержки для установки средства измерения 'уровень'. Ввод данных по ручным измерениям без указания средства измерения невозможен." view-as alert-box .
-        end .
-        
-        if pl-rvd-temp
-        and (pl-temp-sr-izm = ? or pl-temp-sr-izm = 0)
-        then do :
-          v-sug-sr-izm-err = yes .
-          message "Для показателя 'температура' не установлено средство измерения. Обратитесь в службу поддержки для установки средства измерения 'температура'. Ввод данных по ручным измерениям без указания средства измерения невозможен." view-as alert-box .
-        end .
-        
-        if not v-sug-sr-izm-err
-        then do :
+/*        run placelib_get-attr  ( input {&place-SI-temp}                                                                                                                                                                                                           */
+/*                                ,input rvs-line.obj-code                                                                                                                                                                                                          */
+/*                                ,input rvs-line.obj-type                                                                                                                                                                                                          */
+/*                                ,input rvs-line.pl-code                                                                                                                                                                                                           */
+/*                                ,output v-value                                                                                                                                                                                                                   */
+/*                                ,output v-ok      ) no-error.                                                                                                                                                                                                     */
+/*        if v-ok                                                                                                                                                                                                                                                   */
+/*        then pl-temp-sr-izm = integer(v-value) .                                                                                                                                                                                                                  */
+/*        else pl-temp-sr-izm = ? .                                                                                                                                                                                                                                 */
+/*                                                                                                                                                                                                                                                                  */
+/*        run placelib_get-attr  ( input {&place-SI-level}                                                                                                                                                                                                          */
+/*                                ,input rvs-line.obj-code                                                                                                                                                                                                          */
+/*                                ,input rvs-line.obj-type                                                                                                                                                                                                          */
+/*                                ,input rvs-line.pl-code                                                                                                                                                                                                           */
+/*                                ,output v-value                                                                                                                                                                                                                   */
+/*                                ,output v-ok      ) no-error.                                                                                                                                                                                                     */
+/*        if v-ok                                                                                                                                                                                                                                                   */
+/*        then pl-level-sr-izm = integer(v-value) .                                                                                                                                                                                                                 */
+/*        else pl-level-sr-izm = ? .                                                                                                                                                                                                                                */
+/*                                                                                                                                                                                                                                                                  */
+/*        v-sug-sr-izm-err = no .                                                                                                                                                                                                                                   */
+/*                                                                                                                                                                                                                                                                  */
+/*        if pl-rvd-lvl                                                                                                                                                                                                                                             */
+/*        and (pl-level-sr-izm = ? or pl-level-sr-izm = 0)                                                                                                                                                                                                          */
+/*        then do :                                                                                                                                                                                                                                                 */
+/*          v-sug-sr-izm-err = yes .                                                                                                                                                                                                                                */
+/*          message "Для показателя 'уровень' не установлено средство измерения. Обратитесь в службу поддержки для установки средства измерения 'уровень'. Ввод данных по ручным измерениям без указания средства измерения невозможен." view-as alert-box .        */
+/*        end .                                                                                                                                                                                                                                                     */
+/*                                                                                                                                                                                                                                                                  */
+/*        if pl-rvd-temp                                                                                                                                                                                                                                            */
+/*        and (pl-temp-sr-izm = ? or pl-temp-sr-izm = 0)                                                                                                                                                                                                            */
+/*        then do :                                                                                                                                                                                                                                                 */
+/*          v-sug-sr-izm-err = yes .                                                                                                                                                                                                                                */
+/*          message "Для показателя 'температура' не установлено средство измерения. Обратитесь в службу поддержки для установки средства измерения 'температура'. Ввод данных по ручным измерениям без указания средства измерения невозможен." view-as alert-box .*/
+/*        end .                                                                                                                                                                                                                                                     */
+/*                                                                                                                                                                                                                                                                  */
+/*        if not v-sug-sr-izm-err                                                                                                                                                                                                                                   */
+/*        then do :                                                                                                                                                                                                                                                 */
           run str/rvs-lin-sug.w
             (input  parparentproc
             ,input  recid(ub.rvs-line)
@@ -1880,7 +1959,7 @@ else do:
                                 string(buf_goods.prod-code) +
                     " складское место " + string(ub.rvs-line.pl-code)
             ) no-error.
-        end . 
+/*        end .*/
       end.
       else do:
         run str/rvs-lin.w
@@ -1895,7 +1974,6 @@ else do:
         ) no-error.
       end.
     end.
-    
 end.
 
 if error-status :error then do:
@@ -2322,7 +2400,7 @@ if available ub.rvs-line then do:
              and rvs-line-attr.gds-code  = ub.rvs-line.gds-code
              and rvs-line-attr.pl-code   = ub.rvs-line.pl-code
              and rvs-line-attr.rvs-code  = ub.rvs-line.rvs-code
-             and rvs-line-attr.attr-code = "input-type" no-error.
+             and rvs-line-attr.attr-code = "input-type-p" no-error.
       if not available rvs-line-attr then do :
         create rvs-line-attr.
         assign
@@ -2331,7 +2409,7 @@ if available ub.rvs-line then do:
           rvs-line-attr.gds-code  = ub.rvs-line.gds-code
           rvs-line-attr.pl-code   = ub.rvs-line.pl-code
           rvs-line-attr.rvs-code  = ub.rvs-line.rvs-code
-          rvs-line-attr.attr-code = "input-type"
+          rvs-line-attr.attr-code = "input-type-p"
         .
       end.
       if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
@@ -2350,6 +2428,57 @@ if available ub.rvs-line then do:
         or rvs-line-attr.attr-value = 'ф'
         then rvs-line-attr.attr-value = 'п' .
       end.       
+      release rvs-line-attr no-error .
+      
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = ub.rvs-line.obj-code
+             and rvs-line-attr.obj-type  = ub.rvs-line.obj-type
+             and rvs-line-attr.gds-code  = ub.rvs-line.gds-code
+             and rvs-line-attr.pl-code   = ub.rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = ub.rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "input-type-t" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = ub.rvs-line.obj-code
+          rvs-line-attr.obj-type  = ub.rvs-line.obj-type
+          rvs-line-attr.gds-code  = ub.rvs-line.gds-code
+          rvs-line-attr.pl-code   = ub.rvs-line.pl-code
+          rvs-line-attr.rvs-code  = ub.rvs-line.rvs-code
+          rvs-line-attr.attr-code = "input-type-t"
+        .
+      end.
+      if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+      else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+      if available olddens_rvs-line-attr
+      and logical(olddens_rvs-line-attr.attr-value)
+      then do :
+        if rvs-line-attr.attr-value = 'а'
+        or rvs-line-attr.attr-value = 'ф'
+        then rvs-line-attr.attr-value = 'п' .
+      end.       
+      release rvs-line-attr no-error .
+      
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = ub.rvs-line.obj-code
+             and rvs-line-attr.obj-type  = ub.rvs-line.obj-type
+             and rvs-line-attr.gds-code  = ub.rvs-line.gds-code
+             and rvs-line-attr.pl-code   = ub.rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = ub.rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "input-type-l" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = ub.rvs-line.obj-code
+          rvs-line-attr.obj-type  = ub.rvs-line.obj-type
+          rvs-line-attr.gds-code  = ub.rvs-line.gds-code
+          rvs-line-attr.pl-code   = ub.rvs-line.pl-code
+          rvs-line-attr.rvs-code  = ub.rvs-line.rvs-code
+          rvs-line-attr.attr-code = "input-type-l"
+        .
+      end.
+      if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+      else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
       release rvs-line-attr no-error .
       
       run waitfram-show in this-procedure ( input "Пересчитывем шапку" ).
@@ -2781,7 +2910,7 @@ procedure proc_m-meas-1:
                and rvs-line-attr.gds-code  = bf_r-line.gds-code
                and rvs-line-attr.pl-code   = bf_r-line.pl-code
                and rvs-line-attr.rvs-code  = bf_r-line.rvs-code
-               and rvs-line-attr.attr-code = "input-type" no-error.
+               and rvs-line-attr.attr-code = "input-type-p" no-error.
         if not available rvs-line-attr then do :
           create rvs-line-attr.
           assign
@@ -2790,7 +2919,49 @@ procedure proc_m-meas-1:
             rvs-line-attr.gds-code  = bf_r-line.gds-code
             rvs-line-attr.pl-code   = bf_r-line.pl-code
             rvs-line-attr.rvs-code  = bf_r-line.rvs-code
-            rvs-line-attr.attr-code = "input-type"
+            rvs-line-attr.attr-code = "input-type-p"
+          .
+        end.
+        if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+        else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+        
+        find first rvs-line-attr exclusive-lock
+             where rvs-line-attr.obj-code  = bf_r-line.obj-code
+               and rvs-line-attr.obj-type  = bf_r-line.obj-type
+               and rvs-line-attr.gds-code  = bf_r-line.gds-code
+               and rvs-line-attr.pl-code   = bf_r-line.pl-code
+               and rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+               and rvs-line-attr.attr-code = "input-type-t" no-error.
+        if not available rvs-line-attr then do :
+          create rvs-line-attr.
+          assign
+            rvs-line-attr.obj-code  = bf_r-line.obj-code
+            rvs-line-attr.obj-type  = bf_r-line.obj-type
+            rvs-line-attr.gds-code  = bf_r-line.gds-code
+            rvs-line-attr.pl-code   = bf_r-line.pl-code
+            rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+            rvs-line-attr.attr-code = "input-type-t"
+          .
+        end.
+        if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+        else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+        
+        find first rvs-line-attr exclusive-lock
+             where rvs-line-attr.obj-code  = bf_r-line.obj-code
+               and rvs-line-attr.obj-type  = bf_r-line.obj-type
+               and rvs-line-attr.gds-code  = bf_r-line.gds-code
+               and rvs-line-attr.pl-code   = bf_r-line.pl-code
+               and rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+               and rvs-line-attr.attr-code = "input-type-l" no-error.
+        if not available rvs-line-attr then do :
+          create rvs-line-attr.
+          assign
+            rvs-line-attr.obj-code  = bf_r-line.obj-code
+            rvs-line-attr.obj-type  = bf_r-line.obj-type
+            rvs-line-attr.gds-code  = bf_r-line.gds-code
+            rvs-line-attr.pl-code   = bf_r-line.pl-code
+            rvs-line-attr.rvs-code  = bf_r-line.rvs-code
+            rvs-line-attr.attr-code = "input-type-l"
           .
         end.
         if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
@@ -2863,7 +3034,6 @@ procedure proc_m-meas-2 :
           assign
             varcur-pump = yes.
       end.
-      
       { str/rvs-pump.i
         parParentProc
         r-doc.obj-type

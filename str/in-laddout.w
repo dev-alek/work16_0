@@ -1520,6 +1520,8 @@ DO:
   run ref/sr-izm.w (input parparentproc ,
                     input ""            ,
                     input {&lookup}     ,
+                    input ""            ,
+                    input ""            ,
                     input-output v-node-code,
                     output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :

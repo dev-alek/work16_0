@@ -43,6 +43,7 @@ and not (buffer new-{&main-tbl}:handle:buffer-compare (buffer old-{&main-tbl}:ha
 then do:
   if new-{&main-tbl}.head-table  = 'rvd-reasons':U
   or new-{&main-tbl}.head-table  = 'schedule':U
+  or new-{&main-tbl}.head-table  = 'mi-change-1C':U
   then do :
     { gbl/rum-runa.i
        ?

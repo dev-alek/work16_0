@@ -782,6 +782,9 @@ procedure make-rep-ext :
     for each bf_c-user-log no-lock where bf_c-user-log.head-table = 'rvd-reasons':U
                                    break by bf_c-user-log.corr-date desc by bf_c-user-log.corr-time desc
                                    :
+      if num-entries(bf_c-user-log.head-table-key, {&delim-cmd}) = 23 /* Óñòàíîâêà ĞÂÄ â ÑÂÅĞÊÅ */   
+      then next user-log_ .         
+                        
       v-shift-date = date(entry(3, bf_c-user-log.head-table-key, {&delim-cmd})) .
       v-shift-num = integer(entry(4, bf_c-user-log.head-table-key, {&delim-cmd})) .
       v-obj-type = entry(1, bf_c-user-log.head-table-key, {&delim-cmd}) .

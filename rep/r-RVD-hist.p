@@ -14,6 +14,8 @@ Author: Dmitry Ukhanov
 Creation date: 11/12/10
 
 */
+define input parameter p-inv-RVD as logical no-undo .
+
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -197,9 +199,8 @@ v-legend3 = "Расшифровка для столбцов 7,11,12,13 - 7: Указывается режим измерени
 
 run waitfram-show in this-procedure ( "ЖДИТЕ... Формирование отчёта") .
 run make-rep .
-run waitfram-hide in this-procedure .
-
 run print-rep .
+run waitfram-hide in this-procedure .
 
 procedure make-rep :
   
@@ -263,6 +264,11 @@ procedure make-rep :
                                    and bf_c-user-log.head-table = 'rvd-reasons':U
                                    break by bf_c-user-log.corr-date by bf_c-user-log.corr-time
                                    :
+    if not p-inv-RVD
+    and num-entries(bf_c-user-log.head-table-key, {&delim-cmd}) = 23
+    and entry(15, bf_c-user-log.head-table-key, {&delim-cmd}) > ""/* Установка РВД в СВЕРКЕ */
+    then next user-log_ .
+    
     v-obj-type = entry(1, bf_c-user-log.head-table-key, {&delim-cmd}) .
     v-obj-code = integer(entry(2, bf_c-user-log.head-table-key, {&delim-cmd})) .
     if not can-find( first obj-list where obj-list.obj-type = v-obj-type and obj-list.obj-code = v-obj-code )
@@ -493,39 +499,49 @@ procedure make-rep :
       assign tt-report.pl-state = "ПА(Температура)" .
     end .
     
-    v-found-next = false .
-    v-date1 = bf_c-user-log.corr-date .
-    v-time1 = bf_c-user-log.corr-time .
-    find-next_ :
-    for each buf_c-user-log no-lock where buf_c-user-log.head-table = 'rvd-reasons':U
-                                      and (buf_c-user-log.corr-date > bf_c-user-log.corr-date
-                                        or (buf_c-user-log.corr-date = bf_c-user-log.corr-date
-                                        and buf_c-user-log.corr-time > bf_c-user-log.corr-time))
-                                        :
-      if v-obj-type = entry(1, buf_c-user-log.head-table-key, {&delim-cmd}) 
-      and v-obj-code = integer(entry(2, buf_c-user-log.head-table-key, {&delim-cmd}))     
-      and v-pl-code = integer(entry(5, buf_c-user-log.head-table-key, {&delim-cmd}))
+    if num-entries(bf_c-user-log.head-table-key, {&delim-cmd}) = 23 
+    and entry(15, bf_c-user-log.head-table-key, {&delim-cmd}) > "" /* Установка РВД в СВЕРКЕ */
+    then do :
+      assign tt-report.corr-period = "0" .
+    end .
+    else do :
+      v-found-next = false .
+      v-date1 = bf_c-user-log.corr-date .
+      v-time1 = bf_c-user-log.corr-time .
+      find-next_ :
+      for each buf_c-user-log no-lock where buf_c-user-log.head-table = 'rvd-reasons':U
+                                        and (buf_c-user-log.corr-date > bf_c-user-log.corr-date
+                                          or (buf_c-user-log.corr-date = bf_c-user-log.corr-date
+                                          and buf_c-user-log.corr-time > bf_c-user-log.corr-time))
+                                          :
+        if num-entries(buf_c-user-log.head-table-key, {&delim-cmd}) = 23
+        and entry(15, buf_c-user-log.head-table-key, {&delim-cmd}) > "" /* Установка РВД в СВЕРКЕ */
+        then next find-next_ .                                   
+        if v-obj-type = entry(1, buf_c-user-log.head-table-key, {&delim-cmd}) 
+        and v-obj-code = integer(entry(2, buf_c-user-log.head-table-key, {&delim-cmd}))     
+        and v-pl-code = integer(entry(5, buf_c-user-log.head-table-key, {&delim-cmd}))
+        then do :
+          v-date2 = buf_c-user-log.corr-date .
+          v-time2 = buf_c-user-log.corr-time .
+          v-found-next = true .
+          leave find-next_ .
+        end .                              
+      end .
+      if not v-found-next
       then do :
-        v-date2 = buf_c-user-log.corr-date .
-        v-time2 = buf_c-user-log.corr-time .
-        v-found-next = true .
-        leave find-next_ .
-      end .                              
+        v-date2 = today .
+        v-time2 = time .
+      end .
+      v-date-diff = v-date2 - v-date1 .
+      v-time-diff = v-time2 - v-time1 .
+      if v-time-diff < 0
+      then do :
+        v-date-diff = v-date-diff - 1 .
+        v-time-diff = v-time-diff + 86400 .
+      end .
+      
+      assign tt-report.corr-period = string(v-date-diff) + "д. " + string(v-time-diff, "hh:mm:ss") .
     end .
-    if not v-found-next
-    then do :
-      v-date2 = today .
-      v-time2 = time .
-    end .
-    v-date-diff = v-date2 - v-date1 .
-    v-time-diff = v-time2 - v-time1 .
-    if v-time-diff < 0
-    then do :
-      v-date-diff = v-date-diff - 1 .
-      v-time-diff = v-time-diff + 86400 .
-    end .
-    
-    assign tt-report.corr-period = string(v-date-diff) + "д. " + string(v-time-diff, "hh:mm:ss") .
                                
   end .
   
@@ -607,7 +623,7 @@ procedure print-rep :
       '<td style="width: 65px; border: none;"></td>' skip
       '<td style="width: 65px; border: none;"></td>' skip
       '<td style="width: 60px; border: none;"></td>' skip
-      '<td style="width: 60px; border: none;"></td>' skip
+      '<td style="width: 75px; border: none;"></td>' skip
       '<td style="width: 80px; border: none;"></td>' skip
       '<td style="width: 70px; border: none;"></td>' skip
       '</tr>' skip
@@ -654,9 +670,9 @@ procedure print-rep :
       '         <th rowspan="2" style="text-align: center; font-weight:bold; background-color: silver;">Причина перевода на РВД</th>' skip
       '         <th colspan="5" style="text-align: center; font-weight:bold; background-color: silver;">Состояние резервуара после изменения режима</th>' skip
       '         <th rowspan="2" style="text-align: center; font-weight:bold; background-color: silver;">Смена</th>' skip
-      '         <th rowspan="2" style="text-align: center; font-weight:bold; background-color: silver;">Номер заявки ITSM</th>' skip
+      '         <th rowspan="2" style="text-align: center; font-weight:bold; background-color: silver;">Номер заявки ITSM/Номер приказа о проведении инвентаризации</th>' skip
       '         <th rowspan="2" style="text-align: center; font-weight:bold; background-color: silver;">Исполнитель заявки</th>' skip
-      '         <th rowspan="2" style="text-align: center; font-weight:bold; background-color: silver;">Инициатор заявки</th>' skip
+      '         <th rowspan="2" style="text-align: center; font-weight:bold; background-color: silver;">Инициатор заявки/Сотрудник Инв. Комиссии</th>' skip
       '       </tr>' skip
       '       <tr>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Резервуар</th>' skip

@@ -5410,6 +5410,8 @@ PROCEDURE m_sr-izmeren :
    run ref/sr-izm.w (input parparentproc
                     ,input "b-add"
                     ,input {&UPDATE}
+                    ,input ""
+                    ,input ""
                     ,input-output v-node-code
                     ,output v-sr-type
                     ).

@@ -82,6 +82,13 @@ procedure readrevisetxt:
                v-fh                = v-bh:buffer-field( tt-param.strasi )
                v-fh:buffer-value() = decimal( trim( entry( 2, v_string-tmp, '=' ) ) )
             no-error.
+            if tt-param.strfrfile = "temperature"
+            and trim( entry( 2, v_string-tmp, '=' ) ) = "-"
+            then do :
+              assign
+                 v-fh:buffer-value() = ?
+              no-error.
+            end .
          end.
          else do:
             run gbl/fileapnd.p

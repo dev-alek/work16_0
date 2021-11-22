@@ -33,6 +33,7 @@ define variable vss-description as character no-undo init "Выбор причины установ
 { cmp/str-glbl.i }
 { cmp/showinf.i }
 { ref/extclass.i }
+{ gbl/getcntxt.i def }
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-type as integer no-undo .
@@ -43,6 +44,7 @@ define output parameter p-oper-fio as character no-undo .
 
 
 define buffer buf_ext-classif for ub.ext-classif .
+define buffer buf_user-account for ub.user-account .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -95,11 +97,16 @@ DEFINE VARIABLE f-oper-fio AS CHARACTER FORMAT "X(256)":U
      LABEL "ФИО инициатора заявки" 
      VIEW-AS FILL-IN 
      SIZE 50 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE f-inv-fio AS CHARACTER FORMAT "X(256)":U 
+     LABEL "ФИО сотрудника инвентаризационной комиссии" 
+     VIEW-AS FILL-IN 
+     SIZE 29 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-rvd-reason AS character FORMAT "X(64)":U INITIAL "" 
      LABEL "Основание/причина разрешения РВД" 
      VIEW-AS FILL-IN 
-     SIZE 10 BY 1 NO-UNDO.
+     SIZE 15 BY 1 NO-UNDO.
      
 DEFINE VARIABLE v-reason-name AS CHARACTER FORMAT "X(256)":U 
     VIEW-AS FILL-IN 
@@ -118,10 +125,11 @@ DEFINE FRAME Dialog-Frame
      Btn_OK AT ROW 1.2 COL 2
      Btn_Cancel AT ROW 1.2 COL 17
      f-rvd-reason AT ROW 3 COL 41 COLON-ALIGNED WIDGET-ID 2
-     v-reason-name at row 3 col 55 no-label
-     r-select-rvd-reason at row 3 col 75
+     v-reason-name at row 3 col 60 no-label
+     r-select-rvd-reason at row 3 col 80
      f-ITSM-num AT ROW 4.5 COL 25 COLON-ALIGNED WIDGET-ID 4
      f-oper-fio AT ROW 6 COL 25 COLON-ALIGNED WIDGET-ID 6
+     f-inv-fio AT ROW 6 COL 4 WIDGET-ID 6
      SPACE(2) SKIP(1)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -192,6 +200,7 @@ DO:
     f-rvd-reason
     f-ITSM-num
     f-oper-fio
+    f-inv-fio
   .
   if f-rvd-reason = "" or f-rvd-reason = ?
   then do :
@@ -211,13 +220,28 @@ DO:
   end .
   if trim(f-ITSM-num) = ""
   then do :
-    message 'Не заполнено поле "Номер заявки в ITSM". Все поля формы обязательны для заполнения. Для отказа установки разрешения РВД необходимо нажать "Отмена"'
+    if f-ITSM-num:label = "Номер приказа"
+    then do :
+      message 'Не заполнено поле "Номер приказа". Все поля формы обязательны для заполнения. Для отказа установки разрешения РВД необходимо нажать "Отмена"'
+      view-as alert-box .
+    end .
+    else do :
+      message 'Не заполнено поле "Номер заявки в ITSM". Все поля формы обязательны для заполнения. Для отказа установки разрешения РВД необходимо нажать "Отмена"'
+      view-as alert-box .
+    end .
+    return no-apply .
+  end .
+  if f-oper-fio:visible
+  and trim(f-oper-fio) = ""
+  then do :
+    message 'Не заполнено поле "ФИО инициатора заявки". Все поля формы обязательны для заполнения. Для отказа установки разрешения РВД необходимо нажать "Отмена"'
     view-as alert-box .
     return no-apply .
   end .
-  if trim(f-oper-fio) = ""
+  if f-inv-fio:visible
+  and trim(f-inv-fio) = ""
   then do :
-    message 'Не заполнено поле "ФИО инициатора заявки". Все поля формы обязательны для заполнения. Для отказа установки разрешения РВД необходимо нажать "Отмена"'
+    message 'Не заполнено поле "ФИО сотрудника инвентаризационной комиссии". Все поля формы обязательны для заполнения. Для отказа установки разрешения РВД необходимо нажать "Отмена"'
     view-as alert-box .
     return no-apply .
   end .
@@ -226,6 +250,7 @@ DO:
     p-ITSM-num    = f-ITSM-num
     p-oper-fio    = f-oper-fio
   .
+  if f-inv-fio:visible then p-oper-fio = f-inv-fio .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -302,7 +327,23 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  { gbl/getcntxt.i get }
+  
+  f-inv-fio:visible = false .
   RUN enable_UI.
+  if p-type = -1
+  then do :
+    p-type = 0 .
+    f-ITSM-num:label = "Номер приказа" .
+    hide f-oper-fio in FRAME Dialog-Frame.
+    for first buf_user-account no-lock where buf_user-account.user-id = v-cntxt-userid :
+      f-inv-fio = buf_user-account.last-name + " " + buf_user-account.first-name + " " + buf_user-account.second-name .
+    end .
+    DISPLAY f-ITSM-num f-inv-fio 
+      WITH FRAME Dialog-Frame.
+    ENABLE f-inv-fio 
+      WITH FRAME Dialog-Frame.
+  end .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.

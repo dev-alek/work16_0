@@ -74,6 +74,16 @@ define variable v-oper-fio-on     as character no-undo .
 define variable v-rvd-reason-off  as character no-undo .
 define variable v-ITSM-num-off    as character no-undo .
 define variable v-oper-fio-off    as character no-undo .
+define variable v-main-mi-old     as integer   no-undo .
+define variable v-dnst-mi-old     as integer   no-undo .
+define variable v-tmp-mi-old      as integer   no-undo .
+define variable v-lvl-mi-old      as integer   no-undo .
+
+define buffer osn_sr-izmerenia for sr-izmerenia .
+define buffer dnst_sr-izmerenia for sr-izmerenia .
+define buffer tmp_sr-izmerenia for sr-izmerenia .
+define buffer lvl_sr-izmerenia for sr-izmerenia .
+define buffer dop_sr-izmerenia for sr-izmerenia .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -145,29 +155,29 @@ DEFINE BUTTON r-sr-izm
      LABEL "r-sr-izm" 
      SIZE 3 BY .88.
      
-DEFINE BUTTON r-sr-izm-dens 
+DEFINE BUTTON b-mi-dnst 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-sr-izm-dens" 
+     LABEL "b-mi-dnst" 
      SIZE 3 BY .88.
      
-DEFINE BUTTON r-sr-izm-temp 
+DEFINE BUTTON b-mi-tmp 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-sr-izm-temp" 
+     LABEL "b-mi-tmp" 
      SIZE 3 BY .88.
      
-DEFINE BUTTON r-sr-izm-level 
+DEFINE BUTTON b-mi-lvl 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "r-sr-izm-level" 
+     LABEL "b-mi-lvl" 
      SIZE 3 BY .88.
 
 DEFINE VARIABLE dead-balance AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
-     LABEL "Мертвый остаток" 
+     LABEL "Мертвый остаток(л)" 
      VIEW-AS FILL-IN 
      SIZE 11.63 BY 1 NO-UNDO.
      
@@ -177,7 +187,7 @@ DEFINE VARIABLE water-level AS integer FORMAT ">>>>>9":U INITIAL 0
      SIZE 11.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE dens-prov AS DECIMAL FORMAT "9.9999999999" INITIAL 0 
-     LABEL "Плотность при поверке резервуара" 
+     LABEL "Плотность при поверке резервуара(г/см3)" 
      VIEW-AS FILL-IN 
      SIZE 18 BY 1 NO-UNDO.
 
@@ -206,25 +216,45 @@ DEFINE VARIABLE place-dead-high AS DECIMAL FORMAT ">,>>>,>>9":U INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 11.63 BY 1 NO-UNDO.
 
-DEFINE VARIABLE place-si AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
+DEFINE VARIABLE place-si AS INTEGER FORMAT ">>>>>9":U INITIAL 0 
      LABEL "Основное средство измерения" 
      VIEW-AS FILL-IN 
-     SIZE 8.63 BY 1 NO-UNDO.
+     SIZE 11 BY 1 NO-UNDO.
      
-DEFINE VARIABLE place-si-dens AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
+DEFINE VARIABLE v-mi-dnst AS INTEGER FORMAT ">>>>>9":U INITIAL 0 
      LABEL "" 
      VIEW-AS FILL-IN 
-     SIZE 8.63 BY 1 NO-UNDO.
+     SIZE 11 BY 1 NO-UNDO.
      
-DEFINE VARIABLE place-si-temp AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
+DEFINE VARIABLE v-mi-tmp AS INTEGER FORMAT ">>>>>9":U INITIAL 0 
      LABEL "" 
      VIEW-AS FILL-IN 
-     SIZE 8.63 BY 1 NO-UNDO.
+     SIZE 11 BY 1 NO-UNDO.
      
-DEFINE VARIABLE place-si-level AS INTEGER FORMAT ">>>,>>9":U INITIAL 0 
+DEFINE VARIABLE v-mi-lvl AS INTEGER FORMAT ">>>>>9":U INITIAL 0 
      LABEL "" 
      VIEW-AS FILL-IN 
-     SIZE 8.63 BY 1 NO-UNDO.
+     SIZE 11 BY 1 NO-UNDO.
+
+DEFINE VARIABLE place-si-name AS character FORMAT "X(10)":U
+     LABEL "Основное средство измерения" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE v-mi-lvl-name AS character FORMAT "X(10)":U
+     LABEL "" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE v-mi-dnst-name AS character FORMAT "X(10)":U
+     LABEL "" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE v-mi-tmp-name AS character FORMAT "X(10)":U
+     LABEL "" 
+     VIEW-AS FILL-IN 
+     SIZE 11 BY 1 NO-UNDO.
 
 DEFINE VARIABLE place-twice-code AS CHARACTER FORMAT "x(8)" 
      LABEL "Коды связанных резервуаров" 
@@ -318,17 +348,20 @@ DEFINE FRAME d-pl-form
           LABEL "Код"
           VIEW-AS FILL-IN 
           SIZE 10.93 BY 1
-     rvd-dnstv AT ROW 6.75 COL 35.5 WIDGET-ID 40
-     rvd-lvl AT ROW 6.75 COL 51.38 WIDGET-ID 44
-     rvd-tmp AT ROW 6.75 COL 66.88 WIDGET-ID 46
+     rvd-dnstv AT ROW 6.75 COL 35 WIDGET-ID 40
+     rvd-lvl AT ROW 6.75 COL 52 WIDGET-ID 44
+     rvd-tmp AT ROW 6.75 COL 68 WIDGET-ID 46
      "Доп. средства измерения:" VIEW-AS TEXT
           SIZE 24 BY .75 AT ROW 7.7 COL 7 WIDGET-ID 50
-     place-si-dens AT ROW 7.7 COL 35.5 COLON-ALIGNED WIDGET-ID 52 no-label
-     r-sr-izm-dens AT ROW 7.7 COL 48 RIGHT-ALIGNED
-     place-si-level AT ROW 7.7 COL 51.4 COLON-ALIGNED WIDGET-ID 52 no-label
-     r-sr-izm-level AT ROW 7.7 COL 63 RIGHT-ALIGNED
-     place-si-temp AT ROW 7.7 COL 66.9 COLON-ALIGNED WIDGET-ID 52 no-label
-     r-sr-izm-temp AT ROW 7.7 COL 78 RIGHT-ALIGNED
+     v-mi-dnst AT ROW 7.7 COL 33 COLON-ALIGNED WIDGET-ID 52 no-label
+     v-mi-dnst-name AT ROW 7.7 COL 33 COLON-ALIGNED WIDGET-ID 52 no-label
+     b-mi-dnst AT ROW 7.7 COL 48 RIGHT-ALIGNED
+     v-mi-lvl AT ROW 7.7 COL 50 COLON-ALIGNED WIDGET-ID 52 no-label
+     v-mi-lvl-name AT ROW 7.7 COL 50 COLON-ALIGNED WIDGET-ID 52 no-label
+     b-mi-lvl AT ROW 7.7 COL 65 RIGHT-ALIGNED
+     v-mi-tmp AT ROW 7.7 COL 66 COLON-ALIGNED WIDGET-ID 52 no-label
+     v-mi-tmp-name AT ROW 7.7 COL 66 COLON-ALIGNED WIDGET-ID 52 no-label
+     b-mi-tmp AT ROW 7.7 COL 81 RIGHT-ALIGNED
      tt-place.issue-year AT ROW 8.71 COL 21.63 COLON-ALIGNED
           LABEL "Год выпуска"
           VIEW-AS FILL-IN 
@@ -340,16 +373,17 @@ DEFINE FRAME d-pl-form
           SIZE 11.63 BY 1
      place-locat AT ROW 9.71 COL 88 RIGHT-ALIGNED NO-LABEL WIDGET-ID 30
      tt-place.add-qnty AT ROW 11.92 COL 30.63 COLON-ALIGNED
-          LABEL "Объем трубопровода"
+          LABEL "Объем трубопровода(л)"
           VIEW-AS FILL-IN 
           SIZE 11.63 BY 1
      error-mass AT Y 262 X 703 RIGHT-ALIGNED WIDGET-ID 38
      tt-place.max-qnty AT ROW 12.92 COL 30.63 COLON-ALIGNED
-          LABEL "Макс. кол-во в резервуаре"
+          LABEL "Макс. кол-во в резервуаре(л)"
           VIEW-AS FILL-IN 
           SIZE 11.63 BY 1
      place-si AT ROW 12.92 COL 75.38 COLON-ALIGNED WIDGET-ID 16
-     r-sr-izm AT ROW 12.92 COL 88.5 RIGHT-ALIGNED
+     r-sr-izm AT ROW 12.92 COL 90 RIGHT-ALIGNED
+     place-si-name AT ROW 12.92 COL 75.38 COLON-ALIGNED
      dead-balance AT ROW 13.92 COL 30.63 COLON-ALIGNED WIDGET-ID 18
      water-level AT ROW 14.92 COL 30.63 COLON-ALIGNED WIDGET-ID 58
      place-diameter AT ROW 13.92 COL 75.38 COLON-ALIGNED WIDGET-ID 18
@@ -467,7 +501,6 @@ ON CHOOSE OF b-exit IN FRAME d-pl-form /* Ввод */
 DO:
   define variable vOk as logical no-undo .
   
-  
   { gbl/stdbtn.i }
   assign
     tt-place.pl-name
@@ -490,7 +523,14 @@ DO:
     rvd-lvl
     rvd-tmp
     place-si
+    v-mi-dnst
+    v-mi-lvl
+    v-mi-tmp
   .
+if v-mi-dnst = ? then v-mi-dnst = 0 . 
+if v-mi-lvl = ? then v-mi-lvl = 0 . 
+if v-mi-tmp = ? then v-mi-tmp = 0 . 
+
 if input frame {&frame-name} dens-prov <> dens-prov then 
 do:
   if input frame {&frame-name} dens-prov = ?
@@ -506,7 +546,6 @@ do:
 
   assign frame {&frame-name} dens-prov.
 end.
-
 
 if place-si = ? or place-si = 0
 then do :
@@ -534,7 +573,7 @@ end .
 
 if rvd-dnstv
 then do :
-  if place-si-dens = ? or place-si-dens = 0
+  if v-mi-dnst = ? or v-mi-dnst = 0
   then do :
     message "Не указано вспомогательное средство измерения плотности. Вы уверены, что хотите закончить настройку складского места?"
     view-as alert-box question buttons yes-no update vOk .
@@ -543,7 +582,7 @@ then do :
       return no-apply .
   end .
   else do :
-    find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si-dens .
+    find first sr-izmerenia no-lock where sr-izmerenia.node-code = v-mi-dnst .
     if not sr-izmerenia.sr-density
     then do :
       message "Выбранное дополнительно средство измерения для плотности не настроено на измерение плотности! Вы уверены, что хотите закончить настройку складского места?"
@@ -557,7 +596,7 @@ end .
 
 if rvd-tmp
 then do :
-  if place-si-temp = ? or place-si-temp = 0
+  if v-mi-tmp = ? or v-mi-tmp = 0
   then do :
     message "Не указано вспомогательное средство измерения температуры. Вы уверены, что хотите закончить настройку складского места?"
     view-as alert-box question buttons yes-no update vOk .
@@ -566,7 +605,7 @@ then do :
       return no-apply .
   end .
   else do :
-    find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si-temp .
+    find first sr-izmerenia no-lock where sr-izmerenia.node-code = v-mi-tmp .
     if not sr-izmerenia.sr-temperature
     then do :
       message "Выбранное дополнительно средство измерения для температуры не настроено на измерение температуры! Вы уверены, что хотите закончить настройку складского места?"
@@ -580,7 +619,7 @@ end .
 
 if rvd-lvl
 then do :
-  if place-si-level = ? or place-si-level = 0
+  if v-mi-lvl = ? or v-mi-lvl = 0
   then do :
     message "Не указано вспомогательное средство измерения уровня. Вы уверены, что хотите закончить настройку складского места?"
     view-as alert-box question buttons yes-no update vOk .
@@ -589,7 +628,7 @@ then do :
       return no-apply .
   end .
   else do :
-    find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si-level .
+    find first sr-izmerenia no-lock where sr-izmerenia.node-code = v-mi-lvl .
     if not sr-izmerenia.sr-level
     then do :
       message "Выбранное дополнительно средство измерения для уровня не настроено на измерение уровня! Вы уверены, что хотите закончить настройку складского места?"
@@ -697,17 +736,17 @@ do :
             do: 
                 v-value = rvd-tmp:screen-value .
             end.       
-        when {&place-SI-dens} then 
+        when {&place-si-dens} then 
             do: 
-                v-value = place-si-dens:screen-value .
+                v-value = v-mi-dnst:screen-value .
             end.
-        when {&place-SI-temp} then 
+        when {&place-si-temp} then 
             do: 
-                v-value = place-si-temp:screen-value .
+                v-value = v-mi-tmp:screen-value .
             end.
-        when {&place-SI-level} then 
+        when {&place-si-level} then 
             do: 
-                v-value = place-si-level:screen-value .
+                v-value = v-mi-lvl:screen-value .
             end.
         when {&place-passp-num} then 
             do: 
@@ -745,25 +784,115 @@ do :
   v-rvd-params-off = "" .
   v-shift-num = 0 .
   
+  define variable v-mi-par-list as character no-undo .
+  define variable v-mi-old-val-list as character no-undo .
+  define variable v-mi-new-val-list as character no-undo .
+  
+  v-mi-par-list = "" .
+  v-mi-old-val-list = "" .
+  v-mi-new-val-list = "" .
+  
+  define variable v-userlog-value as character no-undo .
+  
+  v-shift-date = ? .
+  for first buf_shift-obj
+      where buf_shift-obj.obj-type = p-obj-type
+        and buf_shift-obj.obj-code = p-obj-code
+        and buf_shift-obj.status_ = {&sht-current}
+      use-index stts :
+    assign
+      v-shift-date = buf_shift-obj.shift-date
+      v-shift-num  = buf_shift-obj.shift-num
+    .
+  end.
+  if v-shift-date = ? then v-shift-date = today .
+  
   if v-rvd-dnsty-on = rvd-dnstv
   and v-rvd-lvl-on = rvd-lvl
   and v-rvd-temp-on = rvd-tmp
   and v-rvd-is-meas-on = tt-place.is-meas
   then do :
+    if v-main-mi-old = place-si
+    and v-dnst-mi-old = v-mi-dnst
+    and v-lvl-mi-old = v-mi-lvl
+    and v-tmp-mi-old = v-mi-tmp
+    then do :
+    end .
+    else do :
+      if v-main-mi-old <> place-si
+      then do :
+        assign
+          v-mi-par-list = "m" + ","
+          v-mi-old-val-list = string(v-main-mi-old) + ","
+          v-mi-new-val-list = string(place-si) + ","
+        .
+      end .
+      if v-dnst-mi-old <> v-mi-dnst
+      then do :
+        assign
+          v-mi-par-list = v-mi-par-list + "p" + ","
+          v-mi-old-val-list = v-mi-old-val-list + string(v-dnst-mi-old) + ","
+          v-mi-new-val-list = v-mi-new-val-list + string(v-mi-dnst) + ","
+        .
+      end .
+      if v-lvl-mi-old <> v-mi-lvl
+      then do :
+        assign
+          v-mi-par-list = v-mi-par-list + "l" + ","
+          v-mi-old-val-list = v-mi-old-val-list + string(v-lvl-mi-old) + ","
+          v-mi-new-val-list = v-mi-new-val-list + string(v-mi-lvl) + ","
+        .
+      end .
+      if v-tmp-mi-old <> v-mi-tmp
+      then do :
+        assign
+          v-mi-par-list = v-mi-par-list + "t"
+          v-mi-old-val-list = v-mi-old-val-list + string(v-tmp-mi-old)
+          v-mi-new-val-list = v-mi-new-val-list + string(v-mi-tmp)
+        .
+      end .
+      assign
+        v-mi-par-list = trim(v-mi-par-list, ",")
+        v-mi-old-val-list = trim(v-mi-old-val-list, ",")
+        v-mi-new-val-list = trim(v-mi-new-val-list, ",")
+      .
+      
+      run trg/userlog.p (
+              input 'mi-change-1C'
+            , input ("Изменение средств измерений на объекте " +
+                    p-obj-type + string(p-obj-code) +
+                    " рез. " + string(p-pl-code) + ": " +
+                    v-mi-par-list + ";" + 
+                    v-mi-old-val-list + ";" +
+                    v-mi-new-val-list +
+                    {&delim-key} +
+                    p-obj-type + {&delim-cmd} +
+                    string(p-obj-code) + {&delim-cmd} +
+                    string(v-shift-date) + {&delim-cmd} +
+                    string(v-shift-num) + {&delim-cmd} +
+                    string(p-pl-code) + {&delim-cmd} +
+                    v-mi-par-list + {&delim-cmd} + 
+                    v-mi-old-val-list + {&delim-cmd} +
+                    v-mi-new-val-list + {&delim-cmd} +                        
+                    string(v-main-mi-old) + {&delim-cmd} +
+                    string(place-SI) + {&delim-cmd} +
+                    string(v-dnst-mi-old) + {&delim-cmd} +
+                    string(v-mi-dnst) + {&delim-cmd} +
+                    string(v-lvl-mi-old) + {&delim-cmd} +
+                    string(v-mi-lvl) + {&delim-cmd} +
+                    string(v-tmp-mi-old) + {&delim-cmd} +
+                    string(v-mi-tmp)   )
+            , input ?
+            , input ?
+            , input ""
+            ) no-error.
+      if error-status :error
+      then do:
+          message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+      end.
+    end .
   end .
   else do :
-    v-shift-date = ? .
-    for first buf_shift-obj
-        where buf_shift-obj.obj-type = p-obj-type
-          and buf_shift-obj.obj-code = p-obj-code
-          and buf_shift-obj.status_ = {&sht-current}
-        use-index stts :
-      assign
-        v-shift-date = buf_shift-obj.shift-date
-        v-shift-num  = buf_shift-obj.shift-num
-      .
-    end.
-    if v-shift-date = ? then v-shift-date = today .
     if v-rvd-on
     then do :
       if v-rvd-dnsty-on <> rvd-dnstv
@@ -790,31 +919,115 @@ do :
       v-rvd-params-on = trim(v-rvd-params-on) .
       if v-rvd-params-on > ""
       then do :
+        v-userlog-value = ("Установка РВД на объекте " +
+                          p-obj-type + string(p-obj-code) +
+                          " рез. " + string(p-pl-code) + ": " +
+                          v-rvd-params-on + ";" + 
+                          "yes" + ";" +
+                          v-rvd-reason-on + ";" +
+                          v-ITSM-num-on + ";" +
+                          v-oper-fio-on +
+                          {&delim-key} +
+                          p-obj-type + {&delim-cmd} +
+                          string(p-obj-code) + {&delim-cmd} +
+                          string(v-shift-date) + {&delim-cmd} +
+                          string(v-shift-num) + {&delim-cmd} +
+                          string(p-pl-code) + {&delim-cmd} +
+                          v-rvd-params-on + {&delim-cmd} + 
+                          "yes" + {&delim-cmd} +
+                          v-rvd-reason-on + {&delim-cmd} +
+                          v-ITSM-num-on + {&delim-cmd} +
+                          v-oper-fio-on + {&delim-cmd} +
+                          string(rvd-tmp) + {&delim-cmd} +
+                          string(rvd-dnstv) + {&delim-cmd} +
+                          string(rvd-lvl) + {&delim-cmd} +
+                          string(tt-place.is-meas)  )
+                          .
+        if v-main-mi-old = place-si
+        and v-dnst-mi-old = v-mi-dnst
+        and v-lvl-mi-old = v-mi-lvl
+        and v-tmp-mi-old = v-mi-tmp
+        then do :
+        end .
+        else do :
+          if v-main-mi-old <> place-si
+          then do :
+            assign
+              v-mi-par-list = "m" + ","
+              v-mi-old-val-list = string(v-main-mi-old) + ","
+              v-mi-new-val-list = string(place-si) + ","
+            .
+          end .
+          if v-dnst-mi-old <> v-mi-dnst
+          then do :
+            assign
+              v-mi-par-list = v-mi-par-list + "p" + ","
+              v-mi-old-val-list = v-mi-old-val-list + string(v-dnst-mi-old) + ","
+              v-mi-new-val-list = v-mi-new-val-list + string(v-mi-dnst) + ","
+            .
+          end .
+          if v-lvl-mi-old <> v-mi-lvl
+          then do :
+            assign
+              v-mi-par-list = v-mi-par-list + "l" + ","
+              v-mi-old-val-list = v-mi-old-val-list + string(v-lvl-mi-old) + ","
+              v-mi-new-val-list = v-mi-new-val-list + string(v-mi-lvl) + ","
+            .
+          end .
+          if v-tmp-mi-old <> v-mi-tmp
+          then do :
+            assign
+              v-mi-par-list = v-mi-par-list + "t"
+              v-mi-old-val-list = v-mi-old-val-list + string(v-tmp-mi-old)
+              v-mi-new-val-list = v-mi-new-val-list + string(v-mi-tmp)
+            .
+          end .
+          assign
+            v-mi-par-list = trim(v-mi-par-list, ",")
+            v-mi-old-val-list = trim(v-mi-old-val-list, ",")
+            v-mi-new-val-list = trim(v-mi-new-val-list, ",")
+          .
+          
+          run trg/userlog.p (
+                  input 'mi-change'
+                , input ("Изменение средств измерений на объекте " +
+                        p-obj-type + string(p-obj-code) +
+                        " рез. " + string(p-pl-code) + ": " +
+                        v-mi-par-list + ";" + 
+                        v-mi-old-val-list + ";" +
+                        v-mi-new-val-list +
+                        {&delim-key} +
+                        p-obj-type + {&delim-cmd} +
+                        string(p-obj-code) + {&delim-cmd} +
+                        string(v-shift-date) + {&delim-cmd} +
+                        string(v-shift-num) + {&delim-cmd} +
+                        string(p-pl-code) + {&delim-cmd} +
+                        v-mi-par-list + {&delim-cmd} + 
+                        v-mi-old-val-list + {&delim-cmd} +
+                        v-mi-new-val-list   )
+                , input ?
+                , input ?
+                , input ""
+                ) no-error.
+          if error-status :error
+          then do:
+              message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+          end.
+          v-userlog-value = v-userlog-value + {&delim-cmd} +
+                            "" + {&delim-cmd} +                        /* rvs-code */
+                            string(v-main-mi-old) + {&delim-cmd} +
+                            string(place-SI) + {&delim-cmd} +
+                            string(v-dnst-mi-old) + {&delim-cmd} +
+                            string(v-mi-dnst) + {&delim-cmd} +
+                            string(v-lvl-mi-old) + {&delim-cmd} +
+                            string(v-mi-lvl) + {&delim-cmd} +
+                            string(v-tmp-mi-old) + {&delim-cmd} +
+                            string(v-mi-tmp) 
+                            .
+        end .                  
         run trg/userlog.p (
                 input 'rvd-reasons'
-              , input ("Установка РВД на объекте " +
-                      p-obj-type + string(p-obj-code) +
-                      " рез. " + string(p-pl-code) + ": " +
-                      v-rvd-params-on + ";" + 
-                      "yes" + ";" +
-                      v-rvd-reason-on + ";" +
-                      v-ITSM-num-on + ";" +
-                      v-oper-fio-on +
-                      {&delim-key} +
-                      p-obj-type + {&delim-cmd} +
-                      string(p-obj-code) + {&delim-cmd} +
-                      string(v-shift-date) + {&delim-cmd} +
-                      string(v-shift-num) + {&delim-cmd} +
-                      string(p-pl-code) + {&delim-cmd} +
-                      v-rvd-params-on + {&delim-cmd} + 
-                      "yes" + {&delim-cmd} +
-                      v-rvd-reason-on + {&delim-cmd} +
-                      v-ITSM-num-on + {&delim-cmd} +
-                      v-oper-fio-on + {&delim-cmd} +
-                      string(rvd-tmp) + {&delim-cmd} +
-                      string(rvd-dnstv) + {&delim-cmd} +
-                      string(rvd-lvl) + {&delim-cmd} +
-                      string(tt-place.is-meas)  )
+              , input v-userlog-value
               , input ?
               , input ?
               , input ""
@@ -859,31 +1072,115 @@ do :
       v-rvd-params-off = trim(v-rvd-params-off) .
       if v-rvd-params-off > ""
       then do :
+        v-userlog-value = ("Снятие РВД на объекте " +
+                          p-obj-type + string(p-obj-code) +
+                          " рез. " + string(p-pl-code) + ": " +
+                          v-rvd-params-off + ";" + 
+                          "no" + ";" +
+                          v-rvd-reason-off + ";" +
+                          v-ITSM-num-off + ";" +
+                          v-oper-fio-off +
+                          {&delim-key} +
+                          p-obj-type + {&delim-cmd} +
+                          string(p-obj-code) + {&delim-cmd} +
+                          string(v-shift-date) + {&delim-cmd} +
+                          string(v-shift-num) + {&delim-cmd} +
+                          string(p-pl-code) + {&delim-cmd} +
+                          v-rvd-params-off + {&delim-cmd} + 
+                          "no" + {&delim-cmd} +
+                          v-rvd-reason-off + {&delim-cmd} +
+                          v-ITSM-num-off + {&delim-cmd} +
+                          v-oper-fio-off + {&delim-cmd} +
+                          string(rvd-tmp) + {&delim-cmd} +
+                          string(rvd-dnstv) + {&delim-cmd} +
+                          string(rvd-lvl) + {&delim-cmd} +
+                          string(tt-place.is-meas)  )
+                          .
+        if v-main-mi-old = place-si
+        and v-dnst-mi-old = v-mi-dnst
+        and v-lvl-mi-old = v-mi-lvl
+        and v-tmp-mi-old = v-mi-tmp
+        then do :
+        end .
+        else do :
+          if v-main-mi-old <> place-si
+          then do :
+            assign
+              v-mi-par-list = "m" + ","
+              v-mi-old-val-list = string(v-main-mi-old) + ","
+              v-mi-new-val-list = string(place-si) + ","
+            .
+          end .
+          if v-dnst-mi-old <> v-mi-dnst
+          then do :
+            assign
+              v-mi-par-list = v-mi-par-list + "p" + ","
+              v-mi-old-val-list = v-mi-old-val-list + string(v-dnst-mi-old) + ","
+              v-mi-new-val-list = v-mi-new-val-list + string(v-mi-dnst) + ","
+            .
+          end .
+          if v-lvl-mi-old <> v-mi-lvl
+          then do :
+            assign
+              v-mi-par-list = v-mi-par-list + "l" + ","
+              v-mi-old-val-list = v-mi-old-val-list + string(v-lvl-mi-old) + ","
+              v-mi-new-val-list = v-mi-new-val-list + string(v-mi-lvl) + ","
+            .
+          end .
+          if v-tmp-mi-old <> v-mi-tmp
+          then do :
+            assign
+              v-mi-par-list = v-mi-par-list + "t"
+              v-mi-old-val-list = v-mi-old-val-list + string(v-tmp-mi-old)
+              v-mi-new-val-list = v-mi-new-val-list + string(v-mi-tmp)
+            .
+          end .
+          assign
+            v-mi-par-list = trim(v-mi-par-list, ",")
+            v-mi-old-val-list = trim(v-mi-old-val-list, ",")
+            v-mi-new-val-list = trim(v-mi-new-val-list, ",")
+          .
+          
+          run trg/userlog.p (
+                  input 'mi-change'
+                , input ("Изменение средств измерений на объекте " +
+                        p-obj-type + string(p-obj-code) +
+                        " рез. " + string(p-pl-code) + ": " +
+                        v-mi-par-list + ";" + 
+                        v-mi-old-val-list + ";" +
+                        v-mi-new-val-list +
+                        {&delim-key} +
+                        p-obj-type + {&delim-cmd} +
+                        string(p-obj-code) + {&delim-cmd} +
+                        string(v-shift-date) + {&delim-cmd} +
+                        string(v-shift-num) + {&delim-cmd} +
+                        string(p-pl-code) + {&delim-cmd} +
+                        v-mi-par-list + {&delim-cmd} + 
+                        v-mi-old-val-list + {&delim-cmd} +
+                        v-mi-new-val-list   )
+                , input ?
+                , input ?
+                , input ""
+                ) no-error.
+          if error-status :error
+          then do:
+              message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+          end.
+          v-userlog-value = v-userlog-value + {&delim-cmd} +
+                            "" + {&delim-cmd} +                        /* rvs-code */
+                            string(v-main-mi-old) + {&delim-cmd} +
+                            string(place-SI) + {&delim-cmd} +
+                            string(v-dnst-mi-old) + {&delim-cmd} +
+                            string(v-mi-dnst) + {&delim-cmd} +
+                            string(v-lvl-mi-old) + {&delim-cmd} +
+                            string(v-mi-lvl) + {&delim-cmd} +
+                            string(v-tmp-mi-old) + {&delim-cmd} +
+                            string(v-mi-tmp) 
+                            .
+        end .
         run trg/userlog.p (
                 input 'rvd-reasons'
-              , input ("Снятие РВД на объекте " +
-                      p-obj-type + string(p-obj-code) +
-                      " рез. " + string(p-pl-code) + ": " +
-                      v-rvd-params-off + ";" + 
-                      "no" + ";" +
-                      v-rvd-reason-off + ";" +
-                      v-ITSM-num-off + ";" +
-                      v-oper-fio-off +
-                      {&delim-key} +
-                      p-obj-type + {&delim-cmd} +
-                      string(p-obj-code) + {&delim-cmd} +
-                      string(v-shift-date) + {&delim-cmd} +
-                      string(v-shift-num) + {&delim-cmd} +
-                      string(p-pl-code) + {&delim-cmd} +
-                      v-rvd-params-off + {&delim-cmd} + 
-                      "no" + {&delim-cmd} +
-                      v-rvd-reason-off + {&delim-cmd} +
-                      v-ITSM-num-off + {&delim-cmd} +
-                      v-oper-fio-off + {&delim-cmd} +
-                      string(rvd-tmp) + {&delim-cmd} +
-                      string(rvd-dnstv) + {&delim-cmd} +
-                      string(rvd-lvl) + {&delim-cmd} +
-                      string(tt-place.is-meas)  )
+              , input v-userlog-value
               , input ?
               , input ?
               , input ""
@@ -895,6 +1192,20 @@ do :
       end .
     end .
   end .  
+
+  if tt-place.is-meas
+  and not rvd-dnstv
+  and not rvd-tmp
+  and not rvd-lvl
+  then do :
+    run placelib_write-attr  (input {&place-need-RVD-rvs}
+                              ,input p-obj-code
+                              ,input p-obj-type
+                              ,input ub.place.pl-code
+                              ,input string(no)
+                              ,output v-ok      ) no-error.
+  end .
+    
 end.
 if AVAILABLE (ub.place) then 
 do:
@@ -1048,7 +1359,6 @@ DO:
       end . 
       v-rvd-on = yes .                     
     end .
-    enable place-si-dens r-sr-izm-dens with frame {&frame-name} .
   end.  
   else do:
     if not v-rvd-off
@@ -1075,7 +1385,6 @@ DO:
       end .
       v-rvd-off = yes .
     end .
-    disable place-si-dens r-sr-izm-dens with frame {&frame-name} .
   end.  
 END.
 
@@ -1113,7 +1422,6 @@ DO:
       end . 
       v-rvd-on = yes .                     
     end .
-    enable place-si-level r-sr-izm-level with frame {&frame-name} .
   end.  
   else do:
     if not v-rvd-off
@@ -1140,7 +1448,6 @@ DO:
       end .
       v-rvd-off = yes .
     end .
-    disable place-si-level r-sr-izm-level with frame {&frame-name} .
   end.  
 END.
 
@@ -1178,7 +1485,6 @@ DO:
       end .        
       v-rvd-on = yes .              
     end .
-    enable place-si-temp r-sr-izm-temp with frame {&frame-name} .
   end.  
   else do:
     if not v-rvd-off
@@ -1205,7 +1511,6 @@ DO:
       end .
       v-rvd-off = yes .
     end .
-    disable place-si-temp r-sr-izm-temp with frame {&frame-name} .
   end.  
 END.
 
@@ -1301,20 +1606,68 @@ DO:
   run ref/sr-izm.w (input parparentproc ,
                     input "b-sel"       ,
                     input {&lookup}     ,
+                    input ""            ,
+                    input ""            ,
                     input-output v-node-code,
                     output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
     place-si = v-node-code.
     place-si:screen-value = string(v-node-code).
+    find first osn_sr-izmerenia no-lock where osn_sr-izmerenia.node-code = place-si .
+    apply "leave" to place-si in frame d-pl-form .
   end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME r-sr-izm-dens
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sr-izm-dens d-pl-form
-ON CHOOSE OF r-sr-izm-dens IN FRAME d-pl-form /* r-sr-izm */
+on entry of place-si-name IN FRAME d-pl-form 
+do:
+  apply "entry" to place-si in frame d-pl-form.
+end .
+
+on entry of place-si IN FRAME d-pl-form 
+do:
+  hide place-si-name in frame d-pl-form.
+end .
+
+on return of place-si IN FRAME d-pl-form 
+do:
+  apply "leave" to place-si IN FRAME d-pl-form .
+end .
+
+on del of place-si in frame d-pl-form
+do :
+  place-si = ? .
+  place-si:screen-value = "?" .
+end .
+
+on leave of place-si IN FRAME d-pl-form 
+do:
+  define variable v-old-val as character no-undo .
+  
+  v-old-val = string(place-si) .
+  find first osn_sr-izmerenia no-lock where osn_sr-izmerenia.node-code = integer(place-si:screen-value) no-error .
+  if not available osn_sr-izmerenia
+  then do :
+    if place-si:screen-value <> "?"
+    and place-si:screen-value <> "0"
+    then do :
+      message ("Не найдено средство измерения с кодом " + place-si:screen-value) view-as alert-box .
+      place-si:screen-value = v-old-val .
+    end .
+/*    apply "choose" to b-mi-dnst in frame {&frame-name}.*/
+    return .
+  end .
+  place-si-name = osn_sr-izmerenia.sr-model .
+  display place-si-name with frame {&frame-name}.
+  enable place-si-name with frame {&frame-name}.
+  assign place-si .
+end .
+
+&Scoped-define SELF-NAME b-mi-dnst
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mi-dnst d-pl-form
+ON CHOOSE OF b-mi-dnst IN FRAME d-pl-form /* r-sr-izm */
 DO:
   define variable v-node-code as integer no-undo.
   define variable v-sr-type as character no-undo.
@@ -1322,20 +1675,84 @@ DO:
   run ref/sr-izm.w (input parparentproc ,
                     input "b-sel"       ,
                     input {&lookup}     ,
+                    input "0,1"         ,
+                    input "dnst"        ,
                     input-output v-node-code,
                     output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
-    place-si-dens = v-node-code.
-    place-si-dens:screen-value = string(v-node-code).
+    v-mi-dnst = v-node-code.
+    v-mi-dnst:screen-value = string(v-node-code).
+    find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = v-mi-dnst .
+    apply "leave" to v-mi-dnst in frame d-pl-form .
   end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME r-sr-izm-level
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sr-izm-level d-pl-form
-ON CHOOSE OF r-sr-izm-level IN FRAME d-pl-form /* r-sr-izm */
+on entry of v-mi-dnst-name IN FRAME d-pl-form 
+do:
+  apply "entry" to v-mi-dnst in frame d-pl-form.
+end .
+
+on entry of v-mi-dnst IN FRAME d-pl-form 
+do:
+  hide v-mi-dnst-name in frame d-pl-form.
+end .
+
+on return of v-mi-dnst IN FRAME d-pl-form 
+do:
+  apply "leave" to v-mi-dnst IN FRAME d-pl-form .
+end .
+
+on del of v-mi-dnst in frame d-pl-form
+do :
+  v-mi-dnst = ? .
+  v-mi-dnst:screen-value = "?" .
+end .
+
+on leave of v-mi-dnst IN FRAME d-pl-form 
+do:
+  define variable v-old-val as character no-undo .
+  
+  v-old-val = string(v-mi-dnst) .
+  find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = integer(v-mi-dnst:screen-value) no-error .
+  if not available dnst_sr-izmerenia
+  then do :
+    if v-mi-dnst:screen-value <> "?"
+    and v-mi-dnst:screen-value <> "0"
+    then do :
+      message ("Не найдено средство измерения с кодом " + v-mi-dnst:screen-value) view-as alert-box .
+      v-mi-dnst:screen-value = v-old-val .
+    end .
+/*    apply "choose" to b-mi-dnst in frame {&frame-name}.*/
+    return .
+  end .
+  else do :
+    if dnst_sr-izmerenia.sr-type-izm = 2
+    then do :
+      message "Средство измерения является Измерительной Системой!" view-as alert-box .
+      v-mi-dnst:screen-value = v-old-val .
+/*      apply "choose" to b-mi-dnst in frame {&frame-name}.*/
+      return .
+    end .
+    if not dnst_sr-izmerenia.sr-density
+    then do :
+      message "Средство измерения НЕ измеряет плотность!" view-as alert-box .
+      v-mi-dnst:screen-value = v-old-val .
+/*      apply "choose" to b-mi-dnst in frame {&frame-name}.*/
+      return .
+    end .
+  end .
+  v-mi-dnst-name = dnst_sr-izmerenia.sr-model .
+  display v-mi-dnst-name with frame {&frame-name}.
+  enable v-mi-dnst-name with frame {&frame-name}.
+  assign v-mi-dnst .
+end .
+
+&Scoped-define SELF-NAME b-mi-lvl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mi-lvl d-pl-form
+ON CHOOSE OF b-mi-lvl IN FRAME d-pl-form /* r-sr-izm */
 DO:
   define variable v-node-code as integer no-undo.
   define variable v-sr-type as character no-undo.
@@ -1343,20 +1760,84 @@ DO:
   run ref/sr-izm.w (input parparentproc ,
                     input "b-sel"       ,
                     input {&lookup}     ,
+                    input "0,1"         ,
+                    input "lvl"         ,
                     input-output v-node-code,
                     output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
-    place-si-level = v-node-code.
-    place-si-level:screen-value = string(v-node-code).
+    v-mi-lvl = v-node-code.
+    v-mi-lvl:screen-value = string(v-node-code).
+    find first lvl_sr-izmerenia no-lock where lvl_sr-izmerenia.node-code = v-mi-lvl .
+    apply "leave" to v-mi-lvl in frame d-pl-form .
   end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME r-sr-izm-temp
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sr-izm-temp d-pl-form
-ON CHOOSE OF r-sr-izm-temp IN FRAME d-pl-form /* r-sr-izm */
+on entry of v-mi-lvl-name IN FRAME d-pl-form 
+do:
+  apply "entry" to v-mi-lvl in frame d-pl-form.
+end .
+
+on entry of v-mi-lvl IN FRAME d-pl-form 
+do:
+  hide v-mi-lvl-name in frame d-pl-form.
+end .
+
+on return of v-mi-lvl IN FRAME d-pl-form 
+do:
+  apply "leave" to v-mi-lvl IN FRAME d-pl-form .
+end . 
+
+on del of v-mi-lvl in frame d-pl-form
+do :
+  v-mi-lvl = ? .
+  v-mi-lvl:screen-value = "?" .
+end . 
+  
+on leave of v-mi-lvl IN FRAME d-pl-form 
+do:
+  define variable v-old-val as character no-undo .
+  
+  v-old-val = string(v-mi-lvl) .
+  find first lvl_sr-izmerenia no-lock where lvl_sr-izmerenia.node-code = integer(v-mi-lvl:screen-value) no-error .
+  if not available lvl_sr-izmerenia
+  then do :
+    if v-mi-lvl:screen-value <> "?"
+    and v-mi-lvl:screen-value <> "0"
+    then do :
+      message ("Не найдено средтсво измерения с кодом " + v-mi-lvl:screen-value) view-as alert-box .
+      v-mi-lvl:screen-value = v-old-val .
+    end .
+/*    apply "choose" to b-mi-lvl in frame {&frame-name}.*/
+    return .
+  end .
+  else do :
+    if lvl_sr-izmerenia.sr-type-izm = 2
+    then do :
+      message "Средство измерения является Измерительной Системой!" view-as alert-box .
+      v-mi-lvl:screen-value = v-old-val .
+/*      apply "choose" to b-mi-lvl in frame {&frame-name}.*/
+      return .
+    end .
+    if not lvl_sr-izmerenia.sr-level
+    then do :
+      message "Средство измерения НЕ измеряет уровень!" view-as alert-box .
+      v-mi-lvl:screen-value = v-old-val .
+/*      apply "choose" to b-mi-lvl in frame {&frame-name}.*/
+      return .
+    end .
+  end .
+  v-mi-lvl-name = lvl_sr-izmerenia.sr-model .
+  display v-mi-lvl-name with frame {&frame-name}.
+  enable v-mi-lvl-name with frame {&frame-name}.
+  assign v-mi-lvl .
+end .
+
+&Scoped-define SELF-NAME b-mi-tmp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mi-tmp d-pl-form
+ON CHOOSE OF b-mi-tmp IN FRAME d-pl-form /* r-sr-izm */
 DO:
   define variable v-node-code as integer no-undo.
   define variable v-sr-type as character no-undo.
@@ -1364,16 +1845,80 @@ DO:
   run ref/sr-izm.w (input parparentproc ,
                     input "b-sel"       ,
                     input {&lookup}     ,
+                    input "0,1"         ,
+                    input "tmp"         ,
                     input-output v-node-code,
                     output v-sr-type) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
-    place-si-temp = v-node-code.
-    place-si-temp:screen-value = string(v-node-code).
+    v-mi-tmp = v-node-code.
+    v-mi-tmp:screen-value = string(v-node-code).
+    find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = v-mi-tmp .
+    apply "leave" to v-mi-tmp in frame d-pl-form .
   end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+on entry of v-mi-tmp-name IN FRAME d-pl-form 
+do:
+  apply "entry" to v-mi-tmp in frame d-pl-form.
+end .
+
+on entry of v-mi-tmp IN FRAME d-pl-form 
+do:
+  hide v-mi-tmp-name in frame d-pl-form.
+end .
+
+on return of v-mi-tmp IN FRAME d-pl-form 
+do:
+  apply "leave" to v-mi-tmp IN FRAME d-pl-form .
+end .
+
+on del of v-mi-tmp in frame d-pl-form
+do :
+  v-mi-tmp = ? .
+  v-mi-tmp:screen-value = "?" .
+end .
+
+on leave of v-mi-tmp IN FRAME d-pl-form 
+do:
+  define variable v-old-val as character no-undo .
+  
+  v-old-val = string(v-mi-tmp) .
+  find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = integer(v-mi-tmp:screen-value) no-error .
+  if not available tmp_sr-izmerenia
+  then do :
+    if v-mi-tmp:screen-value <> "?"
+    and v-mi-tmp:screen-value <> "0"
+    then do :
+      message ("Не найдено средтсво измерения с кодом " + v-mi-tmp:screen-value) view-as alert-box .
+      v-mi-tmp:screen-value = v-old-val .
+    end .
+/*    apply "choose" to b-mi-tmp in frame {&frame-name}.*/
+    return .
+  end .
+  else do :
+    if tmp_sr-izmerenia.sr-type-izm = 2
+    then do :
+      message "Средство измерения является Измерительной Системой!" view-as alert-box .
+      v-mi-tmp:screen-value = v-old-val .
+/*      apply "choose" to b-mi-tmp in frame {&frame-name}.*/
+      return .
+    end .
+    if not tmp_sr-izmerenia.sr-temperature
+    then do :
+      message "Средство измерения НЕ измеряет температуру!" view-as alert-box .
+      v-mi-tmp:screen-value = v-old-val .
+/*      apply "choose" to b-mi-tmp in frame {&frame-name}.*/
+      return .
+    end .
+  end .
+  v-mi-tmp-name = tmp_sr-izmerenia.sr-model .
+  display v-mi-tmp-name with frame {&frame-name}.
+  enable v-mi-tmp-name with frame {&frame-name}.
+  assign v-mi-tmp .
+end .
 
 
 &UNDEFINE SELF-NAME
@@ -1490,7 +2035,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         if v-ok then place-type = integer(v-value) .
       end.
       when {&place-SI} then do :
-        if v-ok then place-si = integer(v-value) .
+        if v-ok
+        then do :
+          place-si = integer(v-value) .
+          v-main-mi-old = place-si .
+          if v-main-mi-old = ? then v-main-mi-old = 0 .
+        end .
       end.
       when {&place-diameter} then do :
         if v-ok then place-diameter = decimal(v-value) .
@@ -1557,14 +2107,29 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           v-rvd-temp-on = rvd-tmp .
         end .
       end.  
-      when {&place-SI-dens} then do :
-        if v-ok then place-si-dens = integer(v-value) .
+      when {&place-si-dens} then do :
+        if v-ok
+        then do :
+          v-mi-dnst = integer(v-value) .
+          v-dnst-mi-old = v-mi-dnst .
+          if v-dnst-mi-old = ? then v-dnst-mi-old = 0 .
+        end .
       end.
-      when {&place-SI-level} then do :
-        if v-ok then place-si-level = integer(v-value) .
+      when {&place-si-level} then do :
+        if v-ok
+        then do :
+          v-mi-lvl = integer(v-value) .
+          v-lvl-mi-old = v-mi-lvl .
+          if v-lvl-mi-old = ? then v-lvl-mi-old = 0 .
+        end .
       end.
-      when {&place-SI-temp} then do :
-        if v-ok then place-si-temp = integer(v-value) .
+      when {&place-si-temp} then do :
+        if v-ok
+        then do :
+          v-mi-tmp = integer(v-value) .
+          v-tmp-mi-old = v-mi-tmp .
+          if v-tmp-mi-old = ? then v-tmp-mi-old = 0 .
+        end .
       end.
       when {&place-passp-num} then do: 
         if v-ok then place-passp-num = v-value .
@@ -1621,8 +2186,8 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY t-place-virtual t-asi-srtif rvd-dnstv rvd-lvl rvd-tmp place-type 
           place-locat error-mass place-si dead-balance water-level place-diameter 
-          dens-prov place-twice-code place-si-dens
-          place-si-level place-si-temp place-passp-num place-passp-type
+          dens-prov place-twice-code v-mi-dnst
+          v-mi-lvl v-mi-tmp place-passp-num place-passp-type
           place-dead-high place-temp-coef
       WITH FRAME d-pl-form.
   IF AVAILABLE tt-place THEN 
@@ -1651,7 +2216,7 @@ PROCEDURE Myenable :
   assign
     v-tab-order = "loc1,loc2,loc3,loc4,pl-name,is-meas,"
                   + "issue-year,start-date,add-qnty,max-qnty,"
-                  + "ps,place-type,place-SI,r-sr-izm,place-SI-dens,r-sr-izm=dens,place-SI-level,r-sr-izm-level,place-SI-temp,r-sr-izm-temp,"
+                  + "ps,place-type,place-SI,r-sr-izm,v-mi-dnst,b-mi-dnst,v-mi-lvl,b-mi-lvl,v-mi-tmp,b-mi-tmp,"
                   + "place-diameter,dead-balance,place-dead-high,place-temp-coef,dens-prov,t-place-virtual,place-twice-code,t-sert-urov,place-passp-num,place-passp-type".
   if p-mode = {&lookup} then do:
     disable
@@ -1677,15 +2242,38 @@ PROCEDURE Myenable :
   if tt-place.is-meas then do:
     enable t-asi-srtif with frame {&frame-name} .
   end.  
-  if rvd-dnstv then do:
-    enable place-si-dens r-sr-izm-dens with frame {&frame-name} .
-  end.
-  if rvd-lvl then do:
-    enable place-si-level r-sr-izm-level with frame {&frame-name} .
-  end.
-  if rvd-tmp then do:
-    enable place-si-temp r-sr-izm-temp with frame {&frame-name} .
-  end.
+  enable v-mi-dnst b-mi-dnst with frame {&frame-name} .
+  enable v-mi-lvl b-mi-lvl with frame {&frame-name} .
+  enable v-mi-tmp b-mi-tmp with frame {&frame-name} .
+  
+  for first dop_sr-izmerenia no-lock where dop_sr-izmerenia.node-code = v-mi-lvl :
+    v-mi-lvl-name = dop_sr-izmerenia.sr-model .
+    display v-mi-lvl-name with frame {&frame-name}.
+  end .
+  if p-mode <> {&lookup} then enable v-mi-lvl-name with frame {&frame-name}.
+  if v-mi-lvl = 0 then v-mi-lvl = ? .
+  
+  for first dop_sr-izmerenia no-lock where dop_sr-izmerenia.node-code = v-mi-dnst :
+    v-mi-dnst-name = dop_sr-izmerenia.sr-model .
+    display v-mi-dnst-name with frame {&frame-name}.
+  end .
+  if p-mode <> {&lookup} then enable v-mi-dnst-name with frame {&frame-name}.
+  if v-mi-dnst = 0 then v-mi-dnst = ? .
+  
+  for first dop_sr-izmerenia no-lock where dop_sr-izmerenia.node-code = v-mi-tmp :
+    v-mi-tmp-name = dop_sr-izmerenia.sr-model .
+    display v-mi-tmp-name with frame {&frame-name}.
+  end .
+  if p-mode <> {&lookup} then enable v-mi-tmp-name with frame {&frame-name}.
+  if v-mi-tmp = 0 then v-mi-tmp = ? .
+  
+  for first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si :
+    place-si-name = sr-izmerenia.sr-model .
+    display place-si-name with frame {&frame-name}.
+  end .
+  if p-mode <> {&lookup} then enable place-si-name with frame {&frame-name}.
+  if place-si = 0 then place-si = ? .
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

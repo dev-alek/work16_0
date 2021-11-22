@@ -54,7 +54,9 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define variable v-pres-sug              as decimal   no-undo .
   define variable v-dens-sug-fact         as decimal   no-undo .
   define variable v-pres-sug-fact         as decimal   no-undo .
-  define variable v-line-input-type       as character no-undo .
+  define variable v-line-input-type-p as character no-undo .
+  define variable v-line-input-type-t as character no-undo .
+  define variable v-line-input-type-l as character no-undo .
   define variable v-doc-input-type        as character no-undo .
   define variable v-input-type-list       as character no-undo .
   define variable er-wght-pipeline        as decimal   no-undo .
@@ -74,6 +76,9 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define variable v-POkMI-water-vol       as decimal no-undo .
   define variable ii                      as integer no-undo .
   define variable v-is-sug                as logical no-undo .
+  define variable v-dnst-mi               as character no-undo .
+  define variable v-lvl-mi                as character no-undo .
+  define variable v-tmp-mi                as character no-undo .
   
 
   define property Msg as character no-undo
@@ -243,16 +248,31 @@ sw = insw .
     
     v-input-type-list = '' .
     for each tt-rvs-line no-lock :
-      find first buf_rvs-line-attr no-lock
-            where buf_rvs-line-attr.obj-code  = tt-rvs-line.obj-code
-            and buf_rvs-line-attr.obj-type  = tt-rvs-line.obj-type
-            and buf_rvs-line-attr.gds-code  = tt-rvs-line.gds-code
-            and buf_rvs-line-attr.pl-code   = tt-rvs-line.pl-code
-            and buf_rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
-            and buf_rvs-line-attr.attr-code = 'input-type'
-            no-error.
-      if available buf_rvs-line-attr
-      then do :
+      for first buf_rvs-line-attr no-lock
+        where buf_rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+        and buf_rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+        and buf_rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+        and buf_rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+        and buf_rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+        and buf_rvs-line-attr.attr-code = 'input-type-p':
+        v-input-type-list = v-input-type-list + ',' + buf_rvs-line-attr.attr-value .
+      end.
+      for first buf_rvs-line-attr no-lock
+        where buf_rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+        and buf_rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+        and buf_rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+        and buf_rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+        and buf_rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+        and buf_rvs-line-attr.attr-code = 'input-type-t':
+        v-input-type-list = v-input-type-list + ',' + buf_rvs-line-attr.attr-value .
+      end.
+      for first buf_rvs-line-attr no-lock
+        where buf_rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+        and buf_rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+        and buf_rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+        and buf_rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+        and buf_rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+        and buf_rvs-line-attr.attr-code = 'input-type-l':
         v-input-type-list = v-input-type-list + ',' + buf_rvs-line-attr.attr-value .
       end.
     end.  
@@ -340,10 +360,20 @@ sw = insw .
             do:
               v-ex-df = decimal(buf_rvs-line-attr.attr-value) .
             end.
-          when "input-type" then
+          when "input-type-p" then
             do:
-              v-line-input-type = buf_rvs-line-attr.attr-value .
-              if length(v-line-input-type) = 2 then v-line-input-type = substring(v-line-input-type, 2, 1) .
+              v-line-input-type-p = buf_rvs-line-attr.attr-value .
+              if length(v-line-input-type-p) = 2 then v-line-input-type-p = substring(v-line-input-type-p, 2, 1) .
+            end.
+          when "input-type-T" then
+            do:
+              v-line-input-type-T = buf_rvs-line-attr.attr-value .
+              if length(v-line-input-type-T) = 2 then v-line-input-type-T = substring(v-line-input-type-T, 2, 1) .
+            end.
+          when "input-type-l" then
+            do:
+              v-line-input-type-l = buf_rvs-line-attr.attr-value .
+              if length(v-line-input-type-l) = 2 then v-line-input-type-l = substring(v-line-input-type-l, 2, 1) .
             end.
           when "dens-pf-sug" then
             do:
@@ -364,7 +394,19 @@ sw = insw .
           when "temp-izm-vol" then
             do:
               v-temp-izm-vol = decimal(buf_rvs-line-attr.attr-value) .
-            end.  
+            end. 
+          when "mi-dnst" then
+            do:
+              v-dnst-mi = buf_rvs-line-attr.attr-value .
+            end. 
+          when "mi-lvl" then
+            do:
+              v-lvl-mi = buf_rvs-line-attr.attr-value .
+            end. 
+          when "mi-tmp" then
+            do:
+              v-tmp-mi = buf_rvs-line-attr.attr-value .
+            end. 
           when "izm-temps" then
             do:
               sr-type-temp = integer(entry(1, buf_rvs-line-attr.attr-value, ";")) no-error .
@@ -408,7 +450,6 @@ sw = insw .
       else er-wght-pipeline = ? .                                
       sw:start-element ("tank") .
       sw:write-data-element ("tank-num"  , if tt-rvs-line.pl-code = ? then "0" else string(tt-rvs-line.pl-code)) no-error .
-      sw:write-data-element ("inp-type"  , v-line-input-type).
       sw:write-data-element ("gd-code"  , if tt-rvs-line.gds-code = ? then "0" else string(tt-rvs-line.gds-code)) no-error .
       sw:write-data-element ("tank-ost" , if tt-rvs-line.measure-qnty = ? then "0" else string(tt-rvs-line.measure-qnty)) no-error .
       sw:write-data-element ("tank-ost-tc" , if tt-rvs-line.measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.measure-tc-qnty)) no-error .
@@ -444,6 +485,12 @@ sw = insw .
       else
         sw:write-data-element ("tnk-t3" , string-mth(tt-rvs-line.temp-layer3)) no-error .
       sw:write-data-element ("tnk-flng" , if tt-rvs-line.meas-cf-qnty = ? then "0" else string-mth(tt-rvs-line.meas-cf-qnty)) no-error .
+      if v-dnst-mi > "" then sw:write-data-element ("dnst-mi" , v-dnst-mi) no-error .
+      if v-line-input-type-p > "" then sw:write-data-element ("inp-type-p" , v-line-input-type-p) no-error .
+      if v-lvl-mi > "" then sw:write-data-element ("lvl-mi" , v-lvl-mi) no-error .
+      if v-line-input-type-l > "" then sw:write-data-element ("inp-type-l" , v-line-input-type-l) no-error .
+      if v-tmp-mi > "" then sw:write-data-element ("tmp-mi" , v-tmp-mi) no-error .
+      if v-line-input-type-t > "" then sw:write-data-element ("inp-type-t" , v-line-input-type-t) no-error .
       if v-dens-sug <> ? and v-dens-sug <> 0 then sw:write-data-element ("tnk-dens-sug" , string-mth(v-dens-sug)) no-error .
       if v-pres-sug <> ? and v-pres-sug <> 0 then sw:write-data-element ("tnk-pres-sug" , string-mth(v-pres-sug)) no-error .
       sw:write-data-element ("tank-ost-fact" , if tt-rvs-line.state-measure-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-qnty)) no-error .

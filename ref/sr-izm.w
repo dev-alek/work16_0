@@ -29,6 +29,8 @@ block-level on error undo, throw.
 DEFINE INPUT PARAMETER parparentproc AS WIDGET-HANDLE NO-UNDO.
 DEFINE INPUT PARAMETER bttns AS character NO-UNDO.
 DEFINE INPUT PARAMETER p-mode AS character NO-UNDO.
+DEFINE INPUT PARAMETER p-type-izm-list AS character NO-UNDO.
+DEFINE INPUT PARAMETER p-izm-par AS character NO-UNDO.
 DEFINE INPUT-OUTPUT PARAMETER p-node-code AS INTEGER NO-UNDO.
 define output parameter p-sr-type as character no-undo.
 
@@ -355,7 +357,7 @@ DO:
   RUN ref\sr-izm-frm.w ({&update}, sr-izmerenia.node-code) no-error.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
-  {&OPEN-QUERY-{&BROWSE-NAME}}
+  run reopen-query .
   find first sr-izmerenia where sr-izmerenia.node-code eq  vnode-code no-lock.
   reposition {&BROWSE-NAME} to rowid rowid(sr-izmerenia) no-error .
     APPLY "value-changed" TO BROWSE br-sr-izm.
@@ -372,6 +374,8 @@ DO:
   IF NOT AVAILABLE sr-izmerenia  THEN RETURN NO-APPLY.
   RUN proc-b-del IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  run reopen-query .
+    APPLY "value-changed" TO BROWSE br-sr-izm.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -386,8 +390,7 @@ DO:
   vnode-code = sr-izmerenia.node-code.
   RUN ref\sr-izm-frm.w ({&lookup}, sr-izmerenia.node-code) .
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
-  {&OPEN-QUERY-{&BROWSE-NAME}}
-/*   br-utd:refresh () no-error.*/
+  run reopen-query .
   find first sr-izmerenia where sr-izmerenia.node-code eq  vnode-code no-lock.
   reposition {&BROWSE-NAME} to rowid rowid(sr-izmerenia) no-error .
   APPLY "value-changed" TO BROWSE br-sr-izm.
@@ -606,7 +609,7 @@ IF p-mode <> {&UPDATE} THEN DO:
   b-quit:COLUMN  = 1.
   b-quit:label in frame {&frame-name} = "&Выход".
 END.
-{&OPEN-QUERY-{&BROWSE-NAME}}
+run reopen-query .
 APPLY "value-changed" TO BROWSE br-sr-izm.
 END PROCEDURE.
 
@@ -668,6 +671,40 @@ v-retfl = false.
     end finally .
   end.
   else return error.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reopen-query Dialog-Frame
+PROCEDURE reopen-query :
+  if p-type-izm-list = ""
+  then do :
+    if p-izm-par = ""
+    then do :
+      {&OPEN-QUERY-{&BROWSE-NAME}}
+    end .
+    else do :
+      open query BR-sr-izm for each sr-izmerenia no-lock where (sr-izmerenia.sr-level and p-izm-par = "lvl")
+                                                            or (sr-izmerenia.sr-density and p-izm-par = "dnst")
+                                                            or (sr-izmerenia.sr-temperature and p-izm-par = "tmp")
+                                                            .
+    end .
+  end .
+  else do :
+    if p-izm-par = ""
+    then do :
+      open query BR-sr-izm for each sr-izmerenia no-lock where can-do(p-type-izm-list, string(sr-izmerenia.sr-type-izm)) .
+    end .
+    else do :
+      open query BR-sr-izm for each sr-izmerenia no-lock where can-do(p-type-izm-list, string(sr-izmerenia.sr-type-izm))
+                                                           and ((sr-izmerenia.sr-level and p-izm-par = "lvl")
+                                                            or (sr-izmerenia.sr-density and p-izm-par = "dnst")
+                                                            or (sr-izmerenia.sr-temperature and p-izm-par = "tmp"))
+                                                            .
+    end .
+  end .
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

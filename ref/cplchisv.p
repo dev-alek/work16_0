@@ -336,6 +336,18 @@ function  getPlaceAttrCode returns character (istr as char ):
    else if istr eq "place-need-RVD-rvs"
    then
       OStr = "Необходимо сделать сверку с РВД".
+   else if istr eq "place-SI-level"
+   then
+      OStr = "Доп. средство измерения уровня".  
+   else if istr eq "place-SI-dens"
+   then
+      OStr = "Доп. средство измерения плотности".
+   else if istr eq "place-SI-temp"
+   then
+      OStr = "Доп. средство измерения температуры". 
+   else if istr eq "place-SI"
+   then
+      OStr = "Основное средство измерения".
    else
       OStr = istr.
    return OStr.
@@ -364,6 +376,12 @@ function  getPlaceAttrValue returns character (istr as char ):
       OStr = OStr + " для смены № " + entry(3,istr,{&delim-par}) + " Дата " + entry(2,istr,{&delim-par}).
    return OStr.
 end.
+
+function getSIname returns character (si-code as char) :
+  for first sr-izmerenia no-lock where sr-izmerenia.node-code = integer(si-code) :
+    return sr-izmerenia.sr-model .
+  end .
+end .
 
 procedure place-attr-proc :
 define output parameter p-description as character no-undo .
@@ -399,11 +417,23 @@ define buffer current_c-place-attr for ub.c-place-attr  .
 
 define variable v-label-param as character no-undo .
 
-v-label-param =
-  "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "getPlaceAttrValue" + {&delim-flf}
- + "attr-code" + {&delim-par} + "Код трибута" + {&delim-par} + "getPlaceAttrCode" + {&delim-flf}
- + "PS" + {&delim-par} + "Примечание" + {&delim-par} + "" + {&delim-flf}
- + "status_" + {&delim-par} + "Статус" + {&delim-par} + ""  .
+if current_c-place-attr.attr-code = "place-SI"
+or current_c-place-attr.attr-code = "place-SI-temp"
+or current_c-place-attr.attr-code = "place-SI-dens"
+or current_c-place-attr.attr-code = "place-SI-level"
+then do :
+  v-label-param =
+    "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "getSIname" + {&delim-flf}
+   + "attr-code" + {&delim-par} + "Код атрибута" + {&delim-par} + "getPlaceAttrCode"   .
+end .
+else do :
+  v-label-param =
+    "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "getPlaceAttrValue" + {&delim-flf}
+   + "attr-code" + {&delim-par} + "Код атрибута" + {&delim-par} + "getPlaceAttrCode" + {&delim-flf}
+   + "PS" + {&delim-par} + "Примечание" + {&delim-par} + "" + {&delim-flf}
+   + "status_" + {&delim-par} + "Статус" + {&delim-par} + ""  .
+end . 
+ 
  run proc-full-temp-changes in this-procedure (
                                              input buf_c-plc-hist.action = integer({&hn-create})
                                             ,input buf_c-plc-hist.action = integer({&hn-delete})
@@ -455,8 +485,8 @@ define variable v-label-param as character no-undo .
 
 v-label-param =
   "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "" + {&delim-flf}
-  + "attr-code" + {&delim-par} + "Код трибута" + {&delim-par} + "" + {&delim-flf}
- + "gds-code" + {&delim-par} + "КОд товара" + {&delim-par} + "" + {&delim-flf}
+  + "attr-code" + {&delim-par} + "Код атрибута" + {&delim-par} + "" + {&delim-flf}
+ + "gds-code" + {&delim-par} + "Код товара" + {&delim-par} + "" + {&delim-flf}
  + "PS" + {&delim-par} + "Примечание" + {&delim-par} + "" + {&delim-flf}
  + "status_" + {&delim-par} + "Статус" + {&delim-par} + ""  .
  run proc-full-temp-changes in this-procedure (
