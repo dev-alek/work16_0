@@ -2297,6 +2297,7 @@ END.
 ON LEAVE OF tt-rvs-line.state-density IN FRAME Dialog-Frame /* Плотность */
 DO:
   if input frame {&frame-name} {&self-name} <> {&self-name} then do:
+     assign frame {&frame-name} tt-rvs-line.state-density.
      run chg-density no-error.
      if error-status:error then return no-apply.
      run weath-water no-error.

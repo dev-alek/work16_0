@@ -2773,6 +2773,47 @@ FUNCTION get-input-type RETURNS CHARACTER
         v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
       end.
     end.
+    if trim(v-input-type-list) = ""
+    then do :
+      for each loc-rvs-line no-lock where loc-rvs-line.rvs-code = loc-rvs-doc.rvs-code :
+        find first loc-rvs-line-attr no-lock
+              where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
+              and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
+              and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
+              and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
+              and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
+              and loc-rvs-line-attr.attr-code = 'input-type-p'
+              no-error.
+        if available loc-rvs-line-attr
+        then do :
+          v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
+        end.
+        find first loc-rvs-line-attr no-lock
+              where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
+              and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
+              and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
+              and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
+              and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
+              and loc-rvs-line-attr.attr-code = 'input-type-t'
+              no-error.
+        if available loc-rvs-line-attr
+        then do :
+          v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
+        end.
+        find first loc-rvs-line-attr no-lock
+              where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
+              and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
+              and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
+              and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
+              and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
+              and loc-rvs-line-attr.attr-code = 'input-type-l'
+              no-error.
+        if available loc-rvs-line-attr
+        then do :
+          v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
+        end.
+      end.
+    end .
     
     if can-do(v-input-type-list, 'à')
     and not can-do(v-input-type-list, 'ô')
