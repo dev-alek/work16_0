@@ -163,7 +163,7 @@ class ibs.th.bge.1crn.subjects.measuring inherits ibs.th.bge.1crn.subjects.asubj
       v-str = v-str + ",deg-auto"          when deg-auto          = ?
       v-str = v-str + ",name"              when name_             = ?
       v-str = v-str + ",level-ms-type"     when level-ms-type     = ? and dimension-level = 1
-      v-str = v-str + ",level-tk"          when level-tk          = ? and dimension-level = 1
+      /* v-str = v-str + ",level-tk"          when level-tk          = ? and dimension-level = 1  Отключен контроль обязательности в сообщении 14.05.2021 */ 
       v-str = v-str + ",level-abs-me"      when level-abs-me      = ? and dimension-level = 1
       v-str = v-str + ",level-rel-me-np"   when level-rel-me-np   = ? and dimension-level = 1
       v-str = v-str + ",level-abs-me-wtr"  when level-abs-me-wtr  = ? and dimension-level = 1
@@ -191,10 +191,10 @@ class ibs.th.bge.1crn.subjects.measuring inherits ibs.th.bge.1crn.subjects.asubj
       del-f             = ?
       deg-auto          = ?
       name_             = ? 
-      dimension-level   = ?
-      dimension-temp    = ?
-      dimension-dnst    = ?
-      dimension-wght    = ?
+      dimension-level   = 0
+      dimension-temp    = 0
+      dimension-dnst    = 0
+      dimension-wght    = 0
       level-ms-type     = ?
       level-tk          = ?
       level-abs-me      = ?

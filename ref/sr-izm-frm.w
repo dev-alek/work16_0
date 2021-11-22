@@ -340,9 +340,11 @@ do:
   if error-status:error 
   then return no-apply .
   
+  /* Отключен контроль обязательности и нулевого значения 14.05.2021
   run Check-sr-temp-line no-error.
   if error-status:error then
      return no-apply.
+  */
      
   run Check-sr-abs-err-temp-vol no-error.
   if error-status:error then
@@ -686,6 +688,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
    if not avail sr-izmerenia 
    then do:
       create sr-izmerenia.
+      assign
+         sr-izmerenia.sr-type-level-measuring = 0.
    end.
   run enable_UI.
   apply "VALUE-CHANGED" to sr-izmerenia.sr-type-izm.
