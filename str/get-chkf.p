@@ -547,6 +547,24 @@ with frame a :
         assign
         var-found-not-remote = no
         .
+        
+        /* Получение данных по топливным транзакциям с кассы */
+        run str/get-tran-fuel.p(parparentproc,
+                                p-parent-handle,
+                                p-log-handle,
+                                log-file-name,
+                                p-obj-type,
+                                p-obj-code,
+                                output v-value-logical) no-error.
+        if error-status:error then do:
+           run write-log-and-file in p-log-handle (
+                        input 1
+                      , input log-file-name
+                      , input 1
+                      , input return-value).
+        
+        end.
+
         _ibm-cash-desk:
         FOR EACH for-cash-desk NO-LOCK WHERE
                 for-cash-desk.db-num = g#db-num and

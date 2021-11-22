@@ -299,6 +299,7 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,c-user-log~
 ,marking-lines~
 ,marking~
+,tran-fuel~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/
@@ -1246,6 +1247,7 @@ v-custom-except-list-erprn =
 ,utd-lines-attr~
 ,utd-marking-lines~
 ,utd-marking-lines-attr~
+,tran-fuel~
 ":U.
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/

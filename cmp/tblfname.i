@@ -2393,6 +2393,8 @@ Creation date: 01/29/07
 &glob table_tnved-item-full '{&bef-table_tnved-item-full}':U
 &glob bef-table_tnved-item-attr-full Атрибуты для tnved-item
 &glob table_tnved-item-attr-full '{&bef-table_tnved-item-attr-full}':U
+&glob bef-table_tran-fuel-full Топливные транзакции
+&glob table_tran-fuel-full '{&bef-table_tran-fuel-full}':U
 &glob bef-table_trn-doc-full trn-doc
 &glob table_trn-doc-full '{&bef-table_trn-doc-full}':U
 &glob bef-table_trn-doc-sum-full trn-doc-sum

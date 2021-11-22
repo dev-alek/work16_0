@@ -1052,6 +1052,14 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.attr-value = vCHNumberKKT
         .
       end.
+      if v-id > "" then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CheckId"
+           chk-doc-attr.attr-value = v-id
+        .
+      end.      
       if vCHNumberFN ne ""
       then do:
         create chk-doc-attr.
@@ -1253,6 +1261,14 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.doc-code   = chk-doc.doc-code
            chk-doc-attr.attr-code  = "CHNumberKKT"
            chk-doc-attr.attr-value = vCHNumberKKT
+        .
+      end.
+      if v-id > "" then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CheckId"
+           chk-doc-attr.attr-value = v-id
         .
       end.
       if vCHNumberFN ne ""

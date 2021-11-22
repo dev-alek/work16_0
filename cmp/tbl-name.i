@@ -1205,6 +1205,7 @@ Creation date: 04/05/06
 &glob table_tnved-head-attr 'tnved-head-attr':U
 &glob table_tnved-item 'tnved-item':U
 &glob table_tnved-item-attr 'tnved-item-attr':U
+&glob table_tran-fuel 'tran-fuel':U
 &glob table_trn-doc 'trn-doc':U
 &glob table_trn-doc-sum 'trn-doc-sum':U
 &glob table_trn-reason 'trn-reason':U

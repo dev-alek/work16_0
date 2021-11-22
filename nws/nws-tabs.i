@@ -834,6 +834,7 @@ abc-analysis~
 ,xGroupObj~
 ,xstatus~
 ,c-contract-specif-attr~
+,tran-fuel
 ':U .
 
 

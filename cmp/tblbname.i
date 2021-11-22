@@ -1205,6 +1205,7 @@ Creation date: 01/29/07
 &glob bef-table_tnved-head-attr tnved-head-attr
 &glob bef-table_tnved-item tnved-item
 &glob bef-table_tnved-item-attr tnved-item-attr
+&glob bef-table_tran-fuel tran-fuel
 &glob bef-table_trn-doc trn-doc
 &glob bef-table_trn-doc-sum trn-doc-sum
 &glob bef-table_trn-reason trn-reason
