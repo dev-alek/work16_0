@@ -697,6 +697,8 @@ abc-analysis~
 ,some-lk~
 ,sr-izmerenia~
 ,c-sr-izmerenia~
+,sr-izmerenia-attr~
+,c-sr-izmerenia-attr~
 ,staff~
 ,c-staff~
 ,stop-list~

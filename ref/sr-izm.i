@@ -29,66 +29,90 @@ field sr-model as character column-label "Модель"
 format "X(35)" label "Модель"
 view-as fill-in size 35 by 1
 
-/*
-field sr-type as character column-label "Тип"
-format "X(55)" label "Тип"
-view-as combo-box list-item-pairs "Ареометр калиброванный при 15°С","1",
-                                  "Ареометр калиброванный при 20°С","2",
-                                  "Поточный плотномер","3",
-                                  "Погружной плотномер","4",
-                                  "Канал измерения плотности (с поточным плотномером)","5",
-                                  "Канал измерения плотности (без поточного плотномера)","6"   inner-lines 5 drop-down-list size-chars 55 by 1
-*/
 field sr-type-id as integer column-label "Тип"
 format ">9" label "Тип"
-view-as combo-box list-item-pairs "Ареометр калиброванный при 15°С",1,
-                                  "Ареометр калиброванный при 20°С",2,
+view-as combo-box list-item-pairs "Ареометр, откалиброванный при 15°С",1,
+                                  "Ареометр, откалиброванный при 20°С",2,
                                   "Поточный плотномер",3,
                                   "Погружной плотномер",4,
                                   "Канал измерения плотности (с поточным плотномером)",5,
                                   "Канал измерения плотности (без поточного плотномера)",6   inner-lines 5 drop-down-list size-chars 55 by 1
 
+field sr-level as logical column-label "Уровень"
+field sr-Density as logical column-label "Плотность"
+field sr-Temperature as logical column-label "Температура"
+field sr-Weight as logical column-label "Масса"
 
-field sr-abs-err-neft-water as decimal column-label "Абсолютная погрешность измерений уровня! нефтепродукта и подтоварной воды"
-format "9.9999" initial 0 label "Абсолютная погрешность измерений уровня нефтепродукта и подтоварной воды"
+field sr-type-level-measuring as integer column-label "Тип средства измерения уровня"
+format ">9" label "Тип средства измерения уровня"
+view-as combo-box list-item-pairs "Рулетка 2-го класса точности (Расчет по ГОСТ 7502)",1,
+                                  "Плотномер-уровнемер ПЛОТ-3Б-1РУ (Расчет по формуле)",2,
+                                  "Тип неизвестен",0
+                                  inner-lines 3 drop-down-list size-chars 55 by 1
+
+field sr-temp-line as decimal column-label "Температурный коэффициент линейного! расширения материала средства! измерения уровня, 1/°С "
+format "-9.9999999" label "Температурный коэффициент линейного расширения материала средства измерения уровня, 1/°С "
+
+
+field sr-abs-err-neft-water as decimal column-label "Абсолютная погрешность измерений уровня! нефтепродукта и подтоварной воды, мм"
+format "9.99" initial ? label "Абсолютная погрешность измерений уровня нефтепродукта и подтоварной воды, мм"
+view-as fill-in size 15  by 1
+
+field sr-Relative-err-neft-water as decimal column-label "Относительная погрешность измерений уровня нефтепродукта и подтоварной воды, %"
+format "9.999" initial ? label "Относительная погрешность измерений уровня нефтепродукта и подтоварной воды, %"
+view-as fill-in size 15  by 1
+
+field sr-abs-err-water as decimal column-label "Абсолютная погрешность измерений! уровня подтоварной воды, мм"
+format "9.99" initial 0 label "Абсолютная погрешность измерений уровня подтоварной воды, мм"
+view-as fill-in size 15  by 1
+
+field sr-Relative-err-water as decimal column-label "Относительная погрешность измерений уровня подтоварной воды, %"
+format "9.999" initial 0 label "Относительная погрешность измерений уровня подтоварной воды, %"
 view-as fill-in size 15  by 1
 
 
-field sr-abs-err-water as decimal column-label "Абсолютная погрешность измерений! уровня подтоварной воды"
-format "9.9999" initial 0 label "Абсолютная погрешность измерений уровня подтоварной воды"
+
+field sr-abs-err-temp-vol as decimal column-label "Абсолютная погрешность измерений температуры нефтепродукта при измерении его объема, °С"
+format "9.9999" initial 0 label "Абсолютная погрешность измерений температуры нефтепродукта при измерении его объема, °С"
 view-as fill-in size 15  by 1
 
 
-field sr-abs-err-dens as decimal column-label "Абсолютная погрешность измерений! плотности нефтепродукта ареометром"
-format "9.9999" initial 0 label "Абсолютная погрешность измерений плотности нефтепродукта ареометром"
+field sr-abs-err-temp-dens as decimal column-label "Абсолютная погрешность измерений температуры нефтепродукта при измерении его плотности, °С"
+format "9.9999" initial 0 label "Абсолютная погрешность измерений температуры нефтепродукта при измерении его плотности, °С"
 view-as fill-in size 15  by 1
 
 
-field sr-abs-err-temp-vol as decimal column-label "Абсолютная погрешность измерений! температуры нефтепродукта при! измерении его объема"
-format "9.9999" initial 0 label "Абсолютная погрешность измерений температуры нефтепродукта при измерении его объема"
+
+field sr-type-density-measuring as integer column-label "Тип средства измерения плотности"
+format "9" label "Тип средства измерения плотности"
+view-as combo-box list-item-pairs "Ареометр, откалиброванный при 15°С",1,
+                                  "Ареометр, откалиброванный при 20°С",2,
+                                  "Поточный плотномер",3,
+                                  "Погружной плотномер",4,
+                                  "Канал измерения плотности (с поточным плотномером)",5,
+                                  "ПКанал измерения плотности (без поточного плотномера).",6
+                                  inner-lines 3 drop-down-list size-chars 55 by 1
+
+field sr-abs-err-dens as decimal column-label "Абсолютная погрешность измерений плотности нефтепродукта, кг/м3"
+format "9.9999" initial 0 label "Абсолютная погрешность измерений плотности нефтепродукта, кг/м3"
 view-as fill-in size 15  by 1
 
-
-field sr-abs-err-temp-dens as decimal column-label "Абсолютная погрешность измерений! температуры нефтепродукта при! измерении его плотности"
-format "9.9999" initial 0 label "Абсолютная погрешность измерений температуры нефтепродукта при измерении его плотности"
+field sr-Relative-err-dens as decimal column-label " Относительная погрешность измерений плотности нефтепродукт, %"
+format "9.999" initial 0 label " Относительная погрешность измерений плотности нефтепродукт, %"
 view-as fill-in size 15  by 1
 
-
-field sr-otnos as decimal column-label "Предел допускаемой относительной! погрешности средства обработки! результатов измерений"
-format "9.999999" initial 0 label "Предел допускаемой относительной погрешности средства обработки результатов измерений"
+field sr-abs-err-dens-lgas-liquid as decimal column-label "Абсолютная погрешность измерений плотности ЖФ продукта, кг/м3"
+format "9.9999" initial 0 label "Абсолютная погрешность измерений плотности ЖФ продукта, кг/м3"
 view-as fill-in size 15  by 1
 
+field sr-abs-err-dens-lgas-vapor as decimal column-label " Абсолютная погрешность измерений плотности ПГФ продукта, кг/м3"
+format "9.999" initial 0 label "Абсолютная погрешность измерений плотности ПГФ продукта, кг/м3"
+view-as fill-in size 15  by 1
 
-/*
-field sr-temp-line as character column-label "Температурный коэффициент линейного! расширения материала средства! измерения уровня "
-format "X(10)" label "Температурный коэффициент линейного расширения материала средства измерения уровня "
-view-as combo-box list-item-pairs "Сталь","0.0000125",
-                                  "Алюминий","0.000023" inner-lines 2 drop-down-list size-chars 10 by 1
-*/
-field sr-temp-line as decimal column-label "Температурный коэффициент линейного! расширения материала средства! измерения уровня "
-format "-9.9999999" label "Температурный коэффициент линейного расширения материала средства измерения уровня "
-view-as combo-box list-item-pairs "Сталь",0.0000125,
-                                  "Алюминий",0.000023 inner-lines 2 drop-down-list size-chars 10 by 1
+field sr-otnos as decimal column-label "относительная погрешность измерения массы, %"
+format "9.999999" initial 0 label "относительная погрешность измерения массы, %"
+view-as fill-in size 15  by 1
+
 
 field node-code as integer  column-label "Код"
 format ">>>9" label "Код"

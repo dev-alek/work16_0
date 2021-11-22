@@ -998,7 +998,7 @@ method public void crtablehist(iTableName as character ):
       
    end.
    dumpTable ("c-" + iTableName + ".df"). 
-   message "c-" + iTableName + ".df"
+   message "c-" + iTableName + ".df" search("c-" + iTableName + ".df")
    view-as alert-box. 
  end method.
 end class.

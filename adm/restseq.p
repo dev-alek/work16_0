@@ -3768,9 +3768,90 @@ procedure restore-s-ref-corr-chip :
     &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
     &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
     {&validate-sequence}
-
-
-
+    
+    &scoped-define table-name      c-dis-grp-rule
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-hist-nws-option
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-layout
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-profile-by-profile
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-rp-by-call
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-rp-rule-param
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-rule-by-call
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-rule-by-profile
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-rule-by-set
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-rule-call-param
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-ruledict-param
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-sr-izmerenia
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-stop-list
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+    
+    &scoped-define table-name      c-tare
+    &scoped-define seq-field-name  chip-num
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.corr-user-db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
 
     &undefine not-include-in-seq-records
 
