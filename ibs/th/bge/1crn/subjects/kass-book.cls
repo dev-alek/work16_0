@@ -74,9 +74,9 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
     private set.
   define property pin   as character  no-undo get. 
     private set.
-  define property bank-resive   as integer   no-undo get. 
+  define property bank-resive   as character    no-undo get. 
     private set.
-  define property bank-deposit   as integer   no-undo get. 
+  define property bank-deposit   as character    no-undo get. 
     private set.
   define property cont-inkass   as integer   no-undo get. 
     private set.
@@ -179,9 +179,9 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       when "pin" then 
         pin = {&attr-str} .
       when "bank-resive" then 
-        bank-resive = {&attr-integer} .
+        bank-resive = {&attr-str} .
       when "bank-deposit" then 
-        bank-deposit = {&attr-integer} .
+        bank-deposit = {&attr-str} .
       when "cont-inkass" then 
         cont-inkass = {&attr-integer} .
       when "contr-code-rko" then 
