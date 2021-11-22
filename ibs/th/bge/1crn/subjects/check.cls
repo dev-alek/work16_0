@@ -921,6 +921,18 @@ index si trn-start trn-end chk-date chk-time
          else v-is-nds = 0 .
          insw:write-data-element (  "is-nds",    string(v-is-nds)              ) . /* Признак распределения НДС по платежу (Число 0/1) */
       end.
+      for first buf_chk-pay-attr no-lock
+           where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
+             and buf_chk-pay-attr.attr-code = "sbprrn":U
+             and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num :  
+         insw:write-data-element (  "sbprrn",    string(buf_chk-pay-attr.attr-value)              ) .
+         end .
+      for first buf_chk-pay-attr no-lock
+           where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
+             and buf_chk-pay-attr.attr-code = "sbpstat":U
+             and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num :  
+         insw:write-data-element (  "sbpstat",    string(buf_chk-pay-attr.attr-value)              ) .
+         end .
       insw:end-element ({&tag-item2}) .
       if last-of(buf_chk-pay.doc-code) then insw:end-element ({&tag-section2}) .
     end . /* end_of for each buf_chk-pay */
