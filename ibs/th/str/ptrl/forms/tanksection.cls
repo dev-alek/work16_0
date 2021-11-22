@@ -730,15 +730,16 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       if available (ub.auto-tank)
       then do:
         comboBoxShape:Enabled = false.
-        comboBoxPour:Enabled = false. 
+        /*comboBoxPour:Enabled = false.*/ 
         maskedTextBoxCarVol:Enabled = false.       
       end.
       else do:
         comboBoxShape:Enabled = true.
-        comboBoxPour:Enabled = true.
+        /*comboBoxPour:Enabled = true.*/
         maskedTextBoxCarVol:Enabled = true.
       end.
 
+      comboBoxPour:Enabled = true.
       
       do ii = 1 to extent (maskedTextBoxDocArr):
         
@@ -1338,11 +1339,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* button1 */
     /*  */
-    this-object:button1:Location = new System.Drawing.Point(648, 57).
+        this-object:button1:BackgroundImage = cast(resources:GetObject("button1.BackgroundImage"), System.Drawing.Image).
+        this-object:button1:ImageAlign = System.Drawing.ContentAlignment:MiddleRight.
+        this-object:button1:Location = new System.Drawing.Point(648, 55).
     this-object:button1:Name = "button1".
-    this-object:button1:Size = new System.Drawing.Size(23, 23).
+        this-object:button1:Size = new System.Drawing.Size(27, 27).
     this-object:button1:TabIndex = 14.
-    this-object:button1:Text = "Â".
     this-object:button1:UseCompatibleTextRendering = true.
     this-object:button1:UseVisualStyleBackColor = true.
     this-object:button1:Click:Subscribe(this-object:button1_Click).
