@@ -1807,7 +1807,7 @@ DO:
   
   do with frame {&frame-name}:
 
-    run ref/codelayout.p({&select},"","OsnovCorr", "Основание коррекции",output table tmprecid).
+    run ref/codelayout.p(parparentproc,{&select},"","OsnovCorr", "Основание коррекции",output table tmprecid).
 /*          run ref/CorrOsnov.w */
 /*        (input  parparentproc */
 /*        ,input  'b-sel,b-mark'*/
