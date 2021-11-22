@@ -373,6 +373,7 @@ procedure InitTT:
                   next.
                v-gds-code = goods.gds-code.
             end.
+            else next.
          end.
          else do:
             find first chk-gds where
@@ -448,6 +449,7 @@ procedure InitTT:
                   next.
                v-gds-code = goods.gds-code.
             end.
+            else next.
          end.
          else do:
             find first chk-gds where
