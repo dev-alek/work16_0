@@ -63,7 +63,7 @@ sr-izmerenia.sr-abs-err-temp-dens sr-izmerenia.sr-density ~
 sr-izmerenia.sr-type-id sr-izmerenia.sr-abs-err-dens ~
 sr-izmerenia.sr-relative-err-dens sr-izmerenia.sr-abs-err-dens-lgas-liquid ~
 sr-izmerenia.sr-abs-err-dens-lgas-vapor sr-izmerenia.sr-Weight ~
-sr-izmerenia.sr-otnos 
+sr-izmerenia.sr-otnos sr-izmerenia.sr-not-used 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-Dialog-Frame sr-izmerenia.sr-model ~
 sr-izmerenia.sr-type-izm sr-izmerenia.sr-level ~
 sr-izmerenia.sr-abs-err-neft-water sr-izmerenia.sr-relative-err-neft-water ~
@@ -73,7 +73,7 @@ sr-izmerenia.sr-abs-err-temp-dens sr-izmerenia.sr-density ~
 sr-izmerenia.sr-type-id sr-izmerenia.sr-abs-err-dens ~
 sr-izmerenia.sr-relative-err-dens sr-izmerenia.sr-abs-err-dens-lgas-liquid ~
 sr-izmerenia.sr-abs-err-dens-lgas-vapor sr-izmerenia.sr-Weight ~
-sr-izmerenia.sr-otnos 
+sr-izmerenia.sr-otnos sr-izmerenia.sr-not-used 
 &Scoped-define ENABLED-TABLES-IN-QUERY-Dialog-Frame sr-izmerenia
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-Dialog-Frame sr-izmerenia
 &Scoped-define QUERY-STRING-Dialog-Frame FOR EACH sr-izmerenia SHARE-LOCK
@@ -92,7 +92,7 @@ sr-izmerenia.sr-abs-err-temp-dens sr-izmerenia.sr-density ~
 sr-izmerenia.sr-type-id sr-izmerenia.sr-abs-err-dens ~
 sr-izmerenia.sr-relative-err-dens sr-izmerenia.sr-abs-err-dens-lgas-liquid ~
 sr-izmerenia.sr-abs-err-dens-lgas-vapor sr-izmerenia.sr-Weight ~
-sr-izmerenia.sr-otnos 
+sr-izmerenia.sr-otnos sr-izmerenia.sr-not-used 
 &Scoped-define ENABLED-TABLES sr-izmerenia
 &Scoped-define FIRST-ENABLED-TABLE sr-izmerenia
 &Scoped-Define ENABLED-OBJECTS RECT-1 RECT-2 RECT-3 RECT-4 Btn_OK ~
@@ -107,7 +107,7 @@ sr-izmerenia.sr-abs-err-temp-dens sr-izmerenia.sr-density ~
 sr-izmerenia.sr-type-id sr-izmerenia.sr-abs-err-dens ~
 sr-izmerenia.sr-relative-err-dens sr-izmerenia.sr-abs-err-dens-lgas-liquid ~
 sr-izmerenia.sr-abs-err-dens-lgas-vapor sr-izmerenia.sr-Weight ~
-sr-izmerenia.sr-otnos 
+sr-izmerenia.sr-otnos sr-izmerenia.sr-not-used 
 &Scoped-define DISPLAYED-TABLES sr-izmerenia
 &Scoped-define FIRST-DISPLAYED-TABLE sr-izmerenia
 
@@ -200,6 +200,9 @@ define query Dialog-Frame for
 define frame Dialog-Frame
      Btn_OK at row 1.75 col 6.13 widget-id 64
      Btn_Cancel at row 1.75 col 22.5 widget-id 62
+     sr-izmerenia.sr-not-used at row 1.9 col 40 widget-id 116
+          view-as toggle-box
+          size 40 by .79
      sr-izmerenia.node-code at row 2 col 85.5 colon-aligned widget-id 66
           view-as fill-in 
           size 14 by 1
@@ -407,6 +410,7 @@ do:
      return no-apply.
      
   assign
+     sr-izmerenia.sr-not-used
      sr-izmerenia.sr-model
      sr-izmerenia.sr-type-izm 
   
@@ -1191,7 +1195,7 @@ procedure enable_UI :
           sr-izmerenia.sr-abs-err-dens sr-izmerenia.sr-relative-err-dens 
           sr-izmerenia.sr-abs-err-dens-lgas-liquid 
           sr-izmerenia.sr-abs-err-dens-lgas-vapor sr-izmerenia.sr-Weight 
-          sr-izmerenia.sr-otnos 
+          sr-izmerenia.sr-otnos sr-izmerenia.sr-not-used 
           temp-line-text abs-err-neft-water-text relative-err-neft-water-text
           abs-err-water-text relative-err-water-text abs-err-temp-vol-text
           abs-err-temp-dens-text abs-err-dens-text relative-err-dens-text
@@ -1213,7 +1217,7 @@ procedure enable_UI :
          sr-izmerenia.sr-abs-err-dens-lgas-liquid 
          sr-izmerenia.sr-abs-err-dens-lgas-vapor sr-izmerenia.sr-Weight 
          sr-izmerenia.sr-otnos sr-izmerenia.sr-type-level-measuring   
-        sr-izmerenia.sr-temp-line
+        sr-izmerenia.sr-temp-line sr-izmerenia.sr-not-used
       with frame Dialog-Frame.
   view frame Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

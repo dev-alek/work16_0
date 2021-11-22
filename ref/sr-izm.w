@@ -57,6 +57,7 @@ DEFINE VARIABLE v-max-node-code AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-node-code AS INTEGER NO-UNDO.
 define variable v-edit-mode as logical no-undo .
 define variable v-action-mode as character no-undo . /* что с редактируемой записью: {&add-def}, {&update} */ 
+define variable mNotUsedStr as character no-undo fgcolor 12.
 define buffer buf_clob-bind for ub.clob-bind.
 
 define variable cb-sr-type-id as integer column-label "Тип"
@@ -74,6 +75,7 @@ define variable cb-sr-type-id as integer column-label "Тип"
 &scoped-define view-dop-sr-izm ~
 DISPLAY ~
 dop-sr-izm.node-code             AT ROW 18 COL 5 LEFT-ALIGNED  SKIP ~
+mNotUsedStr                      AT ROW 18 COL 45 LEFT-ALIGNED format "x(42)" no-label SKIP  ~
 dop-sr-izm.sr-model              AT ROW 19 COL 5 LEFT-ALIGNED  SKIP ~
 dop-sr-izm.sr-type               AT ROW 20 COL 5 LEFT-ALIGNED  SKIP ~
 dop-sr-izm.sr-abs-err-neft-water AT ROW 21 COL 5 LEFT-ALIGNED  SKIP ~
@@ -90,6 +92,7 @@ hide ~
 dop-sr-izm.node-code             ~
 in FRAME {&FRAME-NAME} ~
 dop-sr-izm.sr-model              ~
+mNotUsedStr                      ~
 dop-sr-izm.sr-type               ~
 dop-sr-izm.sr-abs-err-neft-water ~
 dop-sr-izm.sr-abs-err-water      ~
@@ -405,6 +408,11 @@ END.
 ON CHOOSE OF B-sel IN FRAME Dialog-Frame /* Выбор */
 DO:
   if available sr-izmerenia then do :
+    if sr-izmerenia.sr-not-used then do:
+      message "Средство измерения отмечено как неиспользуемое. Выбор запрещен."
+      view-as alert-box warning.
+      return no-apply.
+    end.
     p-node-code = sr-izmerenia.node-code. 
     p-sr-type = string(sr-izmerenia.sr-type-id).
   end.
@@ -444,6 +452,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BR-sr-izm Dialog-Frame
 ON VALUE-CHANGED OF BR-sr-izm IN FRAME Dialog-Frame
 DO:
+  define variable vNotUsedStr as character no-undo.
   if b-cancel:visible in frame {&frame-name}  then do:
     return no-apply.
   end.
@@ -465,9 +474,11 @@ DO:
     */
     assign
       cb-sr-type-id   = sr-izmerenia.sr-type-id
+      vNotUsedStr     = if sr-izmerenia.sr-not-used then "!!! СРЕДСТВО ИЗМЕРЕНИЯ НЕ ИСПОЛЬЗУЕТСЯ !!!"  else ""
     . 
     DISPLAY
       sr-izmerenia.node-code @ dop-sr-izm.node-code AT ROW 18 COL 5 LEFT-ALIGNED  SKIP
+      vNotUsedStr @ mNotUsedStr  AT ROW 18 COL 45 LEFT-ALIGNED format "x(42)" no-label SKIP
       sr-izmerenia.sr-model  @ dop-sr-izm.sr-model  AT ROW 19 COL 5 LEFT-ALIGNED  SKIP
       cb-sr-type-id    AT ROW 20 COL 5 LEFT-ALIGNED  SKIP
       sr-izmerenia.sr-abs-err-neft-water @ dop-sr-izm.sr-abs-err-neft-water AT ROW 21 COL 5 LEFT-ALIGNED  SKIP

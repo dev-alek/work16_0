@@ -44,6 +44,7 @@ define input parameter p-sr-abs-err-dens-lgas-liquid as decimal   no-undo . /* l
 define input parameter p-sr-abs-err-dens-lgas-vapor  as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-dens-lgas-vapor */
 define input parameter p-sr-otnos                    as decimal   no-undo . /* like ub.sr-izmerenia.sr-otnos */
 define input parameter p-sr-temp-line                as decimal   no-undo . /* like ub.sr-izmerenia.sr-temp-line */
+define input parameter p-sr-not-used                 as integer   no-undo . /*  */
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -136,5 +137,6 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
     buf_sr-izmerenia.sr-relative-err-dens        = p-sr-relative-err-dens        
     buf_sr-izmerenia.sr-abs-err-dens-lgas-liquid = p-sr-abs-err-dens-lgas-liquid 
     buf_sr-izmerenia.sr-abs-err-dens-lgas-vapor  = p-sr-abs-err-dens-lgas-vapor  
+    buf_sr-izmerenia.sr-not-used                 = (p-sr-not-used > 0)
   .
   validate buf_sr-izmerenia .

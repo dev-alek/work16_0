@@ -83,6 +83,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       ,input objImp:dnst-abs-me-lpg-v              /* p-sr-abs-err-dens-lgas-vapor (dec) */
       ,input objImp:wght-rel-me                    /* p-sr-otnos (dec) */
       ,input objImp:level-tk                       /* p-sr-temp-line (dec) */
+      ,input objImp:del-l                          /* p-sr-temp-line (int) */
       ) .
       
     end .

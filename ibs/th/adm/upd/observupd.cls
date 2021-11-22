@@ -79,7 +79,7 @@ class ibs.th.adm.upd.observupd:
   
   define public variable pwd as character no-undo.
 
-  &scop NumWorkBase 27
+  &scop NumWorkBase 28
   define public property  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
             ,"cmp/18062801.df"
@@ -108,6 +108,7 @@ class ibs.th.adm.upd.observupd:
             ,"cmp/21070101.df"
             ,"cmp/21070102.df"
             ,"cmp/21091001.df"
+            ,"cmp/21102101.df"
             ] 
      get.
   define public property m-upd-list-chk      as character extent {&NumWorkBase} no-undo
@@ -138,6 +139,7 @@ class ibs.th.adm.upd.observupd:
             ,"TABLE:c-code"
             ,"FIELD:code.nwsgbd"
             ,"TABLE:tran-fuel"
+            ,"FIELD:sr-izmerenia.sr-not-used,FIELD:c-sr-izmerenia.sr-not-used"
             ] 
     get.
   define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 
