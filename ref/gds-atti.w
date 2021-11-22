@@ -6,7 +6,7 @@
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
 
-
+using ibs.th.gbl.sys.objsrv.
 /* Temp-Table and Buffer definitions                                    */
 DEFINE TEMP-TABLE temp-attr NO-UNDO LIKE ub.goods-attr
        field user-can-edit as log
@@ -455,9 +455,17 @@ END.
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* ¬вод */
 DO:
    RUN proc-save IN THIS-PROCEDURE NO-ERROR.
-  IF ERROR-STATUS:ERROR THEN DO:
-     RETURN NO-APPLY.
-  END.
+   IF ERROR-STATUS:ERROR THEN 
+   DO:
+      RETURN NO-APPLY.
+   END.
+   define variable ObjSrv        as class   ibs.th.gbl.sys.objsrv no-undo.
+   define variable v-ban-recipes as logical no-undo .
+   run gbl/getobjsrvhndl.p (input-output ObjSrv).
+   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
+   if v-ban-recipes then 
+   do: 
+   end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1154,6 +1162,7 @@ for each temp-attr NO-LOCK where
       undo, return error  .
     end.
     updated = yes.
+    
   end.
   ASSIGN
   p-updated = v-updated OR p-updated.
@@ -1189,6 +1198,7 @@ and p-update-instantly then do:
     undo, return error .
   end.
 end.
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

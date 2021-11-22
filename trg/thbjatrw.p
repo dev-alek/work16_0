@@ -133,6 +133,11 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     buf_c-cli-hist.source-type = (if g#news then {&hn-source-db} else "":U)
     buf_c-cli-hist.source-ref = (if g#news then string(g#news-source-db) else "":U)
     .
+    if ub.thbj-attr.upper-prop-code = {&attr-marking} and 
+       ub.thbj-attr.prop-code = {&attr-marking_ban-recipes} and 
+       ub.thbj-attr.property-value-logical = true then do:
+          if buf_c-thbj-attr.property-value-logical <> ub.thbj-attr.property-value-logical then { str/promoMark.i } .
+    end.      
   end.
   if g#oxml = yes
   then do:

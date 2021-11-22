@@ -46,7 +46,6 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
-
   if not ub.goods-attr.attr-code = {&attr-gds-attr-lock} then do:
 
     run gds-attr-manual-edit in this-procedure (
@@ -248,6 +247,11 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
             end.
          end.
       end.
+    if ub.goods-attr.attr-code = {&attr-mark-type} and ub.goods-attr.attr-value <> "not-type" and 
+       ub.goods-attr.attr-value <> "" then 
+         do:
+{ str/promoMark.i }
+         end.    
     end.
     run gds-attr-news in this-procedure(input ub.goods-attr.attr-code,
                                         output p-news) no-error.
