@@ -1965,6 +1965,29 @@ define buffer bf_place for ub.place .
           varstate-water-qnty
         with frame {&frame-name} .
         
+        find first rvs-line-attr exclusive-lock
+              where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                and rvs-line-attr.attr-code = "pokmi-water-qnty" no-error.
+        if available rvs-line-attr then do :
+          rvs-line-attr.attr-value = string(v-mm:V_water * 1000) .
+        end.
+        else do :
+          create rvs-line-attr.
+            assign
+                rvs-line-attr.obj-code   = tt-rvs-line.obj-code
+                rvs-line-attr.obj-type   = tt-rvs-line.obj-type
+                rvs-line-attr.gds-code   = tt-rvs-line.gds-code
+                rvs-line-attr.pl-code    = tt-rvs-line.pl-code
+                rvs-line-attr.rvs-code   = tt-rvs-line.rvs-code
+                rvs-line-attr.attr-code  = "pokmi-water-qnty"
+                rvs-line-attr.attr-value = string(v-mm:V_water * 1000)
+            .
+        END.
+        
         assign
           v-POkMI-result =
             "MM:V_total             = " + v-mm:V_total     + {&new-line} +
@@ -2455,12 +2478,12 @@ DO:
     no-error
   }
   
-  if tt-rvs-line.state-measure-qnty > tt-rvs-line.state-brutto-qnty  then do:
-     message "Объем топлива больше общего объема."
-     view-as alert-box error.
-     apply "entry" to tt-rvs-line.state-measure-qnty in frame {&frame-name}.
-     return no-apply.
-  end.
+/*  if tt-rvs-line.state-measure-qnty > tt-rvs-line.state-brutto-qnty  then do:*/
+/*     message "Объем топлива больше общего объема."                           */
+/*     view-as alert-box error.                                                */
+/*     apply "entry" to tt-rvs-line.state-measure-qnty in frame {&frame-name}. */
+/*     return no-apply.                                                        */
+/*  end.                                                                       */
   
   
   if rdc-value = "pomi-rn" then do :
@@ -3587,10 +3610,12 @@ DO:
     assign
       tt-rvs-line.state-measure-qnty = tt-rvs-line.state-measure-cli-qnty / tt-rvs-line.state-density
       tt-rvs-line.fact-calc-vol = tt-rvs-line.state-measure-qnty
+      varstate-sum-vol = (if varstate-water-qnty <> ? then varstate-water-qnty else 0) + tt-rvs-line.fact-calc-vol
       tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty
-      tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty + varstate-water-qnty
+      tt-rvs-line.state-brutto-qnty     = tt-rvs-line.state-measure-qnty + (if varstate-water-qnty <> ? then varstate-water-qnty else 0)
+      tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty + (if varstate-water-qnty <> ? then varstate-water-qnty else 0)
     .
-    display tt-rvs-line.state-measure-cli-qnty tt-rvs-line.fact-calc-vol tt-rvs-line.fact-sum-mass with frame {&frame-name}.
+    display tt-rvs-line.state-measure-cli-qnty tt-rvs-line.fact-calc-vol tt-rvs-line.fact-sum-mass varstate-sum-vol with frame {&frame-name}.
   end .
 END.
 
@@ -4353,17 +4378,18 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   assign tt-rvs-line.calc-vol = tt-rvs-line.measure-qnty .
   assign tt-rvs-line.sum-vol = tt-rvs-line.calc-vol + tt-rvs-line.add-qnty .
   assign tt-rvs-line.sum-mass = tt-rvs-line.calc-add-mass + tt-rvs-line.measure-cli-qnty .
-  assign varsum-vol = input frame {&frame-name} varmeasure-water-qnty + tt-rvs-line.calc-vol .
+  assign varsum-vol = tt-rvs-line.brutto-qnty .
+/*  assign varsum-vol = input frame {&frame-name} varmeasure-water-qnty + tt-rvs-line.calc-vol .*/
   
   assign
     tt-rvs-line.fact-calc-add-mass = tt-rvs-line.state-add-qnty * input frame {&frame-name} tt-rvs-line.state-density 
     tt-rvs-line.fact-calc-vol = tt-rvs-line.state-measure-qnty 
     tt-rvs-line.fact-sum-vol = tt-rvs-line.fact-calc-vol + tt-rvs-line.state-add-qnty 
     tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty 
-    varstate-sum-vol = input frame {&frame-name} varstate-water-qnty + tt-rvs-line.fact-calc-vol 
+    varstate-sum-vol = tt-rvs-line.state-brutto-qnty 
+/*    varstate-sum-vol = input frame {&frame-name} varstate-water-qnty + tt-rvs-line.fact-calc-vol*/
   .
   
-  if tt-rvs-line.state-measure-qnty = ? then tt-rvs-line.state-measure-qnty = tt-rvs-line.fact-calc-vol .
   if tt-rvs-line.state-measure-qnty = ? then tt-rvs-line.state-measure-qnty = tt-rvs-line.fact-calc-vol .
   
   abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 .
@@ -4848,14 +4874,15 @@ else
 assign
   tt-rvs-line.state-measure-qnty = tt-rvs-line.state-measure-cli-qnty / tt-rvs-line.state-density
   tt-rvs-line.fact-calc-vol = tt-rvs-line.state-measure-qnty
-  varstate-sum-vol = (if varstate-water-qnty <> ? then varstate-water-qnty else 0) + tt-rvs-line.fact-calc-vol
+/*  varstate-sum-vol = (if varstate-water-qnty <> ? then varstate-water-qnty else 0) + tt-rvs-line.fact-calc-vol*/
 .
   
 assign
-  tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty + varstate-water-qnty
-  tt-rvs-line.state-brutto-qnty      = tt-rvs-line.state-measure-qnty + varstate-water-qnty
+  tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty + (if varstate-water-qnty <> ? then varstate-water-qnty else 0)
+/*  tt-rvs-line.state-brutto-qnty      = tt-rvs-line.state-measure-qnty + (if varstate-water-qnty <> ? then varstate-water-qnty else 0)*/
   tt-rvs-line.fact-calc-add-mass = tt-rvs-line.state-add-qnty  * tt-rvs-line.state-density
   tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty
+  varstate-sum-vol = tt-rvs-line.state-brutto-qnty 
 .
 abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 no-error .
 display tt-rvs-line.state-measure-cli-qnty tt-rvs-line.fact-calc-add-mass tt-rvs-line.fact-calc-vol tt-rvs-line.fact-sum-mass varstate-sum-vol with frame {&frame-name}.
@@ -5228,9 +5255,20 @@ PROCEDURE volume-measure-water :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-display input frame {&frame-name} tt-rvs-line.brutto-qnty -
-        input frame {&frame-name} tt-rvs-line.measure-qnty @
-        varmeasure-water-qnty with frame {&frame-name}.
+/*  display input frame {&frame-name} tt-rvs-line.brutto-qnty - */
+/*          input frame {&frame-name} tt-rvs-line.measure-qnty @*/
+/*          varmeasure-water-qnty with frame {&frame-name}.     */
+  display ? @ varmeasure-water-qnty with frame {&frame-name}.
+  for first rvs-line-attr no-lock
+        where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          and rvs-line-attr.attr-code = "measure-water-qnty"
+  :
+    display decimal(rvs-line-attr.attr-value) @ varmeasure-water-qnty with frame {&frame-name}.
+  end .         
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -5267,7 +5305,7 @@ else do :
           and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
           and rvs-line-attr.attr-code = "pokmi-water-qnty"
   :
-    display string(decimal(rvs-line-attr.attr-value), ">>>>>>>9") @ varstate-water-qnty with frame {&frame-name}.
+    display decimal(rvs-line-attr.attr-value) @ varstate-water-qnty with frame {&frame-name}.
   end .
 end .
 END PROCEDURE.

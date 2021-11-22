@@ -65,6 +65,7 @@ procedure readrevisetxt:
              tt-place.mass           = ?
              tt-place.vapor-density  = ?
              tt-place.vapor-pressure = ?
+             tt-place.volume_water   = ?
              tt-place.is-error       = no
              tt-place.error-message  = ?
          .
@@ -82,7 +83,8 @@ procedure readrevisetxt:
                v-fh                = v-bh:buffer-field( tt-param.strasi )
                v-fh:buffer-value() = decimal( trim( entry( 2, v_string-tmp, '=' ) ) )
             no-error.
-            if tt-param.strfrfile = "temperature"
+            if (tt-param.flddb = "temperature"
+             or tt-param.flddb = "water-qnty")
             and trim( entry( 2, v_string-tmp, '=' ) ) = "-"
             then do :
               assign
@@ -440,6 +442,7 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
           tt-place.mass           = ?
           tt-place.vapor-density  = ?
           tt-place.vapor-pressure = ?
+          tt-place.volume_water   = ?
           tt-place.is-error       = true
           tt-place.error-message  = v-asi-error-message
         .
@@ -470,6 +473,7 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
           tt-place.mass           = ?
           tt-place.vapor-density  = ?
           tt-place.vapor-pressure = ?
+          tt-place.volume_water   = ?
           tt-place.is-error       = no
           tt-place.error-message  = ?
       .

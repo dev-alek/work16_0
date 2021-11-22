@@ -1353,6 +1353,18 @@ procedure lib-rvs_rvsplace : /* revision-place */
       assign
         anl-loc = trim( bf_place.loc1 )
       .
+      run placelib_get-attr  ( input {&place-twice-code}
+                              ,input bf_place.obj-code
+                              ,input bf_place.obj-type
+                              ,input bf_place.pl-code
+                              ,output v-value
+                              ,output v-ok      ) no-error.
+      if v-ok
+      and trim(v-value)  > ""
+      then do :
+        pl-twice-code = trim(v-value) .
+        anl-loc = anl-loc + "," + pl-twice-code .
+      end .
     end.
     else do:
       assign
@@ -1417,7 +1429,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
       for each tt-meas-file where not tt-meas-file.is-error
           on error undo, return error return-value
           :
-            
+          if not tt-meas-file.meas-vol-water then tt-meas-file.water-qnty = ? . 
           if tt-meas-file.pl-code <> 0
           then do :
             find first buf_place no-lock where buf_place.obj-type = p-obj-type
@@ -1617,9 +1629,9 @@ procedure lib-rvs_rvsplace : /* revision-place */
               then do :
                 assign
                   tt-meas-file.measure-qnty = tt-meas-file.measure-cli-qnty / tt-meas-file.density
-                  tt-meas-file.water-qnty =  tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty 
+/*                  tt-meas-file.water-qnty =  tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty*/
                 .
-                if tt-meas-file.water-qnty < 0 then tt-meas-file.water-qnty = 0 .
+/*                if tt-meas-file.water-qnty < 0 then tt-meas-file.water-qnty = 0 .*/
               end.
               else
               if tt-meas-file.brutto-qnty <> 0 or tt-meas-file.brutto-qnty <> ? then 
@@ -1694,16 +1706,16 @@ procedure lib-rvs_rvsplace : /* revision-place */
               if tt-meas-file.log-brutto
               then do :
                 tt-meas-file.measure-qnty = tt-meas-file.measure-cli-qnty / tt-meas-file.density .
-                tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty  .
-                if tt-meas-file.water-qnty < 0
-                then do :
-                  tt-meas-file.water-qnty = 0 .
-                  tt-meas-file.brutto-qnty = tt-meas-file.measure-qnty .
-                end.
+/*                tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty  .*/
+/*                if tt-meas-file.water-qnty < 0                                                   */
+/*                then do :                                                                        */
+/*                  tt-meas-file.water-qnty = 0 .                                                  */
+/*                  tt-meas-file.brutto-qnty = tt-meas-file.measure-qnty .                         */
+/*                end.                                                                             */
               end.
               else do : 
                 assign
-                  tt-meas-file.measure-qnty = tt-meas-file.brutto-qnty -  tt-meas-file.water-qnty
+                  tt-meas-file.measure-qnty = tt-meas-file.brutto-qnty -  (if tt-meas-file.water-qnty <> ? then tt-meas-file.water-qnty else 0)
                   tt-meas-file.measure-cli-qnty = tt-meas-file.measure-qnty * tt-meas-file.density
                 .
               end.
@@ -1716,14 +1728,14 @@ procedure lib-rvs_rvsplace : /* revision-place */
             if tt-meas-file.meas-vol-oil = no then 
             do:
                 assign
-                    tt-meas-file.measure-qnty = tt-meas-file.brutto-qnty - tt-meas-file.water-qnty
+                    tt-meas-file.measure-qnty = tt-meas-file.brutto-qnty - (if tt-meas-file.water-qnty <> ? then tt-meas-file.water-qnty else 0)
                     .
             end.
-            if tt-meas-file.meas-vol-oil = yes and tt-meas-file.meas-vol-water = no then do:
-                assign
-                    tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty
-                    .
-            end.  
+/*            if tt-meas-file.meas-vol-oil = yes and tt-meas-file.meas-vol-water = no then do:      */
+/*                assign                                                                            */
+/*                    tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty*/
+/*                    .                                                                             */
+/*            end.                                                                                  */
             if tt-meas-file.density > 0
             and tt-meas-file.density < 1
             and tt-meas-file.density <> ?
@@ -1731,12 +1743,12 @@ procedure lib-rvs_rvsplace : /* revision-place */
               if tt-meas-file.log-brutto
               then do :
                 tt-meas-file.measure-qnty = tt-meas-file.measure-cli-qnty / tt-meas-file.density .
-                tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty  .
-                if tt-meas-file.water-qnty < 0
-                then do :
-                  tt-meas-file.water-qnty = 0 .
-                  tt-meas-file.brutto-qnty = tt-meas-file.measure-qnty .
-                end.
+/*                tt-meas-file.water-qnty = tt-meas-file.brutto-qnty - tt-meas-file.measure-qnty  .*/
+/*                if tt-meas-file.water-qnty < 0                                                   */
+/*                then do :                                                                        */
+/*                  tt-meas-file.water-qnty = 0 .                                                  */
+/*                  tt-meas-file.brutto-qnty = tt-meas-file.measure-qnty .                         */
+/*                end.                                                                             */
               end.
               else do : 
                 assign
@@ -2064,6 +2076,28 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
     bf_rvs-line.state-brutto-tc-qnty   = bf_rvs-line.brutto-tc-qnty
   .
   
+  if tt-meas.water-qnty <> ?
+  then do :
+    find first rvs-line-attr exclusive-lock
+         where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+           and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+           and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+           and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+           and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+           and rvs-line-attr.attr-code = "measure-water-qnty" no-error.
+    if not available rvs-line-attr then do :
+      create rvs-line-attr.
+      assign
+        rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+        rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+        rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+        rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+        rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+        rvs-line-attr.attr-code = "measure-water-qnty"
+      .
+    end.
+    rvs-line-attr.attr-value = string(tt-meas.water-qnty) .
+  end .
   
   find first rvs-line-attr exclusive-lock
        where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -2243,7 +2277,6 @@ then do:
       bf_rvs-line.state-measure-cli-qnty = bf_rvs-line.state-measure-qnty * bf_rvs-line.state-density
       bf_rvs-line.state-brutto-cli-qnty  = bf_rvs-line.state-brutto-qnty  * bf_rvs-line.state-density
     .
-    if bf_rvs-line.measure-qnty = 0 then bf_rvs-line.measure-qnty = tt-meas.brutto-qnty .
     find first rvs-line-attr exclusive-lock
         where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
           and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
@@ -2284,10 +2317,7 @@ then do:
                              "Общий уровень:   " + string(tt-meas.level-total) + {&new-line} +
                              "Уровень СУГ:     " + string(tt-meas.level-petrol) + {&new-line} +
                              "Уровень воды:    " + string(tt-meas.level-water) + {&new-line} +
-                             "T1:              " + (if tt-meas.temp-layer1 = ? then "?" else string(tt-meas.temp-layer1)) + {&new-line} +
-                             "T2:              " + (if tt-meas.temp-layer2 = ? then "?" else string(tt-meas.temp-layer2)) + {&new-line} +
-                             "T3:              " + (if tt-meas.temp-layer3 = ? then "?" else string(tt-meas.temp-layer3)) + {&new-line} +
-                             "Вода:            " + string(tt-meas.water-qnty) + {&new-line} +
+                             "Вода:            " + (if tt-meas.water-qnty = ? then "?" else string(tt-meas.water-qnty)) + {&new-line} +
                              "Плотность ПФ:    " + string(tt-meas.vapor-density, ">>>9.9<<<") + {&new-line} +
                              "Давление:        " + string(tt-meas.vapor-pressure, ">>>9.9<<<")
                              .
@@ -2349,7 +2379,7 @@ then do:
                                    "Общий уровень:   " + string(buf_tt-meas.level-total) + {&new-line} +
                                    "Уровень СУГ:     " + string(buf_tt-meas.level-petrol) + {&new-line} +
                                    "Уровень воды:    " + string(buf_tt-meas.level-water) + {&new-line} +
-                                   "Вода:            " + string(buf_tt-meas.water-qnty) + {&new-line} +
+                                   "Вода:            " + (if tt-meas.water-qnty = ? then "?" else string(tt-meas.water-qnty)) + {&new-line} +
                                    "Плотность ПФ:    " + string(buf_tt-meas.vapor-density, ">>>9.9<<<") + {&new-line} +
                                    "Давление:        " + string(buf_tt-meas.vapor-pressure , ">>>9.9<<<")
                                    .
@@ -2501,7 +2531,7 @@ then do:
                                  "Общий уровень:   " + string(buf_tt-meas.level-total) + {&new-line} +
                                  "Уровень СУГ:     " + string(buf_tt-meas.level-petrol) + {&new-line} +
                                  "Уровень воды:    " + string(buf_tt-meas.level-water) + {&new-line} +
-                                 "Вода:            " + string(buf_tt-meas.water-qnty) + {&new-line} +
+                                 "Вода:            " + (if tt-meas.water-qnty = ? then "?" else string(tt-meas.water-qnty)) + {&new-line} +
                                  "Плотность ПФ:    " + string(buf_tt-meas.vapor-density, ">>>9.9<<<") + {&new-line} +
                                  "Давление:        " + string(buf_tt-meas.vapor-pressure , ">>>9.9<<<")
                                  .
@@ -3368,6 +3398,13 @@ then do:
                     END. /* if available prev_rvs-line */
                 END.
             END. /* if available crl_prev_rvs-doc */
+            
+            if not is-sug(bf_rvs-line.gds-code)
+            then do :
+              if bf_rvs-line.measure-qnty = 0 or bf_rvs-line.measure-qnty = ? then bf_rvs-line.measure-qnty = bf_rvs-line.measure-cli-qnty / bf_rvs-line.density .
+              if bf_rvs-line.measure-qnty = 0 or bf_rvs-line.measure-qnty = ? then bf_rvs-line.measure-qnty = tt-meas.brutto-qnty .
+              if bf_rvs-line.measure-qnty > tt-meas.brutto-qnty then bf_rvs-line.measure-qnty = tt-meas.brutto-qnty .
+            end .
         END. /* if ptrlprop-olddens = true */
     END.
   
@@ -3834,11 +3871,6 @@ THEN DO:
       define buffer temp_sr-izmerenia for sr-izmerenia .
       define buffer level_sr-izmerenia for sr-izmerenia .
       
-/*      if pl-rvd-lvl  */
-/*      and pl-rvd-dens*/
-/*      and pl-rvd-temp*/
-/*      then do : end .*/
-/*      else do :      */
       find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si no-error.
       if error-status :error or not available sr-izmerenia then do :
         find first bf_goods no-lock where bf_goods.gds-code = bf_rvs-line.gds-code no-error .
@@ -3866,7 +3898,33 @@ THEN DO:
           DeltaAbs_R_Sug-vapor   = sr-izmerenia.sr-abs-err-dens-lgas-vapor
         .
       end.
-/*      end .*/
+      if is-sug(bf_rvs-line.gds-code)
+      then do :
+        find first rvs-line-attr exclusive-lock
+            where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+            and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+            and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+            and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+            and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+            and rvs-line-attr.attr-code = "delta-mass-qnty" no-error.
+        if available rvs-line-attr then 
+        do :
+          if sr-izmerenia.sr-otnos > 0.65 then rvs-line-attr.attr-value = "0.65". else rvs-line-attr.attr-value = string(sr-izmerenia.sr-otnos)  . 
+        end.
+        else 
+        do :
+          create rvs-line-attr.
+          assign
+              rvs-line-attr.obj-code   = bf_rvs-line.obj-code
+              rvs-line-attr.obj-type   = bf_rvs-line.obj-type
+              rvs-line-attr.gds-code   = bf_rvs-line.gds-code
+              rvs-line-attr.pl-code    = bf_rvs-line.pl-code
+              rvs-line-attr.rvs-code   = bf_rvs-line.rvs-code
+              rvs-line-attr.attr-code  = "delta-mass-qnty"
+          .
+          if sr-izmerenia.sr-otnos > 0.65 then rvs-line-attr.attr-value = "0.65". else rvs-line-attr.attr-value = string(sr-izmerenia.sr-otnos)  .
+        end.
+      end .
       if v-is-olddens
       then do :
         find first rvs-line-attr no-lock
@@ -6273,7 +6331,7 @@ procedure creatett-meas-file:
    
    
    block-Place:
-   for each tt-place :
+   for each tt-place where not tt-place.is-error :
       pl-twice-code = "" . 
       /* Ищем бак в нашей системе */
       find first bf_place no-lock 
@@ -6376,70 +6434,70 @@ procedure creatett-meas-file:
                next block-field.
             if v-fh:buffer-value() ne ?
             then do:
-              if tt-param.strfrfile = 'temperature':U   then do:
-                assign
-                  tt-meas-file.temp-not-null   = yes
-                .
-              end.
-              if tt-param.strfrfile = 'temp-layer1':U   then do:
-                assign
-                  tt-meas-file.t1-not-null   = yes
-                .
-              end.
-              if tt-param.strfrfile = 'temp-layer2':U   then do:
-                assign
-                  tt-meas-file.t2-not-null   = yes
-                .
-              end.
-              if tt-param.strfrfile = 'temp-layer3':U   then do:
-                assign
-                  tt-meas-file.t3-not-null   = yes
-                .
-              end.
-              if tt-param.strfrfile = 'volume_oil':U   then do:
-                assign
-                  tt-meas-file.meas-vol-oil   = yes
-                .
-              end.
-              if tt-param.strfrfile = 'volume_water':U then do:
-                assign
-                  tt-meas-file.meas-vol-water = yes
-                .
-              end.
-              if tt-param.strfrfile = 'mass_total':U  
-              then do: 
-                 if tt-meas-file.pl-code <> 0 
-                 then do:
-                    run placelib_get-attr  ( input {&place-asi-sertif}
-                                            ,input i-obj-code
-                                            ,input i-obj-type
-                                            ,input tt-meas-file.pl-code 
-                                            ,output v-value
-                                            ,output v-ok      ) no-error.
-                    
-                 end.
-                 else do:
-  
-                    run placelib_get-attr  ( input {&place-asi-sertif}
-                                            ,input i-obj-code
-                                            ,input i-obj-type
-                                            ,input place.pl-code 
-                                            ,output v-value
-                                            ,output v-ok      ) no-error.
-                    
-                 end.
-                 if v-ok and v-value = "yes" 
-                 then do: 
-                    if     trim( v-fh:buffer-value() )  <> "-" 
-                       and trim( v-fh:buffer-value() )  <> "" 
-                    then do:
-                       assign
-                          tt-meas-file.log-brutto       = yes
-                          tt-meas-file.measure-cli-qnty = decimal( trim( v-fh:buffer-value() ) )
-                       . 
-                    end.
-                 end.
-              end.  
+            if tt-param.strfrfile = 'temperature':U   then do:
+              assign
+                tt-meas-file.temp-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'temp-layer1':U   then do:
+              assign
+                tt-meas-file.t1-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'temp-layer2':U   then do:
+              assign
+                tt-meas-file.t2-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'temp-layer3':U   then do:
+              assign
+                tt-meas-file.t3-not-null   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'volume_oil':U   then do:
+              assign
+                tt-meas-file.meas-vol-oil   = yes
+              .
+            end.
+            if tt-param.strfrfile = 'volume_water':U then do:
+              assign
+                tt-meas-file.meas-vol-water = yes
+              .
+            end.
+            if tt-param.strfrfile = 'mass_total':U  
+            then do: 
+               if tt-meas-file.pl-code <> 0 
+               then do:
+                  run placelib_get-attr  ( input {&place-asi-sertif}
+                                          ,input i-obj-code
+                                          ,input i-obj-type
+                                          ,input tt-meas-file.pl-code 
+                                          ,output v-value
+                                          ,output v-ok      ) no-error.
+                  
+               end.
+               else do:
+
+                  run placelib_get-attr  ( input {&place-asi-sertif}
+                                          ,input i-obj-code
+                                          ,input i-obj-type
+                                          ,input place.pl-code 
+                                          ,output v-value
+                                          ,output v-ok      ) no-error.
+                  
+               end.
+               if v-ok and v-value = "yes" 
+               then do: 
+                  if     trim( v-fh:buffer-value() )  <> "-" 
+                     and trim( v-fh:buffer-value() )  <> "" 
+                  then do:
+                     assign
+                        tt-meas-file.log-brutto       = yes
+                        tt-meas-file.measure-cli-qnty = decimal( trim( v-fh:buffer-value() ) )
+                     . 
+                  end.
+               end.
+            end.  
             end.
          end.
          else do: /* not available tt-param*/

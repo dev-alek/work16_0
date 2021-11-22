@@ -151,18 +151,18 @@ on stop    undo tr, return error
            substitute( "Вы не сделали сверку товара(не установлено кол-во или плотность): &1 &2 &3 &4 по месту хранения: &5",
                        ub.goods.artic, ub.goods.prod-type, ub.goods.prod-code, ub.goods.gds-name, ub.rvs-line.pl-code ).
       end.
-      if ub.rvs-line.state-measure-qnty > ub.rvs-line.state-brutto-qnty then do:
-         find ub.goods no-lock where ub.goods.gds-code = ub.rvs-line.gds-code.
-         undo tr, return error
-           substitute( "Кол-во топлива больше кол-ва брутто по товару: &1 &2 &3 &4 по месту хранения: &5",
-                       ub.goods.artic, ub.goods.prod-type, ub.goods.prod-code, ub.goods.gds-name, ub.rvs-line.pl-code ).
-      end.
-      if ub.rvs-line.state-measure-cli-qnty > ub.rvs-line.state-brutto-cli-qnty then do:
-         find ub.goods where ub.goods.gds-code = ub.rvs-line.gds-code no-lock.
-         undo tr, return error
-           substitute( "Вес топлива больше веса брутто по товару: &1 &2 &3 &4 по месту хранения: &5",
-                       ub.goods.artic, ub.goods.prod-type, ub.goods.prod-code, ub.goods.gds-name, ub.rvs-line.pl-code ).
-      end.
+/*      if ub.rvs-line.state-measure-qnty > ub.rvs-line.state-brutto-qnty then do:                                        */
+/*         find ub.goods no-lock where ub.goods.gds-code = ub.rvs-line.gds-code.                                          */
+/*         undo tr, return error                                                                                          */
+/*           substitute( "Кол-во топлива больше кол-ва брутто по товару: &1 &2 &3 &4 по месту хранения: &5",              */
+/*                       ub.goods.artic, ub.goods.prod-type, ub.goods.prod-code, ub.goods.gds-name, ub.rvs-line.pl-code ).*/
+/*      end.                                                                                                              */
+/*      if ub.rvs-line.state-measure-cli-qnty > ub.rvs-line.state-brutto-cli-qnty then do:                                */
+/*         find ub.goods where ub.goods.gds-code = ub.rvs-line.gds-code no-lock.                                          */
+/*         undo tr, return error                                                                                          */
+/*           substitute( "Вес топлива больше веса брутто по товару: &1 &2 &3 &4 по месту хранения: &5",                   */
+/*                       ub.goods.artic, ub.goods.prod-type, ub.goods.prod-code, ub.goods.gds-name, ub.rvs-line.pl-code ).*/
+/*      end.                                                                                                              */
 /*      if ub.rvs-line.state-level-petrol > ub.rvs-line.state-level-total then do:                                        */
 /*         find ub.goods where ub.goods.gds-code = ub.rvs-line.gds-code no-lock.                                          */
 /*         undo tr, return error                                                                                          */

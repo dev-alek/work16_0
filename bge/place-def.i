@@ -15,6 +15,7 @@ define temp-table tt-place no-undo
   field mass          as decimal    label "Масса (кг)"
   field vapor-density as decimal    label "Плотность СУГ (кг/л)"
   field vapor-pressure as decimal   label "Давление СУГ (мПа)"
+  field volume_water  as decimal
   field is-error      as logical
   field error-message as character
   index pi as unique
