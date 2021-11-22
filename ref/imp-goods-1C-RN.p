@@ -422,10 +422,8 @@ end.
     RUN gds-attr-delete (v-nbc, {&attr-office-type}, output v-attr-del).     
   end.
   
-  case p-GdsObj:mark-type :
-    when 1 then v-mark-type = {&attr-mark-type_tabak}.
-    otherwise v-mark-type = ? .
-  end case.
+  v-mark-type = ?.
+  v-mark-type = entry(p-GdsObj:mark-type + 1 ,{&prop-list-attr-mark-type}) no-error.
   
   if v-mark-type <> ?
   then do :
