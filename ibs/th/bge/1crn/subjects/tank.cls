@@ -343,23 +343,17 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("dc-height" , string(tt-place-attr.place-dc-height)).        
         sw:write-data-element ("rel-er"   , string-mth (tt-place-attr.place-rel-error)).
         sw:write-data-element ("dnsty"    , string-mth (tt-place-attr.place-dens-prov)).
-        sw:write-data-element ("main-mi-code"  , string(tt-place-attr.place-Si)).
+        sw:write-data-element ("main-mi-code"  , string(if tt-place-attr.place-Si = ? then 0 else tt-place-attr.place-Si)).
         sw:write-data-element ("position"  , string(tt-place-attr.place-local)).
         sw:write-data-element ("certified"  , string(tt-place-attr.place-asi-sertif)).
         sw:write-data-element ("pipe-er"  , string-mth(tt-place-attr.place-error-mass)).
         sw:write-data-element ("tank-tk" , string(tt-place-attr.place-tank-tk)).  
         sw:write-data-element ("rvd-dnsty"  , string(tt-place-attr.place-rvd-dnsty)).
-        if tt-place-attr.place-rvd-dnsty = 1 then
         sw:write-data-element ("dnst-mi-code" , string(tt-place-attr.place-dnst-mi-code)).  
-        else sw:write-data-element ("dnst-mi-code" , "").
         sw:write-data-element ("rvd-lvl"  , string(tt-place-attr.place-rvd-lvl)).
-        if tt-place-attr.place-rvd-lvl = 1 then
         sw:write-data-element ("lvl-mi-code" , string(tt-place-attr.place-lvl-mi-code)).
-        else sw:write-data-element ("lvl-mi-code" , "").  
         sw:write-data-element ("rvd-tmp"  , string(tt-place-attr.place-rvd-tmp)).
-        if tt-place-attr.place-rvd-tmp = 1 then 
         sw:write-data-element ("tmp-mi-code" , string(tt-place-attr.place-tmp-mi-code)). 
-        else sw:write-data-element ("tmp-mi-code" , "").  
         sw:write-data-element ("passport-num" , string(tt-place-attr.place-passport-num)).  
         sw:write-data-element ("passport-type" , string(tt-place-attr.place-passport-type)). 
       end.
