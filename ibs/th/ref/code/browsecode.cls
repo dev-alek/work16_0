@@ -352,6 +352,9 @@ class ibs.th.ref.code.browsecode inherits Form final:
       /*  */
       this-object:dataGridView1:AccessibleRole = System.Windows.Forms.AccessibleRole:None.
       this-object:dataGridView1:AllowUserToAddRows = false.
+      define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar0 = cast(Progress.Util.EnumHelper:Or(cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+      this-object:dataGridView1:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
       this-object:dataGridView1:AutoGenerateColumns = false.
       this-object:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
       this-object:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
@@ -378,13 +381,12 @@ class ibs.th.ref.code.browsecode inherits Form final:
       arrayvar0[19] = this-object:statusrow.
       this-object:dataGridView1:Columns:AddRange(arrayvar0).
       this-object:dataGridView1:DataSource = this-object:bindCode.
-      this-object:dataGridView1:Dock = System.Windows.Forms.DockStyle:Bottom.
       this-object:dataGridView1:Location = new System.Drawing.Point(0, 42).
       this-object:dataGridView1:MultiSelect = false.
       this-object:dataGridView1:Name = "dataGridView1".
       this-object:dataGridView1:ReadOnly = true.
       this-object:dataGridView1:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
-      this-object:dataGridView1:Size = new System.Drawing.Size(657, 312).
+      this-object:dataGridView1:Size = new System.Drawing.Size(599, 404).
       this-object:dataGridView1:TabIndex = 0.
       this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
       this-object:dataGridView1:CellContentDoubleClick:Subscribe(this-object:dataGridView1_CellContentDoubleClick).
@@ -597,7 +599,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:toolStrip1:Items:AddRange(arrayvar3).
       this-object:toolStrip1:Location = new System.Drawing.Point(0, 0).
       this-object:toolStrip1:Name = "toolStrip1".
-      this-object:toolStrip1:Size = new System.Drawing.Size(657, 39).
+      this-object:toolStrip1:Size = new System.Drawing.Size(599, 39).
       this-object:toolStrip1:TabIndex = 1.
       this-object:toolStrip1:Text = "toolStrip1".
       /*  */
@@ -700,7 +702,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       /*  */
       /* browsecode */
       /*  */
-      this-object:ClientSize = new System.Drawing.Size(657, 354).
+      this-object:ClientSize = new System.Drawing.Size(599, 446).
       this-object:Controls:Add(this-object:toolStrip1).
       this-object:Controls:Add(this-object:dataGridView1).
       this-object:Name = "browsecode".

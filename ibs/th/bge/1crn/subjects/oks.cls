@@ -44,7 +44,7 @@ class ibs.th.bge.1crn.subjects.oks inherits ibs.th.bge.1crn.subjects.asubject:
     case inTag:
       when "del-l"        then del-l            = {&attr-integer} .
       when "del-f"        then del-f            = {&attr-integer} .
-      when "Code_ok" or when "Code-ok"      then Code_ok          = {&attr-str} .
+      when "Code_ok"     or when "Code-ok"      then Code_ok          = string({&attr-integer}) .
       when "Code_ei_kkt" or when "Code-ei-kkt"  then Code_ei_kkt      = {&attr-str} .
       when "Code_pf_kkt" or when "Code-pf-kkt"  then Code_pf_kkt      = {&attr-str} .
       when "notation"     then notation         = {&attr-str} .
