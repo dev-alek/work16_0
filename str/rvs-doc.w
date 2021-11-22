@@ -391,19 +391,19 @@ r-doc.obj-type                    at row 2 col 23   colon-aligned no-label      
 ub.clients.obj-name               at row 2 col 33   colon-aligned no-label       view-as text size 40 by 1 fgcolor 4
 r-doc.out-code                    at row 3 col 20   colon-aligned label "На основе документа" view-as text
 r-doc.doc-date                    at row 3 col 40   colon-aligned view-as text
-r-doc.state-measure-qnty          at row 4 col 38   colon-aligned view-as text
-r-doc.measure-qnty                at row 4 col 63   colon-aligned label "Измер" view-as text
-r-doc.system-qnty                 at row 4 col 85.5                          colon-aligned view-as text
+r-doc.state-measure-qnty          at row 4 col 38   colon-aligned view-as text FORMAT "->>,>>>,>>9":U
+r-doc.measure-qnty                at row 4 col 63   colon-aligned label "Измер" view-as text FORMAT "->>,>>>,>>9":U
+r-doc.system-qnty                 at row 4 col 85.5 colon-aligned view-as text FORMAT "->>,>>>,>>9":U
 r-doc.wrkr                        at row 5 col 4.5  colon-aligned format "999999999"  view-as fill-in size 10 by 1
 wrkr-name                         at row 5 col 15   colon-aligned no-label fgcolor 4
 r-wrkr                            at row 5 col 28   no-label
-r-doc.state-measure-cli-qnty      at row 5 col 50   colon-aligned label "Вес"       view-as text
-r-doc.measure-cli-qnty            at row 5 col 85.5 colon-aligned label "Измер.вес" view-as text
+r-doc.state-measure-cli-qnty      at row 5 col 50   colon-aligned label "Масса"       view-as text FORMAT "->>,>>>,>>9.9":U
+r-doc.measure-cli-qnty            at row 5 col 85.5 colon-aligned label "Измер.масса" view-as text FORMAT "->>,>>>,>>9.9":U
 r-doc.agnt                        at row 6 col 4.5 colon-aligned format "999999999"  view-as fill-in size 10 by 1
 agnt-name                         at row 6 col 15  colon-aligned no-label fgcolor 4
 r-agnt                            at row 6 col 28  no-label
-r-doc.system-cli-qnty         at row 6 col 50    colon-aligned label "Учет вес"         view-as text
-r-doc.system-cli-avrg-qnty    at row 6 col 85.5  colon-aligned label "Вес по ср.пл-ти"  view-as text
+r-doc.system-cli-qnty         at row 6 col 50    colon-aligned label "Учет масса"         view-as text FORMAT "->>,>>>,>>9.9":U
+r-doc.system-cli-avrg-qnty    at row 6 col 85.5  colon-aligned label "Масса по ср.пл-ти"  view-as text FORMAT "->>,>>>,>>9.9":U
 r-doc.boss                    at row 7 col 4.5   colon-aligned format "999999999"       view-as fill-in size 10 by 1
 boss-name                     at row 7 col 15    colon-aligned no-label                fgcolor 4
 r-boss                        at row 7 col 28    no-label
@@ -1626,9 +1626,45 @@ end procedure. /* local-add */
 
 procedure local-chg:
 define buffer buf_goods for ub.goods.
+define variable pl-rvd-dens as logical no-undo .
+define variable pl-rvd-lvl as logical no-undo .
+define variable pl-rvd-temp as logical no-undo .
+define variable pl-level-sr-izm   as integer no-undo .
+define variable pl-temp-sr-izm    as integer no-undo .
+define variable v-sug-sr-izm-err as logical no-undo .
+define variable v-value as character no-undo.
+define variable v-ok as logical no-undo.
+
 assign rvs-line-rec = recid(ub.rvs-line)
        rvs-line-pump-rec = (if available ub.rvs-line-pump then recid(ub.rvs-line-pump) else ?).
-
+  
+  run placelib_get-attr  ( input {&place-rvd-dnsty}
+                            ,input ub.rvs-line.obj-code
+                            ,input ub.rvs-line.obj-type
+                            ,input ub.rvs-line.pl-code
+                            ,output v-value
+                            ,output v-ok      ) no-error.
+  if not v-ok then pl-rvd-dens = no.
+  else pl-rvd-dens = logical(v-value) .
+  
+  run placelib_get-attr  ( input {&place-rvd-lvl}
+                            ,input ub.rvs-line.obj-code
+                            ,input ub.rvs-line.obj-type
+                            ,input ub.rvs-line.pl-code
+                            ,output v-value
+                            ,output v-ok      ) no-error.
+  if not v-ok then pl-rvd-lvl = no.
+  else pl-rvd-lvl = logical(v-value) .
+  
+  run placelib_get-attr  ( input {&place-rvd-tmp}
+                            ,input ub.rvs-line.obj-code
+                            ,input ub.rvs-line.obj-type
+                            ,input ub.rvs-line.pl-code
+                            ,output v-value
+                            ,output v-ok      ) no-error.
+  if not v-ok then pl-rvd-temp = no.
+  else pl-rvd-temp = logical(v-value) .
+  
   case r-doc.rvs-type
   :
     when {&rvs-before-doc}
@@ -1658,7 +1694,11 @@ assign rvs-line-rec = recid(ub.rvs-line)
                    ub.place.pl-code  = ub.rvs-line.pl-code
         no-error. 
         if available ub.place then do :
-            if ub.place.is-meas then do :
+            if ub.place.is-meas
+            and not pl-rvd-dens
+            and not pl-rvd-lvl
+            and not pl-rvd-temp
+            then do :
               { gbl/chk-actg.i
                 v-cntxt-db-num
                 v-cntxt-userid
@@ -1702,7 +1742,11 @@ assign rvs-line-rec = recid(ub.rvs-line)
                    ub.place.pl-code  = ub.rvs-line.pl-code
         no-error.
         if available ub.place then do :
-            if ub.place.is-meas then do :
+            if ub.place.is-meas
+            and not pl-rvd-dens
+            and not pl-rvd-lvl
+            and not pl-rvd-temp
+            then do :
               { gbl/chk-actg.i
                 v-cntxt-db-num
                 v-cntxt-userid
@@ -1771,8 +1815,6 @@ end.
 else do:
     
     define variable is-vir as logical no-undo.
-    define variable v-value as character no-undo.
-    define variable v-ok as logical no-undo.
     
     run placelib_get-attr(input {&place-virtual}
                                  ,input rvs-line.obj-code
@@ -1786,11 +1828,48 @@ else do:
     if is-vir then do:
         message "Редактирование строки сверки виртуального резервуара запрещено." view-as alert-box.
     end.
-    
-    else do:
+    else do :
       if available buf_goods
       and is-sug(buf_goods.gds-code) then do:
-         
+        
+        run placelib_get-attr  ( input {&place-SI-temp}
+                                ,input rvs-line.obj-code
+                                ,input rvs-line.obj-type
+                                ,input rvs-line.pl-code
+                                ,output v-value
+                                ,output v-ok      ) no-error.
+        if v-ok
+        then pl-temp-sr-izm = integer(v-value) .
+        else pl-temp-sr-izm = ? .
+        
+        run placelib_get-attr  ( input {&place-SI-level}
+                                ,input rvs-line.obj-code
+                                ,input rvs-line.obj-type
+                                ,input rvs-line.pl-code
+                                ,output v-value
+                                ,output v-ok      ) no-error.
+        if v-ok
+        then pl-level-sr-izm = integer(v-value) .
+        else pl-level-sr-izm = ? .
+        
+        v-sug-sr-izm-err = no .
+        
+        if pl-rvd-lvl
+        and (pl-level-sr-izm = ? or pl-level-sr-izm = 0)
+        then do :
+          v-sug-sr-izm-err = yes .
+          message "Для показателя 'уровень' не установлено средство измерения. Обратитесь в службу поддержки для установки средства измерения 'уровень'. Ввод данных по ручным измерениям без указания средства измерения невозможен." view-as alert-box .
+        end .
+        
+        if pl-rvd-temp
+        and (pl-temp-sr-izm = ? or pl-temp-sr-izm = 0)
+        then do :
+          v-sug-sr-izm-err = yes .
+          message "Для показателя 'температура' не установлено средство измерения. Обратитесь в службу поддержки для установки средства измерения 'температура'. Ввод данных по ручным измерениям без указания средства измерения невозможен." view-as alert-box .
+        end .
+        
+        if not v-sug-sr-izm-err
+        then do :
           run str/rvs-lin-sug.w
             (input  parparentproc
             ,input  recid(ub.rvs-line)
@@ -1801,7 +1880,7 @@ else do:
                                 string(buf_goods.prod-code) +
                     " складское место " + string(ub.rvs-line.pl-code)
             ) no-error.
-         
+        end . 
       end.
       else do:
         run str/rvs-lin.w

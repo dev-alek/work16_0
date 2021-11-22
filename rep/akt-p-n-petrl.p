@@ -473,7 +473,7 @@ do
                 , input fnc-DD-MM-YYYY(v-date-pov-plotn) 
             ).
           end.
-          if sr-izmerenia.sr-type = 3 or sr-izmerenia.sr-type = 4 then do:
+          if sr-izmerenia.sr-type-id = 3 or sr-izmerenia.sr-type-id = 4 then do:
             /* Поле-27 "Плотномер: ПЛОТ-3Б-1П, ГОСТ  АУТП.414122.006 ТУ(1)  №" (из строки ТоплНакл > ДопИнф > поле "Плотномер №") */
             run apn-xl-write-cell-data in this-procedure (
                   input {&apn-xl-num_plotn}
@@ -1442,7 +1442,7 @@ procedure proc-calc-library-pomi:
                     else
                     do:
                         assign
-                            ToolType = integer(sr-izmerenia.sr-type)
+                            ToolType = sr-izmerenia.sr-type-id
                             DeltaAbs_R = sr-izmerenia.sr-abs-err-dens
                             DeltaAbs_Tv = sr-izmerenia.sr-abs-err-temp-vol
                             DeltaAbs_Tr = sr-izmerenia.sr-abs-err-temp-dens
