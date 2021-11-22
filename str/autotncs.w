@@ -581,8 +581,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   do:
       F-dop-volume = decimal(entry(1, parnum-tank, {&delim-par}) ) no-error.
       ellipse-depth = decimal (entry(2, parnum-tank, {&delim-par})) no-error.
-      ellipse-min = decimal (entry(3, parnum-tank, {&delim-par})) no-error.
-      ellipse-max = decimal (entry(4, parnum-tank, {&delim-par})) no-error.
+      ellipse-max = decimal (entry(3, parnum-tank, {&delim-par})) no-error.
+      ellipse-min = decimal (entry(4, parnum-tank, {&delim-par})) no-error.
   end.      
   if par-neck = 1 then 
   do:

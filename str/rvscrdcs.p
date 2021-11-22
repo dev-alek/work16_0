@@ -443,6 +443,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     first buf_goods no-lock where buf_goods.gds-code = buf_rvs-line.gds-code
     on error undo block_cre-inv, retry block_cre-inv
     :
+      if is-gas(buf_goods.gds-code)
+      then do :
+        next block_rvs-line.
+      end .
       if chs-gds-inv <> yes then do:
         assign
           v-log = no
@@ -459,7 +463,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         else do :
           if rdc-value = "pomi-rn"
           and not is-sug(buf_goods.gds-code)
-          and not is-gas(buf_goods.gds-code)
           then do :
             assign
               v-input-type-p = "" 
@@ -685,7 +688,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       oNormWast:ParGdsOAttr:OnDate = if buf_trn-doc.fact-date <> ? then buf_trn-doc.fact-date else buf_trn-doc.doc-date.
       oNormWast:FillNormWast().
       
-      if error-status:error and not v-lgas-gds
+      if error-status:error
+      and not v-lgas-gds
+      and not is-gas(buf_goods.gds-code)
       then do:
         message
           "ОШИБКА при определние нормы естественной убыли." skip
@@ -855,6 +860,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                      .  
                  
           if not v-lgas-gds
+          and not is-gas(buf_goods.gds-code)
           then do:
             assign
               v-metering-error-base = K1 / 100 * buf_rvs-line.state-measure-qnty
@@ -905,7 +911,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                            .                   
           end.
 
-          if not v-lgas-gds and not ptrlprop-algrvspt = 4 
+          if not v-lgas-gds
+          and not is-gas(buf_goods.gds-code)
+          and not ptrlprop-algrvspt = 4 
           then do:
 
             if (O_PKH - O_FACT) <= 0  then do:
@@ -1615,6 +1623,9 @@ when 4 then do:
                            "Кол-во литры: " + string(v-reserv-qnty-base) + {&new-line}    
                            .
           end.
+          if v-reserv-qnty-cli = ? then v-reserv-qnty-cli = 0 .
+          if v-reserv-qnty-base = ? then v-reserv-qnty-base = 0 .
+          
           if v-reserv-qnty-base <> 0 then do:
             assign
               v-chg-qnty = v-reserv-qnty-base

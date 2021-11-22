@@ -424,7 +424,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     do ii = 1 to infoSecsObj:SectionNum:
       tankSectionControl[ii]:SetInfoSec().
     end.
-
+/*    infoSecsObj:SaveDB() .*/
     infoSecsObj:WasSetting = true.
     return.
 

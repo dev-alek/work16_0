@@ -162,6 +162,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define variable v-dop-volume as decimal no-undo.
   define variable var-list-shape as character no-undo init {&list-shape}.
   
+  define variable v-cli-qnty    as decimal no-undo .
+  define variable v-doc-qnty    as decimal no-undo .
+  define variable v-doc-density as decimal no-undo .
     
   constructor public tanksection ( infoSecs as class InfoSectionsTotal, idSec as int, inTanksecs as class tanksections):
     
@@ -476,8 +479,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 	@VisualDesigner.
 	method private void comboBoxShape_SelectedValueChanged( input sender as System.Object, input e as System.EventArgs ):
 		
-		if comboBoxShape:Text = "Без горловины"
-		  then comboBoxPour:Text = "Нижний налив" .
+/*		if comboBoxShape:Text = "Без горловины"    */
+/*		  then comboBoxPour:Text = "Нижний налив" .*/
 		return.
 
 	end method.
@@ -658,7 +661,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       buttonCalcWeight:Visible = false.
       label20:Visible = false.      
 
-    
+      maskedTextBoxTankWater:Enabled = false.
     end.
 
     if infoSecsObj:RdcDnstvalue = "manual"
@@ -674,7 +677,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       label24:Visible = false.
       
       //groupBox4:Location = groupBox7:Location.
-    
+      maskedTextBoxTankWater:Enabled = false.
     end.
 
     if infoSecsObj:Mode = {&lookup}
@@ -684,6 +687,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxTankVolPomi:Enabled = false.
       maskedTextBoxTankDensityPomi:Enabled = false.
       comboBoxShape:Enabled = false.
+      comboBoxPour:Enabled = false.
       
       do ii = 1 to extent (maskedTextBoxArr):
         this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
@@ -709,6 +713,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       buttonCopySec:Visible = false.
       buttonPl:Visible = false.
       buttonPlSi:Visible = false.
+      buttonPlSiTemp:Visible = false.
+      buttonCopyPSTemp:Visible = false.
       
     end.
     
@@ -797,36 +803,43 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       
       if infoSecsObj:RdcDnstvalue = "not"
       then do:
-        this-object:maskedTextBoxTankWeight:Leave:Subscribe(this-object:calc-weight-vol).
-        this-object:maskedTextBoxTankWeight:Enabled = true.
-        this-object:maskedTextBoxTankVol:ReadOnly = false.
+        this-object:maskedTextBoxTankVol:Leave:Subscribe(this-object:calc-weight-vol).
+        this-object:maskedTextBoxTankVol:Enabled = false.
+        this-object:maskedTextBoxTankVol:ReadOnly = true.
         this-object:maskedTextBoxTankWeight:ForeColor = System.Drawing.Color:Red.
-        if not infoSecsObj:CliQntyInput
-          then do:
-            this-object:maskedTextBoxTankWeight:ForeColor = System.Drawing.Color:Maroon.
-            this-object:maskedTextBoxTankWeight:Enabled = false.
-            this-object:maskedTextBoxTankWeight:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-            this-object:maskedTextBoxTankWeight:Leave:Unsubscribe(this-object:calc-weight-vol).
-/*          this-object:maskedTextBoxDocDens:TextChanged:Subscribe(this-object:CalcDoc).*/
-/*          this-object:maskedTextBoxDocQnty:TextChanged:Subscribe(this-object:CalcDoc).*/
-          end.
-        if not infoSecsObj:DocQntyInput
-          then do: 
-            this-object:maskedTextBoxTankVol:Enabled = false.
-            this-object:maskedTextBoxTankVol:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-            this-object:maskedTextBoxTankVol:Leave:Unsubscribe(this-object:calc-weight-vol).
-/*          this-object:maskedTextBoxDocDens:TextChanged:Subscribe(this-object:CalcDoc).   */
-/*          this-object:maskedTextBoxTankWeight:TextChanged:Subscribe(this-object:CalcDoc).*/
-          end.
-        if not infoSecsObj:DensityInput
-          then do: 
-            this-object:maskedTextBoxTankDens:Enabled = false.
-            this-object:maskedTextBoxTankDens:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-            this-object:maskedTextBoxTankDens:Leave:Unsubscribe(this-object:calc-weight-vol).
-/*          this-object:maskedTextBoxDocQnty:TextChanged:Subscribe(this-object:CalcDoc).*/
-/*          this-object:maskedTextBoxCliQnty:TextChanged:Subscribe(this-object:CalcDoc).*/
-          end.
+        this-object:maskedTextBoxTankVol:ForeColor = System.Drawing.Color:Red.
+        this-object:maskedTextBoxTankWeight:Enabled = false.
+        this-object:maskedTextBoxTankWater:Enabled = false.
+/*        if not infoSecsObj:CliQntyInput                                                                                                                                                                                                     */
+/*          then do:                                                                                                                                                                                                                          */
+/*            this-object:maskedTextBoxTankWeight:ForeColor = System.Drawing.Color:Maroon.                                                                                                                                                    */
+/*            this-object:maskedTextBoxTankWeight:Enabled = false.                                                                                                                                                                            */
+/*            this-object:maskedTextBoxTankWeight:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).*/
+/*            this-object:maskedTextBoxTankWeight:Leave:Unsubscribe(this-object:calc-weight-vol).                                                                                                                                             */
+/*/*          this-object:maskedTextBoxDocDens:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                                  */
+/*/*          this-object:maskedTextBoxDocQnty:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                                  */
+/*          end.                                                                                                                                                                                                                              */
+/*        if not infoSecsObj:DocQntyInput                                                                                                                                                                                                     */
+/*          then do:                                                                                                                                                                                                                          */
+/*            this-object:maskedTextBoxTankVol:Enabled = false.                                                                                                                                                                               */
+/*            this-object:maskedTextBoxTankVol:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).   */
+/*            this-object:maskedTextBoxTankVol:Leave:Unsubscribe(this-object:calc-weight-vol).                                                                                                                                                */
+/*/*          this-object:maskedTextBoxDocDens:TextChanged:Subscribe(this-object:CalcDoc).   */                                                                                                                                               */
+/*/*          this-object:maskedTextBoxTankWeight:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                               */
+/*          end.                                                                                                                                                                                                                              */
+/*        if not infoSecsObj:DensityInput                                                                                                                                                                                                     */
+/*          then do:                                                                                                                                                                                                                          */
+/*            this-object:maskedTextBoxTankDens:Enabled = false.                                                                                                                                                                              */
+/*            this-object:maskedTextBoxTankDens:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).  */
+/*            this-object:maskedTextBoxTankDens:Leave:Unsubscribe(this-object:calc-weight-vol).                                                                                                                                               */
+/*/*          this-object:maskedTextBoxDocQnty:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                                  */
+/*/*          this-object:maskedTextBoxCliQnty:TextChanged:Subscribe(this-object:CalcDoc).*/                                                                                                                                                  */
+/*          end.                                                                                                                                                                                                                              */
       end.
+      else do :
+        this-object:maskedTextBoxTankWater:Visible = false.
+        this-object:label18:Visible = false.
+      end .
       maskedTextBoxListTank:Enabled = false.
     end.
 
@@ -2246,11 +2259,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxSecName:Text         = infoSecObj:SectionName.
     this-object:maskedTextBoxCarVol:Text          = format_round_0 (infoSecObj:CarVol).
     this-object:maskedTextBoxDocDens:Text         = format_dens (infoSecObj:DocDensity).
+    v-doc-density = infoSecObj:DocDensity no-error .
     this-object:maskedTextBoxDocQnty:Text         = format_round_0 (infoSecObj:DocQnty).
+    v-doc-qnty = infoSecObj:DocQnty no-error .
     this-object:maskedTextBoxTTNTemp:Text         = if infoSecObj:TTNTemp = ? then "" else format_temper (infoSecObj:TTNTemp).
-    this-object:maskedTextBoxAccShip:Text         = format_round_3 (infoSecObj:AccShip).
+    this-object:maskedTextBoxAccShip:Text         = format_round_3 (if infoSecObj:AccShip > 0 then infoSecObj:AccShip else 0.25).
     this-object:maskedTextBoxDiameter:Text        = (infoSecObj:Diameter).
     this-object:maskedTextBoxCliQnty:Text         = format_round_1 (infoSecObj:CliQnty).
+    v-cli-qnty = infoSecObj:CliQnty no-error .
     this-object:maskedTextBoxNumPassport:Text     = (infoSecObj:NumPassport).
     this-object:maskedTextBoxNormDoc:Text         = (infoSecObj:NormDoc).
     this-object:maskedTextBoxCertifFuel:Text      = (infoSecObj:CertifFuel).
@@ -2845,12 +2861,15 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
     infoSecObj:SectionName = (this-object:maskedTextBoxSecName:Text).                        
     infoSecObj:CarVol          = decimal(this-object:maskedTextBoxCarVol:Text).          
-    infoSecObj:DocDensity      = decimal(this-object:maskedTextBoxDocDens:Text).         
-    infoSecObj:DocQnty         = decimal(this-object:maskedTextBoxDocQnty:Text).         
+/*    infoSecObj:DocDensity      = decimal(this-object:maskedTextBoxDocDens:Text).*/
+    infoSecObj:DocDensity      = v-doc-density .         
+/*    infoSecObj:DocQnty         = decimal(this-object:maskedTextBoxDocQnty:Text).*/
+    infoSecObj:DocQnty         = v-doc-qnty .      
     infoSecObj:TTNTemp         = (if trim (this-object:maskedTextBoxTTNTemp:Text) = "" then ? else decimal(this-object:maskedTextBoxTTNTemp:Text) ).         
     infoSecObj:AccShip         = decimal(this-object:maskedTextBoxAccShip:Text).         
     infoSecObj:Diameter        = (this-object:maskedTextBoxDiameter:Text).        
-    infoSecObj:CliQnty         = decimal(this-object:maskedTextBoxCliQnty:Text).         
+/*    infoSecObj:CliQnty         = decimal(this-object:maskedTextBoxCliQnty:Text).*/
+    infoSecObj:CliQnty         = v-cli-qnty .    
     infoSecObj:NumPassport     = (this-object:maskedTextBoxNumPassport:Text).     
     infoSecObj:NormDoc         = (this-object:maskedTextBoxNormDoc:Text).         
     infoSecObj:CertifFuel      = (this-object:maskedTextBoxCertifFuel:Text).      
@@ -2859,7 +2878,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     infoSecObj:Mouth           = decimal(this-object:maskedTextBoxMouth:Text).           
     infoSecObj:TankVol         = decimal(this-object:maskedTextBoxTankVol:Text).         
     infoSecObj:TankDensity     = decimal(this-object:maskedTextBoxTankDens:Text).        
-    infoSecObj:NaturalLoss     = decimal(this-object:maskedTextBoxNaturLoss:Text).       
+    infoSecObj:NaturalLoss     = decimal(this-object:maskedTextBoxNaturLoss:Text).
     infoSecObj:TankWater       = decimal(this-object:maskedTextBoxTankWater:Text).       
     infoSecObj:TankTemp        = (if trim (this-object:maskedTextBoxTankTemp:Text) = "" then ? else decimal(this-object:maskedTextBoxTankTemp:Text) ).        
     infoSecObj:DensTemp        = (if trim (this-object:maskedTextBoxDensTemp:Text) = "" then ? else decimal(this-object:maskedTextBoxDensTemp:Text) ).        
@@ -2908,17 +2927,26 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     b = decimal (maskedTextBoxDocDens:Text) no-error.
     c = decimal (maskedTextBoxCliQnty:Text) no-error.
     
+    assign
+      v-doc-qnty      = a
+      v-doc-density   = b
+      v-cli-qnty      = c
+    no-error .
+    
     if not infoSecsObj:CliQntyInput
-      then do: 
-        this-object:maskedTextBoxCliQnty:Text = format_round_3(a * b) no-error.  
+      then do:
+        this-object:maskedTextBoxCliQnty:Text = format_round_1(a * b) no-error.
+        v-cli-qnty = a * b .
       end.
     if not infoSecsObj:DocQntyInput
-      then do: 
-        this-object:maskedTextBoxDocQnty:Text = format_round_3(c / b) no-error.
+      then do:
+        this-object:maskedTextBoxDocQnty:Text = format_round_0(c / b) no-error.
+        v-doc-qnty = c / b .
       end.
     if not infoSecsObj:DensityInput
-      then do: 
+      then do:
         this-object:maskedTextBoxDocDens:Text = format_dens(c / a) no-error.
+        v-doc-density = c / a .
       end.
     
   end.
@@ -3026,14 +3054,21 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       v-area = 0.
     end.
     infoSecsObj:InfoSectionCurr:NeckArea = v-area.
-    maskedTextBoxMouth:Text = string (   infoSecsObj:InfoSectionCurr:getMouth(decimal (maskedTextBoxABTArir:Text), v-area)) no-error.
     
-    if error-status:error
-    then do:
-      message "Неверно указано отклонение от планки. Берется по умолчанию 0" view-as alert-box.
-      maskedTextBoxDiameter:Text = "0".
-      v-area = 0.
-    end.
+    if inum-ComboBoxShape = 0
+    and infoSecsObj:RdcDnstvalue = "not"
+    then do :
+      maskedTextBoxMouth:Text = "0" .
+    end .
+    else do :
+      maskedTextBoxMouth:Text = format_round_0 (   infoSecsObj:InfoSectionCurr:getMouth(decimal (maskedTextBoxABTArir:Text), v-area)) no-error.
+      if error-status:error
+      then do:
+        message "Неверно указано отклонение от планки. Берется по умолчанию 0" view-as alert-box.
+        maskedTextBoxDiameter:Text = "0".
+        v-area = 0.
+      end.
+    end .
     
     if not infoSecsObj:RdcDnstvalue = "not"
     then do: 
@@ -3046,23 +3081,24 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
     if infoSecsObj:RdcDnstvalue = "not" then 
     do:
-      
+      maskedTextBoxTankVol:Text = format_round_0 ((decimal (maskedTextBoxCarVol:Text)) + decimal (maskedTextBoxMouth:Text) - decimal(maskedTextBoxTankWater:Text) + (if comboBoxPour:Text = "Нижний налив" then infoSecsObj:InfoSectionCurr:DopVolume else 0)).
       if infoSecsObj:RdcDnstvalue = "not"
       then do:
-        this-object:maskedTextBoxTankWeight:Enabled = true.
-        this-object:maskedTextBoxTankVol:ReadOnly = false.
-        if not infoSecsObj:CliQntyInput
-          then do: 
-            maskedTextBoxTankWeight:Text = format_round_3 (decimal(maskedTextBoxTankVol:Text) * decimal ( maskedTextBoxTankDens:Text)).
-          end.
-        if not infoSecsObj:DocQntyInput
-          then do:
-            maskedTextBoxTankVol:Text = format_round_0 (decimal(maskedTextBoxTankWeight:Text) / decimal ( maskedTextBoxTankDens:Text)).          
-          end.
-        if not infoSecsObj:DensityInput
-          then do: 
-            maskedTextBoxTankDens:Text = format_round_3 (decimal(maskedTextBoxTankWeight:Text) / decimal ( maskedTextBoxTankVol:Text)).
-          end.
+        maskedTextBoxTankWeight:Text = format_round_3 (decimal(maskedTextBoxTankVol:Text) * decimal ( maskedTextBoxTankDens:Text)).
+/*        this-object:maskedTextBoxTankWeight:Enabled = true.                                                                            */
+/*        this-object:maskedTextBoxTankVol:ReadOnly = false.                                                                             */
+/*        if not infoSecsObj:CliQntyInput                                                                                                */
+/*          then do:                                                                                                                     */
+/*            maskedTextBoxTankWeight:Text = format_round_3 (decimal(maskedTextBoxTankVol:Text) * decimal ( maskedTextBoxTankDens:Text)).*/
+/*          end.                                                                                                                         */
+/*        if not infoSecsObj:DocQntyInput                                                                                                */
+/*          then do:                                                                                                                     */
+/*            maskedTextBoxTankVol:Text = format_round_0 (decimal(maskedTextBoxTankWeight:Text) / decimal ( maskedTextBoxTankDens:Text)).*/
+/*          end.                                                                                                                         */
+/*        if not infoSecsObj:DensityInput                                                                                                */
+/*          then do:                                                                                                                     */
+/*            maskedTextBoxTankDens:Text = format_round_3 (decimal(maskedTextBoxTankWeight:Text) / decimal ( maskedTextBoxTankVol:Text)).*/
+/*          end.                                                                                                                         */
       end.
     end.
     else 
@@ -3115,18 +3151,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     def var v-dec as decimal no-undo.
     def var v-str as character no-undo.
     v-str = "Не заполнено обязательное поле ".
-    
+
     if infoSecsObj:FlagTrn
     then do:
       if not infoSecsObj:RdcDnstvalue = "not"
       then do:
-        v-dec = decimal (maskedTextBoxDiameter:Text) no-error.
-        if trim (maskedTextBoxDiameter:Text) = ""
-        then do:
-          ShowMsg( v-str + "размер горловины" ).
-          setFocusMaskTextDoc = maskedTextBoxDiameter.
-          return false.
-        end.
         
         v-dec = decimal (maskedTextBoxCarVol:Text) no-error.
         if (error-status:error or v-dec = 0)
@@ -3185,13 +3214,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         
       end.
       else do:
-        v-dec = decimal (maskedTextBoxDiameter:Text) no-error.
-        if trim (maskedTextBoxDiameter:Text) = ""
-        then do:
-          ShowMsg( v-str + "размер горловины" ).
-          setFocusMaskTextDoc = maskedTextBoxDiameter.
-          return false.
-        end.
         
         v-dec = decimal (maskedTextBoxCarVol:Text) no-error.
         if (error-status:error or v-dec = 0)
@@ -3228,6 +3250,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       calc-weight-vol().
     end.
     else do:
+      v-dec = decimal (maskedTextBoxDiameter:Text) no-error.
+      if trim (maskedTextBoxDiameter:Text) = ""
+      then do:
+        ShowMsg( v-str + "размер горловины" ).
+        setFocusMaskTextDoc = maskedTextBoxDiameter.
+        return false.
+      end.
 
       if trim (maskedTextBoxSecName:Text) = "" or int (maskedTextBoxSecName:Text) = 0
       then do:

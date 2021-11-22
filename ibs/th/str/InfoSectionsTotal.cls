@@ -1003,8 +1003,8 @@ class ibs.th.str.InfoSectionsTotal:
 
     if not InfoSectionCurr:IsKP and not isManual
     then do: 
-      message substitute ("Выявлено сверхнормативное расхождение Данных ТТН с данными в АЦ. Требуется комиссионный прием. Продолжить (необходимо подать заявку в соответсвии с принятой схемой обращения)?")
-      view-as alert-box question buttons yes-no title "Вопрос" update v-ok .
+      message substitute ("Имеются расхождения с документарным количеством больше допустимого. Требуется комиссионный прием нефтепродукта. Продолжить (для секции &1 будет установлен флаг комиссионного приема)?", ii)
+      view-as alert-box question buttons yes-no update v-ok .
       if not v-ok
       then do:
         MP = ?.
@@ -1623,7 +1623,7 @@ class ibs.th.str.InfoSectionsTotal:
               assign
                 InfoSectionCurr:TankDensityPomi    = decimal(v-mm:Rcy) / 1000
                 InfoSectionCurr:TankVolPomi        = v-mm:Vcy * 1000
-                InfoSectionCurr:TankWeight     = v-mm:Mcy
+                InfoSectionCurr:TankWeight     = v-mm:M
                 InfoSectionCurr:AccPomi = round (v-mm:DeltaOtn_M, 3)
               .
 /*              display                  */
@@ -1781,6 +1781,18 @@ class ibs.th.str.InfoSectionsTotal:
     
     if not RdcDnstvalue = "pomi-rn" 
     then do:
+      case v-boxshape:
+        when 1 then do:
+          NeckArea = decimal(entry(3, v-size, "/")) * decimal(entry(4, v-size, "/")) * 0.000001 no-error.
+        end .
+        when 3 then do:
+          NeckArea = 3.14159 * decimal(entry(2, v-size, "/")) * decimal(entry(2, v-size, "/")) * 0.000001 / 4 no-error .
+        end .
+        otherwise do :
+          NeckArea = 0 .
+        end .
+      end case .
+      if NeckArea = ? then NeckArea = 0 .
       return.
     end.
     
@@ -1813,8 +1825,8 @@ class ibs.th.str.InfoSectionsTotal:
       when 2 then do:
         assign
           v-mm:Diameter      = 0.0
-          v-mm:Length        = decimal (entry (4, v-size, "/"))
-          v-mm:Width         = decimal (entry (3, v-size, "/"))
+          v-mm:Length        = decimal (entry (3, v-size, "/"))
+          v-mm:Width         = decimal (entry (4, v-size, "/"))
           v-mm:Circumference = 0.0
           v-mm:Wall          = decimal (entry (2, v-size, "/"))
           .

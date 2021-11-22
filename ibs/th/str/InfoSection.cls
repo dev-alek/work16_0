@@ -337,8 +337,8 @@ class ibs.th.str.InfoSection:
       .
       case ub.auto-tank.type-neck:
       when 0 then do:
-        assign
-          Pour = "Нижний налив".
+/*        assign                  */
+/*          Pour = "Нижний налив".*/
         diameter = string (ub.auto-section.add-volume).
         for each ub.auto-section-table  no-lock where
           ub.auto-section-table.auto-num = ub.auto-section.auto-num and ub.auto-section-table.section-num = ub.auto-section.section-num:

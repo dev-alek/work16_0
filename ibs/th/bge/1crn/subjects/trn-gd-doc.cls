@@ -25,7 +25,7 @@ using ibs.th.gbl.storage.*.
 block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implements iexpsubject:
-
+  &global-define list-shape "Без горловины,Квадратная/прямоугольная,Эллиптическая,Круглая"
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
   { cmp/library.i  class }
@@ -53,6 +53,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   define temp-table buf_trn-doc like ub.trn-doc.
   
   define buffer buf_doc-line for ub.doc-line.
+  define buffer buf_doc-line-attr for ub.doc-line-attr.
   define buffer buf_parts for ub.parts.
   define buffer buf_gds-dtl for ub.gds-dtl.
   define buffer buf_doc-pl for ub.doc-pl.
@@ -457,6 +458,12 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
       write-data-element ('seales-condition', entry (2, buf_doc-attr.attr-value, {&delim-par})) no-error.
     end.
     
+    find first buf_doc-line-attr where buf_doc-line-attr.doc-code = DocCode and buf_doc-line-attr.attr-code begins "shape" no-error.
+    if available (buf_doc-line-attr) 
+    then do:
+      write-data-element ('neck-type', string(lookup(buf_doc-line-attr.attr-value, {&list-shape}) - 1)) no-error .
+    end .
+    
     &scop attr-code trdcattr-date-pour
     &scop tag-code date-pour
     {&create-record-cust-date}
@@ -612,9 +619,16 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("wght-doc", string-mth (infoSecObj:CliQnty)).
           write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
           write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
-          write-data-element ("sz-nck", string (infoSecObj:Diameter)).
-          write-data-element ("filling-method", string (infoSecObj:Pour)).
-          write-data-element ("pipe-vlm", string (infoSecObj:Pour)).
+          write-data-element ("sz-nck", replace(infoSecObj:Diameter, {&delim-cmd}, " ")).
+          write-data-element ("filling-method", (if infoSecObj:Pour = "Верхний налив" then '0' else '1')).
+          if infoSecObj:DopVolume = ?
+          or infoSecObj:DopVolume = 0
+          then do :
+            infoSecObj:DopVolume = decimal (entry(1, replace(infoSecObj:Diameter, {&delim-cmd}, " "), "/")) no-error .
+            if error-status:error 
+              then infoSecObj:DopVolume = 0.
+          end .
+          write-data-element ("pipe-vlm", string (infoSecObj:DopVolume)).
           write-data-element ("lvl", string-mth (infoSecObj:ABTarir)).
           write-data-element ("cap-nck", string-mth (infoSecObj:Mouth)).
           write-data-element ("cap", string-mth (infoSecObj:TankVol)).
@@ -623,7 +637,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("t-cap", string-mth (infoSecObj:TankTemp)).
           write-data-element ("t-dnsty", string-mth (infoSecObj:DensTemp)).
           write-data-element ("msd-code", string-mth (infoSecObj:PlaceSi)).
-          write-data-element ("mst-code", string-mth (infoSecObj:PlaceSi)).
+          write-data-element ("mst-code", string-mth (infoSecObj:PlaceSiTemp)).
           write-data-element ("pv-date", string (iso-date (infoSecObj:DatePovPlotn))).
           write-data-element ("dnsty-pr", string-mth (infoSecObj:TankDensityPomi)).
           write-data-element ("cap-pr", string-mth (infoSecObj:TankVolPomi)).
@@ -687,7 +701,20 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("dnsty", string-mth ( buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty)).
           write-data-element ("cap", string-mth (buf_doc-pl.fact-qnty)).
           write-data-element ("wght", string-mth (buf_doc-pl.cli-fact-qnty)).
-/*          write-data-element ("excess-free", string(0)).  не понятно откуда */
+/*          find first buf_doc-pl-attr no-lock where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code         */
+/*                                               and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type         */
+/*                                               and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code         */
+/*                                               and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code          */
+/*                                               and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code         */
+/*                                               and buf_doc-pl-attr.attr-code = "free-vol-exceed"           */
+/*                                               no-error.                                                   */
+/*          if available buf_doc-pl-attr                                                                     */
+/*          then do :                                                                                        */
+/*            write-data-element ("excess-free", (if logical(buf_doc-pl-attr.attr-value) then "1" else "0")).*/
+/*          end .                                                                                            */
+/*          else do :                                                                                        */
+/*            write-data-element ("excess-free", "0").                                                       */
+/*          end .                                                                                            */
         sw:end-element ("tank").
       end.
     end.
@@ -774,20 +801,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("dnsty", string-mth ( buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty)).
           write-data-element ("cap", string-mth (buf_doc-pl.fact-qnty)).
           write-data-element ("wght", string-mth (buf_doc-pl.cli-fact-qnty)).
-/*          find first buf_doc-pl-attr no-lock where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code         */
-/*                                               and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type         */
-/*                                               and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code         */
-/*                                               and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code          */
-/*                                               and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code         */
-/*                                               and buf_doc-pl-attr.attr-code = "free-vol-exceed"           */
-/*                                               no-error.                                                   */
-/*          if available buf_doc-pl-attr                                                                     */
-/*          then do :                                                                                        */
-/*            write-data-element ("excess-free", (if logical(buf_doc-pl-attr.attr-value) then "1" else "0")).*/
-/*          end .                                                                                            */
-/*          else do :                                                                                        */
-/*            write-data-element ("excess-free", "0").                                                       */
-/*          end .                                                                                            */
         sw:end-element ("tank").
       end.
     end.
