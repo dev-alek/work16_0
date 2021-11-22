@@ -20,6 +20,7 @@ define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { gbl/db-attr.i  }
+{ cmp/trg-def.i }
 
 define buffer buf_sys-ctrl for ub.sys-ctrl.
 define buffer buf_db for ub.db.
@@ -116,7 +117,7 @@ then do:
    then 
       return error substitute("Файл &1 имеет не правильную сигнатуру md5.", mfile).
 
-   mfilever = vimport:xmldom-load-ver  ( "cmp/code.xml",? ) no-error.
+   mfilever = vimport:xmldom-load-ver  ( mfile,? ) no-error.
    if error-status:error
    then
       return error return-value.

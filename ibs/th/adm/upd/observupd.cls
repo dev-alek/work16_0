@@ -62,10 +62,21 @@ class ibs.th.adm.upd.observupd:
     get.
     private set.
     
-  define property IsComp as logical no-undo
+  define property PublisHandle as handle no-undo 
     get.
     set.
 
+  define private property IsComp as logical no-undo
+    get.
+    set.
+  
+  define property ModeUpd as character  no-undo
+    get.
+    set (iarg as character ):
+       modeupd = iarg.
+       IsComp = lookup("iscomp",iarg) ne 0 or lookup("UpdBlank",iarg) ne 0.
+    end.
+  
   define public variable pwd as character no-undo.
 
   &scop NumWorkBase 26
@@ -159,7 +170,6 @@ class ibs.th.adm.upd.observupd:
     define variable vVerStuct as integer no-undo.
     define variable vVerDB    as integer no-undo.
     TargetDBShm = extent(m-upd-list-df).
-    
     find first buf_sys-ctrl no-lock no-error.
     if available buf_sys-ctrl
     then do:
@@ -329,6 +339,7 @@ class ibs.th.adm.upd.observupd:
     define variable vparam   as character no-undo.
     define variable vOK      as logical   no-undo.
     define variable VTestStr as character no-undo.
+    define variable vrunProc as logical   no-undo.
     
     define buffer buf_db for ub.db.
     define buffer buf_sys-ctrl for ub.sys-ctrl.
@@ -372,6 +383,8 @@ class ibs.th.adm.upd.observupd:
                IsErr = true.
                return. 
             end.
+            else
+               vrunProc = yes.
             
          end.
          else if vSearch eq "TABLE"
@@ -476,6 +489,13 @@ class ibs.th.adm.upd.observupd:
     return false.
     
   end.
+  
+  method public void putstat (input itext as char):
+     if valid-handle(PublisHandle)
+     then
+        publish "putstat" from PublisHandle (itext ).
+   end.
+   
   {utl\search.i class}
 end class.
 

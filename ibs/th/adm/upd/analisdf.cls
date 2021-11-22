@@ -26,15 +26,31 @@ class ibs.th.adm.upd.analisdf final:
     get.
     private set.
     
-    define property IsComp as logical no-undo
+    define private property DelArea as logical no-undo
     get.
     set.
 
+    define private property silent as logical no-undo
+    get.
+    set.
+
+    define property ModeUpd as character  no-undo
+    get.
+    set (iarg as character ):
+       modeupd = iarg.
+       DelArea = lookup("iscomp",iarg) ne 0.
+       silent  = lookup("updblank",iarg) ne 0.
+    end.
+    
     define property Msg as character no-undo
     get.
     private set.
 
+    define property PublisHandle as handle no-undo 
+    get.
+    set.
     
+    define stream Ostream.
     define public variable mFileDf   as character no-undo.
     define public variable mUpdateTo as integer   no-undo.
     
@@ -230,7 +246,7 @@ define temp-table {&prefixtt}INDEX
           
          
          vfiledf = search (entry(vi,iFileDf)).
-         output to value(vFileDf_new).
+         output stream Ostream to value(vFileDf_new).
          input STREAM sReadfile FROM  VALUE(vfiledf).
          block-file:
          repeat:
@@ -239,18 +255,18 @@ define temp-table {&prefixtt}INDEX
                 and vFirst             
              then do:
                 vFirst = no.
-                put unformatted  'UPDATE FIELD "reserve1-char" OF "db"' skip '  INITIAL "' + string(num) + '"' skip(1).
+                put stream Ostream unformatted  'UPDATE FIELD "reserve1-char" OF "db"' skip '  INITIAL "' + string(num) + '"' skip(1).
                
              end.
              if trim(vstr) eq ""
              then
-             put unformatted      skip(1) .
+                put stream Ostream unformatted      skip(1) .
              else  
-             put unformatted trim (replace (vstr,"  "," ")) skip .
+                put stream Ostream unformatted trim (replace (vstr,"  "," ")) skip .
          end.
          
          input STREAM sReadfile CLOSE.
-         output close.
+         output stream Ostream close.
          entry(vi,iFileDf) = vFileDf_new.
       end.
      return iFileDf.
@@ -266,7 +282,7 @@ define temp-table {&prefixtt}INDEX
          if vfiledf eq ?
          then do:
             Msg = substitute("Не найден файл &1" , entry(vi,iFileDf)).
-            message msg view-as alert-box.
+            putmes(msg).
             
             return yes.
          end.
@@ -313,8 +329,7 @@ define temp-table {&prefixtt}INDEX
          if error-status:error
          then do:
             msg = substitute("Ошибка структуре df файла не задан объект для метода &1", vMode).
-            message msg
-               view-as alert-box.
+            putmes(msg).
             return yes.
          end.
          if mBufferName eq "PRIMARY"
@@ -323,8 +338,7 @@ define temp-table {&prefixtt}INDEX
              if error-status:error
              then do:
                 msg = substitute( "Ошибка структуре df файла не задан объект для метода &1", vMode).
-                message msg
-                   view-as alert-box.
+                putmes(msg).
                 return yes.
              end.
              assign 
@@ -341,8 +355,7 @@ define temp-table {&prefixtt}INDEX
          then do:
             msg = substitute( "Не известный буфер &1" , "{&prefixtt}" + mBufferName).
                  
-            message msg
-               view-as alert-box.
+            putmes(msg).
             return yes.
          end.
 
@@ -350,8 +363,7 @@ define temp-table {&prefixtt}INDEX
          if error-status:error
          then do: 
             msg = substitute( "Ошибка структуре df файла не задан объект для метода &1  для таблицы &2" ,vMode , "{&prefixtt}" + mBufferName).
-            message msg
-               view-as alert-box.
+            putmes(msg).
             return yes.
          end.
          if    mBufferName eq "field"
@@ -360,8 +372,7 @@ define temp-table {&prefixtt}INDEX
             if error-status:error
             then do: 
                msg = substitute( "Ошибка структуре df файла не задан таблица для &1 &2", mBufferName, mName).
-               message msg
-                  view-as alert-box.
+               putmes(msg).
                return yes.
             end.
             else do:
@@ -376,8 +387,7 @@ define temp-table {&prefixtt}INDEX
             if error-status:error
             then do: 
                msg = substitute( "Ошибка структуре df файла не задан таблица для &1 &2", mBufferName, mName).
-               message msg
-                  view-as alert-box.
+               putmes(msg).
                return yes.
             end.
             else do:
@@ -413,17 +423,37 @@ define temp-table {&prefixtt}INDEX
             end.    
             else if vmode eq "add" 
             then do: 
+               if mBuffer::{&prefixfil}mode eq "drop"
+               then do:
+                  mposih = mBuffer::{&prefixfil}localIndex + 1.
+                  mBuffer:buffer-release ().
+               end.
+               else do: 
                msg = substitute( "Ошибка структуре df файла объект создан рание &1 &2 &3 &4", vmode, mBufferName, mName, vTableWhere).
-               message msg
-                  view-as alert-box.
+                  putmes(msg).
                return yes.
+            end.
             end.
             else if vmode eq "drop"
             then do:
+               if mBuffer::{&prefixfil}mode eq "add" or mBuffer::{&prefixfil}mode eq "update"
+               then do:
+                  if mbuffername eq "table"
+                  then do:
+                     for each {&prefixtt}FIELD where {&prefixtt}FIELD.{&prefixfil}Table eq mBuffer::{&prefixfil}name:
+                        delete {&prefixtt}FIELD.
+                     end.
+                     for each {&prefixtt}index where {&prefixtt}index.{&prefixfil}Table eq mBuffer::{&prefixfil}name:
+                        delete {&prefixtt}index.
+                     end.
+                  end.
                if mBuffer::{&prefixfil}mode eq "add"
                then do:
                   mBuffer:buffer-delete ().
                   return no.
+               end.
+               else
+                     mBuffer:buffer-delete ().
                end.
                else
                   mBuffer::{&prefixfil}mode = vmode.
@@ -459,8 +489,7 @@ define temp-table {&prefixtt}INDEX
                and vMode eq "add"
             then do: 
                msg = substitute( "Ошибка структуре df файла не задан таблица для &1 &2", mBufferName, mName).
-               message msg
-                  view-as alert-box.
+               putmes(msg).
                return yes. 
             end.
          end.
@@ -475,8 +504,7 @@ define temp-table {&prefixtt}INDEX
                if error-status:error
                then do:
                   msg = substitute( "Ошибка структуре df  объекта &1 &2 нет поля в таблице &3", mBufferName, mName, "{&prefixfil}" + vMode). 
-                  message msg
-                     view-as alert-box.
+                  putmes(msg).
                   return yes.
                end.
                define variable vval as character no-undo.
@@ -494,8 +522,7 @@ define temp-table {&prefixtt}INDEX
                if error-status:error
                then do: 
                   msg = substitute( "2 Ошибка структуре df  объекта &1 &2", mBufferName, mName). 
-                  message  msg
-                     view-as alert-box.
+                  putmes(msg).
                   return yes.
                end.
                if vMode eq "NULL-ALLOWED"
@@ -508,8 +535,7 @@ define temp-table {&prefixtt}INDEX
          end.       
          else do:
             msg = substitute( "Ошибка структуре df  объекта &1 &2 неизвестное выражение &3",mBufferName, mName, vMode). 
-            message msg
-                     view-as alert-box.
+            putmes(msg).
                return yes.
          end.
          
@@ -517,8 +543,8 @@ define temp-table {&prefixtt}INDEX
    
    end method.
    method public void dumpTable(ifile  as character):
-      output to value(ifile).
-      output close.
+      output stream Ostream to value(ifile).
+      output stream Ostream close.
       find first {&prefixtt}Table no-error.
       if available {&prefixtt}Table
       then
@@ -535,9 +561,9 @@ define temp-table {&prefixtt}INDEX
       if available {&prefixtt}SEQUENCE
       then
          dumpOneTable(ifile,buffer {&prefixtt}SEQUENCE:handle ).
-      output to value(ifile) append.
-      put unformatted "." skip "PSC" skip "cpstream=1251" skip "." skip .
-      output close.                                
+      output stream Ostream to value(ifile) append.
+      put stream Ostream unformatted "." skip "PSC" skip "cpstream=1251" skip "." skip .
+      output stream Ostream close.                                
    end.
    method private void dumpOneTable(ifile  as character,
                                    iBuffer as  handle):
@@ -553,7 +579,7 @@ define temp-table {&prefixtt}INDEX
    define variable vFieldPref as integer   no-undo.
    
    vBuffer = iBuffer.
-   output to value(ifile) append.
+   output stream Ostream to value(ifile) append.
    create query vQuery.
    vQuery:add-buffer(vBuffer).
    if not vQuery:query-prepare("for EACH " + vBuffer:name) then  do: msg = substitute( "ERROR 1 ", error-status:get-message(1)).  message msg view-as alert-box. end.
@@ -584,30 +610,30 @@ define temp-table {&prefixtt}INDEX
                               vBuffer::{&prefixfil}name,
                               if vBuffer::{&prefixfil}mode eq "rename" then " TO " + vBuffer::{&prefixfil}NewName else ""
                               ).
-         put unformatted vtxt skip.
+         put stream Ostream unformatted vtxt skip.
          do vItm = 1 to vBuffer:num-fields:
             vField = vBuffer:buffer-field(vItm).
             vFieldName = substring(vField:name,vFieldPref).
             
-            if not can-do("mode,name,newname,table,Data-Type,localindex" + (if iscomp then ",area" else "") ,vFieldName)
+            if not can-do("mode,name,newname,table,Data-Type,localindex" + (if DelArea then ",area" else "") ,vFieldName)
             then do:
                
                do vj = 1 to if vField:buffer-value eq ? then 1 else num-entries(vField:buffer-value,{&delim-par}):
                   define variable vValue as character no-undo.
                   vValue = entry(vj,vField:buffer-value,{&delim-par}).
                   if vValue eq "{&logicalfield}" then vValue = "". 
-                  put unformatted substitute ('  &1 &2',vFieldName,vValue) skip.
+                  put stream Ostream unformatted substitute ('  &1 &2',vFieldName,vValue) skip.
                end.    
             end.
          end.
-         put unformatted skip(1).
+         put stream Ostream unformatted skip(1).
          vQuery:get-next().
       end.
    end.
    vQuery:query-close().
 
    delete object vQuery.
-   output close.
+   output stream Ostream close.
 end method.
 method public logical CheckTable(ifile  as character):
       define variable vOk as logical no-undo.
@@ -627,6 +653,7 @@ method public logical CheckTable(ifile  as character):
    end.
 method private logical CheckOneTable(iTable as  handle):
    
+   define buffer buf{&prefixtt}TABLE for {&prefixtt}TABLE.
    define var vItm   as int64  no-undo.
    define var vJ   as int64  no-undo.
    define var vField as handle   no-undo.
@@ -652,13 +679,13 @@ method private logical CheckOneTable(iTable as  handle):
    if not vQuery:query-prepare("PRESELECT EACH " + vBuffer:name) 
    then do: 
       msg = substitute( "ERROR 1 ", error-status:get-message(1)).  
-      message msg view-as alert-box. 
+      putmes(msg).
       verror = yes.
    end.   
    if not vQuery:query-open()                              
    then do:
       msg = substitute( "ERROR 2 ", error-status:get-message(1)).  
-      message msg view-as alert-box.
+      putmes(msg).
       verror = yes.
    end.   
    vQuery:get-first().
@@ -669,6 +696,7 @@ method private logical CheckOneTable(iTable as  handle):
       if  vBuffer:name eq "{&prefixtt}TABLE"
       then
          vBufferName = "_file".
+
       else if  vBuffer:name eq "{&prefixtt}field"
       then  do:
          assign
@@ -697,8 +725,16 @@ method private logical CheckOneTable(iTable as  handle):
            next block-tt.
         end.
       if  vBuffer:name eq "{&prefixtt}TABLE"
+      then do:
+         find first buf{&prefixtt}TABLE where buf{&prefixtt}TABLE.{&prefixfil}name eq  vBuffer::{&prefixfil}name
+                                          and buf{&prefixtt}TABLE.{&prefixfil}localIndex > vBuffer::{&prefixfil}localIndex
+         no-error.
+         if available buf{&prefixtt}TABLE
       then
+            vCheck = no.
          vWhere      = substitute ("where _file._file-name eq &1 ",if vBuffer::{&prefixfil}mode eq "rename" then vBuffer::{&prefixfil}NewName else  vBuffer::{&prefixfil}name).
+      
+      end.
       else if  vBuffer:name eq "{&prefixtt}field"
       then do:
          define variable vvvv as character no-undo.
@@ -806,7 +842,7 @@ method private logical CheckOneTable(iTable as  handle):
    vQuery:query-close().
 
    delete object vQuery.
-   output close.
+ /*  output stream Ostream close.*/
    finally:
       return oOkl.
    end finally.   
@@ -1043,4 +1079,19 @@ method public void crtablehist(iTableName as character ):
    message "c-" + iTableName + ".df" search("c-" + iTableName + ".df")
    view-as alert-box. 
  end method.
+ 
+ method public void putmes (input itext as char):
+    if not silent 
+    then do:
+       message itext
+       view-as alert-box.
+    end.
+     
+ end method.
+ 
+   method public void putstat (input itext as char):
+      if valid-handle(PublisHandle)
+     then
+        publish "putstat" from PublisHandle (itext ).
+   end.
 end class.

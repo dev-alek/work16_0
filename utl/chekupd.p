@@ -26,7 +26,8 @@ define output parameter oUpd  as logical no-undo.
 define variable mdb-ver as integer  no-undo init ?.
 define variable mdbverd as integer no-undo.
 define variable mdbveri as integer no-undo.
-find first sys-ctrl.
+find first sys-ctrl no-lock no-error.
+if not available sys-ctrl then do: oUpd = yes. return. end. 
 g#db-num = sys-ctrl.db-num.
 find first db-attr where db-attr.db-num    eq sys-ctrl.db-num
                      and db-attr.attr-code eq  {&attr-ver-db}
