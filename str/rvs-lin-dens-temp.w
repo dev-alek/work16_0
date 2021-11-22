@@ -154,7 +154,7 @@ do :
   define buffer buf2_tt-dens-temp for tt-dens-temp .
   define buffer buf3_tt-dens-temp for tt-dens-temp .
   case p-sr-izm-type :
-    when 3
+    when 1 /* 1 - Неавтоматизированное СИ */
     then do :
       find first buf1_tt-dens-temp where buf1_tt-dens-temp.ii = 1 .
       find first buf2_tt-dens-temp where buf2_tt-dens-temp.ii = 2 no-error .
@@ -278,7 +278,7 @@ RUN disable_UI.
 procedure fill-tt :
   define variable ii as integer no-undo .
   case p-sr-izm-type :
-    when 3
+    when 1 /* 1 - Неавтоматизированное СИ */
     then do :
       find first tt-dens-temp where tt-dens-temp.key_ = "P1" no-error .
       if available tt-dens-temp

@@ -155,7 +155,7 @@ do :
   define buffer buf2_tt-temps for tt-temps .
   define buffer buf3_tt-temps for tt-temps .
   case p-sr-izm-type :
-    when 2 
+    when 0 /* 0 - Автоматизированное СИ */ 
     then do :
       v-temps-sum = 0 .
       for each buf_tt-temps :
@@ -163,7 +163,7 @@ do :
       end .
       p-avg-temperature = v-temps-sum / v-num-izm .
     end .
-    when 3
+    when 1 /*  1 - Неавтоматизированное СИ */
     then do :
       find first buf1_tt-temps where buf1_tt-temps.ii = 1 .
       find first buf2_tt-temps where buf2_tt-temps.ii = 2 no-error .
@@ -248,7 +248,7 @@ RUN disable_UI.
 procedure fill-tt :
   define variable ii as integer no-undo .
   case p-sr-izm-type :
-    when 2 
+    when 0 /* 0 - Автоматизированное СИ s*/ 
     then do :
       v-num-izm = integer(p-fuel-level / 500) .
       if v-num-izm = 0 then v-num-izm = 1 .
@@ -267,7 +267,7 @@ procedure fill-tt :
         .        
       end .
     end .
-    when 3
+    when 1 /*  1 - Неавтоматизированное СИ */
     then do :
       find first tt-temps where tt-temps.key_ = "t1" no-error .
       if available tt-temps

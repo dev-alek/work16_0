@@ -151,7 +151,7 @@ do :
   define buffer buf2_tt-dens for tt-dens .
   define buffer buf3_tt-dens for tt-dens .
   case p-sr-izm-type :
-    when 2 
+    when 0 /* 0 - Автоматизированное СИ  */
     then do :
       v-dens-sum = 0 .
       for each buf_tt-dens :
@@ -159,7 +159,7 @@ do :
       end .
       p-avg-density = v-dens-sum / v-num-izm .
     end .
-    when 3
+    when 1 /* 1 - Неавтоматизированное СИ */
     then do :
       find first buf1_tt-dens where buf1_tt-dens.ii = 1 .
       find first buf2_tt-dens where buf2_tt-dens.ii = 2 no-error .
@@ -249,7 +249,7 @@ RUN disable_UI.
 procedure fill-tt :
   define variable ii as integer no-undo .
   case p-sr-izm-type :
-    when 2 
+    when 0 /* 0 - Автоматизированное СИ */
     then do :
       v-num-izm = integer(p-fuel-level / 500) .
       if v-num-izm = 0 then v-num-izm = 1 .
@@ -268,7 +268,7 @@ procedure fill-tt :
         .        
       end .
     end .
-    when 3
+    when 1 /* 1 - Неавтоматизированное СИ */
     then do :
       find first tt-dens where tt-dens.key_ = "P1" no-error .
       if available tt-dens

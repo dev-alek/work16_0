@@ -23,16 +23,27 @@ Creation date: 04/12/17
 */
 block-level on error undo, throw.
 
-define input parameter p-node-code             as integer no-undo . /* like ub.sr-izmerenia.node-code */
-define input parameter p-sr-model              as character no-undo . /* like ub.sr-izmerenia.sr-model */
-define input parameter p-sr-type-id            as integer no-undo . /* like ub.sr-izmerenia.sr-type-id */
-define input parameter p-sr-abs-err-neft-water as decimal no-undo . /* like ub.sr-izmerenia.sr-abs-err-neft-water */
-define input parameter p-sr-abs-err-water      as decimal no-undo . /* like ub.sr-izmerenia.sr-abs-err-water */
-define input parameter p-sr-abs-err-dens       as decimal no-undo . /* like ub.sr-izmerenia.sr-abs-err-dens */
-define input parameter p-sr-abs-err-temp-vol   as decimal no-undo . /* like ub.sr-izmerenia.sr-abs-err-temp-vol */
-define input parameter p-sr-abs-err-temp-dens  as decimal no-undo . /* like ub.sr-izmerenia.sr-abs-err-temp-dens */
-define input parameter p-sr-otnos              as decimal no-undo . /* like ub.sr-izmerenia.sr-otnos */
-define input parameter p-sr-temp-line          as decimal no-undo . /* like ub.sr-izmerenia.sr-temp-line */
+define input parameter p-node-code                   as integer   no-undo . /* like ub.sr-izmerenia.node-code */
+define input parameter p-sr-type-izm                 as integer   no-undo . /* like ub.sr-izmerenia.sr-type-izm */
+define input parameter p-sr-model                    as character no-undo . /* like ub.sr-izmerenia.sr-model */
+define input parameter p-sr-level                    as integer   no-undo . /* like ub.sr-izmerenia.sr-level */
+define input parameter p-sr-temperature              as integer   no-undo . /* like ub.sr-izmerenia.sr-temperature */
+define input parameter p-sr-density                  as integer   no-undo . /* like ub.sr-izmerenia.sr-density */
+define input parameter p-sr-Weight                   as integer   no-undo . /* like ub.sr-izmerenia.sr-Weight */
+define input parameter p-sr-type-level-measuring     as integer   no-undo . /* like ub.sr-izmerenia.sr-type-level-measuring */
+define input parameter p-sr-type-id                  as integer   no-undo . /* like ub.sr-izmerenia.sr-type-id */
+define input parameter p-sr-abs-err-neft-water       as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-neft-water */
+define input parameter p-sr-relative-err-neft-water  as decimal   no-undo . /* like ub.sr-izmerenia.sr-relative-err-neft-water */
+define input parameter p-sr-abs-err-water            as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-water */
+define input parameter p-sr-relative-err-water       as decimal   no-undo . /* like ub.sr-izmerenia.sr-relative-err-water */
+define input parameter p-sr-abs-err-dens             as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-dens */
+define input parameter p-sr-abs-err-temp-vol         as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-temp-vol */
+define input parameter p-sr-abs-err-temp-dens        as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-temp-dens */
+define input parameter p-sr-relative-err-dens        as decimal   no-undo . /* like ub.sr-izmerenia.sr-relative-err-dens */
+define input parameter p-sr-abs-err-dens-lgas-liquid as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-dens-lgas-liquid */
+define input parameter p-sr-abs-err-dens-lgas-vapor  as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-dens-lgas-vapor */
+define input parameter p-sr-otnos                    as decimal   no-undo . /* like ub.sr-izmerenia.sr-otnos */
+define input parameter p-sr-temp-line                as decimal   no-undo . /* like ub.sr-izmerenia.sr-temp-line */
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -43,7 +54,6 @@ define variable vss-description as character no-undo init "Сохранение изменений 
 { cmp/vssrevis.i }
 
 { cmp/str-glbl.i }
-
 
 define buffer buf_sr-izmerenia for ub.sr-izmerenia .
 
@@ -56,28 +66,28 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
     ) .
   end .
 
-  /* значения 0.0000125 и 0.000023 берутся из комбобокса, вручную не набираются;
-     поэтому если в импорте придёт коэффициент линейного расширения стали, отличный от общепринятого -
-     это будет ошибка */
-  if p-sr-temp-line <> 0.0000125 /* сталь */ and
-     p-sr-temp-line <> 0.000023  /* алюминий */ then do:
-    undo, throw new Progress.Lang.AppError(
-      substitute("&1 &2 &3&4Температурный коэффициент линейного расширения материала средства измерения уровня отличается от предопределённых значений для ~"сталь~" и для ~"алюминий~"",
-                 vss-workfile, vss-revision, vss-description, {&new-line}) 
-    ) .
-  end .
-
   if can-find (first buf_sr-izmerenia
-  where buf_sr-izmerenia.sr-model               =  p-sr-model
-    AND buf_sr-izmerenia.sr-type-id             =  p-sr-type-id
-    AND buf_sr-izmerenia.sr-abs-err-neft-water  =  p-sr-abs-err-neft-water
-    AND buf_sr-izmerenia.sr-abs-err-water       =  p-sr-abs-err-water
-    AND buf_sr-izmerenia.sr-abs-err-dens        =  p-sr-abs-err-dens
-    AND buf_sr-izmerenia.sr-abs-err-temp-vol    =  p-sr-abs-err-temp-vol
-    AND buf_sr-izmerenia.sr-abs-err-temp-dens   =  p-sr-abs-err-temp-dens
-    AND buf_sr-izmerenia.sr-otnos               =  p-sr-otnos
-    AND buf_sr-izmerenia.sr-temp-line           =  p-sr-temp-line
-    AND buf_sr-izmerenia.node-code             <>  p-node-code
+  where buf_sr-izmerenia.sr-model                    = p-sr-model
+    AND buf_sr-izmerenia.sr-level                    = (p-sr-level > 0)
+    AND buf_sr-izmerenia.sr-temperature              = (p-sr-temperature > 0)
+    AND buf_sr-izmerenia.sr-density                  = (p-sr-density > 0)
+    AND buf_sr-izmerenia.sr-Weight                   = (p-sr-Weight > 0)
+    AND buf_sr-izmerenia.sr-type-id                  = p-sr-type-id
+    AND buf_sr-izmerenia.sr-abs-err-neft-water       = p-sr-abs-err-neft-water
+    AND buf_sr-izmerenia.sr-abs-err-water            = p-sr-abs-err-water
+    AND buf_sr-izmerenia.sr-abs-err-dens             = p-sr-abs-err-dens
+    AND buf_sr-izmerenia.sr-abs-err-temp-vol         = p-sr-abs-err-temp-vol
+    AND buf_sr-izmerenia.sr-abs-err-temp-dens        = p-sr-abs-err-temp-dens
+    AND buf_sr-izmerenia.sr-otnos                    = p-sr-otnos
+    AND buf_sr-izmerenia.sr-temp-line                = p-sr-temp-line
+    AND buf_sr-izmerenia.sr-type-izm                 = p-sr-type-izm
+    AND buf_sr-izmerenia.sr-type-level-measuring     = p-sr-type-level-measuring     
+    AND buf_sr-izmerenia.sr-relative-err-neft-water  = p-sr-relative-err-neft-water  
+    AND buf_sr-izmerenia.sr-relative-err-water       = p-sr-relative-err-water       
+    AND buf_sr-izmerenia.sr-relative-err-dens        = p-sr-relative-err-dens        
+    AND buf_sr-izmerenia.sr-abs-err-dens-lgas-liquid = p-sr-abs-err-dens-lgas-liquid 
+    AND buf_sr-izmerenia.sr-abs-err-dens-lgas-vapor  = p-sr-abs-err-dens-lgas-vapor  
+    AND buf_sr-izmerenia.node-code                  <> p-node-code
   ) then do:
     undo, throw new Progress.Lang.AppError(
       substitute("&1 &2 &3&4Уже существует запись с совпадающими характеристиками, код которой отличается от [&5]",
@@ -106,14 +116,25 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
     .
   end .
   assign
-    buf_sr-izmerenia.sr-model   = p-sr-model
-    buf_sr-izmerenia.sr-type-id = p-sr-type-id
-    buf_sr-izmerenia.sr-abs-err-neft-water = p-sr-abs-err-neft-water
-    buf_sr-izmerenia.sr-abs-err-water      = p-sr-abs-err-water
-    buf_sr-izmerenia.sr-abs-err-dens       = p-sr-abs-err-dens
-    buf_sr-izmerenia.sr-abs-err-temp-vol   = p-sr-abs-err-temp-vol
-    buf_sr-izmerenia.sr-abs-err-temp-dens  = p-sr-abs-err-temp-dens
-    buf_sr-izmerenia.sr-otnos              = p-sr-otnos
-    buf_sr-izmerenia.sr-temp-line          = p-sr-temp-line
+    buf_sr-izmerenia.sr-model                    = p-sr-model
+    buf_sr-izmerenia.sr-level                    = (p-sr-level > 0)
+    buf_sr-izmerenia.sr-temperature              = (p-sr-temperature > 0)
+    buf_sr-izmerenia.sr-density                  = (p-sr-density > 0)
+    buf_sr-izmerenia.sr-Weight                   = (p-sr-Weight > 0)
+    buf_sr-izmerenia.sr-type-id                  = p-sr-type-id
+    buf_sr-izmerenia.sr-abs-err-neft-water       = p-sr-abs-err-neft-water
+    buf_sr-izmerenia.sr-abs-err-water            = p-sr-abs-err-water
+    buf_sr-izmerenia.sr-abs-err-dens             = p-sr-abs-err-dens
+    buf_sr-izmerenia.sr-abs-err-temp-vol         = p-sr-abs-err-temp-vol
+    buf_sr-izmerenia.sr-abs-err-temp-dens        = p-sr-abs-err-temp-dens
+    buf_sr-izmerenia.sr-otnos                    = p-sr-otnos
+    buf_sr-izmerenia.sr-temp-line                = p-sr-temp-line
+    buf_sr-izmerenia.sr-type-izm                 = p-sr-type-izm                 
+    buf_sr-izmerenia.sr-type-level-measuring     = p-sr-type-level-measuring     
+    buf_sr-izmerenia.sr-relative-err-neft-water  = p-sr-relative-err-neft-water  
+    buf_sr-izmerenia.sr-relative-err-water       = p-sr-relative-err-water       
+    buf_sr-izmerenia.sr-relative-err-dens        = p-sr-relative-err-dens        
+    buf_sr-izmerenia.sr-abs-err-dens-lgas-liquid = p-sr-abs-err-dens-lgas-liquid 
+    buf_sr-izmerenia.sr-abs-err-dens-lgas-vapor  = p-sr-abs-err-dens-lgas-vapor  
   .
   validate buf_sr-izmerenia .

@@ -342,10 +342,14 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cng Dialog-Frame
 ON CHOOSE OF b-cng IN FRAME Dialog-Frame /* Изменить */
 DO:
+  define variable vnode-code as integer  no-undo.
   IF NOT AVAILABLE sr-izmerenia THEN RETURN NO-APPLY.
+  vnode-code = sr-izmerenia.node-code.
   RUN ref\sr-izm-frm.w (sr-izmerenia.node-code) .
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
   {&OPEN-QUERY-{&BROWSE-NAME}}
+  find first sr-izmerenia where sr-izmerenia.node-code eq  vnode-code no-lock.
+  reposition {&BROWSE-NAME} to rowid rowid(sr-izmerenia) no-error .
     APPLY "value-changed" TO BROWSE br-sr-izm.
 END.
 

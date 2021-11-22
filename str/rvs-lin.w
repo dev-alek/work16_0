@@ -1581,7 +1581,7 @@ DO:
     message "Средство измерения " string(temp_sr-izmerenia.node-code) " не может измерять температуру!" view-as alert-box .
     return no-apply .
   end . 
-  if temp_sr-izmerenia.sr-type-izm = 1
+  if temp_sr-izmerenia.sr-type-izm = 2 /* 2 - Измерительная система */
   then do :
     message "Средство измерения температуры " string(temp_sr-izmerenia.node-code) " является измерительной системой! Значение температуры определяется показателями СИ." view-as alert-box .
     return no-apply .
@@ -1632,7 +1632,7 @@ DO:
     end .
   
     if available dens_sr-izmerenia
-    and dens_sr-izmerenia.sr-type-izm = 2
+    and dens_sr-izmerenia.sr-type-izm = 0 /* 0 - Автоматизированное СИ */
     then do :
 /*      tt-rvs-line.state-temperature = v-out-temp .                   */
 /*      display tt-rvs-line.state-temperature with frame Dialog-Frame .*/
@@ -1699,12 +1699,12 @@ DO:
     message "Средство измерения " string(dens_sr-izmerenia.node-code) " не может измерять плотность!" view-as alert-box .
     return no-apply .
   end .
-  if dens_sr-izmerenia.sr-type-izm = 1
+  if dens_sr-izmerenia.sr-type-izm = 2 /* 2 - Измерительная система*/
   then do :
     message "Средство измерения плотности " string(dens_sr-izmerenia.node-code) " является измерительной системой! Значение плотности определяется показателями СИ." view-as alert-box .
     return no-apply .
   end .
-  if dens_sr-izmerenia.sr-type-izm = 2
+  if dens_sr-izmerenia.sr-type-izm = 0 /* 0 - Автоматизированное СИ */
   then do :                    
     run str/rvs-lin-density.w (input dens_sr-izmerenia.sr-type-izm,
                                input place-diameter,
@@ -1749,7 +1749,7 @@ DO:
       end.
     end .
   end .
-  if dens_sr-izmerenia.sr-type-izm = 3
+  if dens_sr-izmerenia.sr-type-izm = 1 /* 1 - Неавтоматизированное СИ */
   then do :                    
     run str/rvs-lin-dens-temp.w (input dens_sr-izmerenia.sr-type-izm,
                                input place-diameter,

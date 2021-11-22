@@ -18,8 +18,9 @@ Creation date: 04/12/17
 
 using Progress.Lang.*.
 /*using ibs.th.gbl.gbl-var.*/
-using ibs.th.bge.1crn.enum-ms-type.
-using ibs.th.bge.1crn.enum-ms-tk-type.
+using ibs.th.bge.1crn.enum-deg-auto.
+using ibs.th.bge.1crn.enum-dnst-ms-type.
+using ibs.th.bge.1crn.enum-level-ms-type.
 using ibs.th.bge.1crn.subjects.*.
 
 block-level on error undo, throw.
@@ -61,17 +62,29 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     end .
     else do:
       run ref/sr-izm01.p
-      (input v-ms-code /* p-node-code (int) */
-      ,input objImp:name_ /* p-sr-model (chr) */
-      ,input mapMsType (objImp:ms-type) /* p-sr-type-id (int) */
-      ,input objImp:me-np /* p-sr-abs-err-neft-water (dec) */
-      ,input objImp:me-wtr /* p-sr-abs-err-water (dec) */
-      ,input objImp:me-dnsty /* p-sr-abs-err-dens (dec) */
-      ,input objImp:me-tmp-amnt /* p-sr-abs-err-temp-vol (dec) */
-      ,input objImp:me-tmp-dnsty /* p-sr-abs-err-temp-dens (dec) */
-      ,input objImp:limit /* p-sr-otnos (dec) */
-      ,input mapMsTkType (objImp:tk) /* p-sr-temp-line (dec) */
+      (input v-ms-code                             /* p-node-code (int) */
+      ,input mapDegAuto (objImp:deg-auto)          /* p-sr-type-izm (int) */
+      ,input objImp:name_                          /* p-sr-model (chr) */
+      ,input objImp:dimension-level                /* p-sr-level (int) */
+      ,input objImp:dimension-temp                 /* p-sr-temperature (int) */
+      ,input objImp:dimension-dnst                 /* p-sr-density (int) */
+      ,input objImp:dimension-wght                 /* p-sr-Weight (int) */
+      ,input mapLevelMsType (objImp:level-ms-type) /* p-sr-type-level-measuring (int) */
+      ,input mapDnstMsType (objImp:dnst-ms-type)   /* p-sr-type-id (int) */
+      ,input objImp:level-abs-me                   /* p-sr-abs-err-neft-water (dec) */
+      ,input objImp:level-rel-me-np                /* p-sr-relative-err-neft-water (dec) */
+      ,input objImp:level-abs-me-wtr               /* p-sr-abs-err-water (dec) */
+      ,input objImp:level-rel-me-wtr               /* p-sr-relative-err-water (dec) */
+      ,input objImp:dnst-abs-me-np                 /* p-sr-abs-err-dens (dec) */
+      ,input objImp:temp-abs-me-vlm                /* p-sr-abs-err-temp-vol (dec) */
+      ,input objImp:temp-abs-me-dnst               /* p-sr-abs-err-temp-dens (dec) */
+      ,input objImp:dnst-rel-me-np                 /* p-sr-relative-err-dens (dec) */
+      ,input objImp:dnst-abs-me-lpg-l              /* p-sr-abs-err-dens-lgas-liquid (dec) */
+      ,input objImp:dnst-abs-me-lpg-v              /* p-sr-abs-err-dens-lgas-vapor (dec) */
+      ,input objImp:wght-rel-me                    /* p-sr-otnos (dec) */
+      ,input objImp:level-tk                       /* p-sr-temp-line (dec) */
       ) .
+      
     end .
     assign
       Msg = "":U
@@ -104,27 +117,42 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
      коды в enum - согласно протоколу взаимодействия с 1С;
   */
   /* маппинг кодов типов средств измерения */
-  method private integer mapMsType (p-ms-type as enum-ms-type) :
+  method private integer mapDnstMsType (p-ms-type as enum-dnst-ms-type) :
     define variable v-ms-type as integer no-undo .
     case p-ms-type :
-      when enum-ms-type:enare15 then v-ms-type = 1 . 
-      when enum-ms-type:enare20 then v-ms-type = 2 . 
-      when enum-ms-type:endensflow then v-ms-type = 3 . 
-      when enum-ms-type:endenssubm then v-ms-type = 4 . 
-      when enum-ms-type:enchannelfl then v-ms-type = 5 . 
-      when enum-ms-type:enchannelno then v-ms-type = 6 . 
+      when enum-dnst-ms-type:enare15     then v-ms-type = 1 . 
+      when enum-dnst-ms-type:enare20     then v-ms-type = 2 . 
+      when enum-dnst-ms-type:endensflow  then v-ms-type = 3 . 
+      when enum-dnst-ms-type:endenssubm  then v-ms-type = 4 . 
+      when enum-dnst-ms-type:enchannelfl then v-ms-type = 5 . 
+      when enum-dnst-ms-type:enchannelno then v-ms-type = 6 . 
       otherwise v-ms-type = 1 .
     end case .
     return v-ms-type .
   end method .
-  method private decimal mapMsTkType (p-ms-tk-type as enum-ms-tk-type) :
-    define variable v-ms-tk-type-value as decimal no-undo .
-    case p-ms-tk-type :
-      when enum-ms-tk-type:enalumin then v-ms-tk-type-value = 0.000023 . 
-                               otherwise v-ms-tk-type-value = 0.0000125 . /* :ensteel */
+  
+  method private integer mapDegAuto (p-deg-auto as enum-deg-auto) :
+    define variable v-deg-auto as integer no-undo .
+    case p-deg-auto :
+      when enum-deg-auto:enautoms         then v-deg-auto = 0 . 
+      when enum-deg-auto:ennonautomatedms then v-deg-auto = 1 . 
+      when enum-deg-auto:enmssys          then v-deg-auto = 2 . 
+      otherwise v-deg-auto = 0 .
     end case .
-    return v-ms-tk-type-value .
+    return v-deg-auto .
   end method .
+
+  method private integer mapLevelMsType (p-level-ms-type as enum-level-ms-type) :
+    define variable v-level-ms-type as integer no-undo .
+    case p-level-ms-type :
+      when enum-level-ms-type:enstatic            then v-level-ms-type = 0 . 
+      when enum-level-ms-type:enroulette2class    then v-level-ms-type = 1 . 
+      when enum-level-ms-type:endensitylevelmeter then v-level-ms-type = 2 . 
+      otherwise v-level-ms-type = 0 .
+    end case .
+    return v-level-ms-type .
+  end method .
+
   /* end_of mapping */
 
 end class.

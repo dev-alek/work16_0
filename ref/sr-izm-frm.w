@@ -167,9 +167,9 @@ define frame Dialog-Frame
           size 70 by 1
      sr-izmerenia.sr-type-izm at row 4.63 col 29.5 colon-aligned widget-id 110
           view-as combo-box inner-lines 5
-          list-item-pairs "Измерительная система",1,
-                     "Автоматизированное СИ",2,
-                     "Неавтоматизированное СИ",3
+          list-item-pairs "Измерительная система",2,
+                     "Автоматизированное СИ",0,
+                     "Неавтоматизированное СИ",1
           drop-down-list
           size 70 by 1
      sr-izmerenia.sr-level at row 6.96 col 5.5 widget-id 92
@@ -179,7 +179,7 @@ define frame Dialog-Frame
           view-as combo-box inner-lines 5
           list-item-pairs "Рулетка 2-го класса точности (Расчет по ГОСТ 7502)",1,
                      "Плотномер-уровнемер ПЛОТ-3Б-1РУ (Расчет по формуле)",2,
-                     "Тип неизвестен",0
+                     "Статичная величина",0
           drop-down-list
           size 48 by 1
      sr-izmerenia.sr-temp-line at row 9.13 col 61.5 colon-aligned widget-id 104
@@ -356,7 +356,7 @@ do:
           or sr-izmerenia.sr-temperature
           or sr-izmerenia.sr-Weight)
   then do:
-     message "Не выбран ни уровень, ни температура, ни плолтность, ни масса"
+     message "Не выбран ни уровень, ни температура, ни плотность, ни масса"
         view-as alert-box.
      return no-apply.
   end. 
@@ -392,12 +392,14 @@ do:
      
   if vMess ne ""
   then do:
+     define variable vOk as logical no-undo.
       message vMess skip 
         "Вы уверены, что хотите закончить настройку средства измерения?"
-      view-as alert-box. 
+      view-as alert-box question buttons OK-Cancel update vOk.
      
-        
-     return no-apply.
+     if not vOk
+     then
+        return no-apply.
   end.
   
   /* проверки значений */
@@ -751,7 +753,7 @@ procedure enable_UI :
 ------------------------------------------------------------------------------*/
 
   {&OPEN-QUERY-Dialog-Frame}
-  get first Dialog-Frame.
+  /*get first Dialog-Frame.*/
   if available sr-izmerenia then 
     display sr-izmerenia.node-code sr-izmerenia.sr-model sr-izmerenia.sr-type-izm 
           sr-izmerenia.sr-level sr-izmerenia.sr-type-level-measuring 

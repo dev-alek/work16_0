@@ -464,12 +464,12 @@ sw = insw .
       sw:write-data-element ("tnk-t-vlm-fact" , if v-temp-izm-vol = ? then "0" else string-mth(v-temp-izm-vol)) no-error .
       sw:write-data-element ("tnk-t-average-fact" , if tt-rvs-line.state-temperature = ? then "0" else string-mth(tt-rvs-line.state-temperature)) no-error .
       case sr-type-temp :
-        when 2
+        when 0
         then
         do it = 1 to num-entries(v-izm-temps) :
           sw:write-data-element (substitute("tnk-t&1-fact", string(it)) , string-mth(decimal(entry(it, v-izm-temps)))) no-error .
         end .
-        when 3
+        when 1
         then
         do it = 1 to num-entries(v-izm-temps) :
           if it = 1
@@ -489,12 +489,12 @@ sw = insw .
       
       sw:write-data-element ("ms-dnsty-average" , if v-dnsty = ? then "0" else string-mth(v-dnsty)) no-error .
       case sr-type-dens :
-        when 2
+        when 0
         then
         do id = 1 to num-entries(v-izm-denses) :
           sw:write-data-element (substitute("ms-dnsty&1", string(id)) , string-mth(decimal(entry(id, v-izm-denses)))) no-error .
         end .
-        when 3
+        when 1
         then
         do id = 1 to num-entries(v-izm-denses) :
           if id = 1
