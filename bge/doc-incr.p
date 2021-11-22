@@ -47,6 +47,7 @@ define input parameter p-chk-pay-code    as logical                 no-undo.
 define input parameter p-pay-desk        as logical                 no-undo.
 define input parameter p-pay-desk-cards  as logical                 no-undo.
 define input parameter p-need-chk        as logical                 no-undo.
+define input parameter p-need-doc-rvs    as logical                 no-undo.
 define input parameter sOutFile          as character               no-undo.
 define input parameter sLogFile          as character               no-undo.
 define input parameter p-parent-proc     as handle                  no-undo.
@@ -238,7 +239,7 @@ on error undo, return error return-value
     define variable v-fact-order        as decimal      no-undo.
     define variable v-sys-date          as date         no-undo.
     define variable v-sys-time          as character    no-undo.
-
+    
     define variable v-supp-dog-code     as character    no-undo.
     define variable v-supp-ndog         as character    no-undo.
     define variable v-supp-ddog         as character    no-undo.
@@ -249,8 +250,8 @@ on error undo, return error return-value
     define variable v-date-to           as date         no-undo.
     define variable v-obj-list          as character    no-undo.
     define variable v-error-message     as character    no-undo.
-    define variable v-stop-fo           as decimal      no-undo.
-
+    define variable v-stop-fo           as decimal      no-undo.     
+    
     define variable v-is-envd_              as logical      no-undo.   
     define variable vartype                 as character    no-undo.
     define variable varenvd                 as character    no-undo.                          
@@ -780,8 +781,8 @@ on error undo, return error return-value
       where buf_ot-tot.obj-type = p-obj-type
         and buf_ot-tot.obj-code = p-obj-code
     use-index obj-ot
-    no-error .
-
+    no-error .                            
+    
     if not available buf_ot-tot
     then do:
       run wp-XMLWriteLog in this-procedure ( input sLogFile
@@ -866,10 +867,12 @@ on error undo, return error return-value
     run wp-XMLWriteLog in this-procedure ( input sLogFile
                                          , input 1
                                          , input 'Выгрузка документов по fact-order...'
-                                         ).
+                                         ).  
+                                         
+                                       
     _docs-cycle:
-    for each buf_tt-docs no-lock
-    :                          
+    for each buf_tt-docs no-lock  
+    : 
       find first buf_trn-doc share-lock
         where buf_trn-doc.doc-code = buf_tt-docs.doc-code          
         no-error .
@@ -881,7 +884,6 @@ on error undo, return error return-value
       if  v-ext-doc-type = {&TDEDT_Pri_Vnesh}            
           /* or v-ext-doc-type = {&TDEDT_Ras_Vnesh_VP}    возврат поставщику */
           then assign v-pr-doc-type = YES .    
-    
 
       { str/tdat-val.i                                    
          buf_tt-docs.doc-code
@@ -903,7 +905,7 @@ on error undo, return error return-value
         ) no-error. 
       else  
         v-sum-all-parts = 0 .    
-                                    
+    
       _export-block:
       do transaction
       on error undo _export-block , return error return-value
@@ -1232,7 +1234,7 @@ on error undo, return error return-value
                   , input v-supp-ddog
                   , input buf_trn-doc.d-card
                   , input buf_trn-doc.cli-type
-                  , input buf_trn-doc.cli-code
+                  , input buf_trn-doc.cli-code 
                   , input v-is-envd_
                   , input v-sum-all-parts
               ) no-error.
@@ -1526,7 +1528,7 @@ define input parameter p-sum-all-parts          as decimal          no-undo.
     define variable v-today             as date         no-undo.
     define variable v-time              as integer      no-undo.
     define variable v-scale-is-empty    as logical      no-undo.
-
+    
            define variable ii                      as integer   no-undo.
         define variable v-attrcode              as char no-undo.
         define variable v-SectionName           as char no-undo.
@@ -1543,9 +1545,10 @@ define input parameter p-sum-all-parts          as decimal          no-undo.
         define variable v-tank-density          as decimal   no-undo .
         define variable v-SectionNum            as integer   no-undo.
         define variable v-total-tank-density    as decimal   no-undo.
-        define variable v-tankweight            as decimal   no-undo.
-    
+        define variable v-tankweight            as decimal   no-undo.   
+        
         define variable v-sum-parts             as decimal   no-undo.
+        
     define buffer buf_ot-tot-sale           for ub.ot-tot.
     define buffer buf_ot-tot-cost           for ub.ot-tot.
     define buffer buf_ot-tot-crsa           for ub.ot-tot.
@@ -2209,7 +2212,7 @@ on endkey undo, return error return-value
                   find first   doc-line-attr where doc-line-attr.doc-code = p-doc-code 
                             and doc-line-attr.gds-code = buf_goods.gds-code 
                             and doc-line-attr.attr-code = "n" no-lock no-error.
-                        
+      
                         if available doc-line-attr then
            
                             assign
@@ -2227,21 +2230,21 @@ on endkey undo, return error return-value
                                 and doc-line-attr.gds-code = buf_goods.gds-code
                                 and    (entry (1, doc-line-attr.attr-code, {&delim-par})) =  'tank-vol'
                                 and (v-SectionNum = 1 or (num-entries (doc-line-attr.attr-code, {&delim-par}) > 1 and (entry (2, doc-line-attr.attr-code, {&delim-par})) = string (ii) and v-SectionNum > 1)):
-                   
+
                                 assign
                                     v-tank-vol = v-tank-vol + decimal ( doc-line-attr.attr-value)  .
-            
-                    end.
-                        
+  
+                            end.
+                            
                             for each doc-line-attr where doc-line-attr.doc-code = p-doc-code
                                 and doc-line-attr.gds-code = buf_goods.gds-code
                                 and    (entry (1, doc-line-attr.attr-code, {&delim-par})) =  'tank-vol'
                                 and (v-SectionNum = 1 or (num-entries (doc-line-attr.attr-code, {&delim-par}) > 1 and (entry (2, doc-line-attr.attr-code, {&delim-par})) = string (ii) and v-SectionNum > 1)):
-                        
+
                                 assign
                                     v-tank-density =    v-tank-density + decimal(doc-line-attr.attr-value) .
-                        
-                        end.
+  
+                            end.
                             for each doc-line-attr where doc-line-attr.doc-code = p-doc-code
                                 and doc-line-attr.gds-code = buf_goods.gds-code
                                 and    (entry (1, doc-line-attr.attr-code, {&delim-par})) =  'tank-weight'  
@@ -2260,6 +2263,9 @@ on endkey undo, return error return-value
                             run wp-xmltagput( 4, "petrolTankDensity",    trim(string(v-total-tank-density , "->>>>>>>>>9.9999999999")), 0 ).
                         end.
                     end.
+                
+                define buffer buf_rvs-line      for ub.rvs-line .
+                define buffer buf_rvs-doc       for ub.rvs-doc .
                                     
                 for each buf_doc-pl where buf_doc-pl.obj-type = buf_doc-line.obj-type
                                       and buf_doc-pl.obj-code = buf_doc-line.obj-code
@@ -2271,6 +2277,32 @@ on endkey undo, return error return-value
                 run wp-xmltagput( 5, "PLQnty",  string(buf_doc-pl.fact-qnty) , 0 ).
                 run wp-xmltagput( 5, "PLWeigth",  string(buf_doc-pl.cli-fact-qnty) , 0 ).
                 run wp-xmltagput( 5, "PLDensity",  string( (buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty), "->>>>>>>>>9.99") , 0 ).
+                
+                if p-need-doc-rvs
+                and (p-ext-doc-type = {&TDEDT_Pri_Vnesh} or p-ext-doc-type = {&TDEDT_Pri_Perem})
+                then do :
+                  for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                                  and buf_rvs-doc.rvs-type = {&rvs-before-doc},
+                  first buf_rvs-line where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                       and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                       and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                       and buf_rvs-line.pl-code = buf_doc-pl.pl-code
+                                       and buf_rvs-line.gds-code = buf_doc-pl.gds-code :
+                    run wp-xmltagput( 5, "PLQntyBeforeDoc",  string(buf_rvs-line.state-measure-qnty) , 0 ).
+                    run wp-xmltagput( 5, "PLWeigthBeforeDoc",  string(buf_rvs-line.state-measure-cli-qnty) , 0 ).
+                  end .
+                  for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                                  and buf_rvs-doc.rvs-type = {&rvs-after-doc},
+                  first buf_rvs-line where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                       and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                       and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                       and buf_rvs-line.pl-code = buf_doc-pl.pl-code
+                                       and buf_rvs-line.gds-code = buf_doc-pl.gds-code :
+                    run wp-xmltagput( 5, "PLQntyAfterDoc",  string(buf_rvs-line.state-measure-qnty) , 0 ).
+                    run wp-xmltagput( 5, "PLWeigthAfterDoc",  string(buf_rvs-line.state-measure-cli-qnty) , 0 ).
+                  end .
+                end .
+                
                 run wp-xmltagclose in this-procedure ( input 4, input "PLDoc"  ).                                          
                                           
                 end.             

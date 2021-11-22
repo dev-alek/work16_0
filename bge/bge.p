@@ -559,7 +559,7 @@ case p-export-type:
             end.        /* if v-bge-shift-mode = yes */
             else do:
                 run export-docs-no-shifts in this-procedure (
-                    input yes
+                    input yes 
                 ).
             end.        /* NOT ( if v-bge-shift-mode = yes ) */
         end.        /* if entry( 2, p-export-type ) = "g-expie" */
@@ -587,7 +587,7 @@ case p-export-type:
                             ).
                         end.        /* NOT ( if v-bge-shift-mode = yes ) */
                     end.
-                    when "3"
+                    when "3" 
                     then do:
                         run export-kass in this-procedure (
                             input 1
@@ -650,6 +650,7 @@ define input parameter p-need-opened-docs   as logical          no-undo.
     define variable v-pay-desk-cards    as logical      no-undo.  /* надо ли экспортировать разброс по кассам */
     define variable v-deleted           as logical      no-undo.  /* надо ли экспортировать удаленные в заданный период документы */
     define variable v-chk               as logical      no-undo.  /* надо ли выгружать чеки */
+    define variable v-doc-rvs           as logical      no-undo.  /* надо ли выгружать сверки до/после */
     define variable v-cancel            as logical      no-undo.
 do
 on error undo, return error
@@ -673,6 +674,7 @@ on error undo, return error
         , output v-pay-desk-cards
         , output v-deleted
         , output v-chk
+        , output v-doc-rvs
         , output v-cancel
     ) no-error .
     if error-status :error
@@ -762,6 +764,7 @@ on error undo, return error
             , input v-pay-desk-cards
             , input v-deleted
             , input v-chk
+            , input v-doc-rvs
             , input p-need-opened-docs
             , input v-bge-editor-handle
             , input v-bge-fillin-handle
@@ -799,6 +802,7 @@ on error undo, return error
                     , input v-pay-desk-cards
                     , input v-deleted
                     , input v-chk
+                    , input v-doc-rvs
                     , input p-need-opened-docs
                     , input v-bge-editor-handle
                     , input v-bge-fillin-handle
@@ -832,6 +836,7 @@ on error undo, return error
                     , input v-pay-desk-cards
                     , input v-deleted
                     , input v-chk
+                    , input v-doc-rvs
                     , input p-need-opened-docs
                     , input v-bge-editor-handle
                     , input v-bge-fillin-handle
@@ -916,6 +921,7 @@ define input parameter p-need-opened-docs   as logical          no-undo.
     define variable v-pay-desk-cards    as logical      no-undo.  /* надо ли экспортировать разброс по кассам */
     define variable v-deleted           as logical      no-undo.  /* надо ли экспортировать удаленные в заданный период документы */
     define variable v-chk               as logical      no-undo.  /* надо ли выгружать чеки */
+    define variable v-doc-rvs           as logical      no-undo.  /* надо ли выгружать сверки до/после слива по топливным приходным документам */
     define variable v-cancel            as logical      no-undo.
 do
 on error undo, return error
@@ -941,6 +947,7 @@ on error undo, return error
         , output v-pay-desk-cards
         , output v-deleted
         , output v-chk
+        , output v-doc-rvs
         , output v-cancel
     ) no-error .
     if error-status :error
@@ -1026,6 +1033,10 @@ on error undo, return error
     then do:
         run bgelib-write-edt in this-procedure ( v-bge-editor-handle, 1, "Чеки" ).
     end.
+    if v-doc-rvs = yes
+    then do:
+        run bgelib-write-edt in this-procedure ( v-bge-editor-handle, 1, "Сверки до/после слива" ).
+    end.
 
     if v-shift-on = yes
     then do:
@@ -1047,6 +1058,7 @@ on error undo, return error
             , input v-pay-desk-cards
             , input v-deleted
             , input v-chk
+            , input v-doc-rvs
             , input p-need-opened-docs
             , input v-bge-editor-handle
             , input v-bge-fillin-handle
@@ -1082,6 +1094,7 @@ on error undo, return error
                 , input v-pay-desk-cards
                 , input v-deleted
                 , input v-chk
+                , input v-doc-rvs
                 , input p-need-opened-docs
                 , input v-bge-editor-handle
                 , input v-bge-fillin-handle
@@ -1117,6 +1130,7 @@ on error undo, return error
                     , input v-pay-desk-cards
                     , input v-deleted
                     , input v-chk
+                    , input v-doc-rvs
                     , input p-need-opened-docs
                     , input v-bge-editor-handle
                     , input v-bge-fillin-handle
@@ -1239,6 +1253,7 @@ PROCEDURE export-day :
     define variable v-pay-desk-cards    as logical      no-undo.  /* надо ли экспортировать разброс по кассам */
     define variable v-deleted           as logical      no-undo.  /* надо ли экспортировать удаленные в заданный период документы */
     define variable v-chk               as logical      no-undo.  /* надо ли выгружать чеки */
+    define variable v-doc-rvs           as logical      no-undo.  /* надо ли выгружать сверки до/после */
     define variable v-cancel            as logical      no-undo.
 do
 on error undo, return error
@@ -1264,6 +1279,7 @@ on error undo, return error
         , output v-pay-desk-cards
         , output v-deleted
         , output v-chk
+        , output v-doc-rvs
         , output v-cancel
     ) no-error .
     if error-status :error
@@ -1387,6 +1403,7 @@ on error undo, return error
         , output v-void-logical     /* v-pay-desk-cards */
         , output v-void-logical     /* v-deleted        */
         , output v-void-logical     /* v-chk            */
+        , output v-void-logical     /* v-doc-rvs        */
         , output v-cancel
     ) no-error .
     if error-status :error
@@ -1484,6 +1501,7 @@ define input parameter p-cst            as logical          no-undo.
     define variable v-pay-desk-cards    as logical      no-undo.  /* надо ли экспортировать разброс по кассам */
     define variable v-deleted           as logical      no-undo.  /* надо ли экспортировать удаленные в заданный период документы */
     define variable v-chk               as logical      no-undo.  /* надо ли выгружать чеки */
+    define variable v-doc-rvs           as logical      no-undo.  /* надо ли выгружать сверки до/после */
     define variable v-cancel            as logical      no-undo.
 do
 on error undo, return error
@@ -1507,6 +1525,7 @@ on error undo, return error
         , output v-pay-desk-cards
         , output v-deleted
         , output v-chk
+        , output v-doc-rvs
         , output v-cancel
     ) no-error .
     if error-status :error
@@ -1581,6 +1600,7 @@ PROCEDURE export-std :
     define variable v-pay-desk-cards    as logical      no-undo.  /* надо ли экспортировать разброс по кассам */
     define variable v-deleted           as logical      no-undo.  /* надо ли экспортировать удаленные в заданный период документы */
     define variable v-chk               as logical      no-undo.  /* надо ли выгружать чеки */
+    define variable v-doc-rvs           as logical      no-undo.  /* надо ли выгружать сверки до/после */
     define variable v-cancel            as logical      no-undo.
 do
 on error undo, return error
@@ -1604,6 +1624,7 @@ on error undo, return error
         , output v-pay-desk-cards
         , output v-deleted
         , output v-chk
+        , output v-doc-rvs
         , output v-cancel
     ) no-error .
     if error-status :error
@@ -1693,6 +1714,7 @@ PROCEDURE export-stt :
     define variable v-pay-desk-cards    as logical      no-undo.  /* надо ли экспортировать разброс по кассам */
     define variable v-deleted           as logical      no-undo.  /* надо ли экспортировать удаленные в заданный период документы */
     define variable v-chk               as logical      no-undo.  /* надо ли выгружать чеки */
+    define variable v-doc-rvs           as logical      no-undo.  /* надо ли выгружать сверки до/после */
     define variable v-cancel            as logical      no-undo.
 do
 on error undo, return error
@@ -1716,6 +1738,7 @@ on error undo, return error
             , output v-pay-desk-cards
             , output v-deleted
             , output v-chk
+            , output v-doc-rvs
             , output v-cancel
         ) no-error .
         if error-status :error
@@ -1802,6 +1825,7 @@ PROCEDURE export-prc :
     define variable v-pay-desk-cards    as logical      no-undo.  /* надо ли экспортировать разброс по кассам */
     define variable v-deleted           as logical      no-undo.  /* надо ли экспортировать удаленные в заданный период документы */
     define variable v-chk               as logical      no-undo.  /* надо ли выгружать чеки */
+    define variable v-doc-rvs           as logical      no-undo.  /* надо ли выгружать сверки до/после */
     define variable v-cancel            as logical      no-undo.
 do
 on error undo, return error
@@ -1825,6 +1849,7 @@ on error undo, return error
             , output v-pay-desk-cards
             , output v-deleted
             , output v-chk
+            , output v-doc-rvs
             , output v-cancel
         ) no-error .
         if error-status :error
@@ -1888,6 +1913,7 @@ define input parameter p-dialog-mode    as integer          no-undo.
     define variable v-pay-desk-cards    as logical      no-undo.  /* надо ли экспортировать разброс по кассам */
     define variable v-deleted           as logical      no-undo.  /* надо ли экспортировать удаленные в заданный период документы */
     define variable v-chk               as logical      no-undo.  /* надо ли выгружать чеки */
+    define variable v-doc-rvs           as logical      no-undo.  /* надо ли выгружать сверки до/после */
     define variable v-cancel            as logical      no-undo.
 do
 on error undo, return error
@@ -1911,6 +1937,7 @@ on error undo, return error
         , output v-pay-desk-cards
         , output v-deleted
         , output v-chk
+        , output v-doc-rvs
         , output v-cancel
     ) no-error .
     if error-status :error
@@ -1980,6 +2007,7 @@ PROCEDURE export-card :
     define variable v-pay-desk-cards    as logical      no-undo.  /* надо ли экспортировать разброс по кассам */
     define variable v-deleted           as logical      no-undo.  /* надо ли экспортировать удаленные в заданный период документы */
     define variable v-chk               as logical      no-undo.  /* надо ли выгружать чеки */
+    define variable v-doc-rvs           as logical      no-undo.  /* надо ли выгружать сверки до/после */
     define variable v-cancel            as logical      no-undo.
 do
 on error undo, return error
@@ -2004,6 +2032,7 @@ on error undo, return error
         , output v-pay-desk-cards
         , output v-deleted
         , output v-chk
+        , output v-doc-rvs
         , output v-cancel
     ) no-error .
     if error-status :error

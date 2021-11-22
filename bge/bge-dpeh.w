@@ -45,6 +45,7 @@ Output:
     p-pay-desk-cards as logical       - выгружать ли разброску по префиксам карт
     p-deleted      as logical       - выгружать ли удаленные в заданный период документы
     p-chk          as logical       - выгружать ли чеки
+    p-doc-rvs      as logical       - выгружать ли сверки до/после слива по документам прихода
     p-cancel       as logical       - была нажата кнопка Отменить
 
 */
@@ -74,6 +75,7 @@ define output parameter p-pay-desk          as logical   INIT no    no-undo.
 define output parameter p-pay-desk-cards    as logical   INIT no    no-undo.
 define output parameter p-deleted           as logical   INIT no    no-undo.
 define output parameter p-chk               as logical   INIT no    no-undo.
+define output parameter p-doc-rvs           as logical   INIT no    no-undo.
 define output parameter p-cancel            as logical   INIT no    no-undo.
 
 /* Local Variable Definitions ---                                       */
@@ -120,10 +122,10 @@ define temp-table temp_obj-list no-undo
 &Scoped-Define ENABLED-OBJECTS RECT-2 RECT-1 Btn_OK Btn_Cancel b-help ~
 date_from date_to fi-shift-num-from fi-shift-num-to rs-1 bt-sel-obj ~
 ed-doc-type bt-sel-doc-type tb-inkass-pay-code tb-deleted tb-cst-code ~
-tb-exp-checks tb-parts tb-chk-pay-code tb-pay-desk tb-pay-desk-cards
+tb-exp-checks tb-parts tb-chk-pay-code tb-pay-desk tb-pay-desk-cards tb-exp-doc-rvs
 &Scoped-Define DISPLAYED-OBJECTS date_from date_to ed-object rs-1 ~
 ed-doc-type ed-doc-type-label tb-inkass-pay-code tb-deleted tb-cst-code ~
-tb-exp-checks tb-parts tb-chk-pay-code tb-pay-desk tb-pay-desk-cards
+tb-exp-checks tb-parts tb-chk-pay-code tb-pay-desk tb-pay-desk-cards tb-exp-doc-rvs
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -234,6 +236,11 @@ DEFINE VARIABLE tb-exp-checks AS LOGICAL INITIAL no
      LABEL "Чеки"
      VIEW-AS TOGGLE-BOX
      SIZE 20.5 BY .83 NO-UNDO.
+     
+DEFINE VARIABLE tb-exp-doc-rvs AS LOGICAL INITIAL no
+     LABEL "Сверки до/после слива"
+     VIEW-AS TOGGLE-BOX
+     SIZE 26.38 BY .83 NO-UNDO.     
 
 DEFINE VARIABLE tb-inkass-pay-code AS LOGICAL INITIAL no
      LABEL "По виду оплаты"
@@ -282,6 +289,7 @@ DEFINE FRAME Dialog-Frame
      tb-deleted AT ROW 13.58 COL 36.13
      tb-cst-code AT ROW 14.33 COL 2.13
      tb-exp-checks AT ROW 14.33 COL 36.13 WIDGET-ID 2
+     tb-exp-doc-rvs AT ROW 15.08 COL 36.13
      tb-parts AT ROW 15.08 COL 2.13
      tb-chk-pay-code AT ROW 15.83 COL 2.13
      tb-pay-desk AT ROW 16.75 COL 5.13
@@ -582,6 +590,7 @@ DO:
         tb-pay-desk
         tb-pay-desk-cards
         tb-exp-checks
+        tb-exp-doc-rvs
         fi-shift-num-from
         fi-shift-num-to
     .
@@ -591,6 +600,7 @@ DO:
         p-shift-num-from    = fi-shift-num-from
         p-shift-num-to      = fi-shift-num-to
         p-chk               = tb-exp-checks
+        p-doc-rvs           = tb-exp-doc-rvs
     .
     if p-output-type = 0
     then do:
@@ -756,6 +766,7 @@ DO:
         , input p-pay-desk-cards
         , input p-deleted
         , input p-chk
+        , input p-doc-rvs
     ).
     APPLY "GO" TO FRAME {&FRAME-NAME}.
 END.
@@ -1105,12 +1116,13 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY date_from date_to ed-object rs-1 ed-doc-type ed-doc-type-label
           tb-inkass-pay-code tb-deleted tb-cst-code tb-exp-checks tb-parts
-          tb-chk-pay-code tb-pay-desk tb-pay-desk-cards
+          tb-chk-pay-code tb-pay-desk tb-pay-desk-cards tb-exp-doc-rvs
       WITH FRAME Dialog-Frame.
   ENABLE RECT-2 RECT-1 Btn_OK Btn_Cancel b-help date_from date_to
          fi-shift-num-from fi-shift-num-to rs-1 bt-sel-obj ed-doc-type
          bt-sel-doc-type tb-inkass-pay-code tb-deleted tb-cst-code
          tb-exp-checks tb-parts tb-chk-pay-code tb-pay-desk tb-pay-desk-cards
+         tb-exp-doc-rvs
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1132,7 +1144,7 @@ on error undo, return error
 :
 define output parameter p-host-name as character    no-undo.
 
-define buffer buf_clients   for ub.clients.
+define buffer buf_clients   for clients.
 
     find first buf_clients no-lock
          where buf_clients.obj-type = {&cmp}
@@ -1363,6 +1375,7 @@ on error undo, return error
         , output tb-pay-desk-cards
         , output tb-deleted
         , output tb-exp-checks
+        , output tb-exp-doc-rvs
     ).
     if p-init-doc-type-list = "":U
     then do:
@@ -1749,6 +1762,7 @@ define output parameter p-pay-desk          as logical          no-undo.
 define output parameter p-pay-desk-cards    as logical          no-undo.
 define output parameter p-deleted           as logical          no-undo.
 define output parameter p-chk               as logical          no-undo.
+define output parameter p-doc-rvs           as logical          no-undo.
 
     define variable v-parameters-string as character    no-undo.
     define variable v-temp-date         as date         no-undo.
@@ -1774,6 +1788,8 @@ on error undo, return error
         p-pay-desk          = no
         p-pay-desk-cards    = no
         p-deleted           = no
+        p-chk               = no
+        p-doc-rvs           = no
     .
     assign
         p-obj-list          = "":U
@@ -1802,6 +1818,7 @@ on error undo, return error
         run assign-logical in this-procedure ( input 12, input v-parameters-string, input no                    , output p-pay-desk-cards   ).
         run assign-logical in this-procedure ( input 13, input v-parameters-string, input no                    , output p-deleted          ).
         run assign-logical in this-procedure ( input 14, input v-parameters-string, input no                    , output p-chk              ).
+        run assign-logical in this-procedure ( input 15, input v-parameters-string, input no                    , output p-doc-rvs          ).
     end.        /* if available buf_usr-flt */
     find first buf_usr-flt no-lock
          where buf_usr-flt.user-name  = v-cntxt-userid
@@ -1848,6 +1865,7 @@ define input parameter p-pay-desk          as logical          no-undo.
 define input parameter p-pay-desk-cards    as logical          no-undo.
 define input parameter p-deleted           as logical          no-undo.
 define input parameter p-chk               as logical          no-undo.
+define input parameter p-doc-rvs           as logical          no-undo.
 
     define variable v-parameters-string as character    no-undo.
 
@@ -1868,13 +1886,15 @@ on error undo, return error
                                         , p-cst )
     .
     assign
-        v-parameters-string = substitute( "&1,&2,&3,&4,&5,&6"
+        v-parameters-string = substitute( "&1,&2,&3,&4,&5,&6,&7,&8"
                                         , v-parameters-string
                                         , p-parts
                                         , p-chk-pay-code
                                         , p-pay-desk
                                         , p-pay-desk-cards
-                                        , p-deleted       )
+                                        , p-deleted 
+                                        , p-chk 
+                                        , p-doc-rvs     )
     .
     find first buf_usr-flt exclusive-lock
          where buf_usr-flt.user-name  = v-cntxt-userid
