@@ -689,5 +689,5 @@ class runth.runth_trg:
    end destructor.
 
 /* эти файл должен быть в конце иначе дизайнер не понимает препроцессоры и открывает пустую форму */
-   {utl\param.i class }
+   {runth\param.i class }
 end class.
