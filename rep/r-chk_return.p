@@ -14,6 +14,9 @@ Author: Elena Shklyar
 Creation date: 08/07/14
 
 */
+define input parameter parparentproc as widget-handle no-undo .
+define input parameter p-itog                   as logical                  no-undo .
+define input parameter p-oplat                  as character                no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
@@ -41,12 +44,6 @@ define variable vss-description as character no-undo init "Очет по возвратным оп
 
 /* Temp-Table and Buffer definitions                                    */
 
-define variable parparentproc as handle no-undo .
-
-assign
-  parparentproc = my-handle
-  .
-    
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }        
                   
@@ -83,6 +80,8 @@ DEFINE TEMP-TABLE tt-gds-pay
   field pay_qnty  as decimal
   field sum_total as decimal
   field print     as integer
+  field sbprrn    as character
+  field sbpstat   as character
   Index pi obj-code obj-type doc-code line-num
   . 
 
@@ -112,6 +111,7 @@ define buffer buf_chk-gds      for ub.chk-gds .
 define buffer buf_chk-gds-pay  for ub.chk-gds-pay .
 define buffer buf_goods        for ub.goods .
 define buffer buf_bar-code     for ub.bar-code .
+define buffer buf_cash-pay     for ub.cash-pay .
 
 do
   on error undo, return error return-value
@@ -267,7 +267,21 @@ procedure report:
     for first buf_chk-pay-attr no-lock where buf_chk-pay-attr.attr-code = "CPAgreement"
       and buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code and buf_chk-pay-attr.line-num = buf_chk-pay.line-num:
       tt-gds-pay.print = 1 .
-    end.   
+    end.  
+    for first buf_chk-pay-attr no-lock where buf_chk-pay-attr.attr-code = "sbpstat"
+      and buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code and buf_chk-pay-attr.line-num = buf_chk-pay.line-num:
+      tt-gds-pay.sbpstat = buf_chk-pay-attr.attr-value .
+    end.  
+    for first buf_chk-pay-attr no-lock where buf_chk-pay-attr.attr-code = "sbprrn"
+      and buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code and buf_chk-pay-attr.line-num = buf_chk-pay.line-num:
+      tt-gds-pay.sbprrn = buf_chk-pay-attr.attr-value .
+    end.       
+            if p-oplat <> "" and LOOKUP(string(buf_chk-pay.pay-code), p-oplat) = 0 then do:
+              if available (tt-gds-pay) then delete tt-gds-pay .
+              if available (tt-return) then  delete tt-return .
+            end.
+        
+
   end.  
 end procedure.      
    
@@ -299,8 +313,79 @@ end procedure.
     '<TABLE name="1"  fit_to_page="true" orientation="landscape" CELLSPACING="0" BORDER="0">'skip
     '<thead>' skip
     .
+
+    if p-itog then do:
   put stream OutStr-html unformatted
-    '<tr>' skip
+    '<tr class="set_columns">' skip
+    '<td style="width: 160px;"></td>' skip
+    '<td style="width: 160px;"></td>' skip
+    '<td style="width: 60px;"></td>' skip
+    '<td style="width: 60px;"></td>' skip
+    '<td style="width: 60px;"></td>' skip
+    '<td style="width: 160px;"></td>' skip
+    '<td style="width: 160px;"></td>' skip
+    '<td style="width: 160px;"></td>' skip
+    '<td style="width: 160px;"></td>' skip
+    '<td style="width: 60px;"></td>' skip
+    '<td style="width: 60px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
+    '<td style="width: 150px;"></td>' skip
+    '</tr>' skip
+    .
+                        
+ 
+  put stream OutStr-html unformatted
+    '<TR><TD colspan="14"></TD></TR>' skip
+    '<TR>' skip
+    '<TD colspan="14" style="font-weight: bold;">Отчет для контроля возвратных операций</TD>' skip
+    '</TR>'skip
+                                
+    '<TR>' skip
+    '<TD colspan="14">' + v-period + '</TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD colspan="14">' + v-obj-name + '</TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD colspan="14">Выбор объекта:</TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD colspan="14">' + "АЗК №" + v-list-obj + " маг" + '</TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD colspan="14">' + v-print-date + '</TD>' skip
+    '</TR>'skip
+
+    '</thead>' skip
+    '<tbody>' skip
+    .
+  put stream OutStr-html unformatted
+    '<TR>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Дата и время чека</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Название АЗК/АЗС</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Номер чека</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Тип чека</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Номер кассы</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">ФИО кассира</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Номер дисконтной карты</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Вид оплаты</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Номер платежной карты</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Сумма возврата по типу оплаты</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Общая сумма возврата</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Печать без повторного обращения к ПЦ</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Неопределенный статус возврата через СБП</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">RRN СБП</TD>' skip
+    '</TR>'skip       
+    .        
+    end.
+    else do:    
+  put stream OutStr-html unformatted
+    '<tr class="set_columns">' skip
     '<td style="width: 160px;"></td>' skip
     '<td style="width: 160px;"></td>' skip
     '<td style="width: 60px;"></td>' skip
@@ -318,22 +403,24 @@ end procedure.
     '<td style="width: 60px;"></td>' skip
     '<td style="width: 60px;"></td>' skip
     '<td style="width: 100px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
+    '<td style="width: 150px;"></td>' skip
     '</tr>' skip
     .
                         
  
   put stream OutStr-html unformatted
-    '<TR><TD colspan="17"></TD></TR>' skip
+    '<TR><TD colspan="19"></TD></TR>' skip
     '<TR>' skip
-    '<TD colspan="17" style="font-weight: bold;">Отчет для контроля возвратных операций</TD>' skip
+    '<TD colspan="19" style="font-weight: bold;">Отчет для контроля возвратных операций</TD>' skip
     '</TR>'skip
                                 
     '<TR>' skip
-    '<TD colspan="17">' + v-period + '</TD>' skip
+    '<TD colspan="19">' + v-period + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="17">' + v-obj-name + '</TD>' skip
+    '<TD colspan="19">' + v-obj-name + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
@@ -341,11 +428,11 @@ end procedure.
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="17">' + "АЗК №" + v-list-obj + " маг" + '</TD>' skip
+    '<TD colspan="19">' + "АЗК №" + v-list-obj + " маг" + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="17">' + v-print-date + '</TD>' skip
+    '<TD colspan="19">' + v-print-date + '</TD>' skip
     '</TR>'skip
 
     '</thead>' skip
@@ -370,9 +457,11 @@ end procedure.
     '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Сумма возврата по типу оплаты</TD>' skip
     '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Общая сумма возврата</TD>' skip
     '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Печать без повторного обращения к ПЦ</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Неопределенный статус возврата через СБП</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">RRN СБП</TD>' skip
     '</TR>'skip       
     .
-    
+    end.
     
   for each tt-return:
     v-pay-line = no .
@@ -386,7 +475,7 @@ end procedure.
       '<TD text_wrap="true" style="text-align: center;">' + string(tt-return.cash-num) + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">' + string(tt-return.fio) + '</TD>' skip
       .
-      
+ if not p-itog then do:    
     for each tt-gds-pay where tt-gds-pay.doc-code = tt-return.doc-code and tt-gds-pay.obj-code = tt-return.obj-code and tt-gds-pay.obj-type = tt-return.obj-type:
       if v-gds-line then 
       do:
@@ -406,19 +495,36 @@ end procedure.
         '<TD text_wrap="true" style="text-align: right;">' + if tt-gds-pay.price <> 0 then fnc-convert-dot-to-colon(tt-gds-pay.price,"->>>>>>>>>>>9.99",2) + '</TD>' else " " + '</TD>' skip
         '<TD text_wrap="true" style="text-align: right;">' + if tt-gds-pay.qnty <> 0 then fnc-convert-dot-to-colon(tt-gds-pay.qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else " " + '</TD>' skip
         '<TD text_wrap="true" style="text-align: right;">' + if tt-gds-pay.sum_ <> 0 then fnc-convert-dot-to-colon(tt-gds-pay.sum_,"->>>>>>>>>>>9.99",2) + '</TD>' else " " + '</TD>' skip
-        '<TD text_wrap="true" style="text-align: center;">' + string(tt-gds-pay.d-card) + '</TD>' skip
         .
       put stream OutStr-html unformatted
+        '<TD text_wrap="true" style="text-align: center;">' + string(tt-gds-pay.d-card) + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + string(tt-gds-pay.pay-type) + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + if tt-gds-pay.p-card <> "0" then string(tt-gds-pay.p-card) + '</TD>' else " " + '</TD>' skip
         '<TD text_wrap="true" style="text-align: right;">' + if tt-gds-pay.pay_qnty <> 0 then fnc-convert-dot-to-colon(tt-gds-pay.pay_qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else " " + '</TD>' skip
         '<TD text_wrap="true" style="text-align: right;">' + if tt-gds-pay.sum_total <> 0 then fnc-convert-dot-to-colon(tt-gds-pay.sum_total,"->>>>>>>>>>>9.99",2) + '</TD>' else " " + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + if tt-gds-pay.sum_total <> 0 then string(tt-gds-pay.print) + '</TD>' else " " + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(tt-gds-pay.sbpstat) + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(tt-gds-pay.sbprrn) + '</TD>' skip
         '</TR>'skip
         .
       v-gds-line = yes .
     end.
-        
+end.
+else do:
+    for first tt-gds-pay where tt-gds-pay.doc-code = tt-return.doc-code and tt-gds-pay.obj-code = tt-return.obj-code and tt-gds-pay.obj-type = tt-return.obj-type and tt-gds-pay.line-num = 1:
+          put stream OutStr-html unformatted
+        '<TD text_wrap="true" style="text-align: center;">' + string(tt-gds-pay.d-card) + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(tt-gds-pay.pay-type) + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + if tt-gds-pay.p-card <> "0" then string(tt-gds-pay.p-card) + '</TD>' else " " + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: right;">' + if tt-gds-pay.pay_qnty <> 0 then fnc-convert-dot-to-colon(tt-gds-pay.pay_qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else " " + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: right;">' + if tt-gds-pay.sum_total <> 0 then fnc-convert-dot-to-colon(tt-gds-pay.sum_total,"->>>>>>>>>>>9.99",2) + '</TD>' else " " + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + if tt-gds-pay.sum_total <> 0 then string(tt-gds-pay.print) + '</TD>' else " " + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(tt-gds-pay.sbpstat) + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + string(tt-gds-pay.sbprrn) + '</TD>' skip
+        '</TR>'skip
+        .
+      end.  
+end.            
   end.
 
 
