@@ -39,6 +39,7 @@ function objExists returns character
     return ? .
 
 end.
+
 &if "{1}" = "class"
 &then
 method private character  SearchPFile 

@@ -330,8 +330,15 @@ class ibs.th.ref.code.okeikktedit_ inherits Form:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-  method public void Visual_form( input iChange AS character ): 
-    if iChange = {&update} then 
+  method public void Visual_form( input iChange AS character ):
+    if iChange = {&lookup} 
+    then assign 
+       this-object:mUnit:Enabled     = false
+       this-object:btn_unit:Visible  = false
+       this-object:mKKT:Enabled      = false
+       this-object:mOKEI:Enabled     = false
+    .
+    else if iChange = {&update} then 
        this-object:mOKEI:Enabled = false.
     return.
   end method .

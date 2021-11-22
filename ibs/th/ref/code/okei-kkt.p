@@ -15,7 +15,7 @@ Creation date: 27.04.2021
 */
 {cmp/str-glbl.i }
 { ibs\th\ref\code\codepar.i }
-
+{cmp/trg-def.i }
 define variable vss-revision    as character no-undo init "$Revision:$":U .
 define variable vss-author      as character no-undo init "$Author:$":U .
 define variable vss-date        as character no-undo init "$Date:$":U .
@@ -30,9 +30,10 @@ mCodeTrg = new ibs.th.ref.code.code_trg().
 mCodeTrg:formLable(1, 1, " Ó‰ Œ ≈»").
 mCodeTrg:formLable(1, 2, " Ó‰ ≈»   “").
 mCodeTrg:formLable(1, 4, "œ‘   “").
-mCodeTrg:MaxLevel = 1.
+mCodeTrg:Mode = if g#db-num eq 0 then {&update} else {&lookup}.
 mCodeTrg:parparentproc = iParparentproc.
 mCodeTrg:chek-erpRN = yes.
+mCodeTrg:MaxLevel = mCodeTrg:startlevel.
 
 mCodeTrg:parent = left-trim(iparent + {&delim-par} + icode,{&delim-par}).
 mCodeTrg:startlevel = num-entries(mCodeTrg:parent,{&delim-par}).

@@ -98,7 +98,20 @@ class ibs.th.ref.code.browsecode inherits Form final:
    end constructor.
 
    method private void BrwMode( input imode as character  ):
-      if iMode eq {&select}
+      
+      if iMode eq {&lookup}
+      then do:
+         assign 
+         bAdd   :visible = false
+         bdel   :visible = false
+         bedit  :visible = false
+         bexport:visible = false
+         bimport:visible = false
+         bselect:visible = false
+         this-object:dataGridView1:Columns[1]:Visible = false.
+      .
+      end.
+      else if iMode eq {&select}
       then do:
          assign 
          bAdd   :visible = false
