@@ -38,11 +38,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 
   define variable v-list-db-for-send as character no-undo .
   define variable v-need-send        as logical   no-undo .
+  define variable v-obj-code         as integer   no-undo .
   v-list-db-for-send = "" .
 
   define buffer buf_assortment-matrix for ub.assortment-matrix .
   define buffer buf_clients for ub.clients .
-
+  define buffer bf_clients for ub.clients .
+  
   assign
     v-need-send = false
   .

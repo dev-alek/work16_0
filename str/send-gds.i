@@ -87,17 +87,19 @@ FOR EACH gds-list by order-num:
     if g#news and not avail gds-obj then NEXT.
 
     /* #2789 пункт 3.4 */
-    if available ub.gds-obj then do :
-      if check-ban-sales-via-cd(ub.gds-obj.gds-code) then next.
+   /* if available ub.gds-obj then do :
+      if check-ban-sales-via-cd(ub.gds-obj.gds-code) then do:
+      if g#news then action = 'D':U. else next .
+      end.
     end.
-
+*/
     /*if v-is-restaurant then do:*/
       find first buf_fbr-gds-obj no-lock where
                  buf_fbr-gds-obj.obj-type = {&shop}
              AND buf_fbr-gds-obj.obj-code = i-obj-code
              AND buf_fbr-gds-obj.gds-code = gds-list.gds-code no-error .
-      /*if  available buf_fbr-gds-obj
-      and  (not gds-list.to-del and not buf_fbr-gds-obj.is-cd) then NEXT.
+      /*if     available buf_fbr-gds-obj
+           and not gds-list.to-del and not buf_fbr-gds-obj.is-cd then NEXT.
     end.*/
 
     if not g#news then do:

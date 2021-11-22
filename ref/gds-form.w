@@ -2472,6 +2472,7 @@ define variable v-loc-update-s-coeff as logical no-undo .
 define variable v-loc-update-gds-prop as logical no-undo .
 define variable v-loc-update-add-prop as logical no-undo .
 define variable v-mess as character no-undo .
+define buffer buf_bar-code for ub.bar-code .
 run set-fields.
 assign
 prev-artic = input frame {&frame-name} goods.artic
@@ -2887,64 +2888,26 @@ if mode = {&add-def} then do:
                 output v-type
               ) no-error.
         if v-value = '' then find first buf-grp where buf-grp.node-code = v-upper no-lock no-error.    
-    /*Есть ли атрибут "Группа товаров на кассе" в группе товаров*/
-        if v-value > "" then do:
-          run gds-attr-write IN THIS-PROCEDURE(
-              input ub.goods.gds-code
-             ,INPUT {&attr-mark-type}
-             ,INPUT v-value ) NO-ERROR.
-        end. 
+      /*Есть ли атрибут "Группа товаров на кассе" в группе товаров*/
+      if v-value > "" and v-value <> "not-type" then 
+      do:
+         run gds-attr-write IN THIS-PROCEDURE(
+            input ub.goods.gds-code
+            ,INPUT {&attr-mark-type}
+            ,INPUT v-value ) NO-ERROR.
 
-     end.   
-/*      v-value = ''.                                                                                */
-/*      run ggoattr-value(                                                                           */
-/*                input buf-grp.node-code,                                                           */
-/*                input 0,                                                                           */
-/*                input "",                                                                          */
-/*                input 0,                                                                           */
-/*                input {&ggoattr-alchol-grp},                                                       */
-/*                output v-value,                                                                    */
-/*                output v-type                                                                      */
-/*              ) no-error.                                                                          */
-/*        if v-value = '' then find first buf-grp where buf-grp.node-code = v-upper no-lock no-error.*/
-/*                                                                                                   */
-/*    /*Есть ли атрибут "По умолчанию алкоголь" в группе товаров*/                                   */
-/*                                                                                                   */
-/*        if v-value > "" then do:                                                                   */
-/*          run gds-attr-write IN THIS-PROCEDURE(                                                    */
-/*              input ub.goods.gds-code                                                              */
-/*             ,INPUT {&attr-alcohol-prod}                                                           */
-/*             ,INPUT v-value ) NO-ERROR.                                                            */
-/*        temp-goods.alc-prod = yes .                                                                */
-/*        end.                                                                                       */
-/*                                                                                                   */
-/*                                                                                                   */
-/*   v-value = ''.                                                                                   */
-/*/*   do while v-value = '' and available buf-grp:*/                                                */
-/*      v-upper = buf-grp.upper-code.                                                                */
-/*      run ggoattr-value(                                                                           */
-/*                input buf-grp.node-code,                                                           */
-/*                input 0,                                                                           */
-/*                input "",                                                                          */
-/*                input 0,                                                                           */
-/*                input {&ggoattr-mark-grp},                                                         */
-/*                output v-value,                                                                    */
-/*                output v-type                                                                      */
-/*              ) no-error.                                                                          */
-/*        if v-value = '' then find first buf-grp where buf-grp.node-code = v-upper no-lock no-error.*/
-/*/*     end.*/                                                                                      */
-/*                                                                                                   */
-/*    /*Есть ли атрибут "Требуется обязательной маркировки" в группе товаров*/                       */
-/*                                                                                                   */
-/*        if v-value > "" then do:                                                                   */
-/*          run gds-attr-write IN THIS-PROCEDURE(                                                    */
-/*              input ub.goods.gds-code                                                              */
-/*             ,INPUT {&attr-mark}                                                                   */
-/*             ,INPUT v-value ) NO-ERROR.                                                            */
-/*                                                                                                   */
-/*        temp-goods.alc-mark = yes .                                                                */
-/*        end.                                                                                       */
-
+        
+         for each buf_bar-code no-lock where buf_bar-code.gds-code = ub.goods.gds-code:   
+            find first ub.prod-bc no-lock where ub.prod-bc.b-code = buf_bar-code.b-code and ub.prod-bc.bc-on-type = {&gtin} no-error .
+            if not available (ub.prod-bc) then 
+            do:
+               message   "Для маркированного товара необходимо завести код с типом GTIN" 
+                  view-as alert-box.
+               undo _main, return error .
+            end.
+         end. 
+      end.   
+end.
 end. /*if mode = {&add-def} then do:*/
 
 if mode <> {&add-def} and mode <> {&lookup} then do:
