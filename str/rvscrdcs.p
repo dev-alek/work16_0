@@ -737,7 +737,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                            .                   
           end.
 
-          if not v-lgas-gds
+          if not v-lgas-gds and not ptrlprop-algrvspt = 4 
           then do:
 
             if (O_PKH - O_FACT) <= 0  then do:
@@ -784,6 +784,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                                 "погрешность в литрах   " + string(if v-metering-qnty-cli <> ? then v-metering-qnty-cli else 0) + {&new-line} .
                       end.
                     end.
+                  end.
+when 4 then do:
                   end.
                 end case.
               end.
@@ -895,9 +897,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                           and bf-wst_doc-pl.out-code = bf-wst_doc-line.doc-code
                           and bf-wst_doc-pl.gds-code = buf_rvs-line.gds-code
                         no-error.
-                      if bf-wst_trn-doc.doc-type = {&income}
-                      then oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, bf-wst_doc-pl.cli-fact-qnty).
-                      else oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, - bf-wst_doc-pl.cli-fact-qnty).
+                      if available (bf-wst_doc-pl)
+                      then do:
+                        if bf-wst_trn-doc.doc-type = {&income}
+                        then oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, bf-wst_doc-pl.cli-fact-qnty).
+                        else oNormWast:NormalWastageHdnler:RegDoc(bf-wst_trn-doc.fact-date, - bf-wst_doc-pl.cli-fact-qnty).
+                      end.
                     end.
                     
                     if  bf-wst_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh} 
