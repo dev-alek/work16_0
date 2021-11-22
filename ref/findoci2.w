@@ -16,8 +16,8 @@ DEFINE TEMP-TABLE tt0-payment NO-UNDO LIKE payment.
 DEFINE BUFFER X_clients-host FOR clients.
 DEFINE BUFFER X_firm FOR firm.
 DEFINE BUFFER X_sysconf FOR sysconf.
-
-
+define buffer bf_fin-doc-attr for ub.fin-doc-attr .
+define buffer buf_clients-attr for ub.clients-attr .
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
@@ -1857,7 +1857,20 @@ then
    run update_prc-doc-code-mask(yes).
 &scop prfx tt-fin-doc.
 
-
+   find first buf_clients-attr no-lock where buf_clients-attr.attr-code = {&attr-is-inkassator} and 
+      buf_clients-attr.obj-code = tt-fin-doc.receiver-code and
+      buf_clients-attr.obj-code = tt-fin-doc.receiver-code no-error .
+   if available (buf_clients-attr) then 
+   do:
+      find first bf_fin-doc-attr exclusive-lock where bf_fin-doc-attr.attr-code = "pre-vedom" and bf_fin-doc-attr.host-code = p-host-code
+         and bf_fin-doc-attr.fin-doc-code = tt-fin-doc.fin-doc-code and bf_fin-doc-attr.attr-value <> "" no-error . 
+      if not available (bf_fin-doc-attr) then 
+      do:
+         message "Для данного получателя нет № Препроводительной ведомости, сохранение невозможно" view-as alert-box error .
+         undo, return error .
+  end.                                                
+end.   
+  
 run ref/findoc0.p (
 input-output p-doc-rec
        ,input p-mode
