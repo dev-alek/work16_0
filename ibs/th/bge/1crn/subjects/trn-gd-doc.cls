@@ -686,7 +686,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("dnsty", string-mth ( buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty)).
           write-data-element ("cap", string-mth (buf_doc-pl.fact-qnty)).
           write-data-element ("wght", string-mth (buf_doc-pl.cli-fact-qnty)).
-          write-data-element ("excess-free", string(0)).
+/*          write-data-element ("excess-free", string(0)).  не понятно откуда */
         sw:end-element ("tank").
       end.
     end.
