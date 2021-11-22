@@ -32,7 +32,7 @@ define new shared temp-table dc-dis-card-mask-attr no-undo like ub.dis-card-mask
 { str/pdf-list.i pdf-list def "new shared" }
 { str/defc-pay-list.i "new shared" } /*не должен использоваться в load-rec.p*/
 { str/defc-ext-classif.i "new shared" } /*не должен использоваться в load-rec.p*/
-
+{ ref/extclass.i }
 procedure send-to-cash:
   if not can-find(first ub.cash-desk where
                   ub.cash-desk.db-num = ibs.th.gbl.gbl-var:g#db-num AND

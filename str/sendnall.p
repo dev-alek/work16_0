@@ -133,35 +133,7 @@ for each buf_clients no-lock
        AND buf_cash-desk.cash-on = yes
   on error undo, return error
   :
-for each ext-classif-list no-lock:
 
-   find first ext-classif where ext-classif.db-num = ext-classif-list.db-num and
-                                ext-classif.Key#_One = ext-classif-list.Key#One and
-                                ext-classif.Key#_Two = ext-classif-list.Key#Two and
-                                ext-classif.CharKey_One = ext-classif-list.CharKey_One and
-                                ext-classif.classif-subject = {&table_goods} and 
-                                ext-classif.classif-name = {&extclass_goods_esys}
-   no-lock no-error.
-   if available ext-classif
-   then vrec-cur = vrec-cur + "," + string(recid(ext-classif)).
-end.
-
-vrec-cur = trim(vrec-cur,",").
-
-   if  vrec-cur ne ""
-   then
-    run str/send-petrol.p (
-                    input parparentproc
-                   ,input p-parent-handle
-                   ,input p-log-handle
-                   ,input buf_clients.obj-code
-                   ,input buf_clients.obj-type
-                   ,input "U"
-                   ,input 0
-                  , input vrec-cur
-                  , input log-file-name
-                  , input-output v-view-log
-                  ) no-error .
 
 for each c-ext-classif-list no-lock:
 
@@ -199,6 +171,37 @@ end.
                   , input log-file-name
                   , input-output v-view-log
                   ) no-error .
+
+for each ext-classif-list no-lock:
+
+   find first ext-classif where ext-classif.db-num = ext-classif-list.db-num and
+                                ext-classif.Key#_One = ext-classif-list.Key#One and
+                                ext-classif.Key#_Two = ext-classif-list.Key#Two and
+                                ext-classif.CharKey_One = ext-classif-list.CharKey_One and
+                                ext-classif.classif-subject = {&table_goods} and 
+                                ext-classif.classif-name = {&extclass_goods_esys}
+   no-lock no-error.
+   if available ext-classif
+   then vrec-cur = vrec-cur + "," + string(recid(ext-classif)).
+end.
+
+vrec-cur = trim(vrec-cur,",").
+
+   if  vrec-cur ne ""
+   then
+    run str/send-petrol.p (
+                    input parparentproc
+                   ,input p-parent-handle
+                   ,input p-log-handle
+                   ,input buf_clients.obj-code
+                   ,input buf_clients.obj-type
+                   ,input "U"
+                   ,input 0
+                  , input vrec-cur
+                  , input log-file-name
+                  , input-output v-view-log
+                  ) no-error .
+                
 end.
 if can-find(first gds-list no-lock)
 or can-find(first gdsolist no-lock) then do:

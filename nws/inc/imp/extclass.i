@@ -30,6 +30,7 @@ if not compare-log then do:
       ,input tb-ext-classif.Key#_Two
       ,input tb-ext-classif.CharKey_One
       ).
-   end .
+   end.   
 end.
+/*end.*/
 /* $Workfile$ e n d */
