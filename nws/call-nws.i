@@ -416,6 +416,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,promo-schedule~
 ,marking~
 ,marking-attr~
+,code~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/

@@ -273,6 +273,7 @@ then do:
             v-mode = replace( v-param-value, {&delim-par}, ",":U )
           .
         end.
+        when "A":U then .
         otherwise do:
           message
             substitute("Неизвестный параметр сессии СПН: &1", v-param) skip

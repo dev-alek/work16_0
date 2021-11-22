@@ -1383,6 +1383,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_devisPC-attr}
             or when {&table_utd}
             or when {&table_marking-lines}
+            or when {&table_code}
             then do:
               run nws/del-rec.p
                 ( input v-key-rec

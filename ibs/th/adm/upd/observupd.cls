@@ -68,7 +68,7 @@ class ibs.th.adm.upd.observupd:
 
   define public variable pwd as character no-undo.
 
-  &scop NumWorkBase 24
+  &scop NumWorkBase 26
   define public property  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
             ,"cmp/18062801.df"
@@ -94,6 +94,8 @@ class ibs.th.adm.upd.observupd:
             ,"cmp/20060901.df"
             ,"cmp/20082501.df"
             ,"cmp/20111601.df"
+            ,"cmp/21070101.df"
+            ,"cmp/21070102.df"
             ] 
      get.
   define public property m-upd-list-chk      as character extent {&NumWorkBase} no-undo
@@ -121,6 +123,8 @@ class ibs.th.adm.upd.observupd:
             ,"Initial:db.reserve1-char=22"
             ,"TABLE:auto-section"
             ,"TABLE:xattr"
+            ,"TABLE:c-code"
+            ,"FIELD:code.nwsgbd"
             ] 
     get.
   define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 
@@ -162,7 +166,14 @@ class ibs.th.adm.upd.observupd:
        DbNum = buf_sys-ctrl.db-num. 
     
        find first buf_db no-lock where buf_db.db-num = DbNum no-error.
-       vVerStuct = integer (buf_db.reserve1-char) no-error.
+       if available buf_db
+       then do:
+          if buf_db.reserve1-char begins "updto:"
+          then 
+             vVerStuct = integer (substring(buf_db.reserve1-char,7)) no-error.
+          else
+             vVerStuct = integer (buf_db.reserve1-char) no-error.
+       end.
     end.
     find first _file no-lock where _file._file-name = "db"  no-error.
     if available _file
@@ -189,7 +200,14 @@ class ibs.th.adm.upd.observupd:
     END. */
    /* CurrDBShm = 8.*/
     find first buf_db no-lock where buf_db.db-num = 0 no-error.
-    CurrDB0Shm = integer (buf_db.reserve1-char) no-error.
+    if available buf_db
+    then do:
+       if buf_db.reserve1-char begins "updto:"
+       then 
+          CurrDB0Shm = integer (substring(buf_db.reserve1-char,7)) no-error.
+       else
+          CurrDB0Shm = integer (buf_db.reserve1-char) no-error.
+    end.
     pwd = {&paswordcur}.
     release buf_db.
     release buf_sys-ctrl.
@@ -224,7 +242,11 @@ class ibs.th.adm.upd.observupd:
         TempInt = 0.
         iDB = integer (entry (ii, inListDb, {&delim-nws} )) no-error.
         for each buf_db where buf_db.db-num = iDB and buf_db.db-num <> 0:
-          TempInt = integer (buf_db.reserve1-char) no-error.
+           if buf_db.reserve1-char begins "updto:"
+           then 
+              TempInt = integer (substring(buf_db.reserve1-char,7)) no-error.
+           else
+              TempInt = integer (buf_db.reserve1-char) no-error.
           if TempInt = ?
             then TempInt = 0.
           if TempInt = 1
@@ -337,10 +359,16 @@ class ibs.th.adm.upd.observupd:
                vProc  = entry(1,vStrChk,";")
                vParam = entry(2,vStrChk,";")
             no-error.
-            run value(vProc) (vParam, output vOk).
+            if SearchPFile (vProc) eq ?
+            then do:
+               Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Не найден файл '&2' . Работа с ней запрещена!",inShm,Vproc ).
+               IsErr = true.
+               return.
+            end.
+            run value(vProc) (vParam, output vOk) no-error.
             if not vOk
             then do:
-               Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Не прошла провека '&2' c параметрром '&3'. Работа с ней запрещена!",inShm,Vproc,vParam ).
+               Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Не прошла провека '&2' c параметрром '&3' . Работа с ней запрещена!",inShm,Vproc,vParam ).
                IsErr = true.
                return. 
             end.
@@ -356,7 +384,18 @@ class ibs.th.adm.upd.observupd:
              IsErr = true.
              return. 
            end.
-         end.  
+         end.
+         else if vSearch eq "SEQUENCE"
+         then do:
+            
+           find first _Sequence no-lock where _Sequence._Seq-Name = vStrChk  no-error.
+           if not available (_Sequence)
+           then do:
+             Msg = substitute ( "Обновление схемы БД до версии &1 завершилось неудачно. Отсутствует Sequence &2. Работа с ней запрещена!",inShm,vStrChk ).
+             IsErr = true.
+             return. 
+           end.
+         end.
          else if vSearch eq "FIELD"
          then do:
            find first _file no-lock where _file._file-name = entry(1,vStrChk,".")  no-error.
@@ -390,23 +429,25 @@ class ibs.th.adm.upd.observupd:
        if available buf_sys-ctrl 
        then do:
           find first buf_db exclusive-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
-/*          buf_db.reserve1-char = string (inShm).*/
+          buf_db.reserve1-char = "updto:" + string (inShm).
           CurrDBShm = inShm.
           buf_db.reserve2-char = "deferred-callnews".
           release buf_db.
           release buf_sys-ctrl.
+      /* так нельзя иначе обновление не идет дальше
           find first _file no-lock where _file._file-name = "db"  no-error.
           if available _file
           then do:
              find first _field of _file where _field._Field-Name =  "reserve1-char" no-lock no-error.
-             if available (_field)
+             if     available (_field)
+                and _field._initial ne string (inShm)
              then do:
                 find first _field of _file where _field._Field-Name =  "reserve1-char" exclusive-lock no-error.
                _field._initial = string (inShm).
                release _field.
              end.
              release _file.
-          end.
+          end. */
        end.
     end.
     CurrDBShm = inShm.
@@ -435,8 +476,6 @@ class ibs.th.adm.upd.observupd:
     return false.
     
   end.
-  /*
- 
-*/
+  {utl\search.i class}
 end class.
 

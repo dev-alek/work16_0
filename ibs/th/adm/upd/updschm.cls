@@ -380,10 +380,7 @@ class ibs.th.adm.upd.updschm:
           vproc  = entry(1,iparam,";")
           vparam = entry(2,iparam,";")
        no-error.
-       vproc = SearchPFile (vproc).
-       if vproc ne ?
-       then
-          runsession (vproc,vparam,yes).
+       runsession (vproc,vparam,yes).
     end.
     else do:
        
@@ -393,16 +390,6 @@ class ibs.th.adm.upd.updschm:
       then return.
   end method.
   
-  method private character  SearchPFile (input inFile as char):
-     define variable oFile as character no-undo.
-     inFile = entry(1,inFile,".").
-     oFile = search(inFile + ".r" ).
-     if oFile eq ?
-     then
-        oFile = search(inFile + ".p" ).
-     return oFile.
-     
-  end.
   method private void loaddf (input inFileDF as char):
     
     def var v-filedfname as character no-undo.
@@ -427,6 +414,17 @@ class ibs.th.adm.upd.updschm:
      then do:
          vParamStart = " -ininame "  + GetStartupParam("-ininame").
      end.
+     if SearchPFile (iProc) eq ?
+     then do:
+        Msg = substitute ( "Не найден файл &1 !", iProc).
+        message msg
+        view-as alert-box.
+        IsErr = true.
+        return.
+     end.
+     else
+        iProc = SearchPFile (iProc).
+       
      if iproc eq loadDFprocFile and isRcode
      then 
         vParamStart = vParamStart + " -rx " .
@@ -434,6 +432,7 @@ class ibs.th.adm.upd.updschm:
      if isRcode
      then v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
      else v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
+     
     os-command silent value (v-cmd-comm).
   end method.
    
@@ -459,4 +458,5 @@ class ibs.th.adm.upd.updschm:
    end.
    return vList.
    end method.  
+   {utl\search.i class}
 end class.

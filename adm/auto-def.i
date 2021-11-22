@@ -22,8 +22,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 &if defined(auto-def_i) = 0 &then
 
-{ cmp/str-glbl.i }
-{ gbl/cur-time.i }
 
 define {1} shared variable g#auto-pid           as integer   no-undo .
 define {1} shared variable conn-par             as character no-undo .
@@ -39,6 +37,9 @@ define {1} shared variable log-file-name     as character no-undo initial ? .
 define {1} shared variable add-log-file-name as character no-undo initial ? .
 
 define stream LogStream .
+&if defined (defonly) eq 0 &then
+{ cmp/str-glbl.i }
+{ gbl/cur-time.i }
 
 procedure write-to-log :
 
@@ -226,7 +227,7 @@ PROCEDURE send-msg-to-email :
   end.*/
 
 end procedure. /* send-msg-to-email */
-
+&endif
 &endif
 
 /* $Workfile$ e n d */

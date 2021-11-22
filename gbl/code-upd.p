@@ -29,7 +29,8 @@ then do:
    find first buf_db no-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
    define variable updschmObj      as class ibs.th.adm.upd.updschm no-undo.
    updschmObj = new ibs.th.adm.upd.updschm ().
-   if updschmObj:CurrDBShm ne int(buf_db.reserve1-char)
+   if     buf_db.reserve1-char begins "updto:"
+       or updschmObj:CurrDBShm ne int(buf_db.reserve1-char)
    then do trans:
       find first buf_db exclusive-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
       buf_db.reserve1-char = string(updschmObj:CurrDBShm). 
@@ -57,6 +58,7 @@ mdbver = int(mtxt) no-error.
 if mdbver_old eq ?
 then
    mdbver_old = 0.
+ find first code  where  ub.Code.parent = "" and ub.Code.code = "okei-kkt" no-error.
 
 vimport= new ibs.th.bge.xmlimpexp().
 block-upd:
@@ -83,7 +85,7 @@ do mdbver = mdbver_old + 1 to 999999999:
       vimport:updatetablefordb() no-error.
       if error-status:error
       then
-         return error return-value.
+         return error return-value + " " + error-status:get-message(1).
       vimport:xmldom-clear().
    end.
    else
@@ -121,7 +123,7 @@ then do:
    vimport:updatetablefordb() no-error.
    if error-status:error
    then
-      return error return-value.
+      return error return-value  + " " + error-status:get-message(1).
    else 
       run db-attr-write in this-procedure ( input ibs.th.gbl.gbl-var:g#db-num
                                           , input {&attr-ver-code}

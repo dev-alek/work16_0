@@ -763,8 +763,8 @@ method private logical CheckOneTable(iTable as  handle):
                   .
                
                
-               if     not can-do("_mode,_name,_table,_localindex,_NewName",vFieldName)
-                  and vField:buffer-value ne "" 
+               if     (not can-do("_mode,_name,_table,_localindex,_NewName",vFieldName)
+                  and vField:buffer-value ne "")
                then do vj = 1 to if vField:buffer-value eq ? then 1 else num-entries(vField:buffer-value,{&delim-par}):
                   define variable vValuedb as character no-undo.
                   vFieldValue = replace(trim(vField:buffer-value," "),'"','').

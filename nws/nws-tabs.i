@@ -815,8 +815,9 @@ abc-analysis~
 ,c-goods-attr-any~
 ,c-promo-head~
 ,code~
-,devisPC~
-,devisPC-attr~
+,c-code~
+,devisPc~
+,devisPc-attr~
 ,utd~
 ,c-utd-head~
 ,c-utd~
