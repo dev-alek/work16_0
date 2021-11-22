@@ -24,10 +24,12 @@ else do:
 end.
 if not compare-log then do:
   buffer-copy wt-ext-classif TO tb-ext-classif.
+   if wt-ext-classif.classif-subject = "goods" and wt-ext-classif.classif-name = "exp-esys-gds-code" then do:
    run fill-ext-classif in p-imp-handle (input tb-ext-classif.db-num
       ,input tb-ext-classif.Key#_One
       ,input tb-ext-classif.Key#_Two
       ,input tb-ext-classif.CharKey_One
       ).
+   end .
 end.
 /* $Workfile$ e n d */

@@ -4101,6 +4101,51 @@ procedure m-pay-type-exe :
 
 end procedure. /* m-pay-type-exe */
 
+procedure m-rvd-reason-exe :
+
+  define variable rid#             as character no-undo .
+  define variable v-value    as character no-undo .
+  define variable v-type     as character no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
+    
+    if v-value = "no"
+    then do:
+      if v-cntxt-db-num = 0
+      then do:
+        run ref/rvd-reason.w
+          (input  parparentproc
+          ,input  'b-add,b-upd,b-del'
+          ,input {&all}
+          ,input -1
+          ,output rid#
+          ) .
+      end.
+      else do:
+        run ref/rvd-reason.w
+          (input  parparentproc
+          ,input  ''
+          ,input {&all}
+          ,input -1
+          ,output  rid#
+          ) .
+      end.
+    end .
+    else do :
+      run ref/rvd-reason.w
+        (input  parparentproc
+        ,input  ''
+        ,input {&all}
+        ,input -1
+        ,output  rid#
+        ) .
+    end .
+  end.
+
+end procedure.
 procedure m-cashpay-exe :
 
   define variable ri-list          as character no-undo .

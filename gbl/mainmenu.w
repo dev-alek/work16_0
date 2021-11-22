@@ -66,6 +66,7 @@ define variable vss-description as character no-undo init "Главное окно IBS Trad
 { gbl/godendo.i  }
 { gbl/mainproc.i def }
 { gbl/db-attr.i  }
+{ str/placelib.i }
 
 &scoped-define open-mark   chr(187)
 &scoped-define close-mark   chr(171)
@@ -5369,6 +5370,8 @@ define output parameter p-cur-date-error-code   as integer          no-undo.
                 fi-obj-date:visible      = yes
                 b-show-date:visible      = yes
             .
+            
+            run proc-check-RVD in this-procedure .
         end.
 
         run proc-fi-close-date in this-procedure
@@ -6419,6 +6422,75 @@ PROCEDURE menu-item-open-in-multiedit :
   end.
 
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-check-RVD C-Win
+procedure proc-check-RVD :
+  define buffer buf_place for ub.place .
+  define buffer buf_place-attr for ub.place-attr .
+  define buffer buf_clients-attr for ub.clients-attr .
+  define buffer buf_pl-gds for ub.pl-gds .
+  define buffer buf_goods for ub.goods .
+  define buffer buf_place-attr2 for ub.place-attr .
+  
+  define variable v-message as character no-undo .
+  define variable v-attr-value as character no-undo .
+  define variable v-attr-type as character no-undo .
+  
+  if v-cntxt-db-num = 0 then return .
+  
+  find first buf_place-attr no-lock where buf_place-attr.obj-type = v-cntxt-obj-type
+                                      and buf_place-attr.obj-code = v-cntxt-obj-code
+                                      and buf_place-attr.attr-code = {&place-need-RVD-rvs}
+                                      and logical(buf_place-attr.attr-value) = yes 
+                                      no-error .
+  if available buf_place-attr
+  then do :
+    v-message = "Установлено разрешение РВД. Необходимо выполнить ручные замеры параметров НП и внести их в документ сверки. Резервуары и параметры, требующие ручных замеров:" + {&new-line} .
+    for each buf_place-attr no-lock where buf_place-attr.obj-type = v-cntxt-obj-type
+                                      and buf_place-attr.obj-code = v-cntxt-obj-code
+                                      and buf_place-attr.attr-code = {&place-need-RVD-rvs}
+                                      and logical(buf_place-attr.attr-value) = yes,
+    first buf_place no-lock where buf_place.obj-type = v-cntxt-obj-type
+                              and buf_place.obj-code = v-cntxt-obj-code
+                              and buf_place.pl-code = buf_place-attr.pl-code,
+    first buf_pl-gds no-lock where buf_pl-gds.obj-type = v-cntxt-obj-type
+                               and buf_pl-gds.obj-code = v-cntxt-obj-code
+                               and buf_pl-gds.pl-code = buf_place.pl-code,
+    first buf_goods no-lock where buf_goods.gds-code = buf_pl-gds.gds-code 
+    :
+      v-message = v-message + " Резервуар " + buf_place.loc1 + " код " + string(buf_place.pl-code) + " " + buf_place.pl-name + " с " + buf_goods.gds-name + {&new-line} .
+      for first buf_place-attr2 no-lock where buf_place-attr2.obj-type = v-cntxt-obj-type
+                                          and buf_place-attr2.obj-code = v-cntxt-obj-code
+                                          and buf_place-attr2.pl-code  = buf_place.pl-code
+                                          and buf_place-attr2.attr-code = {&place-rvd-dnsty}
+                                          and logical(buf_place-attr2.attr-value) = yes 
+                                          :
+        v-message = v-message + "   - Плотность" + {&new-line} .
+      end .
+      for first buf_place-attr2 no-lock where buf_place-attr2.obj-type = v-cntxt-obj-type
+                                          and buf_place-attr2.obj-code = v-cntxt-obj-code
+                                          and buf_place-attr2.pl-code  = buf_place.pl-code
+                                          and buf_place-attr2.attr-code = {&place-rvd-tmp}
+                                          and logical(buf_place-attr2.attr-value) = yes 
+                                          :
+        v-message = v-message + "   - Температура" + {&new-line} .
+      end .
+      for first buf_place-attr2 no-lock where buf_place-attr2.obj-type = v-cntxt-obj-type
+                                          and buf_place-attr2.obj-code = v-cntxt-obj-code
+                                          and buf_place-attr2.pl-code  = buf_place.pl-code
+                                          and buf_place-attr2.attr-code = {&place-rvd-lvl}
+                                          and logical(buf_place-attr2.attr-value) = yes 
+                                          :
+        v-message = v-message + "   - Уровень" + {&new-line} .
+      end .
+    end .
+    message v-message view-as alert-box title "Внимание!" .                           
+  end . 
+  
+end procedure .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

@@ -40,8 +40,9 @@ Creation date: 12/22/11
 &global-define place-temp-coef    "place-temp-coef"                    /*Температурный коэффициент линейного расширения материала стенки резервуара,*/
 &global-define disable-water-alarm   "disable-water-alarm" /*Отключить сообщения по воде*/
 &global-define disable-level-alarm   "disable-level-alarm" /*Отключить сообщения по уровню*/
+&global-define place-need-RVD-rvs "place-need-RVD-rvs" /* Необходимо сделать сверку с РВД */
 
-&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm':u /*список атрибутов резервуара*/
+&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm,place-need-RVD-rvs':u /*список атрибутов резервуара*/
 
 
 procedure placelib_write-attr:

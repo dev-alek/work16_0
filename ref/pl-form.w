@@ -57,12 +57,23 @@ define variable vss-description as character no-undo init "Карточка складского м
 { cmp/showinf.i }
 { str/placelib.i }
 
-
-define variable v-tab-order AS CHARACTER NO-UNDO.
-define variable v-code      as character no-undo.
-define variable v-value     as character no-undo.
-define variable v-ok        as logical   no-undo.
-define variable ii          as integer   no-undo .
+define variable v-tab-order       as CHARACTER no-undo .
+define variable v-code            as character no-undo .
+define variable v-value           as character no-undo .
+define variable v-ok              as logical   no-undo .
+define variable ii                as integer   no-undo .
+define variable v-rvd-on          as logical   no-undo init no .
+define variable v-rvd-off         as logical   no-undo init no .
+define variable v-rvd-dnsty-on    as logical   no-undo .
+define variable v-rvd-lvl-on      as logical   no-undo .
+define variable v-rvd-temp-on     as logical   no-undo .
+define variable v-rvd-is-meas-on  as logical   no-undo .
+define variable v-rvd-reason-on   as character no-undo .
+define variable v-ITSM-num-on     as character no-undo .
+define variable v-oper-fio-on     as character no-undo .
+define variable v-rvd-reason-off  as character no-undo .
+define variable v-ITSM-num-off    as character no-undo .
+define variable v-oper-fio-off    as character no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -478,6 +489,7 @@ DO:
     rvd-dnstv
     rvd-lvl
     rvd-tmp
+    place-si
   .
 if input frame {&frame-name} dens-prov <> dens-prov then 
 do:
@@ -616,104 +628,104 @@ do:
 end.
 else 
 do :
+  find first ub.place no-lock where recid(ub.place) = p-rep-rec .
   ii = 0.
   do ii = 1 to num-entries({&list-place-attr},','):
     v-code = entry(ii,{&list-place-attr}) .
-      case v-code :
-          when {&place-type} then 
-              do :
-                  v-value = place-type:screen-value .
-              end.
-          when {&place-SI} then 
-              do :
-                  v-value = place-si:screen-value .
-              end.
-          when {&place-diameter} then 
-              do :
-                  v-value =  place-diameter:screen-value.
-              end.
-          when {&dead-balance} then 
-              do :
-                  v-value =  dead-balance:screen-value.
-              end.
-          when {&water-level} then 
-              do :
-                  v-value =  water-level:screen-value.
-              end.    
+    case v-code :
+        when {&place-type} then 
+            do :
+                v-value = place-type:screen-value .
+            end.
+        when {&place-SI} then 
+            do :
+                v-value = place-si:screen-value .
+            end.
+        when {&place-diameter} then 
+            do :
+                v-value =  place-diameter:screen-value.
+            end.
+        when {&dead-balance} then 
+            do :
+                v-value =  dead-balance:screen-value.
+            end.
+        when {&water-level} then 
+            do :
+                v-value =  water-level:screen-value.
+            end.    
 /*          when {&place-ratio-error} then                    */
 /*              do :                                          */
 /*                  v-value = place-ratio-error:screen-value .*/
 /*              end.                                          */
-          when {&place-dens-prov} then 
-              do :
-                  v-value = dens-prov:screen-value .
-              end.
-          when {&place-virtual} then 
-              do :
-                  v-value = t-place-virtual:screen-value .
-              end.
-          when {&place-twice-code} then 
-              do: 
-                  v-value = place-twice-code:screen-value .
-              end.
+        when {&place-dens-prov} then 
+            do :
+                v-value = dens-prov:screen-value .
+            end.
+        when {&place-virtual} then 
+            do :
+                v-value = t-place-virtual:screen-value .
+            end.
+        when {&place-twice-code} then 
+            do: 
+                v-value = place-twice-code:screen-value .
+            end.
 /*          when {&place-sert-urov} then                */
 /*              do:                                     */
 /*                  v-value = t-sert-urov:screen-value .*/
 /*              end.                                    */
-          when {&place-error-mass} then 
-              do: 
-                  v-value = error-mass:screen-value .
-              end.
-          when {&place-local} then 
-              do: 
-                  v-value = place-locat:screen-value .
-              end.
-          when {&place-asi-sertif} then 
-              do: 
-                  v-value = t-asi-srtif:screen-value .
-              end.       
-          when {&place-rvd-dnsty} then 
-              do: 
-                  v-value = rvd-dnstv:screen-value .
-              end.       
-          when {&place-rvd-lvl} then 
-              do: 
-                  v-value = rvd-lvl:screen-value .
-              end.       
-          when {&place-rvd-tmp} then 
-              do: 
-                  v-value = rvd-tmp:screen-value .
-              end.       
-          when {&place-SI-dens} then 
-              do: 
-                  v-value = place-si-dens:screen-value .
-              end.
-          when {&place-SI-temp} then 
-              do: 
-                  v-value = place-si-temp:screen-value .
-              end.
-          when {&place-SI-level} then 
-              do: 
-                  v-value = place-si-level:screen-value .
-              end.
-          when {&place-passp-num} then 
-              do: 
-                  v-value = place-passp-num:screen-value .
-              end.
-          when {&place-passp-type} then 
-              do: 
-                  v-value = place-passp-type:screen-value .
-              end. 
-          when {&place-dead-high} then 
-              do: 
-                  v-value = place-dead-high:screen-value .
-              end.
-          when {&place-temp-coef} then 
-              do: 
-                  v-value = place-temp-coef:screen-value .
-              end.                                                
-      end case.
-    find first ub.place no-lock where recid(ub.place) = p-rep-rec .
+        when {&place-error-mass} then 
+            do: 
+                v-value = error-mass:screen-value .
+            end.
+        when {&place-local} then 
+            do: 
+                v-value = place-locat:screen-value .
+            end.
+        when {&place-asi-sertif} then 
+            do: 
+                v-value = t-asi-srtif:screen-value .
+            end.       
+        when {&place-rvd-dnsty} then 
+            do: 
+                v-value = rvd-dnstv:screen-value .
+            end.       
+        when {&place-rvd-lvl} then 
+            do: 
+                v-value = rvd-lvl:screen-value .
+            end.       
+        when {&place-rvd-tmp} then 
+            do: 
+                v-value = rvd-tmp:screen-value .
+            end.       
+        when {&place-SI-dens} then 
+            do: 
+                v-value = place-si-dens:screen-value .
+            end.
+        when {&place-SI-temp} then 
+            do: 
+                v-value = place-si-temp:screen-value .
+            end.
+        when {&place-SI-level} then 
+            do: 
+                v-value = place-si-level:screen-value .
+            end.
+        when {&place-passp-num} then 
+            do: 
+                v-value = place-passp-num:screen-value .
+            end.
+        when {&place-passp-type} then 
+            do: 
+                v-value = place-passp-type:screen-value .
+            end. 
+        when {&place-dead-high} then 
+            do: 
+                v-value = place-dead-high:screen-value .
+            end.
+        when {&place-temp-coef} then 
+            do: 
+                v-value = place-temp-coef:screen-value .
+            end.                                                
+    end case.
     run placelib_write-attr  (input v-code
       ,input p-obj-code
       ,input p-obj-type
@@ -722,7 +734,168 @@ do :
       ,output v-ok      ) no-error.
 
   end.
-  end.
+
+  define variable v-rvd-params-on as character no-undo .
+  define variable v-rvd-params-off as character no-undo .
+  define variable v-shift-num as integer no-undo .
+  define variable v-shift-date as date no-undo .
+  define buffer buf_shift-obj for ub.shift-obj .
+  
+  v-rvd-params-on = "" .
+  v-rvd-params-off = "" .
+  v-shift-num = 0 .
+  
+  if v-rvd-dnsty-on = rvd-dnstv
+  and v-rvd-lvl-on = rvd-lvl
+  and v-rvd-temp-on = rvd-tmp
+  and v-rvd-is-meas-on = tt-place.is-meas
+  then do :
+  end .
+  else do :
+    v-shift-date = ? .
+    for first buf_shift-obj
+        where buf_shift-obj.obj-type = p-obj-type
+          and buf_shift-obj.obj-code = p-obj-code
+          and buf_shift-obj.status_ = {&sht-current}
+        use-index stts :
+      assign
+        v-shift-date = buf_shift-obj.shift-date
+        v-shift-num  = buf_shift-obj.shift-num
+      .
+    end.
+    if v-shift-date = ? then v-shift-date = today .
+    if v-rvd-on
+    then do :
+      if v-rvd-dnsty-on <> rvd-dnstv
+      and rvd-dnstv = yes
+      then do :
+        v-rvd-params-on = "p" + "," .
+      end .
+      if v-rvd-temp-on <> rvd-tmp
+      and rvd-tmp = yes
+      then do :
+        v-rvd-params-on = v-rvd-params-on + "T" + "," .
+      end .
+      if v-rvd-lvl-on <> rvd-lvl
+      and rvd-lvl = yes
+      then do :
+        v-rvd-params-on = v-rvd-params-on + "l" + "," .
+      end .
+      if v-rvd-is-meas-on <> tt-place.is-meas
+      and tt-place.is-meas = no
+      then do :
+        v-rvd-params-on = v-rvd-params-on + "F" .
+      end .
+      v-rvd-params-on = trim(v-rvd-params-on, ",") .
+      v-rvd-params-on = trim(v-rvd-params-on) .
+      if v-rvd-params-on > ""
+      then do :
+        run trg/userlog.p (
+                input 'rvd-reasons'
+              , input ("Установка РВД на объекте " +
+                      p-obj-type + string(p-obj-code) +
+                      " рез. " + string(p-pl-code) + ": " +
+                      v-rvd-params-on + ";" + 
+                      "yes" + ";" +
+                      v-rvd-reason-on + ";" +
+                      v-ITSM-num-on + ";" +
+                      v-oper-fio-on +
+                      {&delim-key} +
+                      p-obj-type + {&delim-cmd} +
+                      string(p-obj-code) + {&delim-cmd} +
+                      string(v-shift-date) + {&delim-cmd} +
+                      string(v-shift-num) + {&delim-cmd} +
+                      string(p-pl-code) + {&delim-cmd} +
+                      v-rvd-params-on + {&delim-cmd} + 
+                      "yes" + {&delim-cmd} +
+                      v-rvd-reason-on + {&delim-cmd} +
+                      v-ITSM-num-on + {&delim-cmd} +
+                      v-oper-fio-on + {&delim-cmd} +
+                      string(rvd-tmp) + {&delim-cmd} +
+                      string(rvd-dnstv) + {&delim-cmd} +
+                      string(rvd-lvl) + {&delim-cmd} +
+                      string(tt-place.is-meas)  )
+              , input ?
+              , input ?
+              , input ""
+              ) no-error.
+        if error-status :error
+        then do:
+            message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+        end.
+           
+        run placelib_write-attr  (input {&place-need-RVD-rvs}
+                                  ,input p-obj-code
+                                  ,input p-obj-type
+                                  ,input ub.place.pl-code
+                                  ,input string(yes)
+                                  ,output v-ok      ) no-error.   
+                
+      end .
+    end .
+    if v-rvd-off
+    then do :
+      if v-rvd-dnsty-on <> rvd-dnstv
+      and rvd-dnstv = no
+      then do :
+        v-rvd-params-off = "p" + "," .
+      end .
+      if v-rvd-temp-on <> rvd-tmp
+      and rvd-tmp = no
+      then do :
+        v-rvd-params-off = v-rvd-params-off + "T" + "," .
+      end .
+      if v-rvd-lvl-on <> rvd-lvl
+      and rvd-lvl = no
+      then do :
+        v-rvd-params-off = v-rvd-params-off + "l" + "," .
+      end .
+      if v-rvd-is-meas-on <> tt-place.is-meas
+      and tt-place.is-meas = yes
+      then do :
+        v-rvd-params-off = v-rvd-params-off + "F" .
+      end .
+      v-rvd-params-off = trim(v-rvd-params-off, ",") .
+      v-rvd-params-off = trim(v-rvd-params-off) .
+      if v-rvd-params-off > ""
+      then do :
+        run trg/userlog.p (
+                input 'rvd-reasons'
+              , input ("Снятие РВД на объекте " +
+                      p-obj-type + string(p-obj-code) +
+                      " рез. " + string(p-pl-code) + ": " +
+                      v-rvd-params-off + ";" + 
+                      "no" + ";" +
+                      v-rvd-reason-off + ";" +
+                      v-ITSM-num-off + ";" +
+                      v-oper-fio-off +
+                      {&delim-key} +
+                      p-obj-type + {&delim-cmd} +
+                      string(p-obj-code) + {&delim-cmd} +
+                      string(v-shift-date) + {&delim-cmd} +
+                      string(v-shift-num) + {&delim-cmd} +
+                      string(p-pl-code) + {&delim-cmd} +
+                      v-rvd-params-off + {&delim-cmd} + 
+                      "no" + {&delim-cmd} +
+                      v-rvd-reason-off + {&delim-cmd} +
+                      v-ITSM-num-off + {&delim-cmd} +
+                      v-oper-fio-off + {&delim-cmd} +
+                      string(rvd-tmp) + {&delim-cmd} +
+                      string(rvd-dnstv) + {&delim-cmd} +
+                      string(rvd-lvl) + {&delim-cmd} +
+                      string(tt-place.is-meas)  )
+              , input ?
+              , input ?
+              , input ""
+              ) no-error.
+        if error-status :error
+        then do:
+            message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+        end.
+      end .
+    end .
+  end .  
+end.
 if AVAILABLE (ub.place) then 
 do:
 { gbl/rum-runa.i
@@ -747,7 +920,7 @@ do:
     return no-apply .
 
   end.
-end.
+end.  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -785,8 +958,12 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit d-pl-form
 ON CHOOSE OF b-quit IN FRAME d-pl-form /* Отмена */
 DO:
-    p-rep-rec = ?.
-  END.
+  define variable vlog as logical no-undo .
+  message "Все введенные данные будут утеряны. Вы уверены, что хо-тите отказаться от внесенных изменений?"
+  view-as alert-box question buttons yes-no update vlog .
+  if not vlog then return no-apply .
+  p-rep-rec = ?.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -844,10 +1021,60 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rvd-dnstv d-pl-form
 ON VALUE-CHANGED OF rvd-dnstv IN FRAME d-pl-form /* Измеряется приборами */
 DO:
+  define variable vlog as logical no-undo .
+  
   if rvd-dnstv:screen-value = "yes" then do:
+    if not v-rvd-on
+    and not v-rvd-dnsty-on
+    then do :
+      message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
+      view-as alert-box question buttons ok-cancel update vlog .
+      if not vlog
+      then do :
+        rvd-dnstv:screen-value = "no" .
+        return no-apply .
+      end .
+      v-rvd-reason-on = ? .
+      run ref/rvd-reasons.w (input parparentproc,
+                             input 0, /* РГС */
+                             output v-rvd-reason-on,
+                             output v-ITSM-num-on,
+                             output v-oper-fio-on)
+                             .
+      if v-rvd-reason-on = ?
+      then do :
+        rvd-dnstv:screen-value = "no" .
+        return no-apply .
+      end . 
+      v-rvd-on = yes .                     
+    end .
     enable place-si-dens r-sr-izm-dens with frame {&frame-name} .
   end.  
   else do:
+    if not v-rvd-off
+    and v-rvd-dnsty-on
+    then do :
+      message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
+      view-as alert-box question buttons ok-cancel update vlog .
+      if not vlog 
+      then do :
+        rvd-dnstv:screen-value = "yes" .
+        return no-apply .
+      end .
+      v-rvd-reason-off = ? .
+      run ref/rvd-reasons.w (input parparentproc,
+                             input 0, /* РГС */
+                             output v-rvd-reason-off,
+                             output v-ITSM-num-off,
+                             output v-oper-fio-off)
+                             .
+      if v-rvd-reason-off = ?
+      then do :
+        rvd-dnstv:screen-value = "yes" .
+        return no-apply .
+      end .
+      v-rvd-off = yes .
+    end .
     disable place-si-dens r-sr-izm-dens with frame {&frame-name} .
   end.  
 END.
@@ -859,10 +1086,60 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rvd-lvl d-pl-form
 ON VALUE-CHANGED OF rvd-lvl IN FRAME d-pl-form /* Измеряется приборами */
 DO:
+  define variable vlog as logical no-undo .
+  
   if rvd-lvl:screen-value = "yes" then do:
+    if not v-rvd-on
+    and not v-rvd-lvl-on
+    then do :
+      message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
+      view-as alert-box question buttons ok-cancel update vlog .
+      if not vlog
+      then do :
+        rvd-lvl:screen-value = "no" .
+        return no-apply .
+      end .
+      v-rvd-reason-on = ? .
+      run ref/rvd-reasons.w (input parparentproc,
+                             input 0, /* РГС */
+                             output v-rvd-reason-on,
+                             output v-ITSM-num-on,
+                             output v-oper-fio-on)
+                             .
+      if v-rvd-reason-on = ?
+      then do :
+        rvd-lvl:screen-value = "no" .
+        return no-apply .
+      end . 
+      v-rvd-on = yes .                     
+    end .
     enable place-si-level r-sr-izm-level with frame {&frame-name} .
   end.  
   else do:
+    if not v-rvd-off
+    and v-rvd-lvl-on
+    then do :
+      message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
+      view-as alert-box question buttons ok-cancel update vlog .
+      if not vlog
+      then do :
+        rvd-lvl:screen-value = "yes" .
+        return no-apply .
+      end .
+      v-rvd-reason-off = ? .
+      run ref/rvd-reasons.w (input parparentproc,
+                             input 0, /* РГС */
+                             output v-rvd-reason-off,
+                             output v-ITSM-num-off,
+                             output v-oper-fio-off)
+                             .
+      if v-rvd-reason-off = ?
+      then do :
+        rvd-lvl:screen-value = "yes" .
+        return no-apply .
+      end .
+      v-rvd-off = yes .
+    end .
     disable place-si-level r-sr-izm-level with frame {&frame-name} .
   end.  
 END.
@@ -874,10 +1151,60 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rvd-tmp d-pl-form
 ON VALUE-CHANGED OF rvd-tmp IN FRAME d-pl-form /* Измеряется приборами */
 DO:
+  define variable vlog as logical no-undo .
+  
   if rvd-tmp:screen-value = "yes" then do:
+    if not v-rvd-on
+    and not v-rvd-temp-on
+    then do :
+      message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
+      view-as alert-box question buttons ok-cancel update vlog .
+      if not vlog 
+      then do :
+        rvd-tmp:screen-value = "no" .
+        return no-apply .
+      end .
+      v-rvd-reason-on = ? .
+      run ref/rvd-reasons.w (input parparentproc,
+                             input 0, /* РГС */
+                             output v-rvd-reason-on,
+                             output v-ITSM-num-on,
+                             output v-oper-fio-on)
+                             .
+      if v-rvd-reason-on = ?
+      then do :
+        rvd-tmp:screen-value = "no" .
+        return no-apply .
+      end .        
+      v-rvd-on = yes .              
+    end .
     enable place-si-temp r-sr-izm-temp with frame {&frame-name} .
   end.  
   else do:
+    if not v-rvd-off
+    and v-rvd-temp-on
+    then do :
+      message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
+      view-as alert-box question buttons ok-cancel update vlog .
+      if not vlog
+      then do :
+        rvd-tmp:screen-value = "yes" .
+        return no-apply .
+      end .
+      v-rvd-reason-off = ? .
+      run ref/rvd-reasons.w (input parparentproc,
+                             input 0, /* РГС */
+                             output v-rvd-reason-off,
+                             output v-ITSM-num-off,
+                             output v-oper-fio-off)
+                             .
+      if v-rvd-reason-off = ?
+      then do :
+        rvd-tmp:screen-value = "yes" .
+        return no-apply .
+      end .
+      v-rvd-off = yes .
+    end .
     disable place-si-temp r-sr-izm-temp with frame {&frame-name} .
   end.  
 END.
@@ -889,10 +1216,60 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-place.is-meas d-pl-form
 ON VALUE-CHANGED OF tt-place.is-meas IN FRAME d-pl-form /* Измеряется приборами */
 DO:
+  define variable vlog as logical no-undo .
+  
   if tt-place.is-meas:screen-value = "yes" then do:
+    if not v-rvd-off
+    and not v-rvd-is-meas-on
+    then do :
+      message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
+      view-as alert-box question buttons ok-cancel update vlog .
+      if not vlog 
+      then do :
+        tt-place.is-meas:screen-value = "no" .
+        return no-apply .
+      end .
+      v-rvd-reason-off = ? .
+      run ref/rvd-reasons.w (input parparentproc,
+                             input 0, /* РГС */
+                             output v-rvd-reason-off,
+                             output v-ITSM-num-off,
+                             output v-oper-fio-off)
+                             .
+      if v-rvd-reason-off = ?
+      then do :
+        tt-place.is-meas:screen-value = "no" .
+        return no-apply .
+      end .
+      v-rvd-off = yes .
+    end .
     enable t-asi-srtif with frame {&frame-name} .
   end.  
   else do:
+    if not v-rvd-on
+    and v-rvd-is-meas-on
+    then do :
+      message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
+      view-as alert-box question buttons ok-cancel update vlog .
+      if not vlog
+      then do :
+        tt-place.is-meas:screen-value = "yes" .
+        return no-apply .
+      end .
+      v-rvd-reason-on = ? .
+      run ref/rvd-reasons.w (input parparentproc,
+                             input 0, /* РГС */
+                             output v-rvd-reason-on,
+                             output v-ITSM-num-on,
+                             output v-oper-fio-on)
+                             .
+      if v-rvd-reason-on = ?
+      then do :
+        tt-place.is-meas:screen-value = "yes" .
+        return no-apply .
+      end . 
+      v-rvd-on = yes .                     
+    end .
     disable t-asi-srtif with frame {&frame-name} .
   end.  
 END.
@@ -1080,6 +1457,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   do:
     buffer-copy locked_place to tt-place.
   end.
+  v-rvd-is-meas-on = tt-place.is-meas .
   if p-mode <> {&lookup} then 
   do :
     if ( tt-place.max-qnty = 0
@@ -1155,16 +1533,29 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         if v-ok then error-mass = decimal(v-value) . 
       end.  
       when {&place-asi-sertif} then do :
+        if v-value = "" then v-value = "no" .
         if v-ok then t-asi-srtif = logical(v-value) .
       end.              
       when {&place-rvd-dnsty} then do :
-        if v-ok then rvd-dnstv = logical(v-value) .
+        if v-ok
+        then do :
+          rvd-dnstv = logical(v-value) .
+          v-rvd-dnsty-on = rvd-dnstv .
+        end .
       end.
       when {&place-rvd-lvl} then do :
-        if v-ok then rvd-lvl = logical(v-value) .
+        if v-ok
+        then do :
+          rvd-lvl = logical(v-value) .
+          v-rvd-lvl-on = rvd-lvl .
+        end.
       end.        
       when {&place-rvd-tmp} then do :
-        if v-ok then rvd-tmp = logical(v-value) .
+        if v-ok
+        then do :
+          rvd-tmp = logical(v-value) .
+          v-rvd-temp-on = rvd-tmp .
+        end .
       end.  
       when {&place-SI-dens} then do :
         if v-ok then place-si-dens = integer(v-value) .

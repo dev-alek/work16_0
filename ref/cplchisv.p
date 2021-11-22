@@ -333,6 +333,9 @@ function  getPlaceAttrCode returns character (istr as char ):
    else if istr eq "disable-water-alarm"
    then
       OStr = "Сообщения по воде".
+   else if istr eq "place-need-RVD-rvs"
+   then
+      OStr = "Необходимо сделать сверку с РВД".
    else
       OStr = istr.
    return OStr.

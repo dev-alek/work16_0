@@ -2025,6 +2025,31 @@ define buffer buf_doc-pl-attr for doc-pl-attr .
           rvs-line-attr.attr-value = string(abs-delta-mass-qnty)
           .
   end.
+  find first rvs-line-attr exclusive-lock
+      where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+      and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+      and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+      and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+      and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+      and rvs-line-attr.attr-code = "hand-save" no-error.
+  if available rvs-line-attr then
+  do :
+      rvs-line-attr.attr-value = string(yes)  .
+  end.
+  else
+  do :
+      create rvs-line-attr.
+      assign
+          rvs-line-attr.obj-code   = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type   = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code   = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code    = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code   = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code  = "hand-save"
+          rvs-line-attr.attr-value = string(yes)
+          .
+  end.
+  
 /*  find first rvs-doc where rvs-doc.rvs-code = tt-rvs-line.rvs-code no-lock no-error.*/
       v-vid-action = 56 .
     v-vid-param = 

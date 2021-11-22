@@ -36,3 +36,27 @@ define variable vss-description as character no-undo init "Тригер изменение {&ma
   &nobufhist = yes
   
 }
+
+if not g#news
+and not g#esys
+and not (buffer new-{&main-tbl}:handle:buffer-compare (buffer old-{&main-tbl}:handle)) 
+then do:
+  if new-{&main-tbl}.head-table  = 'rvd-reasons':U
+  then do :
+    { gbl/rum-runa.i
+       ?
+       this-procedure:handle
+       ?
+       {&edoc-proc_event_user-action}
+       " buffer new-{&main-tbl}:handle "
+       ?
+       ''
+       ''
+       no-error
+    }
+    if error-status:error 
+    then do:
+      message return-value view-as alert-box.
+    end.
+  end .
+end .

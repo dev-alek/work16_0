@@ -208,6 +208,9 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable gds-seasonSubjectObj                  as class gds-season              no-undo.
   define variable impGds-SeasonEventHndlrObj            as class impgds-season           no-undo.
   
+  define variable Rvd-ReasonSubj                        as class rvd-reason              no-undo .
+  define variable impRvd-Reason                         as class imprvd-reason           no-undo .
+  
   define variable good             as logical   no-undo.
   define variable nameChildrenCurr as character no-undo.
   define variable iNum             as integer   no-undo. /* примерный счетчик элемента */
@@ -597,6 +600,17 @@ class ibs.th.bge.1crn.import.parsesub:
           end .
           v-iSubject = trn-fuel-doc-inSubjectObj .
           v-iImpSub  = imptrn-fuel-docEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "rvd-reason":U then do:
+          if not valid-object(Rvd-ReasonSubj)       then Rvd-ReasonSubj       = new rvd-reason(). // <promotion>
+          if not valid-object(impRvd-Reason) then do :
+            impRvd-Reason = new imprvd-reason ().
+          end .
+          v-iSubject = Rvd-ReasonSubj .
+          v-iImpSub  = impRvd-Reason .
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
