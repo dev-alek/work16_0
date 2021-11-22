@@ -42,6 +42,7 @@ and not g#esys
 and not (buffer new-{&main-tbl}:handle:buffer-compare (buffer old-{&main-tbl}:handle)) 
 then do:
   if new-{&main-tbl}.head-table  = 'rvd-reasons':U
+  or new-{&main-tbl}.head-table  = 'schedule':U
   then do :
     { gbl/rum-runa.i
        ?

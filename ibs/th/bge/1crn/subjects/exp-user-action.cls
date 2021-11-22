@@ -61,6 +61,7 @@ method public void CrContentToSW (insw as handle):
   define variable v-is-meas as logical no-undo .
   define variable v-ITSM-num as character no-undo .
   define variable v-operator as character no-undo .
+  define variable v-db-num-char as character no-undo .
   
   define buffer buf_user-account for ub.user-account .
 
@@ -130,7 +131,44 @@ method public void CrContentToSW (insw as handle):
             insw:end-element ("tank-action") .
           insw:end-element ("tank-actions") .
         insw:end-element ("user-action") .
-      end .
+      end . /* rvd-reasons */
+/*      when "schedule"                                                                                                               */
+/*      then do :                                                                                                                     */
+/*        v-shift-date = date(entry(3, c-user-log.head-table-key, {&delim-cmd})) .                                                    */
+/*        v-shift-num = integer(entry(4, c-user-log.head-table-key, {&delim-cmd})) .                                                  */
+/*        if num-entries(c-user-log.head-table-key, {&delim-cmd}) >= 16                                                               */
+/*        then                                                                                                                        */
+/*          v-db-num-char = entry(16, c-user-log.head-table-key, {&delim-cmd}) .                                                      */
+/*        else                                                                                                                        */
+/*          v-db-num-char = string(v-db-num) no-error .                                                                               */
+/*                                                                                                                                    */
+/*        insw:start-element ("user-action") .                                                                                        */
+/*          insw:write-data-element ("date", iso-date(datetime(c-user-log.corr-date, (c-user-log.corr-time * 1000 )))).               */
+/*          insw:write-data-element ("shift-date", iso-date(v-shift-date) ).                                                          */
+/*          insw:write-data-element ("shift-num", string(v-shift-num) ).                                                              */
+/*          insw:write-data-element ("usr-id", c-user-log.corr-user-name ).                                                           */
+/*          for first buf_user-account no-lock where buf_user-account.user-id = c-user-log.corr-user-name :                           */
+/*            insw:write-data-element ("usr-nik", buf_user-account.nik ) .                                                            */
+/*          end .                                                                                                                     */
+/*          insw:start-element ("schdl-actions") .                                                                                    */
+/*            insw:start-element ("schdl-action") .                                                                                   */
+/*              insw:write-data-element ("task-type", entry(5, c-user-log.head-table-key, {&delim-cmd}) ).                            */
+/*              insw:write-data-element ("schd-free-id", entry(6, c-user-log.head-table-key, {&delim-cmd}) ).                         */
+/*              insw:write-data-element ("task-num", entry(7, c-user-log.head-table-key, {&delim-cmd}) ).                             */
+/*              insw:write-data-element ("db-num", v-db-num-char ).                                                                   */
+/*              insw:write-data-element ("del-l", "0" ).                                                                              */
+/*              insw:write-data-element ("del-f", (if entry(15, c-user-log.head-table-key, {&delim-cmd}) = "del" then "1" else "0") ).*/
+/*              insw:write-data-element ("task-active", entry(8, c-user-log.head-table-key, {&delim-cmd}) ).                          */
+/*              insw:write-data-element ("task-year", entry(9, c-user-log.head-table-key, {&delim-cmd}) ).                            */
+/*              insw:write-data-element ("task-month", entry(10, c-user-log.head-table-key, {&delim-cmd}) ).                          */
+/*              insw:write-data-element ("task-day", entry(11, c-user-log.head-table-key, {&delim-cmd}) ).                            */
+/*              insw:write-data-element ("task-weekday", entry(12, c-user-log.head-table-key, {&delim-cmd}) ).                        */
+/*              insw:write-data-element ("task-hour", entry(13, c-user-log.head-table-key, {&delim-cmd}) ).                           */
+/*              insw:write-data-element ("task-minute", entry(14, c-user-log.head-table-key, {&delim-cmd}) ).                         */
+/*            insw:end-element ("schdl-action") .                                                                                     */
+/*          insw:end-element ("schdl-actions") .                                                                                      */
+/*        insw:end-element ("user-action") .                                                                                          */
+/*      end . /* schedule */                                                                                                          */
     end case .
   end.
   catch exAppErrors as class Progress.Lang.AppError :

@@ -841,6 +841,11 @@ on error undo, return error return-value
   define variable v-hour-int    as integer   no-undo .
   define variable v-hour-beg    as integer   no-undo .
   define variable v-hour-end    as integer   no-undo .
+  
+  define variable v-shift-num as integer no-undo .
+  define variable v-shift-date as date no-undo .
+  
+  define buffer buf_shift-obj for ub.shift-obj .
 
   run cur-time ( output v-today
               ,output v-time
@@ -1172,6 +1177,60 @@ on error undo, return error return-value
   on error undo, return error return-value
   :
     delete tt-val.
+  end.
+  
+  v-shift-num = 0 .
+  v-shift-date = ? .
+  for first buf_shift-obj
+      where buf_shift-obj.obj-type = v-cntxt-obj-type
+        and buf_shift-obj.obj-code = v-cntxt-obj-code
+        and buf_shift-obj.status_ = {&sht-current}
+      use-index stts :
+    assign
+      v-shift-date = buf_shift-obj.shift-date
+      v-shift-num  = buf_shift-obj.shift-num
+    .
+  end.
+  if v-shift-date = ? then v-shift-date = today .
+  
+  run trg/userlog.p (
+          input 'schedule'
+        , input ("Изменение расписания автозаданий на объекте " +
+                v-cntxt-obj-type + string(v-cntxt-obj-code) + ";" + 
+                buf_schedule.task-type + ";" +
+                (if buf_schedule.task-type = {&btpr-type-autofree} then v-free-id else "0") + ";" +
+                  string(buf_schedule.task-num) + "|" +
+                  (if buf_schedule.active then "1" else "0") + "|" +
+                  buf_schedule.task-year + "|" +
+                  buf_schedule.task-month + "|" +
+                  buf_schedule.task-day + "|" +
+                  buf_schedule.task-weekday + "|" +
+                  buf_schedule.task-hour + "|" +
+                  buf_schedule.task-minute +
+                {&delim-key} +
+                v-cntxt-obj-type + {&delim-cmd} +
+                string(v-cntxt-obj-code) + {&delim-cmd} +
+                string(v-shift-date) + {&delim-cmd} +
+                string(v-shift-num) + {&delim-cmd} +
+                buf_schedule.task-type + {&delim-cmd} +
+                (if buf_schedule.task-type = {&btpr-type-autofree} then v-free-id else "0") + {&delim-cmd} + 
+                string(buf_schedule.task-num) + {&delim-cmd} +
+                (if buf_schedule.active then "1" else "0") + {&delim-cmd} +
+                buf_schedule.task-year + {&delim-cmd} +
+                buf_schedule.task-month + {&delim-cmd} +
+                buf_schedule.task-day + {&delim-cmd} +
+                buf_schedule.task-weekday + {&delim-cmd} +
+                buf_schedule.task-hour + {&delim-cmd} +
+                buf_schedule.task-minute + {&delim-cmd} +
+                "chg" + {&delim-cmd} +
+                buf_schedule.db-num-char )
+        , input ?
+        , input ?
+        , input ""
+        ) no-error.
+  if error-status :error
+  then do:
+      message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
   end.
 
 end. /*doe*/
