@@ -115,7 +115,7 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      BGCOLOR 8 .
 
 DEFINE VARIABLE T-envd AS LOGICAL INITIAL no 
-     LABEL "ЕНВД" 
+     LABEL "без НДС" 
      VIEW-AS TOGGLE-BOX
      SIZE 11.13 BY .83 NO-UNDO.
 
@@ -216,7 +216,7 @@ DO:
                                     and buf_tax-rate-attr.attr-code = "envd" no-error .
         if AVAILABLE buf_tax-rate-attr then do:
                  if t-envd then do:
-                     MESSAGE SUBSTITUTE ("У кода ставки налога &1, уже есть атрибут ЕНВД", buf_tax-rate-attr.rate-code)
+                     MESSAGE SUBSTITUTE ("У кода ставки налога &1, уже есть атрибут без НДС", buf_tax-rate-attr.rate-code)
                      VIEW-AS ALERT-BOX.
                  end.
                  else do:

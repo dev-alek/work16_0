@@ -375,7 +375,7 @@ DEFINE RECTANGLE RECT-sub-store
      SIZE 31.8 BY 1.52.
 
 DEFINE VARIABLE varenvd AS LOGICAL INITIAL no 
-     LABEL "ЕНВД" 
+     LABEL "Без НДС" 
      VIEW-AS TOGGLE-BOX
      SIZE 11.2 BY .81 NO-UNDO.
 
