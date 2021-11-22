@@ -124,6 +124,22 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
     end catch .
   end method.
   
+  method override protected void SetPropProtected (inTag as char, inValue as longchar) :
+     case inTag:      
+      when "img"           then img           = {&attr-str} .
+    end case.
+    catch exProErrors as class Progress.Lang.ProError :
+      case exProErrors:GetMessageNum(1):
+        when 18207 then undo, throw new Progress.Lang.AppError(
+          substitute("Поле <&1> содержит ошибочное значение [&2]", inTag, inValue)
+        ) .
+        otherwise undo, throw new Progress.Lang.AppError(
+          substitute("Ошибка значения для поля <&1>: &2", inTag, exProErrors:GetMessage(1))
+        ) .
+      end case .
+    end catch .
+  end method.
+  
   method override protected void SetPropProtected(SubsObj as subjects):
 
     case SubsObj:InitTag:   

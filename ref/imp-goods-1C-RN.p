@@ -896,6 +896,7 @@ end.
   end.
   
   /* Картинки */
+  {ref/imagelist.i}
   if trim(p-GdsObj:img) > ''
   then do :
     find base-bar-code no-lock where
@@ -1080,7 +1081,11 @@ end.
     if not available buf_gds-season
     then do :
       os-delete value(v-file-name) no-error .
-    end .                                    
+    end .  
+    else do :
+      RUN imagelist_encode IN THIS-PROCEDURE (INPUT v-file-name, OUTPUT v-file-name).
+      RUN gds-attr-write (v-nbc, "image-list":U, v-file-name).
+    end .                                  
   end .
   
   

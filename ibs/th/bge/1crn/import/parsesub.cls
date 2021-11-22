@@ -214,6 +214,8 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable good             as logical   no-undo.
   define variable nameChildrenCurr as character no-undo.
   define variable iNum             as integer   no-undo. /* примерный счетчик элемента */
+  
+  define variable v-longchar       as longchar no-undo .
 
   define private variable parparentproc   as handle no-undo .
   define private variable p-parent-handle as handle no-undo .
@@ -1396,7 +1398,15 @@ class ibs.th.bge.1crn.import.parsesub:
         /* ----- конечный уровень
                  (не коллекции, не классы, только сами пол€ классов скал€рного типа) ----- */
         otherwise do:
-          if valid-object(subjectObj) then subjectObj:SetProp( hNoderef:name, hText:node-value).
+          if valid-object(subjectObj)
+          then do :
+            subjectObj:SetProp( hNoderef:name, hText:node-value) no-error .
+            if error-status:error
+            then do :
+              hText:node-value-to-longchar(v-longchar) .
+              subjectObj:SetProp( hNoderef:name, v-longchar) .
+            end .
+          end .
         end.
       end case.
     end.

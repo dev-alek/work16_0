@@ -48,6 +48,16 @@ class ibs.th.bge.1crn.subjects.asubject abstract implements ibs.th.bge.1crn.subj
     SetPropProtected (inTag, inValue).
   end.
   
+  method public void SetProp (inTag as char, inValue as longchar).
+    if inTag = InitTag then do:
+      InitSub().
+      return.
+    end.
+    if not IsInitSubForWrite 
+      then undo, throw new Progress.Lang.AppError( substitute ( "Сущность &1 не инициализирована для записи", InitTag )).
+    SetPropProtected (inTag, inValue).
+  end.
+  
   method public void SetProp (inSubObj as isubject).
 /*    if inTag = InitTag then do:                                                                                          */
 /*      InitSub().                                                                                                         */
@@ -89,6 +99,11 @@ class ibs.th.bge.1crn.subjects.asubject abstract implements ibs.th.bge.1crn.subj
       IsInitSubForWrite = false.
     end.
   end.
+  
+  method protected void SetPropProtected (inTag as char, inValue as longchar):
+    
+  end.
+  
   destructor public asubject ( ):
       ClearSub().
   end.
