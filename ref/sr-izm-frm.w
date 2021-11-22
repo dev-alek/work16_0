@@ -28,6 +28,7 @@
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
+define input  parameter iMode as character  no-undo.
 define input  parameter inode-code as integer no-undo.
 
  
@@ -318,12 +319,39 @@ end.
 on choose of Btn_OK in frame Dialog-Frame /* Ввод */
 do:
   def var vMess as char no-undo.
+  
+  run check-sr-type-id no-error.
+  if error-status:error 
+  then return no-apply .
+  
   run check-neft-water no-error.
   if error-status:error 
   then return no-apply .
+  
+  run check-err-water no-error.
+  if error-status:error 
+  then return no-apply .
+  
+  run Check-err-dens no-error.
+  if error-status:error 
+  then return no-apply .
+  
   run check-sr-otnos no-error.
   if error-status:error 
   then return no-apply .
+  
+  run Check-sr-temp-line no-error.
+  if error-status:error then
+     return no-apply.
+     
+  run Check-sr-abs-err-temp-vol no-error.
+  if error-status:error then
+     return no-apply.
+
+  run Check-sr-abs-err-temp-dens no-error.
+  if error-status:error then
+     return no-apply.
+     
   assign
      sr-izmerenia.sr-model
      sr-izmerenia.sr-type-izm 
@@ -387,7 +415,7 @@ do:
      and sr-izmerenia.sr-abs-err-dens-lgas-vapor  = ?
    then
       vMess = vMess  
-            + if vMess eq "" then "" else {&new-line}
+            + (if vMess eq "" then "" else {&new-line})
             + "Не указаны характеристики средства измерения плотности.".
      
   if vMess ne ""
@@ -501,18 +529,28 @@ end.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME sr-izmerenia.sr-abs-err-neft-water
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL sr-izmerenia.sr-abs-err-neft-water Dialog-Frame
-on leave of sr-izmerenia.sr-abs-err-neft-water in frame Dialog-Frame /* Абсолютная погрешность измерений */
+&Scoped-define SELF-NAME sr-izmerenia.sr-type-izm
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL sr-izmerenia.sr-type-izm Dialog-Frame
+on value-changed of sr-izmerenia.sr-type-izm in frame Dialog-Frame /* аси */
 do:
-  run check-neft-water no-error.
-  if error-status:error 
-  then return no-apply .
+   assign 
+       sr-izmerenia.sr-type-izm.
+       
+   if sr-izmerenia.sr-type-izm ne 2
+   then do:
+      sr-izmerenia.sr-Weight = no.
+      sr-izmerenia.sr-Weight:checked = no.
+      sr-izmerenia.sr-Weight:visible = no.
+      RECT-4:visible = no.
+   end.
+   else do:
+      sr-izmerenia.sr-Weight:visible = yes.
+      RECT-4:visible = yes.
+   end.
+   apply "VALUE-CHANGED" to sr-izmerenia.sr-Weight.
 end.
-
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 &Scoped-define SELF-NAME sr-izmerenia.sr-density
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL sr-izmerenia.sr-density Dialog-Frame
@@ -598,18 +636,11 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL sr-izmerenia.sr-type-id Dialog-Frame
 on value-changed of sr-izmerenia.sr-type-id in frame Dialog-Frame /* Тип средства измерения плотности */
 do:
-  assign 
-     sr-izmerenia.sr-density
-     sr-izmerenia.sr-type-id
-  .
-  if     sr-izmerenia.sr-density         
-     and sr-izmerenia.sr-type-id eq ?
-  then do:
-     message sr-izmerenia.sr-type-id:label in frame {&frame-name} " обязателен для заполнения"
-     view-as alert-box.
-     apply "entry" to sr-izmerenia.sr-type-id in frame {&frame-name} .
-     return no-apply.
-  end.
+   run check-sr-type-id no-error.
+   if error-status:error 
+   then return no-apply .
+  
+  
   
 end.
 
@@ -657,6 +688,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       create sr-izmerenia.
    end.
   run enable_UI.
+  apply "VALUE-CHANGED" to sr-izmerenia.sr-type-izm.
   apply "VALUE-CHANGED" to sr-izmerenia.sr-level.
   apply "VALUE-CHANGED" to sr-izmerenia.sr-temperature.
   apply "VALUE-CHANGED" to sr-izmerenia.sr-density.
@@ -678,25 +710,210 @@ procedure Check-neft-Water :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
- do with frame Dialog-Frame:
- assign
-     sr-izmerenia.sr-density 
-     sr-izmerenia.sr-type-id
-     sr-izmerenia.sr-abs-err-neft-water
-  .
-  if     sr-izmerenia.sr-density
-     and sr-izmerenia.sr-type-id            eq 0
-     and sr-izmerenia.sr-abs-err-neft-water eq ?
-  then do:
-     message sr-izmerenia.sr-abs-err-neft-water:label " должно быть заполнено для типа измерения уровня Тип неизвестен"
-     view-as alert-box. 
-     return error .
-  end.
-  end.
+   do with frame Dialog-Frame:
+      assign
+         sr-izmerenia.sr-level
+         /* sr-izmerenia.sr-level-product */ /* 09.03.2021 Отключено */
+         sr-izmerenia.sr-type-id
+         sr-izmerenia.sr-abs-err-neft-water
+         sr-izmerenia.sr-relative-err-neft-water
+         .
+     
+      if sr-izmerenia.sr-level then do:
+         /* 09.03.2021 Отключено
+         if sr-izmerenia.sr-level-product = "СУГ" and 
+            (sr-izmerenia.sr-abs-err-neft-water = ? or sr-izmerenia.sr-abs-err-neft-water = 0.0) then
+         do:
+            message quoter("Абсолютная погрешность измерений уровня") "должно быть заполнено для СУГ"
+            view-as alert-box. 
+            return error.
+         end.
+         */
+         if sr-izmerenia.sr-abs-err-neft-water = ? and sr-izmerenia.sr-relative-err-neft-water = ? then do:
+            message 
+               "Для сохранения должно быть заполнено хотя бы одно из полей:" skip
+                " " quoter("Абсолютная погрешность измерений уровня") skip
+                " " quoter("Относительная погрешность измерений уровня")
+            view-as alert-box. 
+            return error.
+         end.
+         if sr-izmerenia.sr-abs-err-neft-water = 0.0 and sr-izmerenia.sr-relative-err-neft-water = 0.0 then do:
+            message 
+               "Для сохранения хотя бы одно из полей должно быть ненулевым:" skip
+                " " quoter("Абсолютная погрешность измерений уровня") skip
+                " " quoter("Относительная погрешность измерений уровня")
+            view-as alert-box. 
+            return error.
+         end.
+         if sr-izmerenia.sr-abs-err-neft-water <> 0.0 and sr-izmerenia.sr-abs-err-neft-water <> ? and 
+            sr-izmerenia.sr-relative-err-neft-water = 0.0 then do:
+            message 
+                "Поле" quoter("Относительная погрешность измерений уровня")
+                "не должно быть нулевым"
+            view-as alert-box.
+            apply "entry" to sr-izmerenia.sr-relative-err-neft-water in frame {&frame-name} .
+            return error.
+         end.
+         if sr-izmerenia.sr-relative-err-neft-water <> 0.0 and sr-izmerenia.sr-relative-err-neft-water <> ? and 
+            sr-izmerenia.sr-abs-err-neft-water = 0.0 then do:
+            message 
+                "Поле" quoter("Абсолютная погрешность измерений уровня")
+                "не должно быть нулевым"
+            view-as alert-box.
+            apply "entry" to sr-izmerenia.sr-abs-err-neft-water in frame {&frame-name} .
+            return error.
+         end.
+      end.
+   end.
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Check-err-Water Dialog-Frame 
+procedure Check-err-Water :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+   do with frame Dialog-Frame:
+      assign
+         sr-izmerenia.sr-level
+         /* sr-izmerenia.sr-level-product */ /* 09.03.2021 Отключено */
+         sr-izmerenia.sr-abs-err-water
+         sr-izmerenia.sr-relative-err-water
+         .
+     
+      if sr-izmerenia.sr-level /*and sr-izmerenia.sr-level-product <> "СУГ" */ /* 09.03.2021 Отключено */ then do: 
+         if sr-izmerenia.sr-abs-err-water = ? and sr-izmerenia.sr-relative-err-water = ? then do:
+            message 
+               "Для сохранения должно быть заполнено хотя бы одно из полей:" skip
+                " " quoter("Абсолютная погрешность измерений уровня подтоварной воды") skip
+                " " quoter("Относительная погрешность измерений уровня подтоварной воды")
+            view-as alert-box. 
+            return error.
+         end.
+         if (sr-izmerenia.sr-abs-err-water      = 0.0 or sr-izmerenia.sr-abs-err-water      = ?) and
+            (sr-izmerenia.sr-relative-err-water = 0.0 or sr-izmerenia.sr-relative-err-water = ?) then do:
+            message 
+               "Для сохранения хотя бы одно из полей должно быть ненулевым:" skip
+                " " quoter("Абсолютная погрешность измерений уровня подтоварной воды") skip
+                " " quoter("Относительная погрешность измерений уровня подтоварной воды")
+            view-as alert-box. 
+            return error.
+         end.
+         if sr-izmerenia.sr-abs-err-water = 0.0 then do:
+            message 
+                "Поле" skip
+                " " quoter("Абсолютная погрешность измерений уровня подтоварной воды")
+                "не должно быть нулевым"
+            view-as alert-box.
+            apply "entry" to sr-izmerenia.sr-abs-err-water in frame {&frame-name} .
+            return error.
+         end.
+         if sr-izmerenia.sr-relative-err-water = 0.0 then do:
+            message 
+                "Поле" skip
+                " " quoter("Относительная погрешность измерений уровня подтоварной воды")
+                "не должно быть нулевым"
+            view-as alert-box.
+            apply "entry" to sr-izmerenia.sr-relative-err-water in frame {&frame-name} .
+            return error.
+         end.
+      end.
+   end.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Check-err-dens Dialog-Frame 
+procedure Check-err-dens :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+   do with frame Dialog-Frame:
+      assign
+         sr-izmerenia.sr-density
+         /* sr-izmerenia.sr-density-product */ /* 09.03.2021 Отключено */
+         sr-izmerenia.sr-abs-err-dens
+         sr-izmerenia.sr-relative-err-dens
+         sr-izmerenia.sr-abs-err-dens-lgas-liquid
+         sr-izmerenia.sr-abs-err-dens-lgas-vapor
+         .
+     
+      if sr-izmerenia.sr-density then do:
+         /* if sr-izmerenia.sr-density-product <> "СУГ" then do: */ /* 09.03.2021 Отключено */
+            if sr-izmerenia.sr-abs-err-dens = ? and sr-izmerenia.sr-relative-err-dens = ? then do:
+               message 
+                  "Для сохранения должно быть заполнено хотя бы одно из полей:" skip
+                   " " quoter("Абсолютная погрешность измерений плотности нефтепродукта") skip
+                   " " quoter("Относительная погрешность измерений плотности нефтепродукта")
+               view-as alert-box. 
+               return error.
+            end.
+            if (sr-izmerenia.sr-abs-err-dens      = 0.0 or sr-izmerenia.sr-abs-err-dens      = ?) and
+               (sr-izmerenia.sr-relative-err-dens = 0.0 or sr-izmerenia.sr-relative-err-dens = ?) then do:
+               message 
+                  "Для сохранения хотя бы одно из полей должно быть ненулевым:" skip
+                   " " quoter("Абсолютная погрешность измерений плотности нефтепродукта") skip
+                   " " quoter("Относительная погрешность измерений плотности нефтепродукта")
+               view-as alert-box. 
+               return error.
+            end.
+            if sr-izmerenia.sr-abs-err-dens <> 0.0 and sr-izmerenia.sr-abs-err-dens <> ? and 
+               sr-izmerenia.sr-relative-err-dens = 0.0 then do:
+               message 
+                   "Поле" skip
+                   " " quoter("Относительная погрешность измерений плотности нефтепродукта")
+                   "не должно быть нулевым"
+               view-as alert-box.
+               apply "entry" to sr-izmerenia.sr-relative-err-dens in frame {&frame-name} .
+               return error.
+            end.
+            if sr-izmerenia.sr-relative-err-dens <> 0.0 and sr-izmerenia.sr-relative-err-dens <> ? and 
+               sr-izmerenia.sr-abs-err-dens = 0.0 then do:
+               message 
+                   "Поле" skip
+                   " " quoter("Абсолютная погрешность измерений плотности нефтепродукта")
+                   "не должно быть нулевым"
+               view-as alert-box.
+               apply "entry" to sr-izmerenia.sr-abs-err-dens in frame {&frame-name} .
+               return error.
+            end.
+         /* end. */
+         /* else do: */ /* sr-izmerenia.sr-density-product = "СУГ" */ /* 09.03.2021 Отключено */
+            if sr-izmerenia.sr-abs-err-dens-lgas-liquid = 0.0 then do:
+               message 
+                  "Поле"
+                  quoter(sr-izmerenia.sr-abs-err-dens-lgas-liquid:label in frame {&frame-name})
+                  "должно быть ненулевым"
+               view-as alert-box.
+               apply "entry" to sr-izmerenia.sr-abs-err-dens-lgas-liquid in frame {&frame-name} .
+               return error.
+            end.
+            if sr-izmerenia.sr-abs-err-dens-lgas-vapor = 0.0 then do:
+               message 
+                  "Поле"
+                  quoter(sr-izmerenia.sr-abs-err-dens-lgas-vapor:label in frame {&frame-name})
+                  "должно быть ненулевым"
+               view-as alert-box.
+               apply "entry" to sr-izmerenia.sr-abs-err-dens-lgas-vapor in frame {&frame-name} .
+               return error.
+            end.
+         /* end. */ 
+      end.
+   end.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Check-sr-otnos Dialog-Frame 
 procedure Check-sr-otnos :
@@ -705,23 +922,158 @@ procedure Check-sr-otnos :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
- do with frame Dialog-Frame:
- assign 
-     sr-izmerenia.sr-Weight
-     sr-izmerenia.sr-otnos
-  .
-  if     sr-izmerenia.sr-Weight         
-     and sr-izmerenia.sr-otnos eq ?
-  then do:
-      message sr-izmerenia.sr-otnos:label " обязателен для заполнения"
-      view-as alert-box.
-      return error.
-  end.
-  end.
+   do with frame Dialog-Frame:
+      assign 
+          sr-izmerenia.sr-Weight
+          sr-izmerenia.sr-otnos
+       .
+       if sr-izmerenia.sr-Weight then do:
+          if sr-izmerenia.sr-otnos = ? then do:
+              message
+                 "Поле"
+                 quoter(sr-izmerenia.sr-otnos:label in frame {&frame-name})
+                 "обязательно для заполнения"
+              view-as alert-box.
+              apply "entry" to sr-izmerenia.sr-otnos in frame {&frame-name} .
+              return error.
+          end.
+          if sr-izmerenia.sr-otnos = 0.0 then do:
+              message
+                 "Поле"
+                 quoter(sr-izmerenia.sr-otnos:label in frame {&frame-name})
+                 "должно быть заполнено ненулевым значением"
+              view-as alert-box.
+              apply "entry" to sr-izmerenia.sr-otnos in frame {&frame-name} .
+              return error.
+          end.
+       end.
+   end.
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Check-sr-type-id Dialog-Frame 
+procedure Check-sr-type-id :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+ do with frame Dialog-Frame:
+assign 
+     sr-izmerenia.sr-density
+     sr-izmerenia.sr-type-id
+  .
+  if     sr-izmerenia.sr-density         
+     and (   sr-izmerenia.sr-type-id eq ?
+          or sr-izmerenia.sr-type-id eq 0)
+  then do:
+     message sr-izmerenia.sr-type-id:label in frame {&frame-name} " обязателен для заполнения"
+     view-as alert-box.
+     apply "entry" to sr-izmerenia.sr-type-id in frame {&frame-name} .
+     return error.
+  end.  end.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Check-sr-temp-line Dialog-Frame 
+procedure Check-sr-temp-line :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+   do with frame Dialog-Frame:
+      assign 
+         sr-izmerenia.sr-temp-line
+         sr-izmerenia.sr-level
+         .
+      if sr-izmerenia.sr-level then do:
+         if sr-izmerenia.sr-temp-line = ? then do:
+            message
+               "Поле"
+               quoter(sr-izmerenia.sr-temp-line:label in frame {&frame-name})
+               "обязательно для заполнения"
+            view-as alert-box.
+            apply "entry" to sr-izmerenia.sr-temp-line in frame {&frame-name} .
+            return error.
+         end.
+         if sr-izmerenia.sr-temp-line = 0.0 then do:
+            message
+               "Поле"
+               quoter(sr-izmerenia.sr-temp-line:label in frame {&frame-name})
+               "не может быть нулевым"
+            view-as alert-box.
+            apply "entry" to sr-izmerenia.sr-temp-line in frame {&frame-name} .
+            return error.
+         end.
+      end.
+   end.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Check-sr-abs-err-temp-vol Dialog-Frame 
+procedure Check-sr-abs-err-temp-vol :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+   do with frame Dialog-Frame:
+      assign 
+         sr-izmerenia.sr-abs-err-temp-vol
+         sr-izmerenia.sr-temperature
+         .
+      if sr-izmerenia.sr-temperature and sr-izmerenia.sr-abs-err-temp-vol = 0.0
+      then do:
+         message 
+            "Поле"
+            quoter(sr-izmerenia.sr-abs-err-temp-vol:label in frame {&frame-name})
+            "должно быть заполнено ненулевым значением"
+         view-as alert-box.
+         apply "entry" to sr-izmerenia.sr-abs-err-temp-vol in frame {&frame-name} .
+         return error.
+      end.
+   end.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Check-sr-abs-err-temp-dens Dialog-Frame 
+procedure Check-sr-abs-err-temp-dens:
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+   do with frame Dialog-Frame:
+      assign 
+         sr-izmerenia.sr-abs-err-temp-dens
+         sr-izmerenia.sr-temperature
+         .
+      if sr-izmerenia.sr-temperature and sr-izmerenia.sr-abs-err-temp-dens = 0.0
+      then do:
+         message 
+            "Поле"
+            quoter(sr-izmerenia.sr-abs-err-temp-dens:label in frame {&frame-name})
+            "должно быть заполнено ненулевым значением"
+         view-as alert-box.
+         apply "entry" to sr-izmerenia.sr-abs-err-temp-dens in frame {&frame-name} .
+         return error.
+      end.
+   end.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 procedure disable_UI :
@@ -767,7 +1119,11 @@ procedure enable_UI :
           sr-izmerenia.sr-abs-err-dens-lgas-vapor sr-izmerenia.sr-Weight 
           sr-izmerenia.sr-otnos 
       with frame Dialog-Frame.
-  enable RECT-1 RECT-2 RECT-3 RECT-4 Btn_OK Btn_Cancel sr-izmerenia.sr-model 
+  enable RECT-1 RECT-2 RECT-3 RECT-4  Btn_Cancel with frame Dialog-Frame.
+  if iMode ne {&lookup}
+  then
+  enable Btn_OK
+         sr-izmerenia.sr-model 
          sr-izmerenia.sr-type-izm sr-izmerenia.sr-level 
          sr-izmerenia.sr-abs-err-neft-water 
          sr-izmerenia.sr-relative-err-neft-water sr-izmerenia.sr-abs-err-water 

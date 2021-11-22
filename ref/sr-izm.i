@@ -43,19 +43,15 @@ field sr-Density as logical column-label "Плотность"
 field sr-Temperature as logical column-label "Температура"
 field sr-Weight as logical column-label "Масса"
 
-field sr-type-level-measuring as integer column-label "Тип средства измерения уровня"
-format ">9" label "Тип средства измерения уровня"
-view-as combo-box list-item-pairs "Рулетка 2-го класса точности (Расчет по ГОСТ 7502)",1,
-                                  "Плотномер-уровнемер ПЛОТ-3Б-1РУ (Расчет по формуле)",2,
-                                  "Тип неизвестен",0
-                                  inner-lines 3 drop-down-list size-chars 55 by 1
+field sr-type-level-measuring as decimal  column-label "Способ расчета предела абс. погрешности уровня"
+format ">9" label "Способ расчета предела абс. погрешности уровня" init ?
 
 field sr-temp-line as decimal column-label "Температурный коэффициент линейного! расширения материала средства! измерения уровня, 1/°С "
 format "-9.9999999" label "Температурный коэффициент линейного расширения материала средства измерения уровня, 1/°С "
 
 
-field sr-abs-err-neft-water as decimal column-label "Абсолютная погрешность измерений уровня! нефтепродукта и подтоварной воды, мм"
-format "9.99" initial ? label "Абсолютная погрешность измерений уровня нефтепродукта и подтоварной воды, мм"
+field sr-abs-err-neft-water as decimal column-label "Абсолютная погрешность!измерений уровня, мм"
+format "9.99" initial ? label "Абс. погрешность измерений уровня"
 view-as fill-in size 15  by 1
 
 field sr-Relative-err-neft-water as decimal column-label "Относительная погрешность измерений уровня нефтепродукта и подтоварной воды, %"

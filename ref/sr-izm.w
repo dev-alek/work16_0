@@ -49,6 +49,8 @@ define variable vss-description as character no-undo init "Справочник средств из
 { ref/sr-izm.i dop-sr-izm }
 /*{ ref/sr-izm.i " " proc }*/
 
+define shared variable g#db-num as integer no-undo .
+
 DEFINE VARIABLE v-max-node-code AS INTEGER NO-UNDO.
 DEFINE VARIABLE v-node-code AS INTEGER NO-UNDO.
 define variable v-edit-mode as logical no-undo .
@@ -176,6 +178,10 @@ DEFINE BUTTON b-add
      LABEL "&Добавить"
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-look
+     LABEL "&Просмотр"
+     SIZE 10 BY 1.
+
 DEFINE BUTTON b-cancel
      LABEL "Отмена"
      SIZE 10 BY 1.
@@ -240,6 +246,7 @@ DEFINE FRAME Dialog-Frame
      b-add AT ROW 1 COL 45 WIDGET-ID 14
      b-cng AT ROW 1 COL 55 WIDGET-ID 4
      b-del AT ROW 1 COL 65 WIDGET-ID 22
+     b-look AT ROW 1 COL 75 WIDGET-ID 22
      B-hist AT ROW 1 COL 137
      B-Help AT ROW 1 COL 140.5
      BR-sr-izm AT ROW 4.25 COL 1.5 WIDGET-ID 200
@@ -303,7 +310,7 @@ END.
 ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
 DO:
   v-action-mode = {&add-def} .
-  RUN ref\sr-izm-frm.w (?) no-error.
+  RUN ref\sr-izm-frm.w ({&add-def}, ?) no-error.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
   {&OPEN-QUERY-{&BROWSE-NAME}}
     APPLY "value-changed" TO BROWSE br-sr-izm.
@@ -345,7 +352,8 @@ DO:
   define variable vnode-code as integer  no-undo.
   IF NOT AVAILABLE sr-izmerenia THEN RETURN NO-APPLY.
   vnode-code = sr-izmerenia.node-code.
-  RUN ref\sr-izm-frm.w (sr-izmerenia.node-code) .
+  RUN ref\sr-izm-frm.w ({&update}, sr-izmerenia.node-code) no-error.
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
   {&OPEN-QUERY-{&BROWSE-NAME}}
   find first sr-izmerenia where sr-izmerenia.node-code eq  vnode-code no-lock.
@@ -364,6 +372,25 @@ DO:
   IF NOT AVAILABLE sr-izmerenia  THEN RETURN NO-APPLY.
   RUN proc-b-del IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-cng
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-look Dialog-Frame
+ON CHOOSE OF b-look IN FRAME Dialog-Frame /* Просмотр */
+DO:
+  define variable vnode-code as integer  no-undo.
+  IF NOT AVAILABLE sr-izmerenia THEN RETURN NO-APPLY.
+  vnode-code = sr-izmerenia.node-code.
+  RUN ref\sr-izm-frm.w ({&lookup}, sr-izmerenia.node-code) .
+  IF ERROR-STATUS:ERROR THEN RETURN NO-APPLY.
+  {&OPEN-QUERY-{&BROWSE-NAME}}
+/*   br-utd:refresh () no-error.*/
+  find first sr-izmerenia where sr-izmerenia.node-code eq  vnode-code no-lock.
+  reposition {&BROWSE-NAME} to rowid rowid(sr-izmerenia) no-error .
+  APPLY "value-changed" TO BROWSE br-sr-izm.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -565,9 +592,10 @@ v-action-mode = "":U .
 /* FIND FIRST dop-sr-izm. */
 enable
 br-sr-izm
-b-add WHEN v-edit-mode
-b-cng WHEN v-edit-mode
-b-del WHEN v-edit-mode
+b-add WHEN v-edit-mode and g#db-num = 0
+b-cng WHEN v-edit-mode and g#db-num = 0
+b-del WHEN v-edit-mode and g#db-num = 0
+b-look
 b-hist
 b-help
 b-quit
