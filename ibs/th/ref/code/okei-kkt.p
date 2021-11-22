@@ -32,6 +32,7 @@ mCodeTrg:formLable(1, 2, " Ó‰ ≈»   “").
 mCodeTrg:formLable(1, 4, "œ‘   “").
 mCodeTrg:MaxLevel = 1.
 mCodeTrg:parparentproc = iParparentproc.
+mCodeTrg:chek-erpRN = yes.
 
 mCodeTrg:parent = left-trim(iparent + {&delim-par} + icode,{&delim-par}).
 mCodeTrg:startlevel = num-entries(mCodeTrg:parent,{&delim-par}).
