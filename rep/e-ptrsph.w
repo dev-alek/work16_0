@@ -40,8 +40,8 @@ define variable vss-description as character no-undo initial "Запуск отчета поча
 { cmp/r-page1.i  }
 { gbl/getcntxt.i def }
 
-&scop ENABLED-OBJECTS   {&Btn_Mark} Btn_UnMark {&Btn_Save} use-column[ 1 ] use-column[ 2 ] use-column[ 3 ] use-column[ 4 ] use-column[ 5 ] use-column[ 6 ] use-column[ 7 ] use-column[ 8 ] use-column[ 9 ] use-column[ 10 ] use-column[ 11 ] use-column[ 12 ] use-column[ 13 ] use-column[ 14 ]
-&scop DISPLAYED-OBJECTS Tog-Excel use-column[ 1 ] use-column[ 2 ] use-column[ 3 ] use-column[ 4 ] use-column[ 5 ] use-column[ 6 ] use-column[ 7 ] use-column[ 8 ] use-column[ 9 ] use-column[ 10 ] use-column[ 11 ] use-column[ 12 ] use-column[ 13 ] use-column[ 14 ]
+&scop ENABLED-OBJECTS   {&Btn_Mark} Btn_UnMark {&Btn_Save} use-column[ 1 ] use-column[ 2 ] use-column[ 3 ] use-column[ 4 ] use-column[ 5 ] use-column[ 6 ] use-column[ 7 ] use-column[ 8 ] use-column[ 9 ] use-column[ 10 ] use-column[ 11 ] use-column[ 12 ] use-column[ 13 ] use-column[ 14 ] use-column[ 15 ]
+&scop DISPLAYED-OBJECTS Tog-Excel use-column[ 1 ] use-column[ 2 ] use-column[ 3 ] use-column[ 4 ] use-column[ 5 ] use-column[ 6 ] use-column[ 7 ] use-column[ 8 ] use-column[ 9 ] use-column[ 10 ] use-column[ 11 ] use-column[ 12 ] use-column[ 13 ] use-column[ 14 ] use-column[ 15 ]
 
 /* Local Variable Definitions ---                                       */
 define variable State-Source as widget-handle no-undo .
@@ -81,6 +81,7 @@ define frame {&FRAME-NAME}
   use-column[ 12 ] at row  8.00 col 42.50 label "Номер &чека"          {&toggle}
   use-column[ 13 ] at row  9.25 col 42.50 label "Сухой &чек"           {&toggle}
   use-column[ 14 ] at row 10.50 col 42.50 label "№ заказа"             {&toggle}
+  use-column[ 15 ] at row 11.75 col  2.50 label "№ кассы"              {&toggle}
   Tog-Excel        at row 18.50 col 38.50
 with 1 down no-box keep-tab-order overlay side-labels no-underline three-d at col 1 row 1 scrollable .
 
@@ -111,6 +112,7 @@ on choose of {&Btn_Mark} in frame {&FRAME-NAME} /* Отметить * */
       use-column[ 12 ] = yes
       use-column[ 13 ] = yes
       use-column[ 14 ] = yes
+      use-column[ 15 ] = yes
       .
     display
       use-column[  1 ]
@@ -127,6 +129,7 @@ on choose of {&Btn_Mark} in frame {&FRAME-NAME} /* Отметить * */
       use-column[ 12 ]
       use-column[ 13 ]
       use-column[ 14 ]
+      use-column[ 15 ]
       with frame {&FRAME-NAME} .
   end.
 
@@ -147,6 +150,7 @@ on choose of Btn_UnMark in frame {&FRAME-NAME} /* Снять * */
       use-column[ 12 ] = no
       use-column[ 13 ] = no
       use-column[ 14 ] = no
+      use-column[ 15 ] = no
       .
     display
       use-column[  1 ]
@@ -163,6 +167,7 @@ on choose of Btn_UnMark in frame {&FRAME-NAME} /* Снять * */
       use-column[ 12 ]
       use-column[ 13 ]
       use-column[ 14 ]
+      use-column[ 15 ]
       with frame {&FRAME-NAME} .
   end.
 
@@ -191,7 +196,7 @@ do:
     assign
       buf_usr-flt.list_ = '':U
       .
-    do jj = 1 to 14
+    do jj = 1 to 15
       :
       assign
         buf_usr-flt.list_ = buf_usr-flt.list_ + ( if use-column[ jj ] = yes then '+':U else '-':U )
@@ -263,7 +268,7 @@ procedure local-initialize :
     c-flt = 'r-ptrsph':U
     jj    = 0
     .
-  do jndex = 1 to 14
+  do jndex = 1 to 15
     :
     assign
       use-column[ jndex ] = no
@@ -288,10 +293,10 @@ procedure local-initialize :
         .
       end.
     end. /* do */
-    if length( buf_usr-flt.list_ ) < 14
+    if length( buf_usr-flt.list_ ) < 15
       then 
     do:
-      do jndex = length( buf_usr-flt.list_ ) + 1 to 14
+      do jndex = length( buf_usr-flt.list_ ) + 1 to 15
         :
         assign
           use-column[ jndex ] = yes
@@ -302,7 +307,7 @@ procedure local-initialize :
   end. /* if available buf_usr-flt */
   else 
   do: /* if not available buf_usr-flt */
-    do jndex = 1 to 14
+    do jndex = 1 to 15
       :
       if use-column[ jndex ] = yes
       then do:
@@ -318,7 +323,7 @@ procedure local-initialize :
       buf_usr-flt.call-point = c-flt
       buf_usr-flt.list_      = '':U
       .
-    do jndex = 1 to 14
+    do jndex = 1 to 15
       :
       assign
         buf_usr-flt.list_ = buf_usr-flt.list_ + ( if use-column[ jndex ] = yes then '+':U else '-':U )
@@ -344,6 +349,7 @@ procedure local-initialize :
     use-column[ 12 ]
     use-column[ 13 ]
     use-column[ 14 ]    
+    use-column[ 15 ]
     with frame {&FRAME-NAME} .
 end procedure. /* local-initialize */
 
@@ -387,7 +393,7 @@ procedure my-report :
     assign
       buf_usr-flt.list_ = '':U
       .
-    do jndex = 1 to 14
+    do jndex = 1 to 15
       :
       assign
         buf_usr-flt.list_ = buf_usr-flt.list_ + ( if use-column[ jndex ] = yes then '+':U else '-':U )
@@ -436,6 +442,7 @@ procedure my-var :
     use-column[ 12 ]
     use-column[ 13 ]
     use-column[ 14 ]    
+    use-column[ 15 ]
     .
   /* строки в которых содержатся выбранные объекты */
   assign
