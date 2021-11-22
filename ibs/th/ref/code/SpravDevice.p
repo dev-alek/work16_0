@@ -25,10 +25,10 @@ define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
     
 mCodeTrg = new ibs.th.ref.code.code_trg().
 
-mCodeTrg:formLable(1, 2, "Код").
-mCodeTrg:formLable(1, 3, "Наименование").
-mCodeTrg:formLable(1, 5, "IP").
-/*mCodeTrg:formLable(1, 6, "Дата").*/
+mCodeTrg:formLable(1, 1, "Код").
+mCodeTrg:formLable(1, 2, "Наименование").
+mCodeTrg:formLable(1, 4, "IP").
+/*mCodeTrg:formLable(1, 5, "Дата").*/
 mCodeTrg:MaxLevel = 1.
 
 mCodeTrg:parent = left-trim(iparent + {&delim-par} + icode,{&delim-par}).

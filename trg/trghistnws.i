@@ -1,16 +1,12 @@
 &if defined(trghistnwsdef) eq 0
 &then
-&glob trghistnwsdef
+&glob trghistnwsdef yes
 { cmp/vssrevis.i }
 
 { cmp/trg-def.i  } 
 { cmp/str-glbl.i } /* &db-name_schema, &hn-delete */
 { gbl/cur-time.i } /* cur-time() */
 {gbl/key-rec.i}
-&if defined(nobufhist) eq 0
-&then
-define buffer buf_c-{&main-tbl}  for ub.c-{&main-tbl} .
-&endif
 
 define variable v-date      as date      no-undo .
 define variable v-time      as integer   no-undo .
@@ -21,6 +17,16 @@ define variable vuniq-key-rec as character no-undo.
 define variable v-rowid as rowid no-undo.
 define variable v-tbl-name as character no-undo.
 &endif
+
+&if defined(hist) ne 0
+&then
+   &if defined(defbuf-c) eq 0
+   &then
+   &glob defbuf-c = yes
+      define buffer buf_c-{&main-tbl}  for ub.c-{&main-tbl} .
+   &endif
+&endif
+
 &if defined (histheadtbl) ne 0 and defined (buf_head) eq 0
 &then
 &glob buf_head

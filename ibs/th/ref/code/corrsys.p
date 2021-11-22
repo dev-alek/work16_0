@@ -27,9 +27,9 @@ define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
 
 mCodeTrg = new ibs.th.ref.code.code_trg().
 
-mCodeTrg:formLable(1, 2, "Код").
-mCodeTrg:formLable(1, 3, "Наименование").
-/*mCodeTrg:formLable(1, 3, "Описание").*/
+mCodeTrg:formLable(1, 1, "Код").
+mCodeTrg:formLable(1, 2, "Наименование").
+/*mCodeTrg:formLable(1, 2, "Описание").*/
 mCodeTrg:MaxLevel = 1.
 mCodeTrg:Mode = imode.
 mCodeTrg:chek-erpRN = g#db-num ne 0.

@@ -829,6 +829,9 @@ abc-analysis~
 ,c-utd-marking-lines-attr~
 ,c-utd-err-attr~
 ,marking-attr
+,Xattr~
+,xGroupObj~
+,xstatus~
 ,c-contract-specif-attr~
 ':U .
 

@@ -78,8 +78,8 @@ class ibs.th.ref.code.code_trg final:
       if mode eq {&select}
       then
       rid-keep ().
-      formLable(0, 2, "Код ").
-      formLable(0, 3, "Наименование").
+      formLable(0, 1, "Код ").
+      formLable(0, 2, "Наименование").
    end constructor.
    
    destructor public code_trg ( ):

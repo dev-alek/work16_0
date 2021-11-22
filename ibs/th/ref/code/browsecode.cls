@@ -716,7 +716,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
          delete object mCodeTrg.
    end destructor.
    method  public void Visual_Columns(input inum as integer ,iName as character ): 
-        inum = inum - 1.
+       /* inum = inum - 1. Выбор */
         if iname eq ?
         then 
            this-object:dataGridView1:Columns[inum]:Visible = no.

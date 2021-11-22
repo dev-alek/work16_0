@@ -52,6 +52,7 @@ define variable vss-description as character no-undo initial "Библиотека  процед
 { ref/grpobj.i   }
 { gbl/thbj-def.i }
 { rep/frmlib.i }
+{gbl/key-rec.i}
 
 if valid-handle (g#attr-lib)
 and g#attr-lib <> this-procedure :handle
@@ -16480,3 +16481,326 @@ procedure assmatat-batch-edit :
     end.
   end.
 end procedure.
+
+procedure attr-write :
+   define input  parameter iBuffHand as handle no-undo.
+   define input  parameter iCode           as character no-undo . /* код атрибута */
+   define input  parameter iValue          as character no-undo . /* Значение атрибута */
+   do
+   on error undo, return error
+   :
+      define variable vWhere as character no-undo.
+      define variable vTables as character no-undo.
+      define variable vTablesAttr as character no-undo.
+      define variable vBhTbl as handle no-undo.
+      define variable vGroupObj as character no-undo.
+      
+      vTables = iBuffHand:table.
+      vTablesAttr = vTables + "-attr".
+      run gen-where-keyr-tab  in this-procedure 
+                   (vTables + "-attr", 
+                    vTables, 
+                    vTables + "-attr", 
+                    iBuffHand, 
+                    "ub",
+                    ?,  
+                    output vWhere).
+/*      vWhere = substitute("FOR EACH &1 &2 ",vTables + "-attr",vWhere).*/
+      create buffer vBhTbl for table vTablesAttr .
+      vGroupObj = iBuffHand:buffer-field ("GroupObj"):buffer-value ()no-error.
+      if error-status:error
+      then do:
+         vBhTbl:find-first( substitute("&1 and &2.attr-code eq 'GroupObj'",vwhere,vTablesAttr), no-lock ) no-error .
+         vGroupObj = if vBhTbl:available then vBhTbl:buffer-field ("attr-value"):buffer-value () else vTables.
+      end.
+      run attr-Check-group(vGroupObj,iCode,iValue) no-error.
+      if error-status:error
+      then
+         return error return-value.
+      find first xattr where Xattr.GroupObj-code eq  vGroupObj 
+                         and Xattr.Xattr-Code    eq  iCode
+      no-lock no-error.
+      if available  Xattr
+      then do trans:
+         vBhTbl:find-first( substitute("&1 and &2.attr-code eq '&3'",vwhere,vTablesAttr,iCode), exclusive-lock ) no-error .
+         if vBhTbl:available
+         then do:
+            vBhTbl:buffer-field ("attr-value"):buffer-value () = iValue.
+         end.
+         else do :
+            define variable v-field-list as character no-undo.
+            define variable vi as integer no-undo.
+            run gen-key-field in this-procedure ( input vTables 
+                                                 ,output v-field-list
+                                              ).
+            vBhTbl:buffer-create ().
+            do vi = 1 to num-entries(v-field-list,{&delim-key}):
+               vBhTbl:buffer-field (entry(vi,v-field-list,{&delim-key})):buffer-value () = iBuffHand:buffer-field (entry(vi,v-field-list,{&delim-key})):buffer-value ().
+            end.
+            vBhTbl:buffer-field ("attr-code") :buffer-value () =  iCode.
+            vBhTbl:buffer-field ("attr-value"):buffer-value () =  if Xattr.Data-Type eq {&ABL-datatype-Decimal}
+                                                                  then string(decimal (ivalue)) 
+                                                                  else if Xattr.Data-Type eq {&ABL-datatype-Date}
+                                                                  then string(date    (ivalue)) 
+                                                                  else if Xattr.Data-Type eq {&ABL-datatype-integer}
+                                                                  then string(integer (ivalue)) 
+                                                                  else if Xattr.Data-Type eq {&ABL-datatype-Logical}
+                                                                  then string(logical (ivalue))
+                                                                  else                 ivalue no-error.
+            if error-status:error
+            then
+               return error error-status:get-message (1).                                                      
+            vBhTbl:buffer-field ("attr-value"):buffer-value () = iValue.
+         end.
+      end.
+      else do:
+         return error substitute ("Для группы &1 нет реквизита",vGroupObj,iCode).
+      end.
+   end.
+   finally:
+      delete object vBhTbl no-error.
+   end.
+end procedure.
+
+procedure attr-Check-group :
+   define input  parameter iGroupObj       as character no-undo.
+   define input  parameter iCode           as character no-undo . /* код атрибута */
+   define input  parameter iValue          as character no-undo . /* Значение атрибута */
+   do
+   on error undo, return error
+   :
+     /* define variable vWhere as character no-undo.
+      define variable vTables as character no-undo.
+      define variable vTablesAttr as character no-undo.
+      define variable vBhTbl as handle no-undo.
+      define variable vGroupObj as character no-undo. */
+      
+      define variable vdec as character  no-undo.
+      define variable vPos as integer no-undo.
+      define variable vMaxDec as decimal no-undo init ?.
+      define variable vMinDec as decimal no-undo init ?.
+      define variable vMaxDat as date no-undo init ?.
+      define variable vMinDat as date no-undo init ?.
+      define variable vMaxStr as character  no-undo.
+      define variable vMinStr as character  no-undo.
+      define variable vValDec as decimal no-undo.
+      define variable vValDat as date    no-undo.
+      define variable vValLog as logical no-undo.
+   
+      
+      find first xattr where Xattr.GroupObj-code eq  GroupObj 
+                         and Xattr.Xattr-Code    eq  iCode
+      no-lock no-error.
+      if available  Xattr
+      then do:
+         if Xattr.Data-Type eq {&ABL-datatype-Decimal}
+         then do:
+            vValDec = decimal (ivalue) no-error.
+            if error-status:error
+            then
+               return error substitute ("Для группы &1 значение атрибута &2 должно быть числом. Переданное значение '&3'",iGroupObj,iCode,ivalue).
+            
+            if Xattr.Validation ne ""
+            then do:
+               vpos = index(Xattr.Validation,"<<").
+               if vpos ne 0
+               then do: 
+                  vminstr = substring(Xattr.Validation,1,vpos - 1).
+                  vmaxStr = substring(Xattr.Validation,vpos + 2).
+                  if vminstr ne ""
+                  then
+                     vmindec = decimal (vminstr)no-error.
+                  if vmaxStr ne ""
+                  then
+                     vmaxdec = decimal (vmaxStr)no-error.
+               end.
+                              
+            end.
+            vdec =  replace(entry(1,Xattr.Data-Format,"."),",","").
+            if vdec begins "-"
+            then do:
+               assign
+                  vmindec = decimal("-" + fill("9",length(vdec) - 1) + if Xattr.Accuracy > 0 then ("." + fill("9",Xattr.Accuracy)) else "" ) when vmindec eq ?
+                  vmaxdec = decimal(      fill("9",length(vdec) - 1) + if Xattr.Accuracy > 0 then ("." + fill("9",Xattr.Accuracy)) else "")  when vmaxdec eq ?
+               .
+            end.
+            else
+               assign 
+                  vmindec = 0                                                                                                               when vmindec eq ?
+                  vmaxdec = decimal(      fill("9",length(vdec)    ) + if Xattr.Accuracy > 0 then ("." + fill("9",Xattr.Accuracy)) else "") when vmaxdec eq ?
+               .
+            if vmindec > vValDec
+            then
+               return error substitute ("Для группы &1 значение атрибута &2 должно быть больше или равно &3.  Переданное значение '&4'",iGroupObj,iCode,vmindec,vValDec).
+            if vmaxdec < vValDec
+            then
+               return error substitute ("Для группы &1 значение атрибута &2 должно быть меньше или равно &3.  Переданное значение '&4'",iGroupObj,iCode,vmaxdec,vValDec).
+         end.
+         else if Xattr.Data-Type eq {&ABL-datatype-Date}
+         then do :
+            vValDat = date (ivalue) no-error.
+            if error-status:error
+            then
+               return error substitute ("Для группы &1 значение атрибута &2 должно быть числом. Переданное значение '&3'",iGroupObj,iCode,ivalue).
+            
+            if Xattr.Validation ne ""
+            then do:
+               vpos = index(Xattr.Validation,"<<").
+               if vpos ne 0
+               then do:
+                  vminstr = substring(Xattr.Validation,1,vpos - 1).
+                  vmaxStr = substring(Xattr.Validation,vpos + 2).
+                  if vminstr ne ""
+                  then
+                     vmindat = date  (vminstr) no-error.
+                  if vmaxStr ne ""
+                  then
+                     vmaxdat = date (vmaxStr) no-error.
+                  if vmindat > vValDat
+                  then
+                     return error substitute ("Для группы &1 значение атрибута &2 должно быть больше или равно &3.  Переданное значение '&4'",iGroupObj,iCode,vmindat,vValDat).
+                  if vmaxdat < vValDat
+                  then
+                     return error substitute ("Для группы &1 значение атрибута &2 должно быть меньше или равно &3.  Переданное значение '&4'",iGroupObj,iCode,vmaxdat,vValDat).
+         
+               end.
+               
+            end.
+         end.
+         else if Xattr.Data-Type eq {&ABL-datatype-integer}
+         then do:
+            vValDec = integer (ivalue) no-error.
+            if error-status:error
+            then
+               return error substitute ("Для группы &1 значение атрибута &2 должно быть числом. Переданное значение '&3'",iGroupObj,iCode,ivalue).
+            if vValDec ne decimal (ivalue)
+            then
+               return error substitute ("Для группы &1 значение атрибута &2 должно быть целым числом. Переданное значение '&3'",iGroupObj,iCode,ivalue).
+            if Xattr.Validation ne ""
+            then do:
+               vpos = index(Xattr.Validation,"<<").
+               if vpos ne 0
+               then do:
+                  vminstr = substring(Xattr.Validation,1,vpos - 1).
+                  vmaxStr = substring(Xattr.Validation,vpos + 2).
+                  if vminstr ne ""
+                  then
+                     vmindec = integer  (vminstr)no-error.
+                  if vmaxStr ne ""
+                  then
+                     vmaxdec = integer (vmaxStr)no-error.
+               end.
+                              
+            end.
+            vdec =  replace(entry(1,Xattr.Data-Format,"."),",","").
+            if vdec begins "-"
+            then do:
+               assign
+                  vmindec = decimal("-" + fill("9",length(vdec) - 1)  ) when vmindec eq ?
+                  vmaxdec = decimal(      fill("9",length(vdec) - 1)  ) when vmaxdec eq ?
+               .
+            end.
+            else
+               assign 
+                  vmindec = 0                                          when vmindec eq ?
+                  vmaxdec = decimal(      fill("9",length(vdec)    ) ) when vmaxdec eq ?
+               .
+            if vmindec > vValDec
+            then
+               return error substitute ("Для группы &1 значение атрибута &2 должно быть больше или равно &3.  Переданное значение '&4'",iGroupObj,iCode,vmindec,vValDec).
+            if vmaxdec < vValDec
+            then
+               return error substitute ("Для группы &1 значение атрибута &2 должно быть меньше или равно &3.  Переданное значение '&4'",iGroupObj,iCode,vmaxdec,vValDec).
+         end. 
+         else if Xattr.Data-Type eq {&ABL-datatype-Logical}
+         then do:
+            vValLog = logical (ivalue) no-error.
+            if    error-status:error
+               or (    Xattr.Validation ne ""
+                   and num-entries(Xattr.Validation,"/") eq 2
+                   and ivalue ne entry(1,Xattr.Validation,"/")
+                   and ivalue ne entry(2,Xattr.Validation,"/"))
+            then
+               return error substitute ("Для группы &1 значение атрибута &2 должно быть числом. Переданное значение '&3'",iGroupObj,iCode,ivalue).
+         end.
+         else do:
+            if Xattr.Domain-Code ne ""
+            then do:
+               define variable vParent as character no-undo.
+               define variable vi      as integer no-undo.
+               define variable vValStr as character no-undo.
+               define buffer code for code.
+               
+               vParent = replace(Xattr.Domain-Code, "\", {&delim-par}).
+               do vi = 1 to num-entries(ivalue):
+                  vValStr = entry(vi,ivalue).
+                  find first code where code.parent  eq  vParent 
+                                    and code.status_ ne {&bef-deleted-status-int}
+                                    and code.code    eq vValStr
+                  no-lock no-error.
+                  if not available code
+                  then
+                     return error substitute ("Для группы &1 значение атрибута &2 должно в справочнике &4. Переданное значение '&3'",iGroupObj,iCode,vValStr,Xattr.Domain-Code).
+                  
+               end.
+                
+            end.
+            if     Xattr.Validation ne ""
+            then do:
+               do vi = 1 to num-entries(ivalue):
+                  vValStr = entry(vi,ivalue).
+                  
+                  if not can-do(Xattr.Validation, vValStr)
+                  then
+                     return error substitute ("Для группы &1 значение атрибута &2 должно удовлетворять маске '&4'. Переданное значение '&3'",iGroupObj,iCode,vValStr,Xattr.Validation).
+                  
+               end.
+            end.
+            
+         end.
+   
+      end.
+      else do:
+         return error substitute ("Для группы &1 нет реквизита",iGroupObj,iCode).
+      end.
+   end.
+   
+end procedure.
+
+
+procedure attr-read :
+   define input   parameter iBuffHand as handle no-undo.
+   define input   parameter iCode           as character no-undo . /* код атрибута */
+   define output  parameter oValue          as character no-undo . /* Значение атрибута */
+   do
+   on error undo, return error
+   :
+      define variable vWhere as character no-undo.
+      define variable vTables as character no-undo.
+      define variable vTablesAttr as character no-undo.
+      define variable vBhTbl as handle no-undo.
+      
+      vTables = iBuffHand:table.
+      vTablesAttr = vTables + "-attr".
+      run GenWhereKeyrTab in this-procedure 
+                   (vTables + "-attr", 
+                    vTables, 
+                    vTables + "-attr", 
+                    iBuffHand, 
+                    "ub",
+                    ?,  
+                    output vWhere).
+/*      vWhere = substitute("FOR EACH &1 &2 ",vTables + "-attr",vWhere).*/
+      create buffer vBhTbl for table vTablesAttr .
+      oValue = iBuffHand:buffer-field (iCode):buffer-value ()no-error.
+      if error-status:error
+      then do:
+         vBhTbl:find-first( substitute("&1 and &2.attr-code eq '&3'",vwhere,vTablesAttr,icode), no-lock ) no-error .
+         oValue = if vBhTbl:available then vBhTbl:buffer-field ("attr-value"):buffer-value () else ?.
+      end.
+   end.
+   finally:
+      delete object vBhTbl no-error.
+   end.
+end procedure.
+
