@@ -1,11 +1,10 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 /* Connected Databases 
-          ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -49,7 +48,6 @@ define variable ref-list as character no-undo.
 define variable v-af-obj-code like ub.clients.obj-code no-undo.
 define variable v-af-obj-type like ub.clients.obj-type no-undo.
 define variable v-i AS INTEGER NO-UNDO.
-define variable varauto-tank-num as CHARACTER no-undo.
 define variable varauto-tank-sec as CHARACTER no-undo.
 define variable parrec-meas as recid     no-undo.
 define variable v-auto-num as character no-undo.
@@ -59,14 +57,15 @@ define variable select-list as character no-undo .
 
 
 DEFINE BUFFER buf_auto-tank FOR ub.auto-tank.
+DEFINE BUFFER error_auto-tank-attr FOR ub.auto-tank-attr.
+DEFINE BUFFER temp_auto-tank-attr FOR ub.auto-tank-attr.
 DEFINE BUFFER buf_auto-tank-meas FOR ub.auto-tank-meas.
+define buffer buf_auto-section for ub.auto-section.
 
 DEFINE TEMP-TABLE tt_auto-tank-sec NO-UNDO
-       FIELD sec-num AS CHARACTER
+       FIELD sec-num AS integer
        FIELD brutto-qnty AS DECIMAL
-       FIELD min-lvl AS DECIMAL
-       FIELD max-lvl AS DECIMAL
-       FIELD diametr AS CHARACTER
+       field add-volume as decimal
        .
 
 /* _UIB-CODE-BLOCK-END */
@@ -78,7 +77,7 @@ if lookup (string (recid (local-meas)), select-list) > 0  then return "*".
                                                            else return "".
 end function.
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -97,15 +96,15 @@ end function.
 auto-tank-meas.meas-qnty 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-brw-auto-meas 
 &Scoped-define QUERY-STRING-brw-auto-meas FOR EACH auto-tank-meas ~
-      WHERE auto-tank-meas.auto-num = varauto-num:screen-value + "#" + tt_auto-tank-sec.sec-num NO-LOCK
+      WHERE auto-tank-meas.auto-num = varauto-num:screen-value + "#" + string(tt_auto-tank-sec.sec-num) NO-LOCK
 &Scoped-define OPEN-QUERY-brw-auto-meas OPEN QUERY brw-auto-meas FOR EACH auto-tank-meas ~
-      WHERE auto-tank-meas.auto-num = varauto-num:screen-value + "#" + tt_auto-tank-sec.sec-num NO-LOCK.
+      WHERE auto-tank-meas.auto-num = varauto-num:screen-value + "#" + string(tt_auto-tank-sec.sec-num) NO-LOCK.
 &Scoped-define TABLES-IN-QUERY-brw-auto-meas auto-tank-meas
 &Scoped-define FIRST-TABLE-IN-QUERY-brw-auto-meas auto-tank-meas
 
 
 /* Definitions for BROWSE brw-auto-num-sec                              */
-&Scoped-define FIELDS-IN-QUERY-brw-auto-num-sec tt_auto-tank-sec.sec-num tt_auto-tank-sec.brutto-qnty tt_auto-tank-sec.min-lvl tt_auto-tank-sec.max-lvl tt_auto-tank-sec.diametr /*ENABLE tt_auto-tank-sec.diametr tt_auto-tank-sec.brutto-qnty*/   
+&Scoped-define FIELDS-IN-QUERY-brw-auto-num-sec tt_auto-tank-sec.sec-num tt_auto-tank-sec.brutto-qnty tt_auto-tank-sec.dop-volume /*ENABLE tt_auto-tank-sec.diametr tt_auto-tank-sec.brutto-qnty*/   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-brw-auto-num-sec   
 &Scoped-define SELF-NAME brw-auto-num-sec
 &Scoped-define QUERY-STRING-brw-auto-num-sec FOR EACH tt_auto-tank-sec EXCLUSIVE-LOCK
@@ -119,11 +118,10 @@ auto-tank-meas.meas-qnty
     ~{&OPEN-QUERY-brw-auto-num-sec}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-1 b-cancel b-help b-choose-auto-firm ~
-varPS b-view-sec brw-auto-num-sec b-view-meas b-imp-meas brw-auto-meas ~
-varps-meas 
-&Scoped-Define DISPLAYED-OBJECTS varname varauto-num varauto-firm varPS ~
-varps-meas 
+&Scoped-Define ENABLED-OBJECTS b-cancel b-help RECT-1 RECT-2 c-AC-type ~
+b-choose-auto-firm C-neck f-error f-temp varPS b-view-sec brw-auto-num-sec 
+&Scoped-Define DISPLAYED-OBJECTS varname varauto-num varauto-firm c-AC-type ~
+C-neck f-error f-temp varPS 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -138,22 +136,14 @@ varps-meas
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add-meas 
-     LABEL "Д&обавить" 
-     SIZE 10 BY 1.
-
 DEFINE BUTTON b-add-sec 
      LABEL "Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-cancel AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-cancel AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
-
-DEFINE BUTTON b-chg-meas 
-     LABEL "И&зменить" 
-     SIZE 10 BY 1.
 
 DEFINE BUTTON b-chg-sec 
      LABEL "Изменить" 
@@ -165,10 +155,6 @@ DEFINE BUTTON b-choose-auto-firm
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "b-choose-auto-firm"
      SIZE 3 BY 1.
-
-DEFINE BUTTON b-del-meas 
-     LABEL "Удалить" 
-     SIZE 10 BY 1.
 
 DEFINE BUTTON b-del-sec 
      LABEL "Удалить" 
@@ -234,42 +220,27 @@ DEFINE VARIABLE varname AS CHARACTER FORMAT "X(40)"
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 77.5 BY 16.25.
+     SIZE 77.5 BY 10.38.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY brw-auto-meas FOR 
-      auto-tank-meas SCROLLING.
-
 DEFINE QUERY brw-auto-num-sec FOR 
       tt_auto-tank-sec SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
-DEFINE BROWSE brw-auto-meas
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS brw-auto-meas Dialog-Frame _STRUCTURED
-  QUERY brw-auto-meas DISPLAY
-      get-mark(BUFFER auto-tank-meas) COLUMN-LABEL "*"  FORMAT "X(1)":U
-      auto-tank-meas.meas-label FORMAT "X(30)":U WIDTH 48.5
-      auto-tank-meas.meas-qnty FORMAT "->>>,>>>,>>9.999":U WIDTH 22.5
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 76 BY 4.5.
-
 DEFINE BROWSE brw-auto-num-sec
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS brw-auto-num-sec Dialog-Frame _FREEFORM
   QUERY brw-auto-num-sec DISPLAY
-      tt_auto-tank-sec.sec-num FORMAT "X(3)":U LABEL "№ секции"
+      tt_auto-tank-sec.sec-num FORMAT ">>>>9":U LABEL "№ секции"
       tt_auto-tank-sec.brutto-qnty FORMAT "->>,>>>,>>9.<<<":U LABEL "Вместимость(л)"
-      tt_auto-tank-sec.min-lvl FORMAT "->>,>>>,>>9.<<<":U LABEL "Min ур.взлива(мм)"
-      tt_auto-tank-sec.max-lvl FORMAT "->>,>>>,>>9.<<<":U LABEL "Max ур.взлива(мм)"
-      tt_auto-tank-sec.diametr  FORMAT "X(20)":U LABEL "Диаметр горловины(мм)"
+      tt_auto-tank-sec.add-volume  FORMAT "->>,>>>,>>9.<<<":U LABEL "Дополнит. объем трубопровода нижнего налива(мм)"
   /*ENABLE
       tt_auto-tank-sec.diametr
       tt_auto-tank-sec.brutto-qnty*/
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 76 BY 5.25.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 76 BY 7.88.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -278,35 +249,33 @@ DEFINE FRAME Dialog-Frame
      b-save AT ROW 1 COL 1
      b-cancel AT ROW 1 COL 11
      b-help AT ROW 1 COL 21
-     varname AT ROW 2.5 COL 16.38 COLON-ALIGNED
+     varname AT ROW 2.5 COL 17.5 COLON-ALIGNED
      varauto-num AT ROW 2.5 COL 54 COLON-ALIGNED
-     varauto-firm AT ROW 3.79 COL 16.5 COLON-ALIGNED WIDGET-ID 2
-     b-choose-auto-firm AT ROW 3.79 COL 36.13 WIDGET-ID 4
-     varPS AT ROW 5.13 COL 18.5 NO-LABEL
-     b-add-sec AT ROW 9.25 COL 2 WIDGET-ID 22
-     b-chg-sec AT ROW 9.25 COL 12 WIDGET-ID 18
-     b-del-sec AT ROW 9.25 COL 22 WIDGET-ID 32
-     b-view-sec AT ROW 9.25 COL 32 WIDGET-ID 20
-     brw-auto-num-sec AT ROW 10.5 COL 1.75 WIDGET-ID 100
-     b-mark AT ROW 16 COL 2 WIDGET-ID 10
-     b-sel-all AT ROW 16 COL 5
-     b-unmark AT ROW 16 COL 8
-     b-add-meas AT ROW 16 COL 12 WIDGET-ID 6
-     b-chg-meas AT ROW 16 COL 22 WIDGET-ID 8
-     b-del-meas AT ROW 16 COL 32 WIDGET-ID 34
-     b-view-meas AT ROW 16 COL 42 WIDGET-ID 12
-     b-imp-meas AT ROW 16 COL 52 WIDGET-ID 30
-     brw-auto-meas AT ROW 17.25 COL 1.75 WIDGET-ID 200
-     varps-meas AT ROW 22 COL 1.5 NO-LABEL WIDGET-ID 24
+     varauto-firm AT ROW 3.75 COL 17.5 COLON-ALIGNED WIDGET-ID 2
+     c-AC-type AT ROW 3.75 COL 54 COLON-ALIGNED WIDGET-ID 36
+     b-choose-auto-firm AT ROW 3.79 COL 36.88 WIDGET-ID 4
+     C-neck AT ROW 5 COL 17.5 COLON-ALIGNED WIDGET-ID 38
+     f-error AT ROW 7.25 COL 59.75 COLON-ALIGNED WIDGET-ID 46
+     f-temp AT ROW 8.54 COL 3.75 WIDGET-ID 48
+     varPS AT ROW 10.25 COL 19.5 NO-LABEL
+     b-add-sec AT ROW 14.38 COL 2 WIDGET-ID 22
+     b-chg-sec AT ROW 14.38 COL 12 WIDGET-ID 18
+     b-del-sec AT ROW 14.38 COL 22 WIDGET-ID 32
+     b-view-sec AT ROW 14.38 COL 32 WIDGET-ID 20
+     brw-auto-num-sec AT ROW 15.63 COL 1.75 WIDGET-ID 100
      "Информация по секциям автотранспорта" VIEW-AS TEXT
-          SIZE 36 BY .67 AT ROW 8.17 COL 21.75 WIDGET-ID 26
+          SIZE 36 BY .67 AT ROW 13.29 COL 21.75 WIDGET-ID 26
           FGCOLOR 4 
      "Примечание:" VIEW-AS TEXT
-          SIZE 11.88 BY .88 AT ROW 6 COL 3.25
-     RECT-1 AT ROW 8.5 COL 1 WIDGET-ID 28
-     SPACE(0.37) SKIP(0.16)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          SIZE 11.88 BY .88 AT ROW 11.29 COL 3.25
+     "Метрологические характеристики" VIEW-AS TEXT
+          SIZE 30.75 BY .67 AT ROW 6.17 COL 23.13 WIDGET-ID 44
+          FGCOLOR 4 
+     RECT-1 AT ROW 13.63 COL 1 WIDGET-ID 28
+     RECT-2 AT ROW 6.5 COL 2 WIDGET-ID 40
+     SPACE(1.37) SKIP(14.49)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Данные по автотранспорту"
          DEFAULT-BUTTON b-save CANCEL-BUTTON b-cancel.
 
@@ -328,60 +297,38 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB brw-auto-num-sec b-view-sec Dialog-Frame */
-/* BROWSE-TAB brw-auto-meas b-imp-meas Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-/* SETTINGS FOR BUTTON b-add-meas IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON b-add-sec IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-/* SETTINGS FOR BUTTON b-chg-meas IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON b-chg-sec IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
-/* SETTINGS FOR BUTTON b-del-meas IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON b-del-sec IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON b-save IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-/* SETTINGS FOR BUTTON b-sel-meas IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
+/* SETTINGS FOR FILL-IN f-temp IN FRAME Dialog-Frame
+   ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN varauto-firm IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        varauto-firm:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN varauto-num IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN varname IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        varPS:RETURN-INSERTED IN FRAME Dialog-Frame  = TRUE
        varPS:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
-
-ASSIGN 
-       varps-meas:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
 
 /* Setting information for Queries and Browse Widgets fields            */
-
-&ANALYZE-SUSPEND _QUERY-BLOCK BROWSE brw-auto-meas
-/* Query rebuild information for BROWSE brw-auto-meas
-     _TblList          = "ub.auto-tank-meas"
-     _Where[1]         = "ub.auto-tank-meas.auto-num = ub.auto-tank.auto-num + ""#"" + tt_auto-tank-sec.sec-num"
-     _FldNameList[1]   > ub.auto-tank-meas.meas-label
-"auto-tank-meas.meas-label" ? ? "character" ? ? ? ? ? ? no ? no no "50" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[2]   > ub.auto-tank-meas.meas-qnty
-"auto-tank-meas.meas-qnty" ? ? "decimal" ? ? ? ? ? ? no ? no no "22.5" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _Query            is NOT OPENED
-*/  /* BROWSE brw-auto-meas */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _QUERY-BLOCK BROWSE brw-auto-num-sec
 /* Query rebuild information for BROWSE brw-auto-num-sec
@@ -391,9 +338,6 @@ OPEN QUERY brw-auto-num-sec FOR EACH tt_auto-tank-sec EXCLUSIVE-LOCK.
      _Query            is OPENED
 */  /* BROWSE brw-auto-num-sec */
 &ANALYZE-RESUME
-
- 
-
 
 
 /* ************************  Control Triggers  ************************ */
@@ -412,43 +356,11 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
 ON CHOOSE OF b-cancel IN FRAME Dialog-Frame /* Данные по автотранспорту */
 DO:
-  if not available ub.auto-tank then
-  for each buf_auto-tank exclusive-lock where buf_auto-tank.auto-num begins (varauto-num:screen-value + "#") :
-      delete buf_auto-tank .
-  end.      
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b-add-meas
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add-meas Dialog-Frame
-ON CHOOSE OF b-add-meas IN FRAME Dialog-Frame /* Добавить */
-DO:
-
-    IF AVAILABLE tt_auto-tank-sec THEN DO:
-        FIND FIRST buf_auto-tank WHERE buf_auto-tank.auto-num = (if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value) + CHR(35) + tt_auto-tank-sec.sec-num NO-LOCK NO-ERROR.
-        IF AVAILABLE buf_auto-tank THEN DO:
-            assign
-                v-auto-num-meas = buf_auto-tank.auto-num
-                v-meas-label = ?
-            .
-            run str/auto-tnm.w
-                ( input {&add-def}
-                 ,input v-auto-num-meas
-                 ,input-output v-meas-label
-                ).
-/*            brw-auto-meas:refresh() in frame {&frame-name}.*/
-            {&OPEN-QUERY-brw-auto-meas}
-            apply "value-changed" to brw-auto-num-sec in frame dialog-frame.
-        END.
-        ELSE DO:
-            message "Данные по секции не заполнены." view-as alert-box error.
-        END.
-    END.
-    ELSE DO:
-        message "Секция не выбрана." view-as alert-box error.
-    END.
+  if not available ub.auto-tank then do:
+    for each buf_auto-section exclusive-lock where buf_auto-section.auto-num = varauto-num:
+      delete buf_auto-section .
+    end.
+  end.
 
 END.
 
@@ -465,7 +377,7 @@ DO:
           return no-apply.
       end .
       ASSIGN
-        varauto-tank-num = if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value
+/*        varauto-tank-num = if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value*/
         varauto-tank-sec = ?
       .
       run str/auto-tncs.w
@@ -473,6 +385,7 @@ DO:
          ,input        varauto-tank-num
          ,input-output varauto-tank-sec
         ) no-error.
+
       RUN init-proc.
       {&OPEN-QUERY-brw-auto-num-sec}
       FIND FIRST tt_auto-tank-sec WHERE tt_auto-tank-sec.sec-num = varauto-tank-sec NO-LOCK NO-ERROR.
@@ -490,46 +403,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b-chg-meas
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg-meas Dialog-Frame
-ON CHOOSE OF b-chg-meas IN FRAME Dialog-Frame /* Изменить */
-DO:
-
-    IF AVAILABLE tt_auto-tank-sec THEN DO:
-        FIND FIRST buf_auto-tank WHERE buf_auto-tank.auto-num = (if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value) + CHR(35) + tt_auto-tank-sec.sec-num NO-LOCK NO-ERROR.
-        IF AVAILABLE buf_auto-tank THEN DO:
-            if available ub.auto-tank-meas then do:
-                assign
-                    v-auto-num-meas = buf_auto-tank.auto-num
-                    v-meas-label = ub.auto-tank-meas.meas-label
-                .
-                run str/auto-tnm.w
-                    ( input        {&update}
-                     ,input        v-auto-num-meas
-                     ,input-output v-meas-label
-                    ) no-error.
-                {&OPEN-QUERY-brw-auto-meas}
-            END.
-            else do:
-                message "Не выбрано измерение по секции." view-as alert-box error.
-            end.
-        END.
-        ELSE DO:
-            message "Данные по секции не заполнены." view-as alert-box error.
-        END.
-    END.
-    ELSE DO:
-        message "Секция не выбрана." view-as alert-box error.
-    END.
-
-
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME b-chg-sec
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg-sec Dialog-Frame
 ON CHOOSE OF b-chg-sec IN FRAME Dialog-Frame /* Изменить */
@@ -537,17 +410,18 @@ DO:
 
     if available tt_auto-tank-sec then do:
       ASSIGN
-        varauto-tank-num = if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value
-        varauto-tank-sec = tt_auto-tank-sec.sec-num
+        varauto-tank-sec = string(tt_auto-tank-sec.sec-num)
       .
       run str/auto-tncs.w
         ( input        {&update}
-         ,input        varauto-tank-num
+         ,input        varauto-num
+         ,input        c-AC-type
+         ,input        C-neck
          ,input-output varauto-tank-sec
         ) no-error.
       RUN init-proc.
       {&OPEN-QUERY-brw-auto-num-sec}
-      FIND FIRST tt_auto-tank-sec WHERE tt_auto-tank-sec.sec-num = varauto-tank-sec NO-LOCK NO-ERROR.
+      FIND FIRST tt_auto-tank-sec WHERE tt_auto-tank-sec.sec-num = integer(varauto-tank-sec) NO-LOCK NO-ERROR.
       IF AVAILABLE tt_auto-tank-sec THEN DO:
             REPOSITION brw-auto-num-sec TO RECID recid(tt_auto-tank-sec) NO-ERROR.
       END.
@@ -583,7 +457,7 @@ DO:
     find first ub.clients no-lock
          where recid(ub.clients) = integer(ref-list) no-error.
     if available ub.clients then do :
-      varauto-firm = ub.clients.obj-type + string(ub.clients.obj-code) .
+      varauto-firm = ub.clients.obj-type + " " + string(ub.clients.obj-code) .
     end.
   end.
   else do :
@@ -596,65 +470,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b-del-meas
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del-meas Dialog-Frame
-ON CHOOSE OF b-del-meas IN FRAME Dialog-Frame /* Удалить */
-DO:
-  define variable varlog as log no-undo.
-  define variable varmeaslbl as CHARACTER no-undo.
-  define variable ii as integer no-undo.
-
-
-    IF AVAILABLE tt_auto-tank-sec THEN DO:
-      assign v-auto-num = (if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value) + CHR(35) + tt_auto-tank-sec.sec-num .
-      if select-list = "" then do :  
-          if available ub.auto-tank-meas then do:
-      
-            MESSAGE "Удалить измерение?" view-as alert-box question
-              buttons yes-no
-              update varlog.
-              if varlog = false then return no-apply.
-    
-            find current auto-tank-meas  EXCLUSIVE-LOCK.
-            FOR EACH auto-tank-meas-attr WHERE auto-tank-meas-attr.auto-num = v-auto-num
-                                           AND auto-tank-meas-attr.meas-label = auto-tank-meas.meas-label EXCLUSIVE-LOCK:
-                DELETE auto-tank-meas-attr.
-            END.
-            DELETE auto-tank-meas.
-            
-            {&OPEN-QUERY-brw-auto-meas}
-          END.
-          else do:
-            message "Не выбрано измерение по секции." view-as alert-box error.
-          end.
-      end.
-      else do :
-          MESSAGE "Удалить отмеченные измерения?" view-as alert-box question
-              buttons yes-no
-              update varlog.
-          if varlog = false then return no-apply.
-          do ii = 1 to num-entries(select-list) :
-              for first ub.auto-tank-meas exclusive-lock where recid(ub.auto-tank-meas) = integer(entry(ii, select-list)) :
-                  
-                  FOR EACH auto-tank-meas-attr WHERE auto-tank-meas-attr.auto-num = v-auto-num
-                                                 AND auto-tank-meas-attr.meas-label = auto-tank-meas.meas-label EXCLUSIVE-LOCK:
-                    DELETE auto-tank-meas-attr.
-                  END.
-                  DELETE auto-tank-meas.
-              end.    
-          end.
-          {&OPEN-QUERY-brw-auto-meas} 
-      end.       
-    END.
-    ELSE DO:
-        message "Секция не выбрана." view-as alert-box error.
-    END.
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 
 &Scoped-define SELF-NAME b-del-sec
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del-sec Dialog-Frame
@@ -665,7 +480,7 @@ DO:
 
     if available tt_auto-tank-sec then do:
       ASSIGN
-        v-auto-num = (if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value) + CHR(35) + tt_auto-tank-sec.sec-num
+        v-auto-num = varauto-num
       .
 
       MESSAGE "Удалить секцию?" view-as alert-box question
@@ -681,8 +496,9 @@ DO:
           DELETE auto-tank-meas.
       END.
 
-      FIND FIRST buf_auto-tank WHERE buf_auto-tank.auto-num = v-auto-num EXCLUSIVE-LOCK NO-ERROR.
-      IF AVAILABLE buf_auto-tank THEN
+      FIND FIRST buf_auto-section WHERE buf_auto-section.auto-num = v-auto-num 
+                                    and buf_auto-section.section-num = tt_auto-tank-sec.sec-num EXCLUSIVE-LOCK NO-ERROR.
+      IF AVAILABLE buf_auto-section THEN
           DELETE buf_auto-tank.
 
       DELETE tt_auto-tank-sec.
@@ -860,9 +676,8 @@ END.
 
 
 
-&Scoped-define SELF-NAME b-view-meas
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-view-meas Dialog-Frame
-ON CHOOSE OF b-view-meas IN FRAME Dialog-Frame /* Просмотр */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-temp Dialog-Frame
+ON VALUE-CHANGED OF f-temp IN FRAME Dialog-Frame
 DO:
   if available tt_auto-tank-sec then do:
       FIND FIRST buf_auto-tank WHERE buf_auto-tank.auto-num = (if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value) + CHR(35) + tt_auto-tank-sec.sec-num NO-LOCK NO-ERROR.
@@ -892,7 +707,14 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-error Dialog-Frame
+ON VALUE-CHANGED OF f-error IN FRAME Dialog-Frame
+DO:
+    assign f-error .
+END.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 &Scoped-define SELF-NAME b-view-sec
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-view-sec Dialog-Frame
 ON CHOOSE OF b-view-sec IN FRAME Dialog-Frame /* Просмотр */
@@ -900,12 +722,14 @@ DO:
   
   if available tt_auto-tank-sec then do:
       ASSIGN
-        varauto-tank-num = if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value
-        varauto-tank-sec = tt_auto-tank-sec.sec-num
+/*        varauto-tank-num = if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value*/
+        varauto-tank-sec = string(tt_auto-tank-sec.sec-num)
       .
       run str/auto-tncs.w
         ( input        {&lookup}
-         ,input        varauto-tank-num
+         ,input        varauto-num
+         ,input        c-AC-type
+         ,input        C-neck
          ,input-output varauto-tank-sec
         ) no-error.
 /*      run local-enable_ui.*/
@@ -979,24 +803,16 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&Scoped-define BROWSE-NAME brw-auto-num-sec
-&Scoped-define SELF-NAME brw-auto-num-sec
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL brw-auto-num-sec Dialog-Frame
-ON VALUE-CHANGED OF brw-auto-num-sec IN FRAME Dialog-Frame
-DO:
-  {&OPEN-QUERY-brw-auto-meas}
-  apply "value-changed" to brw-auto-meas in frame dialog-frame.
-END.
+ON choose of brw-auto-num-sec IN FRAME Dialog-Frame
+    DO:
+       find first tt_auto-tank-sec no-error . 
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&Scoped-define BROWSE-NAME brw-auto-meas
-&UNDEFINE SELF-NAME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1015,16 +831,23 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   if parmode = {&lookup} then do:
     find first ub.auto-tank where recid(ub.auto-tank) = parrecid no-lock.
-    find first ub.auto-tank-attr no-lock
-         where ub.auto-tank-attr.auto-num = ub.auto-tank.auto-num
-           and ub.auto-tank-attr.attr-code = "auto-firm" no-error.
+    find first error_auto-tank-attr no-lock
+         where error_auto-tank-attr.auto-num = ub.auto-tank.auto-num
+           and error_auto-tank-attr.attr-code = "auto-error" no-error.
+    find first temp_auto-tank-attr no-lock
+         where temp_auto-tank-attr.auto-num = ub.auto-tank.auto-num
+           and temp_auto-tank-attr.attr-code = "auto-temp" no-error.
+           
   end.
   if parmode = {&update} then do:
     do transaction:
-      find first ub.auto-tank where recid(ub.auto-tank) = parrecid exclusive-lock.
-      find first ub.auto-tank-attr exclusive-lock
-          where ub.auto-tank-attr.auto-num = ub.auto-tank.auto-num
-            and ub.auto-tank-attr.attr-code = "auto-firm" no-error.
+    find first ub.auto-tank where recid(ub.auto-tank) = parrecid exclusive-lock.
+    find first error_auto-tank-attr exclusive-lock
+         where error_auto-tank-attr.auto-num = ub.auto-tank.auto-num
+           and error_auto-tank-attr.attr-code = "auto-error" no-error.
+    find first temp_auto-tank-attr exclusive-lock
+         where temp_auto-tank-attr.auto-num = ub.auto-tank.auto-num
+           and temp_auto-tank-attr.attr-code = "auto-temp" no-error.
     end.
   end.
   if parmode = {&lookup} or
@@ -1032,8 +855,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     assign
       varauto-num    = ub.auto-tank.auto-num
       varname        = ub.auto-tank.NAME
-      varps          = ub.auto-tank.ps.
-    if available ub.auto-tank-attr then varauto-firm = ub.auto-tank-attr.attr-value.
+      varps          = ub.auto-tank.ps
+      varauto-firm   = string (ub.auto-tank.firm-type) + " " + string (ub.auto-tank.firm-code)
+      c-AC-type      = ub.auto-tank.type-AC
+      C-neck         = ub.auto-tank.type-neck.
+    if available error_auto-tank-attr then f-error = decimal(error_auto-tank-attr.attr-value).
+    if available temp_auto-tank-attr then f-temp = decimal(temp_auto-tank-attr.attr-value) .
   end.
 
   run init-proc in this-procedure .
@@ -1055,7 +882,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -1074,54 +901,22 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY varname varauto-num varauto-firm varPS varps-meas 
+  DISPLAY varname varauto-num varauto-firm c-AC-type varPS 
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-1 b-cancel b-help varPS b-view-sec 
-         brw-auto-num-sec b-view-meas b-imp-meas brw-auto-meas varps-meas 
+  ENABLE b-cancel b-help RECT-1 RECT-2 c-AC-type b-choose-auto-firm brw-auto-num-sec
+         varPS b-view-sec  
       WITH FRAME Dialog-Frame.
+  if c-AC-type <> 1 then do: 
+  hide C-neck f-error f-temp in frame Dialog-Frame .        
+  end.  
+  else do:
+  display C-neck f-error f-temp with frame Dialog-Frame .    
+  end.  
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-mark Dialog-Frame
-PROCEDURE proc-b-mark :
-/* -----------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
--------------------------------------------------------------*/
-  define variable varlog as logical   no-undo .
-  if not available auto-tank-meas then return.
-  run local-mark in this-procedure.
-  assign varlog = brw-auto-meas :select-next-row( ) in frame {&frame-name}.
-  apply "ENTRY":U to brw-auto-meas in frame {&frame-name}.
-  brw-auto-meas:refresh() in frame {&frame-name} .
-
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark Dialog-Frame
-PROCEDURE local-mark :
-/* -----------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
--------------------------------------------------------------*/
-  if not available auto-tank-meas then do:
-    message "Неправильный выбор строки.".
-    return no-apply.
-  end.
-  { gbl/markstrn.i auto-tank-meas select-list }
-  brw-auto-meas:refresh() in frame {&frame-name} .
-
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1138,7 +933,6 @@ PROCEDURE init-proc :
   FOR EACH tt_auto-tank-sec EXCLUSIVE-LOCK:
       DELETE tt_auto-tank-sec.
   END.
-
   v-auto-num = if available ub.auto-tank then ub.auto-tank.auto-num else varauto-num:screen-value in frame {&frame-name} .
   FOR EACH buf_auto-tank WHERE buf_auto-tank.auto-num begins (v-auto-num + CHR(35)) NO-LOCK:
     CREATE tt_auto-tank-sec.
@@ -1163,7 +957,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-enable_UI Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-enable_UI Dialog-Frame 
 PROCEDURE local-enable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     Override standard ADM method
@@ -1176,10 +970,16 @@ PROCEDURE local-enable_UI :
 
   RUN enable_ui IN THIS-PROCEDURE.
   if parmode = {&add-def} or parmode = {&update} then do:
-      enable  varname varauto-firm b-save b-add-sec b-chg-sec b-add-meas b-chg-meas b-del-meas b-choose-auto-firm b-del-sec b-mark b-sel-all b-unmark with frame {&frame-name}.
-     assign varps:read-only = no.
+      enable varauto-num varname varauto-firm b-save b-add-sec b-chg-sec with frame {&frame-name}.
+      assign varps:read-only = no.
+      if c-AC-type = 1 then do:
+        enable
+        C-neck
+        f-error
+        f-temp
+        with frame {&frame-name} .
+      end.  
   end.
-  if parmode = {&add-def} then enable varauto-num with frame {&frame-name}.
   {&OPEN-QUERY-brw-auto-meas}
 /*  if parmode = {&add-def} then do:                                                                                                          */
 /*     enable varauto-num varname varauto-firm b-save with frame {&frame-name}.                                                               */
@@ -1193,7 +993,3 @@ PROCEDURE local-enable_UI :
   /* Code placed here will execute AFTER standard behavior.    */
 
 END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-

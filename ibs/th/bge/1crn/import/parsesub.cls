@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.bge.1crn.import.*.
+using ibs.th.gbl.env.prmtrs.section from propath.
 
 block-level on error undo, throw.
 
@@ -113,7 +114,7 @@ class ibs.th.bge.1crn.import.parsesub:
 
   define variable transportSubjectObj                      as class transport                   no-undo.
   define variable transport_sectionSubjectObj              as class transport_section           no-undo.
-  define variable transport_section_ct-lvlSubjectObj       as class transport_section_ct-lvl    no-undo.
+  define variable transport_section_ct-lvlSubjectObj       as class transport_section_calibration-table    no-undo.
   define variable imptransportEventHndlrObj                as class imptransport                no-undo.
   define variable transport_section-listSubjectsObj        as class subjects                    no-undo.
   define variable transport_section_ct-lvl-listSubjectsObj as class subjects                    no-undo.
@@ -974,8 +975,8 @@ class ibs.th.bge.1crn.import.parsesub:
           case true : 
             when transportSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
               if not valid-object(transport_section_ct-lvl-listSubjectsObj) then transport_section_ct-lvl-listSubjectsObj = new subjects ("calibration-table") .        
-              transport_section_ct-lvl-listSubjectsObj:Add(new transport_section_ct-lvl()). /* а вот здесь уже создаем объект сущнности*/
-              transport_section_ct-lvlSubjectObj = cast (transport_section_ct-lvl-listSubjectsObj:SubjectObjCurr, transport_section_ct-lvl).
+              transport_section_ct-lvl-listSubjectsObj:Add(new transport_section_calibration-table()). /* а вот здесь уже создаем объект сущнности*/
+              transport_section_ct-lvlSubjectObj = cast (transport_section_ct-lvl-listSubjectsObj:SubjectObjCurr, transport_section_calibration-table).
               GetChildrenSub (hNoderef, (level + 1), transport_section_ct-lvlSubjectObj).
               transportSubjectObj:SetProp (transport_section_ct-lvl-listSubjectsObj).
             end.

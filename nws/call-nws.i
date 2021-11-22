@@ -81,8 +81,12 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,sum-grp~
 ,c-sum-grp~
 ,auto-tank~
+,auto-section~
+,auto-section-table~
 ,auto-tank-meas~
 ,c-auto-tank~
+,c-auto-section~
+,c-auto-section-table~
 ,sr-izmerenia~
 ,c-sr-izmerenia~
 ,parts-attr~
@@ -319,6 +323,7 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,goods~
 ,goods-attr~
 ,auto-tank-attr~
+,auto-section-attr~
 ,bar-code~
 ,bar-code-attr~
 ,prod-bc~
@@ -736,6 +741,9 @@ v-custom-except-list-erprn =
 ,c-assortment-matrix-goods~
 ,c-auto-tank~
 ,c-auto-tank-attr~
+,c-auto-section~
+,c-auto-section-attr~
+,c-auto-section-table~
 ,c-auto-tank-meas-attr~
 ,c-bar-code~
 ,c-bar-code-attr~

@@ -26,14 +26,15 @@ define variable vss-description as character no-undo initial "Триггер на запись 
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 
-main-block:
-do
-on error undo main-block, return error
-:
-  if index (ub.auto-tank.auto-num , "#") = 0 then do :
-  message
-    "Удаление автоцистерны невозможно" skip
-    view-as alert-box error .
-    undo, return error .
-  end.      
-end.
+/*main-block:                                      */
+/*do                                               */
+/*  on error undo main-block, return error         */
+/*  :                                              */
+/*  if index (ub.auto-tank.auto-num , "#") = 0 then*/
+/*  do :                                           */
+/*    message                                      */
+/*      "Удаление автоцистерны невозможно" skip    */
+/*      view-as alert-box error .                  */
+/*    undo, return error .                         */
+/*  end.                                           */
+/*end.                                             */

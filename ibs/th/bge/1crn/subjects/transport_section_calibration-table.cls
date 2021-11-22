@@ -19,7 +19,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 
 
-class ibs.th.bge.1crn.subjects.transport_section_ct-lvl inherits ibs.th.bge.1crn.subjects.asubject:
+class ibs.th.bge.1crn.subjects.transport_section_calibration-table inherits ibs.th.bge.1crn.subjects.asubject:
 
   define property sec-num    as integer    no-undo get. 
     private set.

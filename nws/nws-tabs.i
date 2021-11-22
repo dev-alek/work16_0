@@ -305,6 +305,12 @@ abc-analysis~
 ,c-auto-tank~
 ,auto-tank-meas~
 ,auto-tank-attr~
+,auto-section~
+,c-auto-section~
+,auto-section-attr~
+,c-auto-section-attr~
+,auto-section-table~
+,c-auto-section-table~
 ,bar-code~
 ,c-bar-code~
 ,bar-code-attr~
