@@ -4,6 +4,8 @@ define {2} temp-table tt-rep no-undo
    field obj-name          as character
    field chk-date          as date
    field chk-time          as integer
+   field sort-date         as date
+   field sort-time         as integer
    field shift-date        as date
    field shift-name        as character
    field doc-code          as character
@@ -40,7 +42,7 @@ define {2} temp-table tt-rep no-undo
    field uuid              as character
    field uuid-cheq         as character
    field grp-num           as integer
-index pi obj-code shift-date shift-name chk-date chk-time pay-desk fuel-code trk-num nozzle-num
+index pi obj-code shift-date shift-name sort-date sort-time pay-desk fuel-code trk-num nozzle-num
 index si1 obj-code grp-num datetime-beg
 .
 
@@ -225,6 +227,8 @@ procedure CreateOneRec:
             &endif
             tt-rep.chk-date        = chk-doc.chk-date
             tt-rep.chk-time        = chk-doc.chk-time
+            tt-rep.sort-date       = chk-doc.chk-date
+            tt-rep.sort-time       = chk-doc.chk-time
             tt-rep.shift-date      = chk-doc.shift-date
             tt-rep.shift-name      = chk-doc.shift-name + "(" + string(chk-doc.shift-num) + ")"
             tt-rep.doc-code        = chk-doc.doc-code
@@ -320,8 +324,12 @@ procedure InitTT:
    define buffer goods        for goods.
    define buffer cash-pay     for cash-pay.
    define buffer prod-bc      for prod-bc.
+   define buffer b-tran-fuel  for tran-fuel.
    
-   define variable v-gds-code as integer no-undo.
+   define variable v-gds-code as integer  no-undo.
+   define variable vDateBeg   as datetime no-undo.
+   define variable vDateEnd   as datetime no-undo.
+   define variable vCount     as integer  no-undo.
    
    if i-tog-shift then do:
       for 
@@ -469,6 +477,107 @@ procedure InitTT:
                           ).
          &endif
       end.
+
+      &if "{1}" <> "class" &then
+      /* Отбор транзакций, по которым нет чеков */
+      TRAN-FUEL-WITHOUT-CHECK:
+      for each tran-fuel where
+               tran-fuel.date-beg >= datetime(string(i-date-start) + " 00:00:00") - Timezone * 60000
+           and tran-fuel.date-beg <= datetime(string(i-date-end) + " 23:59:59") - Timezone * 60000
+           and can-do(iTRKList, string(tran-fuel.trk-num + 1))
+           and tran-fuel.num-cheq > 0
+      no-lock,
+         first obj-list where
+               obj-list.obj-type = {&shop}
+           and obj-list.obj-code = tran-fuel.obj-code
+      no-lock:
+         find first chk-doc-attr where
+                    chk-doc-attr.attr-code  = "CheckId"
+                and chk-doc-attr.attr-value = tran-fuel.uuid-cheq
+         no-lock no-error.
+         if avail chk-doc-attr then next.
+         
+         /* Если это транзакция заказа техпролива, то исключаем */
+         for first b-tran-fuel where
+                   b-tran-fuel.uuid      =  tran-fuel.uuid
+               and b-tran-fuel.uuid-cheq <> tran-fuel.uuid-cheq
+         no-lock,
+             first chk-doc-attr where
+                   chk-doc-attr.attr-code  = "CheckId"
+               and chk-doc-attr.attr-value = b-tran-fuel.uuid-cheq
+         no-lock,
+             first chk-doc where
+                   chk-doc.doc-code = chk-doc-attr.doc-code
+               and chk-doc.chk-type = 17
+         no-lock:
+            next TRAN-FUEL-WITHOUT-CHECK.
+         end.
+         
+         v-gds-code = tran-fuel.fuel-code.
+         if v-gds-code < 100 then do: /* Если короткий код, то ищем полный код */
+            find first prod-bc where
+                       prod-bc.b-str = string(v-gds-code)
+            no-lock no-error.
+            if avail prod-bc then do:
+               find first goods where
+                          goods.gds-code = prod-bc.b-code
+               no-lock no-error.
+               if not avail goods then
+                  next.
+               v-gds-code = goods.gds-code.
+            end.
+         end.
+         else do:
+            find first goods where
+                       goods.gds-code = v-gds-code
+            no-lock no-error.
+            if not avail goods
+            then
+               next.
+         end.
+         if not can-do(iGdsCodeList, string(v-gds-code)) then next.
+
+         /* Корректировка по часовому поясу */
+         assign
+            vDateBeg = tran-fuel.date-beg + Timezone * 60000
+            vDateEnd = tran-fuel.date-end + Timezone * 60000.
+
+         create tt-rep.
+         assign
+            tt-rep.obj-type        = obj-list.obj-type
+            tt-rep.obj-code        = obj-list.obj-code
+            tt-rep.obj-name        = obj-list.obj-name
+            tt-rep.sort-date       = date(vDateBeg)
+            tt-rep.sort-time       = mtime(vDateBeg) / 1000
+            tt-rep.chk-num         = tran-fuel.num-cheq
+            tt-rep.tran-num        = tran-fuel.tran-num
+            tt-rep.cash-num        = tran-fuel.cash-num
+            tt-rep.trk-num         = tran-fuel.trk-num + 1
+            tt-rep.nozzle-num      = tran-fuel.nozzle-num + 1
+            tt-rep.fuel-code       = goods.gds-code
+            tt-rep.gds-name        = goods.gds-name
+            tt-rep.volume          = tran-fuel.volume
+            tt-rep.price           = tran-fuel.price
+            tt-rep.money           = tran-fuel.money
+            tt-rep.datetime-beg    = vDateBeg
+            tt-rep.date-beg        = date(vDateBeg)
+            tt-rep.time-beg        = mtime(vDateBeg) / 1000
+            tt-rep.datetime-end    = vDateEnd
+            tt-rep.date-end        = date(vDateEnd)
+            tt-rep.time-end        = mtime(vDateEnd) / 1000
+            tt-rep.time-length     = (vDateEnd - vDateBeg) / 1000
+            tt-rep.all-time-length = tt-rep.time-length
+            tt-rep.multi-pay       = no
+            tt-rep.resume-tran     = no
+            tt-rep.uuid            = tran-fuel.uuid
+            tt-rep.uuid-cheq       = tran-fuel.uuid-cheq
+            .
+         if tt-rep.uuid-cheq = "" then do:
+            vCount = vCount + 1.
+            tt-rep.uuid-cheq = "empty-" + string(vCount, "99999999").
+         end.
+      end.
+      &endif
    end.
    
    release tt-rep.
@@ -591,7 +700,11 @@ procedure AfterCalc:
    
    /* Группировка транзакций */
    v-count-grp-num = 0.
-   for each tt-rep:
+   for each tt-rep
+      by tt-rep.obj-code
+      by tt-rep.sort-date
+      by tt-rep.sort-time:
+
       find first tt-grp where
                  tt-grp.obj-type = tt-rep.obj-type 
              and tt-grp.obj-code = tt-rep.obj-code
@@ -628,8 +741,8 @@ procedure AfterCalc:
    break
       by tt-rep.obj-code
       by tt-rep.grp-num
-      by tt-rep.chk-date
-      by tt-rep.chk-time
+      by tt-rep.sort-date
+      by tt-rep.sort-time
       by tt-rep.datetime-beg:
 
       if first-of(tt-rep.grp-num) then do:
@@ -686,8 +799,8 @@ procedure AfterCalc:
          by tt-rep.obj-code
          by tt-rep.grp-num
          by tt-rep.datetime-beg
-         by tt-rep.chk-date
-         by tt-rep.chk-time:
+         by tt-rep.sort-date
+         by tt-rep.sort-time:
          
          if not first-of(tt-rep.grp-num) and tt-rep.chk-type-desc = "Продажа" then do:
             find first b-tt-rep where
@@ -736,6 +849,8 @@ procedure AfterCalc:
                   assign
                      b-tt-rep.chk-date        = tt-rep.chk-date
                      b-tt-rep.chk-time        = tt-rep.chk-time
+                     b-tt-rep.sort-date       = tt-rep.sort-date
+                     b-tt-rep.sort-time       = tt-rep.sort-time
                      b-tt-rep.doc-code        = tt-rep.doc-code
                      b-tt-rep.chk-num         = tt-rep.chk-num
                      b-tt-rep.line-num        = b-chk-gds.line-num
@@ -765,8 +880,8 @@ procedure AfterCalc:
          by tt-rep.obj-code
          by tt-rep.grp-num
          by tt-rep.datetime-beg
-         by tt-rep.chk-date
-         by tt-rep.chk-time:
+         by tt-rep.sort-date
+         by tt-rep.sort-time:
          
          if not first-of(tt-rep.grp-num) and tt-rep.chk-type-desc = "ПеревТрнзкц" then do:
             find first b-tt-rep where
@@ -860,8 +975,8 @@ procedure AfterCalc:
       by tt-rep.obj-code
       by tt-rep.grp-num
       by tt-rep.datetime-beg
-      by tt-rep.chk-date
-      by tt-rep.chk-time:
+      by tt-rep.sort-date
+      by tt-rep.sort-time:
 
       if first-of(tt-rep.grp-num) then do:
          vRowId = ?.
@@ -887,8 +1002,8 @@ procedure AfterCalc:
       by tt-rep.obj-code
       by tt-rep.grp-num
       by tt-rep.datetime-beg
-      by tt-rep.chk-date
-      by tt-rep.chk-time:
+      by tt-rep.sort-date
+      by tt-rep.sort-time:
 
       if first-of(tt-rep.grp-num) then do:
          vRowIdList = "".
@@ -942,8 +1057,8 @@ procedure AfterCalc:
       by tt-rep.obj-code
       by tt-rep.grp-num
       by tt-rep.datetime-beg
-      by tt-rep.chk-date
-      by tt-rep.chk-time:
+      by tt-rep.sort-date
+      by tt-rep.sort-time:
 
       if first-of(tt-rep.grp-num) then do:
          assign
@@ -1000,8 +1115,8 @@ procedure AfterCalc:
    break
       by tt-rep.obj-type
       by tt-rep.obj-code
-      by tt-rep.chk-date
-      by tt-rep.chk-time
+      by tt-rep.sort-date
+      by tt-rep.sort-time
       by tt-rep.uuid-cheq
       by tt-rep.datetime-beg:
 
@@ -1057,8 +1172,8 @@ procedure AfterCalc:
    break
       by tt-rep.obj-type
       by tt-rep.obj-code
-      by tt-rep.chk-date
-      by tt-rep.chk-time
+      by tt-rep.sort-date
+      by tt-rep.sort-time
       by tt-rep.uuid-cheq
       by tt-rep.datetime-beg:
 

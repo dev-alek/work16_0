@@ -35,7 +35,6 @@ define variable mProdBcStrList  as character     no-undo.
 
 {cmp/str-glbl.i}
 {cmp/vssrevis.i}
-{cmp/str-glbl.i}
 {cmp/r-page1.i}
 {ref/fd-attr.i}
 {cmp/trg-def.i}
@@ -349,8 +348,8 @@ procedure PrintTT:
       break
          by tt-rep.obj-code
          by tt-rep.grp-num
-         by tt-rep.chk-date
-         by tt-rep.chk-time
+         by tt-rep.sort-date
+         by tt-rep.sort-time
          by tt-rep.datetime-beg
          by tt-rep.datetime-end:
             
@@ -373,11 +372,11 @@ procedure PrintTT:
             '<TR ' vLevel '>' skip
                 '<TD text_wrap="true" style="text-align: center">' fStrNvl(tt-rep.obj-name, "")                                '</TD>' skip
                 '<TD style="text-align: center">'                  fdate2str(tt-rep.chk-date, "99.99.9999")                    '</TD>' skip
-                '<TD style="text-align: center">'                  fStrNvl(string(tt-rep.chk-time, "HH:MM:SS"), "")            '</TD>' skip
+                '<TD style="text-align: center">'                  if tt-rep.chk-date = ? then "" else fStrNvl(string(tt-rep.chk-time, "HH:MM:SS"), "") '</TD>' skip
                 '<TD style="text-align: center">'                  fdate2str(tt-rep.shift-date, "99.99.9999")                  '</TD>' skip
                 '<TD style="text-align: center">'                  fStrNvl(tt-rep.shift-name, "")                              '</TD>' skip
-                '<TD style="text-align: center">'                  fInt2Str(tt-rep.chk-num, ">>>>>>>>>9")                      '</TD>' skip
-                '<TD style="text-align: center">'                  fInt2Str(tt-rep.z-number, ">>>>>>>>>9")                     '</TD>' skip
+                '<TD style="text-align: center">'                  fInt2Str(tt-rep.chk-num, ">>>>>>>>>>")                      '</TD>' skip
+                '<TD style="text-align: center">'                  fInt2Str(tt-rep.z-number, ">>>>>>>>>>")                     '</TD>' skip
                 '<TD style="text-align: center">'                  fInt2Str(tt-rep.tran-num, ">>>>>>>>>9")                     '</TD>' skip
                 '<TD text_wrap="true" style="text-align: center">' fStrNvl(tt-rep.chk-type-desc, "")                           '</TD>' skip
                 '<TD style="text-align: center">'                  fInt2Str(tt-rep.cash-num, ">>>>9")                          '</TD>' skip
