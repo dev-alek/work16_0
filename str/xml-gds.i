@@ -490,6 +490,9 @@ find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code
         when "photo" then do:
           run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "7", input 1 ).
         end.                
+        when "milk" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "8", input 1 ).
+        end.  
       end case .
     end.
     else do:

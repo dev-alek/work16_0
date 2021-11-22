@@ -16,6 +16,7 @@ using ibs.th.bge.1crn.subjects.{&impclass}.
 using ibs.th.ref.promo.enum-type-discount .
 using ibs.th.ref.promo.enum-promo-status .
 using ibs.th.ref.promo.enum-sched-status .
+using ibs.th.gbl.sys.objsrv.
 
 block-level on error undo, throw.
 
@@ -105,7 +106,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define buffer buf_PromoSched  for ub.promo-schedule .
     define buffer buf_goods       for ub.goods .
     define buffer buf_clients     for ub.clients .
-
+    define buffer buf_goods-attr  for ub.goods-attr .
+    
+    define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+    define variable v-ban-recipes as logical no-undo .
+      
+    run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
     objImp = cast (subjectObj, {&impclass}).
     assign
@@ -300,7 +306,7 @@ do: // объекты
     .
     v-promo-objs = v-promo-action:Objects .
     v-promo-objs:AddItem (v-promo-obj) .
-    
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-obj-type, v-obj-code):IsBanRecipes then v-ban-recipes = true .
 end . // end_of объекты
 
 
@@ -415,6 +421,7 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
           v-promo-gift:Mode = v-promo-crit:Mode
         .
         v-promo-gifts:AddItem (v-promo-gift) .
+        
       end . 
       v-objlist3 = v-threshold:Gifts .
       if valid-object(v-objlist3) then do :
@@ -436,6 +443,14 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
             v-promo-gift:qnty    = v-gift-gd:gd-qnty
             v-promo-gift:Mode    = v-promo-crit:Mode
           .
+   if v-ban-recipes then do:       
+   if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = v-promo-gift:GdsCode and 
+      buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
+      buf_goods-attr.attr-value <> "") then 
+   do:
+      v-promo-action:end-date = today - 1 .
+   end.        
+   end.    
           v-promo-gifts:AddItem (v-promo-gift) .
         end . // end_of_threshold:gifts[]
       end .
@@ -596,6 +611,14 @@ if valid-object (v-objlist9) then do: // gifts - подарки на всю акцию
         v-promo-gift:qnty    = v-gift-gd:gd-qnty
         v-promo-gift:Mode    = {&h-create}
       .
+   if v-ban-recipes then do:       
+   if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = v-promo-gift:GdsCode and 
+      buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
+      buf_goods-attr.attr-value <> "") then 
+   do:
+      v-promo-action:end-date = today - 1 .
+   end.        
+   end.       
       v-promo-gifts:AddItem (v-promo-gift) .
     end . // end_of_gifts[]
 end. // end_of_gifts
