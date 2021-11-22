@@ -812,8 +812,12 @@ cda-IBS-TH_fisreg
 cda-IBS-TH_rec-print
 }
 
+/* װװִ גונסטÿ */
+{ cmp/cr-prep.i 1 cd-attr-ffd-version USE_FFD_VERSION " " USE_FFD_VERSION }
 
 /* באחמגûו IBS-TH*/
+/* ÊÊׂ גונסטÿ */
+{ cmp/cr-prep.i 1 cd-attr-kkt-version KKT_FFD_VERSION " " KKT_FFD_VERSION }
 
 { cmp/cr-prep.i 1 cda-IBS-TH_main                      IBS-TH_main                        " " IBS-TH_main }
 
