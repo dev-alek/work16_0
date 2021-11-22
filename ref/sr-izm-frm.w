@@ -148,6 +148,46 @@ define rectangle RECT-3
 define rectangle RECT-4
      edge-pixels 2 graphic-edge  no-fill   
      size 99 by 2.88.
+DEFINE VARIABLE temp-line-text AS CHARACTER FORMAT "x(4)" INITIAL "1/∞—" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+
+DEFINE VARIABLE abs-err-neft-water-text AS CHARACTER FORMAT "x(2)" INITIAL "ÏÏ" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+DEFINE VARIABLE relative-err-neft-water-text AS CHARACTER FORMAT "x(1)" INITIAL "%" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+DEFINE VARIABLE abs-err-water-text AS CHARACTER FORMAT "x(2)" INITIAL "ÏÏ" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+DEFINE VARIABLE relative-err-water-text AS CHARACTER FORMAT "x(1)" INITIAL "%" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+
+DEFINE VARIABLE abs-err-temp-vol-text AS CHARACTER FORMAT "x(2)" INITIAL "∞—" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+DEFINE VARIABLE abs-err-temp-dens-text AS CHARACTER FORMAT "x(2)" INITIAL "∞—" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+
+DEFINE VARIABLE abs-err-dens-text AS CHARACTER FORMAT "x(5)" INITIAL "Í„/Ï3" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+DEFINE VARIABLE relative-err-dens-text AS CHARACTER FORMAT "x(1)" INITIAL "%" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+DEFINE VARIABLE abs-err-dens-lgas-liquid-text AS CHARACTER FORMAT "x(5)" INITIAL "Í„/Ï3" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+DEFINE VARIABLE abs-err-dens-lgas-vapor-text AS CHARACTER FORMAT "x(5)" INITIAL "Í„/Ï3" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
+
+DEFINE VARIABLE otnos-text AS CHARACTER FORMAT "x(1)" INITIAL "%" 
+     LABEL "nnn" 
+      VIEW-AS TEXT .
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -186,27 +226,34 @@ define frame Dialog-Frame
      sr-izmerenia.sr-temp-line at row 9.13 col 61.5 colon-aligned widget-id 104
           view-as fill-in 
           size 26 by 1
+          temp-line-text no-labels at row 9.3 col 95
      sr-izmerenia.sr-abs-err-neft-water at row 10.33 col 61.5 colon-aligned widget-id 82
           view-as fill-in 
           size 26 by 1
+          abs-err-neft-water-text no-labels at row 10.5 col 95
      sr-izmerenia.sr-relative-err-neft-water at row 11.46 col 61.5 colon-aligned widget-id 100
           view-as fill-in 
           size 26 by 1
+          relative-err-neft-water-text no-labels at row 11.6 col 95
      sr-izmerenia.sr-abs-err-water at row 12.71 col 61.5 colon-aligned widget-id 88
           view-as fill-in 
           size 26 by 1
+          abs-err-water-text no-labels at row 12.85 col 95
      sr-izmerenia.sr-relative-err-water at row 13.92 col 61.5 colon-aligned widget-id 102
           view-as fill-in 
           size 26 by 1
+          relative-err-water-text no-labels at row 14.07 col 95
      sr-izmerenia.sr-temperature at row 16.04 col 5.5 widget-id 106
           view-as toggle-box
           size 20 by .79
      sr-izmerenia.sr-abs-err-temp-vol at row 17.21 col 61.5 colon-aligned widget-id 86
           view-as fill-in 
           size 26 by 1
+          abs-err-temp-vol-text no-labels at row 17.35 col 95 
      sr-izmerenia.sr-abs-err-temp-dens at row 18.42 col 61.5 colon-aligned widget-id 84
           view-as fill-in 
           size 26 by 1
+          abs-err-temp-dens-text no-labels at row 18.57 col 95
      sr-izmerenia.sr-density at row 21.04 col 4.5 widget-id 90
           view-as toggle-box
           size 17 by .79
@@ -223,12 +270,15 @@ define frame Dialog-Frame
      sr-izmerenia.sr-abs-err-dens at row 23.42 col 60.5 colon-aligned widget-id 76
           view-as fill-in 
           size 26 by 1
+          abs-err-dens-text  no-labels at row 23.6 col 95 
      sr-izmerenia.sr-relative-err-dens at row 24.63 col 60.5 colon-aligned widget-id 98
           view-as fill-in 
           size 26 by 1
+          relative-err-dens-text no-labels at row 24.8 col 95
      sr-izmerenia.sr-abs-err-dens-lgas-liquid at row 25.75 col 60.5 colon-aligned widget-id 78
           view-as fill-in 
           size 26 by 1
+          abs-err-dens-lgas-liquid-text no-labels at row 25.9 col 95
     with view-as dialog-box keep-tab-order 
          side-labels no-underline three-d  scrollable  widget-id 100.
 
@@ -237,12 +287,14 @@ define frame Dialog-Frame
      sr-izmerenia.sr-abs-err-dens-lgas-vapor at row 26.96 col 60.5 colon-aligned widget-id 80
           view-as fill-in 
           size 26 by 1
+          abs-err-dens-lgas-vapor-text no-labels at row 27.1 col 95
      sr-izmerenia.sr-Weight at row 28.92 col 4.5 widget-id 114
           view-as toggle-box
           size 13.38 by .79
      sr-izmerenia.sr-otnos at row 30.04 col 61.5 colon-aligned widget-id 96
           view-as fill-in 
           size 25 by 1
+          otnos-text no-labels at row 30.2 col 95
      RECT-1 at row 6.25 col 2.5 widget-id 68
      RECT-2 at row 15.54 col 2.5 widget-id 70
      RECT-3 at row 20.75 col 2.5 widget-id 72
@@ -575,6 +627,10 @@ do:
         sr-izmerenia.sr-relative-err-dens        :visible = sr-izmerenia.sr-density
         sr-izmerenia.sr-abs-err-dens-lgas-liquid :visible = sr-izmerenia.sr-density
         sr-izmerenia.sr-abs-err-dens-lgas-vapor  :visible = sr-izmerenia.sr-density
+        abs-err-dens-text             :visible = sr-izmerenia.sr-density
+        relative-err-dens-text        :visible = sr-izmerenia.sr-density
+        abs-err-dens-lgas-liquid-text :visible = sr-izmerenia.sr-density
+        abs-err-dens-lgas-vapor-text  :visible = sr-izmerenia.sr-density
      .
 end.
 
@@ -597,6 +653,11 @@ do:
         sr-izmerenia.sr-relative-err-neft-water:visible = sr-izmerenia.sr-level
         sr-izmerenia.sr-abs-err-water          :visible = sr-izmerenia.sr-level
         sr-izmerenia.sr-relative-err-water     :visible = sr-izmerenia.sr-level
+        temp-line-text              :visible = sr-izmerenia.sr-level
+        abs-err-neft-water-text     :visible = sr-izmerenia.sr-level
+        relative-err-neft-water-text:visible = sr-izmerenia.sr-level
+        abs-err-water-text          :visible = sr-izmerenia.sr-level
+        relative-err-water-text     :visible = sr-izmerenia.sr-level
      .
        
 end.
@@ -632,6 +693,8 @@ do:
   assign
         sr-izmerenia.sr-abs-err-temp-vol  :visible = sr-izmerenia.sr-temperature
         sr-izmerenia.sr-abs-err-temp-dens :visible = sr-izmerenia.sr-temperature
+        abs-err-temp-vol-text  :visible = sr-izmerenia.sr-temperature
+        abs-err-temp-dens-text :visible = sr-izmerenia.sr-temperature
      .
        
 end.
@@ -666,6 +729,7 @@ do:
   
   assign
         sr-izmerenia.sr-otnos                  :visible = sr-izmerenia.sr-Weight
+        otnos-text                  :visible = sr-izmerenia.sr-Weight
           .
 end.
 
@@ -1128,6 +1192,11 @@ procedure enable_UI :
           sr-izmerenia.sr-abs-err-dens-lgas-liquid 
           sr-izmerenia.sr-abs-err-dens-lgas-vapor sr-izmerenia.sr-Weight 
           sr-izmerenia.sr-otnos 
+          temp-line-text abs-err-neft-water-text relative-err-neft-water-text
+          abs-err-water-text relative-err-water-text abs-err-temp-vol-text
+          abs-err-temp-dens-text abs-err-dens-text relative-err-dens-text
+          abs-err-dens-lgas-liquid-text abs-err-dens-lgas-vapor-text
+          otnos-text
       with frame Dialog-Frame.
   enable RECT-1 RECT-2 RECT-3 RECT-4  Btn_Cancel with frame Dialog-Frame.
   if iMode ne {&lookup}
