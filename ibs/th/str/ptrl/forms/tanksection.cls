@@ -1352,12 +1352,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* button1 */
     /*  */
-        this-object:button1:BackgroundImage = cast(resources:GetObject("button1.BackgroundImage"), System.Drawing.Image).
-        this-object:button1:ImageAlign = System.Drawing.ContentAlignment:MiddleRight.
-        this-object:button1:Location = new System.Drawing.Point(648, 55).
+    this-object:button1:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:button1:ImageAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:button1:Location = new System.Drawing.Point(648, 55).
     this-object:button1:Name = "button1".
-        this-object:button1:Size = new System.Drawing.Size(27, 27).
+    this-object:button1:Size = new System.Drawing.Size(27, 27).
     this-object:button1:TabIndex = 14.
+    this-object:button1:Text = "...".
+    this-object:button1:TextAlign = System.Drawing.ContentAlignment:TopCenter.
     this-object:button1:UseCompatibleTextRendering = true.
     this-object:button1:UseVisualStyleBackColor = true.
     this-object:button1:Click:Subscribe(this-object:button1_Click).
