@@ -52,6 +52,8 @@ function f_disp_time returns character
    define variable vSec     as integer   no-undo.
    define variable vTimeStr as character no-undo.
    
+   if iTime < 0 then return "".
+   
    vHour = truncate(iTime / 3600, 0).
    vMinute = truncate((iTime - vHour * 3600) / 60, 0).
    vSec = iTime - vHour * 3600 - vMinute * 60.
