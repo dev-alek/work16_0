@@ -33,9 +33,9 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
     private set.
   define property qr-rule     as integer      no-undo get. 
     private set.
-  define property bank-resive-debit as character    no-undo get. 
+  define property bank-deposit-debit as character    no-undo get. 
     private set.    
-  define property bank-resive-kredit as character    no-undo get. 
+  define property bank-deposit-kredit as character    no-undo get. 
     private set.    
   define override property InitTag as character no-undo init "bank"
     get. 
@@ -67,15 +67,15 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
           assign 
             qr-rule = integer(inValue) .
         end.              
-      when "bank-resive-debit" then 
+      when "bank-deposit-debit" then 
         do:
           assign 
-            bank-resive-debit = inValue .
+            bank-deposit-debit = inValue .
         end.      
-      when "bank-resive-kredit" then 
+      when "bank-deposit-kredit" then 
         do:
           assign 
-            bank-resive-kredit = inValue .
+            bank-deposit-kredit = inValue .
         end.      
     end case.
   end.
@@ -95,10 +95,10 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
       when cor-acc = ?
       v-str = v-str + ",qr-rule" 
       when qr-rule = ?
-      v-str = v-str + ",bank-resive-debit" 
-      when bank-resive-debit = ?
-      v-str = v-str + ",bank-resive-kredit" 
-      when bank-resive-kredit = ?
+      v-str = v-str + ",bank-deposit-debit" 
+      when bank-deposit-debit = ?
+      v-str = v-str + ",bank-deposit-kredit" 
+      when bank-deposit-kredit = ?
       .
     v-str = trim (v-str, ",").
     if v-str > ''
@@ -114,8 +114,8 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
       bank-city = ?
       bik       = ?
       qr-rule   = ?
-      bank-resive-debit = ?
-      bank-resive-kredit = ?
+      bank-deposit-debit = ?
+      bank-deposit-kredit = ?
       .
   end.
   
