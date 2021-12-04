@@ -1,15 +1,16 @@
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 {cmp\str-glbl.i {1}}
- {gbl\xmlchar.i {1}} 
+{gbl\xmlchar.i}
 define variable mMRCCode as logical no-undo.
+define variable mTypeMark as character  no-undo.
 
-&if "{1}" = "class"
-&then
+
+{&CommentStartNoClass}
 method private character repTegforDm
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function repTegforDm return char 
-&endif
+{utl\comment.i} */
 (iDM as char ):
     define variable vTeglist as character no-undo init "01,02,11,13,17,21,8005".
     define variable vteg as character no-undo.
@@ -22,31 +23,27 @@ function repTegforDm return char
     end.
     return oDM.
 end.
-
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character repSpecSimbforDm
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function repSpecSimbforDm return char 
-&endif
+{utl\comment.i} */ 
 (iDM as char ):
     
     define variable oDM as character no-undo.
-  &if "{1}" <> "class"
-  &then
+  {&CommentStartClass}
   run
-  &endif 
+  {utl\comment.i} */  
     xmlchar-decode(iDM, output oDM).
     
   return repTegforDm (oDM).
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character repSpecSimbforXlm
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function repSpecSimbforXlm return char 
-&endif
+{utl\comment.i} */ 
 (iDM as char ):
   
     define variable vReplist_new as character no-undo init "&amp;,&gt;,&lt;,&apos;,&quot;".
@@ -58,12 +55,11 @@ function repSpecSimbforXlm return char
         
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character getGtinByDM
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getGtinByDM return char 
-&endif
+{utl\comment.i} */ 
 (IDM as char):
    define variable VTXT as char no-undo.
    define variable vGtin as char no-undo.
@@ -112,33 +108,75 @@ function getGtinByDM return char
    return vgtin.    
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private integer getGdsCodeByGtin
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getGdsCodeByGtin return int 
-&endif
+{utl\comment.i} */ 
 (iGtin as char):
    
-   define buffer prod-bc for prod-bc.
+   define buffer prod-bc  for prod-bc.
+   define buffer bar-code for bar-code.
    
    find first prod-bc where prod-bc.b-str eq iGtin no-lock no-error.
    find first bar-code where bar-code.b-code eq prod-bc.b-code no-lock no-error.
-   return if avail prod-bc then bar-code.gds-code else ?.
+   return if avail bar-code then bar-code.gds-code else ?.
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
+method private decimal getQntyCodeByGtin
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function getQntyCodeByGtin return decimal  
+{utl\comment.i} */ 
+(iGtin as char):
+   
+   define buffer prod-bc for prod-bc.
+   define buffer bar-code for bar-code.
+   
+   find first prod-bc where prod-bc.b-str eq iGtin no-lock no-error.
+   find first bar-code where bar-code.b-code eq prod-bc.b-code no-lock no-error.
+   return if avail bar-code then bar-code.cli-base-rate else ?.
+end.
+
+{&CommentStartNoClass}
 method private integer getGdsCodeByDM
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getGdsCodeByDM return int 
-&endif
+{utl\comment.i} */ 
 (iDm as char):
    define variable vGtin as char no-undo.
    define buffer prod-bc for prod-bc.
    vGtin  = getGtinByDM (IDM ).
    return getGdsCodeByGtin (vGtin).
     
+end.
+
+{&CommentStartNoClass}
+method private logical ChekTypeMarkByGds
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function ChekTypeMarkByGds return logical 
+{utl\comment.i} */
+(iGds-code as integer ):
+   define buffer goods-attr for goods-attr.
+   find first goods-attr where goods-attr.gds-code   = iGds-code 
+                           and goods-attr.attr-code  = {&attr-mark-type}
+   no-lock no-error.
+   if available goods-attr
+   then do:
+      mTypeMark = goods-attr.attr-value.                        
+      return goods-attr.attr-value = "tabak" .
+   end.
+   else 
+      return no.
+end.
+
+{&CommentStartNoClass}
+method private logical ChekTypeMarkByDm
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function ChekTypeMarkByDm return logical 
+{utl\comment.i} */
+(iDM as char ):
+   return ChekTypeMarkByGds(getGdsCodeByDM(idm)).
 end.
 /*
 КИ
@@ -164,31 +202,35 @@ end.
 + 20 табачная
 */
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character  GetNextElement
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function GetNextElement return character  
-&endif
+{utl\comment.i} */ 
   (output oteg          as character 
   ,output otegval       as character
   ,input-output pstr    as character 
   /*,input        iLength as character*/ ):
      define variable vlistElem as character no-undo    init "00,01,02,21,17,11,13,(01),(02),(21),(17),(11),(13)". /* ,(8005),8005".*/
-     define variable vlistallleng as character no-undo init "00,00,00,00,00,00,00,0000,0000,0000,0000,0000,0000".  /* ,000000,0000". */
-     define variable vlistleng1   as character no-undo init "27,14,14,07,06,06,06,0014,0014,0007,0006,0006,0006". /* ,000006,0006". */
-     define variable vlistleng2   as character no-undo init "27,14,14,13,06,06,06,0014,0014,0007,0006,0006,0006". /* ,000006,0006".*/
+     define variable vlistleng   as character no-undo init "27,14,14,13,06,06,06,0014,0014,0013,0006,0006,0006". /* ,000006,0006".*/
      define variable vTeg as character no-undo.
      define variable vLength as integer no-undo.
      define variable vi as integer no-undo.
      define variable vj as integer no-undo.
+     if mtypemark eq "milk"
+     then do:
+        entry (4,vlistleng) = "06".
+     end.
+     else if mtypemark eq "tabak"
+     then do:
+        entry (4,vlistleng) = "07".
+     end.
+       
      if mMRCCode
      then
         assign
            vlistElem     = vlistElem    + ",(8005),8005"
-           vlistallleng  = vlistallleng + ",000000,0000"
-           vlistleng1    = vlistleng1   + ",000006,0006"
-           vlistleng2    = vlistleng2   + ",000006,0006"
+           vlistleng     = vlistleng    + ",000006,0006"
         .
      
      if length(pstr) eq 4
@@ -199,26 +241,7 @@ function GetNextElement return character
        vTeg = entry(vi,vlistElem).
        if pstr begins vTeg
        then do:
-          
-          vLength = int(entry(vi,vlistallleng)) no-error.
-          if vLength eq 0
-             and not error-status:error
-          then 
-             vLength = int(entry(vi,vlistleng1)).
-          else do:
-             block-mas:
-             do vj = 1 to num-entries(entry(vi,vlistallleng),"|"):
-                vLength = int(entry(vj,entry(vi,vlistallleng),"|")).
-                if vLength eq length(pstr)
-                then do:
-                   vLength = vj.
-                   leave block-mas.
-                end.
-                else
-                   vLength = ?.
-             end.
-             vLength = int(entry(vi,if vLength ne ? then vlistleng1 else vlistleng2)).
-          end.
+          vLength = int(entry(vi,vlistleng)).
           oteg = entry(vi,vlistElem).
           otegval = substring (pstr,length(oteg) + 1, vLength).
           vTeg = oteg + otegval.
@@ -233,17 +256,17 @@ function GetNextElement return character
     return vteg.
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character  GetCodeIdent
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function GetCodeIdent return character  
-&endif
+{utl\comment.i} */ 
 (iDm as char):
    define variable Velement   as character no-undo init "first".
    define variable oCodeIdent as character no-undo.
    define variable vteg as character no-undo.
    define variable vtegval as character no-undo.
+   ChekTypeMarkByDm(idm).
    if iDm begins {&tech-mark-prefix}
    then
       oCodeIdent = iDm.
@@ -275,12 +298,11 @@ function GetCodeIdent return character
 
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character  GetTegCod
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function GetTegCod return character  
-&endif
+{utl\comment.i} */ 
 (icodeIdent as char, iTeg as char):
    define variable Velement   as character no-undo init "first".
    define variable oTeg as character no-undo.
@@ -304,6 +326,7 @@ function GetTegCod return character
          oTeg = substring(icodeIdent,15,7).
    end.
    else do: 
+      ChekTypeMarkByDm(icodeIdent).
       block-teg: 
          do while Velement ne "" and icodeIdent ne "":
          Velement = GetNextElement(output vteg, output vtegval, input-output icodeIdent).
@@ -318,12 +341,11 @@ function GetTegCod return character
 
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character  addBracketForCode
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function addBracketForCode return character  
-&endif
+{utl\comment.i} */ 
 (icodeIdent as char):
    define variable Velement   as character no-undo init "first".
    define variable oTeg as character no-undo.
@@ -352,16 +374,15 @@ end.
 
 
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private integer getlevelByCodId
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getlevelByCodId return int 
-&endif
+{utl\comment.i} */ 
 (iCode as char):
    define variable vLength as int no-undo.
    define variable vLevel  as int no-undo.
- 
+   if not ChekTypeMarkByDM (icode) then return ?.
    vLength = length(iCode).
    if    vLength eq 18
       or vLength eq 20
@@ -429,12 +450,11 @@ end.
 + 2 + 14 + 2 + 6 + 2 (до +20) = 26 - 46 табачная ("01"("02") + 14 + "11"("13") + 6 + 21 (до +20)
 + 20 табачная
 */
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character  getLevelMotpBycodid
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getLevelMotpBycodid return character  
-&endif
+{utl\comment.i} */ 
 (iDm as char):
    define variable vLevel as integer no-undo.
    define variable vList as character no-undo init "Unit,kin,Level1,Level2,Level3,Level4,Level5".
@@ -448,22 +468,20 @@ function getLevelMotpBycodid return character
       return entry(vlevel,vList).
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character  getLevelMotpByDM
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getLevelMotpByDM return character  
-&endif
+{utl\comment.i} */ 
 (iDm as char):
    return getLevelMotpByCodId(GetCodeIdent(iDm)).
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character  getLevelUTDByCodId
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getLevelUTDByCodId return character  
-&endif
+{utl\comment.i} */ 
 (iDm as char):
    define variable vLevel as integer no-undo.
    define variable vList as character no-undo init "КИ,КИН,КИГУ,КИТУ".
@@ -477,25 +495,25 @@ function getLevelUTDByCodId return character
       return entry(vlevel,vList).
 end.
 
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private character  getLevelUTDByDM
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getLevelUTDByDM return character  
-&endif
+{utl\comment.i} */ 
 (iDm as char):
    return getLevelUTDByCodId(GetCodeIdent(iDm)).
 end.
 
-&if "{1}" = "class"
-&then
-method private integer   getQntyUTDByCodId
-&else
-function getQntyUTDByCodId return integer   
-&endif
+{&CommentStartNoClass}
+method private decimal getQntyUTDByCodId
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function getQntyUTDByCodId return decimal    
+{utl\comment.i} */ 
 (iDm as char):
    define variable vLevel as integer no-undo.
    define variable vList as character no-undo init "1,5,10,500".
+   if ChekTypeMarkByDM (iDM)
+   then do:
    vLevel = getlevelByCodId(iDm).
    if    vLevel eq ?
       or vLevel < 1
@@ -505,21 +523,24 @@ function getQntyUTDByCodId return integer
    else
       return int(entry(vlevel,vList)).
 end.
-&if "{1}" = "class"
-&then
-method private integer   getQntyUTDByDM
-&else
-function getQntyUTDByDM return integer   
-&endif
+   else
+      return getQntyCodeByGtin(getGtinByDm(idm)).
+end.
+
+{&CommentStartNoClass}
+method private decimal getQntyUTDByDM
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function getQntyUTDByDM return decimal    
+{utl\comment.i} */ 
 (iDm as char):
    return getQntyUTDByCodId(GetCodeIdent(iDm)).
 end.
-&if "{1}" = "class"
-&then
+
+{&CommentStartNoClass}
 method private decimal    getMRC4
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getMRC4 return decimal    
-&endif
+{utl\comment.i} */ 
 (iMRC as char):
    define variable oMrc     as decimal no-undo init ?.
    define variable vAlphabet as character no-undo init "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\~"%&\'*+-./_,:;=<>?".
@@ -543,12 +564,12 @@ function getMRC4 return decimal
    end.
    return OMRc.
 end.
-&if "{1}" = "class"
-&then
+
+{&CommentStartNoClass}
 method private decimal    getMRCByDM
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getMRCByDM return decimal    
-&endif
+{utl\comment.i} */ 
 (iDm as char):
    define variable vMRC     as character no-undo.
    define variable oMrc     as decimal no-undo init ?.
@@ -584,6 +605,3 @@ function getMRCByDM return decimal
    end.
    return OMRc.
 end.
-
-
-   

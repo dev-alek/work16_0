@@ -268,7 +268,7 @@ define variable table-find as character
      radio-buttons
      "Рец. на товар",  "recipe":u,
      "В составе рец.", "recipe-gds":u
-     size 17 by 3 initial "recipe":u
+     size 17 by 2 initial "recipe":u
 no-undo.
 
 define variable recipetype as character
@@ -302,11 +302,11 @@ def menu m-types
 
 define variable good-name like ub.goods.gds-name
       view-as text
-     size 25 by 1 fgcolor 4 no-undo.
+     size 18 by 1 fgcolor 4 no-undo.
 
 define variable good-prod like ub.clients.obj-name
       view-as text
-     size 25 by 1 fgcolor 4 no-undo.
+     size 18 by 1 fgcolor 4 no-undo.
 
 define rectangle rect-1
      edge-chars 0.25 graphic-edge  no-fill

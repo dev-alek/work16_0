@@ -281,7 +281,7 @@ DO:
       f-rvd-reason:screen-value = "0" .
     end .
     else
-      v-reason-name:screen-value = buf_ext-classif.CharKey_One .    
+      v-reason-name:screen-value = buf_ext-classif.CharKey_Two .    
   end .                            
 END.
 

@@ -207,7 +207,7 @@ procedure CreateOneRec:
                  b-tran-fuel.uuid      = tran-fuel.uuid
              and b-tran-fuel.uuid-cheq = ""
       no-lock no-error.
-      if avail b-tran-fuel then
+      if avail b-tran-fuel and b-tran-fuel.date-beg < tran-fuel.date-beg then
          vDateBeg = b-tran-fuel.date-beg.
       else
          vDateBeg = tran-fuel.date-beg.
@@ -1038,6 +1038,37 @@ procedure AfterCalc:
          .
    end.
    */
+   
+   /* Определим транзакции перелива */
+   for each tt-rep
+   break
+      by tt-rep.obj-code
+      by tt-rep.grp-num
+      by tt-rep.sort-date
+      by tt-rep.sort-time
+      by tt-rep.datetime-beg:
+
+      if first-of(tt-rep.grp-num) then do:
+         vI = 0.
+         find first b-tt-rep where
+                    rowid(b-tt-rep) = rowid(tt-rep).
+      end.
+      
+      vI = vI + 1.
+      
+      if last-of(tt-rep.grp-num) and vI = 2 then do:
+         if b-tt-rep.chk-type-desc  = "Продажа"           and 
+            b-tt-rep.uuid           = tt-rep.uuid         and
+            tt-rep.uuid-cheq        begins "empty-"       and
+            b-tt-rep.trk-num        = tt-rep.trk-num      and
+            b-tt-rep.nozzle-num     = tt-rep.nozzle-num   and
+            b-tt-rep.fuel-code      = tt-rep.fuel-code    and
+            b-tt-rep.volume         = tt-rep.volume       and
+            b-tt-rep.datetime-beg  <= tt-rep.datetime-beg
+         then
+            tt-rep.chk-type-desc = "Перелив".
+      end.
+   end.
 
    /* Постобработка данных по фильтру тип оплаты */   
    for each tt-rep where
