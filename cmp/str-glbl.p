@@ -139,7 +139,10 @@ run filwrlib_append-new-line in this-procedure (input "&if defined(str-glbl_i) =
 run filwrlib_append-new-line in this-procedure (input "&glob str-glbl_i" ) .
 run filwrlib_append-new-line in this-procedure (input "&global-define language {&language}" ).
 run filwrlib_append-new-line in this-procedure (input '&if "~{1~}" = "class" &then' ) .
+run filwrlib_append-new-line in this-procedure (input '&global-define CommentStartClass /~~* ' ) .
 run filwrlib_append-new-line in this-procedure (input '&else' ) .
+run filwrlib_append-new-line in this-procedure (input '&global-define CommentStartNoClass /~~* ' ) .
+
 run filwrlib_append-new-line in this-procedure (input "define new global shared variable g#language as character no-undo ." ) .
 run filwrlib_append-new-line in this-procedure (input "if g#language <> '' and g#language <> '{&language}':U then do:" ) .
 run filwrlib_append-new-line in this-procedure (input "  undo, return error substitute( '&1. incorrect language&2str-glbl: {&language}&2db: &3':U, this-procedure :file-name, chr(10), g#language  )." ) .

@@ -23,36 +23,35 @@ define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
 
 /*==========================================================================*/
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private void xmlchar-test (input  p-in-string          as character,
                                   output p-out-string-enc     as character,
                                   output p-out-string-dec    as character):
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 procedure xmlchar-test :
 define input parameter p-in-string          as character        no-undo.
 define output parameter p-out-string-enc    as character        no-undo.
 define output parameter p-out-string-dec    as character        no-undo.
-&endif
+{utl\comment.i} */ 
+
 do
 on error undo, return error
 :
-    &if "{1}" = "class"
-    &then 
+
+    {&CommentStartNoClass} 
        xmlchar-encode
-    &else
+    {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
        run xmlchar-encode in this-procedure 
-    &endif
+    {utl\comment.i} */ 
     (
           input p-in-string
         , output p-out-string-enc
     ).
-    &if "{1}" = "class"
-    &then
+    {&CommentStartNoClass}
        xmlchar-decode   
-    &else
+    {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
        run xmlchar-decode in this-procedure 
-    &endif
+    {utl\comment.i} */ 
     (
           input p-out-string-enc
         , output p-out-string-dec
@@ -62,16 +61,15 @@ end.
 end . /* xmlchar-test */
 
 /*==========================================================================*/
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private void xmlchar-encode (input  p-in-string          as character,
                                   output p-out-string         as character):
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 
 procedure xmlchar-encode :
 define input parameter p-in-string      as character        no-undo.
 define output parameter p-out-string    as character        no-undo.
-&endif
+{utl\comment.i} */ 
     define variable v-position      as integer      no-undo.
     define variable v-current-char  as character    no-undo.
 do
@@ -217,16 +215,15 @@ end.
 end . /* xmlchar-encode */
 
 /*==========================================================================*/
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private void xmlchar-decode (input  p-in-string          as character,
                                   output p-out-string         as character):
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 
 procedure xmlchar-decode :
 define input parameter p-in-string      as character        no-undo.
 define output parameter p-out-string    as character        no-undo.
-&endif
+{utl\comment.i} */ 
     define variable v-position      as integer      no-undo.
     define variable v-last-position as integer      no-undo.
     define variable v-temp-integer  as integer      no-undo.
@@ -275,12 +272,11 @@ on error undo, return error
                 .
                 if v-last-position > 0
                 then do:
-                    &if "{1}" = "class"
-                    &then
+                    {&CommentStartNoClass}
                     xmlchar-read-integer
-                    &else
+                    {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
                     run xmlchar-read-integer in this-procedure 
-                    &endif
+                    {utl\comment.i} */ 
                      (
                           input substring( p-in-string, v-position + 2, v-last-position - v-position - 2 )
                         , output v-temp-integer
@@ -367,18 +363,17 @@ end.
 end . /* xmlchar-encode */
 
 /*==========================================================================*/
-&if "{1}" = "class"
-&then
+{&CommentStartNoClass}
 method private void xmlchar-read-integer (input  p-input-string       as character,
                                           output p-output-integer     as integer,
                                           output p-success            as logical):
-&else
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 
 procedure xmlchar-read-integer :
 define input parameter p-input-string      as character        no-undo.
 define output parameter p-output-integer   as integer          no-undo.
 define output parameter p-success       as logical          no-undo.
-&endif
+{utl\comment.i} */ 
 do
 on error undo, return error
 :
