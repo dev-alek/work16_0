@@ -558,6 +558,7 @@ PROCEDURE local-enable_UI :
     brw-auto-tank:visible = true .
     enable brw-auto-tank WITH FRAME Dialog-Frame.
     empty temp-table tt-auto-tank .
+
   if par-obj-type <> "" and par-obj-code <> 0 then do :
      disable rs-status_ WITH FRAME Dialog-Frame.
      case RS-status_:
@@ -577,6 +578,17 @@ PROCEDURE local-enable_UI :
                                            and ub.auto-tank.firm-code = par-obj-code:
               create tt-auto-tank .
               buffer-copy ub.auto-tank to tt-auto-tank .
+           end.
+           FOR EACH ub.auto-tank no-lock where ub.auto-tank.status_ = RS-status_
+                                           and ub.auto-tank.firm-type = ""
+                                           and ub.auto-tank.firm-code = ?:
+              FOR first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
+                                                 and auto-tank-attr.auto-num = ub.auto-tank.auto-num:
+                 if auto-tank-attr.attr-value begins par-obj-type and integer(replace(auto-tank-attr.attr-value, "орг", "")) = par-obj-code then do:
+              create tt-auto-tank .
+              buffer-copy ub.auto-tank to tt-auto-tank .
+                 end.
+              end.                                              
            end.
         end.  
      end case.           
