@@ -514,8 +514,8 @@ sw = insw .
 /*      if v-line-input-type-l > "" then sw:write-data-element ("inp-type-l" , v-line-input-type-l) no-error .*/
 /*      if v-tmp-mi > "" then sw:write-data-element ("tmp-mi" , v-tmp-mi) no-error .*/
 /*      if v-line-input-type-t > "" then sw:write-data-element ("inp-type-t" , v-line-input-type-t) no-error .*/
-      if v-dens-sug <> ? and v-dens-sug <> 0 then sw:write-data-element ("tnk-dens-sug" , string-mth(v-dens-sug)) no-error .
-      if v-pres-sug <> ? and v-pres-sug <> 0 then sw:write-data-element ("tnk-pres-sug" , string-mth(v-pres-sug)) no-error .
+/*      if v-dens-sug <> ? and v-dens-sug <> 0 then sw:write-data-element ("tnk-dens-sug" , string-mth(v-dens-sug)) no-error .*/
+/*      if v-pres-sug <> ? and v-pres-sug <> 0 then sw:write-data-element ("tnk-pres-sug" , string-mth(v-pres-sug)) no-error .*/
       sw:write-data-element ("tank-ost-fact" , if tt-rvs-line.state-measure-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-qnty)) no-error .
       sw:write-data-element ("tank-ost-tc-fact" , if tt-rvs-line.state-measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-tc-qnty)) no-error .
       sw:write-data-element ("tank-dnst-fact" , if tt-rvs-line.state-density = ? then "0" else string-mth(tt-rvs-line.state-density)) no-error .
@@ -554,8 +554,8 @@ sw = insw .
         end .
       end case .
       sw:write-data-element ("tnk-flng-fact" , if tt-rvs-line.state-cf-qnty = ? then "0" else string-mth(tt-rvs-line.state-cf-qnty)) no-error .
-      if v-dens-sug-fact <> ? and v-dens-sug-fact <> 0 then sw:write-data-element ("tnk-dens-sug-fact" , string-mth(v-dens-sug-fact)) no-error .
-      if v-pres-sug-fact <> ? and v-pres-sug-fact <> 0 then sw:write-data-element ("tnk-pres-sug-fact" , string-mth(v-pres-sug-fact)) no-error .
+/*      if v-dens-sug-fact <> ? and v-dens-sug-fact <> 0 then sw:write-data-element ("tnk-dens-sug-fact" , string-mth(v-dens-sug-fact)) no-error .*/
+/*      if v-pres-sug-fact <> ? and v-pres-sug-fact <> 0 then sw:write-data-element ("tnk-pres-sug-fact" , string-mth(v-pres-sug-fact)) no-error .*/
       
       sw:write-data-element ("ms-dnsty-average" , if v-dnsty = ? then "0" else string-mth(v-dnsty)) no-error .
       case sr-type-dens :
