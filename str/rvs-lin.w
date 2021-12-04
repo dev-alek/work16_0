@@ -3427,6 +3427,7 @@ DO:
      tt-rvs-line.state-measure-qnty = input frame {&frame-name} {&self-name} .
      tt-rvs-line.fact-sum-vol = input frame {&frame-name} {&self-name} + input frame {&frame-name} tt-rvs-line.state-add-qnty .
      varstate-sum-vol = input frame {&frame-name} {&self-name} + (if input frame {&frame-name} varstate-water-qnty = ? then 0 else input frame {&frame-name} varstate-water-qnty) .
+     tt-rvs-line.state-brutto-qnty = varstate-sum-vol .
      display tt-rvs-line.fact-sum-vol varstate-sum-vol with frame {&frame-name}.
      run volume-water no-error.
      if error-status:error then return no-apply.
@@ -3439,8 +3440,8 @@ DO:
      end.
      tt-rvs-line.fact-sum-mass = tt-rvs-line.fact-calc-add-mass + tt-rvs-line.state-measure-cli-qnty .
      abs-delta-mass-add-qnty = tt-rvs-line.fact-calc-add-mass * pl-error-mass / 100 no-error .
-     display tt-rvs-line.fact-sum-mass abs-delta-mass-add-qnty with frame {&frame-name}.
-     assign tt-rvs-line.fact-calc-vol .
+     assign tt-rvs-line.fact-calc-vol = tt-rvs-line.state-measure-qnty .
+     display tt-rvs-line.fact-sum-mass tt-rvs-line.fact-calc-vol abs-delta-mass-add-qnty with frame {&frame-name}.
   end.
 
 END.
@@ -4742,6 +4743,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         tt-rvs-line.state-measure-cli-qnty
         tt-rvs-line.state-level-total
         tt-rvs-line.state-level-water
+        tt-rvs-line.fact-calc-vol
       with frame {&frame-name}.
     end .
   end .
