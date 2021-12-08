@@ -573,7 +573,9 @@ sw = insw .
       sw:write-data-element ("tank-lvl-fact" , if tt-rvs-line.state-level-petrol = ? then "0" else string-mth(tt-rvs-line.state-level-petrol)) no-error .
       sw:write-data-element ("tank-cmn-lvl-fact" , if tt-rvs-line.state-level-total = ? then "0" else string-mth(tt-rvs-line.state-level-total)) no-error .
       sw:write-data-element ("tnk-wtr-lvl-fact" , if tt-rvs-line.state-level-water = ? then "0" else string-mth(tt-rvs-line.state-level-water)) no-error .
-      sw:write-data-element ("tnk-t-vlm-fact" , if v-temp-izm-vol = ? then "0" else string-mth(v-temp-izm-vol)) no-error .
+      if not v-is-sug
+      then
+        sw:write-data-element ("tnk-t-vlm-fact" , if v-temp-izm-vol = ? then "0" else string-mth(v-temp-izm-vol)) no-error .
       sw:write-data-element ("tnk-t-average-fact" , if tt-rvs-line.state-temperature = ? then "0" else string-mth(tt-rvs-line.state-temperature)) no-error .
       case sr-type-temp :
         when 0
@@ -599,7 +601,10 @@ sw = insw .
 /*      if v-dens-sug-fact <> ? and v-dens-sug-fact <> 0 then sw:write-data-element ("tnk-dens-sug-fact" , string-mth(v-dens-sug-fact)) no-error .*/
 /*      if v-pres-sug-fact <> ? and v-pres-sug-fact <> 0 then sw:write-data-element ("tnk-pres-sug-fact" , string-mth(v-pres-sug-fact)) no-error .*/
       
-      sw:write-data-element ("ms-dnsty-average" , if v-dnsty = ? then "0" else string-mth(v-dnsty)) no-error .
+      if not v-is-sug
+      then
+        sw:write-data-element ("ms-dnsty-average" , if v-dnsty = ? then "0" else string-mth(v-dnsty)) no-error .
+      
       case sr-type-dens :
         when 0
         then
@@ -625,10 +630,16 @@ sw = insw .
       sw:write-data-element ("ex-df" , string-mth(v-ex-df)) no-error .
       sw:write-data-element ("pomi-wght" , string-mth(v-POkMI-mass)) no-error .
       sw:write-data-element ("pomi-rel-me" , string-mth(v-POkMI-otn-delta-mass)) no-error .
-      sw:write-data-element ("pomi-dnst" , string-mth(v-POkMI-standart-dens)) no-error .
+      if not v-is-sug
+      then
+        sw:write-data-element ("pomi-dnst" , string-mth(v-POkMI-standart-dens)) no-error .
       sw:write-data-element ("pomi-vlm-st" , string-mth(v-POkMI-standart-vol)) no-error .
-      sw:write-data-element ("pomi-vlm-tv" , string-mth(v-POkMI-vol)) no-error .
-      sw:write-data-element ("pomi-wtr" , string-mth(v-POkMI-water-vol)) no-error .
+      if not v-is-sug
+      then
+        sw:write-data-element ("pomi-vlm-tv" , string-mth(v-POkMI-vol)) no-error .
+      if not v-is-sug
+      then
+        sw:write-data-element ("pomi-wtr" , string-mth(v-POkMI-water-vol)) no-error .
       sw:end-element ("tank")  .
     end.
     sw:end-element ("tanks")  .
