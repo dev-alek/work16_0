@@ -25,8 +25,7 @@ class ibs.th.str.ptrl.forms.tanksum inherits UserControl:
   define private variable label16 as System.Windows.Forms.Label no-undo.
   define private variable label15 as System.Windows.Forms.Label no-undo.
   define private variable label13 as System.Windows.Forms.Label no-undo.
-  define private variable maskedTextBoxArr as System.Windows.Forms.MaskedTextBox extent 4 no-undo.
-
+  
     
   constructor public tanksum (  ):
     
@@ -48,7 +47,7 @@ class ibs.th.str.ptrl.forms.tanksum inherits UserControl:
     Visual Designer to avoid any incompatible modifications.
     
     Modifying the contents of this method using a code editor will invalidate any support for this file. */
-    this-object:label39 = new System.Windows.Forms.Label().
+     this-object:label39 = new System.Windows.Forms.Label().
     this-object:label16 = new System.Windows.Forms.Label().
     this-object:label15 = new System.Windows.Forms.Label().
     this-object:label13 = new System.Windows.Forms.Label().
@@ -148,7 +147,7 @@ class ibs.th.str.ptrl.forms.tanksum inherits UserControl:
     this-object:Name = "tanksum".
     this-object:Size = new System.Drawing.Size(700, 820).
     this-object:ResumeLayout(false).
-    this-object:PerformLayout().
+    this-object:PerformLayout(). 
     catch e as Progress.Lang.Error:
       undo, throw e.
     end catch.
@@ -158,19 +157,21 @@ class ibs.th.str.ptrl.forms.tanksum inherits UserControl:
     
     def var ii as int no-undo.
   
-    maskedTextBoxArr[1] = maskedTextBoxDocQntySum.
-    maskedTextBoxArr[2] = maskedTextBoxCarVolSum.
-    maskedTextBoxArr[3] = maskedTextBoxTankVol.
-    maskedTextBoxArr[4] = maskedTextBoxTankWeightSum.
+    InitializeComponentCust( maskedTextBoxDocQntySum).
+    InitializeComponentCust( maskedTextBoxCarVolSum).
+    InitializeComponentCust( maskedTextBoxTankVol).
+    InitializeComponentCust( maskedTextBoxTankWeightSum).
     
-    do ii = 1 to extent (maskedTextBoxArr):
-      
-      maskedTextBoxArr[ii]:Enabled = false.
-      maskedTextBoxArr[ii]:BackColor = maskedTextBoxArr[ii]:BackColor .
-      maskedTextBoxArr[ii]:ReadOnly = true.
-      
-    end.
   
+  end.
+  
+  method private void InitializeComponentCust (imaskedTextBoxArr as System.Windows.Forms.MaskedTextBox):
+    
+      
+      imaskedTextBoxArr:Enabled = false.
+      imaskedTextBoxArr:BackColor = imaskedTextBoxArr:BackColor .
+      imaskedTextBoxArr:ReadOnly = true.
+      
   end.
 
   method public void SetData( infoSecs as InfoSectionsTotal ):

@@ -297,8 +297,11 @@ for each upgfile-tbl :
     os-delete value ( p0-pathrc ) recursive.
     delete upgfile-tbl.
 end.
+def var v-file-name as character no-undo.
+def var v-msg       as character no-undo.
 
-
+v-msg = "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова.".
+run utl\proc-msg.p (v-msg) no-error.
 
 run waitfram-hide in this-procedure .
-return "Установленны обновления программ ТН, чтобы они вступили в действие надо закрыть все программ ТН и запустить их снова" .
+return "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова." .
