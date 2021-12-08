@@ -1373,7 +1373,7 @@ on error undo, return error
                                                   ,input no /*p-logical*/
                                                   ) no-error.
       if error-status:error then do:
-        {&error-in-file-format}
+/*        {&error-in-file-format}*/
       end.
     end.  
     END.
