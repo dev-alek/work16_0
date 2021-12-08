@@ -321,7 +321,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     /*  */
     /* tanksections */
     /*  */
-    this-object:ClientSize = new System.Drawing.Size(715, 785).
+    this-object:ClientSize = new System.Drawing.Size(715, 835).
     this-object:Controls:Add(this-object:tableLayoutPanel1).
     this-object:Controls:Add(this-object:tabControl).
     this-object:Icon = cast(resources:GetObject("$this.Icon"), System.Drawing.Icon).
@@ -426,6 +426,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     end.
 /*    infoSecsObj:SaveDB() .*/
     infoSecsObj:WasSetting = true.
+    this-object:Close().
     return.
 
   end method.
