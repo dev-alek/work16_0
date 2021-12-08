@@ -642,21 +642,23 @@ procedure lib-trn3_clr-line :
         .
       end.
       else do:
-        assign
-          bf_doc-line.doc-density = 1.0 / buf_goods.cli-base-rate
-        .
         if valid-density( bf_doc-line.doc-density, (buf_goods.unit-base = buf_goods.unit-cli) ) <> true then do:
-          undo tr, return error substitute( 'В карточке товара указан некорректный коэффициент единиц измерения поставщика.&1'
-                                            + 'Невозможно установить плотность товара.&1'
-                                            + 'Документ: &2&1'
-                                            + 'Код товара: &3&1'
-                                            + 'Плотность: &4&1'
-                                            ,{&new-line}
-                                            ,bf_doc-line.doc-code
-                                            ,buf_goods.gds-code
-                                            ,bf_doc-line.doc-density
-                                          ).
-        end.
+          assign
+            bf_doc-line.doc-density = 1.0 / buf_goods.cli-base-rate
+          .
+          if valid-density( bf_doc-line.doc-density, (buf_goods.unit-base = buf_goods.unit-cli) ) <> true then do:
+            undo tr, return error substitute( 'В карточке товара указан некорректный коэффициент единиц измерения поставщика.&1'
+                                              + 'Невозможно установить плотность товара.&1'
+                                              + 'Документ: &2&1'
+                                              + 'Код товара: &3&1'
+                                              + 'Плотность: &4&1'
+                                              ,{&new-line}
+                                              ,bf_doc-line.doc-code
+                                              ,buf_goods.gds-code
+                                              ,bf_doc-line.doc-density
+                                            ).
+          end.
+        end .
       end.
       assign
         bf_doc-line.fact-density = bf_doc-line.doc-density
