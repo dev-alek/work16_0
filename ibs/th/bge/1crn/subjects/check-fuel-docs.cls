@@ -353,6 +353,34 @@ sw = insw .
                                      :
         v-is-sug = logical(goods-attr.attr-value = 'lgas':U) no-error .                               
       end .
+      if not v-is-sug
+      then do :
+        varmeasure-water-qnty = (tt-rvs-line.brutto-qnty - tt-rvs-line.measure-qnty) .
+      end .
+      assign
+        v-dnsty = ?
+        v-wght = ?
+        v-ex-df = ?
+        v-line-input-type = ""
+        v-line-input-type-p = ""
+        v-line-input-type-T = ""
+        v-line-input-type-l = ""
+        v-dens-sug = ?
+        v-pres-sug = ?
+        v-dens-sug-fact = ? 
+        v-pres-sug-fact = ?
+        v-temp-izm-vol = ?
+        v-dnst-mi = ""
+        v-lvl-mi = ""
+        v-tmp-mi = ""
+        sr-type-temp = ?
+        v-izm-temps = ""
+        sr-type-dens = ?
+        v-izm-denses = ""
+        v-POkMI-result-attr = ""
+        varmeasure-water-qnty = ?
+        varstate-water-qnty = ?
+      .
       for each buf_rvs-line-attr no-lock
         where buf_rvs-line-attr.obj-code  = tt-rvs-line.obj-code
         and buf_rvs-line-attr.obj-type  = tt-rvs-line.obj-type
@@ -454,8 +482,22 @@ sw = insw .
             end .
           when "sug-water-qnty" then
             do:
+              if v-is-sug
+              then do :
+                varmeasure-water-qnty = decimal(buf_rvs-line-attr.attr-value) .
+                varstate-water-qnty = varmeasure-water-qnty .
+              end .
+            end.
+          when "pokmi-water-qnty" then
+            do:
+              if not v-is-sug
+              then do :
+                varstate-water-qnty = decimal(buf_rvs-line-attr.attr-value) .
+              end .
+            end.  
+          when "measure-water-qnty" then
+            do:
               varmeasure-water-qnty = decimal(buf_rvs-line-attr.attr-value) .
-              varstate-water-qnty = varmeasure-water-qnty .
             end.
         end case .
       end.
@@ -467,7 +509,7 @@ sw = insw .
                                           and buf_place-attr.pl-code     = tt-rvs-line.pl-code no-error.
       if available buf_place-attr
       then do :
-        er-wght-pipeline = tt-rvs-line.state-add-qnty * v-dnsty * decimal(buf_place-attr.attr-value) / 100 no-error.  
+        er-wght-pipeline = tt-rvs-line.state-add-qnty * tt-rvs-line.state-density * decimal(buf_place-attr.attr-value) / 100 no-error.  
       end.
       else er-wght-pipeline = ? .                                
       sw:start-element ("tank") .
@@ -483,7 +525,7 @@ sw = insw .
       sw:write-data-element ("tank-wtr" , if varmeasure-water-qnty = ? then "0" else string-mth(varmeasure-water-qnty)) no-error .
       sw:write-data-element ("tank-wght" , if tt-rvs-line.measure-cli-qnty = ? then "0" else string-mth(tt-rvs-line.measure-cli-qnty)) no-error .
       sw:write-data-element ("tank-wght-br" , if tt-rvs-line.brutto-cli-qnty = ? then "0" else string-mth(tt-rvs-line.brutto-cli-qnty)) no-error .
-      sw:write-data-element ("tank-wtr-wght" , if (tt-rvs-line.brutto-cli-qnty - tt-rvs-line.measure-cli-qnty) = ? then "0" else string-mth(tt-rvs-line.brutto-cli-qnty - tt-rvs-line.measure-cli-qnty)) no-error .
+      sw:write-data-element ("tank-wtr-wght" , if varmeasure-water-qnty = ? then "0" else string-mth(varmeasure-water-qnty)) no-error .
       sw:write-data-element ("tank-lvl" , if tt-rvs-line.level-petrol = ? then "0" else string-mth(tt-rvs-line.level-petrol)) no-error .
       sw:write-data-element ("tank-cmn-lvl" , if tt-rvs-line.level-total = ? then "0" else string-mth(tt-rvs-line.level-total)) no-error .
       sw:write-data-element ("tnk-wtr-lvl" , if tt-rvs-line.level-water = ? then "0" else string-mth(tt-rvs-line.level-water)) no-error .
@@ -520,14 +562,14 @@ sw = insw .
       sw:write-data-element ("tank-ost-tc-fact" , if tt-rvs-line.state-measure-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-tc-qnty)) no-error .
       sw:write-data-element ("tank-dnst-fact" , if tt-rvs-line.state-density = ? then "0" else string-mth(tt-rvs-line.state-density)) no-error .
       sw:write-data-element ("pipeline-qnty-fact" , if tt-rvs-line.state-add-qnty = ? then "0" else string-mth(tt-rvs-line.state-add-qnty)) no-error .
-      sw:write-data-element ("pipeline-wght-fact" , if tt-rvs-line.state-add-qnty * v-dnsty = ? then "0" else string-mth(tt-rvs-line.state-add-qnty * v-dnsty)) no-error .
+      sw:write-data-element ("pipeline-wght-fact" , if tt-rvs-line.state-add-qnty * tt-rvs-line.state-density = ? then "0" else string-mth(tt-rvs-line.state-add-qnty * tt-rvs-line.state-density)) no-error .
       sw:write-data-element ("er-wght-pipeline" , if er-wght-pipeline = ? then "0" else string-mth(er-wght-pipeline)) no-error .
       sw:write-data-element ("tank-ost-br-fact" , if tt-rvs-line.state-brutto-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-qnty)) no-error .
       sw:write-data-element ("tank-ost-br-tc-fact" , if tt-rvs-line.state-brutto-tc-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-tc-qnty)) no-error .
       sw:write-data-element ("tank-wtr-fact" , if varstate-water-qnty = ? then "0" else string-mth(varstate-water-qnty)) no-error .
       sw:write-data-element ("tank-wght-fact" , if tt-rvs-line.state-measure-cli-qnty = ? then "0" else string-mth(tt-rvs-line.state-measure-cli-qnty)) no-error .
       sw:write-data-element ("tank-wght-br-fact" , if tt-rvs-line.state-brutto-cli-qnty = ? then "0" else string-mth(tt-rvs-line.state-brutto-cli-qnty)) no-error .
-      sw:write-data-element ("tank-wtr-wght-fact" , if (tt-rvs-line.state-brutto-cli-qnty - tt-rvs-line.state-measure-cli-qnty) = ? then "0" else string-mth(tt-rvs-line.state-brutto-cli-qnty - tt-rvs-line.state-measure-cli-qnty)) no-error .
+      sw:write-data-element ("tank-wtr-wght-fact" , if varstate-water-qnty = ? then "0" else string-mth(varstate-water-qnty)) no-error .
       sw:write-data-element ("tank-lvl-fact" , if tt-rvs-line.state-level-petrol = ? then "0" else string-mth(tt-rvs-line.state-level-petrol)) no-error .
       sw:write-data-element ("tank-cmn-lvl-fact" , if tt-rvs-line.state-level-total = ? then "0" else string-mth(tt-rvs-line.state-level-total)) no-error .
       sw:write-data-element ("tnk-wtr-lvl-fact" , if tt-rvs-line.state-level-water = ? then "0" else string-mth(tt-rvs-line.state-level-water)) no-error .
