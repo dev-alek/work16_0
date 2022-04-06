@@ -172,45 +172,45 @@ v-outprops v-outR v-outogr v-outb v-outc rep-artic I-rep-artic v-rep-artic
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-1
+DEFINE BUTTON B-1 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
-DEFINE BUTTON B-12
+DEFINE BUTTON B-12 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
-DEFINE BUTTON B-13
+DEFINE BUTTON B-13 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
+
+DEFINE BUTTON B-14 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON B-15 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON B-16 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON B-18 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
-
-DEFINE BUTTON B-15
-     IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
-
-DEFINE BUTTON B-16
-     IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
-     SIZE 3 BY 1.
-
-DEFINE BUTTON B-14
-     IMAGE-UP FILE "cmp/btn-ref.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
 DEFINE BUTTON B-19 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-2 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
@@ -220,379 +220,378 @@ DEFINE BUTTON B-2
 DEFINE BUTTON B-20 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-21 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-22 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-23 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-24 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-25 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-26 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-27 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
-
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-3 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-4 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-5 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-6 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-7 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-8 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE BUTTON B-9 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "&Help"
+DEFINE BUTTON B-Help 
+     LABEL "&Help" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-outappr
+DEFINE BUTTON B-outappr 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outares
+DEFINE BUTTON B-outares 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outasend
+DEFINE BUTTON B-outasend 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outdate
+DEFINE BUTTON B-outdate 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outdisc
+DEFINE BUTTON B-outdisc 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outegrp
+DEFINE BUTTON B-outegrp 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outhold
+DEFINE BUTTON B-outhold 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outnum
+DEFINE BUTTON B-outnum 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outobj
+DEFINE BUTTON B-outobj 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outprim
+DEFINE BUTTON B-outprim 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outrecv
+DEFINE BUTTON B-outrecv 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL "B-outrecv"
+     LABEL "B-outrecv" 
      SIZE 3 BY 1 TOOLTIP "Список типов единиц измерений".
 
-DEFINE BUTTON B-outrubl
+DEFINE BUTTON B-outrubl 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outsend
+DEFINE BUTTON B-outsend 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outsubs
+DEFINE BUTTON B-outsubs 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-outt12
+DEFINE BUTTON B-outt12 
      IMAGE-UP FILE "cmp/update.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON B-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON B-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE outappr AS CHARACTER
+DEFINE VARIABLE outappr AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outares AS CHARACTER
+DEFINE VARIABLE outares AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outasend AS CHARACTER
+DEFINE VARIABLE outasend AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outdate AS CHARACTER
+DEFINE VARIABLE outdate AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outdisc AS CHARACTER
+DEFINE VARIABLE outdisc AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outegrp AS CHARACTER
+DEFINE VARIABLE outegrp AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outhold AS CHARACTER
+DEFINE VARIABLE outhold AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outnum AS CHARACTER
+DEFINE VARIABLE outnum AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outobj AS CHARACTER
+DEFINE VARIABLE outobj AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outprim AS CHARACTER
+DEFINE VARIABLE outprim AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outrecv AS CHARACTER
+DEFINE VARIABLE outrecv AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 45.25 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outrubl AS CHARACTER
+DEFINE VARIABLE outrubl AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outsend AS CHARACTER
+DEFINE VARIABLE outsend AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outsubs AS CHARACTER
+DEFINE VARIABLE outsubs AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outt12 AS CHARACTER
+DEFINE VARIABLE outt12 AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 10 BY 1
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Список печатных форм, для которых :"
-      VIEW-AS TEXT
+DEFINE VARIABLE FILL-IN-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Список печатных форм, для которых :" 
+      VIEW-AS TEXT 
      SIZE 35.63 BY .67
      BGCOLOR 3 FGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-4 AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE FILL-IN-4 AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 26 BY 1 NO-UNDO.
 
-DEFINE VARIABLE in-docpr AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE in-docpr AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-factur01 AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 95 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-fgdsnind AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 70.63 BY .9 NO-UNDO.
-
-DEFINE VARIABLE v-in-docpr AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 80.63 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-incurrat AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-factur01 AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 91.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-invprn0 AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 93.63 BY .79 NO-UNDO.
+DEFINE VARIABLE v-fgdsnind AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 70.63 BY .92 NO-UNDO.
 
-DEFINE VARIABLE v-outappr AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 59.63 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outares AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 82.25 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outasend AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 80 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outb AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 34.63 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outc AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 38.63 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outdate AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 20.75 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outdisc AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-in-docpr AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 80.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-outegrp AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 31.75 BY .79 NO-UNDO.
+DEFINE VARIABLE v-incurrat AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 91.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-outhold AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 59 BY .79 NO-UNDO.
+DEFINE VARIABLE v-invprn0 AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 93.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-outnum AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 30.75 BY .79 NO-UNDO.
+DEFINE VARIABLE v-outappr AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 59.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-outobj AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 62 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outogr AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 34.63 BY .9 NO-UNDO.
-
-DEFINE VARIABLE v-outprim AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 80 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outprncd AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 93.25 BY 1 NO-UNDO.
-
-DEFINE VARIABLE v-outprops AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 80 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outR AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 34.63 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outrecv AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 48.25 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-outrubl AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-outares AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 82.25 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-outsend AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-outasend AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 80 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-outssdoc AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 49 BY .9 NO-UNDO.
+DEFINE VARIABLE v-outb AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 34.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-outsubs AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-outc AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 38.63 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outdate AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 20.75 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outdisc AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 80.63 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outegrp AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 31.75 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outhold AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 59 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outnum AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 30.75 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outobj AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 62 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outogr AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 34.63 BY .92 NO-UNDO.
+
+DEFINE VARIABLE v-outprim AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 80 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-outt12 AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-outprncd AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 93.25 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-outprops AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 80 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outR AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 34.63 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outrecv AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 48.25 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outrubl AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 82.25 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outsend AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 80 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outssdoc AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 49 BY .92 NO-UNDO.
+
+DEFINE VARIABLE v-outsubs AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 80 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-outt12 AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 82.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-sort-prd AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-rep-artic AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 80 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-tick-w AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
-     SIZE 92.63 BY .79 NO-UNDO.
-
-DEFINE VARIABLE v-torg2-no AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-sort-prd AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 80 BY .79 NO-UNDO.
 
-DEFINE VARIABLE v-rep-artic AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE v-tick-w AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 91.63 BY .79 NO-UNDO.
+
+DEFINE VARIABLE v-torg2-no AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 80 BY .79 NO-UNDO.
 
 DEFINE IMAGE I-factur01
@@ -637,7 +636,7 @@ DEFINE IMAGE I-outc
 
 DEFINE IMAGE I-outdate
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE IMAGE I-outdisc
      FILENAME "cmp/info.bmp":U
@@ -693,13 +692,17 @@ DEFINE IMAGE I-outsend
 
 DEFINE IMAGE I-outssdoc
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .9.
+     SIZE 3 BY .92.
 
 DEFINE IMAGE I-outsubs
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY .79.
 
 DEFINE IMAGE I-outt12
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY .79.
+
+DEFINE IMAGE I-rep-artic
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY .79.
 
@@ -715,49 +718,45 @@ DEFINE IMAGE I-torg2-no
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY .79.
 
-DEFINE IMAGE I-rep-artic
-     FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .79.
-
-DEFINE VARIABLE outb AS CHARACTER INITIAL "no_print"
+DEFINE VARIABLE outb AS CHARACTER INITIAL "no_print" 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", "no_print",
 "Item 2", "2",
 "Item 3", "3"
      SIZE 54.25 BY .79
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outc AS CHARACTER INITIAL "clad_doc"
+DEFINE VARIABLE outc AS CHARACTER INITIAL "clad_doc" 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", "no_print",
 "Item 2", "2",
 "Item 3", "3"
      SIZE 54.25 BY .79
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outogr AS CHARACTER INITIAL "no_print"
+DEFINE VARIABLE outogr AS CHARACTER INITIAL "no_print" 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", "no_print",
 "Item 2", "2",
 "Item 3", "3"
      SIZE 60 BY .79
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outR AS CHARACTER INITIAL "no_print"
+DEFINE VARIABLE outR AS CHARACTER INITIAL "no_print" 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Item 1", "no_print",
 "Item 2", "2",
 "Item 3", "3"
      SIZE 54.25 BY .79
      FONT 4 NO-UNDO.
 
-DEFINE VARIABLE outssdoc AS CHARACTER
+DEFINE VARIABLE outssdoc AS CHARACTER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Накладная", "nacl",
 "Фин.док-т", "findoc",
 "Пусто", ""
@@ -765,58 +764,58 @@ DEFINE VARIABLE outssdoc AS CHARACTER
      FONT 4 NO-UNDO.
 
 DEFINE RECTANGLE RECT-2
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  
      SIZE 97 BY .75.
 
-DEFINE VARIABLE factur01 AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE factur01 AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .79 NO-UNDO.
+     SIZE 2.5 BY .79 NO-UNDO.
 
-DEFINE VARIABLE fgdsnind AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE fgdsnind AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 48 BY .9 NO-UNDO.
+     SIZE 48 BY .92 NO-UNDO.
 
-DEFINE VARIABLE incurrat AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE incurrat AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .79 NO-UNDO.
+     SIZE 2 BY .79 NO-UNDO.
 
-DEFINE VARIABLE invprn0 AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE invprn0 AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 39 BY .79 NO-UNDO.
 
-DEFINE VARIABLE outprncd AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE outprncd AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 50 BY 1 NO-UNDO.
 
-DEFINE VARIABLE outprops AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE outprops AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 32.63 BY .79 NO-UNDO.
 
-DEFINE VARIABLE sort-prd AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE rep-artic AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 47.25 BY .79 NO-UNDO.
 
-DEFINE VARIABLE tick-w AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE sort-prd AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .79 NO-UNDO.
+     SIZE 47.25 BY .79 NO-UNDO.
 
-DEFINE VARIABLE torg2-no AS LOGICAL INITIAL no
-     LABEL ""
+DEFINE VARIABLE tick-w AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 2 BY .79 NO-UNDO.
+
+DEFINE VARIABLE torg2-no AS LOGICAL INITIAL no 
+     LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 32.63 BY .79 NO-UNDO.
-
-DEFINE VARIABLE rep-artic AS LOGICAL INITIAL no
-     LABEL ""
-     VIEW-AS TOGGLE-BOX
-     SIZE 47.25 BY .79 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -860,9 +859,9 @@ DEFINE FRAME Dialog-Frame
      B-16 AT ROW 5.33 COL 2.75 WIDGET-ID 370
      tick-w AT ROW 5.33 COL 6 WIDGET-ID 374
      FILL-IN-4 AT ROW 2.25 COL 73 COLON-ALIGNED NO-LABEL WIDGET-ID 352
-     v-factur01 AT ROW 3.58 COL 7.63 NO-LABEL WIDGET-ID 360
+     v-factur01 AT ROW 3.58 COL 9.63 NO-LABEL WIDGET-ID 360
      v-incurrat AT ROW 4.46 COL 7.63 COLON-ALIGNED NO-LABEL WIDGET-ID 368
-     v-tick-w AT ROW 5.33 COL 7.63 NO-LABEL WIDGET-ID 376
+     v-tick-w AT ROW 5.33 COL 9.63 NO-LABEL WIDGET-ID 376
      RECT-2 AT ROW 2 COL 3.63 WIDGET-ID 346
      I-factur01 AT ROW 3.58 COL 1 WIDGET-ID 356
      I-incurrat AT ROW 4.46 COL 1 WIDGET-ID 366
@@ -1014,7 +1013,7 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -1170,13 +1169,13 @@ ASSIGN
    1                                                                    */
 /* SETTINGS FOR IMAGE I-outt12 IN FRAME Dialog-Frame
    1                                                                    */
+/* SETTINGS FOR IMAGE I-rep-artic IN FRAME Dialog-Frame
+   2                                                                    */
 /* SETTINGS FOR IMAGE I-sort-prd IN FRAME Dialog-Frame
    2                                                                    */
 /* SETTINGS FOR IMAGE I-tick-w IN FRAME Dialog-Frame
    2                                                                    */
 /* SETTINGS FOR IMAGE I-torg2-no IN FRAME Dialog-Frame
-   2                                                                    */
-/* SETTINGS FOR IMAGE I-rep-artic IN FRAME Dialog-Frame
    2                                                                    */
 /* SETTINGS FOR FILL-IN in-docpr IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
@@ -1184,57 +1183,57 @@ ASSIGN
    2                                                                    */
 /* SETTINGS FOR TOGGLE-BOX invprn0 IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        invprn0:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* SETTINGS FOR EDITOR outappr IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outappr:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outares IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outares:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outasend IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outasend:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outdate IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outdate:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outdisc IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outdisc:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outegrp IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outegrp:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outhold IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outhold:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outnum IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outnum:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outobj IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outobj:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outprim IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outprim:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR TOGGLE-BOX outprncd IN FRAME Dialog-Frame
@@ -1243,199 +1242,199 @@ ASSIGN
    2                                                                    */
 /* SETTINGS FOR EDITOR outrecv IN FRAME Dialog-Frame
    2                                                                    */
-ASSIGN
+ASSIGN 
        outrecv:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outrubl IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outrubl:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outsend IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outsend:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR RADIO-SET outssdoc IN FRAME Dialog-Frame
    2                                                                    */
 /* SETTINGS FOR EDITOR outsubs IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outsubs:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR EDITOR outt12 IN FRAME Dialog-Frame
    1                                                                    */
-ASSIGN
+ASSIGN 
        outt12:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
+/* SETTINGS FOR TOGGLE-BOX rep-artic IN FRAME Dialog-Frame
+   2                                                                    */
 /* SETTINGS FOR TOGGLE-BOX sort-prd IN FRAME Dialog-Frame
    2                                                                    */
 /* SETTINGS FOR TOGGLE-BOX tick-w IN FRAME Dialog-Frame
    2                                                                    */
 /* SETTINGS FOR TOGGLE-BOX torg2-no IN FRAME Dialog-Frame
    2                                                                    */
-/* SETTINGS FOR TOGGLE-BOX rep-artic IN FRAME Dialog-Frame
-   2                                                                    */
 /* SETTINGS FOR FILL-IN v-factur01 IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-factur01:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-fgdsnind IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-fgdsnind:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-in-docpr IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-in-docpr:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-incurrat IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-incurrat:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-invprn0 IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-invprn0:HIDDEN IN FRAME Dialog-Frame           = TRUE
        v-invprn0:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outappr IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outappr:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outares IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outares:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outasend IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outasend:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outb IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-outb:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outc IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-outc:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outdate IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outdate:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outdisc IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outdisc:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outegrp IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outegrp:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outhold IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outhold:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outnum IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outnum:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outobj IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outobj:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outogr IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-outogr:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outprim IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outprim:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outprncd IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outprncd:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outprops IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-outprops:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outR IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-outR:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outrecv IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-outrecv:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outrubl IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outrubl:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outsend IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outsend:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outssdoc IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-outssdoc:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outsubs IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outsubs:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-outt12 IN FRAME Dialog-Frame
    ALIGN-L 1                                                            */
-ASSIGN
+ASSIGN 
        v-outt12:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+
+/* SETTINGS FOR FILL-IN v-rep-artic IN FRAME Dialog-Frame
+   ALIGN-L 2                                                            */
+ASSIGN 
+       v-rep-artic:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-sort-prd IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-sort-prd:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-tick-w IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-tick-w:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN v-torg2-no IN FRAME Dialog-Frame
    ALIGN-L 2                                                            */
-ASSIGN
+ASSIGN 
        v-torg2-no:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
-
-/* SETTINGS FOR FILL-IN v-rep-artic IN FRAME Dialog-Frame
-   ALIGN-L 2                                                            */
-ASSIGN
-       v-rep-artic:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -1443,7 +1442,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON GO OF FRAME Dialog-Frame /* Настройки для ПЕЧАТНЫХ ФОРМ */
+ON GO OF FRAME Dialog-Frame
 DO:
   run save-proc in this-procedure no-error.
   if error-status :error then return no-apply.
@@ -1454,7 +1453,7 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Настройки для ПЕЧАТНЫХ ФОРМ */
+ON WINDOW-CLOSE OF FRAME Dialog-Frame
 DO:
   APPLY "END-ERROR":U TO SELF.
 END.
@@ -2471,48 +2470,6 @@ END.
 &ANALYZE-RESUME
 
 
-/*&Scoped-define SELF-NAME BUTTON-1                                            */
-/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-1 Dialog-Frame              */
-/*ON CHOOSE OF BUTTON-1 IN FRAME Dialog-Frame /* 1.Параметры */                */
-/*DO:                                                                          */
-/*    if fl = '' then do:                                                      */
-/*       assign  FRAME {&FRAME-NAME} {&page-2p} .                              */
-/*    end.                                                                     */
-/*    fl = ''  .                                                               */
-/*    DISPLAY {&page-1} with FRAME {&FRAME-NAME}.                              */
-/*    HIDE {&page-2} IN FRAME {&FRAME-NAME}.                                   */
-/*button-1:LOAD-IMAGE-UP("adeicon\ts-up":U)        in frame {&frame-name} .    */
-/*button-2:LOAD-IMAGE-Up("adeicon\ts-down":U)      in frame {&frame-name} .    */
-/*F-button-1:fgcolor = 1   .                                                   */
-/*f-button-2:fgcolor = ? .                                                     */
-/*                                                                             */
-/*END.                                                                         */
-/*                                                                             */
-/*/* _UIB-CODE-BLOCK-END */                                                    */
-/*&ANALYZE-RESUME                                                              */
-/*                                                                             */
-/*                                                                             */
-/*&Scoped-define SELF-NAME BUTTON-2                                            */
-/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-2 Dialog-Frame              */
-/*ON CHOOSE OF BUTTON-2 IN FRAME Dialog-Frame /* 2.Параметры */                */
-/*DO:                                                                          */
-/*    assign  FRAME {&FRAME-NAME} {&page-1p} .                                 */
-/*    DISPLAY {&page-2} with FRAME {&FRAME-NAME}.                              */
-/*    HIDE {&page-1} IN FRAME {&FRAME-NAME}.                                   */
-/*                                                                             */
-/*    button-2:LOAD-IMAGE-UP("adeicon\ts-up":U)        in frame {&frame-name} .*/
-/*    button-1:LOAD-IMAGE-Up("adeicon\ts-down":U)      in frame {&frame-name} .*/
-/*    F-button-2:fgcolor = 1   .                                               */
-/*    f-button-1:fgcolor = ? .                                                 */
-/*                                                                             */
-/*                                                                             */
-/*                                                                             */
-/*END.                                                                         */
-/*                                                                             */
-/*/* _UIB-CODE-BLOCK-END */                                                    */
-/*&ANALYZE-RESUME                                                              */
-
-
 &Scoped-define SELF-NAME I-factur01
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-factur01 Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-factur01 IN FRAME Dialog-Frame
@@ -2810,6 +2767,17 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME I-rep-artic
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-rep-artic Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-rep-artic IN FRAME Dialog-Frame
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME I-sort-prd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-sort-prd Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-sort-prd IN FRAME Dialog-Frame
@@ -2843,20 +2811,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME I-rep-artic
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-rep-artic Dialog-Frame
-ON MOUSE-SELECT-CLICK OF I-rep-artic IN FRAME Dialog-Frame
-DO:
-  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -2920,7 +2877,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -3117,7 +3074,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets Dialog-Frame 
 PROCEDURE fill-widgets :
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -3524,7 +3481,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame 
 PROCEDURE init-proc :
 define variable v-i as integer   no-undo .
 define variable v-value-character as character no-undo .
@@ -3710,7 +3667,7 @@ end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-tt Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-tt Dialog-Frame 
 PROCEDURE init-tt :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3734,7 +3691,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-proc Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-proc Dialog-Frame 
 PROCEDURE save-proc :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -3919,7 +3876,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE twowin_custom-add-item Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE twowin_custom-add-item Dialog-Frame 
 PROCEDURE twowin_custom-add-item :
 /* не менять название это callback!!!
 ------------------------------------------------------------------------------*/
@@ -3941,7 +3898,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE twowin_get-bttns Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE twowin_get-bttns Dialog-Frame 
 PROCEDURE twowin_get-bttns :
 /*------------------------------------------------------------------------------
 не менять название! это callback
@@ -3957,3 +3914,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
