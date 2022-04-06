@@ -722,7 +722,7 @@ DEFINE BROWSE br-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-utd d-utd _STRUCTURED
    QUERY br-utd NO-LOCK DISPLAY
    X_utd-lines.LineNum COLUMN-LABEL "№ п/п" FORMAT ">>>9":U
-   X_utd-lines.gds-code COLUMN-LABEL "Код товара" FORMAT ">>>>>>>>>9":U
+   X_utd-lines.gds-code COLUMN-LABEL "Код товара" FORMAT ">>>>>>>>>>>9":U
    X_utd-lines.ProductCode COLUMN-LABEL "Наименование" FORMAT "x(40)":U width 25
    X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(40)":U width 25
    X_utd-lines.Quantity COLUMN-LABEL "Кол-во!марк. прод-ции" FORMAT "->>,>>9.999":U
@@ -1590,7 +1590,7 @@ ON VALUE-CHANGED OF br-utd-nomark IN FRAME d-utd
          do:
             X_utd-lines.qnty-scan:COLUMN-READ-ONLY IN BROWSE br-utd-nomark = TRUE.
          end.
-         
+         if X_utd-lines.stts = "Ошибка" then X_utd-lines.qnty-scan:COLUMN-READ-ONLY IN BROWSE br-utd-nomark = TRUE.
       end. 
        
       display f-info with frame {&frame-name} .
