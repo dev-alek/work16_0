@@ -730,20 +730,20 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("dnsty", string-mth ( buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty)).
           write-data-element ("cap", string-mth (buf_doc-pl.fact-qnty)).
           write-data-element ("wght", string-mth (buf_doc-pl.cli-fact-qnty)).
-/*          find first buf_doc-pl-attr no-lock where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code         */
-/*                                               and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type         */
-/*                                               and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code         */
-/*                                               and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code          */
-/*                                               and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code         */
-/*                                               and buf_doc-pl-attr.attr-code = "free-vol-exceed"           */
-/*                                               no-error.                                                   */
-/*          if available buf_doc-pl-attr                                                                     */
-/*          then do :                                                                                        */
-/*            write-data-element ("excess-free", (if logical(buf_doc-pl-attr.attr-value) then "1" else "0")).*/
-/*          end .                                                                                            */
-/*          else do :                                                                                        */
-/*            write-data-element ("excess-free", "0").                                                       */
-/*          end .                                                                                            */
+          find first buf_doc-pl-attr no-lock where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code
+                                               and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type
+                                               and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code
+                                               and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code
+                                               and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code
+                                               and buf_doc-pl-attr.attr-code = "free-vol-exceed"
+                                               no-error.
+          if available buf_doc-pl-attr
+          then do :
+            write-data-element ("excess-free", (if logical(buf_doc-pl-attr.attr-value) then "1" else "0")).
+          end .
+/*          else do :                                 */
+/*            write-data-element ("excess-free", "0").*/
+/*          end .                                     */
         sw:end-element ("tank").
       end.
     end.
