@@ -66,11 +66,12 @@ if g#db-num <> 0 then p-mode = {&lookup} .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help I-contr-in-income ~
-I-contr-in-expense I-contr-qnty-spec contr-in-income B-2 B-3 ~
-contr-in-expense B-4 contr-qnty-spec v-contr-in-income v-contr-in-expense ~
-v-contr-qnty-spec 
+I-contr-in-expense I-contr-qnty-spec I-contr-recount contr-in-income B-2 ~
+B-3 contr-in-expense B-4 contr-qnty-spec B-5 contr-recount ~
+v-contr-in-income v-contr-in-expense v-contr-qnty-spec v-contr-recount 
 &Scoped-Define DISPLAYED-OBJECTS contr-in-income contr-in-expense ~
-contr-qnty-spec v-contr-in-income v-contr-in-expense v-contr-qnty-spec 
+contr-qnty-spec contr-recount v-contr-in-income v-contr-in-expense ~
+v-contr-qnty-spec v-contr-recount 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -96,6 +97,11 @@ DEFINE BUTTON B-3
      SIZE 3 BY 1.
 
 DEFINE BUTTON B-4 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON B-5 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
      SIZE 3 BY 1.
@@ -127,6 +133,10 @@ DEFINE VARIABLE v-contr-qnty-spec AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT 
      SIZE 71.25 BY 1 NO-UNDO.
 
+DEFINE VARIABLE v-contr-recount AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 71.25 BY 1 NO-UNDO.
+
 DEFINE IMAGE I-contr-in-expense
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
@@ -136,6 +146,10 @@ DEFINE IMAGE I-contr-in-income
      SIZE 3 BY 1.04.
 
 DEFINE IMAGE I-contr-qnty-spec
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+
+DEFINE IMAGE I-contr-recount
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
@@ -154,6 +168,11 @@ DEFINE VARIABLE contr-qnty-spec AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 2.13 BY 1 NO-UNDO.
 
+DEFINE VARIABLE contr-recount AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 2.13 BY 1 NO-UNDO.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -167,13 +186,17 @@ DEFINE FRAME Dialog-Frame
      contr-in-expense AT ROW 4.25 COL 5.88 WIDGET-ID 46
      B-4 AT ROW 5.33 COL 3 WIDGET-ID 100
      contr-qnty-spec AT ROW 5.46 COL 5.88 WIDGET-ID 102
+     B-5 AT ROW 6.5 COL 3 WIDGET-ID 108
+     contr-recount AT ROW 6.63 COL 5.88 WIDGET-ID 110
      v-contr-in-income AT ROW 3 COL 8.75 NO-LABEL WIDGET-ID 6
      v-contr-in-expense AT ROW 4.25 COL 8.75 NO-LABEL WIDGET-ID 18
      v-contr-qnty-spec AT ROW 5.46 COL 8.75 NO-LABEL WIDGET-ID 106
+     v-contr-recount AT ROW 6.63 COL 8.75 NO-LABEL WIDGET-ID 114
      I-contr-in-income AT ROW 2.96 COL 1 WIDGET-ID 10
      I-contr-in-expense AT ROW 4.25 COL 1 WIDGET-ID 34
      I-contr-qnty-spec AT ROW 5.46 COL 1 WIDGET-ID 104
-     SPACE(83.12) SKIP(8.33)
+     I-contr-recount AT ROW 6.63 COL 1 WIDGET-ID 112
+     SPACE(83.12) SKIP(7.16)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для накладных"
@@ -214,6 +237,11 @@ ASSIGN
    ALIGN-L                                                              */
 ASSIGN 
        v-contr-qnty-spec:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+
+/* SETTINGS FOR FILL-IN v-contr-recount IN FRAME Dialog-Frame
+   ALIGN-L                                                              */
+ASSIGN 
+       v-contr-recount:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -288,6 +316,20 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-5
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-5 Dialog-Frame
+ON CHOOSE OF B-5 IN FRAME Dialog-Frame
+DO:
+  run gbl/v-taobj.w
+      ({&attr-contr-in},
+        {&attr-contr-in_contr-recount}
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME I-contr-in-expense
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-in-expense Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-contr-in-expense IN FRAME Dialog-Frame
@@ -313,6 +355,17 @@ END.
 &Scoped-define SELF-NAME I-contr-qnty-spec
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-qnty-spec Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-contr-qnty-spec IN FRAME Dialog-Frame
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME I-contr-recount
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-recount Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-contr-recount IN FRAME Dialog-Frame
 DO:
   MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
 END.
@@ -400,12 +453,13 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY contr-in-income contr-in-expense contr-qnty-spec v-contr-in-income 
-          v-contr-in-expense v-contr-qnty-spec 
+  DISPLAY contr-in-income contr-in-expense contr-qnty-spec contr-recount 
+          v-contr-in-income v-contr-in-expense v-contr-qnty-spec v-contr-recount 
       WITH FRAME Dialog-Frame.
   ENABLE B-exit B-quit B-Help I-contr-in-income I-contr-in-expense 
-         I-contr-qnty-spec contr-in-income B-2 B-3 contr-in-expense B-4 
-         contr-qnty-spec v-contr-in-income v-contr-in-expense v-contr-qnty-spec 
+         I-contr-qnty-spec I-contr-recount contr-in-income B-2 B-3 
+         contr-in-expense B-4 contr-qnty-spec B-5 contr-recount 
+         v-contr-in-income v-contr-in-expense v-contr-qnty-spec v-contr-recount 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -480,6 +534,12 @@ FOR EACH thbjattr_thbj-attr-trn  where
      display contr-qnty-spec with frame {&frame-name} .
   END.
 
+  IF thbjattr_thbj-attr-trn.prop-code = {&attr-contr-in_contr-recount} THEN DO:
+     contr-recount = thbjattr_thbj-attr-trn.property-value-logical.
+     contr-recount:private-data = "recid2=" + string(recid(thbjattr_thbj-attr-trn)).
+     display contr-recount with frame {&frame-name} .
+  END.
+  
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr-trn to temp-thbj-attr.
 END.
@@ -519,6 +579,16 @@ run thbjattr_tooltip in this-procedure (
             ) no-error .
 v-contr-qnty-spec:screen-value = entry(2,v-label,":") .
 I-contr-qnty-spec:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
+
+run thbjattr_tooltip in this-procedure (
+             input   {&attr-contr-in}
+            ,input  "contr-recount"
+            ,output v-tooltip
+            ,output v-label
+            ,output v-tooltip-code
+            ) no-error .
+v-contr-recount:screen-value = entry(2,v-label,":") .
+I-contr-recount:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
 
 END PROCEDURE.
 
@@ -576,6 +646,7 @@ define variable v-found as decimal   no-undo .
         contr-in-income 
         contr-in-expense 
         contr-qnty-spec  
+        contr-recount
         with frame {&frame-name}.
      B-exit:label = "Вы&ход"  .
      hide B-quit in frame {&frame-name} .
@@ -641,6 +712,7 @@ ASSIGN
     contr-in-income FRAME {&FRAME-NAME}
     contr-in-expense
     contr-qnty-spec
+    contr-recount
     .
 assign
   fh = frame {&frame-name}:first-child

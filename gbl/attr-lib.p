@@ -2988,9 +2988,9 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-contr-in   true
 &scop output-display-attr-contr-in  true
 &scop other-attr-contr-in           'spr-ext=gbl\naklpa.w':U
-&scop prop-type-list-attr-contr-in  'logical,logical,logical,logical':U
-&scop prop-label-list-attr-contr-in 'Договор в ПН,Договор в РН,Сверять количества в ПН'
-&scop prop-list-attr-contr-in       'contr-in-income,contr-in-expense,contr-qnty-spec'
+&scop prop-type-list-attr-contr-in  'logical,logical,logical,logical,logical':U
+&scop prop-label-list-attr-contr-in 'Договор в ПН,Договор в РН,Сверять количества в ПН,Перенумерация ПКО и РКО'
+&scop prop-list-attr-contr-in       'contr-in-income,contr-in-expense,contr-qnty-spec,contr-recount'
 &scop global-attr-contr-in true
 &scop host-attr-contr-in true
 &scop shop-attr-contr-in true
@@ -3000,7 +3000,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop attr-contr-in_contr-in-income_tooltip  Обязательная ссылка на договор в приходной накладной
 &scop attr-contr-in_contr-in-expense_tooltip Обязательная ссылка на договор в расходной накладной
 &scop attr-contr-in_contr-qnty-spec_tooltip  Сверять количество в ПН по спецификации
-&scop prop-tooltip-list-attr-contr-in        {&attr-contr-in_contr-in-income_tooltip},{&attr-contr-in_contr-in-expense_tooltip},{&attr-contr-in_contr-qnty-spec_tooltip}
+&scop attr-contr-in_contr-recount  Перенумерация ПКО и РКО
+&scop prop-tooltip-list-attr-contr-in        {&attr-contr-in_contr-in-income_tooltip},{&attr-contr-in_contr-in-expense_tooltip},{&attr-contr-in_contr-qnty-spec_tooltip},{&attr-contr-in_contr-recount}
 &scop level-way-attr-contr-in "obj,host,global"
 &scop up-way-attr-contr-in "contr-in,contr-in,contr-in"
 

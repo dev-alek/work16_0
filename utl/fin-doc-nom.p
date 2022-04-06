@@ -28,6 +28,7 @@ define variable mFactOrder as decimal no-undo.
 { gbl/getcntxt.i get }
 { cmp/library.i  }
 { trg/factord.i  }
+{ gbl/thbjattr.i }
 
 run day-begin-fact-order in this-procedure
     ( input date (1,1,year(iBegDate))
@@ -46,7 +47,37 @@ define variable objKeyRec as ibs.th.gbl.keyrec no-undo.
 define variable objCount  as ibs.th.ref.counter.counterstorage no-undo.
 
 define buffer buf_fin-doc for fin-doc.
-
+define variable v-value-character like ub.thbj-attr.property-value-character no-undo .
+define variable v-value-date      like ub.thbj-attr.property-value-date no-undo .
+define variable v-value-decimal   like ub.thbj-attr.property-value-decimal no-undo .
+define variable v-value-logical   like ub.thbj-attr.property-value-logical no-undo .
+define variable v-value-integer   like ub.thbj-attr.property-value-integer no-undo .
+define variable v-recount         as logical   no-undo .
+define variable varcontract-type  as character no-undo .
+define variable v-mastc           as logical   no-undo init false .
+    run adm/shattri.p (
+      input "get":U
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
+      ,input {&attr-contr-in}
+      ,input  "contr-recount"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-recount
+      ,output varcontract-type
+      ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+      ) no-error .
+      if error-status :error then
+      message
+        vss-workfile vss-revision vss-description skip
+        error-status :get-message(1) skip
+        return-value skip
+        "adm/shattri.p"
+        view-as alert-box error
+      .
+      if v-recount <> true then return no-apply .
 subscribe   to "getCounter" anywhere run-procedure "Mycounter". 
 mlisttype = {&FDEDT_Income_Cash} + "," + {&FDEDT_Expense_Cash}.
 
