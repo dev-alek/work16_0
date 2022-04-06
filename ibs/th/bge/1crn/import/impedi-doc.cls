@@ -69,7 +69,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     define buffer buf_goods-attr for ub.goods-attr .
 /*    define buffer buf_OperServ   for ub.OperServ .*/
     define buffer buf_fin-code-cor-acc for ub.fin-code-cor-acc .
-
+    define buffer utd for ub.utd .
+    define buffer utd-attr for ub.utd-attr .
+    
+   define buffer utd-lines              for ub.utd-lines .
+   define buffer utd-lines-attr         for ub.utd-lines-attr .
+   define buffer utd-marking-lines      for ub.utd-marking-lines .
+   define buffer utd-marking-lines-attr for ub.utd-marking-lines-attr .
+   define buffer marking                for ub.marking .
+   define buffer marking-attr           for ub.marking-attr .
+   define buffer contract               for ub.contract .
 
     objImp = cast (subjectObj, {&impclass}).
 
@@ -188,9 +197,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
          then
             utd.obj-info = shop.addres1.
       end.
-      find first contract  where contract.host-code eq utd.host-code
+      find first contract  where contract.host-code     eq utd.host-code
                              and contract.contract-code eq utd.contract-code
       no-lock no-error.
+      if  not available contract
+      then
+         undo, throw new Progress.Lang.AppError(substitute("В &1, указанный в УПД, не нфйден в системе.",utd.contract-code)) .
+      
       if     contract.cli-type  ne utd.cli-type
          or  contract.cli-code  ne utd.cli-code
       then

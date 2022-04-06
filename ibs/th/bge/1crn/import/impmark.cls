@@ -48,6 +48,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     define buffer buf_bar-code    for ub.bar-code .
     define buffer buf_goods      for ub.goods .
     define buffer marking for marking.
+    define buffer marking-attr for ub.marking-attr .
 
 
     objImp = cast (subjectObj, {&impclass}).
