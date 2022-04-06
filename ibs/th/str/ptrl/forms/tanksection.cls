@@ -1408,7 +1408,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* buttonPl */
     /*  */
-    this-object:buttonPl:Location = new System.Drawing.Point(630, 136).
+    this-object:buttonPl:Location = new System.Drawing.Point(632, 136).
     this-object:buttonPl:Name = "buttonPl".
     this-object:buttonPl:Size = new System.Drawing.Size(47, 23).
     this-object:buttonPl:TabIndex = 24.
@@ -1419,9 +1419,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label19 */
     /*  */
-    this-object:label19:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label19:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:label19:ForeColor = System.Drawing.SystemColors:ControlText.
-    this-object:label19:Location = new System.Drawing.Point(523, 140).
+    this-object:label19:Location = new System.Drawing.Point(534, 140).
     this-object:label19:Name = "label19".
     this-object:label19:Size = new System.Drawing.Size(70, 18).
     this-object:label19:TabIndex = 28.
@@ -1431,9 +1431,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxListTank */
     /*  */
-    this-object:maskedTextBoxListTank:Location = new System.Drawing.Point(596, 138).
+    this-object:maskedTextBoxListTank:Location = new System.Drawing.Point(603, 138).
     this-object:maskedTextBoxListTank:Name = "maskedTextBoxListTank".
-    this-object:maskedTextBoxListTank:Size = new System.Drawing.Size(32, 20).
+    this-object:maskedTextBoxListTank:Size = new System.Drawing.Size(29, 20).
     this-object:maskedTextBoxListTank:TabIndex = 23.
     this-object:maskedTextBoxListTank:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_2).
     /*  */
@@ -1670,9 +1670,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label44 */
     /*  */
-    this-object:label44:Location = new System.Drawing.Point(202, 138).
+    this-object:label44:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label44:Location = new System.Drawing.Point(241, 138).
     this-object:label44:Name = "label44".
-    this-object:label44:Size = new System.Drawing.Size(239, 20).
+    this-object:label44:Size = new System.Drawing.Size(238, 20).
     this-object:label44:TabIndex = 19.
     this-object:label44:Text = "Плотность по пасп. (при станд. темп.),г/см3:".
     this-object:label44:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
@@ -1681,9 +1682,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxPaspDens */
     /*  */
     this-object:maskedTextBoxPaspDens:ForeColor = System.Drawing.SystemColors:WindowText.
-    this-object:maskedTextBoxPaspDens:Location = new System.Drawing.Point(444, 138).
+    this-object:maskedTextBoxPaspDens:Location = new System.Drawing.Point(482, 138).
     this-object:maskedTextBoxPaspDens:Name = "maskedTextBoxPaspDens".
-    this-object:maskedTextBoxPaspDens:Size = new System.Drawing.Size(78, 20).
+    this-object:maskedTextBoxPaspDens:Size = new System.Drawing.Size(58, 20).
     this-object:maskedTextBoxPaspDens:TabIndex = 18.
     this-object:maskedTextBoxPaspDens:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_1_4).
     /*  */
@@ -1810,11 +1811,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label2 */
     /*  */
-    this-object:label2:Location = new System.Drawing.Point(4, 139).
+    this-object:label2:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label2:Location = new System.Drawing.Point(-7, 139).
     this-object:label2:Name = "label2".
-    this-object:label2:Size = new System.Drawing.Size(126, 20).
+    this-object:label2:Size = new System.Drawing.Size(200, 20).
     this-object:label2:TabIndex = 9.
-    this-object:label2:Text = "Объем по паспорту, л:".
+    this-object:label2:Text = "Объем по свидетельству о поверке:".
     this-object:label2:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label2:UseCompatibleTextRendering = true.
     /*  */
@@ -1848,9 +1850,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxCarVol */
     /*  */
     this-object:maskedTextBoxCarVol:ForeColor = System.Drawing.SystemColors:WindowText.
-    this-object:maskedTextBoxCarVol:Location = new System.Drawing.Point(136, 139).
+    this-object:maskedTextBoxCarVol:Location = new System.Drawing.Point(191, 139).
     this-object:maskedTextBoxCarVol:Name = "maskedTextBoxCarVol".
-    this-object:maskedTextBoxCarVol:Size = new System.Drawing.Size(67, 20).
+    this-object:maskedTextBoxCarVol:Size = new System.Drawing.Size(55, 20).
     this-object:maskedTextBoxCarVol:TabIndex = 7.
     this-object:maskedTextBoxCarVol:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
     this-object:maskedTextBoxCarVol:Leave:Subscribe(this-object:calc-weight-vol).
@@ -3663,7 +3665,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           v-dec = decimal (maskedTextBoxCarVol:Text) no-error.
           if (error-status:error or v-dec = 0)
           then do:
-            ShowMsg( v-str + "объем по паспорту" ).
+            ShowMsg( v-str + "объем по свидетельству о поверке" ).
             setFocusMaskTextDoc = maskedTextBoxCarVol.
             return false.
           end.
@@ -3867,7 +3869,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         v-dec = decimal (maskedTextBoxCarVol:Text) no-error.
         if (error-status:error or v-dec = 0)
         then do:
-          ShowMsg( v-str + "объем по паспорту" ).
+          ShowMsg( v-str + "объем по свидетельству о поверке" ).
           setFocusMaskTextDoc = maskedTextBoxCarVol.
           return false.
         end.

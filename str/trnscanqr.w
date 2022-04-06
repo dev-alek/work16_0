@@ -456,7 +456,7 @@ procedure save_update :
     v-mark:screen-value = "" .
     v-scan-str = "".
     v-mark = "".
-    message "Некорректный формат штрих-кода. Повторно просканируйте код с ТТН. При возникновении проблемы обратитесь в тех. поддержку" view-as alert-box .
+    message "Контрольная сумма не соответствует содержанию штрих-кода. Повторно просканируйте код с ТТН. При возникновении проблемы обратитесь в тех. поддержку" view-as alert-box .
     v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
     return .
   end.
@@ -546,7 +546,7 @@ procedure save_update :
       v-mark:screen-value = "" .
       v-scan-str = "".
       v-mark = "".
-      message "Ошибка установки поставщика. Не найден поставщик с кодом " v-cli-code ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" skip return-value view-as alert-box.  
+      message "Ошибка установки поставщика. Не найден поставщик с кодом " v-cli-code ". Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса" skip return-value view-as alert-box.  
       v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
       undo, return error .
     end .
@@ -558,7 +558,7 @@ procedure save_update :
       v-mark:screen-value = "" .
       v-scan-str = "".
       v-mark = "".
-      message "Отсутствует поставщик с кодом " v-cli-code ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box.
+      message "Отсутствует поставщик с кодом " v-cli-code ". Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса" view-as alert-box.
       v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
       undo, return error .
     end .
@@ -568,7 +568,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Поставщик с кодом " v-cli-code " неактивный (Удалён). Для внесения в систему данных обратитесь к сотруднику регионального офиса"  view-as alert-box.
+        message "Поставщик с кодом " v-cli-code " неактивный (Удалён). Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса"  view-as alert-box.
         v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
         undo, return error .
       end .
@@ -663,7 +663,7 @@ procedure save_update :
       v-mark:screen-value = "" .
       v-scan-str = "".
       v-mark = "".
-      message "Отсутствует нефтебаза с кодом " v-cli-code ". Для внесения в систему данных обратитесь к сотруднику регионального офиса"  view-as alert-box.  
+      message "Отсутствует нефтебаза с кодом " v-cli-code ". Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса"  view-as alert-box.  
       v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
       undo, return error .
     end .
@@ -673,7 +673,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Нефтебаза с кодом " v-cli-code " неактивна (Удалена). Для внесения в систему данных обратитесь к сотруднику регионального офиса"  view-as alert-box.
+        message "Нефтебаза с кодом " v-cli-code " неактивна (Удалена). Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса"  view-as alert-box.
         v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
         undo, return error .
       end .
@@ -709,7 +709,7 @@ procedure save_update :
       v-mark:screen-value = "" .
       v-scan-str = "".
       v-mark = "".
-      message "Отсутствует автоцистерна с гос. номером " v-tmp-char ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box.  
+      message "Отсутствует автоцистерна с гос. номером " v-tmp-char ". Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса" view-as alert-box.  
       v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
       undo, return error .
     end .
@@ -792,7 +792,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Для автоцистерны с номером " ub.auto-tank.auto-num " не найдена секция " xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box title "Ошибка".
+        message "Для автоцистерны с номером " ub.auto-tank.auto-num " не найдена секция " xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value ". Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса" view-as alert-box title "Ошибка".
         if not xmlhndlerObj:GetNext()
           then leave rep_.
         next rep_.
@@ -838,7 +838,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Отсутствует товар с кодом " v-gd-cd ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box title "Ошибка".
+        message "Для секции ТТН № " xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value "отсутствует товар с кодом " v-gd-cd ". Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса" view-as alert-box title "Ошибка".
         if not xmlhndlerObj:GetNext()
           then leave rep_.
         next rep_.
@@ -852,7 +852,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Для товара с кодом " v-tmp-int " не удалось определить резервуар для приема НП" ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box title "Ошибка".
+        message "Для товара с кодом " v-tmp-int " не удалось определить резервуар для приема НП" ". Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса" view-as alert-box title "Ошибка".
         if not xmlhndlerObj:GetNext()
           then leave rep_.
         next rep_.

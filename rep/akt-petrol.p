@@ -403,7 +403,7 @@ do
 /*        '<TR><TD colspan="10" style="height: 14px;"></TD></TR>' skip                    */
 /*                                                                                        */
         '<TR>' skip
-        '<TD colspan="3" style="">4. Пломбы от </TD>' skip
+        '<TD colspan="3" style="">3. Пломбы от </TD>' skip
         '<TD colspan="7" style="border-bottom: 1px solid black;">' + v-DD-Month-YYYY-cert + '</TD>' skip
         '</TR>'skip
 
@@ -413,7 +413,7 @@ do
         '</TR>'skip
         
         '<TR>' skip
-        '<TD colspan="1" style="">С №№ </TD>' skip
+        '<TD colspan="1" style="">С № </TD>' skip
         '<TD colspan="9" style="border-bottom: 1px solid black;">' + string(v-seals-condition) + '</TD>' skip
         '</TR>'skip
         
@@ -668,7 +668,7 @@ next_:
                     
         '<TR><TD colspan="18" style="font-style: italic;">Примечания:</TD></TR>' skip
                     
-        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">1 - используется расчётное значение</TD></TR>' skip
+        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">1 - используется расчётное значение, является информационным</TD></TR>' skip
         
         '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">2 - указывается с обозначением метода определения плотности у поставщика</TD></TR>' skip
                     

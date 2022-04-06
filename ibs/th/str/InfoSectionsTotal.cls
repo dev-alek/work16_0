@@ -1485,7 +1485,7 @@ class ibs.th.str.InfoSectionsTotal:
               message
                 "Заполнены не все поля, необходимые " skip
                 "для работы библиотеки ПО МИ"         skip
-                "Введите Объем по паспорту в литрах"  skip
+                "Введите Объем по свидетельству о поверке в литрах"  skip
               view-as alert-box error.
               undo _trpomi, return no-apply  .
             end.
