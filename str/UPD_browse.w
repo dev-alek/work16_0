@@ -2226,12 +2226,21 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
          if not v-check then return no-apply .
          run save_mol.
       end.
-
+      if upd_mark then 
+      do:
+         for first X_utd-lines where X_utd-lines.qnty-mark <> X_utd-lines.qnty-scan:
+            v-ok = yes .
+         end.       
+      end.
+      else 
+      do:
          for first X_utd-lines no-lock where X_utd-lines.db-num = buf_utd.db-num 
             and X_utd-lines.doc-id = buf_utd.doc-id
             and X_utd-lines.Quantity <> X_utd-lines.qnty-scan :
             v-ok = yes .
          end.
+      
+      end.
       for each buf_utd-err where buf_utd-err.CodeErr = "NotMarkForLine" and
          buf_utd-err.db-num = p-db-num and
          buf_utd-err.doc-id = p-doc-id:
