@@ -2203,7 +2203,7 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
          if not v-check then return no-apply .
          run save_mol.
       end.
-      if upd_mark then 
+      if not upd_mark then 
       do:
          for first X_utd-lines where X_utd-lines.qnty-mark <> X_utd-lines.qnty-scan:
             v-ok = yes .
