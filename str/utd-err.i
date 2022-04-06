@@ -652,7 +652,11 @@ function CheckErrForLine returns logical
       if  not vUtdlineError
       then do:
          define variable vGoodMark as logical no-undo.
-         vGoodMark = no.
+         find first utd-marking-lines where utd-marking-lines.db-num  eq vdb-num
+                                        and utd-marking-lines.doc-id  eq vdoc-id
+                                        and utd-marking-lines.LineNum eq vLineNum
+         no-lock no-error.
+         vGoodMark = not available utd-marking-lines.
          block-line-err:
          for each utd-marking-lines where utd-marking-lines.db-num  eq vdb-num
                                       and utd-marking-lines.doc-id  eq vdoc-id

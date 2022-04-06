@@ -233,7 +233,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             end.
             utd-lines.TaxRate = v-gds-gd:nds-code.
             if v-gds-gd:gds-code ne ?
-               and v-gds-gd:gds-code ne 0
             then do:
                find first goods where goods.gds-code eq v-gds-gd:gds-code
                no-lock no-error.
@@ -242,13 +241,21 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   undo, throw new Progress.Lang.AppError(substitute("Нет товара с кодом &1",v-gds-gd:gds-code)).
             end.
             assign
-               utd-lines.gds-code  = goods.gds-cod
-               utd-lines.UnitCode  = goods.unit-base
-               utd-lines.GdsName   = goods.gds-name
                utd-lines.Price     = v-gds-gd:price-nonds
                utd-lines.Quantity  = v-gds-gd:qnty-ttn
                utd-lines.Total     = v-gds-gd:sum
+               utd-lines.gds-code  = v-gds-gd:gds-code
             .
+            if available  goods
+            then
+               assign
+                  
+                  utd-lines.UnitCode  = goods.unit-base
+                  utd-lines.GdsName   = goods.gds-name
+               .
+            release goods.
+            
+            
             if v-gds-gd:sum-nds eq ?
             then
                assign
@@ -269,10 +276,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             define variable vqnty as integer no-undo.
             vqnty = 0.
             define variable vGdsCode as integer no-undo.
-            vGdsCode = ?.
             v-objlistmark = v-gds-gd:marks .
             if valid-object(v-objlistmark) 
             then do :
+               vGdsCode = 0.
+            
                v-i-counter2 = v-objlistmark:iCounter .
                /*if v-i-counter2 < 1
                then
@@ -306,16 +314,19 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                         utd-marking-lines.LineNum = utd-lines.LineNum
                         utd-marking-lines.mark    = vmark
                         utd-marking-lines.doc-level = 1
-                        utd-marking-lines.gds-code  =   goods.gds-cod     
+                        utd-marking-lines.gds-code  = marking.gds-code       
                      .
                   end.
-                  if v-i-num2  eq 1
+                  
+                  if     vGdsCode eq 0
+                     and utd-marking-lines.gds-code ne ?
                   then
-                     vGdsCode = goods.gds-cod.
-                  else
-                     if vGdsCode ne goods.gds-cod
-                     then
-                        vGdsCode = ?.
+                     vGdsCode = utd-marking-lines.gds-code.
+                  else if      utd-marking-lines.gds-code ne ?
+                      and vGdsCode ne utd-marking-lines.gds-code
+                  then
+                     vGdsCode = ?.
+                  
                   if utd-marking-lines.doc-level eq 1
                   then
                      vqnty = vqnty + marking.box-qnty.
@@ -366,14 +377,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   end.
                      
                end.
+               if     vGdsCode     eq ?
+                  and v-i-counter2 > 0
+               then
+                  utd-lines.gds-code = ?.
                
+            
             end. //
            /* else
                AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum ) ).
       */   
-            if vGdsCode eq ?
-            then
-               utd-lines.gds-code = ?.
             release utd-lines.
          end.
       end.

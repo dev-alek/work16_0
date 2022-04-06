@@ -357,6 +357,7 @@ function addBracketForCode return character
       oTeg = icodeIdent.
    end.
    else do:
+      ChekTypeMarkByDm(icodeIdent).
       mMRCCode = yes. 
       block-teg:
       do while Velement ne "" and icodeIdent ne "":
