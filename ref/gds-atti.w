@@ -7,6 +7,10 @@
 &Scoped-define FRAME-NAME Dialog-Frame
 
 using ibs.th.gbl.sys.objsrv.
+using ibs.th.str.mercury.*.
+using ibs.th.gbl.storage.*.
+using ibs.th.bge.mercury.*.
+
 /* Temp-Table and Buffer definitions                                    */
 DEFINE TEMP-TABLE temp-attr NO-UNDO LIKE ub.goods-attr
        field user-can-edit as log
@@ -386,6 +390,35 @@ define variable v-error-code        as character no-undo .
 /*     view-as alert-box error.             */
 /*     return no-apply.                     */
 /*  end.                                    */
+  if temp-attr.code = {&attr-mercur_FGIS} then do:
+  define variable ii             as integer no-undo .
+  define variable gdsMercsubsObj as class   gdsmercsubs.
+  define variable gdsmercstrObj  as class   gdsmercstr.
+  define variable gdsMercObj     as class     gdsmercsub.
+  define VARIABLE f-guid         as character no-undo .     
+  
+  gdsMercsubsObj = new gdsmercsubs ().
+  gdsmercstrObj = new gdsmercstr ().
+  
+  gdsMercsubsObj = gdsmercstrObj:getgdsmercs(p-gds-code).
+  
+  if VALID-OBJECT (gdsMercsubsObj:GdsMercsubsCurr) then
+  do:
+    do ii = 1 to gdsMercsubsObj:GetItem (ii): 
+      gdsMercObj = gdsMercsubsObj:GdsMercsubsCurr. /* выдернула конкретны объект*/
+      assign
+        f-guid         = gdsMercObj:GUID_       
+        .
+    end.
+  end. 
+  if f-guid <> "" then do:
+      message
+      "Необходимо удалить синхронизацию товара с Меркурием" skip
+      view-as alert-box error .
+      return NO-APPLY .
+  end.         
+  end.    
+
   if temp-attr.code = {&attr-item-matter-mark} then do:
     message
     "Атрибут нельзя удалить"
@@ -1031,6 +1064,37 @@ IF attr-user-can-edit Then DO:
       view-as alert-box error .
       undo, return error .
     end.
+  end.
+  if AVAILABLE (temp-attr) then do:
+  if attr-label = "Является подконтрольным ФГИС Меркурий" and
+  temp-attr.code = {&attr-mercur_FGIS} then do:
+  define variable ii             as integer no-undo .
+  define variable gdsMercsubsObj as class   gdsmercsubs.
+  define variable gdsmercstrObj  as class   gdsmercstr.
+  define variable gdsMercObj     as class     gdsmercsub.
+  define VARIABLE f-guid         as character no-undo .     
+  
+  gdsMercsubsObj = new gdsmercsubs ().
+  gdsmercstrObj = new gdsmercstr ().
+  
+  gdsMercsubsObj = gdsmercstrObj:getgdsmercs(p-gds-code).
+  
+  if VALID-OBJECT (gdsMercsubsObj:GdsMercsubsCurr) then
+  do:
+    do ii = 1 to gdsMercsubsObj:GetItem (ii): 
+      gdsMercObj = gdsMercsubsObj:GdsMercsubsCurr. /* выдернула конкретны объект*/
+      assign
+        f-guid         = gdsMercObj:GUID_       
+        .
+    end.
+  end. 
+  if f-guid <> "" then do:
+      message
+      "Необходимо удалить синхронизацию товара с Меркурием" skip
+      view-as alert-box error .
+      undo, return error .
+  end.         
+  end.    
   end.
   run temp-gds-attr-write (
                              input p-gds-code
