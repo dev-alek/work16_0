@@ -45,6 +45,8 @@ define variable rep-rec as recid no-undo .
 define variable prt-mode as character no-undo .
 define variable v-cntxp-cash-pay as integer   no-undo .
 define variable is-doc-hold as logical   no-undo init false .
+define variable varvalue as character no-undo.
+define variable vartype  as character no-undo.
 parext-doc-mode = doc-mode.
 parstat = g#stat .
 
