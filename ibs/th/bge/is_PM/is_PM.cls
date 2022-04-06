@@ -698,18 +698,18 @@ class ibs.th.bge.is_PM.is_PM:
         and exec-time-diff < (rvs-doc-create-diff * 60)
         and not otherOneDate
         then do :
-            if is-full
-            and tt-place.is-meas
-            and not tt-place.rvd-level
-            and rvs-time-diff > exec-time-diff
-            then do :
-              run write-to-log in p-parent-handle ( "Требуется создание сверки" ) .
-              tt-place.need-new-rvs = true .
-            end .
-            else do :
-              run write-to-log in p-parent-handle (if is-full-backdate then "Выгрузка за прошедшие сутки, сверка не создается" else "Выгрузка промежуточная, сверка не создается" ) .
-              tt-place.use-old-rvs = true .
-            end .
+          if is-full
+          and tt-place.is-meas
+          and not tt-place.rvd-level
+          and rvs-time-diff > exec-time-diff
+          then do :
+            run write-to-log in p-parent-handle ( "Требуется создание сверки" ) .
+            tt-place.need-new-rvs = true .
+          end .
+          else do :
+            run write-to-log in p-parent-handle (if is-full-backdate then "Выгрузка за прошедшие сутки, сверка не создается" else "Выгрузка промежуточная, сверка не создается" ) .
+            tt-place.use-old-rvs = true .
+          end .
         end .
         else do :
           if rvs-time-diff > (rvs-doc-exist-diff * 60)
@@ -969,40 +969,40 @@ class ibs.th.bge.is_PM.is_PM:
                                            and buf_chk-gds.b-code   = buf_bar-code.b-code
   /*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                            :
-                if buf_chk-doc.out-code = ?
-                then do :
-                  v-pl-code = findtank (buf_chk-doc.obj-type,
-                                        buf_chk-doc.obj-code,
-                                        buf_chk-gds.pump,
-                                        buf_chk-gds.nozzle-code,
-                                        buf_chk-gds.pl-code,
-                                        buf_bar-code.gds-code) .
-                end .
-                else do :
-                  v-pl-code = buf_chk-gds.pl-code .
-                end .
-                if v-pl-code <> tt-place.pl-code then next chk-gds_ .
-                                               
-                if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
-                then do :   
-                  v-density = 0 .       
-                  { str/avrgdens.i
-                    tt-place.gds-code
-                    buf_chk-doc.obj-type
-                    buf_chk-doc.obj-code
-                    tt-place.pl-code
-                    buf_chk-doc.shift-date
-                    buf_chk-doc.shift-num
-                    buf_chk-doc.chk-date
-                    buf_chk-doc.chk-time
-                    v-density
-                    no-error
-                  }
-                  tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
-                end .
-                else do :                     
-                  tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
-                end .                               
+              if buf_chk-doc.out-code = ?
+              then do :
+                v-pl-code = findtank (buf_chk-doc.obj-type,
+                                      buf_chk-doc.obj-code,
+                                      buf_chk-gds.pump,
+                                      buf_chk-gds.nozzle-code,
+                                      buf_chk-gds.pl-code,
+                                      buf_bar-code.gds-code) .
+              end .
+              else do :
+                v-pl-code = buf_chk-gds.pl-code .
+              end .
+              if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+                                             
+              if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+              then do :   
+                v-density = 0 .       
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  buf_chk-doc.shift-date
+                  buf_chk-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
+              end .
+              else do :                     
+                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+              end .                               
             end .
           end .
           
@@ -1130,7 +1130,7 @@ class ibs.th.bge.is_PM.is_PM:
           and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
           then next chk-doc_ .
           
-          if buf_chk-doc.chk-date = today
+          if buf_chk-doc.chk-date = date-end
           and buf_chk-doc.chk-time > time-end
           then next chk-doc_ .  
                                        
@@ -1141,40 +1141,40 @@ class ibs.th.bge.is_PM.is_PM:
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
 /*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
-              if buf_chk-doc.out-code = ?
-              then do :
-                v-pl-code = findtank (buf_chk-doc.obj-type,
-                                      buf_chk-doc.obj-code,
-                                      buf_chk-gds.pump,
-                                      buf_chk-gds.nozzle-code,
-                                      buf_chk-gds.pl-code,
-                                      buf_bar-code.gds-code) .
-              end .
-              else do :
-                v-pl-code = buf_chk-gds.pl-code .
-              end .
-              if v-pl-code <> tt-place.pl-code then next chk-gds_ .
-                                             
-              if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
-              then do :   
-                v-density = 0 .       
-                { str/avrgdens.i
-                  tt-place.gds-code
-                  buf_chk-doc.obj-type
-                  buf_chk-doc.obj-code
-                  tt-place.pl-code
-                  buf_chk-doc.shift-date
-                  buf_chk-doc.shift-num
-                  buf_chk-doc.chk-date
-                  buf_chk-doc.chk-time
-                  v-density
-                  no-error
-                }
-                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
-              end .
-              else do :                     
-                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
-              end .                               
+            if buf_chk-doc.out-code = ?
+            then do :
+              v-pl-code = findtank (buf_chk-doc.obj-type,
+                                    buf_chk-doc.obj-code,
+                                    buf_chk-gds.pump,
+                                    buf_chk-gds.nozzle-code,
+                                    buf_chk-gds.pl-code,
+                                    buf_bar-code.gds-code) .
+            end .
+            else do :
+              v-pl-code = buf_chk-gds.pl-code .
+            end .
+            if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+                                           
+            if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+            then do :   
+              v-density = 0 .       
+              { str/avrgdens.i
+                tt-place.gds-code
+                buf_chk-doc.obj-type
+                buf_chk-doc.obj-code
+                tt-place.pl-code
+                buf_chk-doc.shift-date
+                buf_chk-doc.shift-num
+                buf_chk-doc.chk-date
+                buf_chk-doc.chk-time
+                v-density
+                no-error
+              }
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
+            end .
+            else do :                     
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+            end .                               
           end .
         end .
         
@@ -1298,7 +1298,7 @@ class ibs.th.bge.is_PM.is_PM:
           and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
           then next chk-doc_ .
           
-          if buf_chk-doc.chk-date = today
+          if buf_chk-doc.chk-date = date-end
           and buf_chk-doc.chk-time > time-end
           then next chk-doc_ .  
                                        
@@ -1521,7 +1521,7 @@ class ibs.th.bge.is_PM.is_PM:
           end .
           
           if buf_chk-doc.chk-date = date-start
-          and buf_chk-doc.chk-time > time-start
+          and buf_chk-doc.chk-time >= time-start
           then next chk-doc_ .  
                                        
           if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
@@ -1749,7 +1749,7 @@ class ibs.th.bge.is_PM.is_PM:
             then next chk-doc_ .
             
             if buf_chk-doc.chk-date = date-start
-            and buf_chk-doc.chk-time > time-start
+            and buf_chk-doc.chk-time >= time-start
             then next chk-doc_ .  
                                          
             if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
