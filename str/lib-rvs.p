@@ -2124,6 +2124,26 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
          and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
          and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
          and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+         and rvs-line-attr.attr-code = "input-type" no-error.
+  if not available rvs-line-attr then do :
+    create rvs-line-attr.
+    assign
+      rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+      rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+      rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+      rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+      rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+      rvs-line-attr.attr-code = "input-type"
+    .
+  end.
+  rvs-line-attr.attr-value = 'à' .
+  
+  find first rvs-line-attr exclusive-lock
+       where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+         and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+         and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+         and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+         and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
          and rvs-line-attr.attr-code = "input-type-p" no-error.
   if not available rvs-line-attr then do :
     create rvs-line-attr.
