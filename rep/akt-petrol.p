@@ -921,15 +921,15 @@ procedure print-table1:
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.type-AC) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.num-AC) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-petrol.name-gds <> ? then string(tt-petrol.name-gds) + '</TD>' else " "  + '</TD>' skip
-            '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.99",2) + '</TD>' skip
-            '<TD text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9999",4) + '" colspan="2" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9999",4) + '</TD>' skip        
+            '<TD text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9",0) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9",1) + '" colspan="2" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip        
             '<TD text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9",0) + '</TD>' skip
-            '<TD text_wrap="true"num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip
             '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.urov-AC + '</TD>' skip
-            '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.99",2) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.99",2) + '</TD>' skip
-            '<TD text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9999",4) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9999",4) + '</TD>' skip        
-            '<TD text_wrap="true"num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9",0) + '</TD>' skip
-            '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.999",3) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+            '<TD text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9",0) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9",0) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip        
+            '<TD text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9",0) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip
             '</TR>'skip     
             .
     end.
@@ -984,11 +984,11 @@ procedure print-table2:
             '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.num-AC + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.name-gds + '</TD>' skip
             '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.passport + '</TD>' skip
-            '<TD text_wrap="true" colspan="3" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.999",3) + '</TD>' skip
-            '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.999",3) + '</TD>' skip
-            '<TD text_wrap="true" colspan="2" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.999",3) + '</TD>' skip           
-            '<TD text_wrap="true" colspan="2" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.999",3) + '</TD>' skip
-            '<TD text_wrap="true" colspan="2" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.999",3) + '</TD>' skip
+            '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '</TD>' skip
+            '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '</TD>' skip           
+            '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.9",1) + '</TD>' skip
+            '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.9",1) + '</TD>' skip
             '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.num-pl + '</TD>' skip
             '</TR>'skip     
             .

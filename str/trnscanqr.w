@@ -671,7 +671,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Нефтебаза с кодом " v-cli-code " неактивна. (Удалёна)"  view-as alert-box.
+        message "Нефтебаза с кодом " v-cli-code " неактивна. (Удалена)"  view-as alert-box.
         v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
         undo, return error .
       end .

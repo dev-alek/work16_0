@@ -619,9 +619,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("standard-dnst", string-mth (infoSecObj:DocDensST)).
           write-data-element ("wght-doc", string-mth (infoSecObj:CliQnty)).
           write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
-          if trim(infoSecObj:cmom-nb) > ""
-          then
-            write-data-element ("cmom-nb", string (infoSecObj:cmom-nb)).
+/*          if trim(infoSecObj:cmom-nb) > ""                              */
+/*          then                                                          */
+/*            write-data-element ("cmom-nb", string (infoSecObj:cmom-nb)).*/
           write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
           write-data-element ("sz-nck", replace(infoSecObj:Diameter, {&delim-cmd}, " ")).
           write-data-element ("filling-method", (if infoSecObj:Pour = "Верхний налив" then '0' else '1')).

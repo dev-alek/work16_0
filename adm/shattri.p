@@ -2960,7 +2960,7 @@ end.
       
       v-prop-code = "{&bef-attr-petrol_sec-fields}" .
 &scop ptype character
-&scop prop-value '':U
+&scop prop-value 'section-name,cli-qnty,doc-dens,group-np,list-tank,a-b-tarir,tank-density,tank-temp,dens-temp,place-si,place-si-temp':U
 &scop prop-code  entry(v-ii,v-prop-code)
 
       do v-ii = 1 to num-entries(v-prop-code):

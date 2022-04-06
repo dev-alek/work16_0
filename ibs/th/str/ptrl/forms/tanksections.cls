@@ -408,7 +408,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
      
     tabThis = tabControl:TabPages[tabControl:SelectedIndex].
     int (tabThis:Name) no-error.
-    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec() 
+    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec(yes) 
     then do:
       tankSectionControl[integer (tabThis:Name)]:SetForcus ().
       tbcontrol = cast(sender, tabControl).
@@ -442,7 +442,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     def var ii as int no-undo.
     
     do ii = 1 to infoSecsObj:SectionNum:
-      if not tankSectionControl[ii]:CheckSec()
+      if not tankSectionControl[ii]:CheckSec(yes)
         then return.
     end.
     

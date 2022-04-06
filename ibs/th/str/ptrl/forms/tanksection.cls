@@ -388,7 +388,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   method private void buttonCalcWeight_Click( input sender as System.Object, input e as System.EventArgs ):
     
     SetInfoSec ().
-    if not CheckSec()
+    if not CheckSec(no)
     then do:
       SetForcus().
       return.
@@ -1596,7 +1596,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label47:Name = "label47".
     this-object:label47:Size = new System.Drawing.Size(203, 20).
     this-object:label47:TabIndex = 25.
-    this-object:label47:Text = "Давление насыщенных паров, МПа:".
+    this-object:label47:Text = "Давление насыщенных паров, кПа:".
     this-object:label47:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label47:UseCompatibleTextRendering = true.
     /*  */
@@ -1607,7 +1607,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxPressure:Name = "maskedTextBoxPressure".
     this-object:maskedTextBoxPressure:Size = new System.Drawing.Size(74, 20).
     this-object:maskedTextBoxPressure:TabIndex = 24.
-    this-object:maskedTextBoxPressure:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_1_4).
+    this-object:maskedTextBoxPressure:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_3_1).
+    this-object:maskedTextBoxPressure:Leave:Subscribe(this-object:PressureLeave).
     /*  */
     /* comboBoxGroupNP */
     /*  */
@@ -2576,6 +2577,20 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
   end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+  method private void PressureLeave( input sender as System.Object, input e as System.EventArgs ):
+		
+		infoSecsObj:GetInfoSectionProp(idSecTabPage).
+    infoSecsObj:InfoSectionCurr:Pressure = decimal(maskedTextBoxPressure:text) .
+		
+    return.
+
+  end method.
+
   method private void SetControls ():
 
     def var infoSecObj as class InfoSection no-undo.
@@ -2587,7 +2602,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     v-doc-density = infoSecObj:DocDensity no-error .
     this-object:maskedTextBoxDocDensST:Text       = format_dens (infoSecObj:DocDensST).
     this-object:maskedTextBoxPaspDens:Text        = format_dens (infoSecObj:PaspDens).
-    this-object:maskedTextBoxPressure:Text        = format_dens (infoSecObj:Pressure).
+    this-object:maskedTextBoxPressure:Text        = if infoSecObj:Pressure = 0 or infoSecObj:Pressure = ? then "0." else format_pressure (infoSecObj:Pressure).
     this-object:maskedTextBoxDocQnty:Text         = format_round_0 (infoSecObj:DocQnty).
     this-object:maskedTextBoxDocVolume:Text       = format_round_0 (infoSecObj:DocVolume).
     v-doc-qnty = infoSecObj:DocQnty no-error .
@@ -2796,6 +2811,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     KeyPressMaskTBDecimal (sender, e, 1, 4).
 
   end method.  
+  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void KeyPressMaskTBDecimal_3_1( input sender as System.Object, input e as System.Windows.Forms.KeyPressEventArgs):
+
+    KeyPressMaskTBDecimal (sender, e, 3, 1).
+
+  end method.  
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -2999,8 +3025,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       e:Handled = false.
       if not e:Handled
       then do:
-        
-    
     
         if startcursor = 0 and v-maskTextBox:Text begins "0"
         then do:
@@ -3014,7 +3038,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         if (length (entry (1, v-maskTextBox:Text, ".")) < maxLenthInt or startcursor < index (v-maskTextBox:Text, ".") ) and (index (v-maskTextBox:Text, ".") = 0 or startcursor <= index (v-maskTextBox:Text, ".") or startcursor = 0) 
         then do:
           if length (entry (1, v-maskTextBox:Text, ".")) < maxLenthInt
-            then return.
+          then do :
+            if num-entries(v-maskTextBox:Text, ".") = 2
+            and length (entry (2, v-maskTextBox:Text, ".")) = maxLenthFractional
+            and startcursor >= index (v-maskTextBox:Text, ".")
+            then do :
+              v-maskTextBox:Text = substring (v-maskTextBox:Text, 1, length (v-maskTextBox:Text) - 1 ) + e:KeyChar .
+              e:KeyChar = "" .
+              v-maskTextBox:SelectionStart = startcursor .
+            end .
+            return.
+          end .
           v-maskTextBox:Text = this-object:ValueChgToInt (v-maskTextBox:Text, maxLenthInt, input-output startcursor).
         end.
         else do:
@@ -3327,6 +3361,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     return str.
   end.
   
+  method private char format_pressure (arg as decimal):
+    def var str as char no-undo.
+    str = trim (string (round(arg, 1), "->>>>>>>>9.<")) no-error.
+    if error-status:error
+      then return "".
+    return str.
+  end.
+  
   method private char format_temper (arg as decimal):
     def var str as char no-undo.
     str = trim (string (round(arg, 1), "->>9.9")).
@@ -3492,7 +3534,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxAccWeight:Text = "".
     end.
     
-    setFocusMaskTextDoc:Focus().
+    setFocusMaskTextDoc:Focus() no-error .
     
   end.
 
@@ -3506,7 +3548,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end.
   end.
 
-  method public logical CheckSec ():
+  method public logical CheckSec (input p-save as logical):
     
     def var v-dec as decimal no-undo.
     def var v-str as character no-undo.
@@ -3587,6 +3629,18 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             return false.
           end.
         end.
+        
+        if p-save
+        then do :
+          v-dec = decimal (maskedTextBoxTankWeight:Text) no-error.
+          if (error-status:error or v-dec = 0)
+          then do:
+            ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                     "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
+                     "Введите данные и нажмите кнопку Рассчитать." ).
+            return false.
+          end.
+        end .
         
       end.
       else do:
@@ -3685,7 +3739,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       if lookup("doc-qnty", v-sec-fields) > 0
       then do :
         v-dec = decimal (maskedTextBoxDocQnty:Text) no-error.
-        if (error-status:error or v-dec = 0) and infoSecsObj:DocQntyInput
+        if (error-status:error or v-dec = 0)
         then do:
           ShowMsg( v-str + "кол-во по документу" ).
           setFocusMaskTextDoc = maskedTextBoxDocQnty.
@@ -3696,7 +3750,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       if lookup("cli-qnty", v-sec-fields) > 0
       then do :
         v-dec = decimal (maskedTextBoxCliQnty:Text) no-error.
-        if (error-status:error or v-dec = 0) and infoSecsObj:CliQntyInput
+        if (error-status:error or v-dec = 0)
         then do:
           ShowMsg( v-str + "масса по документу" ).
           setFocusMaskTextDoc = maskedTextBoxCliQnty.
@@ -3707,7 +3761,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       if lookup("doc-dens", v-sec-fields) > 0
       then do : 
         v-dec = decimal (maskedTextBoxDocDens:Text) no-error.
-        if ( error-status:error or v-dec = 0) and infoSecsObj:DensityInput
+        if ( error-status:error or v-dec = 0)
         then do:
           ShowMsg( v-str + "плотность по док. (при раб. темп.)" ).
           setFocusMaskTextDoc = maskedTextBoxDocDens.
@@ -3763,7 +3817,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       if lookup("doc-volume", v-sec-fields) > 0
       then do :
         v-dec = decimal (maskedTextBoxDocVolume:Text) no-error.
-        if (error-status:error or v-dec = 0) and infoSecsObj:DocQntyInput
+        if (error-status:error or v-dec = 0)
         then do:
           ShowMsg( v-str + "объем по документу" ).
           setFocusMaskTextDoc = maskedTextBoxDocVolume.
@@ -3776,7 +3830,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         if trim (comboBoxGroupNP:Text) = ""
         then do:
           v-dec = decimal (maskedTextBoxPressure:Text) no-error.
-          if (error-status:error or v-dec = 0) and infoSecsObj:DocQntyInput
+          if (error-status:error or v-dec = 0)
           then do:
             ShowMsg( v-str + "группа НП/давление насыщенных паров" ).
             setFocusMaskTextDoc = maskedTextBoxPressure.
