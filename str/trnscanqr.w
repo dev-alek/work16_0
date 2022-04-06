@@ -199,7 +199,7 @@ end.
 
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL UUID_VSD Dialog-Frame
-on any-printable of b-exit in frame Dialog-Frame
+on any-printable of v-mark in frame Dialog-Frame
 do:
 
   run proc-any-key.
@@ -286,7 +286,7 @@ do on error undo MAIN-BLOCK, leave MAIN-BLOCK
   end.
   
   apply "entry" to v-mark in frame {&FRAME-NAME}.
-/*  v-mark:READ-ONLY IN FRAME {&frame-name}       = TRUE .*/
+  v-mark:READ-ONLY IN FRAME {&frame-name}       = TRUE .
   
   disable v-sts with frame {&frame-name}.
   
@@ -386,6 +386,13 @@ procedure save_update :
   define variable v-ix as integer no-undo.
   define variable v-crc as char no-undo.
   define variable ii as integer no-undo .
+  define variable byte1 as character no-undo .
+  define variable byte2 as character no-undo .
+  define variable v-asc-symb as int64 no-undo .
+  define variable mData as memptr no-undo .
+  define variable tmpstr as character no-undo .
+  define variable v-length as integer no-undo .
+  define variable byte-size as integer no-undo .
   define variable infoSecsObj as class InfoSectionsTotal no-undo.
   
   v-bad-symb = '!' + {&delim-par} + '@' + {&delim-par} + '#' + {&delim-par} + '$' + {&delim-par} + '%' + {&delim-par} + '^' + {&delim-par} + '&' + {&delim-par}
@@ -397,15 +404,49 @@ procedure save_update :
   
   if v-mark:screen-value in frame {&frame-name} = ""
   then do:
-    v-mark:screen-value in frame {&frame-name} = codepage-convert(v-scan-str, "1251", "UTF-8") .
-    v-scan-str = "". 
+    v-length = LENGTH(v-scan-str, 'raw').
+    set-size(mData) = 0. 
+    set-size(mData) = v-length.
+    PUT-STRING(mData, 1, v-length) = v-scan-str.
+    byte-size = GET-SIZE(mData).
+    
+    DO ii = 1 TO byte-size:
+      v-asc-symb = GET-BYTE(mData, ii).
+      byte1 = intToHex(v-asc-symb) .
+      if byte2 = "d0" and byte1 = "3f"
+      then do : 
+        tmpstr = substring(tmpstr, 1, length(tmpstr) - 1) no-error .
+        tmpstr = tmpstr + CHR(38) + CHR(36) no-error .
+      end .
+      else do :
+        tmpstr = tmpstr + CHR(v-asc-symb) no-error .
+      end .
+      byte2 = intToHex(v-asc-symb) .
+    END.
+    set-size(mData) = 0.
+    tmpstr = codepage-convert(tmpstr, "1251", "UTF-8") .
+    tmpstr = replace(tmpstr, "&$", "И") .
+    v-mark:screen-value in frame {&frame-name} = tmpstr .
+    v-scan-str = "".
   end.
   
   v-json-str = v-mark:screen-value .
   v-scan-str = "".
+  
+  if trim(v-json-str) = ""
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message "Ошибка сканирования! Попробуйте увеличить время на сканирование QR-кода в настройках по топливу." view-as alert-box .
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    return .
+  end . 
+  
   v-ix = index (v-json-str, ',"CRC":"').
   v-crc = substring (v-json-str, v-ix + 8, 8).
   v-json-str = substring (v-json-str, 9, v-ix - 9).
+  v-json-str = codepage-convert(v-json-str, "UTF-8", "1251") .
 
   run checkcrc (input v-json-str, input v-crc, output v-ok).
   if not v-ok
@@ -413,12 +454,12 @@ procedure save_update :
     v-mark:screen-value = "" .
     v-scan-str = "".
     v-mark = "".
-    message "Ошибка сканирования! Неверная контрольная сумма!" view-as alert-box .
+    message "Некорректный формат штрих-кода. Документ необходимо заполнить в ручном режиме" view-as alert-box .
     v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
     return .
   end.
         
-  assign v-mark = codepage-convert(v-mark:screen-value in frame {&frame-name}, "1251", "UTF-8") .
+  assign v-mark = v-mark:screen-value .
  
   if trim(v-mark) = "" then return .
   
@@ -438,7 +479,7 @@ procedure save_update :
     v-mark:screen-value = "" .
     v-scan-str = "".
     v-mark = "".
-    message "Ошибка сканирования! Неверный формат!" view-as alert-box .
+    message "Некорректный формат штрих-кода. Документ необходимо заполнить в ручном режиме" view-as alert-box .
     v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
     undo, return.
   end.
@@ -1234,11 +1275,11 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-any-key Dialog-Frame 
 procedure proc-any-key :
-/*  if v-scan-str = ""              */
-/*    then v-timedelay = etime.     */
-/*    else                          */
-/*      if etime - v-timedelay > 700*/
-/*        then v-scan-str = "".     */
+  if v-scan-str = ""
+    then v-timedelay = etime.
+    else
+      if etime - v-timedelay > qr-scan-time
+        then v-scan-str = "".
   v-scan-str = v-scan-str + last-event:label.
 end.
 
