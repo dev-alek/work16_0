@@ -260,16 +260,19 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             if v-gds-gd:stts-desc ne ?
             then
                AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"Load1C","stts-desc-line",v-gds-gd:stts-desc + {&delim-par} + string( utd-lines.LineNum)).
+            if v-gds-gd:Qnty-accepted ne ?
+            then
+               setattrutdlines(utd-lines.db-num, utd-lines.doc-id, utd-lines.lineNum,"QuantityBarCode",string(v-gds-gd:Qnty-accepted)).
             define variable vqnty as integer no-undo.
             vqnty = 0.
             v-objlistmark = v-gds-gd:marks .
             if valid-object(v-objlistmark) 
             then do :
                v-i-counter2 = v-objlistmark:iCounter .
-               if v-i-counter2 < 1
+               /*if v-i-counter2 < 1
                then
                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum ) ).
-                  
+                 */ 
                for each tt-mark:
                   delete tt-mark.
                end.
@@ -355,12 +358,15 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                end.
                release utd-lines.
             end. //
-            else
+           /* else
                AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum ) ).
-         end.
+      */   end.
       end.
    end.
-   
+   CheckMarkUtd(utd.db-num,utd.doc-id).
+   CheckMarking(utd.db-num,utd.doc-id,"CheckÑontract").
+/*   vMarkUtd =*/
+   CheckMarkUtd(utd.db-num,utd.doc-id).
    if ibs.th.gbl.gbl-var:g#db-num ne 0 and utd.doc-code = "" and utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
       and (utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB )
      then 

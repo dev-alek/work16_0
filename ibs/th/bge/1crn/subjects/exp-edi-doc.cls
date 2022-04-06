@@ -23,7 +23,8 @@ block-level on error undo, throw.
 class ibs.th.bge.1crn.subjects.exp-edi-doc inherits ibs.th.gbl.sys.objth implements iexpsubject:
 
   { cmp/str-glbl.i class }
-  {utl/gtin.i class}
+  { utl/gtin.i class}
+  { str/utd-attr.i class}
  /* { str/lib-trn.i  class }
   { cmp/library.i  class }
   { ref/extclass.i }*/
@@ -125,7 +126,10 @@ method public void CrContentToSW (insw as handle):
             insw:write-data-element (  "price-nonds",      string(utd-lines.Price)        ) . 
             insw:write-data-element (  "qnty-ttn",   string(utd-lines.Quantity)  ) . 
             insw:write-data-element (  "sum",  string(utd-lines.Total)                 ) .
-            insw:write-data-element (  "sum-nds",  string(utd-lines.vat)                 ) .  
+            insw:write-data-element (  "sum-nds",  string(utd-lines.vat)                 ) .
+            insw:write-data-element (  "Qnty-accepted",  
+                                     getattrutdlinesex(utd-lines.db-num, utd-lines.doc-id, utd-lines.lineNum,"QuantityBarCode","0")                 
+                                     ) .  
             find first utd-marking-lines  where utd-marking-lines.db-num  = utd-lines.db-num
                                             and utd-marking-lines.doc-id  = utd-lines.doc-id
                                             and utd-marking-lines.LineNum = utd-lines.LineNum

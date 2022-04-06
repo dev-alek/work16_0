@@ -65,7 +65,7 @@ define variable vss-description as character no-undo init "Проверка кодов маркир
 { gbl/key-rec.i  }
 { str/edo.i }
 {cmp\trg-def.i}
-
+{ gbl/attr-lib.i}
 /* Local Variable Definitions ---                                       */
 
 define variable log-res-statch as log       no-undo.
@@ -2259,6 +2259,55 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                         buf_marking.sts = Marking:NotAvailable:KeyIntDB .
                   end.  
                end.  
+            end.
+            block-qnty:
+            for each buf_utd-lines where buf_utd-lines.db-num = buf_utd.db-num
+                                     and buf_utd-lines.doc-id = buf_utd.doc-id
+                                     and buf_utd-lines.sts ne objSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB
+            no-lock:
+               if buf_utd-lines.gds-code eq ?
+               then 
+                  next block-qnty.
+               def var v-q as decimal no-undo.
+               v-q = 0.
+               define variable v-par-type as character no-undo.
+               define variable v-par-val  as character no-undo.
+               
+               &scop proc-name gds-attr-value
+               {&run_proc_attr-lib}
+                    ( buf_utd-lines.gds-code,
+                      {&attr-mark-type},
+                      output v-par-val,
+                      output v-par-type
+                    ).
+               if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsMarkingForType(v-par-val)
+               then do:
+                  for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                                   and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                                   and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+                  no-lock:
+                     find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.unit-ext = "UNIT"
+                                              and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-lock no-error.
+                     if available (buf_marking)
+                     then 
+                        v-q = v-q + 1.
+                  end.
+               end.
+               else do:
+                  for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                                   and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                                   and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+                                                   and buf_utd-marking-lines.doc-level = 1
+                  no-lock:
+                     find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark
+                                             and (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB) 
+                                             and buf_marking.box-qnty <> ? no-lock no-error.
+                     if available (buf_marking)
+                     then 
+                        v-q = v-q + buf_marking.box-qnty.
+                  end.      
+               end .
+               setattrutdlines(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.lineNum,"QuantityBarCode",string(v-q)).
             end.  
          end.
          else 

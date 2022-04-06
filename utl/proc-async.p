@@ -112,7 +112,7 @@ quit.
 
 procedure SetErr:
     define input  parameter Itext as character no-undo.
-    output to "error.log" append.
+    output to "error.log".
 /*    if Itext begins "error"
     then
        mError = yes. */
