@@ -616,7 +616,25 @@ procedure save_update :
     undo, return error .
   end .
   else do:
-    v-tmp-date = date( entry(3, v-tmp-char, "-") + "/" + entry(2, v-tmp-char, "-") + "/" + entry(1, v-tmp-char, "-") ) .
+    if trim(v-tmp-char) = ""
+    then do :
+      v-mark:screen-value = "" .
+      v-scan-str = "".
+      v-mark = "".
+      message "В накладной не указана дата документа. Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса"  view-as alert-box.
+      v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+      undo, return error .
+    end .
+    v-tmp-date = date( entry(3, v-tmp-char, "-") + "/" + entry(2, v-tmp-char, "-") + "/" + entry(1, v-tmp-char, "-") ) no-error .
+    if v-tmp-date = ?
+    then do :
+      v-mark:screen-value = "" .
+      v-scan-str = "".
+      v-mark = "".
+      message "В накладной неверно указана дата документа. Для внесения в систему данных обратитесь к ответственному сотруднику регионального офиса"  view-as alert-box.
+      v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+      undo, return error .
+    end .
     { str/tdat-wrt.i
         t_doc.doc-code
         {&trdcattr-dids}
