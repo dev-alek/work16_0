@@ -2036,7 +2036,11 @@ PROCEDURE scan-mark :
     v-scan-str = "". 
     assign 
         v-mark = v-mark:screen-value in frame {&frame-name}.
-    v-marking = GetCodeIdent(v-mark) .
+   mMRCCode  = yes.
+   v-marking = GetCodeIdent(v-mark) .
+
+   mMRCCode = no.
+    
     
     f-text = "" .
     f-text:screen-value = "" .
