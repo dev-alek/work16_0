@@ -731,7 +731,7 @@ define variable v-err               as logical    no-undo .
    /*теперь создадим fin-doc*/
    _temp-fin-sum:
    for each buf_temp-fin-sum no-lock
-      
+    by buf_temp-fin-sum.cashbookid desc 
     on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
     on stop   undo _main, return error substitute( "&1. stop", vss-workfile )
     on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
@@ -1063,6 +1063,7 @@ define variable v-err               as logical    no-undo .
                                           ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "SourceCode")
                                           ,msumInc-save
                                           ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankRecip-acct")).
+      buf_fin-doc.enclosure     =  "№ сумки: " + entry(1,fin-doc-attr.attr-value,";") + " " + buf_fin-doc.enclosure.
       define variable Vparentrec as character no-undo. 
       if Vparentrec eq ""
       then
