@@ -747,16 +747,16 @@ DEFINE BROWSE br-utd-nomark
    X_utd-lines.gds-code COLUMN-LABEL "Код товара" FORMAT ">>>>>>>>>9":U
    X_utd-lines.ProductCode COLUMN-LABEL "Наименование" FORMAT "x(40)":U width 25
    X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(128)":U width 20
-   X_utd-lines.Quantity COLUMN-LABEL "Кол-во!прод-ции" FORMAT "->>,>>9.999":U
+   X_utd-lines.Quantity COLUMN-LABEL "Кол-во!в ед.изм ТН" FORMAT "->>,>>9.999":U
    X_utd-lines.Price COLUMN-LABEL "Цена!(без НДС)" FORMAT "->>,>>99.99":U width 10
    X_utd-lines.Total COLUMN-LABEL "Сумма!(с НДС)" FORMAT "->>,>>99.99":U width 10
    X_utd-lines.TaxRate_ COLUMN-LABEL "НДС" format "X(5)"
    X_utd-lines.fact-qnty COLUMN-LABEL "Остаток" FORMAT "->>>>>>>>>>>>>>9.99":U width 10
    X_utd-lines.qnty-mark COLUMN-LABEL "Кол-во!штрих-кодов" FORMAT "->>>9":U
-   X_utd-lines.qnty-scan COLUMN-LABEL "Кол-во" FORMAT "->>>9":U
+   X_utd-lines.qnty-scan COLUMN-LABEL "Факт.!кол-во" FORMAT "->>>9":U
    X_utd-lines.stts COLUMN-LABEL "Статус" FORMAT "X(20)":U WIDTH 18.13
    X_utd-lines.UnitCliQnty COLUMN-LABEL "Кол-во в!ед.изм !постав-ка" FORMAT "->>>>>9":U
-   X_utd-lines.UnitCode COLUMN-LABEL "Ед.!изм" FORMAT "x(5)":U 
+   X_utd-lines.UnitCode COLUMN-LABEL "Ед.изм!постав-ка" FORMAT "x(5)":U 
   ENABLE
       X_utd-lines.qnty-scan
 /* _UIB-CODE-BLOCK-END */
@@ -1517,12 +1517,10 @@ ON row-leave OF br-utd-nomark IN FRAME d-utd
          end.   
          ub.utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) .
                
-      /*run mark-temp .
-      {&OPEN-QUERY-br-utd-nomark}             
+      run mark-temp .
+      {&OPEN-QUERY-br-utd-nomark}
       br-utd-nomark :refresh() no-error.
-      reposition br-utd-nomark to recid recid_utd no-error .                  
-           */
-            
+      reposition br-utd-nomark to recid recid_utd no-error .
       /*
        if not v-BarCode then 
        do:
