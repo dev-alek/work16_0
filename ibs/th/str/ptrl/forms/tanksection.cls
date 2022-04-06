@@ -2637,8 +2637,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxNaturLoss:Text       = format_round_3 (infoSecObj:NaturalLoss).
     this-object:maskedTextBoxTPNorm:Text          = format_int (integer (infoSecObj:TPNorm)).
     this-object:maskedTextBoxTankWater:Text       = format_round_3 (infoSecObj:TankWater).
-    this-object:maskedTextBoxTankTemp:Text        = if infoSecObj:TankTemp = ? then "" else format_temper (infoSecObj:TankTemp).
-    this-object:maskedTextBoxDensTemp:Text        = if infoSecObj:DensTemp = ? then "" else format_temper (infoSecObj:DensTemp).
+    this-object:maskedTextBoxTankTemp:Text        = if infoSecObj:TankTemp = ? then format_temper (0.0) else format_temper (infoSecObj:TankTemp).
+    this-object:maskedTextBoxDensTemp:Text        = if infoSecObj:DensTemp = ? then format_temper (0.0) else format_temper (infoSecObj:DensTemp).
     this-object:maskedTextBoxListTank:Text        = (infoSecObj:ListTank).
     this-object:maskedTextBoxPlaceSi:Text         = format_int (infoSecObj:PlaceSi).
     this-object:maskedTextBoxNumPlot:Text         = (infoSecObj:NumPlotn).
