@@ -363,7 +363,7 @@ ON CHOOSE OF b-add IN FRAME Dialog-Frame /* Добавить */
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
-    'actn_season_add-def':U
+    'actn_collection_add-def':U
     {&cntxt-global}
     0
     '':U
@@ -517,7 +517,7 @@ ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
-    'actn_season_deletion':U
+    'actn_collection_deletion':U
     {&cntxt-global}
     0
     '':U
@@ -626,7 +626,7 @@ ON CHOOSE OF b-upd IN FRAME Dialog-Frame /* Изменить */
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
-    'actn_season_update':U
+    'actn_collection_update':U
     {&cntxt-global}
     0
     '':U
