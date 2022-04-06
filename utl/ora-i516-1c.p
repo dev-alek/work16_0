@@ -675,7 +675,7 @@ assign
       end.
 
       if ub.gds-obj.inv-on = true then do:
-            v-end-message =  substitute("Товар &1 &2 &3  Находиться в инвентаризации. Прием документов невозможен." ,
+            v-end-message =  substitute("Товар &1 &2 &3  находится в инвентаризации. Прием документов невозможен." ,
                               buf_goods.gds-code ,
                               buf_goods.artic ,
                               buf_goods.gds-name

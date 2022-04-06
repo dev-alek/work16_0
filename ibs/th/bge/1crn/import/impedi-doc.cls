@@ -379,7 +379,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
        then v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value).
        else v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
      end.
-     else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate), return-value).
+     else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формировании ПН. &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate), trim(return-value, ".")).
      
      v-file-name = string (guid(generate-uuid)) + ".vbs".
      output to value (v-file-name).

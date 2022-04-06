@@ -254,7 +254,7 @@ find first buf_sysconf where buf_sysconf.host-code = v-cntxt-host-code-obj no-lo
       end.
 
       if ub.gds-obj.inv-on = true then do:
-            message  substitute("Товар &1 &2 &3  Находиться в инвентаризации. Прием документов невозможен." ,
+            message  substitute("Товар &1 &2 &3  находится в инвентаризации. Прием документов невозможен." ,
                               buf_goods.gds-code ,
                               buf_goods.artic ,
                               buf_goods.gds-name
