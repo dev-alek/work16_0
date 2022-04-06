@@ -2928,9 +2928,12 @@ if mode <> {&add-def} and mode <> {&lookup} then do:
    find first tt0-goods-attr no-lock where tt0-goods-attr.attr-code = {&attr-item-matter-mark} no-error .
    if not available (tt0-goods-attr) then
    do:
+   find first ub.goods-attr no-lock where ub.goods-attr.attr-code = {&attr-item-matter-mark} no-error .
+   if not available (ub.goods-attr) then do:
       message "Не задан атрибут Признак предмета расчета!"
          view-as alert-box.
       undo _main, return error .
+   end.
    end.
    
 find first goods share-lock where recid(goods) = gds-rec .
