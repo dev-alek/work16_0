@@ -38,6 +38,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,{&bef-attr-esys-cert-sign-subject}~
 ,{&bef-attr-esys-cert-sign-issuer}~
 ,{&bef-attr-esys-cert-file-ext}~
+,{&bef-attr-esys-cert-repository}~
 ,{&bef-attr-esys-AuthToken}~
 ,{&bef-attr-esys-AuthTokenDT}~
 ,{&bef-attr-esys-host-code}~

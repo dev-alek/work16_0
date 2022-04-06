@@ -194,6 +194,7 @@ define variable v-cert-enabled     as logical no-undo . // true - добавить цифро
 define variable v-cert-issuer-name as character no-undo .
 define variable v-cert-subj-name   as character no-undo .
 define variable v-sign-fileext     as character no-undo .
+define variable v-cert-repository  as integer no-undo .
 define variable v-pkcs             as class ibs.th.gbl.pkcs no-undo .
 
 /* ------------------------- &start-i-script& -----------------------------------*/
@@ -323,6 +324,7 @@ run write-log  in p-log-handle (
                            ,input v-cert-subj-name
                            ,input v-cert-issuer-name
                            ,input v-sign-fileext
+                           ,input v-cert-repository
                            ,input v-pkcs
                           ) .
     &scop my-message substitute("создан ack_ со статусом Ok в exch &1 - ES &2 по пакету N&3", g#db-num, buf_ext-system.esys-id, v-pack-num)
@@ -343,10 +345,11 @@ run write-log  in p-log-handle (
                               ,input 4
                               ,input v-err-message 
                               ,input buf_ext-system.esys-id
-                                          ,input v-cert-subj-name
-                                          ,input v-cert-issuer-name
-                                          ,input v-sign-fileext
-                                          ,input v-pkcs
+                              ,input v-cert-subj-name
+                              ,input v-cert-issuer-name
+                              ,input v-sign-fileext
+                              ,input v-cert-repository
+                              ,input v-pkcs
                               ) no-error .
       if error-status:error then do :
       &scop my-message substitute("Ошибка при отправке ack_ на ошибку сохранения данных по пакету 1С (РОСНФЕТЬ) из ВС")
@@ -518,6 +521,19 @@ end.
           {&display-message}.
           undo, return error {&my-message}.
         end.
+        v-cert-repository = ? .
+        run ext-system-attr-value in this-procedure (
+                                  input  buf_ext-system.esys-id
+                                 ,input  buf_ext-system.db-num
+                                 ,input  {&attr-esys-cert-repository}
+                                 ,output v-cert-enstr
+                                 ,output v-attr-type) no-error .
+        if v-cert-enstr > ""
+        then
+          v-cert-repository = integer(v-cert-enstr) no-error .    
+        if v-cert-repository = ?
+        then
+          v-cert-repository = 0 .
         if v-cert-subj-name > "" then . else do :
           &scop my-message substitute("Отсутствует имя Владельца сертификата в параметрах настройки внешней системы ВС &1&2пропускаем ..." ~
                                         , v-esys-id ~

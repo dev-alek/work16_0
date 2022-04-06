@@ -1145,6 +1145,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 { cmp/cr-prep.i 1 attr-esys-cert-sign-subject  cert-sign-subject    " " cert-sign-subject }
 { cmp/cr-prep.i 1 attr-esys-cert-sign-issuer   cert-sign-issuer     " " cert-sign-issuer  }
 { cmp/cr-prep.i 1 attr-esys-cert-file-ext      cert-file-ext        " " cert-file-ext     }
+{ cmp/cr-prep.i 1 attr-esys-cert-repository    cert-repository      " " cert-repository   }
 
 
 /* исторический код */

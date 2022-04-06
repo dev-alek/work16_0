@@ -99,6 +99,7 @@ define variable v-cert-enabled     as logical no-undo . // true - добавить цифро
 define variable v-cert-subj-name   as character no-undo . // поле SubjectName (моё имя) в сертификате
 define variable v-cert-issuer-name as character no-undo . // поле IssuerName (кем выдан) в сертификате
 define variable v-sign-fileext     as character no-undo . // расширение файла с электронной подписью
+define variable v-cert-repository  as integer no-undo .
 
     define buffer buf_ext-system         for ub.ext-system.
     define buffer buf_esys-pck-sent      for ub.esys-pck-sent.
@@ -305,6 +306,19 @@ on error undo, return error
                         ) .
         return error.
       end.
+      v-cert-repository = ? .
+      run ext-system-attr-value in this-procedure (
+                                input  buf_ext-system.esys-id
+                               ,input  buf_ext-system.db-num
+                               ,input  {&attr-esys-cert-repository}
+                               ,output v-cert-enstr
+                               ,output v-attr-type) no-error .
+      if v-cert-enstr > ""
+      then
+        v-cert-repository = integer(v-cert-enstr) no-error .    
+      if v-cert-repository = ?
+      then
+        v-cert-repository = 0 .
       if v-cert-subj-name > "" then . else do :
         run write-log in p-log-handle (
                                         input 2
@@ -566,6 +580,7 @@ on error undo, return error
                     ,input v-cert-subj-name
                     ,input v-cert-issuer-name
                     ,input v-sign-fileext
+                    ,input v-cert-repository
                     ,output v-err-gen-pack
                   ) no-error.
         if error-status:error then do:
@@ -768,6 +783,7 @@ define input  parameter p-cert-enabled     as logical no-undo .
 define input  parameter p-cert-subj-name   as character no-undo .
 define input  parameter p-cert-issuer-name as character no-undo .
 define input  parameter p-sign-fileext     as character no-undo .
+define input  parameter p-cert-repository  as integer   no-undo .
 define output parameter p-err-gen-pack as integer   no-undo . // 20/VIII-2018 - не используется, снаружи не проверяется
 
 define variable v-buffer-handle        as handle       no-undo.
@@ -1058,7 +1074,7 @@ on error undo, return error return-value
             
           // p-cert-subj-name > "" и p-cert-issuer-name > "" были проверены при чтении параметров
             v-pkcs = new ibs.th.gbl.pkcs().
-            v-signdata = v-pkcs:computeSign(v-packdata, p-cert-subj-name, p-cert-issuer-name) .
+            v-signdata = v-pkcs:computeSign(v-packdata, p-cert-subj-name, p-cert-issuer-name, p-cert-repository) .
             // взять имя файла p-pack-file без расширения
             v-position = r-index(p-pack-file, ".") .
             v-sign-file = if v-position > 0 then substring(p-pack-file, 1, v-position - 1) else p-pack-file .

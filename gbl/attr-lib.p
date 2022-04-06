@@ -14465,6 +14465,18 @@ end procedure.
 &scop           news-attr-esys-cert-file-ext yes
 &scop    manual-edit-attr-esys-cert-file-ext 0
 &scop     batch-edit-attr-esys-cert-file-ext 0
+
+&scop           type-attr-esys-cert-repository {&type-int}
+&scop         format-attr-esys-cert-repository ">>9"
+&scop          label-attr-esys-cert-repository "Хранилище сертификатов"
+&scop        tooltip-attr-esys-cert-repository "Расположение хранилища сертификатов"
+&scop  user-can-edit-attr-esys-cert-repository true
+&scop output-display-attr-esys-cert-repository false
+&scop          other-attr-esys-cert-repository '':u
+&scop           news-attr-esys-cert-repository yes
+&scop    manual-edit-attr-esys-cert-repository 0
+&scop     batch-edit-attr-esys-cert-repository 0
+
 &scop type-attr-esys-AuthToken {&type-char}
 &scop format-attr-esys-AuthToken "X(16000)"
 &scop label-attr-esys-AuthToken "Токен авторизации"
@@ -14719,6 +14731,8 @@ procedure ext-system-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-esys-cert-file-ext
       {&attr-temp-full-code}
+      &scop attr-code attr-esys-cert-repository
+      {&attr-temp-full-code}
       &scop attr-code attr-esys-AuthToken
       {&attr-temp-full-code}
       &scop attr-code attr-esys-AuthTokenDT
@@ -14791,6 +14805,8 @@ procedure ext-system-attr-tooltip :
       &scop attr-code attr-esys-cert-sign-issuer
       {&attr-temp-code}
       &scop attr-code attr-esys-cert-file-ext
+      {&attr-temp-code}
+      &scop attr-code attr-esys-cert-repository
       {&attr-temp-code}
       &scop attr-code attr-esys-AuthToken
       {&attr-temp-code}
@@ -15061,7 +15077,9 @@ procedure ext-system-attr-news :
       {&attr-news-code}
       &scop attr-code attr-esys-cert-file-ext
       {&attr-news-code}
-       &scop attr-code attr-ver-code
+      &scop attr-code attr-esys-cert-repository
+      {&attr-news-code}
+      &scop attr-code attr-ver-code
       {&attr-news-code}
       &scop attr-code attr-esys-AuthToken
       {&attr-news-code}

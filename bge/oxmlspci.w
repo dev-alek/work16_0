@@ -128,7 +128,7 @@ tt-ext-system.max-p-queue tt-ext-system.max-p-time
 RECT-3 RECT-4 f-ftp-ip f-login FI-delivery-method f-password f-ftp-path ~
 f-ftp-path-in f-ftp-path-out b-db-export f-exp-db-name t-delete-pck-on ~
 T-exp-conf-wait b-db-import f-imp-db-name T-imp-conf-send tg-cert-sign ~
-fi-cert-sign-subject fi-cert-sign-issuer cb-cert-file-ext l-save-oxml-pck ~
+fi-cert-sign-subject fi-cert-sign-issuer cb-cert-file-ext cb-cert-repository l-save-oxml-pck ~
 FILL-IN-4 
 &Scoped-Define DISPLAYED-FIELDS tt-ext-system.esys-id ~
 tt-ext-system.esys-des tt-ext-system.esys-type tt-ext-system.esys-name ~
@@ -144,7 +144,7 @@ tt-ext-system.max-p-queue tt-ext-system.max-p-time
 FI-delivery-method f-password fi-screen-pass f-ftp-path f-ftp-path-in ~
 f-ftp-path-out f-exp-db-name t-delete-pck-on T-exp-conf-wait f-imp-db-name ~
 T-imp-conf-send tg-cert-sign fi-cert-sign-subject fi-cert-sign-issuer ~
-cb-cert-file-ext l-save-oxml-pck FILL-IN-4 
+cb-cert-file-ext cb-cert-repository l-save-oxml-pck FILL-IN-4 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -206,6 +206,15 @@ DEFINE VARIABLE cb-cert-file-ext AS CHARACTER FORMAT "X(4)"
      LIST-ITEMS "p7s","p7c" 
      DROP-DOWN-LIST
      SIZE 14 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE cb-cert-repository AS integer FORMAT ">>9" 
+     LABEL "Хранилище сертификатов" 
+     VIEW-AS COMBO-BOX INNER-LINES 2
+     list-item-pairs
+      "Личное хранилище пользователя",0,
+      "Локальный компьютер",1
+     DROP-DOWN-LIST
+     SIZE 35 BY 1 no-undo init 0.
 
 DEFINE VARIABLE f-exp-db-name AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
@@ -511,6 +520,7 @@ DEFINE FRAME Dialog-Frame
      fi-cert-sign-issuer AT ROW 22.19 COL 38 COLON-ALIGNED WIDGET-ID 72
      fi-cert-sign-subject AT ROW 23.38 COL 38 COLON-ALIGNED WIDGET-ID 74
      cb-cert-file-ext AT ROW 24.57 COL 38 COLON-ALIGNED WIDGET-ID 76
+     cb-cert-repository AT ROW 25.7 COL 38 COLON-ALIGNED WIDGET-ID 86
      l-save-oxml-pck AT ROW 12.24 COL 91 COLON-ALIGNED NO-LABEL WIDGET-ID 60
      FILL-IN-4 AT ROW 17.24 COL 2.4 COLON-ALIGNED NO-LABEL WIDGET-ID 38
      RECT-1 AT ROW 9.52 COL 1.6
@@ -1345,7 +1355,7 @@ PROCEDURE enable_UI :
           fi-screen-pass f-ftp-path f-ftp-path-in f-ftp-path-out f-exp-db-name 
           t-delete-pck-on T-exp-conf-wait f-imp-db-name T-imp-conf-send 
           tg-cert-sign fi-cert-sign-subject fi-cert-sign-issuer cb-cert-file-ext 
-          l-save-oxml-pck FILL-IN-4 
+          cb-cert-repository l-save-oxml-pck FILL-IN-4 
       WITH FRAME Dialog-Frame.
   IF AVAILABLE tt-ext-system THEN 
     DISPLAY tt-ext-system.esys-id tt-ext-system.esys-des tt-ext-system.esys-type 
@@ -1368,6 +1378,7 @@ PROCEDURE enable_UI :
          b-db-import f-imp-db-name tt-ext-system.max-p-queue T-imp-conf-send 
          tt-ext-system.max-p-time tg-cert-sign fi-cert-sign-subject 
          fi-cert-sign-issuer cb-cert-file-ext l-save-oxml-pck FILL-IN-4 
+         cb-cert-repository
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1791,6 +1802,7 @@ for each tt-ext-system-attr:
      when {&attr-esys-cert-sign-subject} then fi-cert-sign-subject = tt-ext-system-attr.esya-attr-value.
      when {&attr-esys-cert-sign-issuer}  then fi-cert-sign-issuer  = tt-ext-system-attr.esya-attr-value.
      when {&attr-esys-cert-file-ext}     then cb-cert-file-ext     = tt-ext-system-attr.esya-attr-value.
+     when {&attr-esys-cert-repository}   then cb-cert-repository   = integer(tt-ext-system-attr.esya-attr-value).
   end case.
 end.
 &SCOPED-DEFINE esys-dm-code ENTRY(v-ii, {&esys-dm-list})
@@ -2032,11 +2044,13 @@ if tg-cert-sign then assign
   fi-cert-sign-subject
   fi-cert-sign-issuer
   cb-cert-file-ext
+  cb-cert-repository
 .
 else assign
   fi-cert-sign-subject = ""
   fi-cert-sign-issuer  = ""
   cb-cert-file-ext     = ""
+  cb-cert-repository   = ?
 .  
 
 if p-mode = {&update} then do:
@@ -2098,6 +2112,7 @@ for each tt-ext-system-attr:
      when {&attr-esys-cert-sign-subject} then tt-ext-system-attr.esya-attr-value = fi-cert-sign-subject.
      when {&attr-esys-cert-sign-issuer}  then tt-ext-system-attr.esya-attr-value = fi-cert-sign-issuer.
      when {&attr-esys-cert-file-ext}     then tt-ext-system-attr.esya-attr-value = cb-cert-file-ext.
+     when {&attr-esys-cert-repository}   then tt-ext-system-attr.esya-attr-value = string(cb-cert-repository).
   end case.
 end.
 
@@ -2550,12 +2565,14 @@ define input parameter p-is-sign-checked as logical no-undo .
       fi-cert-sign-subject
       fi-cert-sign-issuer
       cb-cert-file-ext
+      cb-cert-repository
     with frame {&frame-name} .
     if p-mode <> {&lookup} then do:
         enable
       fi-cert-sign-subject
       fi-cert-sign-issuer
       cb-cert-file-ext
+      cb-cert-repository
         with frame {&frame-name}.
     end .
   end .
@@ -2564,6 +2581,7 @@ define input parameter p-is-sign-checked as logical no-undo .
       fi-cert-sign-subject in frame {&frame-name}
       fi-cert-sign-issuer  in frame {&frame-name}
       cb-cert-file-ext     in frame {&frame-name}
+      cb-cert-repository   in frame {&frame-name}
     .
   end .
   
