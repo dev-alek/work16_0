@@ -253,21 +253,24 @@ class ibs.th.ref.cashbookbrw inherits Form :
          if     available clients
             and clients.db-num ne ?
          then
-            run ref/ccounhist.w (parparentproc,
+            run ref/ccounhist.w (clients.db-num, // id
+                               "cashbookrule",
+                               v-cashbookrule-key-rec,
+                               "currRKO",
+                               parparentproc,
                                0,
                                "",
                                0,
                                "",
                                "one",
-                               clients.db-num, // id
-                               "cashbookrule",
-                               v-cashbookrule-key-rec,
-                               "currRKO",
                                ?,
                                "",
                                "",
                                ibs.th.gbl.gbl-var:g#db-num,
-                               input-output v-rid-list ).
+                               ?,
+                               input-output v-rid-list
+
+                            ).
       end.
 		return.
 
