@@ -5587,17 +5587,17 @@ end procedure. /* lib-rvs_crtt-rvs */
 
 procedure lib-rvs_crtt-pmp : /* cr-tt-param-pump */
   define input-output parameter table for tt-param-pump.
-  define       output parameter           p-comstrpump   as character no-undo initial ?.
+/*  define       output parameter           p-comstrpump   as character no-undo initial ?.*/
 
   define variable StrFrFile-list as character no-undo initial 'PUMP,NZL,VOL,VAL,GRADE,CNT,STATUS':U.
   define variable jj             as integer   no-undo.
 
-  get-key-value section 'revision'
+/*  get-key-value section 'revision'
                 key     'comstrpump'
                 value    p-comstrpump.
   if p-comstrpump <> ?    and
      p-comstrpump <> '':U
-  then do:
+  then do: */
     for each tt-param-pump :
       delete tt-param-pump .
     end.
@@ -5607,13 +5607,18 @@ procedure lib-rvs_crtt-pmp : /* cr-tt-param-pump */
              tt-param-pump.strfrfile = entry( jj, StrFrFile-list )
       .
     end.
-  end.
+  /* end.
   else do:
     return error 'Не указана командная строка для чтения данных с ТРК. Секция revision. Ключ comstrpump.' .
-  end.
+  end.*/
   return .
 end procedure. /* lib-rvs_crtt-pmp */
 
+define temp-table tt-User no-undo
+       field usr as character 
+       field pwd as character
+    index usr usr.
+   
 {bge/socet.i}
 procedure getpump:
    define input  parameter ilogfile as character no-undo.
@@ -5622,6 +5627,7 @@ procedure getpump:
    define output parameter Opump as longchar no-undo.
    define variable vadr as character no-undo.
    define variable vport as character no-undo.
+   define variable vtext as character no-undo.
 /*   define variable v-value-character as character no-undo .
    define variable v-value-date as date no-undo .
    define variable v-value-decimal as decimal no-undo .
@@ -5650,13 +5656,49 @@ procedure getpump:
    else */
       vport = "4000".
 /*      mTimeOut = 60.*/
-   define variable vFlag as logical no-undo.
+   define variable vFlag   as logical no-undo.
+   define variable vFlagOk as logical no-undo.
+
 /*   delete object v-tth no-error.*/
+   mFileLogSocet = ilogfile.
+   
+    define variable vuser as character no-undo.
+    create tt-User.
+    run utl/getuserpwdauto.p(input buffer tt-User:handle) no-error.
+    if not error-status:error
+    then do:
+       vuser =  tt-User.usr.
+    end.
+    else do:
+       run utl/getuserpwd.p( input buffer tt-User:handle) no-error.
+       if not error-status:error
+       then do:
+          vuser =  tt-User.usr.
+       end.
+    end.
+    delete tt-User.
+   define variable vnoActivCash as logical no-undo.
    block-cash:
    for each cash-desk  where cash-desk.db-num   = g#db-num 
-                         and cash-desk.obj-code = iobjcode 
-                         and cash-desk.cash-on  = yes
-   no-lock:
+                         and cash-desk.obj-code = iobjcode
+                         and cash-desk.is-del = no 
+   no-lock 
+   by cash-desk.db-num 
+   by cash-desk.is-del 
+   by ub.cash-desk.cash-on descending
+   by ub.cash-desk.pos-type descending 
+   by ub.cash-desk.cash-num
+      :
+      if     not vnoActivCash
+         and not ub.cash-desk.cash-on
+      then do:
+         vnoActivCash = yes.
+         run gbl/fileapnd.p
+          ( ilogfile
+          , substitute("&1 &2 Нет включенных касс переходим к выключенным пользователь &3 &4", string(today),string(time, "HH:MM:SS"),vuser,{&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .            
+      end.
       vadr = entry(1,
                    (if num-entries(cash-desk.addr-path, {&delim-par}) > 1
                     then  entry(2, cash-desk.addr-path, {&delim-par})
@@ -5669,39 +5711,54 @@ procedure getpump:
       vFlag = yes.
       run gbl/fileapnd.p
           ( ilogfile
-          , substitute("&1 &2  Отправка команды &3 на  &4:&5 &6", string(today),string(time, "HH:MM:SS"),"pumpread",vadr,vport ,{&carriage-return} + {&new-line})
+          , substitute("&1 &2 Отправка команды &3 на кассу № &4 (&5:&6) Пользователь &7 &8", string(today),string(time, "HH:MM:SS"),"pumpread",cash-desk.cash-num,vadr,vport ,vuser,{&carriage-return} + {&new-line})
           ,input 10 /* время ожинания освобождения файла */
           ) no-error .            
-      run ConectSocet (vadr,vport,?,"pumpread" + chr(13) + chr(10), no ) no-error.
+      run ConectSocet (vadr,
+                       vport,
+                       ?,
+                       "pumpread" + chr(13) + chr(10), 
+                       "text",
+                       30,
+                       no,
+                       "Получение данных по ТРК. ") no-error.
       if     not error-status:error
          and length(mWebResp) > 0
          and index(mWebResp," PUMP=") > 0
       then do:
          run gbl/fileapnd.p
           ( ilogfile
-          , substitute("&1 &2  Ответ:&4&3&4", string(today),string(time, "HH:MM:SS"),mWebResp ,{&carriage-return} + {&new-line})
+          , substitute("&1 &2 Ответ:&4&3&4", string(today),string(time, "HH:MM:SS"),mWebResp ,{&carriage-return} + {&new-line})
           ,input 10 /* время ожинания освобождения файла */
           ) no-error .            
-      
+         vFlagOk = yes.
          leave block-cash.
       end.
       else
          run gbl/fileapnd.p
           ( ilogfile
-          , substitute('&1 &2  Результат: &3 "&4" &5', string(today),string(time, "HH:MM:SS"),OerrMsg,mWebResp ,{&carriage-return} + {&new-line})
+          , substitute('&1 &2 Результат: &3 "&4" &5', string(today),string(time, "HH:MM:SS"),OerrMsg,mWebResp ,{&carriage-return} + {&new-line})
           ,input 10 /* время ожинания освобождения файла */
           ) no-error .            
       
    end.
+   mFileLogSocet = "".
    if not vFlag
-   then
+   then do:
+      vtext = substitute("Нет включеных касс по БД &1 Объект &2&3 &4 ", g#db-num, "маг", iobjcode ,{&carriage-return} + {&new-line}).
       run gbl/fileapnd.p
           ( ilogfile
-          , substitute("&1 &2 Нет включеных касс по БД &3 Объект &4&5 &6 ", string(today),string(time, "HH:MM:SS"),g#db-num, "маг", iobjcode ,{&carriage-return} + {&new-line})
+          , substitute("&1 &2 &3", string(today),string(time, "HH:MM:SS"),vtext) 
           ,input 10 /* время ожинания освобождения файла */
           ) no-error .
-   else     
+      return error vtext.
+   end.
+   else if not vFlagOk
+   then
+      return error "На момент приема данных по счетчикам ТРК нет связи ни с одной из касс.".
+   else    
       Opump = mWebResp.
+   
 end. /* getpump */
 
 procedure lib-rvs_anls-pmp : /* analysis-pump */
@@ -5719,7 +5776,8 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   define variable j_gds-code    like ub.goods.gds-code          no-undo.
   define variable is_Error      as   logical                    no-undo initial no.
   define variable is_FatalError as   logical                    no-undo initial no.
-
+  define variable vi as integer no-undo.
+  
   /* Объявляем переменные для чтения из строки */
   define variable v_File-Name   as character no-undo.
   define variable v_File-Err    as character no-undo.
@@ -5742,7 +5800,6 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   define variable j_num         as   integer                   no-undo.
   define variable l_log         as   logical                   no-undo.
   define variable v_CommandPump as   character                 no-undo initial ?.
-  define variable vi as integer no-undo.
   
   define variable vPump as longchar no-undo.
   
@@ -5845,7 +5902,10 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
                     {&wsf-put-err}
   &scop sf-put-err  {&ksf-put-err} ~
                     next main-cycle.
-
+  define variable vErrortext as character no-undo.
+  define variable verrorlist as character no-undo.
+  &scop SaveError if lookup (vErrortext,vErrorList,{&delim-par}) eq 0 then vErrorList = vErrorList + {&delim-par} + vErrorText.
+  &scop GetError if num-entries(vErrorList,{&delim-par}) > 3 then "" else replace(vErrorList,{&delim-par},{&carriage-return} + {&new-line}) + {&carriage-return} + {&new-line}
   for each tt-pump-nozzle-file :
     delete tt-pump-nozzle-file .
   end.
@@ -5854,9 +5914,12 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   do vi = 1 to num-entries(vPump,{&new-line}) :
      v_String-Temp = entry(vi,vPump,{&new-line}).
     /* Отсекем комментарий */
-    if trim( v_String-Temp ) = '':U then next main-cycle .
-    if substring( v_String-Temp, 1, 3 ) <> '212' then next main-cycle .
-    
+    if trim( v_String-Temp ) = '':U then do:
+      next main-cycle .
+    end.
+    if substring( v_String-Temp, 1, 3 ) <> '212' then do:
+      next main-cycle .
+    end.
     assign
       v_Prefix =       substring( v_String-Temp, 1, 4 )
       v_String = trim( substring( v_String-Temp, 5    ) )
@@ -5892,7 +5955,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       find first tt-param-pump where
                  tt-param-pump.strfrfile = trim( entry( 1, v_Param, '=' ) ) no-error .
       if not available tt-param-pump then do:
-        {&pf-put-err} 'Обнаружен неизвестный параметр: ' v_Param {&ksf-put-err}
+         vErrorText = 'Обнаружен неизвестный параметр'.
+        {&SaveError}
+        {&pf-put-err} vErrorText ': ' v_Param {&ksf-put-err}
       end.
       else do:
         assign
@@ -5907,7 +5972,10 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     if       tt-param-pump.meaning   = ?    or
        trim( tt-param-pump.meaning ) = '':U
     then do:
-      {&pf-put-err} 'Неизвестный код ТРК: ' tt-param-pump.meaning {&sf-put-err}
+      vErrorText = 'Неизвестный код ТРК'.
+      {&SaveError}
+        
+      {&pf-put-err} vErrorText ': ' tt-param-pump.meaning {&sf-put-err}
     end.
     assign
       j_pump-code = integer( tt-param-pump.meaning )
@@ -5919,7 +5987,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     if       tt-param-pump.meaning   = ?    or
        trim( tt-param-pump.meaning ) = '':U
     then do:
-      {&pf-put-err} 'Неизвестный код пистолета ТРК: ' tt-param-pump.meaning {&sf-put-err}
+      vErrorText = 'Неизвестный код пистолета ТРК'.
+      {&SaveError}
+      {&pf-put-err} vErrorText ': ' tt-param-pump.meaning {&sf-put-err}
     end.
     assign
       j_nozzle-code = integer( tt-param-pump.meaning )
@@ -5929,7 +5999,15 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     find first tt-param-pump where
                tt-param-pump.strfrfile = 'STATUS' .
     if integer( tt-param-pump.meaning ) <> 0 then do:
-      {&pf-put-err} 'Ошибка при чтении данных с ТРК(статус из поля status): ' tt-param-pump.meaning {&sf-put-err}
+     vErrorText = if integer(tt-param-pump.meaning) eq 70
+                   then "При получении данных со счетчиков ТРК возникла ошибка несоответствия ТРК-ПИСТОЛЕТ-ТОПЛИВО либо отсутствует связь с одной или более ТРК."
+                   else if integer(tt-param-pump.meaning) eq 73
+                   then "Не удалось получить данные по счетчикам ТРК. Необходима проверка состояния/связи с ТРК."
+                   else if integer(tt-param-pump.meaning) eq 3
+                   then "При получении данных со счетчиков ТРК возникла ошибка несоответствия ТРК-ПИСТОЛЕТ-ТОПЛИВО. Возможна некорректная привязка топлива к пистолету на стороне кассы."
+                   else 'Ошибка при чтении данных с ТРК(статус из поля status) ' + string(tt-param-pump.meaning). 
+      {&SaveError}
+      {&pf-put-err} vErrorText {&sf-put-err}
     end.
 
     /* Находим товар по топливному коду */
@@ -5939,13 +6017,17 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
        trim( tt-param-pump.meaning ) = '':U
     then do:
       if p-check-goods = yes then do:
-        {&pf-put-err} 'Неизвестный топливный код товара: ' tt-param-pump.meaning {&sf-put-err}
+       vErrorText = 'Неизвестный топливный код товара '. 
+      {&SaveError}
+      {&pf-put-err} vErrorText ': ' tt-param-pump.meaning {&sf-put-err}
       end.
       else do:
         assign
           j_gds-code = ?
         .
-        {&pf-put-err} 'Неизвестный топливный код товара: ' tt-param-pump.meaning {&ksf-put-err}
+        vErrorText = 'Неизвестный топливный код товара'. 
+        {&SaveError}
+        {&pf-put-err} vErrorText  ': ' tt-param-pump.meaning {&ksf-put-err}
       end.
     end.
     else do:
@@ -6000,22 +6082,26 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
         end.
         if j_b-code = ? then do:
           if p-check-goods = yes then do:
-            {&pf-put-err}
-              'Невозможно определить основной бар-код по топливному коду: ' tt-param-pump.meaning
+            vErrorText = 'Невозможно определить основной бар-код по топливному коду'. 
+            {&SaveError}
+            {&pf-put-err} vErrorText  ': ' tt-param-pump.meaning
             {&sf-put-err}
           end.
           else do:
             assign
               j_gds-code = ?
             .
-            {&pf-put-err}
-              'Невозможно определить основной бар-код по топливному коду: ' tt-param-pump.meaning
+            vErrorText = 'Невозможно определить основной бар-код по топливному коду'. 
+            {&SaveError}
+            {&pf-put-err} vErrorText ': ' tt-param-pump.meaning
             {&ksf-put-err}
           end.
         end.
         else do:
           if d_rate <> 1.00 then do:
-            {&pf-put-err}
+            vErrorText = 'Некорректный курс основного бар-кода'. 
+            {&SaveError}
+            {&pf-put-err} 
               'Замечание(cтрока обработана) . Некорректный курс: ' d_rate ' основного бар-кода: ' j_b-code
             {&ksf-put-err}
           end.
@@ -6073,7 +6159,10 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
         is_FatalError = yes
       .
       */
-      {&pf-put-err}
+      vErrorText = 'Нет связки ТРК и пистолета в конфигурации объекта '. 
+      {&SaveError}
+      {&pf-put-err} 
+              'Замечание(cтрока обработана) . ' vErrorText
         'Из файла получены данные по ТРК ' + string( tt-pump-nozzle-file.pump-code   ) +
         ' и пистолету '                    + string( tt-pump-nozzle-file.nozzle-code ) +
         ' на объекте '                     +         tt-pump-nozzle-file.obj-type      + ' ':U
@@ -6093,6 +6182,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
           find first bf_goods no-lock where
                      bf_goods.gds-code = tt-pump-nozzle.gds-code .
         end.
+        vErrorText = 'Данные по ТРК и пистолету не правильная конфигурация' . 
+        {&SaveError}
+            
         {&pf-put-err}
           'Из файла получены данные по ТРК ' + string( tt-pump-nozzle-file.pump-code   ) +
           ' пистолету '                      + string( tt-pump-nozzle-file.nozzle-code ) +
@@ -6129,8 +6221,10 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       assign
         is_FatalError = yes
       .
+      vErrorText = 'Не по всем ТРК и пистолетам получены данные' . 
+      {&SaveError}
       {&pf-put-err}
-        'Неполучены данные по ТРК ' + string( tt-pump-nozzle.pump-code   ) +
+        'Не получены данные по ТРК ' + string( tt-pump-nozzle.pump-code   ) +
         ' и пистолету '             + string( tt-pump-nozzle.nozzle-code ) +
         ' на объекте '              +         tt-pump-nozzle.obj-type      +
         ' ':U                       + string( tt-pump-nozzle.obj-code    ) +
@@ -6138,17 +6232,21 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       {&wsf-put-err}
     end. /* if not available tt-pump-nozzle-file */
   end. /* for each tt-pump-nozzle */
-
-  output stream str-err to value( v_File-Err ) append.
-  put stream str-err unformatted skip(0) .
-  output stream str-err close .
-  define variable v-save-file-name as character no-undo .
-  v-save-file-name = substitute("&1pmp-err.log", ibs.th.gbl.gbl-inipar:logDir) .
-  OS-APPEND value(v_File-Err) value(v-save-file-name).
-
   if is_FatalError = yes then do:
-    return error 'Во время загрузки файла произошли фатальные ошибки, НЕПОЗВОЛЯЮЩИЕ ЗАГРУЗИТЬ ДАННЫЕ С ТРК. ' +
-                 'Log-файл с описанием ошибок ' + v_File-Err + ' .' .
+    if session:debug-alert
+    then do:
+       {&pf-put-err} "Ошибки при данном запросе :" replace(vErrorList,{&delim-par},{&carriage-return} + {&new-line}) "<<<<"
+       {&wsf-put-err}
+    end.
+    define variable Vtext as character no-undo.
+    Vtext = 
+/*    'Ошибка при получении данных с приборов на ТРК.' +*/
+                 ({&getError}) +
+                 (if session:debug-alert
+                  then 'Log-файл с описанием ошибок ' + v_File-Err + "." 
+                  else '' )+ 'Повторите попытку или обратитесь в техническую поддержку.' 
+                 .
+    return error vtext.
   end.
 
   /* Записываем данные для возврата */
@@ -6167,7 +6265,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
 
   if is_Error = yes then do:
     return 'Во время загрузки файла были ошибки. Log-файл с описанием ошибок ' + v_File-Err + ' .' +
-           'ДАННЫЕ С ТРК ЗАГРУЖЕНЫ В СИСТЕМУ.' .
+           'Сверка создана, но не содержит полной информации. Обратитесь в техподдержку для закрытия сверки или для включения измерения по связке, в случае исправности ТРК.' .
   end.
   return .
 end procedure. /* lib-rvs_anls-pmp */

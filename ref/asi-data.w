@@ -475,7 +475,7 @@ procedure asi-send-cmd :
   define variable cmd                   as character    no-undo .
   define variable v-pid                 as integer      no-undo .
   define variable v-addr                as character    no-undo .
-  run SendReqSocet (v-asi-ip,v-asi-port,"/getmeas/?loclist=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22","","xml","getResponseMy").
+  run SendReqSocet (v-asi-ip,v-asi-port,"getmeas/?loclist=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22","","xml","getResponseMy").
   if oErrMsg ne ""
   then do:
      v-status = oErrMsg.
