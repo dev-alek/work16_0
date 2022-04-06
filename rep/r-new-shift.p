@@ -1305,10 +1305,16 @@ End. /* tog-10 */
 
 if p-batch = integer({&repcalc-type-operator}) then 
 do:
-    run prn-lib-reportviewer-report-name in this-procedure (
-        input parParentProc
-        ,input v-report-name-html
-        ).
+run prn-lib-reportviewer in this-procedure (
+    input parparentproc
+    ,input v-report-name-html
+    ,input "PASSWORD:TRUE" 
+    ) .
+if error-status:error then
+do:
+    message return-value view-as alert-box.
+    return .
+end.
 end.
 
 procedure first-line-tog1-html :
