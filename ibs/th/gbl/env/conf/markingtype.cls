@@ -43,6 +43,10 @@ class ibs.th.gbl.env.conf.markingtype inherits objth.
     get.
     private set.      
 
+  define public property Stiki as logical initial false no-undo 
+    get.
+    private set. 
+
   define public property Milk as logical initial false no-undo 
     get.
     private set.      
@@ -100,6 +104,9 @@ class ibs.th.gbl.env.conf.markingtype inherits objth.
         when  lookup (conf_val, "photo") > 0 then do:
           Photo = true.
         end.
+        when  lookup (conf_val, "stiki") > 0 then do:
+          Stiki = true.
+        end.        
         otherwise do:
           IsMarking = false.
         end.

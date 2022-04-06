@@ -197,7 +197,8 @@ DEFINE VARIABLE f-type-mark AS CHARACTER FORMAT "X(256)"
                      "Лекарства","apteka",
                      "Фотокамеры/фотовспышки","photo",
                      "Молочная продукция","milk",
-                     "Упакованная вода","water"
+                     "Упакованная вода","water",
+                     "Стики","stiki"
      DROP-DOWN-LIST
      SIZE 34.75 BY 1.
 
@@ -882,10 +883,14 @@ FUNCTION get-mark-char RETURNS CHARACTER
          do:
             v-mark = "milk" .
          end.                         
-      when "10" then 
+      when "9" then 
          do:
             v-mark = "water" .
          end.                                                                                                        
+      when "10" then 
+         do:
+            v-mark = "stiki" .
+         end.   
    end case .
    return v-mark .
 
@@ -943,6 +948,10 @@ FUNCTION get-mark-integer RETURNS CHARACTER
             v-mark = "8" .
          end.                         
       when "water" then 
+         do:
+            v-mark = "9" .
+         end.   
+      when "stiki" then 
          do:
             v-mark = "10" .
          end.                                                                                                        

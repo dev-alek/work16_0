@@ -129,7 +129,8 @@ DEFINE VARIABLE S-type AS CHARACTER
                      "Лекарства","apteka",
                      "Фотокамеры/фотовспышки","photo",
                      "Молочная продукция","milk",
-                     "Упакованная вода","water" 
+                     "Упакованная вода","water",
+                     "Стики","stiki" 
      SIZE 31 BY 5 NO-UNDO.
 
 DEFINE VARIABLE S-type-edo AS CHARACTER 
@@ -143,7 +144,8 @@ DEFINE VARIABLE S-type-edo AS CHARACTER
                      "Лекарства","apteka",
                      "Фотокамеры/фотовспышки","photo",
                      "Молочная продукция","milk",
-                     "Упакованная вода","water" 
+                     "Упакованная вода","water",
+                     "Стики","stiki" 
      SIZE 31 BY 5 NO-UNDO.
 
 DEFINE VARIABLE t-ban-altr AS LOGICAL INITIAL no 

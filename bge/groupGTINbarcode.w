@@ -97,7 +97,8 @@ DEFINE VARIABLE f-type-mark  AS CHARACTER FORMAT "X(256)"
    "Лекарства","apteka",
    "Фотокамеры/фотовспышки","photo",
    "Молочная продукция","milk",
-   "Упакованная вода","water"
+   "Упакованная вода","water",
+   "Стики","stiki"
    DROP-DOWN-LIST
    SIZE 33.5 BY 1.
 

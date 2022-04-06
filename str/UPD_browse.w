@@ -4932,7 +4932,7 @@ PROCEDURE temp-mark :
    define input parameter p-id as integer no-undo .
    define buffer buf_marking for ub.marking .
    empty temp-table tt-marking-lines .
-    
+
    if p-id = 1 then 
    do:
       for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = X_utd-lines.db-num and buf_utd-marking-lines.doc-id = X_utd-lines.doc-id
@@ -4966,8 +4966,11 @@ PROCEDURE temp-mark :
          end.   
          else 
          do:
-            if X_utd-lines.qnty-scan = X_utd-lines.Quantity then tt-marking-lines.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
-            tt-marking-lines.box-qnty = X_utd-lines.qnty-scan .
+            if available (X_utd-lines) then 
+            do:
+               if X_utd-lines.qnty-scan = X_utd-lines.Quantity then tt-marking-lines.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
+               tt-marking-lines.box-qnty = X_utd-lines.qnty-scan .
+            end.
          end.    
       end.  
    end.
@@ -5006,8 +5009,11 @@ PROCEDURE temp-mark :
          end.   
          else 
          do:
-            if X_utd-lines.qnty-scan = X_utd-lines.Quantity then tt-marking-lines.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
-            tt-marking-lines.box-qnty = X_utd-lines.qnty-scan .
+            if available (X_utd-lines) then 
+            do:
+               if X_utd-lines.qnty-scan = X_utd-lines.Quantity then tt-marking-lines.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
+               tt-marking-lines.box-qnty = X_utd-lines.qnty-scan .
+            end.
          end.   
       end.   
    end.  

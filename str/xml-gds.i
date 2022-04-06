@@ -461,6 +461,7 @@ if pos-type <> {&cd-type-infokiosk} then do:
     &endif
 end.
 vGdsTabak = no.
+
 find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
               and buf_goods-attr.attr-code  = {&attr-mark-type} no-error . 
     if available (buf_goods-attr) then do:
@@ -468,6 +469,9 @@ find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code
       case buf_goods-attr.attr-value:
         when "not-type" then do:
           run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "0", input 1 ).
+        end.
+        when "stiki" then do:
+          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "1", input 1 ).
         end.
         when "tabak" then do:
           vGdsTabak = yes.
