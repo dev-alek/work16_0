@@ -1305,16 +1305,38 @@ End. /* tog-10 */
 
 if p-batch = integer({&repcalc-type-operator}) then 
 do:
-run prn-lib-reportviewer in this-procedure (
-    input parparentproc
-    ,input v-report-name-html
-    ,input "PASSWORD:TRUE" 
-    ) .
-if error-status:error then
-do:
-    message return-value view-as alert-box.
-    return .
-end.
+/*   define variable v-value-character as character no-undo .*/
+/*   define variable v-value-integer   as character no-undo .*/
+   define variable rep-excel         as logical   no-undo .
+   define variable excel-string      as character no-undo .
+    
+   run adm/shattri.p (
+      input "get":U
+      ,input  p-obj-type /*p-obj-type*/
+      ,input  p-obj-code /*p-obj-code*/
+      ,input  {&attr-report-glob}
+      ,input  {&attr-report-glob_rep-excel} /*p-param-code*/
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output rep-excel
+      ,output v-param-type
+      ,INPUT-OUTPUT table-handle v-tth
+      ) /*no-error*/ .
+   if rep-excel then excel-string = "TRUE" .
+   else excel-string = "FALSE" .
+
+   run prn-lib-reportviewer in this-procedure (
+      input parparentproc
+      ,input v-report-name-html
+      ,input "PASSWORD:" + excel-string + {&delim-par} + "EXCEL:TRUE" 
+      ) .
+   if error-status:error then
+   do:
+      message return-value view-as alert-box.
+      return .
+   end.
 end.
 
 procedure first-line-tog1-html :
