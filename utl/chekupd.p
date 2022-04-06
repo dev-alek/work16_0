@@ -26,6 +26,14 @@ define output parameter oUpd  as logical no-undo.
 define variable mdb-ver as integer  no-undo init ?.
 define variable mdbverd as integer no-undo.
 define variable mdbveri as integer no-undo.
+
+define buffer sys-ctrl     for ub.sys-ctrl.
+define buffer db-attr      for ub.db-attr.
+define buffer db           for ub.db.
+define buffer b_file       for ub._file.
+define buffer b_field      for ub._field.
+define buffer b_Connect    for ub._Connect.
+
 find first sys-ctrl no-lock no-error.
 if not available sys-ctrl then do: oUpd = yes. return. end. 
 g#db-num = sys-ctrl.db-num.
@@ -36,8 +44,10 @@ if available db-attr then mdb-ver = integer (db-attr.attr-value) no-error.
 release db-attr.
 release sys-ctrl.
 if    iChek
-then
+then do:
    oUpd = mdb-ver ne ? and mdb-ver < iTarg.
+   publish "putstat" (substitute ("Проверка на понижение бд. Необходимо понизить версию ? &1",oUpd) ).
+end.
 else do:
    if mdb-ver eq ? or mdb-ver >= iTarg  
    then do:
@@ -55,33 +65,37 @@ else do:
       Msg = ( "Невозможно получить PID процесса. Обновление схемы БД невозможно. Работа с ней запрещена!" ).
       return Msg.
    end.
+   publish "putstat" (substitute ("Запускаем понижение версии БД ") ).
        
    vUserIgnor = "nws".
     
-   for each _Connect where _Connect._Connect-Type = "REMC" 
-                       and _Connect._Connect-Pid <> ? 
-                       and _Connect._Connect-Pid <> v-process-id
-                       and not can-do(vUserIgnor,_Connect._Connect-Name)
+   for each b_Connect where b_Connect._Connect-Type = "REMC" 
+                        and b_Connect._Connect-Pid <> ? 
+                        and b_Connect._Connect-Pid <> v-process-id
+                        and not can-do(vUserIgnor,b_Connect._Connect-Name)
    no-lock:
-      v-process-list = v-process-list + {&new-line} + string (_Connect._Connect-Pid) + " - " + _Connect._Connect-Name +  " - " + _Connect._Connect-Device.
+      v-process-list = v-process-list + {&new-line} + string (b_Connect._Connect-Pid) + " - " + b_Connect._Connect-Name +  " - " + b_Connect._Connect-Device.
    end.
    if v-process-list <> ""
    then do:
+      publish "putstat" (substitute ("Есть не завершенные процесы &1 ", v-process-list) ).
       Msg = substitute ( "Для обновления схемы БД завершите процессы. &1",  v-process-list).
       return Msg.
    end.
-   find first sys-ctrl.
+   find first sys-ctrl no-lock.
    find first db no-lock where db.db-num = sys-ctrl.db-num no-error.
-       
-   find first _file no-lock where _file._file-name = "db"  no-error.
-   if available _file
+      
+   publish "putstat" (substitute ("Понижаем версию БД  ") ).
+ 
+   find first b_file no-lock where b_file._file-name = "db"  no-error.
+   if available b_file
    then do:
-      find first _field of _file where _field._Field-Name =  "reserve1-char" no-lock no-error.
-      release _file.
+      find first b_field of b_file where b_field._Field-Name =  "reserve1-char" no-lock no-error.
+      release b_file.
    end.
    mdbverd = int(db.reserve1-char) no-error.
    release db.
-   mdbveri = int(_field._initial ) no-error.
+   mdbveri = int(b_field._initial ) no-error.
    release _field.
    do trans:
       if mdbverd > mdb-ver
@@ -92,13 +106,13 @@ else do:
       end.
       if mdbveri > mdb-ver
       then do:
-         find first _file no-lock where _file._file-name = "db"  no-error.
-         if available _file
+         find first b_file no-lock where b_file._file-name = "db"  no-error.
+         if available b_file
          then do:
-            find first _field of _file where _field._Field-Name =  "reserve1-char"  no-error.
-            _field._initial = string(mdb-ver).
-            release _file.
-            release _field.
+            find first b_field of b_file where b_field._Field-Name =  "reserve1-char"  no-error.
+            b_field._initial = string(mdb-ver).
+            release b_file.
+            release b_field.
          end.
       end.
       find first db-attr where db-attr.db-num    eq sys-ctrl.db-num
@@ -107,6 +121,8 @@ else do:
       
       delete db-attr.
       release sys-ctrl.
+      publish "putstat" (substitute ("Версия Бд понижена. Нужен перезапуск Th  ") ).
+   
       return "Для обновление структуры базы запустите TH еще раз.".
    end.
    

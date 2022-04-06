@@ -105,7 +105,7 @@ on error undo, return error return-value
   for each buf_temp-trigger-proc:
     delete buf_temp-trigger-proc.
   end.
-
+  define variable mTextHead as character no-undo.
   for each dictdb._file no-lock
     where dictdb._file._hidden = false
   on error undo, return error return-value
@@ -113,23 +113,70 @@ on error undo, return error return-value
     run waitfram-show in this-procedure
       (input substitute("Проверка словаря БД. Таблица &1", dictdb._file._file-name)
       ) .
-
+    mTextHead = substitute ("Таблица &1",dictdb._file._file-name).
     run validate-name in this-procedure
-      (input "Таблица " + dictdb._file._file-name /* p-obj-name   */
+      (input mTextHead                            /* p-obj-name   */
+      ,input "таблицы"
       ,input dictdb._file._file-name              /* p-check-name */
       ,input vartable-name                        /* p-valid-char */
       ) .
 
     if length(dictdb._file._file-name) > 28
     then do:
-      run write-log in this-procedure
-        (input "Таблица" + dictdb._file._file-name + {&new-line}
-          + "Длина имени таблицы превышает 28 символов" + {&new-line}
+      run write-log-item in this-procedure
+        (input mTextHead,
+         input "Длина имени таблицы превышает 28 символов" 
         ) .
     end.
-
+    
+    if dictdb._file._CAN-CREATE ne "!,!odbc,*"
+    then do:
+      run write-log-item in this-procedure
+        (input mTextHead ,
+         input 'Права на создание должны быть "!,!odbc,*" сейчас права "' + dictdb._file._CAN-CREATE + '"'
+        ) .
+    end.
+    if dictdb._file._CAN-DELETE ne "!,!odbc,*"
+    then do:
+      run write-log-item in this-procedure
+        (input mTextHead ,
+         input 'Права на удаление должны быть "!,!odbc,*" сейчас права "' + dictdb._file._CAN-DELETE + '"'
+        ) .
+    end.
+    if dictdb._file._CAN-READ ne "!,*"
+    then do:
+      run write-log-item in this-procedure
+        (input mTextHead ,
+         input 'Права на чтение должны быть "!,*" сейчас права "' + dictdb._file._CAN-READ + '"'
+        ) .
+    end.
+    if dictdb._file._CAN-WRITE ne "!,!odbc,*"
+    then do:
+      run write-log-item in this-procedure
+        (input mTextHead,
+         input 'Права на запись должны быть "!,!odbc,*" сейчас права "' + dictdb._file._CAN-WRITE + '"'
+        ) .
+    end.
+    if     dictdb._file._CAN-DUMP ne "!,!odbc,*"
+       and dictdb._file._CAN-DUMP ne   "!odbc,*"
+    then do:
+      run write-log-item in this-procedure
+        (input mTextHead ,
+         input 'Права на выгрузку должны быть "!,!odbc,*" сейчас права "' + dictdb._file._CAN-DUMP + '"'
+        ) .
+    end.
+    if     dictdb._file._CAN-LOAD ne "!,!odbc,*"
+       and dictdb._file._CAN-LOAD ne   "!odbc,*"
+    then do:
+      run write-log-item in this-procedure
+        (input mTextHead ,
+         input 'Права на загрузку должны быть "!,!odbc,*" сейчас права "' + dictdb._file._CAN-LOAD + '"'
+        ) .
+    end.
+    
     run validate-pi-idx in this-procedure
-      ( input dictdb._file._file-name
+      (  input mTextHead,
+         input dictdb._file._file-name
       ).
 
     run validate-other-idx in this-procedure
@@ -166,10 +213,9 @@ on error undo, return error return-value
         or v-description = ?
         then do:
           /* описание поля не должно быть пустым */
-          run write-log in this-procedure
-            (input "Поле " + dictdb._file._file-name
-              + "." + dictdb._field._field-name + {&new-line}
-              + "Не задано описание поля" + {&new-line}
+          run write-log-item in this-procedure
+            (  input mTextHead,
+               input "Поле " + dictdb._field._field-name    + "Не задано описание поля"
             ) .
         end.
         else do:
@@ -187,11 +233,11 @@ on error undo, return error return-value
             .
           end.
           else do:
-            run write-log in this-procedure
-              (input "Поле " + dictdb._file._file-name
-                + "." + dictdb._field._field-name + {&new-line}
-                + substitute("Описание совпадает с описание поля &1", temp-description.field-name) + {&new-line}
-                + substitute("&1", v-description) + {&new-line}
+            run write-log-item in this-procedure
+              (input mTextHead,
+               input "Поле " + dictdb._field._field-name 
+                             + substitute(" Описание совпадает с описание поля &1", temp-description.field-name) 
+                             + substitute(' "&1"', v-description)
               ) .
           end.
         end.
@@ -199,8 +245,8 @@ on error undo, return error return-value
 
 
       run validate-name in this-procedure
-        (input "Поле " + dictdb._file._file-name /* p-obj-name   */
-             + "." + dictdb._field._field-name
+        (input mTextHead
+        ,input "поля"
         ,input dictdb._field._field-name         /* p-check-name */
         ,input varfield-name                     /* p-valid-char */
         ) .
@@ -210,10 +256,10 @@ on error undo, return error return-value
       then do:
         if _field._decimals = ?
         then do:
-          run write-log in this-procedure
-            (input "Поле " + dictdb._file._file-name
-              + "." + dictdb._field._field-name + {&new-line}
-              + substitute("Не задано количество знаков после запятой (decimals = ?)") + {&new-line}
+          run write-log-item in this-procedure
+            ( input mTextHead,
+             input "Поле " + dictdb._field._field-name 
+              + substitute("Не задано количество знаков после запятой (decimals = ?)")
             ) .
         end.
       end.
@@ -223,8 +269,8 @@ on error undo, return error return-value
     on error undo, return error return-value
     :
       run validate-name in this-procedure
-        (input "Индекс " + dictdb._file._file-name /* p-obj-name   */
-             + "." + dictdb._index._index-name
+        (input mTextHead
+        ,input "индекса"
         ,input dictdb._index._index-name           /* p-check-name */
         ,input varindex-name                       /* p-valid-char */
         ) .
@@ -263,19 +309,19 @@ on error undo, return error return-value
           .
         end.
         otherwise do:
-          run write-log in this-procedure
-            (input substitute("Таблица &1", dictdb._file._file-name) + {&new-line}
-                + substitute("Триггер &1", dictdb._file-trig._proc-name) + {&new-line}
-                + substitute("Неизвестный тип триггера &1", dictdb._file-trig._event) + {&new-line}
+          run write-log-item in this-procedure
+            (input mTextHead,
+             input substitute("Триггер &1 ", dictdb._file-trig._proc-name) 
+                 + substitute("Неизвестный тип триггера &1", dictdb._file-trig._event)
             ) .
         end.
       end.
       find first buf_temp-trigger-proc where
                 buf_temp-trigger-proc.trigger-proc_ = dictdb._file-trig._proc-name no-error .
       if available buf_temp-trigger-proc then do:
-          run write-log in this-procedure
-            (input substitute("Таблица &1", dictdb._file._file-name) + {&new-line}
-                + substitute("Триггер &1", dictdb._file-trig._proc-name) + {&new-line}
+          run write-log-item in this-procedure
+            (input mTextHead,
+                  substitute("Триггер &1", dictdb._file-trig._proc-name) + {&new-line}
                 + substitute("Тип триггера &1", dictdb._file-trig._event) + {&new-line}
                 + "Уже была определена процедура-триггер с таким же именем файла:" + {&new-line}
                 + substitute("Таблица &1", buf_temp-trigger-proc.file-name_) + {&new-line}
@@ -299,25 +345,25 @@ on error undo, return error return-value
 
       if dictdb._file-trig._override <> v-override-property
       then do:
-        run write-log in this-procedure
-          (input substitute("Таблица &1", dictdb._file._file-name) + {&new-line}
-              + substitute("Триггер &1", dictdb._file-trig._proc-name) + {&new-line}
-              + substitute("Имеет неправильное свойство override = &1", dictdb._file-trig._override) + {&new-line}
+        run write-log-item in this-procedure
+          (input mTextHead,
+           input substitute("Триггер &1 ", dictdb._file-trig._proc-name)
+               + substitute("Имеет неправильное свойство override = &1", dictdb._file-trig._override)
           ) .
       end.
 
       if dictdb._file-trig._trig-crc <> ?
       then do:
         run write-log in this-procedure
-          (input substitute("Таблица &1", dictdb._file._file-name) + {&new-line}
-              + substitute("Триггер &1", dictdb._file-trig._proc-name) + {&new-line}
-              + substitute("Задана контрольная сумма триггера CRC = &1", dictdb._file-trig._trig-crc) + {&new-line}
+          (input mTextHead,
+                substitute("Триггер &1 ", dictdb._file-trig._proc-name)
+              + substitute("Задана контрольная сумма триггера CRC = &1", dictdb._file-trig._trig-crc)
           ) .
       end.
 
       run validate-filename in this-procedure
-        (input substitute("Таблица &1. Триггер &2." /* p-object-name */
-                        ,dictdb._file._file-name
+        (input mTextHead, 
+         input substitute("Триггер &1." /* p-object-name */
                         ,dictdb._file-trig._event
                         )
         ,input dictdb._file-trig._proc-name         /* p-file-name   */
@@ -328,11 +374,11 @@ on error undo, return error return-value
     and v-delete-trigger <> ''
     and v-write-trigger  = v-delete-trigger
     then do:
-      run write-log in this-procedure
-        (input substitute("Таблица &1", dictdb._file._file-name) + {&new-line}
-             + substitute("Триггеры ссылаются на один файл") + {&new-line}
-             + substitute("Триггер на запись &1", v-write-trigger) + {&new-line}
-             + substitute("Триггер на удаление &1", v-delete-trigger) + {&new-line}
+      run write-log-item in this-procedure
+        (input mTextHead,
+               substitute("Триггеры ссылаются на один файл ") 
+             + substitute("Триггер на запись &1 ", v-write-trigger) 
+             + substitute("Триггер на удаление &1 ", v-delete-trigger)
         ) .
     end.
 
@@ -340,11 +386,11 @@ on error undo, return error return-value
     and v-delete-trigger <> ''
     and v-create-trigger = v-delete-trigger
     then do:
-      run write-log in this-procedure
-        (input substitute("Таблица &1", dictdb._file._file-name) + {&new-line}
-             + substitute("Триггеры ссылаются на один файл") + {&new-line}
-             + substitute("Триггер на создание &1", v-create-trigger) + {&new-line}
-             + substitute("Триггер на удаление &1", v-delete-trigger) + {&new-line}
+      run write-log-item in this-procedure
+        (input mTextHead,
+         input substitute("Триггеры ссылаются на один файл ") 
+             + substitute("Триггер на создание &1 ", v-create-trigger)
+             + substitute("Триггер на удаление &1", v-delete-trigger)
         ) .
     end.
 
@@ -353,10 +399,10 @@ on error undo, return error return-value
     and v-create-trigger = v-write-trigger
     then do:
       run write-log in this-procedure
-        (input substitute("Таблица &1", dictdb._file._file-name) + {&new-line}
-             + substitute("Триггеры ссылаются на один файл") + {&new-line}
-             + substitute("Триггер на создание &1", v-create-trigger) + {&new-line}
-             + substitute("Триггер на запись &1", v-write-trigger) + {&new-line}
+        (input mTextHead,
+         input substitute("Триггеры ссылаются на один файл ")
+             + substitute("Триггер на создание &1 ", v-create-trigger)
+             + substitute("Триггер на запись &1", v-write-trigger) 
         ) .
     end.
 
@@ -388,10 +434,9 @@ c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-lo
           where buf_file._file-name = substr(dictdb._file._file-name, 3 )
           no-error .
         if not available buf_file then do:
-          run write-log in this-procedure
-            (input substitute(("Таблица &1 должна быть таблицей истории для &2" + {&new-line} +
-                              "Отсутствует основная таблица" + {&new-line})
-                              ,dictdb._file._file-name
+          run write-log-item in this-procedure
+            (input mTextHead,
+             input substitute("Таблица должна быть таблицей истории для &1 Отсутствует основная таблица" 
                               ,substr(dictdb._file._file-name, 3)
                             )
             ) .
@@ -407,10 +452,9 @@ c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-lo
                   and dictdb._field._file-recid = recid(_file) no-error.
               if not available dictdb._field
               then do:
-                run write-log in this-procedure
-                  (input substitute(("Таблица &1 - таблица истории для &2" + {&new-line} +
-                                    "Отсутствует поле &3, имеющееся в основной таблице" + {&new-line})
-                                    ,dictdb._file._file-name
+                run write-log-item in this-procedure
+                  (input mTextHead,
+                   input substitute("Таблица истории для &1 Отсутствует поле &2, имеющееся в основной таблице" 
                                     ,buf_file._file-name
                                     ,buf_field._field-name
                                   )
@@ -424,9 +468,8 @@ c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-lo
                 if v-cmp <> "":U
                 then do:
                   run write-log in this-procedure
-                    (input substitute(("Таблица &1 - таблица истории для &2" + {&new-line} +
-                                      "Поле &3 отличается от поля в основной таблице: &4" + {&new-line})
-                                      ,dictdb._file._file-name
+                    (input mTextHead,
+                     input substitute( "Таблица истории для &1 Поле &2 отличается от поля в основной таблице: &3" 
                                       ,buf_file._file-name
                                       ,buf_field._field-name
                                       ,v-cmp
@@ -453,11 +496,9 @@ c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-lo
         end. /*for each buf_field no-lock*/
         if v-found-subject = no
          and lookup(dictdb._file._file-name, v-no-check-subject) = 0 then do:
-            run write-log in this-procedure
-              (input substitute("Таблица &1 - таблица истории&2" +
-                                "Остутствует поле <subject> и таблица не задана в списке исключений для таблиц без &3"
-                                ,dictdb._file._file-name
-                                , {&new-line}
+            run write-log-item in this-procedure
+              (input mTextHead,
+               input substitute("Таблица истории остутствует поле <subject> и таблица не задана в списке исключений для таблиц без &1"
                                 , "<subject>"
                               )
               ) .
@@ -483,22 +524,20 @@ c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-lo
       end. /*for each buf_field no-lock*/
       if v-found-corr-user-name = no
       and lookup(dictdb._file._file-name, v-no-check-corr-user-name) = 0 then do:
-        run write-log in this-procedure
-          (input substitute("Таблица &1 - таблица истории&2" +
-                            "Остутствует поле <corr-user-name> и таблица не задана в списке исключений для таблиц без &3"
-                            ,dictdb._file._file-name
-                            , {&new-line}
+        run write-log-item in this-procedure
+          (input mTextHead,
+           input substitute("Таблица истории " +
+                            "остутствует поле <corr-user-name> и таблица не задана в списке исключений для таблиц без &1"
                             , "<corr-user-name>"
                           )
           ) .
       end. /*if not v-found-corr-user-name = no*/
       if v-found-corr-user-db-num = no
       and lookup(dictdb._file._file-name, v-no-check-corr-user-db-num) = 0 then do:
-        run write-log in this-procedure
-          (input substitute("Таблица &1 - таблица истории&2" +
-                            "Остутствует поле <corr-user-db-num> и таблица не задана в списке исключений для таблиц без &3"
-                            ,dictdb._file._file-name
-                            , {&new-line}
+        run write-log-item in this-procedure
+          (input mTextHead,
+           input substitute("Таблица истории " +
+                            "остутствует поле <corr-user-db-num> и таблица не задана в списке исключений для таблиц без &1"
                             , "<corr-user-db-num>"
                           )
           ) .
@@ -513,10 +552,9 @@ c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-lo
             where buf_file._file-name = substring(dictdb._file._file-name, 1, length(dictdb._file._file-name) - length("-attr") )
             no-error .
           if not available buf_file then do:
-            run write-log in this-procedure
-              (input substitute(("Таблица &1 должна быть таблицей атрибутов для &2" + {&new-line} +
-                                "Отсутствует основная таблица" + {&new-line})
-                                ,dictdb._file._file-name
+            run write-log-item in this-procedure
+              (input mTextHead,
+               input substitute("Должна быть таблицей атрибутов для &1 Отсутствует основная таблица" 
                                 ,substring(dictdb._file._file-name, 1, length(dictdb._file._file-name) - length("-attr") )
                               )
               ) .
@@ -524,8 +562,13 @@ c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-lo
         end. /*if lookup(dictdb._file._file-name, v-no-attr-primary-table) = 0*/
       end. /*if  r-index(dictdb._file._file-name, "-attr") = length(dictdb._file._file-name) - length("-attr") + 1*/
     end.
+    run write-log-item in this-procedure
+              (input mTextHead,
+               input ""
+              ) .
   end. /*  for each dictdb._file no-lock*/
 
+/* ####################################################################################################### */
   for each dictdb._file no-lock
     where dictdb._file._hidden = false
   on error undo, return error return-value
@@ -708,7 +751,18 @@ c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-lo
     .
   output stream IdxStream close.
 
+run waitfram-show in this-procedure
+    (input substitute("Проверка сохранности динамически используемых полей.")
+    ) .
 
+
+/*  run valid-rename-field-dyn-use  in this-procedure  no-error.
+  if error-status:error then do:
+    run write-log in this-procedure
+      (input substitute( "&1&2", {&new-line}, return-value )
+      ) .
+  end.
+  */
   if v-error-db = true
     or v-error-utl = true
   then do:
@@ -724,6 +778,7 @@ end.
 procedure validate-name :
 
   define input  parameter p-obj-name   as character no-undo .
+  define input  parameter p-obj-type   as character no-undo .
   define input  parameter p-check-name as character no-undo .
   define input  parameter p-valid-char as character no-undo .
 
@@ -746,9 +801,9 @@ procedure validate-name :
       .
       if index (p-valid-char, v-check-symbol) = 0
       then do:
-        run write-log in this-procedure
-          (input p-obj-name + {&new-line}
-               + substitute("Неверный символ: &1", v-check-symbol) + {&new-line}
+        run write-log-item in this-procedure
+          (input p-obj-name ,
+           input substitute("Неверный символ: &1 в имени &2 &3", v-check-symbol,p-obj-type,p-check-name )
           ) .
       end.
     end.
@@ -759,6 +814,7 @@ end procedure. /* validate-name */
 
 procedure validate-filename :
 
+  define input  parameter p-object-head as character no-undo .
   define input  parameter p-object-name as character no-undo .
   define input  parameter p-file-name   as character no-undo .
 
@@ -768,10 +824,11 @@ procedure validate-filename :
     if p-file-name = ""
     or p-file-name = ?
     then do:
-      run write-log in this-procedure
-        (input p-object-name + {&new-line}
-             + substitute("Имя файла &1", p-file-name) + {&new-line}
-             + "Не задано имя файла" + {&new-line}
+      run write-log-item in this-procedure
+        (input p-object-head,
+         input p-object-name 
+             + substitute(" Имя файла &1 ", p-file-name)
+             + "Не задано имя файла"
         ) .
       return .
     end.
@@ -779,10 +836,10 @@ procedure validate-filename :
     if num-entries(dictdb._file-trig._proc-name, '/':u) <> 2
     or entry(1, dictdb._file-trig._proc-name, '/':u) <> 'trg':u
     then do:
-      run write-log in this-procedure
-        (input substitute("Таблица &1", dictdb._file._file-name) + {&new-line}
-            + substitute("Триггер &1", dictdb._file-trig._proc-name) + {&new-line}
-            + substitute("Имя триггера должно быть задано в виде trg/<имя_файла>.p)") + {&new-line}
+      run write-log-item in this-procedure
+        (input p-object-head,
+         input substitute("Триггер &1 ", dictdb._file-trig._proc-name) 
+             + substitute("Имя триггера должно быть задано в виде trg/<имя_файла>.p)")
         ) .
       return .
     end.
@@ -795,18 +852,20 @@ procedure validate-filename :
     if v-search-file-name = ""
     or v-search-file-name = ?
     then do:
-      run write-log in this-procedure
-        (input p-object-name + {&new-line}
-             + substitute("Не найден файл &1", p-file-name) + {&new-line}
+      run write-log-item in this-procedure
+        (input p-object-head,
+         input p-object-name 
+             + substitute(" Не найден файл &1", p-file-name)
         ) .
     end.
 
     if num-entries(p-file-name, '.':u) <> 2
     then do:
-      run write-log in this-procedure
-        (input p-object-name + {&new-line}
-             + substitute("Имя файла &1", p-file-name) + {&new-line}
-             + "Имя файла должно содержать ровно одну точку"
+      run write-log-item in this-procedure
+        (input p-object-head,
+         input p-object-name  
+             + substitute(" Имя файла &1", p-file-name) 
+             + " Имя файла должно содержать ровно одну точку"
         ) .
       return .
     end.
@@ -821,24 +880,28 @@ procedure validate-filename :
 
     if v-file-name-ext <> "p"
     then do:
-      run write-log in this-procedure
-        (input p-object-name + {&new-line}
-             + substitute("Имя файла &1", p-file-name) + {&new-line}
-             + substitute("Расширение файла должно равняться символу &1", "p")  + {&new-line}
+      run write-log-item in this-procedure
+        (input p-object-head,
+         input p-object-name 
+             + substitute(" Имя файла &1", p-file-name)
+             + substitute(" Расширение файла должно равняться символу &1", "p")
         ) .
     end.
     if length(v-file-name-no-ext) > 8
     then do:
       run write-log in this-procedure
-        (input p-object-name + {&new-line}
-             + substitute("Имя файла &1", p-file-name) + {&new-line}
-             + substitute("Количество символов не может быть больше 8")  + {&new-line}
+        (input p-object-head,
+         input p-object-name 
+             + substitute(" Имя файла &1", p-file-name) 
+             + substitute(" Количество символов не может быть больше 8")
         ) .
     end.
 
     run validate-name in this-procedure
-      (input p-object-name + {&new-line}  /* p-obj-name   */
-           + substitute("Имя файла &1", p-file-name) + {&new-line}
+      (input p-object-head
+      ,input p-object-name   /* p-obj-name   */
+           + substitute(" Имя файла &1", p-file-name) + {&new-line}
+      
       ,input v-file-name-no-ext           /* p-check-name */
       ,input vartrigger-name              /* p-valid-char */
       ) .
@@ -847,11 +910,11 @@ procedure validate-filename :
 end procedure. /* validate-filename */
 
 procedure validate-pi-idx :
-
+  define input parameter i-head     as character no-undo.
   define input parameter p-tbl-name as character no-undo .
 
   do
-  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
+  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
   on stop   undo, return error substitute( "&1. stop", vss-workfile )
   on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   :
@@ -881,11 +944,11 @@ procedure validate-pi-idx :
       or LC( entry( 1, v-inform, ",":U ) ) = "default":U
       or entry( 3, v-inform, ",":U ) <> "1":U
     then do:
-      run write-log in this-procedure
-        (input substitute("Таблица &1 не имеет первичного ключа в БД"
+      run write-log-item in this-procedure
+        (input i-head, 
+         input substitute("Не имеет первичного ключа в БД"
                           ,v-th:name
-                         )
-               + {&new-line}
+                         )              
         ) .
       return .
     end.
@@ -894,24 +957,24 @@ procedure validate-pi-idx :
       v-idx-field-qnty = num-entries( v-inform ) - 4
     .
     if v-idx-field-qnty < 2 then do:
-      run write-log in this-procedure
-        (input substitute("Таблица &1 - Первичный индекс (&2) не содержит списка полей."
-                          ,v-th:name
+      run write-log-item in this-procedure
+        (input i-head, 
+         input substitute("Первичный индекс (&1) не содержит списка полей."
                           ,v-inform
                          )
-               + {&new-line}
+               
         ) .
       return .
     end.
 
     if entry( 2, v-inform, ",":U ) <> "1":U
     then do:
-      run write-log in this-procedure
-        (input substitute("Таблица &1 имеет неуникальный первичный ключ &2 в БД"
-                          ,v-th:name
+      run write-log-item in this-procedure
+        (input i-head,
+         input substitute("Имеет неуникальный первичный ключ &1 в БД"
                           ,entry( 1, v-inform, ",":U )
                          )
-               + {&new-line}
+               
         ) .
     end.
 
@@ -922,12 +985,12 @@ procedure validate-pi-idx :
         v-fh = v-th:buffer-field( entry( 4 + v-ind, v-inform, ",":U ) )
       .
       if v-fh:mandatory = false then do:
-        run write-log in this-procedure
-          (input substitute("Таблица &1 - Поле &2 входящее в состав первичного индекса не mandatory."
-                            ,v-th:name
+        run write-log-item in this-procedure
+          (input i-head,
+           input substitute("Поле &1 входящее в состав первичного индекса не mandatory."
                             ,v-fh:name
                           )
-                 + {&new-line}
+                
           ) .
       end.
     end.
@@ -1797,6 +1860,31 @@ procedure clear-log :
   end.
 
 end procedure. /* clear-log */
+
+define variable molditem as character no-undo.
+define variable mError   as integer no-undo.
+procedure write-log-item :
+
+  define input  parameter i-item as character no-undo .
+  define input  parameter i-mes  as character no-undo .
+  if molditem eq i-item
+  then
+     if i-mes eq ""
+     then
+        run write-log in this-procedure (i-mes).
+     else do:
+        mError = mError + 1.
+        run write-log in this-procedure (substitute ("&1) &2",mError, i-mes)).
+     end.
+  else do:
+     if i-mes ne ""
+     then do:
+        molditem =i-item.
+        mError = 1.
+        run write-log in this-procedure (substitute ("&1&2&3) &4" ,i-item, {&new-line}, mError, i-mes)).
+     end.
+  end.
+end.
 
 procedure write-log :
 
