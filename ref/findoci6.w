@@ -1353,6 +1353,7 @@ or p-mode = {&add-copy} then do:
                 ,input p-an-uchet-code
                 ,input p-cel-nazn-code
                 ,input (if available tt-fin-doc then tt-fin-doc.CashBookId else 0)
+                ,input ""
                 ,INPUT-OUTPUT table tt-fin-doc
                 ,INPUT-OUTPUT table ttc-fin-doc
                 ,output table tt0-fin-doc-attr
@@ -1385,6 +1386,7 @@ else do:
                 ,input tt-fin-doc.an-uchet-code
                 ,input tt-fin-doc.cel-nazn-code
                 ,input tt-fin-doc.CashBookId
+                ,input ""
                 ,INPUT-OUTPUT table ttc-fin-doc
                 ,INPUT-OUTPUT table tt-fin-doc
                 ,output table tt0-fin-doc-attr

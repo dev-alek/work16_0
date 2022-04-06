@@ -167,9 +167,8 @@ then do:
       vss-workfile vss-revision vss-description skip
            "Ошибка при поиске текущей смены" skip
             "Объект"  v-cntxt-obj-type v-cntxt-obj-code skip
-            
 view-as alert-box error .
-undo, return error return-value .
+undo, return return-value .
 end.
 
 /* ------------------------- &start-def-vars& -----------------------------------*/
@@ -410,7 +409,8 @@ define variable v-err               as logical    no-undo .
            and buf_shift-staff.obj-code   = buf_shift-obj.obj-code
            and buf_shift-staff.shift-date = buf_shift-obj.shift-date
            and buf_shift-staff.shift-num  = buf_shift-obj.shift-num
-           and buf_shift-staff.staff-role = yes no-error.
+/*           and buf_shift-staff.staff-role = yes*/
+           no-error.
     if not available buf_shift-staFF THEN DO:
        if buf_shift-obj.status_ = {&sht-closed} then do:
           v-cashier = "адм".
@@ -511,7 +511,7 @@ define variable v-err               as logical    no-undo .
                &if defined (debug) ne 0
                &then
                    output to "rkoincas.log" append.
-                   put unformatted "Каоссвая книга " CashBook.id " остаток " tt-cashBookOst.ostrasch skip.
+                   put unformatted "Кассовая книга " CashBook.id " остаток " tt-cashBookOst.ostrasch skip.
                    output close.
                &endif
           end.
@@ -568,7 +568,7 @@ define variable v-err               as logical    no-undo .
               &if defined (debug) ne 0
               &then 
                    output to "rkoincas.log" append.
-                   put unformatted "Кассвая книга " CashBook.id " чек " chk-doc.doc-code " продажа " chk-doc.out-code " Товар " buf_chk-gds-pay.gds-code " сумма " msum skip.
+                   put unformatted "Кассовая книга " CashBook.id " чек " chk-doc.doc-code " продажа " chk-doc.out-code " Товар " " - "/* buf_chk-gds-pay.gds-code */ " сумма " msum skip.
                    output close.
                &endif
                     
@@ -814,6 +814,7 @@ define variable v-err               as logical    no-undo .
                       ,input 0 /*p-an-uchet-code*/
                       ,input 0 /*p-cel-nazn-code*/
                       ,input buf_temp-fin-sum.cashbookid
+                      ,input v-cashier
                       ,INPUT-OUTPUT table tt-fin-doc
                       ,INPUT-OUTPUT table ttc-fin-doc
                       ,output table tt0-fin-doc-attr

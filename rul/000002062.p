@@ -1290,6 +1290,7 @@ define variable v-err               as logical    no-undo .
                       ,input 0 /*p-an-uchet-code*/
                       ,input 0 /*p-cel-nazn-code*/
                       ,input buf_temp-fin-sum.cashbookid
+                      ,input ""
                       ,INPUT-OUTPUT table tt-fin-doc
                       ,INPUT-OUTPUT table ttc-fin-doc
                       ,output table tt0-fin-doc-attr
@@ -1323,6 +1324,7 @@ define variable v-err               as logical    no-undo .
                       ,input 0 /*p-an-uchet-code*/
                       ,input 0 /*p-cel-nazn-code*/
                       ,input buf_temp-fin-sum.cashbookid
+                      ,input ""
                       ,INPUT-OUTPUT table tt-fin-doc
                       ,INPUT-OUTPUT table ttc-fin-doc
                       ,output table tt0-fin-doc-attr
