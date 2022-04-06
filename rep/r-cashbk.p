@@ -500,25 +500,46 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
     end.
   
   end.
-  
+  find first buf_cashbook no-lock where buf_cashbook.id = integer((entry(ii,p-cashbook,{&delim-cmd}))) no-error .
   v-num-page = 0 .
+  
+  define variable v-shift-num as integer no-undo .
+  find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = buf_cashbook.id and ub.CashBookRule.Code = "uchet"
+  and ub.CashBookRule.Obj-code = v-obj-code and ub.CashBookRule.Obj-type = v-obj-type no-error .
+  if available (ub.CashBookRule) and ub.CashBookRule.RuleValue = "1" then do:
+        /*Смены*/
+  do v-date-page = date("01/01/" + string(year(v-date-start1))) to v-date-start1:
+
+   for each ub.shift-obj no-lock where ub.shift-obj.obj-code = v-obj-code and ub.shift-obj.obj-type = v-obj-type and ub.shift-obj.shift-date = v-date-page:
+    if ub.shift-obj.shift-date = x-date-End and ub.shift-obj.shift-num > x-Shift-End then leave .
+    if can-find (first ub.fin-doc no-lock where ub.fin-doc.obj-code = v-obj-code and ub.fin-doc.obj-type = v-obj-type and ub.fin-doc.cashbookid = buf_cashbook.id
+      and ub.fin-doc.shift-date = ub.shift-obj.shift-date and ub.fin-doc.shift-name = ub.shift-obj.shift-name and ub.fin-doc.shift-num = ub.shift-obj.shift-num) then
+    do:  
+      v-num-page = v-num-page + 1 .
+    end.
+  end.
+  end.
+     v-num-page = v-num-page - 1.
+  end. 
+  
+  else do:
+       /*Календарные даты*/
   do v-date-page = date("01/01/" + string(year(v-date-start1))) to v-date-start1 - 1:
-    if can-find (first ub.fin-doc no-lock where ub.fin-doc.obj-code = v-obj-code and ub.fin-doc.obj-type = v-obj-type and ub.fin-doc.cashbookid = integer(entry(ii,p-cashbook,{&delim-cmd}))
+    if can-find (first ub.fin-doc no-lock where ub.fin-doc.obj-code = v-obj-code and ub.fin-doc.obj-type = v-obj-type and ub.fin-doc.cashbookid = buf_cashbook.id
       and ub.fin-doc.fact-date = v-date-page) then
     do:
       v-num-page = v-num-page + 1 .
     end.
-  end.
-
+  end.     
+  end.   
   if p-titul then 
   do:
     put stream OutStr-html unformatted
       '<TABLE fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0" name="Титульный лист КК ' + string(entry(ii,p-cashbook,{&delim-cmd})) + '">'skip
       .
-    find first buf_cashbook no-lock where buf_cashbook.id = integer((entry(ii,p-cashbook,{&delim-cmd}))) no-error .
     put stream OutStr-html unformatted
       '<thead>' skip
-      '<tr>' skip
+      '<tr class="set_columns">' skip
       '<td style="width: 120px;"></td>' skip
       '<td style="width: 120px;"></td>' skip
       '<td style="width: 120px;"></td>' skip
@@ -756,7 +777,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
         .
       put stream OutStr-html unformatted
         '<thead>' skip
-        '<tr>' skip
+        '<tr class="set_columns">' skip
         '<td style="width: 120px;"></td>' skip
         '<td style="width: 120px;"></td>' skip
         '<td style="width: 260px;"></td>' skip
@@ -804,9 +825,10 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
         FIND last ub.shift-staff No-LOCK WHERE
           ub.shift-staff.obj-type   = temp-fin-doc.obj-type AND
           ub.shift-staff.obj-code   = temp-fin-doc.obj-code AND
-          ub.shift-staff.shift-date = v-date-start AND
-          ub.shift-staff.shift-num  = v-shift-start AND
-          ub.shift-staff.staff-role = yes and
+          ub.shift-staff.shift-date = v-date-end AND
+          ub.shift-staff.shift-num  = v-shift-end AND
+          ub.shift-staff.staff-role = no and
+          ub.shift-staff.next-shift = no AND
           ub.shift-staff.psn-num    >= 0 No-ERROR.
       end.
       else 
@@ -814,8 +836,9 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
         FIND last ub.shift-staff No-LOCK WHERE
           ub.shift-staff.obj-type   = temp-fin-doc.obj-type AND
           ub.shift-staff.obj-code   = temp-fin-doc.obj-code AND
-          ub.shift-staff.shift-date = v-date-start AND
-          ub.shift-staff.staff-role = yes and
+          ub.shift-staff.shift-date = v-date-end AND
+          ub.shift-staff.staff-role = no and
+          ub.shift-staff.next-shift = no AND
           ub.shift-staff.psn-num    >= 0 No-ERROR.
       end.  
       assign 
@@ -828,7 +851,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
         put stream OutStr-html unformatted
           '<tr>' skip
           '<td colspan="2" style="text-align: center;">' + buf_temp-fin-doc.prn-doc-code + '</td>' skip
-          '<td text_wrap="true" style="text-align: center;">' + v-payer + '</td>' skip
+          '<td text_wrap="true" style="text-align: center;">' + if v-payer <> ? then v-payer + '</td>' else " " + '</td>' skip
           '<td text_wrap="true" style="text-align: center;">' + buf_temp-fin-doc.cor-acc + '</td>' skip
           '<td text_wrap="true" style="text-align: center;">' + if buf_temp-fin-doc.fin-doc-type = {&income-cash} then string(buf_temp-fin-doc.sum-rubl, "->>>>>>>>9.99")  + '</td>' else "         -" + '</td>' skip
           '<td text_wrap="true" style="text-align: center;">' + if buf_temp-fin-doc.fin-doc-type = {&expense-cash} then string(buf_temp-fin-doc.sum-rubl, "->>>>>>>>9.99")  + '</td>' else "         -" + '</td>' skip

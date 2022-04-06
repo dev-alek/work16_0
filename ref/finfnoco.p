@@ -1068,7 +1068,8 @@ do:
     ub.shift-staff.obj-code   = p-obj-code AND
     ub.shift-staff.shift-date = tt-fin-doc.shift-date AND
     ub.shift-staff.shift-num  = tt-fin-doc.shift-num AND
-    ub.shift-staff.staff-role = yes and
+    ub.shift-staff.shift-name  = tt-fin-doc.shift-name AND
+    ub.shift-staff.staff-role = no and
     ub.shift-staff.psn-num    >= 0 No-ERROR.
   assign 
     v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
