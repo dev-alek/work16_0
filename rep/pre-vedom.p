@@ -1231,7 +1231,7 @@ do
     do:  
       put stream OutStr-html unformatted
         '<tr>' skip
-        '<td colspan="158" style="text-align: center;">Опись сдаваемых денег</td>' skip
+        '<td colspan="158" style="text-align: center;">Опись сдаваемых наличных денег</td>' skip
         '</tr>' skip
         '<tr>' skip
         '<td colspan="158" ></td>' skip
@@ -1270,7 +1270,7 @@ do
       '<td></td>' skip
       '<td colspan="92">Акт вскрытия сумки и пересчета вложенных наличных денег</td>' skip
       '<td colspan="23"></td>' skip
-      '<td colspan="30" style="text-align: center; border-bottom: 1px solid black;">' + if v-shift-date <> ? then string(v-shift-date) + '</td>' else ""  + '</td>' skip
+      '<td colspan="30" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
       '<td colspan="12"></td>' skip
       '</tr>' skip 
       .
@@ -1417,9 +1417,10 @@ do
       
 
   
-  run prn-lib-reportviewer-report-name in this-procedure (
+  run prn-lib-reportviewer in this-procedure (
     input THIS-PROCEDURE
     ,input v-file-name-rep-html1
+    ,input "EXCEL:TRUE"
     ). 
     
     
