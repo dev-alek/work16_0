@@ -5613,6 +5613,96 @@ procedure lib-rvs_crtt-pmp : /* cr-tt-param-pump */
   return .
 end procedure. /* lib-rvs_crtt-pmp */
 
+{bge/socet.i}
+procedure getpump:
+   define input  parameter ilogfile as character no-undo.
+   define input  parameter iobjtype as character no-undo.
+   define input  parameter iobjcode as integer no-undo.
+   define output parameter Opump as longchar no-undo.
+   define variable vadr as character no-undo.
+   define variable vport as character no-undo.
+/*   define variable v-value-character as character no-undo .
+   define variable v-value-date as date no-undo .
+   define variable v-value-decimal as decimal no-undo .
+   define variable v-value-integer as INTEGER no-undo .
+   define variable v-value-logical AS LOGICAL no-undo .
+   define variable v-param-type as character no-undo .
+   define variable v-tth as handle no-undo .
+   
+   run adm/shattri.p (
+       input "get":U
+       ,input  iobjtype
+       ,input  iobjcode
+       ,input  {&attr-cd-sending}
+       ,input  {&attr-cd-sending_pump_port} /*p-param-code*/
+       ,output v-value-character
+       ,output v-value-date
+       ,output v-value-decimal
+       ,output v-value-integer
+       ,output v-value-logical
+       ,output v-param-type
+       ,INPUT-OUTPUT table-handle v-tth
+       ) no-error .
+   if not error-status:error
+   then 
+      vport = v-value-character.
+   else */
+      vport = "4000".
+/*      mTimeOut = 60.*/
+   define variable vFlag as logical no-undo.
+/*   delete object v-tth no-error.*/
+   block-cash:
+   for each cash-desk  where cash-desk.db-num   = g#db-num 
+                         and cash-desk.obj-code = iobjcode 
+                         and cash-desk.cash-on  = yes
+   no-lock:
+      vadr = entry(1,
+                   (if num-entries(cash-desk.addr-path, {&delim-par}) > 1
+                    then  entry(2, cash-desk.addr-path, {&delim-par})
+                    else cash-desk.addr-path
+                    )   
+                  ,":").
+      if vadr eq ""
+      then
+         next block-cash.
+      vFlag = yes.
+      run gbl/fileapnd.p
+          ( ilogfile
+          , substitute("&1 &2  Отправка команды &3 на  &4:&5 &6", string(today),string(time, "HH:MM:SS"),"pumpread",vadr,vport ,{&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .            
+      run ConectSocet (vadr,vport,?,"pumpread" + chr(13) + chr(10), no ) no-error.
+      if     not error-status:error
+         and length(mWebResp) > 0
+         and index(mWebResp," PUMP=") > 0
+      then do:
+         run gbl/fileapnd.p
+          ( ilogfile
+          , substitute("&1 &2  Ответ:&4&3&4", string(today),string(time, "HH:MM:SS"),mWebResp ,{&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .            
+      
+         leave block-cash.
+      end.
+      else
+         run gbl/fileapnd.p
+          ( ilogfile
+          , substitute('&1 &2  Результат: &3 "&4" &5', string(today),string(time, "HH:MM:SS"),OerrMsg,mWebResp ,{&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .            
+      
+   end.
+   if not vFlag
+   then
+      run gbl/fileapnd.p
+          ( ilogfile
+          , substitute("&1 &2 Нет включеных касс по БД &3 Объект &4&5 &6 ", string(today),string(time, "HH:MM:SS"),g#db-num, "маг", iobjcode ,{&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .
+   else     
+      Opump = mWebResp.
+end. /* getpump */
+
 procedure lib-rvs_anls-pmp : /* analysis-pump */
   define input        parameter           p-parent-proc       as   widget-handle       no-undo.
   define input        parameter           p-obj-type          like ub.rvs-doc.obj-type no-undo.
@@ -5651,6 +5741,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   define variable j_num         as   integer                   no-undo.
   define variable l_log         as   logical                   no-undo.
   define variable v_CommandPump as   character                 no-undo initial ?.
+  define variable vi as integer no-undo.
   
   define variable vPump as longchar no-undo.
   
@@ -5716,37 +5807,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       v_File-Name = './pump.txt'
       v_File-Err  = substitute('&1pump.err', ibs.th.gbl.gbl-inipar:logDir) .
     .
-    define variable vi as integer no-undo.
-    v_File-Name = searchfile('pump.txt').
-    if v_File-Name ne ?
-    then do:
-      block-del-file: 
-      do vi = 1 to 5:
-         os-delete value( v_File-Name ) .
-         v_File-Name = searchfile('pump.txt').
-         if v_File-Name eq ?
-         then
-            leave block-del-file.
-      end.
-    end.
-    if v_File-Name ne ?
-    then
-       return error 'Файл pump.txt заблокирован удалите файл и попробуйте еще раз. ' + v_File-Name .
-    v_File-Name = "wpump" + string(random(100000,999999)) + ".tmp".
-    if searchfile(v_File-Name) ne ?
-    then
-      return error "Удалите все файлы wpump*.tmp".
-    assign
-      v_command = v_CommandPump + ' ':U + v_File-Name
-    .
-    os-command silent value( v_command ) .
-    if searchfile( v_File-Name ) = ? then do:
-      return /* error */ 'Файл с данными ТРК не получен.' . /* технологи сказали, что это не должно стопорить создание сверки */
-    end.
-    run readfiletxt(v_File-Name,output vPump).
-/*    os-append value(v_File-Name) value(i-log-file-name).*/
-    os-rename value( v_File-Name ) 'pump.txt'.
-    os-delete value( v_File-Name ) .
+    output to value(v_File-Err) .
+    output close.
+    run getpump(v_File-Err ,p-obj-type, p-obj-code, output vPump).
   end.
   else do:
     v_DirFilePump = ibs.th.gbl.gbl-inipar:dirflpmp .
