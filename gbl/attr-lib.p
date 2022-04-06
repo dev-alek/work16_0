@@ -2995,6 +2995,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop host-attr-contr-in true
 &scop shop-attr-contr-in true
 &scop store-attr-contr-in true
+&scop db-attr-contr-in false
 &scop batch-edit-attr-contr-in  0
 &scop attr-contr-in_contr-in-income-NP_tooltip  Обязательная ссылка на договор в приходной накладной с НП
 &scop attr-contr-in_contr-in-income-CPT_tooltip  Обязательная ссылка на договор в приходной накладной с СПТ

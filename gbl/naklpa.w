@@ -656,6 +656,7 @@ run thbjattr_tooltip in this-procedure (
             ,output v-tooltip-code
             ) no-error .
 v-contr-in-income-NP:screen-value = entry(2,v-label,":") .
+v-contr-in-income-NP:MOVE-TO-Top( ).
 I-contr-in-income-NP:private-data =  REPLACE ( v-tooltip-code , '`' , ',' ).
 
 run thbjattr_tooltip in this-procedure (
@@ -666,6 +667,7 @@ run thbjattr_tooltip in this-procedure (
             ,output v-tooltip-code
             ) no-error .
 v-contr-in-income-CPT:screen-value = entry(2,v-label,":") .
+v-contr-in-income-CPT:MOVE-TO-Top( ).
 I-contr-in-income-CPT:private-data =  REPLACE ( v-tooltip-code , '`' , ',' ).
 
 run thbjattr_tooltip in this-procedure (
@@ -676,6 +678,7 @@ run thbjattr_tooltip in this-procedure (
             ,output v-tooltip-code
             ) no-error .
 v-contr-in-expense-NP:screen-value = entry(2,v-label,":") .
+v-contr-in-expense-NP:MOVE-TO-Top( ).
 I-contr-in-expense-NP:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
 
 run thbjattr_tooltip in this-procedure (
@@ -686,6 +689,7 @@ run thbjattr_tooltip in this-procedure (
             ,output v-tooltip-code
             ) no-error .
 v-contr-in-expense-CPT:screen-value = entry(2,v-label,":") .
+v-contr-in-expense-CPT:MOVE-TO-Top( ).
 I-contr-in-expense-CPT:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
 
 run thbjattr_tooltip in this-procedure (
@@ -696,6 +700,7 @@ run thbjattr_tooltip in this-procedure (
             ,output v-tooltip-code
             ) no-error .
 v-contr-qnty-spec:screen-value = entry(2,v-label,":") .
+v-contr-qnty-spec:MOVE-TO-Top( ).
 I-contr-qnty-spec:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
 
 run thbjattr_tooltip in this-procedure (
@@ -706,6 +711,7 @@ run thbjattr_tooltip in this-procedure (
             ,output v-tooltip-code
             ) no-error .
 v-contr-recount:screen-value = entry(2,v-label,":") .
+v-contr-recount:MOVE-TO-Top( ).
 I-contr-recount:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
 
 END PROCEDURE.
