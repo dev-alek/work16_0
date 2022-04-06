@@ -309,6 +309,30 @@ class ibs.th.str.InfoSection:
   define property NeckArea as decimal no-undo
     get.
     set.
+    
+  define property DocDensST as decimal no-undo
+    get.
+    set.
+    
+  define property PaspDens as decimal no-undo
+    get.
+    set.
+    
+  define property GroupNP as character no-undo
+    get.
+    set.
+    
+  define property Pressure as decimal no-undo
+    get.
+    set.
+    
+  define property DocVolume as decimal no-undo
+    get.
+    set.
+    
+  define property cmom-nb as character no-undo
+    get.
+    set.
 
   /*------------------------------------------------------------------------------
  Purpose:
@@ -332,37 +356,45 @@ class ibs.th.str.InfoSection:
     for each ub.auto-section no-lock where ub.auto-section.auto-num = infoSectionTotal:CarNum and ub.auto-section.section-num = integer (arg) :
       assign
         CarVol =  ub.auto-section.brutto-qnty
-        DopVolume =  ub.auto-section.add-volume
+        DopVolume =  (if ub.auto-section.add-volume = ? then 0 else ub.auto-section.add-volume)
         Shape = entry (ub.auto-tank.type-neck + 1, {&list-shape})
       .
       case ub.auto-tank.type-neck:
       when 0 then do:
 /*        assign                  */
 /*          Pour = "Нижний налив".*/
-        diameter = string (ub.auto-section.add-volume).
+        diameter = if ub.auto-section.add-volume = ? then "0" else string(ub.auto-section.add-volume).
         for each ub.auto-section-table  no-lock where
           ub.auto-section-table.auto-num = ub.auto-section.auto-num and ub.auto-section-table.section-num = ub.auto-section.section-num:
           create tt-section.
           assign
-            tt-section.dif     = ub.auto-section-table.error  
-            tt-section.volume1 = ub.auto-section-table.volume-error no-error
-          .
-          diameter =  diameter + "/" + string (ub.auto-section-table.error) + {&delim-cmd} + string (ub.auto-section-table.volume-error).
+            tt-section.dif     = ub.auto-section-table.error  when ub.auto-section-table.error <> ?
+            tt-section.volume1 = ub.auto-section-table.volume-error when ub.auto-section-table.volume-error <> ?
+          no-error .
+          diameter =  diameter + "/" + (if ub.auto-section-table.error = ? then "0" else string(ub.auto-section-table.error)) + {&delim-cmd}
+                   + (if ub.auto-section-table.volume-error = ? then "0" else string(ub.auto-section-table.volume-error)) .
         end.
       end.
       when 1 then do:
-        diameter = string (ub.auto-section.add-volume) + "/" + string (ub.auto-section.section-depth) + 
-          "/" + string (ub.auto-section.length) + "/" + string (ub.auto-section.width) 
+        diameter = (if ub.auto-section.add-volume = ? then "0" else string(ub.auto-section.add-volume)) + "/"
+                 + (if ub.auto-section.section-depth = ? then "0" else string(ub.auto-section.section-depth)) + "/"
+                 + (if ub.auto-section.length = ? then "0" else string(ub.auto-section.length)) + "/"
+                 + (if ub.auto-section.width = ? then "0" else string(ub.auto-section.width)) 
           .
       end.
       when 2 then do:
-        diameter = string (ub.auto-section.add-volume) + "/" + string (ub.auto-section.section-depth) + 
-          "/" + string (ub.auto-section.diameter-max) + "/" + string (ub.auto-section.diameter-min) 
+        diameter = (if ub.auto-section.add-volume = ? then "0" else string(ub.auto-section.add-volume)) + "/"
+                 + (if ub.auto-section.section-depth = ? then "0" else string(ub.auto-section.section-depth)) + "/"
+                 + (if ub.auto-section.diameter-max = ? then "0" else string(ub.auto-section.diameter-max)) + "/"
+                 + (if ub.auto-section.diameter-min = ? then "0" else string(ub.auto-section.diameter-min)) 
           .
       end.
       when 3 then do:
-        diameter = string (ub.auto-section.add-volume) + "/" + string (ub.auto-section.diameter-min) +
-          "/" + string (ub.auto-section.diameter-max) + "/" + string (ub.auto-section.length)  + "/" + string (ub.auto-section.section-depth)
+        diameter = (if ub.auto-section.add-volume = ? then "0" else string(ub.auto-section.add-volume)) + "/"
+                 + (if ub.auto-section.diameter-max = ? then "0" else string(ub.auto-section.diameter-max)) + "/"
+                 + (if ub.auto-section.diameter-min = ? then "0" else string(ub.auto-section.diameter-min)) + "/"
+                 + (if ub.auto-section.length = ? then "0" else string(ub.auto-section.length)) + "/"
+                 + (if ub.auto-section.section-depth = ? then "0" else string(ub.auto-section.section-depth))
           .
       end.
       end case.
@@ -680,6 +712,36 @@ class ibs.th.str.InfoSection:
         do:
           assign
             Shape = inAttrValue no-error.
+        end.
+      when 'pasp-dens' then 
+        do:
+          assign
+            PaspDens = decimal (inAttrValue) no-error.
+        end.
+      when 'doc-dens-st' then 
+        do:
+          assign
+            DocDensST = decimal (inAttrValue) no-error.
+        end.
+      when 'pressure' then 
+        do:
+          assign
+            Pressure = decimal (inAttrValue) no-error.
+        end.  
+      when 'group-np' then 
+        do:
+          assign
+            GroupNP = inAttrValue no-error.
+        end.
+      when 'doc-volume' then 
+        do:
+          assign
+            DocVolume = decimal (inAttrValue) no-error.
+        end.
+      when 'cmom-nb' then 
+        do:
+          assign
+            cmom-nb = inAttrValue no-error.
         end.
     end case.
 		

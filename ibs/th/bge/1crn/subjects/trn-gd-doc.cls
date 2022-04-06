@@ -614,10 +614,14 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
 /*            else do:                                                                        */
           write-data-element ("sc-num", string (infoSecObj:SectionName)).
           write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
-          write-data-element ("cap-doc", string-mth (infoSecObj:DocQnty)).
+          write-data-element ("cap-doc", string-mth (if infoSecObj:DocVolume > 0 then infoSecObj:DocVolume else infoSecObj:DocQnty)).
           write-data-element ("dnsty-doc", string-mth (infoSecObj:DocDensity)).
+          write-data-element ("standard-dnst", string-mth (infoSecObj:DocDensST)).
           write-data-element ("wght-doc", string-mth (infoSecObj:CliQnty)).
           write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
+          if trim(infoSecObj:cmom-nb) > ""
+          then
+            write-data-element ("cmom-nb", string (infoSecObj:cmom-nb)).
           write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
           write-data-element ("sz-nck", replace(infoSecObj:Diameter, {&delim-cmd}, " ")).
           write-data-element ("filling-method", (if infoSecObj:Pour = "Верхний налив" then '0' else '1')).
@@ -662,6 +666,31 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("norm-doc", string (infoSecObj:NormDoc)).
           /*паспорт качества*/
           write-data-element ("passport-num", string (infoSecObj:NumPassport)).
+          write-data-element ("passport-dnst", string-mth (infoSecObj:PaspDens)).
+          write-data-element ("t-ttn", string-mth (infoSecObj:TTNTemp)).
+          case infoSecObj:GroupNP :
+            when "I"
+            then do :
+              write-data-element ("fuel-group", string (1)).
+            end .
+            when "II"
+            then do :
+              write-data-element ("fuel-group", string (2)).
+            end .
+            when "III"
+            then do :
+              write-data-element ("fuel-group", string (3)).
+            end .
+            when "IV"
+            then do :
+              write-data-element ("fuel-group", string (4)).
+            end .
+          end case .
+          if infoSecObj:Pressure > 0
+          then
+            write-data-element ("dnp", string-mth (infoSecObj:Pressure)).
+            
+          write-data-element ("tank-num", string (infoSecObj:ListTank)).
           /*сертификат соответствия*/
           write-data-element ("certif-fuel", string (infoSecObj:CertifFuel)).
           /*срок действия сертификата*/

@@ -273,7 +273,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         v-input-type-T = ""
         v-input-type-l = ""
       .
-      for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+      for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                     and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                     and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
                                     and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
@@ -282,7 +282,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                     :
         v-input-type-p = buf_rvs-line-attr.attr-value .                              
       end .
-      for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+      for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                     and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                     and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
                                     and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
@@ -291,7 +291,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                     :
         v-input-type-T = buf_rvs-line-attr.attr-value .                              
       end .
-      for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+      for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                     and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                     and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
                                     and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
@@ -469,7 +469,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
               v-input-type-T = ""
               v-input-type-l = ""
             .
-            for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                           and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                           and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
                                           and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
@@ -478,7 +478,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                           :
               v-input-type-p = buf_rvs-line-attr.attr-value .                              
             end .
-            for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                           and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                           and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
                                           and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
@@ -487,7 +487,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                           :
               v-input-type-T = buf_rvs-line-attr.attr-value .                              
             end .
-            for first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                           and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                           and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
                                           and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
@@ -665,11 +665,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
           and buf_goods.gds-code = buf_rvs-line.gds-code no-error.
       find first buf_rvs-line-attr where buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
-                                          and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
-                                          and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
-                                          and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
-                                          and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
-                                          and buf_rvs-line-attr.attr-code = "delta-mass-qnty" no-lock no-error.
+                                      and buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                      and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                      and buf_rvs-line-attr.pl-code = buf_rvs-line.pl-code
+                                      and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                      and buf_rvs-line-attr.attr-code = "delta-mass-qnty" no-lock no-error.
       
       if available (buf_rvs-line-attr)
       then do:

@@ -299,56 +299,189 @@ class ibs.th.bge.1crn.import.impclients implements ibs.th.bge.1crn.import.iimpsu
     find first bf_clients no-lock where recid(bf_clients) eq v-rid  no-error .
     if avail bf_clients 
     then do:
-    find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
-                              and clients-attr.obj-code  eq bf_clients.obj-code
-                              and clients-attr.attr-code eq {&attr-supp-np}
-    exclusive-lock no-error.
-    if avail clients-attr 
-    then do:
-       if objImp:post-np eq 1
-       then
-          clients-attr.attr-value = "yes".
-       else 
-          delete clients-attr.
-    end.
-    else do:
-       if objImp:post-np eq 1
-       then do:
+      find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
+                                and clients-attr.obj-code  eq bf_clients.obj-code
+                                and clients-attr.attr-code eq {&attr-supp-np}
+      exclusive-lock no-error.
+      if avail clients-attr 
+      then do:
+         if objImp:post-np eq 1
+         then
+            clients-attr.attr-value = "yes".
+         else 
+            delete clients-attr.
+      end.
+      else do:
+         if objImp:post-np eq 1
+         then do:
+            create clients-attr.
+            assign 
+               clients-attr.obj-type  = bf_clients.obj-type
+               clients-attr.obj-code  = bf_clients.obj-code
+               clients-attr.attr-code = {&attr-supp-np}
+               clients-attr.attr-value = "yes"
+            .
+         end.
+      end.
+      
+      find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
+                                and clients-attr.obj-code  eq bf_clients.obj-code
+                                and clients-attr.attr-code eq {&attr-supp-lgas}
+      exclusive-lock no-error.
+      if avail clients-attr 
+      then do:
+         if objImp:post-sug eq 1
+         then
+            clients-attr.attr-value = "yes".
+         else 
+            delete clients-attr.
+      end.
+      else do:
+         if objImp:post-sug eq 1
+         then do:
+            create clients-attr.
+            assign 
+               clients-attr.obj-type  = bf_clients.obj-type
+               clients-attr.obj-code  = bf_clients.obj-code
+               clients-attr.attr-code = {&attr-supp-lgas}
+               clients-attr.attr-value = "yes"
+            .
+         end.
+      end.
+      
+      find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
+                                and clients-attr.obj-code  eq bf_clients.obj-code
+                                and clients-attr.attr-code eq {&attr-own-supp}
+      exclusive-lock no-error.
+      if avail clients-attr 
+      then do:
+         if objImp:own-post eq 1
+         then
+            clients-attr.attr-value = "yes".
+         else 
+            delete clients-attr.
+      end.
+      else do:
+         if objImp:own-post eq 1
+         then do:
+            create clients-attr.
+            assign 
+               clients-attr.obj-type  = bf_clients.obj-type
+               clients-attr.obj-code  = bf_clients.obj-code
+               clients-attr.attr-code = {&attr-own-supp}
+               clients-attr.attr-value = "yes"
+            .
+         end.
+      end.
+      
+      find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
+                                and clients-attr.obj-code  eq bf_clients.obj-code
+                                and clients-attr.attr-code eq {&attr-npz}
+      exclusive-lock no-error.
+      if avail clients-attr 
+      then do:
+         if objImp:post-npz eq 1
+         then
+            clients-attr.attr-value = "yes".
+         else 
+            delete clients-attr.
+      end.
+      else do:
+         if objImp:post-npz eq 1
+         then do:
+            create clients-attr.
+            assign 
+               clients-attr.obj-type  = bf_clients.obj-type
+               clients-attr.obj-code  = bf_clients.obj-code
+               clients-attr.attr-code = {&attr-npz}
+               clients-attr.attr-value = "yes"
+            .
+         end.
+      end.
+      
+      find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
+                                and clients-attr.obj-code  eq bf_clients.obj-code
+                                and clients-attr.attr-code eq {&attr-code-KSK}
+      exclusive-lock no-error.
+      if trim(objImp:code-KSK) > ""
+      and objImp:code-KSK <> ?
+      then do :
+        if not available clients-attr
+        then do :
           create clients-attr.
           assign 
              clients-attr.obj-type  = bf_clients.obj-type
              clients-attr.obj-code  = bf_clients.obj-code
-             clients-attr.attr-code = {&attr-supp-np}
-             clients-attr.attr-value = "yes"
+             clients-attr.attr-code = {&attr-code-KSK}
           .
-       end.
-    end.
-    find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
-                              and clients-attr.obj-code  eq bf_clients.obj-code
-                              and clients-attr.attr-code eq {&attr-supp-lgas}
-    exclusive-lock no-error.
-    if avail clients-attr 
-    then do:
-       if objImp:post-sug eq 1
-       then
-          clients-attr.attr-value = "yes".
-       else 
-          delete clients-attr.
-    end.
-    else do:
-       if objImp:post-sug eq 1
-       then do:
+        end .
+        clients-attr.attr-value = string(integer(objImp:code-KSK)) no-error .
+        if error-status:error
+        then 
+          clients-attr.attr-value = objImp:code-KSK .
+      end .
+      else do :
+        if available clients-attr
+        then
+         delete clients-attr.
+      end .
+      
+      find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
+                                and clients-attr.obj-code  eq bf_clients.obj-code
+                                and clients-attr.attr-code eq {&attr-code-AIS}
+      exclusive-lock no-error.
+      if trim(objImp:code-AIS) > ""
+      and objImp:code-AIS <> ?
+      then do :
+        if not available clients-attr
+        then do :
           create clients-attr.
           assign 
              clients-attr.obj-type  = bf_clients.obj-type
              clients-attr.obj-code  = bf_clients.obj-code
-             clients-attr.attr-code = {&attr-supp-lgas}
-             clients-attr.attr-value = "yes"
+             clients-attr.attr-code = {&attr-code-AIS}
           .
-       end.
-    end.
-    
-    
+        end .
+        clients-attr.attr-value = string(integer(objImp:code-AIS)) no-error .
+        if error-status:error
+        then 
+          clients-attr.attr-value = objImp:code-AIS .
+      end .
+      else do :
+        if available clients-attr
+        then
+         delete clients-attr.
+      end .
+      
+      find first clients-attr where clients-attr.obj-type  eq bf_clients.obj-type
+                                and clients-attr.obj-code  eq bf_clients.obj-code
+                                and clients-attr.attr-code eq {&attr-owner-code}
+      exclusive-lock no-error.
+      if trim(objImp:org-code) > ""
+      and objImp:org-code <> ?
+      then do :
+        if not available clients-attr
+        then do :
+          create clients-attr.
+          assign 
+             clients-attr.obj-type  = bf_clients.obj-type
+             clients-attr.obj-code  = bf_clients.obj-code
+             clients-attr.attr-code = {&attr-owner-code}
+          .
+        end .
+        clients-attr.attr-value = {&cmp} + string(integer(objImp:org-code)) no-error .
+        if error-status:error
+        then 
+          clients-attr.attr-value = {&cmp} + objImp:org-code .
+      end .
+      else do :
+        if available clients-attr
+        then
+         delete clients-attr.
+      end .
+      
+      
+      
     end.
     if valid-object (v_carrier) then 
     do:

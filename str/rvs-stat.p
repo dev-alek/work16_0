@@ -138,6 +138,7 @@ do transaction
                                     delete rvs-line-attr .
                                 end.
                             end.
+                            release rvs-line-attr no-error .
                         end.
                     otherwise 
                     do:
@@ -237,6 +238,7 @@ do transaction
                                                 rvs-line-attr.attr-code  = "CriticalDif"
                                                 rvs-line-attr.attr-value = string ( v-abs-critdif ).
                                         end.
+                                        release rvs-line-attr no-error .
                                     end.
                                 end.  
                             end.
@@ -378,6 +380,7 @@ do transaction
                                                 rvs-line-attr.attr-code  = "CriticalDif"
                                                 rvs-line-attr.attr-value = string ( v-abs-critdif ).
                                         end.
+                                        release rvs-line-attr no-error .
                                     end.
                                 end.  
                                 find first rvs-line-attr no-lock
@@ -397,26 +400,28 @@ do transaction
                                                             ,input string(no)
                                                             ,output v-ok      ) no-error.
                                 end .
+                                release rvs-line-attr no-error .
+                                
                                 for first rvs-line-attr no-lock
-				                    where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-				                    and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-				                    and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-				                    and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-				                    and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-				                    and rvs-line-attr.attr-code = "rvd-reason"
-				                :
-				                  run trg/userlog.p (
-				                        input 'rvd-reasons'
-				                      , input rvs-line-attr.attr-value
-				                      , input ?
-				                      , input ?
-				                      , input ""
-				                      ) no-error.
-				                  if error-status :error
-				                  then do:
-				                      message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
-				                  end.
-				                end . 
+        				                    where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+          				                    and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+          				                    and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+          				                    and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+          				                    and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+          				                    and rvs-line-attr.attr-code = "rvd-reason"
+        				                :
+        				                  run trg/userlog.p (
+        				                        input 'rvd-reasons'
+        				                      , input rvs-line-attr.attr-value
+        				                      , input ?
+        				                      , input ?
+        				                      , input ""
+        				                      ) no-error.
+        				                  if error-status :error
+        				                  then do:
+        				                      message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
+        				                  end.
+        				                end . 
                             end.
                             if buf_rvs-doc.rvs-type =  {&rvs-shift} then 
                             do: 

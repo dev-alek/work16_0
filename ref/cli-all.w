@@ -958,47 +958,53 @@ DO:
   if attr-option = "":U then do:
       return no-apply.
   end.
-  CASE X_clients.obj-type :
-    when {&cmp}
-    then do:
-      { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_client-reference_add-del':U
-        {&cntxt-global}
-        0
-        '':U
-        0
-        0
-        0
-        0
-        true
-        g#log
-      }
-    end.
-    when {&prs}
-    then do:
-      { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_client-reference-prs_add-del':U
-        {&cntxt-global}
-        0
-        '':U
-        0
-        0
-        0
-        0
-        true
-        g#log
-      }
-    end.
-    WHEN {&shop} OR WHEN {&stock} THEN DO:
-        g#log = NO.
-    END.
-  END CASE.
+  if attr-option = {&LOOKUP}
+  then do :
+    g#log = NO.
+  end .
+  else do :
+    CASE X_clients.obj-type :
+      when {&cmp}
+      then do:
+        { gbl/chk-actg.i
+          v-cntxt-db-num
+          v-cntxt-userid
+          {&action-head-code-main}
+          'actn_client-reference_add-del':U
+          {&cntxt-global}
+          0
+          '':U
+          0
+          0
+          0
+          0
+          true
+          g#log
+        }
+      end.
+      when {&prs}
+      then do:
+        { gbl/chk-actg.i
+          v-cntxt-db-num
+          v-cntxt-userid
+          {&action-head-code-main}
+          'actn_client-reference-prs_add-del':U
+          {&cntxt-global}
+          0
+          '':U
+          0
+          0
+          0
+          0
+          true
+          g#log
+        }
+      end.
+      WHEN {&shop} OR WHEN {&stock} THEN DO:
+          g#log = NO.
+      END.
+    END CASE.
+  end .
   run ref/ca-attrr.p (
                     input parparentproc
                    ,input (if  NOT can-do( {&deleted} , Cli-Status )

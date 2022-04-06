@@ -882,6 +882,18 @@ end.
 &scop manual-edit-attr-supp-np   1
 &scop batch-edit-attr-supp-np   1
 
+/* Атрибут клиента - Собственный поставщик   */
+&scop type-attr-own-supp  {&type-log}
+&scop format-attr-own-supp  "+/"
+&scop label-attr-own-supp  "Собственный поставщик"
+&scop tooltip-attr-own-supp  "Собственный поставщик"
+&scop user-can-edit-attr-own-supp   true
+&scop output-display-attr-own-supp  true
+&scop other-attr-own-supp  '':u
+&scop news-attr-own-supp  true
+&scop manual-edit-attr-own-supp   1
+&scop batch-edit-attr-own-supp   1
+
 /* Атрибут клиента - Поставщик СУГ   */
 &scop type-attr-supp-lgas  {&type-log}
 &scop format-attr-supp-lgas  "+/"
@@ -906,17 +918,65 @@ end.
 &scop manual-edit-attr-tank-farm-for  1
 &scop batch-edit-attr-tank-farm-for  1
 
+/* Атрибут клиента - Нефтеперерабатывающий завод (НПЗ)   */
+&scop type-attr-NPZ  {&type-log}
+&scop format-attr-NPZ  "+/"
+&scop label-attr-NPZ  "Нефтеперерабатывающий завод"
+&scop tooltip-attr-NPZ  "Нефтеперерабатывающий завод"
+&scop user-can-edit-attr-NPZ   true
+&scop output-display-attr-NPZ  true
+&scop other-attr-NPZ  '':u
+&scop news-attr-NPZ  true
+&scop manual-edit-attr-NPZ   1
+&scop batch-edit-attr-NPZ   1
+
+/* Атрибут клиента - код КСК */
+&scop type-attr-code-KSK {&type-char}
+&scop format-attr-code-KSK  "X(256)"
+&scop label-attr-code-KSK   "Код КСК"
+&scop tooltip-attr-code-KSK   "Код КСК"
+&scop user-can-edit-attr-code-KSK  true
+&scop output-display-attr-code-KSK  true
+&scop other-attr-code-KSK  '':u
+&scop news-attr-code-KSK false
+&scop manual-edit-attr-code-KSK  1
+&scop batch-edit-attr-code-KSK  1
+
+/*  Атрибут клиента - код АИС */
+&scop type-attr-code-AIS {&type-char}
+&scop format-attr-code-AIS  "X(256)"
+&scop label-attr-code-AIS   "Код АИС"
+&scop tooltip-attr-code-AIS   "Код АИС"
+&scop user-can-edit-attr-code-AIS  true
+&scop output-display-attr-code-AIS  true
+&scop other-attr-code-AIS  '':u
+&scop news-attr-code-AIS false
+&scop manual-edit-attr-code-AIS  1
+&scop batch-edit-attr-code-AIS  1
+
 /* Атрибут клиента - являестся перевозчиком для:*/
 &scop type-attr-auto-tank-for {&type-char}
 &scop format-attr-auto-tank-for "X(255)"
-&scop label-attr-auto-tank-for "Являестся перевозчиком для:"
-&scop tooltip-attr-auto-tank-for "Являестся перевозчиком для:"
+&scop label-attr-auto-tank-for "Является перевозчиком для:"
+&scop tooltip-attr-auto-tank-for "Является перевозчиком для:"
 &scop user-can-edit-attr-auto-tank-for  true
 &scop output-display-attr-auto-tank-for  true
 &scop other-attr-auto-tank-for 'spr=clntattr-auto-tank-for':u
 &scop news-attr-auto-tank-for true
 &scop manual-edit-attr-auto-tank-for  1
 &scop batch-edit-attr-auto-tank-for  1
+
+/* Атрибут клиента - являестся поставщиком для:*/
+&scop type-attr-owner-code {&type-char}
+&scop format-attr-owner-code "X(255)"
+&scop label-attr-owner-code "Код ПНПО-владельца"
+&scop tooltip-attr-owner-code "Код ПНПО-владельца"
+&scop user-can-edit-attr-owner-code  true
+&scop output-display-attr-owner-code  true
+&scop other-attr-owner-code 'spr=clntattr-owner-code':u
+&scop news-attr-owner-code true
+&scop manual-edit-attr-owner-code  1
+&scop batch-edit-attr-owner-code  1
 
 /* Атрибут клиента - Список юр.лиц, платежами которых можно закрывать ФО:*/
 &scop type-attr-cli-for-close-fo {&type-char}
@@ -1142,11 +1202,21 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-supp-np
       {&attr-temp-full-code}
+      &scop attr-code attr-own-supp
+      {&attr-temp-full-code}
       &scop attr-code attr-supp-lgas
       {&attr-temp-full-code}
       &scop attr-code attr-tank-farm-for
       {&attr-temp-full-code}
+      &scop attr-code attr-NPZ
+      {&attr-temp-full-code}
+      &scop attr-code attr-code-KSK
+      {&attr-temp-full-code}
+      &scop attr-code attr-code-AIS
+      {&attr-temp-full-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-temp-full-code}
+      &scop attr-code attr-owner-code
       {&attr-temp-full-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-temp-full-code}
@@ -1296,11 +1366,21 @@ procedure clntattr-tooltip :
       {&attr-temp-code}
       &scop attr-code attr-supp-np
       {&attr-temp-code}
+      &scop attr-code attr-own-supp
+      {&attr-temp-code}
       &scop attr-code attr-supp-lgas
       {&attr-temp-code}
       &scop attr-code attr-tank-farm-for
       {&attr-temp-code}
+      &scop attr-code attr-NPZ
+      {&attr-temp-code}
+      &scop attr-code attr-code-KSK
+      {&attr-temp-code}
+      &scop attr-code attr-code-AIS
+      {&attr-temp-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-temp-code}
+      &scop attr-code attr-owner-code
       {&attr-temp-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-temp-code}
@@ -1658,11 +1738,21 @@ procedure clntattr-news :
       {&attr-news-code}
       &scop attr-code attr-supp-np
       {&attr-news-code}
+      &scop attr-code attr-own-supp
+      {&attr-news-code}
       &scop attr-code attr-supp-lgas
       {&attr-news-code}
       &scop attr-code attr-tank-farm-for
       {&attr-news-code}
+      &scop attr-code attr-NPZ
+      {&attr-news-code}
+      &scop attr-code attr-code-KSK
+      {&attr-news-code}
+      &scop attr-code attr-code-AIS
+      {&attr-news-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-news-code}
+      &scop attr-code attr-owner-code
       {&attr-news-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-news-code}
@@ -1961,6 +2051,46 @@ procedure clntattr-auto-tank-for :
   end.
 end procedure.  /* clntattr-auto-tank-for */
 
+procedure clntattr-owner-code :
+
+  define input parameter parparentproc as widget-handle no-undo .
+  define input parameter p-obj-type like ub.clients.obj-type no-undo .
+  define input parameter p-obj-code like ub.clients.obj-code no-undo .
+  define input-output parameter p-value as character no-undo .
+  define output parameter p-setted as logical no-undo .
+
+  define variable v-code  as character no-undo.
+  define variable v-value as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    assign
+      v-code = "owner-code"
+      v-value = p-value
+    .
+    run str/clisel1.p
+      ( input parparentproc
+       ,input p-obj-type
+       ,input p-obj-code
+       ,input v-code
+       ,input-output v-value
+      ).
+    if num-entries(v-value) > 1
+    then do :
+      message "Выбрать можно только одного контрагента!" view-as alert-box .
+      return error .
+    end .
+    if v-value <> p-value
+    then do:
+      assign
+        p-value  = v-value
+        p-setted = yes
+      .
+    end.
+  end.
+end procedure.  /* clntattr-owner-code */
+
 procedure clntattr-cli-for-close-fo :
 
   define input parameter parparentproc as widget-handle no-undo .
@@ -2218,11 +2348,21 @@ procedure clntattr-manual-edit :
       {&attr-manual-edit-code}
       &scop attr-code attr-supp-np
       {&attr-manual-edit-code}
+      &scop attr-code attr-own-supp
+      {&attr-manual-edit-code}
       &scop attr-code attr-supp-lgas
       {&attr-manual-edit-code}
       &scop attr-code attr-tank-farm-for
       {&attr-manual-edit-code}
+      &scop attr-code attr-NPZ
+      {&attr-manual-edit-code}
+      &scop attr-code attr-code-KSK
+      {&attr-manual-edit-code}
+      &scop attr-code attr-code-AIS
+      {&attr-manual-edit-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-manual-edit-code}
+      &scop attr-code attr-owner-code
       {&attr-manual-edit-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-manual-edit-code}
@@ -2287,11 +2427,21 @@ procedure clntattr-batch-edit :
       {&attr-batch-edit-code}
       &scop attr-code attr-supp-np
       {&attr-batch-edit-code}
+      &scop attr-code attr-own-supp
+      {&attr-batch-edit-code}
       &scop attr-code attr-supp-lgas
       {&attr-batch-edit-code}
       &scop attr-code attr-tank-farm-for
       {&attr-batch-edit-code}
+      &scop attr-code attr-NPZ
+      {&attr-batch-edit-code}
+      &scop attr-code attr-code-KSK
+      {&attr-batch-edit-code}
+      &scop attr-code attr-code-AIS
+      {&attr-batch-edit-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-batch-edit-code}
+      &scop attr-code attr-owner-code
       {&attr-batch-edit-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-batch-edit-code}
@@ -4661,7 +4811,7 @@ character~
 &scop user-can-edit-attr-petrol   true
 &scop output-display-attr-petrol  true
 &scop other-attr-petrol 'spr-ext=adm\shattrpt.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical,character,character,character,decimal,decimal,character,decimal,decimal,logical':U
+&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical,character,character,character,decimal,decimal,character,decimal,decimal,logical,logical,character,integer':U
 &scop prop-label-list-attr-petrol '~
 Расхождение в инвентаризации по сверке делать без учета погрешности измерения,~
 Алгоритм вычисления плотности для продаж,~
@@ -4685,7 +4835,10 @@ character~
 Отклонение плотности,~
 Отклонение воды~,~
 Допустимый % расхождения массы при приеме СУГ,~
-Контроль свободной емкости при приходе~
+Контроль свободной емкости при приходе,~
+Разрешить ручное заполнение документа приёма НП при поставках с собственных НБ,~
+Обязательные поля в секциях ПН,~
+Время на сканирование QR-кода (мс)~
 '
 &scop global-attr-petrol true
 &scop host-attr-petrol true
@@ -6198,6 +6351,20 @@ end procedure.
 &scop copy-attr-gds-CommodityCode  true
 &scop manual-edit-attr-gds-CommodityCode  1
 &scop batch-edit-attr-gds-CommodityCode  1
+
+/* Коды АИС */
+&scop type-attr-gds-code-AIS {&type-char}
+&scop format-attr-gds-code-AIS  "X(21)"
+&scop label-attr-gds-code-AIS   "Коды АИС"
+&scop tooltip-attr-gds-code-AIS   "Коды АИС"
+&scop user-can-edit-attr-gds-code-AIS  true
+&scop output-display-attr-gds-code-AIS  true
+&scop other-attr-gds-code-AIS ""
+&glob news-attr-gds-code-AIS true
+&scop copy-attr-gds-code-AIS  true
+&scop manual-edit-attr-gds-code-AIS  6
+&scop batch-edit-attr-gds-code-AIS  6
+
 /* Является скоропортящейся продукцией */
 &glob type-attr-perishable {&type-log}
 &glob format-attr-perishable  "+/-"
@@ -6603,6 +6770,8 @@ procedure gds-attr-name :
       &scop attr-code attr-gds-ptrl-densities
       {&attr-temp-full-code}
       &scop attr-code attr-gds-CommodityCode
+      {&attr-temp-full-code}
+      &scop attr-code attr-gds-code-AIS
       {&attr-temp-full-code}      
       &scop attr-code attr-length-of
       {&attr-temp-full-code}
@@ -6709,7 +6878,9 @@ do
       &scop attr-code attr-gds-ptrl-densities
       {&attr-temp-code}
       &scop attr-code attr-gds-CommodityCode
-      {&attr-temp-code}      
+      {&attr-temp-code}    
+      &scop attr-code attr-gds-code-AIS
+      {&attr-temp-code}  
       &scop attr-code attr-length-of
       {&attr-temp-code}
       &scop attr-code attr-width-of
@@ -7051,6 +7222,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-gds-CommodityCode
       {&attr-news-code}
+      &scop attr-code attr-gds-code-AIS
+      {&attr-news-code}
       &scop attr-code attr-length-of
       {&attr-news-code}
       &scop attr-code attr-width-of
@@ -7150,7 +7323,9 @@ procedure gds-attr-copy :
       &scop attr-code attr-gds-ptrl-densities
       {&attr-copy-code}
       &scop attr-code attr-gds-CommodityCode
-      {&attr-copy-code}      
+      {&attr-copy-code}  
+      &scop attr-code attr-gds-code-AIS
+      {&attr-copy-code}    
       &scop attr-code attr-length-of
       {&attr-copy-code}
       &scop attr-code attr-width-of
@@ -7838,6 +8013,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-gds-CommodityCode
       {&attr-manual-edit-code}
+      &scop attr-code attr-gds-code-AIS
+      {&attr-manual-edit-code}
       &scop attr-code attr-length-of
       {&attr-manual-edit-code}
       &scop attr-code attr-width-of
@@ -7932,6 +8109,8 @@ do
       &scop attr-code attr-gds-ptrl-densities
       {&attr-batch-edit-code}
       &scop attr-code attr-gds-CommodityCode
+      {&attr-batch-edit-code}
+      &scop attr-code attr-gds-code-AIS
       {&attr-batch-edit-code}
       &scop attr-code attr-length-of
       {&attr-batch-edit-code}

@@ -2940,7 +2940,7 @@ end.
           {&create-thbj-attr}.
       end.
 
-      v-prop-code = "{&bef-attr-petrol_autopump-izm},{&bef-attr-petrol_autopump},{&bef-attr-petrol_avtinvpm},{&bef-attr-petrol_rvsnmter},{&bef-attr-petrol_olddens},{&bef-attr-petrol_calc-free-vol}".
+      v-prop-code = "{&bef-attr-petrol_autopump-izm},{&bef-attr-petrol_autopump},{&bef-attr-petrol_avtinvpm},{&bef-attr-petrol_rvsnmter},{&bef-attr-petrol_olddens},{&bef-attr-petrol_calc-free-vol},{&bef-attr-petrol_rvd-own-nb}".
 &scop ptype logical
 &scop prop-value no
 &scop prop-code entry(v-ii, v-prop-code)
@@ -2948,11 +2948,8 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-      do v-ii = 1 to num-entries(v-prop-code):
-        {&create-thbj-attr}.
-      end.
 
-       v-prop-code = "{&bef-attr-petrol_dop-info}" .
+      v-prop-code = "{&bef-attr-petrol_dop-info}" .
 &scop ptype character
 &scop prop-value 'autoent,car-num,time-income,fio-driver,ptbobj':U
 &scop prop-code  entry(v-ii,v-prop-code)
@@ -2960,24 +2957,41 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-          
-        v-prop-code = "{&bef-attr-petrol_Delta-mass-horiz}".
-            &scop ptype character
-            &scop prop-value ""
-            &scop prop-code entry(v-ii, v-prop-code)
-    
-        do v-ii = 1 to num-entries(v-prop-code):
-          {&create-thbj-attr}.
-        end.
+      
+      v-prop-code = "{&bef-attr-petrol_sec-fields}" .
+&scop ptype character
+&scop prop-value '':U
+&scop prop-code  entry(v-ii,v-prop-code)
 
-        v-prop-code = "{&bef-attr-petrol_Delta-mass-vert}".
-            &scop ptype character
-            &scop prop-value ""
-            &scop prop-code entry(v-ii, v-prop-code)
-    
-        do v-ii = 1 to num-entries(v-prop-code):
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+          
+      v-prop-code = "{&bef-attr-petrol_Delta-mass-horiz}".
+          &scop ptype character
+          &scop prop-value ""
+          &scop prop-code entry(v-ii, v-prop-code)
+  
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
+      v-prop-code = "{&bef-attr-petrol_Delta-mass-vert}".
+          &scop ptype character
+          &scop prop-value ""
+          &scop prop-code entry(v-ii, v-prop-code)
+  
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      
+      v-prop-code = "{&bef-attr-petrol_qr-scan-time}".
+&scop ptype integer
+&scop prop-value 5000
+&scop prop-code entry(v-ii, v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
           {&create-thbj-attr}.
-        end.
+      end.
     end.
     when {&attr-staff-options} then do:
     v-prop-code = "{&bef-attr-staff-options_noanshftstaff},{&bef-attr-staff-options_obyznumbukv}".

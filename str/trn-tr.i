@@ -298,6 +298,57 @@ if ref-list <> "" then do:
 &if "{1}" <> "in" &then if pardoc-mode = {&add-def} then &endif
   disp ub.clients.obj-type @ t-doc.cli-type with frame {&frame-name}.
 end.
+if trn-type = {&is-fuel}
+then do :
+  define variable v-tmp-char like ub.thbj-attr.property-value-character no-undo .
+  define variable v-tmp-date      like ub.thbj-attr.property-value-date    no-undo .
+  define variable v-tmp-decimal   like ub.thbj-attr.property-value-decimal no-undo .
+  define variable v-tmp-integer   like ub.thbj-attr.property-value-integer no-undo .
+  define variable v-rvd-own-nb as logical no-undo .
+  define variable v-rvd-own-nb-type as   character no-undo .
+  
+  find ub.clients where ub.clients.obj-code = input frame {&frame-name} t-doc.cli-code
+               and ub.clients.obj-type = input frame {&frame-name} t-doc.cli-type no-error.
+  if not available ub.clients then do:
+    if input frame {&frame-name} t-doc.cli-code <> ? and input t-doc.cli-type <> ? then
+      message "Неправильный код или тип контрагента.".
+    apply "entry" to t-doc.cli-code in frame {&frame-name}.
+    return no-apply .
+  end.
+  
+  run adm/shattri.p (
+      input "get":U
+      ,input t-doc.obj-type
+      ,input t-doc.obj-code
+      ,input {&attr-petrol}
+      ,input  "rvd-own-nb"
+      ,output v-tmp-char
+      ,output v-tmp-date
+      ,output v-tmp-decimal
+      ,output v-tmp-integer
+      ,output v-rvd-own-nb
+      ,output v-rvd-own-nb-type
+      ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+      ) no-error .
+  if error-status :error then v-rvd-own-nb = false .
+  if v-rvd-own-nb = false
+  then do :
+    find first ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type
+                                         and ub.clients-attr.obj-code = ub.clients.obj-code
+                                         and ub.clients-attr.attr-code = {&attr-owner-code}
+                                         no-error .
+    if available ub.clients-attr
+    and ub.clients-attr.attr-value > ""
+    then do :
+      if ub.clients-attr.attr-value = "орг" + string(t-doc.host-code)
+      then do :                            
+        message "Для данного поставщика документ может быть заполнен только в автоматическом режиме путем сканирования 2D кода. Просканируйте код с ТТН или обратитесь к администратору Системы для изменения настроек.".
+        run str/trnscanqr.w (parparentproc, t-doc.doc-code, "", this-procedure).
+        return no-apply .
+      end .
+    end .
+  end .                                     
+end .
 run check-cli no-error.
 if error-status :error then return no-apply.
 &if "{1}" = "in" &then run fill-mol in this-procedure. &endif
@@ -343,6 +394,7 @@ define variable v-num            as   integer       initial 1         no-undo.
 define variable varis-perm       as   logical       initial no        no-undo.
 define buffer bf-f_contract-specif    for ub.contract-specif.
 define variable v-master as character no-undo.
+
 
 define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
 run gbl/getobjsrvhndl.p (input-output ObjSrv).

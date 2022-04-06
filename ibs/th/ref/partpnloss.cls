@@ -49,5 +49,9 @@ class ibs.th.ref.partpnloss:
   define property AutoNormLoss as decimal init 0 no-undo
     get.
     set.
+    
+  define property GroupNP as character no-undo
+    get.
+    set.
 
 end class.

@@ -1554,13 +1554,35 @@ do:
   define variable v-new-fact-qnty        like ub.doc-line.fact-qnty    no-undo .
   define variable v-new-density          like ub.doc-line.fact-density no-undo .
   define variable v-new-cli-fact-qnty    like ub.doc-line.fact-qnty    no-undo .
+  define variable v-edit-doc-pl-mode as character no-undo .
+  define variable d_fact-qnty     as decimal   no-undo initial 0.00 .
+  define variable d_doc-qnty      as decimal   no-undo initial 0.00 .
+  define variable d_cli-fact-qnty as decimal   no-undo initial 0.00 .
+  define variable d_cli-doc-qnty  as decimal   no-undo initial 0.00 .
+  
+  define variable pl_fact-qnty     as decimal   no-undo initial 0.00 .
+  define variable pl_doc-qnty      as decimal   no-undo initial 0.00 .
+  define variable pl_cli-qnty      as decimal   no-undo initial 0.00 .
+  define variable pl_doc-density   as decimal   no-undo initial 0.00 .
+  define variable pl_fact-density  as decimal   no-undo initial 0.00 .
+  define variable pl-list          as character no-undo initial "" .
+  define variable pl-list-old      as character no-undo initial "" .
+
+  define variable v-log            as logical   no-undo .
+  define variable pl-changed       as logical no-undo init false .
+  define variable pl-setted        as logical no-undo init false .
+  define variable ii               as integer no-undo .
+  define variable pl               as integer no-undo .
 
   assign
     v-new-fact-qnty     = tt-fr-doc-line.fact-qnty
     v-new-density       = tt-fr-doc-line.fact-density
     v-new-cli-fact-qnty = tt-fr-doc-line.fact-qnty-kg
   .
-  if parline-mode <> {&add-def} then infoSectionsTotal:GetDBAllAttr().
+  if parline-mode <> {&add-def}
+  or v-is-looksec
+  then
+    infoSectionsTotal:GetDBAllAttr().
   tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
   wait-for tanksForm:ShowDialog().
 
@@ -1576,29 +1598,826 @@ do:
   if error-status :error then do:
     return no-apply.
   end.*/
+  
+  if v-is-looksec
+  then do :
+    infoSectionsTotal:SaveDBNoCheck() .
+    infoSectionsTotal:WasSetting = true . 
+  end .
 
   if infoSectionsTotal:WasSetting = false 
   then infoSectionsTotal:GetDBAllAttr().
   else do:
+    for each tt-doc-pl,
+    first ub.place no-lock where ub.place.pl-code = tt-doc-pl.pl-code :
+      pl-list-old = pl-list-old + "," + ub.place.loc1 .
+    end .
+    pl-list-old = trim(pl-list-old, ",") .
+  
+    do ii = 1 to infoSectionsTotal:SectionNum :
+      infoSectionsTotal:GetInfoSectionProp (ii).
+      if infoSectionsTotal:InfoSectionCurr:FactQnty = 0
+      or infoSectionsTotal:InfoSectionCurr:FactQnty = ?
+      then do :
+        infoSectionsTotal:InfoSectionCurr:FactQnty = infoSectionsTotal:InfoSectionCurr:DocQnty.
+      end .
+      if infoSectionsTotal:InfoSectionCurr:FactDensity = 0
+      or infoSectionsTotal:InfoSectionCurr:FactDensity = ?
+      then do :
+        infoSectionsTotal:InfoSectionCurr:FactDensity = infoSectionsTotal:InfoSectionCurr:DocDensity.
+      end .
+      if lookup(infoSectionsTotal:InfoSectionCurr:ListTank, pl-list) = 0
+      then do :
+        pl-list = pl-list + "," + infoSectionsTotal:InfoSectionCurr:ListTank .
+      end .
+    end .
+    pl-list = trim(pl-list, ",") .
+    
+    if pl-list <> pl-list-old
+    then do :
+      pl-changed = yes .
+    end .
+    
+    if pl-changed
+    then do :
+      for each tt-doc-pl :
+        delete tt-doc-pl .
+      end .
+    end .
+    
     infoSectionsTotal:CalculateTotal().
+
     if not infoSectionsTotal:CliQntyInput then do:
       tt-fr-doc-line.doc-density:screen-value = string (infoSectionsTotal:DocDensityAvg).
       tt-fr-doc-line.doc-qnty:screen-value = string (infoSectionsTotal:DocQntyTotal).
-      apply "leave" to tt-fr-doc-line.doc-qnty in frame {&frame-name} .
-      apply "leave" to tt-fr-doc-line.doc-density in frame {&frame-name} .
+      if input frame {&frame-name} tt-fr-doc-line.doc-qnty <> tt-fr-doc-line.doc-qnty
+      then do:
+        assign
+          frame {&frame-name} tt-fr-doc-line.doc-qnty
+        .
+        run calc-all in this-procedure
+          ( input vardoc-qnty-calc
+          ) no-error.
+        if error-status :error then do:
+          return no-apply .
+        end.
+        if trim(pl-list) = ""
+        then do :
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input ({&autoupdate})
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input buf_goods.gds-code
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-density
+             ,input tt-fr-doc-line.cli-qnty
+             ,input tt-fr-doc-line.doc-qnty
+             ,input tt-fr-doc-line.fact-qnty
+             ,input tt-fr-doc-line.doc-qnty  * tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-qnty * tt-fr-doc-line.fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+        end .
+        else
+        do pl = 1 to num-entries(pl-list) :
+          assign
+            pl_cli-qnty   = 0
+            pl_doc-qnty   = 0
+            pl_fact-qnty  = 0
+          .
+          sect_ :
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            infoSectionsTotal:GetInfoSectionProp (ii).
+            if infoSectionsTotal:InfoSectionCurr:ListTank <> entry(pl, pl-list)
+            then
+              next sect_ .
+              
+            assign
+              pl_cli-qnty   = pl_cli-qnty + (infoSectionsTotal:InfoSectionCurr:DocDensity * infoSectionsTotal:InfoSectionCurr:DocQnty)
+              pl_doc-qnty   = pl_doc-qnty + infoSectionsTotal:InfoSectionCurr:DocQnty
+              pl_fact-qnty  = pl_fact-qnty + infoSectionsTotal:InfoSectionCurr:FactQnty
+            .
+          end . 
+          pl_doc-density = pl_cli-qnty / pl_doc-qnty .
+          pl_fact-density = pl_cli-qnty / pl_fact-qnty no-error .
+          
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input ({&autoupdate} + {&delim-par} + {&delim-par} + "place=" + entry(pl, pl-list))
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input infoSectionsTotal:GdsCode
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input pl_doc-density
+             ,input (if pl_fact-density > 0 then pl_fact-density else pl_doc-density)
+             ,input pl_cli-qnty
+             ,input pl_doc-qnty
+             ,input pl_fact-qnty
+             ,input pl_doc-qnty * pl_doc-density
+             ,input pl_fact-qnty * pl_fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+          pl-setted = yes .
+        end .
+      end .
+      if input frame {&frame-name} tt-fr-doc-line.doc-density <> tt-fr-doc-line.doc-density
+      then do:
+        assign
+          frame {&frame-name} tt-fr-doc-line.doc-density
+        .
+        assign
+          tt-fr-doc-line.fact-density  = tt-fr-doc-line.doc-density
+          tt-fr-doc-line.cli-base-rate = 1 / tt-fr-doc-line.doc-density
+        .
+        run calc-all in this-procedure
+          ( input vardensity-calc
+          ) no-error .
+        if error-status :error then do:
+          return no-apply .
+        end.
+        if trim(pl-list) = ""
+        then do :
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input ({&autoupdate} + {&delim-par} + "update-dens":U)
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input buf_goods.gds-code
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-density
+             ,input tt-fr-doc-line.cli-qnty
+             ,input tt-fr-doc-line.doc-qnty
+             ,input tt-fr-doc-line.fact-qnty
+             ,input tt-fr-doc-line.doc-qnty  * tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-qnty * tt-fr-doc-line.fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+        end .
+        else
+        do pl = 1 to num-entries(pl-list) :
+          assign
+            pl_cli-qnty   = 0
+            pl_doc-qnty   = 0
+            pl_fact-qnty  = 0
+          .
+          sect_ :
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            infoSectionsTotal:GetInfoSectionProp (ii).
+            if infoSectionsTotal:InfoSectionCurr:ListTank <> entry(pl, pl-list)
+            then
+              next sect_ .
+              
+            assign
+              pl_cli-qnty   = pl_cli-qnty + (infoSectionsTotal:InfoSectionCurr:DocDensity * infoSectionsTotal:InfoSectionCurr:DocQnty)
+              pl_doc-qnty   = pl_doc-qnty + infoSectionsTotal:InfoSectionCurr:DocQnty
+              pl_fact-qnty  = pl_fact-qnty + infoSectionsTotal:InfoSectionCurr:FactQnty
+            .
+          end . 
+          pl_doc-density = pl_cli-qnty / pl_doc-qnty .
+          pl_fact-density = pl_cli-qnty / pl_fact-qnty no-error .
+          
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input ({&autoupdate} + {&delim-par} + "update-dens":U + {&delim-par} + "place=" + entry(pl, pl-list))
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input infoSectionsTotal:GdsCode
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input pl_doc-density
+             ,input (if pl_fact-density > 0 then pl_fact-density else pl_doc-density)
+             ,input pl_cli-qnty
+             ,input pl_doc-qnty
+             ,input pl_fact-qnty
+             ,input pl_doc-qnty * pl_doc-density
+             ,input pl_fact-qnty * pl_fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+          pl-setted = yes .
+        end .
+      end .
     end.
     if not infoSectionsTotal:DensityInput then do:
       tt-fr-doc-line.doc-qnty:screen-value = string (infoSectionsTotal:DocQntyTotal).
       tt-fr-doc-line.cli-qnty:screen-value = string (infoSectionsTotal:CliQntyTotal).
-      apply "leave" to tt-fr-doc-line.doc-qnty in frame {&frame-name} .
-      apply "leave" to tt-fr-doc-line.cli-qnty in frame {&frame-name} .
+      if input frame {&frame-name} tt-fr-doc-line.doc-qnty <> tt-fr-doc-line.doc-qnty
+      then do:
+        assign
+          frame {&frame-name} tt-fr-doc-line.doc-qnty
+        .
+        run calc-all in this-procedure
+          ( input vardoc-qnty-calc
+          ) no-error.
+        if error-status :error then do:
+          return no-apply .
+        end.
+        if trim(pl-list) = ""
+        then do :
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input ({&autoupdate})
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input buf_goods.gds-code
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-density
+             ,input tt-fr-doc-line.cli-qnty
+             ,input tt-fr-doc-line.doc-qnty
+             ,input tt-fr-doc-line.fact-qnty
+             ,input tt-fr-doc-line.doc-qnty  * tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-qnty * tt-fr-doc-line.fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+        end .
+        else
+        do pl = 1 to num-entries(pl-list) :
+          assign
+            pl_cli-qnty   = 0
+            pl_doc-qnty   = 0
+            pl_fact-qnty  = 0
+          .
+          sect_ :
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            infoSectionsTotal:GetInfoSectionProp (ii).
+            if infoSectionsTotal:InfoSectionCurr:ListTank <> entry(pl, pl-list)
+            then
+              next sect_ .
+              
+            assign
+              pl_cli-qnty   = pl_cli-qnty + infoSectionsTotal:InfoSectionCurr:CliQnty
+              pl_doc-qnty   = pl_doc-qnty + infoSectionsTotal:InfoSectionCurr:DocQnty
+              pl_fact-qnty  = pl_fact-qnty + infoSectionsTotal:InfoSectionCurr:FactQnty
+            .
+          end . 
+          pl_doc-density = pl_cli-qnty / pl_doc-qnty .
+          pl_fact-density = pl_cli-qnty / pl_fact-qnty no-error .
+          
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input ({&autoupdate} + {&delim-par} + {&delim-par} + "place=" + entry(pl, pl-list))
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input infoSectionsTotal:GdsCode
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input pl_doc-density
+             ,input (if pl_fact-density > 0 then pl_fact-density else pl_doc-density)
+             ,input pl_cli-qnty
+             ,input pl_doc-qnty
+             ,input pl_fact-qnty
+             ,input pl_doc-qnty * pl_doc-density
+             ,input pl_fact-qnty * pl_fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+          pl-setted = yes .
+        end .
+      end .
+      if input frame {&frame-name} tt-fr-doc-line.cli-qnty <> tt-fr-doc-line.cli-qnty
+      then do:
+        assign
+          frame {&frame-name} tt-fr-doc-line.cli-qnty
+        .
+        run calc-all    in this-procedure ( input varcli-qnty-calc ) no-error .
+        if error-status :error then return no-apply.
+        run calc-vat-pc in this-procedure.
+        
+        assign
+          v-edit-doc-pl-mode = {&autoupdate}
+        .
+        if is-petrolium = yes
+          and is-pieces = no
+          and tt-fr-doc-line.cli-qnty :sensitive in frame {&frame-name}
+          and tt-fr-doc-line.doc-qnty :sensitive in frame {&frame-name}
+        then do:
+          assign
+            v-edit-doc-pl-mode = v-edit-doc-pl-mode + {&delim-par} + "update-dens-cli":U
+          .
+        end.
+        else do :
+          assign
+            v-edit-doc-pl-mode = v-edit-doc-pl-mode + {&delim-par}
+          .
+        end .
+        if trim(pl-list) = ""
+        then do :
+          v-edit-doc-pl-mode = trim(v-edit-doc-pl-mode, {&delim-par}) .
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input (v-edit-doc-pl-mode)
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input buf_goods.gds-code
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-density
+             ,input tt-fr-doc-line.cli-qnty
+             ,input tt-fr-doc-line.doc-qnty
+             ,input tt-fr-doc-line.fact-qnty
+             ,input tt-fr-doc-line.doc-qnty  * tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-qnty * tt-fr-doc-line.fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+        end .
+        else
+        do pl = 1 to num-entries(pl-list) :
+          assign
+            pl_cli-qnty   = 0
+            pl_doc-qnty   = 0
+            pl_fact-qnty  = 0
+          .
+          sect_ :
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            infoSectionsTotal:GetInfoSectionProp (ii).
+            if infoSectionsTotal:InfoSectionCurr:ListTank <> entry(pl, pl-list)
+            then
+              next sect_ .
+              
+            assign
+              pl_cli-qnty   = pl_cli-qnty + infoSectionsTotal:InfoSectionCurr:CliQnty
+              pl_doc-qnty   = pl_doc-qnty + infoSectionsTotal:InfoSectionCurr:DocQnty
+              pl_fact-qnty  = pl_fact-qnty + infoSectionsTotal:InfoSectionCurr:FactQnty
+            .
+          end . 
+          pl_doc-density = pl_cli-qnty / pl_doc-qnty .
+          pl_fact-density = pl_cli-qnty / pl_fact-qnty no-error .
+          
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input (v-edit-doc-pl-mode + {&delim-par} + "place=" + infoSectionsTotal:InfoSectionCurr:ListTank)
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input infoSectionsTotal:GdsCode
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input pl_doc-density
+             ,input (if pl_fact-density > 0 then pl_fact-density else pl_doc-density)
+             ,input pl_cli-qnty
+             ,input pl_doc-qnty
+             ,input pl_fact-qnty
+             ,input pl_doc-qnty * pl_doc-density
+             ,input pl_fact-qnty * pl_fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+          pl-setted = yes .
+        end .
+      end .
     end.
     if not infoSectionsTotal:DocQntyInput then do:
       tt-fr-doc-line.doc-density:screen-value = string (infoSectionsTotal:DocDensityAvg).
       tt-fr-doc-line.cli-qnty:screen-value = string (infoSectionsTotal:CliQntyTotal).
-      apply "leave" to tt-fr-doc-line.cli-qnty in frame {&frame-name} .
-      apply "leave" to tt-fr-doc-line.doc-density in frame {&frame-name} .
+      if input frame {&frame-name} tt-fr-doc-line.cli-qnty <> tt-fr-doc-line.cli-qnty
+      then do:
+        assign
+          frame {&frame-name} tt-fr-doc-line.cli-qnty
+        .
+        run calc-all    in this-procedure ( input varcli-qnty-calc ) no-error .
+        if error-status :error then return no-apply.
+        run calc-vat-pc in this-procedure.
+        
+        assign
+          v-edit-doc-pl-mode = {&autoupdate}
+        .
+        if is-petrolium = yes
+          and is-pieces = no
+          and tt-fr-doc-line.cli-qnty :sensitive in frame {&frame-name}
+          and tt-fr-doc-line.doc-qnty :sensitive in frame {&frame-name}
+        then do:
+          assign
+            v-edit-doc-pl-mode = v-edit-doc-pl-mode + {&delim-par} + "update-dens-cli":U
+          .
+        end.
+        else do :
+          assign
+            v-edit-doc-pl-mode = v-edit-doc-pl-mode + {&delim-par}
+          .
+        end .
+        if trim(pl-list) = ""
+        then do :
+          v-edit-doc-pl-mode = trim(v-edit-doc-pl-mode, {&delim-par}) .
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input (v-edit-doc-pl-mode)
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input buf_goods.gds-code
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-density
+             ,input tt-fr-doc-line.cli-qnty
+             ,input tt-fr-doc-line.doc-qnty
+             ,input tt-fr-doc-line.fact-qnty
+             ,input tt-fr-doc-line.doc-qnty  * tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-qnty * tt-fr-doc-line.fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+        end .
+        else
+        do pl = 1 to num-entries(pl-list) :
+          assign
+            pl_cli-qnty   = 0
+            pl_doc-qnty   = 0
+            pl_fact-qnty  = 0
+          .
+          sect_ :
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            infoSectionsTotal:GetInfoSectionProp (ii).
+            if infoSectionsTotal:InfoSectionCurr:ListTank <> entry(pl, pl-list)
+            then
+              next sect_ .
+              
+            assign
+              pl_cli-qnty   = pl_cli-qnty + infoSectionsTotal:InfoSectionCurr:CliQnty
+              pl_doc-qnty   = pl_doc-qnty + infoSectionsTotal:InfoSectionCurr:DocQnty
+              pl_fact-qnty  = pl_fact-qnty + infoSectionsTotal:InfoSectionCurr:FactQnty
+            .
+          end . 
+          pl_doc-density = pl_cli-qnty / pl_doc-qnty .
+          pl_fact-density = pl_cli-qnty / pl_fact-qnty no-error .
+          
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input (v-edit-doc-pl-mode + {&delim-par} + "place=" + entry(pl, pl-list))
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input infoSectionsTotal:GdsCode
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input pl_doc-density
+             ,input (if pl_fact-density > 0 then pl_fact-density else pl_doc-density)
+             ,input pl_cli-qnty
+             ,input pl_doc-qnty
+             ,input pl_fact-qnty
+             ,input pl_doc-qnty * pl_doc-density
+             ,input pl_fact-qnty * pl_fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+          pl-setted = yes .
+        end.
+      end.
+      if input frame {&frame-name} tt-fr-doc-line.doc-density <> tt-fr-doc-line.doc-density
+      then do:
+        assign
+          frame {&frame-name} tt-fr-doc-line.doc-density
+        .
+        assign
+          tt-fr-doc-line.fact-density  = tt-fr-doc-line.doc-density
+          tt-fr-doc-line.cli-base-rate = 1 / tt-fr-doc-line.doc-density
+        .
+        run calc-all in this-procedure
+          ( input vardensity-calc
+          ) no-error .
+        if error-status :error then do:
+          return no-apply .
+        end.
+        if trim(pl-list) = ""
+        then do :
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input ({&autoupdate} + {&delim-par} + "update-dens":U)
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input buf_goods.gds-code
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-density
+             ,input tt-fr-doc-line.cli-qnty
+             ,input tt-fr-doc-line.doc-qnty
+             ,input tt-fr-doc-line.fact-qnty
+             ,input tt-fr-doc-line.doc-qnty  * tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-qnty * tt-fr-doc-line.fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+        end .
+        else
+        do pl = 1 to num-entries(pl-list) :
+          assign
+            pl_cli-qnty   = 0
+            pl_doc-qnty   = 0
+            pl_fact-qnty  = 0
+          .
+          sect_ :
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            infoSectionsTotal:GetInfoSectionProp (ii).
+            if infoSectionsTotal:InfoSectionCurr:ListTank <> entry(pl, pl-list)
+            then
+              next sect_ .
+              
+            assign
+              pl_cli-qnty   = pl_cli-qnty + infoSectionsTotal:InfoSectionCurr:CliQnty
+              pl_doc-qnty   = pl_doc-qnty + infoSectionsTotal:InfoSectionCurr:DocQnty
+              pl_fact-qnty  = pl_fact-qnty + infoSectionsTotal:InfoSectionCurr:FactQnty
+            .
+          end . 
+          pl_doc-density = pl_cli-qnty / pl_doc-qnty .
+          pl_fact-density = pl_cli-qnty / pl_fact-qnty no-error .
+          
+          run str/doc-pls.w
+            ( input parparentproc
+             ,input ({&autoupdate} + {&delim-par} + "update-dens":U + {&delim-par} + "place=" + entry(pl, pl-list))
+             ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+             ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+             ,input t-doc.doc-code
+             ,input infoSectionsTotal:GdsCode
+             ,input tt-fr-doc-line.unit-cli
+             ,input tt-fr-doc-line.cli-base-rate
+             ,input pl_doc-density
+             ,input (if pl_fact-density > 0 then pl_fact-density else pl_doc-density)
+             ,input pl_cli-qnty
+             ,input pl_doc-qnty
+             ,input pl_fact-qnty
+             ,input pl_doc-qnty * pl_doc-density
+             ,input pl_fact-qnty * pl_fact-density
+             ,input ?
+             ,input ?
+             ,input ?
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Ошибка при разбиении кол-ва по местам хранения." skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+          end.
+          pl-setted = yes .
+        end .
+      end .
     end.
+    
+    if pl-changed
+    and not pl-setted
+    and trim(pl-list) > ""
+    then do :
+      do pl = 1 to num-entries(pl-list) :
+        assign
+          pl_cli-qnty   = 0
+          pl_doc-qnty   = 0
+          pl_fact-qnty  = 0
+        .
+        sect_ :
+        do ii = 1 to infoSectionsTotal:SectionNum :
+          infoSectionsTotal:GetInfoSectionProp (ii).
+          if infoSectionsTotal:InfoSectionCurr:ListTank <> entry(pl, pl-list)
+          then
+            next sect_ .
+            
+          assign
+            pl_cli-qnty   = pl_cli-qnty + (infoSectionsTotal:InfoSectionCurr:DocDensity * infoSectionsTotal:InfoSectionCurr:DocQnty)
+            pl_doc-qnty   = pl_doc-qnty + infoSectionsTotal:InfoSectionCurr:DocQnty
+            pl_fact-qnty  = pl_fact-qnty + infoSectionsTotal:InfoSectionCurr:FactQnty
+          .
+        end . 
+        pl_doc-density = pl_cli-qnty / pl_doc-qnty .
+        pl_fact-density = pl_cli-qnty / pl_fact-qnty no-error .
+        
+        run str/doc-pls.w
+          ( input parparentproc
+           ,input ({&autoupdate} + {&delim-par} + {&delim-par} + "place=" + entry(pl, pl-list))
+           ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
+           ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
+           ,input t-doc.doc-code
+           ,input infoSectionsTotal:GdsCode
+           ,input tt-fr-doc-line.unit-cli
+           ,input tt-fr-doc-line.cli-base-rate
+           ,input pl_doc-density
+           ,input (if pl_fact-density > 0 then pl_fact-density else pl_doc-density)
+           ,input pl_cli-qnty
+           ,input pl_doc-qnty
+           ,input pl_fact-qnty
+           ,input pl_doc-qnty * pl_doc-density
+           ,input pl_fact-qnty * pl_fact-density
+           ,input ?
+           ,input ?
+           ,input ?
+          ) no-error .
+        if error-status :error then do:
+          message
+            vss-workfile vss-revision vss-description skip
+            "Ошибка при разбиении кол-ва по местам хранения." skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+        end.
+        pl-setted = yes .
+      end .
+    end .
+    
+    if parline-mode <> {&lookup} then do:
+  
+      for each tt-doc-pl no-lock
+      on error undo, return no-apply
+      :
+        assign
+          d_fact-qnty     = d_fact-qnty     + tt-doc-pl.fact-qnty
+          d_doc-qnty      = d_doc-qnty      + tt-doc-pl.doc-qnty
+          d_cli-fact-qnty = d_cli-fact-qnty + tt-doc-pl.cli-fact-qnty
+          d_cli-doc-qnty  = d_cli-doc-qnty  + tt-doc-pl.cli-doc-qnty
+        .
+      end. /* for each next_doc-pl */
+  
+      if tt-fr-doc-line.doc-qnty <> d_doc-qnty
+        or
+        ( tt-fr-doc-line.doc-qnty :sensitive in frame {&FRAME-NAME} = true
+           and absolute( tt-fr-doc-line.cli-qnty - d_cli-doc-qnty ) < 0.0011
+        )
+        or
+        ( tt-fr-doc-line.cli-qnty :sensitive in frame {&FRAME-NAME} = true
+          and tt-fr-doc-line.cli-qnty <> d_cli-doc-qnty
+        )
+      then do:
+          assign
+            tt-fr-doc-line.doc-qnty = d_doc-qnty
+            tt-fr-doc-line.cli-qnty = d_cli-doc-qnty
+            tt-fr-doc-line.doc-density = tt-fr-doc-line.cli-qnty / tt-fr-doc-line.doc-qnty
+          .
+          display
+            tt-fr-doc-line.doc-qnty
+            tt-fr-doc-line.cli-qnty
+            tt-fr-doc-line.doc-density
+            with frame {&FRAME-NAME} .
+      end.
+  
+      if varupd-fact-qnty = true
+        and not( t-doc.status_ = {&wayb}
+                 and t-doc.flag_ = false
+               )
+        and ( tt-fr-doc-line.fact-qnty <> d_fact-qnty
+              or absolute( tt-fr-doc-line.fact-qnty-kg - d_cli-fact-qnty ) < 0.0011
+            )
+      then do:
+          assign
+            tt-fr-doc-line.fact-qnty    = d_fact-qnty
+            tt-fr-doc-line.fact-qnty-kg = d_cli-fact-qnty
+            tt-fr-doc-line.fact-density = tt-fr-doc-line.fact-qnty-kg / tt-fr-doc-line.fact-qnty
+          .
+          display
+            tt-fr-doc-line.fact-qnty
+            tt-fr-doc-line.fact-qnty-kg
+            tt-fr-doc-line.fact-density
+            with frame {&FRAME-NAME}
+          .
+      end.
+  
+      run check-place-rsrv in this-procedure
+        no-error .
+      if error-status :error then do:
+        return no-apply  .
+      end.
+  
+    end. /* if line-mode <> {&lookup} */
+/*    end .                                                                                  */
+/*    else do :                                                                              */
+/*      if not infoSectionsTotal:CliQntyInput then do:                                       */
+/*        tt-fr-doc-line.doc-density:screen-value = string (infoSectionsTotal:DocDensityAvg).*/
+/*        tt-fr-doc-line.doc-qnty:screen-value = string (infoSectionsTotal:DocQntyTotal).    */
+/*        apply "leave" to tt-fr-doc-line.doc-qnty in frame {&frame-name} .                  */
+/*        apply "leave" to tt-fr-doc-line.doc-density in frame {&frame-name} .               */
+/*      end.                                                                                 */
+/*      if not infoSectionsTotal:DensityInput then do:                                       */
+/*        tt-fr-doc-line.doc-qnty:screen-value = string (infoSectionsTotal:DocQntyTotal).    */
+/*        tt-fr-doc-line.cli-qnty:screen-value = string (infoSectionsTotal:CliQntyTotal).    */
+/*        apply "leave" to tt-fr-doc-line.doc-qnty in frame {&frame-name} .                  */
+/*        apply "leave" to tt-fr-doc-line.cli-qnty in frame {&frame-name} .                  */
+/*      end.                                                                                 */
+/*      if not infoSectionsTotal:DocQntyInput then do:                                       */
+/*        tt-fr-doc-line.doc-density:screen-value = string (infoSectionsTotal:DocDensityAvg).*/
+/*        tt-fr-doc-line.cli-qnty:screen-value = string (infoSectionsTotal:CliQntyTotal).    */
+/*        apply "leave" to tt-fr-doc-line.cli-qnty in frame {&frame-name} .                  */
+/*        apply "leave" to tt-fr-doc-line.doc-density in frame {&frame-name} .               */
+/*      end.                                                                                 */
+/*    end.                                                                                   */
   end.
   
 /*     ,input-output v-new-fact-qnty*/

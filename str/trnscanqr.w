@@ -34,6 +34,7 @@ define variable vss-description as character no-undo init "Сканирование 2D кода.
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/showinf.i  }
+{ str/trdcalib.i }
 
           /* Parameters Definitions ---                                           */
 
@@ -43,6 +44,14 @@ define input  parameter p-mode                as character           no-undo .
 define input  parameter p-handle              as handle              no-undo .
 
 define variable iLang           as integer   no-undo.
+
+define variable par-type          as character no-undo .
+define variable v-value-char      as character no-undo .
+define variable v-value-date      as date      no-undo .
+define variable v-value-decimal   as decimal   no-undo .
+define variable qr-scan-time      as integer   no-undo .
+define variable v-value-logical   as logical   no-undo .
+define variable v-tth             as handle    no-undo .
 
 define buffer t_doc        for ub.trn-doc .
 define buffer bf_doc-line  for ub.doc-line.
@@ -67,7 +76,7 @@ define stream in-stream.
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-cancel b-help b-imp v-sts 
+&Scoped-Define ENABLED-OBJECTS b-exit b-cancel v-mark  v-sts 
 &Scoped-Define DISPLAYED-OBJECTS v-sts 
 
 /* Custom List Definitions                                              */
@@ -76,20 +85,17 @@ define stream in-stream.
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
-
+{ cmp/str-glbl.i }
+{ utl/crc32.i }
 
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-define button b-cancel 
-     label "&Отмена" 
-     size 10 by 1
-     bgcolor 8 .
 
 define button b-exit auto-go 
-     label "&Ввод" 
+     label "&Отмена" 
      size 10 by 1
      bgcolor 8 .
 
@@ -98,18 +104,23 @@ define variable v-sts as character format "X(256)":U init "ожидание сканирования
      view-as fill-in 
      size 76 by 1 no-undo.
 
+DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(31000)":U 
+  LABEL "Марка" 
+  VIEW-AS FILL-IN 
+  SIZE 76 BY 1 
+  BGCOLOR 15 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 
 define frame Dialog-Frame
      b-exit at row 1 col 1
-     b-cancel at row 1 col 11.5
-     v-sts at row 3 col 7.5 colon-aligned
-     space(2.25) skip(0.44)
+     v-mark at row 2.3 col 5 no-label
+     v-sts at row 3.5 col 7.5 colon-aligned
+     space(2) skip(0.1)
     with view-as dialog-box keep-tab-order 
          side-labels no-underline three-d  scrollable 
          title "Сканирование 2D кода. Автоматическое заполнение накладной."
-         default-button b-exit cancel-button b-cancel.
+         default-button b-exit .
 
 
 /* *********************** Procedure Settings ************************ */
@@ -147,7 +158,7 @@ assign
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 on window-close of frame Dialog-Frame
 do:
-
+  APPLY "END-ERROR":U TO SELF.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -177,25 +188,14 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-sts Dialog-Frame
 on entry of v-sts in frame Dialog-Frame
 do:
-    run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
-    run ActivateKeyboardLayout (input iLang, input 0).
-    
-  end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME UUID_VSD
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL UUID_VSD Dialog-Frame
-on any-printable of v-sts in frame Dialog-Frame
-do:
-
-  run proc-any-key.
-
+  run LoadKeyboardLayoutA (input "00000419", input 0, output iLang).
+  run ActivateKeyboardLayout (input iLang, input 0).
+  
 end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL UUID_VSD Dialog-Frame
@@ -209,30 +209,9 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME b-cancel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
-on any-printable of b-cancel in frame Dialog-Frame
-do:
-
-  run proc-any-key.
-
-end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-sts Dialog-Frame
-on leave of v-sts in frame Dialog-Frame /* Марка */
-do:
-    assign frame {&frame-name} v-sts .
-end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-sts Dialog-Frame
-on mouse-select-dblclick of v-sts in frame Dialog-Frame /* Марка */
+on return of v-mark in frame Dialog-Frame /* Марка */
 do:
     run save_update .
 
@@ -241,17 +220,28 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL end-error Dialog-Frame
-on end-error of frame Dialog-Frame
-do:
 
-  return no-apply.
-
-end.
+&Scoped-define SELF-NAME v-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark Dialog-Frame
+ON ENTRY OF v-mark IN FRAME Dialog-Frame /* Марка */
+  DO:
+    run LoadKeyboardLayoutA (input "00000419", input 0, output iLang).
+    run ActivateKeyboardLayout (input iLang, input 0).
+    
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark Dialog-Frame
+ON LEAVE OF v-mark IN FRAME Dialog-Frame /* Марка */
+  DO:
+    assign frame {&frame-name} v-mark .
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &UNDEFINE SELF-NAME
 
@@ -270,13 +260,33 @@ if valid-handle(active-window) and frame {&FRAME-NAME}:PARENT eq ?
 MAIN-BLOCK:
 do on error undo MAIN-BLOCK, leave MAIN-BLOCK
   :
-  run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
-  run ActivateKeyboardLayout (input iLang, input 0).     
+  run LoadKeyboardLayoutA (input "00000419", input 0, output iLang).
+  run ActivateKeyboardLayout (input iLang, input 0).
   run enable_UI.
-  apply "entry" to v-sts in frame {&FRAME-NAME}.
-  find first t_doc no-lock where t_doc.doc-code = p-doc-code no-error .  
   
-  hide b-cancel in frame {&frame-name}.
+  find first t_doc no-lock where t_doc.doc-code = p-doc-code no-error . 
+  
+  run adm/shattri.p (
+             input "get":U
+            ,input  t_doc.obj-type
+            ,input  t_doc.obj-code
+            ,input  {&attr-petrol}
+            ,input  {&attr-petrol_qr-scan-time} /*p-param-code*/
+            ,output v-value-char
+            ,output v-value-date
+            ,output v-value-decimal
+            ,output qr-scan-time
+            ,output v-value-logical
+            ,output par-type
+            ,input-output table-handle v-tth
+            ) no-error .
+  if error-status:error then do:
+      if valid-object(v-tth) then delete object v-tth.
+      qr-scan-time = 5000 .
+  end.
+  
+  apply "entry" to v-mark in frame {&FRAME-NAME}.
+/*  v-mark:READ-ONLY IN FRAME {&frame-name}       = TRUE .*/
   
   disable v-sts with frame {&frame-name}.
   
@@ -299,23 +309,6 @@ end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fillTrnDoc Dialog-Frame*/
-/*procedure fillTrnDoc :                                             */
-/*  define variable v-error      as logical   no-undo init no.       */
-/*  define variable l-error      as logical   no-undo init no.       */
-/*  define variable v-error-lang as logical   no-undo init no.       */
-/*  define variable ii           as integer   no-undo .              */
-/*                                                                   */
-/*  define variable vcodident as character no-undo.                  */
-/*                                                                   */
-/*    //run go-line in p-inv-handle (?).                             */
-/*    f-msg:screen-value in frame {&FRAME-NAME} = v-sts .            */
-/*    f-msg:fgcolor in frame {&FRAME-NAME} = 2.                      */
-/*                                                                   */
-/*end.                                                               */
-/*                                                                   */
-/*/* _UIB-CODE-BLOCK-END */                                          */
-/*&ANALYZE-RESUME                                                    */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 procedure disable_UI :
@@ -354,9 +347,9 @@ procedure enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  display v-sts b-exit 
+  display v-sts v-mark b-exit 
       with frame Dialog-Frame.
-  enable b-exit 
+  enable b-exit v-mark
       with frame Dialog-Frame.
   view frame Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -378,15 +371,81 @@ end procedure.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save_update Dialog-Frame 
 procedure save_update :
   
-  def var v-xmlfile as char no-undo.
-  def var v-ok as logical no-undo.
-  def var xmlhndlerObj as class xmlhndler no-undo.
-  def var v-tmp-int as int no-undo.
-  def var v-gdsrec-list as char no-undo.
-  def var infoSecsObj as class InfoSectionsTotal no-undo.
-  run parse2DCodeToXML (input v-scan-str, output v-xmlfile) no-error.
+  define variable v-xmlfile as char no-undo .
+  define variable v-ok as logical no-undo .
+  define variable xmlhndlerObj as class xmlhndler no-undo .
+  define variable v-tmp-int as int no-undo .
+  define variable v-tmp-char as character no-undo .
+  define variable v-tmp-char2 as character no-undo .
+  define variable v-tmp-date as date no-undo .
+  define variable v-gdsrec-list as char no-undo .
+  define variable v-gd-cd as integer no-undo .
+  define variable v-cli-code as character no-undo .
+  define variable v-bad-symb as character no-undo .
+  define variable v-json-str as character no-undo.
+  define variable v-ix as integer no-undo.
+  define variable v-crc as char no-undo.
+  define variable ii as integer no-undo .
+  define variable infoSecsObj as class InfoSectionsTotal no-undo.
+  
+  v-bad-symb = '!' + {&delim-par} + '@' + {&delim-par} + '#' + {&delim-par} + '$' + {&delim-par} + '%' + {&delim-par} + '^' + {&delim-par} + '&' + {&delim-par}
+             + '*' + {&delim-par} + '(' + {&delim-par} + ')' + {&delim-par} + '-' + {&delim-par} + '_' + {&delim-par} + '=' + {&delim-par} + '+' + {&delim-par} 
+             + '.' + {&delim-par} + ',' + {&delim-par} + '/' + {&delim-par} + '|' + {&delim-par} + '\' + {&delim-par} + '?' + {&delim-par} + '"' + {&delim-par}
+             + ';' + {&delim-par} + ':' + {&delim-par} + '[' + {&delim-par} + ']' + {&delim-par} + chr(123) + {&delim-par} + '}' + {&delim-par}
+             + '`' + {&delim-par} + '№' + {&delim-par} + ' ' + {&delim-par} + "'" .
+             
+  
+  if v-mark:screen-value in frame {&frame-name} = ""
+  then do:
+    v-mark:screen-value in frame {&frame-name} = codepage-convert(v-scan-str, "1251", "UTF-8") .
+    v-scan-str = "". 
+  end.
+  
+  v-json-str = v-mark:screen-value .
+  v-scan-str = "".
+  v-ix = index (v-json-str, ',"CRC":"').
+  v-crc = substring (v-json-str, v-ix + 8, 8).
+  v-json-str = substring (v-json-str, 9, v-ix - 9).
+
+  run checkcrc (input v-json-str, input v-crc, output v-ok).
+  if not v-ok
+  then do:
+    v-sts:screen-value in frame {&frame-name} = "ошибка контрольной суммы CRC32".
+/*    return error.*/
+  end.
+        
+  assign v-mark = codepage-convert(v-mark:screen-value in frame {&frame-name}, "1251", "UTF-8") .
+ 
+  if trim(v-mark) = "" then return .
+  
+  if v-mark begins (CHR(123) + "@data@^")
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message "Ошибка сканирования!" skip "Убедитесь, что установлена русская раскладка клавиатуры." view-as alert-box .
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    return .
+  end .
+  
+  run checkJson (input v-mark, output v-ok) .
+  if not v-ok
+  then do:
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message "Ошибка сканирования! Неверный формат!" view-as alert-box .
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return.
+  end.
+  
+  run parse2DCodeToXML (input v-mark, output v-xmlfile) no-error.
   if error-status:error
   then do:
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
     undo, return.
   end.
   infoSecsObj = new ibs.th.str.InfoSectionsTotal().
@@ -395,62 +454,413 @@ procedure save_update :
   
   xmlhndlerObj:FillDataset(input search (v-xmlfile)) no-error.
   if error-status:error
-    then message xmlhndlerObj:ErrMsg view-as alert-box.
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message xmlhndlerObj:ErrMsg view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .
 
   v-ok = xmlhndlerObj:GetFirst("doc") no-error.
   if not v-ok
-    then message xmlhndlerObj:ErrMsg view-as alert-box.  
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message xmlhndlerObj:ErrMsg view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .  
 
-  v-tmp-int =  (xmlhndlerObj:vbf:buffer-field("contr-cd"):buffer-value) no-error.
+  v-cli-code =  (xmlhndlerObj:vbf:buffer-field("contr-cd"):buffer-value) no-error.
   if error-status:error
-    then message error-status:get-message (1) view-as alert-box.
-    else do:
-      run set-cli-cust in p-handle (input "орг", input v-tmp-int) no-error.
-      if error-status:error
-        then message "Ошибка установки поставщика." return-value view-as alert-box.      
-    end.
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message error-status:get-message (1) view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .
+  else do:
+    v-tmp-int = integer(v-cli-code) no-error .
+    for first ub.clients-attr no-lock where ub.clients-attr.obj-type = {&cmp}
+                                        and ub.clients-attr.attr-code = {&attr-code-KSK}
+                                        and (ub.clients-attr.attr-value = v-cli-code
+                                        or ub.clients-attr.attr-value = string(v-tmp-int))
+                                        :
+      v-tmp-int = ub.clients-attr.obj-code .                                    
+    end .
+    if v-tmp-int = 0 
+    or v-tmp-int = ?
+    then do :
+      v-mark:screen-value = "" .
+      v-scan-str = "".
+      v-mark = "".
+      message "Ошибка установки поставщика. Не найден поставщик с кодом " v-cli-code skip return-value view-as alert-box.  
+      v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+      undo, return error .
+    end .
+    find first ub.clients no-lock where ub.clients.obj-type = {&cmp}
+                                    and ub.clients.obj-code = v-tmp-int
+                                    no-error .
+    if not available ub.clients
+    then do :
+      v-mark:screen-value = "" .
+      v-scan-str = "".
+      v-mark = "".
+      message "Отсутствует поставщик с кодом " v-cli-code  view-as alert-box.
+      v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
+      undo, return error .
+    end .
+    else do :
+      if ub.clients.stts <> {&bef-current-status-int}
+      then do :
+        v-mark:screen-value = "" .
+        v-scan-str = "".
+        v-mark = "".
+        message "Поставщик с кодом " v-cli-code " неактивный. (Удалён)"  view-as alert-box.
+        v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
+        undo, return error .
+      end .
+/*      find first ub.clients-attr no-lock where ub.clients-attr.obj-type = ub.clients.obj-type                                                */
+/*                                           and ub.clients-attr.obj-code = ub.clients.obj-code                                                */
+/*                                           and (ub.clients-attr.attr-code = {&attr-supp-np} or ub.clients-attr.attr-code = {&attr-supp-lgas})*/
+/*                                           and logical(ub.clients-attr.attr-value) = yes                                                     */
+/*                                           no-error .                                                                                        */
+/*      if not available ub.clients-attr                                                                                                       */
+/*      then do :                                                                                                                              */
+/*        message "Поставщик с кодом " v-cli-code " не является поставщиком НП/СУГ"  view-as alert-box.                                        */
+/*        undo, return error .                                                                                                                 */
+/*      end .                                                                                                                                  */
+      run set-cli-cust in p-handle (input {&cmp}, input v-tmp-int) no-error.
+    end .
+  end.
+  
+  v-tmp-char =  (xmlhndlerObj:vbf:buffer-field("doc-num"):buffer-value) no-error.
+  if error-status:error
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message error-status:get-message (1) view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .
+  else do:
+    { str/tdat-wrt.i
+        t_doc.doc-code
+        {&trdcattr-nids}
+        v-tmp-char
+        no-error
+    }
+  end.
+  
+  v-tmp-char =  (xmlhndlerObj:vbf:buffer-field("doc-date"):buffer-value) no-error.
+  if error-status:error
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message error-status:get-message (1) view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .
+  else do:
+    v-tmp-date = date( entry(3, v-tmp-char, "-") + "/" + entry(2, v-tmp-char, "-") + "/" + entry(1, v-tmp-char, "-") ) .
+    { str/tdat-wrt.i
+        t_doc.doc-code
+        {&trdcattr-dids}
+        string(v-tmp-date)
+        no-error
+    }
+  end.
+  
+  v-ok = xmlhndlerObj:GetFirst("transp") no-error.
+  if not v-ok
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message xmlhndlerObj:ErrMsg view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .
+    
+  v-cli-code =  (xmlhndlerObj:vbf:buffer-field("nb-cd"):buffer-value) no-error.
+  if error-status:error
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message error-status:get-message (1) view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .
+  else do:
+    v-tmp-int = integer(v-cli-code) no-error .
+    for first ub.clients-attr no-lock where ub.clients-attr.obj-type = {&cmp}
+                                        and ub.clients-attr.attr-code = {&attr-code-AIS}
+                                        and (ub.clients-attr.attr-value = v-cli-code
+                                        or ub.clients-attr.attr-value = string(v-tmp-int))
+                                        :
+      v-tmp-int = ub.clients-attr.obj-code .                                    
+    end .
+    find first ub.clients no-lock where ub.clients.obj-type = {&cmp}
+                                    and ub.clients.obj-code = v-tmp-int
+                                    no-error .
+    if not available ub.clients
+    then do :
+      v-mark:screen-value = "" .
+      v-scan-str = "".
+      v-mark = "".
+      message "Отсутствует нефтебаза с кодом " v-cli-code  view-as alert-box.  
+      v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+      undo, return error .
+    end .
+    else do :
+      if ub.clients.stts <> {&bef-current-status-int}
+      then do :
+        v-mark:screen-value = "" .
+        v-scan-str = "".
+        v-mark = "".
+        message "Нефтебаза с кодом " v-cli-code " неактивна. (Удалёна)"  view-as alert-box.
+        v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
+        undo, return error .
+      end .
+      v-tmp-char = {&cmp} + ";" + string(v-tmp-int) .
+      { str/tdat-wrt.i
+          t_doc.doc-code
+          {&trdcattr-ptbobj}
+          v-tmp-char
+          no-error
+      }
+    end .
+  end.
+    
+  v-tmp-char =  (xmlhndlerObj:vbf:buffer-field("transp-num"):buffer-value) no-error.
+  if error-status:error
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message error-status:get-message (1) view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .
+  else do:
+    do ii = 1 to num-entries(v-bad-symb, {&delim-par}) :
+      v-tmp-char = replace(v-tmp-char, entry(ii, v-bad-symb, {&delim-par}), "") .
+    end .
+    find first ub.auto-tank no-lock where ub.auto-tank.auto-num = v-tmp-char
+                                      and ub.auto-tank.status_ = {&current-status}
+                                      no-error .
+    if not available ub.auto-tank
+    then do :
+      v-mark:screen-value = "" .
+      v-scan-str = "".
+      v-mark = "".
+      message "Отсутствует автоцистерна с гос. номером " v-tmp-char  view-as alert-box.  
+      v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+      undo, return error .
+    end .
+    else do :
+      infoSecsObj:CarNum = v-tmp-char .
+      { str/tdat-wrt.i
+          t_doc.doc-code
+          {&trdcattr-car-num}
+          v-tmp-char
+          no-error
+      }
+      v-tmp-char2 = ub.auto-tank.firm-type + ";" + string(ub.auto-tank.firm-code) .
+      { str/tdat-wrt.i
+          t_doc.doc-code
+          {&trdcattr-autoent}
+          v-tmp-char2
+          no-error
+      }
+    end .
+  end.  
+  
+  v-tmp-char =  (xmlhndlerObj:vbf:buffer-field("driv"):buffer-value) no-error.
+  if error-status:error
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message error-status:get-message (1) view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .
+  else do:
+    { str/tdat-wrt.i
+        t_doc.doc-code
+        {&trdcattr-fio-driver}
+        v-tmp-char
+        no-error
+    }
+  end. 
+  
+  v-tmp-char =  (xmlhndlerObj:vbf:buffer-field("pl-num"):buffer-value) no-error.
+  if error-status:error
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message error-status:get-message (1) view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .
+  else do:
+    { str/tdat-wrt.i
+        t_doc.doc-code
+        {&trdcattr-seals-condition}
+        v-tmp-char
+        no-error
+    }
+  end. 
   
   v-ok = xmlhndlerObj:GetFirst("scs") no-error.
   if not v-ok
-    then message xmlhndlerObj:ErrMsg view-as alert-box.    
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message xmlhndlerObj:ErrMsg view-as alert-box.
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    undo, return error .
+  end .    
+   
   rep_:
   repeat:
-    v-tmp-int = xmlhndlerObj:vbf:buffer-field("gd-cd"):buffer-value no-error.
+    if available ub.auto-tank
+    then do :
+      find first ub.auto-section no-lock where ub.auto-section.auto-num = ub.auto-tank.auto-num
+                                           and ub.auto-section.section-num = xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value
+                                           no-error .
+      if not available ub.auto-section
+      then do :
+        v-mark:screen-value = "" .
+        v-scan-str = "".
+        v-mark = "".
+        message "Для автоцистерны с номером " ub.auto-tank.auto-num " не найдена секция " xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value view-as alert-box title "Ошибка".
+        if not xmlhndlerObj:GetNext()
+          then leave rep_.
+        next rep_.
+      end .                                     
+    end .
+    v-gd-cd = xmlhndlerObj:vbf:buffer-field("gd-cd"):buffer-value no-error.
     if error-status:error
     then do:
+      v-mark:screen-value = "" .
+      v-scan-str = "".
+      v-mark = "".
       message error-status:get-message (1) view-as alert-box.
+      v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
       if not xmlhndlerObj:GetNext()
         then leave rep_.
       next rep_.
     end.
     else do:
+      v-tmp-int = v-gd-cd .
+      v-tmp-char = "" .
+      for each ub.goods-attr no-lock where ub.goods-attr.attr-code = {&attr-gds-code-AIS}
+                                        and lookup(string(v-gd-cd), ub.goods-attr.attr-value) > 0
+                                        :
+        v-tmp-char = v-tmp-char + string(ub.goods-attr.gds-code) + "," .                                
+        v-tmp-int = ub.goods-attr.gds-code .                                    
+      end .
+      v-tmp-char = trim(v-tmp-char, ",") .
+      if num-entries(v-tmp-char) > 1
+      then do :
+        message "АИС коду топлива " string(v-gd-cd) " соответствуют несколько товаров TH." skip
+                "Выберите топливо в секции " xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value "."
+        view-as alert-box .
+        run str\chs-gd-from-list.w (input v-tmp-char,
+                                    output v-tmp-int) .
+        if v-tmp-int = 0
+        or v-tmp-int = ?
+        then do :
+          next rep_.
+        end .                            
+      end .
       find first ub.goods where ub.goods.gds-code = v-tmp-int no-lock no-error.
       if not available (ub.goods)
       then do:
-        message "Не найден товар с кодом - " v-tmp-int view-as alert-box title "Ошибка".
+        v-mark:screen-value = "" .
+        v-scan-str = "".
+        v-mark = "".
+        message "Не найден товар с кодом " v-gd-cd view-as alert-box title "Ошибка".
         if not xmlhndlerObj:GetNext()
           then leave rep_.
         next rep_.
       end.
-      if lookup (v-gdsrec-list, string (recid (ub.goods))) = 0
+      find first ub.pl-gds no-lock where ub.pl-gds.obj-type   = t_doc.obj-type
+                                     and ub.pl-gds.obj-code   = t_doc.obj-code
+                                     and ub.pl-gds.gds-code   = ub.goods.gds-code
+                                     no-error .
+      if not available (ub.pl-gds)
+      then do:
+        v-mark:screen-value = "" .
+        v-scan-str = "".
+        v-mark = "".
+        message "Для товара с кодом " v-tmp-int " не удалось определить резервуар для приема НП" view-as alert-box title "Ошибка".
+        if not xmlhndlerObj:GetNext()
+          then leave rep_.
+        next rep_.
+      end.                               
+      if lookup (string (recid (ub.goods)), v-gdsrec-list) = 0
       then do:
         v-gdsrec-list = string (v-gdsrec-list) + "," + string (recid (ub.goods)).
         infoSecsObj:Initialization(t_doc.doc-code, ub.goods.gds-code).
         infoSecsObj:GetInfoSectionProp().
       end.
-      else infoSecsObj:NewSection().
+      else
+        infoSecsObj:NewSection().
+        
       infoSecsObj:InfoSectionCurr:SectionName = xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value no-error.
-      infoSecsObj:InfoSectionCurr:DocQnty = xmlhndlerObj:vbf:buffer-field("vol"):buffer-value no-error.
+      infoSecsObj:InfoSectionCurr:SetCarVol(infoSecsObj:InfoSectionCurr:SectionName) .
+      infoSecsObj:InfoSectionCurr:DocVolume = xmlhndlerObj:vbf:buffer-field("vol"):buffer-value no-error.
       infoSecsObj:InfoSectionCurr:CliQnty = xmlhndlerObj:vbf:buffer-field("mass"):buffer-value no-error.
-      infoSecsObj:InfoSectionCurr:DocDensity = infoSecsObj:InfoSectionCurr:CliQnty / infoSecsObj:InfoSectionCurr:DocQnty.
+      infoSecsObj:InfoSectionCurr:DocDensity = xmlhndlerObj:vbf:buffer-field("dens"):buffer-value / 1000 no-error.
+      infoSecsObj:InfoSectionCurr:DocQnty = infoSecsObj:InfoSectionCurr:CliQnty / infoSecsObj:InfoSectionCurr:DocDensity .
       infoSecsObj:InfoSectionCurr:TTNTemp = xmlhndlerObj:vbf:buffer-field("temp"):buffer-value no-error.
-      infoSecsObj:InfoSectionCurr:Shape = "Без горловины".
+      v-tmp-int = xmlhndlerObj:vbf:buffer-field("gd-gr"):buffer-value no-error.
+      if not error-status:error
+      then do :
+        case v-tmp-int:
+          when 1 then infoSecsObj:InfoSectionCurr:GroupNP = "I" .
+          when 2 then infoSecsObj:InfoSectionCurr:GroupNP = "II" .
+          when 3 then infoSecsObj:InfoSectionCurr:GroupNP = "III" .
+          when 4 then infoSecsObj:InfoSectionCurr:GroupNP = "IV" .
+          otherwise infoSecsObj:InfoSectionCurr:GroupNP = "" .
+        end case .
+      end .
+      v-tmp-int = xmlhndlerObj:vbf:buffer-field("fill-type"):buffer-value no-error.
+      if not error-status:error
+      then do :
+        case v-tmp-int:
+          when 0 then infoSecsObj:InfoSectionCurr:Pour = "Верхний налив" .
+          when 1 then infoSecsObj:InfoSectionCurr:Pour = "Нижний налив" .
+          otherwise infoSecsObj:InfoSectionCurr:Pour = "Верхний налив" .
+        end case .
+      end .
+      infoSecsObj:InfoSectionCurr:DocDensST = xmlhndlerObj:vbf:buffer-field("dens-st"):buffer-value / 1000 no-error.
+      infoSecsObj:InfoSectionCurr:AccShip = xmlhndlerObj:vbf:buffer-field("contr-err"):buffer-value no-error.
+      infoSecsObj:InfoSectionCurr:PaspDens = xmlhndlerObj:vbf:buffer-field("dens-pas"):buffer-value / 1000 no-error.
+      infoSecsObj:InfoSectionCurr:NumPassport = xmlhndlerObj:vbf:buffer-field("pasp"):buffer-value no-error.
       infoSecsObj:SaveDBNoCheck().
       if not xmlhndlerObj:GetNext()
         then leave rep_.
     end.
   end.
   v-gdsrec-list = left-trim (v-gdsrec-list, ",").
+  v-mark:screen-value = "" .
+  v-scan-str = "".
+  v-mark = "".
+  v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
   run cycle-add-cust in p-handle (input v-gdsrec-list) no-error.
   if error-status:error
     then message "Ошибка добавление товара." return-value view-as alert-box.
@@ -469,22 +879,17 @@ procedure parse2DCodeToXML :
   define input parameter p-2dcode as char no-undo.
   define output parameter p-xmlfile as char no-undo.
   
-  def var v-json-str as character no-undo.
-  def var v-ix as integer no-undo.
-  def var v-crc as char no-undo.
-  def var cmd as char no-undo.
-  def var v-ok as logical no-undo.
+  define variable v-ok as logical no-undo .
+  define variable v-json-str as character no-undo.
+  define variable v-ix as integer no-undo.
+  define variable v-crc as char no-undo.
+  define variable cmd as char no-undo.
   
   v-json-str = p-2dcode.
   v-scan-str = "".
   v-ix = index (v-json-str, ',"CRC":"').
-  v-json-str = substring (v-json-str, 8, v-ix - 8).
-/*  run checkcrc (input v-json-str, input v-crc, output v-ok).                     */
-/*  if not v-ok                                                                    */
-/*  then do:                                                                       */
-/*    v-sts:screen-value in frame {&frame-name} = "ошибка контрольной суммы CRC32".*/
-/*    return error.                                                                */
-/*  end.                                                                           */
+  v-crc = substring (v-json-str, v-ix + 8, 8).
+  v-json-str = substring (v-json-str, 9, v-ix - 9).
   
   output to "qr2d.json" convert target 'UTF-8'.
   put unformatted v-json-str.
@@ -505,60 +910,319 @@ procedure parse2DCodeToXML :
     return error.
   end .
 
-  run  validatexml (input search("qr2d.xml"), input v-crc, output v-ok).
-  if not v-ok
-  then do:
-    v-sts:screen-value in frame {&frame-name} = "данные не прошли валидацию".
-    return error.
-  end.
   p-xmlfile = search("qr2d.xml"). 
 
 end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE validatexml Dialog-Frame 
-procedure validatexml :
 
-  define input parameter p-xml-file as char no-undo.
-  define input parameter p-xsd-file as char no-undo.
-  define output parameter p-ok as log no-undo.
-  
-  p-ok = true.
-  
-  /*validate xml xsd*/
 
-end.
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE checkJson Dialog-Frame 
+procedure checkJson :
+  define input parameter p-str as character no-undo .
+  define output parameter p-ok as logical no-undo .
+  
+  define variable v-num-sec as integer no-undo .
+  define variable v-tmp-str as character no-undo .
+  define variable ii as integer no-undo .
+  define variable v-num-teg as integer no-undo .
+  
+  p-ok = yes .
+  
+  if index(p-str, '"data"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"CRC"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"doc"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"contr-cd"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"doc-date"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"doc-num"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"transp"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"nb-cd"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"transp-num"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"driv"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"scs"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"sc-num"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"gd-cd"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"gd-gr"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"fill-type"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"temp"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"dens"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"mass"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"vol"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"dens-st"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"contr-err"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"pasp"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  if index(p-str, '"dens-pas"') = 0
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  
+  v-tmp-str = p-str .
+  
+  v-tmp-str = substring(v-tmp-str, index(v-tmp-str, '"scs"') + 6) .
+  v-tmp-str = replace(v-tmp-str, chr(123), "") .
+  v-tmp-str = replace(v-tmp-str, chr(125), "") .
+  v-tmp-str = replace(v-tmp-str, "[", "") .
+  v-tmp-str = replace(v-tmp-str, "]", "") .
+  
+  
+  v-num-sec = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"sc-num"' then v-num-sec = v-num-sec + 1 .
+  end.
+  
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"gd-cd"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"gd-gr"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"fill-type"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"temp"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"dens"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"mass"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"vol"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"dens-st"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"contr-err"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"pasp"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+  v-num-teg = 0 .
+  do ii = 1 to num-entries(v-tmp-str) :
+    if entry(ii, v-tmp-str) begins '"dens-pas"' then v-num-teg = v-num-teg + 1 .
+  end.
+  if v-num-teg <> v-num-sec
+  then do :
+    p-ok = no .
+    return .
+  end .
+  
+end .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE crc32 Dialog-Frame
-procedure crc32 external "crc32.dll" CDECL :
-    define input    parameter p-crc    as long.
-    define input    parameter p-array  as memptr.
-    define input    parameter p-len    as long.
-    define return   parameter p-crc32  as unsigned-long.
-end.
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE validate2dcode Dialog-Frame 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE checkcrc Dialog-Frame 
 procedure checkcrc:
   
   define input parameter p-json-str as char no-undo.
   define input parameter p-crc32 as char no-undo.
   define output parameter p-ok as logical no-undo.
-  define var v-crc32 as int64 no-undo.
   
-  define variable v-message as memptr no-undo.
-  define variable v-mem as memptr no-undo.
-  define variable v-len as int no-undo.
-  set-size(v-message) = v-len .
-  set-pointer-value(v-message) = get-pointer-value(v-mem).
-  run crc32 ( input 0 , input v-message , input v-len , output v-crc32).
-  set-size(v-message) = 0 .
+  define variable v-crc32   as character no-undo .
+  define variable mpData    as memptr    no-undo .
+  define variable inLength  as integer   no-undo .
   
-  p-ok = true.
+  p-ok = false.
+  
+  inLength     = LENGTH(p-json-str, 'raw').
+  set-size(mpData) = 0. 
+  set-size(mpData) = inLength.
+  PUT-STRING(mpData,1,inLength) = p-json-str.
+  v-crc32 =  intToHex(CRC32(INPUT mpData)) .
+  set-size(mpData) = 0. 
+  
+  if p-crc32 = v-crc32
+  then do :
+    p-ok = true.
+  end .
   
 end.
 /* _UIB-CODE-BLOCK-END */
@@ -566,11 +1230,11 @@ end.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-any-key Dialog-Frame 
 procedure proc-any-key :
-  if v-scan-str = ""
-    then v-timedelay = etime.
-    else
-      if etime - v-timedelay > 700
-        then v-scan-str = "".
+/*  if v-scan-str = ""              */
+/*    then v-timedelay = etime.     */
+/*    else                          */
+/*      if etime - v-timedelay > 700*/
+/*        then v-scan-str = "".     */
   v-scan-str = v-scan-str + last-event:label.
 end.
 

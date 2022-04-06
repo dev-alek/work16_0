@@ -54,6 +54,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property calories      as decimal      no-undo get. private set.
   define property vad-gds       as integer      no-undo get. private set.
   define property pay-flag      as integer      no-undo get. private set.
+  define property code-AIS      as character    no-undo get. private set.
   define property barcode        as subjects     no-undo get. private set.
   define property unit-add-codes as subjects     no-undo get. private set.
   
@@ -109,6 +110,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
       when "calories"      then calories      = {&attr-dec} .
       when "ISCookStumped" then ISCookStumped = {&attr-integer} .
       when "CommodityCode" then CommodityCode = {&attr-str} .
+      when "code-ais"      then code-AIS      = {&attr-str} .
       when "vad-gds"       then vad-gds       = {&attr-integer} .
       when "pay-flag"      then pay-flag       = {&attr-integer} .
     end case.
@@ -207,6 +209,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         CommodityCode = ?
         vad-gds       = ?
         pay-flag      = ?
+        code-AIS      = ?
     .   
     if valid-object(barcode) then delete object barcode .
     if valid-object(unit-add-codes) then delete object unit-add-codes . 

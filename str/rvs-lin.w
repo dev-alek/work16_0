@@ -882,6 +882,9 @@ DO:
   assign
     v-return-val = "cancel"
   .
+  
+  release rvs-line-attr no-error .
+  
   APPLY "END-ERROR":U TO SELF.
 END.
 
@@ -2497,7 +2500,7 @@ DO:
       return no-apply.
     end.
     
-    find first rvs-line-attr exclusive-lock
+    find first rvs-line-attr no-lock
          where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
            and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
            and rvs-line-attr.gds-code  = tt-rvs-line.gds-code

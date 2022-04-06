@@ -374,18 +374,18 @@ do
         '<TD colspan="7" style="border-top: 1px solid black; text-align: center;"></TD>' skip
         '</TR>'skip
                     
-        '<TR>' skip
-        '<TD colspan="3" style="">2. Время прибытия АЦ</TD>' skip
-        '<TD colspan="7" style="text-align: center;">' + string(v-hour-income,"99") + ":" + string(v-min-income,"99") + '</TD>' skip
-        '</TR>'skip
-
-        '<TR>' skip
-        '<TD colspan="3" style="height: 14px;"></TD>' skip
-        '<TD colspan="7" style="border-top: 1px solid black; text-align: center;"></TD>' skip
-        '</TR>'skip
+/*        '<TR>' skip                                                                                                                 */
+/*        '<TD colspan="3" style="">2. Время прибытия АЦ</TD>' skip                                                                   */
+/*        '<TD colspan="7" style="text-align: center;">' + string(v-hour-income,"99") + ":" + string(v-min-income,"99") + '</TD>' skip*/
+/*        '</TR>'skip                                                                                                                 */
+/*                                                                                                                                    */
+/*        '<TR>' skip                                                                                                                 */
+/*        '<TD colspan="3" style="height: 14px;"></TD>' skip                                                                          */
+/*        '<TD colspan="7" style="border-top: 1px solid black; text-align: center;"></TD>' skip                                       */
+/*        '</TR>'skip                                                                                                                 */
                     
         '<TR>' skip
-        '<TD colspan="3" style="">3. Техническое состояние АЦ</TD>' skip
+        '<TD colspan="3" style="">2. Техническое состояние АЦ</TD>' skip
         '<TD colspan="7" style="text-align: center;">' + v-condition + '</TD>' skip
         '</TR>'skip
 
@@ -403,11 +403,20 @@ do
 /*        '<TR><TD colspan="10" style="height: 14px;"></TD></TR>' skip                    */
 /*                                                                                        */
         '<TR>' skip
-        '<TD colspan="2" style="">4. Пломбы</TD>' skip
-        '<TD colspan="8" style="border-bottom: 1px solid black;">' + string(v-seals-condition) + '</TD>' skip
+        '<TD colspan="3" style="">4. Пломбы от </TD>' skip
+        '<TD colspan="7" style="border-bottom: 1px solid black;">' + v-DD-Month-YYYY-cert + '</TD>' skip
         '</TR>'skip
 
                     
+        '<TR>' skip
+        '<TD colspan="10" style="height: 14px;"></TD>' skip
+        '</TR>'skip
+        
+        '<TR>' skip
+        '<TD colspan="1" style="">С №№ </TD>' skip
+        '<TD colspan="9" style="border-bottom: 1px solid black;">' + string(v-seals-condition) + '</TD>' skip
+        '</TR>'skip
+        
         '<TR>' skip
         '<TD colspan="10" style="height: 14px;"></TD>' skip
         '</TR>'skip
@@ -415,6 +424,7 @@ do
         '<TR>' skip
         '<TD colspan="10" style="text-align: center;">' + string(v-seals-condition-2) + '</TD>' skip
         '</TR>'skip
+        
         '<TR>' skip
         '<TD colspan="10" style="border-top: 1px solid black; text-align: center;">нарушены (не нарушены)</TD>' skip
         '</TR>'skip
@@ -424,7 +434,7 @@ do
         '</TR>'skip
                     
         '<TR>' skip
-        '<TD colspan="10" style="height: 14px;">5. Документы ' + v-doc-not + ' в полном комплекте и с соответствующими отметками.</TD>' skip
+        '<TD colspan="10" style="height: 14px;">4. Документы ' + v-doc-not + ' в полном комплекте и с соответствующими отметками.</TD>' skip
         '</TR>'skip                    
         .
         if v-doc-not = "НЕ ПРЕДОСТАВЛЕНЫ" then do:
@@ -470,7 +480,7 @@ do
                      
     put stream OutStr-html unformatted                         
         '<TR>' skip
-        '<TD colspan="18" style="">6. При вскрытии АЦ и проверке количества нефтепродуктов установлено следующее:</TD>' skip
+        '<TD colspan="18" style="">5. При вскрытии АЦ и проверке количества нефтепродуктов установлено следующее:</TD>' skip
         '</TR>'skip
 
         '<TR><TD colspan="18" style="height: 14px;"></TD></TR>' skip
@@ -668,9 +678,9 @@ next_:
                     
         '<TR><TD colspan="18" style="height: 14px;"></TD></TR>' skip
                     
-        '<TR><TD text_wrap="true" colspan="18" style="">7. Прилагаемые к акту документы ________________________________________________________________________</TD></TR>' skip
+        '<TR><TD text_wrap="true" colspan="18" style="">6. Прилагаемые к акту документы ________________________________________________________________________</TD></TR>' skip
                     
-        '<TR><TD text_wrap="true" colspan="18" style="">8. Время: начала приема ____ ч ______ мин</TD></TR>' skip
+        '<TR><TD text_wrap="true" colspan="18" style="">7. Время: начала приема ____ ч ______ мин</TD></TR>' skip
                     
         '<TR><TD text_wrap="true" colspan="18" style="">          окончания приема ____ ч ______ мин.</TD></TR>' skip
                     
@@ -879,12 +889,12 @@ procedure print-table1:
         '<TR style="height: 20px;">' skip
         '<TD text_wrap="true" style="text-align: center;">объем, л</TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center;">плотность (1), кг/м3</TD>' skip
-        '<TD text_wrap="true" style="text-align: center;">t,С </TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">температура,С </TD>' skip
         '<TD text_wrap="true" style="text-align: center;">масса, кг</TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center; height: 25px;">фактический уровень наполнения (2), мм</TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center;">объем, м3</TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center;">плотность, кг/м3</TD>' skip
-        '<TD text_wrap="true" style="text-align: center;">t,С </TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">температура,С </TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center;">масса, кг</TD>' skip
         '</TR>'skip   
 

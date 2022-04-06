@@ -338,8 +338,14 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 /* Атрибут клиента - Поставщик НП   */
 { cmp/cr-prep.i 1 attr-supp-np supp-np " " supp-np }
 
+/* Атрибут клиента - Собственный поставщик   */
+{ cmp/cr-prep.i 1 attr-own-supp own-supp " " own-supp }
+
 /* Атрибут клиента - является нефтебазой для:*/
 { cmp/cr-prep.i 1 attr-tank-farm-for tank-farm-for " " tank-farm-for }
+
+/* Атрибут клиента - Нефтеперерабатывающий завод (НПЗ)   */
+{ cmp/cr-prep.i 1 attr-NPZ NPZ " " NPZ }
 
 /* Атрибут клиента - являестся перевозчиком для:*/
 { cmp/cr-prep.i 1 attr-auto-tank-for auto-tank-for " " auto-tank-for }
@@ -358,6 +364,15 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 
 /* Атрибут клиента - «Последняя выгруженная для ИС ПМ дата»   */
 { cmp/cr-prep.i 1 attr-exp-isPM-last-date exp-isPM-last-date " " exp-isPM-last-date }
+
+/* Атрибут клиента - Код КСК  */
+{ cmp/cr-prep.i 1 attr-code-KSK code-KSK " " code-KSK }
+
+/* Атрибут клиента - Код АИС   */
+{ cmp/cr-prep.i 1 attr-code-AIS code-AIS " " code-AIS }
+
+/* Атрибут клиента - Является поставщиком для   */
+{ cmp/cr-prep.i 1 attr-owner-code owner-code " " owner-code }
 
 /* сюда добавлять новые названия атрибутов клиентов */
 
@@ -406,9 +421,14 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fin-calc-
 ,{&bef-attr-requisite-alc-decl}~
 ,{&bef-attr-division-code}~
 ,{&bef-attr-supp-np}~
+,{&bef-attr-own-supp}~
 ,{&bef-attr-supp-lgas}~
 ,{&bef-attr-tank-farm-for}~
+,{&bef-attr-NPZ}~
 ,{&bef-attr-auto-tank-for}~
+,{&bef-attr-code-KSK}~
+,{&bef-attr-code-AIS}~
+,{&bef-attr-owner-code}~
 ,{&bef-attr-cli-for-close-fo}~
 ,{&bef-attr-cli-clim-grp}~
 ,{&bef-attr-cli-decommissioned}~
@@ -572,6 +592,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Доп. ед. изм. */
 { cmp/cr-prep.i 1 attr-MercUnits       MercUnits       " " MercUnits       }
 
+/* коды АИС*/
+{ cmp/cr-prep.i 1 attr-gds-code-AIS  gds-code-AIS " " gds-code-AIS }
 
 /* сюда добавлять новые названия атрибутов товаров */
 
@@ -607,6 +629,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-dflt-insalepr}~
 ,{&bef-attr-gds-ptrl-densities}~
 ,{&bef-attr-gds-CommodityCode}~
+,{&bef-attr-gds-code-AIS}~
 ,{&bef-attr-length-of}~
 ,{&bef-attr-width-of}~
 ,{&bef-attr-height-of}~

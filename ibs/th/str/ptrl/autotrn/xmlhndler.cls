@@ -79,7 +79,7 @@ class ibs.th.str.ptrl.autotrn.xmlhndler :
     delete object vQR no-error.
     delete object vbf no-error.
 
-    file-info:file-name = search("qr2d.xml") .
+    file-info:file-name = search(inXMLFile) .
     if file-info:file-size = 0
     then do :
       ErrMsg = SetErrMsg(LastExcuteMethodName, "Ïףסעמי פאיכ xml", 1).
