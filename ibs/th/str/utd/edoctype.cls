@@ -23,6 +23,7 @@ class ibs.th.str.utd.edoctype:
   define public property  UCD  as class propmap no-undo get.  protected set.
   define public property  returns  as class propmap no-undo get.  protected set.
   define public property  AKT  as class propmap no-undo get.  protected set.
+  define public property  AKTNoMark  as class propmap no-undo get.  protected set.
   define public property  EDoc         as class propmap no-undo get.  protected set.
 
   define public property EDocTypeMap as class mapstring no-undo get. 
@@ -48,6 +49,7 @@ class ibs.th.str.utd.edoctype:
     UCD       = crProp(4, "UСD", "УКД").
     Returns   = crProp(5, "return", "Возврат поставщику").
     AKT       = crProp(6, "akt", "Акт приема").
+    AKTNoMark = crProp(8, "aktnomark", "Акт приема немаркированной продукции").
     EDoc      = crProp(7, "EDoc", "еУПД").
   end.
 

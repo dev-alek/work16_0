@@ -75,9 +75,9 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit B-quit t-edo t-manual t-ban_recipes ~
-t-ban-altr cb-gray_zone_qnty S-type S-type-edo  
+t-ban-altr cb-gray_zone_qnty S-type S-type-edo t-bar-code 
 &Scoped-Define DISPLAYED-OBJECTS t-edo t-manual t-ban_recipes t-ban-altr ~
-cb-gray_zone_qnty S-type S-type-edo 
+cb-gray_zone_qnty S-type S-type-edo t-bar-code
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
 
@@ -156,6 +156,11 @@ DEFINE VARIABLE t-ban_recipes AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 79.25 BY .83 NO-UNDO.
 
+DEFINE VARIABLE t-bar-code AS LOGICAL INITIAL no 
+     LABEL "Определение товара по штрих-коду" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 74.75 BY .83 NO-UNDO.
+
 DEFINE VARIABLE t-edo AS LOGICAL INITIAL no 
      LABEL "Включена работа с ЭДО" 
      VIEW-AS TOGGLE-BOX
@@ -176,6 +181,7 @@ DEFINE FRAME Dialog-Frame
      t-manual AT ROW 3.88 COL 5.75 WIDGET-ID 148
      t-ban_recipes AT ROW 4.92 COL 5.75 WIDGET-ID 156
      t-ban-altr AT ROW 6.63 COL 5.75 WIDGET-ID 160
+     t-bar-code AT ROW 7.79 COL 5.75 WIDGET-ID 162
      cb-gray_zone_qnty AT ROW 9.58 COL 49.38 COLON-ALIGNED WIDGET-ID 150
      S-type AT ROW 11.83 COL 51.5 NO-LABEL WIDGET-ID 144
      S-type-edo AT ROW 17.04 COL 51.5 NO-LABEL WIDGET-ID 152
@@ -295,6 +301,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&Scoped-define SELF-NAME t-bar-code
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-bar-code Dialog-Frame
+ON VALUE-CHANGED OF t-bar-code IN FRAME Dialog-Frame /* Определение товара по штрих-коду */
+DO:
+  assign t-bar-code .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME t-edo
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-edo Dialog-Frame
 ON VALUE-CHANGED OF t-edo IN FRAME Dialog-Frame /* Включена работа с ЭДО */
@@ -381,10 +399,10 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY t-edo t-manual t-ban_recipes t-ban-altr  cb-gray_zone_qnty 
-          S-type S-type-edo 
+          S-type S-type-edo t-bar-code
       WITH FRAME Dialog-Frame.
   ENABLE B-exit B-quit t-edo t-manual t-ban_recipes t-ban-altr 
-         cb-gray_zone_qnty S-type S-type-edo 
+         cb-gray_zone_qnty S-type S-type-edo t-bar-code
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -409,11 +427,11 @@ end.
 
   if p-mode = {&update} then 
   do:
-    ENABLE S-type S-type-edo t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr
+    ENABLE S-type S-type-edo t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr t-bar-code
       WITH FRAME Dialog-Frame.
   end.  
   else do:
-    Display S-type S-type-edo t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr
+    Display S-type S-type-edo t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr t-bar-code
       WITH FRAME Dialog-Frame. 
    end.  
 run adm/shattri.p (
@@ -469,6 +487,10 @@ FOR EACH temp-thbj-attr where temp-thbj-attr.obj-code = p-obj-code and temp-thbj
        t-ban-altr = temp-thbj-attr.property-value-logical .
        display t-ban-altr with frame {&frame-name} .
     END.    
+    IF temp-thbj-attr.prop-code = {&attr-marking_bar-code} THEN DO:
+       t-bar-code = temp-thbj-attr.property-value-logical .
+       display t-bar-code with frame {&frame-name} .
+    END.
 END.
 END PROCEDURE.
 
@@ -520,6 +542,7 @@ ASSIGN FRAME {&FRAME-NAME}
     cb-gray_zone_qnty
     t-ban_recipes
     t-ban-altr
+	t-bar-code
     .
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-logical = t-edo.
@@ -535,6 +558,8 @@ ASSIGN FRAME {&FRAME-NAME}
     temp-thbj-attr.property-value-logical = t-ban_recipes.    
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_ban-altr} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-logical = t-ban-altr. 
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_bar-code} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+    temp-thbj-attr.property-value-logical = t-bar-code. 
 
 
     do transaction:
