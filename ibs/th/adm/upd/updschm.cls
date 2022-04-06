@@ -308,7 +308,7 @@ class ibs.th.adm.upd.updschm:
             m-FileDf     = analisdfObj:mFileDf
             NewCurrDBShm = analisdfObj:mUpdateTo
          .
-         putstat(substitute ("Получен файла обновления &1 c версии &2 до Версии",m-FileDf,CurrDBShm,NewCurrDBShm)).
+         putstat(substitute ("Получен файла обновления &1 c версии &2 до версии &3",m-FileDf,CurrDBShm,NewCurrDBShm)).
       end.
       else
          isErr = yes. 
@@ -328,7 +328,7 @@ class ibs.th.adm.upd.updschm:
       if isErr then 
       do:
         Msg =
-          substitute("Ошибка при обновлении схемы базы данных&1&2&1&3",  {&new-line} ,
+          substitute("Ошибка при обновлении схемы базы данных &1&2 &1&3",  {&new-line} ,
           error-status :get-message(1) ,
           return-value)
           .
@@ -344,7 +344,7 @@ class ibs.th.adm.upd.updschm:
      analisdfObj:modeupd = modeupd.
      analisdfObj:PublisHandle = PublisHandle.
      def var m-FileDf_new as char no-undo.
-     putstat(substitute ("Получение файла проверки для версии &1",CurrDBShm)).
+     putstat(substitute ("Получение файла проверки с версии &1",CurrDBShm)).
       
      if analisdfObj:createDF(CurrDBShm)
      then do:
@@ -359,18 +359,26 @@ class ibs.th.adm.upd.updschm:
            return.
         end.   
      end.
+     putstat(substitute ("Проверка прошла успешно.")).
+     
      delete object analisdfObj no-error. 
      obsrvdbObj = new observupd ().
     obsrvdbObj:ModeUpd = ModeUpd.
     obsrvdbObj:PublisHandle = PublisHandle. 
+    putstat(substitute ("Сохраняем версию БД.")).
+     
     obsrvdbObj:writeResult(NewCurrDBShm).
     if obsrvdbObj:IsErr
     then do:
       Msg = obsrvdbObj:Msg.
+      putstat(substitute ("Ошибка сохранения версии &1",Msg)).
+    
       delete object obsrvdbObj no-error.
       IsErr = true.
       return.  
     end.
+    putstat(substitute ("Сохранена версия &1 БД.",NewCurrDBShm)).
+    
     delete object obsrvdbObj no-error.
     CurrDBShm = NewCurrDBShm.
     isUpdShm = true.

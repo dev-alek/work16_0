@@ -43,7 +43,7 @@ define variable mDirUb as character no-undo.
 define variable mDbConnet as character no-undo.
 define variable mVer      as character no-undo.
 
-run gbl/getvers.p (OUTPUT mVer).
+run gbl/getvers.p (output mVer).
 mVer = replace(mVer,".","_").
 m7z    = search("exe\7z.exe").
 mUbexe = search("exe\ub" + mVer + ".exe").
@@ -67,7 +67,6 @@ else do:
    run SetStat (substitute("Распаковка болванки завершена.")).
    if not StopChek ()
    then do:
-   do:
       connect value(mDbConnet) no-error.
       if error-status:error
       then do:

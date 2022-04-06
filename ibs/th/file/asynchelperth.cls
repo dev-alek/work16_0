@@ -110,9 +110,6 @@ get.
     get.
     set.
     
-    define public property userDB as logical no-undo 
-    get.
-    set.
     
     define public property user-passwd as character initial ? no-undo 
     get:
@@ -1039,21 +1036,20 @@ end.
 method public void  termprc(input iDir as character,iProc as character,iNum as integer ):
    if avail ttrun
    then do:
-   if termprc(ttrun.fpid)
-   then do:
-      output to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
-      put skip.
-      output close.
-   end.
-   if ttrun.fpid eq 0
-   then
-   do: 
-       output to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
-      put skip.
-      output close.
-   end.
+      if termprc(ttrun.fpid)
+      then do:
+         output to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
+         put skip.
+         output close.
+      end.
+      if ttrun.fpid eq 0
+      then
+      do: 
+          output to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
+         put skip.
+         output close.
+      end.
    end.       
-end.    
 end.    
  
 method public logical  termprc(iPid as integer):
