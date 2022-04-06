@@ -405,6 +405,8 @@ procedure save_update :
   if v-mark:screen-value in frame {&frame-name} = ""
   then do:
     v-length = LENGTH(v-scan-str, 'raw').
+    if v-length = 0
+    then return .
     set-size(mData) = 0. 
     set-size(mData) = v-length.
     PUT-STRING(mData, 1, v-length) = v-scan-str.
@@ -454,7 +456,7 @@ procedure save_update :
     v-mark:screen-value = "" .
     v-scan-str = "".
     v-mark = "".
-    message "Некорректный формат штрих-кода. Документ необходимо заполнить в ручном режиме" view-as alert-box .
+    message "Некорректный формат штрих-кода. Повторно просканируйте код с ТТН. При возникновении проблемы обратитесь в тех. поддержку" view-as alert-box .
     v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
     return .
   end.
@@ -479,7 +481,7 @@ procedure save_update :
     v-mark:screen-value = "" .
     v-scan-str = "".
     v-mark = "".
-    message "Некорректный формат штрих-кода. Документ необходимо заполнить в ручном режиме" view-as alert-box .
+    message "Некорректный формат штрих-кода. Повторно просканируйте код с ТТН. При возникновении проблемы обратитесь в тех. поддержку" view-as alert-box .
     v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
     undo, return.
   end.
@@ -544,7 +546,7 @@ procedure save_update :
       v-mark:screen-value = "" .
       v-scan-str = "".
       v-mark = "".
-      message "Ошибка установки поставщика. Не найден поставщик с кодом " v-cli-code skip return-value view-as alert-box.  
+      message "Ошибка установки поставщика. Не найден поставщик с кодом " v-cli-code ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" skip return-value view-as alert-box.  
       v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
       undo, return error .
     end .
@@ -556,7 +558,7 @@ procedure save_update :
       v-mark:screen-value = "" .
       v-scan-str = "".
       v-mark = "".
-      message "Отсутствует поставщик с кодом " v-cli-code  view-as alert-box.
+      message "Отсутствует поставщик с кодом " v-cli-code ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box.
       v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
       undo, return error .
     end .
@@ -566,7 +568,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Поставщик с кодом " v-cli-code " неактивный. (Удалён)"  view-as alert-box.
+        message "Поставщик с кодом " v-cli-code " неактивный (Удалён). Для внесения в систему данных обратитесь к сотруднику регионального офиса"  view-as alert-box.
         v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
         undo, return error .
       end .
@@ -661,7 +663,7 @@ procedure save_update :
       v-mark:screen-value = "" .
       v-scan-str = "".
       v-mark = "".
-      message "Отсутствует нефтебаза с кодом " v-cli-code  view-as alert-box.  
+      message "Отсутствует нефтебаза с кодом " v-cli-code ". Для внесения в систему данных обратитесь к сотруднику регионального офиса"  view-as alert-box.  
       v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
       undo, return error .
     end .
@@ -671,7 +673,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Нефтебаза с кодом " v-cli-code " неактивна. (Удалена)"  view-as alert-box.
+        message "Нефтебаза с кодом " v-cli-code " неактивна (Удалена). Для внесения в систему данных обратитесь к сотруднику регионального офиса"  view-as alert-box.
         v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .  
         undo, return error .
       end .
@@ -707,7 +709,7 @@ procedure save_update :
       v-mark:screen-value = "" .
       v-scan-str = "".
       v-mark = "".
-      message "Отсутствует автоцистерна с гос. номером " v-tmp-char  view-as alert-box.  
+      message "Отсутствует автоцистерна с гос. номером " v-tmp-char ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box.  
       v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
       undo, return error .
     end .
@@ -790,7 +792,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Для автоцистерны с номером " ub.auto-tank.auto-num " не найдена секция " xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value view-as alert-box title "Ошибка".
+        message "Для автоцистерны с номером " ub.auto-tank.auto-num " не найдена секция " xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box title "Ошибка".
         if not xmlhndlerObj:GetNext()
           then leave rep_.
         next rep_.
@@ -820,8 +822,7 @@ procedure save_update :
       v-tmp-char = trim(v-tmp-char, ",") .
       if num-entries(v-tmp-char) > 1
       then do :
-        message "АИС коду топлива " string(v-gd-cd) " соответствуют несколько товаров TH." skip
-                "Выберите топливо в секции " xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value "."
+        message "Коду топлива " string(v-gd-cd) " соответствуют несколько товаров TH." skip "Выберите  топливо по справочнику ТН,  соответствующее  топливу сливаемой секции АЦ по ТТН (секция №" xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value ")."
         view-as alert-box .
         run str\chs-gd-from-list.w (input v-tmp-char,
                                     output v-tmp-int) .
@@ -837,7 +838,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Не найден товар с кодом " v-gd-cd view-as alert-box title "Ошибка".
+        message "Отсутствует товар с кодом " v-gd-cd ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box title "Ошибка".
         if not xmlhndlerObj:GetNext()
           then leave rep_.
         next rep_.
@@ -851,7 +852,7 @@ procedure save_update :
         v-mark:screen-value = "" .
         v-scan-str = "".
         v-mark = "".
-        message "Для товара с кодом " v-tmp-int " не удалось определить резервуар для приема НП" view-as alert-box title "Ошибка".
+        message "Для товара с кодом " v-tmp-int " не удалось определить резервуар для приема НП" ". Для внесения в систему данных обратитесь к сотруднику регионального офиса" view-as alert-box title "Ошибка".
         if not xmlhndlerObj:GetNext()
           then leave rep_.
         next rep_.

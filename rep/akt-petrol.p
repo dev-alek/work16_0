@@ -668,9 +668,11 @@ next_:
                     
         '<TR><TD colspan="18" style="font-style: italic;">Примечания:</TD></TR>' skip
                     
-        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">1 - указывается с обозначением метода определения плотности у поставщика</TD></TR>' skip
+        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">1 - используется расчётное значение</TD></TR>' skip
+        
+        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">2 - указывается с обозначением метода определения плотности у поставщика</TD></TR>' skip
                     
-        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">2 - указывается - "по планку", или величина отклонения уровня от планки со знаком "+" если фактический уровень нефтепродукта выше планки, и "-", если ниже. Если горловина отсутствует (планка находится вне горловины) - указываются только знаки - "+" или "-"</TD></TR>' skip
+        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">3 - указывается - "по планку", или величина отклонения уровня от планки со знаком "+" если фактический уровень нефтепродукта выше планки, и "-", если ниже. Если горловина отсутствует (планка находится вне горловины) - указываются только знаки - "+" или "-"</TD></TR>' skip
                     
         '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">Записи в таблице делаются построчно для каждой группы (подгруппы, марки) нефтепродукта. Построчно делаются записи и для одной марки нефтепродукта, если при его приеме происходит смена приемного резервуара.</TD></TR>' skip
                     
@@ -887,11 +889,11 @@ procedure print-table1:
         '</TR>'skip       
                     
         '<TR style="height: 20px;">' skip
-        '<TD text_wrap="true" style="text-align: center;">объем, л</TD>' skip
-        '<TD text_wrap="true" colspan="2" style="text-align: center;">плотность (1), кг/м3</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">объем (1), л</TD>' skip
+        '<TD text_wrap="true" colspan="2" style="text-align: center;">плотность (2), кг/м3</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">температура,С </TD>' skip
         '<TD text_wrap="true" style="text-align: center;">масса, кг</TD>' skip
-        '<TD text_wrap="true" colspan="2" style="text-align: center; height: 25px;">фактический уровень наполнения (2), мм</TD>' skip
+        '<TD text_wrap="true" colspan="2" style="text-align: center; height: 25px;">фактический уровень наполнения (3), мм</TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center;">объем, м3</TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center;">плотность, кг/м3</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">температура,С </TD>' skip

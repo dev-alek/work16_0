@@ -3105,7 +3105,42 @@ empty temp-table thbjattr_thbj-attr.
      return error.
    end.
    if v-is-looksec
-    then apply "choose" to b-docsec.
+   then do :
+     define variable v-rvd-own-nb as logical no-undo .
+     run adm/shattri.p (
+          input "get":U
+          ,input t-doc.obj-type
+          ,input t-doc.obj-code
+          ,input {&attr-petrol}
+          ,input  "rvd-own-nb"
+          ,output v-value-character
+          ,output v-value-date
+          ,output v-value-decimal
+          ,output v-value-integer
+          ,output v-value-logical
+          ,output par-type
+          ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+        ) no-error .
+     if error-status :error then v-rvd-own-nb = false .
+     else v-rvd-own-nb = v-value-logical.
+     if v-rvd-own-nb = false
+     and t-doc.cli-code > 0
+     then do :
+       find first ub.clients-attr no-lock where ub.clients-attr.obj-type = t-doc.cli-type
+                                            and ub.clients-attr.obj-code = t-doc.cli-code
+                                            and ub.clients-attr.attr-code = {&attr-owner-code}
+                                            no-error .
+       if available ub.clients-attr
+       and ub.clients-attr.attr-value > ""
+       then do :
+         if ub.clients-attr.attr-value = "орг" + string(t-doc.host-code)
+         then do :      
+           disable b-quit with frame {&frame-name}.
+         end .
+       end .
+     end .
+     apply "choose" to b-docsec.
+   end .
    case parline-mode:
      when {&lookup} then wait-for go of frame {&frame-name} focus b-quit.
      otherwise do:

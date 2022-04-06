@@ -48,6 +48,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable label42 as System.Windows.Forms.Label no-undo.
   define private variable label41 as System.Windows.Forms.Label no-undo.
   define private variable label40 as System.Windows.Forms.Label no-undo.
+  define private variable label49 as System.Windows.Forms.Label no-undo.
   define private variable maskedTextBoxDocVolume as System.Windows.Forms.MaskedTextBox no-undo.
   define private variable label48 as System.Windows.Forms.Label no-undo.
   define private variable maskedTextBoxPaspDens as System.Windows.Forms.MaskedTextBox no-undo.
@@ -901,6 +902,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           then do :
             this-object:label46:ForeColor = System.Drawing.Color:Red.
             this-object:label47:ForeColor = System.Drawing.Color:Red.
+            this-object:label49:ForeColor = System.Drawing.Color:Red.
           end .
           when "ttn-temp"
           then do :
@@ -1061,12 +1063,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     define variable resources as Progress.Util.ResourceManager no-undo.
     resources = new Progress.Util.ResourceManager("ibs.th.str.ptrl.forms.tanksection").
     this-object:groupBox3 = new System.Windows.Forms.GroupBox().
-    this-object:buttonPl = new System.Windows.Forms.Button().
     this-object:maskedTextBoxTPNorm = new System.Windows.Forms.MaskedTextBox().
     this-object:label39 = new System.Windows.Forms.Label().
     this-object:label21 = new System.Windows.Forms.Label().
     this-object:label20 = new System.Windows.Forms.Label().
-    this-object:label19 = new System.Windows.Forms.Label().
     this-object:label18 = new System.Windows.Forms.Label().
     this-object:label17 = new System.Windows.Forms.Label().
     this-object:label16 = new System.Windows.Forms.Label().
@@ -1078,11 +1078,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxDiameter = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxTankDens = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxDensTemp = new System.Windows.Forms.MaskedTextBox().
-    this-object:maskedTextBoxListTank = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxTankTemp = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxTankWater = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxABTArir = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxMouth = new System.Windows.Forms.MaskedTextBox().
+    this-object:buttonPl = new System.Windows.Forms.Button().
+    this-object:label19 = new System.Windows.Forms.Label().
+    this-object:maskedTextBoxListTank = new System.Windows.Forms.MaskedTextBox().
     this-object:groupBox2 = new System.Windows.Forms.GroupBox().
     this-object:buttonCopySec = new System.Windows.Forms.Button().
     this-object:maskedTextBoxValidityCertif = new System.Windows.Forms.MaskedTextBox().
@@ -1094,6 +1096,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label9 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxNumPassport = new System.Windows.Forms.MaskedTextBox().
     this-object:groupBox1 = new System.Windows.Forms.GroupBox().
+    this-object:label49 = new System.Windows.Forms.Label().
     this-object:label48 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxDocVolume = new System.Windows.Forms.MaskedTextBox().
     this-object:label47 = new System.Windows.Forms.Label().
@@ -1214,17 +1217,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox3:TabStop = false.
     this-object:groupBox3:UseCompatibleTextRendering = true.
     /*  */
-    /* buttonPl */
-    /*  */
-    this-object:buttonPl:Location = new System.Drawing.Point(630, 138).
-    this-object:buttonPl:Name = "buttonPl".
-    this-object:buttonPl:Size = new System.Drawing.Size(47, 23).
-    this-object:buttonPl:TabIndex = 24.
-    this-object:buttonPl:Text = "Выбор".
-    this-object:buttonPl:UseCompatibleTextRendering = true.
-    this-object:buttonPl:UseVisualStyleBackColor = true.
-    this-object:buttonPl:Click:Subscribe(this-object:buttonPl_Click).
-    /*  */
     /* maskedTextBoxTPNorm */
     /*  */
     this-object:maskedTextBoxTPNorm:ForeColor = System.Drawing.Color:Maroon.
@@ -1268,18 +1260,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label20:Text = "Температура замера объема,C:".
     this-object:label20:TextAlign = System.Drawing.ContentAlignment:TopRight.
     this-object:label20:UseCompatibleTextRendering = true.
-    /*  */
-    /* label19 */
-    /*  */
-    this-object:label19:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-    this-object:label19:ForeColor = System.Drawing.SystemColors:ControlText.
-    this-object:label19:Location = new System.Drawing.Point(523, 142).
-    this-object:label19:Name = "label19".
-    this-object:label19:Size = new System.Drawing.Size(70, 18).
-    this-object:label19:TabIndex = 28.
-    this-object:label19:Text = "Резервуар:".
-    this-object:label19:TextAlign = System.Drawing.ContentAlignment:TopRight.
-    this-object:label19:UseCompatibleTextRendering = true.
     /*  */
     /* label18 */
     /*  */
@@ -1389,14 +1369,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxDensTemp:TabIndex = 21.
     this-object:maskedTextBoxDensTemp:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimalNegNum_2_1).
     /*  */
-    /* maskedTextBoxListTank */
-    /*  */
-    this-object:maskedTextBoxListTank:Location = new System.Drawing.Point(596, 140).
-    this-object:maskedTextBoxListTank:Name = "maskedTextBoxListTank".
-    this-object:maskedTextBoxListTank:Size = new System.Drawing.Size(32, 20).
-    this-object:maskedTextBoxListTank:TabIndex = 23.
-    this-object:maskedTextBoxListTank:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_2).
-    /*  */
     /* maskedTextBoxTankTemp */
     /*  */
     this-object:maskedTextBoxTankTemp:ForeColor = System.Drawing.Color:Red.
@@ -1433,6 +1405,37 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxMouth:TabIndex = 15.
     this-object:maskedTextBoxMouth:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimal_5_3).
     this-object:maskedTextBoxMouth:Leave:Subscribe(this-object:calc-weight-vol).
+    /*  */
+    /* buttonPl */
+    /*  */
+    this-object:buttonPl:Location = new System.Drawing.Point(630, 136).
+    this-object:buttonPl:Name = "buttonPl".
+    this-object:buttonPl:Size = new System.Drawing.Size(47, 23).
+    this-object:buttonPl:TabIndex = 24.
+    this-object:buttonPl:Text = "Выбор".
+    this-object:buttonPl:UseCompatibleTextRendering = true.
+    this-object:buttonPl:UseVisualStyleBackColor = true.
+    this-object:buttonPl:Click:Subscribe(this-object:buttonPl_Click).
+    /*  */
+    /* label19 */
+    /*  */
+    this-object:label19:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label19:ForeColor = System.Drawing.SystemColors:ControlText.
+    this-object:label19:Location = new System.Drawing.Point(523, 140).
+    this-object:label19:Name = "label19".
+    this-object:label19:Size = new System.Drawing.Size(70, 18).
+    this-object:label19:TabIndex = 28.
+    this-object:label19:Text = "Резервуар:".
+    this-object:label19:TextAlign = System.Drawing.ContentAlignment:TopRight.
+    this-object:label19:UseCompatibleTextRendering = true.
+    /*  */
+    /* maskedTextBoxListTank */
+    /*  */
+    this-object:maskedTextBoxListTank:Location = new System.Drawing.Point(596, 138).
+    this-object:maskedTextBoxListTank:Name = "maskedTextBoxListTank".
+    this-object:maskedTextBoxListTank:Size = new System.Drawing.Size(32, 20).
+    this-object:maskedTextBoxListTank:TabIndex = 23.
+    this-object:maskedTextBoxListTank:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_2).
     /*  */
     /* groupBox2 */
     /*  */
@@ -1514,7 +1517,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label9 */
     /*  */
-    this-object:label9:Location = new System.Drawing.Point(12, 116).
+    this-object:label9:Location = new System.Drawing.Point(12, 114).
     this-object:label9:Name = "label9".
     this-object:label9:Size = new System.Drawing.Size(188, 20).
     this-object:label9:TabIndex = 17.
@@ -1524,7 +1527,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxNumPassport */
     /*  */
-    this-object:maskedTextBoxNumPassport:Location = new System.Drawing.Point(206, 116).
+    this-object:maskedTextBoxNumPassport:Location = new System.Drawing.Point(206, 114).
     this-object:maskedTextBoxNumPassport:Name = "maskedTextBoxNumPassport".
     this-object:maskedTextBoxNumPassport:Size = new System.Drawing.Size(464, 20).
     this-object:maskedTextBoxNumPassport:TabIndex = 9.
@@ -1532,6 +1535,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* groupBox1 */
     /*  */
     this-object:groupBox1:AccessibleName = "".
+    this-object:groupBox1:Controls:Add(this-object:label49).
     this-object:groupBox1:Controls:Add(this-object:buttonPl).
     this-object:groupBox1:Controls:Add(this-object:label48).
     this-object:groupBox1:Controls:Add(this-object:maskedTextBoxDocVolume).
@@ -1567,14 +1571,23 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox1:Controls:Add(this-object:maskedTextBoxDocDens).
     this-object:groupBox1:Location = new System.Drawing.Point(10, 3).
     this-object:groupBox1:Name = "groupBox1".
-    this-object:groupBox1:Size = new System.Drawing.Size(682, 171).
+    this-object:groupBox1:Size = new System.Drawing.Size(682, 177).
     this-object:groupBox1:TabIndex = 0.
     this-object:groupBox1:TabStop = false.
     this-object:groupBox1:UseCompatibleTextRendering = true.
     /*  */
+    /* label49 */
+    /*  */
+    this-object:label49:Location = new System.Drawing.Point(12, 161).
+    this-object:label49:Name = "label49".
+    this-object:label49:Size = new System.Drawing.Size(634, 14).
+    this-object:label49:TabIndex = 29.
+    this-object:label49:Text = "*Обязательным для заполнения является либо Группа нефтепродуктов, либо Давление насыщенных паров".
+    this-object:label49:UseCompatibleTextRendering = true.
+    /*  */
     /* label48 */
     /*  */
-    this-object:label48:Location = new System.Drawing.Point(497, 60).
+    this-object:label48:Location = new System.Drawing.Point(497, 58).
     this-object:label48:Name = "label48".
     this-object:label48:Size = new System.Drawing.Size(95, 20).
     this-object:label48:TabIndex = 27.
@@ -1584,7 +1597,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxDocVolume */
     /*  */
-    this-object:maskedTextBoxDocVolume:Location = new System.Drawing.Point(596, 60).
+    this-object:maskedTextBoxDocVolume:Location = new System.Drawing.Point(596, 58).
     this-object:maskedTextBoxDocVolume:Name = "maskedTextBoxDocVolume".
     this-object:maskedTextBoxDocVolume:Size = new System.Drawing.Size(77, 20).
     this-object:maskedTextBoxDocVolume:TabIndex = 26.
@@ -1592,18 +1605,18 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label47 */
     /*  */
-    this-object:label47:Location = new System.Drawing.Point(0, 89).
+    this-object:label47:Location = new System.Drawing.Point(0, 87).
     this-object:label47:Name = "label47".
     this-object:label47:Size = new System.Drawing.Size(203, 20).
     this-object:label47:TabIndex = 25.
-    this-object:label47:Text = "Давление насыщенных паров, кПа:".
+    this-object:label47:Text = "Давление насыщенных паров, кПа:*".
     this-object:label47:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label47:UseCompatibleTextRendering = true.
     /*  */
     /* maskedTextBoxPressure */
     /*  */
     this-object:maskedTextBoxPressure:ForeColor = System.Drawing.SystemColors:WindowText.
-    this-object:maskedTextBoxPressure:Location = new System.Drawing.Point(206, 89).
+    this-object:maskedTextBoxPressure:Location = new System.Drawing.Point(206, 87).
     this-object:maskedTextBoxPressure:Name = "maskedTextBoxPressure".
     this-object:maskedTextBoxPressure:Size = new System.Drawing.Size(74, 20).
     this-object:maskedTextBoxPressure:TabIndex = 24.
@@ -1621,24 +1634,24 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     arrayvar0[4] = "III".
     arrayvar0[5] = "IV".
     this-object:comboBoxGroupNP:Items:AddRange(arrayvar0).
-    this-object:comboBoxGroupNP:Location = new System.Drawing.Point(104, 62).
+    this-object:comboBoxGroupNP:Location = new System.Drawing.Point(104, 60).
     this-object:comboBoxGroupNP:Name = "comboBoxGroupNP".
     this-object:comboBoxGroupNP:Size = new System.Drawing.Size(81, 21).
     this-object:comboBoxGroupNP:TabIndex = 23.
     /*  */
     /* label46 */
     /*  */
-    this-object:label46:Location = new System.Drawing.Point(37, 62).
+    this-object:label46:Location = new System.Drawing.Point(33, 60).
     this-object:label46:Name = "label46".
-    this-object:label46:Size = new System.Drawing.Size(66, 20).
+    this-object:label46:Size = new System.Drawing.Size(80, 20).
     this-object:label46:TabIndex = 22.
-    this-object:label46:Text = "Группа НП:".
+    this-object:label46:Text = "Группа НП:*".
     this-object:label46:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
     this-object:label46:UseCompatibleTextRendering = true.
     /*  */
     /* label45 */
     /*  */
-    this-object:label45:Location = new System.Drawing.Point(191, 61).
+    this-object:label45:Location = new System.Drawing.Point(191, 59).
     this-object:label45:Name = "label45".
     this-object:label45:Size = new System.Drawing.Size(234, 20).
     this-object:label45:TabIndex = 21.
@@ -1649,7 +1662,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxDocDensST */
     /*  */
     this-object:maskedTextBoxDocDensST:ForeColor = System.Drawing.SystemColors:WindowText.
-    this-object:maskedTextBoxDocDensST:Location = new System.Drawing.Point(432, 61).
+    this-object:maskedTextBoxDocDensST:Location = new System.Drawing.Point(432, 59).
     this-object:maskedTextBoxDocDensST:Name = "maskedTextBoxDocDensST".
     this-object:maskedTextBoxDocDensST:Size = new System.Drawing.Size(76, 20).
     this-object:maskedTextBoxDocDensST:TabIndex = 20.
@@ -1657,7 +1670,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label44 */
     /*  */
-    this-object:label44:Location = new System.Drawing.Point(202, 140).
+    this-object:label44:Location = new System.Drawing.Point(202, 138).
     this-object:label44:Name = "label44".
     this-object:label44:Size = new System.Drawing.Size(239, 20).
     this-object:label44:TabIndex = 19.
@@ -1668,7 +1681,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxPaspDens */
     /*  */
     this-object:maskedTextBoxPaspDens:ForeColor = System.Drawing.SystemColors:WindowText.
-    this-object:maskedTextBoxPaspDens:Location = new System.Drawing.Point(444, 140).
+    this-object:maskedTextBoxPaspDens:Location = new System.Drawing.Point(444, 138).
     this-object:maskedTextBoxPaspDens:Name = "maskedTextBoxPaspDens".
     this-object:maskedTextBoxPaspDens:Size = new System.Drawing.Size(78, 20).
     this-object:maskedTextBoxPaspDens:TabIndex = 18.
@@ -1678,7 +1691,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     this-object:button1:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
     this-object:button1:ImageAlign = System.Drawing.ContentAlignment:MiddleRight.
-    this-object:button1:Location = new System.Drawing.Point(643, 84).
+    this-object:button1:Location = new System.Drawing.Point(643, 82).
     this-object:button1:Name = "button1".
     this-object:button1:Size = new System.Drawing.Size(27, 27).
     this-object:button1:TabIndex = 14.
@@ -1696,7 +1709,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     arrayvar1[1] = "Верхний налив".
     arrayvar1[2] = "Нижний налив".
     this-object:comboBoxPour:Items:AddRange(arrayvar1).
-    this-object:comboBoxPour:Location = new System.Drawing.Point(357, 88).
+    this-object:comboBoxPour:Location = new System.Drawing.Point(357, 86).
     this-object:comboBoxPour:Name = "comboBoxPour".
     this-object:comboBoxPour:Size = new System.Drawing.Size(100, 21).
     this-object:comboBoxPour:TabIndex = 13.
@@ -1710,7 +1723,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     define variable arrayvar2 as System.Object extent 1 no-undo.
     arrayvar2[1] = "".
     this-object:comboBoxShape:Items:AddRange(arrayvar2).
-    this-object:comboBoxShape:Location = new System.Drawing.Point(464, 88).
+    this-object:comboBoxShape:Location = new System.Drawing.Point(464, 86).
     this-object:comboBoxShape:Name = "comboBoxShape".
     this-object:comboBoxShape:Size = new System.Drawing.Size(172, 21).
     this-object:comboBoxShape:TabIndex = 12.
@@ -1720,7 +1733,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label8 */
     /*  */
-    this-object:label8:Location = new System.Drawing.Point(496, 10).
+    this-object:label8:Location = new System.Drawing.Point(496, 8).
     this-object:label8:Name = "label8".
     this-object:label8:Size = new System.Drawing.Size(96, 20).
     this-object:label8:TabIndex = 0.
@@ -1730,7 +1743,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxAccShip */
     /*  */
-    this-object:maskedTextBoxAccShip:Location = new System.Drawing.Point(595, 10).
+    this-object:maskedTextBoxAccShip:Location = new System.Drawing.Point(595, 8).
     this-object:maskedTextBoxAccShip:Name = "maskedTextBoxAccShip".
     this-object:maskedTextBoxAccShip:Size = new System.Drawing.Size(77, 20).
     this-object:maskedTextBoxAccShip:TabIndex = 3.
@@ -1738,7 +1751,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxSecName */
     /*  */
-    this-object:maskedTextBoxSecName:Location = new System.Drawing.Point(104, 10).
+    this-object:maskedTextBoxSecName:Location = new System.Drawing.Point(104, 8).
     this-object:maskedTextBoxSecName:Name = "maskedTextBoxSecName".
     this-object:maskedTextBoxSecName:Size = new System.Drawing.Size(81, 20).
     this-object:maskedTextBoxSecName:TabIndex = 1.
@@ -1747,7 +1760,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label7 */
     /*  */
-    this-object:label7:Location = new System.Drawing.Point(7, 10).
+    this-object:label7:Location = new System.Drawing.Point(7, 8).
     this-object:label7:Name = "label7".
     this-object:label7:Size = new System.Drawing.Size(96, 15).
     this-object:label7:TabIndex = 4.
@@ -1757,7 +1770,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label6 */
     /*  */
-    this-object:label6:Location = new System.Drawing.Point(278, 88).
+    this-object:label6:Location = new System.Drawing.Point(278, 86).
     this-object:label6:Name = "label6".
     this-object:label6:Size = new System.Drawing.Size(71, 20).
     this-object:label6:TabIndex = 5.
@@ -1767,7 +1780,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label5 */
     /*  */
-    this-object:label5:Location = new System.Drawing.Point(216, 10).
+    this-object:label5:Location = new System.Drawing.Point(216, 8).
     this-object:label5:Name = "label5".
     this-object:label5:Size = new System.Drawing.Size(197, 20).
     this-object:label5:TabIndex = 6.
@@ -1777,7 +1790,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label4 */
     /*  */
-    this-object:label4:Location = new System.Drawing.Point(7, 34).
+    this-object:label4:Location = new System.Drawing.Point(7, 32).
     this-object:label4:Name = "label4".
     this-object:label4:Size = new System.Drawing.Size(95, 20).
     this-object:label4:TabIndex = 7.
@@ -1787,7 +1800,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label3 */
     /*  */
-    this-object:label3:Location = new System.Drawing.Point(496, 34).
+    this-object:label3:Location = new System.Drawing.Point(496, 32).
     this-object:label3:Name = "label3".
     this-object:label3:Size = new System.Drawing.Size(95, 20).
     this-object:label3:TabIndex = 8.
@@ -1797,7 +1810,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label2 */
     /*  */
-    this-object:label2:Location = new System.Drawing.Point(4, 141).
+    this-object:label2:Location = new System.Drawing.Point(4, 139).
     this-object:label2:Name = "label2".
     this-object:label2:Size = new System.Drawing.Size(126, 20).
     this-object:label2:TabIndex = 9.
@@ -1807,7 +1820,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* label1 */
     /*  */
-    this-object:label1:Location = new System.Drawing.Point(191, 34).
+    this-object:label1:Location = new System.Drawing.Point(191, 32).
     this-object:label1:Name = "label1".
     this-object:label1:Size = new System.Drawing.Size(222, 20).
     this-object:label1:TabIndex = 10.
@@ -1818,7 +1831,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxCliQnty */
     /*  */
     this-object:maskedTextBoxCliQnty:ForeColor = System.Drawing.SystemColors:WindowText.
-    this-object:maskedTextBoxCliQnty:Location = new System.Drawing.Point(104, 34).
+    this-object:maskedTextBoxCliQnty:Location = new System.Drawing.Point(104, 32).
     this-object:maskedTextBoxCliQnty:Name = "maskedTextBoxCliQnty".
     this-object:maskedTextBoxCliQnty:Size = new System.Drawing.Size(81, 20).
     this-object:maskedTextBoxCliQnty:TabIndex = 4.
@@ -1826,7 +1839,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxDocQnty */
     /*  */
-    this-object:maskedTextBoxDocQnty:Location = new System.Drawing.Point(595, 34).
+    this-object:maskedTextBoxDocQnty:Location = new System.Drawing.Point(595, 32).
     this-object:maskedTextBoxDocQnty:Name = "maskedTextBoxDocQnty".
     this-object:maskedTextBoxDocQnty:Size = new System.Drawing.Size(77, 20).
     this-object:maskedTextBoxDocQnty:TabIndex = 6.
@@ -1835,7 +1848,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxCarVol */
     /*  */
     this-object:maskedTextBoxCarVol:ForeColor = System.Drawing.SystemColors:WindowText.
-    this-object:maskedTextBoxCarVol:Location = new System.Drawing.Point(136, 141).
+    this-object:maskedTextBoxCarVol:Location = new System.Drawing.Point(136, 139).
     this-object:maskedTextBoxCarVol:Name = "maskedTextBoxCarVol".
     this-object:maskedTextBoxCarVol:Size = new System.Drawing.Size(67, 20).
     this-object:maskedTextBoxCarVol:TabIndex = 7.
@@ -1844,7 +1857,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxTTNTemp */
     /*  */
-    this-object:maskedTextBoxTTNTemp:Location = new System.Drawing.Point(417, 10).
+    this-object:maskedTextBoxTTNTemp:Location = new System.Drawing.Point(417, 8).
     this-object:maskedTextBoxTTNTemp:Name = "maskedTextBoxTTNTemp".
     this-object:maskedTextBoxTTNTemp:Size = new System.Drawing.Size(78, 20).
     this-object:maskedTextBoxTTNTemp:TabIndex = 2.
@@ -1853,7 +1866,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* maskedTextBoxDocDens */
     /*  */
     this-object:maskedTextBoxDocDens:ForeColor = System.Drawing.SystemColors:WindowText.
-    this-object:maskedTextBoxDocDens:Location = new System.Drawing.Point(417, 34).
+    this-object:maskedTextBoxDocDens:Location = new System.Drawing.Point(417, 32).
     this-object:maskedTextBoxDocDens:Name = "maskedTextBoxDocDens".
     this-object:maskedTextBoxDocDens:Size = new System.Drawing.Size(78, 20).
     this-object:maskedTextBoxDocDens:TabIndex = 5.

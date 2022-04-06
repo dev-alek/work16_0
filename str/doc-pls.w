@@ -1594,44 +1594,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 /*  end.*/
 
   { str/doc-pl.i enable-tot-fld v-is-ptrl }
-  find first buf_trn-doc no-lock
-        where buf_trn-doc.doc-code = p-doc-code
-      .
-      
-  run adm/shattri.p (
-             input "get":U
-            ,input  buf_trn-doc.obj-type
-            ,input  buf_trn-doc.obj-code
-            ,input  {&attr-petrol}
-            ,input  {&attr-petrol_rvd-own-nb} /*p-param-code*/
-            ,output v-value-char
-            ,output v-value-date
-            ,output v-value-decimal
-            ,output v-value-integer
-            ,output v-rvd-own-nb
-            ,output par-type
-            ,input-output table-handle v-tth
-            ) no-error .
-  if error-status:error then do:
-      if valid-object(v-tth) then delete object v-tth.
-      v-rvd-own-nb = false .
-  end.
-  if v-rvd-own-nb = false
-  and buf_trn-doc.cli-code > 0
-  then do :
-    find first ub.clients-attr no-lock where ub.clients-attr.obj-type = buf_trn-doc.cli-type
-                                         and ub.clients-attr.obj-code = buf_trn-doc.cli-code
-                                         and ub.clients-attr.attr-code = {&attr-owner-code}
-                                         no-error .
-    if available ub.clients-attr
-    and ub.clients-attr.attr-value > ""
-    then do :
-      if ub.clients-attr.attr-value = "орг" + string(buf_trn-doc.host-code)
-      then do :     
-        disable b-add b-chg b-del with frame {&frame-name}.
-      end .
-    end .
-  end .
 
   {&OPEN-QUERY-br-doc-pl}
 
@@ -1718,6 +1680,45 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   { str/doc-pl.i disp-total }
 
   apply "entry" to br-doc-pl IN FRAME {&frame-name}.
+  
+  find first buf_trn-doc no-lock
+        where buf_trn-doc.doc-code = p-doc-code
+      .
+      
+  run adm/shattri.p (
+             input "get":U
+            ,input  buf_trn-doc.obj-type
+            ,input  buf_trn-doc.obj-code
+            ,input  {&attr-petrol}
+            ,input  {&attr-petrol_rvd-own-nb} /*p-param-code*/
+            ,output v-value-char
+            ,output v-value-date
+            ,output v-value-decimal
+            ,output v-value-integer
+            ,output v-rvd-own-nb
+            ,output par-type
+            ,input-output table-handle v-tth
+            ) no-error .
+  if error-status:error then do:
+      if valid-object(v-tth) then delete object v-tth.
+      v-rvd-own-nb = false .
+  end.
+  if v-rvd-own-nb = false
+  and buf_trn-doc.cli-code > 0
+  then do :
+    find first ub.clients-attr no-lock where ub.clients-attr.obj-type = buf_trn-doc.cli-type
+                                         and ub.clients-attr.obj-code = buf_trn-doc.cli-code
+                                         and ub.clients-attr.attr-code = {&attr-owner-code}
+                                         no-error .
+    if available ub.clients-attr
+    and ub.clients-attr.attr-value > ""
+    then do :
+      if ub.clients-attr.attr-value = "орг" + string(buf_trn-doc.host-code)
+      then do :     
+        disable b-add b-chg b-del with frame {&frame-name}.
+      end .
+    end .
+  end .
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
