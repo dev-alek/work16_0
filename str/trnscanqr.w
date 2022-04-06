@@ -410,8 +410,12 @@ procedure save_update :
   run checkcrc (input v-json-str, input v-crc, output v-ok).
   if not v-ok
   then do:
-    v-sts:screen-value in frame {&frame-name} = "ошибка контрольной суммы CRC32".
-/*    return error.*/
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message "Ошибка сканирования! Неверная контрольная сумма!" view-as alert-box .
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    return .
   end.
         
   assign v-mark = codepage-convert(v-mark:screen-value in frame {&frame-name}, "1251", "UTF-8") .
