@@ -502,7 +502,7 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
   end.
   find first buf_cashbook no-lock where buf_cashbook.id = integer((entry(ii,p-cashbook,{&delim-cmd}))) no-error .
   v-num-page = 0 .
-  
+
   define variable v-shift-num as integer no-undo .
   find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = buf_cashbook.id and ub.CashBookRule.Code = "uchet"
   and ub.CashBookRule.Obj-code = v-obj-code and ub.CashBookRule.Obj-type = v-obj-type no-error .
@@ -970,8 +970,8 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
         '</table>' skip
         .
       assign
-        v-date-start = v-date-start + 1
-        v-sheet-num  = v-sheet-num + 1
+/*        v-date-start = v-date-start + 1*/
+/*        v-sheet-num  = v-sheet-num + 1 */
         v-kolvo-pko  = 0
         v-kolvo-rko  = 0
         .
