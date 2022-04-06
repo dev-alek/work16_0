@@ -1134,7 +1134,7 @@ define variable v-err               as logical    no-undo .
      end.
      
      &scop fin-doc-type-code (if buf_temp-fin-sum.tot-sum > 0 then ~{&FDEDT_Income_Cash~} else ~{&FDEDT_expense_Cash~})
-     &scop my-message substitute("Создаю &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6  по кассовой книге № &7 &8 на сумму &9" ~
+     &scop my-message substitute("Создаю &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6  по кассовой книге № &7 на сумму &8 &9" ~
                                   , ~{&fin-doc-type-name~}  ~
                                   , buf_shift-obj.shift-name ~
                                   , buf_shift-obj.shift-date ~
