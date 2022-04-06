@@ -180,44 +180,44 @@ case p-pos-type:
     return v-pay-code.
   end.
   when {&cd-type-magia-xml} then do:
-/*очевидно см putc-31.i*/
+    /*очевидно см putc-31.i*/
     if p-pos-pay-code < 1000 then do:
       if p-pos-pay-code = 1 then do:
-    assign
-    p-curr-code = 0
-     .
+        assign
+        p-curr-code = 0
+        .
         return p-pos-pay-code.
-  end.
-  find first buf_currency no-lock where
+      end.
+      find first buf_currency no-lock where
                 buf_currency.okv-code = p-pos-pay-code no-error .
-  if not avail buf_currency then do:
-    assign
-    p-curr-code = - 1
-    .
-    return (- 1).
-  end.
-  assign
-  p-curr-code = buf_currency.curr-code
-  .
-  return 1.
-end.
-else do:
-  assign
+      if not avail buf_currency then do:
+        assign
+        p-curr-code = - 1
+        .
+        return (- 1).
+      end.
+      assign
+      p-curr-code = buf_currency.curr-code
+      .
+      return 1.
+    end.
+    else do:
+      assign
       v-pay-code = p-pos-pay-code - 10000
-  .
-  find buf_cash-pay no-lock where
-       buf_cash-pay.cdpay-code = v-pay-code no-error .
-  if not available buf_cash-pay then do:
-    assign
-    p-curr-code = - 1
-    .
-    return (- 1).
-  end.
-  assign
-  p-curr-code = buf_cash-pay.curr-code
-  .
-  return buf_cash-pay.cdpay-code.
-end.
+      .
+      find buf_cash-pay no-lock where
+          buf_cash-pay.cdpay-code = v-pay-code no-error .
+      if not available buf_cash-pay then do:
+        assign
+        p-curr-code = - 1
+        .
+        return (- 1).
+      end.
+      assign
+      p-curr-code = buf_cash-pay.curr-code
+      .
+      return buf_cash-pay.cdpay-code.
+    end.
   end. /*when cd-type-magia-xml*/
 end case.
 END FUNCTION.
@@ -254,12 +254,14 @@ then do:
   .
   undo, return .
 end.
+
+/* --- получение версии кассового ПО --- */
+define variable v-rowid as rowid no-undo .
+define variable v-tbl-name as character no-undo .
+define buffer locked_cash-desk for ub.cash-desk.
 if entry(1, p-second-mode) = "version" then do:
   do transaction:
-  define variable v-rowid as rowid no-undo .
-  define variable v-tbl-name as character no-undo .
-  define buffer locked_cash-desk for ub.cash-desk.
-  run gen-row-keyr in this-procedure
+    run gen-row-keyr in this-procedure
       ( input  replace(p-second-mode, "version,", "")
        ,input ?
        ,input "ub":U
@@ -269,9 +271,9 @@ if entry(1, p-second-mode) = "version" then do:
        ,output v-tbl-name
       ) no-error .
 
-  find first locked_cash-desk share-lock where
+    find first locked_cash-desk share-lock where
         rowid(locked_cash-desk) = v-rowid.
-  if v-from <> substitute('&1&2_касса&3', {&shop}, locked_cash-desk.obj-code, locked_cash-desk.cash-num) then do:
+    if v-from <> substitute('&1&2_касса&3', {&shop}, locked_cash-desk.obj-code, locked_cash-desk.cash-num) then do:
       run write-log-and-file in p-log-handle (
             input 1
           , input log-file-name
@@ -282,31 +284,27 @@ if entry(1, p-second-mode) = "version" then do:
                             , locked_cash-desk.cash-num
                             , v-from
                               )).
+      p-view-log = yes .
+    end.
+    else if locked_cash-desk.version <> v-pos-version then do:
       assign
-      p-view-log = yes
+        locked_cash-desk.version = v-pos-version
       .
-  end.
-  else  if locked_cash-desk.version <> v-pos-version then do:
-    assign
-    locked_cash-desk.version = v-pos-version
-    .
-    release locked_cash-desk no-error .
-    if not error-status:error then do:
-      run write-log-and-file in p-log-handle (
+      release locked_cash-desk no-error .
+      if not error-status:error then do:
+        run write-log-and-file in p-log-handle (
             input 1
           , input log-file-name
           , input 1
-          , input substitute("!!!Внимание! Для &1 версия ПО принимается равной &2."
+          , input substitute("Изменена версия ПО для &1. Версия ПО принимается равной &2."
                             , v-from
                             , v-pos-version
                               )).
-      assign
-      p-view-log = yes
-      .
+      end.
     end.
-  end.
   end. /*transa*/
 end.
+/* --- end_of получение версии кассового ПО --- */
 
 
 PROCEDURE get-ibm-parameters:
@@ -635,7 +633,8 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     v-flag-card = no
     d-mask_ = "":U
     cli-type_ = "":U
-	price-old = 0
+    v-oss-code = "":U
+    price-old = 0
     cli-code_ = 0
     v-chk-type[1] = 0
     v-chk-type[2] = 0
@@ -824,7 +823,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     . /* Предпологаем что уже есть в базе */
     return.
   end.
-  /* 14/II-2019 следущие три проверки выглядят избыточными
+  /* 15/I-2019 следущие три проверки выглядят избыточными
   assign
   shift-date_ = (if cas-shft
                  then shift-date_
@@ -842,7 +841,6 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     shift-num_       = 0
     shift-open-time_ = 0
   .
-
    find first ub.cash-desk no-lock where
                 ub.cash-desk.cash-num = pay-desk_
           AND ub.cash-desk.obj-code = p-obj-code no-error.
@@ -1355,13 +1353,12 @@ on error undo, return error
 :
     for each buf_temp-param where
             buf_temp-param.record-name = "Param":U
-            AND buf_temp-param.desk = v-desk
+            AND buf_temp-param.desk = m-head-cash-num
             and buf_temp-param.field-name = "ParamValue":
-            run cd-attr-write in this-procedure (
-                                                    input g#db-num
-                                                  ,input p-obj-code
-                                                  ,input p-pos-type
-                                                  ,input buf_temp-param.desk
+      run cd-attr-write in this-procedure (        m-head-db-num 
+                                                  ,m-head-obj-code 
+                                                  ,m-head-pos-type 
+                                                  ,m-head-cash-num 
                                                   ,input  (if p-pos-type = {&cd-type-ibm-xml}
                                                            then {&cda-IBM-XML_operative}
                                                            else {&cda-AUTOTANK_operative})
@@ -1373,7 +1370,7 @@ on error undo, return error
                                                   ,input no /*p-logical*/
                                                   ) no-error.
       if error-status:error then do:
-/*        {&error-in-file-format}*/
+        {&error-in-file-format}
       end.
     end.  
     END.
@@ -3614,8 +3611,6 @@ define buffer buf_cash-desk-attr for ub.cash-desk-attr .
             or (v-time-loc-char = ?
             and p-value = "CHead":U)
             then do:
-              message p-value
-              view-as alert-box.
               assign
               v-start-check = v-start-check - 1
               .
