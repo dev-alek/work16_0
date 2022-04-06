@@ -287,7 +287,8 @@ class ibs.th.str.InfoSectionsTotal:
       rdc-dnstvalue = "not".
     end.
     RdcDnstvalue = rdc-dnstvalue.
-		
+    GetDBAllAttr ().
+    CalculateTotal().
   end method.
 
   /*------------------------------------------------------------------------------
@@ -580,7 +581,20 @@ class ibs.th.str.InfoSectionsTotal:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method public void SaveDB(  ):
+  method public void SaveDB():
+    find first buf_goods no-lock where buf_goods.gds-code = GdsCode. 
+    if not can-find (first buf_doc-line no-lock where
+                               buf_doc-line.doc-code = TrnDocNum
+                           and buf_goods.artic = buf_doc-line.artic
+                           and buf_goods.prod-code = buf_doc-line.prod-code
+                           and buf_goods.prod-type = buf_doc-line.prod-type)
+    then do:
+      return error substitute ("Ћини€ по накладной не существует. Ќе возможно сохранить в базу данных данные по секци€м дл€ накладной &1 товар артикул &2 произовдитель &3&4", TrnDocNum, buf_goods.artic, buf_goods.prod-type, buf_goods.prod-code).
+    end.
+    SaveDBNoCheck().
+  end.
+  
+  method public void SaveDBNoCheck():
 
     define variable ii as integer no-undo.
     
@@ -591,17 +605,6 @@ class ibs.th.str.InfoSectionsTotal:
       delete buf_doc-line-attr.
       
     end.
-
-    find first buf_goods no-lock where buf_goods.gds-code = GdsCode. 
-    if not can-find (first buf_doc-line no-lock where
-                               buf_doc-line.doc-code = TrnDocNum 
-                           and buf_goods.artic = buf_doc-line.artic
-                           and buf_goods.prod-code = buf_doc-line.prod-code
-                           and buf_goods.prod-type = buf_doc-line.prod-type) 
-    then do:
-      return error substitute ("Ћини€ по накладной не существует. Ќе возможно сохранить в базу данных данные по секци€м дл€ накладной &1 товар артикул &2 произовдитель &3&4", TrnDocNum, buf_goods.artic, buf_goods.prod-type, buf_goods.prod-code).                             
-    end.
-                           
 
     create buf_doc-line-attr.
     assign

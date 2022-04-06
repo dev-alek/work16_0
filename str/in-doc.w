@@ -235,6 +235,7 @@ define variable ii as integer no-undo.
 define variable is-copy as logical no-undo.
 define variable docrec-src as recid no-undo.
 define variable varattr as character no-undo.
+define variable v-modeetc as character no-undo.
 
 define variable d-kg-after-qnty like ub.doc-line.fact-qnty  no-undo.
 define variable d-kg-price-rubl like ub.doc-line.price-rubl no-undo.
@@ -1646,7 +1647,7 @@ if pardoc-mode <> {&lookup} then do:
           t-doc.contract-code  = 0.
       end.
   end.
-  run gbl/inidebug.p.
+
 run UI-on in this-procedure ( input "enable" ).
 END.
 
@@ -2892,7 +2893,14 @@ do on error undo main-block, leave main-block :
            t-doc.doc-code
            {&trdcattr-is-fuel}
            "yes" 
-        no-error} 
+        no-error}
+        varlog = no.
+        message "Читать QR код ПН?"
+          view-as alert-box question buttons YES-NO update varlog.
+        if varlog
+        then do:
+          run str/trnscanqr.w (parparentproc, t-doc.doc-code, "", this-procedure).
+        end. 
       end.
       when 2 
       then do:
@@ -4282,6 +4290,39 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-cli-cust d-in-doc
+procedure set-cli-cust :
+  def input parameter p-clitype as char no-undo.
+  def input parameter p-clicode as int  no-undo.
+  
+  find first clients where clients.obj-type = p-clitype and clients.obj-code = p-clicode no-lock no-error.
+  if not available (clients)
+  then do:
+    return error "Не найден клиент - " + p-clitype + string(p-clicode).
+  end.
+  disp clients.obj-code @ t-doc.cli-code
+          clients.obj-name with frame {&frame-name}.
+  disp clients.obj-type @ t-doc.cli-type with frame {&frame-name}.
+      run check-cli no-error.
+      if error-status :error then return no-apply.
+
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE cycle-add-cust d-in-doc
+procedure cycle-add-cust :
+  
+  def input parameter p-recgds-list as character no-undo.
+  v-modeetc = ",autotrnqr2d".
+  varnotes = p-recgds-list.
+  run cycle-add in this-procedure.
+  run ui-on in this-procedure ( input "line" ).
+  
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE cycle-add d-in-doc
 PROCEDURE cycle-add :
 define buffer bf_goods  for ub.goods.
@@ -4448,8 +4489,9 @@ do while varlns-cnt <= num-entries (varnotes):
   end.
   assign
     pardoc-rec = recid(t-doc).
+
   run str/in-line.w (input  parparentproc,
-                     input  (if varlns-cnt > 1 then "ЦИКЛ":U else {&add-def}),
+                     input  ((if varlns-cnt > 1 then "ЦИКЛ":U else {&add-def}) + v-modeetc),
                      input  pardoc-rec,
                      input-output line-rec,
                      input  gds-rec,

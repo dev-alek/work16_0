@@ -1670,7 +1670,6 @@ DO:
 
 END.
 
-
 &Scoped-define SELF-NAME m_introduce-marks
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_introduce-marks {&FRAME-NAME}
 ON CHOOSE OF MENU-ITEM m_introduce-marks /* Добавить марки */

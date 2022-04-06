@@ -110,6 +110,12 @@ index pi obj-type obj-code pl-code out-code gds-code
 index doc out-code gds-code obj-code obj-type pl-code
 index gds-code gds-code
 .
+define  variable v-is-looksec as logical no-undo .
+if lookup ("autotrnqr2d", parline-mode, ",") > 0
+then do:
+  v-is-looksec = true.
+  parline-mode = replace (parline-mode, ",autotrnqr2d", "").
+end.
 
 { cmp/vssrevis.i               }
 { cmp/str-glbl.i               }
@@ -295,7 +301,6 @@ define variable l-repeat-asi                as logical                       no-
 define variable v-is-lgas                   as logical                       no-undo.
 define variable v-is-lgas-corr              as logical                       no-undo.
 define variable v-lgas-gds                  as logical                       no-undo.
-
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -2019,7 +2024,7 @@ do on error   undo main-block, leave main-block
 
    /* Если выбрали добавление старого товара */
    vargds-obj-fact-qnty:tooltip =  "Текущий остаток"  .
-
+   
    find t-doc where recid( t-doc ) = pardoc-rec.
 
      { str/tdat-val.i
@@ -2280,7 +2285,8 @@ empty temp-table thbjattr_thbj-attr.
      view-as alert-box error.
      return error.
    end.
-
+   if v-is-looksec
+    then apply "choose" to b-docsec.
    case parline-mode:
      when {&lookup} then wait-for go of frame {&frame-name} focus b-quit.
      otherwise do:
