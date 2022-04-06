@@ -1972,7 +1972,6 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable DeltaOtn_H              as decimal no-undo.
   define variable DeltaOtn_H_Water        as decimal no-undo.
   define variable DeltaOtn_R              as decimal no-undo.
-  define variable mass-float-cov          as decimal no-undo format ">>,>>9.999":U.
   define variable temp-for-pomi           as integer no-undo.
   define variable temp-izm-vol            as decimal no-undo init ? .
   define variable izmer-density           as decimal no-undo init ? .
@@ -1980,6 +1979,9 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable v-mm-density            as decimal no-undo.
   define variable v-POkMI-result          as character no-undo.
   define variable v-POkMI-result-attr     as character no-undo.
+  define variable place-ponton            as logical no-undo .
+  define variable place-ponton-mass       as decimal no-undo .
+  define variable place-ponton-height     as decimal no-undo .
   
   define variable pl-rvd-dens as logical no-undo .
   define variable pl-rvd-lvl as logical no-undo .
@@ -3731,6 +3733,15 @@ THEN DO:
           when {&place-SI-level} then do :
             if v-ok then pl-level-sr-izm = integer(v-value) .
           end.
+          when {&place-ponton} then do :
+            if v-ok then place-ponton = logical(v-value) .
+          end.
+          when {&place-ponton-mass} then do :
+            if v-ok then place-ponton-mass = decimal(v-value) .
+          end.
+          when {&place-ponton-height} then do :
+            if v-ok then place-ponton-height = decimal(v-value) .
+          end.
         end case.
       end.
         /*..........................................*/
@@ -4211,20 +4222,6 @@ THEN DO:
             and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
             and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
             and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-            and rvs-line-attr.rvs-code  = p-prev-code
-            and rvs-line-attr.attr-code = "mass-float-cov" no-error.
-      if available rvs-line-attr then do :
-        mass-float-cov = decimal(rvs-line-attr.attr-value) .
-      end.
-      else do :
-        mass-float-cov = 0 .
-      end.
-      
-      find first rvs-line-attr no-lock
-          where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-            and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-            and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-            and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
             and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
             and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
       if available rvs-line-attr then do :
@@ -4379,19 +4376,19 @@ THEN DO:
               "    " SKIP
               "    " SKIP
               cur-time-string()           FORMAT "x(16)"    SKIP
-              'Процедура '                v-proc                      FORMAT "x(128)"   SKIP
-              'CODE_PL                = ' bf_rvs-line.pl-code                           SKIP
-              'H                      = ' v-mm:H                  SKIP
-              'H_water                = ' v-mm:H_water                  SKIP
-              'CalibrationTable       = ' v-mm:CalibrationTable                  SKIP
-              'Tv                     = ' v-mm:Tv                 SKIP
-              'Tr                     = ' v-mm:Tr                       SKIP
-              'R                      = ' v-mm:R                SKIP
-              'Tcy                    = ' v-mm:Tcy                                 SKIP
+              'Процедура '                v-proc                          FORMAT "x(128)"    SKIP
+              'CODE_PL                = ' bf_rvs-line.pl-code                                SKIP
+              'H                      = ' v-mm:H                                             SKIP
+              'H_water                = ' v-mm:H_water                                       SKIP
+              'CalibrationTable       = ' v-mm:CalibrationTable                              SKIP
+              'Tv                     = ' v-mm:Tv                                            SKIP
+              'Tr                     = ' v-mm:Tr                                            SKIP
+              'R                      = ' v-mm:R                                             SKIP
+              'Tcy                    = ' v-mm:Tcy                                           SKIP
               'ToolType               = ' v-mm:ToolType                                      SKIP
-              'DeadZone_Reservoir     = ' v-mm:DeadZone_Reservoir                                    SKIP
+              'DeadZone_Reservoir     = ' v-mm:DeadZone_Reservoir                            SKIP
               'DeltaOtn_K             = ' v-mm:DeltaOtn_K                                    SKIP
-              'A_Reservoir            = ' v-mm:A_Reservoir                                     SKIP
+              'A_Reservoir            = ' v-mm:A_Reservoir                                   SKIP
               'A_LevelMeasurementTool = ' v-mm:A_LevelMeasurementTool                        skip
               'DeltaAbs_H             = ' v-mm:DeltaAbs_H                                    SKIP
               'DeltaAbs_H_Water       = ' v-mm:DeltaAbs_H_Water                              SKIP
@@ -4402,19 +4399,22 @@ THEN DO:
               'DeltaOtn_H_Water       = ' v-mm:DeltaOtn_H_Water                              SKIP
               'DeltaOtn_R             = ' v-mm:DeltaOtn_R                                    SKIP
               'DeltaOtn_N             = ' v-mm:DeltaOtn_N                                    SKIP
-                  SKIP SKIP 
           .
   
-          if place-type = 1 then do :
+          if place-type = 1
+          and place-ponton
+          then do :
             v-mm:Rprov = ( dens-prov * 1000 ) .
-            v-mm:Mpokr = mass-float-cov.
+            v-mm:Mpokr = place-ponton-mass .
+            v-mm:CoverFloatingHeight = place-ponton-height .
             put stream outstream unformatted
-  
-              "v-mm:Rprov = " v-mm:Rprov skip
-              "v-mm:Mpokr = " v-mm:Mpokr skip
+              "Rprov                  = " v-mm:Rprov                    skip
+              "Mpokr                  = " v-mm:Mpokr                    skip
+              "CoverFloatingHeight    = " v-mm:CoverFloatingHeight      skip
             .
           end.
           
+          put stream outstream unformatted SKIP SKIP .
           
           output stream outstream close.
         end . /* not is-sug */

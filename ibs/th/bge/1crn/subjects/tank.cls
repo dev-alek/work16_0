@@ -24,29 +24,37 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
   define variable placelib as class placelib no-undo .
   { cmp/str-glbl.i class }
   
-&global-define place-type        "place-type"                /*тип резервуара(вертикальный,горизонтальный)*/
-&global-define place-SI          "place-SI"                    /*средство измерения*/
-&global-define place-diameter    "place-diameter"        /*диаметр резервуара(мм)*/
-&global-define dead-balance      "dead-balance"        /*мертвый остаток*/
-&global-define place-ratio-error "place-ratio-error"  /*относительная погрешность составления калибровочной таблицы резервуара*/
-&global-define place-dens-prov   "dens-prov"         /*плотность при поверке резервуара*/
-&global-define place-virtual     "place-virtual"     /*виртуальный резервуар*/
-&global-define place-twice-code  "place-twice-code" /*Код сдвоенного резервуара*/
-&global-define place-local       "place-local"     /*Расположение резервуара*/
-&global-define place-error-mass  "place-error-mass" /*Погрешность измерения массы*/
-&global-define place-asi-sertif  "place-asi-sertif" /*АСИ сертифицированно*/
-&global-define place-rvd-dnsty   "place-rvd-dnsty" /*РВД плотности*/
-&global-define place-rvd-lvl     "place-rvd-lvl" /*РВД уровня*/
-&global-define place-rvd-tmp     "place-rvd-tmp" /*РВД температуры*/
-&global-define place-dead-high   "place-dead-high" /*Высота мертвой полости(мм)*/
-&global-define place-temp-coef   "place-temp-coef" /*Темп. коэф. линейного расширения материала стенки рез-ра(1/°С)*/
-&global-define place-SI-dens     "place-SI-dens" /*Вспомогательное средство измерения Плотность*/
-&global-define place-SI-level    "place-SI-level" /*Вспомогательное средство измерения Уровень*/
-&global-define place-SI-temp     "place-SI-temp" /*Вспомогательное средство измерения Температура*/
-&global-define place-passp-num   "place-passp-num" /*Номер резервуара по паспорту*/
-&global-define place-passp-type  "place-passp-type" /*Тип резервуара по паспорту*/
+&global-define place-type         "place-type"                /*тип резервуара(вертикальный,горизонтальный)*/
+&global-define place-SI           "place-SI"                    /*средство измерения*/
+&global-define place-diameter     "place-diameter"        /*диаметр резервуара(мм)*/
+&global-define dead-balance       "dead-balance"        /*мертвый остаток*/
+&global-define water-level        "water-level"        /*Допустимый уровень воды(мм)*/
+/*&global-define place-ratio-error  "place-ratio-error"  /*относительная погрешность составления калибровочной таблицы резервуара*/*/
+&global-define place-dens-prov    "dens-prov"         /*плотность при поверке резервуара*/
+&global-define place-virtual      "place-virtual"     /*виртуальный резервуар*/
+&global-define place-twice-code   "place-twice-code" /*Код сдвоенного резервуара*/
+&global-define place-sert-urov    "place-sert-urov" /*Сертифицированный уровнемер по массе*/
+&global-define place-local        "place-local"     /*Расположение резервуара*/
+&global-define place-error-mass   "place-error-mass" /*Погрешность измерения массы*/
+&global-define place-asi-sertif   "place-asi-sertif" /*АСИ сертифицированно*/
+&global-define place-rvd-dnsty    "place-rvd-dnsty" /*РВД плотности*/
+&global-define place-rvd-lvl      "place-rvd-lvl" /*РВД уровня*/
+&global-define place-rvd-tmp      "place-rvd-tmp" /*РВД температуры*/
+&global-define place-SI-dens      "place-SI-dens"                    /*средство измерения плотности*/
+&global-define place-SI-level     "place-SI-level"                    /*средство измерения уровня*/
+&global-define place-SI-temp      "place-SI-temp"                    /*средство измерения температуры*/
+&global-define place-passp-num    "place-passp-num"                    /*номер по паспорту*/
+&global-define place-passp-type   "place-passp-type"                    /*тип по паспорту*/
+&global-define place-dead-high    "place-dead-high"                    /*высота мертвой полости*/
+&global-define place-temp-coef    "place-temp-coef"                    /*Температурный коэффициент линейного расширения материала стенки резервуара,*/
+&global-define disable-water-alarm   "disable-water-alarm" /*Отключить сообщения по воде*/
+&global-define disable-level-alarm   "disable-level-alarm" /*Отключить сообщения по уровню*/
+&global-define place-ponton        "place-ponton"                    /*наличие понтона*/
+&global-define place-ponton-mass   "place-ponton-mass"                    /*масса понтона*/
+&global-define place-ponton-height "place-ponton-height"                    /*высота всплытия понтона*/
+&global-define place-need-RVD-rvs "place-need-RVD-rvs" /* Необходимо сделать сверку с РВД (в список не добавлять!) */
 
-&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,place-ratio-error,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-dead-high,place-temp-coef,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type':u /*список атрибутов резервуара*/
+&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm,place-ponton,place-ponton-mass,place-ponton-height':u /*список атрибутов резервуара*/
 
   define buffer buf_place      for ub.place .
   define buffer buf_c-place    for ub.c-place .
@@ -88,6 +96,9 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
       field place-tmp-mi-code   as character
       field place-passport-num  as character
       field place-passport-type as character
+      field ponton              as logical
+      field ponton-mass         as decimal
+      field ponton-height       as decimal
       index pi as primary unique
       pl-code
       .
@@ -218,10 +229,10 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
                  do :
                     if v-ok then tt-place-attr.dead-balance = decimal(v-value) .
                  end.
-              when {&place-ratio-error} then 
-                 do :
-                    if v-ok then tt-place-attr.place-rel-error = decimal(v-value) .
-                 end.
+/*              when {&place-ratio-error} then                                       */
+/*                 do :                                                              */
+/*                    if v-ok then tt-place-attr.place-rel-error = decimal(v-value) .*/
+/*                 end.                                                              */
               when {&place-dens-prov} then 
                  do :
                     if v-ok then tt-place-attr.place-dens-prov = decimal(v-value) .
@@ -322,7 +333,16 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
                     do:
                        tt-place-attr.place-passport-type = v-value .
                     end.
-                 end.                                                                                                 
+                 end.   
+              when {&place-ponton} then do :
+                if v-ok then tt-place-attr.ponton = logical(v-value) .
+              end.
+              when {&place-ponton-mass} then do: 
+                if v-ok then tt-place-attr.ponton-mass = decimal(v-value) .
+              end.  
+              when {&place-ponton-height} then do: 
+                if v-ok then tt-place-attr.ponton-height = decimal(v-value) .
+              end.                                                                                               
            end case.
         end.
       end.
@@ -341,7 +361,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("d-qnty"   , string(tt-place-attr.dead-balance)).
         sw:write-data-element ("tank-d"   , string(tt-place-attr.place-diameter)).
         sw:write-data-element ("dc-height" , string(tt-place-attr.place-dc-height)).        
-        sw:write-data-element ("rel-er"   , string-mth (tt-place-attr.place-rel-error)).
+        sw:write-data-element ("rel-er"   , if tt-place-attr.place-type = "1" then "0.20" else "0.25").
         sw:write-data-element ("dnsty"    , string-mth (tt-place-attr.place-dens-prov)).
         sw:write-data-element ("main-mi-code"  , string(if tt-place-attr.place-Si = ? then 0 else tt-place-attr.place-Si)).
         sw:write-data-element ("position"  , string(tt-place-attr.place-local)).
@@ -356,6 +376,18 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("tmp-mi-code" , string(tt-place-attr.place-tmp-mi-code)). 
         sw:write-data-element ("passport-num" , string(tt-place-attr.place-passport-num)).  
         sw:write-data-element ("passport-type" , string(tt-place-attr.place-passport-type)). 
+        if tt-place-attr.place-type = "1"
+        then do :
+          if tt-place-attr.ponton
+          then do :
+            sw:write-data-element ("pontoon", "1").
+            sw:write-data-element ("wght-pntn", string(tt-place-attr.ponton-mass)).
+            sw:write-data-element ("srfcng-pntn", string(tt-place-attr.ponton-height)).
+          end .
+          else do :
+            sw:write-data-element ("pontoon", "0").
+          end .
+        end .
       end.
       sw:write-data-element ("gd-code", string(tt-place.gds-code)).
       sw:write-data-element ("izm-pr", if tt-place.is-meas = yes then "1" else "0").

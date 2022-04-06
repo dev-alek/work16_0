@@ -338,6 +338,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          v-new = TRUE
          v-pl-level = ?
          v-pl-qnty  = 0
+         
          FRAME Dialog-Frame:TITLE = SUBSTITUTE  ( "Создание строки градуировочной таблицы для резервуара &1 (&2) &3 &4"
                                                 , p-pl-code
                                                 , buf_place.loc1
@@ -345,6 +346,19 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                                 , p-obj-type
                                                 )
       .
+      find first ub.place-attr no-lock where ub.place-attr.obj-type = buf_place.obj-type
+                                         and ub.place-attr.obj-code = buf_place.obj-code
+                                         and ub.place-attr.pl-code = buf_place.pl-code
+                                         and ub.place-attr.attr-code = "place-type"
+                                         no-error .
+      if not available ub.place-attr 
+      or (available ub.place-attr and ub.place-attr.attr-value = "2")
+      then do :
+        v-pl-tarir-delta = 0.25 .
+      end .
+      else do :
+        v-pl-tarir-delta = 0.2 .
+      end .
    END.
    run check-pl-level in this-procedure NO-ERROR.
       IF ERROR-STATUS:ERROR then do:

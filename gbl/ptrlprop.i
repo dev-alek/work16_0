@@ -194,7 +194,7 @@ procedure get-ptrl-prop :
             .
           end.
         end.
-	when {&attr-petrol_rvd-own-nb} then do:
+	      when {&attr-petrol_rvd-own-nb} then do:
           if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-logical} then do:
             assign
               ptrlprop-rvd-own-nb = thbjattr_thbj-attr.property-value-logical
