@@ -487,28 +487,80 @@ else do:
     return error.
   end.
 end.
-    run adm/shattri.p (
-      input "get":U
-      ,input t-doc.obj-type
-      ,input t-doc.obj-code
-      ,input {&attr-contr-in}
-      ,input ( if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}  then  "contr-in-expense" else "contr-in-income" )
-      ,output v-value-character
-      ,output v-value-date
-      ,output v-value-decimal
-      ,output v-value-integer
-      ,output v-value-logical
-      ,output varcontract-type
-      ,INPUT-OUTPUT TABLE-handle v-tth1
-      ) no-error .
+&if "{2}" = "trn-type" &then
+   if {2} = {&is-gds} then varvalue = "yes" .
+   else do:
+   { str/tdat-val.i
+     t-doc.doc-code
+     {&trdcattr-trn-is-gds}
+     varvalue
+     vartype
+     no-error
+   }
+      if varvalue = "no" then do:
+      if can-find (FIRST ub.clients-attr no-lock where (ub.clients-attr.attr-code = {&attr-supp-np} or ub.clients-attr.attr-code = {&attr-supp-lgas})
+                                                and ub.clients-attr.attr-value = "yes") then varvalue = "no" . else varvalue = "yes" . 
+      end.
+      end.
+&else
+   { str/tdat-val.i
+     t-doc.doc-code
+     {&trdcattr-trn-is-gds}
+     varvalue
+     vartype
+     no-error
+   }
+&endif   
+   if varvalue = "yes" or varvalue = "" then 
+   do:
+      run adm/shattri.p (
+         input "get":U
+         ,input t-doc.obj-type
+         ,input t-doc.obj-code
+         ,input {&attr-contr-in}
+         ,input ( if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}  then  "contr-in-expense" else "contr-in-income" )
+         ,output v-value-character
+         ,output v-value-date
+         ,output v-value-decimal
+         ,output v-value-integer
+         ,output v-value-logical
+         ,output varcontract-type
+         ,INPUT-OUTPUT TABLE-handle v-tth1
+         ) no-error .
       if error-status :error then
-      message
-        vss-workfile vss-revision vss-description skip
-        error-status :get-message(1) skip
-        return-value skip
-        "adm/shattri.p"
-        view-as alert-box error
-      .
+         message
+            vss-workfile vss-revision vss-description skip
+            error-status :get-message(1) skip
+            return-value skip
+            "adm/shattri.p"
+            view-as alert-box error
+            .
+   end.
+   else 
+   do:
+      run adm/shattri.p (
+         input "get":U
+         ,input t-doc.obj-type
+         ,input t-doc.obj-code
+         ,input {&attr-contr-in}
+         ,input ( if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}  then  "contr-in-expense-NP" else "contr-in-income-NP" )
+         ,output v-value-character
+         ,output v-value-date
+         ,output v-value-decimal
+         ,output v-value-integer
+         ,output v-value-logical
+         ,output varcontract-type
+         ,INPUT-OUTPUT TABLE-handle v-tth1
+         ) no-error .
+      if error-status :error then
+         message
+            vss-workfile vss-revision vss-description skip
+            error-status :get-message(1) skip
+            return-value skip
+            "adm/shattri.p"
+            view-as alert-box error
+            .         
+   end.   
       delete object v-tth1.
       if v-value-logical = true then varcontract = "yes" .
                                 else varcontract = "no" .

@@ -223,6 +223,8 @@ define variable v-param as character no-undo .
 define variable v-gds-name as character no-undo .
 define variable parext-doc-mode as character no-undo.
 define variable prev-pardoc-mode as character no-undo.
+define variable varvalue as character no-undo.
+define variable vartype  as character no-undo.
 
 define variable v-is-ptrl   as character no-undo.
 define variable v-data-type as character no-undo.

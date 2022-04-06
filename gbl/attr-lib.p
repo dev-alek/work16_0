@@ -2988,20 +2988,21 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-contr-in   true
 &scop output-display-attr-contr-in  true
 &scop other-attr-contr-in           'spr-ext=gbl\naklpa.w':U
-&scop prop-type-list-attr-contr-in  'logical,logical,logical,logical,logical':U
-&scop prop-label-list-attr-contr-in 'Договор в ПН,Договор в РН,Сверять количества в ПН,Перенумерация ПКО и РКО'
-&scop prop-list-attr-contr-in       'contr-in-income,contr-in-expense,contr-qnty-spec,contr-recount'
+&scop prop-type-list-attr-contr-in  'logical,logical,logical,logical,logical,logical,logical':U
+&scop prop-label-list-attr-contr-in 'Договор в ПН с НП,Договор в ПН с СПТ,Договор в РН с НП,Договор в РН с СПТ,Сверять количества в ПН,Перенумерация ПКО и РКО'
+&scop prop-list-attr-contr-in       'contr-in-income-NP,contr-in-income,contr-in-expense-NP,contr-in-expense,contr-qnty-spec,contr-recount'
 &scop global-attr-contr-in true
 &scop host-attr-contr-in true
 &scop shop-attr-contr-in true
 &scop store-attr-contr-in true
-&scop db-attr-contr-in false
 &scop batch-edit-attr-contr-in  0
-&scop attr-contr-in_contr-in-income_tooltip  Обязательная ссылка на договор в приходной накладной
-&scop attr-contr-in_contr-in-expense_tooltip Обязательная ссылка на договор в расходной накладной
+&scop attr-contr-in_contr-in-income-NP_tooltip  Обязательная ссылка на договор в приходной накладной с НП
+&scop attr-contr-in_contr-in-income-CPT_tooltip  Обязательная ссылка на договор в приходной накладной с СПТ
+&scop attr-contr-in_contr-in-expense-NP_tooltip Обязательная ссылка на договор в расходной накладной с НП
+&scop attr-contr-in_contr-in-expense-CPT_tooltip Обязательная ссылка на договор в расходной накладной с СПТ
 &scop attr-contr-in_contr-qnty-spec_tooltip  Сверять количество в ПН по спецификации
-&scop attr-contr-in_contr-recount  Перенумерация ПКО и РКО
-&scop prop-tooltip-list-attr-contr-in        {&attr-contr-in_contr-in-income_tooltip},{&attr-contr-in_contr-in-expense_tooltip},{&attr-contr-in_contr-qnty-spec_tooltip},{&attr-contr-in_contr-recount}
+&scop attr-contr-in_contr-recount_tooltip  Перенумерация ПКО и РКО
+&scop prop-tooltip-list-attr-contr-in        {&attr-contr-in_contr-in-income-NP_tooltip},{&attr-contr-in_contr-in-income_tooltip},{&attr-contr-in_contr-in-expense-NP_tooltip},{&attr-contr-in_contr-in-expense_tooltip},{&attr-contr-in_contr-qnty-spec_tooltip},{&attr-contr-in_contr-recount_tooltype}
 &scop level-way-attr-contr-in "obj,host,global"
 &scop up-way-attr-contr-in "contr-in,contr-in,contr-in"
 

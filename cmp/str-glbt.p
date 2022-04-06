@@ -269,7 +269,7 @@ attr-fin-doc }
 /* атрибут глобальный -  Договор в накладных */
 { cmp/cr-prep.i 1 attr-contr-in  contr-in contr-in contr-in contr-in  }
 { cmp/cr-prepc.i 1 prop-list-attr-contr-in
-"contr-in-income,contr-in-expense,contr-qnty-spec,contr-recount"
+"contr-in-income-NP,contr-in-income,contr-in-expense-NP,contr-in-expense,contr-qnty-spec,contr-recount"
 attr-contr-in }
 
 /* атрибутЫ накладных от глобального к объекту  */

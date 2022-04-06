@@ -1501,7 +1501,8 @@ if pardoc-mode <> {&lookup} then do:
     define variable varexch-scale     like ub.trn-doc.exch-scale          no-undo.
     define variable varcurr-abbr     as   character                       no-undo.
     define variable v-master as character no-undo.
-    
+
+    if trn-type = {&is-gds} then do:
     run adm/shattri.p (
       input "get":U
       ,input t-doc.obj-type
@@ -1524,6 +1525,31 @@ if pardoc-mode <> {&lookup} then do:
         "adm/shattri.p"
         view-as alert-box error
       .
+      end.
+      else do:
+    run adm/shattri.p (
+      input "get":U
+      ,input t-doc.obj-type
+      ,input t-doc.obj-code
+      ,input {&attr-contr-in}
+      ,input ( if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}  then  "contr-in-expense-NP" else "contr-in-income-NP" )
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output varcontract-type
+      ,INPUT-OUTPUT TABLE-handle v-tth1
+      ) no-error .
+      if error-status :error then
+      message
+        vss-workfile vss-revision vss-description skip
+        error-status :get-message(1) skip
+        return-value skip
+        "adm/shattri.p"
+        view-as alert-box error
+      .         
+      end.   
       delete object v-tth1.
       if v-value-logical = true then varcontract = "yes" .
                                 else varcontract = "no" .
