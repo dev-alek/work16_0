@@ -110,6 +110,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       marking.sts          = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts)
       marking.unit-ext     = objImp:unit-ext
    .
+   if marking.gds-code eq 0
+   then 
+      marking.gds-code = ?.
    if    marking.box-qnty < 1
       or marking.box-qnty eq ? 
    then

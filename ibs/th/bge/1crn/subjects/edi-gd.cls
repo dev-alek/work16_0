@@ -96,7 +96,7 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
       v-str = v-str + ",qnty-ttn"           when qnty-ttn          = ?
       v-str = v-str + ",sum"                when sum               = ? 
       v-str = v-str + ",price-nonds"        when price-nonds       = ? 
-      v-str = v-str + ",gd-code"            when gds-code          = ?
+/*      v-str = v-str + ",gd-code"            when gds-code          = ?*/
       
     .
     v-str = substring(v-str, 2).
