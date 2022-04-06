@@ -1593,8 +1593,8 @@ ON CHOOSE OF menu-item m_akt /* Печать акт  приема-передачи */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_nakl POPUP-MENU-b-servis
 ON CHOOSE OF menu-item m_nakl /* Формирование накладной */
     DO:
-        define variable v-check-db-num  as integer no-undo .
-        define variable v-check-user-id as integer no-undo .
+        define variable v-check-db-num  as integer    no-undo .
+        define variable v-check-user-id as character  no-undo .
    
         { gbl/getcurus.i
     v-check-db-num
@@ -1620,7 +1620,7 @@ ON CHOOSE OF menu-item m_nakl /* Формирование накладной */
                     end.
                     else v-msg = substitute ('Документ: &1 от &2. Ошибка при формировании ПН. &3. &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate), trim(return-value, ".")).
                     message v-msg view-as alert-box.
-                end.  
+               end.  
             end.
             message "Накладные сформированы"
                 view-as alert-box.   
@@ -1648,8 +1648,8 @@ ON CHOOSE OF menu-item m_nakl /* Формирование накладной */
                     else v-msg = substitute ('Документ: &1 от &2. Ошибка при формировании ПН. &3. &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate), trim(return-value, ".")).
                     message v-msg view-as alert-box.
                 run init-id (X_utd.doc-id, X_utd.db-num).
-            
-            end.  
+                
+           end.  
         end.  
         v-rid-list = "" .
     END.
@@ -1680,16 +1680,16 @@ ON CHOOSE OF menu-item m_recEDI /* Получить данные ЭДО */
   true
   log-res
 }
-        if log-res then 
+        if log-res then
         do:
             run getNewupd no-error.
-            if error-status:error then 
+            if error-status:error then
             do:
                 return return-value .
-            end.  
+            end.
             run init-sort .
             {&OPEN-QUERY-br-utd}
-        end.    
+        end.
         v-rid-list = "" .
     END.
 
@@ -2379,6 +2379,9 @@ function checkMark returns logical
    v-write-cancel = false .
    define variable vpen as integer no-undo.
    define variable vdel as integer no-undo.
+   if not logical(getattrutdex(idb-num,idoc-id,"MarkUtd","yes")) 
+   then
+      return yes.
    vpen = Marking:PendingVerification:KeyIntDB.
    vdel = Marking:DeliveryControl:KeyIntDB.
    for each cancel_utd-marking-lines where cancel_utd-marking-lines.doc-id = idoc-id and cancel_utd-marking-lines.db-num = idb-num no-lock, 
@@ -2387,7 +2390,7 @@ function checkMark returns logical
             v-write-cancel = true .
             leave .
    end.
-   if     v-write-cancel 
+   if     v-write-cancel
    then do:
       find first utd where utd.db-num eq idb-num
                        and utd.doc-id eq idoc-id
@@ -2668,7 +2671,7 @@ PROCEDURE init-sort :
             if ub.utd.DocumentNumber <> buf_utd.documentNumber then 
                 X_utd.orig-code = ub.utd.DocumentNumber .
         end.     
-   
+
         if X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and 
         X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Canceled:KeyIntDB and 
         X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB then 
