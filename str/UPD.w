@@ -410,7 +410,7 @@ DEFINE VARIABLE RADIO-SET-2      AS INTEGER
     "Требуется подпись", 1,
     "Подписано", 2
     SIZE 47 BY 1.25 NO-UNDO.
-
+define variable mdoc-id as character no-undo.
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY br-utd FOR 
@@ -438,7 +438,7 @@ DEFINE BROWSE br-utd
     X_utd.orig-code COLUMN-LABEL "Номер!ориг.документа" FORMAT "x(15)":U WIDTH 15
     X_utd.LoadDate COLUMN-LABEL "Дата загр" FORMAT "99/99/9999":U
     X_utd.DocumentExt COLUMN-LABEL "ID документа" FORMAT "x(80)":U WIDTH 50
-    X_utd.doc-id COLUMN-LABEL "Внутр.!номер" FORMAT "99999":U
+    substitute ("&1_&2",X_utd.db-num, X_utd.doc-id) @ mdoc-id COLUMN-LABEL "Внутр.!номер" FORMAT "x(12)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 131 BY 17.63 FIT-LAST-COLUMN.
@@ -711,7 +711,7 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
                 X_utd.orig-code:bGCOLOR in browse br-utd = GRAY_COLOR.
                 X_utd.LoadDate:bGCOLOR in browse br-utd = GRAY_COLOR.
                 X_utd.DocumentExt:bGCOLOR in browse br-utd = GRAY_COLOR.
-                X_utd.doc-id:bGCOLOR in browse br-utd = GRAY_COLOR.
+                mdoc-id:bGCOLOR in browse br-utd = GRAY_COLOR.
                 X_utd.obj-name:bGCOLOR in browse br-utd = GRAY_COLOR.        
             end.  
             if X_utd.edoctype = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
@@ -736,7 +736,7 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
                             X_utd.orig-code:fGCOLOR in browse br-utd = RED_COLOR.
                             X_utd.LoadDate:fGCOLOR in browse br-utd = RED_COLOR.
                             X_utd.DocumentExt:fGCOLOR in browse br-utd = RED_COLOR.
-                            X_utd.doc-id:fGCOLOR in browse br-utd = RED_COLOR.
+                            mdoc-id:fGCOLOR in browse br-utd = RED_COLOR.
                             X_utd.obj-name:fGCOLOR in browse br-utd = RED_COLOR.
                         end.
                     when ObjSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB or
@@ -757,7 +757,7 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
                             X_utd.orig-code:fGCOLOR in browse br-utd = CYAN_COLOR.
                             X_utd.LoadDate:fGCOLOR in browse br-utd = CYAN_COLOR.
                             X_utd.DocumentExt:fGCOLOR in browse br-utd = CYAN_COLOR.
-                            X_utd.doc-id:fGCOLOR in browse br-utd = CYAN_COLOR.
+                            mdoc-id:fGCOLOR in browse br-utd = CYAN_COLOR.
                             X_utd.obj-name:fGCOLOR in browse br-utd = CYAN_COLOR.        
                         end.               
                     when ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB
@@ -777,7 +777,7 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
                             X_utd.orig-code:fGCOLOR in browse br-utd = 13.
                             X_utd.LoadDate:fGCOLOR in browse br-utd = 13.
                             X_utd.DocumentExt:fGCOLOR in browse br-utd = 13.
-                            X_utd.doc-id:fGCOLOR in browse br-utd = 13.
+                            mdoc-id:fGCOLOR in browse br-utd = 13.
                             X_utd.obj-name:fGCOLOR in browse br-utd = 13.
                         end.        
                 end.
@@ -1611,11 +1611,15 @@ ON CHOOSE OF menu-item m_nakl /* Формирование накладной */
                         buf_utd.doc-id, /* OrganizationId*/
                         v-check-user-id /*User-Id*/
                         ) no-error .
-                    if error-status:error then
-                    do:
-                        message return-value view-as alert-box.
-                        return .
+                    def var v-msg as char no-undo.
+                    if not error-status:error
+                    then do:
+                       if return-value matches "*ошибка*"
+                       then v-msg = substitute ('Документ № &1 от &2. Сформирована ПН: &3. &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate) , buf_utd.doc-code, return-value).
+                       else v-msg = substitute ('Документ № &1 от &2. Сформирована ПН: &3. &5 &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate) , buf_utd.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
                     end.
+                    else v-msg = substitute ('Документ: &1 от &2. Ошибка при формировании ПН. &3. &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate), trim(return-value, ".")).
+                    message v-msg view-as alert-box.
                 end.  
             end.
             message "Накладные сформированы"
@@ -1628,21 +1632,22 @@ ON CHOOSE OF menu-item m_nakl /* Формирование накладной */
             if available (X_utd) then 
             do:
                 v-rid-list = string(recid(X_utd)) .
+                find first buf_utd no-lock where buf_utd.doc-id = X_utd.doc-id and buf_utd.db-num = X_utd.db-num no-error .
                 run ibs\th\str\utd\adaputd.p
                     (X_utd.db-num, /*DocumentID*/
                     X_utd.doc-id, /* OrganizationId*/
                     v-check-user-id /*User-Id*/
                     )  no-error.
-                if  error-status:error then 
-                    if error-status:error then
-                    do:
-                        message return-value view-as alert-box.
-                        return .
+                
+                    if not error-status:error
+                    then do:
+                       if return-value matches "*ошибка*"
+                       then v-msg = substitute ('Документ № &1 от &2. Сформирована ПН: &3. &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate) , buf_utd.doc-code, return-value).
+                       else v-msg = substitute ('Документ № &1 от &2. Сформирована ПН: &3. &5 &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate) , buf_utd.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
                     end.
+                    else v-msg = substitute ('Документ: &1 от &2. Ошибка при формировании ПН. &3. &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate), trim(return-value, ".")).
+                    message v-msg view-as alert-box.
                 run init-id (X_utd.doc-id, X_utd.db-num).
-                find first ub.utd no-lock where ub.utd.doc-id = X_utd.doc-id and ub.utd.db-num = X_utd.db-num no-error .
-                message "Накладная " +  ub.utd.doc-code + " сформирована"
-                    view-as alert-box.
             
             end.  
         end.  
@@ -1707,7 +1712,6 @@ ON CHOOSE OF b_oneUtd IN FRAME d-utd /* Повторно проверить */
             end.
             run init-id (X_utd.doc-id, X_utd.db-num).  
         end.  
-  
         {&OPEN-QUERY-br-utd}
     END.
 
@@ -1747,7 +1751,6 @@ ON CHOOSE OF MENU-ITEM m_recheck /* Повторно проверить */
 }
         if log-res then 
         do:
-                
             define buffer buf_c-utd for ub.c-utd .
             if v-rid-list <> "" then 
             do:
@@ -1761,7 +1764,6 @@ ON CHOOSE OF MENU-ITEM m_recheck /* Повторно проверить */
                     unsubscribe "getNextseq".
                 end.  
                 run init-sort in this-procedure .
-                {&OPEN-QUERY-br-utd}
             end.   
             else 
             do:
@@ -1774,9 +1776,9 @@ ON CHOOSE OF MENU-ITEM m_recheck /* Повторно проверить */
                     Recheck(X_utd.db-num, X_utd.doc-id).
                     unsubscribe "getNextseq".
                     run init-id (X_utd.doc-id, X_utd.db-num).
-                       
                 end.  
             end.
+            {&OPEN-QUERY-br-utd}
             v-rid-list = "" .
         end.
     END.
@@ -1869,7 +1871,6 @@ ON CHOOSE OF MENU-ITEM m_checknakl /* Привязать накладную */
                     return no-apply.
                 end.    
                 else do:
-
                 find first Nakl_utd no-lock where Nakl_utd.doc-code = buf_trn-doc.doc-code no-error .
                 if available (Nakl_utd) then do:
                     message
@@ -2395,12 +2396,12 @@ function checkMark returns logical
          and utd.sts-edi <> ObjSrv:Env:Utd:Sts:EDI:AutoRejected:KeyIntDB 
          and utd.sts-edi <> ObjSrv:Env:Utd:Sts:EDI:SignatureNotAccepted:KeyIntDB
       then
-         return yes.
-      else
          return no.
+      else
+         return yes.
    end.
    else
-      return no.
+      return yes.
 END function.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2582,6 +2583,7 @@ PROCEDURE init-id :
             X_utd.sts-edi = buf_utd.sts-edi .
             X_utd.stts = StatusTHName(buf_utd.sts).
             X_utd.stts-edi = StatusEDIName(buf_utd.sts-edi).
+            X_utd.doc-code = buf_utd.doc-code.
             if v-cntxt-db-num <> 0 then 
             do:
                 for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num 

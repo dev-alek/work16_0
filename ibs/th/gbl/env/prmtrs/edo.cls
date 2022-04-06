@@ -19,66 +19,39 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
 { cmp/str-glbl.i class}
 { gbl/thbj-def.i }
 
-  define public property Shoes as logical initial false no-undo 
-    get.
-    private set. 
-
-  define public property Perfume as logical initial false no-undo 
-    get.
-    private set. 
-
-  define public property Industry as logical initial false no-undo 
-    get.
-    private set. 
-
-  define public property Tires as logical initial false no-undo 
-    get.
-    private set. 
-    
-  define public property Apteka as logical initial false no-undo 
-    get.
-    private set. 
-    
-  define public property Photo as logical initial false no-undo 
-    get.
-    private set. 
-
-  define public property Tabak as logical initial false no-undo 
-    get.
-    private set.      
-
-  define public property Milk as logical initial false no-undo 
-    get.
-    private set.   
-    
-  define public property Water as logical initial false no-undo 
-    get.
-    private set.   
-        
-  define public property NotType as logical initial false no-undo 
-    get.
-    private set.
-
   define public property MarkingType as character initial "" no-undo 
     get.
-    private set.
+    private set. 
+
+  define public property MarkingTypeobj as class markingtype no-undo 
+    get.
+    private set. 
 
   define public property MarkingTypeEDO as character initial "" no-undo 
     get.
-    private set.
+    private set. 
 
-  define public property IsMarking as logical initial false no-undo 
+  define public property MarkingTypeEDOobj as class markingtype no-undo 
     get.
-    private set.
+    private set. 
+    
+    
+  define public property IsMarking as logical initial false no-undo 
+    get:
+       return MarkingTypeobj:IsMarking.
+    end.
 
   define public property IsEdo as logical initial false no-undo 
+    get.
+    private set.   
+        
+  define public property IsEdoNotMark as logical initial false no-undo 
     get.
     private set.
     
   define public property IsManual as logical initial false no-undo 
     get.
     private set.
-
 
   define public property IsBanRecipes as logical initial false no-undo 
     get.
@@ -129,7 +102,7 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingType = v-value-character.
-
+    {utl\objreg.i MarkingTypeobj markingtype MarkingType}
     run adm/shattri.p (
       input "get":U
       ,input pObjType
@@ -145,6 +118,7 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingTypeEDO = v-value-character.
+    {utl\objreg.i MarkingTypeEDOobj markingtype MarkingTypeEDO}
         
     run adm/shattri.p (
       input "get":U
@@ -164,6 +138,24 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       then IsEDO = true.
       else IsEDO = false.
 
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "marking-EDO-NotMark"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    if v-value-logical = true
+      then IsEdonotMark = true.
+      else IsEdonotMark = false.
+      
     run adm/shattri.p (
       input "get":U
       ,input pObjType
@@ -236,46 +228,6 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       then IsBarCode = true.
       else IsBarCode = false.   
 
-    if MarkingType = ""
-    then IsMarking = false.
-    else do:
-      IsMarking = true.
-      case true:
-        when lookup (MarkingType, "not-type") > 0 then do:
-          NotType = true.
-        end.
-        when  lookup (MarkingType, "tabak") > 0 then do:
-          Tabak = true.
-        end.
-        when  lookup (MarkingType, "shoes") > 0 then do:
-          Shoes = true.
-        end.
-        when  lookup (MarkingType, "perfume") > 0 then do:
-          Perfume = true.
-        end.
-        when  lookup (MarkingType, "industry") > 0 then do:
-          Industry = true.
-        end.
-        when  lookup (MarkingType, "tires") > 0 then do:
-          Tires = true.
-        end.
-        when  lookup (MarkingType, "apteka") > 0 then do:
-          Apteka = true.
-        end.
-        when  lookup (MarkingType, "photo") > 0 then do:
-          Photo = true.
-        end.
-        when  lookup (MarkingType, "milk") > 0 then do:
-          Milk = true.
-        end.
-        when  lookup (MarkingType, "water") > 0 then do:
-          Water = true.
-        end.        
-        otherwise do:
-          IsMarking = false.
-        end.
-      end.
-    end.
     
   end constructor.
 
@@ -286,17 +238,13 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
 
   method public logical GetIsMarkingForType(pType as char):
 
-    if not MarkingType = "" and lookup (pType, MarkingType) > 0
-      then return true.
-      else return false.
+    return MarkingTypeobj:GetValForType(pType).
 
   end method.  
   
   method public logical GetIsMarkingForTypeEDO(pType as char):
 
-    if not MarkingTypeEDO = "" and lookup (pType, MarkingTypeEDO) > 0
-      then return true.
-      else return false.
+    return MarkingTypeEDOobj:GetValForType(pType).
 
   end method.  
     

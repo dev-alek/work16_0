@@ -227,7 +227,7 @@ run gbl/md5.p (
        input  mfile
       ,output v-md5-signature /* p-md5-signature */
       ) .
-if "{cmp/procasunc.md5}" ne v-md5-signature 
+if "{cmp/procasunc.md5}" ne {utl/chekmd5.i v-md5-signature } 
 then do:
    message substitute("Файл &1 имеет не правильную сигнатуру md5.", mfile)
    view-as alert-box.

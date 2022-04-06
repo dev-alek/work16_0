@@ -27,7 +27,7 @@ Creation date: 05/08/07
 
 /* Parameters Definitions ---                                           */
 
-define input  param ttl     as character no-undo .
+define input  param ittl     as character no-undo .
 define output param en-pswd as character no-undo .
 
 def var vss-revision    as character no-undo init "$Revision$":U .
@@ -36,7 +36,7 @@ def var vss-date        as character no-undo init "$Date$":U .
 def var vss-workfile    as character no-undo init "$Workfile$":U .
 def var vss-archive     as character no-undo init "$Archive$":U .
 def var vss-description as character no-undo init "Запрос пароля".
-{ cmp/vssrevis.i "substitute('&1':u,ttl)" }
+{ cmp/vssrevis.i "substitute('&1':u,ittl)" }
 { cmp/str-glbl.i }
 { cmp/showinf.i  }
 
@@ -53,12 +53,12 @@ def var vss-description as character no-undo init "Запрос пароля".
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME d-ask-pswd
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help pswd
-&Scoped-Define DISPLAYED-OBJECTS pswd
+&Scoped-Define DISPLAYED-OBJECTS TTL pswd 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -88,23 +88,29 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE pswd AS CHARACTER FORMAT "X(8)":U
+DEFINE VARIABLE TTL AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL LARGE
+     SIZE 52 BY 6 NO-UNDO.
+
+DEFINE VARIABLE pswd AS CHARACTER FORMAT "X(50)":U 
      LABEL "&Пароль"
      VIEW-AS FILL-IN
-     SIZE 14 BY 1 NO-UNDO.
+     SIZE 44 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-ask-pswd
+     pswd AT ROW 9.75 COL 10 COLON-ALIGNED BLANK  PASSWORD-FIELD 
+     
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      b-help AT ROW 1 COL 21
-     pswd AT ROW 3 COL 10.5 COLON-ALIGNED BLANK
-     SPACE(6.49) SKIP(1.28)
+     TTL AT ROW 3 COL 4 NO-LABEL WIDGET-ID 4
+     SPACE(2.99) SKIP(1.66)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE "<insert dialog title>"
+         TITLE "Ввод пароля "
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
 
@@ -123,10 +129,15 @@ DEFINE FRAME d-ask-pswd
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX d-ask-pswd
-                                                                        */
+   FRAME-NAME                                                           */
 ASSIGN
        FRAME d-ask-pswd:SCROLLABLE       = FALSE
        FRAME d-ask-pswd:HIDDEN           = TRUE.
+
+/* SETTINGS FOR EDITOR TTL IN FRAME d-ask-pswd
+   NO-ENABLE                                                            */
+ASSIGN 
+       TTL:READ-ONLY IN FRAME d-ask-pswd        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -149,9 +160,32 @@ ASSIGN
 
 &Scoped-define SELF-NAME d-ask-pswd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL d-ask-pswd d-ask-pswd
-ON WINDOW-CLOSE OF FRAME d-ask-pswd /* <insert dialog title> */
+ON WINDOW-CLOSE OF FRAME d-ask-pswd /* ВВод пароля  */
 DO:
   APPLY "END-ERROR":U TO SELF.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-exit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-ask-pswd
+ON CHOOSE OF b-exit IN FRAME d-ask-pswd /* Ввод  */
+DO:
+   en-pswd = encode (input pswd).
+  /* apply "leave" to pswd IN FRAME d-ask-pswd. */ 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-quit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit d-ask-pswd
+ON CHOOSE OF b-quit IN FRAME d-ask-pswd /* Ввод  */
+DO:
+   en-pswd = ?.
+   /* apply "leave" to pswd IN FRAME d-ask-pswd. */
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -162,12 +196,11 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL pswd d-ask-pswd
 ON LEAVE OF pswd IN FRAME d-ask-pswd /* Пароль */
 DO:
-  if input pswd = "" then do:
-    message "Пароль не может быть пустым!".
-    apply "entry" to pswd.
+  /* if input pswd = "" then do:
+    message "Пароль не может быть пустым!" view-as alert-box.
     return no-apply.
   end.
-  else en-pswd = encode (input pswd).
+  else */ 
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -194,7 +227,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   en-pswd = "".
   RUN enable_UI.
-  frame {&frame-name}:title = ttl.
+/*  frame {&frame-name}:title = ttl.*/
+  ttl:screen-value = iTTL.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -233,14 +267,14 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY pswd
+  DISPLAY TTL pswd 
       WITH FRAME d-ask-pswd.
   ENABLE b-exit b-quit b-help pswd
       WITH FRAME d-ask-pswd.
   VIEW FRAME d-ask-pswd.
-  apply "entry" to pswd in frame d-ask-pswd .
   {&OPEN-BROWSERS-IN-QUERY-d-ask-pswd}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

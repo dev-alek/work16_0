@@ -10,7 +10,20 @@ function CheckedocMark return logical
  input idb-numedoc as integer,
  input idoc-idedoc as integer  ):
     define variable VChekOk as logical no-undo init yes.
+    define variable vMarkUtd   as logical   no-undo.
+    define variable v-par-type as character no-undo.
+    define variable v-par-val  as character no-undo.
     
+    define buffer buf_utd-attr      for utd-attr.
+    define buffer buf_utd           for utd.
+    define buffer utd-marking-lines for utd-marking-lines.
+    define buffer utd-lines         for utd-lines.
+    define buffer marking           for marking.
+    define buffer edoc-lines        for utd-lines.
+    
+    vMarkutd = logical(getattrutdex (idb-numorig,idoc-idorig,"MarkUtd","yes")).
+    if vMarkUtd
+    then do:
     for each utd-marking-lines where utd-marking-lines.db-num    eq idb-numorig
                                  and utd-marking-lines.doc-id    eq idoc-idorig
                                  and utd-marking-lines.doc-level eq 1
@@ -44,6 +57,74 @@ function CheckedocMark return logical
        AddUtdErrForTab(idb-numedoc, idoc-idedoc, "utd-marking-lines", buffer tt-utd-mark:handle, "edoc", "MarkOrig" + tt-utd-mark.side, tt-utd-mark.mark).
        VChekOk = no.
     end.
+       find first buf_utd where buf_utd.db-num eq idb-numedoc
+                            and buf_utd.doc-id eq idoc-idedoc
+       no-lock.
+       define variable vqnty as decimal no-undo.
+       for each edoc-lines where edoc-lines.db-num eq idb-numedoc
+                             and edoc-lines.doc-id eq idoc-idedoc
+       no-lock:
+          vqnty = 0.
+          &scop proc-name gds-attr-value
+          {&run_proc_attr-lib}
+               ( edoc-lines.gds-code,
+                 {&attr-mark-type},
+                 output v-par-val,
+                 output v-par-type
+                ).
+          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsMarkingForType(v-par-val)
+          then do:
+             for each utd-marking-lines where utd-marking-lines.db-num  eq edoc-lines.db-num
+                                          and utd-marking-lines.doc-id  eq edoc-lines.doc-id
+                                          and utd-marking-lines.LineNum eq edoc-lines.LineNum
+                                          and utd-marking-lines.sts     eq objSrv:Env:marking:Sts:Mark:Checked_:KeyIntDB
+             no-lock,
+                first marking where marking.mark eq utd-marking-lines.mark
+                                and marking.box-qnty eq 1
+             no-lock:
+                vqnty = vqnty +  1.
+             end.
+          end.
+          else do:
+             for each utd-marking-lines where utd-marking-lines.db-num    = edoc-lines.db-num
+                                          and utd-marking-lines.doc-id    = edoc-lines.doc-id
+                                          and utd-marking-lines.LineNum   = edoc-lines.LineNum
+                                          and utd-marking-lines.doc-level = 1
+             no-lock,
+                first marking where marking.mark = utd-marking-lines.mark
+                                and (   marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
+                                     or marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB) 
+                                and marking.box-qnty <> ? 
+             no-lock:
+                vqnty = vqnty + marking.box-qnty.
+             end.      
+          end.
+  
+          if vqnty ne edoc-lines.Quantity
+          then
+             AddUtdErrForTab(idb-numedoc, idoc-idedoc, "utd-lines", buffer edoc-lines:handle, "edoc", "lineQnty", string(edoc-lines.LineNum ) + {&delim-par} + string(Vqnty) + {&delim-par} + string(edoc-lines.Quantity)).
+       end.
+    end.
+    else do:
+       for each utd-lines where utd-lines.db-num    eq idb-numorig
+                            and utd-lines.doc-id    eq idoc-idorig
+       no-lock:
+          find first edoc-lines where edoc-lines.db-num eq idb-numedoc
+                                  and edoc-lines.doc-id eq idoc-idedoc
+                                  and edoc-lines.LineNum eq utd-lines.LineNum
+          no-lock no-error.
+       
+          define variable VUtdlinequentity as decimal no-undo.
+          VUtdlinequentity = dec (getattrutdlinesex(utd-lines.db-num ,utd-lines.doc-id,utd-lines.LineNum,"QuantityBarCode","0")).
+          if     VUtdlinequentity eq ?
+             or (if available edoc-lines then edoc-lines.Quantity else 0) ne VUtdlinequentity
+          then
+             AddUtdErr(idb-numedoc, idoc-idedoc,buffer edoc-lines:handle,"edoc","lineQnty",string(edoc-lines.LineNum ) + {&delim-par} + string(VUtdlinequentity) + {&delim-par} + string(edoc-lines.Quantity ) ).
+       end.
+    end.
+    for each tt-utd-mark:
+       delete tt-utd-mark.
+    end.
 end.
 
 
@@ -63,7 +144,11 @@ function CheckEdoc returns character
    define buffer utd-marking-lines  for ub.utd-marking-lines.
    define buffer edoc-lines for ub.utd-lines.
    define variable vSts as integer no-undo.
+   define variable vMarkutd as logical no-undo.
    vSts = objSrv:Env:utd:Sts:th:ReceivedFromSupplier:KeyIntDB.
+   vMarkutd = logical(getattrutdex (idb-numOrig,idoc-idOrig,"MarkUtd","yes")).
+   if vMarkutd
+   then do:
    for each utd-lines where utd-lines.db-num eq idb-num
                          and utd-lines.doc-id eq idoc-id
     exclusive-lock:
@@ -96,22 +181,40 @@ function CheckEdoc returns character
                                   and utd-marking-lines.doc-id eq idoc-idOrig
                                   and utd-marking-lines.sts    eq objSrv:Env:marking:Sts:Mark:Checked_:KeyIntDB
    no-lock no-error.
-   if available utd-marking-lines
+   end.
+   if    not vMarkutd
+      or available utd-marking-lines
    then do:
       
       for each utd-lines where utd-lines.db-num eq idb-numOrig
                            and utd-lines.doc-id eq idoc-idOrig
       no-lock:
-         find first edoc-lines where edoc-lines.db-num eq idb-numOrig
-                                 and edoc-lines.doc-id eq idoc-idOrig
+         find first edoc-lines where edoc-lines.db-num eq idb-num
+                                 and edoc-lines.doc-id eq idoc-id
                                  and edoc-lines.LineNum eq utd-lines.LineNum
          no-lock no-error.
          if     available edoc-lines
-            and edoc-lines.Quantity ne 0
+         then do:
+            if edoc-lines.Quantity ne 0
          then do:
             if edoc-lines.Price ne utd-lines.Price
             then
                AddUtdErr(edoc-lines.db-num,edoc-lines.doc-id,buffer edoc-lines:handle,"Edoc","Price" ,string(edoc-lines.LineNum)).
+         end.
+            else do:
+               find first utd-marking-lines where utd-marking-lines.db-num  eq edoc-lines.db-num
+                                              and utd-marking-lines.doc-id  eq edoc-lines.doc-id
+                                              and utd-marking-lines.linenum eq edoc-lines.LineNum
+                                              and length(utd-marking-lines.mark) > 13
+               no-lock no-error.
+               if not available utd-marking-lines
+               then do:
+                  find current edoc-lines exclusive-lock.
+                  delete edoc-lines.
+               end.
+               else
+                  AddUtdErr(edoc-lines.db-num,edoc-lines.doc-id,buffer edoc-lines:handle,"Edoc","Amount" , string(edoc-lines.LineNum )).
+            end.
          end.
       end.
       vSts = objSrv:Env:utd:Sts:th:SignatureRequired:KeyIntDB. /* Требует подписания */
@@ -158,6 +261,7 @@ function CrEdoc returns character
    define buffer edoc-lines-attr for ub.utd-lines-attr.
    define buffer utd-marking-lines  for ub.utd-marking-lines.
    define buffer edoc-marking-lines for ub.utd-marking-lines.
+   
    define buffer utd-marking-lines-attr for ub.utd-marking-lines-attr.
    define buffer edoc-marking-lines-attr for ub.utd-marking-lines-attr.
    
@@ -224,6 +328,7 @@ function CrEdoc returns character
             edoc-lines.db-num = edoc.db-num
             edoc-lines.doc-id = edoc.doc-id
          .
+         release edoc-lines.
       end.
       for each utd-lines-attr where utd-lines-attr.db-num eq vdb-num 
                                 and utd-lines-attr.doc-id eq vdoc-id
@@ -237,6 +342,7 @@ function CrEdoc returns character
       end.
       for each utd-marking-lines where utd-marking-lines.db-num eq vdb-num 
                                    and utd-marking-lines.doc-id eq vdoc-id
+                                   and utd-marking-lines.doc-level eq 1
       no-lock:
          create edoc-marking-lines.
          buffer-copy utd-marking-lines except doc-id db-num to edoc-marking-lines
@@ -247,6 +353,7 @@ function CrEdoc returns character
       end.
       for each utd-marking-lines-attr where utd-marking-lines-attr.db-num eq vdb-num 
                                         and utd-marking-lines-attr.doc-id eq vdoc-id
+                                        and not utd-marking-lines-attr.attr-code begins "System-info-"
       no-lock:
          create edoc-marking-lines-attr.
          buffer-copy utd-marking-lines-attr except doc-id db-num to edoc-marking-lines-attr
@@ -262,7 +369,6 @@ function CrEdoc returns character
                      and utd.Timestamp le iTimestamp
                      and (    utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB
                           or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:sendRecipient:KeyIntDB
-                          or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:WithRecipientSignature:KeyIntDB
                           or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:WithRecipientSignature:KeyIntDB
                           or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:HaveToCreateReceipt:KeyIntDB
                           or  utd.sts-edi   eq ObjSrv:Env:Utd:Sts:edi:Verification:KeyIntDB)
@@ -324,6 +430,30 @@ function CrEdoc returns character
                   edoc-lines.Quantity  = dec(getattrUtdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"Quantity_old_new") )  + utd-lines.Quantity.
                   edoc-lines.TotalWithVatExcluded = edoc-lines.Total - edoc-lines.Vat.
                .
+               
+            define variable Vqnty as decimal no-undo.
+            Vqnty = dec(getattrUtdlines(edoc-lines.db-num,edoc-lines.doc-id,edoc-lines.LineNum,"Quantity") ) 
+                  + dec(getattrUtdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"Quantity") ).
+            setattrUtdlines(edoc-lines.db-num,edoc-lines.doc-id,edoc-lines.LineNum,"Quantity",string(vqnty)).         
+            if     getattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"unitcode_old") ne ?
+               and edoc-lines.UnitCode ne getattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"unitcode_old")
+            then
+               AddUtdErr(edoc.db-num,edoc.doc-id,buffer edoc-lines:handle,
+                   "loadUtd",
+                   "UcdUnitChangForUtd",
+                   string(edoc-lines.LineNum )                  + {&delim-par} + 
+                   edoc-lines.UnitCode                   + {&delim-par} + 
+                   getattrutdlinesex(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"unitcode_old","?")).
+            if     utd-lines.UnitCode ne ?
+               and utd-lines.UnitCode ne ""
+               and utd-lines.UnitCode ne getattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"unitcode_old")
+            then
+               AddUtdErr(edoc.db-num,edoc.doc-id,buffer edoc-lines:handle,
+                      "loadUtd",
+                      "UcdUnitChang",
+                      string(edoc-lines.LineNum )                  + {&delim-par} + 
+                      utd-lines.UnitCode                          + {&delim-par} + 
+                      getattrutdlinesex(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"unitcode_old","?")).
             for each utd-marking-lines where utd-marking-lines.db-num eq utd-lines.db-num 
                                          and utd-marking-lines.doc-id eq utd-lines.doc-id
                                          and utd-marking-lines.LineNum eq utd-lines.LineNum

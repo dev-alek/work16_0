@@ -10,10 +10,10 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+using ibs.th.gbl.sys.objth.
 using ibs.th.gbl.sys.env.ini.section.val.
 
-
-class ibs.th.gbl.sys.env.ini: 
+class ibs.th.gbl.sys.env.ini  inherits objth: 
 
   define public property SystemLogFileName as val no-undo 
     get.
@@ -28,13 +28,13 @@ class ibs.th.gbl.sys.env.ini:
     super ().
     SystemLogFileName = getKeyValue("SystemTH", "SysLogFileName", "systh.log").
     
-    
   end constructor.
 
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
+  def var mval as class val no-undo.
 
   method private class val getKeyValue(inSecName as char, inKeyName as char, inValueDefault as char):
     def var value_ as character no-undo.
@@ -43,7 +43,8 @@ class ibs.th.gbl.sys.env.ini:
       section inSecName
       key inKeyName
       value value_.
-    val = new val().
+    {utl\objreg.i val  val}.
+    mval = val.
     assign
       val:SectionName = inSecName
       val:KeyName = inKeyName

@@ -4,6 +4,10 @@ def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@
 {gbl\objsrv.i {1}}
 { gbl/attr-lib.i {1}}
 {str/utd-attr.i {1} }
+define temp-table TT-err no-undo
+  field code_ as character 
+  field text_ as character
+index code_ code_.
 &if "{1}" = "class"
 &then
 method private logical AddUtdErrForTab
@@ -263,9 +267,14 @@ function GetErrJsonForUtd returns character
    define buffer utd-err for utd-err.
    define variable vHQry as handle no-undo.
    define variable vError as longchar no-undo.
+   define variable vErrorOne as longchar  no-undo.
+   
    define variable oError as character no-undo.
    create query vHQry.
    define variable vi as integer no-undo.
+   for each tt-err :
+      delete tt-err.
+   end. 
    vHQry:set-buffers(buffer utd-err:handle).
    vHQry:query-prepare("for each utd-err where utd-err.db-num         eq " + QUOTER(idb-num) 
                             +            " and utd-err.doc-id         eq " + QUOTER(idoc-id)  
@@ -278,7 +287,6 @@ function GetErrJsonForUtd returns character
 
    QRY-BLOCK:
    repeat while not vHQry:query-off-end:
-      define variable vErrorOne as character no-undo.
       vErrorOne = GetTextErrorType(utd-err.CheckType,utd-err.CodeErr,utd-err.CheckObj,"error").
       if     vErrorOne ne ?
          and vErrorOne ne ""
@@ -290,25 +298,41 @@ function GetErrJsonForUtd returns character
       end.
       vHQry:get-next().
    end.
-   for first utd where utd.db-num eq idb-num
-                   and utd.doc-id eq idoc-id
-                   and utd.sts    eq ObjSrv:Env:Utd:Sts:th:DeliveryCodeMismatch:KeyIntDB
-   no-lock,
-      each utd-marking-lines where utd-marking-lines.db-num eq idb-num
-                               and utd-marking-lines.doc-id eq idoc-id
-                               and utd-marking-lines.doc-level eq 1
-   no-lock,
-      first marking where marking.mark eq utd-marking-lines.mark
-                      and marking.sts  eq ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
-   no-lock:
-      vErrorOne = GetTextErrortype("CheckShip","NotMark",marking.mark,"error").
-      if     vErrorOne ne ?
-         and vErrorOne ne ""
-      then do:
-      
-         vError = vError + ',"Œ¯Ë·Í‡_' + string(vi) +  '":~{" Ó‰Œ¯":"'    + "CheckShip" + "_" + "NotMark" 
-                         + '","Œ·˙ÂÍÚŒ¯":"' + marking.mark 
-                         + '","“ÂÍÒÚŒ¯":"' + vErrorOne + '"}'.
+   define variable vMarkUtd as logical no-undo.
+   define buffer buf_utd-attr for utd-attr.
+   find first buf_utd-attr no-lock where buf_utd-attr.doc-id = idoc-id
+                                     and buf_utd-attr.db-num = idb-num
+                                     and buf_utd-attr.attr-code = "MarkUtd"
+                                     no-error .
+   if available buf_utd-attr
+   then do :                                 
+      vMarkUtd = logical(buf_utd-attr.attr-value) .                             
+   end .
+   else do :
+      vMarkUtd = yes .
+   end.
+   if vMarkUtd
+   then do:
+      for first utd where utd.db-num eq idb-num
+                      and utd.doc-id eq idoc-id
+                      and utd.sts    eq ObjSrv:Env:Utd:Sts:th:DeliveryCodeMismatch:KeyIntDB
+      no-lock,
+         each utd-marking-lines where utd-marking-lines.db-num eq idb-num
+                                  and utd-marking-lines.doc-id eq idoc-id
+                                  and utd-marking-lines.doc-level eq 1
+      no-lock,
+         first marking where marking.mark eq utd-marking-lines.mark
+                         and marking.sts  eq ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+      no-lock:
+         vErrorOne = GetTextErrortype("CheckShip","NotMark",marking.mark,"error").
+         if     vErrorOne ne ?
+            and vErrorOne ne ""
+         then do:
+         
+            vError = vError + ',"Œ¯Ë·Í‡_' + string(vi) +  '":~{" Ó‰Œ¯":"'    + "CheckShip" + "_" + "NotMark" 
+                            + '","Œ·˙ÂÍÚŒ¯":"' + marking.mark 
+                            + '","“ÂÍÒÚŒ¯":"' + vErrorOne + '"}'.
+         end.
       end.
    end.
    if vError ne ""
@@ -405,11 +429,6 @@ function GetCodeTextError returns character
           else (oCode + "_" + ovalue).
           
 end.
-
-define temp-table TT-err no-undo
-  field code_ as character 
-  field text_ as character
-index code_ code_.
 
 &if "{1}" = "class"
 &then

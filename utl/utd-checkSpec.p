@@ -1,16 +1,16 @@
+/*
+$Revision:$
+$Author:$
+$Date:$
+$Workfile:$
+$Archive:$
 
-/*------------------------------------------------------------------------
-    File        : utd-mark-introduce.p
-    Purpose     : 
+Автор: Рубан Дмитрий Андреевич 
+Дата создания: 16 сент. 2021 г.
+Author:  Ruban Dmitriy Andreevich
+Creation date: 16 сент. 2021 г.
 
-    Syntax      :
-
-    Description : 
-
-    Author(s)   : SSlivenko
-    Created     : Fri Apr 10 13:45:13 AST 2020
-    Notes       :
-  ----------------------------------------------------------------------*/
+*/
 
 /* ***************************  Definitions  ************************** */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -204,7 +204,7 @@ then do :
   
   delete object objKeyRec.
 end .
-
+  
 find current buf_utd exclusive-lock .
 if not v-ok
 then do :

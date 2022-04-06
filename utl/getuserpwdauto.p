@@ -21,12 +21,6 @@ define variable vss-description as character no-undo init "".
 
 { adm/auto-def.i}
 define input  parameter IBuff as handle no-undo.
-define variable mPwd as character no-undo.
-
-run adm/pswd-enc.p
-    (input  encode(g#auto-user-password)
-    ,output mPwd
-    ) no-error .
 IBuff::Usr = g#auto-user-login.
-IBuff::Pwd = mPwd.
+IBuff::Pwd = g#auto-user-password.
 return.

@@ -1,9 +1,8 @@
 
 .session:debug-alert = yes.
 { utl/setpwd.i }
-{cmp/trg-def.i new }
+{cmp/trg-def.i }
 
-run gbl/set-gbl.p (yes,"sysadm",{&paswordcur}).
 output to "error.log".
    put unformatted "error   Не удалось получить счетсчи".
 output close.
@@ -16,7 +15,11 @@ then do:
    output to "error.log".
    put unformatted "error   Получение счетчика было преврвано пользователем или по TimeOut.".
    output close.
-   return.
+   output to "endproc.txt". 
+   put unformatted "end" skip.
+   output close.
+   quit.      
+   
 end.
 
 define variable  mfilename as character no-undo.

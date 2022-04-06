@@ -235,7 +235,8 @@ on error undo, return error return-value
         v-fact-qnty = v-fact-qnty + buf_gds-dtl.fact-qnty .
         v-doc-qnty  = v-doc-qnty + buf_gds-dtl.doc-qnty .
     end.
-    if ObjSrv:Env:Conf:IsMarking:IsMarking then do:
+
+  if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_doc-line.obj-type, buf_doc-line.obj-code):IsMarking then do:
     find first ub.goods no-lock where ub.goods.artic = buf_doc-line.artic and ub.goods.prod-code = buf_doc-line.prod-code and ub.goods.prod-type = buf_doc-line.prod-type no-error .
     if available (ub.goods) then do:
         RUN gds-attr-value (
@@ -257,7 +258,7 @@ on error undo, return error return-value
                                      no-error .
     if available doc-fbr-gds
     then do :
-if buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} and not ObjSrv:Env:Conf:IsMarking:GetValForType(v-gds-attr-value-old) then do:
+if buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} and not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_doc-line.obj-type, buf_doc-line.obj-code):GetIsMarkingForType(v-gds-attr-value-old) then do:
       if v-fact-qnty-p <> v-doc-qnty  and v-fact-qnty-p <> 0 then do:
           p-mess = "В документе не соответствует количество по партиям и признакам для производства (fact) !!!"   .
           p-err = true .

@@ -20,28 +20,15 @@ define variable vss-description as character no-undo init "".
 define variable mError as logical no-undo.
 { cmp/vssrevis.i }
 { gbl/getcntxt.i def }
-{ cmp/trg-def.i  new}
+{ cmp/trg-def.i }
 
 session:system-alert-boxes = yes.
 session:appl-alert-boxes = yes.
 session:debug-alert = yes.
 
-
+&glob xdebug yes
 define variable mAsyncHelper as class ibs.th.file.AsyncHelperth. 
 mAsyncHelper = new ibs.th.file.AsyncHelperth().
-mAsyncHelper:creatProcInfo(1,1,1).
-find first sys-ctrl no-lock .
-find first user-login no-lock
-        where user-login.db-num     = sys-ctrl.db-num
-          and user-login.status_    = {&uls-normal}
-          and user-login.user-login = mAsyncHelper:GetStartupParam("-U")
-        no-error .
-run gbl/set-gbl.p
-    (input true                  /* p-auto        */
-    ,input if avail user-login then user-login.user-id else mAsyncHelper:GetStartupParam("-U") /* p-user-id     */
-    ,input mAsyncHelper:GetStartupParam("-P") /* p-user-passwd */ 
-            
-    ) no-error .
 {str/edo.i}
 mPublishHand = this-procedure .
 define variable mParam as character no-undo.
@@ -91,9 +78,11 @@ else do:
       v-cntxt-host-code-obj = int(ext-system-attr.esya-attr-value).
       g#esys-source-esys = ext-system.esys-id.
       mext-sys = ext-system.esys-id.
-      if    mAsyncHelper:ChekStop()
+      if    mAsyncHelper:CheckStop()
       then 
          leave Block-extsys.
+      subscribe "PutErr" anywhere run-procedure "SetErr".
+      subscribe "StopProc" anywhere run-procedure "StopChek".
       
       mDiadocConnection = conectbylogin().
       if mDiadocConnection eq ?
@@ -103,18 +92,17 @@ else do:
          
       end.
       else do:
-         subscribe "PutErr" anywhere run-procedure "SetErr".
-         subscribe "StopProc" anywhere run-procedure "StopChek".
          run getNewUpd.
+      end.
          unsubscribe "StopProc".
          unsubscribe "PutErr".
-      end.
-      if    mAsyncHelper:ChekStop()
+      
+      if    mAsyncHelper:CheckStop()
       then 
          leave Block-extsys.
       run SetErr(substitute("Загрузка данных по ВС &1 завершена.",ext-system.esys-id) ).
    end.
-   if    mAsyncHelper:ChekStop()
+   if    mAsyncHelper:CheckStop()
    then .
    else if not mFirst
    then
@@ -126,7 +114,7 @@ else do:
    else
       run SetErr( substitute("Данные загруженны в БД &1 загружены с ошибками." , mAsyncHelper:GetPARAM("param.txt", "ParamProc_1"))).
 end.
-if    mAsyncHelper:ChekStop()
+if    mAsyncHelper:CheckStop()
 then do:
    run SetErr( "error   Получение данных было преврвано пользователем." ).
 end.
@@ -162,7 +150,7 @@ procedure StopChek:
     then 
        oFlag = mstop.
     else do:
-       oFlag = mAsyncHelper:ChekStop().
+       oFlag = mAsyncHelper:CheckStop().
        mstop = oFlag.
     end.
 end.

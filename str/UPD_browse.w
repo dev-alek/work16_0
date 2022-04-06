@@ -698,13 +698,7 @@ DEFINE QUERY br-utd FOR
 DEFINE QUERY br-utd-nomark FOR 
    X_utd-lines SCROLLING.
 &ANALYZE-RESUME
-
-/*def var objSrv as class objsrv no-undo.*/
-/*run gbl/getobjsrvhndl.p (input-output ObjSrv).*/
 def var Marking as class mark no-undo .
-
-/* Browse definitions                                                   */
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusTHName d-utd
 FUNCTION StatusTHName RETURNS CHARACTER
    (input p-stsTH as integer)  .
@@ -720,6 +714,8 @@ FUNCTION EdoTypeName RETURNS CHARACTER
 END FUNCTION .  
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
 
 /* Browse definitions                                                   */
 DEFINE BROWSE br-utd
@@ -769,8 +765,8 @@ DEFINE BROWSE br-utd-nomark
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-utd
-   b-exit AT ROW 1 COL 2
    b-cancel AT ROW 1 COL 2
+   b-exit AT ROW 1 COL 2
    b-save AT ROW 1 COL 17
    b-servis AT ROW 1 COL 99.88 WIDGET-ID 288
    b_error AT ROW 1 COL 114.88 WIDGET-ID 282
@@ -914,7 +910,6 @@ ASSIGN
    b_error:POPUP-MENU IN FRAME d-utd = MENU m_error:HANDLE.
 ASSIGN 
    b_error:MENU-MOUSE = 1.
-
 /* SETTINGS FOR BUTTON B_mark IN FRAME d-utd
    ALIGN-R                                                              */
 ASSIGN 
@@ -1620,7 +1615,7 @@ ON CHOOSE OF b_cleaggds IN FRAME d-utd /* сброс */
 &ANALYZE-RESUME
 &Scoped-define SELF-NAME b_back-check
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_back-check d-utd
-ON CHOOSE OF b_back-check IN FRAME d-utd /* Продолжить на проверку */
+ON CHOOSE OF b_back-check IN FRAME d-utd /* Продолжить проверку */
    DO:
       if c-status = ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB then 
       do:
@@ -1912,7 +1907,6 @@ ON CHOOSE OF b_finish IN FRAME d-utd /* Ввод в оборот */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &Scoped-define SELF-NAME m_marks-lines
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_marks-lines m_marks
 ON CHOOSE OF menu-item m_marks-lines  /* Марки */
@@ -2147,7 +2141,19 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
       define buffer bf_utd-lines         for ub.utd-lines .
       define buffer bf_marking           for ub.marking .
       define variable v-not-mark as integer no-undo .
+      define variable vPawd as character no-undo.
+      run adm\ask-pswd.w ("Введите пароль пользователя, осуществляющего обработку электронного документа, с целью подтверждения соответствия фактически полученного от поставщика количества товара и количества указанного в системе.",output vPawd).
+      if  vPawd eq ?
+      then
+         return no-apply.
 
+      If vPawd ne encode(g#passwd)
+         then 
+      do:
+         message "Введен неправильный пароль"
+            view-as alert-box.
+         return no-apply.
+      end.
       find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num and 
          buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
       if not available (buf_utd-marking-lines) then 
@@ -3551,6 +3557,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsManual
       then v-manual = yes . 
    else v-manual = no .
+
    run enable_UI in this-procedure .
    run enable_BUTTON in this-procedure .
    if not upd_mark then apply "entry" to v-bar-code in FRAME {&FRAME-NAME}.
@@ -3852,7 +3859,6 @@ PROCEDURE enable_UI :
                                             These statements here are based on the "Other
                                             Settings" section of the widget Property Sheets.
                                 -------------------------------------------------------------------- */
-
    p-type = c-type .
    display
       br-utd
@@ -5318,6 +5324,7 @@ PROCEDURE save_mark :
          return.
       end.    
       for first buf_marking no-lock where buf_marking.mark begins v-marking and buf_marking.sts > Marking:UnknowSts:KeyIntDB:
+           
          if buf_marking.loc-key begins "utd" then 
          do:
             run gen-row-keyr in this-procedure (
@@ -5474,6 +5481,7 @@ PROCEDURE save_mark :
             X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + buf_marking.box-qnty .
             X_utd-lines.Quantity  = X_utd-lines.Quantity  + buf_marking.box-qnty .
             X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
+                
             br-utd:refresh () no-error .
             reposition br-utd to recid recid_utd no-error . 
             v-mark:screen-value = "" .
@@ -5599,7 +5607,6 @@ PROCEDURE save_mark :
           
          if available (buf_goods) or c-type = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
          do:
-              
             find first buf_utd-lines where buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.db-num = buf_utd.db-num
                and buf_utd-lines.gds-code = v-gds-code no-error .
             if not available (buf_utd-lines) then 
@@ -5815,6 +5822,7 @@ PROCEDURE save_mark :
    display F-text with frame {&frame-name}.
    v-mark:screen-value = "" .
    v-mark = "" .
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

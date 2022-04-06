@@ -243,6 +243,25 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME BROWSE-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BROWSE-2 C-Win
+on leave of tt-Param.ParamValue in browse BROWSE-2  do:
+ 
+ tt-Param.ParamValue = tt-Param.ParamValue:screen-value in browse BROWSE-2  no-error .
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME BROWSE-3
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BROWSE-3 C-Win
+on leave of tt-sespar.parCheck in browse BROWSE-3  do:
+ 
+ tt-sespar.parCheck = logical (tt-sespar.parCheck:screen-value in browse BROWSE-3 ) no-error .
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME Btn_OK
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK C-Win
 on choose of Btn_OK in frame Dialog-Frame /* Отказать в подписи */

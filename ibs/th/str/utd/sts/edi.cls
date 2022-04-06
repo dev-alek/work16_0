@@ -105,7 +105,7 @@ class ibs.th.str.utd.sts.edi inherits objth:
   end. 
  
   constructor public edi ():
-    EDIMap = new mapstring(true).
+    {utl\objreg.i EDIMap mapstring true}
     HaveToCreateReceipt = crProp(11,"HaveToCreateReceipt","Подписать ИОП").
 
     RequestsMyRevocation      = crProp(32,"RequestsMyRevocation","Подписать аннуляцию").
@@ -199,7 +199,7 @@ class ibs.th.str.utd.sts.edi inherits objth:
   
    method private class propmap crProp(inKeyInt as int, inNameProp as char, inLabel as char):
     def var prop as class propmap no-undo.
-    prop = new propmap (string(inKeyInt), inLabel).
+    {utl\objreg.i prop propmap string(inKeyInt) inLabel}
     prop:KeyIntDB = inKeyInt.
     prop:KeyCharDB = inNameProp.
     EDIMap:AddItem(prop, inKeyInt,inNameProp).

@@ -110,6 +110,10 @@ get.
     get.
     set.
     
+    define public property userDB as logical no-undo 
+    get.
+    set.
+    
     define public property user-passwd as character initial ? no-undo 
     get:
        if user-passwd eq ?
@@ -821,7 +825,7 @@ define public event MyPause   /*10 прогрес не поддерживает публикацию событий */
       return GetPARAM("param.txt",iName).
    end.
    
-   method public logical ChekStop ():
+   method public logical CheckStop ():
       return not FileExists("stop.txt").
    end. 
    
@@ -970,6 +974,21 @@ define public event MyPause   /*10 прогрес не поддерживает публикацию событий */
                end.
                input close.
             end.
+            vFile = vdir + "procstatus.txt".
+             if FileExists(vFile)
+             then do:
+               input STREAM sReadfile FROM  VALUE(vFile). 
+               repeat:
+                  import stream sReadfile unformatted vCount.
+                  if vCount ne ""
+                  then do:
+                     assign
+                        ttrun.fstatus =  vCount
+                     no-error.
+                  end.
+               end.
+               input close.
+            end.
          end.
          else do:
              if available ttrun
@@ -1034,6 +1053,7 @@ method public void  termprc(input iDir as character,iProc as character,iNum as i
       output close.
    end.
    end.       
+end.    
 end.    
  
 method public logical  termprc(iPid as integer):
