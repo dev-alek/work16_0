@@ -322,12 +322,12 @@ DEFINE VARIABLE t-avtinvpm AS LOGICAL INITIAL no
      SIZE 82.5 BY .83 TOOLTIP "если включено, то контроль и создание происходит при закрытии сверки" NO-UNDO.
 
 DEFINE VARIABLE t-calc-free-vol AS LOGICAL INITIAL no 
-     LABEL "Контроль свободной емкости при приходе" 
+     LABEL "Контроль свободного объема в резервуаре при приеме" 
      VIEW-AS TOGGLE-BOX
      SIZE 60.5 BY .79 NO-UNDO.
 
 DEFINE VARIABLE t-trn-reas-sug AS LOGICAL INITIAL no 
-     LABEL "Обязательный выбор основания для приема СУГ" 
+     LABEL "Обязательный выбор этапа для приема газовоза" 
      VIEW-AS TOGGLE-BOX
      SIZE 60.5 BY .79 NO-UNDO.
      

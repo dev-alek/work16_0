@@ -1154,7 +1154,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         and (bf_trn-doc.reason-code = 0 or bf_trn-doc.reason-code = ?)
         then do :
           run waitfram-hide in this-procedure no-error.
-          undo, return error "Не задано поле ПРИЧИНА СОЗДАНИЯ ДОКУМЕНТА. В настройках по топливу отмечено обязательное заполнение поля при приеме СУГ".
+          undo, return error "Не задано поле по этапу приема СУГ - укажите финальный или не финальный слив газовоза".
         end .
       end .                             
     end .                                 

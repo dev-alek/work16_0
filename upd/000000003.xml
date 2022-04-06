@@ -3,7 +3,7 @@
 	<table-trn-reason NwsNotSend="C-trn-reason,trn-reason">
 		<record-trn-reason>
 			<reason-code>98</reason-code>
-			<reason-name>Предварительный слив СУГ</reason-name>
+			<reason-name>Не финальный слив СУГ</reason-name>
 			<PS></PS>
 			<whole-send-news>0</whole-send-news>
 		</record-trn-reason>
