@@ -1381,41 +1381,30 @@ ON VALUE-CHANGED OF br-utd IN FRAME d-utd
 ON row-leave OF br-utd-nomark IN FRAME d-utd
    DO:
       define variable kk as integer no-undo .
-
+      define variable v-linenum as integer no-undo .
       if available (X_utd-lines) then 
       do:
+         if X_utd-lines.stts = "Ошибка" then X_utd-lines.qnty-scan:COLUMN-READ-ONLY IN BROWSE br-utd-nomark = TRUE.
          kk = X_utd-lines.qnty-scan .
          assign
             browse br-utd-nomark X_utd-lines.qnty-scan
-            .         
+            .      
+               
          if X_utd-lines.stts = "Ошибка" and kk <> X_utd-lines.qnty-scan then 
          do:
-            message "Приемка товара не возможна"
-               view-as alert-box.
+
             X_utd-lines.qnty-scan = kk.
-            assign
-               browse br-utd-nomark X_utd-lines.qnty-scan
-               .
-            if X_utd-lines.Quantity = X_utd-lines.qnty-scan then X_utd-lines.stts = "Проверен" .
-            else X_utd-lines.stts = "Ожидает проверку" .
-      
-            recid_utd = recid (X_utd-lines) .
+  
             run mark-temp .               
-            {&OPEN-QUERY-br-utd-nomark}             
+            {&OPEN-QUERY-br-utd-nomark}   
             br-utd-nomark :refresh() no-error.
             reposition br-utd-nomark to recid recid_utd no-error .                  
               
             return .
-            /*                                                      */
-            /*         recid_utd = recid (X_utd-lines) .            */
-            /*         kk = X_utd-lines.qnty-scan .                 */
-            /*         assign                                       */
-            /*            browse br-utd-nomark X_utd-lines.qnty-scan*/
-            .
          end.
          else if X_utd-lines.stts = "Ошибка" then 
             do:
-               return .
+            X_utd-lines.qnty-scan = 0.
             end.   
          if kk > X_utd-lines.qnty-scan and kk = X_utd-lines.Quantity then 
          do:
@@ -1431,9 +1420,19 @@ ON row-leave OF br-utd-nomark IN FRAME d-utd
             if X_utd-lines.Quantity = X_utd-lines.qnty-scan then X_utd-lines.stts = "Проверен" .
             else X_utd-lines.stts = "Ожидает проверку" .
       
-               recid_utd = recid (X_utd-lines) .
+               v-linenum = X_utd-lines.LineNum .
                run mark-temp .
-               {&OPEN-QUERY-br-utd-nomark}             
+               {&OPEN-QUERY-br-utd-nomark}   
+            find first buf_utd-lines no-lock where buf_utd-lines.linenum = v-linenum and buf_utd-lines.db-num = p-db-num 
+               and buf_utd-lines.doc-id = buf_utd.doc-id 
+               /*                    and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB*/
+               no-error .
+            if available (buf_utd-lines) then
+            do:
+               find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-lines.LineNum no-error .
+               if available (X_utd-lines) then
+                  recid_utd = recid (X_utd-lines) .
+            end.                         
                br-utd-nomark :refresh() no-error.
                reposition br-utd-nomark to recid recid_utd no-error .                  
                return .
@@ -1444,15 +1443,26 @@ ON row-leave OF br-utd-nomark IN FRAME d-utd
             message "По строке введено максимальное значение. Изменить его в большую сторону невозможно."
                view-as alert-box.
             X_utd-lines.qnty-scan = kk.
+            v-linenum = X_utd-lines.linenum .
             /* assign
                browse br-utd-nomark X_utd-lines.qnty-scan
                . */
             if X_utd-lines.Quantity = X_utd-lines.qnty-scan then X_utd-lines.stts = "Проверен" .
             else X_utd-lines.stts = "Ожидает проверку" .
       
-            recid_utd = recid (X_utd-lines) .
+            v-linenum = X_utd-lines.linenum .
             run mark-temp .
-            {&OPEN-QUERY-br-utd-nomark}             
+            {&OPEN-QUERY-br-utd-nomark}         
+           find first buf_utd-lines no-lock where buf_utd-lines.linenum = v-linenum and buf_utd-lines.db-num = p-db-num 
+               and buf_utd-lines.doc-id = buf_utd.doc-id 
+               /*                    and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB*/
+               no-error .
+            if available (buf_utd-lines) then
+            do:
+               find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-lines.LineNum no-error .
+               if available (X_utd-lines) then
+                  recid_utd = recid (X_utd-lines) .
+            end.                
             br-utd-nomark :refresh() no-error.
             reposition br-utd-nomark to recid recid_utd no-error .                  
             return .         
@@ -1467,10 +1477,20 @@ ON row-leave OF br-utd-nomark IN FRAME d-utd
                .
             if X_utd-lines.Quantity = X_utd-lines.qnty-scan then X_utd-lines.stts = "Проверен" .
             else X_utd-lines.stts = "Ожидает проверку" .
-                                                                         
-            recid_utd = recid (X_utd-lines) .
+                                                                   
+            v-linenum = X_utd-lines.linenum .
             run mark-temp .
-            {&OPEN-QUERY-br-utd-nomark}             
+            {&OPEN-QUERY-br-utd-nomark}        
+           find first buf_utd-lines no-lock where buf_utd-lines.linenum = v-linenum and buf_utd-lines.db-num = p-db-num 
+               and buf_utd-lines.doc-id = buf_utd.doc-id 
+               /*                    and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB*/
+               no-error .
+            if available (buf_utd-lines) then
+            do:
+               find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-lines.LineNum no-error .
+               if available (X_utd-lines) then
+                  recid_utd = recid (X_utd-lines) .
+            end.
             br-utd-nomark :refresh() no-error.
             reposition br-utd-nomark to recid recid_utd no-error .                  
             return .
@@ -1516,22 +1536,25 @@ ON row-leave OF br-utd-nomark IN FRAME d-utd
                .
          end.   
          ub.utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) .
-               
+      v-linenum = X_utd-lines.linenum .         
       run mark-temp .
       {&OPEN-QUERY-br-utd-nomark}
+           find first buf_utd-lines no-lock where buf_utd-lines.linenum = v-linenum and buf_utd-lines.db-num = p-db-num 
+               and buf_utd-lines.doc-id = buf_utd.doc-id 
+               /*                    and buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB*/
+               no-error .
+            if available (buf_utd-lines) then
+            do:
+               find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-lines.LineNum no-error .
+               if available (X_utd-lines) then
+                  recid_utd = recid (X_utd-lines) .
+            end.      
       br-utd-nomark :refresh() no-error.
       reposition br-utd-nomark to recid recid_utd no-error .
-      /*
-       if not v-BarCode then 
-       do:
-          X_utd-lines.qnty-scan:COLUMN-READ-ONLY IN BROWSE br-utd-nomark = FALSE.
-       end.
-       else 
-       do:
-          X_utd-lines.qnty-scan:COLUMN-READ-ONLY IN BROWSE br-utd-nomark = TRUE.
-       end.  
-        */
+
       end.  
+
+       br-utd-nomark:select-next-row () no-error .
 
    END.
 
