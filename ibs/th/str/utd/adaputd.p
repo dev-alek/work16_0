@@ -27,11 +27,12 @@ using ibs.th.skt.*.
 using ibs.th.skt.Adapters.*.
 using ibs.th.gbl.env.utd.
 
-{ cmp/str-glbl.i }
+{ cmp/trg-def.i }
 { cmp/library.i  }
 { ibs/th/str/utd/trn/tt516.i}
 { gbl/getcntxt.i def }
-
+{ str/utd-attr.i}
+{ gbl/attr-lib.i}
 /*define shared variable g#auto-user-id as character no-undo .*/
 
 define input  parameter  p-db-num as integer no-undo.
@@ -50,8 +51,13 @@ MAIN-BLOCK:
 do:
   define variable num-rec-ok as logical no-undo.
   define variable ii         as integer no-undo.
+  define variable vMarkUtd   as logical no-undo init no .
+  define variable v-par-type as character no-undo.
+  define variable v-par-val  as character no-undo.
+   
 /*  define variable logWrite   as class   LogWrite no-undo.*/
   def buffer buf_utd for ub.utd.
+  def buffer buf_utd-attr for ub.utd-attr.
   def buffer buf_utd-lines for ub.utd-lines.
   def buffer buf_utd-marking-lines for ub.utd-marking-lines.
   def buffer buf_mark-lines for ub.marking-lines.
@@ -66,7 +72,22 @@ do:
   if not available (buf_utd)
     then undo, return error "Не найден УТД - " + string(p-db-num) + "," + string(p-doc-id).
   
-  if buf_utd.sts ne objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB
+  find first buf_utd-attr no-lock where buf_utd-attr.doc-id = p-doc-id
+                                    and buf_utd-attr.db-num = p-db-num
+                                    and buf_utd-attr.attr-code = "MarkUtd"
+                                    no-error .
+  if available buf_utd-attr
+  then do :                                 
+    vMarkUtd = logical(buf_utd-attr.attr-value) .                             
+  end .
+  else do :
+    vMarkUtd = yes .
+  end .
+  
+  if (vMarkUtd  and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB)
+     or (not vMarkUtd
+         and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB
+         and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB)
   then do:
     undo, return error "Неверный статус документа УТД " + string(p-db-num) + "," +  string(p-doc-id) + " - " + objSrv:Env:Utd:Sts:TH:GetLabel(buf_utd.sts).
   end.
@@ -80,6 +101,8 @@ do:
   then do:
     undo, return error "Для документа уже создана накладная " + string(p-db-num) + "," + string(p-doc-id) + " - " + buf_utd.doc-code.
   end.
+  
+  
 
 
   create temp_trn-doc.
@@ -104,11 +127,11 @@ do:
     temp_trn-doc.host-code = buf_utd.host-code
 /*      temp_trn-doc.price-type    = if TempTrnDoc.ext-doc-type = {&TDEDT_Ras_Vnesh } then "TSFTSD" else ""*/
     .
-  
 
   fe_:
-  for each buf_utd-lines where buf_utd-lines.db-num = buf_utd.db-num and
-  buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.sts ne objSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB
+  for each buf_utd-lines where buf_utd-lines.db-num = buf_utd.db-num
+                           and buf_utd-lines.doc-id = buf_utd.doc-id
+                           and buf_utd-lines.sts ne objSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB
   no-lock:
     if buf_utd-lines.gds-code eq ?
       then next fe_.
@@ -118,35 +141,50 @@ do:
 /*    if buf_utd.EDocType = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB*/
 /*    then                                                       */
 
-    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsMarkingForType("tabak")
-    then do:
-      for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
-        and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
-        and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
-        :
-        
-        find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.unit-ext = "UNIT"
-          and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
-        if available (buf_marking)
-          then v-q = v-q + 1.
+    if vMarkUtd
+    then do :
+      &scop proc-name gds-attr-value
+      {&run_proc_attr-lib}
+           ( buf_utd-lines.gds-code,
+             {&attr-mark-type},
+             output v-par-val,
+             output v-par-type
+           ).
+      if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsMarkingForType(v-par-val)
+      then do:
+        for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+          and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+          and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+          :
+          
+          find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.unit-ext = "UNIT"
+            and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
+          if available (buf_marking)
+            then v-q = v-q + 1.
+        end.
       end.
-    end.
-    else do:
-      for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
-        and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
-        and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
-        and buf_utd-marking-lines.doc-level = 1
-        :
-        find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark
-                    and (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB) 
-					and buf_marking.box-qnty <> ? no-lock no-error.
-        if available (buf_marking)
-          then v-q = v-q + buf_marking.box-qnty.
-      end.      
-    end.
-    if v-q = 0
-      then next fe_.
-    
+      else do:
+        for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+          and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+          and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+          and buf_utd-marking-lines.doc-level = 1
+          :
+          find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark
+                      and (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB) 
+  					and buf_marking.box-qnty <> ? no-lock no-error.
+          if available (buf_marking)
+            then v-q = v-q + buf_marking.box-qnty.
+        end.      
+      end.
+    end .
+    else do :
+      v-q = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"QuantityBarCode")) .
+    end .
+    if    v-q eq 0
+       or v-q eq ?
+    then 
+       next fe_.
+        
     sum-vat = (buf_utd-lines.Total - buf_utd-lines.TotalWithVatExcluded) / buf_utd-lines.Quantity. 
     
     create temp_doc-line.
