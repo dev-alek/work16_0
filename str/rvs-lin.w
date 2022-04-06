@@ -1177,6 +1177,18 @@ do:
         end .
       end .
     end .
+    if pl-rvd-dens <> pl-rvd-temp
+    then do :
+      find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = v-mi-tmp no-error .
+      if (available tmp_sr-izmerenia and tmp_sr-izmerenia.sr-type-izm = 0 and tmp_sr-izmerenia.sr-density and tmp_sr-izmerenia.sr-temperature)
+      or (available dnst_sr-izmerenia and dnst_sr-izmerenia.sr-type-izm = 0 and dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
+      then do :
+        message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, "
+                "если дополнительное автоматизированное СИ предназначено для измерения обоих параметров." skip
+                "Подайте заявку в службу поддержки для приведения параметров в соответствие требованиям бизнес-процесса."
+        view-as alert-box .
+      end .
+    end .
     if dnst_sr-izmerenia.sr-temperature
     and v-mi-dnst <> v-mi-tmp
     and b-mi-tmp:sensitive
@@ -1376,6 +1388,18 @@ do:
           b-temperature
         with frame {&frame-name}.
       end .
+    end .
+  end .
+  if pl-rvd-dens <> pl-rvd-temp
+  then do :
+    find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = v-mi-dnst no-error .
+    if (available tmp_sr-izmerenia and tmp_sr-izmerenia.sr-type-izm = 0 and tmp_sr-izmerenia.sr-density and tmp_sr-izmerenia.sr-temperature)
+    or (available dnst_sr-izmerenia and dnst_sr-izmerenia.sr-type-izm = 0 and dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
+    then do :
+      message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, "
+              "если дополнительное автоматизированное СИ предназначено для измерения обоих параметров." skip
+              "Подайте заявку в службу поддержки для приведения параметров в соответствие требованиям бизнес-процесса."
+      view-as alert-box .
     end .
   end .
   if tmp_sr-izmerenia.sr-density

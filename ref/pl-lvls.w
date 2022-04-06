@@ -771,7 +771,7 @@ PROCEDURE del-pl-level :
     define variable v-del as logical no-undo.
 
     message
-        SUBSTITUTE ( "Удалить ровень &1 "
+        SUBSTITUTE ( "Удалить уровень &1 "
         , buf_pl-level.pl-level
         )
         view-as alert-box information

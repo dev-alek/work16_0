@@ -304,6 +304,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
                     if v-ok then 
                     do:
                        tt-place-attr.place-dnst-mi-code = v-value .
+                       if tt-place-attr.place-dnst-mi-code = ? then tt-place-attr.place-dnst-mi-code = "0" .
                     end.
                  end. 
               when {&place-SI-level} then 
@@ -311,6 +312,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
                     if v-ok then 
                     do:
                        tt-place-attr.place-lvl-mi-code = v-value .
+                       if tt-place-attr.place-lvl-mi-code = ? then tt-place-attr.place-lvl-mi-code = "0" .
                     end.
                  end. 
               when {&place-SI-temp} then 
@@ -318,6 +320,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
                     if v-ok then 
                     do:
                        tt-place-attr.place-tmp-mi-code = v-value.
+                       if tt-place-attr.place-tmp-mi-code = ? then tt-place-attr.place-tmp-mi-code = "0" .
                     end.
                  end. 
               when {&place-passp-num} then 

@@ -394,7 +394,7 @@ DEFINE FRAME d-pl-form
           LABEL "Объем трубопровода(л)"
           VIEW-AS FILL-IN 
           SIZE 11.63 BY 1
-     error-mass AT Y 262 X 703 RIGHT-ALIGNED WIDGET-ID 38
+     error-mass AT ROW 11.92 COL 75.38 COLON-ALIGNED WIDGET-ID 38
      tt-place.max-qnty AT ROW 12.92 COL 30.63 COLON-ALIGNED
           LABEL "Макс. кол-во в резервуаре(л)"
           VIEW-AS FILL-IN 
@@ -1932,13 +1932,14 @@ do:
   assign v-mi-dnst .
   
   if dnst_sr-izmerenia.sr-temperature
-  and v-mi-dnst <> v-mi-tmp
+/*  and v-mi-dnst <> v-mi-tmp*/
   then do :
 /*    message "Для измерения плотности выбрано дополнительное СИ " + v-mi-dnst-name + ". Установить данное СИ для измерения температуры автоматически?"*/
 /*    view-as alert-box buttons yes-no update vlog .                                                                                                   */
 /*    if vlog                                                                                                                                          */
 /*    then do :                                                                                                                                        */
       v-mi-tmp = v-mi-dnst .
+      v-mi-tmp:screen-value = v-mi-dnst:screen-value .
       v-mi-tmp-name = v-mi-dnst-name .
       find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = v-mi-tmp .
       display v-mi-tmp-name with frame {&frame-name}.
@@ -2143,13 +2144,14 @@ do:
   assign v-mi-tmp .
   
   if tmp_sr-izmerenia.sr-density
-  and v-mi-tmp <> v-mi-dnst
+/*  and v-mi-tmp <> v-mi-dnst*/
   then do :
 /*    message "Для измерения температуры выбрано дополнительное СИ " + v-mi-dnst-name + ". Установить данное СИ для измерения плотности автоматически?"*/
 /*    view-as alert-box buttons yes-no update vlog .                                                                                                   */
 /*    if vlog                                                                                                                                          */
 /*    then do :                                                                                                                                        */
       v-mi-dnst = v-mi-tmp .
+      v-mi-dnst:screen-value = v-mi-tmp:screen-value .
       v-mi-dnst-name = v-mi-tmp-name .
       find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = v-mi-dnst .
       display v-mi-dnst-name with frame {&frame-name}.
