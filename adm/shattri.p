@@ -2949,6 +2949,15 @@ end.
         {&create-thbj-attr}.
       end.
 
+      v-prop-code = "{&bef-attr-petrol_trn-reas-sug}".
+&scop ptype logical
+&scop prop-value yes
+&scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+
       v-prop-code = "{&bef-attr-petrol_dop-info}" .
 &scop ptype character
 &scop prop-value 'autoent,car-num,time-income,fio-driver,ptbobj':U

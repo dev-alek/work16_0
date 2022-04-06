@@ -114,13 +114,14 @@ r-expptrl r-inpptrl dop-info rvs-wt-email B-set_dop-info r-algrvspt ~
 t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc ~
 mass-proc r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz ~
 delta-vert otkl-temp otkl-density otkl-water mass-proc-in-lgas ~
-t-calc-free-vol t-rvd-own-nb v-dop-info sec-fields v-sec-fields qr-scan-time
+t-calc-free-vol t-rvd-own-nb v-dop-info sec-fields v-sec-fields qr-scan-time ~
+t-trn-reas-sug
 &Scoped-Define DISPLAYED-OBJECTS t-autopump-izm t-autopump t-avtinvpm ~
 t-olddens r-expptrl r-inpptrl dop-info rvs-wt-email r-algrvspt t-rvsnmter ~
 t-invclipt f-invclipt r-temp-for-pomi r-denstclc mass-proc r-algoincptrl ~
 t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp ~
 otkl-density otkl-water mass-proc-in-lgas t-calc-free-vol t-rvd-own-nb v-dop-info ~
-f-invclipt-name sec-fields v-sec-fields qr-scan-time
+f-invclipt-name sec-fields v-sec-fields qr-scan-time t-trn-reas-sug
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -324,6 +325,11 @@ DEFINE VARIABLE t-calc-free-vol AS LOGICAL INITIAL no
      LABEL "Контроль свободной емкости при приходе" 
      VIEW-AS TOGGLE-BOX
      SIZE 60.5 BY .79 NO-UNDO.
+
+DEFINE VARIABLE t-trn-reas-sug AS LOGICAL INITIAL no 
+     LABEL "Обязательный выбор основания для приема СУГ" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60.5 BY .79 NO-UNDO.
      
 DEFINE VARIABLE t-rvd-own-nb AS LOGICAL INITIAL no 
      LABEL "Разрешить ручное заполнение документа приёма НП при поставках с собственных НБ" 
@@ -390,8 +396,9 @@ DEFINE FRAME shattrpt
      otkl-water AT ROW 35.79 COL 72.63 COLON-ALIGNED WIDGET-ID 512
      mass-proc-in-lgas AT ROW 38.25 COL 1.5 WIDGET-ID 518
      t-calc-free-vol AT ROW 39.29 COL 3.5 WIDGET-ID 524
-     t-rvd-own-nb AT ROW 40.3 COL 3.5 WIDGET-ID 526
-     qr-scan-time at row 41.3 col 3.5 WIDGET-ID 528
+     t-trn-reas-sug at row 40.3 col 3.5 widget-id 526     
+     t-rvd-own-nb AT ROW 41.3 COL 3.5 WIDGET-ID 528
+     qr-scan-time at row 42.3 col 3.5 WIDGET-ID 538
      v-dop-info AT ROW 12.2 COL 3.5 NO-LABEL WIDGET-ID 498
      B-set_sec-fields AT ROW 13.2 COL 41 WIDGET-ID 596
      v-sec-fields AT ROW 13.2 COL 3.5 NO-LABEL WIDGET-ID 598
@@ -925,7 +932,7 @@ PROCEDURE enable_UI :
           r-temp-for-pomi r-denstclc mass-proc r-algoincptrl 
           t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp 
           otkl-density otkl-water mass-proc-in-lgas t-calc-free-vol t-rvd-own-nb v-dop-info 
-          f-invclipt-name v-sec-fields qr-scan-time
+          f-invclipt-name v-sec-fields qr-scan-time t-trn-reas-sug
       WITH FRAME shattrpt.
   ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 RECT-5 RECT-6 
          t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
@@ -934,7 +941,7 @@ PROCEDURE enable_UI :
          r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz 
          delta-vert otkl-temp otkl-density otkl-water mass-proc-in-lgas 
          t-calc-free-vol t-rvd-own-nb v-dop-info B-set_sec-fields v-sec-fields
-         qr-scan-time
+         qr-scan-time t-trn-reas-sug
       WITH FRAME shattrpt.
   {&OPEN-BROWSERS-IN-QUERY-shattrpt}
 END PROCEDURE.
@@ -1162,6 +1169,13 @@ on error undo, return error return-value
             assign
               t-calc-free-vol = thbjattr_thbj-attr.property-value-logical 
               t-calc-free-vol :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .  
+          end.
+        when {&attr-petrol_trn-reas-sug} then 
+          do: 
+            assign
+              t-trn-reas-sug = thbjattr_thbj-attr.property-value-logical 
+              t-trn-reas-sug :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
             .  
           end.
         when {&attr-petrol_rvd-own-nb} then 

@@ -35,6 +35,7 @@ define variable ptrlprop-mand-choice-autocar as logical no-undo init false.
 define variable ptrlprop-Delta-mass-horiz      as character no-undo .
 define variable ptrlprop-Delta-mass-vert       as character no-undo .
 define variable ptrlprop-calc-free-vol as logical no-undo init false.
+define variable ptrlprop-trn-reas-sug as logical no-undo init true.
 define variable ptrlprop-rvd-own-nb as logical no-undo init false.
 define variable ptrlprop-qr-scan-time as integer no-undo init 5000 .
 
@@ -186,7 +187,14 @@ procedure get-ptrl-prop :
             .
           end.
         end.
-		    when {&attr-petrol_rvd-own-nb} then do:
+        when {&attr-petrol_trn-reas-sug} then do:
+          if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-logical} then do:
+            assign
+              ptrlprop-trn-reas-sug = thbjattr_thbj-attr.property-value-logical
+            .
+          end.
+        end.
+	when {&attr-petrol_rvd-own-nb} then do:
           if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-logical} then do:
             assign
               ptrlprop-rvd-own-nb = thbjattr_thbj-attr.property-value-logical

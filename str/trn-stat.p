@@ -1113,6 +1113,39 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
         run waitfram-hide in this-procedure no-error.
         undo, return error ("Договор " + ub.contract.contract-name + " рассчитан на поставки через ЭДО. Ручной приход по нему невозможен!") .
       end .
+    end . 
+    /* Приемка СУГ */
+    for first doc-attr no-lock where doc-attr.doc-code  = bf_trn-doc.doc-code 
+                                 and doc-attr.attr-code = {&trdcattr-is-lgas}       
+                                 :
+      if logical(doc-attr.attr-value)
+      then do :
+        define variable v-trn-reas-sug as logical no-undo .
+        define variable v-trn-reas-sug-type as character no-undo .
+        delete object v-tth no-error.
+        run adm/shattri.p (
+             input "get":U
+            ,input bf_trn-doc.obj-type
+            ,input bf_trn-doc.obj-code
+            ,input {&attr-petrol}
+            ,input  "trn-reas-sug"
+            ,output v-value-character
+            ,output v-value-date
+            ,output v-value-decimal
+            ,output v-value-integer
+            ,output v-trn-reas-sug
+            ,output v-trn-reas-sug-type
+            ,INPUT-OUTPUT table-handle v-tth
+            ) no-error .
+        if error-status :error  then v-trn-reas-sug = true .
+        delete object v-tth no-error.
+        if v-trn-reas-sug
+        and (bf_trn-doc.reason-code = 0 or bf_trn-doc.reason-code = ?)
+        then do :
+          run waitfram-hide in this-procedure no-error.
+          undo, return error "Не задано поле ПРИЧИНА СОЗДАНИЯ ДОКУМЕНТА. В настройках по топливу отмечено обязательное заполнение поля при приеме СУГ".
+        end .
+      end .                             
     end .                                 
   end .
 
