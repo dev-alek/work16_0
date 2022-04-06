@@ -2981,9 +2981,9 @@ define buffer buf_doc-pl-attr for doc-pl-attr .
         end.
       end .
       else do :
-        message "Объем СУГ по ТТН  " string(buf_doc-pl.fact-qnty)
+        message "Объем СУГ по ТТН  " string(round(buf_doc-pl.fact-qnty, 0))
                 "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "
-                string(v-free-vol) "л." skip
+                string(round(v-free-vol, 0)) "л." skip
                 "Проверьте введенные данные из ТТН, значение объема ЖФ в сверке до слива"
                 " и при необходимости оповестите ответственное лицо ОГ в соответствии с принятым в ОГ порядком оповещения"
         view-as alert-box . 

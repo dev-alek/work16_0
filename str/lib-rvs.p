@@ -2025,6 +2025,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define buffer buf_trn-doc  for ub.trn-doc.
   
   define variable v-free-vol  as decimal   no-undo .
+  define variable v-doc-volume as decimal no-undo .
   
   define variable  v-cardif as integer no-undo.
 
@@ -4811,26 +4812,57 @@ END.
     if ptrlprop-calc-free-vol
     and buf_rvs-doc.rvs-type = {&rvs-before-doc}
     then do :
+      define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo.
+      define variable iisec as integer no-undo .
+      
       find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_rvs-doc.out-code no-error .
       if available buf_trn-doc
       and buf_trn-doc.reason-code = 98
       then do : end .
       else do :  
-        find first buf_doc-pl no-lock where buf_doc-pl.obj-type   = bf_rvs-line.obj-type
-                                        and buf_doc-pl.obj-code   = bf_rvs-line.obj-code
-                                        and buf_doc-pl.gds-code   = bf_rvs-line.gds-code
-                                        and buf_doc-pl.pl-code    = bf_rvs-line.pl-code
-                                        and buf_doc-pl.out-code   = buf_rvs-doc.out-code
-                                        no-error .
-        if not available buf_doc-pl
+        v-doc-volume = 0 .
+        find first buf_place no-lock where buf_place.obj-code = bf_rvs-line.obj-code
+                                       and buf_place.obj-type = bf_rvs-line.obj-type
+                                       and buf_place.pl-code  = bf_rvs-line.pl-code
+                                       no-error.
+        if is-sug(bf_rvs-line.gds-code)
         then do :
-          message "В накладной для товара " string(bf_rvs-line.gds-code) " нет распределения по местам хранения!" view-as alert-box .
-        end .                                
+          find first buf_doc-pl no-lock where buf_doc-pl.obj-type   = bf_rvs-line.obj-type
+                                          and buf_doc-pl.obj-code   = bf_rvs-line.obj-code
+                                          and buf_doc-pl.gds-code   = bf_rvs-line.gds-code
+                                          and buf_doc-pl.pl-code    = bf_rvs-line.pl-code
+                                          and buf_doc-pl.out-code   = buf_rvs-doc.out-code
+                                          no-error .
+          if not available buf_doc-pl
+          then do :
+            message "В накладной для товара " string(bf_rvs-line.gds-code) " нет распределения по местам хранения! Невозможно произвести расчет свободной ёмкости в резервуаре." view-as alert-box .
+          end . 
+          else do :
+            v-doc-volume = buf_doc-pl.fact-qnty .
+          end .
+        end .                           
         else do :
-          find first buf_place no-lock where buf_place.obj-code = bf_rvs-line.obj-code
-                                         and buf_place.obj-type = bf_rvs-line.obj-type
-                                         and buf_place.pl-code  = bf_rvs-line.pl-code
-                                         no-error.
+          infoSectionsTotal = new ibs.th.str.InfoSectionsTotal(buf_trn-doc.doc-code, bf_rvs-line.gds-code, {&lookup}).
+          
+          sect_ :
+          do iisec = 1 to infoSectionsTotal:SectionNum :
+            infoSectionsTotal:GetInfoSectionProp (iisec).
+            if infoSectionsTotal:InfoSectionCurr:ListTank <> buf_place.loc1
+            then
+              next sect_ .
+            
+            if infoSectionsTotal:InfoSectionCurr:DocVolume > 0
+            then do :
+              v-doc-volume = v-doc-volume + infoSectionsTotal:InfoSectionCurr:DocVolume . 
+            end .
+            else do :
+              v-doc-volume = v-doc-volume + infoSectionsTotal:InfoSectionCurr:DocQnty .
+            end .
+          end . 
+        end .
+        
+        if v-doc-volume > 0
+        then do :
           if is-sug(bf_rvs-line.gds-code)
           then do :
             assign v-free-vol = 0.85 * buf_place.max-qnty - bf_rvs-line.state-measure-tc-qnty .
@@ -4839,15 +4871,15 @@ END.
             assign v-free-vol = 0.95 * buf_place.max-qnty - bf_rvs-line.state-brutto-qnty .
           end .
           
-          if v-free-vol >= buf_doc-pl.fact-qnty
+          if v-free-vol >= v-doc-volume
           then do :
             find first buf_doc-pl-attr exclusive-lock
-                where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code
-                and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type
-                and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code
-                and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code
-                and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code
-                and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
+                where buf_doc-pl-attr.obj-code  = bf_rvs-line.obj-code
+                  and buf_doc-pl-attr.obj-type  = bf_rvs-line.obj-type
+                  and buf_doc-pl-attr.gds-code  = bf_rvs-line.gds-code
+                  and buf_doc-pl-attr.pl-code   = bf_rvs-line.pl-code
+                  and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+                  and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
             if available buf_doc-pl-attr then
             do :
               buf_doc-pl-attr.attr-value = string(no)  .
@@ -4856,30 +4888,30 @@ END.
             do :
               create buf_doc-pl-attr.
               assign
-                buf_doc-pl-attr.obj-code   = buf_doc-pl.obj-code
-                buf_doc-pl-attr.obj-type   = buf_doc-pl.obj-type
-                buf_doc-pl-attr.gds-code   = buf_doc-pl.gds-code
-                buf_doc-pl-attr.pl-code    = buf_doc-pl.pl-code
-                buf_doc-pl-attr.out-code   = buf_doc-pl.out-code
+                buf_doc-pl-attr.obj-code   = bf_rvs-line.obj-code
+                buf_doc-pl-attr.obj-type   = bf_rvs-line.obj-type
+                buf_doc-pl-attr.gds-code   = bf_rvs-line.gds-code
+                buf_doc-pl-attr.pl-code    = bf_rvs-line.pl-code
+                buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
                 buf_doc-pl-attr.attr-code  = "free-vol-exceed"
                 buf_doc-pl-attr.attr-value = string(no)
               .
             end.
           end .
           else do :
-            message "Объем нефтепродукта по ТТН " string(buf_doc-pl.fact-qnty)
+            message "Объем нефтепродукта по ТТН " string(round(v-doc-volume, 0))
                     "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "
-                    string(v-free-vol) "л." skip
+                    string(round(v-free-vol, 0)) "л." skip
                     "Проверьте введенные данные из ТТН, значение объема наполнения в сверке до слива"
                     " и при необходимости оповестите ответственное лицо ОГ в соответствии с принятым в ОГ порядком оповещения"
             view-as alert-box . 
             find first buf_doc-pl-attr exclusive-lock
-                where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code
-                and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type
-                and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code
-                and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code
-                and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code
-                and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
+                where buf_doc-pl-attr.obj-code  = bf_rvs-line.obj-code
+                  and buf_doc-pl-attr.obj-type  = bf_rvs-line.obj-type
+                  and buf_doc-pl-attr.gds-code  = bf_rvs-line.gds-code
+                  and buf_doc-pl-attr.pl-code   = bf_rvs-line.pl-code
+                  and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+                  and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
             if available buf_doc-pl-attr then
             do :
               buf_doc-pl-attr.attr-value = string(yes)  .
@@ -4888,17 +4920,17 @@ END.
             do :
               create buf_doc-pl-attr.
               assign
-                buf_doc-pl-attr.obj-code   = buf_doc-pl.obj-code
-                buf_doc-pl-attr.obj-type   = buf_doc-pl.obj-type
-                buf_doc-pl-attr.gds-code   = buf_doc-pl.gds-code
-                buf_doc-pl-attr.pl-code    = buf_doc-pl.pl-code
-                buf_doc-pl-attr.out-code   = buf_doc-pl.out-code
+                buf_doc-pl-attr.obj-code   = bf_rvs-line.obj-code
+                buf_doc-pl-attr.obj-type   = bf_rvs-line.obj-type
+                buf_doc-pl-attr.gds-code   = bf_rvs-line.gds-code
+                buf_doc-pl-attr.pl-code    = bf_rvs-line.pl-code
+                buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
                 buf_doc-pl-attr.attr-code  = "free-vol-exceed"
                 buf_doc-pl-attr.attr-value = string(yes)
               .
             end.       
-          end . 
-        end .                           
+          end .
+        end . 
       end .
     end .
     
