@@ -61,7 +61,7 @@ run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
 mFileLogSocet = v-log-file-name.
 run ConectSocet (v-asi-ip,
                  v-asi-port,
-                 ("/getmeas/?loclist=" + p-loclist),
+                 ("getmeas/?loclist=" + p-loclist),
                  "",
                  "xml",
                  180,

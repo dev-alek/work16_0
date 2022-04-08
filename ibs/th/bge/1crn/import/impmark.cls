@@ -48,6 +48,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     define buffer buf_bar-code    for ub.bar-code .
     define buffer buf_goods      for ub.goods .
     define buffer marking for marking.
+    define buffer marking-attr for ub.marking-attr .
 
 
     objImp = cast (subjectObj, {&impclass}).
@@ -84,23 +85,29 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       marking.mark     = vmark.
       
    end.
-   
-   find first buf_goods  where buf_goods.gds-code eq objImp:gds-code
-   no-lock no-error.
-   if not available buf_goods
-   then
-      undo, throw new Progress.Lang.AppError(substitute("Не известный товар &1",objImp:gds-code)) .
-   find first prod-bc  where prod-bc.b-str eq objImp:gtin
-   no-lock no-error.
-   if not available prod-bc
-   then
-      undo, throw new Progress.Lang.AppError(substitute("Не известный GTIN &1",objImp:gtin)) .
-   else do:
-      find buf_bar-code where buf_bar-code.b-code = ub.prod-bc.b-code no-lock no-error .
-      if    not available buf_bar-code
-         or buf_bar-code.gds-code ne objImp:gds-code
+     
+   if objImp:gds-code ne ?
+   then do:
+      find first buf_goods  where buf_goods.gds-code eq objImp:gds-code
+      no-lock no-error.
+      if not available buf_goods
       then
-         undo, throw new Progress.Lang.AppError(substitute("GTIN &1 не принадлежит товару &2 ", objImp:gtin , objImp:gds-code)) . 
+         undo, throw new Progress.Lang.AppError(substitute("Не известный товар &1",objImp:gds-code)) .
+   end.
+   if objImp:gtin ne ? and objImp:gds-code ne ?
+   then do:
+      find first prod-bc  where prod-bc.b-str eq objImp:gtin
+      no-lock no-error.
+      if not available prod-bc
+      then .
+/*          undo, throw new Progress.Lang.AppError(substitute("Не известный GTIN &1",objImp:gtin)) .*/
+      else do:
+         find buf_bar-code where buf_bar-code.b-code = ub.prod-bc.b-code no-lock no-error .
+         if    not available buf_bar-code
+            or buf_bar-code.gds-code ne objImp:gds-code
+         then
+            undo, throw new Progress.Lang.AppError(substitute("GTIN &1 не принадлежит товару &2 ", objImp:gtin , objImp:gds-code)) . 
+      end.
    end.
    assign
       marking.gds-code     = objImp:gds-code
@@ -110,16 +117,29 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       marking.sts          = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts)
       marking.unit-ext     = objImp:unit-ext
    .
+   if marking.gds-code eq 0
+   then 
+      marking.gds-code = ?.
+   if marking.sts eq ? then
+      undo, throw new Progress.Lang.AppError(substitute("Не известный статус марки &1",objImp:stts)) .
+   
+   if marking.sts ne objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+   then do:
    if    marking.box-qnty < 1
       or marking.box-qnty eq ? 
    then
       undo, throw new Progress.Lang.AppError(substitute("Значение qnty-box должно быть больше 0")) .
-   if marking.gds-ext-id ne getGtinByDM(marking.mark)
+   define variable vgtin as character no-undo.
+   vgtin = getGtinByDM(marking.mark).
+   if vgtin eq ""
    then
-      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 макрки не равет &2",getGtinByDM(marking.mark),marking.gds-ext-id)) .
+      vgtin = ?.
+   if marking.gds-ext-id ne vgtin
+   then
+      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 макрки не равен &2",getGtinByDM(marking.mark),marking.gds-ext-id)) .
    if marking.gds-code ne getGdsCodeByGtin(marking.gds-ext-id)
    then
-      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 макрки тносится к товару &2, в файле товар &3",marking.gds-ext-id,getGdsCodeByGtin(marking.gds-ext-id),marking.gds-code)) .
+      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 макрки относится к товару &2, в файле товар &3",marking.gds-ext-id,getGdsCodeByGtin(marking.gds-ext-id),marking.gds-code)) .
    
    if     objImp:mrc ne 0 
       and objImp:mrc ne ?
@@ -139,10 +159,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       marking-attr.attr-value = string(objImp:mrc).
       release marking-attr no-error.
    end.
-     
-   if marking.sts eq ? then
-      undo, throw new Progress.Lang.AppError(substitute("Не известный статус марки &1",objImp:stts)) .
-   v-retfl = true .
+   end.  
+  v-retfl = true .
     define variable i as integer no-undo .
     catch exAppErrors as class Progress.Lang.AppError :
       Msg = exAppErrors:ReturnValue .

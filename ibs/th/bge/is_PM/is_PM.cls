@@ -18,20 +18,23 @@ class ibs.th.bge.is_PM.is_PM:
   { str/lib-trn.i class }
   
   define temp-table tt-result no-undo
-    field gds-code          as integer
-    field gds-name          as character
-    field wght-fact-start   as decimal
-    field wght-fact-end     as decimal
-    field wght-doc-start    as decimal
-    field wght-doc-end      as decimal
-    field delivery          as decimal
-    field direct-delivery   as decimal
-    field fuel-in-transit   as decimal
-    field wght-sale         as decimal
-    field wght-wholesale    as decimal
-    field loss-own-needs    as decimal
-    field Delivery-ned-izl  as decimal
-    field wght-other        as decimal
+    field gds-code            as integer
+    field gds-name            as character
+    field wght-fact-start     as decimal
+    field wght-fact-end       as decimal
+    field wght-doc-start      as decimal
+    field wght-doc-end        as decimal
+    field delivery            as decimal
+    field delivery-own-pnpo   as decimal
+    field delivery-other-pnpo as decimal
+    field delivery-other      as decimal
+    field direct-delivery     as decimal
+    field fuel-in-transit     as decimal
+    field wght-sale           as decimal
+    field wght-wholesale      as decimal
+    field loss-own-needs      as decimal
+    field Delivery-ned-izl    as decimal
+    field wght-other          as decimal
   index pi as primary gds-code
   .
   
@@ -698,18 +701,18 @@ class ibs.th.bge.is_PM.is_PM:
         and exec-time-diff < (rvs-doc-create-diff * 60)
         and not otherOneDate
         then do :
-            if is-full
-            and tt-place.is-meas
-            and not tt-place.rvd-level
-            and rvs-time-diff > exec-time-diff
-            then do :
-              run write-to-log in p-parent-handle ( "Требуется создание сверки" ) .
-              tt-place.need-new-rvs = true .
-            end .
-            else do :
-              run write-to-log in p-parent-handle (if is-full-backdate then "Выгрузка за прошедшие сутки, сверка не создается" else "Выгрузка промежуточная, сверка не создается" ) .
-              tt-place.use-old-rvs = true .
-            end .
+          if is-full
+          and tt-place.is-meas
+          and not tt-place.rvd-level
+          and rvs-time-diff > exec-time-diff
+          then do :
+            run write-to-log in p-parent-handle ( "Требуется создание сверки" ) .
+            tt-place.need-new-rvs = true .
+          end .
+          else do :
+            run write-to-log in p-parent-handle (if is-full-backdate then "Выгрузка за прошедшие сутки, сверка не создается" else "Выгрузка промежуточная, сверка не создается" ) .
+            tt-place.use-old-rvs = true .
+          end .
         end .
         else do :
           if rvs-time-diff > (rvs-doc-exist-diff * 60)
@@ -969,40 +972,40 @@ class ibs.th.bge.is_PM.is_PM:
                                            and buf_chk-gds.b-code   = buf_bar-code.b-code
   /*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                            :
-                if buf_chk-doc.out-code = ?
-                then do :
-                  v-pl-code = findtank (buf_chk-doc.obj-type,
-                                        buf_chk-doc.obj-code,
-                                        buf_chk-gds.pump,
-                                        buf_chk-gds.nozzle-code,
-                                        buf_chk-gds.pl-code,
-                                        buf_bar-code.gds-code) .
-                end .
-                else do :
-                  v-pl-code = buf_chk-gds.pl-code .
-                end .
-                if v-pl-code <> tt-place.pl-code then next chk-gds_ .
-                                               
-                if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
-                then do :   
-                  v-density = 0 .       
-                  { str/avrgdens.i
-                    tt-place.gds-code
-                    buf_chk-doc.obj-type
-                    buf_chk-doc.obj-code
-                    tt-place.pl-code
-                    buf_chk-doc.shift-date
-                    buf_chk-doc.shift-num
-                    buf_chk-doc.chk-date
-                    buf_chk-doc.chk-time
-                    v-density
-                    no-error
-                  }
-                  tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
-                end .
-                else do :                     
-                  tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
-                end .                               
+              if buf_chk-doc.out-code = ?
+              then do :
+                v-pl-code = findtank (buf_chk-doc.obj-type,
+                                      buf_chk-doc.obj-code,
+                                      buf_chk-gds.pump,
+                                      buf_chk-gds.nozzle-code,
+                                      buf_chk-gds.pl-code,
+                                      buf_bar-code.gds-code) .
+              end .
+              else do :
+                v-pl-code = buf_chk-gds.pl-code .
+              end .
+              if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+                                             
+              if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+              then do :   
+                v-density = 0 .       
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  buf_chk-doc.shift-date
+                  buf_chk-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
+              end .
+              else do :                     
+                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+              end .                               
             end .
           end .
           
@@ -1130,7 +1133,7 @@ class ibs.th.bge.is_PM.is_PM:
           and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
           then next chk-doc_ .
           
-          if buf_chk-doc.chk-date = today
+          if buf_chk-doc.chk-date = date-end
           and buf_chk-doc.chk-time > time-end
           then next chk-doc_ .  
                                        
@@ -1141,40 +1144,40 @@ class ibs.th.bge.is_PM.is_PM:
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
 /*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
-              if buf_chk-doc.out-code = ?
-              then do :
-                v-pl-code = findtank (buf_chk-doc.obj-type,
-                                      buf_chk-doc.obj-code,
-                                      buf_chk-gds.pump,
-                                      buf_chk-gds.nozzle-code,
-                                      buf_chk-gds.pl-code,
-                                      buf_bar-code.gds-code) .
-              end .
-              else do :
-                v-pl-code = buf_chk-gds.pl-code .
-              end .
-              if v-pl-code <> tt-place.pl-code then next chk-gds_ .
-                                             
-              if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
-              then do :   
-                v-density = 0 .       
-                { str/avrgdens.i
-                  tt-place.gds-code
-                  buf_chk-doc.obj-type
-                  buf_chk-doc.obj-code
-                  tt-place.pl-code
-                  buf_chk-doc.shift-date
-                  buf_chk-doc.shift-num
-                  buf_chk-doc.chk-date
-                  buf_chk-doc.chk-time
-                  v-density
-                  no-error
-                }
-                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
-              end .
-              else do :                     
-                tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
-              end .                               
+            if buf_chk-doc.out-code = ?
+            then do :
+              v-pl-code = findtank (buf_chk-doc.obj-type,
+                                    buf_chk-doc.obj-code,
+                                    buf_chk-gds.pump,
+                                    buf_chk-gds.nozzle-code,
+                                    buf_chk-gds.pl-code,
+                                    buf_bar-code.gds-code) .
+            end .
+            else do :
+              v-pl-code = buf_chk-gds.pl-code .
+            end .
+            if v-pl-code <> tt-place.pl-code then next chk-gds_ .
+                                           
+            if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
+            then do :   
+              v-density = 0 .       
+              { str/avrgdens.i
+                tt-place.gds-code
+                buf_chk-doc.obj-type
+                buf_chk-doc.obj-code
+                tt-place.pl-code
+                buf_chk-doc.shift-date
+                buf_chk-doc.shift-num
+                buf_chk-doc.chk-date
+                buf_chk-doc.chk-time
+                v-density
+                no-error
+              }
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
+            end .
+            else do :                     
+              tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * buf_chk-gds.density) .   
+            end .                               
           end .
         end .
         
@@ -1298,7 +1301,7 @@ class ibs.th.bge.is_PM.is_PM:
           and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
           then next chk-doc_ .
           
-          if buf_chk-doc.chk-date = today
+          if buf_chk-doc.chk-date = date-end
           and buf_chk-doc.chk-time > time-end
           then next chk-doc_ .  
                                        
@@ -1521,7 +1524,7 @@ class ibs.th.bge.is_PM.is_PM:
           end .
           
           if buf_chk-doc.chk-date = date-start
-          and buf_chk-doc.chk-time > time-start
+          and buf_chk-doc.chk-time >= time-start
           then next chk-doc_ .  
                                        
           if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
@@ -1749,7 +1752,7 @@ class ibs.th.bge.is_PM.is_PM:
             then next chk-doc_ .
             
             if buf_chk-doc.chk-date = date-start
-            and buf_chk-doc.chk-time > time-start
+            and buf_chk-doc.chk-time >= time-start
             then next chk-doc_ .  
                                          
             if lookup(string(buf_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next chk-doc_ .
@@ -1932,6 +1935,7 @@ class ibs.th.bge.is_PM.is_PM:
   
   method private void stage4 () :
     define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_doc-attr for ub.doc-attr .
     define buffer buf_doc-line for ub.doc-line .
     define buffer buf_doc-pl for ub.doc-pl .
     define buffer buf_chk-doc for ub.chk-doc .
@@ -1940,6 +1944,13 @@ class ibs.th.bge.is_PM.is_PM:
     define buffer buf_goods for ub.goods .
     define buffer buf_clients-attr for ub.clients-attr .
     define buffer buf_inv-line for ub.inv-line.
+    
+    define variable v-is-npz    as logical no-undo .
+    define variable v-is-own    as logical no-undo .
+    define variable v-is-own-nb as logical no-undo .
+    
+    define variable v-nb-obj-type as character no-undo .
+    define variable v-nb-obj-code as integer no-undo .
     
     run write-to-log in p-parent-handle (" START TURNOVER UTC " + utc-time() ) .
     
@@ -2054,10 +2065,59 @@ class ibs.th.bge.is_PM.is_PM:
           /* ТехПролив */
           if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next income-doc-line_ .
         end .
+        assign
+          v-is-npz = false
+          v-is-own = false
+          v-is-own-nb  = false
+        .
+        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                             and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                             and buf_clients-attr.attr-code = {&attr-NPZ}
+                                             :
+          if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then v-is-npz = true . else v-is-npz = false .
+        end .
+        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                             and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                             and buf_clients-attr.attr-code = {&attr-own-supp}
+                                             :
+          if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then v-is-own = true . else v-is-own = false .
+        end .
+        for first buf_doc-attr where buf_doc-attr.doc-code  = buf_trn-doc.doc-code
+                                 and buf_doc-attr.attr-code = {&trdcattr-ptbobj}
+                                 :
+          assign
+            v-nb-obj-type = entry(1, buf_doc-attr.attr-value, ";")
+            v-nb-obj-code = integer(entry(2, buf_doc-attr.attr-value, ";"))
+          no-error .                         
+        end .
+        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = v-nb-obj-type
+                                             and buf_clients-attr.obj-code  = v-nb-obj-code
+                                             and buf_clients-attr.attr-code = {&attr-owner-code}
+                                             :
+          if (buf_clients-attr.attr-value = {&cmp} + string(buf_trn-doc.host-code)) then v-is-own-nb = true . else v-is-own-nb = false .
+        end .
         if ABS((buf_doc-line.fact-qnty * buf_doc-line.fact-density) - buf_doc-line.cli-qnty) < 0.002
         then do :
           /* Формула 7 */
           tt-result.delivery = tt-result.delivery + buf_doc-line.cli-qnty .
+          if v-is-npz
+          then do :
+            tt-result.direct-delivery = tt-result.direct-delivery + buf_doc-line.cli-qnty .
+          end .
+          else
+          if v-is-own
+          then do :
+            if v-is-own-nb
+            then do :
+              tt-result.delivery-own-pnpo = tt-result.delivery-own-pnpo + buf_doc-line.cli-qnty .
+            end .
+            else do :
+              tt-result.delivery-other-pnpo = tt-result.delivery-other-pnpo + buf_doc-line.cli-qnty .
+            end .
+          end .
+          else do :
+            tt-result.delivery-other = tt-result.delivery-other + buf_doc-line.cli-qnty .
+          end .
         end .
         else do :
           for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
@@ -2066,6 +2126,24 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-pl.gds-code = tt-result.gds-code
                                         :
             tt-result.delivery = tt-result.delivery + buf_doc-pl.cli-fact-qnty .
+            if v-is-npz
+            then do :
+              tt-result.direct-delivery = tt-result.direct-delivery + buf_doc-pl.cli-fact-qnty .
+            end .
+            else
+            if v-is-own
+            then do :
+              if v-is-own-nb
+              then do :
+                tt-result.delivery-own-pnpo = tt-result.delivery-own-pnpo + buf_doc-pl.cli-fact-qnty .
+              end .
+              else do :
+                tt-result.delivery-other-pnpo = tt-result.delivery-other-pnpo + buf_doc-pl.cli-fact-qnty .
+              end .
+            end .
+            else do :
+              tt-result.delivery-other = tt-result.delivery-other + buf_doc-pl.cli-fact-qnty .
+            end .
           end .
         end .
       end . /* for each income buf_doc-line */
@@ -2460,18 +2538,21 @@ class ibs.th.bge.is_PM.is_PM:
             ii = ii + 1 .
             sw:write-data-element ("line-num",  string(ii)).
             sw:write-data-element ("gd-code",   string(tt-result.gds-code)).
-            sw:write-data-element ("wght-fact-start",   string-mth(tt-result.wght-fact-start)).
-            sw:write-data-element ("wght-fact-end",     string-mth(tt-result.wght-fact-end)).
-            sw:write-data-element ("wght-doc-start",    string-mth(tt-result.wght-doc-start)).
-            sw:write-data-element ("wght-doc-end",      string-mth(tt-result.wght-doc-end)).
-            sw:write-data-element ("delivery",          string-mth(tt-result.delivery)).
-            sw:write-data-element ("direct-delivery",   string-mth(tt-result.direct-delivery)).
-            sw:write-data-element ("fuel-in-transit",   string-mth(tt-result.fuel-in-transit)).
-            sw:write-data-element ("wght-sale",         string-mth(tt-result.wght-sale)).
-            sw:write-data-element ("wght-wholesale",    string-mth(tt-result.wght-wholesale)).
-            sw:write-data-element ("loss-own-needs",    string-mth(tt-result.loss-own-needs)).
-            sw:write-data-element ("Delivery-ned-izl",  string-mth(tt-result.Delivery-ned-izl)).
-            sw:write-data-element ("wght-other",        string-mth(tt-result.wght-other)).
+            sw:write-data-element ("wght-fact-start",     string-mth(tt-result.wght-fact-start)).
+            sw:write-data-element ("wght-fact-end",       string-mth(tt-result.wght-fact-end)).
+            sw:write-data-element ("wght-doc-start",      string-mth(tt-result.wght-doc-start)).
+            sw:write-data-element ("wght-doc-end",        string-mth(tt-result.wght-doc-end)).
+            sw:write-data-element ("delivery",            string-mth(tt-result.delivery)).
+            sw:write-data-element ("delivery-own-pnpo",   string-mth(tt-result.delivery-own-pnpo)).
+            sw:write-data-element ("delivery-other-pnpo", string-mth(tt-result.delivery-other-pnpo)).
+            sw:write-data-element ("delivery-other",      string-mth(tt-result.delivery-other)).
+            sw:write-data-element ("direct-delivery",     string-mth(tt-result.direct-delivery)).
+            sw:write-data-element ("fuel-in-transit",     string-mth(tt-result.fuel-in-transit)).
+            sw:write-data-element ("wght-sale",           string-mth(tt-result.wght-sale)).
+            sw:write-data-element ("wght-wholesale",      string-mth(tt-result.wght-wholesale)).
+            sw:write-data-element ("loss-own-needs",      string-mth(tt-result.loss-own-needs)).
+            sw:write-data-element ("Delivery-ned-izl",    string-mth(tt-result.Delivery-ned-izl)).
+            sw:write-data-element ("wght-other",          string-mth(tt-result.wght-other)).
           sw:end-element ("gd") .
         end .          
         sw:end-element ("gds") .
@@ -2544,6 +2625,9 @@ class ibs.th.bge.is_PM.is_PM:
           '<td style="width: 70px; border: none;"></td>' skip
           '<td style="width: 70px; border: none;"></td>' skip
           '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
         '</tr>' skip
     .
                         
@@ -2576,7 +2660,10 @@ class ibs.th.bge.is_PM.is_PM:
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Факт. остатки на начало дня, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Факт. остатки на конец дня, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Поступления, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Поступления от собственных нефтебаз ПНПО, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Прямые поставки, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Поступления от собственных нефтебаз других ПНПО, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Поступления от сторонних поставщиков, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Нефтепродукты в пути, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">АЗС/АЗК, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Мелкий опт</th>' skip
@@ -2606,7 +2693,10 @@ class ibs.th.bge.is_PM.is_PM:
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-fact-start,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-fact-start,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-fact-end,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-fact-end,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.delivery,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.delivery,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.delivery-own-pnpo,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.delivery-own-pnpo,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.direct-delivery,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.direct-delivery,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.delivery-other-pnpo,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.delivery-other-pnpo,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.delivery-other,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.delivery-other,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.fuel-in-transit,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.fuel-in-transit,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-sale,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-sale,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-wholesale,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-wholesale,"->>>>>>>>>>>>>9.99",2) + '</th>' skip

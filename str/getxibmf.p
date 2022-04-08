@@ -73,6 +73,7 @@ REPEAT :
      ( substring( file, v-lengthfname - 2, 3 ) = "xml":u ) AND
      can-do( "f", atr )  /* see "os-dir" help : f - Regular file or FIFO pipe */
      and (p-spool-or-data = "spool"
+       or p-spool-or-data = "config"
        or entry(1,  file, ".":U) = p-waiting-name)
   then do:
     assign

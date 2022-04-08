@@ -28,10 +28,11 @@ class ibs.th.gbl.env inherits objth:
     get.
     private set.
 
-  define property Conf as class conf no-undo
+  /* define property Conf as class conf no-undo
     get.
     private set.
-
+из-за говно реализации клас оказался пустой 
+*/
   define property ParametrsOfSection as class section no-undo
     get.
     private set.
@@ -43,10 +44,10 @@ class ibs.th.gbl.env inherits objth:
   ------------------------------------------------------------------------------*/
   constructor public env (  ):
     super ().
-    Utd = new utd().
-    Marking = new marking().
-    Conf = new conf ().
-    ParametrsOfSection = new section ().
+    {utl\objreg.i Utd utd}.
+    {utl\objreg.i Marking marking}
+/*    {utl\objreg.i Conf conf }*/
+    {utl\objreg.i ParametrsOfSection section }.
   end constructor.
 
 end class.

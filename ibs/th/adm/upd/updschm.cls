@@ -1,21 +1,29 @@
- 
- /*------------------------------------------------------------------------
-    File        : updschm
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : asmorozov
-    Created     : Wed Jun 20 17:45:11 MSK 2018
-    Notes       : 
-  ----------------------------------------------------------------------*/
-
+/*
+  $Revision:$
+  $Author:$
+  $Date:$
+  $Workfile:$
+  $Archive:$
+  
+  Автор: Рубан Дмитрий Андреевич 
+  Дата создания: 22 авг. 2021 г.
+  Author:  Ruban Dmitriy Andreevich
+  Creation date: 22 авг. 2021 г.
+  
+  */
 using Progress.Lang.*.
 using ibs.th.adm.upd.*.
 
 
 class ibs.th.adm.upd.updschm: 
-
   {cmp/str-glbl.i class}
+  
+  define variable vss-revision    as character no-undo init "$Revision:$":U .
+  define variable vss-author      as character no-undo init "$Author:$":U .
+  define variable vss-date        as character no-undo init "$Date:$":U .
+  define variable vss-workfile    as character no-undo init "$Workfile:$":U .
+  define variable vss-archive     as character no-undo init "$Archive:$":U .
+  define variable vss-description as character no-undo init "Класс обновления БД".
   
   
   define variable loadDFprocFile as character no-undo.
@@ -75,18 +83,18 @@ class ibs.th.adm.upd.updschm:
       then do:
          modeupd = "iscomp".
          arg = entry(2,arg,"|").
-      end.
+      end. 
       ConPar = replace (arg, "&1", ""). 
     end.
 
   define property isUpdShm as logical no-undo init yes 
     get.
     private set.
-    
+  
   define property isNeedUpd as logical no-undo 
-    get.
-    private set.
-
+  get.
+  private set.
+  
   define property PublisHandle as handle  no-undo 
     get.
     private set.
@@ -115,7 +123,10 @@ class ibs.th.adm.upd.updschm:
   define variable mDfUpdaLL as character no-undo.
 
   constructor public updschm ():
+     putStat ("Установка контекста для проверки обновления ... ").
+     
      obsrvdbObj = new observupd ().
+     
      obsrvdbObj:ModeUpd = modeupd.
      obsrvdbObj:PublisHandle = PublisHandle.
      
@@ -129,10 +140,13 @@ class ibs.th.adm.upd.updschm:
         run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
      
      delete object obsrvdbObj.
-    
+     putStat  ("Установка контекста для проверки обновления завершена").
+     
   end constructor.
 
   constructor public updschm (input inConPar as char,input iMode as character,ipubhan as handle):
+    putStat  ("Установка контекста для обновления ...").
+     
     modeupd = iMode.
     PublisHandle = iPubHan. 
     obsrvdbObj = new observupd ().
@@ -156,15 +170,23 @@ class ibs.th.adm.upd.updschm:
     if not isNeedUpd
     then
        run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
+    
     if QuestionUpd and not isRcode and isNeedUpd 
     then do:
+       putStat  ("Предоставлен выбор пользователя обновлять Бд или нет").
+    
        message "Обновить базу с версии " CurrDBShm  " до " TargetDBShm "?" view-as alert-box question 
           buttons yes-no title "[ ВНИМАНИЕ! ]" update vupd.
        if not vupd
        then do:
+          putStat  ("Пользователя отказался от обновления Бд").
+    
           isNeedUpd = no.
           return.
        end.
+       else
+          putStat  ("Пользователя согласился на обновление Бд").
+    
     end.
     isNeedUpd = obsrvdbObj:isneedupg().
     if obsrvdbObj:IsErr
@@ -196,9 +218,10 @@ class ibs.th.adm.upd.updschm:
     
     m-prowin32FileName =  search ("bin/prowin32.exe").
     delete object obsrvdbObj.
+    putStat  ("Установка контекста для обновления завершена").
     
   end constructor.
-
+  
   constructor public updschm (input inConPar as char ):
      this-object(input inConPar,"").
   end. 
@@ -213,7 +236,7 @@ class ibs.th.adm.upd.updschm:
     if  CurrDBShm eq TargetDBShm
     then
        vdbconect = yes.
-    
+    putStat  ("Обновление Бд").
     upddbshmall().
     /* загрузка df файлов */
     if isUpdShm  /* загрузка df файлов коректировки выполняется всегда*/
@@ -278,12 +301,14 @@ class ibs.th.adm.upd.updschm:
       analisdfObj = new analisdf ().
       analisdfObj:modeupd = modeupd.
       analisdfObj:PublisHandle = PublisHandle.
+      putstat(substitute ("Получение файла обновления для версии &1",CurrDBShm)).
       if  analisdfObj:createDF(CurrDBShm)
       then do:
          assign
             m-FileDf     = analisdfObj:mFileDf
             NewCurrDBShm = analisdfObj:mUpdateTo
          .
+         putstat(substitute ("Получен файла обновления &1 c версии &2 до версии &3",m-FileDf,CurrDBShm,NewCurrDBShm)).
       end.
       else
          isErr = yes. 
@@ -293,6 +318,7 @@ class ibs.th.adm.upd.updschm:
           substitute("Ошибка при обновлении схемы базы данных &1&2",  {&new-line} ,
           analisdfObj:msg)
           .
+        putstat(Msg).
         IsErr = true.
         return.
       end.
@@ -302,10 +328,11 @@ class ibs.th.adm.upd.updschm:
       if isErr then 
       do:
         Msg =
-          substitute("Ошибка при обновлении схемы базы данных&1&2&1&3",  {&new-line} ,
+          substitute("Ошибка при обновлении схемы базы данных &1&2 &1&3",  {&new-line} ,
           error-status :get-message(1) ,
           return-value)
           .
+        putStat(MSG).
         IsErr = true.
         return.
       end.
@@ -317,6 +344,8 @@ class ibs.th.adm.upd.updschm:
      analisdfObj:modeupd = modeupd.
      analisdfObj:PublisHandle = PublisHandle.
      def var m-FileDf_new as char no-undo.
+     putstat(substitute ("Получение файла проверки с версии &1",CurrDBShm)).
+      
      if analisdfObj:createDF(CurrDBShm)
      then do:
         m-FileDf     = analisdfObj:mFileDf.
@@ -330,18 +359,26 @@ class ibs.th.adm.upd.updschm:
            return.
         end.   
      end.
+     putstat(substitute ("Проверка прошла успешно.")).
+     
      delete object analisdfObj no-error. 
      obsrvdbObj = new observupd ().
     obsrvdbObj:ModeUpd = ModeUpd.
     obsrvdbObj:PublisHandle = PublisHandle. 
+    putstat(substitute ("Сохраняем версию БД.")).
+     
     obsrvdbObj:writeResult(NewCurrDBShm).
     if obsrvdbObj:IsErr
     then do:
       Msg = obsrvdbObj:Msg.
+      putstat(substitute ("Ошибка сохранения версии &1",Msg)).
+    
       delete object obsrvdbObj no-error.
       IsErr = true.
       return.  
     end.
+    putstat(substitute ("Сохранена версия &1 БД.",NewCurrDBShm)).
+    
     delete object obsrvdbObj no-error.
     CurrDBShm = NewCurrDBShm.
     isUpdShm = true.
@@ -426,13 +463,17 @@ class ibs.th.adm.upd.updschm:
           vproc  = entry(1,iparam,";")
           vparam = entry(2,iparam,";")
        no-error.
+       putStat  (substitute ("Выполнение процедуры &1 ...",iparam)).
        if vproc ne ""
        then 
-       runsession (vproc,vparam,yes).
+          runsession (vproc,vparam,yes).
+       putStat  (substitute ("Выполнение процедуры &1 завершено",iparam)).
+       
     end.
     else do:
-       
+       putStat  (substitute ("Загрузка данных из файла &1 ...",iparam)).
        loaddf (iparam).
+       putStat  (substitute ("Загрузка данных из файла &1 завершена.",iparam)).
     end.   
     if IsErr = true
       then return.
@@ -512,6 +553,8 @@ class ibs.th.adm.upd.updschm:
        message itext
        view-as alert-box.
     end.
+    putStat  (itext).
+    
    end.
    method public void putstat (input itext as char):
       if valid-handle(PublisHandle)

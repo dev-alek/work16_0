@@ -70,7 +70,7 @@ define variable v-onewin-point as character no-undo .
 ardecldt  shft-qty ~
 xl-delim  rep-sort ~
 alcgrpgd s-alcgrpgd cplot cdens 
-&Scoped-define page-1p rep-shift-format
+&Scoped-define page-1p rep-shift-format rep-excel
 
 &Scoped-define page-2p
 
@@ -95,29 +95,29 @@ v-tthf = buffer thbjattr_thbj-attr-f:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS BUTTON-1 B-exit B-quit BUTTON-2 B-Help ~
-I-actuate I-ardecldt I-rep-sort I-sum-from I-sum-step I-sum-to I-sumvals ~
-I-prt-z-no I-shft-qty RECT-2 I-xl-delim I-alcgrpgd I-cplot I-cdens actuate ~
-B-10 prt-z-no sum-from sum-step sum-to sumvals B-17 xl-delim B-set_rep-sort ~
-rep-sort ardecldt B-11 shft-qty rep-shift-format B-alcgrpgd cplot ~
-B-set_cplot cdens F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 ~
-v-sum-from v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt ~
-v-shft-qty v-alcgrpgd v-cplot v-cdens 
+&Scoped-Define ENABLED-OBJECTS B-exit BUTTON-1 B-quit B-Help I-actuate ~
+BUTTON-2 I-ardecldt I-rep-sort I-sum-from I-sum-step I-sum-to I-sumvals ~
+I-prt-z-no I-shft-qty RECT-2 I-xl-delim I-alcgrpgd I-cplot I-cdens ~
+I-rep-excel actuate B-10 prt-z-no sum-from sum-step sum-to sumvals B-17 ~
+xl-delim rep-sort B-set_rep-sort ardecldt B-11 shft-qty rep-shift-format ~
+rep-excel B-alcgrpgd cplot B-set_cplot cdens F-button-1 F-button-2 ~
+v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to v-sumvals ~
+v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd v-cplot v-cdens 
 &Scoped-Define DISPLAYED-OBJECTS actuate prt-z-no sum-from sum-step sum-to ~
-sumvals xl-delim rep-sort ardecldt shft-qty rep-shift-format alcgrpgd cplot ~
-cdens F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from ~
-v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty ~
-v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
+sumvals xl-delim rep-sort ardecldt shft-qty rep-shift-format rep-excel ~
+alcgrpgd cplot cdens F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 ~
+v-sum-from v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt ~
+v-shft-qty v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
 
 /* Custom List Definitions                                              */
 /* page-1,page-2,List-3,List-4,List-5,List-6                            */
 &Scoped-define page-1 I-actuate I-ardecldt I-rep-sort I-sum-from I-sum-step ~
 I-sum-to I-sumvals I-prt-z-no I-shft-qty I-xl-delim I-alcgrpgd I-cplot ~
-I-cdens actuate B-10 prt-z-no sum-from sum-step sum-to sumvals B-17 ~
-xl-delim B-set_rep-sort rep-sort ardecldt B-11 shft-qty alcgrpgd B-alcgrpgd ~
-cplot B-set_cplot cdens v-actuate v-prt-z-no FILL-IN-2 v-sum-from ~
-v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty ~
-v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
+I-cdens I-rep-excel actuate B-10 prt-z-no sum-from sum-step sum-to sumvals ~
+B-17 xl-delim rep-sort B-set_rep-sort ardecldt B-11 shft-qty alcgrpgd ~
+B-alcgrpgd cplot B-set_cplot cdens v-actuate v-prt-z-no FILL-IN-2 ~
+v-sum-from v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt ~
+v-shft-qty v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -137,7 +137,7 @@ DEFINE BUTTON B-10
 DEFINE BUTTON B-11 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
      LABEL "" 
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE BUTTON B-17 
      IMAGE-UP FILE "cmp/btn-ref.bmp":U
@@ -167,26 +167,26 @@ DEFINE BUTTON B-quit AUTO-END-KEY
 DEFINE BUTTON B-set_cplot 
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL "" 
-     SIZE 2.6 BY 1.1.
+     SIZE 2.63 BY 1.08.
 
 DEFINE BUTTON B-set_rep-sort 
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL "" 
-     SIZE 2.6 BY 1.1.
+     SIZE 2.63 BY 1.08.
 
 DEFINE BUTTON BUTTON-1 
      IMAGE-UP FILE "adeicon\ts-up":U
      IMAGE-DOWN FILE "adeicon\ts-down":U
      IMAGE-INSENSITIVE FILE "adeicon\ts-up":U NO-FOCUS
      LABEL "&1.Параметры" 
-     SIZE 14 BY 1.14 TOOLTIP "Закладка №1".
+     SIZE 14 BY 1.13 TOOLTIP "Закладка №1".
 
 DEFINE BUTTON BUTTON-2 
      IMAGE-UP FILE "adeicon\ts-up":U
      IMAGE-DOWN FILE "adeicon\ts-down":U
      IMAGE-INSENSITIVE FILE "adeicon\ts-up":U NO-FOCUS
      LABEL "&2.Параметры" 
-     SIZE 14 BY 1.14 TOOLTIP "Закладка №2".
+     SIZE 14 BY 1.13 TOOLTIP "Закладка №2".
 
 DEFINE VARIABLE rep-shift-format AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 1 
      VIEW-AS COMBO-BOX INNER-LINES 5
@@ -198,22 +198,22 @@ DEFINE VARIABLE rep-shift-format AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 1
 
 DEFINE VARIABLE cplot AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 45.4 BY 1
+     SIZE 45.38 BY 1
      FGCOLOR 4 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE rep-sort AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 45.4 BY 1
+     SIZE 45.38 BY 1
      FGCOLOR 4 FONT 4 NO-UNDO.
 
 DEFINE VARIABLE sumvals AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 24.6 BY 1
+     SIZE 24.63 BY 1
      FONT 4 NO-UNDO.
 
 DEFINE VARIABLE alcgrpgd AS INTEGER FORMAT ">>>>>>9":U INITIAL 0 
      VIEW-AS FILL-IN NATIVE 
-     SIZE 10.6 BY 1 NO-UNDO.
+     SIZE 10.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE ardecldt AS DATE FORMAT "99/99/9999":U 
      VIEW-AS FILL-IN 
@@ -225,7 +225,7 @@ DEFINE VARIABLE F-button-1 AS CHARACTER FORMAT "X(256)":U INITIAL "№ &1."
 
 DEFINE VARIABLE F-button-2 AS CHARACTER FORMAT "X(256)":U INITIAL "№ &2." 
       VIEW-AS TEXT 
-     SIZE 4.8 BY .67 TOOLTIP "Закладка №2" NO-UNDO.
+     SIZE 4.75 BY .67 TOOLTIP "Закладка №2" NO-UNDO.
 
 DEFINE VARIABLE FILL-IN-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Диапозоны для ОТЧЕТА ~"Почасовой отчет по диапазонам сумм продаж~"" 
       VIEW-AS TEXT 
@@ -234,71 +234,71 @@ DEFINE VARIABLE FILL-IN-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Диапозоны для 
 
 DEFINE VARIABLE s-alcgrpgd AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 51.2 BY .67 NO-UNDO.
+     SIZE 51.25 BY .67 NO-UNDO.
 
 DEFINE VARIABLE sum-from AS DECIMAL FORMAT "->>>>>>>9.99":U INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 10 BY .81 NO-UNDO.
+     SIZE 10 BY .79 NO-UNDO.
 
 DEFINE VARIABLE sum-step AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 14 BY .81 NO-UNDO.
+     SIZE 14 BY .79 NO-UNDO.
 
 DEFINE VARIABLE sum-to AS DECIMAL FORMAT "->>>>>>>9.99":U INITIAL 0 
      VIEW-AS FILL-IN 
-     SIZE 10 BY .81 NO-UNDO.
+     SIZE 10 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-actuate AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 70 BY .81 NO-UNDO.
+     SIZE 70 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-alcgrpgd AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 32.6 BY .81 NO-UNDO.
+     SIZE 32.63 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-ardecldt AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 47.8 BY .81 NO-UNDO.
+     SIZE 47.75 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-cdens AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 40 BY .81 NO-UNDO.
+     SIZE 40 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-cplot AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 48.2 BY .81 NO-UNDO.
+     SIZE 48.25 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-prt-z-no AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 42.6 BY .81 NO-UNDO.
+     SIZE 42.63 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-rep-sort AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 48.2 BY .81 NO-UNDO.
+     SIZE 48.25 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-shft-qty AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 41 BY .81 NO-UNDO.
+     SIZE 41 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-sum-from AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 12.6 BY .81 NO-UNDO.
+     SIZE 12.63 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-sum-step AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 5.6 BY .81 NO-UNDO.
+     SIZE 5.63 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-sum-to AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 12.6 BY .81 NO-UNDO.
+     SIZE 12.63 BY .79 NO-UNDO.
 
 DEFINE VARIABLE v-sumvals AS CHARACTER FORMAT "X(256)":U INITIAL "Список" 
       VIEW-AS TEXT 
-     SIZE 6.6 BY 1 NO-UNDO.
+     SIZE 6.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-xl-delim AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 50.8 BY .81 NO-UNDO.
+     SIZE 50.75 BY .79 NO-UNDO.
 
 DEFINE VARIABLE xl-delim AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
@@ -306,62 +306,66 @@ DEFINE VARIABLE xl-delim AS CHARACTER FORMAT "X(256)":U
 
 DEFINE IMAGE I-actuate
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-alcgrpgd
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-ardecldt
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-cdens
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-cplot
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-prt-z-no
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
+
+DEFINE IMAGE I-rep-excel
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-rep-sort
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-shft-qty
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-sum-from
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-sum-step
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-sum-to
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-sumvals
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE IMAGE I-xl-delim
      FILENAME "cmp/info.bmp":U
-     SIZE 3 BY .81.
+     SIZE 3 BY .79.
 
 DEFINE VARIABLE cdens AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
           "По средней", 0,
 "По чекам", 1
-     SIZE 28 BY .81
+     SIZE 28 BY .79
      FONT 4 NO-UNDO.
 
 DEFINE VARIABLE shft-qty AS CHARACTER 
@@ -369,86 +373,93 @@ DEFINE VARIABLE shft-qty AS CHARACTER
      RADIO-BUTTONS 
           "Расчетно-книжный остаток", "system",
 "Фактический остаток", "state"
-     SIZE 38 BY .81
+     SIZE 38 BY .79
      FONT 4 NO-UNDO.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  
-     SIZE 101 BY .24.
+     SIZE 101 BY .25.
 
 DEFINE VARIABLE actuate AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 72.6 BY .81 NO-UNDO.
+     SIZE 72.63 BY .79 NO-UNDO.
 
 DEFINE VARIABLE prt-z-no AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 45 BY .81 NO-UNDO.
+     SIZE 45 BY .79 NO-UNDO.
+
+DEFINE VARIABLE rep-excel AS LOGICAL INITIAL no 
+     LABEL "Excel для отчетов, защита от редактирования" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 57.25 BY .83 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     BUTTON-1 AT ROW 1 COL 34.6 WIDGET-ID 342
      B-exit AT ROW 1 COL 1
+     BUTTON-1 AT ROW 1 COL 34.63 WIDGET-ID 342
      B-quit AT ROW 1 COL 11
-     BUTTON-2 AT ROW 1 COL 48.4 WIDGET-ID 344
      B-Help AT ROW 1 COL 98
-     actuate AT ROW 2.24 COL 2.8 WIDGET-ID 268
-     B-10 AT ROW 3 COL 2.8 WIDGET-ID 298
-     prt-z-no AT ROW 3.1 COL 6 WIDGET-ID 300
-     sum-from AT ROW 4.76 COL 15 COLON-ALIGNED NO-LABEL WIDGET-ID 272
-     sum-step AT ROW 4.76 COL 34.6 COLON-ALIGNED NO-LABEL WIDGET-ID 288
-     sum-to AT ROW 5.57 COL 17 NO-LABEL WIDGET-ID 270
-     sumvals AT ROW 5.57 COL 36.6 NO-LABEL WIDGET-ID 284
-     B-17 AT ROW 6.52 COL 2.8 WIDGET-ID 378
-     xl-delim AT ROW 6.52 COL 4 COLON-ALIGNED NO-LABEL WIDGET-ID 386
-     B-set_rep-sort AT ROW 7.48 COL 49.6 WIDGET-ID 480
-     rep-sort AT ROW 7.52 COL 2.8 NO-LABEL WIDGET-ID 278
-     ardecldt AT ROW 8.57 COL 2.8 NO-LABEL WIDGET-ID 274
-     B-11 AT ROW 9.57 COL 2.8 WIDGET-ID 314
-     shft-qty AT ROW 9.57 COL 47.6 NO-LABEL WIDGET-ID 308
-     rep-shift-format AT ROW 10.57 COL 26.6 COLON-ALIGNED NO-LABEL WIDGET-ID 488
-     alcgrpgd AT ROW 11.91 COL 34.4 COLON-ALIGNED NO-LABEL WIDGET-ID 472
-     B-alcgrpgd AT ROW 11.91 COL 47.2 WIDGET-ID 464
-     cplot AT ROW 12.95 COL 2.8 NO-LABEL WIDGET-ID 478
-     B-set_cplot AT ROW 12.95 COL 49 WIDGET-ID 476
-     cdens AT ROW 14.33 COL 47 NO-LABEL WIDGET-ID 494
-     F-button-1 AT ROW 1.24 COL 34 COLON-ALIGNED NO-LABEL WIDGET-ID 350
-     F-button-2 AT ROW 1.24 COL 47.2 COLON-ALIGNED NO-LABEL WIDGET-ID 348
-     v-actuate AT ROW 2.24 COL 5.6 NO-LABEL WIDGET-ID 122
-     v-prt-z-no AT ROW 3.1 COL 9.4 NO-LABEL WIDGET-ID 304
+     BUTTON-2 AT ROW 1 COL 48.38 WIDGET-ID 344
+     actuate AT ROW 2.25 COL 2.75 WIDGET-ID 268
+     B-10 AT ROW 3 COL 2.75 WIDGET-ID 298
+     prt-z-no AT ROW 3.08 COL 6 WIDGET-ID 300
+     sum-from AT ROW 4.75 COL 15 COLON-ALIGNED NO-LABEL WIDGET-ID 272
+     sum-step AT ROW 4.75 COL 34.63 COLON-ALIGNED NO-LABEL WIDGET-ID 288
+     sum-to AT ROW 5.58 COL 17 NO-LABEL WIDGET-ID 270
+     sumvals AT ROW 5.58 COL 36.63 NO-LABEL WIDGET-ID 284
+     B-17 AT ROW 6.5 COL 2.75 WIDGET-ID 378
+     xl-delim AT ROW 6.5 COL 4 COLON-ALIGNED NO-LABEL WIDGET-ID 386
+     rep-sort AT ROW 7.5 COL 2.75 NO-LABEL WIDGET-ID 278
+     B-set_rep-sort AT ROW 7.5 COL 49.63 WIDGET-ID 480
+     ardecldt AT ROW 8.58 COL 2.75 NO-LABEL WIDGET-ID 274
+     B-11 AT ROW 9.58 COL 2.75 WIDGET-ID 314
+     shft-qty AT ROW 9.58 COL 47.63 NO-LABEL WIDGET-ID 308
+     rep-shift-format AT ROW 10.58 COL 26.63 COLON-ALIGNED NO-LABEL WIDGET-ID 488
+     rep-excel AT ROW 11.75 COL 2.5 WIDGET-ID 368
+     alcgrpgd AT ROW 12.83 COL 34.38 COLON-ALIGNED NO-LABEL WIDGET-ID 472
+     B-alcgrpgd AT ROW 12.83 COL 47.25 WIDGET-ID 464
+     cplot AT ROW 13.88 COL 2.75 NO-LABEL WIDGET-ID 478
+     B-set_cplot AT ROW 13.88 COL 49 WIDGET-ID 476
+     cdens AT ROW 15.25 COL 47 NO-LABEL WIDGET-ID 494
+     F-button-1 AT ROW 1.25 COL 34 COLON-ALIGNED NO-LABEL WIDGET-ID 350
+     F-button-2 AT ROW 1.25 COL 47.25 COLON-ALIGNED NO-LABEL WIDGET-ID 348
+     v-actuate AT ROW 2.25 COL 5.63 NO-LABEL WIDGET-ID 122
+     v-prt-z-no AT ROW 3.08 COL 9.38 NO-LABEL WIDGET-ID 304
      FILL-IN-2 AT ROW 4 COL 2 NO-LABEL WIDGET-ID 338
-     v-sum-from AT ROW 4.76 COL 2.8 NO-LABEL WIDGET-ID 172
-     v-sum-step AT ROW 4.76 COL 30 NO-LABEL WIDGET-ID 178
-     v-sum-to AT ROW 5.57 COL 2.8 NO-LABEL WIDGET-ID 184
-     v-sumvals AT ROW 5.57 COL 30 NO-LABEL WIDGET-ID 208
-     v-xl-delim AT ROW 6.52 COL 10.2 NO-LABEL WIDGET-ID 384
-     v-rep-sort AT ROW 7.48 COL 52.8 NO-LABEL WIDGET-ID 160
-     v-ardecldt AT ROW 8.62 COL 14.8 NO-LABEL WIDGET-ID 132
-     v-shft-qty AT ROW 9.57 COL 6 NO-LABEL WIDGET-ID 312
-     v-alcgrpgd AT ROW 11.91 COL 2.8 NO-LABEL WIDGET-ID 470
-     s-alcgrpgd AT ROW 12.14 COL 48.6 COLON-ALIGNED NO-LABEL WIDGET-ID 474
-     v-cplot AT ROW 13.05 COL 52.2 NO-LABEL WIDGET-ID 484
-     v-cdens AT ROW 14.33 COL 5 NO-LABEL WIDGET-ID 498
+     v-sum-from AT ROW 4.75 COL 2.75 NO-LABEL WIDGET-ID 172
+     v-sum-step AT ROW 4.75 COL 30 NO-LABEL WIDGET-ID 178
+     v-sum-to AT ROW 5.58 COL 2.75 NO-LABEL WIDGET-ID 184
+     v-sumvals AT ROW 5.58 COL 30 NO-LABEL WIDGET-ID 208
+     v-xl-delim AT ROW 6.5 COL 10.25 NO-LABEL WIDGET-ID 384
+     v-rep-sort AT ROW 7.5 COL 52.75 NO-LABEL WIDGET-ID 160
+     v-ardecldt AT ROW 8.63 COL 14.75 NO-LABEL WIDGET-ID 132
+     v-shft-qty AT ROW 9.58 COL 6 NO-LABEL WIDGET-ID 312
+     v-alcgrpgd AT ROW 12.83 COL 2.75 NO-LABEL WIDGET-ID 470
+     s-alcgrpgd AT ROW 13.04 COL 48.63 COLON-ALIGNED NO-LABEL WIDGET-ID 474
+     v-cplot AT ROW 13.96 COL 52.25 NO-LABEL WIDGET-ID 484
+     v-cdens AT ROW 15.25 COL 5 NO-LABEL WIDGET-ID 498
      "Форма сменного отчета:" VIEW-AS TEXT
-          SIZE 23.6 BY .67 AT ROW 10.67 COL 2.8 WIDGET-ID 486
-     I-actuate AT ROW 2.24 COL 1 WIDGET-ID 118
+          SIZE 23.63 BY .67 AT ROW 10.67 COL 2.75 WIDGET-ID 486
+     I-actuate AT ROW 2.25 COL 1 WIDGET-ID 118
      I-ardecldt AT ROW 8.67 COL 1 WIDGET-ID 128
-     I-rep-sort AT ROW 7.52 COL 1 WIDGET-ID 158
-     I-sum-from AT ROW 4.76 COL 1 WIDGET-ID 168
-     I-sum-step AT ROW 4.76 COL 27.6 WIDGET-ID 174
-     I-sum-to AT ROW 5.57 COL 1 WIDGET-ID 180
-     I-sumvals AT ROW 5.57 COL 27.6 WIDGET-ID 204
-     I-prt-z-no AT ROW 3.1 COL 1 WIDGET-ID 302
-     I-shft-qty AT ROW 9.57 COL 1 WIDGET-ID 306
+     I-rep-sort AT ROW 7.5 COL 1 WIDGET-ID 158
+     I-sum-from AT ROW 4.75 COL 1 WIDGET-ID 168
+     I-sum-step AT ROW 4.75 COL 27.63 WIDGET-ID 174
+     I-sum-to AT ROW 5.58 COL 1 WIDGET-ID 180
+     I-sumvals AT ROW 5.58 COL 27.63 WIDGET-ID 204
+     I-prt-z-no AT ROW 3.08 COL 1 WIDGET-ID 302
+     I-shft-qty AT ROW 9.58 COL 1 WIDGET-ID 306
      RECT-2 AT ROW 2 COL 1 WIDGET-ID 346
-     I-xl-delim AT ROW 6.52 COL 1 WIDGET-ID 380
-     I-alcgrpgd AT ROW 11.95 COL 1 WIDGET-ID 466
-     I-cplot AT ROW 12.95 COL 1 WIDGET-ID 482
-     I-cdens AT ROW 14.33 COL 1 WIDGET-ID 490
-     SPACE(98.12) SKIP(8.10)
+     I-xl-delim AT ROW 6.5 COL 1 WIDGET-ID 380
+     I-alcgrpgd AT ROW 12.88 COL 1 WIDGET-ID 466
+     I-cplot AT ROW 13.88 COL 1 WIDGET-ID 482
+     I-cdens AT ROW 15.25 COL 1 WIDGET-ID 490
+     I-rep-excel AT ROW 11.75 COL 1 WIDGET-ID 500
+     SPACE(98.24) SKIP(10.70)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для ОТЧЕТОВ"
@@ -513,6 +524,8 @@ ASSIGN
 /* SETTINGS FOR IMAGE I-cplot IN FRAME Dialog-Frame
    1                                                                    */
 /* SETTINGS FOR IMAGE I-prt-z-no IN FRAME Dialog-Frame
+   1                                                                    */
+/* SETTINGS FOR IMAGE I-rep-excel IN FRAME Dialog-Frame
    1                                                                    */
 /* SETTINGS FOR IMAGE I-rep-sort IN FRAME Dialog-Frame
    1                                                                    */
@@ -842,6 +855,17 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME I-rep-excel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-rep-excel Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-rep-excel IN FRAME Dialog-Frame
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME I-rep-sort
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-rep-sort Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-rep-sort IN FRAME Dialog-Frame
@@ -913,6 +937,17 @@ END.
 ON MOUSE-SELECT-CLICK OF I-xl-delim IN FRAME Dialog-Frame
 DO:
   MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME rep-excel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rep-excel Dialog-Frame
+ON VALUE-CHANGED OF rep-excel IN FRAME Dialog-Frame /* Excel для отчетов, защита от редактирования */
+DO:
+  assign rep-excel .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1005,26 +1040,20 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY actuate prt-z-no sum-from sum-step sum-to sumvals xl-delim rep-sort 
-          ardecldt shft-qty rep-shift-format alcgrpgd cplot cdens F-button-1 
-          F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step 
-          v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty 
-          v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
+          ardecldt shft-qty rep-shift-format rep-excel alcgrpgd cplot cdens 
+          F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from 
+          v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt 
+          v-shft-qty v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
       WITH FRAME Dialog-Frame.
-  ENABLE BUTTON-1 B-exit B-quit BUTTON-2 B-Help I-actuate I-ardecldt I-rep-sort 
+  ENABLE B-exit BUTTON-1 B-quit B-Help I-actuate BUTTON-2 I-ardecldt I-rep-sort 
          I-sum-from I-sum-step I-sum-to I-sumvals I-prt-z-no I-shft-qty RECT-2 
-         I-xl-delim I-alcgrpgd I-cplot I-cdens actuate B-10 prt-z-no sum-from 
-         sum-step sum-to sumvals B-17 xl-delim B-set_rep-sort rep-sort ardecldt 
-         B-11 shft-qty rep-shift-format B-alcgrpgd cplot B-set_cplot cdens 
-         F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from 
-         v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt 
-         v-shft-qty v-alcgrpgd v-cplot v-cdens 
+         I-xl-delim I-alcgrpgd I-cplot I-cdens I-rep-excel actuate B-10 
+         prt-z-no sum-from sum-step sum-to sumvals B-17 xl-delim rep-sort 
+         B-set_rep-sort ardecldt B-11 shft-qty rep-shift-format rep-excel 
+         B-alcgrpgd cplot B-set_cplot cdens F-button-1 F-button-2 v-actuate 
+         v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to v-sumvals 
+         v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd v-cplot v-cdens 
       WITH FRAME Dialog-Frame.
-  if p-type <> 'obj' then do:
-     disable
-     shft-qty
-     with frame {&frame-name} .
-  end.    
-      
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
@@ -1156,7 +1185,6 @@ END.
     display ~{&pole~} with frame {&frame-name} . ~
 END.
 
-
 FOR EACH thbjattr_thbj-attr-g :
   case thbjattr_thbj-attr-g.prop-code :
     
@@ -1167,7 +1195,6 @@ FOR EACH thbjattr_thbj-attr-g :
 &scop pole ardecldt
 &scop type date
 {&telo1gc}
-
 
 &scop pole rep-sort
 &scop type character
@@ -1189,7 +1216,6 @@ FOR EACH thbjattr_thbj-attr-g :
 &scop type character
 {&telo1gc}
 
-
 &scop pole alcgrpgd
 &scop type integer
 {&telo1gc}
@@ -1205,7 +1231,11 @@ FOR EACH thbjattr_thbj-attr-g :
 &scop pole cdens
 &scop type integer
 {&telo1gc}
-    
+
+&scop pole rep-excel
+&scop type logical
+{&telo1gc}
+
     otherwise .
   end case .
 /* 17/VIII-2018 - перенесено в case  
@@ -1253,6 +1283,10 @@ FOR EACH thbjattr_thbj-attr-g :
 
 &scop pole cdens
 &scop type integer
+{&telo1g}
+
+&scop pole rep-excel
+&scop type logical
 {&telo1g}
 */
 
@@ -1346,7 +1380,6 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 
 &scop pole ardecldt
 {&telo2g}
-
 
 &scop pole rep-sort
 {&telo2g}
@@ -1517,6 +1550,7 @@ define variable v-found as decimal   no-undo .
      sumvals
      cplot
      rep-shift-format 
+     rep-excel
      cdens
      with frame {&frame-name}.
   end.
@@ -1533,6 +1567,7 @@ define variable v-found as decimal   no-undo .
   cplot
   rep-shift-format
   cdens
+  rep-excel
   with frame {&frame-name} .
 
 end procedure.
@@ -1914,6 +1949,7 @@ ASSIGN
     shft-qty
     cplot
     rep-shift-format
+    rep-excel
     cdens
  .
  

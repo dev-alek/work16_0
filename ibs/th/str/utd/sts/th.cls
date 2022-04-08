@@ -37,8 +37,8 @@ class ibs.th.str.utd.sts.th inherits objth:
   define public property  edocError as class propmap no-undo get.  protected set.
   define public property  RejectionUtd as class propmap no-undo get.  protected set.
   define public property  ConfirmedUcd as class propmap no-undo get.  protected set.
+  define public property  Rejection as class propmap no-undo get. protected set.
   define public property  PackProcess as class propmap no-undo get.  protected set.
-  define public property  Rejection as class propmap no-undo get. 
     protected set.    
 
   define public property THMap as class mapstring no-undo get. 
@@ -57,7 +57,7 @@ class ibs.th.str.utd.sts.th inherits objth:
   end. 
  
   constructor public th ():
-    THMap = new mapstring(true).
+    {utl\objreg.i THMap mapstring true}
     NewStatus            = crProp(0, "NewStatus", "Новый").
     ReceivedFromSupplier = crProp(1, "ReceivedFromSupplier", "Получен от поставщика").
     VerificationPassed   = crProp(2, "VerificationPassed", "Пройдена проверка МОТП").

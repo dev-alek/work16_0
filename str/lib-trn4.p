@@ -2439,7 +2439,7 @@ define variable v-ischg-ext-type as logical no-undo .
             no-error.
       if error-status :error then do:
         v-mess = 
-          vss-workfile + vss-revision + vss-description + {&new-line} +
+/*          vss-workfile + vss-revision + vss-description + {&new-line} +*/
           "Ошибка при закрытии документа " + buf_trn-doc.doc-code + {&new-line} +
           return-value + {&new-line} .
         run userlogingerr in this-procedure ( buffer buf_trn-doc, 57, v-mess, v-cntxt-db-num) no-error.

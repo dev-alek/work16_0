@@ -798,13 +798,22 @@ end.
     RUN gds-attr-delete (v-nbc, {&attr-time-coock}, output v-attr-del).     
   end.
 
-  if      p-GdsObj:CommodityCode <> ""
-     and  p-GdsObj:CommodityCode <> ?
+  if p-GdsObj:CommodityCode <> ""
+  and p-GdsObj:CommodityCode <> ?
   then do :
     RUN gds-attr-write (v-nbc, {&attr-gds-CommodityCode}, p-GdsObj:CommodityCode).  
   end.
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-gds-CommodityCode}, output v-attr-del).     
+  end.
+  
+  if p-GdsObj:code-AIS <> ""
+  and p-GdsObj:code-AIS <> ?
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-gds-code-AIS}, p-GdsObj:code-AIS).  
+  end.
+  else do :
+    RUN gds-attr-delete (v-nbc, {&attr-gds-code-AIS}, output v-attr-del).     
   end.
       
   if p-GdsObj:carbohydrates <> ?

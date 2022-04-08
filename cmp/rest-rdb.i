@@ -117,7 +117,7 @@ assortment-matrix~
 ,c-bar-code-attr~
 ,c-auto-tank~
 ,c-auto-section~
-,c-auto-section-table-
+,c-auto-section-table~
 ,auto-tank-meas~
 ,buyer-group~
 ,c-buyer-group~

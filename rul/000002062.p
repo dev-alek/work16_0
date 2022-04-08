@@ -1125,7 +1125,7 @@ define variable v-err               as logical    no-undo .
           end.
           else do:
              &scop fin-doc-type-code (if buf_temp-fin-sum.tot-sum > 0 then ~{&FDEDT_Income_Cash~} else ~{&FDEDT_expense_Cash~})
-                 &scop my-message substitute("Не возможно создздать &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6  по кассовой книге № &7 на сумму &8 на кассой книге № 0 не достаточно средств." ~
+                 &scop my-message substitute("Не возможно создать &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6  по кассовой книге № &7 на сумму &8 на кассой книге № 0 не достаточно средств." ~
                                   , ~{&fin-doc-type-name~}  ~
                                   , buf_shift-obj.shift-name ~
                                   , buf_shift-obj.shift-date ~
@@ -1290,6 +1290,7 @@ define variable v-err               as logical    no-undo .
                       ,input 0 /*p-an-uchet-code*/
                       ,input 0 /*p-cel-nazn-code*/
                       ,input buf_temp-fin-sum.cashbookid
+                      ,input ""
                       ,INPUT-OUTPUT table tt-fin-doc
                       ,INPUT-OUTPUT table ttc-fin-doc
                       ,output table tt0-fin-doc-attr
@@ -1323,6 +1324,7 @@ define variable v-err               as logical    no-undo .
                       ,input 0 /*p-an-uchet-code*/
                       ,input 0 /*p-cel-nazn-code*/
                       ,input buf_temp-fin-sum.cashbookid
+                      ,input ""
                       ,INPUT-OUTPUT table tt-fin-doc
                       ,INPUT-OUTPUT table ttc-fin-doc
                       ,output table tt0-fin-doc-attr

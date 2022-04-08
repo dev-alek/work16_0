@@ -90,6 +90,7 @@ on error undo, return error
   define buffer buf_esys-all-attr     for ub.esys-all-attr .
   define buffer buf_db                for ub.db .
   define buffer buf_utd               for ub.utd .
+  define buffer buf_utd-attr          for ub.utd-attr .
   define buffer buf_utd-err           for ub.utd-err .
   define buffer upd_utd               for ub.utd .
   define buffer locked_utd            for ub.utd .
@@ -267,6 +268,10 @@ on error undo, return error
           then do :
             run write-to-log( "Со времени получения токена прошло более 6 часов. Пробуем обновить токен..." ) .
             vNewToken = oMotp:updateToken(vToken) .
+            if oMotp:HttpStatus = 502
+            then do :
+              run write-to-log( oMotp:Msg ) .
+            end .
             if oMotp:StatusErr
             then do :
               run write-to-log( oMotp:Msg ) .
@@ -356,6 +361,15 @@ on error undo, return error
                 find first locked_utd exclusive-lock where rowid(locked_utd) = rowid(buf_utd) no-wait no-error .
                 if not available locked_utd
                 then do :
+                  next utd_ .
+                end .
+                
+                for first buf_utd-attr no-lock where buf_utd-attr.doc-id = buf_utd.doc-id
+                                                 and buf_utd-attr.db-num = buf_utd.db-num
+                                                 and buf_utd-attr.attr-code = "MarkUtd"
+                                                 and logical(buf_utd-attr.attr-value) = false
+                                                 :
+                  /* УПД без маркированной продукции */
                   next utd_ .
                 end .
                 
@@ -473,6 +487,16 @@ on error undo, return error
             then do :
               next .
             end .
+            
+            for first buf_utd-attr no-lock where buf_utd-attr.doc-id = buf_utd.doc-id
+                                             and buf_utd-attr.db-num = buf_utd.db-num
+                                             and buf_utd-attr.attr-code = "MarkUtd"
+                                             and logical(buf_utd-attr.attr-value) = false
+                                             :
+              /* УПД без маркированной продукции */
+              next .
+            end .
+                
             run write-to-log( "Проверка документа в ИС МОТП. УПД " + string(buf_utd.DocumentNumber) ) .
   /*          oMotp:checkUtd(vToken, buf_utd.db-num, buf_utd.doc-id) .*/
             oMotp:checkINN = true .
@@ -500,6 +524,16 @@ on error undo, return error
             then do :
               next .
             end .
+            
+            for first buf_utd-attr no-lock where buf_utd-attr.doc-id = buf_utd.doc-id
+                                             and buf_utd-attr.db-num = buf_utd.db-num
+                                             and buf_utd-attr.attr-code = "MarkUtd"
+                                             and logical(buf_utd-attr.attr-value) = false
+                                             :
+              /* УПД без маркированной продукции */
+              next .
+            end .
+            
             run write-to-log( "Запрос информации по маркам. Первоначальный ввод " + string(buf_utd.DocumentNumber) ) .
             oMotp:isFirstEnter = true .
             oMotp:cisesInfo(vToken, buf_utd.db-num, buf_utd.doc-id, false, output v-ok) .

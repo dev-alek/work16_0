@@ -26,6 +26,7 @@ class ibs.th.gbl.env.prmtrs.section inherits objth:
   method public class edo GetSectionEDO(pObjType as char, pObjCode as int):
     def var vMarkingType as character no-undo.
     def var vIsEDO as logical no-undo.
+    def var vIsEDODiadok as logical no-undo.
     def var vIsManual as logical no-undo.
     def var vIsBanRecipes as logical no-undo.
     def var vIsBanAltr as logical no-undo.
@@ -35,7 +36,7 @@ class ibs.th.gbl.env.prmtrs.section inherits objth:
       return edo.
     end.
     delete object edo no-error.
-    edo = new edo(pObjType, pObjCode).    
+    {utl\objreg.i edo edo pObjType pObjCode}    
     return edo.
   end method.
   

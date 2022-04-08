@@ -18,6 +18,8 @@ using System.Windows.Forms.* from assembly.
 
 class ibs.th.str.ptrl.forms.tanksections inherits Form: 
   
+  { cmp/str-glbl.i class}
+  
   define property infoSecsObj as class ibs.th.str.InfoSectionsTotal no-undo
     get.
     private set.
@@ -50,6 +52,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
   define private variable toolSBtn_Copy as System.Windows.Forms.ToolStripButton no-undo.
   define private variable toolSBtn_Add as System.Windows.Forms.ToolStripButton no-undo.
   
+  define private variable vClickSave as logical no-undo initial no .
   
   define private variable maxSec as integer no-undo.
   define private variable prevTabIndex as integer no-undo.
@@ -107,9 +110,39 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
 /*    extent (tankSectionControl) = infoSecsObj:SectionNum.*/
 /*    extent (tabPageArr) = infoSecsObj:SectionNum.        */
 
+    define variable v-tth             as handle    no-undo .
+    define variable par-type          as character no-undo .
+    define variable v-value-char      as character no-undo .
+    define variable v-value-date      as date      no-undo .
+    define variable v-value-decimal   as decimal   no-undo .
+    define variable v-value-integer   as integer   no-undo .
+    define variable v-value-logical   as logical   no-undo .
+    define variable v-rvd-own-nb      as logical   no-undo .
+    
+    define buffer buf_trn-doc for ub.trn-doc .
+
     if not valid-object (infoSecsObj)
     then do:
       undo, throw new Progress.Lang.AppError ("Ошибка при создании формы, передан неверный параметр, не иницализирован объект типа InfoSectionsTotal").
+    end.
+    
+    run adm/shattri.p (
+               input "get":U
+              ,input  infoSecsObj:ObjType
+              ,input  infoSecsObj:ObjCode
+              ,input  {&attr-petrol}
+              ,input  {&attr-petrol_rvd-own-nb} /*p-param-code*/
+              ,output v-value-char
+              ,output v-value-date
+              ,output v-value-decimal
+              ,output v-value-integer
+              ,output v-rvd-own-nb
+              ,output par-type
+              ,input-output table-handle v-tth
+              ) no-error .
+    if error-status:error then do:
+        if valid-object(v-tth) then delete object v-tth.
+        v-rvd-own-nb = false .
     end.
 
     do ii = 1 to infoSecsObj:SectionNum:
@@ -137,6 +170,27 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
       toolSBtn_Ok:Visible = false.
     end.
     
+    if v-rvd-own-nb = false
+    then do :
+      find first buf_trn-doc no-lock where buf_trn-doc.doc-code = infoSecsObj:TrnDocNum no-error .
+      if available buf_trn-doc
+      then do :
+        find first ub.clients-attr no-lock where ub.clients-attr.obj-type = buf_trn-doc.cli-type
+                                             and ub.clients-attr.obj-code = buf_trn-doc.cli-code
+                                             and ub.clients-attr.attr-code = {&attr-owner-code}
+                                             no-error .
+        if available ub.clients-attr
+        and ub.clients-attr.attr-value > ""
+        then do :
+          if ub.clients-attr.attr-value = "орг" + string(buf_trn-doc.host-code)
+          then do : 
+            toolSBtn_Delete:Visible = false.
+            this-object:tabControl:Controls:Remove(this-object:tabPageAdd).
+          end .
+        end .
+      end .
+    end .
+    
         
     catch e as Progress.Lang.Error:
       undo, throw e.
@@ -160,206 +214,207 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     
     Modifying the contents of this method using a code editor will invalidate any support for this file. */
     
-      this-object:components = new System.ComponentModel.Container().
-      @VisualDesigner.FormMember (NeedsInitialize="true").
-      define variable resources as Progress.Util.ResourceManager no-undo.
-      resources = new Progress.Util.ResourceManager("ibs.th.str.ptrl.forms.tanksections").
-      this-object:tabControl = new System.Windows.Forms.TabControl().
-      this-object:imageList = new System.Windows.Forms.ImageList(this-object:components).
-      this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
-      this-object:toolStrip1 = new System.Windows.Forms.ToolStrip().
-      this-object:toolSBtn_Exit = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_Ok = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_Delete = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_Add = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_Star = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_Main = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_View = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_Edit = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_Copy = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_Status = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_Print = new System.Windows.Forms.ToolStripButton().
-      this-object:toolSBtn_History = new System.Windows.Forms.ToolStripButton().
-      this-object:tabPageSum = new System.Windows.Forms.TabPage().
-      this-object:tankSectionSumControl = new ibs.th.str.ptrl.forms.tanksum().
-      this-object:tabPageAdd = new System.Windows.Forms.TabPage().
-      this-object:tableLayoutPanel1:SuspendLayout().
-      this-object:toolStrip1:SuspendLayout().
-      this-object:tabPageSum:SuspendLayout().
-      this-object:SuspendLayout().
-      /*  */
-      /* tabControl */
-      /*  */
-      define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar0 = cast(Progress.Util.EnumHelper:Or(cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
-      this-object:tabControl:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:tabControl:ImageList = this-object:imageList.
-      this-object:tabControl:Location = new System.Drawing.Point(3, 45).
-      this-object:tabControl:Name = "tabControl".
-      this-object:tabControl:SelectedIndex = 0.
-      this-object:tabControl:Size = new System.Drawing.Size(710, 785).
-      this-object:tabControl:TabIndex = 1.
-      /*  */
-      /* imageList */
-      /*  */
-      this-object:imageList:ColorDepth = System.Windows.Forms.ColorDepth:Depth8Bit.
-      this-object:imageList:ImageSize = new System.Drawing.Size(16, 16).
-      this-object:imageList:TransparentColor = System.Drawing.Color:Transparent.
-      /*  */
-      /* tableLayoutPanel1 */
-      /*  */
-      this-object:tableLayoutPanel1:ColumnCount = 1.
-      this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-      this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-      this-object:tableLayoutPanel1:Controls:Add(this-object:toolStrip1, 0, 0).
-      this-object:tableLayoutPanel1:Location = new System.Drawing.Point(3, 3).
-      this-object:tableLayoutPanel1:Name = "tableLayoutPanel1".
-      this-object:tableLayoutPanel1:RowCount = 1.
-      this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-      this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
-      this-object:tableLayoutPanel1:Size = new System.Drawing.Size(710, 40).
-      this-object:tableLayoutPanel1:TabIndex = 0.
-      /*  */
-      /* toolStrip1 */
-      /*  */
-      this-object:toolStrip1:AutoSize = false.
-      this-object:toolStrip1:Dock = System.Windows.Forms.DockStyle:Fill.
-      this-object:toolStrip1:ImageScalingSize = new System.Drawing.Size(32, 32).
-      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar0 as System.Windows.Forms.ToolStripItem extent 3 no-undo.
-      arrayvar0[1] = this-object:toolSBtn_Exit.
-      arrayvar0[2] = this-object:toolSBtn_Ok.
-      arrayvar0[3] = this-object:toolSBtn_Delete.
-      this-object:toolStrip1:Items:AddRange(arrayvar0).
-      this-object:toolStrip1:Location = new System.Drawing.Point(0, 0).
-      this-object:toolStrip1:Name = "toolStrip1".
-      this-object:toolStrip1:Size = new System.Drawing.Size(710, 40).
-      this-object:toolStrip1:TabIndex = 0.
-      this-object:toolStrip1:Text = "toolStrip1".
-      /*  */
-      /* toolSBtn_Exit */
-      /*  */
-      this-object:toolSBtn_Exit:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-      this-object:toolSBtn_Exit:Image = cast(resources:GetObject("toolSBtn_Exit.Image"), System.Drawing.Image).
-      this-object:toolSBtn_Exit:ImageTransparentColor = System.Drawing.Color:Magenta.
-      this-object:toolSBtn_Exit:Name = "toolSBtn_Exit".
-      this-object:toolSBtn_Exit:Size = new System.Drawing.Size(36, 37).
-      this-object:toolSBtn_Exit:Text = "Выход без сохранения".
-      this-object:toolSBtn_Exit:Click:Subscribe(this-object:toolSBtn_Exit_Click).
-      /*  */
-      /* toolSBtn_Ok */
-      /*  */
-      this-object:toolSBtn_Ok:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-      this-object:toolSBtn_Ok:Image = cast(resources:GetObject("toolSBtn_Ok.Image"), System.Drawing.Image).
-      this-object:toolSBtn_Ok:ImageTransparentColor = System.Drawing.Color:Magenta.
-      this-object:toolSBtn_Ok:Name = "toolSBtn_Ok".
-      this-object:toolSBtn_Ok:Size = new System.Drawing.Size(36, 37).
-      this-object:toolSBtn_Ok:Text = "Сохранить".
-      this-object:toolSBtn_Ok:Click:Subscribe(this-object:toolSBtn_Ok_Click).
-      /*  */
-      /* toolSBtn_Delete */
-      /*  */
-      this-object:toolSBtn_Delete:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
-      this-object:toolSBtn_Delete:Image = cast(resources:GetObject("toolSBtn_Delete.Image"), System.Drawing.Image).
-      this-object:toolSBtn_Delete:ImageTransparentColor = System.Drawing.Color:Magenta.
-      this-object:toolSBtn_Delete:Name = "toolSBtn_Delete".
-      this-object:toolSBtn_Delete:Size = new System.Drawing.Size(36, 37).
-      this-object:toolSBtn_Delete:Text = "Удалить секцию".
-      this-object:toolSBtn_Delete:Visible = false.
-      this-object:toolSBtn_Delete:Click:Subscribe(this-object:toolSBtn_Delete_Click).
-      /*  */
-      /* toolSBtn_Add */
-      /*  */
-      this-object:toolSBtn_Add:Name = "toolSBtn_Add".
-      this-object:toolSBtn_Add:Size = new System.Drawing.Size(23, 23).
-      /*  */
-      /* toolSBtn_Star */
-      /*  */
-      this-object:toolSBtn_Star:Name = "toolSBtn_Star".
-      this-object:toolSBtn_Star:Size = new System.Drawing.Size(23, 23).
-      /*  */
-      /* toolSBtn_Main */
-      /*  */
-      this-object:toolSBtn_Main:Name = "toolSBtn_Main".
-      this-object:toolSBtn_Main:Size = new System.Drawing.Size(23, 23).
-      /*  */
-      /* toolSBtn_View */
-      /*  */
-      this-object:toolSBtn_View:Name = "toolSBtn_View".
-      this-object:toolSBtn_View:Size = new System.Drawing.Size(23, 23).
-      /*  */
-      /* toolSBtn_Edit */
-      /*  */
-      this-object:toolSBtn_Edit:Name = "toolSBtn_Edit".
-      this-object:toolSBtn_Edit:Size = new System.Drawing.Size(23, 23).
-      /*  */
-      /* toolSBtn_Copy */
-      /*  */
-      this-object:toolSBtn_Copy:Name = "toolSBtn_Copy".
-      this-object:toolSBtn_Copy:Size = new System.Drawing.Size(23, 23).
-      /*  */
-      /* toolSBtn_Status */
-      /*  */
-      this-object:toolSBtn_Status:Name = "toolSBtn_Status".
-      this-object:toolSBtn_Status:Size = new System.Drawing.Size(23, 23).
-      /*  */
-      /* toolSBtn_Print */
-      /*  */
-      this-object:toolSBtn_Print:Name = "toolSBtn_Print".
-      this-object:toolSBtn_Print:Size = new System.Drawing.Size(23, 23).
-      /*  */
-      /* toolSBtn_History */
-      /*  */
-      this-object:toolSBtn_History:Name = "toolSBtn_History".
-      this-object:toolSBtn_History:Size = new System.Drawing.Size(23, 23).
-      /*  */
-      /* tabPageSum */
-      /*  */
-      this-object:tabPageSum:Controls:Add(this-object:tankSectionSumControl).
-      this-object:tabPageSum:Location = new System.Drawing.Point(4, 23).
-      this-object:tabPageSum:Name = "tabPageSum".
-      this-object:tabPageSum:Padding = new System.Windows.Forms.Padding(3).
-      this-object:tabPageSum:Size = new System.Drawing.Size(702, 765).
-      this-object:tabPageSum:TabIndex = 0.
-      this-object:tabPageSum:Text = "Итого".
-      this-object:tabPageSum:UseVisualStyleBackColor = true.
-      this-object:tabPageSum:Enter:Subscribe(this-object:tabPageSum_Enter).
-      /*  */
-      /* tankSectionSumControl */
-      /*  */
-      this-object:tankSectionSumControl:BackgroundImage = cast(resources:GetObject("tankSectionSumControl.BackgroundImage"), System.Drawing.Image).
-      this-object:tankSectionSumControl:Location = new System.Drawing.Point(0, 0).
-      this-object:tankSectionSumControl:Name = "tankSectionSumControl".
-      this-object:tankSectionSumControl:Size = new System.Drawing.Size(700, 765).
-      this-object:tankSectionSumControl:TabIndex = 0.
-      /*  */
-      /* tabPageAdd */
-      /*  */
-      this-object:tabPageAdd:Location = new System.Drawing.Point(4, 23).
-      this-object:tabPageAdd:Name = "tabPageAdd".
-      this-object:tabPageAdd:Padding = new System.Windows.Forms.Padding(3).
-      this-object:tabPageAdd:Size = new System.Drawing.Size(702, 765).
-      this-object:tabPageAdd:TabIndex = 0.
-      this-object:tabPageAdd:Text = "+".
-      this-object:tabPageAdd:UseVisualStyleBackColor = true.
-      this-object:tabPageAdd:Enter:Subscribe(this-object:tabPageAdd_Enter).
-      /*  */
-      /* tanksections */
-      /*  */
-      this-object:ClientSize = new System.Drawing.Size(715, 835).
-      this-object:Controls:Add(this-object:tableLayoutPanel1).
-      this-object:Controls:Add(this-object:tabControl).
-      this-object:Icon = cast(resources:GetObject("$this.Icon"), System.Drawing.Icon).
-      this-object:Name = "tanksections".
-      this-object:Text = "Дополнительная информация по сливу нефтепродукта из АЦ".
-      this-object:tableLayoutPanel1:ResumeLayout(false).
-      this-object:toolStrip1:ResumeLayout(false).
-      this-object:toolStrip1:PerformLayout().
-      this-object:tabPageSum:ResumeLayout(false).
-      this-object:ResumeLayout(false).
-      catch e as Progress.Lang.Error:
-         undo, throw e.
-      end catch.
+    this-object:components = new System.ComponentModel.Container().
+    @VisualDesigner.FormMember (NeedsInitialize="true").
+    define variable resources as Progress.Util.ResourceManager no-undo.
+    resources = new Progress.Util.ResourceManager("ibs.th.str.ptrl.forms.tanksections").
+    this-object:tabControl = new System.Windows.Forms.TabControl().
+    this-object:imageList = new System.Windows.Forms.ImageList(this-object:components).
+    this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:toolStrip1 = new System.Windows.Forms.ToolStrip().
+    this-object:toolSBtn_Exit = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Ok = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Delete = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Add = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Star = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Main = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_View = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Edit = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Copy = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Status = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_Print = new System.Windows.Forms.ToolStripButton().
+    this-object:toolSBtn_History = new System.Windows.Forms.ToolStripButton().
+    this-object:tabPageSum = new System.Windows.Forms.TabPage().
+    this-object:tankSectionSumControl = new ibs.th.str.ptrl.forms.tanksum().
+    this-object:tabPageAdd = new System.Windows.Forms.TabPage().
+    this-object:tableLayoutPanel1:SuspendLayout().
+    this-object:toolStrip1:SuspendLayout().
+    this-object:tabPageSum:SuspendLayout().
+    this-object:SuspendLayout().
+    /*  */
+    /* tabControl */
+    /*  */
+    define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
+    nestedvar0 = cast(Progress.Util.EnumHelper:Or(cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+    this-object:tabControl:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+    this-object:tabControl:ImageList = this-object:imageList.
+    this-object:tabControl:Location = new System.Drawing.Point(3, 45).
+    this-object:tabControl:Name = "tabControl".
+    this-object:tabControl:SelectedIndex = 0.
+    this-object:tabControl:Size = new System.Drawing.Size(710, 785).
+    this-object:tabControl:TabIndex = 1.
+    /*  */
+    /* imageList */
+    /*  */
+    this-object:imageList:ColorDepth = System.Windows.Forms.ColorDepth:Depth8Bit.
+    this-object:imageList:ImageSize = new System.Drawing.Size(16, 16).
+    this-object:imageList:TransparentColor = System.Drawing.Color:Transparent.
+    /*  */
+    /* tableLayoutPanel1 */
+    /*  */
+    this-object:tableLayoutPanel1:ColumnCount = 1.
+    this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel1:Controls:Add(this-object:toolStrip1, 0, 0).
+    this-object:tableLayoutPanel1:Location = new System.Drawing.Point(3, 3).
+    this-object:tableLayoutPanel1:Name = "tableLayoutPanel1".
+    this-object:tableLayoutPanel1:RowCount = 1.
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(50))).
+    this-object:tableLayoutPanel1:Size = new System.Drawing.Size(710, 40).
+    this-object:tableLayoutPanel1:TabIndex = 0.
+    /*  */
+    /* toolStrip1 */
+    /*  */
+    this-object:toolStrip1:AutoSize = false.
+    this-object:toolStrip1:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:toolStrip1:ImageScalingSize = new System.Drawing.Size(32, 32).
+    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+    define variable arrayvar0 as System.Windows.Forms.ToolStripItem extent 3 no-undo.
+    arrayvar0[1] = this-object:toolSBtn_Exit.
+    arrayvar0[2] = this-object:toolSBtn_Ok.
+    arrayvar0[3] = this-object:toolSBtn_Delete.
+    this-object:toolStrip1:Items:AddRange(arrayvar0).
+    this-object:toolStrip1:Location = new System.Drawing.Point(0, 0).
+    this-object:toolStrip1:Name = "toolStrip1".
+    this-object:toolStrip1:Size = new System.Drawing.Size(710, 40).
+    this-object:toolStrip1:TabIndex = 0.
+    this-object:toolStrip1:Text = "toolStrip1".
+    /*  */
+    /* toolSBtn_Exit */
+    /*  */
+    this-object:toolSBtn_Exit:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Exit:Image = cast(resources:GetObject("toolSBtn_Exit.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Exit:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Exit:Name = "toolSBtn_Exit".
+    this-object:toolSBtn_Exit:Size = new System.Drawing.Size(36, 37).
+    this-object:toolSBtn_Exit:Text = "Выход без сохранения".
+    this-object:toolSBtn_Exit:Click:Subscribe(this-object:toolSBtn_Exit_Click).
+    /*  */
+    /* toolSBtn_Ok */
+    /*  */
+    this-object:toolSBtn_Ok:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Ok:Image = cast(resources:GetObject("toolSBtn_Ok.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Ok:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Ok:Name = "toolSBtn_Ok".
+    this-object:toolSBtn_Ok:Size = new System.Drawing.Size(36, 37).
+    this-object:toolSBtn_Ok:Text = "Сохранить".
+    this-object:toolSBtn_Ok:Click:Subscribe(this-object:toolSBtn_Ok_Click).
+    /*  */
+    /* toolSBtn_Delete */
+    /*  */
+    this-object:toolSBtn_Delete:DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle:Image.
+    this-object:toolSBtn_Delete:Image = cast(resources:GetObject("toolSBtn_Delete.Image"), System.Drawing.Image).
+    this-object:toolSBtn_Delete:ImageTransparentColor = System.Drawing.Color:Magenta.
+    this-object:toolSBtn_Delete:Name = "toolSBtn_Delete".
+    this-object:toolSBtn_Delete:Size = new System.Drawing.Size(36, 37).
+    this-object:toolSBtn_Delete:Text = "Удалить секцию".
+    this-object:toolSBtn_Delete:Visible = false.
+    this-object:toolSBtn_Delete:Click:Subscribe(this-object:toolSBtn_Delete_Click).
+    /*  */
+    /* toolSBtn_Add */
+    /*  */
+    this-object:toolSBtn_Add:Name = "toolSBtn_Add".
+    this-object:toolSBtn_Add:Size = new System.Drawing.Size(23, 23).
+    /*  */
+    /* toolSBtn_Star */
+    /*  */
+    this-object:toolSBtn_Star:Name = "toolSBtn_Star".
+    this-object:toolSBtn_Star:Size = new System.Drawing.Size(23, 23).
+    /*  */
+    /* toolSBtn_Main */
+    /*  */
+    this-object:toolSBtn_Main:Name = "toolSBtn_Main".
+    this-object:toolSBtn_Main:Size = new System.Drawing.Size(23, 23).
+    /*  */
+    /* toolSBtn_View */
+    /*  */
+    this-object:toolSBtn_View:Name = "toolSBtn_View".
+    this-object:toolSBtn_View:Size = new System.Drawing.Size(23, 23).
+    /*  */
+    /* toolSBtn_Edit */
+    /*  */
+    this-object:toolSBtn_Edit:Name = "toolSBtn_Edit".
+    this-object:toolSBtn_Edit:Size = new System.Drawing.Size(23, 23).
+    /*  */
+    /* toolSBtn_Copy */
+    /*  */
+    this-object:toolSBtn_Copy:Name = "toolSBtn_Copy".
+    this-object:toolSBtn_Copy:Size = new System.Drawing.Size(23, 23).
+    /*  */
+    /* toolSBtn_Status */
+    /*  */
+    this-object:toolSBtn_Status:Name = "toolSBtn_Status".
+    this-object:toolSBtn_Status:Size = new System.Drawing.Size(23, 23).
+    /*  */
+    /* toolSBtn_Print */
+    /*  */
+    this-object:toolSBtn_Print:Name = "toolSBtn_Print".
+    this-object:toolSBtn_Print:Size = new System.Drawing.Size(23, 23).
+    /*  */
+    /* toolSBtn_History */
+    /*  */
+    this-object:toolSBtn_History:Name = "toolSBtn_History".
+    this-object:toolSBtn_History:Size = new System.Drawing.Size(23, 23).
+    /*  */
+    /* tabPageSum */
+    /*  */
+    this-object:tabPageSum:Controls:Add(this-object:tankSectionSumControl).
+    this-object:tabPageSum:Location = new System.Drawing.Point(4, 23).
+    this-object:tabPageSum:Name = "tabPageSum".
+    this-object:tabPageSum:Padding = new System.Windows.Forms.Padding(3).
+    this-object:tabPageSum:Size = new System.Drawing.Size(702, 765).
+    this-object:tabPageSum:TabIndex = 0.
+    this-object:tabPageSum:Text = "Итого".
+    this-object:tabPageSum:UseVisualStyleBackColor = true.
+    this-object:tabPageSum:Enter:Subscribe(this-object:tabPageSum_Enter).
+    /*  */
+    /* tankSectionSumControl */
+    /*  */
+    this-object:tankSectionSumControl:BackgroundImage = cast(resources:GetObject("tankSectionSumControl.BackgroundImage"), System.Drawing.Image).
+    this-object:tankSectionSumControl:Location = new System.Drawing.Point(0, 0).
+    this-object:tankSectionSumControl:Name = "tankSectionSumControl".
+    this-object:tankSectionSumControl:Size = new System.Drawing.Size(700, 765).
+    this-object:tankSectionSumControl:TabIndex = 0.
+    /*  */
+    /* tabPageAdd */
+    /*  */
+    this-object:tabPageAdd:Location = new System.Drawing.Point(4, 23).
+    this-object:tabPageAdd:Name = "tabPageAdd".
+    this-object:tabPageAdd:Padding = new System.Windows.Forms.Padding(3).
+    this-object:tabPageAdd:Size = new System.Drawing.Size(702, 765).
+    this-object:tabPageAdd:TabIndex = 0.
+    this-object:tabPageAdd:Text = "+".
+    this-object:tabPageAdd:UseVisualStyleBackColor = true.
+    this-object:tabPageAdd:Enter:Subscribe(this-object:tabPageAdd_Enter).
+    /*  */
+    /* tanksections */
+    /*  */
+    this-object:ClientSize = new System.Drawing.Size(715, 835).
+    this-object:Controls:Add(this-object:tableLayoutPanel1).
+    this-object:Controls:Add(this-object:tabControl).
+    this-object:Icon = cast(resources:GetObject("$this.Icon"), System.Drawing.Icon).
+    this-object:Name = "tanksections".
+    this-object:Text = "Дополнительная информация по сливу нефтепродукта из АЦ".
+    this-object:FormClosing:Subscribe(this-object:tool_FormClosing).
+    this-object:tableLayoutPanel1:ResumeLayout(false).
+    this-object:toolStrip1:ResumeLayout(false).
+    this-object:toolStrip1:PerformLayout().
+    this-object:tabPageSum:ResumeLayout(false).
+    this-object:ResumeLayout(false).
+    catch e as Progress.Lang.Error:
+      undo, throw e.
+    end catch.
   end method.
   
   method private void InitializeComponentCust(  ):
@@ -408,7 +463,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
      
     tabThis = tabControl:TabPages[tabControl:SelectedIndex].
     int (tabThis:Name) no-error.
-    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec() 
+    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec(yes) 
     then do:
       tankSectionControl[integer (tabThis:Name)]:SetForcus ().
       tbcontrol = cast(sender, tabControl).
@@ -420,13 +475,35 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
 
   end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void tool_FormClosing( input sender as System.Object, input e as System.Windows.Forms.FormClosingEventArgs ):
+		
+		define variable vlog as logical no-undo .
+		if not vClickSave
+		and (infoSecsObj:Mode = "ИЗМЕНЕНИЕ" or infoSecsObj:Mode = "ДОБАВЛЕНИЕ")
+		then do :
+      message "Несохранённые данные будут утеряны! Выйти без сохранения?"
+      view-as alert-box question buttons yes-no update vlog .
+      if not vlog
+      then do :
+        e:Cancel = yes .
+      end .
+    end .
+		return.
+
+	end method.
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void toolSBtn_Exit_Click( input sender as System.Object, input e as System.EventArgs ):
-
+    
     this-object:Close().
     return.
 
@@ -442,7 +519,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     def var ii as int no-undo.
     
     do ii = 1 to infoSecsObj:SectionNum:
-      if not tankSectionControl[ii]:CheckSec()
+      if not tankSectionControl[ii]:CheckSec(yes)
         then return.
     end.
     
@@ -451,6 +528,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     end.
 /*    infoSecsObj:SaveDB() .*/
     infoSecsObj:WasSetting = true.
+    vClickSave = yes .
     this-object:Close().
     return.
 

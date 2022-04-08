@@ -32,14 +32,13 @@
 /* Parameters Definitions ---                                           */
 {cmp/str-glbl.i}
 
-define input  parameter p-trn-code  as character no-undo.
-define input  parameter p-gds-code  as integer   no-undo.
+define input parameter p-obj-type  as character no-undo.
+define input parameter p-obj-code  as integer   no-undo.
+define input parameter p-gds-code  as integer   no-undo.
 define input-output parameter p-list-tank as character no-undo.
 
 
-define buffer buf_parts for ub.parts.
-define buffer buf_doc-line for ub.doc-line.
-define buffer buf_doc-pl for ub.doc-pl.
+define buffer buf_pl-gds for ub.pl-gds.
 
 /* Local Variable Definitions ---                                       */
 
@@ -279,18 +278,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
   
-  for each buf_doc-pl no-lock where buf_doc-pl.out-code = p-trn-code and buf_doc-pl.gds-code = p-gds-code:
-    find first ub.place no-lock where ub.place.pl-code = buf_doc-pl.pl-code no-error.
+  for each buf_pl-gds no-lock where buf_pl-gds.obj-type = p-obj-type
+                                and buf_pl-gds.obj-code = p-obj-code
+                                and buf_pl-gds.gds-code = p-gds-code
+                                :
+    find first ub.place no-lock where ub.place.pl-code = buf_pl-gds.pl-code no-error.
     create tt-pl.
     assign
       tt-pl.pl-code = ub.place.pl-code
       tt-pl.pl-name = ub.place.pl-name
-      tt-pl.pl-coord = ub.place.loc1.
-/*    if lookup (string (tt-pl.pl-coord), p-list-tank) > 0*/
-/*    then do:                                            */
-/*      tt-pl.mark = "*".                                 */
-/*    end.                                                */
-    
+      tt-pl.pl-coord = ub.place.loc1
+    .
   end.
 
   RUN enable_UI.

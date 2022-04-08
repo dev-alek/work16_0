@@ -85,7 +85,7 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
       do:
         create tt-fin-doc .
         BUFFER-COPY buf_c-fin-doc to tt-fin-doc .
-        for each buf_c-fin-doc-tax no-lock where buf_c-fin-doc-tax.fin-doc-code = buf_c-fin-doc.fin-doc-code:
+        for first buf_c-fin-doc-tax no-lock where buf_c-fin-doc-tax.fin-doc-code = buf_c-fin-doc.fin-doc-code:
           create tt-fin-doc-tax .
           BUFFER-COPY buf_c-fin-doc-tax to tt-fin-doc-tax .
         end.  
@@ -220,34 +220,44 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     sw:write-data-element ("operator", if tt-fin-doc.user-name-doc = ? then "" else user-name(tt-fin-doc.user-name-doc)).
     sw:write-data-element ("idty-doc", if tt-fin-doc.payer-dop1 = ? then "" else string(tt-fin-doc.receiver-passport)).
 
-   /* find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
+    find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
     if available (tt-fin-doc-attr) then do:
-       if     tt-fin-doc-attr.sumka ne ?
-          and tt-fin-doc-attr.sumka ne ""
-       then
-          sw:write-data-element ("sumka", string(tt-fin-doc-attr.sumka)).
-       if     tt-fin-doc-attr.banknote ne ?
-          and tt-fin-doc-attr.banknote ne "" 
-       then 
-          sw:write-data-element ("banknote",  string(tt-fin-doc-attr.banknote)).
-       if     tt-fin-doc-attr.bank-resive ne ?
-          and tt-fin-doc-attr.bank-resive ne 0 
-       then
-          sw:write-data-element ("bank-resive",  string(tt-fin-doc-attr.bank-resive)).
-       if     tt-fin-doc-attr.bank-deposit ne ?
-          and tt-fin-doc-attr.bank-deposit ne 0 
-       then
-          sw:write-data-element ("bank-deposit", string(tt-fin-doc-attr.bank-deposit)).
-       if     tt-fin-doc-attr.pin ne ?
-          and tt-fin-doc-attr.pin ne "" 
-       then 
-          sw:write-data-element ("pin",  string(tt-fin-doc-attr.pin)).
-       if     tt-fin-doc-attr.source_ ne ?
-          and tt-fin-doc-attr.source_ ne "" 
-       then
-          sw:write-data-element ("source",  string(tt-fin-doc-attr.source_)).
+/*       if     tt-fin-doc-attr.sumka ne ?                                 */
+/*          and tt-fin-doc-attr.sumka ne ""                                */
+/*       then                                                              */
+/*          sw:write-data-element ("sumka", string(tt-fin-doc-attr.sumka)).*/
+/*       if     tt-fin-doc-attr.banknote ne ?                                     */
+/*          and tt-fin-doc-attr.banknote ne ""                                    */
+/*       then                                                                     */
+/*          sw:write-data-element ("banknote",  string(tt-fin-doc-attr.banknote)).*/
+/*       if     tt-fin-doc-attr.bank-resive ne ?                                                     */
+/*          and tt-fin-doc-attr.bank-resive ne 0                                                     */
+/*       then do:                                                                                    */
+/*          for first ub.fin-bank no-lock where ub.fin-bank.host-code = tt-fin-doc.host-code and     */
+/*                                               ub.fin-bank.code-bank = tt-fin-doc-attr.bank-resive:*/
+/*          sw:write-data-element ("bank-resive",  string(ub.fin-bank.bik)).                         */
+/*          end.                                                                                     */
+/*       end.                                                                                        */
+
+
+/*       if     tt-fin-doc-attr.bank-deposit ne ?                                                     */
+/*          and tt-fin-doc-attr.bank-deposit ne 0                                                     */
+/*       then do:                                                                                     */
+/*          for first ub.fin-bank no-lock where ub.fin-bank.host-code = tt-fin-doc.host-code and      */
+/*                                               ub.fin-bank.code-bank = tt-fin-doc-attr.bank-deposit:*/
+/*          sw:write-data-element ("bank-deposit", string(ub.fin-bank.bik)).                          */
+/*          end.                                                                                      */
+/*       end.                                                                                         */
+/*       if     tt-fin-doc-attr.pin ne ?                                       */
+/*          and tt-fin-doc-attr.pin ne ""                                      */
+/*       then                                                                  */
+/*          sw:write-data-element ("pin",  string(tt-fin-doc-attr.pin)).       */
+/*       if     tt-fin-doc-attr.source_ ne ?                                   */
+/*          and tt-fin-doc-attr.source_ ne ""                                  */
+/*       then                                                                  */
+/*          sw:write-data-element ("source",  string(tt-fin-doc-attr.source_)).*/
     end.
-    */
+    
     find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
     if     available tt-fin-doc-attr
        and tt-fin-doc-attr.contr-kb ne ?

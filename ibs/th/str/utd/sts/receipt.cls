@@ -42,8 +42,7 @@ class ibs.th.str.utd.sts.receipt inherits objth:
   end. 
  
   constructor public receipt ():
-    ReceiptMap = new mapstring(true).
-  
+    {utl\objreg.i ReceiptMap mapstring true}  
     GeneralReceiptStsNotAcceptable  = crProp("GeneralReceiptStsNotAcceptable", "ИОП на документ не запрошен").
     HaveToCreateReceipt  = crProp("HaveToCreateReceipt", "нужно подписать ИОП на документ").
     WaitingForReceipt  = crProp("WaitingForReceipt", "ожидание подписания ИОПа на документ").
@@ -79,7 +78,7 @@ class ibs.th.str.utd.sts.receipt inherits objth:
   
   method private class propmap crProp(inNameProp as char, inLabel as char):
     def var prop as class propmap no-undo.
-    prop = new propmap (inNameProp, inLabel).
+    {utl\objreg.i prop propmap inNameProp inLabel}
     prop:KeyCharDB = inNameProp.
     ReceiptMap:AddItem(prop, inNameProp).
     return prop.

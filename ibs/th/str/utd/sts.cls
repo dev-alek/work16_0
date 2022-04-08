@@ -40,21 +40,21 @@ class ibs.th.str.utd.sts inherits objth:
     
   constructor public sts (  ):
     super ().
-    EDI = new edi().
-    TH = new th().
-    Receipt = new receipt().
-    Direction = new direction().
+    {utl\objreg.i EDI edi}
+    {utl\objreg.i TH th}
+    {utl\objreg.i Receipt receipt}
+    {utl\objreg.i Direction direction}
   end constructor.
 
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-  destructor public sts ( ):
+/*  destructor public sts ( ):*/
 /*    if valid-object (EDI)    */
 /*      then delete object EDI.*/
 /*    if valid-object (TH)     */
 /*      then delete object TH. */
-  end destructor.
+/*  end destructor.*/
 
 end class.

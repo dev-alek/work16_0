@@ -132,6 +132,7 @@ end destructor .
 method private System.Security.Cryptography.X509Certificates.X509Certificate2 getMyCert (
   input p-my-name as character
 , input p-issuer  as character
+, input p-cert-repository as integer
 ) :
 define variable v-my-cert      as class System.Security.Cryptography.X509Certificates.X509Certificate2 no-undo .
 define variable v-certificates as class System.Security.Cryptography.X509Certificates.X509Certificate2Collection no-undo .
@@ -152,9 +153,20 @@ define variable v-subj1 as character no-undo .
       // StoreName:Root = 6 - The X.509 certificate store for trusted root certificate authorities (CAs).
       // https://docs.microsoft.com/ru-ru/dotnet/api/system.security.cryptography.x509certificates.storelocation?view=netframework-4.7.1
       // StoreLocation:CurrentUser = 1 - The X.509 certificate store used by the current user.
-      m-x509-store   = new System.Security.Cryptography.X509Certificates.X509Store
-      ( System.Security.Cryptography.X509Certificates.StoreName:My,
-        System.Security.Cryptography.X509Certificates.StoreLocation:CurrentUser ) .
+      case p-cert-repository :
+        when 0
+        then do :
+          m-x509-store   = new System.Security.Cryptography.X509Certificates.X509Store
+          ( System.Security.Cryptography.X509Certificates.StoreName:My,
+            System.Security.Cryptography.X509Certificates.StoreLocation:CurrentUser ) .
+        end .
+        when 1
+        then do :
+          m-x509-store   = new System.Security.Cryptography.X509Certificates.X509Store
+          ( System.Security.Cryptography.X509Certificates.StoreName:My,
+            System.Security.Cryptography.X509Certificates.StoreLocation:LocalMachine ) .
+        end .
+      end case .
     end .
         
     m-x509-store:Open
@@ -400,6 +412,7 @@ method public memptr computeSign (
   input p-data    as memptr
 , input p-my-name as character
 , input p-issuer  as character
+, input p-cert-repository as integer
 ) :
 define variable v-my-sert      as class System.Security.Cryptography.X509Certificates.X509Certificate2 no-undo .
 define variable v-sign         as memptr no-undo .
@@ -409,7 +422,7 @@ define variable v-content-info as class System.Security.Cryptography.Pkcs.Conten
 define variable v-encoded-sign as class "System.Byte[]" no-undo .
 define variable i              as integer no-undo .
 
-  v-my-sert = getMyCert(p-my-name, p-issuer).
+  v-my-sert = getMyCert(p-my-name, p-issuer, p-cert-repository).
   if valid-object(v-my-sert) then do:
     if m-debug-enabled then do :
       define variable v-publ-key as class System.Security.Cryptography.X509Certificates.PublicKey no-undo .

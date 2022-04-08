@@ -3909,6 +3909,19 @@ define variable v-value-decimal   like ub.thbj-attr.property-value-decimal no-un
 define variable v-value-logical   like ub.thbj-attr.property-value-logical no-undo .
 define variable v-value-integer   like ub.thbj-attr.property-value-integer no-undo .
 define variable v-mastc           as logical   no-undo init false .
+
+         define variable varvalue as character no-undo.
+         define variable vartype  as character no-undo.
+
+     { str/tdat-val.i
+     buf_doc-line.doc-code
+     {&trdcattr-trn-is-gds}
+     varvalue
+     vartype
+     no-error
+   }
+         if varvalue = "yes" then 
+         do:
     run adm/shattri.p (
       input "get":U
       ,input buf_doc-line.obj-type
@@ -3931,8 +3944,31 @@ define variable v-mastc           as logical   no-undo init false .
         "adm/shattri.p"
         view-as alert-box error
       .
-
-
+end.
+else do:
+    run adm/shattri.p (
+      input "get":U
+      ,input buf_doc-line.obj-type
+      ,input buf_doc-line.obj-code
+      ,input {&attr-contr-in}
+      ,input  "contr-in-income-NP"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-contract
+      ,output varcontract-type
+      ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+      ) no-error .
+      if error-status :error then
+      message
+        vss-workfile vss-revision vss-description skip
+        error-status :get-message(1) skip
+        return-value skip
+        "adm/shattri.p"
+        view-as alert-box error
+      .   
+end.   
     RUN enable_UI.
 
     assign

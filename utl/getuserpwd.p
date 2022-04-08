@@ -20,17 +20,12 @@ define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
 define input  parameter IBuff as handle no-undo.
-define variable mPwd as character no-undo.
 
-run adm/pswd-enc.p
-    (input  encode(g#passwd)
-    ,output mPwd
-    ) no-error .
 find first user-login where user-login.user-id = g#userid no-lock no-error .
       
 IBuff::Usr = if available user-login then user-login.user-login else g#userid.
-release user-account.
-IBuff::Pwd = mPwd.
+release user-login.
+IBuff::Pwd = g#passwd.
 if g#userid eq ""
 then
    return error.

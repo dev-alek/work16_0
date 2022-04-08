@@ -108,7 +108,7 @@ tt-place.start-date tt-place.add-qnty tt-place.max-qnty tt-place.PS
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit B-hist b-help t-place-virtual ~
 rvd-dnstv rvd-lvl rvd-tmp place-type place-locat error-mass place-si ~
 r-sr-izm dead-balance water-level place-diameter place-ratio-error dens-prov ~
-place-twice-code tt-place.chk-max-qnty 
+place-twice-code tt-place.chk-max-qnty t-ponton ponton-mass ponton-height
 &Scoped-Define DISPLAYED-FIELDS tt-place.loc1 tt-place.loc2 tt-place.loc3 ~
 tt-place.loc4 tt-place.pl-name tt-place.is-meas tt-place.pl-code ~
 tt-place.issue-year tt-place.start-date tt-place.add-qnty tt-place.max-qnty ~
@@ -117,7 +117,8 @@ tt-place.PS
 &Scoped-define FIRST-DISPLAYED-TABLE tt-place
 &Scoped-Define DISPLAYED-OBJECTS t-place-virtual t-asi-srtif rvd-dnstv ~
 rvd-lvl rvd-tmp place-type place-locat error-mass place-si dead-balance water-level ~
-place-diameter place-ratio-error dens-prov place-twice-code tt-place.chk-max-qnty 
+place-diameter place-ratio-error dens-prov place-twice-code tt-place.chk-max-qnty ~
+t-ponton ponton-mass ponton-height
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -309,7 +310,21 @@ DEFINE VARIABLE t-place-virtual AS LOGICAL INITIAL no
      LABEL "Виртуальный резервуар" 
      VIEW-AS TOGGLE-BOX
      SIZE 27 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE t-ponton AS LOGICAL INITIAL no 
+     LABEL "Понтон:" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 15 BY 1 NO-UNDO.     
 
+DEFINE VARIABLE ponton-mass AS DECIMAL FORMAT ">>>>>>9.999":U INITIAL ? decimals 3
+     LABEL "Масса понтона(кг)" 
+     VIEW-AS FILL-IN 
+     SIZE 12 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE ponton-height AS DECIMAL FORMAT ">>>>>>9.9":U INITIAL ? decimals 1
+     LABEL "Высота всплытия(мм)" 
+     VIEW-AS FILL-IN 
+     SIZE 12 BY 1 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -372,11 +387,14 @@ DEFINE FRAME d-pl-form
           VIEW-AS FILL-IN 
           SIZE 11.63 BY 1
      place-locat AT ROW 9.71 COL 88 RIGHT-ALIGNED NO-LABEL WIDGET-ID 30
+     t-ponton at row 10.81 col 2
+     ponton-mass at row 10.81 col 18
+     ponton-height  at row 10.81 col 50
      tt-place.add-qnty AT ROW 11.92 COL 30.63 COLON-ALIGNED
           LABEL "Объем трубопровода(л)"
           VIEW-AS FILL-IN 
           SIZE 11.63 BY 1
-     error-mass AT Y 262 X 703 RIGHT-ALIGNED WIDGET-ID 38
+     error-mass AT ROW 11.92 COL 75.38 COLON-ALIGNED WIDGET-ID 38
      tt-place.max-qnty AT ROW 12.92 COL 30.63 COLON-ALIGNED
           LABEL "Макс. кол-во в резервуаре(л)"
           VIEW-AS FILL-IN 
@@ -526,6 +544,8 @@ DO:
     v-mi-dnst
     v-mi-lvl
     v-mi-tmp
+    ponton-mass
+    ponton-height
   .
 if v-mi-dnst = ? then v-mi-dnst = 0 . 
 if v-mi-lvl = ? then v-mi-lvl = 0 . 
@@ -546,6 +566,55 @@ do:
 
   assign frame {&frame-name} dens-prov.
 end.
+
+if place-type:screen-value = "1"
+and t-ponton:screen-value = "yes"
+then do :
+  if ponton-mass = 0
+  or ponton-mass = ?
+  then do :
+    message "Не указана масса понтона для вертикального резервуара с понтоном." skip
+            "Сохранение невозможно." skip
+            "Укажите массу понтона."
+    view-as alert-box error.
+    apply "entry" to ponton-mass .
+    return no-apply.
+  end .
+  if ponton-height = 0
+  or ponton-height = ?
+  then do :
+    message "Не указана высота всплытия понтона для вертикального резервуара с понтоном." skip
+            "Сохранение невозможно." skip
+            "Укажите высоту всплытия понтона."
+    view-as alert-box error.
+    apply "entry" to ponton-height .
+    return no-apply.
+  end .
+end .
+
+if rvd-dnstv <> rvd-tmp
+and ((available dnst_sr-izmerenia and dnst_sr-izmerenia.sr-type-izm = 0 and dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
+  or (available tmp_sr-izmerenia and tmp_sr-izmerenia.sr-type-izm = 0 and tmp_sr-izmerenia.sr-density and tmp_sr-izmerenia.sr-temperature))
+then do :
+  message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, " +
+          "если дополнительное автоматизированное СИ предназначено для измерения обоих параметров. " +
+          "Сохранение неравнозначных положений разрешения РВД по параметрам температура и плотность запрещено. " +
+          "Установите разрешение РВД для температуры и плотности в равнозначные положения."
+  view-as alert-box .
+  return no-apply.
+end .
+
+if available dnst_sr-izmerenia
+and available tmp_sr-izmerenia
+and dnst_sr-izmerenia.node-code <> tmp_sr-izmerenia.node-code
+and ((dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
+  or (tmp_sr-izmerenia.sr-density and tmp_sr-izmerenia.sr-temperature))
+then do :
+  message "Нельзя устанавливать разные дополнительные СИ по плотности и температуре, если одно из них измеряет оба параметра." skip
+          "Сохранение невозможно."
+  view-as alert-box .
+  return no-apply.
+end .
 
 if place-si = ? or place-si = 0
 then do :
@@ -763,7 +832,19 @@ do :
         when {&place-temp-coef} then 
             do: 
                 v-value = place-temp-coef:screen-value .
-            end.                                                
+            end.    
+        when {&place-ponton} then 
+            do: 
+                v-value = t-ponton:screen-value .
+            end. 
+        when {&place-ponton-mass} then 
+            do: 
+                v-value = ponton-mass:screen-value .
+            end.
+        when {&place-ponton-height} then 
+            do: 
+                v-value = ponton-height:screen-value .
+            end.                                             
     end case.
     run placelib_write-attr  (input v-code
       ,input p-obj-code
@@ -1333,6 +1414,26 @@ END.
 ON VALUE-CHANGED OF rvd-dnstv IN FRAME d-pl-form /* Измеряется приборами */
 DO:
   define variable vlog as logical no-undo .
+  define variable v-tmp-old-val as character no-undo .
+  
+  v-tmp-old-val = rvd-tmp:screen-value .
+  
+  if available dnst_sr-izmerenia
+  and dnst_sr-izmerenia.sr-type-izm = 0
+  and dnst_sr-izmerenia.sr-density
+  and dnst_sr-izmerenia.sr-temperature
+  and rvd-dnstv:screen-value <> rvd-tmp:screen-value
+  then do :
+    message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, " +
+            "если автоматизированное СИ для одного из них предназначено для измерения обоих. " +
+            "Сохранение неравнозначных положений разрешения РВД по параметрам температура и плотность запрещено. " +
+            "Установить значение " + (if rvd-dnstv:screen-value = "yes" then "'Да'" else "'Нет'") + " для РВД по температуре автоматически?"
+    view-as alert-box question buttons yes-no update vlog .
+    if vlog
+    then do :
+      rvd-tmp:screen-value = rvd-dnstv:screen-value .
+    end .
+  end .
   
   if rvd-dnstv:screen-value = "yes" then do:
     if not v-rvd-on
@@ -1343,6 +1444,7 @@ DO:
       if not vlog
       then do :
         rvd-dnstv:screen-value = "no" .
+        rvd-tmp:screen-value = v-tmp-old-val .
         return no-apply .
       end .
       v-rvd-reason-on = ? .
@@ -1355,6 +1457,7 @@ DO:
       if v-rvd-reason-on = ?
       then do :
         rvd-dnstv:screen-value = "no" .
+        rvd-tmp:screen-value = v-tmp-old-val .
         return no-apply .
       end . 
       v-rvd-on = yes .                     
@@ -1369,6 +1472,7 @@ DO:
       if not vlog 
       then do :
         rvd-dnstv:screen-value = "yes" .
+        rvd-tmp:screen-value = v-tmp-old-val .
         return no-apply .
       end .
       v-rvd-reason-off = ? .
@@ -1381,6 +1485,7 @@ DO:
       if v-rvd-reason-off = ?
       then do :
         rvd-dnstv:screen-value = "yes" .
+        rvd-tmp:screen-value = v-tmp-old-val .
         return no-apply .
       end .
       v-rvd-off = yes .
@@ -1459,6 +1564,26 @@ END.
 ON VALUE-CHANGED OF rvd-tmp IN FRAME d-pl-form /* Измеряется приборами */
 DO:
   define variable vlog as logical no-undo .
+  define variable v-dnst-old-val as character no-undo .
+  
+  v-dnst-old-val = rvd-dnstv:screen-value .
+  
+  if available tmp_sr-izmerenia
+  and tmp_sr-izmerenia.sr-type-izm = 0
+  and tmp_sr-izmerenia.sr-temperature
+  and tmp_sr-izmerenia.sr-density
+  and rvd-tmp:screen-value <> rvd-dnstv:screen-value
+  then do :
+    message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, " +
+            "если автоматизированное СИ для одного из них предназначено для измерения обоих. " +
+            "Сохранение неравнозначных положений разрешения РВД по параметрам температура и плотность запрещено. " +
+            "Установить значение " + (if rvd-tmp:screen-value = "yes" then "'Да'" else "'Нет'") + " для РВД по плотности автоматически?"
+    view-as alert-box question buttons yes-no update vlog .
+    if vlog
+    then do :
+      rvd-dnstv:screen-value = rvd-tmp:screen-value .
+    end .
+  end .
   
   if rvd-tmp:screen-value = "yes" then do:
     if not v-rvd-on
@@ -1469,6 +1594,7 @@ DO:
       if not vlog 
       then do :
         rvd-tmp:screen-value = "no" .
+        rvd-dnstv:screen-value = v-dnst-old-val .
         return no-apply .
       end .
       v-rvd-reason-on = ? .
@@ -1481,6 +1607,7 @@ DO:
       if v-rvd-reason-on = ?
       then do :
         rvd-tmp:screen-value = "no" .
+        rvd-dnstv:screen-value = v-dnst-old-val .
         return no-apply .
       end .        
       v-rvd-on = yes .              
@@ -1495,6 +1622,7 @@ DO:
       if not vlog
       then do :
         rvd-tmp:screen-value = "yes" .
+        rvd-dnstv:screen-value = v-dnst-old-val .
         return no-apply .
       end .
       v-rvd-reason-off = ? .
@@ -1507,6 +1635,7 @@ DO:
       if v-rvd-reason-off = ?
       then do :
         rvd-tmp:screen-value = "yes" .
+        rvd-dnstv:screen-value = v-dnst-old-val .
         return no-apply .
       end .
       v-rvd-off = yes .
@@ -1583,17 +1712,45 @@ END.
 &ANALYZE-RESUME
 
 
-/*&Scoped-define SELF-NAME place-locat                                               */
-/*&Scoped-define SELF-NAME place-type                                                */
-/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL place-type d-pl-form                     */
-/*ON value-changed OF place-type IN FRAME d-pl-form                                  */
-/*DO:                                                                                */
-/*    if place-type:screen-value = "1" then place-ratio-error:screen-value = "0.20" .*/
-/*    if place-type:screen-value = "2" then place-ratio-error:screen-value = "0.25" .*/
-/*  END.                                                                             */
-/*                                                                                   */
-/*/* _UIB-CODE-BLOCK-END */                                                          */
-/*&ANALYZE-RESUME                                                                    */
+&Scoped-define SELF-NAME place-type
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL place-type d-pl-form
+ON value-changed OF place-type IN FRAME d-pl-form
+DO:
+  if place-type:screen-value = "1"
+  then do :
+    enable t-ponton with frame {&frame-name} .
+    if t-ponton:screen-value = "yes"
+    then do :
+      enable ponton-mass ponton-height with frame {&frame-name} .
+    end .
+    else do :
+      disable ponton-mass ponton-height with frame {&frame-name} .
+    end .
+  end .
+  if place-type:screen-value = "2"
+  then do :
+    disable t-ponton ponton-mass ponton-height with frame {&frame-name} .
+  end .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME t-ponton
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-ponton d-pl-form
+ON value-changed OF t-ponton IN FRAME d-pl-form
+DO:
+  if t-ponton:screen-value = "yes"
+  then do :
+    enable ponton-mass ponton-height with frame {&frame-name} .
+  end .
+  else do :
+    disable ponton-mass ponton-height with frame {&frame-name} .
+  end .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 
 &Scoped-define SELF-NAME r-sr-izm
@@ -1670,15 +1827,24 @@ end .
 ON CHOOSE OF b-mi-dnst IN FRAME d-pl-form /* r-sr-izm */
 DO:
   define variable v-node-code as integer no-undo.
-  define variable v-sr-type as character no-undo.
+  define variable v-sr-type-id as character no-undo.
+  define variable v-sr-type-izm as character no-undo .
   v-node-code = 0 .
+  
+/*  if available tmp_sr-izmerenia                           */
+/*  then do :                                               */
+/*    v-sr-type-izm = string(tmp_sr-izmerenia.sr-type-izm) .*/
+/*  end .                                                   */
+/*  else do :                                               */
+    v-sr-type-izm = "0,1" .
+/*  end .*/
   run ref/sr-izm.w (input parparentproc ,
                     input "b-sel"       ,
                     input {&lookup}     ,
-                    input "0,1"         ,
+                    input v-sr-type-izm ,
                     input "dnst"        ,
                     input-output v-node-code,
-                    output v-sr-type) no-error.
+                    output v-sr-type-id) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
     v-mi-dnst = v-node-code.
     v-mi-dnst:screen-value = string(v-node-code).
@@ -1713,6 +1879,7 @@ end .
 
 on leave of v-mi-dnst IN FRAME d-pl-form 
 do:
+  define variable vlog as logical no-undo .
   define variable v-old-val as character no-undo .
   
   v-old-val = string(v-mi-dnst) .
@@ -1743,11 +1910,43 @@ do:
 /*      apply "choose" to b-mi-dnst in frame {&frame-name}.*/
       return .
     end .
+    if dnst_sr-izmerenia.sr-type-izm = 0
+    and dnst_sr-izmerenia.sr-density
+    and dnst_sr-izmerenia.sr-temperature
+    and rvd-dnstv:screen-value <> rvd-tmp:screen-value
+    then do :
+      message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, " +
+              "если автоматизированное СИ для одного из них предназначено для измерения обоих. " +
+              "Сохранение неравнозначных положений разрешения РВД по параметрам температура и плотность запрещено. " +
+              "Установить значение " + (if rvd-dnstv:screen-value = "yes" then "'Да'" else "'Нет'") + " для РВД по температуре автоматически?"
+      view-as alert-box question buttons yes-no update vlog .
+      if vlog
+      then do :
+        rvd-tmp:screen-value = rvd-dnstv:screen-value .
+      end .
+    end .
   end .
   v-mi-dnst-name = dnst_sr-izmerenia.sr-model .
   display v-mi-dnst-name with frame {&frame-name}.
   enable v-mi-dnst-name with frame {&frame-name}.
   assign v-mi-dnst .
+  
+  if dnst_sr-izmerenia.sr-temperature
+/*  and v-mi-dnst <> v-mi-tmp*/
+  then do :
+/*    message "Для измерения плотности выбрано дополнительное СИ " + v-mi-dnst-name + ". Установить данное СИ для измерения температуры автоматически?"*/
+/*    view-as alert-box buttons yes-no update vlog .                                                                                                   */
+/*    if vlog                                                                                                                                          */
+/*    then do :                                                                                                                                        */
+      v-mi-tmp = v-mi-dnst .
+      v-mi-tmp:screen-value = v-mi-dnst:screen-value .
+      v-mi-tmp-name = v-mi-dnst-name .
+      find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = v-mi-tmp .
+      display v-mi-tmp-name with frame {&frame-name}.
+      enable v-mi-tmp-name with frame {&frame-name}.
+/*    end .*/
+  end .
+  
 end .
 
 &Scoped-define SELF-NAME b-mi-lvl
@@ -1840,15 +2039,24 @@ end .
 ON CHOOSE OF b-mi-tmp IN FRAME d-pl-form /* r-sr-izm */
 DO:
   define variable v-node-code as integer no-undo.
-  define variable v-sr-type as character no-undo.
+  define variable v-sr-type-id as character no-undo.
+  define variable v-sr-type-izm as character no-undo .
   v-node-code = 0 .
+  
+/*  if available dnst_sr-izmerenia                           */
+/*  then do :                                                */
+/*    v-sr-type-izm = string(dnst_sr-izmerenia.sr-type-izm) .*/
+/*  end .                                                    */
+/*  else do :                                                */
+    v-sr-type-izm = "0,1" .
+/*  end .*/
   run ref/sr-izm.w (input parparentproc ,
                     input "b-sel"       ,
                     input {&lookup}     ,
-                    input "0,1"         ,
+                    input v-sr-type-izm ,
                     input "tmp"         ,
                     input-output v-node-code,
-                    output v-sr-type) no-error.
+                    output v-sr-type-id) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
     v-mi-tmp = v-node-code.
     v-mi-tmp:screen-value = string(v-node-code).
@@ -1883,6 +2091,7 @@ end .
 
 on leave of v-mi-tmp IN FRAME d-pl-form 
 do:
+  define variable vlog as logical no-undo .
   define variable v-old-val as character no-undo .
   
   v-old-val = string(v-mi-tmp) .
@@ -1913,11 +2122,42 @@ do:
 /*      apply "choose" to b-mi-tmp in frame {&frame-name}.*/
       return .
     end .
+    if tmp_sr-izmerenia.sr-type-izm = 0
+    and tmp_sr-izmerenia.sr-temperature
+    and tmp_sr-izmerenia.sr-density
+    and rvd-tmp:screen-value <> rvd-dnstv:screen-value
+    then do :
+      message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, " +
+              "если автоматизированное СИ для одного из них предназначено для измерения обоих. " +
+              "Сохранение неравнозначных положений разрешения РВД по параметрам температура и плотность запрещено. " +
+              "Установить значение " + (if rvd-tmp:screen-value = "yes" then "'Да'" else "'Нет'") + " для РВД по плотности автоматически?"
+      view-as alert-box question buttons yes-no update vlog .
+      if vlog
+      then do :
+        rvd-dnstv:screen-value = rvd-tmp:screen-value .
+      end .
+    end .
   end .
   v-mi-tmp-name = tmp_sr-izmerenia.sr-model .
   display v-mi-tmp-name with frame {&frame-name}.
   enable v-mi-tmp-name with frame {&frame-name}.
   assign v-mi-tmp .
+  
+  if tmp_sr-izmerenia.sr-density
+/*  and v-mi-tmp <> v-mi-dnst*/
+  then do :
+/*    message "Для измерения температуры выбрано дополнительное СИ " + v-mi-dnst-name + ". Установить данное СИ для измерения плотности автоматически?"*/
+/*    view-as alert-box buttons yes-no update vlog .                                                                                                   */
+/*    if vlog                                                                                                                                          */
+/*    then do :                                                                                                                                        */
+      v-mi-dnst = v-mi-tmp .
+      v-mi-dnst:screen-value = v-mi-tmp:screen-value .
+      v-mi-dnst-name = v-mi-tmp-name .
+      find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = v-mi-dnst .
+      display v-mi-dnst-name with frame {&frame-name}.
+      enable v-mi-dnst-name with frame {&frame-name}.
+/*    end .*/
+  end .
 end .
 
 
@@ -2113,6 +2353,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           v-mi-dnst = integer(v-value) .
           v-dnst-mi-old = v-mi-dnst .
           if v-dnst-mi-old = ? then v-dnst-mi-old = 0 .
+          find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = v-mi-dnst no-error .
         end .
       end.
       when {&place-si-level} then do :
@@ -2121,6 +2362,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           v-mi-lvl = integer(v-value) .
           v-lvl-mi-old = v-mi-lvl .
           if v-lvl-mi-old = ? then v-lvl-mi-old = 0 .
+          find first lvl_sr-izmerenia no-lock where lvl_sr-izmerenia.node-code = v-mi-lvl no-error .
         end .
       end.
       when {&place-si-temp} then do :
@@ -2129,6 +2371,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           v-mi-tmp = integer(v-value) .
           v-tmp-mi-old = v-mi-tmp .
           if v-tmp-mi-old = ? then v-tmp-mi-old = 0 .
+          find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = v-mi-tmp no-error .
         end .
       end.
       when {&place-passp-num} then do: 
@@ -2142,7 +2385,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.  
       when {&place-temp-coef} then do: 
         if v-ok then place-temp-coef = decimal(v-value) .
-      end.            
+      end.  
+      when {&place-ponton} then do :
+        if v-ok then t-ponton = logical(v-value) .
+      end.
+      when {&place-ponton-mass} then do: 
+        if v-ok then ponton-mass = decimal(v-value) .
+      end.  
+      when {&place-ponton-height} then do: 
+        if v-ok then ponton-height = decimal(v-value) .
+      end.          
     end case.
   end.
   run Myenable in this-procedure .
@@ -2189,6 +2441,7 @@ PROCEDURE enable_UI :
           dens-prov place-twice-code v-mi-dnst
           v-mi-lvl v-mi-tmp place-passp-num place-passp-type
           place-dead-high place-temp-coef
+          t-ponton ponton-mass ponton-height
       WITH FRAME d-pl-form.
   IF AVAILABLE tt-place THEN 
     DISPLAY tt-place.loc1 tt-place.loc2 tt-place.loc3 tt-place.loc4 
@@ -2202,6 +2455,7 @@ PROCEDURE enable_UI :
          tt-place.max-qnty place-si r-sr-izm dead-balance water-level place-diameter 
          dens-prov place-twice-code tt-place.chk-max-qnty 
          tt-place.PS place-passp-num place-passp-type place-dead-high place-temp-coef
+         t-ponton ponton-mass ponton-height
       WITH FRAME d-pl-form.
   {&OPEN-BROWSERS-IN-QUERY-d-pl-form}
 END PROCEDURE.
@@ -2273,6 +2527,8 @@ PROCEDURE Myenable :
   end .
   if p-mode <> {&lookup} then enable place-si-name with frame {&frame-name}.
   if place-si = 0 then place-si = ? .
+  
+  apply "value-changed" to place-type .
   
 END PROCEDURE.
 

@@ -7850,7 +7850,7 @@ procedure qntycalc :
     case p-calc-method :
       when "cli-qnty"
       then do:
-        if p-doc-qnty = round(p-cli-qnty * p-cli-base-rate, v-round-parameter)
+        if abs(p-doc-qnty - round(p-cli-qnty * p-cli-base-rate, v-round-parameter)) < 0.0011
         then do:
           assign
             p-new-cli-qnty = p-cli-qnty

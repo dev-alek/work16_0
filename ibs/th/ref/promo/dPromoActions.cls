@@ -180,8 +180,33 @@ end .
     end method.
  
     method private void cancelButton_Click (sender as System.Object, e as System.EventArgs):
+              // для остальных вкладок bindingSounce:Assign() внутри :
+      deleteObject().
+         
+
         this-object:DialogResult = System.Windows.Forms.DialogResult:Cancel.
         this-object:Close ( ).
+  define variable v-err-msg as character no-undo .  
+  catch exAppErrors as class Progress.Lang.AppError :
+    v-err-msg = exAppErrors:ReturnValue .
+    if v-err-msg > "" then . else do :
+      v-err-msg = exAppErrors:GetMessage(1) .
+      if v-err-msg > "" then . else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+    end .
+    message "AppError" skip(1) v-err-msg skip exAppErrors:CallStack view-as alert-box.
+  end catch .
+  catch exProErrors as class Progress.Lang.ProError :
+    v-err-msg = exProErrors:GetMessage(1) . 
+    if v-err-msg > "" then . else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+    message "ProError" skip(1) v-err-msg skip exProErrors:CallStack view-as alert-box.
+  end catch .
+  catch exAnyErrors as class Progress.Lang.Error:
+    v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+    message "LangError" skip(1) v-err-msg skip exAnyErrors:CallStack view-as alert-box.
+  end catch .
+  finally: 
+  end finally.
+
     end method.
     
     method private void InitializeComponent ( ):

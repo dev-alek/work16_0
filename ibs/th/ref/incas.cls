@@ -72,7 +72,7 @@ class ibs.th.ref.incas inherits Form:
 	   if     windowContainer1:v-total-sum ne 0
 	      and windowContainer1:v-total-sum ne dec(fSum:text)
 	   then do:
-	      message "Веднная сумма не сответствует введеным номиналам"
+	      message "Введенная сумма не соответствует введенным номиналам"
          view-as alert-box.
          return.
       end.

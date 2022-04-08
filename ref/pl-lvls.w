@@ -49,8 +49,10 @@ define variable v_ok as LOGICAL no-undo .
 define buffer buf_pl-level for ub.pl-level .
 define buffer buf_pl-level-attr for ub.pl-level-attr .
 define buffer buf_place    for ub.place .
+define buffer buf_place-attr    for ub.place-attr .
 define VARIABLE v-ok-level as logical no-undo INIT no .
 define variable v-chk-act-host-code as integer   no-undo .
+define variable v-place-type as integer no-undo .
 define variable glog                as logical   no-undo .
 /* Local Variable Definitions ---                                       */
 
@@ -634,6 +636,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             , p-obj-type
             ) .
     end.
+    
+    v-place-type = 2 .
+    for first buf_place-attr no-lock where buf_place-attr.obj-type = buf_place.obj-type
+                                       and buf_place-attr.obj-code = buf_place.obj-code
+                                       and buf_place-attr.pl-code = buf_place.pl-code
+                                       and buf_place-attr.attr-code = "place-type"
+                                       :
+      v-place-type = integer(buf_place-attr.attr-value) .                        
+    end .
+    
 
     ASSIGN
         FRAME Dialog-Frame:TITLE = SUBSTITUTE  ( "Градуировочная таблица для резервуара &1 (&2) &3 &4"
@@ -663,7 +675,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
          buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
          buf_pl-level-attr.attr-code = "tarir-delta"        
-         buf_pl-level-attr.attr-value = string(0.25)
+         buf_pl-level-attr.attr-value = (if v-place-type = 2 then string(0.25) else string(0.20))
        .
      end .                                                                      
    end .
@@ -759,7 +771,7 @@ PROCEDURE del-pl-level :
     define variable v-del as logical no-undo.
 
     message
-        SUBSTITUTE ( "Удалить ровень &1 "
+        SUBSTITUTE ( "Удалить уровень &1 "
         , buf_pl-level.pl-level
         )
         view-as alert-box information

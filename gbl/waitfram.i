@@ -32,10 +32,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 define variable v-waitfram-action01         as character   no-undo .
 define variable v-waitfram-action02         as character   no-undo .
 define variable v-waitfram-action03         as character   no-undo .
-define variable v-waitfram-prev-left-margin as integer     no-undo init 0 .
 define variable mWaitFramTextBeg            as character   no-undo.
 define variable mWaitFramTextEnd            as character   no-undo.
 define variable mWaitFramView               as logical     no-undo.
+define variable mWaitProcEvent              as logical     no-undo init yes.
 define variable mWaitFramInterval           as integer     no-undo init 1 .
 define variable mWaitFramStop               as logical     no-undo.
 define variable mWaitFramStopUser           as logical     no-undo.
@@ -72,14 +72,16 @@ end.
 
 procedure waitfram-hide :
 
-  do
+  if not session:batch-mode
+  then do
   on error undo, return error return-value
   :
     pause 0 before-hide .
     hide frame waitfram .
 
 &if "{1}" = "" &then
-  if not mWaitFramView
+  if     not mWaitFramView
+     and mWaitProcEvent
   then
     process events .
 &endif
@@ -94,7 +96,8 @@ procedure waitfram-show :
 
   define variable v-left-margin as integer   no-undo .
 
-  do
+  if not session:batch-mode
+  then do
   on error undo, return error return-value
   :
     if length(p-message) <= 70 then do:
@@ -104,33 +107,41 @@ procedure waitfram-show :
       assign
         v-left-margin = max(0, v-left-margin - (v-left-margin mod 5))
       .
-      if abs(v-left-margin - v-waitfram-prev-left-margin) > 5 then do:
-        assign
-          v-waitfram-prev-left-margin = v-left-margin
-        .
-      end.
-
+      
       assign
         v-waitfram-action01 = " "
         v-waitfram-action02 = " "
-                                 + fill(" ", v-waitfram-prev-left-margin)
+                                 + fill(" ", v-left-margin)
                                  + p-message
         v-waitfram-action03 = " "
       .
     end.
     else do:
-      if length(p-message) <= 140 then do:
+      define variable vRindex1 as integer no-undo.
+      define variable vRindex2 as integer no-undo.
+      
+      vRindex1 = r-index(p-message," ",70).
+      if vRindex1 = 0
+      then
+         vRindex1 = 70.
+      if length(p-message)  <= vRindex1 + 70 then do:
         assign
           v-waitfram-action01 = " "
-          v-waitfram-action02 = " " + substring(p-message,   1, 70)
-          v-waitfram-action03 = " " + substring(p-message,  71, 70)
+          v-waitfram-action02 = " " + substring(p-message,   1          , vRindex1)
+          v-waitfram-action03 = " " + substring(p-message,  vRindex1 + 1, 70      )
         .
       end.
       else do:
+         
+        vRindex2 = r-index(p-message," ",vRindex1 + 70).
+        if vRindex2 <= vRindex1
+        then
+           vRindex2 = vRindex1 + 70.
+      
         assign
-          v-waitfram-action01 = " " + substring(p-message,   1, 70)
-          v-waitfram-action02 = " " + substring(p-message,  71, 70)
-          v-waitfram-action03 = " " + substring(p-message, 141, 70)
+          v-waitfram-action01 = " " + substring(p-message,   1          , vRindex1)
+          v-waitfram-action02 = " " + substring(p-message,  vRindex1 + 1, vRindex2 - vRindex1 )
+          v-waitfram-action03 = " " + substring(p-message,  vRindex2 + 1, 70)
         .
       end.
     end.
@@ -144,11 +155,17 @@ procedure waitfram-show :
       v-waitfram-action03 skip
       with frame waitfram .
 &if "{1}" = "" &then
-    if mWaitFramView 
-    then
-       wait-for go of frame waitfram pause mWaitFramInterval.
-    else
-       process events .
+    
+       if     mWaitFramView 
+       then do:
+          if mWaitFramInterval ne ?
+          then
+             wait-for go of frame waitfram pause mWaitFramInterval.
+       end.
+       else
+          if mWaitProcEvent
+          then
+             process events .
 &endif
   end.
 
@@ -160,9 +177,9 @@ end procedure. /* waitfram-show */
       define variable vtime as int64 no-undo.
       vtime = ( now - mWaitFramStartProc  ) / 1000 .
       mWaitFramInterval = iInterval.
-      run waitfram-show (substitute("&1 Прошло: &2 сек &3&4" ,
+      run waitfram-show (substitute("&1&2 &3&4" ,
                                     mWaitFramTextBeg , 
-                                    string( vtime),
+                                    if vtime eq ? then "" else substitute (" Прошло: &1 сек" , string( vtime)),
                                     if mWaitFramTimeOut ne 0 and mWaitFramTimeOut ne ? then " из " + string(mWaitFramTimeOut) + " сек. " else "",
                                     mWaitFramTextEnd
                                    )
@@ -175,16 +192,20 @@ end procedure. /* waitfram-show */
       define variable vStart  as datetime-tz no-undo.
       define variable vend    as datetime-tz no-undo.
       define variable vint as int64 no-undo.
-  
+      define variable vOk as logical no-undo.
       vStart = now.
       vend   = vStart.
-      publish "WaitFramPause" (iInterval).
+      publish "WaitFramPause" (iInterval,output vOk).
       vend   =  now.
       vint = vend - vStart.
       vint = iInterval - vint / 1000.
 /*      publish "WaitFramStop".*/
       if     not mWaitFramStop
-         and vint > 0
+         and (   vint > 0
+              or (    not vOk
+                  and iInterval eq ?
+                  )
+              )          
       then
          run waitfram-show-this (iInterval). 
       vend   =  now.
@@ -195,7 +216,9 @@ end procedure. /* waitfram-show */
          and vint > 0
       then
          pause vint no-message.
-      publish "WaitFramStop".
+      if iInterval ne ?
+      then
+         publish "WaitFramStop".
    end.
    
    procedure WaitFramWaitFor:
@@ -205,6 +228,10 @@ end procedure. /* waitfram-show */
          mWaitFramStopUser    = no
          mWaitFramStopTimeOut = no
       .
+     /* if    mWaitFramTimeOut eq ?
+         or mWaitFramTimeOut eq 0
+      then
+         mWaitFramView = yes. */
       block-wait:
       do while not mWaitFramStop:
          run WaitFramRunPause (iInterval).
@@ -218,6 +245,7 @@ end procedure. /* waitfram-show */
             leave block-wait.
          end.
       end.
+      run waitfram-hide.
    end.
 
 procedure waitfram-join :

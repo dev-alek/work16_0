@@ -10,10 +10,11 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+using ibs.th.gbl.sys.objth.
 using ibs.th.str.marking.sts.mark.
 
 
-class ibs.th.str.marking.sts: 
+class ibs.th.str.marking.sts inherits objth: 
 
   define public property Mark as class mark no-undo 
     get.
@@ -26,7 +27,7 @@ class ibs.th.str.marking.sts:
     
   constructor public sts (  ):
     super ().
-    Mark = new mark().
+    {utl\objreg.i Mark mark}
     
   end constructor.
 

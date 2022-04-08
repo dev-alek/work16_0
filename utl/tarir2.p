@@ -101,18 +101,34 @@ on error undo, return error return-value :
          varcode   = integer(entry (1, varstring, chr(9)))
          varlevel  = integer(entry (2, varstring, chr(9)))
          varvolume = DECIMAL(entry (3, varstring, chr(9)))
-         vardelta  = DECIMAL(entry (4, varstring, chr(9)))
       no-error.
 
       if error-status:error = no
       and STRING(varcode) = buf_place.loc1
       then do:
-            create tt-tarir.
-            assign
-               tt-tarir.level  = varlevel
-               tt-tarir.volume = varvolume
-               tt-tarir.delta  = vardelta
-            .
+        create tt-tarir.
+        assign
+           tt-tarir.level  = varlevel
+           tt-tarir.volume = varvolume
+        .
+        vardelta  = DECIMAL(entry (4, varstring, chr(9))) no-error .
+        if vardelta = 0 or vardelta = ?
+        then do :
+          find first ub.place-attr no-lock where ub.place-attr.obj-type = buf_place.obj-type
+                                             and ub.place-attr.obj-code = buf_place.obj-code
+                                             and ub.place-attr.pl-code = buf_place.pl-code
+                                             and ub.place-attr.attr-code = "place-type"
+                                             no-error .
+          if not available ub.place-attr 
+          or (available ub.place-attr and ub.place-attr.attr-value = "2")
+          then do :
+            vardelta = 0.25 .
+          end .
+          else do :
+            vardelta = 0.2 .
+          end .
+        end .
+        tt-tarir.delta  = vardelta .
       end.
    end. /* repeat */
 

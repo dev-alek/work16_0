@@ -27,6 +27,13 @@ DEFINE INPUT  PARAMETER silence          as logical no-undo.
 DEFINE OUTPUT PARAMETER ini-entry-value  as character no-undo INIt ?.
 define variable v-mess as character no-undo .
 get-key-value section ini-section-name key ini-key-name value ini-entry-value.
+if ini-entry-value = ? and ini-key-name begins "spl" 
+then 
+get-key-value section ini-section-name key "splall" value ini-entry-value.
+if ini-entry-value = ? and ini-key-name begins "sav" 
+then 
+get-key-value section ini-section-name key "savall" value ini-entry-value.
+
 if ini-entry-value = ? then do:
   assign
   v-mess = substitute("Ошибка ini - файла:&1Секция &2&1Ключ &3&1&4"

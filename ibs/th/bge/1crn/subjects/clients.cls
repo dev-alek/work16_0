@@ -76,10 +76,27 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
   define property okpo as character no-undo
     get.
     private set.
-  define property post-np     as integer    no-undo get. 
+  define property post-np     as integer    no-undo
+    get. 
     private set.    
-  define property post-sug     as integer    no-undo get. 
+  define property post-sug     as integer    no-undo
+    get. 
+    private set.  
+  define property own-post    as integer    no-undo
+    get. 
     private set.    
+  define property post-npz     as integer    no-undo
+    get. 
+    private set. 
+  define property code-KSK as character no-undo
+    get.
+    private set. 
+  define property code-AIS as character no-undo
+    get.
+    private set.
+  define property org-code as character no-undo
+    get. 
+    private set.
   define override property InitTag as character no-undo init "contractor"
     get. 
     
@@ -123,6 +140,16 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
         post-np      = if inValue >= "" then int(inValue) else 0 .
       when "post-sug"      then 
         post-sug      = if inValue >= "" then int(inValue) else 0 .
+      when "own"      then 
+        own-post      = if inValue >= "" then int(inValue) else 0 .
+      when "npz"      then 
+        post-npz      = if inValue >= "" then int(inValue) else 0 .
+      when "code-KSK"      then 
+        code-KSK      = if inValue >= "" then inValue else "" .
+      when "code-AIS"      then 
+        code-AIS      = if inValue >= "" then inValue else "" .
+      when "org-code"      then 
+        org-code      = if inValue >= "" then inValue else "" .
 
     end case.
   end method.
@@ -183,6 +210,11 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
       okpo      = ?
       post-np   = ?
       post-sug  = ?
+      own-post  = ?
+      post-npz  = ?
+      code-KSK  = ?
+      code-AIS  = ?
+      org-code  = ?
       .
   end method.
   

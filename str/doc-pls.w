@@ -100,6 +100,15 @@ define variable v-upd-units as character no-undo .
 define variable v-is-ptrl   as character no-undo .
 define variable tt-density  as decimal   no-undo .
 define variable pl-j        as integer   no-undo .
+
+define variable par-type          as character no-undo .
+define variable v-value-char      as character no-undo .
+define variable v-value-date      as date      no-undo .
+define variable v-value-decimal   as decimal   no-undo .
+define variable v-value-integer   as integer   no-undo .
+define variable v-value-logical   as logical   no-undo .
+define variable v-rvd-own-nb      as logical   no-undo .
+define variable v-tth             as handle    no-undo .
  
 define buffer buf_trn-doc for ub.trn-doc .
 define buffer buf_pl-gds for ub.pl-gds .
@@ -1184,6 +1193,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable v-new-qnty      as   decimal           no-undo .
   define variable v-column-handle as   handle            no-undo .
   define variable v-for-upd-units as   character         no-undo .
+  define variable v-loc1          like ub.place.loc1     no-undo .
 
   assign /* это нужно для устранения глюка прогресса всязанного с передачей параметров - обрезаем все переменные соответственно их decimals */
     p-doc-line-cli-base-rate    = p-doc-line-cli-base-rate
@@ -1202,7 +1212,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   assign
     v-mode = entry( 1, p-mode, {&delim-par} )
   .
-  if num-entries( p-mode, {&delim-par} ) >= 2 then do:
+  if num-entries( p-mode, {&delim-par} ) >= 2
+  then do:
     assign
       v-add-mode1 = entry( 2, p-mode, {&delim-par} )
     .
@@ -1260,29 +1271,56 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     v-single-place = false
     v-pl-code      = ?
   .
-  block_check-pl-gds :
-  for each buf_pl-gds no-lock
-    where buf_pl-gds.obj-code = buf_trn-doc.obj-code
-      and buf_pl-gds.obj-type = buf_trn-doc.obj-type
-      and buf_pl-gds.gds-code = p-gds-code
-  on error undo, return error return-value
-  :
-    assign
-      v-av-place = true
-    .
-    if v-single-place = false then do:
+  
+  if num-entries( p-mode, {&delim-par} ) >= 3
+  then do:
+    if entry(3, p-mode, {&delim-par} ) begins "place"
+    then do :
+      v-loc1 = entry(2, entry(3, p-mode, {&delim-par}), "=") .
+      for first buf_place no-lock where buf_place.obj-code = buf_trn-doc.obj-code
+                                    and buf_place.obj-type = buf_trn-doc.obj-type
+                                    and buf_place.loc1 = v-loc1
+                                    and buf_place.status_ <> {&deleted-status},
+      first buf_pl-gds no-lock where buf_pl-gds.obj-code = buf_trn-doc.obj-code
+                                 and buf_pl-gds.obj-type = buf_trn-doc.obj-type
+                                 and buf_pl-gds.gds-code = p-gds-code
+                                 and buf_pl-gds.pl-code = buf_place.pl-code
+                                 :
+        assign
+          v-av-place     = true
+          v-single-place = true
+          v-pl-code      = buf_place.pl-code
+        .                           
+      end .
+    end .
+  end .
+  
+  if v-pl-code = ?
+  then do :
+    block_check-pl-gds :
+    for each buf_pl-gds no-lock
+      where buf_pl-gds.obj-code = buf_trn-doc.obj-code
+        and buf_pl-gds.obj-type = buf_trn-doc.obj-type
+        and buf_pl-gds.gds-code = p-gds-code
+    on error undo, return error return-value
+    :
       assign
-        v-pl-code      = buf_pl-gds.pl-code
-        v-single-place = true
+        v-av-place = true
       .
+      if v-single-place = false then do:
+        assign
+          v-pl-code      = buf_pl-gds.pl-code
+          v-single-place = true
+        .
+      end.
+      else do:
+        assign
+          v-single-place = false
+        .
+        leave block_check-pl-gds .
+      end.
     end.
-    else do:
-      assign
-        v-single-place = false
-      .
-      leave block_check-pl-gds .
-    end.
-  end.
+  end .
 
   if v-add-mode1 <> "":U then do:
     case v-add-mode1 :
@@ -1290,12 +1328,24 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       or when "update-dens-cli":U
       or when "update-dens-base":U
       then do:
-        find first tt-doc-pl
-          where tt-doc-pl.gds-code = p-gds-code
-            and tt-doc-pl.obj-code = buf_trn-doc.obj-code
-            and tt-doc-pl.obj-type = buf_trn-doc.obj-type
-            and tt-doc-pl.out-code = buf_trn-doc.doc-code
-          no-error .
+        if v-single-place
+        then do :
+          find first tt-doc-pl
+            where tt-doc-pl.gds-code = p-gds-code
+              and tt-doc-pl.obj-code = buf_trn-doc.obj-code
+              and tt-doc-pl.obj-type = buf_trn-doc.obj-type
+              and tt-doc-pl.pl-code  = v-pl-code
+              and tt-doc-pl.out-code = buf_trn-doc.doc-code
+            no-error .
+        end .
+        else do :
+          find first tt-doc-pl
+            where tt-doc-pl.gds-code = p-gds-code
+              and tt-doc-pl.obj-code = buf_trn-doc.obj-code
+              and tt-doc-pl.obj-type = buf_trn-doc.obj-type
+              and tt-doc-pl.out-code = buf_trn-doc.doc-code
+            no-error .
+        end .
         if available tt-doc-pl then do:
           case v-add-mode1 :
             when "update-dens-cli":U then do:
@@ -1317,6 +1367,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               and tt-doc-pl.obj-code = buf_trn-doc.obj-code
               and tt-doc-pl.obj-type = buf_trn-doc.obj-type
               and tt-doc-pl.out-code = buf_trn-doc.doc-code
+              and ((v-single-place and tt-doc-pl.pl-code = v-pl-code) or not v-single-place)
           on error undo, return error return-value
           :
             if p-upd-field = "rest":U
@@ -1375,6 +1426,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                 assign
                   tt-doc-pl.cli-qnty = tt-doc-pl.doc-qnty / p-doc-line-cli-base-rate
                 .
+                if abs(tt-doc-pl.cli-qnty - tt-doc-pl.cli-doc-qnty) < 0.0011
+                then do :
+                  assign
+                    tt-doc-pl.cli-qnty = tt-doc-pl.cli-doc-qnty
+                  .
+                end .
               end.
             end.
           end.
@@ -1623,6 +1680,45 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   { str/doc-pl.i disp-total }
 
   apply "entry" to br-doc-pl IN FRAME {&frame-name}.
+  
+  find first buf_trn-doc no-lock
+        where buf_trn-doc.doc-code = p-doc-code
+      .
+      
+  run adm/shattri.p (
+             input "get":U
+            ,input  buf_trn-doc.obj-type
+            ,input  buf_trn-doc.obj-code
+            ,input  {&attr-petrol}
+            ,input  {&attr-petrol_rvd-own-nb} /*p-param-code*/
+            ,output v-value-char
+            ,output v-value-date
+            ,output v-value-decimal
+            ,output v-value-integer
+            ,output v-rvd-own-nb
+            ,output par-type
+            ,input-output table-handle v-tth
+            ) no-error .
+  if error-status:error then do:
+      if valid-object(v-tth) then delete object v-tth.
+      v-rvd-own-nb = false .
+  end.
+  if v-rvd-own-nb = false
+  and buf_trn-doc.cli-code > 0
+  then do :
+    find first ub.clients-attr no-lock where ub.clients-attr.obj-type = buf_trn-doc.cli-type
+                                         and ub.clients-attr.obj-code = buf_trn-doc.cli-code
+                                         and ub.clients-attr.attr-code = {&attr-owner-code}
+                                         no-error .
+    if available ub.clients-attr
+    and ub.clients-attr.attr-value > ""
+    then do :
+      if ub.clients-attr.attr-value = "орг" + string(buf_trn-doc.host-code)
+      then do :     
+        disable b-add b-chg b-del with frame {&frame-name}.
+      end .
+    end .
+  end .
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.

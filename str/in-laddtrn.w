@@ -1790,8 +1790,14 @@ PROCEDURE disp-obj-name :
 ------------------------------------------------------------------------------*/
   find ub.clients where ub.clients.obj-code = input frame {&frame-name} f-autoent-obj-code and
                      ub.clients.obj-type = input frame {&frame-name} f-autoent-obj-type no-lock no-error.
-  if available ub.clients then
-  disp ub.clients.obj-name @ f-autoent-obj-name with frame {&frame-name}.
+  if available ub.clients
+  then do :
+    assign
+      v-autoent-obj-type = ub.clients.obj-type
+      v-autoent-obj-code = ub.clients.obj-code
+    .
+    disp ub.clients.obj-name @ f-autoent-obj-name with frame {&frame-name}.
+  end .
   else do:
       display ? @ f-autoent-obj-name with frame {&frame-name}.
 /*      apply "choose" to b-clients in frame {&frame-name}.*/

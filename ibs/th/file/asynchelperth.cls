@@ -17,7 +17,7 @@ class ibs.th.file.AsyncHelperth:
    { cmp/str-glbl.i class}
    {utl/ttprocdef.i}
    {utl/ttfileList.i  ttfile  }
-   {utl/setpwd.i class } 
+ /*  {utl/setpwd.i class}*/
 /*define temp-table ttfileTarget no-undo like ttfile.*/
 define temp-table ttfileList no-undo like ttfile.
 
@@ -45,6 +45,20 @@ get.
       then
          MyParamStart = arg.
     end.
+
+define public property ConPar as character  no-undo init ?
+get:
+   define variable vconpar as character no-undo.
+   if ConPar ne ?
+   then 
+      return ConPar.
+   else do:
+      get-key-value section "REP-SETS" key "ConPar" value vConPar.
+      return vConPar.
+   end.
+end.
+    set .
+   
 define public variable MyBachMode as logical no-undo init yes.
 /*method private void GetOSErrorText (input iSourseDir as char,input iTargetDir as char,input cleadir as logical ):
 
@@ -92,6 +106,11 @@ get.
        field pwd as character
     index usr usr.
     
+    define public property userDB as logical no-undo 
+    get.
+    set.
+    
+    
     define public property user-passwd as character initial ? no-undo 
     get:
        if user-passwd eq ?
@@ -100,7 +119,8 @@ get.
           then 
              create tt-User.
           run utl/syspwd.p(input buffer tt-User:handle).
-          return  substitute("-U &1 -P &2 ",tt-User.usr,tt-User.pwd). 
+          userDB = yes.
+          return  substitute("-U &1 -P &2",tt-User.usr,tt-User.pwd).  
        end.
        else 
           return user-passwd.
@@ -114,21 +134,25 @@ get.
           run utl/getuserpwdauto.p(input buffer tt-User:handle) no-error.
           if not error-status:error
           then do:
-             user-passwd =  substitute("-U &1 -P &2 ",tt-User.usr,tt-User.pwd).
+             user-passwd =  substitute("U:&1,P:&2",tt-User.usr,tt-User.pwd).
           end.
           else do:
              run utl/getuserpwd.p( input buffer tt-User:handle) no-error.
              if not error-status:error
              then do:
-                user-passwd =  substitute("-U &1 -P &2 ",tt-User.usr,tt-User.pwd).
+                user-passwd =  substitute("U:&1,P:&2",tt-User.usr,tt-User.pwd).
              end.
              else
-                user-passwd = substitute("-U &1 -P &2 ",GetStartupParam("-U"),GetStartupParam("-P")).
+                user-passwd = substitute("U:&1,P:&2",GetStartupParam("-U"),GetStartupParam("-P")).
           end.
           
        end.
-       else
+       else do:
           user-passwd = arg.
+          if trim(arg) begins "-U"
+          then
+             userDB = yes.
+       end.
     end.
     define public property TaskName as character no-undo
     get.
@@ -316,10 +340,7 @@ end method.
          
    end method.
    */
-   define variable isRcode  as logical no-undo.
-   define variable mProcFile as character no-undo.
    define variable mIniFile as character no-undo.
-   define variable mConPar as character no-undo.
    define variable mFirstrun as logical no-undo init yes.
          
    method public int64 AsyncProc (
@@ -339,7 +360,7 @@ end method.
       define variable vprocname as character no-undo.
       define variable v-user-passwd       as character no-undo . 
       mIniFile = " -ininame "  + GetStartupParam("-ininame")  .
-      get-key-value section "REP-SETS" key "ConPar" value mConPar.
+      
       iProc = right-trim(iProc,".r").
       iProc = right-trim(iProc,".p").
       vprocname = replace (iProc ,"/",v-path-tls-dir-delim).
@@ -347,7 +368,7 @@ end method.
       
       TaskName = vprocname.
       v-user-passwd = user-passwd.
-      mConPar = substitute(mConPar, v-user-passwd).
+      ConPar = substitute(ConPar, v-user-passwd).
       if not FileExists  (MyWorkDir + vprocname + ".txt" )
       then do:
          
@@ -362,16 +383,16 @@ end method.
          
          do vi = 1 to iCount:
            vTask = vprocname + string(vi).
-           if  FolderExists  ( MyWorkDir + vTask) 
-           then do:
-              os-delete value (MyWorkDir + vTask + "/endproc.txt") recursive.
-           end. 
-           os-create-dir VALUE(MyWorkDir + vTask ).
+           os-delete value (MyWorkDir + vTask) recursive.
+           if not  FolderExists  ( MyWorkDir + vTask) 
+           then
+             os-create-dir VALUE(MyWorkDir + vTask ).
            os-copy value(MyWorkDir + "assemblies.xml" )
                  value(MyWorkDir + vTask + v-path-tls-dir-delim + "assemblies.xml").  
            output to value(MyWorkDir + vTask + v-path-tls-dir-delim + "param.txt").
              SavePARAM("numSession",string(vi)).
              SavePARAM("countSession",string(iCount)).
+             SavePARAM("UserDB",string(UserDB)).
              do vj = 1 to num-entries(iParam, {&delim-par} ):
                 SavePARAM("ParamProc_" + string(vj),entry(vj,iParam, {&delim-par} )).
              end.
@@ -434,13 +455,30 @@ end method.
        /* message vtime view-as alert-box. */
          /* ждем 2 минуты если процес не создал файл  считаем что произошла ошибка запуска */ 
         /*vvv = vvv and not FileExists(vFile).*/
-        if    vtime > 120
-          and not FileExists(vFile)
+        if FileExists(vFile)
+        then do:
+           input STREAM sReadfile FROM  VALUE(vFile). 
+           repeat:
+              import stream sReadfile unformatted vCount.
+              if vCount ne ""
+              then do:
+                 assign
+                    ttrun.fpid = int(entry(1,vCount, "~001"))
+                    ttrun.fmaxitem  =  int(entry(2,vCount, "~001")) 
+                    ttRun.num       =  int(entry(3,vCount, "~001"))
+                    ttrun.fmax      = int(entry(4,vCount, "~001"))
+                 no-error.
+              end.
+           end.
+           input close.
+        end.
+        else if    vtime > 120
         then do:
            vFile = MyWorkDir + ttrun.proc + string(ttrun.num) + "/endproc.txt".
            output to value(vFile).
            output close.
-        end.    
+        end.
+            
         vFile = MyWorkDir + ttrun.proc + string(ttrun.num) + "/procrec.txt".
         if FileExists(vFile)
         then do:
@@ -472,11 +510,26 @@ end method.
            copylog(ttrun.proc ,ttrun.num).
           /* os-delete value(vFile).*/
           if not SaveFile
-          then
+          then do:
              os-delete value (MyWorkDir + ttrun.proc + string(ttrun.num)) recursive.
-          os-delete value (MyWorkDir + ttrun.proc + string(ttrun.num) + ".bat").
+             os-delete value (MyWorkDir + ttrun.proc + string(ttrun.num) + ".bat").
+          end.
           delete ttrun.
-        end.        
+        end. 
+        else do:
+           vFile = MyWorkDir + ttrun.proc + string(ttrun.num) + "/procstatus.txt".
+           if FileExists(vFile)
+             then do:
+               define variable vtxt as character no-undo.
+               input STREAM sReadfile FROM  VALUE(vFile). 
+               repeat:
+                  import stream sReadfile unformatted vtxt.
+                  
+                  ttrun.fstatus =  vtxt   .
+               end.
+               input close.
+            end.
+        end.       
      end.
      WAIT-FOR-COMPLETE = yes.
      for each ttrun where ttrun.proc eq iSched no-lock:
@@ -523,7 +576,9 @@ end method.
       end.
       output close.
    end. 
-   define public variable mStop as logical no-undo.  
+   define public variable mStop as logical no-undo. 
+   
+    
    method public logical WaitFor ( input iSched as character, input ipInterval as int64):
       if iSched eq ?
       then 
@@ -637,45 +692,59 @@ define public event MyPause   /*10 прогрес не поддерживает публикацию событий */
       iProc    as character
      ):
       define variable v-cmd-comm  as character no-undo.
+      define variable isRcode  as logical no-undo.
+      define variable mProcFile as character no-undo.
+      define variable mAsuncProc as character no-undo.
       mProcFile = search (iProc + ".r").
       if mProcFile <> ?
-         then isRcode = true.
-      else mProcFile = search (iProc + ".p").
-         if MyParamStart ne ""
-         then 
-            mIniFile = MyParamStart.
-         if isRcode
-         then v-cmd-comm = substitute ("start &1 &2  &3 &4     -p &5 &6", m-prowin32FileName, if MyBachMode then "-b" else "", mIniFile,mconpar, mProcFile,paramSession).
-         else v-cmd-comm = substitute ("start &1 &2  &3 &4     -p &5 &6", m-prowin32FileName, if MyBachMode then "-b" else "", mIniFile,mconpar, mProcFile,paramSession).
-         /*v-cmd-comm = substitute ("cd &5 "  + chr(13)  + chr(10) +  "start &4 -b -ininame &1 -U sysadm -P sysadm -p &2 "  + chr(13)  + chr(10) + "exit", mIniFile, mProcFile, iParam, m-prowin32FileName,iSchedId).
-         */
-        /* v-cmd-comm = "start " +  m-prowin32FileName + " -b -s 100000 -ininame C:\comptest\wd\prog101b.cmp -mmax 65534 -D 30 -pf c:\comptest\wd\rubl_ro.pf -param C:\comptest\wd\cmpparam.xml -p " + mProcFile  .
-        */
-        
-        define variable vruncomand as character no-undo.
-         vruncomand =  "cd " + MyWorkDir + iSchedId + " & " + v-cmd-comm + " & exit".
-         if not isRcode
-         then do:
-            output to value(MyWorkDir + iSchedId + ".bat").                                                                                                                          
-            put unformatted replace (vruncomand,"&","~n") skip.
-            output close.
-         end.
-       /*  message 2222
-         view-as alert-box.*/
-       /*  os-command  value (MyWorkDir + iSchedId + ".bat"). */
-       os-command  value (vruncomand  ).
-       /*  os-delete   value( MyWorkDir + iSchedId + ".bat").  */
-        /* message v-cmd-comm
-         view-as alert-box.*/
-         
+      then 
+         isRcode = true.
+      else 
+         mProcFile = search (iProc + ".p").
       
+      if isRcode
+      then
+         mAsuncProc = search("utl\proc-async.r").
+      else
+         mAsuncProc = search("utl\proc-async.p").
+      if MyParamStart ne ""
+      then 
+         mIniFile = MyParamStart.
+      define variable vSesPar as character no-undo.
+      define variable vUserPas as character no-undo.
+      vUserPas = user-passwd. /* получем пользователя так как в этт момент может переопределиться парамтр подключения */
+      if    UserDB 
+         or vUserPas eq ""
+         or vUserPas eq ""
+      then
+         vSesPar =  substitute("-param R:&1 &2 ",                mProcFile, paramSession).
+      else
+         vSesPar =  substitute("-param &1,R:&2 &3", user-passwd, mProcFile, paramSession).
+      if UserDB
+      then
+         v-cmd-comm = substitute ("&1 &2  &3  -p &4 &5 &6", m-prowin32FileName, if MyBachMode then "-b" else "", mIniFile, mAsuncProc,vSesPar, conpar).
+      else 
+         v-cmd-comm = substitute ("&1 &2  &3  -p &4 &5", m-prowin32FileName, if MyBachMode then "-b" else "", mIniFile, mAsuncProc,vsespar).
+      define variable vruncomand as character no-undo.
+      vruncomand =  iSchedId + " & " + v-cmd-comm + " & rename stop.txt endproc.txt  & exit".
+      if ( not isRcode or session:debug-alert ) 
+/*       and not UserDB*/
+      then do:
+         output to value(MyWorkDir + iSchedId + ".bat").                                                                                                                          
+         put unformatted "cd " replace (vruncomand,"&","~n":U) skip.
+         output close.
+      end.
+      vruncomand =  "cd " + MyWorkDir + vruncomand.
+      os-command no-wait value (vruncomand  ).
    end.
+   
    method public void delworkdir():
       if MyWorkDir ne ""
       then
       os-delete   value(trim(MyWorkDir,v-path-tls-dir-delim )) RECURSIVE.
      
    end method.    
+   
    method public character GetStartupParam (input iParam as character  ):
       
    define variable vStartupParameters as character no-undo.
@@ -753,9 +822,14 @@ define public event MyPause   /*10 прогрес не поддерживает публикацию событий */
       return GetPARAM("param.txt",iName).
    end.
    
-   method public logical ChekStop ():
+   method public logical CheckStop ():
       return not FileExists("stop.txt").
    end. 
+   
+   method public logical CheckParam ():
+      return FileExists("param.txt").
+   end. 
+   
      
    method public char GetPARAM ( input iFile as char, input iName as char ):
       def var vLob  as longchar no-undo.
@@ -882,6 +956,36 @@ define public event MyPause   /*10 прогрес не поддерживает публикацию событий */
                end.
                input close.
             end.
+            vFile = vdir + "procstatus.txt".
+             if FileExists(vFile)
+             then do:
+               input STREAM sReadfile FROM  VALUE(vFile). 
+               repeat:
+                  import stream sReadfile unformatted vCount.
+                  if vCount ne ""
+                  then do:
+                     assign
+                        ttrun.fstatus =  vCount
+                     no-error.
+                  end.
+               end.
+               input close.
+            end.
+            vFile = vdir + "procstatus.txt".
+             if FileExists(vFile)
+             then do:
+               input STREAM sReadfile FROM  VALUE(vFile). 
+               repeat:
+                  import stream sReadfile unformatted vCount.
+                  if vCount ne ""
+                  then do:
+                     assign
+                        ttrun.fstatus =  vCount
+                     no-error.
+                  end.
+               end.
+               input close.
+            end.
          end.
          else do:
              if available ttrun
@@ -915,7 +1019,9 @@ method public handle  getqueryttrun():
 end.
 
 method public void  Stopprc(input iDir as char ):
-    Stopprc(iDir,ttrun.proc,ttrun.num).
+    if avail ttrun
+    then
+       Stopprc(iDir,ttrun.proc,ttrun.num).
 end.
 
 method public void  Stopprc(input iDir as character,iProc as character,iNum as integer ):
@@ -923,21 +1029,26 @@ method public void  Stopprc(input iDir as character,iProc as character,iNum as i
 end.    
     
 method public void  termprc(input iDir as char ):
-   termprc(iDir,ttrun.proc,ttrun.num).
+   if avail ttrun
+   then 
+      termprc(iDir,ttrun.proc,ttrun.num).
 end.    
 method public void  termprc(input iDir as character,iProc as character,iNum as integer ):
-   if termprc(ttrun.fpid)
+   if avail ttrun
    then do:
-      output to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
-      put skip.
-      output close.
-   end.
-   if ttrun.fpid eq 0
-   then
-   do: 
-       output to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
-      put skip.
-      output close.
+      if termprc(ttrun.fpid)
+      then do:
+         output to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
+         put skip.
+         output close.
+      end.
+      if ttrun.fpid eq 0
+      then
+      do: 
+          output to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
+         put skip.
+         output close.
+      end.
    end.       
 end.    
  
@@ -960,8 +1071,25 @@ method public logical  termprc(iPid as integer):
          vok = true.
    end.
    return vOk.    
-end.    
+end. 
+method public void putStatus (itext as character ):
+   output to "procstatus.txt". 
+   put unformatted itext skip.
+   output close.
+end.
 
+method public char getStatus (iSched as character  ):
+   if iSched eq ?
+   then 
+      iSched = taskname.
+   define variable vStat as character no-undo.
+   for each ttrun where ttrun.proc eq iSched no-lock:
+      if ttrun.fstatus ne "" and ttrun.fstatus ne ?
+      then
+         vStat = vStat + " "  + (if ttrun.fmax ne 1 then string(ttrun.num) + ": " else "") + ttrun.fstatus no-error.
+   end.
+   return vStat.
+end.
 /*************************************************/
 
 define variable v-waitfram-action01         as character no-undo .

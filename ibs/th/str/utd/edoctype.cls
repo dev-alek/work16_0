@@ -10,12 +10,13 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+using ibs.th.gbl.sys.objth.
 using ibs.th.str.utd.edoctype.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.map.mapstring.
 
 
-class ibs.th.str.utd.edoctype: 
+class ibs.th.str.utd.edoctype inherits objth: 
 
   define public property  UTD  as class propmap no-undo get.  protected set.
   define public property  Introduce   as class propmap no-undo get.  protected set.
@@ -23,6 +24,7 @@ class ibs.th.str.utd.edoctype:
   define public property  UCD  as class propmap no-undo get.  protected set.
   define public property  returns  as class propmap no-undo get.  protected set.
   define public property  AKT  as class propmap no-undo get.  protected set.
+  define public property  AKTNoMark  as class propmap no-undo get.  protected set.
   define public property  EDoc         as class propmap no-undo get.  protected set.
 
   define public property EDocTypeMap as class mapstring no-undo get. 
@@ -41,13 +43,14 @@ class ibs.th.str.utd.edoctype:
   end. 
  
   constructor public edoctype ():
-    EDocTypeMap = new mapstring(true).
+    {utl\objreg.i EDocTypeMap mapstring true}
     UTD       = crProp(1, "UTD", "УПД").
     Introduce = crProp(2, "Introduce", "Первоначальный ввод КМ").
     Receipt   = crProp(3, "receipt", "Списание (выбытие из оборота)").
     UCD       = crProp(4, "UСD", "УКД").
     Returns   = crProp(5, "return", "Возврат поставщику").
     AKT       = crProp(6, "akt", "Акт приема").
+    AKTNoMark = crProp(8, "aktnomark", "Акт приема немаркированной продукции").
     EDoc      = crProp(7, "EDoc", "еУПД").
   end.
 
@@ -109,7 +112,7 @@ class ibs.th.str.utd.edoctype:
   
   method private class propmap crProp(inKeyInt as int, inNameProp as char, inLabel as char):
     def var prop as class propmap no-undo.
-    prop = new propmap (string(inKeyInt), inLabel).
+    {utl\objreg.i prop propmap string(inKeyInt) inLabel}
     prop:KeyIntDB = inKeyInt.
     prop:KeyCharDB = inNameProp.
     EDocTypeMap:AddItem(prop,  inKeyInt,inNameProp).

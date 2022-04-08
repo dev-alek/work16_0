@@ -287,7 +287,8 @@ class ibs.th.str.InfoSectionsTotal:
       rdc-dnstvalue = "not".
     end.
     RdcDnstvalue = rdc-dnstvalue.
-		
+    GetDBAllAttr ().
+    CalculateTotal().
   end method.
 
   /*------------------------------------------------------------------------------
@@ -397,7 +398,10 @@ class ibs.th.str.InfoSectionsTotal:
     idSecCurr = SectionNum.
     InfoSectionCurr:idSec = SectionNum.
     InfoSectionCurr:infoSectionTotal = this-object.
-    InfoSectionCurr:AccShip = 0.25.
+    if InfoSectionCurr:AccShip = 0
+    or InfoSectionCurr:AccShip = ?
+    then
+      InfoSectionCurr:AccShip = 0.25.
 
   end method.
 
@@ -502,24 +506,24 @@ class ibs.th.str.InfoSectionsTotal:
       GetInfoSectionProp (ii).
       if not CliQntyInput
       then do:
-        InfoSectionCurr:CliQnty = InfoSectionCurr:DocDensity * InfoSectionCurr:DocQnty.
+        InfoSectionCurr:CliQnty = round(InfoSectionCurr:DocDensity * InfoSectionCurr:DocQnty, 3).
       end.
       else do:
         InfoSectionCurr:DocDensity = InfoSectionCurr:CliQnty / InfoSectionCurr:DocQnty.
       end.
       assign
-        CarVolTotal = InfoSectionCurr:CarVol + CarVolTotal
-        TankVolTotal = InfoSectionCurr:TankVol + TankVolTotal
-        TankWaterVolTotal = InfoSectionCurr:TankWater + TankWaterVolTotal
-        TankWeightTotal = InfoSectionCurr:TankWeight + TankWeightTotal
-        DocQntyTotal = InfoSectionCurr:DocQnty + DocQntyTotal
-        FactQntyTotal = InfoSectionCurr:FactQnty + FactQntyTotal
-        FactKgQntyTotal = InfoSectionCurr:FactKgQnty + FactKgQntyTotal
-        TPNormPLSum = InfoSectionCurr:TPNormPL + TPNormPLSum
-        TPNormAutoSum = InfoSectionCurr:TPNormAuto + TPNormAutoSum
-        TPNormSum = InfoSectionCurr:TPNorm + TPNormSum
+        CarVolTotal = round(InfoSectionCurr:CarVol, 3) + CarVolTotal
+        TankVolTotal = round(InfoSectionCurr:TankVol, 3) + TankVolTotal
+        TankWaterVolTotal = round(InfoSectionCurr:TankWater, 3) + TankWaterVolTotal
+        TankWeightTotal = round(InfoSectionCurr:TankWeight, 3) + TankWeightTotal
+        DocQntyTotal = round(InfoSectionCurr:DocQnty, 3) + DocQntyTotal
+        FactQntyTotal = round(InfoSectionCurr:FactQnty, 3) + FactQntyTotal
+        FactKgQntyTotal = round(InfoSectionCurr:FactKgQnty, 3) + FactKgQntyTotal
+        TPNormPLSum = round(InfoSectionCurr:TPNormPL, 3) + TPNormPLSum
+        TPNormAutoSum = round(InfoSectionCurr:TPNormAuto, 3) + TPNormAutoSum
+        TPNormSum = round(InfoSectionCurr:TPNorm, 3) + TPNormSum
       .
-      CliQntyTotal = InfoSectionCurr:CliQnty + CliQntyTotal.
+      CliQntyTotal = round(InfoSectionCurr:CliQnty, 3) + CliQntyTotal.
       if StartRealDate = ? or datetime (InfoSectionCurr:DateStart, InfoSectionCurr:TimeStart) < datetime (StartRealDate, StartRealTime) 
       then do:
         assign
@@ -580,7 +584,20 @@ class ibs.th.str.InfoSectionsTotal:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method public void SaveDB(  ):
+  method public void SaveDB():
+    find first buf_goods no-lock where buf_goods.gds-code = GdsCode. 
+    if not can-find (first buf_doc-line no-lock where
+                               buf_doc-line.doc-code = TrnDocNum
+                           and buf_goods.artic = buf_doc-line.artic
+                           and buf_goods.prod-code = buf_doc-line.prod-code
+                           and buf_goods.prod-type = buf_doc-line.prod-type)
+    then do:
+      return error substitute ("Линия по накладной не существует. Не возможно сохранить в базу данных данные по секциям для накладной &1 товар артикул &2 произовдитель &3&4", TrnDocNum, buf_goods.artic, buf_goods.prod-type, buf_goods.prod-code).
+    end.
+    SaveDBNoCheck().
+  end.
+  
+  method public void SaveDBNoCheck():
 
     define variable ii as integer no-undo.
     
@@ -591,17 +608,6 @@ class ibs.th.str.InfoSectionsTotal:
       delete buf_doc-line-attr.
       
     end.
-
-    find first buf_goods no-lock where buf_goods.gds-code = GdsCode. 
-    if not can-find (first buf_doc-line no-lock where
-                               buf_doc-line.doc-code = TrnDocNum 
-                           and buf_goods.artic = buf_doc-line.artic
-                           and buf_goods.prod-code = buf_doc-line.prod-code
-                           and buf_goods.prod-type = buf_doc-line.prod-type) 
-    then do:
-      return error substitute ("Линия по накладной не существует. Не возможно сохранить в базу данных данные по секциям для накладной &1 товар артикул &2 произовдитель &3&4", TrnDocNum, buf_goods.artic, buf_goods.prod-type, buf_goods.prod-code).                             
-    end.
-                           
 
     create buf_doc-line-attr.
     assign
@@ -914,6 +920,42 @@ class ibs.th.str.InfoSectionsTotal:
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'shape' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string (InfoSectionCurr:Shape).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'doc-dens-st' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:DocDensST ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'pasp-dens' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:PaspDens ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'pressure' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:Pressure ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'group-np' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:GroupNP ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'doc-volume' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:DocVolume ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'cmom-nb' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:cmom-nb ).
       release buf_doc-line-attr.
       
     end.
@@ -1326,6 +1368,7 @@ class ibs.th.str.InfoSectionsTotal:
         Parnl:PlCode = ub.place.pl-code no-error.
         release ub.place.
         Parnl:SecNum = InfoSectionCurr:SectionName.
+        Parnl:GroupNP = InfoSectionCurr:GroupNP.
         NLStorage:getNormLoss(Parnl).
         InfoSectionCurr:TPNormAuto = Parnl:AutoNormLoss.
         InfoSectionCurr:TPNormPL = (InfoSectionCurr:TankWeight / 1000 * ParNl:PLNormLoss).
@@ -1428,6 +1471,7 @@ class ibs.th.str.InfoSectionsTotal:
                 "для работы библиотеки ПО МИ"         skip
                 "Введите тип налива"  skip
               view-as alert-box error.
+              undo _trpomi, return no-apply .
             end.
             
             if InfoSectionCurr:Shape = "" then do :
@@ -1441,10 +1485,9 @@ class ibs.th.str.InfoSectionsTotal:
               message
                 "Заполнены не все поля, необходимые " skip
                 "для работы библиотеки ПО МИ"         skip
-                "Введите Объем по паспорту в литрах"  skip
+                "Введите Объем по свидетельству о поверке в литрах"  skip
               view-as alert-box error.
-/*              apply "entry" to f-car-vol in frame {&frame-name} .*/
-/*              undo _trpomi, return no-apply  .*/
+              undo _trpomi, return no-apply  .
             end.
             
             if InfoSectionCurr:ABTarir = ? then do :
@@ -1453,8 +1496,7 @@ class ibs.th.str.InfoSectionsTotal:
                 "для работы библиотеки ПО МИ"         skip
                 "Введите Уровень цистерны относительно тарировочной планки"  skip
               view-as alert-box error.
-/*              apply "entry" to f-a-b-tarir in frame {&frame-name} .*/
-/*              undo _trpomi, return no-apply  .                     */
+              undo _trpomi, return no-apply  .
             end.
 /*              assign                                         */
 /*              f-size              = string (decimal (f-size))*/
@@ -1475,23 +1517,21 @@ class ibs.th.str.InfoSectionsTotal:
               NeckType = 0 
               Dgor = decimal (InfoSectionCurr:Diameter).
             end.  
-            if InfoSectionCurr:Diameter = ? or InfoSectionCurr:Diameter = "0" then do :
-              message
-                "Заполнены не все поля, необходимые " skip
-                "для работы библиотеки ПО МИ"         skip
-                "Введите Внутренний диаметр горловины"  skip
-              view-as alert-box error.
-/*              apply "entry" to f-size in frame {&frame-name} .*/
-/*              undo _trpomi, return no-apply  .                */
-            end.
+/*            if InfoSectionCurr:Diameter = ? or InfoSectionCurr:Diameter = "0" then do :*/
+/*              message                                                                  */
+/*                "Заполнены не все поля, необходимые " skip                             */
+/*                "для работы библиотеки ПО МИ"         skip                             */
+/*                "Введите Внутренний диаметр горловины"  skip                           */
+/*              view-as alert-box error.                                                 */
+/*              undo _trpomi, return no-apply  .                                         */
+/*            end.                                                                       */
             if InfoSectionCurr:TankTemp = ? then do :
               message
                 "Заполнены не все поля, необходимые " skip
                 "для работы библиотеки ПО МИ"         skip
                 "Введите Температуру"  skip
               view-as alert-box error.
-/*              apply "entry" to f-tank-temp in frame {&frame-name} .*/
-/*              undo _trpomi, return no-apply  .                     */
+              undo _trpomi, return no-apply  .
             end.
             if InfoSectionCurr:TankDensity = ? or InfoSectionCurr:TankDensity = 0 then do :
               message
@@ -1499,6 +1539,7 @@ class ibs.th.str.InfoSectionsTotal:
                 "для работы библиотеки ПО МИ"         skip
                 "Введите Плотность топлива для ПО МИ"  skip
               view-as alert-box error.
+              undo _trpomi, return no-apply .
             end.
 
             if  InfoSectionCurr:ListTank = "" then do :
@@ -1507,7 +1548,7 @@ class ibs.th.str.InfoSectionsTotal:
                 "для работы библиотеки ПО МИ"         skip
                 "Выберите резервуар"  skip
               view-as alert-box error.
-
+              undo _trpomi, return no-apply .
             end.
 
             define variable v-auto-error as decimal no-undo.
@@ -1621,6 +1662,7 @@ class ibs.th.str.InfoSectionsTotal:
             end.
             else do :
               assign
+                InfoSectionCurr:cmom-nb = replace(v-proc, "ADMM.", "")
                 InfoSectionCurr:TankDensityPomi    = decimal(v-mm:Rcy) / 1000
                 InfoSectionCurr:TankVolPomi        = v-mm:Vcy * 1000
                 InfoSectionCurr:TankWeight     = v-mm:M
@@ -1795,6 +1837,12 @@ class ibs.th.str.InfoSectionsTotal:
       if NeckArea = ? then NeckArea = 0 .
       return.
     end.
+    
+    if v-size = ""
+    or v-size = ?
+    then do :
+      v-size = "////" .
+    end .
     
     v-proc = "ADMM.CMethodOfMetering26A" .
   

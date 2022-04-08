@@ -64,7 +64,7 @@ class ibs.th.str.marking.sts.mark inherits objth:
  
   constructor public mark ():
     
-    MarkMap = new mapstring(true).
+    {utl\objreg.i MarkMap mapstring true}
     
     PendingVerification  = crProp(1,"PendingVerification","ќжидает проверку").
     CheckContr   = crProp(2,"CheckContr","ќжидает проверку по договору").
@@ -162,7 +162,7 @@ class ibs.th.str.marking.sts.mark inherits objth:
   
   method private class propmap crProp(inKeyInt as int, inNameProp as char, inLabel as char):
     def var prop as class propmap no-undo.
-    prop = new propmap (string(inKeyInt), inLabel).
+    {utl\objreg.i prop propmap string(inKeyInt) inLabel}
     prop:KeyIntDB = inKeyInt.
     prop:KeyCharDB = inNameProp.
     MarkMap:AddItem(prop, inKeyInt,inNameProp).

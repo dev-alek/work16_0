@@ -374,18 +374,18 @@ do
         '<TD colspan="7" style="border-top: 1px solid black; text-align: center;"></TD>' skip
         '</TR>'skip
                     
-        '<TR>' skip
-        '<TD colspan="3" style="">2. Время прибытия АЦ</TD>' skip
-        '<TD colspan="7" style="text-align: center;">' + string(v-hour-income,"99") + ":" + string(v-min-income,"99") + '</TD>' skip
-        '</TR>'skip
-
-        '<TR>' skip
-        '<TD colspan="3" style="height: 14px;"></TD>' skip
-        '<TD colspan="7" style="border-top: 1px solid black; text-align: center;"></TD>' skip
-        '</TR>'skip
+/*        '<TR>' skip                                                                                                                 */
+/*        '<TD colspan="3" style="">2. Время прибытия АЦ</TD>' skip                                                                   */
+/*        '<TD colspan="7" style="text-align: center;">' + string(v-hour-income,"99") + ":" + string(v-min-income,"99") + '</TD>' skip*/
+/*        '</TR>'skip                                                                                                                 */
+/*                                                                                                                                    */
+/*        '<TR>' skip                                                                                                                 */
+/*        '<TD colspan="3" style="height: 14px;"></TD>' skip                                                                          */
+/*        '<TD colspan="7" style="border-top: 1px solid black; text-align: center;"></TD>' skip                                       */
+/*        '</TR>'skip                                                                                                                 */
                     
         '<TR>' skip
-        '<TD colspan="3" style="">3. Техническое состояние АЦ</TD>' skip
+        '<TD colspan="3" style="">2. Техническое состояние АЦ</TD>' skip
         '<TD colspan="7" style="text-align: center;">' + v-condition + '</TD>' skip
         '</TR>'skip
 
@@ -403,11 +403,20 @@ do
 /*        '<TR><TD colspan="10" style="height: 14px;"></TD></TR>' skip                    */
 /*                                                                                        */
         '<TR>' skip
-        '<TD colspan="2" style="">4. Пломбы</TD>' skip
-        '<TD colspan="8" style="border-bottom: 1px solid black;">' + string(v-seals-condition) + '</TD>' skip
+        '<TD colspan="3" style="">3. Пломбы от </TD>' skip
+        '<TD colspan="7" style="border-bottom: 1px solid black;">' + v-DD-Month-YYYY-cert + '</TD>' skip
         '</TR>'skip
 
                     
+        '<TR>' skip
+        '<TD colspan="10" style="height: 14px;"></TD>' skip
+        '</TR>'skip
+        
+        '<TR>' skip
+        '<TD colspan="1" style="">С № </TD>' skip
+        '<TD colspan="9" style="border-bottom: 1px solid black;">' + string(v-seals-condition) + '</TD>' skip
+        '</TR>'skip
+        
         '<TR>' skip
         '<TD colspan="10" style="height: 14px;"></TD>' skip
         '</TR>'skip
@@ -415,6 +424,7 @@ do
         '<TR>' skip
         '<TD colspan="10" style="text-align: center;">' + string(v-seals-condition-2) + '</TD>' skip
         '</TR>'skip
+        
         '<TR>' skip
         '<TD colspan="10" style="border-top: 1px solid black; text-align: center;">нарушены (не нарушены)</TD>' skip
         '</TR>'skip
@@ -424,7 +434,7 @@ do
         '</TR>'skip
                     
         '<TR>' skip
-        '<TD colspan="10" style="height: 14px;">5. Документы ' + v-doc-not + ' в полном комплекте и с соответствующими отметками.</TD>' skip
+        '<TD colspan="10" style="height: 14px;">4. Документы ' + v-doc-not + ' в полном комплекте и с соответствующими отметками.</TD>' skip
         '</TR>'skip                    
         .
         if v-doc-not = "НЕ ПРЕДОСТАВЛЕНЫ" then do:
@@ -470,7 +480,7 @@ do
                      
     put stream OutStr-html unformatted                         
         '<TR>' skip
-        '<TD colspan="18" style="">6. При вскрытии АЦ и проверке количества нефтепродуктов установлено следующее:</TD>' skip
+        '<TD colspan="18" style="">5. При вскрытии АЦ и проверке количества нефтепродуктов установлено следующее:</TD>' skip
         '</TR>'skip
 
         '<TR><TD colspan="18" style="height: 14px;"></TD></TR>' skip
@@ -658,9 +668,11 @@ next_:
                     
         '<TR><TD colspan="18" style="font-style: italic;">Примечания:</TD></TR>' skip
                     
-        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">1 - указывается с обозначением метода определения плотности у поставщика</TD></TR>' skip
+        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">1 - используется расчётное значение, является информационным</TD></TR>' skip
+        
+        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">2 - указывается с обозначением метода определения плотности у поставщика</TD></TR>' skip
                     
-        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">2 - указывается - "по планку", или величина отклонения уровня от планки со знаком "+" если фактический уровень нефтепродукта выше планки, и "-", если ниже. Если горловина отсутствует (планка находится вне горловины) - указываются только знаки - "+" или "-"</TD></TR>' skip
+        '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">3 - указывается - "по планку", или величина отклонения уровня от планки со знаком "+" если фактический уровень нефтепродукта выше планки, и "-", если ниже. Если горловина отсутствует (планка находится вне горловины) - указываются только знаки - "+" или "-"</TD></TR>' skip
                     
         '<TR><TD text_wrap="true" colspan="18" style="font-style: italic;">Записи в таблице делаются построчно для каждой группы (подгруппы, марки) нефтепродукта. Построчно делаются записи и для одной марки нефтепродукта, если при его приеме происходит смена приемного резервуара.</TD></TR>' skip
                     
@@ -668,9 +680,9 @@ next_:
                     
         '<TR><TD colspan="18" style="height: 14px;"></TD></TR>' skip
                     
-        '<TR><TD text_wrap="true" colspan="18" style="">7. Прилагаемые к акту документы ________________________________________________________________________</TD></TR>' skip
+        '<TR><TD text_wrap="true" colspan="18" style="">6. Прилагаемые к акту документы ________________________________________________________________________</TD></TR>' skip
                     
-        '<TR><TD text_wrap="true" colspan="18" style="">8. Время: начала приема ____ ч ______ мин</TD></TR>' skip
+        '<TR><TD text_wrap="true" colspan="18" style="">7. Время: начала приема ____ ч ______ мин</TD></TR>' skip
                     
         '<TR><TD text_wrap="true" colspan="18" style="">          окончания приема ____ ч ______ мин.</TD></TR>' skip
                     
@@ -877,14 +889,14 @@ procedure print-table1:
         '</TR>'skip       
                     
         '<TR style="height: 20px;">' skip
-        '<TD text_wrap="true" style="text-align: center;">объем, л</TD>' skip
-        '<TD text_wrap="true" colspan="2" style="text-align: center;">плотность (1), кг/м3</TD>' skip
-        '<TD text_wrap="true" style="text-align: center;">t,С </TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">объем (1), л</TD>' skip
+        '<TD text_wrap="true" colspan="2" style="text-align: center;">плотность (2), кг/м3</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">температура,С </TD>' skip
         '<TD text_wrap="true" style="text-align: center;">масса, кг</TD>' skip
-        '<TD text_wrap="true" colspan="2" style="text-align: center; height: 25px;">фактический уровень наполнения (2), мм</TD>' skip
+        '<TD text_wrap="true" colspan="2" style="text-align: center; height: 25px;">фактический уровень наполнения (3), мм</TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center;">объем, м3</TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center;">плотность, кг/м3</TD>' skip
-        '<TD text_wrap="true" style="text-align: center;">t,С </TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">температура,С </TD>' skip
         '<TD text_wrap="true" colspan="2" style="text-align: center;">масса, кг</TD>' skip
         '</TR>'skip   
 
@@ -911,15 +923,15 @@ procedure print-table1:
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.type-AC) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.num-AC) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-petrol.name-gds <> ? then string(tt-petrol.name-gds) + '</TD>' else " "  + '</TD>' skip
-            '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.99",2) + '</TD>' skip
-            '<TD text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9999",4) + '" colspan="2" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9999",4) + '</TD>' skip        
-            '<TD text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9",0) + '</TD>' skip
-            '<TD text_wrap="true"num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+            '<TD text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9",0) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9",1) + '" colspan="2" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip        
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip
             '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.urov-AC + '</TD>' skip
-            '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.99",2) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.99",2) + '</TD>' skip
-            '<TD text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9999",4) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9999",4) + '</TD>' skip        
-            '<TD text_wrap="true"num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9",0) + '</TD>' skip
-            '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.999",3) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+            '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.999",3) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip        
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip
             '</TR>'skip     
             .
     end.
@@ -974,11 +986,11 @@ procedure print-table2:
             '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.num-AC + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.name-gds + '</TD>' skip
             '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.passport + '</TD>' skip
-            '<TD text_wrap="true" colspan="3" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.999",3) + '</TD>' skip
-            '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.999",3) + '</TD>' skip
-            '<TD text_wrap="true" colspan="2" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.999",3) + '</TD>' skip           
-            '<TD text_wrap="true" colspan="2" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.999",3) + '</TD>' skip
-            '<TD text_wrap="true" colspan="2" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.999",3) + '</TD>' skip
+            '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '</TD>' skip
+            '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '</TD>' skip
+            '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '</TD>' skip           
+            '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.9",1) + '</TD>' skip
+            '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.9",1) + '</TD>' skip
             '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.num-pl + '</TD>' skip
             '</TR>'skip     
             .

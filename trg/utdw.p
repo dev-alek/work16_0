@@ -372,7 +372,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       then v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value).
       else v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
     end.
-      else v-msg = substitute ('Получен УПД. Документ: &1 от &2. Ошибка при формирование ПН &3. &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate), return-value).
+      else v-msg = substitute ('Получен УПД. Документ: &1 от &2. Ошибка при формировании ПН. &3. &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate), trim(return-value, ".")).
     
     run utl\proc-msg.p (v-msg) no-error.
   

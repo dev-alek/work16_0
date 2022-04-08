@@ -1312,6 +1312,12 @@ end.
             buf_parts.cli-qnty = 0
           .
         end.
+        if abs(buf_parts.cli-qnty - p-cli-qnty) < 0.0011
+        then do :
+          assign
+            buf_parts.cli-qnty = p-cli-qnty
+          .
+        end .
       end.
 
       if l-goods-twounit = false

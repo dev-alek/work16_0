@@ -89,7 +89,7 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
          when "reg-num" then 
             do:
                assign 
-                  reg-num = inValue.
+                  reg-num = replace(inValue, " ", "").
             end.
          when "tr-owner" then 
             do:

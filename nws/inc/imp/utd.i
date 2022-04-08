@@ -124,6 +124,7 @@ on error  undo, return error
   then
      return error return-value.
 end.
+
 for each locb-utd-lines where locb-utd-lines.db-num     = wt-utd.db-num
                                    and locb-utd-lines.doc-id = wt-utd.doc-id
 
@@ -137,6 +138,7 @@ on error  undo, return error
   then
      return error return-value.
 end.
+
 /* ------------------------------- utd-lines-attr ---------------------------------------------- */
 for each buf_utd-lines-attr where buf_utd-lines-attr.db-num     = wt-utd.db-num
                                    and buf_utd-lines-attr.doc-id = wt-utd.doc-id
@@ -149,6 +151,7 @@ on error  undo, return error
   then
      return error return-value.
 end.
+
 for each locb-utd-lines-attr where locb-utd-lines-attr.db-num     = wt-utd.db-num
                                    and locb-utd-lines-attr.doc-id = wt-utd.doc-id
 
@@ -299,59 +302,6 @@ on error  undo, return error
      return error return-value.
 end.
 
-/* ------------------------------- utd-lines ---------------------------------------------- */
-for each buf_utd-lines where buf_utd-lines.db-num     = wt-utd.db-num
-                                   and buf_utd-lines.doc-id = wt-utd.doc-id
-
-on error  undo, return error
-:
-  delete buf_utd-lines.
-  validate buf_utd-lines no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-for each buf_utd-lines-attr where buf_utd-lines-attr.db-num     = wt-utd.db-num
-                                   and buf_utd-lines-attr.doc-id = wt-utd.doc-id
-
-on error  undo, return error
-:
-  delete buf_utd-lines-attr.
-  validate buf_utd-lines-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-
-for each locb-utd-lines where locb-utd-lines.db-num     = wt-utd.db-num
-                                    and locb-utd-lines.doc-id = wt-utd.doc-id
-
-no-lock
-on error  undo, return error
-:
-  create buf_utd-lines.
-  buffer-copy locb-utd-lines to buf_utd-lines.
-  validate buf_utd-lines no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-for each locb-utd-lines-attr where locb-utd-lines-attr.db-num     = wt-utd.db-num
-                                    and locb-utd-lines-attr.doc-id = wt-utd.doc-id
-
-no-lock
-on error  undo, return error
-:
-  create buf_utd-lines-attr.
-  buffer-copy locb-utd-lines-attr to buf_utd-lines-attr.
-  validate buf_utd-lines-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
 
 /* ------------------------------- utd ---------------------------------------------- */
 if not available tb-utd then do:

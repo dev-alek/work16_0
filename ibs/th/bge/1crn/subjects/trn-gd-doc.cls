@@ -614,10 +614,14 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
 /*            else do:                                                                        */
           write-data-element ("sc-num", string (infoSecObj:SectionName)).
           write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
-          write-data-element ("cap-doc", string-mth (infoSecObj:DocQnty)).
+          write-data-element ("cap-doc", string-mth (if infoSecObj:DocVolume > 0 then infoSecObj:DocVolume else infoSecObj:DocQnty)).
           write-data-element ("dnsty-doc", string-mth (infoSecObj:DocDensity)).
+          write-data-element ("standard-dnst", string-mth (infoSecObj:DocDensST)).
           write-data-element ("wght-doc", string-mth (infoSecObj:CliQnty)).
           write-data-element ("acc-ship", string-mth (infoSecObj:AccShip)).
+/*          if trim(infoSecObj:cmom-nb) > ""                              */
+/*          then                                                          */
+/*            write-data-element ("cmom-nb", string (infoSecObj:cmom-nb)).*/
           write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
           write-data-element ("sz-nck", replace(infoSecObj:Diameter, {&delim-cmd}, " ")).
           write-data-element ("filling-method", (if infoSecObj:Pour = "Верхний налив" then '0' else '1')).
@@ -662,6 +666,31 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("norm-doc", string (infoSecObj:NormDoc)).
           /*паспорт качества*/
           write-data-element ("passport-num", string (infoSecObj:NumPassport)).
+          write-data-element ("passport-dnst", string-mth (infoSecObj:PaspDens)).
+          write-data-element ("t-ttn", string-mth (infoSecObj:TTNTemp)).
+          case infoSecObj:GroupNP :
+            when "I"
+            then do :
+              write-data-element ("fuel-group", string (1)).
+            end .
+            when "II"
+            then do :
+              write-data-element ("fuel-group", string (2)).
+            end .
+            when "III"
+            then do :
+              write-data-element ("fuel-group", string (3)).
+            end .
+            when "IV"
+            then do :
+              write-data-element ("fuel-group", string (4)).
+            end .
+          end case .
+          if infoSecObj:Pressure > 0
+          then
+            write-data-element ("dnp", string-mth (infoSecObj:Pressure)).
+            
+          write-data-element ("tank-num", string (infoSecObj:ListTank)).
           /*сертификат соответствия*/
           write-data-element ("certif-fuel", string (infoSecObj:CertifFuel)).
           /*срок действия сертификата*/
@@ -701,20 +730,20 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("dnsty", string-mth ( buf_doc-pl.cli-fact-qnty / buf_doc-pl.fact-qnty)).
           write-data-element ("cap", string-mth (buf_doc-pl.fact-qnty)).
           write-data-element ("wght", string-mth (buf_doc-pl.cli-fact-qnty)).
-/*          find first buf_doc-pl-attr no-lock where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code         */
-/*                                               and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type         */
-/*                                               and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code         */
-/*                                               and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code          */
-/*                                               and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code         */
-/*                                               and buf_doc-pl-attr.attr-code = "free-vol-exceed"           */
-/*                                               no-error.                                                   */
-/*          if available buf_doc-pl-attr                                                                     */
-/*          then do :                                                                                        */
-/*            write-data-element ("excess-free", (if logical(buf_doc-pl-attr.attr-value) then "1" else "0")).*/
-/*          end .                                                                                            */
-/*          else do :                                                                                        */
-/*            write-data-element ("excess-free", "0").                                                       */
-/*          end .                                                                                            */
+          find first buf_doc-pl-attr no-lock where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code
+                                               and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type
+                                               and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code
+                                               and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code
+                                               and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code
+                                               and buf_doc-pl-attr.attr-code = "free-vol-exceed"
+                                               no-error.
+          if available buf_doc-pl-attr
+          then do :
+            write-data-element ("excess-free", (if logical(buf_doc-pl-attr.attr-value) then "1" else "0")).
+          end .
+/*          else do :                                 */
+/*            write-data-element ("excess-free", "0").*/
+/*          end .                                     */
         sw:end-element ("tank").
       end.
     end.

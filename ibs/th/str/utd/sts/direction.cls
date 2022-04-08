@@ -41,7 +41,7 @@ class ibs.th.str.utd.sts.direction inherits objth:
   end. 
  
   constructor public direction ():
-    DirectionMap = new mapstring(true).
+    {utl\objreg.i DirectionMap mapstring true}
   
     Inbound  = crProp("Inbound", "входящий документ").
     Outbound = crProp("Outbound", "исходящий документ").
@@ -77,7 +77,7 @@ class ibs.th.str.utd.sts.direction inherits objth:
   
   method private class propmap crProp(inNameProp as char, inLabel as char):
     def var prop as class propmap no-undo.
-    prop = new propmap (inNameProp, inLabel).
+    {utl\objreg.i prop propmap inNameProp inLabel}
     prop:KeyCharDB = inNameProp.
     DirectionMap:AddItem(prop, inNameProp).
     return prop.

@@ -269,7 +269,7 @@ attr-fin-doc }
 /* атрибут глобальный -  Договор в накладных */
 { cmp/cr-prep.i 1 attr-contr-in  contr-in contr-in contr-in contr-in  }
 { cmp/cr-prepc.i 1 prop-list-attr-contr-in
-"contr-in-income,contr-in-expense,contr-qnty-spec"
+"contr-in-income-NP,contr-in-income,contr-in-expense-NP,contr-in-expense,contr-qnty-spec,contr-recount"
 attr-contr-in }
 
 /* атрибутЫ накладных от глобального к объекту  */
@@ -468,7 +468,7 @@ attr-prt-obj }
 /* атрибут глобальный  -  ОТЧЕТЫ */
 { cmp/cr-prep.i 1 attr-report-glob  report-glob report-glob report-glob report-glob }
 { cmp/cr-prepc.i 1 prop-list-attr-report-glob
-"actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens"
+"actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens,rep-excel"
 attr-report-glob }
 
 /* атрибут по фирме  -  ОТЧЕТЫ */
@@ -537,7 +537,7 @@ attr-fbrattr
 { cmp/cr-prep.i 1 attr-petrol petrol " " petrol }
 
 { cmp/cr-prepc.i 1 prop-list-attr-petrol
-"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info,otkl-fact-volue,otkl-temp,otkl-density,otkl-water,CriticalDifInLgas,calc-free-vol"
+"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info,otkl-fact-volue,otkl-temp,otkl-density,otkl-water,CriticalDifInLgas,calc-free-vol,trn-reas-sug,rvd-own-nb,sec-fields,qr-scan-time"
 attr-petrol
 }
 
@@ -573,7 +573,7 @@ attr-egais-host }
 /*Электронный документооборот*/
 { cmp/cr-prep.i 1 attr-marking marking " " marking }
 { cmp/cr-prepc.i 1 prop-list-attr-marking
-"marking-EDO,marking-EDO-Diadok,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,control-date"
+"marking-EDO,marking-EDO-Diadok,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code"
 attr-marking }
 
 /*набор опций работы с документами МЦ*/

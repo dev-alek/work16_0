@@ -43,7 +43,7 @@ index iid id
 index icr is unique primary cr cra
 .
 define temp-table temp-param no-undo
-field desk as character
+field desk as integer 
 field cr as integer
 field group-name as character
 field record-name as character
@@ -69,7 +69,10 @@ define variable v-db-key-enc as character no-undo .
 define variable cri as integer no-undo .
 define variable crai as integer no-undo .
 define variable v-id as character no-undo .
-define variable v-desk as character no-undo .
+define variable m-head-db-num   as integer no-undo.
+define variable m-head-obj-code as integer no-undo.
+define variable m-head-pos-type as character no-undo.
+define variable m-head-cash-num as integer no-undo.
 define variable v-ctrl as character no-undo .
 define variable v-time as integer no-undo .
 define variable v-time-char as character no-undo .
@@ -132,6 +135,25 @@ if error-status:error then do:
   return.
 end.
 error-status:error = FALSE.
+   
+run gbl/fileapnd.p
+  ( input p-filename
+   ,input ""
+   ,input 5 /* врем€ ожинани€ освобождени€ файла */
+  ) no-error .
+if error-status:error then do:
+   run write-log-and-file in p-log-handle (
+       input 1
+     , input log-file-name
+     , input 1
+     , input return-value
+     ).
+   assign
+      p-view-log = yes
+      .
+   undo, return.
+end.
+
 if p-encoding = "utf-8":U  then  do:
   input stream ChkStream from value( p-filename ) convert source "utf-8".
 end.
@@ -290,9 +312,6 @@ input stream ChkStream close.
 &endif
 END PROCEDURE.
 
-
-
-
 procedure cb-xmlparse-tag-start-Header :
 /* обработка событи€ "начало Header"*/
 
@@ -330,6 +349,7 @@ define variable v-FO-version as character no-undo .
 define variable v-old-fo-version as character no-undo .
 define variable v-pay-desk as integer no-undo .
 define variable v-dop as character no-undo .
+define buffer cash-desk for ub.cash-desk.
 define variable v-date as date no-undo .
 define variable v-decimal as decimal no-undo .
 define variable v-integer as integer no-undo .
@@ -339,6 +359,7 @@ define variable v-err-message as character no-undo .
 do
 on error undo, return error
 :
+
   if v-is-spool-file = no then do:
     assign
     v-file-type = cb-xmlparse-get-attr(
@@ -360,21 +381,21 @@ on error undo, return error
                              ,input p-parameter
                              ,input "version":U
                              ,input no)
-    v-from =  cb-xmlparse-get-attr(
-                              input this-procedure:handle
-                             ,input p-spool-or-data
-                             ,input p-parameter
-                             ,input "from":U
-                             ,input no)
     v-FO-version =  cb-xmlparse-get-attr(
                               input this-procedure:handle
                              ,input p-spool-or-data
                              ,input p-parameter
                              ,input "release":U
                              ,input no)
+    v-from =  cb-xmlparse-get-attr(
+                              input this-procedure:handle
+                             ,input p-spool-or-data
+                             ,input p-parameter
+                             ,input "from":U
+                             ,input no)
+
     &endif
     .
-
     if v-file-type = "REPLY":U AND
     (v-adresat begins ({&shop} + string(p-obj-code))
 &if "{1}" = "data" &then
@@ -384,20 +405,38 @@ on error undo, return error
 &endif
     )
     then do:
-    assign
-    v-is-spool-file = yes
-    .
+      assign
+      v-is-spool-file = yes
+      .
       if v-from begins ({&shop} + string(p-obj-code) + "_" + "касса") then do:
+        v-pay-desk = ?.
         v-pay-desk = integer(replace(v-from, ({&shop} + string(p-obj-code) + "_" + "касса"), "")) no-error.
-v-desk = string(v-pay-desk) .
-
-         do transaction :
+        assign
+           m-head-db-num    = ?
+           m-head-obj-code  = ?
+           m-head-pos-type  = ?
+           m-head-cash-num  = ?
+        .
+        find first cash-desk where
+                         cash-desk.db-num = g#db-num
+                     and cash-desk.obj-code = p-obj-code
+/*                     and cash-desk.pos-type = p-pos-type*/
+                     and cash-desk.cash-num = v-pay-desk
+        no-lock no-error.
+        if available cash-desk
+        then do transaction :
+           assign
+              m-head-db-num    = cash-desk.db-num
+              m-head-obj-code  = cash-desk.obj-code
+              m-head-pos-type  = cash-desk.pos-type
+              m-head-cash-num  = cash-desk.cash-num
+           .
 /*ƒата последнего опроса касс*/
-            run cd-attr-write in this-procedure (
-                                                    input g#db-num
-                                                  ,input p-obj-code
-                                                  ,input p-pos-type
-                                                  ,input v-pay-desk
+           run cd-attr-write in this-procedure (
+                                                   input cash-desk.db-num
+                                                  ,input cash-desk.obj-code
+                                                  ,input cash-desk.pos-type
+                                                  ,input cash-desk.cash-num
                                                   ,input  (if p-pos-type = {&cd-type-ibm-xml}
                                                            then {&cda-IBM-XML_operative}
                                                            else {&cda-AUTOTANK_operative})
@@ -410,11 +449,11 @@ v-desk = string(v-pay-desk) .
                                                   ) .
 
 /*¬рем€ последнего опроса касс*/
-            run cd-attr-write in this-procedure (
-                                                    input g#db-num
-                                                  ,input p-obj-code
-                                                  ,input p-pos-type
-                                                  ,input v-pay-desk
+           run cd-attr-write in this-procedure (
+                                                   input cash-desk.db-num
+                                                  ,input cash-desk.obj-code
+                                                  ,input cash-desk.pos-type
+                                                  ,input cash-desk.cash-num
                                                   ,input  (if p-pos-type = {&cd-type-ibm-xml}
                                                            then {&cda-IBM-XML_operative}
                                                            else {&cda-AUTOTANK_operative})
@@ -426,13 +465,12 @@ v-desk = string(v-pay-desk) .
                                                   ,input no /*p-logical*/
                                                   ) .
 
-          end. /*  do transaction :*/
 
-        run cd-attr-value in this-procedure (
-                                              input  g#db-num
-                                              ,input  p-obj-code
-                                              ,input  p-pos-type
-                                              ,input  v-pay-desk
+           run cd-attr-value in this-procedure (
+                                               input cash-desk.db-num
+                                              ,input cash-desk.obj-code
+                                              ,input cash-desk.pos-type
+                                              ,input cash-desk.cash-num
                                               ,input  (if p-pos-type = {&cd-type-IBM-XML}
                                                       then {&cda-IBM-XML_operative}
                                                       else {&cda-AUTOTANK_operative})
@@ -445,19 +483,14 @@ v-desk = string(v-pay-desk) .
                                               ,output v-integer
                                               ,output v-logical
                                               ,output v-dop) no-error.
-       if v-old-fo-version <> v-fo-version and v-FO-version <> ?
-       and can-find(first ub.cash-desk where
-                         ub.cash-desk.db-num = g#db-num
-                     and ub.cash-desk.obj-code = p-obj-code
-                     and ub.cash-desk.pos-type = p-pos-type
-                     and ub.cash-desk.cash-num = v-pay-desk)
-       then do:
-         do transaction :
-            run cd-attr-write in this-procedure (
-                                                    input g#db-num
-                                                  ,input p-obj-code
-                                                  ,input p-pos-type
-                                                  ,input v-pay-desk
+           if     v-old-fo-version <> v-fo-version 
+              and v-FO-version <> ?
+           then do:
+              run cd-attr-write in this-procedure (
+                                                   input cash-desk.db-num
+                                                  ,input cash-desk.obj-code
+                                                  ,input cash-desk.pos-type
+                                                  ,input cash-desk.cash-num
                                                   ,input  (if p-pos-type = {&cd-type-ibm-xml}
                                                            then {&cda-IBM-XML_operative}
                                                            else {&cda-AUTOTANK_operative})
@@ -471,7 +504,7 @@ v-desk = string(v-pay-desk) .
                                                   ,input no /*p-logical*/
                                                   ) no-error.
             if error-status:error then do :
-              v-err-message = return-value . // чтобы видеть текст сообщени€ в деббагере
+              v-err-message = return-value . /* чтобы видеть текст сообщени€ в деббагере*/
               run write-log-and-file in p-log-handle (
             input 1
           , input log-file-name
@@ -879,7 +912,7 @@ define input parameter p-field-value as character no-undo .
     temp-param.record-name = p-record-name
     temp-param.field-name  = p-field-name
     temp-param.field-value = p-field-value
-    temp-param.desk        = v-desk
+    temp-param.desk        = m-head-cash-num
     temp-param.key-name    = v-key
     temp-param.group-name  = v-group
     cri                   = cri + 1

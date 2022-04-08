@@ -310,7 +310,7 @@ do
 
   put stream OutStr-html unformatted
     '<thead>' skip
-    '<tr>' skip
+    '<tr  class="set_columns">' skip
     '<td style="width: 6px;"></td>' skip
     '<td style="width: 6px;"></td>' skip
     '<td style="width: 6px;"></td>' skip

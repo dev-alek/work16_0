@@ -801,10 +801,14 @@ FUNCTION get-mark-char RETURNS CHARACTER
          do:
             v-mark = "milk" .
          end.                         
-      when '10' then 
+      when '9' then 
          do:
             v-mark = "water" .
          end.                                                                                                        
+      when '10' then 
+         do:
+            v-mark = "stiki" .
+         end.  
    end case .
    RETURN v-mark.   /* Function return value. */
 
@@ -864,8 +868,12 @@ FUNCTION get-mark-list-integer RETURNS CHARACTER
             end.                         
          when "water" then 
             do:
-               v-mark = v-mark + "," + "10" .
+               v-mark = v-mark + "," + "9" .
             end.                                                                                                        
+         when "stiki" then 
+            do:
+               v-mark = v-mark + "," + "10" .
+            end. 
       end case .
    end.   
    v-mark = trim(v-mark,",") .

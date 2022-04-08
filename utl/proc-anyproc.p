@@ -20,9 +20,9 @@ define variable vss-description as character no-undo init "".
 define variable mError as logical no-undo.
 { cmp/vssrevis.i }
 
-{ cmp/trg-def.i  new}
+{ cmp/trg-def.i }
 
-{ adm/auto-def.i new}
+{ adm/auto-def.i}
 log-file-name = "any.log".
 session:system-alert-boxes = yes.
 session:appl-alert-boxes = yes.
@@ -31,24 +31,6 @@ session:debug-alert = yes.
 
 define variable mAsyncHelper as class ibs.th.file.AsyncHelperth. 
 mAsyncHelper = new ibs.th.file.AsyncHelperth().
-mAsyncHelper:creatProcInfo(1,1,1).
-find first sys-ctrl no-lock .
-find first user-login no-lock
-        where user-login.db-num     = sys-ctrl.db-num
-          and user-login.status_    = {&uls-normal}
-          and user-login.user-login = mAsyncHelper:GetStartupParam("-U")
-        no-error .
-run gbl/set-gbl.p
-    (input true                  /* p-auto        */
-    ,input if avail user-login then user-login.user-id else mAsyncHelper:GetStartupParam("-U") /* p-user-id     */
-    ,input mAsyncHelper:GetStartupParam("-P") /* p-user-passwd */ 
-            
-    ) no-error .
-/* удаляем все persistent-procedure, иначе не произойдет disconnect */
-  run gbl/del-pers.p no-error .
-  if error-status :error then do:
-    return error vss-workfile + "Ошибка при удалении persistent-procedures" .
-  end.
 define variable mProcedure as character no-undo.
 mProcedure = mAsyncHelper:GetPARAM( "ParamProc_1").
 if mProcedure eq ? then do:
@@ -71,7 +53,7 @@ output to "error.log".
 
 run RUN_IO_Params  (mProcedure) no-error.
 run SetErr(return-value).
-if    mAsyncHelper:ChekStop()
+if    mAsyncHelper:CheckStop()
 then do:
    run SetErr( "error   Процесс прерван." ).
 end.
@@ -182,7 +164,7 @@ procedure StopChek:
     then 
        oFlag = mstop.
     else do:
-       oFlag = mAsyncHelper:ChekStop().
+       oFlag = mAsyncHelper:CheckStop().
        mstop = oFlag.
     end.
 end.

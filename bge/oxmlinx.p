@@ -118,6 +118,7 @@ define variable v-sign-file    as character no-undo . // имя файла с электронной
 define variable v-sign-fileext as character no-undo . // расширение файла с электронной подписью
 define variable v-cert-issuer-name as character no-undo .
 define variable v-cert-subj-name   as character no-undo .
+define variable v-cert-repository  as integer no-undo .
 define variable v-position     as integer no-undo . // позиция точки в имени файла
 define variable v-attr-type    as character no-undo . // для чтения значений из ext-system-attr
 define variable v-cert-subject as character no-undo . // владелец сертификата из входящего пакета
@@ -284,7 +285,6 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                      ,input  {&attr-esys-cert-sign-issuer}
                                      ,output v-cert-issuer-name
                                      ,output v-attr-type) no-error .
-                                     
             if not error-status:error then
             run ext-system-attr-value in this-procedure (
                                       input  buf_ext-system.esys-id
@@ -292,6 +292,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                      ,input  {&attr-esys-cert-sign-subject}
                                      ,output v-cert-subj-name
                                      ,output v-attr-type) no-error .
+                                     
             if error-status:error then do:
               run write-log in p-log-handle (
                                                   input 2
@@ -304,6 +305,19 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                   ) .
               undo _ext-system, next _ext-system.
             end.
+            v-cert-repository = ? .
+            run ext-system-attr-value in this-procedure (
+                                      input  buf_ext-system.esys-id
+                                     ,input  buf_ext-system.db-num
+                                     ,input  {&attr-esys-cert-repository}
+                                     ,output v-cert-enstr
+                                     ,output v-attr-type) no-error .
+            if v-cert-enstr > ""
+            then
+              v-cert-repository = integer(v-cert-enstr) no-error .    
+            if v-cert-repository = ?
+            then
+              v-cert-repository = 0 .                  
             if v-cert-subj-name > "" then . else do :
               run write-log in p-log-handle (
                                         input 2
@@ -725,6 +739,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                           ,input v-cert-subj-name
                                           ,input v-cert-issuer-name
                                           ,input v-sign-fileext
+                                          ,input v-cert-repository
                                           ,input v-pkcs
                                           ) no-error .
                       if error-status:error then do :                                                               
@@ -909,6 +924,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                         ,input v-cert-subj-name
                         ,input v-cert-issuer-name
                         ,input v-sign-fileext
+                        ,input v-cert-repository
                         ,input v-pkcs
                         ) no-error .
                         if error-status:error then do :

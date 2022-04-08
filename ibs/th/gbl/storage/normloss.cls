@@ -140,7 +140,9 @@ class ibs.th.gbl.storage.normloss:
       and bf_cli-attr.attr-code = {&attr-cli-clim-grp}
       no-error.
     
-    if available (bf_cli-attr) and available (bf_gds-attr) and parTPforNorm:OnDate <> ?
+    if available (bf_cli-attr)
+    and (available (bf_gds-attr) or parTPforNorm:GroupNP > "")
+    and parTPforNorm:OnDate <> ?
     then do:
       if num-entries (bf_cli-attr.attr-value) = 3
       then do: 
@@ -157,7 +159,7 @@ class ibs.th.gbl.storage.normloss:
     end.
 
     find first bf_norm-loss no-lock where bf_norm-loss.type = 0 and bf_norm-loss.clim-grp = climGrp
-        and bf_norm-loss.oil-grp = bf_gds-attr.attr-value 
+        and bf_norm-loss.oil-grp = (if parTPforNorm:GroupNP > "" then parTPforNorm:GroupNP else bf_gds-attr.attr-value) 
         and bf_norm-loss.position = locate
         and bf_norm-loss.season = season 
         no-error.
@@ -178,7 +180,7 @@ class ibs.th.gbl.storage.normloss:
     end.
     
     for first bf_norm-loss no-lock where maxlvl > 0 and bf_norm-loss.type = 1 and bf_norm-loss.clim-grp = climGrp
-        and bf_norm-loss.oil-grp = bf_gds-attr.attr-value 
+        and bf_norm-loss.oil-grp = (if parTPforNorm:GroupNP > "" then parTPforNorm:GroupNP else bf_gds-attr.attr-value) 
         and bf_norm-loss.season = season 
         and 
         (

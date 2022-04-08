@@ -284,7 +284,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
       buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB.
       vLC = getJson(1, cashSts:SaleLock:Label_, buf_marking.mark).
       ObjSrv:Lib:MarkingTree:UnGroupMark(buf_marking.mark).
-      ObjSrv:Lib:MarkingTree:LockChkChildeMark(buffer buf_marking).
+      ObjSrv:Lib:MarkingTree:LockChkChildeMark(buf_marking.mark).
     end.
     when action = cashSts:ReturnLock:NameProp and
       (buf_marking.sts = thMarkSts:OutZone:KeyIntDB
@@ -294,7 +294,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
       buf_marking.sts = thMarkSts:ReturnWaitLock:KeyIntDB.
       vLC = getJson(1, cashSts:ReturnLock:Label_, buf_marking.mark).
       ObjSrv:Lib:MarkingTree:UnGroupMark(buf_marking.mark).
-      ObjSrv:Lib:MarkingTree:LockChkChildeMark(buffer buf_marking).
+      ObjSrv:Lib:MarkingTree:LockChkChildeMark(buf_marking.mark).
     end.
 
     when action = cashSts:Unlock:NameProp then 

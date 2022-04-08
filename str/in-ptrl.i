@@ -708,6 +708,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             if varcur-rvs > 0 then rvs-line-attr.attr-value = 'à' .
             else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ô' .
+            
+            release rvs-line-attr no-error .
 
             run cur-time in this-procedure
               ( output v-today
@@ -1194,7 +1196,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 assign
                   v-calc-density = infoSectionObj:TankDensityPomi when not p-infoSectionsTotal:RdcDnstvalue = 'not'
                   v-calc-density = infoSectionObj:TankDensity when p-infoSectionsTotal:RdcDnstvalue = 'not'.
-                p-infoSectionsTotal:RNAlgo (ii, output v-new-sec-fact-qnty-kg).
+                p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
                 if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
                 then do:
                   v-new-sec-fact-qnty = v-new-sec-fact-qnty-kg / v-calc-density.
@@ -1251,6 +1253,15 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             
             v-calc-density = p-infoSectionsTotal:FactKgQntyTotal / p-infoSectionsTotal:FactQntyTotal.
             v-new-fact-qnty = p-infoSectionsTotal:FactQntyTotal.
+            
+            if p-new-fact-qnty <> v-new-fact-qnty
+            and absolute(p-new-fact-qnty - v-new-fact-qnty) < 0.0011
+            then do :
+              p-infoSectionsTotal:FactQntyTotal = p-new-fact-qnty .
+              v-new-fact-qnty = p-infoSectionsTotal:FactQntyTotal .
+              v-calc-density = p-new-density .
+              p-infoSectionsTotal:FactKgQntyTotal = p-infoSectionsTotal:FactQntyTotal * v-calc-density .
+            end .
             
             if (absolute (v-calc-density - p-new-density ) > 0.0000000001
               or absolute (p-infoSectionsTotal:FactQntyTotal - p-new-fact-qnty ) > 0.001)

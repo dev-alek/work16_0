@@ -221,7 +221,7 @@ function GetNextElement return character
      then do:
         entry (4,vlistleng) = "06".
      end.
-     else if mtypemark eq "tabak"
+     else if mtypemark eq "tabak" or mtypemark eq "stiki"
      then do:
         entry (4,vlistleng) = "07".
      end.
@@ -357,6 +357,7 @@ function addBracketForCode return character
       oTeg = icodeIdent.
    end.
    else do:
+      ChekTypeMarkByDm(icodeIdent).
       mMRCCode = yes. 
       block-teg:
       do while Velement ne "" and icodeIdent ne "":

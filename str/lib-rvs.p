@@ -1972,7 +1972,6 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable DeltaOtn_H              as decimal no-undo.
   define variable DeltaOtn_H_Water        as decimal no-undo.
   define variable DeltaOtn_R              as decimal no-undo.
-  define variable mass-float-cov          as decimal no-undo format ">>,>>9.999":U.
   define variable temp-for-pomi           as integer no-undo.
   define variable temp-izm-vol            as decimal no-undo init ? .
   define variable izmer-density           as decimal no-undo init ? .
@@ -1980,6 +1979,9 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable v-mm-density            as decimal no-undo.
   define variable v-POkMI-result          as character no-undo.
   define variable v-POkMI-result-attr     as character no-undo.
+  define variable place-ponton            as logical no-undo .
+  define variable place-ponton-mass       as decimal no-undo .
+  define variable place-ponton-height     as decimal no-undo .
   
   define variable pl-rvd-dens as logical no-undo .
   define variable pl-rvd-lvl as logical no-undo .
@@ -2022,7 +2024,10 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define buffer buf_doc-pl-attr for ub.doc-pl-attr .
   define buffer buf_place for ub.place .
   
+  define buffer buf_trn-doc  for ub.trn-doc.
+  
   define variable v-free-vol  as decimal   no-undo .
+  define variable v-doc-volume as decimal no-undo .
   
   define variable  v-cardif as integer no-undo.
 
@@ -2117,6 +2122,26 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
     end.
     rvs-line-attr.attr-value = string(tt-meas.water-qnty) .
   end .
+  
+  find first rvs-line-attr exclusive-lock
+       where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+         and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+         and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+         and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+         and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+         and rvs-line-attr.attr-code = "input-type" no-error.
+  if not available rvs-line-attr then do :
+    create rvs-line-attr.
+    assign
+      rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+      rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+      rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+      rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+      rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+      rvs-line-attr.attr-code = "input-type"
+    .
+  end.
+  rvs-line-attr.attr-value = 'а' .
   
   find first rvs-line-attr exclusive-lock
        where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -3708,6 +3733,15 @@ THEN DO:
           when {&place-SI-level} then do :
             if v-ok then pl-level-sr-izm = integer(v-value) .
           end.
+          when {&place-ponton} then do :
+            if v-ok then place-ponton = logical(v-value) .
+          end.
+          when {&place-ponton-mass} then do :
+            if v-ok then place-ponton-mass = decimal(v-value) .
+          end.
+          when {&place-ponton-height} then do :
+            if v-ok then place-ponton-height = decimal(v-value) .
+          end.
         end case.
       end.
         /*..........................................*/
@@ -4188,20 +4222,6 @@ THEN DO:
             and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
             and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
             and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-            and rvs-line-attr.rvs-code  = p-prev-code
-            and rvs-line-attr.attr-code = "mass-float-cov" no-error.
-      if available rvs-line-attr then do :
-        mass-float-cov = decimal(rvs-line-attr.attr-value) .
-      end.
-      else do :
-        mass-float-cov = 0 .
-      end.
-      
-      find first rvs-line-attr no-lock
-          where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-            and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-            and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-            and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
             and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
             and rvs-line-attr.attr-code = "temp-izm-vol" no-error.
       if available rvs-line-attr then do :
@@ -4356,19 +4376,19 @@ THEN DO:
               "    " SKIP
               "    " SKIP
               cur-time-string()           FORMAT "x(16)"    SKIP
-              'Процедура '                v-proc                      FORMAT "x(128)"   SKIP
-              'CODE_PL                = ' bf_rvs-line.pl-code                           SKIP
-              'H                      = ' v-mm:H                  SKIP
-              'H_water                = ' v-mm:H_water                  SKIP
-              'CalibrationTable       = ' v-mm:CalibrationTable                  SKIP
-              'Tv                     = ' v-mm:Tv                 SKIP
-              'Tr                     = ' v-mm:Tr                       SKIP
-              'R                      = ' v-mm:R                SKIP
-              'Tcy                    = ' v-mm:Tcy                                 SKIP
+              'Процедура '                v-proc                          FORMAT "x(128)"    SKIP
+              'CODE_PL                = ' bf_rvs-line.pl-code                                SKIP
+              'H                      = ' v-mm:H                                             SKIP
+              'H_water                = ' v-mm:H_water                                       SKIP
+              'CalibrationTable       = ' v-mm:CalibrationTable                              SKIP
+              'Tv                     = ' v-mm:Tv                                            SKIP
+              'Tr                     = ' v-mm:Tr                                            SKIP
+              'R                      = ' v-mm:R                                             SKIP
+              'Tcy                    = ' v-mm:Tcy                                           SKIP
               'ToolType               = ' v-mm:ToolType                                      SKIP
-              'DeadZone_Reservoir     = ' v-mm:DeadZone_Reservoir                                    SKIP
+              'DeadZone_Reservoir     = ' v-mm:DeadZone_Reservoir                            SKIP
               'DeltaOtn_K             = ' v-mm:DeltaOtn_K                                    SKIP
-              'A_Reservoir            = ' v-mm:A_Reservoir                                     SKIP
+              'A_Reservoir            = ' v-mm:A_Reservoir                                   SKIP
               'A_LevelMeasurementTool = ' v-mm:A_LevelMeasurementTool                        skip
               'DeltaAbs_H             = ' v-mm:DeltaAbs_H                                    SKIP
               'DeltaAbs_H_Water       = ' v-mm:DeltaAbs_H_Water                              SKIP
@@ -4379,19 +4399,22 @@ THEN DO:
               'DeltaOtn_H_Water       = ' v-mm:DeltaOtn_H_Water                              SKIP
               'DeltaOtn_R             = ' v-mm:DeltaOtn_R                                    SKIP
               'DeltaOtn_N             = ' v-mm:DeltaOtn_N                                    SKIP
-                  SKIP SKIP 
           .
   
-          if place-type = 1 then do :
+          if place-type = 1
+          and place-ponton
+          then do :
             v-mm:Rprov = ( dens-prov * 1000 ) .
-            v-mm:Mpokr = mass-float-cov.
+            v-mm:Mpokr = place-ponton-mass .
+            v-mm:CoverFloatingHeight = place-ponton-height .
             put stream outstream unformatted
-  
-              "v-mm:Rprov = " v-mm:Rprov skip
-              "v-mm:Mpokr = " v-mm:Mpokr skip
+              "Rprov                  = " v-mm:Rprov                    skip
+              "Mpokr                  = " v-mm:Mpokr                    skip
+              "CoverFloatingHeight    = " v-mm:CoverFloatingHeight      skip
             .
           end.
           
+          put stream outstream unformatted SKIP SKIP .
           
           output stream outstream close.
         end . /* not is-sug */
@@ -4789,88 +4812,126 @@ END.
     if ptrlprop-calc-free-vol
     and buf_rvs-doc.rvs-type = {&rvs-before-doc}
     then do :
-      find first buf_doc-pl no-lock where buf_doc-pl.obj-type   = bf_rvs-line.obj-type
-                                      and buf_doc-pl.obj-code   = bf_rvs-line.obj-code
-                                      and buf_doc-pl.gds-code   = bf_rvs-line.gds-code
-                                      and buf_doc-pl.pl-code    = bf_rvs-line.pl-code
-                                      and buf_doc-pl.out-code   = buf_rvs-doc.out-code
-                                      no-error .
-      if not available buf_doc-pl
-      then do :
-        message "В накладной для товара " string(bf_rvs-line.gds-code) " нет распределения по местам хранения!" view-as alert-box .
-      end .                                
-      else do :
+      define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo.
+      define variable iisec as integer no-undo .
+      
+      find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_rvs-doc.out-code no-error .
+      if available buf_trn-doc
+      and buf_trn-doc.reason-code = 98
+      then do : end .
+      else do :  
+        v-doc-volume = 0 .
         find first buf_place no-lock where buf_place.obj-code = bf_rvs-line.obj-code
                                        and buf_place.obj-type = bf_rvs-line.obj-type
                                        and buf_place.pl-code  = bf_rvs-line.pl-code
                                        no-error.
         if is-sug(bf_rvs-line.gds-code)
         then do :
-          assign v-free-vol = 0.85 * buf_place.max-qnty - bf_rvs-line.state-measure-tc-qnty .
-        end .
-        else do :         
-          assign v-free-vol = 0.95 * buf_place.max-qnty - bf_rvs-line.state-brutto-qnty .
+          find first buf_doc-pl no-lock where buf_doc-pl.obj-type   = bf_rvs-line.obj-type
+                                          and buf_doc-pl.obj-code   = bf_rvs-line.obj-code
+                                          and buf_doc-pl.gds-code   = bf_rvs-line.gds-code
+                                          and buf_doc-pl.pl-code    = bf_rvs-line.pl-code
+                                          and buf_doc-pl.out-code   = buf_rvs-doc.out-code
+                                          no-error .
+          if not available buf_doc-pl
+          then do :
+            message "В накладной для товара " string(bf_rvs-line.gds-code) " нет распределения по местам хранения! Невозможно произвести расчет свободной ёмкости в резервуаре." view-as alert-box .
+          end . 
+          else do :
+            v-doc-volume = buf_doc-pl.fact-qnty .
+          end .
+        end .                           
+        else do :
+          infoSectionsTotal = new ibs.th.str.InfoSectionsTotal(buf_trn-doc.doc-code, bf_rvs-line.gds-code, {&lookup}).
+          
+          sect_ :
+          do iisec = 1 to infoSectionsTotal:SectionNum :
+            infoSectionsTotal:GetInfoSectionProp (iisec).
+            if infoSectionsTotal:InfoSectionCurr:ListTank <> buf_place.loc1
+            then
+              next sect_ .
+            
+            if infoSectionsTotal:InfoSectionCurr:DocVolume > 0
+            then do :
+              v-doc-volume = v-doc-volume + infoSectionsTotal:InfoSectionCurr:DocVolume . 
+            end .
+            else do :
+              v-doc-volume = v-doc-volume + infoSectionsTotal:InfoSectionCurr:DocQnty .
+            end .
+          end . 
         end .
         
-        if v-free-vol >= buf_doc-pl.fact-qnty
+        if v-doc-volume > 0
         then do :
-          find first buf_doc-pl-attr exclusive-lock
-              where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code
-              and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type
-              and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code
-              and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code
-              and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code
-              and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-          if available buf_doc-pl-attr then
-          do :
-            buf_doc-pl-attr.attr-value = string(no)  .
-          end.
-          else
-          do :
-            create buf_doc-pl-attr.
-            assign
-              buf_doc-pl-attr.obj-code   = buf_doc-pl.obj-code
-              buf_doc-pl-attr.obj-type   = buf_doc-pl.obj-type
-              buf_doc-pl-attr.gds-code   = buf_doc-pl.gds-code
-              buf_doc-pl-attr.pl-code    = buf_doc-pl.pl-code
-              buf_doc-pl-attr.out-code   = buf_doc-pl.out-code
-              buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-              buf_doc-pl-attr.attr-value = string(no)
-            .
-          end.
-        end .
-        else do :
-          message "Объем нефтепродукта по ТТН " string(buf_doc-pl.fact-qnty)
-                  "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "
-                  string(v-free-vol) "л." skip
-                  "Проверьте введенные данные из ТТН, значение объема наполнения в сверке до слива"
-                  " и при необходимости оповестите ответственное лицо ОГ в соответствии с принятым в ОГ порядком оповещения"
-          view-as alert-box . 
-          find first buf_doc-pl-attr exclusive-lock
-              where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code
-              and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type
-              and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code
-              and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code
-              and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code
-              and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-          if available buf_doc-pl-attr then
-          do :
-            buf_doc-pl-attr.attr-value = string(yes)  .
-          end.
-          else
-          do :
-            create buf_doc-pl-attr.
-            assign
-              buf_doc-pl-attr.obj-code   = buf_doc-pl.obj-code
-              buf_doc-pl-attr.obj-type   = buf_doc-pl.obj-type
-              buf_doc-pl-attr.gds-code   = buf_doc-pl.gds-code
-              buf_doc-pl-attr.pl-code    = buf_doc-pl.pl-code
-              buf_doc-pl-attr.out-code   = buf_doc-pl.out-code
-              buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-              buf_doc-pl-attr.attr-value = string(yes)
-            .
-          end.       
-        end .                            
+          if is-sug(bf_rvs-line.gds-code)
+          then do :
+            assign v-free-vol = 0.85 * buf_place.max-qnty - bf_rvs-line.state-measure-tc-qnty .
+          end .
+          else do :         
+            assign v-free-vol = 0.95 * buf_place.max-qnty - bf_rvs-line.state-brutto-qnty .
+          end .
+          
+          if v-free-vol >= v-doc-volume
+          then do :
+            find first buf_doc-pl-attr exclusive-lock
+                where buf_doc-pl-attr.obj-code  = bf_rvs-line.obj-code
+                  and buf_doc-pl-attr.obj-type  = bf_rvs-line.obj-type
+                  and buf_doc-pl-attr.gds-code  = bf_rvs-line.gds-code
+                  and buf_doc-pl-attr.pl-code   = bf_rvs-line.pl-code
+                  and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+                  and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
+            if available buf_doc-pl-attr then
+            do :
+              buf_doc-pl-attr.attr-value = string(no)  .
+            end.
+            else
+            do :
+              create buf_doc-pl-attr.
+              assign
+                buf_doc-pl-attr.obj-code   = bf_rvs-line.obj-code
+                buf_doc-pl-attr.obj-type   = bf_rvs-line.obj-type
+                buf_doc-pl-attr.gds-code   = bf_rvs-line.gds-code
+                buf_doc-pl-attr.pl-code    = bf_rvs-line.pl-code
+                buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+                buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+                buf_doc-pl-attr.attr-value = string(no)
+              .
+            end.
+          end .
+          else do :
+            message "Внимание! Объем нефтепродукта по ТТН " string(round(v-doc-volume, 0))
+                    "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "
+                    string(round(v-free-vol, 0)) "л." skip
+                    "Проверьте введенные данные из ТТН или значение фактического объема в резервуаре в сверке до слива"
+                    " и при необходимости проинформируйте ответственное лицо ОГ в соответствии со схемой оповещения."
+                    " Если данные корректны, прием запрещен!"
+            view-as alert-box . 
+            find first buf_doc-pl-attr exclusive-lock
+                where buf_doc-pl-attr.obj-code  = bf_rvs-line.obj-code
+                  and buf_doc-pl-attr.obj-type  = bf_rvs-line.obj-type
+                  and buf_doc-pl-attr.gds-code  = bf_rvs-line.gds-code
+                  and buf_doc-pl-attr.pl-code   = bf_rvs-line.pl-code
+                  and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+                  and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
+            if available buf_doc-pl-attr then
+            do :
+              buf_doc-pl-attr.attr-value = string(yes)  .
+            end.
+            else
+            do :
+              create buf_doc-pl-attr.
+              assign
+                buf_doc-pl-attr.obj-code   = bf_rvs-line.obj-code
+                buf_doc-pl-attr.obj-type   = bf_rvs-line.obj-type
+                buf_doc-pl-attr.gds-code   = bf_rvs-line.gds-code
+                buf_doc-pl-attr.pl-code    = bf_rvs-line.pl-code
+                buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+                buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+                buf_doc-pl-attr.attr-value = string(yes)
+              .
+            end.       
+          end .
+        end . 
       end .
     end .
     
@@ -5526,17 +5587,17 @@ end procedure. /* lib-rvs_crtt-rvs */
 
 procedure lib-rvs_crtt-pmp : /* cr-tt-param-pump */
   define input-output parameter table for tt-param-pump.
-  define       output parameter           p-comstrpump   as character no-undo initial ?.
+/*  define       output parameter           p-comstrpump   as character no-undo initial ?.*/
 
   define variable StrFrFile-list as character no-undo initial 'PUMP,NZL,VOL,VAL,GRADE,CNT,STATUS':U.
   define variable jj             as integer   no-undo.
 
-  get-key-value section 'revision'
+/*  get-key-value section 'revision'
                 key     'comstrpump'
                 value    p-comstrpump.
   if p-comstrpump <> ?    and
      p-comstrpump <> '':U
-  then do:
+  then do: */
     for each tt-param-pump :
       delete tt-param-pump .
     end.
@@ -5546,12 +5607,159 @@ procedure lib-rvs_crtt-pmp : /* cr-tt-param-pump */
              tt-param-pump.strfrfile = entry( jj, StrFrFile-list )
       .
     end.
-  end.
+  /* end.
   else do:
     return error 'Не указана командная строка для чтения данных с ТРК. Секция revision. Ключ comstrpump.' .
-  end.
+  end.*/
   return .
 end procedure. /* lib-rvs_crtt-pmp */
+
+define temp-table tt-User no-undo
+       field usr as character 
+       field pwd as character
+    index usr usr.
+   
+{bge/socet.i}
+procedure getpump:
+   define input  parameter ilogfile as character no-undo.
+   define input  parameter iobjtype as character no-undo.
+   define input  parameter iobjcode as integer no-undo.
+   define output parameter Opump as longchar no-undo.
+   define variable vadr as character no-undo.
+   define variable vport as character no-undo.
+   define variable vtext as character no-undo.
+/*   define variable v-value-character as character no-undo .
+   define variable v-value-date as date no-undo .
+   define variable v-value-decimal as decimal no-undo .
+   define variable v-value-integer as INTEGER no-undo .
+   define variable v-value-logical AS LOGICAL no-undo .
+   define variable v-param-type as character no-undo .
+   define variable v-tth as handle no-undo .
+   
+   run adm/shattri.p (
+       input "get":U
+       ,input  iobjtype
+       ,input  iobjcode
+       ,input  {&attr-cd-sending}
+       ,input  {&attr-cd-sending_pump_port} /*p-param-code*/
+       ,output v-value-character
+       ,output v-value-date
+       ,output v-value-decimal
+       ,output v-value-integer
+       ,output v-value-logical
+       ,output v-param-type
+       ,INPUT-OUTPUT table-handle v-tth
+       ) no-error .
+   if not error-status:error
+   then 
+      vport = v-value-character.
+   else */
+      vport = "4000".
+/*      mTimeOut = 60.*/
+   define variable vFlag   as logical no-undo.
+   define variable vFlagOk as logical no-undo.
+
+/*   delete object v-tth no-error.*/
+   mFileLogSocet = ilogfile.
+   
+    define variable vuser as character no-undo.
+    create tt-User.
+    run utl/getuserpwdauto.p(input buffer tt-User:handle) no-error.
+    if not error-status:error
+    then do:
+       vuser =  tt-User.usr.
+    end.
+    else do:
+       run utl/getuserpwd.p( input buffer tt-User:handle) no-error.
+       if not error-status:error
+       then do:
+          vuser =  tt-User.usr.
+       end.
+    end.
+    delete tt-User.
+   define variable vnoActivCash as logical no-undo.
+   block-cash:
+   for each cash-desk  where cash-desk.db-num   = g#db-num 
+                         and cash-desk.obj-code = iobjcode
+                         and cash-desk.is-del = no 
+   no-lock 
+   by cash-desk.db-num 
+   by cash-desk.is-del 
+   by ub.cash-desk.cash-on descending
+   by ub.cash-desk.pos-type descending 
+   by ub.cash-desk.cash-num
+      :
+      if     not vnoActivCash
+         and not ub.cash-desk.cash-on
+      then do:
+         vnoActivCash = yes.
+         run gbl/fileapnd.p
+          ( ilogfile
+          , substitute("&1 &2 Нет включенных касс переходим к выключенным пользователь &3 &4", string(today),string(time, "HH:MM:SS"),vuser,{&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .            
+      end.
+      vadr = entry(1,
+                   (if num-entries(cash-desk.addr-path, {&delim-par}) > 1
+                    then  entry(2, cash-desk.addr-path, {&delim-par})
+                    else cash-desk.addr-path
+                    )   
+                  ,":").
+      if vadr eq ""
+      then
+         next block-cash.
+      vFlag = yes.
+      run gbl/fileapnd.p
+          ( ilogfile
+          , substitute("&1 &2 Отправка команды &3 на кассу № &4 (&5:&6) Пользователь &7 &8", string(today),string(time, "HH:MM:SS"),"pumpread",cash-desk.cash-num,vadr,vport ,vuser,{&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .            
+      run ConectSocet (vadr,
+                       vport,
+                       ?,
+                       "pumpread" + chr(13) + chr(10), 
+                       "text",
+                       30,
+                       no,
+                       "Получение данных по ТРК. ") no-error.
+      if     not error-status:error
+         and length(mWebResp) > 0
+         and index(mWebResp," PUMP=") > 0
+      then do:
+         run gbl/fileapnd.p
+          ( ilogfile
+          , substitute("&1 &2 Ответ:&4&3&4", string(today),string(time, "HH:MM:SS"),mWebResp ,{&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .            
+         vFlagOk = yes.
+         leave block-cash.
+      end.
+      else
+         run gbl/fileapnd.p
+          ( ilogfile
+          , substitute('&1 &2 Результат: &3 "&4" &5', string(today),string(time, "HH:MM:SS"),OerrMsg,mWebResp ,{&carriage-return} + {&new-line})
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .            
+      
+   end.
+   mFileLogSocet = "".
+   if not vFlag
+   then do:
+      vtext = substitute("Нет включеных касс по БД &1 Объект &2&3 &4 ", g#db-num, "маг", iobjcode ,{&carriage-return} + {&new-line}).
+      run gbl/fileapnd.p
+          ( ilogfile
+          , substitute("&1 &2 &3", string(today),string(time, "HH:MM:SS"),vtext) 
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .
+      return error vtext.
+   end.
+   else if not vFlagOk
+   then
+      return error "На момент приема данных по счетчикам ТРК нет связи ни с одной из касс.".
+   else    
+      Opump = mWebResp.
+   
+end. /* getpump */
 
 procedure lib-rvs_anls-pmp : /* analysis-pump */
   define input        parameter           p-parent-proc       as   widget-handle       no-undo.
@@ -5568,7 +5776,8 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   define variable j_gds-code    like ub.goods.gds-code          no-undo.
   define variable is_Error      as   logical                    no-undo initial no.
   define variable is_FatalError as   logical                    no-undo initial no.
-
+  define variable vi as integer no-undo.
+  
   /* Объявляем переменные для чтения из строки */
   define variable v_File-Name   as character no-undo.
   define variable v_File-Err    as character no-undo.
@@ -5656,37 +5865,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       v_File-Name = './pump.txt'
       v_File-Err  = substitute('&1pump.err', ibs.th.gbl.gbl-inipar:logDir) .
     .
-    define variable vi as integer no-undo.
-    v_File-Name = searchfile('pump.txt').
-    if v_File-Name ne ?
-    then do:
-      block-del-file: 
-      do vi = 1 to 5:
-         os-delete value( v_File-Name ) .
-         v_File-Name = searchfile('pump.txt').
-         if v_File-Name eq ?
-         then
-            leave block-del-file.
-      end.
-    end.
-    if v_File-Name ne ?
-    then
-       return error 'Файл pump.txt заблокирован удалите файл и попробуйте еще раз. ' + v_File-Name .
-    v_File-Name = "wpump" + string(random(100000,999999)) + ".tmp".
-    if searchfile(v_File-Name) ne ?
-    then
-      return error "Удалите все файлы wpump*.tmp".
-    assign
-      v_command = v_CommandPump + ' ':U + v_File-Name
-    .
-    os-command silent value( v_command ) .
-    if searchfile( v_File-Name ) = ? then do:
-      return /* error */ 'Файл с данными ТРК не получен.' . /* технологи сказали, что это не должно стопорить создание сверки */
-    end.
-    run readfiletxt(v_File-Name,output vPump).
-/*    os-append value(v_File-Name) value(i-log-file-name).*/
-    os-rename value( v_File-Name ) 'pump.txt'.
-    os-delete value( v_File-Name ) .
+    output to value(v_File-Err) .
+    output close.
+    run getpump(v_File-Err ,p-obj-type, p-obj-code, output vPump).
   end.
   else do:
     v_DirFilePump = ibs.th.gbl.gbl-inipar:dirflpmp .
@@ -5721,7 +5902,10 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
                     {&wsf-put-err}
   &scop sf-put-err  {&ksf-put-err} ~
                     next main-cycle.
-
+  define variable vErrortext as character no-undo.
+  define variable verrorlist as character no-undo.
+  &scop SaveError if lookup (vErrortext,vErrorList,{&delim-par}) eq 0 then vErrorList = vErrorList + {&delim-par} + vErrorText.
+  &scop GetError if num-entries(vErrorList,{&delim-par}) > 3 then "" else replace(vErrorList,{&delim-par},{&carriage-return} + {&new-line}) + {&carriage-return} + {&new-line}
   for each tt-pump-nozzle-file :
     delete tt-pump-nozzle-file .
   end.
@@ -5730,9 +5914,12 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   do vi = 1 to num-entries(vPump,{&new-line}) :
      v_String-Temp = entry(vi,vPump,{&new-line}).
     /* Отсекем комментарий */
-    if trim( v_String-Temp ) = '':U then next main-cycle .
-    if substring( v_String-Temp, 1, 3 ) <> '212' then next main-cycle .
-    
+    if trim( v_String-Temp ) = '':U then do:
+      next main-cycle .
+    end.
+    if substring( v_String-Temp, 1, 3 ) <> '212' then do:
+      next main-cycle .
+    end.
     assign
       v_Prefix =       substring( v_String-Temp, 1, 4 )
       v_String = trim( substring( v_String-Temp, 5    ) )
@@ -5768,7 +5955,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       find first tt-param-pump where
                  tt-param-pump.strfrfile = trim( entry( 1, v_Param, '=' ) ) no-error .
       if not available tt-param-pump then do:
-        {&pf-put-err} 'Обнаружен неизвестный параметр: ' v_Param {&ksf-put-err}
+         vErrorText = 'Обнаружен неизвестный параметр'.
+        {&SaveError}
+        {&pf-put-err} vErrorText ': ' v_Param {&ksf-put-err}
       end.
       else do:
         assign
@@ -5783,7 +5972,10 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     if       tt-param-pump.meaning   = ?    or
        trim( tt-param-pump.meaning ) = '':U
     then do:
-      {&pf-put-err} 'Неизвестный код ТРК: ' tt-param-pump.meaning {&sf-put-err}
+      vErrorText = 'Неизвестный код ТРК'.
+      {&SaveError}
+        
+      {&pf-put-err} vErrorText ': ' tt-param-pump.meaning {&sf-put-err}
     end.
     assign
       j_pump-code = integer( tt-param-pump.meaning )
@@ -5795,7 +5987,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     if       tt-param-pump.meaning   = ?    or
        trim( tt-param-pump.meaning ) = '':U
     then do:
-      {&pf-put-err} 'Неизвестный код пистолета ТРК: ' tt-param-pump.meaning {&sf-put-err}
+      vErrorText = 'Неизвестный код пистолета ТРК'.
+      {&SaveError}
+      {&pf-put-err} vErrorText ': ' tt-param-pump.meaning {&sf-put-err}
     end.
     assign
       j_nozzle-code = integer( tt-param-pump.meaning )
@@ -5805,7 +5999,15 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     find first tt-param-pump where
                tt-param-pump.strfrfile = 'STATUS' .
     if integer( tt-param-pump.meaning ) <> 0 then do:
-      {&pf-put-err} 'Ошибка при чтении данных с ТРК(статус из поля status): ' tt-param-pump.meaning {&sf-put-err}
+     vErrorText = if integer(tt-param-pump.meaning) eq 70
+                   then "При получении данных со счетчиков ТРК возникла ошибка несоответствия ТРК-ПИСТОЛЕТ-ТОПЛИВО либо отсутствует связь с одной или более ТРК."
+                   else if integer(tt-param-pump.meaning) eq 73
+                   then "Не удалось получить данные по счетчикам ТРК. Необходима проверка состояния/связи с ТРК."
+                   else if integer(tt-param-pump.meaning) eq 3
+                   then "При получении данных со счетчиков ТРК возникла ошибка несоответствия ТРК-ПИСТОЛЕТ-ТОПЛИВО. Возможна некорректная привязка топлива к пистолету на стороне кассы."
+                   else 'Ошибка при чтении данных с ТРК(статус из поля status) ' + string(tt-param-pump.meaning). 
+      {&SaveError}
+      {&pf-put-err} vErrorText {&sf-put-err}
     end.
 
     /* Находим товар по топливному коду */
@@ -5815,13 +6017,17 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
        trim( tt-param-pump.meaning ) = '':U
     then do:
       if p-check-goods = yes then do:
-        {&pf-put-err} 'Неизвестный топливный код товара: ' tt-param-pump.meaning {&sf-put-err}
+       vErrorText = 'Неизвестный топливный код товара '. 
+      {&SaveError}
+      {&pf-put-err} vErrorText ': ' tt-param-pump.meaning {&sf-put-err}
       end.
       else do:
         assign
           j_gds-code = ?
         .
-        {&pf-put-err} 'Неизвестный топливный код товара: ' tt-param-pump.meaning {&ksf-put-err}
+        vErrorText = 'Неизвестный топливный код товара'. 
+        {&SaveError}
+        {&pf-put-err} vErrorText  ': ' tt-param-pump.meaning {&ksf-put-err}
       end.
     end.
     else do:
@@ -5876,22 +6082,26 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
         end.
         if j_b-code = ? then do:
           if p-check-goods = yes then do:
-            {&pf-put-err}
-              'Невозможно определить основной бар-код по топливному коду: ' tt-param-pump.meaning
+            vErrorText = 'Невозможно определить основной бар-код по топливному коду'. 
+            {&SaveError}
+            {&pf-put-err} vErrorText  ': ' tt-param-pump.meaning
             {&sf-put-err}
           end.
           else do:
             assign
               j_gds-code = ?
             .
-            {&pf-put-err}
-              'Невозможно определить основной бар-код по топливному коду: ' tt-param-pump.meaning
+            vErrorText = 'Невозможно определить основной бар-код по топливному коду'. 
+            {&SaveError}
+            {&pf-put-err} vErrorText ': ' tt-param-pump.meaning
             {&ksf-put-err}
           end.
         end.
         else do:
           if d_rate <> 1.00 then do:
-            {&pf-put-err}
+            vErrorText = 'Некорректный курс основного бар-кода'. 
+            {&SaveError}
+            {&pf-put-err} 
               'Замечание(cтрока обработана) . Некорректный курс: ' d_rate ' основного бар-кода: ' j_b-code
             {&ksf-put-err}
           end.
@@ -5949,7 +6159,10 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
         is_FatalError = yes
       .
       */
-      {&pf-put-err}
+      vErrorText = 'Нет связки ТРК и пистолета в конфигурации объекта '. 
+      {&SaveError}
+      {&pf-put-err} 
+              'Замечание(cтрока обработана) . ' vErrorText
         'Из файла получены данные по ТРК ' + string( tt-pump-nozzle-file.pump-code   ) +
         ' и пистолету '                    + string( tt-pump-nozzle-file.nozzle-code ) +
         ' на объекте '                     +         tt-pump-nozzle-file.obj-type      + ' ':U
@@ -5969,6 +6182,9 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
           find first bf_goods no-lock where
                      bf_goods.gds-code = tt-pump-nozzle.gds-code .
         end.
+        vErrorText = 'Данные по ТРК и пистолету не правильная конфигурация' . 
+        {&SaveError}
+            
         {&pf-put-err}
           'Из файла получены данные по ТРК ' + string( tt-pump-nozzle-file.pump-code   ) +
           ' пистолету '                      + string( tt-pump-nozzle-file.nozzle-code ) +
@@ -6005,8 +6221,10 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       assign
         is_FatalError = yes
       .
+      vErrorText = 'Не по всем ТРК и пистолетам получены данные' . 
+      {&SaveError}
       {&pf-put-err}
-        'Неполучены данные по ТРК ' + string( tt-pump-nozzle.pump-code   ) +
+        'Не получены данные по ТРК ' + string( tt-pump-nozzle.pump-code   ) +
         ' и пистолету '             + string( tt-pump-nozzle.nozzle-code ) +
         ' на объекте '              +         tt-pump-nozzle.obj-type      +
         ' ':U                       + string( tt-pump-nozzle.obj-code    ) +
@@ -6014,17 +6232,21 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       {&wsf-put-err}
     end. /* if not available tt-pump-nozzle-file */
   end. /* for each tt-pump-nozzle */
-
-  output stream str-err to value( v_File-Err ) append.
-  put stream str-err unformatted skip(0) .
-  output stream str-err close .
-  define variable v-save-file-name as character no-undo .
-  v-save-file-name = substitute("&1pmp-err.log", ibs.th.gbl.gbl-inipar:logDir) .
-  OS-APPEND value(v_File-Err) value(v-save-file-name).
-
   if is_FatalError = yes then do:
-    return error 'Во время загрузки файла произошли фатальные ошибки, НЕПОЗВОЛЯЮЩИЕ ЗАГРУЗИТЬ ДАННЫЕ С ТРК. ' +
-                 'Log-файл с описанием ошибок ' + v_File-Err + ' .' .
+    if session:debug-alert
+    then do:
+       {&pf-put-err} "Ошибки при данном запросе :" replace(vErrorList,{&delim-par},{&carriage-return} + {&new-line}) "<<<<"
+       {&wsf-put-err}
+    end.
+    define variable Vtext as character no-undo.
+    Vtext = 
+/*    'Ошибка при получении данных с приборов на ТРК.' +*/
+                 ({&getError}) +
+                 (if session:debug-alert
+                  then 'Log-файл с описанием ошибок ' + v_File-Err + "." 
+                  else '' )+ 'Повторите попытку или обратитесь в техническую поддержку.' 
+                 .
+    return error vtext.
   end.
 
   /* Записываем данные для возврата */
@@ -6043,7 +6265,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
 
   if is_Error = yes then do:
     return 'Во время загрузки файла были ошибки. Log-файл с описанием ошибок ' + v_File-Err + ' .' +
-           'ДАННЫЕ С ТРК ЗАГРУЖЕНЫ В СИСТЕМУ.' .
+           'Сверка создана, но не содержит полной информации. Обратитесь в техподдержку для закрытия сверки или для включения измерения по связке, в случае исправности ТРК.' .
   end.
   return .
 end procedure. /* lib-rvs_anls-pmp */

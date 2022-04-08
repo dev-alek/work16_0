@@ -101,9 +101,11 @@ on error undo, return error
       return.
     end.
   end.
-  run process-all-check in this-procedure ( input p-shift-date
-                                          , input p-shift-name
-                                          , input p-shift-num) no-error.
+  if act-mess                   ne {&receipt-in}
+  then
+     run process-all-check in this-procedure ( input p-shift-date
+                                             , input p-shift-name
+                                             , input p-shift-num) no-error.
   if avail buf_shift-cash then do:
     if buf_shift-cash.status_ = {&sht-closed}
     AND not act-mess = {&cash-desk-on}

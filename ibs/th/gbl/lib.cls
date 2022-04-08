@@ -10,17 +10,24 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+using ibs.th.gbl.sys.objth.
 using ibs.th.str.marking.handlers.tree.
 using ibs.th.gbl.keyrec.
 
 
-class ibs.th.gbl.lib: 
+class ibs.th.gbl.lib inherits objth: 
   
-  
+  define variable marTree as class tree no-undo.
   
   define public property MarkingTree as class tree no-undo 
-  get.
-  private set. 
+  get:
+    if not valid-object (MarkingTree)
+    then do:
+       {utl\objreg.i marTree tree }
+    end.
+    return marTree .
+  end.
+/*  private set.*/
 
   define public property KeyRec as class keyrec no-undo 
   get.
@@ -33,8 +40,8 @@ class ibs.th.gbl.lib:
     
   constructor public lib (  ):
     super ().
-    MarkingTree = new tree ().
-    KeyRec = new keyrec ().
+    {utl\objreg.i marTree tree}
+    {utl\objreg.i KeyRec keyrec }
     
   end constructor.
 

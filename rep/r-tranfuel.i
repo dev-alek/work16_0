@@ -65,13 +65,27 @@ define {2} temp-table tt-grp no-undo
    field obj-code           as integer
    field obj-name           as character
    field grp-num            as integer
-   field uuid-cheq-list     as character
-   field uuid-list          as character
    field all-time-length    as integer
    field all-time-length-2  as integer
    field cash-pay-code      as integer
    field cash-pay-name      as character
    field resume-tran        as logical
+ index name  obj-type obj-code obj-name.
+.
+define {2} temp-table tt-grp-uuid no-undo
+   field obj-type           as character
+   field obj-code           as integer
+   field obj-name           as character
+   field uuid               as character
+ index uid  obj-type obj-code obj-name uuid.
+.
+
+define {2} temp-table tt-grp-cheq-uuid no-undo
+   field obj-type           as character
+   field obj-code           as integer
+   field obj-name           as character
+   field uuid               as character
+ index uid  obj-type obj-code obj-name.
 .
 
 define {2} temp-table tt-pay no-undo
@@ -618,10 +632,17 @@ procedure AfterCalc:
    define variable vRecId               as recid     no-undo.
    define variable vRowId               as rowid     no-undo.
    define variable vRowIdList           as character no-undo.
-   define variable vUuidList            as character no-undo.
    define variable v-gds-code           as integer   no-undo.
    define variable vTrkNum              as integer   no-undo.
-   
+   for each  tt-grp:
+      delete tt-grp.
+   end.
+   for each  tt-grp-uuid:
+      delete tt-grp-uuid.
+   end.
+   for each  tt-grp-cheq-uuid:
+      delete tt-grp-cheq-uuid.
+   end.
    /* Постобработка данных по фильтру */   
    for each tt-rep where
             not can-do(iTRKList, string(tt-rep.trk-num)):
@@ -707,15 +728,27 @@ procedure AfterCalc:
       by tt-rep.sort-date
       by tt-rep.sort-time:
 
+      find first tt-grp-cheq-uuid where tt-grp-cheq-uuid.obj-type = tt-rep.obj-type 
+                                    and tt-grp-cheq-uuid.obj-code = tt-rep.obj-code
+                                    and tt-grp-cheq-uuid.obj-name = tt-rep.obj-name
+                                    and tt-grp-cheq-uuid.uuid     = tt-rep.uuid-cheq
+      no-error.
+      find first tt-grp-uuid where tt-grp-uuid.obj-type = tt-rep.obj-type 
+                               and tt-grp-uuid.obj-code = tt-rep.obj-code
+                               and tt-grp-uuid.obj-name = tt-rep.obj-name
+                               and tt-grp-uuid.uuid     = tt-rep.uuid
+      no-error.
       find first tt-grp where
                  tt-grp.obj-type = tt-rep.obj-type 
              and tt-grp.obj-code = tt-rep.obj-code
              and tt-grp.obj-name = tt-rep.obj-name
-             and (can-do(tt-grp.uuid-cheq-list, tt-rep.uuid-cheq)
-                   or
-                  can-do(tt-grp.uuid-list, tt-rep.uuid))
+             and (   available tt-grp-cheq-uuid
+                  or available tt-grp-uuid )    
+      
       no-error.
-      if not avail tt-grp then do:
+      
+      if     not avail tt-grp
+      then do:
          v-count-grp-num = v-count-grp-num + 1.
          create tt-grp.
          assign
@@ -725,11 +758,29 @@ procedure AfterCalc:
             tt-grp.grp-num  = v-count-grp-num
             .
       end.
-      if not can-do(tt-grp.uuid-cheq-list, tt-rep.uuid-cheq) then
-         tt-grp.uuid-cheq-list = tt-grp.uuid-cheq-list + (if tt-grp.uuid-cheq-list > "" then "," else "") + string(tt-rep.uuid-cheq).
-      if not can-do(tt-grp.uuid-list, tt-rep.uuid) then
-         tt-grp.uuid-list = tt-grp.uuid-list + (if tt-grp.uuid-list > "" then "," else "") + tt-rep.uuid.
-
+      
+      if not available tt-grp-cheq-uuid 
+      then do:
+         create tt-grp-cheq-uuid.
+         assign
+            tt-grp-cheq-uuid.obj-type = tt-grp.obj-type 
+            tt-grp-cheq-uuid.obj-code = tt-grp.obj-code
+            tt-grp-cheq-uuid.obj-name = tt-grp.obj-name
+            tt-grp-cheq-uuid.uuid     = tt-rep.uuid-cheq
+         .
+      end.
+      
+                  
+      if not available tt-grp-uuid 
+      then do:
+         create tt-grp-uuid.
+         assign
+            tt-grp-uuid.obj-type = tt-grp.obj-type 
+            tt-grp-uuid.obj-code = tt-grp.obj-code
+            tt-grp-uuid.obj-name = tt-grp.obj-name
+            tt-grp-uuid.uuid     = tt-rep.uuid
+         .
+      end.
       tt-rep.grp-num = tt-grp.grp-num.
       if tt-grp.cash-pay-name = "" then
          assign
@@ -1143,7 +1194,9 @@ procedure AfterCalc:
    end.
    
    /* Итоги по АЗК */
-   vUuidList = "".
+   for each tt-grp-uuid:
+      delete tt-grp-uuid.
+   end.
    for each tt-rep
    break
       by tt-rep.obj-type
@@ -1165,10 +1218,22 @@ procedure AfterCalc:
          vCheck = no.
          tt-total-rep.qty-chk = tt-total-rep.qty-chk + 1.
       end.
-      if can-do(vUuidList, tt-rep.uuid) = no
+      find first tt-grp-uuid where tt-grp-uuid.obj-type = "" 
+                               and tt-grp-uuid.obj-code = 0
+                               and tt-grp-uuid.obj-name = ""
+                               and tt-grp-uuid.uuid     = tt-rep.uuid
+      no-error.
+                  
+      if not available tt-grp-uuid
       then do:
          vCheck = yes.
-         vUuidList = vUuidList + (if vUuidList > "" then "," else "") + tt-rep.uuid.
+         create tt-grp-uuid.
+         assign
+            tt-grp-uuid.obj-type = "" 
+            tt-grp-uuid.obj-code = 0
+            tt-grp-uuid.obj-name = ""
+            tt-grp-uuid.uuid     = tt-rep.uuid
+         .
       end.
 
       if last-of(tt-rep.uuid-cheq) then do:
@@ -1200,7 +1265,10 @@ procedure AfterCalc:
    end.
    
    /* Общие итоги по фирме */
-   vUuidList = "".
+   for each tt-grp-uuid:
+      delete tt-grp-uuid.
+   end.
+   
    for each tt-rep
    break
       by tt-rep.obj-type
@@ -1221,11 +1289,22 @@ procedure AfterCalc:
          vCheck = no.
          tt-all-total-rep.qty-chk = tt-all-total-rep.qty-chk + 1.
       end.
-
-      if can-do(vUuidList, tt-rep.uuid) = no
+      find first tt-grp-uuid where tt-grp-uuid.obj-type = "" 
+                               and tt-grp-uuid.obj-code = 0
+                               and tt-grp-uuid.obj-name = ""
+                               and tt-grp-uuid.uuid     = tt-rep.uuid
+      no-error.
+      
+      if not available tt-grp-uuid
       then do:
          vCheck = yes.
-         vUuidList = vUuidList + (if vUuidList > "" then "," else "") + tt-rep.uuid.
+         create tt-grp-uuid.
+         assign
+            tt-grp-uuid.obj-type = "" 
+            tt-grp-uuid.obj-code = 0
+            tt-grp-uuid.obj-name = ""
+            tt-grp-uuid.uuid     = tt-rep.uuid
+         .
       end.
 
       if last-of(tt-rep.uuid-cheq) then do:

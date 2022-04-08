@@ -69,7 +69,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     define buffer buf_goods-attr for ub.goods-attr .
 /*    define buffer buf_OperServ   for ub.OperServ .*/
     define buffer buf_fin-code-cor-acc for ub.fin-code-cor-acc .
-
+    define buffer utd for ub.utd .
+    define buffer utd-attr for ub.utd-attr .
+    
+   define buffer utd-lines              for ub.utd-lines .
+   define buffer utd-lines-attr         for ub.utd-lines-attr .
+   define buffer utd-marking-lines      for ub.utd-marking-lines .
+   define buffer utd-marking-lines-attr for ub.utd-marking-lines-attr .
+   define buffer marking                for ub.marking .
+   define buffer marking-attr           for ub.marking-attr .
+   define buffer contract               for ub.contract .
 
     objImp = cast (subjectObj, {&impclass}).
 
@@ -188,9 +197,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
          then
             utd.obj-info = shop.addres1.
       end.
-      find first contract  where contract.host-code eq utd.host-code
+      find first contract  where contract.host-code     eq utd.host-code
                              and contract.contract-code eq utd.contract-code
       no-lock no-error.
+      if  not available contract
+      then
+         undo, throw new Progress.Lang.AppError(substitute("В &1, указанный в УПД, не нфйден в системе.",utd.contract-code)) .
+      
       if     contract.cli-type  ne utd.cli-type
          or  contract.cli-code  ne utd.cli-code
       then
@@ -232,20 +245,30 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                .
             end.
             utd-lines.TaxRate = v-gds-gd:nds-code.
-            find first goods where goods.gds-code eq v-gds-gd:gds-code
-            no-lock no-error.
-            if not available goods
-            then
-               undo, throw new Progress.Lang.AppError(substitute("Нет товара с кодом &1",v-gds-gd:gds-code)).
-        
+            if v-gds-gd:gds-code ne ?
+            then do:
+               find first goods where goods.gds-code eq v-gds-gd:gds-code
+               no-lock no-error.
+               if not available goods
+               then
+                  undo, throw new Progress.Lang.AppError(substitute("Нет товара с кодом &1",v-gds-gd:gds-code)).
+            end.
             assign
-               utd-lines.gds-code  = goods.gds-cod
-               utd-lines.UnitCode  = goods.unit-base
-               utd-lines.GdsName   = goods.gds-name
                utd-lines.Price     = v-gds-gd:price-nonds
                utd-lines.Quantity  = v-gds-gd:qnty-ttn
                utd-lines.Total     = v-gds-gd:sum
+               utd-lines.gds-code  = v-gds-gd:gds-code
             .
+            if available  goods
+            then
+               assign
+                  
+                  utd-lines.UnitCode  = goods.unit-base
+                  utd-lines.GdsName   = goods.gds-name
+               .
+            release goods.
+            
+            
             if v-gds-gd:sum-nds eq ?
             then
                assign
@@ -260,16 +283,22 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             if v-gds-gd:stts-desc ne ?
             then
                AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"Load1C","stts-desc-line",v-gds-gd:stts-desc + {&delim-par} + string( utd-lines.LineNum)).
+            if v-gds-gd:Qnty-accepted ne ?
+            then
+               setattrutdlines(utd-lines.db-num, utd-lines.doc-id, utd-lines.lineNum,"QuantityBarCode",string(v-gds-gd:Qnty-accepted)).
             define variable vqnty as integer no-undo.
             vqnty = 0.
+            define variable vGdsCode as integer no-undo.
             v-objlistmark = v-gds-gd:marks .
             if valid-object(v-objlistmark) 
             then do :
+               vGdsCode = 0.
+            
                v-i-counter2 = v-objlistmark:iCounter .
-               if v-i-counter2 < 1
+               /*if v-i-counter2 < 1
                then
                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum ) ).
-                  
+                 */ 
                for each tt-mark:
                   delete tt-mark.
                end.
@@ -291,8 +320,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                      undo, throw new Progress.Lang.AppError(substitute("Нет марки &1 .",v-marks-mark:mark-code)) .
                   if not available utd-marking-lines
                   then do:
-                     
-                     
                      create utd-marking-lines.
                      assign
                         utd-marking-lines.db-num  = utd-lines.db-num
@@ -300,9 +327,19 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                         utd-marking-lines.LineNum = utd-lines.LineNum
                         utd-marking-lines.mark    = vmark
                         utd-marking-lines.doc-level = 1
-                        utd-marking-lines.gds-code  =   goods.gds-cod     
+                        utd-marking-lines.gds-code  = marking.gds-code       
                      .
                   end.
+                  
+                  if     vGdsCode eq 0
+                     and utd-marking-lines.gds-code ne ?
+                  then
+                     vGdsCode = utd-marking-lines.gds-code.
+                  else if      utd-marking-lines.gds-code ne ?
+                      and vGdsCode ne utd-marking-lines.gds-code
+                  then
+                     vGdsCode = ?.
+                  
                   if utd-marking-lines.doc-level eq 1
                   then
                      vqnty = vqnty + marking.box-qnty.
@@ -353,14 +390,24 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   end.
                      
                end.
-               release utd-lines.
+               if     vGdsCode     eq ?
+                  and v-i-counter2 > 0
+               then
+                  utd-lines.gds-code = ?.
+               
+            
             end. //
-            else
+           /* else
                AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum ) ).
+      */   
+            release utd-lines.
          end.
       end.
    end.
-   
+   CheckMarkUtd(utd.db-num,utd.doc-id).
+   CheckMarking(utd.db-num,utd.doc-id,"CheckСontract").
+/*   vMarkUtd =*/
+   CheckMarkUtd(utd.db-num,utd.doc-id).
    if ibs.th.gbl.gbl-var:g#db-num ne 0 and utd.doc-code = "" and utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
       and (utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB )
      then 
@@ -379,7 +426,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
        then v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value).
        else v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
      end.
-     else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формирование ПН &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate), return-value).
+     else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формировании ПН. &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate), trim(return-value, ".")).
      
      v-file-name = string (guid(generate-uuid)) + ".vbs".
      output to value (v-file-name).

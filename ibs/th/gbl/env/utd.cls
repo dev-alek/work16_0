@@ -31,8 +31,8 @@ class ibs.th.gbl.env.utd inherits objth:
     
   constructor public utd (  ):
     super ().
-    Sts = new sts ().
-    EDocType = new edoctype ().
+    {utl\objreg.i Sts sts }
+    {utl\objreg.i EDocType edoctype }
     
   end constructor.
 
@@ -40,11 +40,11 @@ class ibs.th.gbl.env.utd inherits objth:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-  destructor public utd ( ):
+/*  destructor public utd ( ):*/
 /*    if valid-object (EDI)    */
 /*      then delete object EDI.*/
 /*    if valid-object (TH)     */
 /*      then delete object TH. */
-  end destructor.
+/*  end destructor.*/
 
 end class.

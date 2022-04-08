@@ -10,10 +10,11 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+using ibs.th.gbl.sys.objth.
 using ibs.th.str.marking.sts.
 
 
-class ibs.th.gbl.env.marking: 
+class ibs.th.gbl.env.marking inherits objth: 
   
   define public property Sts as class sts no-undo 
     get.
@@ -26,7 +27,7 @@ class ibs.th.gbl.env.marking:
     
   constructor public marking (  ):
     super ().
-    Sts = new sts ().
+    {utl\objreg.i Sts sts }
     
   end constructor.
 
@@ -34,11 +35,11 @@ class ibs.th.gbl.env.marking:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-  destructor public marking ( ):
+/*  destructor public marking ( ):*/
 /*    if valid-object (EDI)    */
 /*      then delete object EDI.*/
 /*    if valid-object (TH)     */
 /*      then delete object TH. */
-  end destructor.
+/*  end destructor.*/
 
 end class.

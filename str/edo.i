@@ -1,5 +1,7 @@
 define variable mDebug as logical no-undo.
+mDebug = session:debug-alert.
 
+/* https://1c-docs.diadoc.ru/ru/latest/ */
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
@@ -29,7 +31,7 @@ end.
     
 &endif
 {cmp/str-glbl.i {1}}
-
+{str/utd-attr.i {1} }
 {str/utd-err.i {1} &*}
 {str/utd.i {1}}
 { gbl/attr-lib.i {1}}
@@ -54,6 +56,35 @@ function PutMes returns character
       put unformatted now " " idext skip.
       output close. 
    end.
+end.
+
+   
+
+&if "{1}" = "class"
+&then
+method public character  PutErr
+&else
+function PutErr returns character
+&endif
+(idext as character ):
+   define variable vi as integer no-undo.
+   define variable vnumerr as integer no-undo.
+   define variable vtext as character extent 25 no-undo .
+
+   if error-status:num-messages > 0 then do:
+      vnumerr = error-status:num-messages.
+      vnumerr = min(vnumerr,extent(vtext)).
+      do vi = 1 to vnumerr:
+         vtext[vi] = error-status:get-message(vi).
+      end.
+      idext = idext + {&new-line} + "Ошибка: [":U.
+      do vi = 1 to vnumerr:
+         idext = idext + {&new-line} + vtext[vi] no-error.
+      end.
+      idext = idext +  {&new-line} +  " ]" no-error.
+      PutMes(idext).
+   end.
+
 end.
 
 &if "{1}" = "class"
@@ -86,7 +117,7 @@ define temp-table tt-recid no-undo
           field stamp as datetime
           index pi orgid docid 
           index parent parent  stamp.
-{ref/extclass.i}
+
 define variable Mext-sys as integer no-undo init ?.
 define stream File-stream.
 define variable mdb-num-local as integer no-undo.
@@ -171,7 +202,7 @@ function  getExtAttr returns character
        end.
    end.
   
-   return oValue.
+   return if oValue eq ? then "" else oValue .
 end.
 
 &if "{1}" = "class"
@@ -258,12 +289,12 @@ function  getdesc returns logical
       putloggetdesc(vPropertyName,vPropertyType,vPropertyValue).
      put stream File-stream  unformatted vPropertyName " " vPropertyType  " " vPropertyValue skip.
    end.
+   release object vPropertyNames.
    put stream File-stream  unformatted skip "method" skip.
    vMethodsNames = vDescobj:GetMethodsNames().
    vi = vMethodsNames:count.
    do vi = 1 to vMethodsNames:count :
       vMethodsName = "".
-      vMethodDesc = "".
       vMethodsName = vMethodsNames:GetItem(vi - 1)no-error.
       vMethodDesc  = vDescobj:GetMethodDesc(vMethodsName)no-error.
       putloggetdesc("method",vMethodsName, vMethodDesc:RetVal).
@@ -275,9 +306,12 @@ function  getdesc returns logical
          put stream File-stream  unformatted " args " varg  skip .
          putloggetdesc(" args ",varg, "").
       end. 
+      release object vMethodDesc.
    end.
+   release object vMethodsNames.
    put stream File-stream  unformatted "end---------------------------------------" skip.
    output stream File-stream close.
+   release object vDescobj.
    release object vReflector.
    end.
    return true.
@@ -329,20 +363,97 @@ function getxsddocum returns logical
                put stream File-stream  unformatted "DocumentType -> Function -> Version -> Title -> IsFormal " vTitle:IsFormal skip.
                put stream File-stream  unformatted "DocumentType -> Function -> Version -> Title -> XsdUrl " vTitle:XsdUrl skip.
                put stream File-stream  unformatted "DocumentType -> Function -> Version -> Title -> HaveUserDataXSD " vTitle:HaveUserDataXSD skip.
+               put stream File-stream  unformatted "DocumentType -> Function -> Version -> Title -> type " vTitle:type skip.
                
+               release object vTitle.
             end.
-            if vDocumentType:name eq "UniversalTransferDocument"
+          /*  if vDocumentType:name eq "UniversalTransferDocument"
             then
             iOrganization:SaveUserDataXSD(vDocumentType:name, vFunction:name, vVersion:version, "Seller", "c:\11\diadoc\" + "upd_" + vFunction:name + ".xsd").    
+           */ release object vTitles.
+            release object vVersion.    
          end.
+         release object vVersions.
+         release object vFunction.
       end.
+      release object vFunctions.
+      release object vDocumentType.
    end.
-   
+   release object vDocumentTypes.
    /* mOrganization.SaveUserDataXSD(TitleName, mFunction:name, Version, DocflowSide, FilePath).*/ 
    put stream File-stream  unformatted "--------------------------------------------------- " skip.
   output stream File-stream close.
   end.
    return true.
+  
+end.
+
+/*получение  TitleType*/
+&if "{1}" = "class"
+&then
+method private char GetDocTitleType
+&else
+function GetDocTitleType returns character  
+&endif
+(iOrganizationid as character ,
+itype as character ,
+ifunction as character, 
+iversion as character
+):
+   if iOrganizationid eq ? then return "".
+   /* олучение чsd схемы */
+   define variable vOrganization  as component-handle no-undo.
+   define variable vDocumentTypes as component-handle no-undo.
+   define variable vDocumentType  as component-handle no-undo.
+   define variable vFunctions     as component-handle no-undo.
+   define variable vFunction      as component-handle no-undo.
+   define variable vVersions      as component-handle no-undo.
+   define variable vVersion       as component-handle no-undo.
+   define variable vTitles        as component-handle no-undo.
+   define variable vTitle         as component-handle no-undo.
+   define variable vi             as integer no-undo.
+   define variable vii            as integer no-undo.
+   define variable viii           as integer no-undo.
+   define variable viiii          as integer no-undo.
+   define variable oTitleType as character no-undo.
+   vOrganization = mDiadocConnection:GetOrganizationById(iOrganizationId) no-error.
+   if vOrganization eq ? then return "".
+   vDocumentTypes = vOrganization:GetDocumentTypes().
+   do vi =1 to vDocumentTypes:count:
+      vDocumentType = vDocumentTypes:GetItem(vi - 1).
+      if vDocumentType:name eq iType
+      then do: 
+         vFunctions = vDocumentType:Functions.
+         do vii =1 to vFunctions:count:
+            vFunction = vFunctions:GetItem(vii - 1 ).
+            if vFunction:name eq ifunction
+            then do: 
+               vVersions = vFunction:Versions.
+               do viii =1 to vVersions:count:
+                  vVersion = vVersions:GetItem(viii - 1 ).
+                  if vVersion:version eq iversion
+                  then do:
+                     vTitles  = vVersion:Titles.
+                     do viiii =1 to vTitles:count:
+                        vTitle = vTitles:GetItem(viiii - 1 ).
+                        oTitleType = oTitleType + "," + vTitle:type.
+                        release object vTitle.
+                     end.
+                     release object vTitles.
+                  end.
+                  release object vVersion.    
+               end.
+               release object vVersions.
+            end.
+            release object vFunction.
+         end.
+         release object vFunctions.
+      end.
+      release object vDocumentType.
+   end.
+   release object vDocumentTypes.
+   release object vOrganization.
+   return left-trim(oTitleType,",").
   
 end.
 
@@ -545,7 +656,7 @@ function getOrganizationInfo returns character
     
    define variable vi as integer no-undo.
    define variable vContAgentOrganizationDetails   as component-handle no-undo.
-   define variable vContAgentOrganizationReference as component-handle no-undo.
+/*   define variable vContAgentOrganizationReference as component-handle no-undo.*/
    define variable vAddrRus                        as component-handle no-undo.
    
    if iContAgent ne ?
@@ -561,7 +672,7 @@ function getOrganizationInfo returns character
       oOrgName = vContAgentOrganizationDetails:OrgName. 
       getdesc(vContAgentOrganizationDetails:Address).
       vAddrRus = vContAgentOrganizationDetails:Address:RussianAddress.
-      getdesc(vContAgentOrganizationDetails:Address:RussianAddress).
+      getdesc(vAddrRus ).
       if vAddrRus ne ?
       then do:
          if vAddrRus:ZipCode ne ""
@@ -594,10 +705,12 @@ function getOrganizationInfo returns character
        
          
       end.
+      release object vAddrRus.
       /*getdesc(vContAgentOrganizationDetails:Address:ForeignAddress).
       vContAgentOrganizationReference = iContAgent:OrganizationReference.
       getdesc(vContAgentOrganizationReference).
       */
+      release object vContAgentOrganizationDetails.
    end.
 end.
 
@@ -650,11 +763,15 @@ function ConectByCertif return component-handle
    define variable vtest as component-handle no-undo.
    vtest = mDiadocApi:TestConnection2().
    if not vtest:ConnectionSuccess
-   then
-      message vtest:ErrorText
-      view-as alert-box.
+   then do:
+      PutMes(vtest:ErrorText).
+   end.
    else
       mDiadocConnection = mDiadocApi:CreateConnectionByCertificate(iThumbprint,"") no-error.
+   if mDiadocConnection eq ?
+   then
+      PutErr("DiadocApi:CreateConnectionByCertificate:").
+   release object vtest. 
    return mDiadocConnection.
 end.
 
@@ -692,6 +809,10 @@ function ConectByLogin return component-handle
       mDiadocApi:ProxySettings:Password = getextAttr({&attr-esys-proxy-pswd}).
    end. 
    mDiadocConnection = mDiadocAPI:CreateConnectionByLogin(getextAttr({&attr-esys-diadoc-user}),getextAttr({&attr-esys-diadoc-pwd})) no-error. /*"sibintek-pnpo@yandex.ru","987654321Aa"*/
+   define variable vi as integer no-undo.
+   if mDiadocConnection eq ?
+   then
+      PutErr("DiadocAPI:CreateConnectionByLogin").
    return mDiadocConnection.
 end.    
 
@@ -716,12 +837,16 @@ function ProcessSystemMessStart return component-handle
        do vi = 1 to vOrganizationList:count:
           vOrganization = vOrganizationList:GetItem(vi - 1 ). 
           vReceiptGenerationProcess = vOrganization:GetReceiptGenerationProcess().
+          release object vOrganization.
           if IStartStop
           then
              vReceiptGenerationProcess:Start().
           else
              vReceiptGenerationProcess:Stop().
+          
+          release object vReceiptGenerationProcess.
        end.
+       release object vOrganizationList.
    end.
 end.
 
@@ -735,10 +860,12 @@ method private character SendAccept
   output oOperationCode as character  ): 
 &else
 procedure SendAccept:
-   define input  parameter itype as character no-undo.
+   define input  parameter iTypeAccept     as character no-undo.
    define input  parameter iReplyTask as component-handle no-undo.
    define input  parameter iOrganizationId as character no-undo.
    define input  parameter iWorkflowId as integer no-undo.
+   define input  parameter iTitleTypes    as character  no-undo.
+   
    define output parameter oOperationCode as character no-undo.                                   
 &endif
                                       
@@ -751,6 +878,8 @@ procedure SendAccept:
    define variable vEmployee     as component-handle no-undo.
    define variable vContentOperCode as component-handle no-undo.
    define variable vOrganization   as component-handle no-undo.
+   define variable vUserperm   as component-handle no-undo.
+   
    define variable vi as integer no-undo.
 
   define variable vdate as date no-undo.
@@ -759,9 +888,10 @@ procedure SendAccept:
   define variable vOperationCode as character no-undo.
   define variable vOperationContenttext as character no-undo.
   define variable vOperationContent as character no-undo.
+  define variable vThumbprint as character no-undo.
+  define variable vJobTitle   as character no-undo.
 
-  define buffer user-account for user-account.
-
+  vThumbprint = mDiadocConnection:Certificate:Thumbprint.
   vOrganization = mDiadocConnection:GetOrganizationById(iOrganizationId) no-error.
   if vOrganization eq ?
   then do:
@@ -771,18 +901,80 @@ procedure SendAccept:
         return error "".
   end. 
   else do:
+     define variable vTitleType as character no-undo.
+     define variable vSignSet   as component-handle no-undo.
+     define variable vSeller as logical no-undo.
+     vUserperm = vOrganization:GetUserPermissions().
+     vJobTitle = vUserperm:JobTitle.
+     release object vUserperm.     
+     blk-tit:
+     do vi = 1 to num-entries(iTitleTypes):
+        vTitleType = entry(vi,iTitleTypes).
+        vSeller = index(vTitleType,"Seller") > 0.
+        if vSeller
+        then 
+           next blk-tit.
+        vSignSet = vOrganization:GetExtendedSignerDetails2(vThumbprint, vTitleType) no-error.
+        if error-status:num-messages > 0
+        then do:
+           define variable vTasksetSign   as component-handle no-undo.
+           define variable vTasksetSignDetal   as component-handle no-undo.
+         
+           vTasksetSign = vOrganization:CreateSetExtendedSignerDetailsTask(VThumbprint).  
+           getdesc(vTasksetSign).
+           vTasksetSign:DocumentTitleType = vTitleType.
+           getdesc(vTasksetSign).
+           vTasksetSignDetal = vTasksetSign:ExtendedSignerDetailsToPost.
+           getdesc(vTasksetSignDetal).
+           vTasksetSignDetal:JobTitle  = vJobTitle    . /* должность работника */
+/*                 vTasksetSignDetal:RegistrationCertificate = "" . /* реквизиты свидетельства о регистрации ИП */*/
+           vTasksetSignDetal:SignerType = "LegalEntity" . /* тип подписанта. LegalEntity представитель юридического лица */
+           vTasksetSignDetal:SignerInfo = "". /* иные сведения, идентифицирующие физическое лицо*/
+           vTasksetSignDetal:Powers = if VSeller then "InvoiceSigner"  else "PersonDocumentedOperation". /* область полномочий InvoiceSigner  лицо, ответственное за подписание счетов-фактур*/
+           vTasksetSignDetal:Status = if VSeller then "SellerEmployee" else "BuyerEmployee". /* статус BuyerEmployee   работник организации покупателя товаров (работ, услуг, имущественных прав) */
+           vTasksetSignDetal:PowersBase = "Должностные обязанности". /* основания полномочий (доверия) */
+/*                 vTasksetSignDetal:OrganizationPowersBase = "". /* основания полномочий (доверия) организации*/*/
+           getdesc(vTasksetSignDetal).
+           release object vTasksetSignDetal.
+           vTasksetSign:send() no-error.
+           if error-status:num-messages > 0 then do:
+         
+              PutErr(substitute("Error Ошибка при установке подписанта по документу &1 ", vTitleType )).
+           end.
+           release object vTasksetSign.
      
-     vOperationContent = if itype eq "AcceptDocumentWithDisc" then "2" else if itype eq "AcceptDocumentNotAccepted" then "3" else "1".
+        end.
+        else do: 
+           getdesc(vSignSet).
+           release object vSignSet.
+        end.
+     end.
+        
+     vOperationContent = if iTypeAccept eq "AcceptDocumentWithDisc" 
+                         then "2" 
+                         else if iTypeAccept eq "AcceptDocumentNotAccepted" 
+                         then "3" 
+                         else "1".
      vdate = today.
      vDocumentCreator = substitute("&1, ИНН~/КПП &2~/&3", vOrganization:name , vOrganization:inn , vOrganization:kpp).
+     release object vOrganization.
   end.
      
+  
+  if    vJobTitle eq ?
+     or vJobTitle eq ""
+  then
+     vJobTitle = mDiadocConnection:Certificate:JobTitle.
   
                       
    if (   iWorkflowId = 3
       or iWorkflowId = 5
       or iWorkflowId = 8
-      or iWorkflowId = 11)
+      or iWorkflowId = 11
+      or iWorkflowId = 12
+      or iWorkflowId = 13
+      or iWorkflowId = 16)
+      
       and iReplyTask ne ?
    then do:
       getdesc(iReplyTask).
@@ -793,7 +985,7 @@ procedure SendAccept:
          getdesc(vContentItems:GetItem(vi - 1 ):document).
          vContentItem = vContentItems:GetItem(vi - 1 ):Content.
          getdesc(vContentItem).
-         release object vBuyerTitle no-error.
+         
          vBuyerTitle = vContentItem:UniversalTransferDocumentBuyerTitle no-error.
          getdesc(vBuyerTitle).
          if vBuyerTitle eq ?
@@ -814,26 +1006,16 @@ procedure SendAccept:
             getdesc(vBuyerTitle).
             vEmployee = vBuyerTitle:Employee.
             getdesc(vEmployee).
-            find first user-account 
-              where user-account.user-id = v-cntxt-userid 
-              no-lock no-error .
-               
-            if available user-account
-            then do:
-               if    user-account.position eq ""
-               or user-account.first-name eq ""
-               or user-account.last-name eq ""
-            then do:
-               putmes("error Незаполнено должность или фамилия или имя").
-               return error "Незаполнено должность или фамилия или имя".
-            end.
-               vEmployee:position        = user-account.position    . /* должность работника */
-               vEmployee:FirstName       = user-account.first-name  . /* фамилия */
-               vEmployee:LastName        = user-account.last-name   . /* имя */
-               vEmployee:MiddleName      = user-account.second-name . /* отчество */
+            define variable vUser   as component-handle no-undo.
+            vUser = mDiadocConnection:GetMyUser().
+            getdesc(vUser).
+ /*           vEmployee:position        = vJobTitle    . /* должность работника */
+            vEmployee:FirstName       = vUser:FirstName  . /* фамилия */
+  */          vEmployee:LastName        = vUser:LastName   . /* имя */
+            vEmployee:MiddleName      = vUser:MiddleName . /* отчество */
       /*         vEmployee:EmployeeInfo     = /* иные сведения, идентифицирующие физическое лицо */   */
                vEmployee:EmployeeBase     = "Должностные обязанности". /* основание полномочий представителя */ 
-            end.
+            release object vUser.
             getdesc(vEmployee).
             getdesc(mDiadocConnection:Certificate).
    
@@ -845,7 +1027,7 @@ procedure SendAccept:
             vContentOperCode:DateDiscrepDocument = string(today,"99.99.9999"). /* ДатаДокРасх */
             vContentOperCode:NumberDiscrepDocument = "NumberDiscrepDocument". /* НомДокРасх */
             vContentOperCode:TypeDiscrepDocument = "3".                       /* ВидДокРасх Принимает значение: 
-   2 – документ о приемке с расхождениями   |
+   2 – документ о приемке с расходениями   |
    3 – документ о расхождениях
             */
             vContentOperCode:NameDiscrepDocument = "NameDiscrepDocument". /* НаимДокРасх */ */
@@ -854,7 +1036,9 @@ procedure SendAccept:
    2 – товары (работы, услуги, права) приняты с расхождениями (претензией)   |
    3 – товары (работы, услуги, права) не приняты
             */
-            vBuyerTitle:OperationCode   = vOperationCode. /*"вид операции".*/
+            vBuyerTitle:OperationCode   = oOperationCode. /*"вид операции".*/
+            release object vContentOperCode.
+            release object vEmployee.
          end. 
          vBuyerTitle:DocumentCreator = vDocumentCreator . /*"составитель файла обмена счета-фактуры (информации покупателя)".*/
          vBuyerTitle:DocumentCreatorBase     = vDocumentCreatorBase. /*"основание, по которому экономический субъект является составителем файла обмена счета-фактуры".*/
@@ -908,18 +1092,15 @@ procedure SendAccept:
          
          
    */
-   
-   
-         
-        
          vSigner:SignerReference:CertificateThumbprint = mDiadocConnection:Certificate:Thumbprint.
          vSigner:SignerReference:boxid = iOrganizationId.
          getdesc(vSigner:SignerReference).
+         release object vBuyerTitle no-error.
+         release object vContentItem.
       end.
+      release object vContentItems.
    end.
    
-
-
 end.
 
 &if "{1}" = "class"
@@ -935,6 +1116,10 @@ function SendAnswer returns character
    define variable vSigner        as component-handle no-undo.
    define variable vSignTask      as component-handle no-undo.
    define variable vOrganization  as component-handle no-undo. 
+   define variable vUserperm      as component-handle no-undo. 
+   define variable vUser          as component-handle no-undo. 
+   
+   
    define variable vi as integer no-undo.
    
    if     itypeAnswer ne "AcceptRevocation" 
@@ -960,36 +1145,31 @@ function SendAnswer returns character
         getdesc(vContent).
          vSigner = vContent:Signer.
          getdesc(vSigner).
-         find first user-account 
-           where user-account.user-id = v-cntxt-userid 
-           no-lock no-error .
+         vOrganization = mDiadocConnection:GetOrganizationById(iOrg) no-error.
          
-         if available user-account
-         then do:
-             if    user-account.position eq ""
-            or user-account.first-name eq ""
-            or user-account.last-name eq ""
-         then do:
-            putmes("error Незаполнено должность или фамилия или имя").
-            return error "".
-         end.   
-         
-            vSigner:JobTitle        = user-account.position    . /* должность работника */
-            vSigner:Surname       = user-account.first-name  . /* фамилия */
-            vSigner:FirstName        = user-account.last-name   . /* имя */
-            vSigner:Patronymic      = user-account.second-name . /* отчество */
-            vOrganization = mDiadocConnection:GetOrganizationById(iOrg) no-error.
-            vSigner:Inn        = vOrganization:inn.
-         end.
-         else do:
-         vSigner:Surname    = entry (1,mDiadocConnection:Certificate:name, " ").
-         vSigner:FirstName  = entry (2,mDiadocConnection:Certificate:name, " ")no-error.
-         vSigner:Patronymic = entry (3,mDiadocConnection:Certificate:name, " ")no-error.
-         vSigner:JobTitle   = mDiadocConnection:Certificate:JobTitle.
+         vUserperm = vOrganization:GetUserPermissions().
+         define variable vJobTitle as character no-undo.
+         vJobTitle = vUserperm:JobTitle.
+         if    vJobTitle eq ?
+            or vJobTitle eq ""
+         then
+            vJobTitle = mDiadocConnection:Certificate:JobTitle.
+         release object vUserperm.
+         release object vOrganization.     
+         vUser = mDiadocConnection:GetMyUser().
+         getdesc(vUser).
+         vSigner:Surname    = vUser:FirstName.
+         vSigner:FirstName  = vUser:LastName.
+      /*   vSigner:Patronymic = vUser:MiddleName.
+         vSigner:JobTitle   = vJobTitle.
           vSigner:Inn        = mDiadocConnection:Certificate:inn.
-         end.
+        */ getdesc(vSigner).
          
+         release object vUser.
+         release object vSigner.
+         release object vContent.
       end.
+      release object vContentItems.
    end.
    
 end.
@@ -1036,13 +1216,27 @@ procedure send:
       vReplyTask = iDocument:CreateReplySendTask2(vTypeAnswer).
       vOrganizationid = iDocument:OrganizationId.
       vDocumentid     = iDocument:DocumentId.
+      getdesc(iDocument).
+         
       if vTypeAnswer =  "AcceptDocument" 
       then do:
+         define variable vtitletype as character no-undo.
+         vTitleType = GetDocTitleType(vOrganizationid,iDocument:TypeNamedId,iDocument:DocumentFunction,iDocument:Version).
          &if "{1}" = "class"
          &then
-             sendAccept  (vTypeAnswer_orig,vReplyTask,iDocument:OrganizationId,iDocument:WorkflowId,output oOperationCode ) no-error.
+             sendAccept  (vTypeAnswer_orig,
+                          vReplyTask,
+                          iDocument:OrganizationId,
+                          iDocument:WorkflowId,
+                          vtitletype,
+                          output oOperationCode ) no-error.
          &else
-         run sendAccept in this-procedure (vTypeAnswer_orig,vReplyTask,iDocument:OrganizationId,iDocument:WorkflowId,output oOperationCode ) no-error.
+         run sendAccept in this-procedure (vTypeAnswer_orig,
+                                           vReplyTask,
+                                           iDocument:OrganizationId,
+                                           iDocument:WorkflowId,
+                                           vtitletype,
+                                           output oOperationCode ) no-error.
          &endif
          if error-status:error
          then
@@ -1087,14 +1281,32 @@ procedure send:
          end.
          if not mFlaftest
          then do:
+         getdesc(vReplyTask).
             vReplyTask:Send() no-error.
             if error-status:num-messages > 0 then do:
-            do vi = 1 to error-status:num-messages:
-               PutMes(substitute("Error Ошибка при выполнение действия по документу &1 Ошибка: &2. ", vDocumentid ,error-status:get-message(vi))).
+            Puterr(substitute("Error Ошибка при выполнение действия по документу &1. ", vDocumentid )).
                
-            end.
+            release object vReplyTask.
             return error "Ошибка при выполнение дейстия с документом".
          end.
+         /*
+         define variable vAsyncResult   as component-handle no-undo.
+   
+         vAsyncResult = vReplyTask:SendAsync() no-error.
+         getdesc(vAsyncResult).
+         pause 5.
+         getdesc(vAsyncResult).
+         
+         release object vReplyTask.
+         
+         message vAsyncResult:IsCompleted vAsyncResult:Result
+         view-as alert-box.
+         message vAsyncResult:IsCompleted vAsyncResult:Result
+         view-as alert-box.
+         getdesc(vAsyncResult).
+         message 555
+         view-as alert-box.
+         */
          /*do trans:
             find first utd where utd.DocumentExt     = vDocumentid
                              and utd.OrganizationExt = vOrganizationid
@@ -1144,10 +1356,14 @@ function GetDocumforid returns character
    then do:
       vOrganization = mDiadocConnection:GetOrganizationById(iorg) no-error.
       if vOrganization ne ?
+      then do:
+         oDocument = vOrganization:GetDocumentById(idoc-id,false) no-error.
+         if oDocument eq ?
       then
-         oDocument = vOrganization:GetDocumentById(idoc-id,false).
+            PutErr(substitute("Error Нет доступа к документу &2 по организации &1. ", iorg,idoc-id)).
+      end.
       else do:
-         PutMes(substitute("Error Нет доступа к организации &1 по документу &2. ", iorg,idoc-id)).
+         PutErr(substitute("Error Нет доступа к организации &1 по документу &2. ", iorg,idoc-id)).
          return "Нет доступа к организации " + iorg.
       end.
    end.
@@ -1182,17 +1398,23 @@ function GetDocum returns character
    then do:
       vOrganization = mDiadocConnection:GetOrganizationById(utd.OrganizationExt) no-error.
       if vOrganization ne ?
+      then do:
+         oDocument = vOrganization:GetDocumentById(utd.DocumentExt,false) no-error.
+         if oDocument eq ?
       then
-         oDocument = vOrganization:GetDocumentById(utd.DocumentExt,false).
+            PutErr(substitute("Error Нет доступа к документу &2 по организации &1. ", utd.OrganizationExt,utd.DocumentExt)).
+
+         release object vOrganization no-error.
+      end.
       else do:
-         PutMes(substitute("Error Нет доступа к организации &1 по документу &2. ", utd.OrganizationExt,utd.DocumentNumber)).
+         PutErr(substitute("Error Нет доступа к организации &1 по документу &2. ", utd.OrganizationExt,utd.DocumentNumber)).
          return "Нет доступа к организации " + utd.OrganizationExt.
       end.
    end.
    else
       return "Нет доступа к организации не ЭДО".
    
-   release object vOrganization no-error.
+   
    return "". 
 end.
 
@@ -1241,6 +1463,59 @@ end.
 
 &if "{1}" = "class"
 &then
+method public logical addMarkforUtd
+&else
+function addMarkforUtd returns logical 
+&endif
+(iDb-num  as integer ,
+ iDoc-id  as integer ,
+ ilinenum as integer ,
+ iMark as character  ,
+ isite   as character   ):
+   if imark ne "-"
+   then do:
+      imark = repTegforDm(imark).
+                                     
+      find first marking where marking.mark eq iMark exclusive-lock no-error.
+      if not available marking
+      then do:
+         create marking.
+         marking.mark = iMark.
+         marking.box-qnty = getQntyUTDByDM(marking.mark).
+         marking.gds-code = ?.
+      end.
+      find first utd-marking-lines where utd-marking-lines.mark       = marking.mark
+                                     and utd-marking-lines.db-num     = idb-num     
+                                     and utd-marking-lines.doc-id     = idoc-id 
+                                     and utd-marking-lines.Linenum    = iLinenum        
+      exclusive-lock no-error.
+      if not available utd-marking-lines
+      then do:
+         create utd-marking-lines.
+         assign
+            utd-marking-lines.mark      = marking.mark
+            utd-marking-lines.db-num    = idb-num     
+            utd-marking-lines.doc-id    = idoc-id 
+            utd-marking-lines.Linenum   = iLinenum
+            utd-marking-lines.site      = isite
+            utd-marking-lines.doc-level = 1
+            utd-marking-lines.gds-code  = ?        
+         .
+         release utd-marking-lines. 
+      end.
+      else do:
+         if    (    isite eq "-"
+            and utd-marking-lines.site eq "+")
+         or (    isite eq "+"
+            and utd-marking-lines.site eq "-")
+         then 
+            delete utd-marking-lines.
+      end.
+   end.
+end.
+
+&if "{1}" = "class"
+&then
 method public logical CheckLoad
 &else
 function CheckLoad returns logical 
@@ -1254,7 +1529,7 @@ function CheckLoad returns logical
    define variable vDocumentChild as component-handle no-undo.
    define variable vContent as component-handle no-undo.
    define variable vConsignees as component-handle no-undo.
-   
+   define variable vfilename as character no-undo.
    oObj-type  = ?.
    oObj-code  = ?.
    ohost-code = ?.
@@ -1269,11 +1544,12 @@ function CheckLoad returns logical
    then main-block :
    do on error undo main-block, return error:
       getdesc(iDocument).
-      if not iDocument:filename  begins "ON_NSCHFDOPPRMARK_"
+      vfilename = iDocument:filename.
+     /* if not iDocument:filename  begins "ON_NSCHFDOPPRMARK_"
       then do:
          PutMes(substitute('По &1 файл &2 не начинается с "ON_NSCHFDOPPRMARK_".' ,iDocument:DocumentNumber, iDocument:filename) ).
          return no.
-      end.
+      end. */
       if iDocument:Direction eq "Inbound"
       then do:
          
@@ -1317,7 +1593,7 @@ function CheckLoad returns logical
             end.
             else
                vContent = vDocumentChild:UniversalTransferDocumentWithHyphens no-error. /* табличная часть счета фактуры */
-            
+            release object vDocumentChild.
             if vContent ne ?
             then do:
                getdesc(vContent).
@@ -1383,8 +1659,10 @@ function CheckLoad returns logical
                      getdesc(vConsignees:Consignee:GetItem(0)).
                      getOrganizationInfo(vConsignees:Consignee:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAddrOrg).
                   end.
+                  release object vConsignees.
                   vFnsParticipantId = vContent:RecipientFnsParticipantId.
                end.
+               release object vContent.
                define variable otext as character no-undo.
                vFlag = getObgFns 
                           (input iDocument:DocumentNumber ,
@@ -1397,11 +1675,10 @@ function CheckLoad returns logical
                if otext ne "" and otext ne ?
                then 
                   PutMes( otext).
-               if vFlag  ne ?
+               if vFlag  eq no
                then 
                   return vFlag .
-               else
-                  vFlag = no.
+               
             end.
             else do:
                PutMes("Error Ошибка получения данных из Диадок UniversalTransferDocument" + if iDocument:version  eq "utd820_05_01_01" then "" else "WithHyphens").
@@ -1409,12 +1686,12 @@ function CheckLoad returns logical
             end.
          end.
          else do:
-            PutMes("Error Ошибка получения данных из Диадок Seller").
+            PutErr(substitute ("Error Ошибка получения данных из Диадок Seller по документу с типом &1",iDocument:type)).
             return no.
          end.
       end.
       else
-         vFlag = yes.
+         return no.
       if ohost-code eq ? or ohost-code eq 0
       then do: 
          PutMes(substitute("По &1 не удалось определить фирму по получателю  &2." ,iDocument:DocumentNumber, vFnsParticipantId) ).
@@ -1425,7 +1702,52 @@ function CheckLoad returns logical
    else do:
       define variable vdb-num as integer no-undo.
       define variable vdoc-id as integer no-undo.
-      GetLastUTDForPac(iDocument:PackageId,iDocument:Timestamp,output vdb-num,output vdoc-id ).
+      define variable vpack as character no-undo init ?.
+      define variable vcli-type as character no-undo.
+      define variable vcli-code as integer no-undo.
+      define variable vfns as character no-undo.
+      define variable vchar as character no-undo.
+      vDocumentChild = iDocument:GetDynamicContent("Seller")no-error.
+      if vDocumentChild eq ?
+      then do:
+         PutErr(substitute ("Error Ошибка получения данных из Диадок Seller по документу с типом &1",iDocument:type)).
+         return no.
+      end.
+      vContent = vDocumentChild:UniversalCorrectionDocument no-error.
+            
+      if vContent ne ?
+      then do:
+                    /* mSellerCol = mSellers:Seller. */
+         getOrganizationInfo(vContent:Seller,output vchar,output vchar,vFns, output vchar, output vchar).
+            
+         find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
+                                  and ext-classif.charkey_three eq vFns
+         no-lock no-error.
+         if available ext-classif
+         then do:
+            assign 
+               vcli-type = ext-classif.CharKey_One
+               vcli-code = ext-classif.Key#_One
+            .
+            vPack = substitute("&1|&2|&3|&4",vcli-type,vcli-code,iDocument:OriginalInvoiceNumber,date(iDocument:OriginalInvoiceDate)).
+            
+            GetprevUTDForPac(vpack,iDocument:Timestamp,output vdb-num,output vdoc-id ).
+            release object vContent.
+      
+         end.
+         else do:
+                  PutMes(substitute("По &1 не найден отправитель  &2." ,iDocument:DocumentNumber, vFnsParticipantId) ).
+                  return no.
+                  
+               end.
+      end.
+      else do:
+         PutErr("Error Ошибка получения данных из Диадок Seller").
+         return no.
+      end.
+      
+      release object vDocumentChild.
+      
       define buffer     utd for utd.
       find first utd where utd.db-num eq vdb-num
                        and utd.doc-id eq vdoc-id
@@ -1436,42 +1758,36 @@ function CheckLoad returns logical
             oobj-type  = utd.obj-type
             oobj-code  = utd.obj-code
             ohost-code = utd.host-code
+            vfilename  = getattrutd (utd.db-num,utd.doc-id,"FileName")
          .
+      end.
+      else do:
+         PutMes(substitute("Не найден оригенальный документ по пакету &1.",vpack)).
+         return no.
+      end.
+      
+   end.
+   if /* not vFlag */ yes
+   then do:
+      define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+      EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(oobj-type, oobj-code).
+      
+      if     not EDOParSec:IsEdo
+         and vfilename begins "ON_NSCHFDOPPRMARK_"
+      then do:
+         PutMes(substitute("На объекте &1&2 не установлен параметр работы с ЭДО для маркированного товара.",oobj-type,oobj-code)).
+         vFlag = no.
+      end.
+      else if     not EDOParSec:IsEdoNotmark
+              and not vfilename begins "ON_NSCHFDOPPRMARK_"
+      then do:
+         PutMes(substitute("На объекте &1&2 не установлен параметр работы с ЭДО для не маркированного товара.",oobj-type,oobj-code)).
+         vFlag = no.
       end.
       else
          vFlag = yes.
       
-   end.
-   if not vFlag
-   then do:
-      define variable v-tth as handle no-undo .
-      define variable v-value-character as character no-undo.
-      define variable v-value-date as date no-undo.
-      define variable v-value-decimal as decimal no-undo.
-      define variable v-value-integer as integer no-undo.
-      define variable v-param-type as character no-undo.
-      define variable v-FlagEdo as logical no-undo.
-      run adm/shattri.p (
-         input "get":U
-         ,input  oobj-type /*p-obj-type*/
-         ,input   oobj-code /*p-obj-code*/
-         ,input  {&attr-marking}
-         ,input  {&attr-marking_marking-EDO} /*p-param-code*/
-         ,output v-value-character
-         ,output v-value-date
-         ,output v-value-decimal
-         ,output v-value-integer
-         ,output v-FlagEdo
-         ,output v-param-type
-         ,input-output table-handle v-tth
-      ) no-error .
-      if not error-status:error and v-FlagEdo ne ? 
-      then do:
-         vFlag = v-FlagEdo.
-         if not vFlag
-         then
-            PutMes(substitute("На объекте &1&2 не установлен параметр работы с ЭДО.",oobj-type,oobj-code)).
-      end.
+     
    end.
    
    return vFlag.
@@ -1525,6 +1841,7 @@ procedure  UpdateUTDInformOne :
    define variable vunits  as component-handle no-undo.
    define variable vunit   as component-handle no-undo.
    define variable VValue  as character        no-undo.
+   define variable vsite   as character        no-undo.
    define variable vNewUtd as logical          no-undo.
    if iDocument eq ?
    then
@@ -1627,6 +1944,7 @@ procedure  UpdateUTDInformOne :
          then
             utd.sts-edi = ?. */
          setattrutd (utd.db-num,utd.doc-id,"FileName",iDocument:FileName).
+         
          utd.RevocationStatus = iDocument:RevocationStatus.
          utd.RecipientResponseStatus          = iDocument:RecipientResponseStatus.
          utd.TypeId           = iDocument:type.
@@ -1721,8 +2039,9 @@ procedure  UpdateUTDInformOne :
                      utd.BaseDocumentNumber = vTransferBase:BaseDocumentNumber.
                      utd.BaseDocumentName   = vTransferBase:BaseDocumentName.
                      utd.BaseDocumentDate   = date(vTransferBase:BaseDocumentDate).
+                     release object vTransferBase.
                   end.
-                 
+                  release object vTransferBasecol.
                   vSellers = vContent:Sellers.
                   getdesc(vSellers).
                   
@@ -1730,6 +2049,7 @@ procedure  UpdateUTDInformOne :
                   if vSellers:Seller:count > 0
                   then
                      getOrganizationInfo(vSellers:Seller:GetItem(0),output utd.cli-inn,output utd.cli-kpp,utd.cli-FnsParticipantId, output vorgname, output vAddrOrg).
+                  release object vSellers.
                   if iDocument:version  ne "utd820_05_01_01"
                   then
                      utd.cli-FnsParticipantId = vContent:SenderFnsParticipantId.
@@ -1747,6 +2067,7 @@ procedure  UpdateUTDInformOne :
                      then
                         getOrganizationInfo(vConsignees:Consignee:GetItem(0),output utd.obj-inn,output utd.obj-kpp,utd.obj-FnsParticipantId, output vorgname, output vAddrOrg).
                      utd.obj-FnsParticipantId = vContent:RecipientFnsParticipantId.
+                     release object vConsignees.
                   end.
                   utd.obj-info = vorgname + " " + vAddrOrg + " ИНН: " + utd.obj-inn + " КПП: " + utd.obj-kpp.
                   
@@ -1754,6 +2075,7 @@ procedure  UpdateUTDInformOne :
                   vInvoiceTable = vContent:Table.
                   getdesc(vInvoiceTable).
                   vItems = vInvoiceTable:Item.
+                  release object vInvoiceTable.
                   do vi = 1 to vItems:Count: /* Документы потомки */
                      vExtendedInvoiceItem= vItems:GetItem(vi - 1).
                        /* if VIII = 1 then*/ 
@@ -1769,12 +2091,14 @@ procedure  UpdateUTDInformOne :
                            utd-lines.db-num   = utd.db-num
                            utd-lines.doc-id   = utd.doc-id
                            utd-lines.Linenum  = vi
+                           utd-lines.gds-code = ?
                         .
                         
                      end.
                      utd-lines.ProductCode = vExtendedInvoiceItem:Product.
                      utd-lines.UnitCode    = vExtendedInvoiceItem:UnitnAME.
                      setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(vExtendedInvoiceItem:Quantity)).
+                     setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Unit",string(vExtendedInvoiceItem:unit)).
                      
                      utd-lines.Price       = vExtendedInvoiceItem:Price.
                      utd-lines.TotalWithVatExcluded   = vExtendedInvoiceItem:SubtotalWithVatExcluded.
@@ -1809,7 +2133,7 @@ procedure  UpdateUTDInformOne :
                         getdesc(vItemIdentificationNumber:Unit).
                         if vItemIdentificationNumber:TransPackageId ne ? and vItemIdentificationNumber:TransPackageId ne ""
                         then do:
-                           VValue = repSpecSimbforDm(vItemIdentificationNumber:TransPackageId).
+                           VValue = repTegforDm(vItemIdentificationNumber:TransPackageId).
                            find first marking where marking.mark eq VValue exclusive-lock no-error.
                            if not available marking
                            then do:
@@ -1818,7 +2142,7 @@ procedure  UpdateUTDInformOne :
                               marking.unit-ext   = getLevelMotpByCodId(marking.mark) .
                               marking.box-qnty   = getQntyUTDByCodId(marking.mark) .
                               marking.unit       = getLevelUTDByCodId(marking.mark) .
-                              
+                              marking.gds-code = ?.
                                
                                     
                            end.
@@ -1845,15 +2169,16 @@ procedure  UpdateUTDInformOne :
                                  utd-marking-lines.doc-id    = utd-lines.doc-id 
                                  utd-marking-lines.Linenum   = utd-lines.Linenum
                                  utd-marking-lines.doc-level = 1        
+                                 utd-marking-lines.gds-code = ?        
                               .
                                
                            end.
-                        
+                           release object vItemIdentificationNumber.
                         end. 
                         vunit = vItemIdentificationNumber:Unit.
                         do viii = 1 to vunit:count:
                            vValue = vunit:GETITEM(viii - 1).
-                           VValue = repSpecSimbforDm(VValue).
+                           VValue = repTegforDm(VValue).
                            find first marking where marking.mark eq VValue exclusive-lock no-error.
                            if not available marking
                            then do:
@@ -1862,17 +2187,24 @@ procedure  UpdateUTDInformOne :
                               marking.unit-ext   = getLevelMotpByCodId(marking.mark) .
                               marking.box-qnty   = getQntyUTDByCodId(marking.mark) .
                               marking.unit       = getLevelUTDByCodId(marking.mark) .
+                              marking.gds-code = ?.
                               define variable vMRC as decimal no-undo.
                               vMRC =  getMRCByDM (vValue).
                               if     vMRC ne 0 
                                  and vMRC ne ?
                               then do:
+                                 find first marking-attr where marking-attr.mark      = vValue
+                                                           and marking-attr.attr-code = "MRC"
+                                 no-lock no-error.
+                                 if not available marking-attr
+                                 then do:
                                  create marking-attr.
                                  assign
                                     marking-attr.mark =  vValue
                                     marking-attr.attr-code = "MRC"
                                     marking-attr.attr-value = string(vMRC)
-                                 no-error.
+                                    .
+                                 end.
                                  release marking-attr no-error.
                               end. 
                                     
@@ -1900,17 +2232,18 @@ procedure  UpdateUTDInformOne :
                                  utd-marking-lines.doc-id    = utd-lines.doc-id 
                                  utd-marking-lines.Linenum   = utd-lines.Linenum
                                  utd-marking-lines.doc-level = 1        
+                                 utd-marking-lines.gds-code = ?        
                               .
                                
                            end.
                         end.
-                        
+                        release object  vunit.
                         getdesc(vItemIdentificationNumber:PackageId).
                         vunit = vItemIdentificationNumber:PackageId.
                                         
                         do viii = 1 to vunit:count:
                            VValue = vunit:GETITEM(viii - 1).
-                           VValue = repSpecSimbforDm(VValue).
+                           VValue = repTegforDm(VValue).
                            find first marking where marking.mark eq VValue exclusive-lock no-error.
                            if not available marking
                            then do:
@@ -1919,16 +2252,23 @@ procedure  UpdateUTDInformOne :
                               marking.unit-ext    = getLevelMotpByCodId(marking.mark) .
                               marking.box-qnty    = getQntyUTDByCodId(marking.mark) .
                               marking.unit        = getLevelUTDByCodId(marking.mark) .
+                              marking.gds-code = ?.
                               vMRC =  getMRCByDM (vValue).
                               if     vMRC ne 0 
                                  and vMRC ne ?
                               then do:
+                                 find first marking-attr where marking-attr.mark      =  vValue
+                                                           and marking-attr.attr-code = "MRC"
+                                 no-lock no-error.
+                                 if not available marking-attr
+                                 then do:
                                  create marking-attr.
                                  assign
                                     marking-attr.mark =  vValue
                                     marking-attr.attr-code = "MRC"
                                     marking-attr.attr-value = string(vMRC)
-                                 no-error.
+                                    .
+                                 end.
                                  release marking-attr no-error.
                               end.
                            end.
@@ -1954,20 +2294,67 @@ procedure  UpdateUTDInformOne :
                                  utd-marking-lines.db-num     = utd-lines.db-num     
                                  utd-marking-lines.doc-id     = utd-lines.doc-id 
                                  utd-marking-lines.Linenum    = utd-lines.Linenum
+                                 utd-marking-lines.gds-code   = ?
                                  utd-marking-lines.doc-level  = 1
                                  
                               .
                              
                            end.
                         end.
+                        release object  vunit.
                      end.
+                     
+                     vunits = vExtendedInvoiceItem:AdditionalInfos:AdditionalInfo.
+                     do vii = 1 to vunits:count:
+                        vunit = vunits:GETITEM(vii - 1).
+                        getdesc(vunit).
+                        if     vunit:Id eq "штрихкод"
+                        then do:
+                           setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"BarCode",vunit:value).
+                                  
+                           find first utd-marking-lines where       utd-marking-lines.db-num     = utd-lines.db-num     
+                                                          and utd-marking-lines.doc-id     = utd-lines.doc-id 
+                                                          and utd-marking-lines.Linenum    = utd-lines.Linenum        
+                           no-lock no-error.
+                           if not available utd-marking-lines
+                           then do:
+                              vtext = vunit:Value.
+                              do viii = 1 to num-entries(vtext," "):
+                                 VValue = entry(viii,vtext," ").
+                                 find first utd-marking-lines where utd-marking-lines.mark       = VValue
+                                                                and utd-marking-lines.db-num     = utd-lines.db-num     
+                                                                and utd-marking-lines.doc-id     = utd-lines.doc-id 
+                                                                and utd-marking-lines.Linenum    = utd-lines.Linenum        
+                                 no-lock no-error.
+                                 if not available utd-marking-lines
+                                 then do:
+                                    create utd-marking-lines.
+                                    assign
+                                       utd-marking-lines.mark      = VValue
+                                       utd-marking-lines.db-num    = utd-lines.db-num     
+                                       utd-marking-lines.doc-id    = utd-lines.doc-id 
+                                       utd-marking-lines.Linenum   = utd-lines.Linenum
+                                       utd-marking-lines.doc-level = 1
+                                       utd-marking-lines.gds-code = ?        
+                                    .
+                                     
+                                 end.
+                              end.
+                           end.
+                        end.
+                        release object  vunit.
+                     end.
+                     release object  vunits.
+                     
                      release utd-lines.   
+                     release object vExtendedInvoiceItem. 
                   end.
-                  
+                  release object vItems.
                   
                end.
                else do:
                   PutMes("Ошибка получения данных из Диадок UniversalTransferDocumentWithHyphens").
+                  release object vDocumentChild.
                   return error "Ошибка получения данных из Диадок UniversalTransferDocumentWithHyphens".
                end.
                
@@ -1998,15 +2385,12 @@ procedure  UpdateUTDInformOne :
                       
                   
                       vItems = vInvoiceTable:Items:item.
+                      release object vInvoiceTable.
                       do vi = 1 to vItems:Count: /* Документы потомки */
              /*            put stream File-stream  unformatted skip vi skip.*/
                          vExtendedInvoiceItem= vItems:GetItem(vi - 1).
                            /* if VIII = 1 then*/ 
                          getdesc(vExtendedInvoiceItem).
-                         getdesc(vExtendedInvoiceItem:OriginalValues ).
-                         getdesc(vExtendedInvoiceItem:CorrectedValues ).
-                         getdesc(vExtendedInvoiceItem:AmountsInc ).
-                         getdesc(vExtendedInvoiceItem:AmountsDec ).
                          getdesc(vExtendedInvoiceItem:AdditionalInfos ).
                          getdesc(vExtendedInvoiceItem:AdditionalInfos:AdditionalInfo ).
                       /*   getdesc(vExtendedInvoiceItem:AdditionalInfos:AdditionalInfo:getItem(0) ).
@@ -2025,21 +2409,32 @@ procedure  UpdateUTDInformOne :
                                utd-lines.db-num   = utd.db-num
                                utd-lines.doc-id   = utd.doc-id
                                utd-lines.Linenum  = vi
+                               utd-lines.gds-code = ?
                             .
                             
                          end.
                          utd-lines.ProductCode = vExtendedInvoiceItem:Product.
 /*                         utd-lines.UnitCode    = vExtendedInvoiceItem:UnitnAME.*/
-                         vValues = vExtendedInvoiceItem:CorrectedValues.
+                         vValues = vExtendedInvoiceItem:CorrectedValues no-error.
+                         if vValues ne ?
+                         then do:
+                            getdesc(vExtendedInvoiceItem:OriginalValues ).
+                            getdesc(vExtendedInvoiceItem:CorrectedValues ).
+                            getdesc(vExtendedInvoiceItem:AmountsInc ).
+                            getdesc(vExtendedInvoiceItem:AmountsDec ).
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Unit",string(vValues:unit)).
+                        
                          define variable vQuantity as decimal no-undo.
                          vQuantity    = vValues:Quantity.
                          utd-lines.Price       = vValues:Price.
                          utd-lines.TotalWithVatExcluded   = vValues:SubtotalWithVatExcluded.
+/*                            utd-lines.UnitCode    = vValues:unitname.*/
              /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
                          utd-lines.TaxRate   =   if  vValues:TaxRate eq "без ндс" then -1 else decimal(trim(entry(1,vValues:TaxRate,"/"),"%")).
                          utd-lines.Vat       = vValues:Vat.
                          utd-lines.Total     = vValues:Subtotal.
 /*                         utd-lines.Article   = vExtendedInvoiceItem:ItemVendorCode. /* ??? */*/
+                            release object vValues.
                          vValues = vExtendedInvoiceItem:OriginalValues.
                          vQuantity    = vQuantity - vValues:Quantity.
                          setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(vQuantity)).
@@ -2054,10 +2449,11 @@ procedure  UpdateUTDInformOne :
                          setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"TaxRate_old", string(  if  vValues:TaxRate eq "без ндс" then -1 else decimal(trim(entry(1,vValues:TaxRate,"/"),"%")))).
                          setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Vat_old"    , string( vValues:Vat)).
                          setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Total_old",       string( vValues:Subtotal)).
-                         
+                            release object vValues.
                          vunits = vExtendedInvoiceItem:AdditionalInfos:AdditionalInfo.
                          do vii = 1 to vunits:count:
                             vunit = vunits:GETITEM(vii - 1).
+                               getdesc(vunit).
                             if     vunit:Id eq "cis"
                                or vunit:Id eq "cis_до"
                                or vunit:Id eq "sscc"
@@ -2068,55 +2464,203 @@ procedure  UpdateUTDInformOne :
                                if vtext ne "-"
                                then do viii = 1 to num-entries(vtext," "):
                                   VValue = entry(viii,vtext," ").
-                                  VValue = repSpecSimbforDm(VValue).
-                                  find first marking where marking.mark eq VValue exclusive-lock no-error.
-                                  if not available marking
-                                  then do:
-                                     create marking.
-                                     marking.mark = vValue.
-                                     marking.box-qnty = getQntyUTDByDM(marking.mark).
-                                  end.
-                               
-                                 /* if marking.sts = objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB
-                                  then
-                                     marking.sts = ?. */
-                                     define variable vsite as character no-undo.
                                      vsite = if     vunit:Id eq "cis" or vunit:Id eq "sscc" then "+" else "-".
-                                  find first utd-marking-lines where utd-marking-lines.mark       = marking.mark
+                                     addMarkforUtd (utd-lines.db-num, utd-lines.doc-id, utd-lines.LineNum, VValue, vsite).
+                                        
+                                  end.
+                               end.
+                               release object vunit.
+                            end.
+                            do vii = 1 to vunits:count:
+                               vunit = vunits:GETITEM(vii - 1).
+                               getdesc(vunit).
+                               if     vunit:Id eq "штрихкод"
+                               then do:
+                                  setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"BarCode",vunit:value).
+                                  find first utd-marking-lines where       utd-marking-lines.db-num     = utd-lines.db-num     
+                                                                 and utd-marking-lines.doc-id     = utd-lines.doc-id 
+                                                                 and utd-marking-lines.Linenum    = utd-lines.Linenum        
+                                  no-lock no-error.
+                                  if not available utd-marking-lines
+                                  then do:
+                                    vtext = vunit:Value.
+                                    do viii = 1 to num-entries(vtext," "):
+                                       VValue = entry(viii,vtext," ").
+                                       find first utd-marking-lines where utd-marking-lines.mark       = VValue
                                                                  and utd-marking-lines.db-num     = utd-lines.db-num     
                                                                  and utd-marking-lines.doc-id     = utd-lines.doc-id 
                                                                  and utd-marking-lines.Linenum    = utd-lines.Linenum        
-                                  exclusive-lock no-error.
+                                       no-lock no-error.
                                   if not available utd-marking-lines
                                   then do:
                                      create utd-marking-lines.
                                      assign
-                                        utd-marking-lines.mark      = marking.mark
+                                             utd-marking-lines.gds-code  = ?
+                                             utd-marking-lines.mark      = VValue
                                         utd-marking-lines.db-num    = utd-lines.db-num     
                                         utd-marking-lines.doc-id    = utd-lines.doc-id 
                                         utd-marking-lines.Linenum   = utd-lines.Linenum
-                                        utd-marking-lines.site      = vsite
                                         utd-marking-lines.doc-level = 1        
                                      .
+                                           
+                                       end.
+                                    end.
+                                 end.
+                                 
+                              end.
+                              release object  vunit.
+                              
+                           end.
+                            release object vunits.
+                            release utd-lines.
                                      release utd-marking-lines. 
                                   end.
                                   else do:
-                                     if    (vsite eq "-"
-                                        and utd-marking-lines.site eq "+")
-                                        or
-                                        (vsite eq "+"
-                                        and utd-marking-lines.site eq "-")
-                                     then 
-                                        delete utd-marking-lines.
+                            
+                            getdesc(vExtendedInvoiceItem:OriginalItemIdentificationNumbers ).
+                            getdesc(vExtendedInvoiceItem:OriginalItemIdentificationNumbers:ItemIdentificationNumber).
+                            vunits = vExtendedInvoiceItem:OriginalItemIdentificationNumbers:ItemIdentificationNumber.
+                            getdesc(vunits).
+                            vsite =  "-".
+                                  
+                            do vii = 1 to vunits:count:
+                               getdesc(vunits:GETITEM(vii - 1)).
+                               vunit = vunits:GETITEM(vii - 1):unit.
+                               getdesc(vunit).
+                               do viii = 1 to vunit:count:
+                                  vvalue = vunit:GETITEM(viii - 1).
+                                  addMarkforUtd (utd-lines.db-num, utd-lines.doc-id, utd-lines.LineNum, VValue, vsite).
+                                        
+                               end.
+                               release object vunit.
+                               vunit = vunits:GETITEM(vii - 1):PackageId.
+                               getdesc(vunit).
+                               do viii = 1 to vunit:count:
+                                  vvalue = vunit:GETITEM(viii - 1).
+                                  addMarkforUtd (utd-lines.db-num, utd-lines.doc-id, utd-lines.LineNum, VValue, vsite).
+                                     
+                               end.
+                               release object vunit.   
+                            end.
+                            release object vunits.   
+                            getdesc(vExtendedInvoiceItem:CorrectedItemIdentificationNumbers).
+                            vunits = vExtendedInvoiceItem:CorrectedItemIdentificationNumbers:ItemIdentificationNumber.
+                            
+                            getdesc(vunits).
+                            vsite =  "+".
+                                  
+                            do vii = 1 to vunits:count:
+                               getdesc(vunits:GETITEM(vii - 1)).
+                               vunit = vunits:GETITEM(vii - 1):unit.
+                               getdesc(vunit).
+                               do viii = 1 to vunit:count:
+                                  vvalue = vunit:GETITEM(viii - 1).
+                                  addMarkforUtd (utd-lines.db-num, utd-lines.doc-id, utd-lines.LineNum, VValue, vsite).
+                                        
                                   end.
+                               release object vunit.
+                               vunit = vunits:GETITEM(vii - 1):PackageId.
+                               getdesc(vunit).
+                               do viii = 1 to vunit:count:
+                                  vvalue = vunit:GETITEM(viii - 1).
+                                  addMarkforUtd (utd-lines.db-num, utd-lines.doc-id, utd-lines.LineNum, VValue, vsite).
                                   
                                end.
+                               release object vunit.   
+                            end.
+                            release object vunits.   
+                               
+                            getdesc(vExtendedInvoiceItem:TaxRate ).
+                            getdesc(vExtendedInvoiceItem:UnitName ).
+                            getdesc(vExtendedInvoiceItem:Unit ).
+                            getdesc(vExtendedInvoiceItem:Quantity ).
+                            getdesc(vExtendedInvoiceItem:Price ).
+                            getdesc(vExtendedInvoiceItem:Excise ).
+                            getdesc(vExtendedInvoiceItem:SubtotalWithVatExcluded ).
+                            getdesc(vExtendedInvoiceItem:Vat ).
+                            getdesc(vExtendedInvoiceItem:WithoutVat).
+                            getdesc(vExtendedInvoiceItem:Subtotal ).
+                            getdesc(vExtendedInvoiceItem:ItemTracingInfos ).
+                            getdesc(vExtendedInvoiceItem:ItemTracingInfos:ItemTracingInfo ).
+                            vValues = vExtendedInvoiceItem:CorrectedItemIdentificationNumbers.
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Unit",string(vExtendedInvoiceItem:Unit:CorrectedValue)).
+                            utd-lines.Price       = vExtendedInvoiceItem:Price:CorrectedValue.
+                            utd-lines.TotalWithVatExcluded   = vExtendedInvoiceItem:SubtotalWithVatExcluded:CorrectedValue.
+                            utd-lines.UnitCode    = vExtendedInvoiceItem:UnitName:CorrectedValue.
+                /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+                            utd-lines.TaxRate   =   if  vExtendedInvoiceItem:TaxRate:CorrectedValue eq "без ндс" then -1 else decimal(trim(entry(1,vExtendedInvoiceItem:TaxRate:CorrectedValue,"/"),"%")).
+                            utd-lines.Vat       = vExtendedInvoiceItem:Vat:CorrectedValue.
+                            utd-lines.Total     = vExtendedInvoiceItem:Subtotal:CorrectedValue.
+   /*                         utd-lines.Article   = vExtendedInvoiceItem:ItemVendorCode. /* ??? */*/
+                            
+                            vQuantity    = dec(vExtendedInvoiceItem:Quantity:CorrectedValue) - dec(vExtendedInvoiceItem:Quantity:OriginalValue).
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(vQuantity)).
+                            utd-lines.Price       = utd-lines.Price - vExtendedInvoiceItem:Price:OriginalValue.
+                            utd-lines.Vat       = utd-lines.Vat - vExtendedInvoiceItem:Vat:OriginalValue.
+                            utd-lines.Total     = utd-lines.Total  - vExtendedInvoiceItem:Subtotal:OriginalValue.
+                            utd-lines.TotalWithVatExcluded   = utd-lines.TotalWithVatExcluded - vExtendedInvoiceItem:SubtotalWithVatExcluded:OriginalValue.
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity_old",string( vExtendedInvoiceItem:Quantity:OriginalValue)).
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Price_old"   ,string( vExtendedInvoiceItem:Price:OriginalValue)).
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"TotalWithVatExcluded", string( vExtendedInvoiceItem:SubtotalWithVatExcluded:OriginalValue)).
+                /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"TaxRate_old", string(  if  vExtendedInvoiceItem:TaxRate:OriginalValue eq "без ндс" then -1 else decimal(trim(entry(1,vExtendedInvoiceItem:TaxRate:OriginalValue,"/"),"%")))).
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Vat_old"    , string( vExtendedInvoiceItem:Vat:OriginalValue)).
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Total_old",       string( vExtendedInvoiceItem:Subtotal:OriginalValue)).
+                            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"UnitCode_old", vExtendedInvoiceItem:UnitName:OriginalValue).
+                            
+                         
+                         end.
+                         
+                         
+                         vunits = vExtendedInvoiceItem:AdditionalInfos:AdditionalInfo.
+                         getdesc(vunits).
+                         do vii = 1 to vunits:count:
+                            vunit = vunits:GETITEM(vii - 1).
+                            getdesc(vunit).
+                            if     vunit:Id eq "штрихкод"
+                            then do:
+                               setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"BarCode",vunit:value).
+                               find first utd-marking-lines where       utd-marking-lines.db-num     = utd-lines.db-num     
+                                                              and utd-marking-lines.doc-id     = utd-lines.doc-id 
+                                                              and utd-marking-lines.Linenum    = utd-lines.Linenum        
+                               no-lock no-error.
+                               if not available utd-marking-lines
+                               then do:
+                                 vtext = vunit:Value.
+                                 do viii = 1 to num-entries(vtext," "):
+                                    VValue = entry(viii,vtext," ").
+                                    find first utd-marking-lines where utd-marking-lines.mark       = VValue
+                                                                   and utd-marking-lines.db-num     = utd-lines.db-num     
+                                                                   and utd-marking-lines.doc-id     = utd-lines.doc-id 
+                                                                   and utd-marking-lines.Linenum    = utd-lines.Linenum        
+                                    no-lock no-error.
+                                    if not available utd-marking-lines
+                                    then do:
+                                       create utd-marking-lines.
+                                       assign
+                                          utd-marking-lines.mark      = VValue
+                                          utd-marking-lines.db-num    = utd-lines.db-num     
+                                          utd-marking-lines.doc-id    = utd-lines.doc-id 
+                                          utd-marking-lines.Linenum   = utd-lines.Linenum
+                                          utd-marking-lines.gds-code  = ?
+                                          utd-marking-lines.doc-level = 1        
+                                       .
+                                        
                             end.
                          end.
-                         release utd-lines.   
                       end.
+                              
                   end.
+                           release object  vunit.
                  
+               end.
+                        release object  vunits.
+                         
+                         release object vExtendedInvoiceItem.   
+                      end.
+                      release object vItems. 
+                  end.
+                  release object vContent.
                end.
                else do:
                   create tt-recid.
@@ -2125,6 +2669,7 @@ procedure  UpdateUTDInformOne :
                      tt-recid.docid = vDocumentid
                   .
                   PutMes("Error Ошибка получения данных из Диадок UniversalCorrectionDocument").
+                  release object vDocumentChild.
                   return error "Ошибка получения данных из Диадок UniversalCorrectionDocument".
                end.
             end.
@@ -2132,6 +2677,7 @@ procedure  UpdateUTDInformOne :
          
             
          end.
+         release object vDocumentChild.
          define variable vsetPAck as logical no-undo.
          define variable vcli-type as character no-undo.
          define variable vcli-code as integer no-undo.
@@ -2183,7 +2729,8 @@ procedure  UpdateUTDInformOne :
                      utd-marking-lines.sts = if available buf_utd-marking-lines then buf_utd-marking-lines.sts else  objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB.
                   end.
                   validate utd. /* необходимо для привязки марок */
-                  SaturateAndCheckUTD( utd.db-num, utd.doc-id).
+                  ReCheckload( utd.db-num, utd.doc-id,yes).
+                  subscribe "getNextseq" anywhere run-procedure "MySeqForUtd". /*Подпишимся еще раз так как в нутир отписались от события */
                end.
             end.
             else do:
@@ -2235,9 +2782,14 @@ procedure  UpdateUTDInformOne :
             tt-recid.parent = utd.PackageId.
             tt-recid.stamp  = utd.Timestamp.
          end.
-         release utd. /* необходимо для сохранения истории */
+         release utd no-error. /* необходимо для сохранения истории */
+         if error-status:error
+         then
+            PutMes(substitute("Документ &1 не загружен. &2" ,iDocument:DocumentNumber,return-value) ).
+         else
+            PutMes(substitute("Документ &1 загружен." ,iDocument:DocumentNumber) ).
          unsubscribe "getNextseq". 
-         PutMes(substitute("Документ &1 загружен." ,iDocument:DocumentNumber) ).
+         
       end.
    end.
 end.
@@ -2314,7 +2866,9 @@ function packetupdd returns date
             .
          
          end.
+         release object vDocument.
       end.
+      release object vDocuments.
 end.
   
 
@@ -2408,33 +2962,41 @@ procedure UpdateUTDInform:
           
                       vDocumentList = vDocumentsTask:GetDocuments() no-error.
                       if vDocumentList ne ?
-                      then do vii= 1 to vDocumentList:Count:
+                      then do: 
+                        do vii= 1 to vDocumentList:Count:
                           if chekStop() then return ?.
                          vDocument = vDocumentList:GetItem(vii - 1).
 /*                         message vDocument:DocumentNumber                     view-as alert-box.*/
                          odatelast = max(odatelast,vDocument:DocumentDate) no-error.
                          odatelast = min(odatelast,today).
                          packetupdd(vOrganization, vDocument).
-                         
+                           release object vDocument.
+                         end.
+                         release object vDocumentList.
                       end.
                    end.
                    for each tt-pack :
                        if chekStop() then return ?.
                       if GetDocumforid (tt-pack.orgid, tt-pack.docid, output vDocument) eq "" /* Получим обновленный объект */
-                      then
+                      then do:
                          &if "{1}" = "class"
                          &then
                          UpdateUTDInformOne(vDocument).    
                          &else
                             run UpdateUTDInformOne(vDocument). 
                          &endif   
+                         release object vDocument.
+                     end.   
                   end.
               /*  end.
              end.
           end.
       end.*/
+      release object vOrganization.
+      release object vDocumentsTask.
    end.
    /*pause 60.*/
+   release object vOrganizationList.
 end.
 
 &if "{1}" = "class"
@@ -2454,6 +3016,7 @@ define input  parameter idoc-id as integer no-undo.
    then do:
       PutMes(substitute("Обработка подписи ИОП по документу ДБ &1 ID &2",idb-num,idoc-id)).
       vDocument:SendReceiptsAsync().
+      release object vDocument.
       PutMes(substitute("Запущена асинхронная обработка ИОП по документу ДБ &1 ID &2",idb-num,idoc-id)).
       find first utd where utd.db-num eq idb-num 
                        and utd.doc-id eq idoc-id
@@ -2461,24 +3024,30 @@ define input  parameter idoc-id as integer no-undo.
       if available utd
       then do:
          if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
-         then
+         then do:
             &if "{1}" = "class"
             &then
             UpdateUTDInformOne(vDocument).
             &else
                 run UpdateUTDInformOne(vDocument). 
             &endif
+            release object vDocument.
+         end.
          utd.flagRI = yes.
-         SaturateAndCheckUTD( utd.db-num, utd.doc-id).
+        /* if utd.sts = ObjSrv:Env:Utd:Sts:TH:loaderror:KeyIntDB
+         then 
+            SaturateAndCheckUTD( utd.db-num, utd.doc-id). */ 
       end.
       if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
-      then
+      then do:
          &if "{1}" = "class"
          &then
          UpdateUTDInformOne(vDocument).
          &else
              run UpdateUTDInformOne(vDocument). 
          &endif
+         release object vDocument.
+      end.
    end.
 
 end.
@@ -2514,6 +3083,13 @@ procedure SendAnsver:
          and iTypeAnswer eq "CorrectionRequest"
       then 
          iTypeAnswer = "RejectDocument".*/
+         find first utd where utd.db-num eq idb-num
+                                and utd.doc-id eq idoc-id
+               no-lock.
+      if      (not utd.AmendmentRequested
+          and  iTypeAnswer eq "CorrectionRequest")
+          or iTypeAnswer ne "CorrectionRequest"
+      then do:
       &if "{1}" = "class"
       &then
       send(vDocument,iTypeAnswer,iComment,output vSendcode) no-error.
@@ -2521,9 +3097,16 @@ procedure SendAnsver:
       run send in this-procedure (vDocument,iTypeAnswer,iComment,output vSendcode) no-error.
       &endif
       if error-status:error
-      then
+         then do:
+            release object vDocument.
          return error return-value.
+         end.
       PutMes(substitute("Обработка запроса &3 по документу ДБ &1 ID &2 Завершина",idb-num,idoc-id,iTypeAnswer)).
+      end.
+      else
+         PutMes(substitute("Обработка запроса &3 по документу ДБ &1 ID &2 пропущена",idb-num,idoc-id,iTypeAnswer)).
+      
+      release object vDocument.
       if     vSendcode ne ?
          and vSendcode ne ""
       then
@@ -2531,13 +3114,15 @@ procedure SendAnsver:
       if not mFlaftest
       then do:
          if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
-         then
+         then do:
             &if "{1}" = "class"
             &then
             UpdateUTDInformOne(vDocument).
             &else
                 run UpdateUTDInformOne(vDocument). 
             &endif
+            release object vDocument.
+         end.
          if    iTypeAnswer eq "CorrectionRequest" /* запрошена коректировка */ 
             or iTypeAnswer eq "AcceptRevocation" /* подпись ануляции */
             or iTypeAnswer eq "RejectRevocation" /* отказано ануляции */
@@ -2547,13 +3132,15 @@ procedure SendAnsver:
             or iTypeAnswer eq "AcceptDocumentNotAccepted"
          then do:
             if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
-            then
+            then do:
                &if "{1}" = "class"
                &then
                UpdateUTDInformOne(vDocument).
                &else
                    run UpdateUTDInformOne(vDocument). 
                &endif
+               release object vDocument.
+            end.
             if   not mFlaftest  
                
             then do trans:
@@ -2856,13 +3443,15 @@ procedure updOneUTD:
       delete tt-recid.
    end.
    if getdocum (idb-num, idoc-id, output vDocument) eq "" /* Получим обновленный объект */
-   then
+   then do:
       &if "{1}" = "class"
       &then
       UpdateUTDInformOne(vDocument).
       &else
           run UpdateUTDInformOne(vDocument). 
       &endif
+      release object vDocument.
+   end.
    
 end.
 
@@ -2874,11 +3463,22 @@ procedure getNewUpd :
 &endif 
 
    define variable VLastDate as date no-undo init ?.
-   define variable vOrganization as component-handle no-undo.
    define variable vDocument     as component-handle no-undo.
+   define variable vYear         as integer no-undo.
+   define variable vMonth        as integer no-undo.
+   define variable vDay          as integer no-undo.
+   define variable vBegLoadDate  as date    no-undo. /* Начальная дата периода, в котором разрешено обновлять документы */
+   define variable vLastLoadDate as date    no-undo. /* Последняя дата загрузки документов */
    define buffer utd for utd.
    VLastDate = date( getextAttr({&attr-esys-diadoc-lastload})) no-error.
-   
+   find first sys-ctrl no-lock.
+   if VLastDate eq ?
+   then
+      VLastDate = sys-ctrl.cut-date + 3.
+   else if sys-ctrl.cut-date ne ?
+   then
+      VLastDate = max(VLastDate,sys-ctrl.cut-date + 3) .
+   vLastLoadDate = VLastDate. /* Запоминаем последнюю дату загрузки документов */
    for each tt-recid:
       delete tt-recid.
    end.
@@ -2891,8 +3491,26 @@ procedure getNewUpd :
    &endif
    if chekStop() then return "Остановка пользователем".
    if VLastDate ne ?
-   then
+   then do:
       setextAttr({&attr-esys-diadoc-lastload},string(VLastDate)).
+/* Получаем дату vBegLoadDate, сдвинутую на 2 месяца назад */
+      vYear = year(vLastLoadDate).
+      vMonth = month(vLastLoadDate) - 2.
+      vDay   = day(vLastLoadDate).
+      if vMonth <= 0 then
+         assign
+            vMonth = vMonth + 12
+            vYear  = vYear - 1
+            .
+      repeat:
+         vBegLoadDate = date(vMonth, vDay, vYear) no-error. 
+         if error-status:error then 
+            vDay = vDay - 1.
+         else
+            leave.
+      end.
+      vBegLoadDate = vBegLoadDate + 1.
+   end.
    block-rec:
    for each tt-recid break by tt-recid.parent descending by tt-recid.stamp descending :
       if  tt-recid.parent eq ""
@@ -2914,7 +3532,16 @@ procedure getNewUpd :
          end.
       end.
    end.
-   PutMes("Обновление информации по ранее загруженным документам ").
+   PutMes("Обновление информации по ранее загруженным документам за период c " + (if vBegLoadDate <> ? then
+                                                                                     string(vBegLoadDate)
+                                                                                  else "?")
+                                                                                  + " по " + 
+                                                                                  (if vLastLoadDate <> ? then
+                                                                                      string(vLastLoadDate)
+                                                                                   else
+                                                                                      "?")
+                                                                                   ).
+                                                                                      
    define variable vobj as character no-undo.
    vobj = getExtAttr({&attr-esys-host-code}).
    if vobj ne "0"
@@ -2923,6 +3550,8 @@ procedure getNewUpd :
                       and utd.host-code eq int(vobj)
        no-lock break by utd.OrganizationExt:
           if chekStop() then return "Остановка пользователем".
+          /* Не обновляем документы, полученные ранее 2 месяцев от даты последнего загруженного документа */
+          if vBegLoadDate <> ? and utd.DocumentDate < vBegLoadDate then next. 
           find first tt-recid where tt-recid.orgid = utd.OrganizationExt
                                 and tt-recid.docid = utd.DocumentExt
                  no-error.
@@ -2946,6 +3575,8 @@ procedure getNewUpd :
                       and utd.obj-type + string(utd.obj-code) eq vobj
        no-lock break by utd.OrganizationExt:
           if chekStop() then return "Остановка пользователем".
+          /* Не обновляем документы, полученные ранее 2 месяцев от даты последнего загруженного документа */
+          if vBegLoadDate <> ? and utd.DocumentDate < vBegLoadDate then next.           
           find first tt-recid where tt-recid.orgid = utd.OrganizationExt
                                 and tt-recid.docid = utd.DocumentExt
                  no-error.
@@ -2990,6 +3621,7 @@ define variable vDocumentToSend as component-handle no-undo.
        vDocumentToSend = vSendTask:AddDocument("Nonformalized", "default", "v1").
        message 
        view-as alert-box.
+       release object vSendTask.
        getdesc(vDocumentToSend).
        vDocumentToSend:Comment = "Это УПД с заполнением контента средствами компоненты".
 /*       ЗаполнитьДинамическийКонтентДокумента(First_DocumentToSend.Content);
@@ -3009,6 +3641,8 @@ define variable vDocumentToSend as component-handle no-undo.
 
 КонецПроцедуры
 */
+      release object vDocumentToSend.
+      release object vOrganization.
    end.
 end.
 

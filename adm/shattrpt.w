@@ -79,6 +79,20 @@ define temp-table temp_twowin_itemsSelected_col no-undo
       itm-key
 .
 
+define variable v-list-sec-fields-full as character    no-undo.
+define variable v-list-sec-fields      as character    no-undo.
+
+define temp-table sect_twowin_itemsSelected_col no-undo
+    field its-key   as integer
+    field itm-key   as integer
+    field itmExtKey as character
+
+    index pi is primary unique
+      its-key
+    index im
+      itm-key
+.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -100,13 +114,14 @@ r-expptrl r-inpptrl dop-info rvs-wt-email B-set_dop-info r-algrvspt ~
 t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc ~
 mass-proc r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz ~
 delta-vert otkl-temp otkl-density otkl-water mass-proc-in-lgas ~
-t-calc-free-vol v-dop-info 
+t-calc-free-vol t-rvd-own-nb v-dop-info sec-fields v-sec-fields qr-scan-time ~
+t-trn-reas-sug
 &Scoped-Define DISPLAYED-OBJECTS t-autopump-izm t-autopump t-avtinvpm ~
 t-olddens r-expptrl r-inpptrl dop-info rvs-wt-email r-algrvspt t-rvsnmter ~
 t-invclipt f-invclipt r-temp-for-pomi r-denstclc mass-proc r-algoincptrl ~
 t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp ~
-otkl-density otkl-water mass-proc-in-lgas t-calc-free-vol v-dop-info ~
-f-invclipt-name 
+otkl-density otkl-water mass-proc-in-lgas t-calc-free-vol t-rvd-own-nb v-dop-info ~
+f-invclipt-name sec-fields v-sec-fields qr-scan-time t-trn-reas-sug
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -147,6 +162,11 @@ DEFINE BUTTON B-set_dop-info
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL "" 
      SIZE 2.63 BY 1.08.
+     
+DEFINE BUTTON B-set_sec-fields 
+     IMAGE-UP FILE "cmp/update.bmp":U
+     LABEL "" 
+     SIZE 2.63 BY 1.08.
 
 DEFINE VARIABLE delta-horiz AS CHARACTER 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
@@ -159,6 +179,9 @@ DEFINE VARIABLE delta-vert AS CHARACTER
 DEFINE VARIABLE dop-info AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 28.5 BY 4.5 NO-UNDO.
+
+DEFINE VARIABLE sec-fields AS character VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 1 BY 1 no-undo .
 
 DEFINE VARIABLE f-invclipt LIKE clients.obj-code
      VIEW-AS FILL-IN 
@@ -203,6 +226,10 @@ DEFINE VARIABLE rvs-wt-email AS CHARACTER FORMAT "X(256)":U
      SIZE 60 BY .96 NO-UNDO.
 
 DEFINE VARIABLE v-dop-info AS CHARACTER FORMAT "X(256)":U INITIAL "Обязательные поля доп.инфо. ПН по НП" 
+      VIEW-AS TEXT 
+     SIZE 37.5 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE v-sec-fields AS CHARACTER FORMAT "X(256)":U INITIAL "Обязательные поля в секциях ПН по НП" 
       VIEW-AS TEXT 
      SIZE 37.5 BY 1 NO-UNDO.
 
@@ -295,9 +322,19 @@ DEFINE VARIABLE t-avtinvpm AS LOGICAL INITIAL no
      SIZE 82.5 BY .83 TOOLTIP "если включено, то контроль и создание происходит при закрытии сверки" NO-UNDO.
 
 DEFINE VARIABLE t-calc-free-vol AS LOGICAL INITIAL no 
-     LABEL "Контроль свободной емкости при приходе" 
+     LABEL "Контроль свободного объема в резервуаре при приеме" 
      VIEW-AS TOGGLE-BOX
      SIZE 60.5 BY .79 NO-UNDO.
+
+DEFINE VARIABLE t-trn-reas-sug AS LOGICAL INITIAL no 
+     LABEL "Обязательный выбор этапа для приема газовоза" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60.5 BY .79 NO-UNDO.
+     
+DEFINE VARIABLE t-rvd-own-nb AS LOGICAL INITIAL no 
+     LABEL "Разрешить ручное заполнение документа приёма НП при поставках с собственных НБ" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 83 BY .83 NO-UNDO.
 
 DEFINE VARIABLE t-invclipt AS LOGICAL INITIAL no 
      LABEL "Контрагент для списания ЕУ при инвентаризации топлива по сверке:" 
@@ -319,6 +356,10 @@ DEFINE VARIABLE t-rvsnmter AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 82.5 BY .83 NO-UNDO.
 
+DEFINE VARIABLE qr-scan-time AS integer FORMAT ">>>>>9":U INITIAL 5000 
+     LABEL "Время на сканирование QR-кода (мс)" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -333,8 +374,9 @@ DEFINE FRAME shattrpt
      r-expptrl AT ROW 7.25 COL 72.5 NO-LABEL WIDGET-ID 50
      r-inpptrl AT ROW 8.92 COL 4 NO-LABEL WIDGET-ID 44
      dop-info AT ROW 9.5 COL 69.5 NO-LABEL WIDGET-ID 492
-     rvs-wt-email AT ROW 11.75 COL 3.5 NO-LABEL WIDGET-ID 90
-     B-set_dop-info AT ROW 13 COL 41 WIDGET-ID 496
+     sec-fields AT ROW 9.5 COL 69.5 NO-LABEL WIDGET-ID 592
+     rvs-wt-email AT ROW 11.4 COL 3.5 NO-LABEL WIDGET-ID 90
+     B-set_dop-info AT ROW 12.2 COL 41 WIDGET-ID 496
      r-algrvspt AT ROW 15.83 COL 3.5 NO-LABEL WIDGET-ID 80
      t-rvsnmter AT ROW 17.83 COL 3.5 WIDGET-ID 58
      t-invclipt AT ROW 18.83 COL 3.5 WIDGET-ID 74
@@ -354,16 +396,21 @@ DEFINE FRAME shattrpt
      otkl-water AT ROW 35.79 COL 72.63 COLON-ALIGNED WIDGET-ID 512
      mass-proc-in-lgas AT ROW 38.25 COL 1.5 WIDGET-ID 518
      t-calc-free-vol AT ROW 39.29 COL 3.5 WIDGET-ID 524
-     v-dop-info AT ROW 13 COL 3.5 NO-LABEL WIDGET-ID 498
+     t-trn-reas-sug at row 40.3 col 3.5 widget-id 526     
+     t-rvd-own-nb AT ROW 41.3 COL 3.5 WIDGET-ID 528
+     qr-scan-time at row 42.3 col 3.5 WIDGET-ID 538
+     v-dop-info AT ROW 12.2 COL 3.5 NO-LABEL WIDGET-ID 498
+     B-set_sec-fields AT ROW 13.2 COL 41 WIDGET-ID 596
+     v-sec-fields AT ROW 13.2 COL 3.5 NO-LABEL WIDGET-ID 598
      f-invclipt-name AT ROW 19.83 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
      "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
-          SIZE 64.5 BY .96 AT ROW 10.08 COL 3.5 WIDGET-ID 92
+          SIZE 64.5 BY .96 AT ROW 9.9 COL 3.5 WIDGET-ID 92
      "Алгоритм вычисления плотности топлива для продаж :" VIEW-AS TEXT
           SIZE 50.5 BY .63 AT ROW 22.58 COL 3.5 WIDGET-ID 36
      "горизонтальных" VIEW-AS TEXT
           SIZE 17.5 BY .67 AT ROW 31.88 COL 3.5 WIDGET-ID 126
      "на список почтовых адресов(разделять адреса запятыми):" VIEW-AS TEXT
-          SIZE 62.5 BY .96 AT ROW 10.79 COL 3.5 WIDGET-ID 94
+          SIZE 62.5 BY .96 AT ROW 10.6 COL 3.5 WIDGET-ID 94
      "Погрешность изм. массы для резервуаров" VIEW-AS TEXT
           SIZE 42 BY .67 AT ROW 30.92 COL 3.5 WIDGET-ID 112
      "вертикальных" VIEW-AS TEXT
@@ -423,6 +470,9 @@ ASSIGN
 
 ASSIGN 
        dop-info:READ-ONLY IN FRAME shattrpt        = TRUE.
+       
+ASSIGN 
+       sec-fields:READ-ONLY IN FRAME shattrpt        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-invclipt IN FRAME shattrpt
    LIKE = ub.clients.obj-code EXP-LABEL EXP-HELP EXP-SIZE               */
@@ -533,6 +583,16 @@ END.
 ON CHOOSE OF B-set_dop-info IN FRAME shattrpt
 DO:
   run select-dop-info in this-procedure.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-set_sec-fields
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_sec-fields shattrpt
+ON CHOOSE OF B-set_sec-fields IN FRAME shattrpt
+DO:
+  run select-sec-fields in this-procedure.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -812,6 +872,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
 
   RUN proc-init-dop-info.
+  RUN proc-init-sec-fields.
   RUN enable_UI.
 
   apply "value-changed" to t-invclipt in frame {&frame-name} .
@@ -823,9 +884,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     enable
       b-quit
       B-set_dop-info
+      B-set_sec-fields
       with frame {&frame-name} .
   end.
   hide dop-info in frame {&frame-name} .
+  hide sec-fields in frame {&frame-name} .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -868,8 +931,8 @@ PROCEDURE enable_UI :
           dop-info rvs-wt-email r-algrvspt t-rvsnmter t-invclipt f-invclipt 
           r-temp-for-pomi r-denstclc mass-proc r-algoincptrl 
           t-mand-chioce-autocar otkl-fact-volue delta-horiz delta-vert otkl-temp 
-          otkl-density otkl-water mass-proc-in-lgas t-calc-free-vol v-dop-info 
-          f-invclipt-name 
+          otkl-density otkl-water mass-proc-in-lgas t-calc-free-vol t-rvd-own-nb v-dop-info 
+          f-invclipt-name v-sec-fields qr-scan-time t-trn-reas-sug
       WITH FRAME shattrpt.
   ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 RECT-5 RECT-6 
          t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
@@ -877,7 +940,8 @@ PROCEDURE enable_UI :
          f-invclipt b-invclipt r-temp-for-pomi r-denstclc mass-proc 
          r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz 
          delta-vert otkl-temp otkl-density otkl-water mass-proc-in-lgas 
-         t-calc-free-vol v-dop-info 
+         t-calc-free-vol t-rvd-own-nb v-dop-info B-set_sec-fields v-sec-fields
+         qr-scan-time t-trn-reas-sug
       WITH FRAME shattrpt.
   {&OPEN-BROWSERS-IN-QUERY-shattrpt}
 END PROCEDURE.
@@ -1086,20 +1150,48 @@ on error undo, return error return-value
               dop-info :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
             .  
           end.
-      when {&attr-petrol_CriticalDifInLgas} then 
+        when {&attr-petrol_sec-fields} then 
+          do:
+            assign 
+              sec-fields = thbjattr_thbj-attr.property-value-character 
+              sec-fields :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .  
+          end.
+        when {&attr-petrol_CriticalDifInLgas} then 
           do:
             assign 
               mass-proc-in-lgas = thbjattr_thbj-attr.property-value-decimal 
               mass-proc-in-lgas :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
             .  
           end.
-      when {&attr-petrol_calc-free-vol} then 
+        when {&attr-petrol_calc-free-vol} then 
           do: 
             assign
               t-calc-free-vol = thbjattr_thbj-attr.property-value-logical 
               t-calc-free-vol :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
             .  
           end.
+        when {&attr-petrol_trn-reas-sug} then 
+          do: 
+            assign
+              t-trn-reas-sug = thbjattr_thbj-attr.property-value-logical 
+              t-trn-reas-sug :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .  
+          end.
+        when {&attr-petrol_rvd-own-nb} then 
+          do: 
+            assign
+              t-rvd-own-nb = thbjattr_thbj-attr.property-value-logical 
+              t-rvd-own-nb :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .  
+          end.
+        when {&attr-petrol_qr-scan-time} then
+          do:
+            assign
+              qr-scan-time = thbjattr_thbj-attr.property-value-integer
+              qr-scan-time :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .
+        end.
     end case.
     create temp-thbj-attr.
     buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
@@ -1128,6 +1220,33 @@ PROCEDURE proc-init-dop-info :
       v-list-dop-info-full = {&label-trdcattr-car-num} + "," + {&label-trdcattr-fio-driver} + "," + {&label-trdcattr-time-income} + "," + {&label-trdcattr-time-pour} + "," + {&label-trdcattr-date-pour} + "," + {&label-trdcattr-inspection-cert} + ","
       + {&label-trdcattr-date-cert} + "," + {&label-trdcattr-condition} + "," + {&label-trdcattr-seals-condition} + "," + {&label-trdcattr-acc-ship} + "," + {&label-trdcattr-doc-not} + "," + {&label-trdcattr-spisok-not-doc} +
        "," + {&label-trdcattr-ptbobj} + "," + {&label-trdcattr-ptb-item-pour} + "," + {&label-trdcattr-autoent}.
+
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-init-sec-fields shattrpt 
+PROCEDURE proc-init-sec-fields :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+
+
+   assign
+      v-list-sec-fields      = "section-name,cli-qnty,doc-dens,group-np,list-tank,"
+                             + "ttn-temp,acc-ship,doc-dens-st,doc-qnty,doc-volume,"
+                             + "shape,pour,num-passport,car-vol,pasp-dens,"
+                             + "a-b-tarir,tank-density,tank-temp,dens-temp,"
+                             + "place-si,place-si-temp".
+      v-list-sec-fields-full = "Номер секции,Масса по док.,Плотность по док. (при раб. темп.),Группа НП/Давление насыщенных паров,Резервуар,"
+                             + "Температура по ТТН,Погр. изм. пост.,Плотность по док. (при станд. темп.),Кол-во по док.,Объем по док.,"
+                             + "Форма горловины,Тип налива,Дата и номер паспорта качества,Объем по свидетельству о поверке,Плотность по паспорту,"
+                             + "Отклонение от тарировочной планки,Плотность топлива,Температура замера объема,Температура замера плотности,"
+                             + "Средство измерения плотности,Средство измерения температуры".
 
 
 END PROCEDURE.
@@ -1173,8 +1292,8 @@ define variable v-time                 as character no-undo .
 do
 on error undo, return error return-value
 :
-display dop-info with frame {&frame-name} .
-hide dop-info in frame {&frame-name} .
+display dop-info sec-fields with frame {&frame-name} .
+hide dop-info sec-fields in frame {&frame-name} .
 
   if p-mode = {&lookup} then do:
     return error.
@@ -1469,6 +1588,74 @@ else v-mode = 1 .
         dop-info = trim(dop-info, ",") .
         display dop-info with frame {&frame-name} .
                     hide dop-info in frame {&frame-name} .
+    end.
+end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-dop-info shattrpt 
+PROCEDURE select-sec-fields :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+
+define variable v-counter       as integer      no-undo.
+define variable v-label         as character    no-undo.
+define variable v-value         as character    no-undo.
+define variable v-list          as character    no-undo.
+define variable v-changed       as logical    no-undo.
+define variable v-accepted      as logical    no-undo.
+define variable v-mode          as integer    no-undo.
+define variable V-EX as logical   no-undo .
+
+do
+with frame {&frame-name}
+on error undo, return error
+:
+if p-mode = {&lookup} then v-mode = 0 .
+else v-mode = 1 .
+
+    run twowin_clear in this-procedure.
+
+    do v-counter = 1 to num-entries( v-list-sec-fields-full )
+    on error undo, return error
+    :
+        assign
+            v-label = entry( v-counter, v-list-sec-fields-full )
+            v-value = entry( v-counter, v-list-sec-fields )
+            v-ex = false
+        .
+           if  lookup (v-value , sec-fields ) > 0 then  v-ex = true .
+           else v-ex = false .
+        run twowin_add-item in this-procedure (
+              input v-value
+            , input v-label
+            , input substitute( "Обязательные поля: &1", v-VALUE)
+            , input  V-EX
+        ).
+    end.        /* do */
+    run gbl/twowin.w (
+          input ?
+        , input v-mode
+        , input "Выбор обязательного поля в секциях ПН":U
+        , input "":U
+        , input "&Тест"
+        , input table temp_twowin_items
+        , output table sect_twowin_itemsSelected_col
+        , output v-changed
+        , output v-accepted
+    ).
+    if v-changed then do:
+        sec-fields = "" .
+        for each sect_twowin_itemsSelected_col :
+        sec-fields = sec-fields +  sect_twowin_itemsSelected_col.itmExtKey + "," .
+        end.
+        sec-fields = trim(sec-fields, ",") .
     end.
 end.
 

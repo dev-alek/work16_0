@@ -23,11 +23,12 @@ class ibs.th.gbl.sys.objsrv:
   
   define temp-table tt-objth no-undo
     field iNum      as integer
-    field objhndl   as integer
+    field objhndl   as Progress.Lang.Object
     field objname   as character
-    field objparent as integer
+    field objparent as character
+    
     .
-  
+  &glob GlobObjSrv yes
   define public property Env as class env no-undo
     get.
     private set.
@@ -40,7 +41,7 @@ class ibs.th.gbl.sys.objsrv:
     get.
     private set.
   
-  define private variable out as class putout.
+  define private variable out as class putout no-undo.
   
   define property SysINI as class ini no-undo
     get.
@@ -54,8 +55,6 @@ class ibs.th.gbl.sys.objsrv:
 
   constructor public objsrv (  ):
     super ().
-    SysINI = new ini().
-    out = new putout (SysINI:SystemLogFileName:Value_).
     SysLog = new logger (out) .
     SysLog:EventHndlr("Родился objsrv").
   end constructor.
@@ -67,8 +66,10 @@ class ibs.th.gbl.sys.objsrv:
   ------------------------------------------------------------------------------*/
 
   method public void Initialization(  ):
-    Env = new env().
-    Lib = new lib().
+    {utl\objreg.i SysINI ini}
+    {utl\objreg.i out putout "SysINI:SystemLogFileName:Value_" }
+    {utl\objreg.i Env env }
+    {utl\objreg.i Lib lib}.
     return.
   end method.
 
@@ -77,22 +78,33 @@ class ibs.th.gbl.sys.objsrv:
  Notes:
 ------------------------------------------------------------------------------*/
     
-  method public void Regobj( obj as Progress.Lang.Object ):
+  method public void Regobj( iobj as Progress.Lang.Object ):
+    define variable IdObj as character  no-undo.
     
-    if valid-object (obj)
+    if valid-object (iobj)
       then 
     do:
+       IdObj = iobj:ToString().
+       find first tt-objth where tt-objth.objname eq IdObj no-error.
+       if not available tt-objth
+       then do:
       create tt-objth.
       assign
-        tt-objth.objname = obj:ToString()
+             tt-objth.objname = IdObj
+             tt-objth.objhndl = iobj
+             tt-objth.objparent = cast (this-object, Progress.Lang.Object):ToString()
         .
-      SysLog:EventHndlr("Зарегистрирован - " + obj:ToString()).
+       end.
+      SysLog:EventHndlr("Зарегистрирован - " + iobj:ToString()).
     end.
 
     return.
 
   end method.
   
+  
+  
+    
   method public void Delobj( obj as Progress.Lang.Object ):
     
     /*    find first tt-objth exclusive-lock where tt-objth.objhndl = integer(obj).*/
@@ -103,16 +115,37 @@ class ibs.th.gbl.sys.objsrv:
         SysLog:EventHndlr("Че то объекта нет").
         return.
       end.
+    DelobjChild(obj:ToString()).
     find first tt-objth where tt-objth.objname = obj:ToString() no-error.
     if not available (tt-objth)
     then do:
       SysLog:EventHndlr("Че то не то - " + obj:ToString()).
     end.
-    else SysLog:EventHndlr("Разрегистрирован - " + obj:ToString()).
+    else do:
+       SysLog:EventHndlr("Разрегистрирован - " + obj:ToString()).
+       delete tt-objth.
+    end.
+    
     return.
 
   end method.
 
+method public void DelobjChild( iParent as character  ):
+    define buffer tt-objth for tt-objth.
+    /*    find first tt-objth exclusive-lock where tt-objth.objhndl = integer(obj).*/
+    /*    delete tt-objth.                                                         */
+    /*    message "Разрегистрация" view-as alert-box.*/
+    find first tt-objth where tt-objth.objparent = iParent no-error.
+    do while  available  tt-objth:
+       DelobjChild(tt-objth.objname).
+       delete object tt-objth.objhndl no-error.
+       if avail tt-objth then delete tt-objth. /* если не УДАЛИМ В В DELOBJ */
+       find first tt-objth where tt-objth.objparent = iParent no-error.
+    
+    end.    
+    return.
+
+  end method.
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -139,6 +172,27 @@ class ibs.th.gbl.sys.objsrv:
 
   /*  end method.*/
 
+  method public void Regobj(iobjparen as Progress.Lang.Object, iobj as Progress.Lang.Object ):
+    define variable IdObj as character  no-undo.
+    if valid-object (iobj)
+    then do:
+       IdObj = iobj:ToString().
+       find first tt-objth where tt-objth.objname eq IdObj no-error.
+       if not available tt-objth
+       then do:
+          create tt-objth.
+          assign
+             tt-objth.objname = IdObj
+             tt-objth.objhndl = iobj
+          .
+       end.
+       tt-objth.objparent = iobjparen:ToString().
+       SysLog:EventHndlr("Зарегистрирован - " + IdObj).
+    end.
+
+    return.
+
+  end method.
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -149,6 +203,15 @@ class ibs.th.gbl.sys.objsrv:
     /*      delete object handle (tt-objth.objhndl).*/
     /*    end.                                      */
     SysLog:EventHndlr("Умирает objsrv").
+    delobj(this-object).
+    
+    /* удалим все ссылки на объекты, а то при отключении от базы будет беда */
+    for each tt-objth where tt-objth.objname ne SysLog:ToString() :
+       SysLog:EventHndlr("Забыли удалить " + tt-objth.objname) .
+/*       message "Забыли удалить " + tt-objth.objname       view-as alert-box.*/
+       delete tt-objth.
+    end.
+    delete object SysLog no-error.
   end destructor.
 
   method public void GetTable(input-output table for tt-objth):
@@ -157,6 +220,11 @@ class ibs.th.gbl.sys.objsrv:
 
   end method.
 
+  method public void Dispose ():
+    
+    delete object Lib:MarkingTree no-error.
+
+  end method.
   
 
 end class.

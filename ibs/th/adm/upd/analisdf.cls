@@ -45,11 +45,11 @@ class ibs.th.adm.upd.analisdf final:
     define property Msg as character no-undo
     get.
     private set.
-
+    
     define property PublisHandle as handle no-undo 
     get.
     set.
-    
+
     define stream Ostream.
     define public variable mFileDf   as character no-undo.
     define public variable mUpdateTo as integer   no-undo.
@@ -183,22 +183,28 @@ define temp-table {&prefixtt}INDEX
         if not obsrvdbObj:m-upd-list-df[vi    ] begins "proc:"
         then do:
            vFlagDf = yes.
-           if readDF(obsrvdbObj:m-upd-list-df[vi])
+           vFileDf   = obsrvdbObj:m-upd-list-df[vi].
+           if vFileDf begins "only:"
+           then
+              vFileDf = substring(vFileDf,6).
+           if readDF(vFileDf)
            then
               return no.
         end.
         else do:
            mFileDf   = obsrvdbObj:m-upd-list-df[vi    ].
+           if mFileDf begins "only:"
+           then
+              mFileDf = substring(mFileDf,6).
            mUpdateTo = vi.
            return yes. 
         end.
-        if vi >= TargetDBShm 
-           or (        obsrvdbObj:m-upd-list-df[vi    ] begins "proc:")
-               or
-               (    not obsrvdbObj:m-upd-list-df[vi    ] begins "proc:"
-                and     obsrvdbObj:m-upd-list-df[vi + 1] begins "proc:"               
-                
-               )
+        if     vi >= TargetDBShm 
+           or  obsrvdbObj:m-upd-list-df[vi    ] begins "proc:"
+           or  obsrvdbObj:m-upd-list-df[vi + 1] begins "proc:"               
+           or  obsrvdbObj:m-upd-list-df[vi    ] begins "only:"
+           or  obsrvdbObj:m-upd-list-df[vi + 1] begins "only:"               
+           
          then 
             leave block-read.  
      end.
@@ -206,6 +212,9 @@ define temp-table {&prefixtt}INDEX
      if vi > minimum(iTargetDBShm,TargetDBShm) 
      then 
         vi = minimum(iTargetDBShm,TargetDBShm).
+     if mFileDf begins "proc:"
+     then
+        return yes.
      define variable VavailVer as logical no-undo.
      for each {&prefixtt}FIELD where {&prefixfil}Name       = '"reserve1-char"'
                                  and {&prefixfil}Table      = '"db"'
@@ -422,17 +431,17 @@ define temp-table {&prefixtt}INDEX
                mBuffer:buffer-release ().
             end.    
             else if vmode eq "add" 
-            then do: 
+            then do:
                if mBuffer::{&prefixfil}mode eq "drop"
                then do:
                   mposih = mBuffer::{&prefixfil}localIndex + 1.
                   mBuffer:buffer-release ().
                end.
                else do: 
-               msg = substitute( "Ошибка структуре df файла объект создан рание &1 &2 &3 &4", vmode, mBufferName, mName, vTableWhere).
+                  msg = substitute( "Ошибка структуре df файла объект создан рание &1 &2 &3 &4", vmode, mBufferName, mName, vTableWhere).
                   putmes(msg).
-               return yes.
-            end.
+                  return yes.
+               end.
             end.
             else if vmode eq "drop"
             then do:
@@ -447,12 +456,12 @@ define temp-table {&prefixtt}INDEX
                         delete {&prefixtt}index.
                      end.
                   end.
-               if mBuffer::{&prefixfil}mode eq "add"
-               then do:
-                  mBuffer:buffer-delete ().
-                  return no.
-               end.
-               else
+                  if mBuffer::{&prefixfil}mode eq "add"
+                  then do:
+                     mBuffer:buffer-delete ().
+                     return no.
+                  end.
+                  else
                      mBuffer:buffer-delete ().
                end.
                else
@@ -536,7 +545,7 @@ define temp-table {&prefixtt}INDEX
          else do:
             msg = substitute( "Ошибка структуре df  объекта &1 &2 неизвестное выражение &3",mBufferName, mName, vMode). 
             putmes(msg).
-               return yes.
+            return yes.
          end.
          
       end.     /* can-do("add,upddate,drop", vStrTmp) */
@@ -694,7 +703,7 @@ method private logical CheckOneTable(iTable as  handle):
       define variable vCheck as logical no-undo.
       vCheck = yes.
       if  vBuffer:name eq "{&prefixtt}TABLE"
-      then
+      then 
          vBufferName = "_file".
 
       else if  vBuffer:name eq "{&prefixtt}field"
@@ -730,7 +739,7 @@ method private logical CheckOneTable(iTable as  handle):
                                           and buf{&prefixtt}TABLE.{&prefixfil}localIndex > vBuffer::{&prefixfil}localIndex
          no-error.
          if available buf{&prefixtt}TABLE
-      then
+         then
             vCheck = no.
          vWhere      = substitute ("where _file._file-name eq &1 ",if vBuffer::{&prefixfil}mode eq "rename" then vBuffer::{&prefixfil}NewName else  vBuffer::{&prefixfil}name).
       

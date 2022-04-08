@@ -742,108 +742,6 @@ PROCEDURE check-obj :
     end case.
     /* ищем следующюю смену и ее персонал */
 
-    FIND FIRST ub.shift-staff No-LOCK WHERE
-      ub.shift-staff.obj-type   = p-obj-type AND
-      ub.shift-staff.obj-code   = p-obj-code AND
-      ub.shift-staff.shift-date = tt-fin-doc.shift-date AND
-      ub.shift-staff.shift-num  = tt-fin-doc.shift-num AND
-      ub.shift-staff.staff-role = yes and
-      ub.shift-staff.psn-num    >= 0 No-ERROR.
-    assign 
-      v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
-    .
-    if tt-fin-doc.fin-ext-doc-type = {&FDEDT_Expense_Cash} then 
-    do:
-      assign
-        tt-fin-doc.payer-sign1 = v-director
-        tt-fin-doc.payer-sign2 = v-snr-accnt
-        tt-fin-doc.payer-sign3 = v-cashier
-        .        
-    end.
-    find first ub.CashBook no-lock where ub.CashBook.id = tt-fin-doc.CashBookId no-error .
-    if available (ub.CashBook) then 
-    do:
-      case ub.CashBook.RuleOsnRko:
-        when "0" then 
-          tt-fin-doc.naznach-plat = "Выручка от реализации" .
-        when "1" or 
-        when "2" then 
-          tt-fin-doc.naznach-plat = "" .
-        otherwise 
-        tt-fin-doc.naznach-plat = ub.CashBook.RuleOsnRko .
-      end case .
-
-      case ub.CashBook.RulePril:
-        when '0' then 
-          do:
-            tt-fin-doc.enclosure = v-naznach-plat .
-          end.  
-        when '1' then 
-          do:
-            tt-fin-doc.enclosure = "" .
-          end.  
-        otherwise 
-        tt-fin-doc.enclosure = ub.CashBook.RulePril .
-      end case.  
-      if ub.CashBook.CorrRko <> "" then 
-      do:
-        for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
-          and ub.fin-code-cor-acc.host-code = p-curr-host-code :
-          tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
-          tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
-        end.
-      end.
-      if tt-fin-doc.cor-acc = ? or tt-fin-doc.cor-acc = 0 then 
-      do:
-        for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = "57.01"
-          and ub.fin-code-cor-acc.host-code = p-curr-host-code :
-          tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
-          tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
-        end. 
-      end.    
-      if ub.CashBook.OsnAcct <> "" then 
-      do:
-        for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
-          and ub.fin-code-cor-acc.host-code = p-curr-host-code :
-          tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code .
-          tt-fin-doc.cor-acc1-value = ub.fin-code-cor-acc.code-value .
-        end.  
-      end.
-    end.
-  
-    assign
-      tt-fin-doc.str-podr-name = if v-hist-name = "" then v-dpt-dflt-name else v-hist-name
-      tt-fin-doc.str-podr-type = v-dpt-dflt-type
-      tt-fin-doc.str-podr-code = v-dpt-dflt-code
-      .
-    
-    display
-      tt-fin-doc.str-podr-name
-      tt-fin-doc.str-podr-type
-      tt-fin-doc.str-podr-code
-      tt-fin-doc.enclosure
-      tt-fin-doc.naznach-plat
-      tt-fin-doc.cor-acc
-      tt-fin-doc.cor-acc1
-      tt-fin-doc.cor-acc1-value
-      tt-fin-doc.cor-acc-value
-      /*  tt-fin-doc.payer-sign1:label  = "Рук. орг-ции"  +*/
-      /*  (if v-head-position <> ''                        */
-      /*  then " - ":U + v-head-position                   */
-      /*  else '')                                         */
-/*      tt-fin-doc.payer-sign2*/
-/*      tt-fin-doc.payer-sign3*/
-    
-      with frame {&frame-name} .
-        
-  end.
-  else 
-  do:
-    assign
-      tt-fin-doc.shift-flag = 0
-      .
-  end.
-
 &if "{&doc-type}" = "income-cash" or "{&doc-type}" = "expense-cash" &then
   if tt-fin-doc.shift-flag = integer({&fin-flag-shift}) then 
   do:
@@ -924,6 +822,124 @@ PROCEDURE check-obj :
       with frame {&frame-name} .
   end.
 &endif
+ 
+  FIND FIRST ub.shift-staff No-LOCK WHERE
+    ub.shift-staff.obj-type   = p-obj-type AND
+    ub.shift-staff.obj-code   = p-obj-code AND
+    ub.shift-staff.shift-date = tt-fin-doc.shift-date AND
+    ub.shift-staff.shift-num  = tt-fin-doc.shift-num AND
+    ub.shift-staff.staff-role = no and
+    ub.shift-staff.psn-num    >= 0 No-ERROR.
+  assign 
+    v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+  .
+  if tt-fin-doc.fin-ext-doc-type = {&FDEDT_Expense_Cash} then 
+  do:
+    assign
+      tt-fin-doc.payer-sign1 = v-director
+      tt-fin-doc.payer-sign2 = v-snr-accnt
+      tt-fin-doc.payer-sign3 = v-cashier
+      .        
+  end.
+  if tt-fin-doc.fin-ext-doc-type = {&FDEDT_Income_Cash} then 
+  do:
+    assign
+      tt-fin-doc.receiver-sign2 = v-snr-accnt
+      tt-fin-doc.receiver-sign3 = v-cashier
+      .        
+  end.
+  find first ub.CashBook no-lock where ub.CashBook.id = tt-fin-doc.CashBookId no-error .
+  if available (ub.CashBook) then 
+  do:
+    case ub.CashBook.RuleOsnRko:
+      when "0" then 
+        tt-fin-doc.naznach-plat = "Выручка от реализации" .
+      when "1" or 
+      when "2" then 
+        tt-fin-doc.naznach-plat = "" .
+      otherwise 
+      tt-fin-doc.naznach-plat = ub.CashBook.RuleOsnRko .
+    end case .
+
+    case ub.CashBook.RulePril:
+      when '0' then 
+        do:
+          tt-fin-doc.enclosure = v-naznach-plat .
+        end.  
+      when '1' then 
+        do:
+          tt-fin-doc.enclosure = "" .
+        end.  
+      otherwise 
+      tt-fin-doc.enclosure = ub.CashBook.RulePril .
+    end case.  
+    if ub.CashBook.CorrRko <> "" then 
+    do:
+      for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.CorrRko
+        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+        tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+        tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
+      end.
+    end.
+    if tt-fin-doc.cor-acc = ? or tt-fin-doc.cor-acc = 0 then 
+    do:
+      for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = "57.01"
+        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+        tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code .
+        tt-fin-doc.cor-acc-value = ub.fin-code-cor-acc.code-value .
+      end. 
+    end.    
+    if ub.CashBook.OsnAcct <> "" then 
+    do:
+      for first ub.fin-code-cor-acc no-lock where ub.fin-code-cor-acc.code-value = ub.CashBook.OsnAcct
+        and ub.fin-code-cor-acc.host-code = p-curr-host-code :
+        tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code .
+        tt-fin-doc.cor-acc1-value = ub.fin-code-cor-acc.code-value .
+      end.  
+    end.
+  end.
+  
+  assign
+    tt-fin-doc.str-podr-name = if v-hist-name = "" then v-dpt-dflt-name else v-hist-name
+    tt-fin-doc.str-podr-type = v-dpt-dflt-type
+    tt-fin-doc.str-podr-code = v-dpt-dflt-code
+    .
+  
+  display
+    tt-fin-doc.str-podr-name
+    tt-fin-doc.str-podr-type
+    tt-fin-doc.str-podr-code
+    tt-fin-doc.enclosure
+    tt-fin-doc.naznach-plat
+    tt-fin-doc.cor-acc
+    tt-fin-doc.cor-acc1
+    tt-fin-doc.cor-acc1-value
+    tt-fin-doc.cor-acc-value
+    &if  "{&doc-type}" = "expense-cash" &then
+    tt-fin-doc.payer-sign1  
+    tt-fin-doc.payer-sign1:label = "Рук. орг-ции"  +
+       (if v-head-position <> ''                        
+       then " - ":U + v-head-position                   
+       else '')                                         
+    tt-fin-doc.payer-sign2
+    tt-fin-doc.payer-sign3
+    &elseif "{&doc-type}" = "income-cash"
+    &then
+    tt-fin-doc.receiver-sign2
+    tt-fin-doc.receiver-sign3
+    &endif
+    with frame {&frame-name} .
+       
+  end.
+  else 
+  do:
+    assign
+      tt-fin-doc.shift-flag = 0
+      .
+  end.
+
+
+  
 END PROCEDURE.
 
 

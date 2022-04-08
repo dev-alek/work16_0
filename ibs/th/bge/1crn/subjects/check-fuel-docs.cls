@@ -501,6 +501,8 @@ sw = insw .
             end.
         end case .
       end.
+      if v-wght = ? then v-wght = 0 .
+      if v-ex-df = ? then v-ex-df = 0 .
       if v-dens-sug-fact = 0 or v-dens-sug-fact = ? then v-dens-sug-fact = v-dens-sug .
       if v-pres-sug-fact = 0 or v-pres-sug-fact = ? then v-pres-sug-fact = v-pres-sug .
       find first buf_place-attr no-lock where buf_place-attr.attr-code   = "place-error-mass"

@@ -27,10 +27,11 @@ define input parameter p-pck-num as integer no-undo .
 define input parameter p-status_ as integer no-undo .
 define input parameter p-error   as character no-undo .
 define input parameter p-esys-id like ub.ext-system-attr.esys-id    no-undo .
-define input  parameter p-cert-subj-name   as character no-undo .
-define input  parameter p-cert-issuer-name as character no-undo .
-define input  parameter p-sign-fileext     as character no-undo .
-define input  parameter p-pkcs             as class ibs.th.gbl.pkcs no-undo .
+define input parameter p-cert-subj-name   as character no-undo .
+define input parameter p-cert-issuer-name as character no-undo .
+define input parameter p-sign-fileext     as character no-undo .
+define input parameter p-cert-repository  as integer no-undo .
+define input parameter p-pkcs             as class ibs.th.gbl.pkcs no-undo .
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -134,7 +135,7 @@ define variable v-sign-file as character no-undo .
       define variable v-err-msg as character no-undo .
       v-err-msg = "" .
           
-      v-signdata = p-pkcs:computeSign(v-packdata, p-cert-subj-name, p-cert-issuer-name) .
+      v-signdata = p-pkcs:computeSign(v-packdata, p-cert-subj-name, p-cert-issuer-name, p-cert-repository) .
       // взять имя файла p-pack-file без расширения
       v-position = r-index(v-filename, ".") .
       v-sign-file = if v-position > 0 then substring(v-filename, 1, v-position - 1) else v-filename .

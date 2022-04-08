@@ -65,7 +65,7 @@ class ibs.th.adm.upd.observupd:
   define property PublisHandle as handle no-undo 
     get.
     set.
-
+    
   define private property IsComp as logical no-undo
     get.
     set.
@@ -344,7 +344,7 @@ class ibs.th.adm.upd.observupd:
     define variable vOK      as logical   no-undo.
     define variable VTestStr as character no-undo.
     define variable vrunProc as logical   no-undo.
-    
+
     define buffer buf_db for ub.db.
     define buffer buf_sys-ctrl for ub.sys-ctrl.
     on write of ub.db override do: end.
@@ -465,6 +465,25 @@ class ibs.th.adm.upd.observupd:
              end.
              release _file.
           end. */
+       end.
+    end.
+    else do:
+       if     vrunProc
+          and inShm >= TargetDBShm /* обновим только если это у нас последнее версиия иначе прогрес падает из-за изменения схемы в это й сесии. */
+       then do:
+          find first _file no-lock where _file._file-name = "db"  no-error.
+          if available _file
+          then do:
+             find first _field of _file where _field._Field-Name =  "reserve1-char" no-lock no-error.
+             if     available (_field)
+                and _field._initial ne string (inShm)
+             then do:
+                find first _field of _file where _field._Field-Name =  "reserve1-char" exclusive-lock no-error.
+               _field._initial = string (inShm).
+               release _field.
+             end.
+             release _file.
+          end.
        end.
     end.
     CurrDBShm = inShm.

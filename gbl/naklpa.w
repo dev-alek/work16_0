@@ -65,12 +65,17 @@ if g#db-num <> 0 then p-mode = {&lookup} .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help I-contr-in-income ~
-I-contr-in-expense I-contr-qnty-spec contr-in-income B-2 B-3 ~
-contr-in-expense B-4 contr-qnty-spec v-contr-in-income v-contr-in-expense ~
-v-contr-qnty-spec 
-&Scoped-Define DISPLAYED-OBJECTS contr-in-income contr-in-expense ~
-contr-qnty-spec v-contr-in-income v-contr-in-expense v-contr-qnty-spec 
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help I-contr-in-income-NP ~
+I-contr-in-expense-NP I-contr-qnty-spec I-contr-in-expense-CPT ~
+I-contr-in-income-CPT I-contr-recount B-2 contr-in-income-NP B-3 ~
+contr-in-income-CPT B-4 contr-in-expense-NP B-5 contr-in-expense-CPT B-6 ~
+contr-qnty-spec B-7 contr-recount v-contr-in-income-NP ~
+v-contr-in-income-CPT v-contr-in-expense-NP v-contr-in-expense-CPT ~
+v-contr-qnty-spec v-contr-recount 
+&Scoped-Define DISPLAYED-OBJECTS contr-in-income-NP contr-in-income-CPT ~
+contr-in-expense-NP contr-in-expense-CPT contr-qnty-spec contr-recount ~
+v-contr-in-income-NP v-contr-in-income-CPT v-contr-in-expense-NP ~
+v-contr-in-expense-CPT v-contr-qnty-spec v-contr-recount 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -100,6 +105,21 @@ DEFINE BUTTON B-4
      LABEL "" 
      SIZE 3 BY 1.
 
+DEFINE BUTTON B-5 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON B-6 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON B-7 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+
 DEFINE BUTTON B-exit AUTO-GO 
      LABEL "&Ввод" 
      SIZE 10 BY 1
@@ -115,23 +135,43 @@ DEFINE BUTTON B-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE v-contr-in-expense AS CHARACTER FORMAT "X(256)":U 
+DEFINE VARIABLE v-contr-in-expense-CPT AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 71.25 BY 1 NO-UNDO.
+     SIZE 77 BY 1 NO-UNDO.
 
-DEFINE VARIABLE v-contr-in-income AS CHARACTER FORMAT "X(256)":U 
+DEFINE VARIABLE v-contr-in-expense-NP AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 77 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-contr-in-income-CPT AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 77 BY 1 NO-UNDO.
+
+DEFINE VARIABLE v-contr-in-income-NP AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 77 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-contr-qnty-spec AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
-     SIZE 71.25 BY 1 NO-UNDO.
+     SIZE 77 BY 1 NO-UNDO.
 
-DEFINE IMAGE I-contr-in-expense
+DEFINE VARIABLE v-contr-recount AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 77 BY 1 NO-UNDO.
+
+DEFINE IMAGE I-contr-in-expense-CPT
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
-DEFINE IMAGE I-contr-in-income
+DEFINE IMAGE I-contr-in-expense-NP
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+
+DEFINE IMAGE I-contr-in-income-CPT
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.04.
+
+DEFINE IMAGE I-contr-in-income-NP
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.04.
 
@@ -139,20 +179,39 @@ DEFINE IMAGE I-contr-qnty-spec
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
-DEFINE VARIABLE contr-in-expense AS LOGICAL INITIAL no 
-     LABEL "" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 2.13 BY 1 NO-UNDO.
+DEFINE IMAGE I-contr-recount
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
 
-DEFINE VARIABLE contr-in-income AS LOGICAL INITIAL no 
+DEFINE VARIABLE contr-in-expense-CPT AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 2.13 BY 1 NO-UNDO.
+     SIZE 80 BY 1 NO-UNDO.
+
+DEFINE VARIABLE contr-in-expense-NP AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 80 BY 1 NO-UNDO.
+
+DEFINE VARIABLE contr-in-income-CPT AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 80 BY 1 NO-UNDO.
+
+DEFINE VARIABLE contr-in-income-NP AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 80 BY 1 NO-UNDO.
 
 DEFINE VARIABLE contr-qnty-spec AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 2.13 BY 1 NO-UNDO.
+     SIZE 80 BY 1 NO-UNDO.
+
+DEFINE VARIABLE contr-recount AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 80 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -161,19 +220,31 @@ DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      B-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 74.5
-     contr-in-income AT ROW 2.96 COL 5.88 WIDGET-ID 44
-     B-2 AT ROW 3 COL 3 WIDGET-ID 96
-     B-3 AT ROW 4.13 COL 3 WIDGET-ID 98
-     contr-in-expense AT ROW 4.25 COL 5.88 WIDGET-ID 46
-     B-4 AT ROW 5.33 COL 3 WIDGET-ID 100
-     contr-qnty-spec AT ROW 5.46 COL 5.88 WIDGET-ID 102
-     v-contr-in-income AT ROW 3 COL 8.75 NO-LABEL WIDGET-ID 6
-     v-contr-in-expense AT ROW 4.25 COL 8.75 NO-LABEL WIDGET-ID 18
-     v-contr-qnty-spec AT ROW 5.46 COL 8.75 NO-LABEL WIDGET-ID 106
-     I-contr-in-income AT ROW 2.96 COL 1 WIDGET-ID 10
-     I-contr-in-expense AT ROW 4.25 COL 1 WIDGET-ID 34
-     I-contr-qnty-spec AT ROW 5.46 COL 1 WIDGET-ID 104
-     SPACE(83.12) SKIP(8.33)
+     B-2 AT ROW 2.96 COL 3 WIDGET-ID 96
+     contr-in-income-NP AT ROW 2.96 COL 5.88 WIDGET-ID 44
+     B-3 AT ROW 3.96 COL 3 WIDGET-ID 124
+     contr-in-income-CPT AT ROW 3.96 COL 5.88 WIDGET-ID 126
+     B-4 AT ROW 4.96 COL 3 WIDGET-ID 98
+     contr-in-expense-NP AT ROW 4.96 COL 5.88 WIDGET-ID 46
+     B-5 AT ROW 5.96 COL 3 WIDGET-ID 116
+     contr-in-expense-CPT AT ROW 5.96 COL 5.88 WIDGET-ID 118
+     B-6 AT ROW 6.96 COL 3 WIDGET-ID 100
+     contr-qnty-spec AT ROW 6.96 COL 5.88 WIDGET-ID 102
+     B-7 AT ROW 7.96 COL 3 WIDGET-ID 108
+     contr-recount AT ROW 7.96 COL 5.88 WIDGET-ID 110
+     v-contr-in-income-NP AT ROW 2.96 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 6
+     v-contr-in-income-CPT AT ROW 3.96 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 130
+     v-contr-in-expense-NP AT ROW 4.96 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 18
+     v-contr-in-expense-CPT AT ROW 5.96 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 122
+     v-contr-qnty-spec AT ROW 6.96 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 106
+     v-contr-recount AT ROW 7.96 COL 6.75 COLON-ALIGNED NO-LABEL WIDGET-ID 114
+     I-contr-in-income-NP AT ROW 3 COL 1 WIDGET-ID 10
+     I-contr-in-expense-NP AT ROW 5 COL 1 WIDGET-ID 34
+     I-contr-qnty-spec AT ROW 7 COL 1 WIDGET-ID 104
+     I-contr-in-expense-CPT AT ROW 6 COL 1 WIDGET-ID 120
+     I-contr-in-income-CPT AT ROW 4 COL 1 WIDGET-ID 128
+     I-contr-recount AT ROW 8 COL 1 WIDGET-ID 112
+     SPACE(83.12) SKIP(5.79)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для накладных"
@@ -200,20 +271,11 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-/* SETTINGS FOR FILL-IN v-contr-in-expense IN FRAME Dialog-Frame
-   ALIGN-L                                                              */
-ASSIGN 
-       v-contr-in-expense:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
-
-/* SETTINGS FOR FILL-IN v-contr-in-income IN FRAME Dialog-Frame
-   ALIGN-L                                                              */
-ASSIGN 
-       v-contr-in-income:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
-
-/* SETTINGS FOR FILL-IN v-contr-qnty-spec IN FRAME Dialog-Frame
-   ALIGN-L                                                              */
 ASSIGN 
        v-contr-qnty-spec:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+
+ASSIGN 
+       v-contr-recount:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -252,7 +314,7 @@ ON CHOOSE OF B-2 IN FRAME Dialog-Frame
 DO:
   run gbl/v-taobj.w
       ({&attr-contr-in},
-       {&attr-contr-in_contr-in-income}
+       {&attr-contr-in_contr-in-income-NP}
        ).
 END.
 
@@ -266,7 +328,7 @@ ON CHOOSE OF B-3 IN FRAME Dialog-Frame
 DO:
   run gbl/v-taobj.w
       ({&attr-contr-in},
-       {&attr-contr-in_contr-in-expense}
+       {&attr-contr-in_contr-in-income}
        ).
 END.
 
@@ -280,6 +342,34 @@ ON CHOOSE OF B-4 IN FRAME Dialog-Frame
 DO:
   run gbl/v-taobj.w
       ({&attr-contr-in},
+       {&attr-contr-in_contr-in-expense-NP}
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-5
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-5 Dialog-Frame
+ON CHOOSE OF B-5 IN FRAME Dialog-Frame
+DO:
+  run gbl/v-taobj.w
+      ({&attr-contr-in},
+       {&attr-contr-in_contr-in-expense}
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-6
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-6 Dialog-Frame
+ON CHOOSE OF B-6 IN FRAME Dialog-Frame
+DO:
+  run gbl/v-taobj.w
+      ({&attr-contr-in},
         {&attr-contr-in_contr-qnty-spec}
        ).
 END.
@@ -288,9 +378,23 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME I-contr-in-expense
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-in-expense Dialog-Frame
-ON MOUSE-SELECT-CLICK OF I-contr-in-expense IN FRAME Dialog-Frame
+&Scoped-define SELF-NAME B-7
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-7 Dialog-Frame
+ON CHOOSE OF B-7 IN FRAME Dialog-Frame
+DO:
+  run gbl/v-taobj.w
+      ({&attr-contr-in},
+        {&attr-contr-in_contr-recount}
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME I-contr-in-expense-CPT
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-in-expense-CPT Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-contr-in-expense-CPT IN FRAME Dialog-Frame
 DO:
   MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
 END.
@@ -299,9 +403,31 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME I-contr-in-income
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-in-income Dialog-Frame
-ON MOUSE-SELECT-CLICK OF I-contr-in-income IN FRAME Dialog-Frame
+&Scoped-define SELF-NAME I-contr-in-expense-NP
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-in-expense-NP Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-contr-in-expense-NP IN FRAME Dialog-Frame
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME I-contr-in-income-CPT
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-in-income-CPT Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-contr-in-income-CPT IN FRAME Dialog-Frame
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME I-contr-in-income-NP
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-in-income-NP Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-contr-in-income-NP IN FRAME Dialog-Frame
 DO:
   MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
 END.
@@ -313,6 +439,17 @@ END.
 &Scoped-define SELF-NAME I-contr-qnty-spec
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-qnty-spec Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-contr-qnty-spec IN FRAME Dialog-Frame
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME I-contr-recount
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-contr-recount Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-contr-recount IN FRAME Dialog-Frame
 DO:
   MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
 END.
@@ -400,12 +537,18 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY contr-in-income contr-in-expense contr-qnty-spec v-contr-in-income 
-          v-contr-in-expense v-contr-qnty-spec 
+  DISPLAY contr-in-income-NP contr-in-income-CPT contr-in-expense-NP 
+          contr-in-expense-CPT contr-qnty-spec contr-recount 
+          v-contr-in-income-NP v-contr-in-income-CPT v-contr-in-expense-NP 
+          v-contr-in-expense-CPT v-contr-qnty-spec v-contr-recount 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit B-Help I-contr-in-income I-contr-in-expense 
-         I-contr-qnty-spec contr-in-income B-2 B-3 contr-in-expense B-4 
-         contr-qnty-spec v-contr-in-income v-contr-in-expense v-contr-qnty-spec 
+  ENABLE B-exit B-quit B-Help I-contr-in-income-NP I-contr-in-expense-NP 
+         I-contr-qnty-spec I-contr-in-expense-CPT I-contr-in-income-CPT 
+         I-contr-recount B-2 contr-in-income-NP B-3 contr-in-income-CPT B-4 
+         contr-in-expense-NP B-5 contr-in-expense-CPT B-6 contr-qnty-spec B-7 
+         contr-recount v-contr-in-income-NP v-contr-in-income-CPT 
+         v-contr-in-expense-NP v-contr-in-expense-CPT v-contr-qnty-spec 
+         v-contr-recount 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -462,16 +605,25 @@ FOR EACH thbjattr_thbj-attr-trn  where
          thbjattr_thbj-attr-trn.obj-type =  p-obj-type and
          thbjattr_thbj-attr-trn.obj-code =  p-obj-code
 :
+  IF thbjattr_thbj-attr-trn.prop-code = {&attr-contr-in_contr-in-income-NP} THEN DO:
+     contr-in-income-NP = thbjattr_thbj-attr-trn.property-value-logical.
+     contr-in-income-NP:PRIVATE-DATA IN FRAME {&frame-name}  = "recid2=" + string(recid(thbjattr_thbj-attr-trn)).
+     display contr-in-income-NP with frame {&frame-name} .
+  end.   
   IF thbjattr_thbj-attr-trn.prop-code = {&attr-contr-in_contr-in-income} THEN DO:
-     contr-in-income = thbjattr_thbj-attr-trn.property-value-logical.
-     contr-in-income:PRIVATE-DATA IN FRAME {&frame-name}  = "recid2=" + string(recid(thbjattr_thbj-attr-trn)).
-     display contr-in-income with frame {&frame-name} .
-
+     contr-in-income-CPT = thbjattr_thbj-attr-trn.property-value-logical.
+     contr-in-income-CPT:PRIVATE-DATA IN FRAME {&frame-name}  = "recid2=" + string(recid(thbjattr_thbj-attr-trn)).
+     display contr-in-income-CPT with frame {&frame-name} .
+  END.
+  IF thbjattr_thbj-attr-trn.prop-code = {&attr-contr-in_contr-in-expense-NP} THEN DO:
+     contr-in-expense-NP = thbjattr_thbj-attr-trn.property-value-logical.
+     contr-in-expense-NP:private-data = "recid2=" + string(recid(thbjattr_thbj-attr-trn)).
+     display contr-in-expense-NP with frame {&frame-name} .
   END.
   IF thbjattr_thbj-attr-trn.prop-code = {&attr-contr-in_contr-in-expense} THEN DO:
-     contr-in-expense = thbjattr_thbj-attr-trn.property-value-logical.
-     contr-in-expense:private-data = "recid2=" + string(recid(thbjattr_thbj-attr-trn)).
-     display contr-in-expense with frame {&frame-name} .
+     contr-in-expense-CPT = thbjattr_thbj-attr-trn.property-value-logical.
+     contr-in-expense-CPT:private-data = "recid2=" + string(recid(thbjattr_thbj-attr-trn)).
+     display contr-in-expense-CPT with frame {&frame-name} .
   END.
 
   IF thbjattr_thbj-attr-trn.prop-code = {&attr-contr-in_contr-qnty-spec} THEN DO:
@@ -480,6 +632,12 @@ FOR EACH thbjattr_thbj-attr-trn  where
      display contr-qnty-spec with frame {&frame-name} .
   END.
 
+  IF thbjattr_thbj-attr-trn.prop-code = {&attr-contr-in_contr-recount} THEN DO:
+     contr-recount = thbjattr_thbj-attr-trn.property-value-logical.
+     contr-recount:private-data = "recid2=" + string(recid(thbjattr_thbj-attr-trn)).
+     display contr-recount with frame {&frame-name} .
+  END.
+  
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr-trn to temp-thbj-attr.
 END.
@@ -492,13 +650,36 @@ define variable v-tooltip-code as character no-undo .
 
 run thbjattr_tooltip in this-procedure (
              input   {&attr-contr-in}
+            ,input  "contr-in-income-NP"
+            ,output v-tooltip
+            ,output v-label
+            ,output v-tooltip-code
+            ) no-error .
+v-contr-in-income-NP:screen-value = entry(2,v-label,":") .
+v-contr-in-income-NP:MOVE-TO-Top( ).
+I-contr-in-income-NP:private-data =  REPLACE ( v-tooltip-code , '`' , ',' ).
+
+run thbjattr_tooltip in this-procedure (
+             input   {&attr-contr-in}
             ,input  "contr-in-income"
             ,output v-tooltip
             ,output v-label
             ,output v-tooltip-code
             ) no-error .
-v-contr-in-income:screen-value = entry(2,v-label,":") .
-I-contr-in-income:private-data =  REPLACE ( v-tooltip-code , '`' , ',' ).
+v-contr-in-income-CPT:screen-value = entry(2,v-label,":") .
+v-contr-in-income-CPT:MOVE-TO-Top( ).
+I-contr-in-income-CPT:private-data =  REPLACE ( v-tooltip-code , '`' , ',' ).
+
+run thbjattr_tooltip in this-procedure (
+             input   {&attr-contr-in}
+            ,input  "contr-in-expense-NP"
+            ,output v-tooltip
+            ,output v-label
+            ,output v-tooltip-code
+            ) no-error .
+v-contr-in-expense-NP:screen-value = entry(2,v-label,":") .
+v-contr-in-expense-NP:MOVE-TO-Top( ).
+I-contr-in-expense-NP:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
 
 run thbjattr_tooltip in this-procedure (
              input   {&attr-contr-in}
@@ -507,8 +688,9 @@ run thbjattr_tooltip in this-procedure (
             ,output v-label
             ,output v-tooltip-code
             ) no-error .
-v-contr-in-expense:screen-value = entry(2,v-label,":") .
-I-contr-in-expense:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
+v-contr-in-expense-CPT:screen-value = entry(2,v-label,":") .
+v-contr-in-expense-CPT:MOVE-TO-Top( ).
+I-contr-in-expense-CPT:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
 
 run thbjattr_tooltip in this-procedure (
              input   {&attr-contr-in}
@@ -518,7 +700,19 @@ run thbjattr_tooltip in this-procedure (
             ,output v-tooltip-code
             ) no-error .
 v-contr-qnty-spec:screen-value = entry(2,v-label,":") .
+v-contr-qnty-spec:MOVE-TO-Top( ).
 I-contr-qnty-spec:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
+
+run thbjattr_tooltip in this-procedure (
+             input   {&attr-contr-in}
+            ,input  "contr-recount"
+            ,output v-tooltip
+            ,output v-label
+            ,output v-tooltip-code
+            ) no-error .
+v-contr-recount:screen-value = entry(2,v-label,":") .
+v-contr-recount:MOVE-TO-Top( ).
+I-contr-recount:private-data = REPLACE ( v-tooltip-code , '`' , ',' ) .
 
 END PROCEDURE.
 
@@ -572,10 +766,13 @@ define variable v-found as decimal   no-undo .
   run fill-widgets in this-procedure no-error.
   if error-status:error then undo, return error.
   if p-mode <> {&update} then do:
-     disable 
-        contr-in-income 
-        contr-in-expense 
-        contr-qnty-spec  
+     disable
+        contr-in-income-CPT
+        contr-in-income-NP
+        contr-in-expense-CPT
+        contr-in-expense-NP
+        contr-qnty-spec
+        contr-recount
         with frame {&frame-name}.
      B-exit:label = "Вы&ход"  .
      hide B-quit in frame {&frame-name} .
@@ -638,9 +835,12 @@ define variable loc#log as logical   no-undo .
   if loc#log <> yes then do: return error. end.
 
 ASSIGN
-    contr-in-income FRAME {&FRAME-NAME}
-    contr-in-expense
-    contr-qnty-spec
+    contr-in-income-CPT FRAME {&FRAME-NAME}
+    contr-in-income-NP FRAME {&FRAME-NAME}
+    contr-in-expense-CPT FRAME {&FRAME-NAME}
+    contr-in-expense-NP FRAME {&FRAME-NAME}
+    contr-qnty-spec 
+    contr-recount
     .
 assign
   fh = frame {&frame-name}:first-child

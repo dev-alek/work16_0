@@ -132,6 +132,8 @@ define variable v-dnst-mi-old     as integer no-undo .
 define variable v-tmp-mi-old      as integer no-undo .
 define variable v-lvl-mi-old      as integer no-undo .
 
+define variable place-type        as integer no-undo.
+
 define variable place-SI          as integer no-undo.
 
 define variable v-revision-mode   as logical no-undo init no .
@@ -356,6 +358,8 @@ DEFINE VARIABLE v-mi-tmp AS integer FORMAT ">>>>>9":U
      LABEL "" 
      VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
+
+define variable v-mi-tmp-dnst as integer no-undo .
      
 DEFINE VARIABLE v-mi-lvl-name AS character FORMAT "X(10)":U
      LABEL "" 
@@ -882,6 +886,9 @@ DO:
   assign
     v-return-val = "cancel"
   .
+  
+  release rvs-line-attr no-error .
+  
   APPLY "END-ERROR":U TO SELF.
 END.
 
@@ -938,6 +945,12 @@ on return of v-mi-lvl IN FRAME Dialog-Frame
 do:
   apply "leave" to v-mi-lvl IN FRAME Dialog-Frame .
 end .  
+
+on del of v-mi-lvl in frame Dialog-Frame
+do :
+  v-mi-lvl = ? .
+  v-mi-lvl:screen-value = "?" .
+end . 
   
 on leave of v-mi-lvl IN FRAME Dialog-Frame 
 do:
@@ -948,6 +961,7 @@ do:
   if not available lvl_sr-izmerenia
   then do :
     if v-mi-lvl:screen-value <> "?"
+    and v-mi-lvl:screen-value <> "0"
     then do :
       message ("Не найдено средтсво измерения с кодом " + v-mi-lvl:screen-value) view-as alert-box .
       v-mi-lvl:screen-value = v-old-val .
@@ -1028,16 +1042,24 @@ end .
 ON CHOOSE OF b-mi-dnst IN FRAME Dialog-Frame 
 DO:
   define variable v-node-code as integer no-undo.
-  define variable v-sr-type as character no-undo.
-  
+  define variable v-sr-type-id as character no-undo.
+  define variable v-sr-type-izm as character no-undo .
   v-node-code = 0 .
+  
+/*  if available tmp_sr-izmerenia                           */
+/*  then do :                                               */
+/*    v-sr-type-izm = string(tmp_sr-izmerenia.sr-type-izm) .*/
+/*  end .                                                   */
+/*  else do :                                               */
+    v-sr-type-izm = "0,1" .
+/*  end .*/
   run ref/sr-izm.w (input parparentproc ,
                     input "b-sel"       ,
                     input {&lookup}     ,
-                    input "0,1"         ,
+                    input v-sr-type-izm ,
                     input "dnst"        ,
                     input-output v-node-code,
-                    output v-sr-type) no-error.
+                    output v-sr-type-id) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
     v-mi-dnst = v-node-code.
     v-mi-dnst:screen-value = string(v-node-code).
@@ -1064,8 +1086,15 @@ do:
   apply "leave" to v-mi-dnst IN FRAME Dialog-Frame .
 end .
 
+on del of v-mi-dnst in frame Dialog-Frame
+do :
+  v-mi-dnst = ? .
+  v-mi-dnst:screen-value = "?" .
+end .
+
 on leave of v-mi-dnst IN FRAME Dialog-Frame 
 do:
+  define variable vlog as logical no-undo .
   define variable v-old-val as character no-undo .
   
   v-old-val = string(v-mi-dnst) .
@@ -1073,6 +1102,7 @@ do:
   if not available dnst_sr-izmerenia
   then do :
     if v-mi-dnst:screen-value <> "?"
+    and v-mi-dnst:screen-value <> "0"
     then do :
       message ("Не найдено средство измерения с кодом " + v-mi-dnst:screen-value) view-as alert-box .
       v-mi-dnst:screen-value = v-old-val .
@@ -1147,6 +1177,32 @@ do:
         end .
       end .
     end .
+    if pl-rvd-dens <> pl-rvd-temp
+    then do :
+      find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = v-mi-tmp no-error .
+      if (available tmp_sr-izmerenia and tmp_sr-izmerenia.sr-type-izm = 0 and tmp_sr-izmerenia.sr-density and tmp_sr-izmerenia.sr-temperature)
+      or (available dnst_sr-izmerenia and dnst_sr-izmerenia.sr-type-izm = 0 and dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
+      then do :
+        message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, "
+                "если дополнительное автоматизированное СИ предназначено для измерения обоих параметров." skip
+                "Подайте заявку в службу поддержки для приведения параметров в соответствие требованиям бизнес-процесса."
+        view-as alert-box .
+      end .
+    end .
+    if dnst_sr-izmerenia.sr-temperature
+    and v-mi-dnst <> v-mi-tmp
+    and b-mi-tmp:sensitive
+    then do :
+/*      message "Для измерения плотности выбрано дополнительное СИ " + v-mi-dnst-name + ". Установить данное СИ для измерения температуры автоматически?"*/
+/*      view-as alert-box buttons yes-no update vlog .                                                                                                   */
+/*      if vlog                                                                                                                                          */
+/*      then do :                                                                                                                                        */
+        v-mi-tmp = v-mi-dnst .
+        v-mi-tmp:screen-value = v-mi-dnst:screen-value .
+        v-mi-tmp-name = v-mi-dnst-name .
+        apply "leave" to v-mi-tmp in frame Dialog-Frame .
+/*      end .*/
+    end .
   end .
   else do :
     if string(v-mi-dnst) <> v-old-val
@@ -1202,16 +1258,24 @@ end .
 ON CHOOSE OF b-mi-tmp IN FRAME Dialog-Frame 
 DO:
   define variable v-node-code as integer no-undo.
-  define variable v-sr-type as character no-undo.
-  
+  define variable v-sr-type-id as character no-undo.
+  define variable v-sr-type-izm as character no-undo .
   v-node-code = 0 .
+  
+/*  if available dnst_sr-izmerenia                           */
+/*  then do :                                                */
+/*    v-sr-type-izm = string(dnst_sr-izmerenia.sr-type-izm) .*/
+/*  end .                                                    */
+/*  else do :                                                */
+    v-sr-type-izm = "0,1" .
+/*  end .*/
   run ref/sr-izm.w (input parparentproc ,
                     input "b-sel"       ,
                     input {&lookup}     ,
-                    input "0,1"         ,
+                    input v-sr-type-izm ,
                     input "tmp"         ,
                     input-output v-node-code,
-                    output v-sr-type) no-error.
+                    output v-sr-type-id) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
     v-mi-tmp = v-node-code.
     v-mi-tmp:screen-value = string(v-node-code).
@@ -1238,8 +1302,15 @@ do:
   apply "leave" to v-mi-tmp IN FRAME Dialog-Frame .
 end .
 
+on del of v-mi-tmp in frame Dialog-Frame
+do :
+  v-mi-tmp = ? .
+  v-mi-tmp:screen-value = "?" .
+end .
+
 on leave of v-mi-tmp IN FRAME Dialog-Frame 
 do:
+  define variable vlog as logical no-undo .
   define variable v-old-val as character no-undo .
   
   v-old-val = string(v-mi-tmp) .
@@ -1247,6 +1318,7 @@ do:
   if not available tmp_sr-izmerenia
   then do :
     if v-mi-tmp:screen-value <> "?"
+    and v-mi-tmp:screen-value <> "0"
     then do :
       message ("Не найдено средтсво измерения с кодом " + v-mi-tmp:screen-value) view-as alert-box .
       v-mi-tmp:screen-value = v-old-val .
@@ -1318,6 +1390,32 @@ do:
       end .
     end .
   end .
+  if pl-rvd-dens <> pl-rvd-temp
+  then do :
+    find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = v-mi-dnst no-error .
+    if (available tmp_sr-izmerenia and tmp_sr-izmerenia.sr-type-izm = 0 and tmp_sr-izmerenia.sr-density and tmp_sr-izmerenia.sr-temperature)
+    or (available dnst_sr-izmerenia and dnst_sr-izmerenia.sr-type-izm = 0 and dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
+    then do :
+      message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, "
+              "если дополнительное автоматизированное СИ предназначено для измерения обоих параметров." skip
+              "Подайте заявку в службу поддержки для приведения параметров в соответствие требованиям бизнес-процесса."
+      view-as alert-box .
+    end .
+  end .
+  if tmp_sr-izmerenia.sr-density
+  and v-mi-tmp <> v-mi-dnst
+  and b-mi-dnst:sensitive
+  then do :
+/*    message "Для измерения температуры выбрано дополнительное СИ " + v-mi-dnst-name + ". Установить данное СИ для измерения плотности автоматически?"*/
+/*    view-as alert-box buttons yes-no update vlog .                                                                                                   */
+/*    if vlog                                                                                                                                          */
+/*    then do :                                                                                                                                        */
+      v-mi-dnst = v-mi-tmp .
+      v-mi-dnst:screen-value = v-mi-tmp:screen-value .
+      v-mi-dnst-name = v-mi-tmp-name .
+      apply "leave" to v-mi-dnst in frame Dialog-Frame .
+/*    end .*/
+  end .
   apply "leave" to tt-rvs-line.state-level-total in frame Dialog-Frame .
 end .
 
@@ -1332,8 +1430,6 @@ define variable v-mm57       as com-handle.
 
 define variable v-code            as character no-undo.
 define variable ii                as integer   no-undo.
-
-define variable place-type        as integer no-undo.
 
 define variable place-ratio-error as decimal no-undo.
 define variable dens-prov         as decimal no-undo format "9.9999999999":U.
@@ -1358,6 +1454,9 @@ define variable temp-for-pomi           as integer no-undo.
 define variable error-string            as character no-undo.
 define variable v-is-meas               as logical no-undo.
 define variable v-mm-density            as decimal no-undo.
+define variable place-ponton            as logical no-undo .
+define variable place-ponton-mass       as decimal no-undo .
+define variable place-ponton-height     as decimal no-undo .
 
 define variable v-POkMI-result          as character no-undo.
 
@@ -1365,6 +1464,7 @@ define buffer buf_sr-izmerenia for sr-izmerenia .
 define buffer dens_sr-izmerenia for sr-izmerenia .
 define buffer temp_sr-izmerenia for sr-izmerenia .
 define buffer level_sr-izmerenia for sr-izmerenia .
+define buffer temp-dens_sr-izmerenia for sr-izmerenia .
 define buffer buf_place     for ub.place.
 
 define buffer water1_pl-level  for ub.pl-level .
@@ -1470,6 +1570,15 @@ define buffer bf_place for ub.place .
         end.
         when {&place-dead-high} then do :
           if v-ok then DeadZone_Reservoir = decimal(v-value) .
+        end.
+        when {&place-ponton} then do :
+          if v-ok then place-ponton = logical(v-value) .
+        end.
+        when {&place-ponton-mass} then do :
+          if v-ok then place-ponton-mass = decimal(v-value) .
+        end.
+        when {&place-ponton-height} then do :
+          if v-ok then place-ponton-height = decimal(v-value) .
         end.
       end case.
     end.
@@ -1711,6 +1820,14 @@ define buffer bf_place for ub.place .
       end .
     end .
     
+    if v-mi-tmp-dnst > 0
+    and v-mi-tmp-dnst <> v-mi-tmp
+    then do :
+      for first temp-dens_sr-izmerenia no-lock where temp-dens_sr-izmerenia.node-code = v-mi-tmp-dnst :
+        assign DeltaAbs_Tr = temp-dens_sr-izmerenia.sr-abs-err-temp-dens when temp-dens_sr-izmerenia.sr-abs-err-temp-dens > 0 .
+      end .
+    end .
+    
     if available level_sr-izmerenia
     then
       LevelToolType = level_sr-izmerenia.sr-type-level-measuring .
@@ -1905,6 +2022,19 @@ define buffer bf_place for ub.place .
               'DeltaOtn_R             = ' v-mm:DeltaOtn_R                                    SKIP
               'DeltaOtn_N             = ' v-mm:DeltaOtn_N                                    SKIP
       .
+      
+      if place-type = 1
+      and place-ponton
+      then do :
+        v-mm:Rprov = ( dens-prov * 1000 ) .
+        v-mm:Mpokr = place-ponton-mass .
+        v-mm:CoverFloatingHeight = place-ponton-height .
+        put stream outstream unformatted
+          "Rprov                  = " v-mm:Rprov                    skip
+          "Mpokr                  = " v-mm:Mpokr                    skip
+          "CoverFloatingHeight    = " v-mm:CoverFloatingHeight      skip
+        .
+      end.
       
       output stream outstream close.
       v-mm:Exec() .
@@ -2107,6 +2237,7 @@ DO:
   define buffer dens_sr-izmerenia for sr-izmerenia .
   define variable vOk as logical no-undo .
   define variable v-out-temp as decimal no-undo .
+  define variable v-calc-type as integer no-undo init 1 .
   define variable v-izm-temps as character no-undo .
   
   if pl-rvd-temp
@@ -2131,10 +2262,21 @@ DO:
   then do :
     message "Средство измерения температуры " string(temp_sr-izmerenia.node-code) " является измерительной системой! Значение температуры определяется показателями СИ." view-as alert-box .
     return no-apply .
-  end .                  
+  end .                 
+  for first rvs-line-attr no-lock where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                                    and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                                    and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                                    and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                                    and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                                    and rvs-line-attr.attr-code = "temp-calc-type"
+                                    :
+    v-calc-type = integer(rvs-line-attr.attr-value) .                                  
+  end .        
   run str/rvs-lin-temperature.w (input temp_sr-izmerenia.sr-type-izm,
+                                 input place-type,
                                  input place-diameter,
-                                 input tt-rvs-line.state-level-total * 10,
+                                 input (if place-type = 1 then ((tt-rvs-line.state-level-total - tt-rvs-line.state-level-water) * 10) else (tt-rvs-line.state-level-total * 10)),
+                                 input-output v-calc-type,
                                  output v-out-temp,
                                  output vOk)
                                  .
@@ -2142,7 +2284,31 @@ DO:
   then do :      
     tt-rvs-line.temp-izm-vol = v-out-temp .                        
     display tt-rvs-line.temp-izm-vol with frame Dialog-Frame .
+        
     assign v-hand-input-tmp = true .
+    
+    find first rvs-line-attr exclusive-lock
+         where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+           and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+           and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+           and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+           and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+           and rvs-line-attr.attr-code = "temp-calc-type" no-error.
+    if not available rvs-line-attr then do :
+      create rvs-line-attr.
+      assign
+        rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+        rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+        rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+        rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+        rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+        rvs-line-attr.attr-code = "temp-calc-type"
+        rvs-line-attr.attr-value = string(v-calc-type)
+      .
+    end.
+    else do :
+      rvs-line-attr.attr-value = string(v-calc-type) .
+    end.
     
     if pl-rvd-temp
     and not pl-rvd-dens
@@ -2242,6 +2408,7 @@ DO:
   define variable v-out-temp as decimal no-undo .
   define variable v-izm-temps as character no-undo .
   define variable v-izm-denses as character no-undo .
+  define variable v-calc-type as integer no-undo init 1 .
   
   if pl-rvd-dens
   or v-revision-mode
@@ -2267,10 +2434,21 @@ DO:
     return no-apply .
   end .
   if dens_sr-izmerenia.sr-type-izm = 0 /* 0 - Автоматизированное СИ */
-  then do :                    
+  then do :  
+    for first rvs-line-attr no-lock where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                                      and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                                      and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                                      and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                                      and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                                      and rvs-line-attr.attr-code = "dens-calc-type"
+                                      :
+      v-calc-type = integer(rvs-line-attr.attr-value) .                                  
+    end .                  
     run str/rvs-lin-density.w (input dens_sr-izmerenia.sr-type-izm,
+                               input place-type,
                                input place-diameter,
-                               input tt-rvs-line.state-level-total * 10,
+                               input (if place-type = 1 then ((tt-rvs-line.state-level-total - tt-rvs-line.state-level-water) * 10) else (tt-rvs-line.state-level-total * 10)),
+                               input-output v-calc-type,
                                output v-out-dens,
                                output vOk)
                                .
@@ -2283,6 +2461,29 @@ DO:
       display tt-rvs-line.izmer-density tt-rvs-line.state-density with frame Dialog-Frame . 
       
       assign v-hand-input-dnst = true .
+      
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "dens-calc-type" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code = "dens-calc-type"
+          rvs-line-attr.attr-value = string(v-calc-type)
+        .
+      end.
+      else do :
+        rvs-line-attr.attr-value = string(v-calc-type) .
+      end.
       
       find first rvs-line-attr exclusive-lock
          where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
@@ -2326,14 +2527,28 @@ DO:
     end .
   end .
   if dens_sr-izmerenia.sr-type-izm = 1 /* 1 - Неавтоматизированное СИ */
-  then do :                    
-    run str/rvs-lin-dens-temp.w (input dens_sr-izmerenia.sr-type-izm,
-                               input place-diameter,
-                               input tt-rvs-line.state-level-total * 10,
-                               output v-out-dens,
-                               output v-out-temp,
-                               output vOk)
-                               .
+  then do :
+    v-mi-tmp-dnst = v-mi-tmp .
+    for first rvs-line-attr no-lock where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                                      and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                                      and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                                      and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                                      and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                                      and rvs-line-attr.attr-code = "mi-tmp-dnst"
+                                      :
+      v-mi-tmp-dnst = integer(rvs-line-attr.attr-value) .                                  
+    end .
+    if v-mi-tmp-dnst = ? then v-mi-tmp-dnst = 0 .                    
+    run str/rvs-lin-dens-temp.w (input parparentproc,
+                                 input dens_sr-izmerenia.sr-type-izm,
+                                 input place-type,
+                                 input place-diameter,
+                                 input tt-rvs-line.state-level-total * 10,
+                                 input-output v-mi-tmp-dnst,
+                                 output v-out-dens,
+                                 output v-out-temp,
+                                 output vOk)
+                                 .
     if vOk
     then do : 
       assign      
@@ -2346,6 +2561,29 @@ DO:
       assign v-hand-input-tmp = true .
       tt-rvs-line.state-temperature = v-out-temp .
       display tt-rvs-line.state-temperature with frame Dialog-Frame .
+      
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "mi-tmp-dnst" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code = "mi-tmp-dnst"
+          rvs-line-attr.attr-value = string(v-mi-tmp-dnst)
+        .
+      end.
+      else do :
+        rvs-line-attr.attr-value = string(v-mi-tmp-dnst) .
+      end.
       
       find first rvs-line-attr exclusive-lock
          where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
@@ -2497,7 +2735,7 @@ DO:
       return no-apply.
     end.
     
-    find first rvs-line-attr exclusive-lock
+    find first rvs-line-attr no-lock
          where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
            and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
            and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
@@ -3025,17 +3263,24 @@ release rvs-line-attr no-error .
 if ptrlprop-calc-free-vol
 and buf_rvs-doc.rvs-type = {&rvs-before-doc}
 then do :
-  find first buf_doc-pl no-lock where buf_doc-pl.obj-type   = tt-rvs-line.obj-type
-                                  and buf_doc-pl.obj-code   = tt-rvs-line.obj-code
-                                  and buf_doc-pl.gds-code   = tt-rvs-line.gds-code
-                                  and buf_doc-pl.pl-code    = tt-rvs-line.pl-code
-                                  and buf_doc-pl.out-code   = buf_rvs-doc.out-code
-                                  no-error .
-  if not available buf_doc-pl
-  then do :
-    message "В накладной для товара " string(tt-rvs-line.gds-code) " нет распределения по местам хранения!" view-as alert-box .
-    return no-apply .
-  end .                                
+  define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo.
+  define variable iisec as integer no-undo .
+  define variable v-doc-volume as decimal no-undo init 0.0 .
+  define buffer buf_trn-doc for ub.trn-doc .
+      
+/*  find first buf_doc-pl no-lock where buf_doc-pl.obj-type   = tt-rvs-line.obj-type                                             */
+/*                                  and buf_doc-pl.obj-code   = tt-rvs-line.obj-code                                             */
+/*                                  and buf_doc-pl.gds-code   = tt-rvs-line.gds-code                                             */
+/*                                  and buf_doc-pl.pl-code    = tt-rvs-line.pl-code                                              */
+/*                                  and buf_doc-pl.out-code   = buf_rvs-doc.out-code                                             */
+/*                                  no-error .                                                                                   */
+/*  if not available buf_doc-pl                                                                                                  */
+/*  then do :                                                                                                                    */
+/*    message "В накладной для товара " string(tt-rvs-line.gds-code) " нет распределения по местам хранения!" view-as alert-box .*/
+/*    return no-apply .                                                                                                          */
+/*  end .                                                                                                                        */
+  
+  find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_rvs-doc.out-code no-error .
   
   find first buf_place no-lock where buf_place.obj-code = tt-rvs-line.obj-code
                                  and buf_place.obj-type = tt-rvs-line.obj-type
@@ -3044,64 +3289,85 @@ then do :
            
   assign v-free-vol = 0.95 * buf_place.max-qnty - varstate-sum-vol .
   
-  if v-free-vol >= buf_doc-pl.fact-qnty
+  infoSectionsTotal = new ibs.th.str.InfoSectionsTotal(buf_trn-doc.doc-code, tt-rvs-line.gds-code, {&lookup}).
+          
+  sect_ :
+  do iisec = 1 to infoSectionsTotal:SectionNum :
+    infoSectionsTotal:GetInfoSectionProp (iisec).
+    if infoSectionsTotal:InfoSectionCurr:ListTank <> buf_place.loc1
+    then
+      next sect_ .
+    
+    if infoSectionsTotal:InfoSectionCurr:DocVolume > 0
+    then do :
+      v-doc-volume = v-doc-volume + infoSectionsTotal:InfoSectionCurr:DocVolume . 
+    end .
+    else do :
+      v-doc-volume = v-doc-volume + infoSectionsTotal:InfoSectionCurr:DocQnty .
+    end .
+  end . 
+  
+  if v-doc-volume > 0
   then do :
-    find first buf_doc-pl-attr exclusive-lock
-        where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code
-        and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type
-        and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code
-        and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code
-        and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code
-        and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-    if available buf_doc-pl-attr then
-    do :
-      buf_doc-pl-attr.attr-value = string(no)  .
-    end.
-    else
-    do :
-      create buf_doc-pl-attr.
-      assign
-        buf_doc-pl-attr.obj-code   = buf_doc-pl.obj-code
-        buf_doc-pl-attr.obj-type   = buf_doc-pl.obj-type
-        buf_doc-pl-attr.gds-code   = buf_doc-pl.gds-code
-        buf_doc-pl-attr.pl-code    = buf_doc-pl.pl-code
-        buf_doc-pl-attr.out-code   = buf_doc-pl.out-code
-        buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-        buf_doc-pl-attr.attr-value = string(no)
-      .
-    end.
-  end .
-  else do :
-    message "Объем нефтепродукта по ТТН " string(buf_doc-pl.fact-qnty)
-            "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "
-            string(v-free-vol) "л." skip
-            "Проверьте введенные данные из ТТН, значение объема наполнения в сверке до слива"
-            " и при необходимости оповестите ответственное лицо ОГ в соответствии с принятым в ОГ порядком оповещения"
-    view-as alert-box . 
-    find first buf_doc-pl-attr exclusive-lock
-        where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code
-        and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type
-        and buf_doc-pl-attr.gds-code  = buf_doc-pl.gds-code
-        and buf_doc-pl-attr.pl-code   = buf_doc-pl.pl-code
-        and buf_doc-pl-attr.out-code  = buf_doc-pl.out-code
-        and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-    if available buf_doc-pl-attr then
-    do :
-      buf_doc-pl-attr.attr-value = string(yes)  .
-    end.
-    else
-    do :
-      create buf_doc-pl-attr.
-      assign
-        buf_doc-pl-attr.obj-code   = buf_doc-pl.obj-code
-        buf_doc-pl-attr.obj-type   = buf_doc-pl.obj-type
-        buf_doc-pl-attr.gds-code   = buf_doc-pl.gds-code
-        buf_doc-pl-attr.pl-code    = buf_doc-pl.pl-code
-        buf_doc-pl-attr.out-code   = buf_doc-pl.out-code
-        buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-        buf_doc-pl-attr.attr-value = string(yes)
-      .
-    end.       
+    if v-free-vol >= v-doc-volume
+    then do :
+      find first buf_doc-pl-attr exclusive-lock
+          where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+            and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+            and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+            and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+            and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+            and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
+      if available buf_doc-pl-attr then
+      do :
+        buf_doc-pl-attr.attr-value = string(no)  .
+      end.
+      else
+      do :
+        create buf_doc-pl-attr.
+        assign
+          buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+          buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+          buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+          buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+          buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+          buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+          buf_doc-pl-attr.attr-value = string(no)
+        .
+      end.
+    end .
+    else do :
+      message "Внимание! Объем нефтепродукта по ТТН " string(round(v-doc-volume, 0))
+              "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "
+              string(round(v-free-vol, 0)) "л." skip
+              "Проверьте введенные данные из ТТН или значение фактического объема в резервуаре в сверке до слива"
+              " и при необходимости проинформируйте ответственное лицо ОГ в соответствии со схемой оповещения. Если данные корректны, прием запрещен!"
+      view-as alert-box . 
+      find first buf_doc-pl-attr exclusive-lock
+          where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+          and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+          and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+          and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+          and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+          and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
+      if available buf_doc-pl-attr then
+      do :
+        buf_doc-pl-attr.attr-value = string(yes)  .
+      end.
+      else
+      do :
+        create buf_doc-pl-attr.
+        assign
+          buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+          buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+          buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+          buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+          buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+          buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+          buf_doc-pl-attr.attr-value = string(yes)
+        .
+      end.       
+    end .
   end .                            
 
 end .
@@ -3580,6 +3846,25 @@ DO:
       then
         enable b-density with frame {&frame-name}. 
     end .
+    
+    if ((pl-rvd-dens and pl-rvd-temp)
+     or v-revision-mode)
+    and v-mi-dnst > 0
+    and v-mi-tmp > 0
+    and rdc-value = "pomi-rn"
+    then do :
+      find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = v-mi-dnst no-error .
+      find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = v-mi-tmp no-error .
+      if available dnst_sr-izmerenia
+      and available tmp_sr-izmerenia
+      and dnst_sr-izmerenia.node-code <> tmp_sr-izmerenia.node-code
+      and ((dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
+        or (tmp_sr-izmerenia.sr-density and tmp_sr-izmerenia.sr-temperature))
+      then do :
+        disable b-temperature with frame {&frame-name} .
+        disable b-density with frame {&frame-name} .
+      end .
+    end .
   end .
   else do :
     disable b-temperature with frame {&frame-name} .
@@ -3911,6 +4196,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       in frame Dialog-Frame.
   end.
   
+  run placelib_get-attr  ( input {&place-type}
+                            ,input tt-rvs-line.obj-code
+                            ,input tt-rvs-line.obj-type
+                            ,input tt-rvs-line.pl-code
+                            ,output v-value
+                            ,output v-ok      ) no-error.
+  if v-ok then place-type = integer(v-value) .
+  
   run placelib_get-attr  ( input {&place-rvd-dnsty}
                             ,input tt-rvs-line.obj-code
                             ,input tt-rvs-line.obj-type
@@ -4131,9 +4424,65 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         undo, return .
      end.
   end.
+  
+  run placelib_get-attr  ( input {&place-SI}
+                          ,input tt-rvs-line.obj-code
+                          ,input tt-rvs-line.obj-type
+                          ,input tt-rvs-line.pl-code
+                          ,output v-value
+                          ,output v-ok      ) no-error.
+  if v-ok
+  then place-si = integer(v-value) .
+  else place-si = ? .
+  
+  run placelib_get-attr  ( input {&place-SI-temp}
+                          ,input tt-rvs-line.obj-code
+                          ,input tt-rvs-line.obj-type
+                          ,input tt-rvs-line.pl-code
+                          ,output v-value
+                          ,output v-ok      ) no-error.
+  if v-ok
+  then pl-temp-sr-izm = integer(v-value) .
+  else pl-temp-sr-izm = ? .
+  
+  run placelib_get-attr  ( input {&place-SI-dens}
+                          ,input tt-rvs-line.obj-code
+                          ,input tt-rvs-line.obj-type
+                          ,input tt-rvs-line.pl-code
+                          ,output v-value
+                          ,output v-ok      ) no-error.
+  if v-ok
+  then pl-dens-sr-izm = integer(v-value) .
+  else pl-dens-sr-izm = ? .
+  
+  run placelib_get-attr  ( input {&place-SI-level}
+                          ,input tt-rvs-line.obj-code
+                          ,input tt-rvs-line.obj-type
+                          ,input tt-rvs-line.pl-code
+                          ,output v-value
+                          ,output v-ok      ) no-error.
+  if v-ok
+  then pl-level-sr-izm = integer(v-value) .
+  else pl-level-sr-izm = ? .
+  
   if parmode <> {&update} then do:
     disable b-save with frame {&frame-name}.
   end.
+  else do :
+    if pl-rvd-dens <> pl-rvd-temp
+    then do :
+      find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = pl-temp-sr-izm no-error .
+      find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = pl-dens-sr-izm no-error .
+      if (available tmp_sr-izmerenia and tmp_sr-izmerenia.sr-type-izm = 0 and tmp_sr-izmerenia.sr-density and tmp_sr-izmerenia.sr-temperature)
+      or (available dnst_sr-izmerenia and dnst_sr-izmerenia.sr-type-izm = 0 and dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
+      then do :
+        message "Бизнес-процессом не предусмотрено использование неравнозначных положений разрешения РВД по параметрам температура и плотность, "
+                "если дополнительное автоматизированное СИ предназначено для измерения обоих параметров." skip
+                "Подайте заявку в службу поддержки для приведения параметров в соответствие требованиям бизнес-процесса."
+        view-as alert-box .
+      end .
+    end .
+  end .
   
   RUN gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", NO, OUTPUT rdc-value, OUTPUT rdc-type) NO-ERROR.
       
@@ -4302,46 +4651,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   then place-diameter = decimal(v-value) .
   else place-diameter = ? . 
   
-  run placelib_get-attr  ( input {&place-SI}
-                          ,input tt-rvs-line.obj-code
-                          ,input tt-rvs-line.obj-type
-                          ,input tt-rvs-line.pl-code
-                          ,output v-value
-                          ,output v-ok      ) no-error.
-  if v-ok
-  then place-si = integer(v-value) .
-  else place-si = ? .
-  
-  run placelib_get-attr  ( input {&place-SI-temp}
-                          ,input tt-rvs-line.obj-code
-                          ,input tt-rvs-line.obj-type
-                          ,input tt-rvs-line.pl-code
-                          ,output v-value
-                          ,output v-ok      ) no-error.
-  if v-ok
-  then pl-temp-sr-izm = integer(v-value) .
-  else pl-temp-sr-izm = ? .
-  
-  run placelib_get-attr  ( input {&place-SI-dens}
-                          ,input tt-rvs-line.obj-code
-                          ,input tt-rvs-line.obj-type
-                          ,input tt-rvs-line.pl-code
-                          ,output v-value
-                          ,output v-ok      ) no-error.
-  if v-ok
-  then pl-dens-sr-izm = integer(v-value) .
-  else pl-dens-sr-izm = ? .
-  
-  run placelib_get-attr  ( input {&place-SI-level}
-                          ,input tt-rvs-line.obj-code
-                          ,input tt-rvs-line.obj-type
-                          ,input tt-rvs-line.pl-code
-                          ,output v-value
-                          ,output v-ok      ) no-error.
-  if v-ok
-  then pl-level-sr-izm = integer(v-value) .
-  else pl-level-sr-izm = ? .
-  
   if rdc-value =  "pomi-rn"
   then do :
     define buffer dop_sr-izmerenia for sr-izmerenia .
@@ -4408,6 +4717,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end .
     if parmode = {&update} then enable v-mi-tmp-name with frame {&frame-name}.
     if v-mi-tmp = 0 then v-mi-tmp = ? .
+    
+    for first rvs-line-attr no-lock where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                                      and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                                      and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                                      and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                                      and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                                      and rvs-line-attr.attr-code = "mi-tmp-dnst"
+                                      :
+      v-mi-tmp-dnst = integer(rvs-line-attr.attr-value) .                                  
+    end .
         
     assign
       v-dnst-mi-old = v-mi-dnst
@@ -4706,6 +5025,27 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       display tt-rvs-line.izmer-density with frame Dialog-Frame .
     end .
     apply "leave" to tt-rvs-line.state-level-total in frame Dialog-Frame .
+    
+    if pl-rvd-dens
+    and pl-rvd-temp
+    and v-mi-dnst > 0
+    and v-mi-tmp > 0
+    then do :
+      find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = v-mi-dnst no-error .
+      find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = v-mi-tmp no-error .
+      if available dnst_sr-izmerenia
+      and available tmp_sr-izmerenia
+      and dnst_sr-izmerenia.node-code <> tmp_sr-izmerenia.node-code
+      and ((dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
+        or (tmp_sr-izmerenia.sr-density and tmp_sr-izmerenia.sr-temperature))
+      then do :
+        message "Бизнес-процессом не предусмотрено использование разных дополнительных СИ по параметрам температура и плотность, при условии, что одно из установленных дополнительных СИ, предназначено для измерения обоих параметров." skip
+                "Установите для температуры и плотности соответствующие требованиям дополнительные СИ."
+        view-as alert-box .
+        disable b-temperature with frame {&frame-name} .
+        disable b-density with frame {&frame-name} .
+      end .
+    end .
   end .
   
   find first rvs-line-attr no-lock
@@ -4805,6 +5145,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         find first tt-temps no-lock where tt-temps.ii = it no-error .
         if not available tt-temps
         then do :
+          if place-type = 1
+          and it = 3
+          then do :
+            tt-temps.key_ = "tср" no-error .
+          end .
           create tt-temps .
           assign
             tt-temps.ii = it
@@ -4815,6 +5160,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             when 2 then tt-temps.key_ = "tср" .
             when 3 then tt-temps.key_ = "tв" .
           end case .
+          if place-type = 1
+          and it = 2
+          then do :
+            tt-temps.key_ = "tв" no-error .
+          end .
         end .
       end .
     end .

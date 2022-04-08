@@ -55,7 +55,7 @@ define input parameter p-cor-acc1 like ub.fin-doc.cor-acc1 no-undo.
 define input parameter p-an-uchet-code like ub.fin-doc.an-uchet-code no-undo.
 define input parameter p-cel-nazn-code like ub.fin-doc.cel-nazn-code no-undo.
 define input parameter p-cashbookId like ub.fin-doc.CashBookId no-undo .
-
+define input parameter p-cashier as character no-undo .
 define INPUT-OUTPUT parameter table for tt0-fin-doc.
 /*если p-mode = {&add-def} в этой таблице будет лежать заполняемый платеж
 если p-mode = {&add-copy} он уже будет предварительно заполнен заполнен из копируемой записи
@@ -1051,6 +1051,7 @@ do:
     end case.
       
     v-cashier = buf_sysconf.cashier.
+    if v-cashier = "" then v-cashier = p-cashier .
   end. /*if tt-fin-doc.obj-type <> ''then do:*/
   else 
   do:
@@ -1068,10 +1069,11 @@ do:
     ub.shift-staff.obj-code   = p-obj-code AND
     ub.shift-staff.shift-date = tt-fin-doc.shift-date AND
     ub.shift-staff.shift-num  = tt-fin-doc.shift-num AND
-    ub.shift-staff.staff-role = yes and
+    ub.shift-staff.shift-name  = tt-fin-doc.shift-name AND
+    ub.shift-staff.staff-role = no and
     ub.shift-staff.psn-num    >= 0 No-ERROR.
   assign 
-    v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+    v-cashier = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else  string(p-cashier, "X(30)") .
   .
   find first ub.CashBook no-lock where ub.CashBook.id = tt-fin-doc.cashbookid no-error .
   if not available ub.CashBook 

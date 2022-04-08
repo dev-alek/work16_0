@@ -235,6 +235,7 @@ define variable ii as integer no-undo.
 define variable is-copy as logical no-undo.
 define variable docrec-src as recid no-undo.
 define variable varattr as character no-undo.
+define variable v-modeetc as character no-undo.
 
 define variable d-kg-after-qnty like ub.doc-line.fact-qnty  no-undo.
 define variable d-kg-price-rubl like ub.doc-line.price-rubl no-undo.
@@ -265,6 +266,8 @@ define variable v-back-date as logical   no-undo .
 define variable v-not-ord   as logical   no-undo .
 define variable v-edit-fact-wayb as logical   no-undo .
 define variable v-fact-qnty as character no-undo.
+
+define variable v-can-edit as logical init yes .
 
 define new shared variable PrintScale   as logical init true no-undo.
 define new shared variable CostPrice    as logical no-undo.
@@ -1326,12 +1329,18 @@ DO:
  {&stdbtn}
   run init-attr-general in this-procedure .
 
-  if t-doc.status_ <> {&fact} then do:
-    run str/doc-attr.w (input ParParentproc, input "b-lkp,b-chg,b-add,b-del", input t-doc.doc-code, input table tt-upd-attr) no-error.
-  end.
-  else do:
-    run str/doc-attr.w (input ParParentproc, input "b-lkp,b-chg,b-add", input t-doc.doc-code, input table tt-upd-attr) no-error.
-  end.
+  if v-can-edit
+  then do :
+    if t-doc.status_ <> {&fact} then do:
+      run str/doc-attr.w (input ParParentproc, input "b-lkp,b-chg,b-add,b-del", input t-doc.doc-code, input table tt-upd-attr) no-error.
+    end.
+    else do:
+      run str/doc-attr.w (input ParParentproc, input "b-lkp,b-chg,b-add", input t-doc.doc-code, input table tt-upd-attr) no-error.
+    end.
+  end .
+  else do :
+    run str/doc-attr.w (input ParParentproc, input "b-lkp", input t-doc.doc-code, input table tt-upd-attr) no-error.
+  end .
 
 END.
 
@@ -1365,10 +1374,10 @@ DO:
       tt-upd-attr-fuel.full-screen-val  ' =full-screen-val '   .
     end.
     */
-      run str/in-laddtrn.w (input ParParentproc, input pardoc-mode, input t-doc.doc-code, input table tt-upd-attr-fuel) no-error.
+      run str/in-laddtrn.w (input ParParentproc, input (if not v-can-edit then {&lookup} else pardoc-mode), input t-doc.doc-code, input table tt-upd-attr-fuel) no-error.
     end.
     else do:
-      run str/in-laddtrn.w (input ParParentproc, input pardoc-mode, input t-doc.doc-code, input table tt-upd-attr-fuel) no-error.
+      run str/in-laddtrn.w (input ParParentproc, input (if not v-can-edit then {&lookup} else pardoc-mode), input t-doc.doc-code, input table tt-upd-attr-fuel) no-error.
     end.
 END.
 
@@ -1501,7 +1510,8 @@ if pardoc-mode <> {&lookup} then do:
     define variable varexch-scale     like ub.trn-doc.exch-scale          no-undo.
     define variable varcurr-abbr     as   character                       no-undo.
     define variable v-master as character no-undo.
-    
+
+    if trn-type = {&is-gds} then do:
     run adm/shattri.p (
       input "get":U
       ,input t-doc.obj-type
@@ -1524,6 +1534,31 @@ if pardoc-mode <> {&lookup} then do:
         "adm/shattri.p"
         view-as alert-box error
       .
+      end.
+      else do:
+    run adm/shattri.p (
+      input "get":U
+      ,input t-doc.obj-type
+      ,input t-doc.obj-code
+      ,input {&attr-contr-in}
+      ,input ( if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}  then  "contr-in-expense-NP" else "contr-in-income-NP" )
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output varcontract-type
+      ,INPUT-OUTPUT TABLE-handle v-tth1
+      ) no-error .
+      if error-status :error then
+      message
+        vss-workfile vss-revision vss-description skip
+        error-status :get-message(1) skip
+        return-value skip
+        "adm/shattri.p"
+        view-as alert-box error
+      .         
+      end.   
       delete object v-tth1.
       if v-value-logical = true then varcontract = "yes" .
                                 else varcontract = "no" .
@@ -1620,7 +1655,7 @@ if pardoc-mode <> {&lookup} then do:
           t-doc.contract-code  = 0.
       end.
   end.
-  run gbl/inidebug.p.
+
 run UI-on in this-procedure ( input "enable" ).
 END.
 
@@ -2866,7 +2901,14 @@ do on error undo main-block, leave main-block :
            t-doc.doc-code
            {&trdcattr-is-fuel}
            "yes" 
-        no-error} 
+        no-error}
+        varlog = no.
+        message "Читать QR код ПН?"
+          view-as alert-box question buttons YES-NO update varlog.
+        if varlog
+        then do:
+          run str/trnscanqr.w (parparentproc, t-doc.doc-code, "", this-procedure).
+        end. 
       end.
       when 2 
       then do:
@@ -2926,11 +2968,11 @@ do on error undo main-block, leave main-block :
    ub.goods.gds-name:width     in browse {&browse-name}   = 40.
   /*end.*/
    
-  if not (trn-type = {&is-lgas} or trn-type = {&is-lgas-corr} or trn-type = {&is-fuel}) 
+ /* if not (trn-type = {&is-lgas} or trn-type = {&is-lgas-corr} or trn-type = {&is-fuel}) 
   then do:
     hide b-in-attr-fuel in frame {&frame-name}.
   end.
-  else do :
+  else*/ do :
     t-doc.cli-qnty:label = "КолТТН(кг)" .
     t-doc.doc-qnty:label = "Док.кол-во(л)" .
     t-doc.fact-qnty:label = "Факт.кол-во(л)" .
@@ -4256,6 +4298,79 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-cli-cust d-in-doc
+procedure set-cli-cust :
+  def input parameter p-clitype as char no-undo.
+  def input parameter p-clicode as int  no-undo.
+  define variable v-tmp-char like ub.thbj-attr.property-value-character no-undo .
+  define variable v-tmp-date      like ub.thbj-attr.property-value-date    no-undo .
+  define variable v-tmp-decimal   like ub.thbj-attr.property-value-decimal no-undo .
+  define variable v-tmp-integer   like ub.thbj-attr.property-value-integer no-undo .
+  define variable v-rvd-own-nb as logical no-undo .
+  define variable v-rvd-own-nb-type as   character no-undo .
+  
+  find first clients where clients.obj-type = p-clitype and clients.obj-code = p-clicode no-lock no-error.
+  if not available (clients)
+  then do:
+    return error "Не найден клиент - " + p-clitype + string(p-clicode).
+  end.
+  disp clients.obj-code @ t-doc.cli-code
+          clients.obj-name with frame {&frame-name}.
+  disp clients.obj-type @ t-doc.cli-type with frame {&frame-name}.
+  
+  run adm/shattri.p (
+      input "get":U
+      ,input t-doc.obj-type
+      ,input t-doc.obj-code
+      ,input {&attr-petrol}
+      ,input  "rvd-own-nb"
+      ,output v-tmp-char
+      ,output v-tmp-date
+      ,output v-tmp-decimal
+      ,output v-tmp-integer
+      ,output v-rvd-own-nb
+      ,output v-rvd-own-nb-type
+      ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+      ) no-error .
+  if error-status :error then v-rvd-own-nb = false .
+  if v-rvd-own-nb = false
+  and t-doc.cli-code > 0
+  then do :
+    find first ub.clients-attr no-lock where ub.clients-attr.obj-type = t-doc.cli-type
+                                         and ub.clients-attr.obj-code = t-doc.cli-code
+                                         and ub.clients-attr.attr-code = {&attr-owner-code}
+                                         no-error .
+    if available ub.clients-attr
+    and ub.clients-attr.attr-value > ""
+    then do :
+      if ub.clients-attr.attr-value = "орг" + string(t-doc.host-code)
+      then do :     
+        v-can-edit = no .                       
+        disable b-add b-del with frame {&frame-name}.
+      end .
+    end .
+  end .
+  
+      run check-cli no-error.
+      if error-status :error then return no-apply.
+  run fill-mol in this-procedure no-error .
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE cycle-add-cust d-in-doc
+procedure cycle-add-cust :
+  
+  def input parameter p-recgds-list as character no-undo.
+  v-modeetc = ",autotrnqr2d".
+  varnotes = p-recgds-list.
+  run cycle-add in this-procedure.
+  run ui-on in this-procedure ( input "line" ).
+  
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE cycle-add d-in-doc
 PROCEDURE cycle-add :
 define buffer bf_goods  for ub.goods.
@@ -4422,8 +4537,9 @@ do while varlns-cnt <= num-entries (varnotes):
   end.
   assign
     pardoc-rec = recid(t-doc).
+
   run str/in-line.w (input  parparentproc,
-                     input  (if varlns-cnt > 1 then "ЦИКЛ":U else {&add-def}),
+                     input  ((if varlns-cnt > 1 then "ЦИКЛ":U else {&add-def}) + v-modeetc),
                      input  pardoc-rec,
                      input-output line-rec,
                      input  gds-rec,
@@ -6750,6 +6866,46 @@ if lookup( fnc, "enable" ) > 0 then do:
          end.
          enable b-revis t-doc.ord-num with frame {&frame-name}.
       end.
+      
+      define variable v-tmp-char like ub.thbj-attr.property-value-character no-undo .
+      define variable v-tmp-date      like ub.thbj-attr.property-value-date    no-undo .
+      define variable v-tmp-decimal   like ub.thbj-attr.property-value-decimal no-undo .
+      define variable v-tmp-integer   like ub.thbj-attr.property-value-integer no-undo .
+      define variable v-rvd-own-nb as logical no-undo .
+      define variable v-rvd-own-nb-type as   character no-undo .
+      
+      run adm/shattri.p (
+          input "get":U
+          ,input t-doc.obj-type
+          ,input t-doc.obj-code
+          ,input {&attr-petrol}
+          ,input  "rvd-own-nb"
+          ,output v-tmp-char
+          ,output v-tmp-date
+          ,output v-tmp-decimal
+          ,output v-tmp-integer
+          ,output v-rvd-own-nb
+          ,output v-rvd-own-nb-type
+          ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+          ) no-error .
+      if error-status :error then v-rvd-own-nb = false .
+      if v-rvd-own-nb = false
+      and t-doc.cli-code > 0
+      then do :
+        find first ub.clients-attr no-lock where ub.clients-attr.obj-type = t-doc.cli-type
+                                             and ub.clients-attr.obj-code = t-doc.cli-code
+                                             and ub.clients-attr.attr-code = {&attr-owner-code}
+                                             no-error .
+        if available ub.clients-attr
+        and ub.clients-attr.attr-value > ""
+        then do :
+          if ub.clients-attr.attr-value = "орг" + string(t-doc.host-code)
+          then do :      
+            v-can-edit = no .                      
+            disable b-add b-del with frame {&frame-name}.
+          end .
+        end .
+      end .
     end. /* when {&update} */
   end case.
 end.

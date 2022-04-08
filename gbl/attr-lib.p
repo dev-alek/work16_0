@@ -882,6 +882,18 @@ end.
 &scop manual-edit-attr-supp-np   1
 &scop batch-edit-attr-supp-np   1
 
+/* Атрибут клиента - Собственный поставщик   */
+&scop type-attr-own-supp  {&type-log}
+&scop format-attr-own-supp  "+/"
+&scop label-attr-own-supp  "Собственный поставщик"
+&scop tooltip-attr-own-supp  "Собственный поставщик"
+&scop user-can-edit-attr-own-supp   true
+&scop output-display-attr-own-supp  true
+&scop other-attr-own-supp  '':u
+&scop news-attr-own-supp  true
+&scop manual-edit-attr-own-supp   1
+&scop batch-edit-attr-own-supp   1
+
 /* Атрибут клиента - Поставщик СУГ   */
 &scop type-attr-supp-lgas  {&type-log}
 &scop format-attr-supp-lgas  "+/"
@@ -906,17 +918,65 @@ end.
 &scop manual-edit-attr-tank-farm-for  1
 &scop batch-edit-attr-tank-farm-for  1
 
+/* Атрибут клиента - Нефтеперерабатывающий завод (НПЗ)   */
+&scop type-attr-NPZ  {&type-log}
+&scop format-attr-NPZ  "+/"
+&scop label-attr-NPZ  "Нефтеперерабатывающий завод"
+&scop tooltip-attr-NPZ  "Нефтеперерабатывающий завод"
+&scop user-can-edit-attr-NPZ   true
+&scop output-display-attr-NPZ  true
+&scop other-attr-NPZ  '':u
+&scop news-attr-NPZ  true
+&scop manual-edit-attr-NPZ   1
+&scop batch-edit-attr-NPZ   1
+
+/* Атрибут клиента - код КСК */
+&scop type-attr-code-KSK {&type-char}
+&scop format-attr-code-KSK  "X(256)"
+&scop label-attr-code-KSK   "Код КСК"
+&scop tooltip-attr-code-KSK   "Код КСК"
+&scop user-can-edit-attr-code-KSK  true
+&scop output-display-attr-code-KSK  true
+&scop other-attr-code-KSK  '':u
+&scop news-attr-code-KSK false
+&scop manual-edit-attr-code-KSK  1
+&scop batch-edit-attr-code-KSK  1
+
+/*  Атрибут клиента - код АИС */
+&scop type-attr-code-AIS {&type-char}
+&scop format-attr-code-AIS  "X(256)"
+&scop label-attr-code-AIS   "Код АИС"
+&scop tooltip-attr-code-AIS   "Код АИС"
+&scop user-can-edit-attr-code-AIS  true
+&scop output-display-attr-code-AIS  true
+&scop other-attr-code-AIS  '':u
+&scop news-attr-code-AIS false
+&scop manual-edit-attr-code-AIS  1
+&scop batch-edit-attr-code-AIS  1
+
 /* Атрибут клиента - являестся перевозчиком для:*/
 &scop type-attr-auto-tank-for {&type-char}
 &scop format-attr-auto-tank-for "X(255)"
-&scop label-attr-auto-tank-for "Являестся перевозчиком для:"
-&scop tooltip-attr-auto-tank-for "Являестся перевозчиком для:"
+&scop label-attr-auto-tank-for "Является перевозчиком для:"
+&scop tooltip-attr-auto-tank-for "Является перевозчиком для:"
 &scop user-can-edit-attr-auto-tank-for  true
 &scop output-display-attr-auto-tank-for  true
 &scop other-attr-auto-tank-for 'spr=clntattr-auto-tank-for':u
 &scop news-attr-auto-tank-for true
 &scop manual-edit-attr-auto-tank-for  1
 &scop batch-edit-attr-auto-tank-for  1
+
+/* Атрибут клиента - являестся поставщиком для:*/
+&scop type-attr-owner-code {&type-char}
+&scop format-attr-owner-code "X(255)"
+&scop label-attr-owner-code "Код ПНПО-владельца"
+&scop tooltip-attr-owner-code "Код ПНПО-владельца"
+&scop user-can-edit-attr-owner-code  true
+&scop output-display-attr-owner-code  true
+&scop other-attr-owner-code 'spr=clntattr-owner-code':u
+&scop news-attr-owner-code true
+&scop manual-edit-attr-owner-code  1
+&scop batch-edit-attr-owner-code  1
 
 /* Атрибут клиента - Список юр.лиц, платежами которых можно закрывать ФО:*/
 &scop type-attr-cli-for-close-fo {&type-char}
@@ -1142,11 +1202,21 @@ procedure clntattr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-supp-np
       {&attr-temp-full-code}
+      &scop attr-code attr-own-supp
+      {&attr-temp-full-code}
       &scop attr-code attr-supp-lgas
       {&attr-temp-full-code}
       &scop attr-code attr-tank-farm-for
       {&attr-temp-full-code}
+      &scop attr-code attr-NPZ
+      {&attr-temp-full-code}
+      &scop attr-code attr-code-KSK
+      {&attr-temp-full-code}
+      &scop attr-code attr-code-AIS
+      {&attr-temp-full-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-temp-full-code}
+      &scop attr-code attr-owner-code
       {&attr-temp-full-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-temp-full-code}
@@ -1296,11 +1366,21 @@ procedure clntattr-tooltip :
       {&attr-temp-code}
       &scop attr-code attr-supp-np
       {&attr-temp-code}
+      &scop attr-code attr-own-supp
+      {&attr-temp-code}
       &scop attr-code attr-supp-lgas
       {&attr-temp-code}
       &scop attr-code attr-tank-farm-for
       {&attr-temp-code}
+      &scop attr-code attr-NPZ
+      {&attr-temp-code}
+      &scop attr-code attr-code-KSK
+      {&attr-temp-code}
+      &scop attr-code attr-code-AIS
+      {&attr-temp-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-temp-code}
+      &scop attr-code attr-owner-code
       {&attr-temp-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-temp-code}
@@ -1658,11 +1738,21 @@ procedure clntattr-news :
       {&attr-news-code}
       &scop attr-code attr-supp-np
       {&attr-news-code}
+      &scop attr-code attr-own-supp
+      {&attr-news-code}
       &scop attr-code attr-supp-lgas
       {&attr-news-code}
       &scop attr-code attr-tank-farm-for
       {&attr-news-code}
+      &scop attr-code attr-NPZ
+      {&attr-news-code}
+      &scop attr-code attr-code-KSK
+      {&attr-news-code}
+      &scop attr-code attr-code-AIS
+      {&attr-news-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-news-code}
+      &scop attr-code attr-owner-code
       {&attr-news-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-news-code}
@@ -1961,6 +2051,46 @@ procedure clntattr-auto-tank-for :
   end.
 end procedure.  /* clntattr-auto-tank-for */
 
+procedure clntattr-owner-code :
+
+  define input parameter parparentproc as widget-handle no-undo .
+  define input parameter p-obj-type like ub.clients.obj-type no-undo .
+  define input parameter p-obj-code like ub.clients.obj-code no-undo .
+  define input-output parameter p-value as character no-undo .
+  define output parameter p-setted as logical no-undo .
+
+  define variable v-code  as character no-undo.
+  define variable v-value as character no-undo .
+
+  do
+  on error undo, return error
+  :
+    assign
+      v-code = "owner-code"
+      v-value = p-value
+    .
+    run str/clisel1.p
+      ( input parparentproc
+       ,input p-obj-type
+       ,input p-obj-code
+       ,input v-code
+       ,input-output v-value
+      ).
+    if num-entries(v-value) > 1
+    then do :
+      message "Выбрать можно только одного контрагента!" view-as alert-box .
+      return error .
+    end .
+    if v-value <> p-value
+    then do:
+      assign
+        p-value  = v-value
+        p-setted = yes
+      .
+    end.
+  end.
+end procedure.  /* clntattr-owner-code */
+
 procedure clntattr-cli-for-close-fo :
 
   define input parameter parparentproc as widget-handle no-undo .
@@ -2218,11 +2348,21 @@ procedure clntattr-manual-edit :
       {&attr-manual-edit-code}
       &scop attr-code attr-supp-np
       {&attr-manual-edit-code}
+      &scop attr-code attr-own-supp
+      {&attr-manual-edit-code}
       &scop attr-code attr-supp-lgas
       {&attr-manual-edit-code}
       &scop attr-code attr-tank-farm-for
       {&attr-manual-edit-code}
+      &scop attr-code attr-NPZ
+      {&attr-manual-edit-code}
+      &scop attr-code attr-code-KSK
+      {&attr-manual-edit-code}
+      &scop attr-code attr-code-AIS
+      {&attr-manual-edit-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-manual-edit-code}
+      &scop attr-code attr-owner-code
       {&attr-manual-edit-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-manual-edit-code}
@@ -2287,11 +2427,21 @@ procedure clntattr-batch-edit :
       {&attr-batch-edit-code}
       &scop attr-code attr-supp-np
       {&attr-batch-edit-code}
+      &scop attr-code attr-own-supp
+      {&attr-batch-edit-code}
       &scop attr-code attr-supp-lgas
       {&attr-batch-edit-code}
       &scop attr-code attr-tank-farm-for
       {&attr-batch-edit-code}
+      &scop attr-code attr-NPZ
+      {&attr-batch-edit-code}
+      &scop attr-code attr-code-KSK
+      {&attr-batch-edit-code}
+      &scop attr-code attr-code-AIS
+      {&attr-batch-edit-code}
       &scop attr-code attr-auto-tank-for
+      {&attr-batch-edit-code}
+      &scop attr-code attr-owner-code
       {&attr-batch-edit-code}
       &scop attr-code attr-cli-for-close-fo
       {&attr-batch-edit-code}
@@ -2988,19 +3138,22 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-contr-in   true
 &scop output-display-attr-contr-in  true
 &scop other-attr-contr-in           'spr-ext=gbl\naklpa.w':U
-&scop prop-type-list-attr-contr-in  'logical,logical,logical,logical':U
-&scop prop-label-list-attr-contr-in 'Договор в ПН,Договор в РН,Сверять количества в ПН'
-&scop prop-list-attr-contr-in       'contr-in-income,contr-in-expense,contr-qnty-spec'
+&scop prop-type-list-attr-contr-in  'logical,logical,logical,logical,logical,logical,logical':U
+&scop prop-label-list-attr-contr-in 'Договор в ПН с НП,Договор в ПН с СТ,Договор в РН с НП,Договор в РН с СТ,Сверять количества в ПН,Перенумерация ПКО и РКО'
+&scop prop-list-attr-contr-in       'contr-in-income-NP,contr-in-income,contr-in-expense-NP,contr-in-expense,contr-qnty-spec,contr-recount'
 &scop global-attr-contr-in true
 &scop host-attr-contr-in true
 &scop shop-attr-contr-in true
 &scop store-attr-contr-in true
 &scop db-attr-contr-in false
 &scop batch-edit-attr-contr-in  0
-&scop attr-contr-in_contr-in-income_tooltip  Обязательная ссылка на договор в приходной накладной
-&scop attr-contr-in_contr-in-expense_tooltip Обязательная ссылка на договор в расходной накладной
+&scop attr-contr-in_contr-in-income-NP_tooltip  Обязательная ссылка на договор в приходной накладной с НП
+&scop attr-contr-in_contr-in-income-CPT_tooltip  Обязательная ссылка на договор в приходной накладной с СТ
+&scop attr-contr-in_contr-in-expense-NP_tooltip Обязательная ссылка на договор в расходной накладной с НП
+&scop attr-contr-in_contr-in-expense-CPT_tooltip Обязательная ссылка на договор в расходной накладной с СТ
 &scop attr-contr-in_contr-qnty-spec_tooltip  Сверять количество в ПН по спецификации
-&scop prop-tooltip-list-attr-contr-in        {&attr-contr-in_contr-in-income_tooltip},{&attr-contr-in_contr-in-expense_tooltip},{&attr-contr-in_contr-qnty-spec_tooltip}
+&scop attr-contr-in_contr-recount_tooltip  Перенумерация ПКО и РКО
+&scop prop-tooltip-list-attr-contr-in        {&attr-contr-in_contr-in-income-NP_tooltip},{&attr-contr-in_contr-in-income_tooltip},{&attr-contr-in_contr-in-expense-NP_tooltip},{&attr-contr-in_contr-in-expense_tooltip},{&attr-contr-in_contr-qnty-spec_tooltip},{&attr-contr-in_contr-recount_tooltype}
 &scop level-way-attr-contr-in "obj,host,global"
 &scop up-way-attr-contr-in "contr-in,contr-in,contr-in"
 
@@ -3904,9 +4057,9 @@ logical~
 &scop user-can-edit-attr-marking   true
 &scop output-display-attr-marking  true
 &scop other-attr-marking           'spr-ext=gbl\marking.w':U
-&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical':U
-&scop prop-label-list-attr-marking 'Включена работа с ЭДО,Включена работа с ЭДО Диадок,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций с маркированными товарами,Использования рецепта Альтернатива только для получения ингредиентов'
-&scop prop-list-attr-marking       'marking-EDO,marking-EDO-Diadok,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr'
+&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical,logical':U
+&scop prop-label-list-attr-marking 'Включена работа с ЭДО,Включена работа с ЭДО Диадок,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций с маркированными товарами,Использования рецепта Альтернатива только для получения ингредиентов,Определение товара по штрих-коду'
+&scop prop-list-attr-marking       'marking-EDO,marking-EDO-Diadok,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code'
 &scop global-attr-marking true
 &scop host-attr-marking false
 &scop shop-attr-marking true
@@ -4347,6 +4500,7 @@ logical~
 ,character~
 ,integer~
 ,integer~
+,logical~
 ':U
 &scop prop-label-list-attr-report-glob '~
 Есть отчеты Actuate~
@@ -4360,13 +4514,14 @@ logical~
 ,Сортировка типов касс.пл-жей в отчете по АВТОКУШ~
 ,Формат сменного отчета~
 ,Алгоритм расчета плотности в отчетах~
+,Excel для отчетов, защита от редактирования~
 '
 
-&scop prop-list-attr-report-glob 'actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens'
+&scop prop-list-attr-report-glob 'actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens,rep-excel'
 &scop global-attr-report-glob true
 &scop host-attr-report-glob false
-&scop shop-attr-report-glob false
-&scop store-attr-report-glob false
+&scop shop-attr-report-glob true
+&scop store-attr-report-glob true
 &scop db-attr-report-glob false
 &scop batch-edit-attr-report-glob  0
 &scop attr-report-glob-actuate_tooltip    (actuate)   Глобальный. Есть возможность формирования отчетов через внешнюю программу Actuate
@@ -4380,6 +4535,7 @@ logical~
 &scop attr-report-glob-cplot_tooltip      (cplot)     Глобальный. Перечень типов касс.платежей - билетов лотереи АВТОКУШ. Порядок вывода типов касс.платежа в отчетах <<Отчет по АВТОКУШ>> соответствует порядку перечисления кодов в этом параметре
 &scop attr-report-glob-shift-rep-format_tooltip  (rep-shift-format) Глобальный. Формат сменного отчета
 &scop attr-report-glob-cdens_tooltip      (cdens)     Глобальный. По средней - плотность чека брать из документа продажи. По чекам - в каждом чеке плотность считается по выставленному алгоритму.
+&scop attr-report-glob-rep-excel_tooltip  (rep-excel) Глобальный. Excel для отчетов, защита от редактирования
 &scop prop-tooltip-list-attr-report-glob  {&attr-report-glob-actuate_tooltip}~
 ,{&attr-report-glob-ardecldt_tooltip}~
 ,{&attr-report-glob-rep-sort_tooltip}~
@@ -4390,10 +4546,11 @@ logical~
 ,{&attr-report-glob-alcgrpgd_tooltip}~
 ,{&attr-report-glob-cplot_tooltip}~
 ,{&attr-report-glob-rep-shift-format_tooltip}~
-,{&attr-report-glob-cdens_tooltip}
+,{&attr-report-glob-cdens_tooltip}~
+,{&attr-report-glob-rep-excel_tooltip}
 
-&scop level-way-attr-report-glob ",,global"
-&scop up-way-attr-report-glob ",,report-glob"
+&scop level-way-attr-report-glob "obj,,global"
+&scop up-way-attr-report-glob "prt-glob,,report-glob"
 
 
 /* параметры отчетам фирма */
@@ -4658,7 +4815,7 @@ character~
 &scop user-can-edit-attr-petrol   true
 &scop output-display-attr-petrol  true
 &scop other-attr-petrol 'spr-ext=adm\shattrpt.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical,character,character,character,decimal,decimal,character,decimal,decimal,logical':U
+&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical,character,character,character,decimal,decimal,character,decimal,decimal,logical,logical,logical,character,integer':U
 &scop prop-label-list-attr-petrol '~
 Расхождение в инвентаризации по сверке делать без учета погрешности измерения,~
 Алгоритм вычисления плотности для продаж,~
@@ -4682,7 +4839,11 @@ character~
 Отклонение плотности,~
 Отклонение воды~,~
 Допустимый % расхождения массы при приеме СУГ,~
-Контроль свободной емкости при приходе~
+Контроль свободного объема в резервуаре при приеме,~
+Обязательный выбор этапа для приема газовоза,~
+Разрешить ручное заполнение документа приёма НП при поставках с собственных НБ,~
+Обязательные поля в секциях ПН,~
+Время на сканирование QR-кода (мс)~
 '
 &scop global-attr-petrol true
 &scop host-attr-petrol true
@@ -6195,6 +6356,20 @@ end procedure.
 &scop copy-attr-gds-CommodityCode  true
 &scop manual-edit-attr-gds-CommodityCode  1
 &scop batch-edit-attr-gds-CommodityCode  1
+
+/* Коды АИС */
+&scop type-attr-gds-code-AIS {&type-char}
+&scop format-attr-gds-code-AIS  "X(21)"
+&scop label-attr-gds-code-AIS   "Коды АИС"
+&scop tooltip-attr-gds-code-AIS   "Коды АИС"
+&scop user-can-edit-attr-gds-code-AIS  true
+&scop output-display-attr-gds-code-AIS  true
+&scop other-attr-gds-code-AIS ""
+&glob news-attr-gds-code-AIS true
+&scop copy-attr-gds-code-AIS  true
+&scop manual-edit-attr-gds-code-AIS  6
+&scop batch-edit-attr-gds-code-AIS  6
+
 /* Является скоропортящейся продукцией */
 &glob type-attr-perishable {&type-log}
 &glob format-attr-perishable  "+/-"
@@ -6600,6 +6775,8 @@ procedure gds-attr-name :
       &scop attr-code attr-gds-ptrl-densities
       {&attr-temp-full-code}
       &scop attr-code attr-gds-CommodityCode
+      {&attr-temp-full-code}
+      &scop attr-code attr-gds-code-AIS
       {&attr-temp-full-code}      
       &scop attr-code attr-length-of
       {&attr-temp-full-code}
@@ -6706,7 +6883,9 @@ do
       &scop attr-code attr-gds-ptrl-densities
       {&attr-temp-code}
       &scop attr-code attr-gds-CommodityCode
-      {&attr-temp-code}      
+      {&attr-temp-code}    
+      &scop attr-code attr-gds-code-AIS
+      {&attr-temp-code}  
       &scop attr-code attr-length-of
       {&attr-temp-code}
       &scop attr-code attr-width-of
@@ -7048,6 +7227,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-gds-CommodityCode
       {&attr-news-code}
+      &scop attr-code attr-gds-code-AIS
+      {&attr-news-code}
       &scop attr-code attr-length-of
       {&attr-news-code}
       &scop attr-code attr-width-of
@@ -7147,7 +7328,9 @@ procedure gds-attr-copy :
       &scop attr-code attr-gds-ptrl-densities
       {&attr-copy-code}
       &scop attr-code attr-gds-CommodityCode
-      {&attr-copy-code}      
+      {&attr-copy-code}  
+      &scop attr-code attr-gds-code-AIS
+      {&attr-copy-code}    
       &scop attr-code attr-length-of
       {&attr-copy-code}
       &scop attr-code attr-width-of
@@ -7835,6 +8018,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-gds-CommodityCode
       {&attr-manual-edit-code}
+      &scop attr-code attr-gds-code-AIS
+      {&attr-manual-edit-code}
       &scop attr-code attr-length-of
       {&attr-manual-edit-code}
       &scop attr-code attr-width-of
@@ -7929,6 +8114,8 @@ do
       &scop attr-code attr-gds-ptrl-densities
       {&attr-batch-edit-code}
       &scop attr-code attr-gds-CommodityCode
+      {&attr-batch-edit-code}
+      &scop attr-code attr-gds-code-AIS
       {&attr-batch-edit-code}
       &scop attr-code attr-length-of
       {&attr-batch-edit-code}
@@ -14462,6 +14649,18 @@ end procedure.
 &scop           news-attr-esys-cert-file-ext yes
 &scop    manual-edit-attr-esys-cert-file-ext 0
 &scop     batch-edit-attr-esys-cert-file-ext 0
+
+&scop           type-attr-esys-cert-repository {&type-int}
+&scop         format-attr-esys-cert-repository ">>9"
+&scop          label-attr-esys-cert-repository "Хранилище сертификатов"
+&scop        tooltip-attr-esys-cert-repository "Расположение хранилища сертификатов"
+&scop  user-can-edit-attr-esys-cert-repository true
+&scop output-display-attr-esys-cert-repository false
+&scop          other-attr-esys-cert-repository '':u
+&scop           news-attr-esys-cert-repository yes
+&scop    manual-edit-attr-esys-cert-repository 0
+&scop     batch-edit-attr-esys-cert-repository 0
+
 &scop type-attr-esys-AuthToken {&type-char}
 &scop format-attr-esys-AuthToken "X(16000)"
 &scop label-attr-esys-AuthToken "Токен авторизации"
@@ -14716,6 +14915,8 @@ procedure ext-system-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-esys-cert-file-ext
       {&attr-temp-full-code}
+      &scop attr-code attr-esys-cert-repository
+      {&attr-temp-full-code}
       &scop attr-code attr-esys-AuthToken
       {&attr-temp-full-code}
       &scop attr-code attr-esys-AuthTokenDT
@@ -14788,6 +14989,8 @@ procedure ext-system-attr-tooltip :
       &scop attr-code attr-esys-cert-sign-issuer
       {&attr-temp-code}
       &scop attr-code attr-esys-cert-file-ext
+      {&attr-temp-code}
+      &scop attr-code attr-esys-cert-repository
       {&attr-temp-code}
       &scop attr-code attr-esys-AuthToken
       {&attr-temp-code}
@@ -15058,7 +15261,9 @@ procedure ext-system-attr-news :
       {&attr-news-code}
       &scop attr-code attr-esys-cert-file-ext
       {&attr-news-code}
-       &scop attr-code attr-ver-code
+      &scop attr-code attr-esys-cert-repository
+      {&attr-news-code}
+      &scop attr-code attr-ver-code
       {&attr-news-code}
       &scop attr-code attr-esys-AuthToken
       {&attr-news-code}
