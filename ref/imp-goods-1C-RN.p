@@ -426,6 +426,7 @@ end.
   v-mark-type = entry(p-GdsObj:mark-type + 1 ,{&prop-list-attr-mark-type}) no-error.
   
   if v-mark-type <> ?
+  and v-mark-type <> "not-type"
   then do :
     RUN gds-attr-write (v-nbc, {&attr-mark-type}, v-mark-type).  
   end.
