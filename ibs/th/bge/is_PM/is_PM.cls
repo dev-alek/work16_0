@@ -1436,12 +1436,12 @@ class ibs.th.bge.is_PM.is_PM:
                                             (if tt-place.is-calc
                                              then
                                               ("; " +
-                                               string(tt-place.end-rvs-fact-qnty) + ": " +
-                                               string(tt-place.end-chk-fact-qnty) + ": " +
-                                               string(tt-place.end-trn-fact-qnty) + "; "
+                                               string-mth(tt-place.end-rvs-fact-qnty) + ": " +
+                                               string-mth(tt-place.end-chk-fact-qnty) + ": " +
+                                               string-mth(tt-place.end-trn-fact-qnty) + "; "
                                               )
                                              else "; ") + 
-                                            string(tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) 
+                                            string-mth(tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) 
                                             ) .
     end .
     
@@ -1450,7 +1450,7 @@ class ibs.th.bge.is_PM.is_PM:
     first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
     :
       run write-to-log in p-parent-handle ("gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
-                                           string(tt-result.wght-fact-end)
+                                           string-mth(tt-result.wght-fact-end)
                                            ) .
     end .
     
@@ -1904,12 +1904,12 @@ class ibs.th.bge.is_PM.is_PM:
                                             (if tt-place.is-calc
                                              then
                                               ("; " +
-                                               string(tt-place.start-rvs-fact-qnty) + ": " +
-                                               string(tt-place.start-chk-fact-qnty) + ": " +
-                                               string(tt-place.start-trn-fact-qnty) + "; "
+                                               string-mth(tt-place.start-rvs-fact-qnty) + ": " +
+                                               string-mth(tt-place.start-chk-fact-qnty) + ": " +
+                                               string-mth(tt-place.start-trn-fact-qnty) + "; "
                                               )
                                              else "; ") + 
-                                            string(tt-place.start-rvs-fact-qnty - tt-place.start-chk-fact-qnty + tt-place.start-trn-fact-qnty) 
+                                            string-mth(tt-place.start-rvs-fact-qnty - tt-place.start-chk-fact-qnty + tt-place.start-trn-fact-qnty) 
                                             ) .
     end .
     
@@ -1917,7 +1917,7 @@ class ibs.th.bge.is_PM.is_PM:
     first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
     :
       run write-to-log in p-parent-handle ("fact_gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
-                                           string(tt-result.wght-fact-start)
+                                           string-mth(tt-result.wght-fact-start)
                                            ) .
     end .
     
@@ -1925,7 +1925,7 @@ class ibs.th.bge.is_PM.is_PM:
     first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
     :
       run write-to-log in p-parent-handle ("book_gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
-                                           string(tt-result.wght-doc-start)
+                                           string-mth(tt-result.wght-doc-start)
                                            ) .
     end .
     
@@ -2201,9 +2201,9 @@ class ibs.th.bge.is_PM.is_PM:
     first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
     :
       run write-to-log in p-parent-handle ("gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
-                                           string(tt-result.delivery) + "; " +
-                                           string(tt-result.Delivery-ned-izl) + "; " +
-                                           string(tt-result.wght-sale)
+                                           string-mth(tt-result.delivery) + "; " +
+                                           string-mth(tt-result.Delivery-ned-izl) + "; " +
+                                           string-mth(tt-result.wght-sale)
                                            ) .
     end .
     
@@ -2437,8 +2437,8 @@ class ibs.th.bge.is_PM.is_PM:
     first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
     :
       run write-to-log in p-parent-handle ("book_gds " + string(tt-result.gds-code) + ": " + buf_goods.gds-name + "; " +
-                                           string(tt-result.wght-doc-end) + "; " +
-                                           string(tt-result.wght-other)
+                                           string-mth(tt-result.wght-doc-end) + "; " +
+                                           string-mth(tt-result.wght-other)
                                            ) .
     end .
     
@@ -2738,11 +2738,15 @@ class ibs.th.bge.is_PM.is_PM:
     def var v-str as character no-undo.
     
     if inValue = ?
-      then v-str = "0".
+    then do :
+      v-str = "0".
+      return v-str.
+    end .
     
     if string (inValue) begins "."
       then v-str = "0" + string (inValue).
       else v-str = string (inValue).
+    
     return v-str.
     
   end method . /* string-mth */
