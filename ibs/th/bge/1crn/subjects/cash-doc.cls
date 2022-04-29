@@ -222,22 +222,22 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
 
     find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
     if available (tt-fin-doc-attr) then do:
-/*       if     tt-fin-doc-attr.sumka ne ?                                 */
-/*          and tt-fin-doc-attr.sumka ne ""                                */
-/*       then                                                              */
-/*          sw:write-data-element ("sumka", string(tt-fin-doc-attr.sumka)).*/
+       if     tt-fin-doc-attr.sumka ne ?
+          and tt-fin-doc-attr.sumka ne ""
+       then
+          sw:write-data-element ("sumka", string(tt-fin-doc-attr.sumka)).
 /*       if     tt-fin-doc-attr.banknote ne ?                                     */
 /*          and tt-fin-doc-attr.banknote ne ""                                    */
 /*       then                                                                     */
 /*          sw:write-data-element ("banknote",  string(tt-fin-doc-attr.banknote)).*/
-/*       if     tt-fin-doc-attr.bank-resive ne ?                                                     */
-/*          and tt-fin-doc-attr.bank-resive ne 0                                                     */
-/*       then do:                                                                                    */
-/*          for first ub.fin-bank no-lock where ub.fin-bank.host-code = tt-fin-doc.host-code and     */
-/*                                               ub.fin-bank.code-bank = tt-fin-doc-attr.bank-resive:*/
-/*          sw:write-data-element ("bank-resive",  string(ub.fin-bank.bik)).                         */
-/*          end.                                                                                     */
-/*       end.                                                                                        */
+       if     tt-fin-doc-attr.bank-resive ne ?
+          and tt-fin-doc-attr.bank-resive ne 0
+       then do:
+          for first ub.fin-bank no-lock where ub.fin-bank.host-code = tt-fin-doc.host-code and
+                                               ub.fin-bank.code-bank = tt-fin-doc-attr.bank-resive:
+          sw:write-data-element ("bank-resive",  string(ub.fin-bank.bik)).
+          end.
+       end.
 
 
 /*       if     tt-fin-doc-attr.bank-deposit ne ?                                                     */
@@ -252,10 +252,10 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
 /*          and tt-fin-doc-attr.pin ne ""                                      */
 /*       then                                                                  */
 /*          sw:write-data-element ("pin",  string(tt-fin-doc-attr.pin)).       */
-/*       if     tt-fin-doc-attr.source_ ne ?                                   */
-/*          and tt-fin-doc-attr.source_ ne ""                                  */
-/*       then                                                                  */
-/*          sw:write-data-element ("source",  string(tt-fin-doc-attr.source_)).*/
+       if     tt-fin-doc-attr.source_ ne ?
+          and tt-fin-doc-attr.source_ ne ""
+       then
+          sw:write-data-element ("source",  string(tt-fin-doc-attr.source_)).
     end.
     
     find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
