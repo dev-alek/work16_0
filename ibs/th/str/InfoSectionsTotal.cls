@@ -512,18 +512,18 @@ class ibs.th.str.InfoSectionsTotal:
         InfoSectionCurr:DocDensity = InfoSectionCurr:CliQnty / InfoSectionCurr:DocQnty.
       end.
       assign
-        CarVolTotal = round(InfoSectionCurr:CarVol, 3) + CarVolTotal
-        TankVolTotal = round(InfoSectionCurr:TankVol, 3) + TankVolTotal
-        TankWaterVolTotal = round(InfoSectionCurr:TankWater, 3) + TankWaterVolTotal
-        TankWeightTotal = round(InfoSectionCurr:TankWeight, 3) + TankWeightTotal
-        DocQntyTotal = round(InfoSectionCurr:DocQnty, 3) + DocQntyTotal
-        FactQntyTotal = round(InfoSectionCurr:FactQnty, 3) + FactQntyTotal
-        FactKgQntyTotal = round(InfoSectionCurr:FactKgQnty, 3) + FactKgQntyTotal
-        TPNormPLSum = round(InfoSectionCurr:TPNormPL, 3) + TPNormPLSum
-        TPNormAutoSum = round(InfoSectionCurr:TPNormAuto, 3) + TPNormAutoSum
-        TPNormSum = round(InfoSectionCurr:TPNorm, 3) + TPNormSum
+        CarVolTotal = InfoSectionCurr:CarVol + CarVolTotal
+        TankVolTotal = InfoSectionCurr:TankVol + TankVolTotal
+        TankWaterVolTotal = InfoSectionCurr:TankWater + TankWaterVolTotal
+        TankWeightTotal = InfoSectionCurr:TankWeight + TankWeightTotal
+        DocQntyTotal = InfoSectionCurr:DocQnty + DocQntyTotal
+        FactQntyTotal = InfoSectionCurr:FactQnty + FactQntyTotal
+        FactKgQntyTotal = InfoSectionCurr:FactKgQnty + FactKgQntyTotal
+        TPNormPLSum = InfoSectionCurr:TPNormPL + TPNormPLSum
+        TPNormAutoSum = InfoSectionCurr:TPNormAuto + TPNormAutoSum
+        TPNormSum = InfoSectionCurr:TPNorm + TPNormSum
       .
-      CliQntyTotal = round(InfoSectionCurr:CliQnty, 3) + CliQntyTotal.
+      CliQntyTotal = InfoSectionCurr:CliQnty + CliQntyTotal.
       if StartRealDate = ? or datetime (InfoSectionCurr:DateStart, InfoSectionCurr:TimeStart) < datetime (StartRealDate, StartRealTime) 
       then do:
         assign
@@ -539,6 +539,19 @@ class ibs.th.str.InfoSectionsTotal:
         .
       end.
     end.
+    assign
+      CliQntyTotal = round(CliQntyTotal, 3)
+      CarVolTotal = round(CarVolTotal, 3)
+      TankVolTotal = round(TankVolTotal, 3)
+      TankWaterVolTotal = round(TankWaterVolTotal, 3)
+      TankWeightTotal = round(TankWeightTotal, 3)
+      DocQntyTotal = round(DocQntyTotal, 3)
+      FactQntyTotal = round(FactQntyTotal, 3)
+      FactKgQntyTotal = round(FactKgQntyTotal, 3)
+      TPNormPLSum = round(TPNormPLSum, 3)
+      TPNormAutoSum = round(TPNormAutoSum, 3)
+      TPNormSum = round(TPNormSum, 3)
+    .
     DocDensityAvg = CliQntyTotal / DocQntyTotal .
 
 
