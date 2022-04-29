@@ -349,7 +349,7 @@ b-func br-attr B-print B-hist B-help RECT-1 fhour fmin fsec B-card b-cd ~
 v-corr-osnov v-corr-type v-doc-osnov corr-date f-num-corr BUTTON-1 ~
 b-choose-date f-cause-corr v-src-d-card b-addbonus B-adddiscnt B-addgds ~
 BR-corr BR-gds BR-discnt BR-pay B-addpay b-cf F-cashier F-salesman Btn_sht-from~
-f-cli-name B_mark 
+f-cli-name B_mark b-slip-chk 
 &Scoped-Define DISPLAYED-FIELDS tt-chk-doc.src-tot-doc tt-chk-doc.chk-date ~
 tt-chk-doc.cashier tt-chk-doc.sales-man tt-chk-doc.obj-code ~
 tt-chk-doc.d-card tt-chk-doc.pay-desk tt-chk-doc.doc-num ~
@@ -591,6 +591,11 @@ DEFINE BUTTON BUTTON-1
 DEFINE BUTTON B_mark 
      LABEL "Марки" 
      SIZE 9.13 BY 1.
+
+DEFINE BUTTON b-slip-chk 
+     LABEL "Просмотр слипов" 
+     SIZE 15.75 BY 2.
+     
 
 DEFINE VARIABLE Cb-chk-type AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS COMBO-BOX INNER-LINES 10
@@ -940,11 +945,12 @@ DEFINE FRAME Dialog-Frame
      BR-pay AT ROW 21.67 COL 1
      tt-chk-doc.PS AT ROW 26 COL 1 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
-          SIZE 86.38 BY 2
-     B-addpay AT ROW 26.04 COL 88.63
+          SIZE 69.38 BY 2
+     B-addpay AT ROW 26.04 COL 97.51 RIGHT-ALIGNED
      B_mark AT ROW 27 COL 97.51 RIGHT-ALIGNED WIDGET-ID 80
      b-cf AT ROW 27.04 COL 88.63 WIDGET-ID 4
      F-cashier AT ROW 2.08 COL 43.13 COLON-ALIGNED NO-LABEL
+     b-slip-chk AT ROW 26.04 COL 86.13 RIGHT-ALIGNED
      tt-chk-doc.tot-doc AT ROW 2.08 COL 81 COLON-ALIGNED
           LABEL "Сумма брутто"
            VIEW-AS TEXT 
@@ -1325,6 +1331,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-slip-chk
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-slip-chk Dialog-Frame
+ON CHOOSE OF b-slip-chk IN FRAME Dialog-Frame /* Слипы (чек) */
+DO:
+{ gbl/stdbtn.i }
+  run proc-b-slip in this-procedure  (input "chk")  no-error.
+  if error-status:error then return no-apply.
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME B-card
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-card Dialog-Frame
@@ -5602,6 +5620,7 @@ case PAR-MODE:
     /*b-addgds */
     b-adddiscnt
     b-addbonus
+    b-slip-chk
     br-gds br-discnt br-pay
     b-hist
     b-cf WHEN tt-chk-doc.chk-type = INTEGER({&rcpt-z-rep})
@@ -5661,6 +5680,7 @@ case PAR-MODE:
                                 index(tt-chk-doc.d-card, "!" ) > 0)
                                )
     b-addgds b-adddiscnt b-addbonus
+    b-slip-chk
     tt-chk-doc.chk-date  when not get-chkc_context.shift-on
     tt-chk-doc.cashier
     tt-chk-doc.d-card
@@ -5786,7 +5806,7 @@ with frame {&frame-name} .
 for each tt-gds-info no-lock:
 
 
-EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(tt-chk-doc.obj-type, tt-chk-doc.obj-code).
+EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(tt-chk-doc.obj-type, tt-chk-doc.obj-code) no-error.
       RUN gds-attr-value (
                           INPUT tt-gds-info.gds-code,
                           INPUT {&attr-mark-type},
@@ -6699,6 +6719,64 @@ buffer-copy tt-chk-pay to locked_chk-pay.
 REPOSITION br-pay to recid trid NO-ERROR.
 glog = BR-pay:SET-REPOSITIONED-ROW(1, "CONDITIONAL") in frame {&frame-name}.
 apply "entry" to br-pay in frame {&frame-name} .
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-slip Dialog-Frame 
+PROCEDURE proc-b-slip :
+  define input parameter p-slip-type as character no-undo .
+  
+  define buffer buf_chk-doc-attr for ub.chk-doc-attr .
+  define buffer buf_chk-pay-attr for ub.chk-pay-attr .
+  
+  find first buf_chk-doc-attr no-lock where buf_chk-doc-attr.doc-code = tt-chk-doc.doc-code
+                                        and buf_chk-doc-attr.attr-code = "CheckId"
+                                        no-error .
+  if not available buf_chk-doc-attr 
+  or (available buf_chk-doc-attr and trim(buf_chk-doc-attr.attr-value) = "")
+  then do :
+    message "В чеке нет атрибута 'CheckId' для поиска слипов!" view-as alert-box error .
+    return .
+  end .
+    
+  if p-slip-type = "chk"
+  then do :
+    
+    run str/chk-slips.w (input v-cntxt-db-num,
+                         input trim(buf_chk-doc-attr.attr-value),
+                         input ?)
+                        .                               
+  end .
+  
+  if p-slip-type = "pay"
+  then do :
+    find first buf_chk-pay-attr no-lock where buf_chk-pay-attr.doc-code = tt-chk-doc.doc-code
+                                          and buf_chk-pay-attr.attr-code = "RRN"
+                                          and buf_chk-pay-attr.line-num = tt-chk-pay.line-num
+                                          no-error .
+    if not available buf_chk-pay-attr 
+    or (available buf_chk-pay-attr and trim(buf_chk-pay-attr.attr-value) = "")
+    then do :
+      find first buf_chk-pay-attr no-lock where buf_chk-pay-attr.doc-code = tt-chk-doc.doc-code
+                                            and buf_chk-pay-attr.attr-code = "CPDOC"
+                                            and buf_chk-pay-attr.line-num = tt-chk-pay.line-num
+                                            no-error .
+      if not available buf_chk-pay-attr 
+      or (available buf_chk-pay-attr and trim(buf_chk-pay-attr.attr-value) = "")
+      then do :                                      
+        message "В чеке нет атрибута 'RRN/CPDOC' для поиска слипов по оплате!" view-as alert-box error .
+        return .
+      end .
+    end .
+    
+    run str/chk-slips.w (input v-cntxt-db-num,
+                         input trim(buf_chk-doc-attr.attr-value),
+                         input trim(buf_chk-pay-attr.attr-value))
+                        .
+  end .
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
