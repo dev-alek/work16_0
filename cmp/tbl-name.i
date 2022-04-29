@@ -568,6 +568,8 @@ Creation date: 04/05/06
 &glob table_chk-gds-pay 'chk-gds-pay':U
 &glob table_chk-pay 'chk-pay':U
 &glob table_chk-pay-attr 'chk-pay-attr':U
+&glob table_chk-slip-head 'chk-slip-head':U
+&glob table_chk-slip-string 'chk-slip-string':U
 &glob table_cli-art 'cli-art':U
 &glob table_cli-art-attr 'cli-art-attr':U
 &glob table_cli-gds 'cli-gds':U

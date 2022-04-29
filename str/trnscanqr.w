@@ -178,7 +178,7 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit Dialog-Frame
 on return of b-exit in frame Dialog-Frame /* Ввод */
 do:
-    run save_update .
+  run save_update .
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -190,7 +190,6 @@ on entry of v-sts in frame Dialog-Frame
 do:
   run LoadKeyboardLayoutA (input "00000419", input 0, output iLang).
   run ActivateKeyboardLayout (input iLang, input 0).
-  
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -213,8 +212,7 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-sts Dialog-Frame
 on return of v-mark in frame Dialog-Frame /* Марка */
 do:
-    run save_update .
-
+  run save_update .
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -224,11 +222,10 @@ end.
 &Scoped-define SELF-NAME v-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark Dialog-Frame
 ON ENTRY OF v-mark IN FRAME Dialog-Frame /* Марка */
-  DO:
-    run LoadKeyboardLayoutA (input "00000419", input 0, output iLang).
-    run ActivateKeyboardLayout (input iLang, input 0).
-    
-  END.
+DO:
+  run LoadKeyboardLayoutA (input "00000419", input 0, output iLang).
+  run ActivateKeyboardLayout (input iLang, input 0).
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -236,9 +233,9 @@ ON ENTRY OF v-mark IN FRAME Dialog-Frame /* Марка */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark Dialog-Frame
 ON LEAVE OF v-mark IN FRAME Dialog-Frame /* Марка */
-  DO:
-    assign frame {&frame-name} v-mark .
-  END.
+DO:
+  assign frame {&frame-name} v-mark .
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -394,6 +391,7 @@ procedure save_update :
   define variable v-length as integer no-undo .
   define variable byte-size as integer no-undo .
   define variable infoSecsObj as class InfoSectionsTotal no-undo.
+  define variable v-gds-attr as character no-undo .
   
   v-bad-symb = '!' + {&delim-par} + '@' + {&delim-par} + '#' + {&delim-par} + '$' + {&delim-par} + '%' + {&delim-par} + '^' + {&delim-par} + '&' + {&delim-par}
              + '*' + {&delim-par} + '(' + {&delim-par} + ')' + {&delim-par} + '-' + {&delim-par} + '_' + {&delim-par} + '=' + {&delim-par} + '+' + {&delim-par} 
@@ -832,10 +830,14 @@ procedure save_update :
       v-tmp-int = v-gd-cd .
       v-tmp-char = "" .
       for each ub.goods-attr no-lock where ub.goods-attr.attr-code = {&attr-gds-code-AIS}
-                                        and lookup(string(v-gd-cd), ub.goods-attr.attr-value) > 0
-                                        :
-        v-tmp-char = v-tmp-char + string(ub.goods-attr.gds-code) + "," .                                
-        v-tmp-int = ub.goods-attr.gds-code .                                    
+                                       and trim(ub.goods-attr.attr-value) > ""
+                                       :
+        v-gds-attr = replace(ub.goods-attr.attr-value, " ", "") .
+        if lookup(string(v-gd-cd), v-gds-attr) > 0
+        then do :
+          v-tmp-char = v-tmp-char + string(ub.goods-attr.gds-code) + "," .                                
+          v-tmp-int = ub.goods-attr.gds-code .   
+        end .                                 
       end .
       v-tmp-char = trim(v-tmp-char, ",") .
       if num-entries(v-tmp-char) > 1
@@ -874,15 +876,17 @@ procedure save_update :
         if not xmlhndlerObj:GetNext()
           then leave rep_.
         next rep_.
-      end.                               
+      end.   
       if lookup (string (recid (ub.goods)), v-gdsrec-list) = 0
       then do:
         v-gdsrec-list = string (v-gdsrec-list) + "," + string (recid (ub.goods)).
         infoSecsObj:Initialization(t_doc.doc-code, ub.goods.gds-code).
         infoSecsObj:GetInfoSectionProp().
       end.
-      else
+      else do :
+        infoSecsObj:Initialization(t_doc.doc-code, ub.goods.gds-code).
         infoSecsObj:NewSection().
+      end .
         
       infoSecsObj:InfoSectionCurr:SectionName = xmlhndlerObj:vbf:buffer-field("sc-num"):buffer-value no-error.
       infoSecsObj:InfoSectionCurr:SetCarVol(infoSecsObj:InfoSectionCurr:SectionName) .

@@ -136,8 +136,8 @@ define variable vss-description as character no-undo init "".
 }
 
 { gbl/menuload.i
-  {&bef-menuload_service_impexp}
-  "'Загрузка GTIN и штрих-коды маркированной продукции'"
+  {&bef-menuload_service_customs}
+  "'Загрузка GTIN и штрих-коды маркированной продукции '"
   "'bge/loadGTINMark.w'"
   " "
   " "
@@ -147,7 +147,7 @@ define variable vss-description as character no-undo init "".
 }
 
 { gbl/menuload.i
-  {&bef-menuload_service_impexp}
+  {&bef-menuload_service_customs}
   "'Сбор данных по GTIN и штрих-кодам'"
   "'bge/impGTINbarcode.w'"
   " "

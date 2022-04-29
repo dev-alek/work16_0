@@ -1604,7 +1604,7 @@ CASE v-mode:
             &where-cond = " X_cash-desk.obj-code = parobj-code "
             &dyn_where-cond = " substitute('X_cash-desk.obj-code = &1', parobj-code) "
             &use-ind = "  "
-            &by = "  "
+            &by = " by X_cash-desk.cash-num "
           }
       END.
       WHEN NO THEN DO:
@@ -1617,7 +1617,7 @@ CASE v-mode:
               &where-cond = " X_cash-desk.obj-code = parobj-code and X_cash-desk.is-del = no "
               &dyn_where-cond = " substitute('X_cash-desk.obj-code = &1 and X_cash-desk.is-del = no', parobj-code) "
               &use-ind = "  "
-              &by = "  "
+              &by = " by X_cash-desk.cash-num "
             }
 
         END.
@@ -1632,7 +1632,7 @@ CASE v-mode:
                &where-cond = " X_cash-desk.db-num = pardb-num "
                &dyn_where-cond = " substitute('X_cash-desk.db-num = &1', pardb-num) "
                &use-ind = "  "
-               &by = " by X_cash-desk.db-num by X_cash-desk.obj-code  "
+               &by = " by X_cash-desk.db-num by X_cash-desk.obj-code by X_cash-desk.cash-num "
              }
 
        END.
@@ -1643,7 +1643,7 @@ CASE v-mode:
                 &where-cond = " X_cash-desk.db-num = pardb-num and X_cash-desk.is-del = no "
                 &dyn_where-cond = " substitute('X_cash-desk.db-num = &1 and X_cash-desk.is-del = no ', pardb-num) "
                 &use-ind = "  "
-                &by = " by X_cash-desk.db-num by X_cash-desk.obj-code  "
+                &by = " by X_cash-desk.db-num by X_cash-desk.is-del by X_cash-desk.obj-code by X_cash-desk.cash-num "
               }
       END.
     END CASE.
@@ -1782,9 +1782,13 @@ PROCEDURE proc-b-print :
       '<td style="text-align: center;">16</td>' skip
       '<td style="text-align: center;">17</td>' skip
       '</tr>' skip
-
       .     
-   for each X_cash-desk :
+
+/*   for each X_cash-desk :*/
+
+   define variable vQuery as handle no-undo. 
+   vQuery = query br-cash-desk:handle.
+   do while available X_cash-desk:
 
       put stream OutStr-html unformatted
          '<tr>' skip
@@ -1795,11 +1799,11 @@ PROCEDURE proc-b-print :
          .
          case X_cash-desk.autonomy:
           when 0 then v-autonomy = {&cd-self-full} .
-          when 0 then v-autonomy = {&cd-slave-full} .
-          when 0 then v-autonomy = {&cd-manager-full} .
+          when 1 then v-autonomy = {&cd-slave-full} .
+          when 2 then v-autonomy = {&cd-manager-full} .
          end case .
          put stream OutStr-html unformatted
-         '<td text_wrap="true" style="text-align: center;">' + string(v-autonomy) + '</td>' skip .
+         '<td text_wrap="true" style="text-align: center;">' + v-autonomy  + '</td>' skip .
          if X_cash-desk.pos-type = {&cd-type-ibm-xml} or X_cash-desk.pos-type = {&cd-type-autotank} then do:
          if num-entries(X_cash-desk.addr-path, {&delim-par}) > 1 then 
          v-addr-path = (entry(1, X_cash-desk.addr-path, {&delim-par}) + ":\\":U + entry(2, X_cash-desk.addr-path, {&delim-par})) .
@@ -1859,6 +1863,12 @@ PROCEDURE proc-b-print :
       do:
          run waitfram-show in this-procedure ( "Просмотрено строк : " + string( ii ) ) .
       end.
+
+    GET NEXT br-cash-desk. 
+    /*vQuery:get-next().*/
+            
+
+
    END.
 
 

@@ -165,6 +165,7 @@ on error undo, return error return-value
   find first bf_object no-lock where
              bf_object.obj-type = bf_trn-doc.obj-type and
              bf_object.obj-code = bf_trn-doc.obj-code .
+
   { gbl/hostname.i
       bf_trn-doc.obj-type
       bf_trn-doc.obj-code
@@ -293,6 +294,8 @@ on error undo, return error return-value
         fact-qnty-in   = 0.00
         fact-qnty-out  = 0.00.
     end.
+
+
     { gbl/bcodeprc.i
         bf_trn-doc.obj-type
         bf_trn-doc.obj-code
@@ -346,14 +349,14 @@ on error undo, return error return-value
              bf_parts-out.prod-code = bf_goods-out.prod-code       /*and
              bf_parts-out.in-code   = bf_parts-root.orig-in-code   and
              bf_parts-out.part-code = bf_parts-root.orig-part-code*/ on error undo, return error return-value :
-        if bf_parts-out.part-code = bf_parts-root.orig-part-code then 
-        do:                
+        /*if bf_parts-out.part-code = bf_parts-root.orig-part-code then 
+        do:                */
            assign
               sum-sale-out  = sum-sale-out  + price-sale-out          * bf_parts-out.fact-qnty
               sum-cost-out  = sum-cost-out  + bf_parts-out.price-rubl * bf_parts-out.fact-qnty 
               fact-qnty-out = fact-qnty-out + bf_parts-out.fact-qnty
               .
-        end.
+/*        end.
         else 
         do:
            if bf_parts-out.in-code   = bf_parts-root.orig-in-code then 
@@ -364,7 +367,7 @@ on error undo, return error return-value
                  fact-qnty-out = fact-qnty-out + bf_parts-out.fact-qnty
                  .            
            end.   
-        end.   
+        end.    */
      end. /* for each bf_parts-out */
      for each bf_parts-in   no-lock where
         bf_parts-in.out-code   = bf_trn-doc.doc-code         and

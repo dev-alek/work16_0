@@ -564,6 +564,23 @@ with frame a :
                       , input return-value).
         
         end.
+        
+        /* Получение данных по слипам с кассы */
+        run str/get-chk-slips.p(parparentproc,
+                                p-parent-handle,
+                                p-log-handle,
+                                log-file-name,
+                                p-obj-type,
+                                p-obj-code,
+                                output v-value-logical) no-error.
+        if error-status:error then do:
+           run write-log-and-file in p-log-handle (
+                        input 1
+                      , input log-file-name
+                      , input 1
+                      , input return-value).
+        
+        end.
 
         _ibm-cash-desk:
         FOR EACH for-cash-desk NO-LOCK WHERE

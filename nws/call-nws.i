@@ -300,6 +300,8 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,marking-lines~
 ,marking~
 ,tran-fuel~
+,chk-slip-head~
+,chk-slip-string~
 ":U.
 
 /*---------------------------------------------------------------------------------------------*/

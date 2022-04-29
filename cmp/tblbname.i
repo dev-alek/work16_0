@@ -568,6 +568,8 @@ Creation date: 01/29/07
 &glob bef-table_chk-gds-pay chk-gds-pay
 &glob bef-table_chk-pay chk-pay
 &glob bef-table_chk-pay-attr chk-pay-attr
+&glob bef-table_chk-slip-head chk-slip-head
+&glob bef-table_chk-slip-string chk-slip-string
 &glob bef-table_cli-art cli-art
 &glob bef-table_cli-art-attr cli-art-attr
 &glob bef-table_cli-gds cli-gds

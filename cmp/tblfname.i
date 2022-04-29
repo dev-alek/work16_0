@@ -1119,6 +1119,10 @@ Creation date: 01/29/07
 &glob table_chk-pay-full '{&bef-table_chk-pay-full}':U
 &glob bef-table_chk-pay-attr-full Атрибуты для chk-pay
 &glob table_chk-pay-attr-full '{&bef-table_chk-pay-attr-full}':U
+&glob bef-table_chk-slip-head-full chk-slip-head
+&glob table_chk-slip-head-full '{&bef-table_chk-slip-head-full}':U
+&glob bef-table_chk-slip-string-full chk-slip-string
+&glob table_chk-slip-string-full '{&bef-table_chk-slip-string-full}':U
 &glob bef-table_cli-art-full cli-art
 &glob table_cli-art-full '{&bef-table_cli-art-full}':U
 &glob bef-table_cli-art-attr-full Атрибуты для cli-art
