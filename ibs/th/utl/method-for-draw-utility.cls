@@ -22,6 +22,7 @@ class ibs.th.utl.method-for-draw-utility final:
   define public variable Obj-type      as character  no-undo.
   define public variable Obj-code      as integer    no-undo.
   define public variable v-host-code as integer no-undo .
+  define public variable mDebug as logical no-undo.
   { cmp/library.i class}
   define property parparentproc as handle no-undo
   get.
@@ -246,8 +247,8 @@ define stream lsOUT.
     super ().
     mplacelib = new ibs.th.str.placelib().
     mParser = new ObjectModelParser().
-/*    define variable mDebug as logical no-undo.*/
-/*    mDebug = session:debug-alert.             */
+
+    mDebug = session:debug-alert.
    /* output to {&namelogfile} .
     output close.*/
   end constructor.
@@ -900,6 +901,10 @@ put-Log(return-value).
   end.
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("schem-temp.json") .
+     os-delete value("schem.json") .
+     end.
      if vflag then
         put-log( string(now) + "   Топология загружена!" ).
      else
@@ -1079,6 +1084,10 @@ method public void load_schedule ():
   
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("schem-temp.json") .
+     os-delete value("schem.json") .
+     end.
      if vflag then
         put-log( string(now) + "   Расписания для автозаданий созданы!") .
      else
@@ -1158,6 +1167,10 @@ method public void load_auto_schedule (iAddr as character):
    end.
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("auto-schedule-temp.json") .
+     os-delete value("schedule.json") .
+     end.
      if vflag then
         put-log( string(now) + "   Расписание и автозадания загружены!") .
      else
@@ -1257,6 +1270,10 @@ method public void  load_fbrgds (iAddr as character,ifile-path as character ):
   end.
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("fbrgds-temp.json") .
+     os-delete value("fbrgds.json") .
+     end.
      if vflag then
         put-log( string(now) + "   Атрибуты автопроизводства загружены!") .
      else
@@ -1422,6 +1439,10 @@ method public character load_cashdesk(iAddr as character ) :
 /*  if vflag then return v-string-cash .*/
 /*  else return "" .                    */
   finally:
+     if not mDebug then do:
+     os-delete value("cashdesk-temp.json") .
+     os-delete value("cashdesk.json") .
+     end.     
      if vflag then do:
         put-log( string(now) + "   Кассы загружены!") .
         return v-string-cash .
@@ -1611,6 +1632,10 @@ method public void  load_price (iAddr as character,ifile-path as character ):
    
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("price-temp.json") .
+     os-delete value("price.json") .
+     end.     
      if vflag then
         put-log( string( now) + "   Цены загружены!") .
      else
@@ -1769,6 +1794,10 @@ method public void load_user(iAddr as character ) :
   
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("user-temp.json") .
+     os-delete value("user.json") .
+     end.     
      if vflag then
         put-log( string(now) + "   Пользователи загружены!") .
      else
@@ -1950,6 +1979,10 @@ method public void load_pumpdoc (iaddr as character, ifile-path as character ) :
   
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("pumpdoc-temp.json") .
+     os-delete value("pumpdoc.json") .
+     end.     
      if vflag then
         put-log( string( now) +  "   Инвентаризация счётчиков ТРК загружена!" ) .
      else
@@ -2038,6 +2071,10 @@ method public logical load_rest (iaddr as character,
 
   vok = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("rest-temp.json") .
+     os-delete value("rest.json") .
+     end.     
      vok = chek_rest() and vok.
      put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
      put-log("").
@@ -2090,6 +2127,10 @@ method public logical load_rest_ptrl (iaddr as character,
   
   vok = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("rest-ptrl-temp.json") .
+     os-delete value("rest-ptrl.json") .
+     end.     
      vok = chek_rest() and vok.
      put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
      put-log("").
@@ -2416,6 +2457,10 @@ define buffer buf_goods     for ub.goods .
      put stream lsOut unformatted "Расхождений не обнаружено." skip.
   vok = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("verify-rest-temp.json") .
+     os-delete value("verify-rest.json") .
+     end.     
      output STREAM lsIN close.
      output STREAM lsOUT close.
 
@@ -2903,6 +2948,10 @@ method public logical load_rest_fin (iaddr as character,
   end.
   vok = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("rest-fin-temp.json") .
+     os-delete value("restfin.json") .
+     end.     
     vok = chek_rest() and vok.
     put-log( string( now) + if  vok then "   Денежные остатки загружены!" else "   Денежные остатки не загружены!") .
     put-log("").
@@ -3468,6 +3517,10 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
   end.
   vOk = yes.                                  
   finally:
+     if not mDebug then do:
+     os-delete value("rvs-temp.json") .
+     os-delete value("rvs.json") .
+     end.     
       vOk = chek_rvs-shift() and vok.
      put-log(if vOk then "Сверка загружена" else "Сверка не загружена").
      put-log("").
@@ -3666,6 +3719,10 @@ method public logical load_cash_passwd (iaddr as character) :
       put-log ( string(now) +  "   LangError " + Msg) .
   end catch .
   finally:
+     if not mDebug then do:
+     os-delete value("cashp-temp.json") .
+     os-delete value("cashp.json") .
+     end.     
      output STREAM lsIN close.
      output STREAM lsOUT close.
      if vok then
