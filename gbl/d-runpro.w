@@ -643,6 +643,7 @@ PROCEDURE run-procedure :
           vAsyncHelper = new ibs.th.file.AsyncHelperth().
           vAsyncHelper:user-passwd = "".
           vAsyncHelper:MyBachMode = no.
+vAsyncHelper:userdb = yes.
           vAsyncHelper:AsyncProc("utl/proc-chekproc", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U + {&delim-par} + "&4":U + {&delim-par} + "&5":U + {&delim-par} + "&6":U + {&delim-par} + "&7":U  + {&delim-par} + "&9":U 
                                                                        , search(v-proc-name) ,v-num-parameters, t-parparentproc :checked, vKey,v-parameter1,v-parameter2,v-parameter3 ),1).
           vAsyncHelper:myTimeOut = 300.
