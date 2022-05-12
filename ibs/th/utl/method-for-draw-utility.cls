@@ -76,6 +76,9 @@ define temp-table tt-user-menu-group  like ub.user-menu-group .
 define temp-table tt-schedule         like ub.schedule .
 define temp-table tt-schedule-attr    like ub.schedule-attr .
 
+define temp-table tt-auto-schedule like ub.schedule .
+define temp-table tt-auto-schedule-attr like ub.schedule-attr .
+
 define temp-table tt-rvs-doc          like ub.rvs-doc 
     field Findex as logical
     index pi FINdex.
@@ -923,6 +926,22 @@ method public logical chek_schedule():
     return  v-has-records.
 end method.
 
+/*method public logical chek_auto_schedule():                                                   */
+/*                                                                                              */
+/*    define variable v-has-records as logical no-undo.                                         */
+/*    for each ub.schedule no-lock where ub.schedule.cre-db-num = v-cntxt-db-num-obj :          */
+/*      v-has-records = true .                                                                  */
+/*      leave.                                                                                  */
+/*    end.                                                                                      */
+/*    if not v-has-records                                                                      */
+/*    then                                                                                      */
+/*    for each ub.schedule-attr no-lock where ub.schedule-attr.cre-db-num = v-cntxt-db-num-obj :*/
+/*      v-has-records = true .                                                                  */
+/*      leave.                                                                                  */
+/*    end.                                                                                      */
+/*    return  v-has-records.                                                                    */
+/*end method.                                                                                   */
+
 method public void load_schedule ():
   define variable v-file-sch as character no-undo .
   define variable v-file-attr as character no-undo .
@@ -999,6 +1018,84 @@ method public void load_schedule ():
         put-log( string(now) + "   Расписания для автозаданий не созданы!") .
   end finally.
   
+end. 
+
+method public void load_auto_schedule ():
+  load_auto_schedule(mAddr ).
+end.
+
+method public void load_auto_schedule (iAddr as character):
+  define variable v-rid as recid no-undo .
+  define variable vcmd  as character no-undo.
+  define variable vFlag as logical no-undo.
+  
+  define buffer buf_schedule for ub.schedule .
+  define buffer buf_schedule-attr for ub.schedule-attr .
+  
+  empty temp-table tt-auto-schedule.
+  empty temp-table tt-auto-schedule-attr.
+
+  put-log(string (now) + "   Отправляем запрос для получения расписаний и автопроцессов...").
+  
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetAutoSched >&3", search ("exe/curl.exe"), iAddr, "auto-schedule-temp.json").
+  os-command silent value (vcmd).
+  put-log(string (now) + "   Разбираем полученные данные...").
+  fix-codepage_and_SetJsonObj (input "auto-schedule-temp.json") .
+  
+  
+  parse-json(input temp-table tt-auto-schedule:default-buffer-handle, input "schedule") .
+  parse-json(input temp-table tt-auto-schedule-attr:default-buffer-handle, input "schedule-attr") .
+  
+  /* Delete all objects created by this procedure to avoid memory leaks */
+  
+  put-log( string(now) + "   Начинаем загрузку расписаний и автопроцессов...") .
+
+  for each tt-auto-schedule :
+    put-log(  "Тип процесса " + tt-auto-schedule.task-type 
+            + " Номер задачи" + string(tt-auto-schedule.task-num)).       
+
+    if tt-auto-schedule.task-num = ? or tt-auto-schedule.task-num <= 0 then next .
+    find first buf_schedule exclusive-lock where buf_schedule.cre-db-num = v-cntxt-db-num and
+                                                 buf_schedule.task-type = tt-auto-schedule.task-type  and
+                                                 buf_schedule.task-num = tt-auto-schedule.task-num no-error .
+    if available (buf_schedule) then do:
+       buf_schedule.active = tt-auto-schedule.active .
+       buf_schedule.db-num-char = tt-auto-schedule.db-num-char .
+       buf_schedule.task-hour = tt-auto-schedule.task-hour .
+       buf_schedule.task-minute = tt-auto-schedule.task-minute .
+    end.
+    else do:
+    create buf_schedule.
+    buffer-copy tt-auto-schedule to buf_schedule no-error.
+    if error-status:error then do:
+       put-Log(return-value).
+      undo, return error return-value.
+    end.
+    end.
+    for each tt-auto-schedule-attr where tt-auto-schedule-attr.task-type = tt-auto-schedule.task-type and
+                                         tt-auto-schedule-attr.task-num = tt-auto-schedule.task-num :
+    find first buf_schedule-attr exclusive-lock where buf_schedule-attr.cre-db-num = tt-auto-schedule-attr.cre-db-num and
+                                                      buf_schedule-attr.task-type = tt-auto-schedule-attr.task-type  and
+                                                      buf_schedule-attr.task-num = tt-auto-schedule-attr.task-num and
+                                                      buf_schedule-attr.attr-code = tt-auto-schedule-attr.attr-code no-error .    
+    if not available (buf_schedule-attr) then do:
+    create buf_schedule-attr.
+    buffer-copy tt-auto-schedule-attr to buf_schedule-attr no-error.
+    if error-status:error then do:
+       put-Log(return-value).
+      undo, return error return-value.
+    end.     
+    buf_schedule-attr.attr-code = replace(string(buf_schedule-attr.attr-code),"|",{&delim-par}).  
+    end.                                      
+    end.                                            
+   end.
+  vflag  = yes.
+  finally:
+     if vflag then
+        put-log( string(now) + "   Расписание и автозадания загружены!") .
+     else
+        put-log( string(now) + "   Расписание и автозадания не загружены!") .
+  end finally.
 end. 
 
 method public logical chek_cash_desk():
@@ -1494,18 +1591,30 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
   define variable vline2 as char no-undo .
   define variable v-out-file as character no-undo .
   
-  case p-file :
-    when "schem-temp.json"       then v-out-file = "schem.json" .
-    when "pumpdoc-temp.json"     then v-out-file = "pumpdoc.json" .
-    when "cashdesk-temp.json"    then v-out-file = "cashdesk.json" .
-    when "price-temp.json"       then v-out-file = "price.json" .
-    when "rest-temp.json"        then v-out-file = "rest.json" .
-    when "rest-ptrl-temp.json"   then v-out-file = "rest-ptrl.json" .
-    when "verify-rest-temp.json" then v-out-file = "verify-rest.json" .
-    when "rvs-temp.json"         then v-out-file = "rvs.json" .
-    when "cashp-temp.json"       then v-out-file = "cashp.json" .
-    when "user-temp.json"        then v-out-file = "user.json" .
-  end case.
+   case p-file :
+      when "schem-temp.json"       then 
+         v-out-file = "schem.json" .
+      when "auto-schedule-temp.json"  then 
+         v-out-file = "schedule.json" .
+      when "pumpdoc-temp.json"     then 
+         v-out-file = "pumpdoc.json" .
+      when "cashdesk-temp.json"    then 
+         v-out-file = "cashdesk.json" .
+      when "price-temp.json"       then 
+         v-out-file = "price.json" .
+      when "rest-temp.json"        then 
+         v-out-file = "rest.json" .
+      when "rest-ptrl-temp.json"   then 
+         v-out-file = "rest-ptrl.json" .
+      when "verify-rest-temp.json" then 
+         v-out-file = "verify-rest.json" .
+      when "rvs-temp.json"         then 
+         v-out-file = "rvs.json" .
+      when "cashp-temp.json"       then 
+         v-out-file = "cashp.json" .
+      when "user-temp.json"        then 
+         v-out-file = "user.json" .
+   end case.
   
   input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
   output STREAM lsOUT to value(v-out-file).
