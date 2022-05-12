@@ -51,7 +51,7 @@ class ibs.th.utl.method-for-draw-utility final:
     field gds-code as integer
     field b-str as character
     field bc-on-type as character
-    index pi as primary unique  gds-code
+    index pi as primary unique  gds-code b-str
 .
 define temp-table tt-rest-fin
   field obj-code as integer
@@ -635,7 +635,7 @@ method public void load_schem (iAddr as character, ifile-path as character ):
   /* Delete all objects created by this procedure to avoid memory leaks */
   //  delete object myResultObj no-error.
   //delete object results-array no-error.
-  
+
   for each tt-gds-prod no-lock :
     find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-gds-prod.gds-code no-error .
     if not available tt-gds-mapping
