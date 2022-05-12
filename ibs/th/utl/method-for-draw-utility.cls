@@ -552,7 +552,7 @@ method public void load_schem (iAddr as character, ifile-path as character ):
   empty temp-table tt-pl-level. 
   empty temp-table tt-pl-gds. 
   empty temp-table tt-pl-gds-pump. 
-   cmd = substitute ("&1 &2/THGetInfo?GetSchem >&3", search ("exe/curl.exe"), iAddr, "schem-temp.json").
+   cmd = substitute ("&1 --http0.9 &2/THGetInfo?GetSchem >&3", search ("exe/curl.exe"), iAddr, "schem-temp.json").
   os-command silent value (cmd).
   put-log(string (now) + "   Разбираем полученные данные...").
   fix-codepage_and_SetJsonObj (input "schem-temp.json") .
@@ -1033,7 +1033,7 @@ method public void load_cashdesk(iAddr as character ) :
   put-log(string (now) + "   Отправляем запрос для получения касс...").
   
   
-  vcmd = substitute ("&1 &2/THGetInfo?GetCashDesk >&3", search ("exe/curl.exe"), iAddr, "cashdesk-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetCashDesk >&3", search ("exe/curl.exe"), iAddr, "cashdesk-temp.json").
   os-command silent value (vcmd).
   put-log(string (now) + "   Разбираем полученные данные...").
   fix-codepage_and_SetJsonObj (input "cashdesk-temp.json") .
@@ -1240,7 +1240,7 @@ method public void  load_price (iAddr as character,ifile-path as character ):
   define variable ii as integer no-undo initial 0 .
   define variable jj as integer no-undo initial 0 .
   
-  vcmd = substitute ("&1 &2/THGetInfo?GetPrice >&3", search ("exe/curl.exe"), iaddr, "price-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetPrice >&3", search ("exe/curl.exe"), iaddr, "price-temp.json").
   os-command silent value (vcmd).
   
   put-log(string (now) + "   Разбираем полученные данные...").
@@ -1367,7 +1367,7 @@ method public void load_user(iAddr as character ) :
   
   put-log(string (now) + "   Отправляем запрос для получения пользователей...").
   
-  vcmd = substitute ("&1 &2/THGetInfo?GetUser >&3", search ("exe/curl.exe"), iAddr, "user-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetUser >&3", search ("exe/curl.exe"), iAddr, "user-temp.json").
   os-command silent value (vcmd).
   put-log(string (now) + "   Разбираем полученные данные...").
   
@@ -1558,7 +1558,7 @@ method public void load_pumpdoc (iaddr as character, ifile-path as character ) :
   empty temp-table tt-icnt-doc.
   empty temp-table tt-icnt-line.
   
-  vcmd = substitute ("&1 &2/THGetInfo?GetPumpDoc >&3", search ("exe/curl.exe"), iaddr, "pumpdoc-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetPumpDoc >&3", search ("exe/curl.exe"), iaddr, "pumpdoc-temp.json").
   os-command silent value (vcmd).
   
   put-log(string (now) + "   Разбираем полученные данные...").
@@ -1714,7 +1714,7 @@ method public logical load_rest (iaddr as character,
                               ):
   define variable vcmd as character no-undo.
   define variable vOk as logical no-undo.
-  vcmd = substitute ("&1 &2/THGetInfo?GetRest >&3", search ("exe/curl.exe"), iaddr, "rest-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetRest >&3", search ("exe/curl.exe"), iaddr, "rest-temp.json").
   os-command silent value (vcmd).
   fix-codepage_and_SetJsonObj (input "rest-temp.json") .
   empty temp-table tt-imp-parts.
@@ -1755,7 +1755,7 @@ method public logical load_rest_ptrl (iaddr as character,
                               ):
   define variable vcmd as character no-undo.
   define variable vOk as logical no-undo.
-  vcmd = substitute ("&1 &2/THGetInfo?GetRestPtrl >&3", search ("exe/curl.exe"), iaddr, "rest-ptrl-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetRestPtrl >&3", search ("exe/curl.exe"), iaddr, "rest-ptrl-temp.json").
   os-command silent value (vcmd).
   fix-codepage_and_SetJsonObj (input "rest-ptrl-temp.json") .
   empty temp-table tt-imp-parts-ptrl.
@@ -1849,7 +1849,7 @@ define buffer buf_goods     for ub.goods .
   
 
   put-log(string (now) + "   Отправляем запрос для сравнения остатков...").
-  vcmd = substitute ("&1 &2/THGetInfo?VerifyRest >&3", search ("exe/curl.exe"), iaddr, "verify-rest-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?VerifyRest >&3", search ("exe/curl.exe"), iaddr, "verify-rest-temp.json").
   os-command silent value (vcmd).
 
   put-log(string (now) + "   Разбираем полученные данные...").
@@ -2204,7 +2204,7 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
     empty temp-table tt-rvs-line-pump-attr.
     empty temp-table tt-rvs-doc .
     */
-    vcmd = substitute ("&1 &2/THGetInfo?GetRvs >&3", search ("exe/curl.exe"), iaddr, "rvs-temp.json").
+    vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetRvs >&3", search ("exe/curl.exe"), iaddr, "rvs-temp.json").
     os-command silent value (vcmd).
     fix-codepage_and_SetJsonObj(input "rvs-temp.json") .
     parse-json(input temp-table tt-rvs-doc              :default-buffer-handle, input "rvs-doc") .
@@ -2560,7 +2560,7 @@ end method.
 method public logical load_cash_passwd (iaddr as character) :
   define variable vcmd as character no-undo.
   define variable vOk as logical no-undo.
-  vcmd = substitute ("&1 &2/THGetInfo?GetCashp >&3", search ("exe/curl.exe"), iaddr, "cashp-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetCashp >&3", search ("exe/curl.exe"), iaddr, "cashp-temp.json").
   os-command silent value (vcmd).
   fix-codepage_and_SetJsonObj (input "cashp-temp.json") .
 
