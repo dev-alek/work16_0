@@ -50,6 +50,7 @@ class ibs.th.utl.method-for-draw-utility final:
   define temp-table tt-gds-prod
     field gds-code as integer
     field b-str as character
+    field bc-on-type as character
     index pi as primary unique  gds-code
 .
 define temp-table tt-place          like ub.place .
@@ -589,6 +590,19 @@ method public void load_schem (iAddr as character, ifile-path as character ):
     then do :
        put-log(("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) ).
       undo, return error ("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) .
+    end.
+    else do:
+       find first ub.prod-bc no-lock where ub.prod-bc.b-code = ub.goods.gds-code and ub.prod-bc.b-str = tt-gds-prod.b-str no-error .
+       if not available (ub.prod-bc) then do:
+          create ub.prod-bc.
+          assign
+          ub.prod-bc.b-code = ub.goods.gds-code
+          ub.prod-bc.b-str = tt-gds-prod.b-str
+          ub.prod-bc.bc-on = true
+          ub.prod-bc.bc-on-type = tt-gds-prod.bc-on-type
+          ub.prod-bc.cr-db-num = v-cntxt-db-num-obj
+          .
+       end.
     end.
   end. 
   
