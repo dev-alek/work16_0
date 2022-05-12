@@ -44,6 +44,7 @@ class ibs.th.utl.draw_utility inherits Form:
   define private variable checkBox26 as System.Windows.Forms.CheckBox no-undo.
   define private variable checkBox27 as System.Windows.Forms.CheckBox no-undo.
    define private variable checkBox28 as System.Windows.Forms.CheckBox no-undo.
+   define private variable checkBox29 as System.Windows.Forms.CheckBox no-undo.
   define private variable checkBox6 as System.Windows.Forms.CheckBox no-undo.
   define private variable checkBox5 as System.Windows.Forms.CheckBox no-undo.
   define private variable checkBox4 as System.Windows.Forms.CheckBox no-undo.
@@ -165,6 +166,17 @@ class ibs.th.utl.draw_utility inherits Form:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void checkBox28_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void checkBox29_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
 		
 		return.
 
@@ -389,6 +401,7 @@ class ibs.th.utl.draw_utility inherits Form:
      checkBox20:checked = checkBox19:checked.
      checkBox27:checked = mutil:chek_schedule().
      checkBox28:checked = mutil:chek_schedule().
+     checkBox29:checked = mutil:chek_fbrgds().
   end method .  
   
   method private void BtnStart():
@@ -461,6 +474,12 @@ class ibs.th.utl.draw_utility inherits Form:
        mutil:load_Auto_Schedule().
        checkBox28:checked = mutil:Chek_Schedule().
     end.
+    checkBox29:checked = mutil:Chek_fbrgds().
+    if not checkBox29:checked
+    then do:
+       mutil:load_fbrgds(textBox2:text).
+       checkBox29:checked = mutil:Chek_fbrgds().
+    end.    
   end.  
   
   method private void InitializeComponent(  ):
@@ -478,6 +497,8 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:textBox1 = new System.Windows.Forms.TextBox().
       this-object:tabControl1 = new System.Windows.Forms.TabControl().
       this-object:tabPage1 = new System.Windows.Forms.TabPage().
+      this-object:checkBox29 = new System.Windows.Forms.CheckBox().
+      this-object:checkBox28 = new System.Windows.Forms.CheckBox().
       this-object:checkBox27 = new System.Windows.Forms.CheckBox().
       this-object:checkBox25 = new System.Windows.Forms.CheckBox().
       this-object:checkBox26 = new System.Windows.Forms.CheckBox().
@@ -527,7 +548,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:textBox3 = new System.Windows.Forms.TextBox().
       this-object:listBox1 = new System.Windows.Forms.ListBox().
       this-object:button6 = new System.Windows.Forms.Button().
-      this-object:checkBox28 = new System.Windows.Forms.CheckBox().
+      this-object:checkBox29 = new System.Windows.Forms.CheckBox().
       this-object:tabControl1:SuspendLayout().
       this-object:tabPage1:SuspendLayout().
       this-object:tabPage2:SuspendLayout().
@@ -568,6 +589,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /*  */
       /* tabPage1 */
       /*  */
+      this-object:tabPage1:Controls:Add(this-object:checkBox29).
       this-object:tabPage1:Controls:Add(this-object:checkBox28).
       this-object:tabPage1:Controls:Add(this-object:checkBox27).
       this-object:tabPage1:Controls:Add(this-object:checkBox25).
@@ -586,6 +608,18 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:tabPage1:TabIndex = 0.
       this-object:tabPage1:Text = "Этап 1".
       this-object:tabPage1:UseVisualStyleBackColor = true.
+      /*  */
+      /* checkBox28 */
+      /*  */
+      this-object:checkBox28:Enabled = false.
+      this-object:checkBox28:Location = new System.Drawing.Point(118, 301).
+      this-object:checkBox28:Name = "checkBox28".
+      this-object:checkBox28:Size = new System.Drawing.Size(249, 24).
+      this-object:checkBox28:TabIndex = 10.
+      this-object:checkBox28:Text = "Перенос расписаний и автопроцессов".
+      this-object:checkBox28:UseCompatibleTextRendering = true.
+      this-object:checkBox28:UseVisualStyleBackColor = true.
+      this-object:checkBox28:CheckedChanged:Subscribe(this-object:checkBox28_CheckedChanged).
       /*  */
       /* checkBox27 */
       /*  */
@@ -1127,17 +1161,17 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:button6:UseVisualStyleBackColor = true.
       this-object:button6:Click:Subscribe(this-object:button6_Click).
       /*  */
-      /* checkBox28 */
+      /* checkBox29 */
       /*  */
-      this-object:checkBox28:Enabled = false.
-      this-object:checkBox28:Location = new System.Drawing.Point(118, 301).
-      this-object:checkBox28:Name = "checkBox28".
-      this-object:checkBox28:Size = new System.Drawing.Size(249, 24).
-      this-object:checkBox28:TabIndex = 10.
-      this-object:checkBox28:Text = "Перенос расписаний и автопроцессов".
-      this-object:checkBox28:UseCompatibleTextRendering = true.
-      this-object:checkBox28:UseVisualStyleBackColor = true.
-      this-object:checkBox28:CheckedChanged:Subscribe(this-object:checkBox28_CheckedChanged).
+      this-object:checkBox29:Enabled = false.
+      this-object:checkBox29:Location = new System.Drawing.Point(118, 331).
+      this-object:checkBox29:Name = "checkBox29".
+      this-object:checkBox29:Size = new System.Drawing.Size(249, 24).
+      this-object:checkBox29:TabIndex = 11.
+      this-object:checkBox29:Text = "Перенос атрибутов автопроизводства".
+      this-object:checkBox29:UseCompatibleTextRendering = true.
+      this-object:checkBox29:UseVisualStyleBackColor = true.
+      this-object:checkBox29:CheckedChanged:Subscribe(this-object:checkBox29_CheckedChanged).
       /*  */
       /* draw_utility */
       /*  */

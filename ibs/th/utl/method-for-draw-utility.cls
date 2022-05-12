@@ -79,6 +79,8 @@ define temp-table tt-schedule-attr    like ub.schedule-attr .
 
 define temp-table tt-auto-schedule like ub.schedule .
 define temp-table tt-auto-schedule-attr like ub.schedule-attr .
+define temp-table tt-fbr-gds-obj       like ub.fbr-gds-obj .
+define temp-table tt-fbr-gds-obj-attr  like ub.fbr-gds-obj-attr .
 
 define temp-table tt-rvs-doc          like ub.rvs-doc 
     field Findex as logical
@@ -190,6 +192,8 @@ define stream lsOUT.
     super ().
     mplacelib = new ibs.th.str.placelib().
     mParser = new ObjectModelParser().
+/*    define variable mDebug as logical no-undo.*/
+/*    mDebug = session:debug-alert.             */
    /* output to {&namelogfile} .
     output close.*/
   end constructor.
@@ -940,21 +944,16 @@ method public logical chek_schedule():
     return  v-has-records.
 end method.
 
-/*method public logical chek_auto_schedule():                                                   */
-/*                                                                                              */
-/*    define variable v-has-records as logical no-undo.                                         */
-/*    for each ub.schedule no-lock where ub.schedule.cre-db-num = v-cntxt-db-num-obj :          */
-/*      v-has-records = true .                                                                  */
-/*      leave.                                                                                  */
-/*    end.                                                                                      */
-/*    if not v-has-records                                                                      */
-/*    then                                                                                      */
-/*    for each ub.schedule-attr no-lock where ub.schedule-attr.cre-db-num = v-cntxt-db-num-obj :*/
-/*      v-has-records = true .                                                                  */
-/*      leave.                                                                                  */
-/*    end.                                                                                      */
-/*    return  v-has-records.                                                                    */
-/*end method.                                                                                   */
+method public logical chek_fbrgds():
+/*run gbl/inidebug.p.*/
+    define variable v-has-records as logical no-undo.
+    for each ub.fbr-gds-obj no-lock where ub.fbr-gds-obj.obj-code = v-cntxt-obj-code and ub.fbr-gds-obj.obj-type = v-cntxt-obj-type and
+    ub.fbr-gds-obj.is-modificator = true :
+      v-has-records = true .
+      leave.
+    end.
+    return  v-has-records.
+end method.
 
 method public void load_schedule ():
   define variable v-file-sch as character no-undo .
@@ -1109,6 +1108,105 @@ method public void load_auto_schedule (iAddr as character):
         put-log( string(now) + "   Расписание и автозадания загружены!") .
      else
         put-log( string(now) + "   Расписание и автозадания не загружены!") .
+  end finally.
+end. 
+
+method public void  load_fbrgds (ifile-path as character ):
+  load_fbrgds (maddr,ifile-path ).
+end method .   
+
+method public void  load_fbrgds (iAddr as character,ifile-path as character ):
+  define variable v-rid as recid no-undo .
+  define variable vcmd  as character no-undo.
+  define variable vFlag as logical no-undo.
+  
+  define buffer buf_fbr-gds-obj for ub.fbr-gds-obj .
+  
+  empty temp-table tt-fbr-gds-obj.
+
+  put-log(string (now) + "   Отправляем запрос для получения атрибутов автопроизводства...").
+
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetFbrGds >&3", search ("exe/curl.exe"), iAddr, "fbrgds-temp.json").
+  os-command silent value (vcmd).
+  put-log(string (now) + "   Разбираем полученные данные...").
+  fix-codepage_and_SetJsonObj (input "fbrgds-temp.json") .
+  
+  parse-json(input temp-table tt-fbr-gds-obj:default-buffer-handle, input "fbr-gds-obj") .
+  
+  /* Delete all objects created by this procedure to avoid memory leaks */
+  
+  put-log( string(now) + "   Начинаем загрузку атрибутов автопроизводства...") .
+
+  for each tt-fbr-gds-obj no-lock :
+    find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-fbr-gds-obj.gds-code no-error .
+    if available tt-gds-mapping
+    then do :
+      if tt-gds-mapping.gds-code15 = 0 or tt-gds-mapping.gds-code15 = ?
+      or tt-gds-mapping.gds-code16 = 0 or tt-gds-mapping.gds-code16 = ?
+      then next .
+      find first ub.goods no-lock where ub.goods.gds-code = tt-gds-mapping.gds-code16 no-error.
+      if available ub.goods
+      then do :
+        find first buf_fbr-gds-obj exclusive-lock where buf_fbr-gds-obj.gds-code = ub.goods.gds-code and
+                                                 buf_fbr-gds-obj.obj-code = v-cntxt-obj-code and
+                                                 buf_fbr-gds-obj.obj-type = v-cntxt-obj-type no-error .
+         if not available (buf_fbr-gds-obj) then do:
+/*            create buf_fbr-gds-obj .                                                              */
+/*            assign                                                                                */
+/*            buf_fbr-gds-obj.gds-code = ub.goods.gds-code                                          */
+/*            buf_fbr-gds-obj.obj-code = v-cntxt-obj-code                                           */
+/*            buf_fbr-gds-obj.obj-type = v-cntxt-obj-type                                           */
+/*            .                                                                                     */
+/*            buffer-copy tt-fbr-gds-obj except tt-fbr-gds-obj.obj-code                             */
+/*                                             tt-fbr-gds-obj.obj-type                              */
+/*                                             tt-fbr-gds-obj.gds-code to buf_fbr-gds-obj no-error .*/
+/*                                       if error-status:error then                                 */
+/*                                       do:                                                        */
+/*                                          put-Log(return-value).                                  */
+/*                                          undo, return error return-value.                        */
+/*                                       end.                                                       */
+        put-err-log(
+          "Товар с кодом " + string(tt-gds-mapping.gds-code16) + " .Код в 15.0 " + string(tt-fbr-gds-obj.gds-code) + " " + 
+          "Не имеет атрибуты производства в 16 версии").
+           next .
+
+         end.  
+         else do:
+           if tt-fbr-gds-obj.is-menu <> buf_fbr-gds-obj.is-menu then do:
+        put-err-log(
+          "Товар с кодом " + string(tt-gds-mapping.gds-code16) + " .Код в 15.0 " + string(tt-fbr-gds-obj.gds-code) + " " + 
+          "Атрибут: Является блюдом меню, в 15 версии имеет значение: " + string(tt-fbr-gds-obj.is-menu) + " а в 16 " + string (buf_fbr-gds-obj.is-menu)).
+           next .
+           end.  
+           else buf_fbr-gds-obj.is-modificator = tt-fbr-gds-obj.is-modificator .
+           buffer-copy tt-fbr-gds-obj except tt-fbr-gds-obj.obj-code 
+                                             tt-fbr-gds-obj.obj-type 
+                                             tt-fbr-gds-obj.gds-code 
+                                             tt-fbr-gds-obj.is-menu 
+                                             tt-fbr-gds-obj.is-modificator to buf_fbr-gds-obj no-error .
+                                                  if error-status:error then 
+                                       do:
+                                          put-Log(return-value).
+                                          undo, return error return-value.
+                                       end. 
+         end.                                                
+      end.
+      else do :
+        put-err-log(
+          "Не найден товар с кодом " + string(tt-gds-mapping.gds-code16) + " .Код в 15.0 " + string(tt-fbr-gds-obj.gds-code)).
+      end. 
+    end.
+    else do :
+      put-err-log(
+        "В файле соответствия " + ifile-path + " нет данных по товару с кодом " + string(tt-fbr-gds-obj.gds-code)).
+    end.
+  end.
+  vflag  = yes.
+  finally:
+     if vflag then
+        put-log( string(now) + "   Атрибуты автопроизводства загружены!") .
+     else
+        put-log( string(now) + "   Атрибуты автопроизводства не загружены!") .
   end finally.
 end. 
 
@@ -1630,6 +1728,8 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
          v-out-file = "cashp.json" .
       when "user-temp.json"        then 
          v-out-file = "user.json" .
+      when "fbrgds-temp.json"  then 
+         v-out-file = "fbrgds.json" .
    end case.
   
   input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
