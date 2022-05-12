@@ -2022,6 +2022,8 @@ method public logical load_rest (iaddr as character,
   empty temp-table tt-imp-parts.
   
   parse-json(input temp-table tt-imp-parts:default-buffer-handle, input "tt-imp-parts") .
+  
+  delete object mJsonObj no-error.
 
   put-log ( string(now) +  "   Начинаем загрузку остатков...") .
   
