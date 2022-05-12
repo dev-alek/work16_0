@@ -95,7 +95,7 @@ class ibs.th.utl.draw_utility inherits Form:
       textBox1:text = getPARAM("host").
       if textBox1:text eq ""
       then 
-         textBox1:text = "localhost:8080".
+      textBox1:text = "localhost:8080".
       textBox2:text = getPARAM("correspondence_gds").
       textBox3:text = getPARAM("correspondence_supp").
 
@@ -475,6 +475,7 @@ class ibs.th.utl.draw_utility inherits Form:
   end method .  
   
   method private void BtnStart():
+    define variable string-cash as character no-undo .
     mutil:mAddr = textbox1:Text.
     
     checkBox1:checked = mutil:Chek_Shem().
@@ -488,7 +489,9 @@ class ibs.th.utl.draw_utility inherits Form:
      if         checkBox1:checked
         and not checkBox2:checked
      then do:
-        mutil:load_cashdesk().
+        string-cash = mutil:load_cashdesk().
+        if string-cash <> "" or string-cash <> ? then
+        mutil:sendnum(string-cash) .
         checkBox2:checked = mutil:chek_cash_desk().
      end.
      checkBox3:checked = mutil:chek-sht-open().
@@ -497,8 +500,6 @@ class ibs.th.utl.draw_utility inherits Form:
      then do:
         mutil:sht-open().
         checkBox3:checked = mutil:chek-sht-open().
-        
-        
      end.
       checkBox5:checked = mutil:chek_price().
      if         checkBox3:checked
@@ -1308,6 +1309,7 @@ class ibs.th.utl.draw_utility inherits Form:
     this-object:tabControl1:ResumeLayout(false).
     this-object:tabPage1:ResumeLayout(false).
     this-object:tabPage2:ResumeLayout(false).
+    this-object:tabPage2:PerformLayout().
     this-object:tabPage3:ResumeLayout(false).
     this-object:tabPage4:ResumeLayout(false).
     this-object:tabPage5:ResumeLayout(false).
@@ -1384,6 +1386,7 @@ class ibs.th.utl.draw_utility inherits Form:
     
         return ? .
    end method.
+
     /*------------------------------------------------------------------------------
       Purpose:
       Notes:

@@ -1284,14 +1284,18 @@ method public logical chek_cash_desk():
     return  v-has-records.
 end method.
 // Перенос справочника касс 
-method public void load_cashdesk ():
-  load_cashdesk(mAddr ).
+method public character load_cashdesk ():
+  return load_cashdesk(mAddr ).
 end. 
  
-method public void load_cashdesk(iAddr as character ) :
+method public character load_cashdesk(iAddr as character ) :
   define variable v-rid as recid no-undo .
   define variable vcmd  as character no-undo.
   define variable vFlag as logical no-undo.
+  define variable v-cash-num as integer no-undo .
+  define variable v-send as logical no-undo.
+  define variable v-string-cash as character no-undo .
+  
   empty temp-table tt-cash-desk.
   empty temp-table tt-cash-desk-attr.
  
@@ -1303,15 +1307,14 @@ method public void load_cashdesk(iAddr as character ) :
   put-log(string (now) + "   Разбираем полученные данные...").
   fix-codepage_and_SetJsonObj (input "cashdesk-temp.json") .
   
-  
   parse-json(input temp-table tt-cash-desk:default-buffer-handle, input "cash-desk") .
   parse-json(input temp-table tt-cash-desk-attr:default-buffer-handle, input "cash-desk-attr") .
   
   /* Delete all objects created by this procedure to avoid memory leaks */
-  
   put-log( string(now) + "   Начинаем загрузку касс...") .
-  
-  for each tt-cash-desk where not tt-cash-desk.is-del exclusive-lock :
+  v-cash-num = 0 .
+  for each tt-cash-desk where not tt-cash-desk.is-del exclusive-lock by tt-cash-desk.cash-num by tt-cash-desk.pos-type:
+    v-send = false .
     tt-cash-desk.addr-path = replace(tt-cash-desk.addr-path, "|", chr(4)) .
     for first tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
                                          and tt-cash-desk-attr.obj-code = tt-cash-desk.obj-code
@@ -1326,7 +1329,15 @@ method public void load_cashdesk(iAddr as character ) :
             + " IP: "  + entry(if tt-cash-desk.addr-path eq "" then 1 else num-entries(tt-cash-desk.addr-path, chr(4)) ,
                                tt-cash-desk.addr-path, 
                                chr(4))).       
-                   
+    if tt-cash-desk.pos-type = "Autotank" and tt-cash-desk.addr-path <> "" then .
+    else do:
+    assign
+    v-cash-num = v-cash-num + 1 . 
+    if tt-cash-desk.cash-num <> v-cash-num then
+    assign
+    tt-cash-desk.cash-num = v-cash-num 
+    v-send = true .
+    end.                
     run ref/cashdsk1.p (
      input-output v-rid
     ,input {&add-def}
@@ -1336,7 +1347,7 @@ method public void load_cashdesk(iAddr as character ) :
     ,input tt-cash-desk.cash-num
     ,input tt-cash-desk.autonomy
     ,input tt-cash-desk.addr-path 
-    ,input no
+    ,input tt-cash-desk.cash-on
     ,input tt-cash-desk.cash-os
     ,input tt-cash-desk.is-del
     ,input tt-cash-desk.remote
@@ -1350,6 +1361,9 @@ method public void load_cashdesk(iAddr as character ) :
        put-Log(return-value).
       undo, return error return-value.
     end.
+    if v-send then do:
+      v-string-cash = v-string-cash + ";" + string(tt-cash-desk.cash-num) .
+    end.  
     for each tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
                                          and tt-cash-desk-attr.obj-code = tt-cash-desk.obj-code
                                          and tt-cash-desk-attr.pos-type = tt-cash-desk.pos-type
@@ -1400,16 +1414,23 @@ method public void load_cashdesk(iAddr as character ) :
       end case.                                   
     end.                                       
   end.
-  
-  
+  v-string-cash = trim(v-string-cash,";") .
+
   vflag  = yes.
+/*  if vflag then return v-string-cash .*/
+/*  else return "" .                    */
   finally:
-     if vflag then
+     if vflag then do:
         put-log( string(now) + "   Кассы загружены!") .
-     else
+        return v-string-cash .
+     end.
+     else do:
         put-log( string(now) + "   Кассы не загружены!") .
+        return "" .
+     end.   
   end finally.
 end method.
+
 method public void parse-json (
   pBuff as handle,
   p-array-name as character):
@@ -3050,6 +3071,14 @@ method public logical sendcode(icode as integer ):
    put-log("").
    return yes.
 end method.
+
+method public logical sendnum(text-num as character ):
+   run utl/sendnum.p(this-object,text-num,v-cntxt-obj-code).
+   
+   put-log("").
+   return yes.
+end method.
+
 method public logical  chek_rest():
                   for each ub.trn-doc no-lock where ub.trn-doc.obj-type = v-cntxt-obj-type
                     and ub.trn-doc.obj-code = v-cntxt-obj-code,
