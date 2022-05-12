@@ -611,7 +611,9 @@ then do:
       then do:
           vsdSubsObj:GetItem(1).
         end.
-      if (vsdSubsObj:iCounter = 0 or vsdSubsObj:VsdObjCurr:UUID = "") and v-mercury-prod
+      if (vsdSubsObj:iCounter = 0 or vsdSubsObj:VsdObjCurr:UUID = "")
+      and v-mercury-prod
+      and not var-is-auto-trn
       then do:
         varlog = false.
         if v-close = true

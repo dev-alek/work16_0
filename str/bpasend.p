@@ -90,7 +90,7 @@ CASE p-pos-type:
             , input log-file-name
             , input 1
             , input substitute( "!!!&1 платежные агенты/операторы реализуются только для POS &2"
-                                , (if action = "U" then "Передача" else "Удаление")
+                                , (if action begins "U" then "Передача" else "Удаление")
                                 , {&cd-type-IBM-XML}
                               )
                                               ).
@@ -136,18 +136,25 @@ CASE p-pos-type:
 /*    if NOT glog then return .*/
   end. /*ibm*/
 END CASE.
-run gbl/d-askw.w (input "Выбор платежных агентов/операторов для пересылки",
-            input ( (if action = "U"
-                      then "Переслать на кассу"
-                      else "Удалить из кассы" ) + {&new-line} +
-                              "информацию о платежных агентах/операторов"
-                              ),
-            input "|",
-            input "Все|Выборочно|Отказ от пересылки",
-            input "||",
-            input 1,
-            input 3,
-            output choice).
+if action = "DD"
+or action = "UU"
+then do :
+  choice = 1 .
+end .
+else do :
+  run gbl/d-askw.w (input "Выбор платежных агентов/операторов для пересылки",
+              input ( (if action = "U"
+                        then "Переслать на кассу"
+                        else "Удалить из кассы" ) + {&new-line} +
+                                "информацию о платежных агентах/операторов"
+                                ),
+              input "|",
+              input "Все|Выборочно|Отказ от пересылки",
+              input "||",
+              input 1,
+              input 3,
+              output choice).
+end .              
 CASE choice:
   when 1 then do:
   end.

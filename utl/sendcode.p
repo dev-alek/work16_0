@@ -31,8 +31,8 @@ then do:
 end.
 else if iCode eq 3
 then do:
-mAnswer = "4".
-run str/send-tax.p (iUtil:parparentproc, {&cd-type-ibm}, iUtil:obj-type, iUtil:obj-code, 'D') .
+  mAnswer = "4".
+  run str/send-tax.p (iUtil:parparentproc, {&cd-type-ibm}, iUtil:obj-type, iUtil:obj-code, 'D') .
 end.
 else if iCode eq 4
 then do:
@@ -65,8 +65,8 @@ then do:
 end.
 else if iCode eq 9
 then do:
-    mAnswer = "4".
-    run str/senddcty.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "D").
+  mAnswer = "4".
+  run str/senddcty.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "D").
 end.
 else if iCode eq 10
 then do:
@@ -77,28 +77,27 @@ end.
 else  if iCode eq 11
 then do:
   mAnswer = "1".
-  run str/bpasend.p (iUtil:parparentproc,this-procedure,this-procedure,{&cd-type-IBM-XML} + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "D").
+  run str/bpasend.p (iUtil:parparentproc,this-procedure,this-procedure,{&cd-type-IBM-XML} + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "DD").
 end.
 else  if iCode eq 12
 then do:
-   mAnswer = "1".
-   run str/bpasend.p (iUtil:parparentproc,this-procedure,this-procedure,{&cd-type-IBM-XML} + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
+  mAnswer = "1".
+  run str/bpasend.p (iUtil:parparentproc,this-procedure,this-procedure,{&cd-type-IBM-XML} + {&delim-par} + iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "UU").
 end.
 else if iCode eq 13
 then do:
-    mAnswer = "4".
-   run str/del-gds.p (iUtil:parparentproc,this-procedure,this-procedure,string(iUtil:obj-code) + {&delim-par} + "no").
+  mAnswer = "4".
+  run str/del-gds.p (iUtil:parparentproc,this-procedure,this-procedure,string(iUtil:obj-code) + {&delim-par} + "no").
 end.
 else if iCode eq 14
 then do:
-    mAnswer = "1".
-    run str/send-gds-draw.p (iUtil:parparentproc).
+  mAnswer = "1".
+  run str/send-gds-draw.p (iUtil:parparentproc).
 end.
 else if iCode eq 15
-        then 
-    do:
-        run str/sendcashcomm.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U","execute","dbClear",ireclist).
-    end.
+then do:
+  run str/sendcashcomm.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U","execute","dbClear",ireclist).
+end.
 
 unsubscribe to "ResponseToQuestion".
 
