@@ -327,6 +327,12 @@ class ibs.th.utl.draw_utility inherits Form:
       v-send-param = no
 	  .
 	   define variable vtestlg as logical no-undo init no.
+	   find first ub.cash-desk-attr exclusive-lock where ub.cash-desk-attr.attr-code = "string-cash" and
+                                                        ub.cash-desk-attr.cash-num = 0 no-error .
+      if available (ub.cash-desk-attr) then do:
+        if ub.cash-desk-attr.attr-value-character <> "" then  
+        mutil:sendnum(ub.cash-desk-attr.attr-value-character) .
+      end.     
       mUtil:put-log("Начато   : удаление кассиров с касс").
       checkBox7:checked =mutil:sendcode(1).
       mUtil:put-log("Выполнено: удаление кассиров с касс").
@@ -567,8 +573,8 @@ class ibs.th.utl.draw_utility inherits Form:
         and not checkBox2:checked
      then do:
         string-cash = mutil:load_cashdesk().
-        if string-cash <> "" or string-cash <> ? then
-        mutil:sendnum(string-cash) .
+/*        if string-cash <> "" or string-cash <> ? then*/
+/*        mutil:sendnum(string-cash) .                 */
         checkBox2:checked = mutil:chek_cash_desk().
      end.
      checkBox3:checked = mutil:chek-sht-open().

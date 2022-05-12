@@ -71,7 +71,8 @@ define temp-table tt-pl-pump-nozzle like ub.pl-pump-nozzle .
 define temp-table tt-pl-level       like ub.pl-level .
 define temp-table tt-pl-gds         like ub.pl-gds .
 define temp-table tt-pl-gds-pump    like ub.pl-gds-pump .
-define temp-table tt-cash-desk      like ub.cash-desk .
+define temp-table tt-cash-desk      like ub.cash-desk 
+  field isSave as logical.
 define temp-table tt-cash-desk-attr like ub.cash-desk-attr
   field attr-value as character 
 .
@@ -137,6 +138,12 @@ define temp-table tt-auto-schedule-attr like ub.schedule-attr .
 define temp-table tt-fbr-gds-obj       like ub.fbr-gds-obj .
 define temp-table tt-fbr-gds-obj-attr  like ub.fbr-gds-obj-attr .
 
+   define variable v-cash-num    as integer   no-undo .
+   define variable v-string-cash as character no-undo .
+   define variable v-RfNumber    as integer   no-undo .
+   define variable v-cash-rf     as integer   no-undo .
+   define variable v-send-Rf     as logical   no-undo .
+  
 define temp-table tt-rvs-doc          like ub.rvs-doc 
     field Findex as logical
     index pi FINdex.
@@ -1309,10 +1316,10 @@ method public character load_cashdesk(iAddr as character ) :
   define variable v-rid as recid no-undo .
   define variable vcmd  as character no-undo.
   define variable vFlag as logical no-undo.
-  define variable v-cash-num as integer no-undo .
-  define variable v-send as logical no-undo.
-  define variable v-string-cash as character no-undo .
-  
+  define variable v-addr-path as character no-undo .
+  define buffer buf_tt-cash-desk for tt-cash-desk .
+  define buffer bf_tt-cash-desk  for tt-cash-desk .
+  define variable isCashDesk as logical no-undo init true .
   empty temp-table tt-cash-desk.
   empty temp-table tt-cash-desk-attr.
  
@@ -1333,7 +1340,7 @@ method public character load_cashdesk(iAddr as character ) :
 
   for each tt-cash-desk where exclusive-lock by tt-cash-desk.cash-num by tt-cash-desk.pos-type:
     if tt-cash-desk.is-del then next . 
-    v-send = false .
+
     tt-cash-desk.addr-path = replace(tt-cash-desk.addr-path, "|", chr(4)) .
     for first tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
                                          and tt-cash-desk-attr.obj-code = tt-cash-desk.obj-code
@@ -1342,51 +1349,131 @@ method public character load_cashdesk(iAddr as character ) :
                                          and tt-cash-desk-attr.attr-code = "fr-type" :
       tt-cash-desk.fr-type = tt-cash-desk-attr.attr-value .                                    
     end.          
-     
-    put-log(  "Касса " + tt-cash-desk.pos-type 
-            + " №"     + string(tt-cash-desk.cash-num) 
-            + " IP: "  + entry(if tt-cash-desk.addr-path eq "" then 1 else num-entries(tt-cash-desk.addr-path, chr(4)) ,
-                               tt-cash-desk.addr-path, 
-                               chr(4))).       
-    if tt-cash-desk.pos-type = "Autotank" and tt-cash-desk.addr-path <> "" then .
-    else do:
+    end.
+
+   do while isCashDesk:
+   if can-find (first tt-cash-desk where tt-cash-desk.isSave = false) then 
+   do:
+     load_cashdesk1 () .
+   end.
+   else isCashDesk = false .
+   end.
+   
+  v-string-cash = trim(v-string-cash,";") .
+
+  vflag  = yes.
+
+  finally:
+     if not mDebug then do:
+     os-delete value("cashdesk-temp.json") .
+     os-delete value("cashdesk.json") .
+     end.     
+     if vflag then do:
+        if v-RfNumber <> 0 then v-string-cash = string(v-cash-rf) + {&delim-par} + string(v-RfNumber) + {&delim-par} + v-string-cash .
+        find first ub.cash-desk-attr exclusive-lock where ub.cash-desk-attr.attr-code = "string-cash" and
+                                                          ub.cash-desk-attr.cash-num = 0 and
+                                                          ub.cash-desk-attr.db-num = v-cntxt-db-num and
+                                                          ub.cash-desk-attr.obj-code = v-cntxt-obj-code no-error .
+        if not available (ub.cash-desk-attr) then do:
+        create ub.cash-desk-attr .
+        assign
+        ub.cash-desk-attr.attr-code = "string-cash"
+        ub.cash-desk-attr.cash-num = 0
+        ub.cash-desk-attr.db-num = v-cntxt-db-num
+        ub.cash-desk-attr.obj-code = v-cntxt-obj-code
+        . 
+        end.
+        ub.cash-desk-attr.attr-value-character = v-string-cash .
+        
+        put-log( string(now) + "   Кассы загружены!") .
+        return v-string-cash .
+     end.
+     else do:
+        put-log( string(now) + "   Кассы не загружены!") .
+        return "" .
+     end.   
+  end finally.
+end method.
+
+method public void load_cashdesk1() :
+  define variable v-rid as recid no-undo .
+  define variable v-addr-path as character no-undo .
+  define buffer buf_tt-cash-desk for tt-cash-desk .
+  define variable v-send as logical no-undo .
+ 
+    for each tt-cash-desk where not tt-cash-desk.is-del and not tt-cash-desk.isSave exclusive-lock:
+       v-send = false .  
+       find first buf_tt-cash-desk where not buf_tt-cash-desk.isSave and buf_tt-cash-desk.pos-type = "Autotank" and buf_tt-cash-desk.autonomy = 2 no-error .
+       if available (buf_tt-cash-desk) then do:
+          buf_tt-cash-desk.isSave = true .
+          if integer(entry (2,buf_tt-cash-desk.addr-path,":")) = 7999 then 
+          v-addr-path = entry (1,buf_tt-cash-desk.addr-path,":") .
+       end.
+       else do:
+       find first buf_tt-cash-desk where not buf_tt-cash-desk.isSave and buf_tt-cash-desk.pos-type = "IBM-XML" no-error .
+       if available (buf_tt-cash-desk) then do:
+          v-cash-num = v-cash-num + 1 .
+          if v-addr-path = entry (1,buf_tt-cash-desk.addr-path,":") then do: 
+             v-cash-rf = v-cash-num .
+             v-send-Rf = true .
+          end.     
+          buf_tt-cash-desk.isSave = true .
+          
+       end.
+       else do:
+       find first buf_tt-cash-desk where not buf_tt-cash-desk.isSave and buf_tt-cash-desk.pos-type = "Autotank" no-error .
+       if available (buf_tt-cash-desk) then do:
+          v-cash-num = v-cash-num + 1 .
+          if v-send-Rf then v-RfNumber = v-cash-num .
+          v-send-Rf = false .
+          buf_tt-cash-desk.isSave = true .
+          
+       end.
+       end .   
+       end.
+
+        put-log(  "Касса " + buf_tt-cash-desk.pos-type 
+            + " №"     + string(buf_tt-cash-desk.cash-num) 
+            + " IP: "  + entry(if buf_tt-cash-desk.addr-path eq "" then 1 else num-entries(buf_tt-cash-desk.addr-path, chr(4)) ,
+                               buf_tt-cash-desk.addr-path, 
+                               chr(4))).      
+
+    if buf_tt-cash-desk.cash-num <> v-cash-num then
     assign
-    v-cash-num = v-cash-num + 1 . 
-    if tt-cash-desk.cash-num <> v-cash-num then
-    assign
-    tt-cash-desk.cash-num = v-cash-num 
+    buf_tt-cash-desk.cash-num = v-cash-num 
     v-send = true .
-    end.                
+
     run ref/cashdsk1.p (
      input-output v-rid
     ,input {&add-def}
     ,input v-cntxt-db-num-obj
     ,input v-cntxt-obj-code
-    ,input tt-cash-desk.pos-type
-    ,input tt-cash-desk.cash-num
-    ,input tt-cash-desk.autonomy
-    ,input tt-cash-desk.addr-path 
+    ,input buf_tt-cash-desk.pos-type
+    ,input buf_tt-cash-desk.cash-num
+    ,input buf_tt-cash-desk.autonomy
+    ,input buf_tt-cash-desk.addr-path 
     ,input no
-    ,input tt-cash-desk.cash-os
-    ,input tt-cash-desk.is-del
-    ,input tt-cash-desk.remote
-    ,input tt-cash-desk.version
-    ,input tt-cash-desk.registration-code
-    ,input tt-cash-desk.serial-code
-    ,input tt-cash-desk.fr-type
+    ,input buf_tt-cash-desk.cash-os
+    ,input buf_tt-cash-desk.is-del
+    ,input buf_tt-cash-desk.remote
+    ,input buf_tt-cash-desk.version
+    ,input buf_tt-cash-desk.registration-code
+    ,input buf_tt-cash-desk.serial-code
+    ,input buf_tt-cash-desk.fr-type
     ,input ? /* вариант исполнения кассы (ТСО,неТСО,мобильн); "?" = "оставить прежнее значение" */
     ) no-error .
     if error-status:error then do:
        put-Log(return-value).
       undo, return error return-value.
     end.
-    if v-send then do:
-      v-string-cash = v-string-cash + ";" + string(tt-cash-desk.cash-num) .
+    if v-send then do: 
+      v-string-cash = v-string-cash + ";" + string(buf_tt-cash-desk.cash-num) .
     end.  
-    for each tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
-                                         and tt-cash-desk-attr.obj-code = tt-cash-desk.obj-code
-                                         and tt-cash-desk-attr.pos-type = tt-cash-desk.pos-type
-                                         and tt-cash-desk-attr.cash-num = tt-cash-desk.cash-num :
+    
+    for each tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = buf_tt-cash-desk.db-num
+                                         and tt-cash-desk-attr.obj-code = buf_tt-cash-desk.obj-code
+                                         and tt-cash-desk-attr.pos-type = buf_tt-cash-desk.pos-type
+                                         and tt-cash-desk-attr.cash-num = buf_tt-cash-desk.cash-num :
       case tt-cash-desk-attr.attr-code :
         when "last-check-params"
         then do :
@@ -1410,48 +1497,10 @@ method public character load_cashdesk(iAddr as character ) :
                                 ,input no /*p-logical*/
                                 ) no-error.
         end.
-        when "FO-version"
-        then do :
-/*          run cd-attr-write in this-procedure (                                            */
-/*                                  input v-cntxt-db-num-obj                                 */
-/*                                ,input v-cntxt-obj-code                                    */
-/*                                ,input tt-cash-desk-attr.pos-type                          */
-/*                                ,input tt-cash-desk-attr.cash-num                          */
-/*                                ,input  (if tt-cash-desk-attr.pos-type = {&cd-type-ibm-xml}*/
-/*                                         then {&cda-IBM-XML_operative}                     */
-/*                                         else {&cda-AUTOTANK_operative})                   */
-/*                                ,input (if tt-cash-desk-attr.pos-type = {&cd-type-IBM-XML} */
-/*                                        then {&cda-IBM-XML_operative_fo-version}           */
-/*                                        else {&cda-AUTOTANK_operative_fo-version})         */
-/*                                ,input tt-cash-desk-attr.attr-value                        */
-/*                                ,input ? /*p-date*/                                        */
-/*                                ,input 0 /*p-decimal*/                                     */
-/*                                ,input 0 /*p-integer*/                                     */
-/*                                ,input no /*p-logical*/                                    */
-/*                                ) no-error.                                                */
-        end.                        
       end case.                                   
     end.                                       
   end.
-  v-string-cash = trim(v-string-cash,";") .
 
-  vflag  = yes.
-/*  if vflag then return v-string-cash .*/
-/*  else return "" .                    */
-  finally:
-     if not mDebug then do:
-     os-delete value("cashdesk-temp.json") .
-     os-delete value("cashdesk.json") .
-     end.     
-     if vflag then do:
-        put-log( string(now) + "   Кассы загружены!") .
-        return v-string-cash .
-     end.
-     else do:
-        put-log( string(now) + "   Кассы не загружены!") .
-        return "" .
-     end.   
-  end finally.
 end method.
 
 method public void parse-json (
