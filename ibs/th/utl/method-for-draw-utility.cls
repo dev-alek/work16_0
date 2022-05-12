@@ -1313,7 +1313,9 @@ method public character load_cashdesk(iAddr as character ) :
   /* Delete all objects created by this procedure to avoid memory leaks */
   put-log( string(now) + "   Начинаем загрузку касс...") .
   v-cash-num = 0 .
-  for each tt-cash-desk where not tt-cash-desk.is-del exclusive-lock by tt-cash-desk.cash-num by tt-cash-desk.pos-type:
+
+  for each tt-cash-desk where exclusive-lock by tt-cash-desk.cash-num by tt-cash-desk.pos-type:
+    if tt-cash-desk.is-del then next . 
     v-send = false .
     tt-cash-desk.addr-path = replace(tt-cash-desk.addr-path, "|", chr(4)) .
     for first tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
