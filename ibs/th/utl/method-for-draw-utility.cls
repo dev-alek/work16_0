@@ -3079,6 +3079,32 @@ method public logical sendnum(text-num as character ):
    return yes.
 end method.
 
+method public logical sendparam(text_file as character ):
+  define variable cmd as character no-undo .
+  define buffer buf_cash-desk for ub.cash-desk .
+  define variable ii as integer no-undo .
+  
+  do ii = 1 to num-entries (text_file,{&delim-par}):
+  if search (entry (ii,text_file,{&delim-par})) > ""
+  then
+  for each buf_cash-desk no-lock where buf_cash-desk.db-num   = v-cntxt-db-num
+                                   and buf_cash-desk.obj-code = v-cntxt-obj-code
+                                   and buf_cash-desk.pos-type = {&cd-type-ibm-xml} 
+                                   and buf_cash-desk.cash-on
+                                   :
+    assign
+      cmd = substitute('&1 -X POST -H "Content-Type: text/xml" -d @&2 &3 >&4'
+                      , search ("exe/curl.exe")
+                      , search (entry (ii,text_file,{&delim-par}))
+                      , (entry(1, buf_cash-desk.addr-path, {&delim-par}) + '://' + entry(2, buf_cash-desk.addr-path, {&delim-par}))
+                      , "cashParResp.txt")
+    .          
+    os-command silent value (cmd) .                       
+  end .
+  end.
+   return yes.
+end method.
+
 method public logical  chek_rest():
                   for each ub.trn-doc no-lock where ub.trn-doc.obj-type = v-cntxt-obj-type
                     and ub.trn-doc.obj-code = v-cntxt-obj-code,
