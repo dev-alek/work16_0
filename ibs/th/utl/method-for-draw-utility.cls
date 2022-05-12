@@ -35,7 +35,7 @@ class ibs.th.utl.method-for-draw-utility final:
   define public variable mAddr         as character no-undo.
   //define public variable mlogHand      as handle no-undo. 
   
-  
+
  
   {cmp/str-glbl.i class}
   &glob defined_parparentproc = yes 
@@ -53,6 +53,13 @@ class ibs.th.utl.method-for-draw-utility final:
     field bc-on-type as character
     index pi as primary unique  gds-code
 .
+define temp-table tt-rest-fin
+  field obj-code as integer
+  field obj-type as character
+  field CashBookId like ub.CashBook.id
+  field ostatok as decimal
+  index pi is primary obj-code obj-type CashBookId
+  .
 define temp-table tt-place          like ub.place .
 define temp-table tt-place-attr     like ub.place-attr .
 define temp-table tt-pump           like ub.pump .
@@ -67,6 +74,53 @@ define temp-table tt-cash-desk      like ub.cash-desk .
 define temp-table tt-cash-desk-attr like ub.cash-desk-attr
   field attr-value as character 
 .
+
+define temp-table temp-fin-sum no-undo
+field cash-desk  as integer
+field curr-code as integer
+field tot-sum as decimal
+field tot-base as decimal
+field tot-rubl as decimal
+field is-petrol as logical
+field cashbookid as int64
+field is-expense_cash as logical
+field num-expense_cash as int
+index pi is unique primary
+num-expense_cash is-expense_cash cash-desk curr-code is-petrol cashbookid
+.
+
+define temp-table temp-tax no-undo
+field with-vat as logical init yes
+field curr-code as integer
+field vat-pc as decimal
+field slt-pc as decimal
+field vat-base as decimal
+field vat-rubl as decimal
+field vat-doc as decimal
+field sum-base as decimal
+field sum-rubl as decimal
+field sum-doc as decimal
+field cash-desk  as integer
+field is-petrol as logical
+field cashbookId as int64
+field is-expense_cash as logical
+field num-expense_cash as int
+index pi is unique primary
+num-expense_cash
+is-expense_cash
+cash-desk
+curr-code
+vat-pc
+slt-pc
+is-petrol
+cashbookId
+.
+
+define temp-table tt0-fin-doc-tax like ub.fin-doc-tax .
+define temp-table tt0-fin-doc-attr like ub.fin-doc-attr .
+define temp-table tt-fin-doc like ub.fin-doc .
+DEFINE TEMP-TABLE ttc-fin-doc NO-UNDO LIKE ub.fin-doc.
+DEFINE TEMP-TABLE tt0-payment NO-UNDO LIKE ub.payment.
 
 define temp-table tt-user-account     like ub.user-account .
 define temp-table tt-user-login       like ub.user-login .
@@ -945,7 +999,7 @@ method public logical chek_schedule():
 end method.
 
 method public logical chek_fbrgds():
-/*run gbl/inidebug.p.*/
+
     define variable v-has-records as logical no-undo.
     for each ub.fbr-gds-obj no-lock where ub.fbr-gds-obj.obj-code = v-cntxt-obj-code and ub.fbr-gds-obj.obj-type = v-cntxt-obj-type and
     ub.fbr-gds-obj.is-modificator = true :
@@ -1730,6 +1784,8 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
          v-out-file = "user.json" .
       when "fbrgds-temp.json"  then 
          v-out-file = "fbrgds.json" .
+      when "rest-fin-temp.json"    then
+         v-out-file = "restfin.json" .   
    end case.
   
   input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
@@ -2357,6 +2413,638 @@ define buffer buf_goods     for ub.goods .
   end finally.
 end method . /* end_of verify_rest */
 
+method public logical load_rest_fin (
+                              iosn-fname   as character,  // список соответствия поставщиков
+                              iart-fname   as  character, // список соответствия товаров
+                              icontr       as character,  // контрагент для ПКО РКО
+                              iretry-fname as character   // файл для повторного импорта
+                              ):
+     return load_rest_fin(maddr, iosn-fname, iart-fname, icontr, iretry-fname).
+end method.                                
+method public logical load_rest_fin (iaddr as character,
+                              iosn-fname   as character,  // список соответствия поставщиков
+                              iart-fname   as  character, // список соответствия товаров
+                              icontr       as character,  // контрагент для ПКО РКО
+                              iretry-fname as character   // файл для повторного импорта
+                              ):
+  define variable vcmd              as character no-undo.
+  define variable vOk               as logical   no-undo.
+  define variable p-doc-rec         as recid     no-undo .
+  define variable mCashBook         as class     ibs.th.ref.cashbookstorage no-undo .
+  define variable p-by-cash-desk    as logical   no-undo .
+  define variable p-by-petrol-goods as logical   no-undo .
+  define variable p-by-osnovanie    as character no-undo .
+  define variable p-by-pril         as character no-undo .
+  define variable v-naznach-plat    as character no-undo .
+  define variable v-naznach-plat2   as character no-undo .
+  
+  define variable o-uchet           as character no-undo .
+  define variable v-uchet           as character no-undo .
+  
+  define variable v-real-obj-type   as character no-undo .
+  define variable v-real-obj-code   as integer   no-undo .
+  define variable v-limit-access    as integer   no-undo .
+  define variable v-base-code       as integer   no-undo .
+  define variable mOsnbag           as character no-undo.
+  define variable msumInc-save      as decimal   no-undo.
+  define variable mMoney            as character no-undo.
+  
+  { ref/fndocip.i class}
+
+  { gbl/basecode.i v-cntxt-host-code-obj v-base-code }
+  &scop prfx tt-fin-doc.
+  mCashBook = new ibs.th.ref.cashbookstorage () .
+  define buffer buf_temp-fin-sum for temp-fin-sum .
+  define buffer buf_temp-tax     for temp-tax .
+  define buffer buf_fin-doc      for ub.fin-doc .
+  define buffer buf_fin-doc-tax  for ub.fin-doc-tax .
+  define buffer buf_fin-doc-attr for ub.fin-doc-attr .
+  define buffer buf_payment      for ub.payment .
+  define buffer buf_shift-obj    for ub.shift-obj.
+  
+  empty temp-table tt-rest-fin .
+  empty temp-table temp-tax .
+  put-log(string (now) + "   Отправляем запрос для получения денежных остатков...").
+    
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetRestFin >&3", search ("exe/curl.exe"), iaddr, "rest-fin-temp.json").
+  os-command silent value (vcmd).
+  
+  fix-codepage_and_SetJsonObj (input "rest-fin-temp.json") .
+  
+  parse-json(input temp-table tt-rest-fin:default-buffer-handle, input "tt-rest-fin") .
+   
+  put-log ( string(now) +  "   Начинаем загрузку денежных остатков...") .
+
+  define variable v-count-err as integer no-undo .
+
+  find last buf_shift-obj
+    where buf_shift-obj.obj-type    = v-cntxt-obj-type 
+    and buf_shift-obj.obj-code    = v-cntxt-obj-code
+    no-error.
+   
+  for each tt-rest-fin where tt-rest-fin.obj-code = v-cntxt-obj-code and tt-rest-fin.obj-type = v-cntxt-obj-type:
+    find first ub.CashBook no-lock where ub.CashBook.id = tt-rest-fin.CashBookId no-error .
+    if not available (ub.CashBook) then next .
+    find first buf_temp-fin-sum
+      where buf_temp-fin-sum.curr-code = 0
+      and buf_temp-fin-sum.cashbookid = tt-rest-fin.CashBookId
+      and buf_temp-fin-sum.is-expense_cash = no
+      no-error.
+    if not available buf_temp-fin-sum 
+      then 
+    do:
+      create buf_temp-fin-sum.
+      assign
+        buf_temp-fin-sum.curr-code       = 0
+        buf_temp-fin-sum.cash-desk       = 0
+        buf_temp-fin-sum.is-petrol       = no
+        buf_temp-fin-sum.cashbookid      = tt-rest-fin.CashBookId
+        buf_temp-fin-sum.is-expense_cash = no
+        . 
+    end.
+    assign 
+      buf_temp-fin-sum.tot-rubl = buf_temp-fin-sum.tot-rubl + tt-rest-fin.ostatok
+      buf_temp-fin-sum.tot-base = buf_temp-fin-sum.tot-base + tt-rest-fin.ostatok
+      buf_temp-fin-sum.tot-sum  = buf_temp-fin-sum.tot-sum + tt-rest-fin.ostatok
+      .
+    if buf_temp-fin-sum.tot-sum eq 0
+      then delete buf_temp-fin-sum.
+    else 
+    do:
+      create buf_temp-tax.
+      assign
+        buf_temp-tax.curr-code        = buf_temp-fin-sum.curr-code
+        buf_temp-tax.cash-desk        = buf_temp-fin-sum.cash-desk
+        buf_temp-tax.is-petrol        = buf_temp-fin-sum.is-petrol
+        buf_temp-tax.cashbookId       = buf_temp-fin-sum.cashbookid
+        buf_temp-tax.is-expense_cash  = buf_temp-fin-sum.is-expense_cash
+        buf_temp-tax.num-expense_cash = buf_temp-fin-sum.num-expense_cash
+        buf_temp-tax.sum-rubl         = buf_temp-fin-sum.tot-sum
+        buf_temp-tax.sum-base         = buf_temp-fin-sum.tot-sum
+        buf_temp-tax.sum-doc          = buf_temp-fin-sum.tot-sum
+        .
+    end.   
+  end.
+  _temp-fin-sum:
+  for each buf_temp-fin-sum no-lock
+    by buf_temp-fin-sum.cashbookid desc 
+    :
+
+    empty temp-table tt0-fin-doc-tax.
+    empty temp-table tt0-fin-doc-attr.
+    empty temp-table tt-fin-doc.
+    if buf_temp-fin-sum.tot-sum = 0  then 
+    do:
+      next _temp-fin-sum.
+    end.
+      
+    find first ub.CashBook no-lock where ub.CashBook.id = buf_temp-fin-sum.CashBookId no-error .
+    define variable mCashbookName as character no-undo.     
+    mCashbookName = string(ub.CashBook.id).                            
+    if available ub.CashBook then 
+    do:
+      assign
+        v-real-obj-type = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CountCollect-type") . 
+      v-real-obj-code = int(mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CountCollect-code") ).
+      mCashbookName = string(ub.CashBook.id) + " (" + CashBook.CashBookName + ")".
+      .
+    end.
+      
+    define variable v-doc-rec          as recid     no-undo .
+    define variable v-fin-doc-type     as character no-undo .
+    define variable v-fin-ext-doc-type as character no-undo .
+    if  buf_temp-fin-sum.tot-rubl > 0 then 
+      assign
+        v-fin-doc-type     = {&Income-cash} 
+        v-fin-ext-doc-type = {&FDEDT_Income_cash}.
+    else 
+      assign
+        v-fin-doc-type     = {&expense-cash} 
+        v-fin-ext-doc-type = {&FDEDT_expense_cash}.
+    run ref/finfnoco.p (
+      INPUT parParentProc
+      ,INPUT ? /*не надо нам*/
+      ,input v-host-code
+      ,input ({&add-def} + {&delim-par} + {&auto})
+      ,input v-host-code
+      ,input v-doc-rec
+      ,input 0 /*p-fin-doc-code*/
+      ,input v-fin-doc-type /*p-fin-doc-type*/
+      ,input v-fin-ext-doc-type /*p-fin-ext-doc-type*/
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
+      ,input 0 /*p-contract-code*/
+      ,input '' /*p-ob-doc-code*/
+      ,input {&cmp} /*p-payer-type*/
+      ,input v-host-code /*p-payer-code*/
+      ,input 0 /*p-payer-code-schet*/
+      ,input v-real-obj-type  /*p-receiver-type*/
+      ,input v-real-obj-code /*p-receiever-code*/
+      ,input 0 /*p-receiver-code-schet*/
+      ,input buf_temp-fin-sum.curr-code
+      ,input 0 /*p-cor-acc*/
+      ,input 0 /*p-cor-acc1*/
+      ,input 0 /*p-an-uchet-code*/
+      ,input 0 /*p-cel-nazn-code*/
+      ,input buf_temp-fin-sum.cashbookid
+      ,input ""
+      ,INPUT-OUTPUT table tt-fin-doc
+      ,INPUT-OUTPUT table ttc-fin-doc
+      ,output table tt0-fin-doc-attr
+      ,output v-limit-access ) no-error.
+    /* end. */ 
+    if error-status:error then 
+    do:
+      put-log("Ошибки при заполнении фин.док-та значениями по умолчанию").
+    end.
+    find first tt-fin-doc.
+    /*заполнение налогов*/
+    define variable v-line-num as integer no-undo .
+
+    for each buf_temp-tax no-lock
+      where buf_temp-tax.curr-code        = buf_temp-fin-sum.curr-code
+      and buf_temp-tax.cash-desk         = buf_temp-fin-sum.cash-desk
+      and buf_temp-tax.is-petrol        = buf_temp-fin-sum.is-petrol
+      and buf_temp-tax.cashbookId       = buf_temp-fin-sum.cashbookId
+      and buf_temp-tax.is-expense_cash  = buf_temp-fin-sum.is-expense_cash
+      and buf_temp-tax.num-expense_cash = buf_temp-fin-sum.num-expense_cash
+      :
+      v-line-num = v-line-num + 1.
+      create tt0-fin-doc-tax .
+      assign
+        tt0-fin-doc-tax.fin-doc-code       = tt-fin-doc.fin-doc-code
+        tt0-fin-doc-tax.host-code          = tt-fin-doc.host-code
+        tt0-fin-doc-tax.line-num           = v-line-num
+        tt0-fin-doc-tax.VAT-pc             = buf_temp-tax.vat-pc
+        tt0-fin-doc-tax.slt-pc             = buf_temp-tax.slt-pc
+        tt0-fin-doc-tax.sum-line-contr     = 0
+        tt0-fin-doc-tax.sum-vat-line-contr = 0
+        tt0-fin-doc-tax.with-vat           = buf_temp-tax.with-vat
+        .
+      if buf_temp-fin-sum.tot-sum > 0  then 
+      do :
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = buf_temp-tax.sum-doc
+          tt0-fin-doc-tax.sum-vat-line-doc  = buf_temp-tax.vat-doc
+          tt0-fin-doc-tax.sum-line-rubl     = buf_temp-tax.sum-rubl
+          tt0-fin-doc-tax.sum-vat-line-rubl = buf_temp-tax.vat-rubl
+          tt0-fin-doc-tax.sum-line-base     = buf_temp-tax.sum-base
+          tt0-fin-doc-tax.sum-vat-line-base = buf_temp-tax.vat-base
+          .
+      end.
+      else 
+      do :
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = abs(buf_temp-tax.sum-doc)
+          tt0-fin-doc-tax.sum-vat-line-doc  = abs(buf_temp-tax.vat-doc)
+          tt0-fin-doc-tax.sum-line-rubl     = abs(buf_temp-tax.sum-rubl)
+          tt0-fin-doc-tax.sum-vat-line-rubl = abs(buf_temp-tax.vat-rubl)
+          tt0-fin-doc-tax.sum-line-base     = abs(buf_temp-tax.sum-base)
+          tt0-fin-doc-tax.sum-vat-line-base = abs(buf_temp-tax.vat-base)
+          .
+      end.
+
+    end.
+      
+    tt-fin-doc.including = StrTax (tt-fin-doc.including) .
+    /* округляем  */
+    RoundTax() .
+
+    if available ub.CashBook
+      then 
+    do :
+      p-by-cash-desk = ub.CashBook.FlagSepCash .
+      p-by-petrol-goods = ub.CashBook.FlagSepFull .
+      p-by-osnovanie = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "BasisIncas") .
+      p-by-pril = ub.CashBook.RulePril .
+    end.
+
+    tt-fin-doc.enclosure = p-by-pril.
+    assign
+      tt-fin-doc.naznach-plat = "Перенос денежных остатков".
+
+    assign
+      tt-fin-doc.CashBookId = buf_temp-fin-sum.cashbookid
+      tt-fin-doc.sum-doc    = abs(buf_temp-fin-sum.tot-sum)
+      tt-fin-doc.sum-base   = abs(buf_temp-fin-sum.tot-base)
+      tt-fin-doc.sum-rubl   = abs(buf_temp-fin-sum.tot-rubl)
+      tt-fin-doc.exch-rate  = abs(if buf_temp-fin-sum.curr-code = 0 then 1 else buf_temp-fin-sum.tot-rubl / buf_temp-fin-sum.tot-sum )
+      tt-fin-doc.exch-scale = 1
+      tt-fin-doc.base-rate  = abs(if buf_temp-fin-sum.curr-code = v-base-code then 1 else buf_temp-fin-sum.tot-rubl / buf_temp-fin-sum.tot-base )
+      tt-fin-doc.base-scale = 1
+      .
+      
+      
+    o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "uchet") .
+      
+      
+      
+    if available ub.CashBook
+      then 
+    do :
+      tt-fin-doc.cor-acc-value  = ub.CashBook.OsnAcct .
+      tt-fin-doc.cor-acc1-value = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CorrAcctIncas") .
+        
+               
+      FIND ub.fin-code-cor-acc WHERE
+        ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc-value
+        AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+        AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+        NO-LOCK NO-error.
+        
+      if not available ub.fin-code-cor-acc
+        then 
+      do:
+        assign
+          tt-fin-doc.cor-acc-value = {&question-mark}
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code
+          .
+      end.
+      FIND ub.fin-code-cor-acc WHERE
+        ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc1-value
+        AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+        AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+        NO-LOCK NO-error.
+        
+      if not available ub.fin-code-cor-acc
+        then 
+      do:
+        assign
+          tt-fin-doc.cor-acc1-value = {&question-mark}
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code
+          .
+      end.
+    end.
+    if tt-fin-doc.cor-acc1-value eq "" or tt-fin-doc.cor-acc1-value eq ?
+      then 
+    do:
+      put-log("Не задан счет для инкасации") .
+    end.
+    if o-uchet = "0"
+      then v-uchet = "cal" .
+    else v-uchet = "smen" . 
+    
+    define variable v-name as character no-undo.
+    define variable v-codetype as character no-undo .
+    
+    if icontr = "" then do:
+      put-log("Не задан контрагент для ПКО/РКО") .
+    end.  
+    v-codetype = trim(entry(1,icontr,"_")) .      
+    v-name = trim(entry(2,icontr,"_")) .
+    /* Получатель */
+    if v-fin-doc-type = {&expense-cash} then do:
+    tt-fin-doc.receiver-code = integer(substring (v-codetype, 4)) .
+    tt-fin-doc.receiver-type = substring (v-codetype, 1, 3) .
+    tt-fin-doc.receiver-name = v-name .
+    end.
+    else do:
+    tt-fin-doc.payer-code = integer(substring (v-codetype, 4)) .
+    tt-fin-doc.payer-type = substring (v-codetype, 1, 3) .
+    tt-fin-doc.payer-name = v-name .
+    end.  
+    /*подкручиваем для утилиты */
+    if buf_shift-obj.status_ = {&sht-closed} and v-uchet = "smen" then 
+    do:
+      assign
+        tt-fin-doc.doc-date   = buf_shift-obj.close-date
+        tt-fin-doc.shift-date = buf_shift-obj.shift-date
+        tt-fin-doc.shift-num  = buf_shift-obj.shift-num
+        tt-fin-doc.shift-name = buf_shift-obj.shift-name
+        .
+    end.
+    assign
+      tt-fin-doc.doc-author = {&auto}.
+    &scop prfx tt-fin-doc.
+      run ref/findoc0.p (
+      input-output v-doc-rec
+            ,input {&add-def} + {&delim-par} + {&auto}
+            ,input yes
+            {&all-fin-doc-params-doc-status-transfer}
+            {&all-fin-doc-params-doc-status-transfer-2}
+            ,input table tt0-fin-doc-tax
+            ,input table tt0-fin-doc-attr
+            ,input no /*p-save-payment*/
+            ,input table tt0-payment
+      ) no-error.
+    if error-status:error then 
+    do:
+      put-log("Ошибки при сохранении фин.док-та")
+        .
+    end.
+    /*закрываем до факта*/
+    find first buf_fin-doc share-lock where
+      recid(buf_fin-doc) = v-doc-rec.
+    assign
+      buf_fin-doc.shift-flag = integer({&fin-flag-shift})
+      .
+    find first fin-doc-attr where fin-doc-attr.host-code    eq buf_fin-doc.host-code
+      and fin-doc-attr.fin-doc-code eq buf_fin-doc.fin-doc-code
+      and fin-doc-attr.attr-code    eq "pre-vedom"
+      exclusive-lock no-error.
+    if not available fin-doc-attr
+      then 
+    do:
+      create fin-doc-attr.
+      assign
+        fin-doc-attr.host-code    = buf_fin-doc.host-code
+        fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code
+        fin-doc-attr.attr-code    = "pre-vedom"
+        .
+    end.
+    define variable mPin as character no-undo.
+      
+    mPin   = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "Pin") .
+      
+    fin-doc-attr.attr-value = substitute("&1;&2;&3;&4;&5;&6;&7"
+      ,mOsnbag
+      ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankDepos-code")
+      ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankRecip-code") 
+      ,mPin
+      ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "SourceCode")
+      ,msumInc-save
+      ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankRecip-acct")).
+    define variable Vparentrec as character no-undo. 
+    if Vparentrec eq ""
+      then
+      Vparentrec = gen-key-rec ("fin-doc",(buffer buf_fin-doc:handle)).
+    find first fin-doc-attr where fin-doc-attr.host-code       eq buf_fin-doc.host-code
+      and fin-doc-attr.fin-doc-code eq buf_fin-doc.fin-doc-code
+      and fin-doc-attr.attr-code    eq "ParentMoney"
+      exclusive-lock no-error.
+    if not available fin-doc-attr
+      then 
+    do:
+      create fin-doc-attr.
+      assign
+        fin-doc-attr.host-code    = buf_fin-doc.host-code
+        fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code
+        fin-doc-attr.attr-code    = "ParentMoney"
+        .
+    end.
+    fin-doc-attr.attr-value = Vparentrec.
+    if mMoney ne ""
+      then 
+    do:
+      find first fin-doc-attr where fin-doc-attr.host-code eq buf_fin-doc.host-code
+        and fin-doc-attr.fin-doc-code eq buf_fin-doc.fin-doc-code
+        and fin-doc-attr.attr-code eq "cover_sheet"
+        exclusive-lock no-error.
+      if not available fin-doc-attr
+        then 
+      do:
+        create fin-doc-attr.
+        assign
+          fin-doc-attr.host-code    = buf_fin-doc.host-code
+          fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code
+          fin-doc-attr.attr-code    = "cover_sheet"
+          .
+      end.
+      fin-doc-attr.attr-value = mMoney.
+      mMoney = "".
+    end.
+      
+    proc-close ( buffer buf_fin-doc) no-error.
+    if error-status :error then 
+    do:
+      put-log("Ошибки при сохранении фин.док-та").
+    END.
+    if buf_fin-doc.status_ <> {&fin-fact} then 
+    do:
+      proc-close ( buffer buf_fin-doc) NO-ERROR.
+      if error-status :error then 
+      do:
+        put-log("Не удалось сменить статус фин.док-та").
+      END.
+    end.
+    if buf_fin-doc.status_ <> {&fin-fact} then 
+    do:
+      proc-close ( buffer buf_fin-doc) no-error .
+      if error-status :error then 
+      do:
+        put-log("Не удалось сменить статус фин.док-та").
+      END.
+    end.
+
+  end.
+  vok = yes.
+  finally:
+    vok = chek_rest() and vok.
+    put-log( string( now) + if  vok then "   Денежные остатки загружены!" else "   Денежные остатки не загружены!") .
+    put-log("").
+    return vok.
+  end finally.
+end method .
+
+method public void proc-close (buffer buf_fin-doc for ub.fin-doc) :
+
+
+define variable v-status_ as character no-undo .
+/*куда перейдет*/
+define variable v-old-status_ as character no-undo .
+/*статус первой записи*/
+define variable v-ask-date as logical no-undo .
+/*дата перехода статуса*/
+define variable v-ask-message as character no-undo .
+/*подтверждающий запрос пользователю */
+define variable v-status-date-chr as character no-undo.
+define variable v-date1 as date no-undo .
+assign
+v-old-status_ = buf_fin-doc.status_
+.
+run trg/findgraf.p (
+                input  buf_fin-doc.host-code
+                ,input  buf_fin-doc.fin-doc-code
+                ,input  {&close-doc}
+                ,input  '' /*много платежей неизвестно можн и ли нет*/
+                ,input  v-old-status_
+                ,input  ?                     /*p-status-date*/
+                ,output v-status_
+                ,output v-ask-date
+                ,output v-ask-message
+                ) no-error.
+if error-status:error then do:
+  return error substitute("Ошибка при проверке возможности &1&2&3"
+                           ,{&close-doc}
+                           , {&new-line}
+                           , return-value ).
+end.
+
+v-date1 = buf_fin-doc.doc-date.
+run trg/findstat.p (
+                  input parparentproc
+                ,input buf_fin-doc.host-code
+                ,input buf_fin-doc.fin-doc-code
+                ,input {&close-doc}
+                ,input {&auto} /*p-author*/
+                ,input v-status_
+                ,input-output v-date1
+                ,input no /*p-silent*/
+                ) no-error .
+if error-status:error then do:
+  return error substitute("Ошибка при переводе статуса финансового документа:&1&2&1&3"
+                           ,{&close-doc}
+                           , {&new-line}
+                           , return-value ).
+
+
+end.
+end method. /* proc-close */
+
+
+method public character gen-key-rec (p-tbl-name    as character,
+p-bh_tbl-name as handle):
+  define variable p-key-rec     as character no-undo.
+    define variable fh               as handle    no-undo .
+    define variable v-ok             as logical   no-undo .
+
+    define variable v-inform         as character no-undo .
+    define variable v-ind            as integer   no-undo .
+    define variable v-idx-field-qnty as integer   no-undo .
+
+    if p-tbl-name = ?
+      or p-tbl-name = "":U
+    then do:
+      return error substitute( "(gen-key-rec). Ошибка задания входных параметров. Не задано имя таблицы." ).
+    end.
+
+    if not p-bh_tbl-name:available then do:
+      return error substitute( "(gen-key-rec). Ошибка задания входных параметров. Переданый буфер таблицы &2 не доступен", p-tbl-name ).
+    end.
+
+    assign
+      p-key-rec = p-tbl-name
+      v-inform  = p-bh_tbl-name:index-information(1)
+      v-ind     = 2
+    .
+    do while v-inform <> ? and entry( 3, v-inform, ",":U ) <> "1":U
+    on error undo, return error
+    :
+      assign
+        v-inform = p-bh_tbl-name:index-information( v-ind )
+        v-ind    = v-ind + 1
+      .
+    end.
+
+    if v-inform = ?
+      or LC( entry( 1, v-inform, ",":U ) ) = "default":U
+      or entry( 3, v-inform, ",":U ) <> "1":U
+    then do:
+      return error substitute( "Таблица &2 не имеет первичного ключа в БД",  p-tbl-name ).
+    end.
+    else do:
+      assign
+        v-idx-field-qnty = num-entries( v-inform ) - 4
+      .
+      if v-idx-field-qnty < 2 then do:
+        return error substitute( "Определенный первичный индекс (&2) не содержит списка полей для таблицы &3", v-inform, p-tbl-name ).
+      end.
+      do v-ind = 1 to v-idx-field-qnty by 2
+      on error undo, return error
+      :
+        assign
+          fh = p-bh_tbl-name:buffer-field( entry( 4 + v-ind, v-inform, ",":U ) ).
+          p-key-rec = p-key-rec + {&delim-key} + substitute("&1", replace(fh:buffer-value(),{&delim-key},{&delim-key-rep}))
+        .
+      end.
+    end.
+
+    if p-key-rec = ? then do:
+      assign
+        p-key-rec = "":U
+      .
+      return error substitute( "&1. Поле(поля) первичного ключа таблицы &2 имеет(ют) неопределенное значение", p-tbl-name ).
+    end.
+
+  return p-key-rec.
+end method. /* gen-key-rec */
+
+method public character StrTax (str as character):
+
+    define variable v-envd as logical no-undo .
+    assign str = " В т.ч.: "  .
+
+    for each tt0-fin-doc-tax :
+      
+      if str <> " В т.ч.: " then str = str + "," .
+      if not tt0-fin-doc-tax.with-vat then assign str = str + "без НДС - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+      else do:
+      if tt-fin-doc.curr-code = 0 then do:
+        assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+      end.
+      else do:
+        assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+      end.  
+    end.
+    if str = " В т.ч.: " then assign str = "" .
+  end.
+  return str .
+end method.
+
+method public void RoundTax() :
+    for each tt0-fin-doc-tax :
+      assign
+        tt0-fin-doc-tax.sum-line-doc       =  ROUND( tt0-fin-doc-tax.sum-line-doc      , 2)
+        tt0-fin-doc-tax.sum-vat-line-doc   =  ROUND( tt0-fin-doc-tax.sum-vat-line-doc  , 2)
+        tt0-fin-doc-tax.sum-line-rubl      =  ROUND( tt0-fin-doc-tax.sum-line-rubl     , 2)
+        tt0-fin-doc-tax.sum-vat-line-rubl  =  ROUND( tt0-fin-doc-tax.sum-vat-line-rubl , 2)
+        tt0-fin-doc-tax.sum-line-base      =  ROUND( tt0-fin-doc-tax.sum-line-base     , 2)
+        tt0-fin-doc-tax.sum-vat-line-base  =  ROUND( tt0-fin-doc-tax.sum-vat-line-base , 2)
+      .
+    end.
+
+END method.
+
 method public logical sendcode(icode as integer ):
    run utl/sendcode.p(this-object,icode,?).
    put-log("").
@@ -2365,6 +3053,10 @@ end method.
 method public logical  chek_rest():
     return can-find (first ub.trn-doc where ub.trn-doc.obj-type = v-cntxt-obj-type
                               and ub.trn-doc.obj-code = v-cntxt-obj-code).
+end  method.
+method public logical  chek_rest_fin():
+    return can-find (first ub.fin-doc where ub.fin-doc.obj-type = v-cntxt-obj-type
+                              and ub.fin-doc.obj-code = v-cntxt-obj-code).
 end  method.
 method public logical  load_rvs(ifile-path as character):
     return load_rvs(mAddr,ifile-path).
