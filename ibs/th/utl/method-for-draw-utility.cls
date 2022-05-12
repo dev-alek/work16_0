@@ -1102,14 +1102,16 @@ method public logical chek_cash_desk():
     
     define variable v-has-records as logical no-undo.
     for each ub.cash-desk no-lock where ub.cash-desk.db-num = v-cntxt-db-num-obj
-                                    and ub.cash-desk.obj-code = v-cntxt-obj-code :
+                                    and ub.cash-desk.obj-code = v-cntxt-obj-code 
+                                    and ub.cash-desk.pos-type <> "IBM-XML":
       v-has-records = true .
       leave.    
     end.
     if not v-has-records
     then
     for each ub.cash-desk-attr no-lock where ub.cash-desk-attr.db-num = v-cntxt-db-num-obj
-                                         and ub.cash-desk-attr.obj-code = v-cntxt-obj-code :
+                                         and ub.cash-desk-attr.obj-code = v-cntxt-obj-code 
+                                         and ub.cash-desk-attr.pos-type <> "IBM-XML":
       v-has-records = true .
       leave.    
     end.
@@ -1158,7 +1160,7 @@ method public void load_cashdesk(iAddr as character ) :
             + " IP: "  + entry(if tt-cash-desk.addr-path eq "" then 1 else num-entries(tt-cash-desk.addr-path, chr(4)) ,
                                tt-cash-desk.addr-path, 
                                chr(4))).       
-                        
+                   
     run ref/cashdsk1.p (
      input-output v-rid
     ,input {&add-def}
