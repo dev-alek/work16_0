@@ -429,7 +429,7 @@ PROCEDURE Characters:
       ErrorMessage = vCurrContent.
     when "STextCheq"
     then do :
-      vCurrContent = vCurrContent .
+      vCurrContent = codepage-convert(vCurrContent, "1251", "UTF-8")  .
       m-textCheq = m-textCheq + vCurrContent .
     end .
   end case.
