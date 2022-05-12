@@ -1347,7 +1347,7 @@ method public character load_cashdesk(iAddr as character ) :
     ,input tt-cash-desk.cash-num
     ,input tt-cash-desk.autonomy
     ,input tt-cash-desk.addr-path 
-    ,input tt-cash-desk.cash-on
+    ,input no
     ,input tt-cash-desk.cash-os
     ,input tt-cash-desk.is-del
     ,input tt-cash-desk.remote
