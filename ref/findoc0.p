@@ -153,7 +153,7 @@ end. /*if not (p-obj-type = '' and p-obj-code = 0)*/
 assign
 v-base-code = buf_sysconf.base-code
 .
-if p-prn-doc-code <> "":U
+if p-prn-doc-code <> "":U and p-prn-doc-code <> "тех_":U
 then do:
   assign
   v-year-start-date = date(1, 1, year(p-doc-date))

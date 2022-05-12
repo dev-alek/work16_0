@@ -2587,7 +2587,7 @@ method public logical load_rest_fin (iaddr as character,
       INPUT parParentProc
       ,INPUT ? /*не надо нам*/
       ,input v-host-code
-      ,input ({&add-def} + {&delim-par} + {&auto})
+      ,input ({&add-def} + {&delim-par} + {&auto} + {&delim-par} + "тех_")
       ,input v-host-code
       ,input v-doc-rec
       ,input 0 /*p-fin-doc-code*/
