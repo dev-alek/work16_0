@@ -2330,16 +2330,16 @@ define buffer buf_goods     for ub.goods .
     .
 
     find first tt-stk-gd2 where tt-stk-gd2.gds-code16 = tt-gds-mapping.gds-code16 no-error .
-    if available tt-stk-gd2 then do :
-      assign
-        tt-stk-gd2.fact-qnty16     = tt-stk-gd2.fact-qnty16     + v-fact-qnty16
-        tt-stk-gd2.sum-rubl-cost16 = tt-stk-gd2.sum-rubl-cost16 + v-sum-rubl-cost16
-        tt-stk-gd2.vat-rubl16      = tt-stk-gd2.vat-rubl16      + v-vat-rubl16
-        tt-stk-gd2.sum-rubl-crsa16 = tt-stk-gd2.sum-rubl-crsa16 + v-sum-rubl-crsa16
-        v-count-confirm = v-count-confirm + 1
-      no-error .
-    end .
-    else do :
+    if not available tt-stk-gd2 then do :
+/*      assign                                                                       */
+/*        tt-stk-gd2.fact-qnty16     = tt-stk-gd2.fact-qnty16     + v-fact-qnty16    */
+/*        tt-stk-gd2.sum-rubl-cost16 = tt-stk-gd2.sum-rubl-cost16 + v-sum-rubl-cost16*/
+/*        tt-stk-gd2.vat-rubl16      = tt-stk-gd2.vat-rubl16      + v-vat-rubl16     */
+/*        tt-stk-gd2.sum-rubl-crsa16 = tt-stk-gd2.sum-rubl-crsa16 + v-sum-rubl-crsa16*/
+/*        v-count-confirm = v-count-confirm + 1                                      */
+/*      no-error .                                                                   */
+/*    end .                                                                          */
+/*    else do :                                                                      */
       create tt-stk-gd2 .
       buffer-copy tt-stk-gd to tt-stk-gd2 assign
         tt-stk-gd2.gds-code16      = tt-gds-mapping.gds-code16
