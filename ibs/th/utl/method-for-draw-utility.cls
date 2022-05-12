@@ -1669,15 +1669,14 @@ method public void load_user(iAddr as character ) :
   /* Delete all objects created by this procedure to avoid memory leaks */
   
   put-log( string(now) + "   Начинаем загрузку пользователей...") .
-  
+
   user_:
   for each tt-user-account where tt-user-account.status_ = {&bef-user-status-normal} exclusive-lock,
     first buf_tt-user-login where buf_tt-user-login.user-id = tt-user-account.user-id:
 
     put-log(  "Пользователь " + string(tt-user-account.user-id) ).
 
-    find first buf_user-account exclusive-lock where buf_user-account.first-name = tt-user-account.first-name 
-      and buf_user-account.last-name = tt-user-account.last-name and buf_user-account.second-name = tt-user-account.second-name no-error .
+    find first buf_user-account exclusive-lock where buf_user-account.user-id = tt-user-account.user-id no-error .
     if available (buf_user-account) then 
     do:
       next user_ .
