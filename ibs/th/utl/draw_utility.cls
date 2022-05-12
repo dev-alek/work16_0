@@ -98,10 +98,11 @@ class ibs.th.utl.draw_utility inherits Form:
          textBox1:text = "localhost:8080".
       textBox2:text = getPARAM("correspondence_gds").
       textBox3:text = getPARAM("correspondence_supp").
+
     catch e as Progress.Lang.Error:
       undo, throw e.
     end catch.
-
+    
   end constructor.
   
 	/*------------------------------------------------------------------------------
@@ -385,25 +386,29 @@ class ibs.th.utl.draw_utility inherits Form:
        view-as alert-box.
        return.
     end.      
+
     mutil:mAddr = textbox1:Text.
-    checkBox19:checked = mutil:chek_rest().
-    checkBox20:checked = checkBox19:checked.
-    checkBox30:checked = mutil:chek_rest_fin().
-    if not checkBox19:checked
-    then
+    if checkBox19:checked and checkBox19:Enabled = true
+    then do:
        checkBox19:checked = mutil:load_rest(textbox3:text,textbox2:text,"").
     if not checkBox19:checked
       then return.
-    if not checkBox20:checked
-    then
+    else checkBox19:Enabled = false .
+    end.  
+    if checkBox20:checked and checkBox20:Enabled = true
+    then do:
        checkBox20:checked = mutil:load_rest_ptrl(textbox3:text,textbox2:text,"").
     if not checkBox20:checked
       then return.
-    if not checkBox30:checked
-    then
+    else checkBox20:Enabled = false .
+    end. 
+    if checkBox30:checked and checkBox30:Enabled = true
+    then do:
        checkBox30:checked = mutil:load_rest_fin(textbox3:text,textbox2:text,Lincasagent:Text,"").
     if not checkBox30:checked
-      then return.      
+      then return.
+    else checkBox30:Enabled = false .  
+    end.       
    end method.
    
    method private void close_shift(  ):
@@ -457,13 +462,16 @@ class ibs.th.utl.draw_utility inherits Form:
      checkBox25:checked = if v-log-param then true else false.
      /* и таблица с пользователями тоже заполнена, но, возможно, не полностью */
      v-log-param = logical( getPARAM("darw_util_user") ) no-error .      
-     checkBox26:checked = if v-log-param then true else false.
-     
-     checkBox19:checked = mutil:chek_rest().
-     checkBox20:checked = checkBox19:checked.
-     checkBox27:checked = mutil:chek_schedule().
-     checkBox28:checked = mutil:chek_schedule().
-     checkBox29:checked = mutil:chek_fbrgds().
+    checkBox26:checked = if v-log-param then true else false.
+    checkBox19:checked = mutil:chek_rest().
+    if checkBox19:Checked then checkBox19:Enabled = false .
+    checkBox20:checked = mutil:chek_rest_ptrl().
+    if checkBox20:Checked then checkBox20:Enabled = false .
+    checkBox30:checked = mutil:chek_rest_fin().
+    if checkBox30:Checked then checkBox30:Enabled = false .
+    checkBox27:checked = mutil:chek_schedule().
+    checkBox28:checked = mutil:chek_schedule().
+    checkBox29:checked = mutil:chek_fbrgds().
   end method .  
   
   method private void BtnStart():
@@ -1046,7 +1054,6 @@ class ibs.th.utl.draw_utility inherits Form:
     /*  */
     /* checkBox30 */
     /*  */
-    this-object:checkBox30:Enabled = false.
     this-object:checkBox30:Location = new System.Drawing.Point(117, 88).
     this-object:checkBox30:Name = "checkBox30".
     this-object:checkBox30:Size = new System.Drawing.Size(223, 24).
@@ -1058,7 +1065,6 @@ class ibs.th.utl.draw_utility inherits Form:
     /*  */
     /* checkBox20 */
     /*  */
-    this-object:checkBox20:Enabled = false.
     this-object:checkBox20:Location = new System.Drawing.Point(117, 58).
     this-object:checkBox20:Name = "checkBox20".
     this-object:checkBox20:Size = new System.Drawing.Size(223, 24).
@@ -1069,12 +1075,11 @@ class ibs.th.utl.draw_utility inherits Form:
     /*  */
     /* checkBox19 */
     /*  */
-    this-object:checkBox19:Enabled = false.
     this-object:checkBox19:Location = new System.Drawing.Point(117, 27).
     this-object:checkBox19:Name = "checkBox19".
     this-object:checkBox19:Size = new System.Drawing.Size(223, 24).
     this-object:checkBox19:TabIndex = 1.
-    this-object:checkBox19:Text = "Перенос остатков".
+    this-object:checkBox19:Text = "Перенос остатков по товару".
     this-object:checkBox19:UseCompatibleTextRendering = true.
     this-object:checkBox19:UseVisualStyleBackColor = true.
     /*  */

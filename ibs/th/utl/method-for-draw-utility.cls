@@ -3051,9 +3051,34 @@ method public logical sendcode(icode as integer ):
    return yes.
 end method.
 method public logical  chek_rest():
-    return can-find (first ub.trn-doc where ub.trn-doc.obj-type = v-cntxt-obj-type
-                              and ub.trn-doc.obj-code = v-cntxt-obj-code).
+                  for each ub.trn-doc no-lock where ub.trn-doc.obj-type = v-cntxt-obj-type
+                    and ub.trn-doc.obj-code = v-cntxt-obj-code,
+                    each ub.doc-line no-lock where ub.doc-line.doc-code = ub.trn-doc.doc-code:
+                    for first ub.goods no-lock where ub.goods.artic = ub.doc-line.artic and
+                      ub.goods.prod-code = ub.doc-line.prod-code and
+                      ub.goods.prod-type = ub.doc-line.prod-type,
+                      first ub.units no-lock where ub.units.unit-name = ub.goods.unit-base:
+                      if lookup( {&petrolium}, ub.units.type ) > 0 then next .
+                      else return yes .
+                    end.
+                  end.                              
+                  return no .
 end  method.
+method public logical  chek_rest_ptrl():
+                  for each ub.trn-doc no-lock where ub.trn-doc.obj-type = v-cntxt-obj-type
+                    and ub.trn-doc.obj-code = v-cntxt-obj-code,
+                    each ub.doc-line no-lock where ub.doc-line.doc-code = ub.trn-doc.doc-code:
+                    for first ub.goods no-lock where ub.goods.artic = ub.doc-line.artic and
+                      ub.goods.prod-code = ub.doc-line.prod-code and
+                      ub.goods.prod-type = ub.doc-line.prod-type,
+                      first ub.units no-lock where ub.units.unit-name = ub.goods.unit-base:
+                      if lookup( {&petrolium}, ub.units.type ) > 0 then return yes .
+                      else next .
+                    end.
+                  end.                              
+                  return no .
+end  method.
+
 method public logical  chek_rest_fin():
     return can-find (first ub.fin-doc where ub.fin-doc.obj-type = v-cntxt-obj-type
                               and ub.fin-doc.obj-code = v-cntxt-obj-code).
