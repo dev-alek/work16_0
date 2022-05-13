@@ -142,6 +142,7 @@ define variable v-value-decimal             as decimal   no-undo .
 define variable v-value-integer             as INTEGER   no-undo .
 define variable v-value-logical             AS LOGICAL   no-undo .
 define variable v-tth                       as handle    no-undo .
+define variable v-prefix-fin-doc            as character no-undo .
 define variable mCashBook                   as class     ibs.th.ref.cashbookstorage no-undo .
 assign
   v-tth = buffer thbjattr_thbj-attr:table-handle .
@@ -184,7 +185,11 @@ do
   :
 
   { gbl/getcntxt.i get }
+  
   assign
+    v-prefix-fin-doc = (if num-entries(p-mode, {&delim-par}) > 2
+            then entry(3, p-mode, {&delim-par})
+            else '':U)    
     v-author = (if num-entries(p-mode, {&delim-par}) > 1
             then entry(2, p-mode, {&delim-par})
             else '':U)
@@ -785,7 +790,7 @@ do:
     v-fin-doc-code              = tt-fin-doc.fin-doc-code
     tt-fin-doc.fin-doc-type     = p-fin-doc-type
     tt-fin-doc.fin-ext-doc-type = p-fin-ext-doc-type
-    tt-fin-doc.prn-doc-code     = "":U /*todo*/
+    tt-fin-doc.prn-doc-code     = v-prefix-fin-doc + "":U /*todo*/
     tt-fin-doc.status_          = {&fin-new}
     tt-fin-doc.user-db-num-doc  = v-cntxt-db-num
     tt-fin-doc.user-name-doc    = v-cntxt-userid

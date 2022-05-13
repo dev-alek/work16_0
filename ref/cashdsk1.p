@@ -983,9 +983,11 @@ ON STOP UNDO, RETURN ERROR return-value :
           temp-cash-desk.addr-path = string(buf_cash-desk.cash-num).
         end.
       end.
-      assign
-      ii-num-cd = ii-num-cd + 1
-      .
+        if temp-cash-desk.cash-on then do:
+        assign
+        ii-num-cd = ii-num-cd + 1
+        .
+        end.
     end.
     if p-mode = {&add-def} then do:
       if not p-is-del then do:
@@ -1003,9 +1005,11 @@ ON STOP UNDO, RETURN ERROR return-value :
         temp-cash-desk.autonomy  = p-autonomy
         temp-cash-desk.is-del    = p-is-del
         .
+        if temp-cash-desk.cash-on then do:
         assign
         ii-num-cd = ii-num-cd + 1
         .
+        end.
       end.
     end.
     for each temp-cash-desk

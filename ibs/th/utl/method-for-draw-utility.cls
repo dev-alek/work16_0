@@ -22,6 +22,7 @@ class ibs.th.utl.method-for-draw-utility final:
   define public variable Obj-type      as character  no-undo.
   define public variable Obj-code      as integer    no-undo.
   define public variable v-host-code as integer no-undo .
+  define public variable mDebug as logical no-undo.
   { cmp/library.i class}
   define property parparentproc as handle no-undo
   get.
@@ -35,7 +36,7 @@ class ibs.th.utl.method-for-draw-utility final:
   define public variable mAddr         as character no-undo.
   //define public variable mlogHand      as handle no-undo. 
   
-  
+
  
   {cmp/str-glbl.i class}
   &glob defined_parparentproc = yes 
@@ -50,8 +51,16 @@ class ibs.th.utl.method-for-draw-utility final:
   define temp-table tt-gds-prod
     field gds-code as integer
     field b-str as character
-    index pi as primary unique  gds-code
+    field bc-on-type as character
+    index pi as primary unique  gds-code b-str
 .
+define temp-table tt-rest-fin
+  field obj-code as integer
+  field obj-type as character
+  field CashBookId like ub.CashBook.id
+  field ostatok as decimal
+  index pi is primary obj-code obj-type CashBookId
+  .
 define temp-table tt-place          like ub.place .
 define temp-table tt-place-attr     like ub.place-attr .
 define temp-table tt-pump           like ub.pump .
@@ -62,10 +71,58 @@ define temp-table tt-pl-pump-nozzle like ub.pl-pump-nozzle .
 define temp-table tt-pl-level       like ub.pl-level .
 define temp-table tt-pl-gds         like ub.pl-gds .
 define temp-table tt-pl-gds-pump    like ub.pl-gds-pump .
-define temp-table tt-cash-desk      like ub.cash-desk .
+define temp-table tt-cash-desk      like ub.cash-desk 
+  field isSave as logical.
 define temp-table tt-cash-desk-attr like ub.cash-desk-attr
   field attr-value as character 
 .
+
+define temp-table temp-fin-sum no-undo
+field cash-desk  as integer
+field curr-code as integer
+field tot-sum as decimal
+field tot-base as decimal
+field tot-rubl as decimal
+field is-petrol as logical
+field cashbookid as int64
+field is-expense_cash as logical
+field num-expense_cash as int
+index pi is unique primary
+num-expense_cash is-expense_cash cash-desk curr-code is-petrol cashbookid
+.
+
+define temp-table temp-tax no-undo
+field with-vat as logical init yes
+field curr-code as integer
+field vat-pc as decimal
+field slt-pc as decimal
+field vat-base as decimal
+field vat-rubl as decimal
+field vat-doc as decimal
+field sum-base as decimal
+field sum-rubl as decimal
+field sum-doc as decimal
+field cash-desk  as integer
+field is-petrol as logical
+field cashbookId as int64
+field is-expense_cash as logical
+field num-expense_cash as int
+index pi is unique primary
+num-expense_cash
+is-expense_cash
+cash-desk
+curr-code
+vat-pc
+slt-pc
+is-petrol
+cashbookId
+.
+
+define temp-table tt0-fin-doc-tax like ub.fin-doc-tax .
+define temp-table tt0-fin-doc-attr like ub.fin-doc-attr .
+define temp-table tt-fin-doc like ub.fin-doc .
+DEFINE TEMP-TABLE ttc-fin-doc NO-UNDO LIKE ub.fin-doc.
+DEFINE TEMP-TABLE tt0-payment NO-UNDO LIKE ub.payment.
 
 define temp-table tt-user-account     like ub.user-account .
 define temp-table tt-user-login       like ub.user-login .
@@ -76,6 +133,17 @@ define temp-table tt-user-menu-group  like ub.user-menu-group .
 define temp-table tt-schedule         like ub.schedule .
 define temp-table tt-schedule-attr    like ub.schedule-attr .
 
+define temp-table tt-auto-schedule like ub.schedule .
+define temp-table tt-auto-schedule-attr like ub.schedule-attr .
+define temp-table tt-fbr-gds-obj       like ub.fbr-gds-obj .
+define temp-table tt-fbr-gds-obj-attr  like ub.fbr-gds-obj-attr .
+
+   define variable v-cash-num    as integer   no-undo .
+   define variable v-string-cash as character no-undo .
+   define variable v-RfNumber    as integer   no-undo .
+   define variable v-cash-rf     as integer   no-undo .
+   define variable v-send-Rf     as logical   no-undo .
+  
 define temp-table tt-rvs-doc          like ub.rvs-doc 
     field Findex as logical
     index pi FINdex.
@@ -186,6 +254,8 @@ define stream lsOUT.
     super ().
     mplacelib = new ibs.th.str.placelib().
     mParser = new ObjectModelParser().
+
+    mDebug = session:debug-alert.
    /* output to {&namelogfile} .
     output close.*/
   end constructor.
@@ -552,7 +622,7 @@ method public void load_schem (iAddr as character, ifile-path as character ):
   empty temp-table tt-pl-level. 
   empty temp-table tt-pl-gds. 
   empty temp-table tt-pl-gds-pump. 
-   cmd = substitute ("&1 &2/THGetInfo?GetSchem >&3", search ("exe/curl.exe"), iAddr, "schem-temp.json").
+   cmd = substitute ("&1 --http0.9 &2/THGetInfo?GetSchem >&3", search ("exe/curl.exe"), iAddr, "schem-temp.json").
   os-command silent value (cmd).
   put-log(string (now) + "   Разбираем полученные данные...").
   fix-codepage_and_SetJsonObj (input "schem-temp.json") .
@@ -573,7 +643,7 @@ method public void load_schem (iAddr as character, ifile-path as character ):
   /* Delete all objects created by this procedure to avoid memory leaks */
   //  delete object myResultObj no-error.
   //delete object results-array no-error.
-  
+
   for each tt-gds-prod no-lock :
     find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-gds-prod.gds-code no-error .
     if not available tt-gds-mapping
@@ -586,6 +656,19 @@ method public void load_schem (iAddr as character, ifile-path as character ):
     then do :
        put-log(("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) ).
       undo, return error ("Нет топлива с кодом " + string(tt-gds-mapping.gds-code16) + " . Код в v15.0 - " + string(tt-gds-mapping.gds-code15)) .
+    end.
+    else do:
+       find first ub.prod-bc no-lock where ub.prod-bc.b-code = ub.goods.gds-code and ub.prod-bc.b-str = tt-gds-prod.b-str no-error .
+       if not available (ub.prod-bc) then do:
+          create ub.prod-bc.
+          assign
+          ub.prod-bc.b-code = ub.goods.gds-code
+          ub.prod-bc.b-str = tt-gds-prod.b-str
+          ub.prod-bc.bc-on = true
+          ub.prod-bc.bc-on-type = tt-gds-prod.bc-on-type
+          ub.prod-bc.cr-db-num = v-cntxt-db-num-obj
+          .
+       end.
     end.
   end. 
   
@@ -825,6 +908,10 @@ put-Log(return-value).
   end.
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("schem-temp.json") .
+     os-delete value("schem.json") .
+     end.
      if vflag then
         put-log( string(now) + "   Топология загружена!" ).
      else
@@ -923,6 +1010,17 @@ method public logical chek_schedule():
     return  v-has-records.
 end method.
 
+method public logical chek_fbrgds():
+
+    define variable v-has-records as logical no-undo.
+    for each ub.fbr-gds-obj no-lock where ub.fbr-gds-obj.obj-code = v-cntxt-obj-code and ub.fbr-gds-obj.obj-type = v-cntxt-obj-type and
+    ub.fbr-gds-obj.is-modificator = true :
+      v-has-records = true .
+      leave.
+    end.
+    return  v-has-records.
+end method.
+
 method public void load_schedule ():
   define variable v-file-sch as character no-undo .
   define variable v-file-attr as character no-undo .
@@ -993,6 +1091,10 @@ method public void load_schedule ():
   
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("schem-temp.json") .
+     os-delete value("schem.json") .
+     end.
      if vflag then
         put-log( string(now) + "   Расписания для автозаданий созданы!") .
      else
@@ -1001,52 +1103,244 @@ method public void load_schedule ():
   
 end. 
 
+method public void load_auto_schedule ():
+  load_auto_schedule(mAddr ).
+end.
+
+method public void load_auto_schedule (iAddr as character):
+  define variable v-rid as recid no-undo .
+  define variable vcmd  as character no-undo.
+  define variable vFlag as logical no-undo.
+  
+  define buffer buf_schedule for ub.schedule .
+  define buffer buf_schedule-attr for ub.schedule-attr .
+  
+  empty temp-table tt-auto-schedule.
+  empty temp-table tt-auto-schedule-attr.
+
+  put-log(string (now) + "   Отправляем запрос для получения расписаний и автопроцессов...").
+  
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetAutoSched >&3", search ("exe/curl.exe"), iAddr, "auto-schedule-temp.json").
+  os-command silent value (vcmd).
+  put-log(string (now) + "   Разбираем полученные данные...").
+  fix-codepage_and_SetJsonObj (input "auto-schedule-temp.json") .
+  
+  
+  parse-json(input temp-table tt-auto-schedule:default-buffer-handle, input "schedule") .
+  parse-json(input temp-table tt-auto-schedule-attr:default-buffer-handle, input "schedule-attr") .
+  
+  /* Delete all objects created by this procedure to avoid memory leaks */
+  
+  put-log( string(now) + "   Начинаем загрузку расписаний и автопроцессов...") .
+
+  for each tt-auto-schedule :
+    put-log(  "Тип процесса " + tt-auto-schedule.task-type 
+            + " Номер задачи" + string(tt-auto-schedule.task-num)).       
+
+    if tt-auto-schedule.task-num = ? or tt-auto-schedule.task-num <= 0 then next .
+    find first buf_schedule exclusive-lock where buf_schedule.cre-db-num = v-cntxt-db-num and
+                                                 buf_schedule.task-type = tt-auto-schedule.task-type  and
+                                                 buf_schedule.task-num = tt-auto-schedule.task-num no-error .
+    if available (buf_schedule) then do:
+       buf_schedule.active = tt-auto-schedule.active .
+       buf_schedule.db-num-char = tt-auto-schedule.db-num-char .
+       buf_schedule.task-hour = tt-auto-schedule.task-hour .
+       buf_schedule.task-minute = tt-auto-schedule.task-minute .
+    end.
+    else do:
+    create buf_schedule.
+    buffer-copy tt-auto-schedule to buf_schedule no-error.
+    if error-status:error then do:
+       put-Log(return-value).
+      undo, return error return-value.
+    end.
+    end.
+    for each tt-auto-schedule-attr where tt-auto-schedule-attr.task-type = tt-auto-schedule.task-type and
+                                         tt-auto-schedule-attr.task-num = tt-auto-schedule.task-num :
+    find first buf_schedule-attr exclusive-lock where buf_schedule-attr.cre-db-num = tt-auto-schedule-attr.cre-db-num and
+                                                      buf_schedule-attr.task-type = tt-auto-schedule-attr.task-type  and
+                                                      buf_schedule-attr.task-num = tt-auto-schedule-attr.task-num and
+                                                      buf_schedule-attr.attr-code = tt-auto-schedule-attr.attr-code no-error .    
+    if not available (buf_schedule-attr) then do:
+    create buf_schedule-attr.
+    buffer-copy tt-auto-schedule-attr to buf_schedule-attr no-error.
+    if error-status:error then do:
+       put-Log(return-value).
+      undo, return error return-value.
+    end.     
+    buf_schedule-attr.attr-code = replace(string(buf_schedule-attr.attr-code),"|",{&delim-par}).  
+    end.                                      
+    end.                                            
+   end.
+  vflag  = yes.
+  finally:
+     if not mDebug then do:
+     os-delete value("auto-schedule-temp.json") .
+     os-delete value("schedule.json") .
+     end.
+     if vflag then
+        put-log( string(now) + "   Расписание и автозадания загружены!") .
+     else
+        put-log( string(now) + "   Расписание и автозадания не загружены!") .
+  end finally.
+end. 
+
+method public void  load_fbrgds (ifile-path as character ):
+  load_fbrgds (maddr,ifile-path ).
+end method .   
+
+method public void  load_fbrgds (iAddr as character,ifile-path as character ):
+  define variable v-rid as recid no-undo .
+  define variable vcmd  as character no-undo.
+  define variable vFlag as logical no-undo.
+  
+  define buffer buf_fbr-gds-obj for ub.fbr-gds-obj .
+  
+  empty temp-table tt-fbr-gds-obj.
+
+  put-log(string (now) + "   Отправляем запрос для получения атрибутов автопроизводства...").
+
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetFbrGds >&3", search ("exe/curl.exe"), iAddr, "fbrgds-temp.json").
+  os-command silent value (vcmd).
+  put-log(string (now) + "   Разбираем полученные данные...").
+  fix-codepage_and_SetJsonObj (input "fbrgds-temp.json") .
+  
+  parse-json(input temp-table tt-fbr-gds-obj:default-buffer-handle, input "fbr-gds-obj") .
+  
+  /* Delete all objects created by this procedure to avoid memory leaks */
+  
+  put-log( string(now) + "   Начинаем загрузку атрибутов автопроизводства...") .
+
+  for each tt-fbr-gds-obj no-lock :
+    find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-fbr-gds-obj.gds-code no-error .
+    if available tt-gds-mapping
+    then do :
+      if tt-gds-mapping.gds-code15 = 0 or tt-gds-mapping.gds-code15 = ?
+      or tt-gds-mapping.gds-code16 = 0 or tt-gds-mapping.gds-code16 = ?
+      then next .
+      find first ub.goods no-lock where ub.goods.gds-code = tt-gds-mapping.gds-code16 no-error.
+      if available ub.goods
+      then do :
+        find first buf_fbr-gds-obj exclusive-lock where buf_fbr-gds-obj.gds-code = ub.goods.gds-code and
+                                                 buf_fbr-gds-obj.obj-code = v-cntxt-obj-code and
+                                                 buf_fbr-gds-obj.obj-type = v-cntxt-obj-type no-error .
+         if not available (buf_fbr-gds-obj) then do:
+/*            create buf_fbr-gds-obj .                                                              */
+/*            assign                                                                                */
+/*            buf_fbr-gds-obj.gds-code = ub.goods.gds-code                                          */
+/*            buf_fbr-gds-obj.obj-code = v-cntxt-obj-code                                           */
+/*            buf_fbr-gds-obj.obj-type = v-cntxt-obj-type                                           */
+/*            .                                                                                     */
+/*            buffer-copy tt-fbr-gds-obj except tt-fbr-gds-obj.obj-code                             */
+/*                                             tt-fbr-gds-obj.obj-type                              */
+/*                                             tt-fbr-gds-obj.gds-code to buf_fbr-gds-obj no-error .*/
+/*                                       if error-status:error then                                 */
+/*                                       do:                                                        */
+/*                                          put-Log(return-value).                                  */
+/*                                          undo, return error return-value.                        */
+/*                                       end.                                                       */
+        put-err-log(
+          "Товар с кодом " + string(tt-gds-mapping.gds-code16) + " .Код в 15.0 " + string(tt-fbr-gds-obj.gds-code) + " " + 
+          "Не имеет атрибуты производства в 16 версии").
+           next .
+
+         end.  
+         else do:
+           if tt-fbr-gds-obj.is-menu <> buf_fbr-gds-obj.is-menu then do:
+        put-err-log(
+          "Товар с кодом " + string(tt-gds-mapping.gds-code16) + " .Код в 15.0 " + string(tt-fbr-gds-obj.gds-code) + " " + 
+          "Атрибут: Является блюдом меню, в 15 версии имеет значение: " + string(tt-fbr-gds-obj.is-menu) + " а в 16 " + string (buf_fbr-gds-obj.is-menu)).
+           next .
+           end.  
+           else buf_fbr-gds-obj.is-modificator = tt-fbr-gds-obj.is-modificator .
+           buffer-copy tt-fbr-gds-obj except tt-fbr-gds-obj.obj-code 
+                                             tt-fbr-gds-obj.obj-type 
+                                             tt-fbr-gds-obj.gds-code 
+                                             tt-fbr-gds-obj.is-menu 
+                                             tt-fbr-gds-obj.is-modificator to buf_fbr-gds-obj no-error .
+                                                  if error-status:error then 
+                                       do:
+                                          put-Log(return-value).
+                                          undo, return error return-value.
+                                       end. 
+         end.                                                
+      end.
+      else do :
+        put-err-log(
+          "Не найден товар с кодом " + string(tt-gds-mapping.gds-code16) + " .Код в 15.0 " + string(tt-fbr-gds-obj.gds-code)).
+      end. 
+    end.
+    else do :
+      put-err-log(
+        "В файле соответствия " + ifile-path + " нет данных по товару с кодом " + string(tt-fbr-gds-obj.gds-code)).
+    end.
+  end.
+  vflag  = yes.
+  finally:
+     if not mDebug then do:
+     os-delete value("fbrgds-temp.json") .
+     os-delete value("fbrgds.json") .
+     end.
+     if vflag then
+        put-log( string(now) + "   Атрибуты автопроизводства загружены!") .
+     else
+        put-log( string(now) + "   Атрибуты автопроизводства не загружены!") .
+  end finally.
+end. 
+
 method public logical chek_cash_desk():
     
     define variable v-has-records as logical no-undo.
     for each ub.cash-desk no-lock where ub.cash-desk.db-num = v-cntxt-db-num-obj
-                                    and ub.cash-desk.obj-code = v-cntxt-obj-code :
+                                    and ub.cash-desk.obj-code = v-cntxt-obj-code 
+                                    and ub.cash-desk.pos-type <> "IBM-XML":
       v-has-records = true .
       leave.    
     end.
     if not v-has-records
     then
     for each ub.cash-desk-attr no-lock where ub.cash-desk-attr.db-num = v-cntxt-db-num-obj
-                                         and ub.cash-desk-attr.obj-code = v-cntxt-obj-code :
+                                         and ub.cash-desk-attr.obj-code = v-cntxt-obj-code 
+                                         and ub.cash-desk-attr.pos-type <> "IBM-XML":
       v-has-records = true .
       leave.    
     end.
     return  v-has-records.
 end method.
 // Перенос справочника касс 
-method public void load_cashdesk ():
-  load_cashdesk(mAddr ).
+method public character load_cashdesk ():
+  return load_cashdesk(mAddr ).
 end. 
  
-method public void load_cashdesk(iAddr as character ) :
+method public character load_cashdesk(iAddr as character ) :
   define variable v-rid as recid no-undo .
   define variable vcmd  as character no-undo.
   define variable vFlag as logical no-undo.
+  define variable v-addr-path as character no-undo .
+  define buffer buf_tt-cash-desk for tt-cash-desk .
+  define buffer bf_tt-cash-desk  for tt-cash-desk .
+  define variable isCashDesk as logical no-undo init true .
   empty temp-table tt-cash-desk.
   empty temp-table tt-cash-desk-attr.
  
   put-log(string (now) + "   Отправляем запрос для получения касс...").
   
   
-  vcmd = substitute ("&1 &2/THGetInfo?GetCashDesk >&3", search ("exe/curl.exe"), iAddr, "cashdesk-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetCashDesk >&3", search ("exe/curl.exe"), iAddr, "cashdesk-temp.json").
   os-command silent value (vcmd).
   put-log(string (now) + "   Разбираем полученные данные...").
   fix-codepage_and_SetJsonObj (input "cashdesk-temp.json") .
-  
   
   parse-json(input temp-table tt-cash-desk:default-buffer-handle, input "cash-desk") .
   parse-json(input temp-table tt-cash-desk-attr:default-buffer-handle, input "cash-desk-attr") .
   
   /* Delete all objects created by this procedure to avoid memory leaks */
-  
   put-log( string(now) + "   Начинаем загрузку касс...") .
-  
-  for each tt-cash-desk where not tt-cash-desk.is-del exclusive-lock :
+  v-cash-num = 0 .
+
+  for each tt-cash-desk where exclusive-lock by tt-cash-desk.cash-num by tt-cash-desk.pos-type:
+    if tt-cash-desk.is-del then next . 
+
     tt-cash-desk.addr-path = replace(tt-cash-desk.addr-path, "|", chr(4)) .
     for first tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
                                          and tt-cash-desk-attr.obj-code = tt-cash-desk.obj-code
@@ -1055,40 +1349,131 @@ method public void load_cashdesk(iAddr as character ) :
                                          and tt-cash-desk-attr.attr-code = "fr-type" :
       tt-cash-desk.fr-type = tt-cash-desk-attr.attr-value .                                    
     end.          
-     
-    put-log(  "Касса " + tt-cash-desk.pos-type 
-            + " №"     + string(tt-cash-desk.cash-num) 
-            + " IP: "  + entry(if tt-cash-desk.addr-path eq "" then 1 else num-entries(tt-cash-desk.addr-path, chr(4)) ,
-                               tt-cash-desk.addr-path, 
-                               chr(4))).       
-                        
+    end.
+
+   do while isCashDesk:
+   if can-find (first tt-cash-desk where tt-cash-desk.isSave = false) then 
+   do:
+     load_cashdesk1 () .
+   end.
+   else isCashDesk = false .
+   end.
+   
+  v-string-cash = trim(v-string-cash,";") .
+
+  vflag  = yes.
+
+  finally:
+     if not mDebug then do:
+     os-delete value("cashdesk-temp.json") .
+     os-delete value("cashdesk.json") .
+     end.     
+     if vflag then do:
+        if v-RfNumber <> 0 then v-string-cash = string(v-cash-rf) + {&delim-par} + string(v-RfNumber) + {&delim-par} + v-string-cash .
+        find first ub.cash-desk-attr exclusive-lock where ub.cash-desk-attr.attr-code = "string-cash" and
+                                                          ub.cash-desk-attr.cash-num = 0 and
+                                                          ub.cash-desk-attr.db-num = v-cntxt-db-num and
+                                                          ub.cash-desk-attr.obj-code = v-cntxt-obj-code no-error .
+        if not available (ub.cash-desk-attr) then do:
+        create ub.cash-desk-attr .
+        assign
+        ub.cash-desk-attr.attr-code = "string-cash"
+        ub.cash-desk-attr.cash-num = 0
+        ub.cash-desk-attr.db-num = v-cntxt-db-num
+        ub.cash-desk-attr.obj-code = v-cntxt-obj-code
+        . 
+        end.
+        ub.cash-desk-attr.attr-value-character = v-string-cash .
+        
+        put-log( string(now) + "   Кассы загружены!") .
+        return v-string-cash .
+     end.
+     else do:
+        put-log( string(now) + "   Кассы не загружены!") .
+        return "" .
+     end.   
+  end finally.
+end method.
+
+method public void load_cashdesk1() :
+  define variable v-rid as recid no-undo .
+  define variable v-addr-path as character no-undo .
+  define buffer buf_tt-cash-desk for tt-cash-desk .
+  define variable v-send as logical no-undo .
+ 
+    for each tt-cash-desk where not tt-cash-desk.is-del and not tt-cash-desk.isSave exclusive-lock:
+       v-send = false .  
+       find first buf_tt-cash-desk where not buf_tt-cash-desk.isSave and buf_tt-cash-desk.pos-type = "Autotank" and buf_tt-cash-desk.autonomy = 2 no-error .
+       if available (buf_tt-cash-desk) then do:
+          buf_tt-cash-desk.isSave = true .
+          if integer(entry (2,buf_tt-cash-desk.addr-path,":")) = 7999 then 
+          v-addr-path = entry (1,buf_tt-cash-desk.addr-path,":") .
+       end.
+       else do:
+       find first buf_tt-cash-desk where not buf_tt-cash-desk.isSave and buf_tt-cash-desk.pos-type = "IBM-XML" no-error .
+       if available (buf_tt-cash-desk) then do:
+          v-cash-num = v-cash-num + 1 .
+          if v-addr-path = entry (1,buf_tt-cash-desk.addr-path,":") then do: 
+             v-cash-rf = v-cash-num .
+             v-send-Rf = true .
+          end.     
+          buf_tt-cash-desk.isSave = true .
+          
+       end.
+       else do:
+       find first buf_tt-cash-desk where not buf_tt-cash-desk.isSave and buf_tt-cash-desk.pos-type = "Autotank" no-error .
+       if available (buf_tt-cash-desk) then do:
+          v-cash-num = v-cash-num + 1 .
+          if v-send-Rf then v-RfNumber = v-cash-num .
+          v-send-Rf = false .
+          buf_tt-cash-desk.isSave = true .
+          
+       end.
+       end .   
+       end.
+
+        put-log(  "Касса " + buf_tt-cash-desk.pos-type 
+            + " №"     + string(buf_tt-cash-desk.cash-num) 
+            + " IP: "  + entry(if buf_tt-cash-desk.addr-path eq "" then 1 else num-entries(buf_tt-cash-desk.addr-path, chr(4)) ,
+                               buf_tt-cash-desk.addr-path, 
+                               chr(4))).      
+
+    if buf_tt-cash-desk.cash-num <> v-cash-num then
+    assign
+    buf_tt-cash-desk.cash-num = v-cash-num 
+    v-send = true .
+
     run ref/cashdsk1.p (
      input-output v-rid
     ,input {&add-def}
     ,input v-cntxt-db-num-obj
     ,input v-cntxt-obj-code
-    ,input tt-cash-desk.pos-type
-    ,input tt-cash-desk.cash-num
-    ,input tt-cash-desk.autonomy
-    ,input tt-cash-desk.addr-path 
+    ,input buf_tt-cash-desk.pos-type
+    ,input buf_tt-cash-desk.cash-num
+    ,input buf_tt-cash-desk.autonomy
+    ,input buf_tt-cash-desk.addr-path 
     ,input no
-    ,input tt-cash-desk.cash-os
-    ,input tt-cash-desk.is-del
-    ,input tt-cash-desk.remote
-    ,input tt-cash-desk.version
-    ,input tt-cash-desk.registration-code
-    ,input tt-cash-desk.serial-code
-    ,input tt-cash-desk.fr-type
+    ,input buf_tt-cash-desk.cash-os
+    ,input buf_tt-cash-desk.is-del
+    ,input buf_tt-cash-desk.remote
+    ,input buf_tt-cash-desk.version
+    ,input buf_tt-cash-desk.registration-code
+    ,input buf_tt-cash-desk.serial-code
+    ,input buf_tt-cash-desk.fr-type
     ,input ? /* вариант исполнения кассы (ТСО,неТСО,мобильн); "?" = "оставить прежнее значение" */
     ) no-error .
     if error-status:error then do:
        put-Log(return-value).
       undo, return error return-value.
     end.
-    for each tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = tt-cash-desk.db-num
-                                         and tt-cash-desk-attr.obj-code = tt-cash-desk.obj-code
-                                         and tt-cash-desk-attr.pos-type = tt-cash-desk.pos-type
-                                         and tt-cash-desk-attr.cash-num = tt-cash-desk.cash-num :
+    if v-send then do: 
+      v-string-cash = v-string-cash + ";" + string(buf_tt-cash-desk.cash-num) .
+    end.  
+    
+    for each tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = buf_tt-cash-desk.db-num
+                                         and tt-cash-desk-attr.obj-code = buf_tt-cash-desk.obj-code
+                                         and tt-cash-desk-attr.pos-type = buf_tt-cash-desk.pos-type
+                                         and tt-cash-desk-attr.cash-num = buf_tt-cash-desk.cash-num :
       case tt-cash-desk-attr.attr-code :
         when "last-check-params"
         then do :
@@ -1112,39 +1497,12 @@ method public void load_cashdesk(iAddr as character ) :
                                 ,input no /*p-logical*/
                                 ) no-error.
         end.
-        when "FO-version"
-        then do :
-/*          run cd-attr-write in this-procedure (                                            */
-/*                                  input v-cntxt-db-num-obj                                 */
-/*                                ,input v-cntxt-obj-code                                    */
-/*                                ,input tt-cash-desk-attr.pos-type                          */
-/*                                ,input tt-cash-desk-attr.cash-num                          */
-/*                                ,input  (if tt-cash-desk-attr.pos-type = {&cd-type-ibm-xml}*/
-/*                                         then {&cda-IBM-XML_operative}                     */
-/*                                         else {&cda-AUTOTANK_operative})                   */
-/*                                ,input (if tt-cash-desk-attr.pos-type = {&cd-type-IBM-XML} */
-/*                                        then {&cda-IBM-XML_operative_fo-version}           */
-/*                                        else {&cda-AUTOTANK_operative_fo-version})         */
-/*                                ,input tt-cash-desk-attr.attr-value                        */
-/*                                ,input ? /*p-date*/                                        */
-/*                                ,input 0 /*p-decimal*/                                     */
-/*                                ,input 0 /*p-integer*/                                     */
-/*                                ,input no /*p-logical*/                                    */
-/*                                ) no-error.                                                */
-        end.                        
       end case.                                   
     end.                                       
   end.
-  
-  
-  vflag  = yes.
-  finally:
-     if vflag then
-        put-log( string(now) + "   Кассы загружены!") .
-     else
-        put-log( string(now) + "   Кассы не загружены!") .
-  end finally.
+
 end method.
+
 method public void parse-json (
   pBuff as handle,
   p-array-name as character):
@@ -1240,7 +1598,7 @@ method public void  load_price (iAddr as character,ifile-path as character ):
   define variable ii as integer no-undo initial 0 .
   define variable jj as integer no-undo initial 0 .
   
-  vcmd = substitute ("&1 &2/THGetInfo?GetPrice >&3", search ("exe/curl.exe"), iaddr, "price-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetPrice >&3", search ("exe/curl.exe"), iaddr, "price-temp.json").
   os-command silent value (vcmd).
   
   put-log(string (now) + "   Разбираем полученные данные...").
@@ -1323,6 +1681,10 @@ method public void  load_price (iAddr as character,ifile-path as character ):
    
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("price-temp.json") .
+     os-delete value("price.json") .
+     end.     
      if vflag then
         put-log( string( now) + "   Цены загружены!") .
      else
@@ -1367,7 +1729,7 @@ method public void load_user(iAddr as character ) :
   
   put-log(string (now) + "   Отправляем запрос для получения пользователей...").
   
-  vcmd = substitute ("&1 &2/THGetInfo?GetUser >&3", search ("exe/curl.exe"), iAddr, "user-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetUser >&3", search ("exe/curl.exe"), iAddr, "user-temp.json").
   os-command silent value (vcmd).
   put-log(string (now) + "   Разбираем полученные данные...").
   
@@ -1383,15 +1745,14 @@ method public void load_user(iAddr as character ) :
   /* Delete all objects created by this procedure to avoid memory leaks */
   
   put-log( string(now) + "   Начинаем загрузку пользователей...") .
-  
+
   user_:
   for each tt-user-account where tt-user-account.status_ = {&bef-user-status-normal} exclusive-lock,
     first buf_tt-user-login where buf_tt-user-login.user-id = tt-user-account.user-id:
 
     put-log(  "Пользователь " + string(tt-user-account.user-id) ).
 
-    find first buf_user-account exclusive-lock where buf_user-account.first-name = tt-user-account.first-name 
-      and buf_user-account.last-name = tt-user-account.last-name and buf_user-account.second-name = tt-user-account.second-name no-error .
+    find first buf_user-account exclusive-lock where buf_user-account.user-id = tt-user-account.user-id no-error .
     if available (buf_user-account) then 
     do:
       next user_ .
@@ -1482,6 +1843,10 @@ method public void load_user(iAddr as character ) :
   
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("user-temp.json") .
+     os-delete value("user.json") .
+     end.     
      if vflag then
         put-log( string(now) + "   Пользователи загружены!") .
      else
@@ -1494,18 +1859,34 @@ method public void fix-codepage_and_SetJsonObj (p-file as character):
   define variable vline2 as char no-undo .
   define variable v-out-file as character no-undo .
   
-  case p-file :
-    when "schem-temp.json"       then v-out-file = "schem.json" .
-    when "pumpdoc-temp.json"     then v-out-file = "pumpdoc.json" .
-    when "cashdesk-temp.json"    then v-out-file = "cashdesk.json" .
-    when "price-temp.json"       then v-out-file = "price.json" .
-    when "rest-temp.json"        then v-out-file = "rest.json" .
-    when "rest-ptrl-temp.json"   then v-out-file = "rest-ptrl.json" .
-    when "verify-rest-temp.json" then v-out-file = "verify-rest.json" .
-    when "rvs-temp.json"         then v-out-file = "rvs.json" .
-    when "cashp-temp.json"       then v-out-file = "cashp.json" .
-    when "user-temp.json"        then v-out-file = "user.json" .
-  end case.
+   case p-file :
+      when "schem-temp.json"       then 
+         v-out-file = "schem.json" .
+      when "auto-schedule-temp.json"  then 
+         v-out-file = "schedule.json" .
+      when "pumpdoc-temp.json"     then 
+         v-out-file = "pumpdoc.json" .
+      when "cashdesk-temp.json"    then 
+         v-out-file = "cashdesk.json" .
+      when "price-temp.json"       then 
+         v-out-file = "price.json" .
+      when "rest-temp.json"        then 
+         v-out-file = "rest.json" .
+      when "rest-ptrl-temp.json"   then 
+         v-out-file = "rest-ptrl.json" .
+      when "verify-rest-temp.json" then 
+         v-out-file = "verify-rest.json" .
+      when "rvs-temp.json"         then 
+         v-out-file = "rvs.json" .
+      when "cashp-temp.json"       then 
+         v-out-file = "cashp.json" .
+      when "user-temp.json"        then 
+         v-out-file = "user.json" .
+      when "fbrgds-temp.json"  then 
+         v-out-file = "fbrgds.json" .
+      when "rest-fin-temp.json"    then
+         v-out-file = "restfin.json" .   
+   end case.
   
   input STREAM lsIN from value(search(p-file)) convert target "UTF-8" source "1251".
   output STREAM lsOUT to value(v-out-file).
@@ -1558,7 +1939,7 @@ method public void load_pumpdoc (iaddr as character, ifile-path as character ) :
   empty temp-table tt-icnt-doc.
   empty temp-table tt-icnt-line.
   
-  vcmd = substitute ("&1 &2/THGetInfo?GetPumpDoc >&3", search ("exe/curl.exe"), iaddr, "pumpdoc-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetPumpDoc >&3", search ("exe/curl.exe"), iaddr, "pumpdoc-temp.json").
   os-command silent value (vcmd).
   
   put-log(string (now) + "   Разбираем полученные данные...").
@@ -1647,6 +2028,10 @@ method public void load_pumpdoc (iaddr as character, ifile-path as character ) :
   
   vflag  = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("pumpdoc-temp.json") .
+     os-delete value("pumpdoc.json") .
+     end.     
      if vflag then
         put-log( string( now) +  "   Инвентаризация счётчиков ТРК загружена!" ) .
      else
@@ -1714,12 +2099,14 @@ method public logical load_rest (iaddr as character,
                               ):
   define variable vcmd as character no-undo.
   define variable vOk as logical no-undo.
-  vcmd = substitute ("&1 &2/THGetInfo?GetRest >&3", search ("exe/curl.exe"), iaddr, "rest-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetRest >&3", search ("exe/curl.exe"), iaddr, "rest-temp.json").
   os-command silent value (vcmd).
   fix-codepage_and_SetJsonObj (input "rest-temp.json") .
   empty temp-table tt-imp-parts.
   
   parse-json(input temp-table tt-imp-parts:default-buffer-handle, input "tt-imp-parts") .
+  
+  delete object mJsonObj no-error.
 
   put-log ( string(now) +  "   Начинаем загрузку остатков...") .
   
@@ -1733,6 +2120,10 @@ method public logical load_rest (iaddr as character,
 
   vok = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("rest-temp.json") .
+     os-delete value("rest.json") .
+     end.     
      vok = chek_rest() and vok.
      put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
      put-log("").
@@ -1755,7 +2146,7 @@ method public logical load_rest_ptrl (iaddr as character,
                               ):
   define variable vcmd as character no-undo.
   define variable vOk as logical no-undo.
-  vcmd = substitute ("&1 &2/THGetInfo?GetRestPtrl >&3", search ("exe/curl.exe"), iaddr, "rest-ptrl-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetRestPtrl >&3", search ("exe/curl.exe"), iaddr, "rest-ptrl-temp.json").
   os-command silent value (vcmd).
   fix-codepage_and_SetJsonObj (input "rest-ptrl-temp.json") .
   empty temp-table tt-imp-parts-ptrl.
@@ -1785,6 +2176,10 @@ method public logical load_rest_ptrl (iaddr as character,
   
   vok = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("rest-ptrl-temp.json") .
+     os-delete value("rest-ptrl.json") .
+     end.     
      vok = chek_rest() and vok.
      put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
      put-log("").
@@ -1849,7 +2244,7 @@ define buffer buf_goods     for ub.goods .
   
 
   put-log(string (now) + "   Отправляем запрос для сравнения остатков...").
-  vcmd = substitute ("&1 &2/THGetInfo?VerifyRest >&3", search ("exe/curl.exe"), iaddr, "verify-rest-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?VerifyRest >&3", search ("exe/curl.exe"), iaddr, "verify-rest-temp.json").
   os-command silent value (vcmd).
 
   put-log(string (now) + "   Разбираем полученные данные...").
@@ -1984,16 +2379,16 @@ define buffer buf_goods     for ub.goods .
     .
 
     find first tt-stk-gd2 where tt-stk-gd2.gds-code16 = tt-gds-mapping.gds-code16 no-error .
-    if available tt-stk-gd2 then do :
-      assign
-        tt-stk-gd2.fact-qnty16     = tt-stk-gd2.fact-qnty16     + v-fact-qnty16
-        tt-stk-gd2.sum-rubl-cost16 = tt-stk-gd2.sum-rubl-cost16 + v-sum-rubl-cost16
-        tt-stk-gd2.vat-rubl16      = tt-stk-gd2.vat-rubl16      + v-vat-rubl16
-        tt-stk-gd2.sum-rubl-crsa16 = tt-stk-gd2.sum-rubl-crsa16 + v-sum-rubl-crsa16
-        v-count-confirm = v-count-confirm + 1
-      no-error .
-    end .
-    else do :
+    if not available tt-stk-gd2 then do :
+/*      assign                                                                       */
+/*        tt-stk-gd2.fact-qnty16     = tt-stk-gd2.fact-qnty16     + v-fact-qnty16    */
+/*        tt-stk-gd2.sum-rubl-cost16 = tt-stk-gd2.sum-rubl-cost16 + v-sum-rubl-cost16*/
+/*        tt-stk-gd2.vat-rubl16      = tt-stk-gd2.vat-rubl16      + v-vat-rubl16     */
+/*        tt-stk-gd2.sum-rubl-crsa16 = tt-stk-gd2.sum-rubl-crsa16 + v-sum-rubl-crsa16*/
+/*        v-count-confirm = v-count-confirm + 1                                      */
+/*      no-error .                                                                   */
+/*    end .                                                                          */
+/*    else do :                                                                      */
       create tt-stk-gd2 .
       buffer-copy tt-stk-gd to tt-stk-gd2 assign
         tt-stk-gd2.gds-code16      = tt-gds-mapping.gds-code16
@@ -2111,6 +2506,10 @@ define buffer buf_goods     for ub.goods .
      put stream lsOut unformatted "Расхождений не обнаружено." skip.
   vok = yes.
   finally:
+     if not mDebug then do:
+     os-delete value("verify-rest-temp.json") .
+     os-delete value("verify-rest.json") .
+     end.     
      output STREAM lsIN close.
      output STREAM lsOUT close.
 
@@ -2132,14 +2531,713 @@ define buffer buf_goods     for ub.goods .
   end finally.
 end method . /* end_of verify_rest */
 
+method public logical load_rest_fin (
+                              iosn-fname   as character,  // список соответствия поставщиков
+                              iart-fname   as  character, // список соответствия товаров
+                              icontr       as character,  // контрагент для ПКО РКО
+                              iretry-fname as character   // файл для повторного импорта
+                              ):
+     return load_rest_fin(maddr, iosn-fname, iart-fname, icontr, iretry-fname).
+end method.                                
+method public logical load_rest_fin (iaddr as character,
+                              iosn-fname   as character,  // список соответствия поставщиков
+                              iart-fname   as  character, // список соответствия товаров
+                              icontr       as character,  // контрагент для ПКО РКО
+                              iretry-fname as character   // файл для повторного импорта
+                              ):
+  define variable vcmd              as character no-undo.
+  define variable vOk               as logical   no-undo.
+  define variable p-doc-rec         as recid     no-undo .
+  define variable mCashBook         as class     ibs.th.ref.cashbookstorage no-undo .
+  define variable p-by-cash-desk    as logical   no-undo .
+  define variable p-by-petrol-goods as logical   no-undo .
+  define variable p-by-osnovanie    as character no-undo .
+  define variable p-by-pril         as character no-undo .
+  define variable v-naznach-plat    as character no-undo .
+  define variable v-naznach-plat2   as character no-undo .
+  
+  define variable o-uchet           as character no-undo .
+  define variable v-uchet           as character no-undo .
+  
+  define variable v-real-obj-type   as character no-undo .
+  define variable v-real-obj-code   as integer   no-undo .
+  define variable v-limit-access    as integer   no-undo .
+  define variable v-base-code       as integer   no-undo .
+  define variable mOsnbag           as character no-undo.
+  define variable msumInc-save      as decimal   no-undo.
+  define variable mMoney            as character no-undo.
+  
+  { ref/fndocip.i class}
+
+  { gbl/basecode.i v-cntxt-host-code-obj v-base-code }
+  &scop prfx tt-fin-doc.
+  mCashBook = new ibs.th.ref.cashbookstorage () .
+  define buffer buf_temp-fin-sum for temp-fin-sum .
+  define buffer buf_temp-tax     for temp-tax .
+  define buffer buf_fin-doc      for ub.fin-doc .
+  define buffer buf_fin-doc-tax  for ub.fin-doc-tax .
+  define buffer buf_fin-doc-attr for ub.fin-doc-attr .
+  define buffer buf_payment      for ub.payment .
+  define buffer buf_shift-obj    for ub.shift-obj.
+  
+  empty temp-table tt-rest-fin .
+  empty temp-table temp-tax .
+  put-log(string (now) + "   Отправляем запрос для получения денежных остатков...").
+    
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetRestFin >&3", search ("exe/curl.exe"), iaddr, "rest-fin-temp.json").
+  os-command silent value (vcmd).
+  
+  fix-codepage_and_SetJsonObj (input "rest-fin-temp.json") .
+  
+  parse-json(input temp-table tt-rest-fin:default-buffer-handle, input "tt-rest-fin") .
+   
+  put-log ( string(now) +  "   Начинаем загрузку денежных остатков...") .
+
+  define variable v-count-err as integer no-undo .
+
+  find last buf_shift-obj
+    where buf_shift-obj.obj-type    = v-cntxt-obj-type 
+    and buf_shift-obj.obj-code    = v-cntxt-obj-code
+    no-error.
+   
+  for each tt-rest-fin where tt-rest-fin.obj-code = v-cntxt-obj-code and tt-rest-fin.obj-type = v-cntxt-obj-type:
+    find first ub.CashBook no-lock where ub.CashBook.id = tt-rest-fin.CashBookId no-error .
+    if not available (ub.CashBook) then next .
+    find first buf_temp-fin-sum
+      where buf_temp-fin-sum.curr-code = 0
+      and buf_temp-fin-sum.cashbookid = tt-rest-fin.CashBookId
+      and buf_temp-fin-sum.is-expense_cash = no
+      no-error.
+    if not available buf_temp-fin-sum 
+      then 
+    do:
+      create buf_temp-fin-sum.
+      assign
+        buf_temp-fin-sum.curr-code       = 0
+        buf_temp-fin-sum.cash-desk       = 0
+        buf_temp-fin-sum.is-petrol       = no
+        buf_temp-fin-sum.cashbookid      = tt-rest-fin.CashBookId
+        buf_temp-fin-sum.is-expense_cash = no
+        . 
+    end.
+    assign 
+      buf_temp-fin-sum.tot-rubl = buf_temp-fin-sum.tot-rubl + tt-rest-fin.ostatok
+      buf_temp-fin-sum.tot-base = buf_temp-fin-sum.tot-base + tt-rest-fin.ostatok
+      buf_temp-fin-sum.tot-sum  = buf_temp-fin-sum.tot-sum + tt-rest-fin.ostatok
+      .
+    if buf_temp-fin-sum.tot-sum eq 0
+      then delete buf_temp-fin-sum.
+    else 
+    do:
+      create buf_temp-tax.
+      assign
+        buf_temp-tax.curr-code        = buf_temp-fin-sum.curr-code
+        buf_temp-tax.cash-desk        = buf_temp-fin-sum.cash-desk
+        buf_temp-tax.is-petrol        = buf_temp-fin-sum.is-petrol
+        buf_temp-tax.cashbookId       = buf_temp-fin-sum.cashbookid
+        buf_temp-tax.is-expense_cash  = buf_temp-fin-sum.is-expense_cash
+        buf_temp-tax.num-expense_cash = buf_temp-fin-sum.num-expense_cash
+        buf_temp-tax.sum-rubl         = buf_temp-fin-sum.tot-sum
+        buf_temp-tax.sum-base         = buf_temp-fin-sum.tot-sum
+        buf_temp-tax.sum-doc          = buf_temp-fin-sum.tot-sum
+        .
+    end.   
+  end.
+  _temp-fin-sum:
+  for each buf_temp-fin-sum no-lock
+    by buf_temp-fin-sum.cashbookid desc 
+    :
+
+    empty temp-table tt0-fin-doc-tax.
+    empty temp-table tt0-fin-doc-attr.
+    empty temp-table tt-fin-doc.
+    if buf_temp-fin-sum.tot-sum = 0  then 
+    do:
+      next _temp-fin-sum.
+    end.
+      
+    find first ub.CashBook no-lock where ub.CashBook.id = buf_temp-fin-sum.CashBookId no-error .
+    define variable mCashbookName as character no-undo.     
+    mCashbookName = string(ub.CashBook.id).                            
+    if available ub.CashBook then 
+    do:
+      assign
+        v-real-obj-type = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CountCollect-type") . 
+      v-real-obj-code = int(mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CountCollect-code") ).
+      mCashbookName = string(ub.CashBook.id) + " (" + CashBook.CashBookName + ")".
+      .
+    end.
+      
+    define variable v-doc-rec          as recid     no-undo .
+    define variable v-fin-doc-type     as character no-undo .
+    define variable v-fin-ext-doc-type as character no-undo .
+    if  buf_temp-fin-sum.tot-rubl > 0 then 
+      assign
+        v-fin-doc-type     = {&Income-cash} 
+        v-fin-ext-doc-type = {&FDEDT_Income_cash}.
+    else 
+      assign
+        v-fin-doc-type     = {&expense-cash} 
+        v-fin-ext-doc-type = {&FDEDT_expense_cash}.
+    run ref/finfnoco.p (
+      INPUT parParentProc
+      ,INPUT ? /*не надо нам*/
+      ,input v-host-code
+      ,input ({&add-def} + {&delim-par} + {&auto} + {&delim-par} + "тех_")
+      ,input v-host-code
+      ,input v-doc-rec
+      ,input 0 /*p-fin-doc-code*/
+      ,input v-fin-doc-type /*p-fin-doc-type*/
+      ,input v-fin-ext-doc-type /*p-fin-ext-doc-type*/
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
+      ,input 0 /*p-contract-code*/
+      ,input '' /*p-ob-doc-code*/
+      ,input {&cmp} /*p-payer-type*/
+      ,input v-host-code /*p-payer-code*/
+      ,input 0 /*p-payer-code-schet*/
+      ,input v-real-obj-type  /*p-receiver-type*/
+      ,input v-real-obj-code /*p-receiever-code*/
+      ,input 0 /*p-receiver-code-schet*/
+      ,input buf_temp-fin-sum.curr-code
+      ,input 0 /*p-cor-acc*/
+      ,input 0 /*p-cor-acc1*/
+      ,input 0 /*p-an-uchet-code*/
+      ,input 0 /*p-cel-nazn-code*/
+      ,input buf_temp-fin-sum.cashbookid
+      ,input ""
+      ,INPUT-OUTPUT table tt-fin-doc
+      ,INPUT-OUTPUT table ttc-fin-doc
+      ,output table tt0-fin-doc-attr
+      ,output v-limit-access ) no-error.
+    /* end. */ 
+    if error-status:error then 
+    do:
+      put-log("Ошибки при заполнении фин.док-та значениями по умолчанию").
+    end.
+    find first tt-fin-doc.
+    /*заполнение налогов*/
+    define variable v-line-num as integer no-undo .
+
+    for each buf_temp-tax no-lock
+      where buf_temp-tax.curr-code        = buf_temp-fin-sum.curr-code
+      and buf_temp-tax.cash-desk         = buf_temp-fin-sum.cash-desk
+      and buf_temp-tax.is-petrol        = buf_temp-fin-sum.is-petrol
+      and buf_temp-tax.cashbookId       = buf_temp-fin-sum.cashbookId
+      and buf_temp-tax.is-expense_cash  = buf_temp-fin-sum.is-expense_cash
+      and buf_temp-tax.num-expense_cash = buf_temp-fin-sum.num-expense_cash
+      :
+      v-line-num = v-line-num + 1.
+      create tt0-fin-doc-tax .
+      assign
+        tt0-fin-doc-tax.fin-doc-code       = tt-fin-doc.fin-doc-code
+        tt0-fin-doc-tax.host-code          = tt-fin-doc.host-code
+        tt0-fin-doc-tax.line-num           = v-line-num
+        tt0-fin-doc-tax.VAT-pc             = buf_temp-tax.vat-pc
+        tt0-fin-doc-tax.slt-pc             = buf_temp-tax.slt-pc
+        tt0-fin-doc-tax.sum-line-contr     = 0
+        tt0-fin-doc-tax.sum-vat-line-contr = 0
+        tt0-fin-doc-tax.with-vat           = buf_temp-tax.with-vat
+        .
+      if buf_temp-fin-sum.tot-sum > 0  then 
+      do :
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = buf_temp-tax.sum-doc
+          tt0-fin-doc-tax.sum-vat-line-doc  = buf_temp-tax.vat-doc
+          tt0-fin-doc-tax.sum-line-rubl     = buf_temp-tax.sum-rubl
+          tt0-fin-doc-tax.sum-vat-line-rubl = buf_temp-tax.vat-rubl
+          tt0-fin-doc-tax.sum-line-base     = buf_temp-tax.sum-base
+          tt0-fin-doc-tax.sum-vat-line-base = buf_temp-tax.vat-base
+          .
+      end.
+      else 
+      do :
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = abs(buf_temp-tax.sum-doc)
+          tt0-fin-doc-tax.sum-vat-line-doc  = abs(buf_temp-tax.vat-doc)
+          tt0-fin-doc-tax.sum-line-rubl     = abs(buf_temp-tax.sum-rubl)
+          tt0-fin-doc-tax.sum-vat-line-rubl = abs(buf_temp-tax.vat-rubl)
+          tt0-fin-doc-tax.sum-line-base     = abs(buf_temp-tax.sum-base)
+          tt0-fin-doc-tax.sum-vat-line-base = abs(buf_temp-tax.vat-base)
+          .
+      end.
+
+    end.
+      
+    tt-fin-doc.including = StrTax (tt-fin-doc.including) .
+    /* округляем  */
+    RoundTax() .
+
+    if available ub.CashBook
+      then 
+    do :
+      p-by-cash-desk = ub.CashBook.FlagSepCash .
+      p-by-petrol-goods = ub.CashBook.FlagSepFull .
+      p-by-osnovanie = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "BasisIncas") .
+      p-by-pril = ub.CashBook.RulePril .
+    end.
+
+    tt-fin-doc.enclosure = p-by-pril.
+    assign
+      tt-fin-doc.naznach-plat = "Перенос денежных остатков".
+
+    assign
+      tt-fin-doc.CashBookId = buf_temp-fin-sum.cashbookid
+      tt-fin-doc.sum-doc    = abs(buf_temp-fin-sum.tot-sum)
+      tt-fin-doc.sum-base   = abs(buf_temp-fin-sum.tot-base)
+      tt-fin-doc.sum-rubl   = abs(buf_temp-fin-sum.tot-rubl)
+      tt-fin-doc.exch-rate  = abs(if buf_temp-fin-sum.curr-code = 0 then 1 else buf_temp-fin-sum.tot-rubl / buf_temp-fin-sum.tot-sum )
+      tt-fin-doc.exch-scale = 1
+      tt-fin-doc.base-rate  = abs(if buf_temp-fin-sum.curr-code = v-base-code then 1 else buf_temp-fin-sum.tot-rubl / buf_temp-fin-sum.tot-base )
+      tt-fin-doc.base-scale = 1
+      .
+      
+      
+    o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "uchet") .
+      
+      
+      
+    if available ub.CashBook
+      then 
+    do :
+      tt-fin-doc.cor-acc-value  = ub.CashBook.OsnAcct .
+      tt-fin-doc.cor-acc1-value = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CorrAcctIncas") .
+        
+               
+      FIND ub.fin-code-cor-acc WHERE
+        ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc-value
+        AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+        AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+        NO-LOCK NO-error.
+        
+      if not available ub.fin-code-cor-acc
+        then 
+      do:
+        assign
+          tt-fin-doc.cor-acc-value = {&question-mark}
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code
+          .
+      end.
+      FIND ub.fin-code-cor-acc WHERE
+        ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc1-value
+        AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+        AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+        NO-LOCK NO-error.
+        
+      if not available ub.fin-code-cor-acc
+        then 
+      do:
+        assign
+          tt-fin-doc.cor-acc1-value = {&question-mark}
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code
+          .
+      end.
+    end.
+    if tt-fin-doc.cor-acc1-value eq "" or tt-fin-doc.cor-acc1-value eq ?
+      then 
+    do:
+      put-log("Не задан счет для инкасации") .
+    end.
+    if o-uchet = "0"
+      then v-uchet = "cal" .
+    else v-uchet = "smen" . 
+    
+    define variable v-name as character no-undo.
+    define variable v-codetype as character no-undo .
+    
+    if icontr = "" then do:
+      put-log("Не задан контрагент для ПКО/РКО") .
+    end.  
+    v-codetype = trim(entry(1,icontr,"_")) .      
+    v-name = trim(entry(2,icontr,"_")) .
+    /* Получатель */
+    if v-fin-doc-type = {&expense-cash} then do:
+    tt-fin-doc.receiver-code = integer(substring (v-codetype, 4)) .
+    tt-fin-doc.receiver-type = substring (v-codetype, 1, 3) .
+    tt-fin-doc.receiver-name = v-name .
+    end.
+    else do:
+    tt-fin-doc.payer-code = integer(substring (v-codetype, 4)) .
+    tt-fin-doc.payer-type = substring (v-codetype, 1, 3) .
+    tt-fin-doc.payer-name = v-name .
+    end.  
+    /*подкручиваем для утилиты */
+    if buf_shift-obj.status_ = {&sht-closed} and v-uchet = "smen" then 
+    do:
+      assign
+        tt-fin-doc.doc-date   = buf_shift-obj.close-date
+        tt-fin-doc.shift-date = buf_shift-obj.shift-date
+        tt-fin-doc.shift-num  = buf_shift-obj.shift-num
+        tt-fin-doc.shift-name = buf_shift-obj.shift-name
+        .
+    end.
+    assign
+      tt-fin-doc.doc-author = {&auto}.
+    &scop prfx tt-fin-doc.
+      run ref/findoc0.p (
+      input-output v-doc-rec
+            ,input {&add-def} + {&delim-par} + {&auto}
+            ,input yes
+            {&all-fin-doc-params-doc-status-transfer}
+            {&all-fin-doc-params-doc-status-transfer-2}
+            ,input table tt0-fin-doc-tax
+            ,input table tt0-fin-doc-attr
+            ,input no /*p-save-payment*/
+            ,input table tt0-payment
+      ) no-error.
+    if error-status:error then 
+    do:
+      put-log("Ошибки при сохранении фин.док-та")
+        .
+    end.
+    /*закрываем до факта*/
+    find first buf_fin-doc share-lock where
+      recid(buf_fin-doc) = v-doc-rec.
+    assign
+      buf_fin-doc.shift-flag = integer({&fin-flag-shift})
+      .
+    find first fin-doc-attr where fin-doc-attr.host-code    eq buf_fin-doc.host-code
+      and fin-doc-attr.fin-doc-code eq buf_fin-doc.fin-doc-code
+      and fin-doc-attr.attr-code    eq "pre-vedom"
+      exclusive-lock no-error.
+    if not available fin-doc-attr
+      then 
+    do:
+      create fin-doc-attr.
+      assign
+        fin-doc-attr.host-code    = buf_fin-doc.host-code
+        fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code
+        fin-doc-attr.attr-code    = "pre-vedom"
+        .
+    end.
+    define variable mPin as character no-undo.
+      
+    mPin   = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "Pin") .
+      
+    fin-doc-attr.attr-value = substitute("&1;&2;&3;&4;&5;&6;&7"
+      ,mOsnbag
+      ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankDepos-code")
+      ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankRecip-code") 
+      ,mPin
+      ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "SourceCode")
+      ,msumInc-save
+      ,mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "BankRecip-acct")).
+    define variable Vparentrec as character no-undo. 
+    if Vparentrec eq ""
+      then
+      Vparentrec = gen-key-rec ("fin-doc",(buffer buf_fin-doc:handle)).
+    find first fin-doc-attr where fin-doc-attr.host-code       eq buf_fin-doc.host-code
+      and fin-doc-attr.fin-doc-code eq buf_fin-doc.fin-doc-code
+      and fin-doc-attr.attr-code    eq "ParentMoney"
+      exclusive-lock no-error.
+    if not available fin-doc-attr
+      then 
+    do:
+      create fin-doc-attr.
+      assign
+        fin-doc-attr.host-code    = buf_fin-doc.host-code
+        fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code
+        fin-doc-attr.attr-code    = "ParentMoney"
+        .
+    end.
+    fin-doc-attr.attr-value = Vparentrec.
+    if mMoney ne ""
+      then 
+    do:
+      find first fin-doc-attr where fin-doc-attr.host-code eq buf_fin-doc.host-code
+        and fin-doc-attr.fin-doc-code eq buf_fin-doc.fin-doc-code
+        and fin-doc-attr.attr-code eq "cover_sheet"
+        exclusive-lock no-error.
+      if not available fin-doc-attr
+        then 
+      do:
+        create fin-doc-attr.
+        assign
+          fin-doc-attr.host-code    = buf_fin-doc.host-code
+          fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code
+          fin-doc-attr.attr-code    = "cover_sheet"
+          .
+      end.
+      fin-doc-attr.attr-value = mMoney.
+      mMoney = "".
+    end.
+      
+    proc-close ( buffer buf_fin-doc) no-error.
+    if error-status :error then 
+    do:
+      put-log("Ошибки при сохранении фин.док-та").
+    END.
+    if buf_fin-doc.status_ <> {&fin-fact} then 
+    do:
+      proc-close ( buffer buf_fin-doc) NO-ERROR.
+      if error-status :error then 
+      do:
+        put-log("Не удалось сменить статус фин.док-та").
+      END.
+    end.
+    if buf_fin-doc.status_ <> {&fin-fact} then 
+    do:
+      proc-close ( buffer buf_fin-doc) no-error .
+      if error-status :error then 
+      do:
+        put-log("Не удалось сменить статус фин.док-та").
+      END.
+    end.
+
+  end.
+  vok = yes.
+  finally:
+     if not mDebug then do:
+     os-delete value("rest-fin-temp.json") .
+     os-delete value("restfin.json") .
+     end.     
+    vok = chek_rest() and vok.
+    put-log( string( now) + if  vok then "   Денежные остатки загружены!" else "   Денежные остатки не загружены!") .
+    put-log("").
+    return vok.
+  end finally.
+end method .
+
+method public void proc-close (buffer buf_fin-doc for ub.fin-doc) :
+
+
+define variable v-status_ as character no-undo .
+/*куда перейдет*/
+define variable v-old-status_ as character no-undo .
+/*статус первой записи*/
+define variable v-ask-date as logical no-undo .
+/*дата перехода статуса*/
+define variable v-ask-message as character no-undo .
+/*подтверждающий запрос пользователю */
+define variable v-status-date-chr as character no-undo.
+define variable v-date1 as date no-undo .
+assign
+v-old-status_ = buf_fin-doc.status_
+.
+run trg/findgraf.p (
+                input  buf_fin-doc.host-code
+                ,input  buf_fin-doc.fin-doc-code
+                ,input  {&close-doc}
+                ,input  '' /*много платежей неизвестно можн и ли нет*/
+                ,input  v-old-status_
+                ,input  ?                     /*p-status-date*/
+                ,output v-status_
+                ,output v-ask-date
+                ,output v-ask-message
+                ) no-error.
+if error-status:error then do:
+  return error substitute("Ошибка при проверке возможности &1&2&3"
+                           ,{&close-doc}
+                           , {&new-line}
+                           , return-value ).
+end.
+
+v-date1 = buf_fin-doc.doc-date.
+run trg/findstat.p (
+                  input parparentproc
+                ,input buf_fin-doc.host-code
+                ,input buf_fin-doc.fin-doc-code
+                ,input {&close-doc}
+                ,input {&auto} /*p-author*/
+                ,input v-status_
+                ,input-output v-date1
+                ,input no /*p-silent*/
+                ) no-error .
+if error-status:error then do:
+  return error substitute("Ошибка при переводе статуса финансового документа:&1&2&1&3"
+                           ,{&close-doc}
+                           , {&new-line}
+                           , return-value ).
+
+
+end.
+end method. /* proc-close */
+
+
+method public character gen-key-rec (p-tbl-name    as character,
+p-bh_tbl-name as handle):
+  define variable p-key-rec     as character no-undo.
+    define variable fh               as handle    no-undo .
+    define variable v-ok             as logical   no-undo .
+
+    define variable v-inform         as character no-undo .
+    define variable v-ind            as integer   no-undo .
+    define variable v-idx-field-qnty as integer   no-undo .
+
+    if p-tbl-name = ?
+      or p-tbl-name = "":U
+    then do:
+      return error substitute( "(gen-key-rec). Ошибка задания входных параметров. Не задано имя таблицы." ).
+    end.
+
+    if not p-bh_tbl-name:available then do:
+      return error substitute( "(gen-key-rec). Ошибка задания входных параметров. Переданый буфер таблицы &2 не доступен", p-tbl-name ).
+    end.
+
+    assign
+      p-key-rec = p-tbl-name
+      v-inform  = p-bh_tbl-name:index-information(1)
+      v-ind     = 2
+    .
+    do while v-inform <> ? and entry( 3, v-inform, ",":U ) <> "1":U
+    on error undo, return error
+    :
+      assign
+        v-inform = p-bh_tbl-name:index-information( v-ind )
+        v-ind    = v-ind + 1
+      .
+    end.
+
+    if v-inform = ?
+      or LC( entry( 1, v-inform, ",":U ) ) = "default":U
+      or entry( 3, v-inform, ",":U ) <> "1":U
+    then do:
+      return error substitute( "Таблица &2 не имеет первичного ключа в БД",  p-tbl-name ).
+    end.
+    else do:
+      assign
+        v-idx-field-qnty = num-entries( v-inform ) - 4
+      .
+      if v-idx-field-qnty < 2 then do:
+        return error substitute( "Определенный первичный индекс (&2) не содержит списка полей для таблицы &3", v-inform, p-tbl-name ).
+      end.
+      do v-ind = 1 to v-idx-field-qnty by 2
+      on error undo, return error
+      :
+        assign
+          fh = p-bh_tbl-name:buffer-field( entry( 4 + v-ind, v-inform, ",":U ) ).
+          p-key-rec = p-key-rec + {&delim-key} + substitute("&1", replace(fh:buffer-value(),{&delim-key},{&delim-key-rep}))
+        .
+      end.
+    end.
+
+    if p-key-rec = ? then do:
+      assign
+        p-key-rec = "":U
+      .
+      return error substitute( "&1. Поле(поля) первичного ключа таблицы &2 имеет(ют) неопределенное значение", p-tbl-name ).
+    end.
+
+  return p-key-rec.
+end method. /* gen-key-rec */
+
+method public character StrTax (str as character):
+
+    define variable v-envd as logical no-undo .
+    assign str = " В т.ч.: "  .
+
+    for each tt0-fin-doc-tax :
+      
+      if str <> " В т.ч.: " then str = str + "," .
+      if not tt0-fin-doc-tax.with-vat then assign str = str + "без НДС - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+      else do:
+      if tt-fin-doc.curr-code = 0 then do:
+        assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+      end.
+      else do:
+        assign str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+      end.  
+    end.
+    if str = " В т.ч.: " then assign str = "" .
+  end.
+  return str .
+end method.
+
+method public void RoundTax() :
+    for each tt0-fin-doc-tax :
+      assign
+        tt0-fin-doc-tax.sum-line-doc       =  ROUND( tt0-fin-doc-tax.sum-line-doc      , 2)
+        tt0-fin-doc-tax.sum-vat-line-doc   =  ROUND( tt0-fin-doc-tax.sum-vat-line-doc  , 2)
+        tt0-fin-doc-tax.sum-line-rubl      =  ROUND( tt0-fin-doc-tax.sum-line-rubl     , 2)
+        tt0-fin-doc-tax.sum-vat-line-rubl  =  ROUND( tt0-fin-doc-tax.sum-vat-line-rubl , 2)
+        tt0-fin-doc-tax.sum-line-base      =  ROUND( tt0-fin-doc-tax.sum-line-base     , 2)
+        tt0-fin-doc-tax.sum-vat-line-base  =  ROUND( tt0-fin-doc-tax.sum-vat-line-base , 2)
+      .
+    end.
+
+END method.
+
 method public logical sendcode(icode as integer ):
    run utl/sendcode.p(this-object,icode,?).
    put-log("").
    return yes.
 end method.
+
+method public logical sendnum(text-num as character ):
+   run utl/sendnum.p(this-object,text-num,v-cntxt-obj-code).
+   
+   put-log("").
+   return yes.
+end method.
+
+method public logical sendparam(text_file as character ):
+  define variable cmd as character no-undo .
+  define buffer buf_cash-desk for ub.cash-desk .
+  define variable ii as integer no-undo .
+  
+  do ii = 1 to num-entries (text_file,{&delim-par}):
+  if search (entry (ii,text_file,{&delim-par})) > ""
+  then
+  for each buf_cash-desk no-lock where buf_cash-desk.db-num   = v-cntxt-db-num
+                                   and buf_cash-desk.obj-code = v-cntxt-obj-code
+                                   and buf_cash-desk.pos-type = {&cd-type-ibm-xml} 
+                                   and buf_cash-desk.cash-on
+                                   :
+    assign
+      cmd = substitute('&1 -X POST -H "Content-Type: text/xml" -d @&2 &3 >&4'
+                      , search ("exe/curl.exe")
+                      , search (entry (ii,text_file,{&delim-par}))
+                      , (entry(1, buf_cash-desk.addr-path, {&delim-par}) + '://' + entry(2, buf_cash-desk.addr-path, {&delim-par}))
+                      , "cashParResp.txt")
+    .          
+    os-command silent value (cmd) .                       
+  end .
+  end.
+   return yes.
+end method.
+
 method public logical  chek_rest():
-    return can-find (first ub.trn-doc where ub.trn-doc.obj-type = v-cntxt-obj-type
-                              and ub.trn-doc.obj-code = v-cntxt-obj-code).
+                  for each ub.trn-doc no-lock where ub.trn-doc.obj-type = v-cntxt-obj-type
+                    and ub.trn-doc.obj-code = v-cntxt-obj-code,
+                    each ub.doc-line no-lock where ub.doc-line.doc-code = ub.trn-doc.doc-code:
+                    for first ub.goods no-lock where ub.goods.artic = ub.doc-line.artic and
+                      ub.goods.prod-code = ub.doc-line.prod-code and
+                      ub.goods.prod-type = ub.doc-line.prod-type,
+                      first ub.units no-lock where ub.units.unit-name = ub.goods.unit-base:
+                      if lookup( {&petrolium}, ub.units.type ) > 0 then next .
+                      else return yes .
+                    end.
+                  end.                              
+                  return no .
+end  method.
+method public logical  chek_rest_ptrl():
+                  for each ub.trn-doc no-lock where ub.trn-doc.obj-type = v-cntxt-obj-type
+                    and ub.trn-doc.obj-code = v-cntxt-obj-code,
+                    each ub.doc-line no-lock where ub.doc-line.doc-code = ub.trn-doc.doc-code:
+                    for first ub.goods no-lock where ub.goods.artic = ub.doc-line.artic and
+                      ub.goods.prod-code = ub.doc-line.prod-code and
+                      ub.goods.prod-type = ub.doc-line.prod-type,
+                      first ub.units no-lock where ub.units.unit-name = ub.goods.unit-base:
+                      if lookup( {&petrolium}, ub.units.type ) > 0 then return yes .
+                      else next .
+                    end.
+                  end.                              
+                  return no .
+end  method.
+
+method public logical  chek_rest_fin():
+    return can-find (first ub.fin-doc where ub.fin-doc.obj-type = v-cntxt-obj-type
+                              and ub.fin-doc.obj-code = v-cntxt-obj-code).
 end  method.
 method public logical  load_rvs(ifile-path as character):
     return load_rvs(mAddr,ifile-path).
@@ -2204,7 +3302,7 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
     empty temp-table tt-rvs-line-pump-attr.
     empty temp-table tt-rvs-doc .
     */
-    vcmd = substitute ("&1 &2/THGetInfo?GetRvs >&3", search ("exe/curl.exe"), iaddr, "rvs-temp.json").
+    vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetRvs >&3", search ("exe/curl.exe"), iaddr, "rvs-temp.json").
     os-command silent value (vcmd).
     fix-codepage_and_SetJsonObj(input "rvs-temp.json") .
     parse-json(input temp-table tt-rvs-doc              :default-buffer-handle, input "rvs-doc") .
@@ -2468,6 +3566,10 @@ method public logical load_rvs(iAddr as character,ifile-path as character  ):
   end.
   vOk = yes.                                  
   finally:
+     if not mDebug then do:
+     os-delete value("rvs-temp.json") .
+     os-delete value("rvs.json") .
+     end.     
       vOk = chek_rvs-shift() and vok.
      put-log(if vOk then "Сверка загружена" else "Сверка не загружена").
      put-log("").
@@ -2560,7 +3662,7 @@ end method.
 method public logical load_cash_passwd (iaddr as character) :
   define variable vcmd as character no-undo.
   define variable vOk as logical no-undo.
-  vcmd = substitute ("&1 &2/THGetInfo?GetCashp >&3", search ("exe/curl.exe"), iaddr, "cashp-temp.json").
+  vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetCashp >&3", search ("exe/curl.exe"), iaddr, "cashp-temp.json").
   os-command silent value (vcmd).
   fix-codepage_and_SetJsonObj (input "cashp-temp.json") .
 
@@ -2666,6 +3768,10 @@ method public logical load_cash_passwd (iaddr as character) :
       put-log ( string(now) +  "   LangError " + Msg) .
   end catch .
   finally:
+     if not mDebug then do:
+     os-delete value("cashp-temp.json") .
+     os-delete value("cashp.json") .
+     end.     
      output STREAM lsIN close.
      output STREAM lsOUT close.
      if vok then

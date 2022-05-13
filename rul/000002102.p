@@ -338,6 +338,8 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
 /*    end. /*else if retry*/*/
   &scop release_1 clear-data ( )
   ExpData1:Route-data_{&release_1} .
+  
+  delete object subDocObj no-error .
 
 /*  &scop my-message substitute("Обработано заказов списка экспорта: &1, из них удачно: &2", num-rec, num-rec-ok)*/
 /*  {&display-message}.*/

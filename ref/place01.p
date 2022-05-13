@@ -80,23 +80,7 @@ or p-pl-name = ? then do:
   run err-mes in this-procedure ( input-output v-mess).
   undo, return error (if p-silent then v-mess else 'pl-name':U).
 end.
-if p-loc1 = '':U then do:
-v-mess = "Коорд1 не может быть пустой".
-  run err-mes in this-procedure ( input-output v-mess).
-  undo, return error (if p-silent then v-mess else 'loc1':U).
-end.  
 
-assign
-v-dopi = integer(p-loc1)
-no-error .
-if error-status:error
-or v-dopi <= 0
-or v-dopi > 999
-or p-loc1 <> trim(string(v-dopi, ">>9")) then do:
-  v-mess = "коорд1 для топливного резервуара должна быть ПОЛОЖИТЕЛЬНЫМ ТРЕХЗНАЧНЫМ ЧИСЛОМ БЕЗ ЛИДИРУЮЩИХ НУЛЕЙ".
-  run err-mes in this-procedure ( input-output v-mess).
-  undo, return error (if p-silent then v-mess else 'loc1':U).
-end.  
 
 if p-obj-type <> {&shop}
 and p-obj-type <> {&stock} then do:

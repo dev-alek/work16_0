@@ -142,7 +142,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       ,input (buffer ub.fin-doc:handle)
       ).
   end.
-  if oldb.prn-doc-code <> ub.fin-doc.prn-doc-code
+  if oldb.prn-doc-code <> ub.fin-doc.prn-doc-code and ub.fin-doc.prn-doc-code <> "тех_"
   AND not new(ub.fin-doc) and g#db-num <> 0 
   and oldb.status_ = ub.fin-doc.status_
   and ub.fin-doc.status_ = {&fin-fact}

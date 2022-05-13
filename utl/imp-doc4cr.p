@@ -392,7 +392,7 @@ define variable v-imp-row as character no-undo .
           ";" +
           substitute("&1;", buf_tt-parts.supp-code) +
           substitute("&1;", buf_tt-parts.supp-type) +
-          substitute("&1;", buf_tt-parts.cont-prn-code)
+          substitute("&1", buf_tt-parts.cont-prn-code)
   .
   return v-imp-row .
 end function .          

@@ -818,7 +818,7 @@ and not (buf_fin-doc.obj-type = ''
 then do:
   { gbl/objdbnum.i buf_fin-doc.obj-type buf_fin-doc.obj-code v-obj-db-num }
   if    v-obj-db-num <> g#db-num 
-     or (buf_fin-doc.prn-doc-code <> "" and buf_fin-doc.prn-doc-code <> ?) 
+     or (buf_fin-doc.prn-doc-code <> "" and buf_fin-doc.prn-doc-code <> ? and buf_fin-doc.prn-doc-code <> "тех_") 
   then do:
     return.
   end .
@@ -976,7 +976,7 @@ then do:
 /*  assign                                                              */
 /*  v-current-num = buf_thbj-attr.property-value-integer.               */
   
-  v-prn-doc-code = mValue.
+  v-prn-doc-code = v-prn-doc-code + mValue.
 /*  case buf_fin-doc.fin-ext-doc-type:                 */
 /*    when {&FDEDT_income_cash} then do:               */
 /*      assign                                         */

@@ -36,6 +36,7 @@ define variable vss-description as character no-undo init "Толкач выгрузки на пр
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
+{ gbl/sel-date.i }
 { str/getctxtp.i def }
 { gbl/getcntxt.i def }
 
@@ -142,6 +143,13 @@ DEFINE VARIABLE v-date AS DATE FORMAT "99/99/9999":U INITIAL today
      LABEL "Дата" 
      VIEW-AS FILL-IN 
      SIZE 12 BY 1 NO-UNDO.
+     
+DEFINE BUTTON b-choose-date
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "b-choose-date"
+     SIZE 3 BY .88.     
 
 DEFINE MENU MENU-B-print
        MENU-ITEM m_one         LABEL "Текущий"
@@ -167,11 +175,12 @@ WITH SEPARATORS SIZE 100 BY 12 FIT-LAST-COLUMN.
 DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1.1 COL 2
      b-print AT ROW 1.1 COL 18.8 WIDGET-ID 2
-     v-date AT ROW 2.3 COL 7 COLON-ALIGNED WIDGET-ID 4
-     v-cash-num AT ROW 2.3 COL 27 COLON-ALIGNED WIDGET-ID 6
-     b-cd AT ROW 2.3 COL 33 COLON-ALIGNED WIDGET-ID 14
-     v-src AT ROW 2.3 COL 47 COLON-ALIGNED WIDGET-ID 8
-     v-kind AT ROW 2.3 COL 77 COLON-ALIGNED WIDGET-ID 12
+     v-date AT ROW 2.3 COL 6 COLON-ALIGNED WIDGET-ID 4
+     b-choose-date AT ROW 2.3 COL 18.1 COLON-ALIGNED WIDGET-ID 16
+     v-cash-num AT ROW 2.3 COL 28 COLON-ALIGNED WIDGET-ID 6
+     b-cd AT ROW 2.3 COL 34 COLON-ALIGNED WIDGET-ID 14
+     v-src AT ROW 2.3 COL 47.3 COLON-ALIGNED WIDGET-ID 8
+     v-kind AT ROW 2.3 COL 77.2 COLON-ALIGNED WIDGET-ID 12
      br-chk-slip-head AT ROW 3.5 COL 2
      SPACE(1) SKIP(0.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -287,10 +296,24 @@ end .
 
 &Scoped-define SELF-NAME v-date
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-date Dialog-Frame
-ON value-changed OF v-date IN FRAME Dialog-Frame
+ON leave OF v-date IN FRAME Dialog-Frame
 DO:
   assign v-date .
   run reopen-query .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-choose-date
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-choose-date Dialog-Frame
+ON CHOOSE OF b-choose-date IN FRAME Dialog-Frame /* b-choose-date */
+DO:
+  run sel-date in this-procedure
+    (input v-date :handle
+    ,input ""
+    ) .
+  apply "leave" to v-date IN FRAME Dialog-Frame .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -607,7 +630,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY v-date v-cash-num v-src v-kind
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-print v-date v-cash-num v-src v-kind b-cd br-chk-slip-head
+  ENABLE b-exit b-print v-date v-cash-num v-src v-kind b-cd br-chk-slip-head b-choose-date
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

@@ -65,7 +65,7 @@ IF not avail(cash-desk) then do:
       , input log-file-name
       , input 1
       , input substitute( "!!!&1 справочника ОСС реализуется только для касс &2 &3 "
-                          , (if action = "U" then "Передача" else "Удаление")
+                          , (if action begins "U" then "Передача" else "Удаление")
                           , {&cd-type-ibm}
                           , {&cd-type-ibm-xml}
                         )
@@ -79,6 +79,8 @@ do:
     view-as alert-box QUESTION buttons YES-NO update glog.
   if not glog then return.
 end.
+if action = "DD" then action = "D" .
+if action = "UU" then action = "U" .
 { str/putc-oss.i }
 /*PROCEDURE for-cash-cycle*/
 /*пройдем цикл по всем кассам одного типа*/
