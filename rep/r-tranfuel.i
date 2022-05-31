@@ -70,6 +70,8 @@ define {2} temp-table tt-grp no-undo
    field cash-pay-code      as integer
    field cash-pay-name      as character
    field resume-tran        as logical
+   field uuid               as character
+   field uuid-cheq          as character
  index name  obj-type obj-code obj-name.
 .
 define {2} temp-table tt-grp-uuid no-undo
@@ -745,8 +747,10 @@ procedure AfterCalc:
                  tt-grp.obj-type = tt-rep.obj-type 
              and tt-grp.obj-code = tt-rep.obj-code
              and tt-grp.obj-name = tt-rep.obj-name
-             and (   available tt-grp-cheq-uuid
-                  or available tt-grp-uuid )    
+/*             and (   available tt-grp-cheq-uuid*/
+/*                  or available tt-grp-uuid )   */
+             and (tt-grp.uuid = tt-rep.uuid or
+             tt-grp.uuid-cheq = tt-rep.uuid-cheq)   
       
       no-error.
       
@@ -759,6 +763,8 @@ procedure AfterCalc:
             tt-grp.obj-code = tt-rep.obj-code
             tt-grp.obj-name = tt-rep.obj-name
             tt-grp.grp-num  = v-count-grp-num
+            tt-grp.uuid     = tt-rep.uuid
+            tt-grp.uuid-cheq = tt-rep.uuid-cheq
             .
       end.
       
@@ -1137,7 +1143,7 @@ procedure AfterCalc:
          delete tt-rep.
       end.
    end.
-   
+
    /* Общее время отпуска НП */
    for each tt-rep
    break
