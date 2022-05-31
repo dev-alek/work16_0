@@ -2945,7 +2945,7 @@ end.
           {&create-thbj-attr}.
       end.
 
-      v-prop-code = "{&bef-attr-petrol_autopump-izm},{&bef-attr-petrol_autopump},{&bef-attr-petrol_avtinvpm},{&bef-attr-petrol_rvsnmter},{&bef-attr-petrol_olddens},{&bef-attr-petrol_calc-free-vol},{&bef-attr-petrol_rvd-own-nb}".
+      v-prop-code = "{&bef-attr-petrol_autopump-izm},{&bef-attr-petrol_autopump},{&bef-attr-petrol_avtinvpm},{&bef-attr-petrol_rvsnmter},{&bef-attr-petrol_olddens},{&bef-attr-petrol_calc-free-vol},{&bef-attr-petrol_rvd-own-nb},{&bef-attr-petrol_trnscanqr}".
 &scop ptype logical
 &scop prop-value no
 &scop prop-code entry(v-ii, v-prop-code)

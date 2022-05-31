@@ -4815,7 +4815,7 @@ character~
 &scop user-can-edit-attr-petrol   true
 &scop output-display-attr-petrol  true
 &scop other-attr-petrol 'spr-ext=adm\shattrpt.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical,character,character,character,decimal,decimal,character,decimal,decimal,logical,logical,logical,character,integer':U
+&scop prop-type-list-attr-petrol 'logical,character,logical,logical,logical,character,character,integer,logical,integer,integer,character,integer,integer,logical,character,character,character,decimal,decimal,character,decimal,decimal,logical,logical,logical,character,integer,logical':U
 &scop prop-label-list-attr-petrol '~
 Расхождение в инвентаризации по сверке делать без учета погрешности измерения,~
 Алгоритм вычисления плотности для продаж,~
@@ -4843,7 +4843,8 @@ character~
 Обязательный выбор этапа для приема газовоза,~
 Разрешить ручное заполнение документа приёма НП при поставках с собственных НБ,~
 Обязательные поля в секциях ПН,~
-Время на сканирование QR-кода (мс)~
+Время на сканирование QR-кода (мс),~
+Автозаполнение НП~
 '
 &scop global-attr-petrol true
 &scop host-attr-petrol true
