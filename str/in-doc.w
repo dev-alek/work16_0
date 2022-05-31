@@ -268,6 +268,7 @@ define variable v-edit-fact-wayb as logical   no-undo .
 define variable v-fact-qnty as character no-undo.
 
 define variable v-can-edit as logical init yes .
+define variable v-trnscanqr as logical no-undo .
 
 define new shared variable PrintScale   as logical init true no-undo.
 define new shared variable CostPrice    as logical no-undo.
@@ -2902,13 +2903,35 @@ do on error undo main-block, leave main-block :
            {&trdcattr-is-fuel}
            "yes" 
         no-error}
-        varlog = no.
-        message "Читать QR код ПН?"
-          view-as alert-box question buttons YES-NO update varlog.
-        if varlog
-        then do:
-          run str/trnscanqr.w (parparentproc, t-doc.doc-code, "", this-procedure).
-        end. 
+        
+        run adm/shattri.p (
+            input "get":U
+            ,input t-doc.obj-type
+            ,input t-doc.obj-code
+            ,input {&attr-petrol}
+            ,input  "trnscanqr"
+            ,output v-value-character
+            ,output v-value-date
+            ,output v-value-decimal
+            ,output v-value-integer
+            ,output v-value-logical
+            ,output par-type
+            ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+            ) no-error .
+        if error-status :error
+        then v-trnscanqr = false .
+        else v-trnscanqr = v-value-logical .
+        
+        if v-trnscanqr
+        then do :
+          varlog = no.
+          message "Читать QR код ПН?"
+            view-as alert-box question buttons YES-NO update varlog.
+          if varlog
+          then do:
+            run str/trnscanqr.w (parparentproc, t-doc.doc-code, "", this-procedure).
+          end. 
+        end .
       end.
       when 2 
       then do:

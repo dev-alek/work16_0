@@ -443,6 +443,16 @@ procedure save_update :
     return .
   end . 
   
+  if v-json-str begins (CHR(123) + "@data@^")
+  then do :
+    v-mark:screen-value = "" .
+    v-scan-str = "".
+    v-mark = "".
+    message "Ошибка сканирования!" skip "Убедитесь, что установлена русская раскладка клавиатуры." view-as alert-box .
+    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
+    return .
+  end .
+  
   v-ix = index (v-json-str, ',"CRC":"').
   v-crc = substring (v-json-str, v-ix + 8, 8).
   v-json-str = substring (v-json-str, 9, v-ix - 9).
@@ -462,16 +472,6 @@ procedure save_update :
   assign v-mark = v-mark:screen-value .
  
   if trim(v-mark) = "" then return .
-  
-  if v-mark begins (CHR(123) + "@data@^")
-  then do :
-    v-mark:screen-value = "" .
-    v-scan-str = "".
-    v-mark = "".
-    message "Ошибка сканирования!" skip "Убедитесь, что установлена русская раскладка клавиатуры." view-as alert-box .
-    v-sts:screen-value in frame {&frame-name} = "ожидание сканирования" .
-    return .
-  end .
   
   run checkJson (input v-mark, output v-ok) .
   if not v-ok

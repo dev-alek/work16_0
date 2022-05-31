@@ -351,7 +351,7 @@ then do :
 end .
 run check-cli no-error.
 if error-status :error then return no-apply.
-&if "{1}" = "in" &then run fill-mol in this-procedure. &endif
+&if "{1}" = "in" or "{1}" = "inv" or "{1}" = "out" &then run fill-mol in this-procedure. &endif
 if error-status :error then return no-apply.
 end.
 
@@ -1967,6 +1967,7 @@ procedure proc-exit :
   if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}  and pardoc-mode <> {&lookup} then do:
      run str/ep-corrp.p (input parparentproc , input t-doc.doc-code ) no-error.
   end.
+  &if "{1}" = "in" or "{1}" = "inv" or "{1}" = "out" &then run fill-mol in this-procedure. &endif
 end procedure. /* proc-exit */
 
 procedure check-base-code :
@@ -2098,7 +2099,7 @@ procedure proc-history :
 end procedure. /* proc-history */
 
 
-&if "{1}" = "in" or "{1}" = "inv" &then
+&if "{1}" = "in" or "{1}" = "inv" or "{1}" = "out" &then
 procedure fill-mol:
   if pardoc-mode = {&update} or pardoc-mode = {&add-def}
   then 
@@ -2116,11 +2117,11 @@ procedure fill-mol:
         t-doc.wrkr:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
         apply "leave" to t-doc.wrkr in frame {&frame-name}.
       end.
+      t-doc.agnt:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
+      apply "leave" to t-doc.agnt in frame {&frame-name}.
     end.
-    t-doc.agnt:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
-    apply "leave" to t-doc.agnt in frame {&frame-name}.    
+    release ub.user-account.    
   end.
-  release ub.user-account.
 end.
 &endif
 /* $Workfile$   E n d */

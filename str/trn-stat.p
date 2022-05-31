@@ -2406,6 +2406,7 @@ vartechproliv = no
             bf_trn-doc.status_  = varstatus
             bf_trn-doc.flag_    = varflag.
         end. /*статус не fact*/
+        run fill-mol .
       end. /* приход внешний */
       when {&TDEDT_Ras_Vnesh}     or
       when {&TDEDT_Ras_Vnesh_VP}  or
@@ -3145,6 +3146,12 @@ vartechproliv = no
             end.
           end case. /* bf_trn-doc.status_ */
         end. /* запрос+, накл+, разрешен+ */
+        if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
+        or bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+        or bf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}
+        then do :
+          run fill-mol .
+        end .
       end.  /* рас возврат спи, при внутр ------------------------------------------------- */
       when {&TDEDT_Inv}              or
       when {&TDEDT_Corr_Acc_Price}   or
@@ -3208,6 +3215,7 @@ vartechproliv = no
               undo, return error substitute( "Ошибочный статус &1 для закрытия.", bf_trn-doc.status_).
             end.
           end.
+          run fill-mol .
         end.
         else do:
           /*Документ коррекции приходных цен*/
@@ -4427,6 +4435,22 @@ define variable v-date as date      no-undo .
 
 end procedure. /* ver-inv-date-close */
 
+procedure fill-mol:
+  find first ub.user-account no-lock where ub.user-account.user-id = v-curr-userid.
+  if ub.user-account.psn-code <> 0 and ub.user-account.psn-code <> ?
+    then 
+  do:
+    if bf_trn-doc.agnt = ? then do:
+      bf_trn-doc.agnt = ub.user-account.psn-code.
+    end.
+    if bf_trn-doc.wrkr = ?
+    then do:
+      bf_trn-doc.wrkr = ub.user-account.psn-code.
+    end.
+    bf_trn-doc.boss = ub.user-account.psn-code.
+  end.
+  release ub.user-account.    
+end procedure.
 
 procedure need-ver-spec :
 define output parameter v-is-nover as logical   no-undo .
