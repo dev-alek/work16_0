@@ -6744,7 +6744,7 @@ PROCEDURE proc-b-slip :
   if p-slip-type = "chk"
   then do :
     
-    run str/chk-slips.w (input v-cntxt-db-num,
+    run str/chk-slips.w (input v-cntxt-db-num-obj,
                          input trim(buf_chk-doc-attr.attr-value),
                          input ?)
                         .                               
@@ -6771,7 +6771,7 @@ PROCEDURE proc-b-slip :
       end .
     end .
     
-    run str/chk-slips.w (input v-cntxt-db-num,
+    run str/chk-slips.w (input v-cntxt-db-num-obj,
                          input trim(buf_chk-doc-attr.attr-value),
                          input trim(buf_chk-pay-attr.attr-value))
                         .
