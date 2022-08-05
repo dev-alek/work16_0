@@ -963,6 +963,7 @@ define private temp-table tt-recid-TranFuel no-undo
     /* section3 обязательность 0-1 */
     /* если в чеке есть скидка по топливному купону, у которой discnt-type = 23 и discnt-value-pcnt = 0 - то
        из этого чека скидки не выгружаем вообще. Там попадается скидка -1000% */
+    define variable vflg as logical no-undo.
     if not can-find (first chk-discnt where chk-discnt.doc-code = p-buf_chk-doc.doc-code
                                         and chk-discnt.discnt-type       = 23
                                         and chk-discnt.discnt-value-pcnt = 0) then do :
@@ -974,14 +975,17 @@ define private temp-table tt-recid-TranFuel no-undo
                or buf_chk-discnt.value-type = 14)
     break by buf_chk-discnt.doc-code :
       if first-of(buf_chk-discnt.doc-code) then insw:start-element ({&tag-section3}) .
-      
       /*если промоакции и скидка на подитог, необходимо размазать скидку на все товары*/
       if /* buf_chk-discnt.promo-id > "" and */  buf_chk-discnt.line-type = integer({&discnt-sub-total})
+      and buf_chk-discnt.record-type = 1 
       and can-find(first  bf_chk-discnt no-lock
-          where bf_chk-discnt.doc-code = buf_chk-discnt.doc-code and bf_chk-discnt.record-type = 1 and bf_chk-discnt.discnt-id = buf_chk-discnt.discnt-id ) then 
+          where bf_chk-discnt.doc-code = buf_chk-discnt.doc-code and  bf_chk-discnt.record-type = 1 and bf_chk-discnt.discnt-id = buf_chk-discnt.discnt-id ) then 
       do:
-        for each bf_chk-discnt no-lock
+         if not vflg
+         then
+         for each bf_chk-discnt no-lock
           where bf_chk-discnt.doc-code = buf_chk-discnt.doc-code and bf_chk-discnt.record-type = 1  and bf_chk-discnt.discnt-id = buf_chk-discnt.discnt-id  break by bf_chk-discnt.object-line-num:
+          vflg = yes.
           insw:start-element ({&tag-item3}) .
           insw:write-data-element (  "discnt-num",       string(bf_chk-discnt.discnt-id)          ) . /* Номер строки скидки (Число) */
           insw:write-data-element (  "line-num",         string(bf_chk-discnt.object-line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
