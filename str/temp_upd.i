@@ -22,6 +22,8 @@ Creation date: 10/10/08
  
 /* ***************************  Main Block  *************************** */
 
+
+
 define temp-table tt-utd like ub.utd 
   field stts        as character
   field stts-edi    as character
@@ -33,6 +35,14 @@ define temp-table tt-utd like ub.utd
   field obj-name    as character
   .
 
+define temp-table tt-utd-lines-filtr no-undo
+    field db-num  as integer 
+    field doc-id  as integer 
+    field linenum as integer 
+    field bar-code as character 
+    index pi  db-num doc-id LineNum
+    index bar-code bar-code db-num doc-id LineNum
+.
 
 define temp-table tt-utd-lines like ub.utd-lines
   field qnty-scan as integer 
@@ -44,6 +54,8 @@ define temp-table tt-utd-lines like ub.utd-lines
   field sts_err   as logical
   field UnitCli   as character
   field UnitCliQnty as decimal
+  field isMarking   as logical
+  field isArtic     as logical
   index pi  db-num doc-id LineNum
   index gds-code gds-code
   index sts stts sts
@@ -62,7 +74,8 @@ define temp-table tt-marking-lines like ub.marking-lines
   field db-num      as integer
   field doc-id      as integer
   field LineNum     as integer
-  field GrayZone    as logical 
+  field GrayZone    as logical
+  field isMark      as logical 
   field marking-string as character
   index pi  doc-level   sts
   index pi2 mark-parent sts
@@ -113,4 +126,5 @@ define temp-table tt-utd-err like ub.utd-err
   field descr as character
   field gds-code as integer
   field LineNum  as integer
+  field type     as integer
   .  

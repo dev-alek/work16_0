@@ -4487,12 +4487,12 @@ do while varlns-cnt <= num-entries (varnotes):
       next.
     end.
 
-
   end.
   
   varvalue = "" .
   run gbl/getobjsrvhndl.p (input-output ObjSrv).
   EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+ 
   RUN gds-attr-value (
                       INPUT bf_goods.gds-code,
                       INPUT {&attr-mark-type},
@@ -4500,7 +4500,7 @@ do while varlns-cnt <= num-entries (varnotes):
                       OUTPUT vartype
                       ).
   if varvalue > "" then do:
-   if EDOParSec:GetIsMarkingForType(varvalue)
+   if EDOParSec:GetIsMarkingForType(varvalue) 
   then do :
       if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then 
       do:
@@ -4521,18 +4521,30 @@ do while varlns-cnt <= num-entries (varnotes):
           next.
       end.
   end .
-   if EDOParSec:GetIsMarkingForTypeEDO(varvalue) and EDOParSec:IsEdo
+   if EDOParSec:GetIsArticForType(varvalue) 
   then do :
       if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then 
       do:
           message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
-              "нельзя добавлять, так как он подлежит маркировке."
+              "нельзя добавлять в ручном режиме, так как он подлежит маркировке."
               view-as alert-box error.
           assign 
               varlns-cnt = varlns-cnt + 1.
           next.          
       end.
-  end .
+  end .  
+/*   if EDOParSec:GetIsMarkingForTypeEDO(varvalue) and EDOParSec:IsEdo                                                  */
+/*  then do :                                                                                                           */
+/*      if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then                                                                */
+/*      do:                                                                                                             */
+/*          message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip*/
+/*              "нельзя добавлять, так как он подлежит маркировке."                                                     */
+/*              view-as alert-box error.                                                                                */
+/*          assign                                                                                                      */
+/*              varlns-cnt = varlns-cnt + 1.                                                                            */
+/*          next.                                                                                                       */
+/*      end.                                                                                                            */
+/*  end .                                                                                                               */
   end.
   
   
@@ -4560,7 +4572,6 @@ do while varlns-cnt <= num-entries (varnotes):
   end.
   assign
     pardoc-rec = recid(t-doc).
-
   run str/in-line.w (input  parparentproc,
                      input  ((if varlns-cnt > 1 then "ЦИКЛ":U else {&add-def}) + v-modeetc),
                      input  pardoc-rec,
@@ -4583,7 +4594,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE del-doc-line d-in-doc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE del-doc-line d-in-doc 
 PROCEDURE del-doc-line :
 /*------------------------------------------------------------------------------
   Purpose:

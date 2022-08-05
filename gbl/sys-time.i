@@ -24,7 +24,9 @@ mjd - системная дата и время для часового пояса UTC в виде одного десятичного чи
         дробная часть - время прошедшее с начала суток
 
 */
-
+&if defined (sys-time_i) eq 0
+&then
+&glob sys-time_i yes
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
@@ -695,6 +697,6 @@ PROCEDURE GetCurrentProcessId EXTERNAL "kernel32.dll"
 :
   DEFINE RETURN PARAMETER RetVal          AS LONG.
 END PROCEDURE.
-
+&endif
 
 /* $Workfile$ e n d */

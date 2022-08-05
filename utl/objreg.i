@@ -6,8 +6,11 @@
 &elseif "{4}" eq ""
 &then
 {1} = new {2} ({3}).
-&else
+&elseif "{5}" eq ""
+&then
 {1} = new {2} ({3},{4}).
+&else 
+{1} = new {2} ({3},{4},{5}).
 &endif
 &if defined(GlobObjSrv) eq 0
 &then

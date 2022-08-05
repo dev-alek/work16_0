@@ -217,6 +217,7 @@ Creation date: 01/29/07
 &glob bef-table_c-cli-hist c-cli-hist
 &glob bef-table_c-clients c-clients
 &glob bef-table_c-clients-attr c-clients-attr
+&glob bef-table_c-Code c-Code
 &glob bef-table_c-condition-keeping c-condition-keeping
 &glob bef-table_c-condition-keeping-attr c-condition-keeping-attr
 &glob bef-table_c-config c-config

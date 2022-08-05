@@ -417,6 +417,8 @@ Creation date: 01/29/07
 &glob table_c-clients-full '{&bef-table_c-clients-full}':U
 &glob bef-table_c-clients-attr-full Атрибуты товара на объекте
 &glob table_c-clients-attr-full '{&bef-table_c-clients-attr-full}':U
+&glob bef-table_c-Code-full Справочники
+&glob table_c-Code-full '{&bef-table_c-Code-full}':U
 &glob bef-table_c-condition-keeping-full История условий хранения
 &glob table_c-condition-keeping-full '{&bef-table_c-condition-keeping-full}':U
 &glob bef-table_c-condition-keeping-attr-full Иcтория для condition-keeping-attr

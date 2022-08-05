@@ -44,6 +44,7 @@ define buffer tt-sespar for SesParam.
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
+define input  parameter parparentproc as handle no-undo.
 define input  parameter iProcId as character no-undo.
 define input  parameter dataset  for ds-asuncProc bind.
 /* Local Variable Definitions ---                                       */
@@ -113,7 +114,7 @@ define button Btn_Cancel auto-end-key
      size 15 by 1.13
      bgcolor 8 .
 
-define button Btn_OK auto-go 
+define button Btn_OK  
      label "Выполнить" 
      size 15 by 1.13
      bgcolor 8 .
@@ -270,11 +271,33 @@ on choose of Btn_OK in frame Dialog-Frame /* Отказать в подписи */
     define buffer tt-sespar for SesParam.
     define buffer tt-procAsunc for procAsunc.
     
-    define variable vParams as character no-undo.
-    define variable vwaitfile as character no-undo.
-    vParams = fill({&delim-par},25).
-    for each tt-Param where tt-Param.procid eq iProcId
+    define variable vParams      as character no-undo.
+    define variable vwaitfile    as character no-undo.
+    define variable vParamSession as character no-undo.
+    find first tt-procAsunc where tt-procAsunc.procid eq iProcid no-lock.
+    
+    for each tt-sespar where tt-sespar.parCheck
     no-lock:
+       vparamSession = vparamSession + " " + tt-sespar.parvalue.
+       if tt-sespar.parWaitFile ne "" and tt-sespar.parWaitFile ne ?
+       then
+          vwaitfile = vwaitfile +  "," + tt-sespar.parWaitFile.
+    end.
+    vwaitfile = trim(vwaitfile,",").
+    
+    vParams = fill({&delim-par},25).
+    for each tt-Param where tt-Param.procid eq tt-procAsunc.procid
+    no-lock:
+       if tt-Param.ParamValue eq "#paramSession#"
+       then
+           tt-Param.ParamValue = vparamSession.
+       else if tt-Param.ParamValue eq "#waitfile#"
+       then
+           tt-Param.ParamValue = vwaitfile.
+       else if tt-Param.ParamValue eq "#SaveFile#"
+       then
+           tt-Param.ParamValue = "yes".
+       else
        if     tt-Param.ParamType ne ""
           and tt-Param.ParamType ne ?
        then do:
@@ -302,38 +325,44 @@ on choose of Btn_OK in frame Dialog-Frame /* Отказать в подписи */
        entry(tt-Param.numparam,vParams,{&delim-par}) = tt-Param.ParamValue.
        
     end.
-    vwaitfile = trim(vwaitfile,",").
+    
     vParams = right-trim(vParams,{&delim-par}).
-    define variable vasynchelper as class ibs.th.file.asynchelperTh no-undo.
-    vAsyncHelper = new ibs.th.file.AsyncHelperth().
-    vAsyncHelper:mProcPublish = this-procedure.
-    vAsyncHelper:user-passwd = "current".
-    vAsyncHelper:MyBachMode = session:batch-mode.
-    vAsyncHelper:SaveFile = yes.
     
-    for each tt-sespar where tt-sespar.parCheck
-    no-lock:
-       vAsyncHelper:paramSession = vAsyncHelper:paramSession + " " + tt-sespar.parvalue.
-       if tt-sespar.parWaitFile ne "" and tt-sespar.parWaitFile ne ?
-       then
-          vwaitfile = vwaitfile +  "," + tt-sespar.parWaitFile.
+    if tt-procAsunc.proctyperun eq "diallog"
+    then do: 
+       run str/diallog.w ( parparentproc
+              , this-procedure
+              , tt-procAsunc.procval
+              , vParams
+              , no /*p-auto-go*/
+              , '':U
+              , tt-procAsunc.procname) no-error .
     end.
-    vwaitfile = trim(vwaitfile,",").
-    vAsyncHelper:WaitFile = vwaitfile.
-    find first tt-procAsunc where tt-procAsunc.procid eq iProcid no-lock.
-    vAsyncHelper:AsyncProc(tt-procAsunc.procval, vParams,1).
-    
-            
-    vAsyncHelper:waitfor (?, 1,tt-procAsunc.procname).
-    
-    message "Результаты выполнения находятся в " vAsyncHelper:SaveArh()
-    view-as alert-box.
-    delete object vAsyncHelper.
-   
+    else do:
+       define variable vasynchelper as class ibs.th.file.asynchelperTh no-undo.
+       
+       vAsyncHelper = new ibs.th.file.AsyncHelperth().
+       vAsyncHelper:mProcPublish   = this-procedure.
+       vAsyncHelper:setCurrentUserPasswd().
+       vAsyncHelper:MyBachMode     = session:batch-mode.
+       vAsyncHelper:SaveFile       = yes.
+       vAsyncHelper:paramSession   = vparamSession.
+       
+       vAsyncHelper:WaitFile = vwaitfile.
+       vAsyncHelper:AsyncProc(tt-procAsunc.procval, vParams,1).
+       
+               
+       run ibs\th\file\waithelper.p (vAsyncHelper,?, 1,tt-procAsunc.procname).
+       
+       message "Результаты выполнения находятся в " vAsyncHelper:SaveArh()
+       view-as alert-box.
+       delete object vAsyncHelper.
+   end.
     
   end.
 
 /* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define BROWSE-NAME BROWSE-2
 &UNDEFINE SELF-NAME

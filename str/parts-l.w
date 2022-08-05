@@ -2403,7 +2403,7 @@ end.
                         OUTPUT v-marking-type
                         ).
 
-if not error-status:error and v-marking-value <> {&attr-mark-type_not-type} then 
+if not error-status:error and v-marking-value <> "" then 
   v-marking = true .
                     
     define variable v-alcohol-value as character no-undo .

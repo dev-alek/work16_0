@@ -81,6 +81,14 @@ define variable vsdSts           as class vsdstatustype no-undo.
 define variable v-scan-str       as character no-undo.
 define variable v-timestap       as integer no-undo.
 define variable iLang            as integer no-undo.
+define variable p-value-logical as logical no-undo.
+define variable p-value-character  as character no-undo.
+define variable p-value-date       as date no-undo.
+define variable p-value-decimal    as decimal no-undo.
+define variable p-value-integer    as integer no-undo.
+define variable p-param-type       as character no-undo.
+define variable v-tth as handle no-undo .
+
 
 define variable par-type          as character no-undo.
 define variable v-value-character as character no-undo .
@@ -638,6 +646,22 @@ end.
 ON ENTRY OF UUID_VSD IN FRAME Dialog-Frame /*             UUID бяд */
 DO:
   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).
 END.
 
@@ -748,6 +772,22 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   run initialize-section.
   run show-current-page(input 1).
   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).
   run enable_UI.
   run hide-disp-page.

@@ -50,6 +50,7 @@ run gbl/getObjSrvhndl.p (input-output ObjSrv).
 { str/temp_upd.i }
 { utl/gtin.i     }
 { rep/gn-extp.i  }
+{ gbl/getcntxt.i def }
 define temp-table tt-mark no-undo
   field alcmark as character.
 
@@ -61,6 +62,13 @@ define input  parameter p-mode                as character           no-undo .
 define input  parameter p-inv-handle          as handle              no-undo .
 
 define variable iLang           as integer   no-undo.
+define variable p-value-logical as logical no-undo.
+define variable p-value-character  as character no-undo.
+define variable p-value-date       as date no-undo.
+define variable p-value-decimal    as decimal no-undo.
+define variable p-value-integer    as integer no-undo.
+define variable p-param-type       as character no-undo.
+define variable v-tth as handle no-undo .
 
 define variable v-alc-code      as character no-undo .
 define variable v-proc-name-err as character no-undo initial 'impmark.txt'. /* Имя лога */
@@ -366,6 +374,22 @@ END.
 ON ENTRY OF v-mark IN FRAME Dialog-Frame /* Марка */
 DO:
     run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
     run ActivateKeyboardLayout (input iLang, input 0).
     
   END.
@@ -483,6 +507,22 @@ MAIN-BLOCK:
 DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   :
   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).     
   RUN enable_UI.
   apply "entry" to v-mark in FRAME {&FRAME-NAME}.

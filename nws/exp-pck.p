@@ -74,7 +74,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-dsh           as handle    no-undo .
   define variable v-dsh-dump      as handle    no-undo .
   define variable v-xmlh          as handle    no-undo .
-  define variable v-found-gate    as logical no-undo .
+  define variable v-found-gate    as logical   no-undo .
+  define variable mFrameView      as logical   no-undo init yes.
+  mFrameView = writelogvalue ne "AsyncProc". 
 
   define variable v-sys-key  as character no-undo . /* для чтения параметра конфигурации */
 
@@ -105,20 +107,24 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     v-sys-key
     no-error
   }
-
-  view frame exp-pck.
-  assign
-    frame exp-pck:title = substitute( "&1 для БД &2", frame exp-pck:title, trim( string( p-db-num, ">>>>>>>>9" ) ) )
-  .
-
+if mFrameView
+  then do:
+     view frame exp-pck.
+     assign
+       frame exp-pck:title = substitute( "&1 для БД &2", frame exp-pck:title, trim( string( p-db-num, ">>>>>>>>9" ) ) )
+     .
+  end.
+  
   assign
     v-err = 0
   .
-  display
-    p-db-num
-    p-source-dir
-    p-pack-name
-    with frame exp-pck.
+  if mFrameView
+  then
+     display
+       p-db-num
+       p-source-dir
+       p-pack-name
+       with frame exp-pck.
 
   find first buf_pck-sent no-lock
     where buf_pck-sent.db-num   = p-db-num
@@ -252,10 +258,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       0
       rec-cnt
     }
-    display
-      rec-cnt
-      lin-cnt
-      with frame exp-pck.
+    if mFrameView
+    then
+       display
+         rec-cnt
+         lin-cnt
+         with frame exp-pck.
   end. /* for each ub.pck-sent ... */
   for each ub.pck-rcvd no-lock
      where ub.pck-rcvd.db-num     = p-db-num
@@ -281,10 +289,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       0
       rec-cnt
     }
-    display
-      rec-cnt
-      lin-cnt
-      with frame exp-pck.
+    if mFrameView
+    then
+       display
+         rec-cnt
+         lin-cnt
+         with frame exp-pck.
   end. /* for each ub.pck-rcvd ... */
 
   for each ub.pck-rcvd-attr no-lock
@@ -593,9 +603,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             delete object tth .
           end.
 
-          display
-            lin-cnt
-            with frame exp-pck.
+          if mFrameView
+          then
+             display
+               lin-cnt
+               with frame exp-pck.
 
         end.
 
@@ -603,10 +615,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       if v-found-gate then do:
         run all-gates-clear in this-procedure (  buffer buf_temp-xml-tables).
       end.
-      display
-        rec-cnt
-        lin-cnt
-        with frame exp-pck.
+      if mFrameView
+      then
+         display
+           rec-cnt
+           lin-cnt
+           with frame exp-pck.
   end. /* for each buf_route */
 
   assign
@@ -697,5 +711,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
 
 end.
-
-hide frame exp-pck.
+if mFrameView
+then
+   hide frame exp-pck.

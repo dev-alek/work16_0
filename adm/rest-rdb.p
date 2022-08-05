@@ -1412,14 +1412,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
     /* Запись _user создается в триггере на изменение user-login.
        Триггера отключены, поэтому принудительно создаем здесь. */
-    for each dst.user-login no-lock
+    for each dst.user-login exclusive-lock
     on error  undo, return error substitute( "&1 (dst.user-login). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
     on stop   undo, return error substitute( "&1 (dst.user-login). stop", vss-workfile )
     on endkey undo, return error substitute( "&1 (dst.user-login). endkey", vss-workfile )
     :
-      if not can-find (first dst._user where dst._user._userid = dst.user-login.user-login no-lock) then do:
-        { trg/user.i dst }
-      end.
+        if not can-find (first dst._user where dst._user._userid = dst.user-login.user-login no-lock) then do:
+           { trg/user.i dst }
+        end.
     end.
 
     /* Если выгружается новая УБД, то в ней создается адм
@@ -1856,6 +1856,26 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       "OK rest-season"  skip.
       output stream slog close .
     end.
+    
+    output stream slog to rest-rdb.txt append .
+      export stream slog "start CashBook " cur-time-string() .
+      output stream slog close .
+
+      run rest-cash-book in this-procedure
+        
+        no-error .
+      if error-status :error then do:
+        output stream slog to rest-rdb.txt append .
+        export stream slog  error-status :get-message(1) return-value cur-time-string() .
+        output stream slog close .
+        return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+      end.
+      else do:
+         output stream slog to rest-rdb.txt append .
+         export stream slog
+         "OK CashBook"  skip.
+         output stream slog close .
+      end.
 
     for each ub.clients no-lock
       where ub.clients.db-num = p-db-num
@@ -2279,6 +2299,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
           output stream slog close .
           return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
       end.
+      
+       
 
       if p-unload-history then do:
         output stream slog to rest-rdb.txt append .
@@ -3042,21 +3064,17 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       end.
 
       output stream slog to rest-rdb.txt append .
-      export stream slog "start CashBook " cur-time-string() .
+      export stream slog "start PromoAction " cur-time-string() .
       output stream slog close .
 
-      run rest-cash-book in this-procedure
-        ( input ub.clients.obj-type
-         ,input ub.clients.obj-code
-        )
+      run rest-promo-action in this-procedure
         no-error .
       if error-status :error then do:
         output stream slog to rest-rdb.txt append .
         export stream slog  error-status :get-message(1) return-value cur-time-string() .
         output stream slog close .
         return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
-      end.
-   
+      end.   
     end. /* for each clients */
 
     /* Вызов процедуры выгрузки документов МЦ */
@@ -5394,7 +5412,8 @@ procedure rest-tcc :
       ( output v-today
        ,output v-time
       ).
-
+    run adm\comcom.p (p-db-num).
+    
     for each temp_db-rec-attr
     on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
     :
@@ -5416,7 +5435,7 @@ procedure rest-tcc :
           buffer-copy temp_db-rec-attr to buf-dst_db-rec-attr
             assign
               buf-dst_db-rec-attr.db-num             = p-db-num
-              buf-dst_db-rec-attr.attr-value-logical = false
+              buf-dst_db-rec-attr.attr-value-logical = yes
           .
         end.
 
@@ -5430,7 +5449,7 @@ procedure rest-tcc :
           buffer-copy temp_db-rec-attr to buf-ub_db-rec-attr
             assign
               buf-ub_db-rec-attr.db-num             = p-db-num
-              buf-ub_db-rec-attr.attr-value-logical = false
+              buf-ub_db-rec-attr.attr-value-logical = yes
           .
 
           if p-type-unload = {&unload-copy} then do:
@@ -5438,7 +5457,7 @@ procedure rest-tcc :
             buffer-copy temp_db-rec-attr to buf-src_db-rec-attr
               assign
                 buf-src_db-rec-attr.db-num             = p-db-num
-                buf-src_db-rec-attr.attr-value-logical = false
+                buf-src_db-rec-attr.attr-value-logical = yes
             .
           end.
         end.
@@ -5998,8 +6017,6 @@ end procedure. /* rest-add-doc */
 
 procedure rest-cash-book private :
 /* Кассовые книги. Действие то же самое, что с add-doc и с action-role */
-define input  parameter p-obj-type as character no-undo .
-define input  parameter p-obj-code as integer   no-undo .
 
   do
   on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
@@ -6025,8 +6042,8 @@ define input  parameter p-obj-code as integer   no-undo .
       end.
 
       for each ub.CashBookRule no-lock
-         where ub.CashBookRule.Obj-type = p-obj-type
-           and ub.CashBookRule.Obj-code = p-obj-code
+/*         where ub.CashBookRule.Obj-type = p-obj-type*/
+/*           and ub.CashBookRule.Obj-code = p-obj-code*/
       on error  undo, return error substitute( "&1 (CashBookRule). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
       on stop   undo, return error substitute( "&1 (CashBookRule). stop", vss-workfile )
       on endkey undo, return error substitute( "&1 (CashBookRule). endkey", vss-workfile )
@@ -6037,8 +6054,8 @@ define input  parameter p-obj-code as integer   no-undo .
       end.
       
       for each ub.CashBookRuleAttr no-lock
-              where ub.CashBookRuleAttr.obj-type    = ub.CashBookRule.obj-type
-                and ub.CashBookRuleAttr.obj-code    = ub.CashBookRule.obj-code
+/*              where ub.CashBookRuleAttr.obj-type    = ub.CashBookRule.obj-type*/
+/*                and ub.CashBookRuleAttr.obj-code    = ub.CashBookRule.obj-code*/
       on error  undo, return error substitute( "&1 (CashBookRuleAttr). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
       on stop   undo, return error substitute( "&1 (CashBookRuleAttr). stop", vss-workfile )
       on endkey undo, return error substitute( "&1 (CashBookRuleAttr). endkey", vss-workfile )
@@ -6068,3 +6085,127 @@ define input  parameter p-obj-code as integer   no-undo .
   end. /* end_of doe */
 
 end procedure. /* rest-cash-book */
+
+procedure rest-promo-action private :
+   /* Промоакции */
+   do
+      on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+      on stop   undo, return error substitute( "&1. stop", vss-workfile )
+      on endkey undo, return error substitute( "&1. endkey", vss-workfile )
+      :
+      for each dst.PromoAction:
+         delete dst.PromoAction .
+      end.   
+      for each dst.PromoAttr:
+         delete dst.PromoAttr .
+      end.   
+      for each dst.promo-schedule:
+         delete dst.promo-schedule .
+      end.   
+      for each dst.promo-schedule-week:
+         delete dst.promo-schedule-week .
+      end.   
+      for each dst.PromoCriterion:
+         delete dst.PromoCriterion .
+      end.   
+      for each dst.PromoGift:
+         delete dst.PromoGift .
+      end.   
+      for each dst.PromoGoods:
+         delete dst.PromoGoods .
+      end.         
+      for each dst.PromoObject:
+         delete dst.PromoObject .
+      end.       
+           
+      for each ub.PromoAction no-lock
+         where ub.PromoAction.end-date < today and ub.PromoAction.Status_ <> 2 
+         on error  undo, return error substitute( "&1 (PromoAction). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+         on stop   undo, return error substitute( "&1 (PromoAction). stop", vss-workfile )
+         on endkey undo, return error substitute( "&1 (PromoAction). endkey", vss-workfile )
+         :
+         create dst.PromoAction.
+         buffer-copy ub.PromoAction to dst.PromoAction .
+         for each ub.PromoAttr no-lock
+            where ub.PromoAttr.tablename = "PromoAction" and
+            ub.PromoAttr.attr-code = "promo-message" and
+            ub.PromoAction.id = int64(entry(1,ub.PromoAttr.p-key,{&delim-key})) and 
+            ub.PromoAction.db-num = integer(entry(2,ub.PromoAttr.p-key,{&delim-key}))
+            on error  undo, return error substitute( "&1 (PromoAttr). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (PromoAttr). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (PromoAttr). endkey", vss-workfile )
+            :
+            create dst.PromoAttr.
+            buffer-copy ub.PromoAttr to dst.PromoAttr .
+         end.
+
+         for each ub.promo-schedule no-lock
+            where ub.promo-schedule.db-num = ub.PromoAction.db-num and
+            ub.promo-schedule.id = ub.PromoAction.promosched-id
+            on error  undo, return error substitute( "&1 (promo-schedule). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (promo-schedule). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (promo-schedule). endkey", vss-workfile )
+            :
+            create dst.promo-schedule.
+            buffer-copy ub.promo-schedule to dst.promo-schedule .
+        
+         end.
+      
+         for each ub.promo-schedule-week no-lock
+            where ub.promo-schedule-week.db-num = ub.PromoAction.db-num and
+            ub.promo-schedule-week.promosched-id = ub.PromoAction.promosched-id
+            on error  undo, return error substitute( "&1 (promo-schedule-week). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (promo-schedule-week). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (promo-schedule-week). endkey", vss-workfile )
+            :
+            create dst.promo-schedule-week.
+            buffer-copy ub.promo-schedule-week to dst.promo-schedule-week .
+         end.
+      
+         for each ub.PromoCriterion no-lock
+            where ub.PromoCriterion.db-num = ub.PromoAction.db-num and
+            ub.PromoCriterion.idAction = ub.PromoAction.id
+            on error  undo, return error substitute( "&1 (PromoCriterion). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (PromoCriterion). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (PromoCriterion). endkey", vss-workfile )
+            :
+            create dst.PromoCriterion.
+            buffer-copy ub.PromoCriterion to dst.PromoCriterion .
+         end.
+
+         for each ub.PromoGift no-lock
+            where ub.PromoGift.db-num = ub.PromoAction.db-num and
+            ub.PromoGift.idaction = ub.PromoAction.id
+            on error  undo, return error substitute( "&1 (PromoGift). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (PromoGift). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (PromoGift). endkey", vss-workfile )
+            :
+            create dst.PromoGift.
+            buffer-copy ub.PromoGift to dst.PromoGift .
+         end.
+
+         for each ub.PromoGoods no-lock
+            where ub.PromoGoods.db-num = ub.PromoAction.db-num and
+            ub.PromoGoods.idAction = ub.PromoAction.id
+            on error  undo, return error substitute( "&1 (PromoGoods). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (PromoGoods). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (PromoGoods). endkey", vss-workfile )
+            :
+            create dst.PromoGoods.
+            buffer-copy ub.PromoGoods to dst.PromoGoods .
+         end.
+
+         for each ub.PromoObject no-lock
+            where ub.PromoObject.db-num = ub.PromoAction.db-num and
+            ub.PromoObject.idAction = ub.PromoAction.id  
+            on error  undo, return error substitute( "&1 (PromoObject). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+            on stop   undo, return error substitute( "&1 (PromoObject). stop", vss-workfile )
+            on endkey undo, return error substitute( "&1 (PromoObject). endkey", vss-workfile )
+            :
+            create dst.PromoObject.
+            buffer-copy ub.PromoObject to dst.PromoObject .
+         end.
+      end.
+   end. /* end_of doe */
+
+end procedure. /* rest-promo-action */

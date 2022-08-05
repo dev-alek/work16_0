@@ -1,10 +1,27 @@
+&if defined (utl_gtin_i) eq 0
+&then 
+&glob utl_gtin_i yes
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 {cmp\str-glbl.i {1}}
 {gbl\xmlchar.i}
-define variable mMRCCode as logical no-undo.
+define variable mMRCCode  as logical    no-undo.
 define variable mTypeMark as character  no-undo.
 
+{&CommentStartNoClass}
+method private logical IS-NeedMark
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function IS-NeedMark returns logical 
+{utl\comment.i} */
+( input ib-code as integer  ,
+  input ib-str as character ):
+   define buffer buf_prod-bc-attr for ub.prod-bc-attr.
+   find first buf_prod-bc-attr where buf_prod-bc-attr.b-code eq ib-code
+                                 and buf_prod-bc-attr.b-str  eq ib-str 
+                                 and buf_prod-bc-attr.attr-code eq {&mark}
+     no-lock no-error. 
+   return if available buf_prod-bc-attr then logical(buf_prod-bc-attr.attr-value) else no .
+end.
 
 {&CommentStartNoClass}
 method private character repTegforDm
@@ -12,7 +29,7 @@ method private character repTegforDm
 function repTegforDm return char 
 {utl\comment.i} */
 (iDM as char ):
-    define variable vTeglist as character no-undo init "01,02,11,13,17,21,8005".
+    define variable vTeglist as character no-undo init "01,02,11,13,17,21,8005,37".
     define variable vteg as character no-undo.
     define variable oDM as character no-undo. 
     define variable vi as integer no-undo.
@@ -40,6 +57,28 @@ function repSpecSimbforDm return char
 end.
 
 {&CommentStartNoClass}
+method private logical CheckGtin
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function CheckGtin return logical 
+{utl\comment.i} */ 
+(iGtin as char):
+   define variable bar_code as character no-undo.
+   define variable vGtin as logical no-undo init "yes".
+   if length(iGtin) eq 14
+   then do:
+      bar_code = substr (iGtin, 1, length (iGtin) - 1).
+      run str/chk-sum.p
+       (input-output bar_code ) no-error .
+      if iGtin ne  bar_code
+      then
+         vGtin = no.
+   end.
+   else 
+      vGtin = no.
+   return vgtin.
+end.
+
+{&CommentStartNoClass}
 method private character repSpecSimbforXlm
 {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function repSpecSimbforXlm return char 
@@ -63,6 +102,7 @@ function getGtinByDM return char
 (IDM as char):
    define variable VTXT as char no-undo.
    define variable vGtin as char no-undo.
+   
    vTXt = IdM.
    vGtin = IDM.
    if    length(vtxt) > 14
@@ -73,10 +113,17 @@ function getGtinByDM return char
          vGtin = substring(vtxt,5,14).
       else if   (vtxt begins "01"
              or vtxt begins "02" )
-             and substring(iDm,17,2) eq "21"
-             and length(vtxt) >= 25  
-      then
+             and (   (    substring(iDm,17,2) eq "21"
+                      and length(vtxt) >= 21)
+                  or substring(iDm,17,2) eq "37"
+                  or substring(iDm,17,4) eq "(37)" )
+      then do:
          vGtin = substring(vtxt,3,14).
+         if not checkGtin(vGtin)
+         then
+            vGtin = substring(vtxt,1,14).
+   
+      end.
       else if     length(vtxt) eq 14 + 7 + 4 + 4
           or length(vtxt) eq 14 + 7 + 4
           or length(vtxt) eq 14 + 7 
@@ -93,20 +140,13 @@ function getGtinByDM return char
    end.
      
   
-   if length(vGtin) eq 14
-   then do:
-      define variable bar_code as character no-undo.
-      bar_code = substr (vGtin, 1, length (vGtin) - 1).
-      run str/chk-sum.p
-       (input-output bar_code ) no-error .
-      if vGtin ne  bar_code
-      then
-         vGtin = "".
-   end.
-   else 
+   if not checkGtin(vGtin)
+   then
       vGtin = "". 
    return vgtin.    
 end.
+
+
 
 {&CommentStartNoClass}
 method private integer getGdsCodeByGtin
@@ -118,7 +158,7 @@ function getGdsCodeByGtin return int
    define buffer prod-bc  for prod-bc.
    define buffer bar-code for bar-code.
    
-   find first prod-bc where prod-bc.b-str eq iGtin no-lock no-error.
+   find first prod-bc where prod-bc.b-str eq iGtin  and prod-bc.bc-on no-lock no-error.
    find first bar-code where bar-code.b-code eq prod-bc.b-code no-lock no-error.
    return if avail bar-code then bar-code.gds-code else ?.
 end.
@@ -130,7 +170,7 @@ function getQntyCodeByGtin return decimal
 {utl\comment.i} */ 
 (iGtin as char):
    
-   define buffer prod-bc for prod-bc.
+   define buffer prod-bc  for prod-bc.
    define buffer bar-code for bar-code.
    
    find first prod-bc where prod-bc.b-str eq iGtin no-lock no-error.
@@ -178,6 +218,15 @@ function ChekTypeMarkByDm return logical
 (iDM as char ):
    return ChekTypeMarkByGds(getGdsCodeByDM(idm)).
 end.
+{&CommentStartNoClass}
+method private logical ChekTypeMarkByGtin
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function ChekTypeMarkByGtin return logical 
+{utl\comment.i} */
+(iGtin as char ):
+   return ChekTypeMarkByGds(getGdsCodeByGtin(iGtin)).
+end.
+
 /*
 КИ
 + 14 + 7 + 4               = 25 табачная (14 + 7 + 4) КИ
@@ -207,12 +256,17 @@ method private character  GetNextElement
 {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function GetNextElement return character  
 {utl\comment.i} */ 
-  (output oteg          as character 
+  (input iAllTeg        as logical
+  ,output oteg          as character 
   ,output otegval       as character
   ,input-output pstr    as character 
   /*,input        iLength as character*/ ):
-     define variable vlistElem as character no-undo    init "00,01,02,21,17,11,13,(01),(02),(21),(17),(11),(13)". /* ,(8005),8005".*/
+     define variable vlistElem   as character no-undo init "00,01,02,21,17,11,13,(01),(02),(21),(17),(11),(13)". /* ,(8005),8005".*/
      define variable vlistleng   as character no-undo init "27,14,14,13,06,06,06,0014,0014,0013,0006,0006,0006". /* ,000006,0006".*/
+     
+     define variable vlistElemDop   as character no-undo init ",37,(37),(8005),8005,93,(93)". 
+     define variable vlistlengDop   as character no-undo init ",08,0008,000006,0006,04,0004".
+     
      define variable vTeg as character no-undo.
      define variable vLength as integer no-undo.
      define variable vi as integer no-undo.
@@ -225,18 +279,20 @@ function GetNextElement return character
      then do:
         entry (4,vlistleng) = "07".
      end.
-       
-     if mMRCCode
+     if iAllTeg
+     then 
+        assign
+           vlistElem     = vlistElem    + vlistElemDop
+           vlistleng     = vlistleng    + vlistlengDop
+        .
+     else if mMRCCode
      then
         assign
            vlistElem     = vlistElem    + ",(8005),8005"
            vlistleng     = vlistleng    + ",000006,0006"
         .
      
-     if length(pstr) eq 4
-     then
-        return "".
-        block-elem:
+    block-elem:
     do vi = 1 to num-entries(vlistElem):
        vTeg = entry(vi,vlistElem).
        if pstr begins vTeg
@@ -266,32 +322,41 @@ function GetCodeIdent return character
    define variable oCodeIdent as character no-undo.
    define variable vteg as character no-undo.
    define variable vtegval as character no-undo.
+   define buffer marking for ub.marking.
    ChekTypeMarkByDm(idm).
    if iDm begins {&tech-mark-prefix}
    then
       oCodeIdent = iDm.
    else if length(iDm) < 21
-   then
-      oCodeIdent = ?.
+   then do:
+      find first marking where marking.mark eq idm
+      no-lock no-error.
+      oCodeIdent = if available marking then marking.mark else  ?.
+   end.
    else if     length(iDm) eq 29
       and not iDm begins "01"
       and not iDm begins "02"
    then
       
       oCodeIdent = substring(iDm,1,if mMRCCode then 25 else 21 ).
+   else  if     length(iDm) >= 24 /* 2 + 14 + 2 + 6(пока минимум для молока)  */
+            and (  iDm begins "01"
+                or iDm begins "02")
+            and  substring(iDm,17,2) ne "21"
+   then 
+      return iDM.
    else  if     (   length(iDm) eq 25
-                 or length(iDm) eq 29
                  or length(iDm) eq 21)
-            and ((not iDm begins "01"
-            and not iDm begins "02")
-            or   substring(iDm,17,2) ne "21")
+            and (not iDm begins "01"
+            and  not iDm begins "02")
+            
    then
       oCodeIdent = substring(iDm,1,21).
-   else if getGtinByDM (iDm) eq ""
+   else if checkGtin(substring(iDm,1,14)) and ( length(idm) eq 21 or length(idm) eq 25)
    then 
       oCodeIdent = substring(iDm,1,21).
    else do while Velement ne "" and idm ne "":
-      Velement = GetNextElement(output vteg, output vtegval, input-output idm).
+      Velement = GetNextElement(no,output vteg, output vtegval, input-output idm).
       oCodeIdent = oCodeIdent + Velement.
    end.
    return oCodeIdent.
@@ -305,7 +370,7 @@ function GetTegCod return character
 {utl\comment.i} */ 
 (icodeIdent as char, iTeg as char):
    define variable Velement   as character no-undo init "first".
-   define variable oTeg as character no-undo.
+   define variable oTeg as character no-undo init ?.
    define variable vteg as character no-undo.
    define variable vtegval as character no-undo.
    
@@ -329,8 +394,9 @@ function GetTegCod return character
       ChekTypeMarkByDm(icodeIdent).
       block-teg: 
          do while Velement ne "" and icodeIdent ne "":
-         Velement = GetNextElement(output vteg, output vtegval, input-output icodeIdent).
-         if Velement begins iTeg
+         Velement = GetNextElement(yes,output vteg, output vtegval, input-output icodeIdent).
+         if    Velement begins iTeg
+            or Velement begins "(" + iTeg + ")" 
          then do:
             oTeg = vtegval.
             leave block-teg.
@@ -340,6 +406,25 @@ function GetTegCod return character
    return oTeg.
 
 end.
+
+{&CommentStartNoClass}
+method private logical isOAD
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function isOAD return logical 
+{utl\comment.i} */ 
+(icodeIdent as character):
+   return length(icodeIdent) > 13 and GetTegCod(icodeIdent,"37") ne ? and GetTegCod(icodeIdent,"02") ne ?.
+end.
+
+{&CommentStartNoClass}
+method private logical isMark
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function isMark return logical 
+{utl\comment.i} */ 
+(icodeIdent as character):
+   return length(icodeIdent) > 13 and not isOAD(icodeIdent).
+end.
+   
 
 {&CommentStartNoClass}
 method private character  addBracketForCode
@@ -357,11 +442,10 @@ function addBracketForCode return character
       oTeg = icodeIdent.
    end.
    else do:
-      ChekTypeMarkByDm(icodeIdent).
       mMRCCode = yes. 
       block-teg:
       do while Velement ne "" and icodeIdent ne "":
-         Velement = GetNextElement(output vteg, output vtegval, input-output icodeIdent).
+         Velement = GetNextElement(no,output vteg, output vtegval, input-output icodeIdent).
          if vteg ne ""
          then
             oTeg = oTeg + "(" + vteg + ")" + vtegval .
@@ -513,19 +597,24 @@ function getQntyUTDByCodId return decimal
 (iDm as char):
    define variable vLevel as integer no-undo.
    define variable vList as character no-undo init "1,5,10,500".
-   if ChekTypeMarkByDM (iDM)
+   define variable vGtin as character no-undo.
+   define variable vqnty as decimal no-undo init ?.
+   vqnty = dec(GetTegCod(iDm,"37")) no-error.
+   if vqnty eq ?
    then do:
-   vLevel = getlevelByCodId(iDm).
-   if    vLevel eq ?
-      or vLevel < 1
-      or vLevel > 4
-   then
-      return ?.
-   else
-      return int(entry(vlevel,vList)).
-end.
-   else
-      return getQntyCodeByGtin(getGtinByDm(idm)).
+      vGtin = getGtinByDm(idm).
+      if ChekTypeMarkByGtin (vGtin)
+      then do:
+         vLevel = getlevelByCodId(iDm).
+         if     vLevel >= 1
+            and vLevel <= 4
+         then
+            vqnty = int(entry(vlevel,vList)).
+      end.
+      else
+         vqnty = getQntyCodeByGtin(vgtin).
+   end.
+   return vqnty.
 end.
 
 {&CommentStartNoClass}
@@ -534,7 +623,7 @@ method private decimal getQntyUTDByDM
 function getQntyUTDByDM return decimal    
 {utl\comment.i} */ 
 (iDm as char):
-   return getQntyUTDByCodId(GetCodeIdent(iDm)).
+   return getQntyUTDByCodId(iDm).
 end.
 
 {&CommentStartNoClass}
@@ -588,7 +677,7 @@ function getMRCByDM return decimal
    else do:
        block-mrc:
        do while Velement ne "" and idm ne "":
-          Velement = GetNextElement(output vteg, output vtegval, input-output idm).
+          Velement = GetNextElement(yes,output vteg, output vtegval, input-output idm).
           if Velement begins "8005"
           then do:
              vMRC = substring(idm,5,6).
@@ -606,3 +695,4 @@ function getMRCByDM return decimal
    end.
    return OMRc.
 end.
+&endif

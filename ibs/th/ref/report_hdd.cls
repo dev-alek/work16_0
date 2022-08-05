@@ -79,6 +79,7 @@ class ibs.th.ref.report_hdd inherits Form:
     set(input iH as handle):
       p-callback-handle = ih.
     end.
+  { cmp/library.i  class }
     
   constructor public report_hdd (  ):
 
@@ -164,7 +165,6 @@ class ibs.th.ref.report_hdd inherits Form:
     { cmp/str-glbl.i class }
     { gbl/getcntxt.i def }
     { gbl/getcntxt.i get }
-    { cmp/library.i  class }
 
     for each buf_userobjs_temp-user-obj
       on error undo, return error return-value

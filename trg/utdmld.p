@@ -29,8 +29,17 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
   &hist = yes 
   &seqnamehist = "s-c-utd-chip-num"
   &histheadtbl = "c-utd-head"
-  
+  &fieldmainheadtab  = "db-num doc-id" 
   &del  = yes
 }
+
+/*  &fieldmaintab      = "db-num doc-id LineNum mark"*/
  
 
+for each {&main-tbl}-attr where {&main-tbl}-attr.db-num eq  {&main-tbl}.db-num
+                            and {&main-tbl}-attr.doc-id eq  {&main-tbl}.doc-id
+                            and {&main-tbl}-attr.linenum eq  {&main-tbl}.linenum
+                            and {&main-tbl}-attr.mark eq  {&main-tbl}.mark
+exclusive-lock:
+   delete {&main-tbl}-attr.
+end.

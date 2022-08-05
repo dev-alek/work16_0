@@ -149,11 +149,14 @@ then do:
    define variable mdbver as integer no-undo.
    block-upd:
    do mdbver = 1 to 999999999:
-      mfile    = search(substitute("upd/&1.xml",string(mdbver ,"999999999"))).
-      if    mfile    eq ? 
+      mfile    = substitute("upd/&1.xml",string(mdbver ,"999999999")).
+      if    search(mfile)    eq ? 
       then 
          leave block-upd.
+      mfileNew = mFile.
+      entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
       run SaveFileList (mfile,mfileNew).
+      mfile = search(mfile).
       mfileNew = mFile.
       entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
       run gbl/md5.p(mfile,output v-md5-signature).
@@ -235,11 +238,16 @@ then do:
    &endif
    &if "{&iscompil}" eq ""
    &then
-   run utl/crpwd.p(no). 
+   run utlcomp/crpwd.p(no).
+   run utlcomp/crkey.p(no). 
    &else
-   run utl/crpwd.p(yes).
+   run utlcomp/crpwd.p(yes).
+   run utlcomp/crkey.p(yes). 
    &endif
-   run SaveFileList ("utl/crpwd.p","utl/crpwd.i").  
+   run SaveFileList ("utlcomp/crpwd.p","utlcomp/crpwd.i").  
+   run SaveFileList ("utlcomp/crkey.p","utlcomp/keypub.i").
+   run SaveFileList ("utlcomp/crkey.p","utlcomp/keypriv.i").
+   run SaveFileList ("utlcomp/crkey.p","utlcomp/keyset.i").
 end.
 procedure SaveFileList:
    define input  parameter iFileNameOld as character no-undo.

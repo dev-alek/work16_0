@@ -33,19 +33,25 @@ define buffer buf_user-login for ub.user-login .
 do
 on error undo, return error return-value
 :
-  find first buf_sys-ctrl no-lock .
-
-  find buf_user-login share-lock
-    where buf_user-login.db-num     = buf_sys-ctrl.db-num
-      and buf_user-login.status_    = {&uls-normal}
-      and buf_user-login.user-login = g#auto-user-login
-    no-error no-wait .
-  if not available buf_user-login
-  then do:
-    undo, return error substitute("Не найден пользователь &1", g#auto-user-login) .
-  end.
-
-  assign
-    g#auto-user-id = buf_user-login.user-id
-  .
+  if g#auto-user-password begins "nocrypt:"
+  then
+     g#auto-user-id = g#auto-user-login.
+  else do:
+  
+     find first buf_sys-ctrl no-lock .
+    
+     find buf_user-login share-lock
+       where buf_user-login.db-num     = buf_sys-ctrl.db-num
+         and buf_user-login.status_    = {&uls-normal}
+         and buf_user-login.user-login = g#auto-user-login
+       no-error no-wait .
+     if not available buf_user-login
+     then do:
+       undo, return error substitute("Не найден пользователь &1", g#auto-user-login) .
+     end.
+   
+     assign
+       g#auto-user-id = buf_user-login.user-id
+     .
+   end.
 end.

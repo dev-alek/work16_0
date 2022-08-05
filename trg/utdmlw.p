@@ -30,17 +30,25 @@ define variable vss-description as character no-undo init "Тригер изменение {&ma
 { trg/trghistnws.i } 
 {str/utd-err.i}
 {str/utd.i}
+if new-{&main-tbl}.gds-code eq 0
+then 
+   new-{&main-tbl}.gds-code = ?.
 
 if     not g#news
    and new new-{&main-tbl}
    and new-{&main-tbl}.doc-level eq 1
 then
    addMark(buffer new-{&main-tbl} ).
+
 { trg/trghistnws.i 
   &hist = yes 
   &seqnamehist = "s-c-utd-chip-num"
   &histheadtbl = "c-utd-head"
-  
-  
+  &fieldmainheadtab  = "db-num doc-id" 
 } 
+
+
+/*  &{&main-tbl}_primary_key      = "db-num doc-id LineNum mark"*/
+  
+  
 

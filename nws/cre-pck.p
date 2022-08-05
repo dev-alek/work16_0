@@ -69,6 +69,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
   define variable v-sys-key  as character no-undo . /* для чтения параметра конфигурации */
 
+  define variable mFrameView      as logical   no-undo init yes.
+  mFrameView = writelogvalue ne "AsyncProc". 
+  
   define frame inf
     p-db-num    label "для БД" format ">>>>>>>>9"
     v-pack-num  label "Пакет N" format ">>>>>>>>9"
@@ -122,13 +125,15 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     .
 
   end.
-
-  view frame inf.
-  do with frame inf
-  :
-    assign
-      p-db-num :screen-value   = string( p-db-num, p-db-num :format)
-    .
+  if mFrameView
+  then do:
+     view frame inf.
+     do with frame inf
+     :
+       assign
+         p-db-num :screen-value   = string( p-db-num, p-db-num :format)
+       .
+     end.
   end.
 
   gen-pack:
@@ -230,9 +235,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         leave gen-pack .
       end.
     end.
-
-    do with frame inf
-    :
+    if mFrameView
+    then do with frame inf:
       assign
         p-db-num :screen-value   = string( p-db-num, p-db-num :format)
         v-pack-num :screen-value = string( v-pack-num, v-pack-num :format)
@@ -403,7 +407,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         leave route-label.
       end.
 
-      do with frame inf
+      if mFrameView
+      then do with frame inf
       :
         assign
           p-db-num :screen-value   = string( p-db-num, p-db-num :format)
@@ -447,5 +452,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
   end.
 
-  hide frame inf.
+  if mFrameView
+  then 
+     hide frame inf.
 end.

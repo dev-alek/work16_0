@@ -35,6 +35,7 @@ define variable vss-description as character no-undo init "Сканирование 2D кода.
 { cmp/str-glbl.i }
 { cmp/showinf.i  }
 { str/trdcalib.i }
+{ gbl/getcntxt.i def }
 
           /* Parameters Definitions ---                                           */
 
@@ -44,6 +45,15 @@ define input  parameter p-mode                as character           no-undo .
 define input  parameter p-handle              as handle              no-undo .
 
 define variable iLang           as integer   no-undo.
+define variable p-value-logical as logical no-undo.
+define variable p-value-character  as character no-undo.
+define variable p-value-date       as date no-undo.
+define variable p-value-decimal    as decimal no-undo.
+define variable p-value-integer    as integer no-undo.
+define variable p-param-type       as character no-undo.
+define variable v-tth as handle no-undo .
+
+
 
 define variable par-type          as character no-undo .
 define variable v-value-char      as character no-undo .
@@ -51,7 +61,6 @@ define variable v-value-date      as date      no-undo .
 define variable v-value-decimal   as decimal   no-undo .
 define variable qr-scan-time      as integer   no-undo .
 define variable v-value-logical   as logical   no-undo .
-define variable v-tth             as handle    no-undo .
 
 define buffer t_doc        for ub.trn-doc .
 define buffer bf_doc-line  for ub.doc-line.
@@ -189,6 +198,22 @@ end.
 on entry of v-sts in frame Dialog-Frame
 do:
   run LoadKeyboardLayoutA (input "00000419", input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).
 end.
 
@@ -200,9 +225,7 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL UUID_VSD Dialog-Frame
 on any-printable of v-mark in frame Dialog-Frame
 do:
-
   run proc-any-key.
-
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -224,6 +247,22 @@ end.
 ON ENTRY OF v-mark IN FRAME Dialog-Frame /* Марка */
 DO:
   run LoadKeyboardLayoutA (input "00000419", input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).
 END.
 
@@ -258,6 +297,22 @@ MAIN-BLOCK:
 do on error undo MAIN-BLOCK, leave MAIN-BLOCK
   :
   run LoadKeyboardLayoutA (input "00000419", input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).
   run enable_UI.
   
@@ -278,7 +333,7 @@ do on error undo MAIN-BLOCK, leave MAIN-BLOCK
             ,input-output table-handle v-tth
             ) no-error .
   if error-status:error then do:
-      if valid-object(v-tth) then delete object v-tth.
+      if valid-handle(v-tth) then delete object v-tth.
       qr-scan-time = 5000 .
   end.
   
@@ -391,7 +446,11 @@ procedure save_update :
   define variable v-length as integer no-undo .
   define variable byte-size as integer no-undo .
   define variable infoSecsObj as class InfoSectionsTotal no-undo.
+  define variable v-bool as logical no-undo.
   define variable v-gds-attr as character no-undo .
+  
+  define buffer buf_pl-gds for ub.pl-gds .
+  define buffer buf_auto-tank for ub.auto-tank .
   
   v-bad-symb = '!' + {&delim-par} + '@' + {&delim-par} + '#' + {&delim-par} + '$' + {&delim-par} + '%' + {&delim-par} + '^' + {&delim-par} + '&' + {&delim-par}
              + '*' + {&delim-par} + '(' + {&delim-par} + ')' + {&delim-par} + '-' + {&delim-par} + '_' + {&delim-par} + '=' + {&delim-par} + '+' + {&delim-par} 
@@ -702,6 +761,9 @@ procedure save_update :
       }
     end .
   end.
+  
+  define variable v-auto-num as character no-undo .
+  define variable v-found-trans as logical no-undo .
     
   v-tmp-char =  (xmlhndlerObj:vbf:buffer-field("transp-num"):buffer-value) no-error.
   if error-status:error
@@ -717,10 +779,19 @@ procedure save_update :
     do ii = 1 to num-entries(v-bad-symb, {&delim-par}) :
       v-tmp-char = replace(v-tmp-char, entry(ii, v-bad-symb, {&delim-par}), "") .
     end .
-    find first ub.auto-tank no-lock where ub.auto-tank.auto-num = v-tmp-char
-                                      and ub.auto-tank.status_ = {&current-status}
-                                      no-error .
-    if not available ub.auto-tank
+    v-found-trans = no .
+    for each ub.auto-tank no-lock where ub.auto-tank.status_ = {&current-status} :
+      v-auto-num = ub.auto-tank.auto-num . 
+      do ii = 1 to num-entries(v-bad-symb, {&delim-par}) :
+        v-auto-num = replace(v-auto-num, entry(ii, v-bad-symb, {&delim-par}), "") .
+      end .
+      if v-auto-num = v-tmp-char
+      then do :
+        v-found-trans = true .
+        leave .
+      end .
+    end .                              
+    if not v-found-trans
     then do :
       v-mark:screen-value = "" .
       v-scan-str = "".

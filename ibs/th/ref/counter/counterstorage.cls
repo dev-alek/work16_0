@@ -37,7 +37,7 @@ class ibs.th.ref.counter.counterstorage final:
    
    method public handle getquery():
       empty temp-table tt-counter.
-      if valid-object(mQuery) then delete object mQuery.
+      if valid-handle(mQuery) then delete object mQuery.
       for each counter no-lock:
          create tt-counter.
          buffer-copy counter to tt-counter.
@@ -83,62 +83,17 @@ class ibs.th.ref.counter.counterstorage final:
          
       end.   
    end method.
-   define stream sReadfile.
-   method public int64 GetAsuncNextcount (iFileName as character , iKey as character,icode as character  ):
-      
-      define variable vAsyncHelper as class ibs.th.file.AsyncHelperth no-undo.
-      define variable vText as character no-undo.
-      define variable vlogfile as character no-undo.
-      define variable vError as logical no-undo.
-      define variable vCount   as int64 no-undo init ?.
-      if trans
-      then do:
-         vAsyncHelper = new ibs.th.file.AsyncHelperth().
-         vAsyncHelper:AsyncProc("utl/proc-getnextcount", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U , iFileName ,ikey, icode ),1).
-         vAsyncHelper:myTimeOut = 300.
-         vAsyncHelper:WaitFor("proc-getnextcount", 1,"Получаем значение счетчика.").
-         vlogfile = vAsyncHelper:myWorkDir + "proc-getnextcounterror.log".
-         if vAsyncHelper:FileExists(vlogfile)
-         then do:
-            input stream sReadfile FROM  VALUE(vlogfile).
-            repeat:
-               import stream sReadfile unformatted vText.
-               if vtext begins "error" then vError = yes.
-               else do: 
-                  vCount = int64(vText) no-error.
-                  if error-status:error
-                  then
-                     vError = yes.
-               end.   
-            end.
-            input stream sReadfile close  .
-            os-delete value(vlogfile).
-          
-          end.
-          else
-             vError = yes.
-          vAsyncHelper:delworkdir().
-          delete object vAsyncHelper.
-       end.
-       else
-          vError = yes.
-       if    vError
-          or vCount eq ?
-          then do:
-             vCount = GetNextcount(iFileName , iKey,icode ).
-          end.
-       
-     return vCount.
+   {utl\counter.i}
+   method public int64 GetNextcount(iFileName as character , iKey as character,icode as character, iParam as character   ):
+      return GetNextcount(sys-ctrl.db-num,iFileName , iKey ,icode,iParam   ).
    end.
-   method public int64 GetNextcount(iFileName as character , iKey as character,icode as character  ):
-      return GetNextcount(sys-ctrl.db-num,iFileName , iKey ,icode   ).
-   end.
-   method public int64 GetNextcount(idb as integer,iFileName as character , iKey as character,icode as character  ):
+   method public int64 GetNextcount(idb as integer,iFileName as character , iKey as character,icode as character,iParam as character  ):
       define variable vValue     as character no-undo.
       define variable vNumPar    as integer   no-undo.
-      define variable vInt       as integer   no-undo.
+      define variable vInt       as integer   no-undo init ?.
       define variable vNextCount as integer   no-undo.
-     
+      define variable vYear      as integer   no-undo init ?.
+      
       find first counter where counter.db        eq idb
                            and counter.file-name eq iFileName
                            and counter.key       eq iKey
@@ -155,7 +110,19 @@ class ibs.th.ref.counter.counterstorage final:
                   vValue = entry(vNumPar + 1,counter.sysInfo)
                   vInt = int(vValue) 
                no-error.
-               if vint ne year(today)
+               vNumPar = lookup("year",iParam).
+               if vNumPar ne 0
+               then do:
+                  assign
+                     vValue = entry(vNumPar + 1,counter.sysInfo)
+                     vYear = int(vValue) 
+                  no-error.
+               end.
+               if vYear eq ?
+               then
+                  vYear = year(today).
+               if     vint ne ?
+                  and vint ne vYear
                then
                   vNextCount = 1.
                else

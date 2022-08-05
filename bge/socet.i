@@ -178,6 +178,9 @@ end.
   Notes:
 ------------------------------------------------------------------------------*/
 procedure WaitRespTestStop:
+   if mWaitFramStopTimeOut
+   then
+      return.
    if     (mWebResp ne ""
        and mWebResp ne ?)
    then do:
@@ -287,12 +290,19 @@ procedure getResponse:
    mWaitProcEvent = no. /* Отключим proces event иначе бедет беда с получением данных*/
    run WaitFramRunPause (?).
    define variable vByte as int64 no-undo.
+   define variable vNextMese as int64 no-undo init 100000.
    mWaitFramStop = no.
+   mWaitFramStopTimeOut = no.
+   block-wait:
    do while mHSocket:get-bytes-available() > 0:
-      SET-SIZE(vResponse) = mHSocket:get-bytes-available() + 1.
+      define variable vNumByte as integer no-undo.
+      vNumByte = if mReturnXML and not vFlagTag then 1 else  mHSocket:get-bytes-available().
+      if vNumByte > 30000 then vNumByte = 30000.
+      SET-SIZE(vResponse) = vNumByte + 1.
       SET-BYTE-ORDER(vResponse) = big-endian.
-      mHSocket:read(vResponse,1,1,mHSocket:get-bytes-available()).
-      vByte = vByte + 1.
+      
+      mHSocket:read(vResponse,1,vNumByte).
+      vByte = vByte + vNumByte.
       if  mReturnXML
       then do:
          /*Отсечение HTTP HEADER*/
@@ -313,11 +323,20 @@ procedure getResponse:
          run WaitFramRunPause (?).
          pause 1 no-message.      /* ответ приходит медленее чем мы читаем ответ */
       end.
-      else if vByte mod 1000 eq 0
+      else if vByte > vNextMese
       then do:
+         vNextMese = vNextMese + 100000.
+         mWaitFramTextEnd = substitute ("Получаем ответ прочитано &1 байт ",vByte) .
          run WaitFramRunPause (?). 
       end.
-         
+      SET-SIZE(vResponse) = 0.
+      
+      if mWaitFramStopTimeOut
+      then do:
+         mWebResp = "".
+         mHSocket:disconnect ().
+         leave block-wait.
+      end.
    end.
    mWaitFramStop = yes.
    run writeLogSocet         in this-procedure ("Получен ответ").

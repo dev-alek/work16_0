@@ -11,11 +11,10 @@
 
 using Progress.Lang.*.
 using ibs.th.gbl.propmap.
-using ibs.th.gbl.map.mapstring.
-using ibs.th.gbl.sys.objth.
+using ibs.th.gbl.TypeMap.
 
 
-class ibs.th.str.marking.sts.mark inherits objth:
+class ibs.th.str.marking.sts.mark inherits TypeMap:
   
   define public property  PendingVerification as class propmap no-undo get.  protected set.
   define public property  CheckContr  as class propmap no-undo get.  protected set.
@@ -47,25 +46,9 @@ class ibs.th.str.marking.sts.mark inherits objth:
   define public property  Return_  as class propmap no-undo get.  protected set.
   define public property  Returned  as class propmap no-undo get.  protected set.
 */
-  define public property MarkMap as class mapstring no-undo get. 
-    protected set.
-
-  define public property CurrMarkMapProp as class propmap no-undo 
-  get:
-    def var currP as class propmap no-undo. 
-    currP = cast (MarkMap:SubjectObjCurr, propmap) no-error.
-    if currP = ? or error-status:error
-    then do:
-     "Залогируем".
-      return ?.
-    end.
-    else return currP.
-  end. 
  
   constructor public mark ():
-    
-    {utl\objreg.i MarkMap mapstring true}
-    
+    super().
     PendingVerification  = crProp(1,"PendingVerification","Ожидает проверку").
     CheckContr   = crProp(2,"CheckContr","Ожидает проверку по договору").
     DeliveryControl = crProp(3,"DeliveryControl","Ожидает приемку").
@@ -102,74 +85,6 @@ class ibs.th.str.marking.sts.mark inherits objth:
    */
   end.
 
-  /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
 
-  method public char GetLabel(inKey as int):
-    def var prop as class propmap no-undo.    
-    if valid-object (MarkMap:GetItemKeyInt(inKey))
-      then return cast (MarkMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
-      else return string(inKey). /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
-  end method. 
-
-  method private char GetLabel(inKeyStr as char):
-    def var prop as class propmap no-undo.    
-    if valid-object (MarkMap:GetItemKeyStr(inKeyStr))
-      then return cast (MarkMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
-      else return inKeyStr. /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
-  end method. 
-
-  method public char GetNameProp(inKey as int):
-    return GetNameProp(string (inKey)).
-  end method. 
- 
-  method private char GetNameProp(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (MarkMap:GetItemKeyStr(inKeyStr))
-      then return cast (MarkMap:SubjectObjCurr, ibs.th.gbl.propmap):NameProp. 
-      else return ?.
-  end method. 
-
-  method public char GetKeystrDB(inKeyint as integer ):
-    def var prop as class propmap no-undo.
-    if valid-object (MarkMap:GetItemKeyInt(inKeyint))
-      then return cast (MarkMap:SubjectObjCurr, ibs.th.gbl.propmap):KeycharDB. 
-      else return ?.
-  end method. 
-  
-  method public int GetKeyIntDB(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (MarkMap:GetItemKeyStr(inKeyStr))
-      then return cast (MarkMap:SubjectObjCurr, ibs.th.gbl.propmap):KeyIntDB. 
-      else return ?.
-  end method. 
-  
-  method class propmap GetProp(inKey as int):
-    def var prop as class propmap no-undo.
-    if valid-object (MarkMap:GetItemKeyInt(inKey))
-      then return cast(MarkMap:SubjectObjCurr, propmap). 
-      else return UnknowSts.
-  end method. 
-
-  method private class propmap GetProp(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (MarkMap:GetItemKeyStr(inKeyStr))
-      then return cast(MarkMap:SubjectObjCurr, propmap). 
-      else return UnknowSts.
-  end method.
-  
-  method private class propmap crProp(inKeyInt as int, inNameProp as char, inLabel as char):
-    def var prop as class propmap no-undo.
-    {utl\objreg.i prop propmap string(inKeyInt) inLabel}
-    prop:KeyIntDB = inKeyInt.
-    prop:KeyCharDB = inNameProp.
-    MarkMap:AddItem(prop, inKeyInt,inNameProp).
-    return prop.
-    
-  end method. 
-
-  
 
 end class.

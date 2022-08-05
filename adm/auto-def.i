@@ -21,8 +21,11 @@ Creation date: 03/22/04
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 &if defined(auto-def_i) = 0 &then
-
-
+&glob auto-def_i yes
+&if defined (defonly) eq 0 &then
+{ cmp/str-glbl.i }
+{ gbl/cur-time.i }
+&endif
 define {1} shared variable g#auto-pid           as integer   no-undo .
 define {1} shared variable conn-par             as character no-undo .
 define {1} shared variable g#auto-user-id       as character no-undo .
@@ -35,11 +38,17 @@ define {1} shared variable auto-log-msg-h    as handle    no-undo .
 define {1} shared variable hand-log-msg-h    as handle    no-undo .
 define {1} shared variable log-file-name     as character no-undo initial ? .
 define {1} shared variable add-log-file-name as character no-undo initial ? .
-
-define stream LogStream .
+define {1} shared variable writelogvalue     as character no-undo initial ? .
+define variable mNoTime as logical no-undo.
 &if defined (defonly) eq 0 &then
-{ cmp/str-glbl.i }
-{ gbl/cur-time.i }
+define stream LogStream .
+
+procedure write-to-log-notime :
+  define input param i-str as character no-undo .
+  mNoTime = yes.
+  run write-to-log (i-str).
+  mNoTime = no.
+end.
 
 procedure write-to-log :
 
@@ -50,13 +59,15 @@ procedure write-to-log :
   on stop   undo, return error substitute( "&1 (write-to-log). stop", vss-workfile )
   on endkey undo, return error substitute( "&1 (write-to-log). endkey", vss-workfile )
   :
-    define variable log-res       as logical no-undo.
-    define variable v-jj as integer   no-undo .
-
+    define variable log-res        as logical   no-undo .
+    define variable v-jj           as integer   no-undo .
     /* здесь именно ТЕКУЩЕЕ ВРЕМЯ */
-    assign
-      p-str = substitute( "&1 (pid: &2) &3 &4&5", g#auto-user-id, g#auto-pid, cur-time-string-sec(), p-str, {&new-line} )
-    .
+    if    mNoTime
+       or writelogvalue eq "AsyncProc"
+    then
+       p-str = substitute( "&1 (pid: &2) &3&4"   , g#auto-user-id, g#auto-pid,                        p-str, {&new-line} ).
+    else
+       p-str = substitute( "&1 (pid: &2) &3 &4&5", g#auto-user-id, g#auto-pid, cur-time-string-sec(), p-str, {&new-line} ).
 
     /* На экран */
     if auto-log-msg-h <> ? then do:
@@ -79,7 +90,7 @@ procedure write-to-log :
     .
 
     if add-log-file-name <> ? then do:
-     do v-jj = 1 to num-entries(add-log-file-name, {&delim-nws}):
+      do v-jj = 1 to num-entries(add-log-file-name, {&delim-nws}):
         run gbl/fileapnd.p
           ( input entry(v-jj, add-log-file-name, {&delim-nws} )
           ,input p-str
@@ -90,14 +101,21 @@ procedure write-to-log :
         end.
       end.
     end.
-
-    run gbl/fileapnd.p
-      ( input log-file-name
-       ,input p-str
+    if writelogvalue eq "AsyncProc" 
+    then do:
+       p-str = trim(p-str, ({&carriage-return} + {&new-line}) )
+    .
+       Publish "WriteLogAsunc" (p-str).
+    end.
+    else if writelogvalue <> "yes" then do:
+      run gbl/fileapnd.p
+        ( input log-file-name
+        ,input p-str
         ,input 20 /* время ожинания освобождения файла */
-      ) no-error .
-    if error-status:error then do:
-      return error return-value .
+        ) no-error .
+      if error-status:error then do:
+        return error return-value .
+      end.
     end.
 
   end.
@@ -120,7 +138,6 @@ procedure write-to-screen :
     assign
       p-str = substitute( "&1 (pid: &2) &3 &4&5", g#auto-user-id, g#auto-pid, cur-time-string-sec(), p-str, {&new-line} )
     .
-
     /* На экран */
     if auto-log-msg-h <> ?
     then do:
@@ -136,7 +153,8 @@ procedure write-to-screen :
 
 end procedure.  /* write-to-log */
 
-PROCEDURE send-msg-to-email :
+procedure send-msg-to-email :
+
   define input  parameter p-subject      as character no-undo .
   define input  parameter p-text-err     as character no-undo .
   define input  parameter p-attach-files as character no-undo .

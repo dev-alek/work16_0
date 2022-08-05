@@ -52,13 +52,13 @@ define variable vss-description as character no-undo init "Проверка кодов маркир
 { str/temp_upd.i }
 { gbl/key-rec.i  }
 { utl/gtin.i }
-
+{ gbl/objsrv.i }
 define input parameter parparentproc as widget-handle no-undo .
 define input-output  PARAMETER TABLE FOR tt-marking-lines.
 define input parameter p-mode as character no-undo .
 define input parameter p-doc as character  no-undo . /*title*/
 define input parameter p-type as integer   no-undo . /*тип документа 0 - все документы 1 - УТД со статусом 4 2 - внутренний приход 4 - чеки 5 - ЭДО в статусе новый 6 - серая зона*/ 
-define input parameter p-type_mark as character   no-undo . /*тип продукции*/
+define input parameter p-parent_mark as character   no-undo . /*марка родитель*/
 /* Local Variable Definitions ---                                       */
 
 define variable log-res     as log       no-undo.
@@ -71,13 +71,20 @@ define variable v-db-list   as character no-undo .
 define variable recid_mark  as integer   no-undo .
 define variable title_name  as character no-undo .
 define variable iLang       as integer   no-undo.
+define variable p-value-logical as logical no-undo.
+define variable p-value-character  as character no-undo.
+define variable p-value-date       as date no-undo.
+define variable p-value-decimal    as decimal no-undo.
+define variable p-value-integer    as integer no-undo.
+define variable p-param-type       as character no-undo.
+define variable v-tth as handle no-undo .
 define variable Tree        as class     tree no-undo .
 define variable ungroup     as logical   no-undo .
 define variable jj          as integer   no-undo .
 define variable v-qnty-mark as integer   no-undo .
 define variable mark-parent as character no-undo .
 define variable v-edoc-type as logical   no-undo .
-define variable upd_mark    as logical   no-undo init true.
+/*define variable upd_mark    as logical   no-undo init true.*/
 define temp-table tt-gray-marking-lines like tt-marking-lines .
 
 define buffer buf_marking           for ub.marking .
@@ -89,17 +96,14 @@ define buffer buf_goods             for ub.goods .
 define buffer buf_utd-err           for ub.utd-err .
 DEFINE BUFFER X_marking             FOR tt-marking-lines.
 DEFINE BUFFER X_marking-line        FOR tt-marking-lines.
-
+define variable typem as character no-undo.
 define variable v-scan-str  as character no-undo.
 define variable v-manual    as logical   no-undo .
 DEFINE VARIABLE v-timedelay as integer   no-undo .
+define variable vMarkBrow2 as character no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
-def    var      objSrv      as class     ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
 /* Temp-Table and Buffer definitions                                    */
 /*DEFINE NEW SHARED BUFFER X_marking FOR marking.            */
 /*DEFINE NEW SHARED BUFFER X_marking-lines FOR marking-lines.*/
@@ -164,8 +168,12 @@ X_marking.mark-parent X_marking.mark X_marking.unit X_marking.sts
 &Scoped-define FIELDS-IN-QUERY-br-mark X_marking.gds-code ~
 X_marking.mark-parent X_marking.mark X_marking.unit X_marking.sts 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-mark 
-&Scoped-define QUERY-STRING-br-mark FOR EACH X_marking NO-LOCK where x_marking.doc-level = 1 and if Status_ <> 0 then if Status_ = 7 then x_marking.sts-utd =  else x_marking.sts-utd = 3 or X_marking.sts-utd = Status_ else x_marking.sts-utd <> 99 INDEXED-REPOSITION
-&Scoped-define OPEN-QUERY-br-mark OPEN QUERY br-mark FOR EACH X_marking NO-LOCK where x_marking.doc-level = 1 and if Status_ <> 0 then if Status_ = 7 then x_marking.sts-utd = Status_ else x_marking.sts-utd = 3 or X_marking.sts-utd = Status_ else x_marking.sts-utd <> 99 INDEXED-REPOSITION.
+&Scoped-define QUERY-STRING-br-mark if p-parent_mark eq "" ~
+then FOR EACH X_marking NO-LOCK where x_marking.doc-level = 1 and if Status_ <> 0 then if Status_ = 7 then x_marking.sts-utd =  else x_marking.sts-utd = 3 or X_marking.sts-utd = Status_ else x_marking.sts-utd <> 99 indexed-reposition. ~
+else FOR EACH X_marking NO-LOCK where x_marking.mark-parent = p-parent_mark and if Status_ <> 0 then if Status_ = 7 then x_marking.sts-utd = Status_ else x_marking.sts-utd = 3 or X_marking.sts-utd = Status_ else x_marking.sts-utd <> 99 INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-br-mark if p-parent_mark eq "" ~
+then OPEN QUERY br-mark FOR EACH X_marking NO-LOCK where x_marking.doc-level = 1 and if Status_ <> 0 then if Status_ = 7 then x_marking.sts-utd = Status_ else x_marking.sts-utd = 3 or X_marking.sts-utd = Status_ else x_marking.sts-utd <> 99 INDEXED-REPOSITION. ~
+else OPEN QUERY br-mark FOR EACH X_marking NO-LOCK where x_marking.mark-parent = p-parent_mark and if Status_ <> 0 then if Status_ = 7 then x_marking.sts-utd = Status_ else x_marking.sts-utd = 3 or X_marking.sts-utd = Status_ else x_marking.sts-utd <> 99 INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-br-mark X_marking
 &Scoped-define FIRST-TABLE-IN-QUERY-br-mark X_marking
 
@@ -174,15 +182,14 @@ X_marking.mark-parent X_marking.mark X_marking.unit X_marking.sts
 &Scoped-define FIELDS-IN-QUERY-br-mark-item X_marking-line.gds-code ~
 X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-line.sts 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-mark-item 
-&Scoped-define QUERY-STRING-br-mark-item for each X_marking-line no-lock where X_marking-line.mark-parent = X_marking.mark and X_marking-line.doc-level = 2 and if Status_ <> 0 then if Status_ = 7 then x_marking-line.sts-utd = Status_ else x_marking-line.sts-utd = 3 or X_marking-line.sts-utd = Status_ else x_marking-line.sts <> 99 INDEXED-REPOSITION
-&Scoped-define OPEN-QUERY-br-mark-item OPEN QUERY br-mark-item for each X_marking-line no-lock where X_marking-line.mark-parent = X_marking.mark and X_marking-line.doc-level = 2 and if Status_ <> 0 then if Status_ = 7 then x_marking-line.sts-utd = Status_ else x_marking-line.sts-utd = 3 or X_marking-line.sts-utd = Status_ else x_marking-line.sts <> 99 INDEXED-REPOSITION.
+&Scoped-define QUERY-STRING-br-mark-item for each X_marking-line no-lock where X_marking-line.mark-parent = vMarkBrow2 and if Status_ <> 0 then if Status_ = 7 then x_marking-line.sts-utd = Status_ else x_marking-line.sts-utd = 3 or X_marking-line.sts-utd = Status_ else x_marking-line.sts <> 99 INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-br-mark-item OPEN QUERY br-mark-item for each X_marking-line no-lock where X_marking-line.mark-parent = vMarkBrow2   and if Status_ <> 0 then if Status_ = 7 then x_marking-line.sts-utd = Status_ else x_marking-line.sts-utd = 3 or X_marking-line.sts-utd = Status_ else x_marking-line.sts <> 99 INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-br-mark-item X_marking-line
 &Scoped-define FIRST-TABLE-IN-QUERY-br-mark-item X_marking-line
 
 
 /* Definitions for DIALOG-BOX d-mark                                    */
 &Scoped-define OPEN-BROWSERS-IN-QUERY-d-mark ~
-    ~{&OPEN-QUERY-br-bar-code}~
     ~{&OPEN-QUERY-br-mark}~
     ~{&OPEN-QUERY-br-mark-item}
 
@@ -204,14 +211,14 @@ qnty-mark-2 f-qnty-unit qnty-mark
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD GdsName d-mark 
 FUNCTION GdsName RETURNS CHARACTER
-   ( input p-gds-code as integer )  FORWARD.
+    ( input p-gds-code as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusName d-mark 
 FUNCTION StatusName RETURNS CHARACTER
-   ( input p-sts as integer )  FORWARD.
+    ( input p-sts as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -223,79 +230,83 @@ def var Marking as class mark no-undo .
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-change 
-   LABEL "&Поменять":L 
-   SIZE 10 BY 1.
+     LABEL "&Поменять":L 
+     SIZE 10 BY 1.
+
+DEFINE BUTTON b-look 
+     LABEL "Просмотр":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-change-2 
-   LABEL "&Поменять":L 
-   SIZE 10 BY 1.
+     LABEL "Поменять":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-del 
-   LABEL "&Удалить":L 
-   SIZE 10 BY 1.
+     LABEL "&Удалить":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-exit AUTO-GO 
-   LABEL "&Выход ":L 
-   SIZE 10 BY 1.
+     LABEL "&Выход ":L 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-hist 
-   IMAGE-UP FILE "cmp/b-hist.bmp":U
-   IMAGE-DOWN FILE "cmp/b-hist.bmp":U
-   IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
-   LABEL "Ис&тория" 
-   SIZE 3 BY 1.
+     IMAGE-UP FILE "cmp/b-hist.bmp":U
+     IMAGE-DOWN FILE "cmp/b-hist.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
+     LABEL "Ис&тория" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON b-mark 
-   LABEL "&*" 
-   SIZE 3 BY 1.
+     LABEL "&*" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON b-mark-2 
-   LABEL "&*" 
-   SIZE 3 BY 1.
+     LABEL "&*" 
+     SIZE 3 BY 1.
 
 DEFINE BUTTON bt-not-sel-all 
-   LABEL "+" 
-   SIZE 3 BY 1 TOOLTIP "Выбрать все".
+     LABEL "+" 
+     SIZE 3 BY 1 TOOLTIP "Выбрать все".
 
 DEFINE BUTTON bt-not-sel-all-2 
-   LABEL "+" 
-   SIZE 3 BY 1 TOOLTIP "Выбрать все".
+     LABEL "+" 
+     SIZE 3 BY 1 TOOLTIP "Выбрать все".
 
 DEFINE BUTTON bt-not-sel-desel-all 
-   LABEL "-" 
-   SIZE 3 BY 1 TOOLTIP "Отменить выбор".
+     LABEL "-" 
+     SIZE 3 BY 1 TOOLTIP "Отменить выбор".
 
 DEFINE BUTTON bt-not-sel-desel-all-2 
-   LABEL "-" 
-   SIZE 3 BY 1 TOOLTIP "Отменить выбор".
+     LABEL "-" 
+     SIZE 3 BY 1 TOOLTIP "Отменить выбор".
 
 DEFINE BUTTON b_block 
-   LABEL "Проверка" 
-   SIZE 10 BY 1.
+     LABEL "Проверка" 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b_error 
-   LABEL "Ошибки" 
-   SIZE 10 BY 1.
+     LABEL "Ошибки" 
+     SIZE 10 BY 1.
 
-DEFINE VARIABLE c-status    AS INTEGER   FORMAT "-999":U INITIAL 0 
-   VIEW-AS COMBO-BOX INNER-LINES 5
-   LIST-ITEM-PAIRS "Все",1,
-   "Получен от поставщика",2,
-   "Требует корректировки",3,
-   "Ожидает поставки",4,
-   "Требует подписания",5
-   DROP-DOWN-LIST
-   SIZE 29 BY 1 NO-UNDO.
+DEFINE VARIABLE c-status AS INTEGER FORMAT "-999":U INITIAL 0 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "Все",1,
+                     "Получен от поставщика",2,
+                     "Требует корректировки",3,
+                     "Ожидает поставки",4,
+                     "Требует подписания",5
+     DROP-DOWN-LIST
+     SIZE 29 BY 1 NO-UNDO.
 
-DEFINE VARIABLE c-status-2  AS INTEGER   FORMAT "-999":U INITIAL 0 
-   VIEW-AS COMBO-BOX INNER-LINES 5
-   LIST-ITEM-PAIRS "Все",1,
-   "Получен от поставщика",2,
-   "Требует корректировки",3,
-   "Ожидает поставки",4,
-   "Требует подписания",5
-   DROP-DOWN-LIST
-   SIZE 29 BY 1 NO-UNDO.
+DEFINE VARIABLE c-status-2 AS INTEGER FORMAT "-999":U INITIAL 0 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "Все",1,
+                     "Получен от поставщика",2,
+                     "Требует корректировки",3,
+                     "Ожидает поставки",4,
+                     "Требует подписания",5
+     DROP-DOWN-LIST
+     SIZE 29 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-qnty-bar-code AS INTEGER FORMAT "->>>,>>>,>>9":U INITIAL 0 
      LABEL "Кол-во штрих-кодов" 
@@ -312,47 +323,47 @@ DEFINE VARIABLE F-text AS CHARACTER FORMAT "X(256)":U
      SIZE 80.5 BY 1.25
      FGCOLOR 12  NO-UNDO.
 
-DEFINE VARIABLE qnty-bar-code AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 0 
+/*DEFINE VARIABLE qnty-bar-code AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 0*/
+/*     LABEL "из"                                                         */
+/*     VIEW-AS FILL-IN                                                    */
+/*     SIZE 5.5 BY 1 NO-UNDO.                                             */
+/*                                                                        */
+/*DEFINE VARIABLE qnty-bar-code2 AS INTEGER FORMAT "->,>>>>>9":U INITIAL 0*/
+/*     LABEL "Просканировано штрих-кодов"                                 */
+/*     VIEW-AS FILL-IN                                                    */
+/*     SIZE 5.5 BY 1 NO-UNDO.                                             */
+
+DEFINE VARIABLE qnty-mark AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 0 
      LABEL "из" 
      VIEW-AS FILL-IN 
      SIZE 5.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE qnty-bar-code2 AS INTEGER FORMAT "->,>>>>>9":U INITIAL 0 
-     LABEL "Просканировано штрих-кодов" 
+DEFINE VARIABLE qnty-mark-2 AS INTEGER FORMAT "->,>>>>>9":U INITIAL 0 
+     LABEL "Просканировано марок" 
      VIEW-AS FILL-IN 
      SIZE 5.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE qnty-mark   AS INTEGER   FORMAT "->,>>>,>>9":U INITIAL 0 
-   LABEL "из" 
-   VIEW-AS FILL-IN 
-   SIZE 5.5 BY 1 NO-UNDO.
+/*DEFINE VARIABLE v-bar-code AS CHARACTER FORMAT "X(255)"*/
+/*     LABEL "Штрих-код"                                 */
+/*     VIEW-AS FILL-IN                                   */
+/*     SIZE 71 BY 1.                                     */
 
-DEFINE VARIABLE qnty-mark-2 AS INTEGER   FORMAT "->,>>>>>9":U INITIAL 0 
-   LABEL "Просканировано марок" 
-   VIEW-AS FILL-IN 
-   SIZE 5.5 BY 1 NO-UNDO.
-
-DEFINE VARIABLE v-bar-code AS CHARACTER FORMAT "X(255)" 
-     LABEL "Штрих-код" 
+DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(255)" 
+     LABEL "Марка/Штрих-код" 
      VIEW-AS FILL-IN 
-     SIZE 71 BY 1.
+     SIZE 74 BY 1.
 
-DEFINE VARIABLE v-mark      AS CHARACTER FORMAT "X(255)" 
-   LABEL "Марка" 
-   VIEW-AS FILL-IN 
-   SIZE 74 BY 1.
-
-DEFINE VARIABLE Status_     AS INTEGER 
-   VIEW-AS RADIO-SET HORIZONTAL
-   RADIO-BUTTONS 
-   "Все", 0,
-   "Ожидает проверку", 1,
-   "Проверен", 7
-   SIZE 41 BY 1 NO-UNDO.
+DEFINE VARIABLE Status_ AS INTEGER 
+     VIEW-AS RADIO-SET HORIZONTAL
+     RADIO-BUTTONS 
+          "Все", 0,
+"Ожидает проверку", 1,
+"Проверен", 7
+     SIZE 41 BY 1 NO-UNDO.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusTHName d-utd
 FUNCTION StatusTHName RETURNS CHARACTER
-   (input p-stsTH as integer)  .
-   Return Marking:GetLabel(p-stsTH) .
+  (input p-stsTH as integer)  .
+  Return Marking:GetLabel(p-stsTH) .
 END FUNCTION .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -362,64 +373,75 @@ DEFINE QUERY br-bar-code FOR
   X_marking SCROLLING.
   
 DEFINE QUERY br-mark FOR 
-   X_marking SCROLLING.
+  X_marking SCROLLING.
 
 DEFINE QUERY br-mark-item FOR 
-   X_marking-line SCROLLING.
+  X_marking-line SCROLLING.
 &ANALYZE-RESUME
 
-/* Browse definitions                                                   */
-DEFINE BROWSE br-bar-code
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-bar-code d-mark _STRUCTURED
-  QUERY br-bar-code NO-LOCK DISPLAY
-  X_marking.marking-string column-label "*" format "X(1)":U
-  X_marking.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U
-  X_marking.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 55
-  X_marking.mark COLUMN-LABEL "Штрих-код" FORMAT "x(56)":U width 33
-  X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-/*  X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20*/
-/*  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20    */
-/*  X_marking.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U                  */
-/*  X_marking.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U                 */
-/*  X_marking.site COLUMN-LABEL "" FORMAT "X(1)":U                        */
-/*  X_marking.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U                 */
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 123.5 BY 11 FIT-LAST-COLUMN.
+/*/* Browse definitions                                                   */     */
+/*DEFINE BROWSE br-bar-code                                                      */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-bar-code d-mark _STRUCTURED*/
+/*  QUERY br-bar-code NO-LOCK DISPLAY                                            */
+/*  X_marking.marking-string column-label "*" format "X(1)":U                    */
+/*  X_marking.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U            */
+/*  X_marking.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 55    */
+/*  X_marking.mark COLUMN-LABEL "Штрих-код" FORMAT "x(56)":U width 33            */
+/*  X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U              */
+/*/*  X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20*/   */
+/*/*  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20    */   */
+/*/*  X_marking.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U                  */   */
+/*/*  X_marking.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U                 */   */
+/*/*  X_marking.site COLUMN-LABEL "" FORMAT "X(1)":U                        */   */
+/*/*  X_marking.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U                 */   */
+/*/* _UIB-CODE-BLOCK-END */                                                      */
+/*&ANALYZE-RESUME                                                                */
+/*    WITH NO-ROW-MARKERS SEPARATORS SIZE 123.5 BY 11 FIT-LAST-COLUMN.           */
     
 /* Browse definitions                                                   */
 DEFINE BROWSE br-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-mark d-mark _STRUCTURED
-   QUERY br-mark NO-LOCK DISPLAY
-   X_marking.marking-string column-label "*" format "X(1)":U
-   X_marking.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U
-   X_marking.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 15
-   X_marking.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
-   X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-   X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
-   X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20
-   X_marking.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U
-   X_marking.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U
-   X_marking.site COLUMN-LABEL "" FORMAT "X(1)":U
-   X_marking.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
+  QUERY br-mark NO-LOCK DISPLAY
+  X_marking.marking-string column-label "*" format "X(1)":U
+  X_marking.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U
+  X_marking.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 15
+  (if length(X_marking.mark) < 16 then "ШК" 
+  else if ismark(X_marking.mark) then "КМ"
+  else "АОД") @ typem COLUMN-LABEL "Тип!кода" FORMAT "x(3)":U
+  X_marking.mark COLUMN-LABEL "Марка/Штрих-код" FORMAT "x(56)":U width 33
+  
+  X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
+  if not ismark(X_marking.mark) then "" else if X_marking.stts-utd = marking:Checked_:Label_ then X_marking.stts-utd else X_marking.stts @ X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
+/*  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
+/*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
+/*  X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U*/
+  X_marking.site COLUMN-LABEL "" FORMAT "X(1)":U
+  X_marking.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
+Enable
+X_marking.mark  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 123.5 BY 11 FIT-LAST-COLUMN.
 
 DEFINE BROWSE br-mark-item
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-mark-item d-mark _STRUCTURED
-   QUERY br-mark-item NO-LOCK DISPLAY
-   X_marking-line.marking-string column-label "*" format "X(1)":U
-   X_marking-line.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U
-   X_marking-line.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 15
-   X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
-   X_marking-line.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-   X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
-   X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20
-   X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U
-   X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U
-   X_marking-line.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
-  
+  QUERY br-mark-item NO-LOCK DISPLAY
+  X_marking-line.marking-string column-label "*" format "X(1)":U
+  X_marking-line.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U
+  X_marking-line.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 15
+  if length(X_marking.mark) < 16 then "ШК" 
+  else if ismark(X_marking.mark) then "КМ"
+  else "АОД" @ typem COLUMN-LABEL "Тип!кода" FORMAT "x(3)":U
+  X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
+  X_marking-line.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
+  if X_marking-line.stts-utd = marking:Checked_:Label_ then X_marking-line.stts-utd else X_marking-line.stts @ X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
+/*  X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
+/*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
+/*  X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U*/
+  X_marking-line.unit COLUMN-LABEL "Ед.изм." FORMAT "x(8)":U
+Enable
+X_marking-line.mark  
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 123.5 BY 11.25 FIT-LAST-COLUMN.
@@ -431,8 +453,8 @@ DEFINE FRAME d-mark
      b-exit AT ROW 1 COL 1
      b_block AT ROW 1 COL 101.63 WIDGET-ID 290
      b_error AT ROW 1 COL 111.5 WIDGET-ID 282
-     v-mark AT ROW 1.08 COL 18 COLON-ALIGNED WIDGET-ID 34
-     v-bar-code AT ROW 1.08 COL 21 COLON-ALIGNED WIDGET-ID 292
+     v-mark AT ROW 1.08 COL 38 COLON-ALIGNED WIDGET-ID 34
+/*     v-bar-code AT ROW 1.08 COL 21 COLON-ALIGNED WIDGET-ID 292*/
      b-hist AT ROW 1.08 COL 121.88 WIDGET-ID 64
      F-text AT ROW 2.33 COL 23 NO-LABEL WIDGET-ID 224
      bt-not-sel-all AT ROW 3.75 COL 1.63 WIDGET-ID 10 NO-TAB-STOP 
@@ -441,9 +463,10 @@ DEFINE FRAME d-mark
      b-del AT ROW 3.75 COL 10.88 WIDGET-ID 66
      c-status AT ROW 3.75 COL 22 COLON-ALIGNED NO-LABEL WIDGET-ID 72
      b-change AT ROW 3.75 COL 53.5 WIDGET-ID 68
+     b-look AT ROW 3.75 COL 63.5 WIDGET-ID 68
      Status_ AT ROW 3.75 COL 84 NO-LABEL WIDGET-ID 24
      br-mark AT ROW 4.75 COL 1.5 WIDGET-ID 200
-     br-bar-code AT ROW 4.75 COL 1.5 WIDGET-ID 400
+/*     br-bar-code AT ROW 4.75 COL 1.5 WIDGET-ID 400*/
      bt-not-sel-all-2 AT ROW 16 COL 1.5 WIDGET-ID 80 NO-TAB-STOP 
      bt-not-sel-desel-all-2 AT ROW 16 COL 4.5 WIDGET-ID 82 NO-TAB-STOP 
      b-mark-2 AT ROW 16 COL 7.5 WIDGET-ID 78
@@ -452,9 +475,9 @@ DEFINE FRAME d-mark
      f-qnty-unit AT ROW 16 COL 123.75 RIGHT-ALIGNED WIDGET-ID 284
      qnty-mark-2 AT ROW 16 COL 107.25 COLON-ALIGNED WIDGET-ID 288
      f-qnty-bar-code AT ROW 16 COL 123.75 RIGHT-ALIGNED WIDGET-ID 294
-     qnty-bar-code2 AT ROW 16 COL 107.25 COLON-ALIGNED WIDGET-ID 298
+/*     qnty-bar-code2 AT ROW 16 COL 107.25 COLON-ALIGNED WIDGET-ID 298*/
      qnty-mark AT ROW 16 COL 117.38 COLON-ALIGNED WIDGET-ID 286
-     qnty-bar-code AT ROW 16 COL 117.38 COLON-ALIGNED WIDGET-ID 296
+/*     qnty-bar-code AT ROW 16 COL 117.38 COLON-ALIGNED WIDGET-ID 296*/
      br-mark-item AT ROW 17 COL 1.5 WIDGET-ID 300
      SPACE(0.99) SKIP(0.28)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -483,9 +506,9 @@ DEFINE FRAME d-mark
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-mark Status_ d-mark */
 /* BROWSE-TAB br-mark-item qnty-mark d-mark */
-ASSIGN 
-       br-bar-code:HIDDEN  IN FRAME d-mark                = TRUE.
-       br-bar-code:COLUMN-RESIZABLE IN FRAME d-mark       = TRUE.
+/*ASSIGN                                                           */
+/*       br-bar-code:HIDDEN  IN FRAME d-mark                = TRUE.*/
+/*       br-bar-code:COLUMN-RESIZABLE IN FRAME d-mark       = TRUE.*/
 ASSIGN 
        br-mark:HIDDEN  IN FRAME d-mark                = TRUE
        br-mark:COLUMN-RESIZABLE IN FRAME d-mark       = TRUE.
@@ -495,7 +518,7 @@ ASSIGN
        br-mark-item:COLUMN-RESIZABLE IN FRAME d-mark       = TRUE.
 
 assign
-      v-bar-code:hidden in frame d-mark = true .
+/*      v-bar-code:hidden in frame d-mark = true .*/
       v-mark:hidden in frame d-mark = true .
       b-change-2:hidden in frame d-mark = true .
       b-mark-2:hidden in frame d-mark = true .
@@ -505,6 +528,7 @@ assign
       c-status-2:hidden in frame d-mark = true .
       b_error:hidden in frame d-mark = true .
 
+      
 /* SETTINGS FOR BUTTON bt-not-sel-all IN FRAME d-mark
    NO-ENABLE                                                            */
 /* SETTINGS FOR BUTTON bt-not-sel-all-2 IN FRAME d-mark
@@ -533,71 +557,72 @@ assign
 &Scoped-define SELF-NAME b-change
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-change d-mark
 ON CHOOSE OF b-change IN FRAME d-mark /* Поменять */
-   DO:
-      define variable ii         as integer no-undo .
-      define variable recid_mark as integer no-undo .
-      find first tt-marking-lines where tt-marking-lines.marking-string = "*" and tt-marking-lines.doc-level = 1 no-error .
-      if available (tt-marking-lines) then 
-      do:
-         for each X_marking where X_marking.marking-string = "*" and X_marking.doc-level = 1 :
-            find first buf_marking exclusive-lock where buf_marking.mark = X_marking.mark no-error .
-            if available (buf_marking) 
-               then 
-            do: 
-               buf_marking.sts = c-status .
-               validate buf_marking.
-               X_marking.sts = buf_marking.sts .
-               X_marking.stts =  StatusTHName(X_marking.sts).
+    DO:
+        define variable ii         as integer no-undo .
+        define variable recid_mark as integer no-undo .
+        find first tt-marking-lines where tt-marking-lines.marking-string = "*" no-error .
+        if available (tt-marking-lines) then 
+        do:
+            for each X_marking where X_marking.marking-string = "*":
+                find first buf_marking exclusive-lock where buf_marking.mark = X_marking.mark no-error .
+                if available (buf_marking) 
+                    then 
+                do: 
+                    buf_marking.sts = c-status .
+                    validate buf_marking.
+                    X_marking.sts = buf_marking.sts .
+                    X_marking.stts =  StatusTHName(X_marking.sts).
+                end.
+                find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark 
+                                                                  and buf_utd-marking-lines.db-num = X_marking.db-num 
+                                                                  and buf_utd-marking-lines.doc-id = X_marking.doc-id no-error .
+                if available (buf_utd-marking-lines) 
+                    then 
+                do: 
+                    buf_utd-marking-lines.sts = c-status .
+                    validate buf_utd-marking-lines.
+                    X_marking.sts-utd = buf_utd-marking-lines.sts .
+                    X_marking.stts-utd =  StatusTHName(X_marking.sts-utd).
+                end.
+                X_marking.marking-string = "" .
             end.
-            find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark and buf_utd-marking-lines.db-num = X_marking.db-num and
-               buf_utd-marking-lines.doc-id = X_marking.doc-id no-error .
-            if available (buf_utd-marking-lines) 
-               then 
-            do: 
-               buf_utd-marking-lines.sts = c-status .
-               validate buf_utd-marking-lines.
-               X_marking.sts-utd = buf_utd-marking-lines.sts .
-               X_marking.stts-utd =  StatusTHName(X_marking.sts-utd).
-            end.
-            X_marking.marking-string = "" .
-         end.
 
-      end.  
+        end.  
     
-      else 
-      do:
-         recid_mark = recid(X_marking) .
-         find first X_marking where recid (X_marking) = recid_mark no-error.
-         if available (X_marking) then 
-         do:
+        else 
+        do:
+            recid_mark = recid(X_marking) .
+            find first X_marking where recid (X_marking) = recid_mark no-error.
+            if available (X_marking) then 
+            do:
         
         
-            find first buf_marking exclusive-lock where buf_marking.mark = X_marking.mark no-error .
-            if available (buf_marking) 
-               then 
-            do: 
-               buf_marking.sts = c-status .
-               validate buf_marking.
-               X_marking.sts = buf_marking.sts .
-               X_marking.stts =  StatusTHName(X_marking.sts).
-            end.
-            find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark and buf_utd-marking-lines.db-num = X_marking.db-num and
-               buf_utd-marking-lines.doc-id = X_marking.doc-id no-error .
-            if available (buf_utd-marking-lines) 
-               then 
-            do: 
-               buf_utd-marking-lines.sts = c-status .
-               validate buf_utd-marking-lines.
-               X_marking.sts-utd = buf_utd-marking-lines.sts .
-               X_marking.stts-utd =  StatusTHName(X_marking.sts-utd).
-            end.
-         end.                  
+                find first buf_marking exclusive-lock where buf_marking.mark = X_marking.mark no-error .
+                if available (buf_marking) 
+                    then 
+                do: 
+                    buf_marking.sts = c-status .
+                    validate buf_marking.
+                    X_marking.sts = buf_marking.sts .
+                    X_marking.stts =  StatusTHName(X_marking.sts).
+                end.
+                find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark and buf_utd-marking-lines.db-num = X_marking.db-num and
+                    buf_utd-marking-lines.doc-id = X_marking.doc-id no-error .
+                if available (buf_utd-marking-lines) 
+                    then 
+                do: 
+                    buf_utd-marking-lines.sts = c-status .
+                    validate buf_utd-marking-lines.
+                    X_marking.sts-utd = buf_utd-marking-lines.sts .
+                    X_marking.stts-utd =  StatusTHName(X_marking.sts-utd).
+                end.
+            end.                  
       
-      end.  
-      {&OPEN-BROWSERS-IN-QUERY-d-mark}
-      apply "entry" to {&browse-name} in frame {&frame-name}.
+        end.  
+        {&OPEN-BROWSERS-IN-QUERY-d-mark}
+        apply "entry" to {&browse-name} in frame {&frame-name}.
 
-   END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -606,49 +631,49 @@ ON CHOOSE OF b-change IN FRAME d-mark /* Поменять */
 &Scoped-define SELF-NAME b-change-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-change-2 d-mark
 ON CHOOSE OF b-change-2 IN FRAME d-mark /* Поменять */
-   DO:
-      define variable ii         as integer no-undo .
-      define variable recid_mark as integer no-undo .
+    DO:
+        define variable ii         as integer no-undo .
+        define variable recid_mark as integer no-undo .
   
-      find first tt-marking-lines where tt-marking-lines.marking-string = "*" and tt-marking-lines.doc-level > 1 no-error .
-      if available (tt-marking-lines) then 
-      do:
-         for each X_marking-line where X_marking-line.marking-string = "*" and tt-marking-lines.doc-level > 1:
-            X_marking-line.sts-utd = c-status-2 .
-            X_marking-line.stts-utd =  StatusTHName(X_marking-line.sts-utd).
-            X_marking-line.sts = c-status-2 .
-            X_marking-line.stts =  StatusTHName(X_marking-line.sts).
-            find first buf_marking exclusive-lock where buf_marking.mark = X_marking-line.mark no-error .
-            if available (buf_marking) then buf_marking.sts = X_marking-line.sts .
-            find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking-line.mark and buf_utd-marking-lines.db-num = X_marking-line.db-num and
-               buf_utd-marking-lines.doc-id = X_marking-line.doc-id no-error .
-            if available (buf_utd-marking-lines) then buf_utd-marking-lines.sts = X_marking-line.sts-utd .
-            X_marking-line.marking-string = "" .
-         end.
+        find first tt-marking-lines where tt-marking-lines.marking-string = "*" and tt-marking-lines.doc-level > 1 no-error .
+        if available (tt-marking-lines) then 
+        do:
+            for each X_marking-line where X_marking-line.marking-string = "*" and tt-marking-lines.doc-level > 1:
+                X_marking-line.sts-utd = c-status-2 .
+                X_marking-line.stts-utd =  StatusTHName(X_marking-line.sts-utd).
+                X_marking-line.sts = c-status-2 .
+                X_marking-line.stts =  StatusTHName(X_marking-line.sts).
+                find first buf_marking exclusive-lock where buf_marking.mark = X_marking-line.mark no-error .
+                if available (buf_marking) then buf_marking.sts = X_marking-line.sts .
+                find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking-line.mark and buf_utd-marking-lines.db-num = X_marking-line.db-num and
+                    buf_utd-marking-lines.doc-id = X_marking-line.doc-id no-error .
+                if available (buf_utd-marking-lines) then buf_utd-marking-lines.sts = X_marking-line.sts-utd .
+                X_marking-line.marking-string = "" .
+            end.
             
-      end.  
+        end.  
 
-      else 
-      do:
-         recid_mark = recid(X_marking-line) .
-         find first X_marking-line where recid (X_marking-line) = recid_mark no-error.
-         if available (X_marking-line) then 
-         do:
-            X_marking-line.sts-utd = c-status-2 .
-            X_marking-line.stts-utd =  StatusTHName(X_marking-line.sts-utd).
-            X_marking-line.sts = c-status-2 .
-            X_marking-line.stts =  StatusTHName(X_marking-line.sts).
-            find first buf_marking exclusive-lock where buf_marking.mark = X_marking-line.mark no-error .
-            if available (buf_marking) then buf_marking.sts = X_marking-line.sts .
-            find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking-line.mark and buf_utd-marking-lines.db-num = X_marking-line.db-num and
-               buf_utd-marking-lines.doc-id = X_marking-line.doc-id no-error .
-            if available (buf_utd-marking-lines) then buf_utd-marking-lines.sts = X_marking-line.sts-utd .
-         end.
-      end. 
-      {&OPEN-BROWSERS-IN-QUERY-d-mark}
-      apply "entry" to {&browse-name} in frame {&frame-name}.
+        else 
+        do:
+            recid_mark = recid(X_marking-line) .
+            find first X_marking-line where recid (X_marking-line) = recid_mark no-error.
+            if available (X_marking-line) then 
+            do:
+                X_marking-line.sts-utd = c-status-2 .
+                X_marking-line.stts-utd =  StatusTHName(X_marking-line.sts-utd).
+                X_marking-line.sts = c-status-2 .
+                X_marking-line.stts =  StatusTHName(X_marking-line.sts).
+                find first buf_marking exclusive-lock where buf_marking.mark = X_marking-line.mark no-error .
+                if available (buf_marking) then buf_marking.sts = X_marking-line.sts .
+                find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking-line.mark and buf_utd-marking-lines.db-num = X_marking-line.db-num and
+                    buf_utd-marking-lines.doc-id = X_marking-line.doc-id no-error .
+                if available (buf_utd-marking-lines) then buf_utd-marking-lines.sts = X_marking-line.sts-utd .
+            end.
+        end. 
+        {&OPEN-BROWSERS-IN-QUERY-d-mark}
+        apply "entry" to {&browse-name} in frame {&frame-name}.
 
-   END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -723,11 +748,11 @@ ON CHOOSE OF b-del IN FRAME d-mark /* Удалить */
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-mark
 ON choose OF b-exit IN FRAME d-mark /* Выход  */
-   DO:
-      define buffer buf_marking for ub.marking .
-      define variable quest-ok   as logical no-undo .
-      define variable quest-scan as logical no-undo .
-      define buffer buf_utd for ub.utd .
+DO:
+    define buffer buf_marking for ub.marking .
+    define variable quest-ok as logical no-undo .
+    define variable quest-scan as logical no-undo .
+    define buffer buf_utd for ub.utd .
     
     if  p-type = 6 then 
     do:
@@ -790,14 +815,14 @@ ON choose OF b-exit IN FRAME d-mark /* Выход  */
               end.  
             end.  
 
-            end.
-            else 
-            do:
-               return no-apply .
-            end.  
-         end. 
-      end.
-   END.
+        end.
+        else 
+        do:
+          return no-apply .
+        end.  
+      end. 
+    end.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -839,27 +864,15 @@ ON CHOOSE OF b-mark IN FRAME d-mark /* * */
     DO:
         define variable loc#log     as logical no-undo .
         define variable row-marking as rowid   no-undo .
-        if available X_marking then 
+        if available X_marking 
+           and X_marking.isMark
+        then 
         do:
             if X_marking.marking-string = "*" then X_marking.marking-string = "" .
             else X_marking.marking-string = "*" . 
             /*      { gbl/markstrn.i X_marking v-rid-list }*/
             row-marking = rowid(X_marking).
-       if not upd_mark then do:
-          loc#log = br-bar-code:refresh() .
-            reposition br-bar-code to rowid row-marking.
-      
-            loc#log = br-bar-code:refresh() .
-
-            if last-event:function <> "MOUSE-SELECT-DBLCLICK" then 
-            do:
-                loc#log = br-bar-code:select-next-row () .
-                apply "VALUE-CHANGED" to br-bar-code in frame {&frame-name} .
-            end.
-        apply "entry" to br-bar-code in frame {&frame-name}.
-       end.
-       else do:   
-          loc#log = br-mark:refresh() .
+            loc#log = br-mark:refresh() .
             reposition br-mark to rowid row-marking.
       
             loc#log = br-mark:refresh() .
@@ -869,9 +882,8 @@ ON CHOOSE OF b-mark IN FRAME d-mark /* * */
                 loc#log = br-mark:select-next-row () .
                 apply "VALUE-CHANGED" to br-mark in frame {&frame-name} .
             end.
-        apply "entry" to br-mark in frame {&frame-name}.
-       end.
-       end.
+            apply "entry" to br-mark in frame {&frame-name}.
+         end.
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -885,7 +897,9 @@ ON CHOOSE OF b-mark-2 IN FRAME d-mark /* * */
         define variable loc#log     as logical no-undo .
         define variable row-marking as rowid   no-undo .
         apply "entry" to {&browse-name} in frame {&frame-name}.
-        if available X_marking-line then 
+        if     available X_marking-line 
+           and X_marking.isMark
+        then 
         do:
             if X_marking-line.marking-string = "*" then X_marking-line.marking-string = "" .
             else X_marking-line.marking-string = "*" .
@@ -907,107 +921,107 @@ ON CHOOSE OF b-mark-2 IN FRAME d-mark /* * */
 &ANALYZE-RESUME
 
 
-&Scoped-define BROWSE-NAME br-bar-code
-&Scoped-define SELF-NAME br-bar-code
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-bar-code d-mark
-ON ROW-DISPLAY OF br-bar-code IN FRAME d-mark
-DO:
-        if p-type = 1 or p-type = 6 then 
-        do:
-            case X_marking.sts-utd:
-                when Marking:Checked_:KeyIntDB then
-                    do:
-                        X_marking.gds-code:fGCOLOR in browse br-bar-code = CYAN_COLOR.
-                        X_marking.gds-name:fGCOLOR in browse br-bar-code = CYAN_COLOR.
-                        X_marking.mark:fGCOLOR in browse br-bar-code = CYAN_COLOR.
-                        X_marking.box-qnty:fGCOLOR in browse br-bar-code = CYAN_COLOR.
-/*                        X_marking.unit:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */
-/*                        X_marking.stts:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */
-/*                        X_marking.stts-utd:fGCOLOR in browse br-bar-code = CYAN_COLOR.*/
-/*                        X_marking.in-code:fGCOLOR in browse br-bar-code = CYAN_COLOR. */
-/*                        X_marking.out-code:fGCOLOR in browse br-bar-code = CYAN_COLOR.*/
-                    end.
-                when Marking:MarkError:KeyIntDB then
-                    do:
-                        X_marking.gds-code:fGCOLOR in browse br-bar-code = red_COLOR.
-                        X_marking.gds-name:fGCOLOR in browse br-bar-code = red_COLOR.
-                        X_marking.mark:fGCOLOR in browse br-bar-code = red_COLOR.
-                        X_marking.box-qnty:fGCOLOR in browse br-bar-code = red_COLOR.
-/*                        X_marking.unit:fGCOLOR in browse br-bar-code = red_COLOR.    */
-/*                        X_marking.stts:fGCOLOR in browse br-bar-code = red_COLOR.    */
-/*                        X_marking.stts-utd:fGCOLOR in browse br-bar-code = red_COLOR.*/
-/*                        X_marking.in-code:fGCOLOR in browse br-bar-code = red_COLOR. */
-/*                        X_marking.out-code:fGCOLOR in browse br-bar-code = red_COLOR.*/
-                    end.    
-            end case.
-            if X_marking.sts = Marking:MarkError:KeyIntDB then 
-            do:
-                X_marking.gds-code:fGCOLOR in browse br-bar-code = red_COLOR.
-                X_marking.gds-name:fGCOLOR in browse br-bar-code = red_COLOR.
-                X_marking.mark:fGCOLOR in browse br-bar-code = red_COLOR.
-                X_marking.box-qnty:fGCOLOR in browse br-bar-code = red_COLOR.
-/*                X_marking.unit:fGCOLOR in browse br-bar-code = red_COLOR.    */
-/*                X_marking.stts:fGCOLOR in browse br-bar-code = red_COLOR.    */
-/*                X_marking.stts-utd:fGCOLOR in browse br-bar-code = red_COLOR.*/
-/*                X_marking.in-code:fGCOLOR in browse br-bar-code = red_COLOR. */
-/*                X_marking.out-code:fGCOLOR in browse br-bar-code = red_COLOR.*/
-            end.       
-        end.
-        else 
-        do:
-            case X_marking.sts:
-                when Marking:MarkError:KeyIntDB then
-                    do:
-                        X_marking.gds-code:fGCOLOR in browse br-bar-code = red_COLOR.
-                        X_marking.gds-name:fGCOLOR in browse br-bar-code = red_COLOR.
-                        X_marking.mark:fGCOLOR in browse br-bar-code = red_COLOR.
-                        X_marking.box-qnty:fGCOLOR in browse br-bar-code = red_COLOR.
-/*                        X_marking.unit:fGCOLOR in browse br-bar-code = red_COLOR.    */
-/*                        X_marking.stts:fGCOLOR in browse br-bar-code = red_COLOR.    */
-/*                        X_marking.stts-utd:fGCOLOR in browse br-bar-code = red_COLOR.*/
-/*                        X_marking.in-code:fGCOLOR in browse br-bar-code = red_COLOR. */
-/*                        X_marking.out-code:fGCOLOR in browse br-bar-code = red_COLOR.*/
-                    end.  
-            end case.
-        end.
-   
-    END .
+/*&Scoped-define BROWSE-NAME br-bar-code                                                    */
+/*&Scoped-define SELF-NAME br-bar-code                                                      */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-bar-code d-mark                              */
+/*ON ROW-DISPLAY OF br-bar-code IN FRAME d-mark                                             */
+/*DO:                                                                                       */
+/*        if p-type = 1 or p-type = 6 then                                                  */
+/*        do:                                                                               */
+/*            case X_marking.sts-utd:                                                       */
+/*                when Marking:Checked_:KeyIntDB then                                       */
+/*                    do:                                                                   */
+/*                        X_marking.gds-code:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */
+/*                        X_marking.gds-name:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */
+/*                        X_marking.mark:fGCOLOR in browse br-bar-code = CYAN_COLOR.        */
+/*                        X_marking.box-qnty:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */
+/*/*                        X_marking.unit:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */*/
+/*/*                        X_marking.stts:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */*/
+/*/*                        X_marking.stts-utd:fGCOLOR in browse br-bar-code = CYAN_COLOR.*/*/
+/*/*                        X_marking.in-code:fGCOLOR in browse br-bar-code = CYAN_COLOR. */*/
+/*/*                        X_marking.out-code:fGCOLOR in browse br-bar-code = CYAN_COLOR.*/*/
+/*                    end.                                                                  */
+/*                when Marking:MarkError:KeyIntDB then                                      */
+/*                    do:                                                                   */
+/*                        X_marking.gds-code:fGCOLOR in browse br-bar-code = red_COLOR.     */
+/*                        X_marking.gds-name:fGCOLOR in browse br-bar-code = red_COLOR.     */
+/*                        X_marking.mark:fGCOLOR in browse br-bar-code = red_COLOR.         */
+/*                        X_marking.box-qnty:fGCOLOR in browse br-bar-code = red_COLOR.     */
+/*/*                        X_marking.unit:fGCOLOR in browse br-bar-code = red_COLOR.    */ */
+/*/*                        X_marking.stts:fGCOLOR in browse br-bar-code = red_COLOR.    */ */
+/*/*                        X_marking.stts-utd:fGCOLOR in browse br-bar-code = red_COLOR.*/ */
+/*/*                        X_marking.in-code:fGCOLOR in browse br-bar-code = red_COLOR. */ */
+/*/*                        X_marking.out-code:fGCOLOR in browse br-bar-code = red_COLOR.*/ */
+/*                    end.                                                                  */
+/*            end case.                                                                     */
+/*            if X_marking.sts = Marking:MarkError:KeyIntDB then                            */
+/*            do:                                                                           */
+/*                X_marking.gds-code:fGCOLOR in browse br-bar-code = red_COLOR.             */
+/*                X_marking.gds-name:fGCOLOR in browse br-bar-code = red_COLOR.             */
+/*                X_marking.mark:fGCOLOR in browse br-bar-code = red_COLOR.                 */
+/*                X_marking.box-qnty:fGCOLOR in browse br-bar-code = red_COLOR.             */
+/*/*                X_marking.unit:fGCOLOR in browse br-bar-code = red_COLOR.    */         */
+/*/*                X_marking.stts:fGCOLOR in browse br-bar-code = red_COLOR.    */         */
+/*/*                X_marking.stts-utd:fGCOLOR in browse br-bar-code = red_COLOR.*/         */
+/*/*                X_marking.in-code:fGCOLOR in browse br-bar-code = red_COLOR. */         */
+/*/*                X_marking.out-code:fGCOLOR in browse br-bar-code = red_COLOR.*/         */
+/*            end.                                                                          */
+/*        end.                                                                              */
+/*        else                                                                              */
+/*        do:                                                                               */
+/*            case X_marking.sts:                                                           */
+/*                when Marking:MarkError:KeyIntDB then                                      */
+/*                    do:                                                                   */
+/*                        X_marking.gds-code:fGCOLOR in browse br-bar-code = red_COLOR.     */
+/*                        X_marking.gds-name:fGCOLOR in browse br-bar-code = red_COLOR.     */
+/*                        X_marking.mark:fGCOLOR in browse br-bar-code = red_COLOR.         */
+/*                        X_marking.box-qnty:fGCOLOR in browse br-bar-code = red_COLOR.     */
+/*/*                        X_marking.unit:fGCOLOR in browse br-bar-code = red_COLOR.    */ */
+/*/*                        X_marking.stts:fGCOLOR in browse br-bar-code = red_COLOR.    */ */
+/*/*                        X_marking.stts-utd:fGCOLOR in browse br-bar-code = red_COLOR.*/ */
+/*/*                        X_marking.in-code:fGCOLOR in browse br-bar-code = red_COLOR. */ */
+/*/*                        X_marking.out-code:fGCOLOR in browse br-bar-code = red_COLOR.*/ */
+/*                    end.                                                                  */
+/*            end case.                                                                     */
+/*        end.                                                                              */
+/*                                                                                          */
+/*    END .                                                                                 */
+/*                                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                                 */
+/*&ANALYZE-RESUME                                                                           */
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-bar-code d-mark
-ON value-changed OF br-bar-code IN FRAME d-mark
-DO:
-        br-bar-code:refresh() no-error .
-        if p-type = 1 then 
-        do:
-            if X_marking.sts = Marking:GrayZone:KeyIntDB then 
-            do:
-                enable
-                    b_block
-                    with frame {&frame-name} .
-            end.
-            else 
-            do:
-                hide b_block in frame {&frame-name} .
-            end.   
-        end.
-        
-    END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-bar-code d-mark */
+/*ON value-changed OF br-bar-code IN FRAME d-mark              */
+/*DO:                                                          */
+/*        br-bar-code:refresh() no-error .                     */
+/*        if p-type = 1 then                                   */
+/*        do:                                                  */
+/*            if X_marking.sts = Marking:GrayZone:KeyIntDB then*/
+/*            do:                                              */
+/*                enable                                       */
+/*                    b_block                                  */
+/*                    with frame {&frame-name} .               */
+/*            end.                                             */
+/*            else                                             */
+/*            do:                                              */
+/*                hide b_block in frame {&frame-name} .        */
+/*            end.                                             */
+/*        end.                                                 */
+/*                                                             */
+/*    END.                                                     */
+/*                                                             */
+/*/* _UIB-CODE-BLOCK-END */                                    */
+/*&ANALYZE-RESUME                                              */
 
 &Scoped-define SELF-NAME br-mark-item
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark-item d-mark
 ON value-changed OF br-mark-item IN FRAME d-mark /* Номер документа */
-   DO:
+    DO:
 
-      br-mark-item:refresh () no-error .
+        br-mark-item:refresh () no-error .
     
-   END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1017,78 +1031,82 @@ ON value-changed OF br-mark-item IN FRAME d-mark /* Номер документа */
 &Scoped-define SELF-NAME br-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark d-mark
 ON ROW-DISPLAY OF br-mark IN FRAME d-mark
-   DO:
-      if p-type = 1 or p-type = 6 then 
-      do:
-         case X_marking.sts-utd:
-            when Marking:Checked_:KeyIntDB then
-               do:
-                  X_marking.gds-code:fGCOLOR in browse br-mark = CYAN_COLOR.
-                  X_marking.gds-name:fGCOLOR in browse br-mark = CYAN_COLOR.
-                  X_marking.mark:fGCOLOR in browse br-mark = CYAN_COLOR.
-                  X_marking.box-qnty:fGCOLOR in browse br-mark = CYAN_COLOR.
-                  X_marking.unit:fGCOLOR in browse br-mark = CYAN_COLOR.
-                  X_marking.stts:fGCOLOR in browse br-mark = CYAN_COLOR.
-                  X_marking.stts-utd:fGCOLOR in browse br-mark = CYAN_COLOR.
-                  X_marking.in-code:fGCOLOR in browse br-mark = CYAN_COLOR.
-                  X_marking.out-code:fGCOLOR in browse br-mark = CYAN_COLOR.
-               end.
-            /*        when Marking:PendingVerification:KeyIntDB or                    */
-            /*        when Marking:DeliveryControl:KeyIntDB then                      */
-            /*          do:                                                           */
-            /*            X_marking.gds-code:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
-            /*            X_marking.gds-name:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
-            /*            X_marking.mark:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
-            /*            X_marking.box-qnty:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
-            /*            X_marking.unit:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
-            /*            X_marking.stts:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
-            /*            X_marking.stts-utd:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
-            /*            X_marking.in-code:BGCOLOR in browse br-mark = YELLOW_COLOR. */
-            /*            X_marking.out-code:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
-            /*          end.                                                          */
-            when Marking:MarkError:KeyIntDB then
-               do:
-                  X_marking.gds-code:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.in-code:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.out-code:fGCOLOR in browse br-mark = red_COLOR.
-               end.    
-         end case.
-         if X_marking.sts = Marking:MarkError:KeyIntDB then 
-         do:
-            X_marking.gds-code:fGCOLOR in browse br-mark = red_COLOR.
-            X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
-            X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
-            X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
-            X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
-            X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
-            X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.
-            X_marking.in-code:fGCOLOR in browse br-mark = red_COLOR.
-            X_marking.out-code:fGCOLOR in browse br-mark = red_COLOR.
-         end.       
-      end.
-      else 
-      do:
-         case X_marking.sts:
-            when Marking:MarkError:KeyIntDB then
-               do:
-                  X_marking.gds-code:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.in-code:fGCOLOR in browse br-mark = red_COLOR.
-                  X_marking.out-code:fGCOLOR in browse br-mark = red_COLOR.
-               end.  
-         end case.
-      end.
+    DO:
+        if p-type = 1 or p-type = 6 then 
+        do:
+            case X_marking.sts-utd:
+                when Marking:Checked_:KeyIntDB then
+                    do:
+                        X_marking.gds-code:fGCOLOR in browse br-mark = CYAN_COLOR.
+                        X_marking.gds-name:fGCOLOR in browse br-mark = CYAN_COLOR.
+                        X_marking.mark:fGCOLOR in browse br-mark = CYAN_COLOR.
+                        X_marking.box-qnty:fGCOLOR in browse br-mark = CYAN_COLOR.
+                        X_marking.unit:fGCOLOR in browse br-mark = CYAN_COLOR.
+                        X_marking.stts:fGCOLOR in browse br-mark = CYAN_COLOR.
+/*                        X_marking.stts-utd:fGCOLOR in browse br-mark = CYAN_COLOR.*/
+                        typem:fGCOLOR in browse br-mark = CYAN_COLOR.
+/*                        X_marking.in-code:fGCOLOR in browse br-mark = CYAN_COLOR. */
+/*                        X_marking.out-code:fGCOLOR in browse br-mark = CYAN_COLOR.*/
+                    end.
+                /*        when Marking:PendingVerification:KeyIntDB or                    */
+                /*        when Marking:DeliveryControl:KeyIntDB then                      */
+                /*          do:                                                           */
+                /*            X_marking.gds-code:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+                /*            X_marking.gds-name:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+                /*            X_marking.mark:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
+                /*            X_marking.box-qnty:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+                /*            X_marking.unit:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
+                /*            X_marking.stts:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
+                /*            X_marking.stts-utd:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+                /*            X_marking.in-code:BGCOLOR in browse br-mark = YELLOW_COLOR. */
+                /*            X_marking.out-code:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+                /*          end.                                                          */
+                when Marking:MarkError:KeyIntDB then
+                    do:
+                        X_marking.gds-code:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
+/*                        X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.*/
+                        typem:fGCOLOR in browse br-mark = red_COLOR.
+/*                        X_marking.in-code:fGCOLOR in browse br-mark = red_COLOR. */
+/*                        X_marking.out-code:fGCOLOR in browse br-mark = red_COLOR.*/
+                    end.    
+            end case.
+            if X_marking.sts = Marking:MarkError:KeyIntDB then 
+            do:
+                X_marking.gds-code:fGCOLOR in browse br-mark = red_COLOR.
+                X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
+                X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
+                X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
+                X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
+                X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
+/*                X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.*/
+                typem:fGCOLOR in browse br-mark = red_COLOR.
+/*                X_marking.in-code:fGCOLOR in browse br-mark = red_COLOR. */
+/*                X_marking.out-code:fGCOLOR in browse br-mark = red_COLOR.*/
+            end.       
+        end.
+        else 
+        do:
+            case X_marking.sts:
+                when Marking:MarkError:KeyIntDB then
+                    do:
+                        X_marking.gds-code:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
+/*                        X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.*/
+                        typem:fGCOLOR in browse br-mark = red_COLOR.
+/*                        X_marking.in-code:fGCOLOR in browse br-mark = red_COLOR. */
+/*                        X_marking.out-code:fGCOLOR in browse br-mark = red_COLOR.*/
+                    end.  
+            end case.
+        end.
    
     END .
 
@@ -1113,6 +1131,7 @@ DO:
                 disable b_block with frame {&frame-name} .
             end.   
         end.
+        vMarkBrow2 = if not available X_marking then ? else X_marking.mark.
         {&OPEN-QUERY-br-mark-item} .
     END.
 
@@ -1124,79 +1143,83 @@ DO:
 &Scoped-define SELF-NAME br-mark-item
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark-item d-mark
 ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
-   DO:
-      if p-type = 1 or p-type = 6 then 
-      do:
-         case X_marking-line.sts-utd:
-            when Marking:Checked_:KeyIntDB then
-               do:
-                  X_marking-line.gds-code:fGCOLOR in browse br-mark-item = CYAN_COLOR.
-                  X_marking-line.gds-name:fGCOLOR in browse br-mark-item = CYAN_COLOR.
-                  X_marking-line.mark:fGCOLOR in browse br-mark-item = CYAN_COLOR.
-                  X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = CYAN_COLOR.
-                  X_marking-line.unit:fGCOLOR in browse br-mark-item = CYAN_COLOR.
-                  X_marking-line.stts:fGCOLOR in browse br-mark-item = CYAN_COLOR.
-                  X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = CYAN_COLOR.
-                  X_marking-line.in-code:fGCOLOR in browse br-mark-item = CYAN_COLOR.
-                  X_marking-line.out-code:fGCOLOR in browse br-mark-item = CYAN_COLOR.
-               end.
-            /*        when Marking:PendingVerification:KeyIntDB or                              */
-            /*        when Marking:DeliveryControl:KeyIntDB then                                */
-            /*          do:                                                                     */
-            /*            X_marking-line.gds-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
-            /*            X_marking-line.gds-name:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
-            /*            X_marking-line.mark:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
-            /*            X_marking-line.box-qnty:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
-            /*            X_marking-line.unit:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
-            /*            X_marking-line.stts:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
-            /*            X_marking-line.stts-utd:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
-            /*            X_marking-line.in-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR. */
-            /*            X_marking-line.out-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
-            /*          end.                                                                    */
-            when Marking:MarkError:KeyIntDB then 
-               do:
-                  X_marking-line.gds-code:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.
-               end. 
-         end case.
-         if X_marking-line.sts = Marking:MarkError:KeyIntDB then 
-         do:
-            X_marking-line.gds-code:fGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR.
-            X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.
-         end. 
+    DO:
+        if p-type = 1 or p-type = 6 then 
+        do:
+            case X_marking-line.sts-utd:
+                when Marking:Checked_:KeyIntDB then
+                    do:
+                        X_marking-line.gds-code:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+                        X_marking-line.gds-name:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+                        X_marking-line.mark:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+                        X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+                        X_marking-line.unit:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+                        X_marking-line.stts:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+/*                        X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = CYAN_COLOR.*/
+                        typem:fGCOLOR in browse br-mark = CYAN_COLOR.
+/*                        X_marking-line.in-code:fGCOLOR in browse br-mark-item = CYAN_COLOR. */
+/*                        X_marking-line.out-code:fGCOLOR in browse br-mark-item = CYAN_COLOR.*/
+                    end.
+                /*        when Marking:PendingVerification:KeyIntDB or                              */
+                /*        when Marking:DeliveryControl:KeyIntDB then                                */
+                /*          do:                                                                     */
+                /*            X_marking-line.gds-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+                /*            X_marking-line.gds-name:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+                /*            X_marking-line.mark:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
+                /*            X_marking-line.box-qnty:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+                /*            X_marking-line.unit:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
+                /*            X_marking-line.stts:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
+                /*            X_marking-line.stts-utd:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+                /*            X_marking-line.in-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR. */
+                /*            X_marking-line.out-code:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+                /*          end.                                                                    */
+                when Marking:MarkError:KeyIntDB then 
+                    do:
+                        X_marking-line.gds-code:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
+/*                        X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.*/
+                        typem:fGCOLOR in browse br-mark = red_COLOR.
+/*                        X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR. */
+/*                        X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.*/
+                    end. 
+            end case.
+            if X_marking-line.sts = Marking:MarkError:KeyIntDB then 
+            do:
+                X_marking-line.gds-code:fGCOLOR in browse br-mark-item = red_COLOR.
+                X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
+                X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
+                X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
+                X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
+                X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
+/*                X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.*/
+                typem:fGCOLOR in browse br-mark = red_COLOR.
+/*                X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR. */
+/*                X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.*/
+            end. 
 
-      end.
-      else 
-      do:
-         case X_marking-line.sts:
-            when Marking:MarkError:KeyIntDB then 
-               do:
-                  X_marking-line.gds-code:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR.
-                  X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.
-               end. 
-         end case.
-      end.  
+        end.
+        else 
+        do:
+            case X_marking-line.sts:
+                when Marking:MarkError:KeyIntDB then 
+                    do:
+                        X_marking-line.gds-code:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
+/*                        X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.*/
+                        typem:fGCOLOR in browse br-mark = red_COLOR.
+/*                        X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR. */
+/*                        X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.*/
+                    end. 
+            end case.
+        end.  
     
     
     END .
@@ -1205,36 +1228,30 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark-item d-mark
-ON value-changed OF br-mark-item IN FRAME d-mark
-DO:
-
-        br-mark-item:refresh () no-error .
-    
-    END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 
 &Scoped-define SELF-NAME bt-not-sel-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-not-sel-all d-mark
 ON CHOOSE OF bt-not-sel-all IN FRAME d-mark /* + */
-   DO:
-      define variable loc#log as logical no-undo .
+    DO:
+        define variable loc#log as logical no-undo .
 
-        if available X_marking then 
+        if available X_marking 
+           and X_marking.isMark
+        then 
         do:
             v-rid-list = "" .
             for each X_marking where X_marking.doc-level = 1:
                 X_marking.marking-string = "*" .
                 /*        { gbl/markstrn.i X_marking v-rid-list }*/
-                if not upd_mark then loc#log = br-bar-code:refresh() no-error.
-                else loc#log = br-mark:refresh() no-error.
+/*                if not upd_mark then loc#log = br-bar-code:refresh() no-error.*/
+/*                else                                                          */
+                loc#log = br-mark:refresh() no-error.
             end.
         end.
-        if not upd_mark then apply "entry" to br-bar-code in frame {&frame-name}. 
-        else apply "entry" to br-mark in frame {&frame-name}.
+/*        if not upd_mark then apply "entry" to br-bar-code in frame {&frame-name}.*/
+/*        else                                                                     */
+        apply "entry" to br-mark in frame {&frame-name}.
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1244,19 +1261,19 @@ ON CHOOSE OF bt-not-sel-all IN FRAME d-mark /* + */
 &Scoped-define SELF-NAME bt-not-sel-all-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-not-sel-all-2 d-mark
 ON CHOOSE OF bt-not-sel-all-2 IN FRAME d-mark /* + */
-   DO:
-      define variable loc#log as logical no-undo .
-      if available (X_marking) then 
-      do:
-         v-rid-list2 = "" .
-         for each X_marking-line where X_marking.mark begins X_marking-line.mark-parent and X_marking-line.doc-level > 1:
-            X_marking-line.marking-string = "*" .
-            /*        { gbl/markstrn.i X_marking-line v-rid-list2 }*/
-            loc#log = br-mark-item:refresh() no-error.
-         end.
-      end.
-      apply "entry" to br-mark-item in frame {&frame-name}.
-   END.
+    DO:
+        define variable loc#log as logical no-undo .
+        if available (X_marking) then 
+        do:
+            v-rid-list2 = "" .
+            for each X_marking-line where X_marking.mark begins X_marking-line.mark-parent and X_marking-line.doc-level > 1:
+                X_marking-line.marking-string = "*" .
+                /*        { gbl/markstrn.i X_marking-line v-rid-list2 }*/
+                loc#log = br-mark-item:refresh() no-error.
+            end.
+        end.
+        apply "entry" to br-mark-item in frame {&frame-name}.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1271,8 +1288,9 @@ ON CHOOSE OF bt-not-sel-desel-all IN FRAME d-mark /* - */
         For each X_marking where X_marking.marking-string = "*":
             X_marking.marking-string = "" .
         end.    
-        if not upd_mark then loc#log = br-bar-code:refresh() no-error. 
-        else loc#log = br-mark:refresh() no-error.
+/*        if not upd_mark then loc#log = br-bar-code:refresh() no-error.*/
+/*        else                                                          */
+        loc#log = br-mark:refresh() no-error.
         
     END.
 
@@ -1283,15 +1301,15 @@ ON CHOOSE OF bt-not-sel-desel-all IN FRAME d-mark /* - */
 &Scoped-define SELF-NAME bt-not-sel-desel-all-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-not-sel-desel-all-2 d-mark
 ON CHOOSE OF bt-not-sel-desel-all-2 IN FRAME d-mark /* - */
-   DO:
-      define variable loc#log as logical no-undo .
-      v-rid-list2 = "" .
-      For each X_marking-line where X_marking-line.marking-string = "*":
-         X_marking-line.marking-string = "" .
-      end.
-      loc#log = br-mark-item:refresh() .
+    DO:
+        define variable loc#log as logical no-undo .
+        v-rid-list2 = "" .
+        For each X_marking-line where X_marking-line.marking-string = "*":
+            X_marking-line.marking-string = "" .
+        end.
+        loc#log = br-mark-item:refresh() .
 
-   END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1300,12 +1318,12 @@ ON CHOOSE OF bt-not-sel-desel-all-2 IN FRAME d-mark /* - */
 &Scoped-define SELF-NAME b_block
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_block d-mark
 ON CHOOSE OF b_block IN FRAME d-mark /* Проверка */
-   DO:
-      /*вызов серой зоны*/
-      define buffer gray_marking                for ub.marking .
-      define buffer gray_unit-marking           for ub.marking .
-      define buffer gray_utd-marking-lines      for ub.utd-marking-lines .
-      define buffer gray_unit_utd-marking-lines for ub.utd-marking-lines .
+    DO:
+        /*вызов серой зоны*/
+        define buffer gray_marking                for ub.marking .
+        define buffer gray_unit-marking           for ub.marking .
+        define buffer gray_utd-marking-lines      for ub.utd-marking-lines .
+        define buffer gray_unit_utd-marking-lines for ub.utd-marking-lines .
     
         for first gray_utd-marking-lines no-lock where gray_utd-marking-lines.db-num = X_marking.db-num and 
             gray_utd-marking-lines.doc-id = X_marking.doc-id and 
@@ -1387,7 +1405,7 @@ ON CHOOSE OF b_block IN FRAME d-mark /* Проверка */
         /*                  {&OPEN-BROWSERS-IN-QUERY-d-mark}*/
         br-mark-item:refresh () no-error .
 
-   END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1396,17 +1414,45 @@ ON CHOOSE OF b_block IN FRAME d-mark /* Проверка */
 &Scoped-define SELF-NAME b_error
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_error d-mark
 ON CHOOSE OF b_error IN FRAME d-mark /* Ошибки */
-   DO:
-      /*Ошибки по всем маркам документа*/
-      define variable v-ok as logical no-undo .
+    DO:
+        /*Ошибки по всем маркам документа*/
+        define variable v-ok as logical no-undo .
     
-      run ref/dialog-error.w (input X_marking.db-num, input X_marking.doc-id, input "utd-marking-lines") .
-      if  error-status:error then 
-      do: 
-         return return-value .
-      end.
-      run enable_UI in this-procedure .
-   END.
+        run ref/dialog-error.w (input X_marking.db-num, input X_marking.doc-id, input "utd-marking-lines") .
+        if  error-status:error then 
+        do: 
+            return return-value .
+        end.
+        run enable_UI in this-procedure .
+    END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-look
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-look d-mark
+ON CHOOSE OF b-look IN FRAME d-mark /* Ошибки */
+    DO:
+        /*Ошибки по всем маркам документа*/
+        define variable v-ok as logical no-undo .
+        define buffer buf-mark for tt-marking-lines.
+        find first buf-mark where buf-mark.mark-parent eq X_marking.mark no-lock no-error.
+        if available buf-mark
+        then do:
+           run str/mark_browse.w (input parparentproc,
+               input-output table tt-marking-lines by-reference,
+               input p-mode,
+               input substitute ("&1 по марке &2 уровень &3",p-doc, X_marking.mark ,X_marking.doc-level + 1) ,
+               input p-type,
+               input X_marking.mark /* марка родитель */
+               ) no-error .
+           if  error-status:error then 
+           do: 
+               return return-value .
+           end.
+           run enable_UI in this-procedure .
+       end.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1415,9 +1461,9 @@ ON CHOOSE OF b_error IN FRAME d-mark /* Ошибки */
 &Scoped-define SELF-NAME c-status
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-status d-mark
 ON VALUE-CHANGED OF c-status IN FRAME d-mark
-   DO:
-      assign c-status .
-   END.
+    DO:
+        assign c-status .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1426,9 +1472,9 @@ ON VALUE-CHANGED OF c-status IN FRAME d-mark
 &Scoped-define SELF-NAME c-status-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-status-2 d-mark
 ON VALUE-CHANGED OF c-status-2 IN FRAME d-mark
-   DO:
-      assign c-status-2 .
-   END.
+    DO:
+        assign c-status-2 .
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1446,36 +1492,36 @@ ON VALUE-CHANGED OF Status_ IN FRAME d-mark
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME v-bar-code
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-bar-code d-mark
-ON any-printable OF v-bar-code IN FRAME d-mark /* Штрих-код */
-do:
-        run proc-any-key.
-    end.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-bar-code d-mark
-ON ENTRY OF v-bar-code IN FRAME d-mark /* Штрих-код */
-DO:
-        run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
-        run ActivateKeyboardLayout (input iLang, input 0).
-    END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&Scoped-define SELF-NAME v-bar-code                           */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-bar-code d-mark   */
+/*ON any-printable OF v-bar-code IN FRAME d-mark /* Штрих-код */*/
+/*do:                                                           */
+/*        run proc-any-key.                                     */
+/*    end.                                                      */
+/*                                                              */
+/*/* _UIB-CODE-BLOCK-END */                                     */
+/*&ANALYZE-RESUME                                               */
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-bar-code d-mark
-ON return OF v-bar-code IN FRAME d-mark /* Штрих-код */
-DO:
-        run scan-bar-code .
-    END.
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-bar-code d-mark               */
+/*ON ENTRY OF v-bar-code IN FRAME d-mark /* Штрих-код */                    */
+/*DO:                                                                       */
+/*        run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).*/
+/*        run ActivateKeyboardLayout (input iLang, input 0).                */
+/*    END.                                                                  */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-bar-code d-mark*/
+/*ON return OF v-bar-code IN FRAME d-mark /* Штрих-код */    */
+/*DO:                                                        */
+/*        run scan-bar-code .                                */
+/*    END.                                                   */
+/*                                                           */
+/*/* _UIB-CODE-BLOCK-END */                                  */
+/*&ANALYZE-RESUME                                            */
 
 &Scoped-define SELF-NAME v-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-mark
@@ -1492,6 +1538,22 @@ do:
 ON ENTRY OF v-mark IN FRAME d-mark /* Марка */
 DO:
         run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+        run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+        IF p-value-logical = yes THEN  iLang = 68748313.
+
         run ActivateKeyboardLayout (input iLang, input 0).
     END.
 
@@ -1502,15 +1564,29 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-mark
 ON return OF v-mark IN FRAME d-mark /* Марка */
 DO:
-        run scan-mark .
-    END.
+   if v-mark:screen-value in frame {&frame-name} = ""
+        then 
+    do:
+        v-mark:screen-value in frame {&frame-name} = v-scan-str.
+    end.
+      
+    v-scan-str = "". 
+    assign 
+        v-mark = v-mark:screen-value .
+    
+   if isMark(v-mark)
+   then
+      run scan-mark .
+   else
+      run scan-bar-code .
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&Scoped-define BROWSE-NAME br-bar-code
-&UNDEFINE SELF-NAME
+/*&Scoped-define BROWSE-NAME br-bar-code*/
+/*&UNDEFINE SELF-NAME                   */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-mark 
 
@@ -1519,31 +1595,47 @@ DO:
 
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
-   THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+    THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
 /* Add Trigger to equate WINDOW-CLOSE to END-ERROR                      */
 ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} 
-   APPLY "END-ERROR":U TO SELF.
+    APPLY "END-ERROR":U TO SELF.
 
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
-   { gbl/getcntxt.i get }
-   Marking = ObjSrv:Env:Marking:Sts:Mark .
-   tree = ObjSrv:Lib:MarkingTree .
-   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
-   run ActivateKeyboardLayout (input iLang, input 0).
-   /*  /*  run gbl/inidebug.p.            */*/
-   /*       output to hhhhhhh.txt.       */
-   /*       for each tt-marking-lines:   */
-   /*           export tt-marking-lines .*/
-   /*       end.                         */
-   /*       output close.                */
+    { gbl/getcntxt.i get }
+    Marking = ObjSrv:Env:Marking:Sts:Mark .
+    tree = ObjSrv:Lib:MarkingTree .
+    run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
+    run ActivateKeyboardLayout (input iLang, input 0).
+/*        run gbl/inidebug.p.*/
+/*    output to hhhhhhh.txt.       */
+/*    for each tt-marking-lines:   */
+/*        export tt-marking-lines .*/
+/*    end.                         */
+/*    output close.                */
    /*Проверка прав */
-   { gbl/chk-actg.i
+    { gbl/chk-actg.i
   v-cntxt-db-num
   v-cntxt-userid
   {&action-head-code-main}
@@ -1558,11 +1650,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   false
   log-res
 }
-   { gbl/brwrepos.i
+    { gbl/brwrepos.i
   &browse-name = br-mark
   &line-num= 5
 }
-   { gbl/brwrepos.i
+    { gbl/brwrepos.i
   &browse-name = br-mark-item
   &line-num= 5
 }
@@ -1570,8 +1662,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    find first utd no-lock where utd.doc-id = tt-marking-lines.doc-id and utd.db-num = tt-marking-lines.db-num no-error .
    if available (utd) then do:
       if utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then v-edoc-type = yes .
-      find first ub.utd-attr no-lock where ub.utd-attr.doc-id = utd.doc-id and ub.utd-attr.db-num = utd.db-num and ub.utd-attr.attr-code = "MarkUtd" no-error .
-      if available (ub.utd-attr) then upd_mark = logical(ub.utd-attr.attr-value) .
+/*      find first ub.utd-attr no-lock where ub.utd-attr.doc-id = utd.doc-id and ub.utd-attr.db-num = utd.db-num and ub.utd-attr.attr-code = "MarkUtd" no-error .*/
+/*      if available (ub.utd-attr) then upd_mark = logical(ub.utd-attr.attr-value) .                                                                             */
    end.   
     run init-temp in this-procedure .
     run enable_UI in this-procedure .
@@ -1582,8 +1674,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     do: 
         v-manual = no .
         v-mark:READ-ONLY IN FRAME {&frame-name}        = TRUE .
-        v-bar-code:READ-ONLY IN FRAME {&frame-name}        = TRUE .
+/*        v-bar-code:READ-ONLY IN FRAME {&frame-name}        = TRUE .*/
     end.
+    X_marking-line.mark:COLUMN-READ-ONLY IN BROWSE br-mark-item = YES.
+    X_marking.mark     :COLUMN-READ-ONLY IN BROWSE br-mark      = YES.
+    apply "value-changed" to br-mark in FRAME {&FRAME-NAME}.
     WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name}.
 END.
 
@@ -1597,16 +1692,16 @@ run disable_UI in this-procedure .
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI d-mark  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-   /*------------------------------------------------------------------------------
-     Purpose:     DISABLE the User Interface
-     Parameters:  <none>
-     Notes:       Here we clean-up the user-interface by deleting
-                  dynamic widgets we have created and/or hide 
-                  frames.  This procedure is usually called when
-                  we are ready to "clean-up" after running.
-   ------------------------------------------------------------------------------*/
-   /* Hide all frames. */
-   HIDE FRAME d-mark.
+    /*------------------------------------------------------------------------------
+      Purpose:     DISABLE the User Interface
+      Parameters:  <none>
+      Notes:       Here we clean-up the user-interface by deleting
+                   dynamic widgets we have created and/or hide 
+                   frames.  This procedure is usually called when
+                   we are ready to "clean-up" after running.
+    ------------------------------------------------------------------------------*/
+    /* Hide all frames. */
+    HIDE FRAME d-mark.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1623,31 +1718,31 @@ PROCEDURE enable_UI :
                                        These statements here are based on the "Other
                                        Settings" section of the widget Property Sheets.
                            -------------------------------------------------------------------- */
-
     frame {&frame-name}:title = p-doc + " " + p-mode.
     ENABLE
         b-exit
         b-hist
+        b-look
         with frame {&frame-name} .  
-    if not upd_mark then do:
-    ENABLE
-        br-bar-code
-        with frame {&frame-name} .
-    hide
-    br-mark
-    br-mark-item
-    Status_
-    in frame {&frame-name} .             
-    end.
-    else do:
-    hide
-        br-bar-code
-        in frame {&frame-name} .
+/*    if not upd_mark then do:      */
+/*    ENABLE                        */
+/*        br-bar-code               */
+/*        with frame {&frame-name} .*/
+/*    hide                          */
+/*    br-mark                       */
+/*    br-mark-item                  */
+/*    Status_                       */
+/*    in frame {&frame-name} .      */
+/*    end.                          */
+/*    else do:                      */
+/*    hide                          */
+/*        br-bar-code               */
+/*        in frame {&frame-name} .  */
     enable
     br-mark
     br-mark-item
     with frame {&frame-name} .          
-    end.          
+/*    end.*/
     display f-text with frame {&frame-name} .
       
     if p-mode <> {&lookup} then 
@@ -1660,23 +1755,35 @@ PROCEDURE enable_UI :
                 bt-not-sel-all
                 bt-not-sel-desel-all
                 with frame {&frame-name} .
+/*           if not upd_mark then do:                                   */
+/*              disable                                                 */
+/*                 b-del                                                */
+/*                 b-mark                                               */
+/*                 bt-not-sel-all                                       */
+/*                 bt-not-sel-desel-all                                 */
+/*                 b-change                                             */
+/*                 with frame {&frame-name} .                           */
+/*                 browse br-bar-code:GET-BROWSE-COLUMN(5):VISIBLE = no.*/
+/*           end.                                                       */
         end.  
-        if not upd_mark then do:
-        HIDE
-            v-mark
-            in frame {&frame-name} .
-        enable
-            v-bar-code
-            with frame {&frame-name} .                
-        end.
-        else do:
+        
+/*        if not upd_mark then do:          */
+/*                                          */
+/*        HIDE                              */
+/*            v-mark                        */
+/*            in frame {&frame-name} .      */
+/*/*        enable                        */*/
+/*/*            v-bar-code                */*/
+/*/*            with frame {&frame-name} .*/*/
+/*        end.                              */
+/*        else do:                          */
         ENABLE
             v-mark
             with frame {&frame-name} .
-        HIDE
-            v-bar-code
-            in frame {&frame-name} .
-        end.      
+/*        HIDE                        */
+/*            v-bar-code              */
+/*            in frame {&frame-name} .*/
+/*        end.                        */
         /*проверка на права*/
         if log-res then 
         do:  
@@ -1687,15 +1794,15 @@ PROCEDURE enable_UI :
                 bt-not-sel-all
                 bt-not-sel-desel-all
                  WITH FRAME {&frame-name}.
-            if upd_mark then do:
-            enable
-                c-status-2
-                b-change-2
-                b-mark-2
-                bt-not-sel-all-2
-                bt-not-sel-desel-all-2
-                WITH FRAME {&frame-name}.               
-            end.       
+/*            if upd_mark then do:         */
+/*            enable                       */
+/*                c-status-2               */
+/*                b-change-2               */
+/*                b-mark-2                 */
+/*                bt-not-sel-all-2         */
+/*                bt-not-sel-desel-all-2   */
+/*                WITH FRAME {&frame-name}.*/
+/*            end.                         */
         end.   
     end.
     else 
@@ -1714,38 +1821,38 @@ PROCEDURE enable_UI :
             b-change-2
             c-status-2
             WITH FRAME {&frame-name}.
-      if not upd_mark then do:
-            hide
-                c-status-2
-                b-change-2
-                b-mark-2
-                bt-not-sel-all-2
-                bt-not-sel-desel-all-2
-                in FRAME {&frame-name}.           
-      end.               
+/*      if not upd_mark then do:         */
+/*            hide                       */
+/*                c-status-2             */
+/*                b-change-2             */
+/*                b-mark-2               */
+/*                bt-not-sel-all-2       */
+/*                bt-not-sel-desel-all-2 */
+/*                in FRAME {&frame-name}.*/
+/*      end.                             */
     end.  
     if p-type = 1 then 
     do:
         if p-mode <> {&lookup} then 
         do:
-        if not upd_mark then do:
-        HIDE
-            Status_
-            v-mark
-            in frame {&frame-name} .
-        enable
-            v-bar-code
-            with frame {&frame-name} .                
-        end.
-        else do:
+/*        if not upd_mark then do:          */
+/*        HIDE                              */
+/*            Status_                       */
+/*            v-mark                        */
+/*            in frame {&frame-name} .      */
+/*/*        enable                        */*/
+/*/*            v-bar-code                */*/
+/*/*            with frame {&frame-name} .*/*/
+/*        end.                              */
+/*        else do:                          */
         ENABLE
             Status_
             v-mark
             with frame {&frame-name} .
-        HIDE
-            v-bar-code
-            in frame {&frame-name} .
-        end. 
+/*        HIDE                        */
+/*            v-bar-code              */
+/*            in frame {&frame-name} .*/
+/*        end.                        */
         end.
     end.
     else 
@@ -1754,13 +1861,13 @@ PROCEDURE enable_UI :
     end.  
     if p-type = 0 then 
     do:
-        browse br-bar-code:GET-BROWSE-COLUMN(5):VISIBLE = no.
-        browse br-mark:GET-BROWSE-COLUMN(7):VISIBLE = no.
-        browse br-mark-item:GET-BROWSE-COLUMN(7):VISIBLE = no.
+/*        browse br-bar-code:GET-BROWSE-COLUMN(5):VISIBLE = no.*/
+/*        browse br-mark:GET-BROWSE-COLUMN(7):VISIBLE = no.     */
+/*        browse br-mark-item:GET-BROWSE-COLUMN(7):VISIBLE = no.*/
         hide 
             Status_
             v-mark
-            v-bar-code
+/*            v-bar-code*/
             in frame {&frame-name} .
     end.  
     if p-type <> 2 then 
@@ -1769,41 +1876,41 @@ PROCEDURE enable_UI :
         if available (buf_utd-err) then 
             enable b_error with frame {&frame-name} .
     end.  
-    if p-mode = {&lookup} then 
-    do:
-        if not upd_mark then do:
-        HIDE
-            v-mark
-            in frame {&frame-name} .
-        enable
-            v-bar-code
-            with frame {&frame-name} .                
-        end.
-    end.
-if not upd_mark then do:
-   hide
-   qnty-mark
-   qnty-mark-2
-   f-qnty-unit
-   in frame {&frame-name} .
-    if p-type = 6 then 
-    do:
-        display qnty-bar-code with frame {&frame-name} .
-        display qnty-bar-code2 with frame {&frame-name} .
-        hide f-qnty-bar-code in frame {&frame-name} .
-    end.
-    else 
-    do:  
-        display f-qnty-bar-code with frame {&frame-name} .
-        hide qnty-bar-code   in frame {&frame-name} .
-        hide qnty-bar-code2 in frame {&frame-name} .
-    end.   
-end. 
-else do:      
-   hide qnty-bar-code
-   qnty-bar-code2
-   f-qnty-bar-code
-   in frame {&frame-name} . 
+/*    if p-mode = {&lookup} then                            */
+/*    do:                                                   */
+/*        if not upd_mark then do:                          */
+/*        HIDE                                              */
+/*            v-mark                                        */
+/*            in frame {&frame-name} .                      */
+/*        enable                                            */
+/*            v-bar-code                                    */
+/*            with frame {&frame-name} .                    */
+/*        end.                                              */
+/*    end.                                                  */
+/*if not upd_mark then do:                                  */
+/*   hide                                                   */
+/*   qnty-mark                                              */
+/*   qnty-mark-2                                            */
+/*   f-qnty-unit                                            */
+/*   in frame {&frame-name} .                               */
+/*    if p-type = 6 then                                    */
+/*    do:                                                   */
+/*        display qnty-bar-code with frame {&frame-name} .  */
+/*        display qnty-bar-code2 with frame {&frame-name} . */
+/*        hide f-qnty-bar-code in frame {&frame-name} .     */
+/*    end.                                                  */
+/*    else                                                  */
+/*    do:                                                   */
+/*        display f-qnty-bar-code with frame {&frame-name} .*/
+/*        hide qnty-bar-code   in frame {&frame-name} .     */
+/*        hide qnty-bar-code2 in frame {&frame-name} .      */
+/*    end.                                                  */
+/*end.                                                      */
+/*else do:                                                  */
+/*   hide qnty-bar-code      */
+/*   qnty-bar-code2          */
+/*   f-qnty-bar-code         */
+/*   in frame {&frame-name} .*/
     if p-type = 6 then 
     do:
         display qnty-mark with frame {&frame-name} .
@@ -1816,12 +1923,13 @@ else do:
         hide qnty-mark   in frame {&frame-name} .
         hide qnty-mark-2 in frame {&frame-name} .
     end.
-end.    
+/*end.*/
 
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-mark d-mark 
 PROCEDURE save-mark :
@@ -1869,7 +1977,7 @@ PROCEDURE save-mark :
         ub.marking.box-qnty  = getQntyUTDByDM(X_marking-line.mark) .
     /*          ub.marking.unit = getLevelUTDByDM(v-marking) .*/
  
-   end.  
+    end.  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1877,41 +1985,47 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-temp d-mark 
 PROCEDURE init-temp :
-   /* --------------------------------------------------------------------
-                         Purpose:     ENABLE the User Interface
-                         Parameters:  <none>
-                         Notes:       Here we display/view/enable the widgets in the
-                                      user-interface.  In addition, OPEN all queries
-                                      associated with each FRAME and BROWSE.
-                                      These statements here are based on the "Other
-                                      Settings" section of the widget Property Sheets.
-                          -------------------------------------------------------------------- */
-   /*по товару*/
-   define variable ii       as integer   no-undo .
-   define variable Status_1 as character no-undo .
-   define variable StatusTH as class     ibs.th.str.marking.sts no-undo .
+    /* --------------------------------------------------------------------
+                          Purpose:     ENABLE the User Interface
+                          Parameters:  <none>
+                          Notes:       Here we display/view/enable the widgets in the
+                                       user-interface.  In addition, OPEN all queries
+                                       associated with each FRAME and BROWSE.
+                                       These statements here are based on the "Other
+                                       Settings" section of the widget Property Sheets.
+                           -------------------------------------------------------------------- */
+    /*по товару*/
+    define variable ii       as integer   no-undo .
+    define variable Status_1 as character no-undo .
   
     Status_1 = "" + {&comma-char} + '0':U .
+ 
+   define variable MarkType as ibs.th.gbl.map.mapstring no-undo.
+   define variable objType  as ibs.th.gbl.propmap no-undo.
+   define variable Types as ibs.th.str.marking.sts.mark no-undo.
+   Types = ObjSrv:Env:Marking:Sts:Mark.
+   MarkType = Types:mapType.
 
-    StatusTH = ObjSrv:Env:Marking:Sts .
-
-    do ii = 1 to StatusTH:Mark:MarkMap:GetItem(ii):
-        Status_1 = Status_1 + {&comma-char} + StatusTH:Mark:CurrMarkMapProp:Label_ + {&comma-char} + string(StatusTH:Mark:CurrMarkMapProp:KeyIntDB) .
+    do ii = 1 to MarkType:GetItemByLab(ii):
+        objType = Types:CurrProp.
+        Status_1 = Status_1 + {&comma-char} + objType:Label_ + {&comma-char} + string(objType:KeyIntDB) .
     end.
     ASSIGN
         c-status:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_1 .
     ASSIGN
         c-status-2:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_1 .
-    if not upd_mark then do:
-    for each tt-marking-lines no-lock:
-        v-qnty-mark = v-qnty-mark + 1 .
-    end.         
-    end.
-    else do:
+/*    if not upd_mark then do:           */
+/*    for each tt-marking-lines no-lock: */
+/*        v-qnty-mark = v-qnty-mark + 1 .*/
+/*    end.                               */
+/*    end.                               */
+/*    else do:                           */
     for each tt-marking-lines no-lock where tt-marking-lines.unit-ext = "UNIT":
-        v-qnty-mark = v-qnty-mark + 1 .
+/*        if tt-marking-lines.isMark*/
+/*        then                      */
+           v-qnty-mark = v-qnty-mark + 1 .
     end.  
-    end.      
+/*    end.*/
 
     f-qnty-unit = v-qnty-mark .
     f-qnty-bar-code = v-qnty-mark .
@@ -1921,11 +2035,13 @@ PROCEDURE init-temp :
         if available (tt-marking-lines) then 
         do:
             qnty-mark = tt-marking-lines.box-qnty .
-            qnty-bar-code = tt-marking-lines.box-qnty .
+/*            qnty-bar-code = tt-marking-lines.box-qnty .*/
             mark-parent = tt-marking-lines.mark .
         end.
-        if not upd_mark then f-text = "Упаковка с неполным составом штрих-кодом, необходимо просканировать все марки упаковки" .
-        else f-text = "Упаковка с неполным составом марок, необходимо просканировать все марки упаковки" .
+/*        if not upd_mark then                                                                                    */
+/*             f-text = "Упаковка с неполным составом штрих-кодом, необходимо просканировать все марки упаковки" .*/
+/*        else                                                                                                    */
+        f-text = "Упаковка с неполным составом марок/штрих-кодом, необходимо просканировать все марки упаковки" .
     end.
     {&OPEN-BROWSERS-IN-QUERY-d-mark}
   
@@ -1938,16 +2054,16 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION GdsName d-mark 
 FUNCTION GdsName RETURNS CHARACTER
-   ( input p-gds-code as integer ) :
-   /*------------------------------------------------------------------------------
-     Purpose:  
-       Notes:  
-   ------------------------------------------------------------------------------*/
-   define buffer buf_goods for ub.goods .
-   define variable v-gds-name as character no-undo . 
-   find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
-   if available (buf_goods) then v-gds-name = buf_goods.gds-name .
-   RETURN v-gds-name.   /* Function return value. */
+    ( input p-gds-code as integer ) :
+    /*------------------------------------------------------------------------------
+      Purpose:  
+        Notes:  
+    ------------------------------------------------------------------------------*/
+    define buffer buf_goods for ub.goods .
+    define variable v-gds-name as character no-undo . 
+    find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+    if available (buf_goods) then v-gds-name = buf_goods.gds-name .
+    RETURN v-gds-name.   /* Function return value. */
 
 END FUNCTION.
 
@@ -1956,13 +2072,13 @@ END FUNCTION.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION StatusName d-mark 
 FUNCTION StatusName RETURNS CHARACTER
-   ( input p-sts as integer ) :
-   /*------------------------------------------------------------------------------
-     Purpose:  
-       Notes:  
-   ------------------------------------------------------------------------------*/
-   define variable v-status as character no-undo .
-   RETURN v-status.   /* Function return value. */
+    ( input p-sts as integer ) :
+    /*------------------------------------------------------------------------------
+      Purpose:  
+        Notes:  
+    ------------------------------------------------------------------------------*/
+    define variable v-status as character no-undo .
+    RETURN v-status.   /* Function return value. */
 
 END FUNCTION.
 
@@ -1972,37 +2088,53 @@ END FUNCTION.
 &Scoped-define SELF-NAME v-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-mark
 ON ENTRY OF v-mark IN FRAME d-mark /* Марка */
-   DO:
-      run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
-      run ActivateKeyboardLayout (input iLang, input 0).
-   END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME v-bar-code
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-bar-code d-mark
-ON ENTRY OF v-bar-code IN FRAME d-mark /* Штрих-код */
     DO:
         run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+        run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+        IF p-value-logical = yes THEN  iLang = 68748313.
+
         run ActivateKeyboardLayout (input iLang, input 0).
     END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+/*&Scoped-define SELF-NAME v-bar-code                                       */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-bar-code d-mark               */
+/*ON ENTRY OF v-bar-code IN FRAME d-mark /* Штрих-код */                    */
+/*    DO:                                                                   */
+/*        run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).*/
+/*        run ActivateKeyboardLayout (input iLang, input 0).                */
+/*    END.                                                                  */
+/*                                                                          */
+/*/* _UIB-CODE-BLOCK-END */                                                 */
+/*&ANALYZE-RESUME                                                           */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE LoadKeyboardLayoutA d-utd
 procedure LoadKeyboardLayoutA external "user32" :
-   define input  parameter P1 as char.
-   define input  parameter P2 as LONG.
-   define return parameter pret as LONG.
+    define input  parameter P1 as char.
+    define input  parameter P2 as LONG.
+    define return parameter pret as LONG.
 end procedure.
         
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ActivateKeyboardLayout d-utd 
 procedure ActivateKeyboardLayout external "user32" :
-   define input parameter P1 as LONG.
-   define input parameter P2 as LONG.
+    define input parameter P1 as LONG.
+    define input parameter P2 as LONG.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2010,22 +2142,22 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE scan-mark d-mark 
 PROCEDURE scan-mark :
-   define variable v_list      as character no-undo .
-   define variable ii          as integer   no-undo .
-   define variable v-marking   as character no-undo .
-   define variable recid_mark1 as integer   no-undo .
-   define variable v-GTIN      as character no-undo .
-   define variable v-gds-code  as integer   no-undo .
-   define VARIABLE vRecKeyLine as character no-undo .
-   define buffer gray_marking                for ub.marking .
-   define buffer gray_unit-marking           for ub.marking .
-   define buffer gray_utd-marking-lines      for ub.utd-marking-lines .
-   define buffer gray_unit_utd-marking-lines for ub.utd-marking-lines .
-   define buffer buf_utd-lines               for ub.utd-lines .
-   define buffer buf_utd-marking-lines       for ub.utd-marking-lines .
-   define buffer X_utd-lines                 for tt-utd-lines .
-   define buffer buf_utd-err                 for ub.utd-err .
-   define buffer un_utd-marking-lines        for ub.utd-marking-lines .
+    define variable v_list      as character no-undo .
+    define variable ii          as integer   no-undo .
+    define variable v-marking   as character no-undo .
+    define variable recid_mark1 as integer   no-undo .
+    define variable v-GTIN      as character no-undo .
+    define variable v-gds-code  as integer   no-undo .
+    define VARIABLE vRecKeyLine as character no-undo .
+    define buffer gray_marking                for ub.marking .
+    define buffer gray_unit-marking           for ub.marking .
+    define buffer gray_utd-marking-lines      for ub.utd-marking-lines .
+    define buffer gray_unit_utd-marking-lines for ub.utd-marking-lines .
+    define buffer buf_utd-lines               for ub.utd-lines .
+    define buffer buf_utd-marking-lines       for ub.utd-marking-lines .
+    define buffer X_utd-lines                 for tt-utd-lines .
+    define buffer buf_utd-err                 for ub.utd-err .
+    define buffer un_utd-marking-lines        for ub.utd-marking-lines .
     
     if v-mark:screen-value in frame {&frame-name} = ""
         then 
@@ -2036,11 +2168,7 @@ PROCEDURE scan-mark :
     v-scan-str = "". 
     assign 
         v-mark = v-mark:screen-value in frame {&frame-name}.
-   mMRCCode  = yes.
-   v-marking = GetCodeIdent(v-mark) .
-
-   mMRCCode = no.
-    
+    v-marking = GetCodeIdent(v-mark) .
     
     f-text = "" .
     f-text:screen-value = "" .
@@ -2123,8 +2251,8 @@ PROCEDURE scan-mark :
                 br-mark-item :refresh().
                 reposition br-mark-item to recid recid_mark no-error .
 
-            v-mark:screen-value = "" .
-            v-mark = "" .
+                v-mark:screen-value = "" .
+                v-mark = "" .
 
             end.
             else 
@@ -2215,20 +2343,20 @@ PROCEDURE scan-mark :
                 /*          ub.marking.box-qnty  = getQntyUTDByDM(v-marking) .           */
                 /*/*          ub.marking.unit = getLevelUTDByDM(v-marking) .*/           */
 
-            create X_marking-line .
-            assign
-               X_marking-line.db-num      = X_marking.db-num
-               X_marking-line.doc-id      = X_marking.doc-id
-               X_marking-line.doc-level   = 2
-               X_marking-line.gds-code    = X_marking.gds-code
-               X_marking-line.LineNum     = X_marking.LineNum
-               X_marking-line.mark        = v-marking 
-               X_marking-line.sts         = Marking:DeliveryControl:KeyIntDB
-               X_marking-line.mark-parent = X_marking.mark
-               X_marking-line.GrayZone    = yes
-               .
-            X_marking-line.gds-name    = GdsName(X_marking-line.gds-code) 
-               .
+                create X_marking-line .
+                assign
+                    X_marking-line.db-num      = X_marking.db-num
+                    X_marking-line.doc-id      = X_marking.doc-id
+                    X_marking-line.doc-level   = X_marking.doc-level + 1
+                    X_marking-line.gds-code    = X_marking.gds-code
+                    X_marking-line.LineNum     = X_marking.LineNum
+                    X_marking-line.mark        = v-marking 
+                    X_marking-line.sts         = Marking:DeliveryControl:KeyIntDB
+                    X_marking-line.mark-parent = X_marking.mark
+                    X_marking-line.GrayZone    = yes
+                    .
+                X_marking-line.gds-name    = GdsName(X_marking-line.gds-code) 
+                    .
             
                 X_marking-line.box-qnty = getQntyUTDByDM(v-marking) .
                 X_marking.unit-ext  = getLevelMotpByDM(v-marking) .
@@ -2696,40 +2824,31 @@ PROCEDURE scan-bar-code :
     define buffer buf_utd-err                 for ub.utd-err .
     define buffer un_utd-marking-lines        for ub.utd-marking-lines .
     
-    if v-bar-code:screen-value in frame {&frame-name} = ""
-        then 
-    do:
-        v-bar-code:screen-value in frame {&frame-name} = v-scan-str.
-    end.
-      
-    v-scan-str = "". 
-    assign 
-        v-bar-code = v-bar-code:screen-value in frame {&frame-name}.
     
     f-text = "" .
-    f-text:screen-value = "" .
+    f-text:screen-value in frame {&frame-name} = "" .
     /*    if v-marking = "" or v-marking = ? then RETurn no-apply .*/
     ASSIGN 
         v_list = 'Ё,Й,Ц,У,К,Е,Н,Г,Ш,Щ,З,Х,Ъ,Ф,Ы,В,А,П,Р,О,Л,Д,Ж,Э,Я,Ч,С,М,И,Т,Ь,Б,Ю':U .
 
     /*проверка на русские буквы*/
-    do ii = 1 to length (v-bar-code):
-        if LOOKUP( SUBSTRING( v-bar-code, ii, 1 ), v_list )  > 1 then
+    do ii = 1 to length (v-mark):
+        if LOOKUP( SUBSTRING( v-mark, ii, 1 ), v_list )  > 1 then
         do:
             message "Не корректно считан штрих-код, перед считыванием переключите клавиатуру на английскую раскладку."
                 view-as alert-box.
-            v-bar-code:screen-value = "" .
-            v-bar-code = "" . 
+            v-mark:screen-value = "" .
+            v-mark = "" . 
             return .  
         end.
     end.
        mMRCCode  = yes.
 
-   v-marking = GetCodeIdent(v-bar-code) .
+   v-marking = GetCodeIdent(v-mark) .
    mMRCCode = no.
    if v-marking <> "" and v-marking <> ? then 
    do:
-      v-bar-code = v-marking .
+      v-mark = v-marking .
    end.   
 
 /*    if p-mode <> {&lookup} then                                                                                                                                                                 */
@@ -2804,30 +2923,29 @@ PROCEDURE scan-bar-code :
 /*    end.                                                                                                                                                                                        */
 /*    else                                                                                                                                                                                        */
 /*    do:                                                                                                                                                                                         */
-        find first X_marking no-lock where X_marking.mark begins v-bar-code and X_marking.doc-level = 1 no-error .
+        find first X_marking no-lock where X_marking.mark begins v-mark and X_marking.doc-level = 1 no-error .
         if available (X_marking) then
         do:
             recid_mark = recid (X_marking) .
             reposition br-bar-code to recid recid_mark no-error .
         end.
-        v-bar-code:screen-value = "" .
-        v-bar-code = "" .
+        v-mark:screen-value = "" .
+        v-mark = "" .
 /*    end.*/
 end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-any-key Dialog-Frame 
 PROCEDURE proc-any-key :
-   if not v-manual
-      then
-      if v-scan-str = ""
-         then etime(yes).
-      else
-         if etime > 700
-            then v-scan-str = "".
-   v-scan-str = v-scan-str + last-event:label.
+    if not v-manual
+        then
+        if v-scan-str = ""
+            then etime(yes).
+        else
+            if etime > 700
+                then v-scan-str = "".
+    v-scan-str = v-scan-str + last-event:label.
 end.
 
 /* _UIB-CODE-BLOCK-END */

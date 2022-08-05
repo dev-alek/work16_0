@@ -45,8 +45,6 @@ define variable v-marking            as logical   no-undo .
 define variable v-gds-attr-value-old as character no-undo .
 define variable v-gds-attr-type      as character no-undo .
 
-define variable ObjSrv               as class     ibs.th.gbl.sys.objsrv no-undo.
-
 define stream str-log .
 define stream str-err .
 
@@ -364,28 +362,22 @@ PROCEDURE check-param :
    define variable v-value-type      as character no-undo .
    define variable v-value-date      as date      no-undo .
    /**/ 
-   run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
-   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsMarking then 
-   do: 
-      v-marking = yes .
-      run adm/shattri.p (
-         input "get":U
-         ,input v-cntxt-obj-type
-         ,input v-cntxt-obj-code
-         ,input {&attr-marking}
-         ,input "marking-type"
-         ,output v-value-character
-         ,output v-value-date
-         ,output v-value-decimal
-         ,output v-value-integer
-         ,output v-value-logical
-         ,output v-value-type
-         ,input-output TABLE thbjattr_thbj-attr
-         ) no-error .
-      MarkingType = v-value-character.
-
-   end.      
+   v-marking = yes .
+   run adm/shattri.p (
+      input "get":U
+      ,input v-cntxt-obj-type
+      ,input v-cntxt-obj-code
+      ,input {&attr-marking}
+      ,input "marking-type"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+   MarkingType = v-value-character.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

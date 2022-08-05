@@ -12,11 +12,14 @@
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
 using ibs.th.str.marking.sts.
-
+using ibs.th.str.marking.types.
 
 class ibs.th.gbl.env.marking inherits objth: 
   
   define public property Sts as class sts no-undo 
+    get.
+    set.
+  define public property Types as class Types no-undo 
     get.
     set.
 
@@ -28,7 +31,7 @@ class ibs.th.gbl.env.marking inherits objth:
   constructor public marking (  ):
     super ().
     {utl\objreg.i Sts sts }
-    
+    {utl\objreg.i Types Types  }
   end constructor.
 
   /*------------------------------------------------------------------------------

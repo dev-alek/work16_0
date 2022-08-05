@@ -4049,24 +4049,6 @@ logical~
 &scop level-way-attr-egais-host "obj,,global"
 &scop up-way-attr-egais-host "egais,egais,egais,egais,egais"
 
-/* Электронный документооборот */
-&scop type-attr-marking               {&type-char}
-&scop format-attr-marking             "x(40)"
-&scop label-attr-marking           "Электронный документооборот"
-&scop tooltip-attr-marking         "Электронный документооборот"
-&scop user-can-edit-attr-marking   true
-&scop output-display-attr-marking  true
-&scop other-attr-marking           'spr-ext=gbl\marking.w':U
-&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical,logical':U
-&scop prop-label-list-attr-marking 'Включена работа с ЭДО,Включена работа с ЭДО Диадок,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций с маркированными товарами,Использования рецепта Альтернатива только для получения ингредиентов,Определение товара по штрих-коду'
-&scop prop-list-attr-marking       'marking-EDO,marking-EDO-Diadok,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code'
-&scop global-attr-marking true
-&scop host-attr-marking false
-&scop shop-attr-marking true
-&scop store-attr-marking true
-&scop db-attr-marking false
-&scop level-way-attr-marking "obj,,global"
-&scop up-way-attr-marking "marking,marking,marking"
 
 /* Общие параметры по АРХИВАМ */
 &scop type-attr-arh-global            {&type-char}
@@ -4894,6 +4876,25 @@ character~
 &scop batch-edit-attr-izt-rul  0
 &scop level-way-attr-izt-rul ",,global"
 &scop up-way-attr-izt-rul ",,izt-rul"
+
+/* Электронный документооборот */
+&scop type-attr-marking               {&type-char}
+&scop format-attr-marking             "x(40)"
+&scop label-attr-marking           "Электронный документооборот"
+&scop tooltip-attr-marking         "Электронный документооборот"
+&scop user-can-edit-attr-marking   true
+&scop output-display-attr-marking  true
+&scop other-attr-marking           'spr-ext=gbl\marking.w':U
+&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical,logical,logical,character,character':U
+&scop prop-label-list-attr-marking 'Включена работа с ЭДО для маркированных документов,Включена работа с ЭДО для не маркированных документов,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций с маркированными товарами,Использования рецепта Альтернатива только для получения ингредиентов,Определение товара по штрих-коду,автоматическое переключение раскладки на рус,Типы маркировок для объемно-артикульного учета,Типы маркировок переходный период'
+&scop prop-list-attr-marking       'marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional'
+&scop global-attr-marking true
+&scop host-attr-marking false
+&scop shop-attr-marking true
+&scop store-attr-marking true
+&scop db-attr-marking false
+&scop level-way-attr-marking "obj,,global"
+&scop up-way-attr-marking "marking,marking,marking"
 
 /*сюда вставлять новые thbj-attr*/
 
@@ -7545,6 +7546,7 @@ define input parameter p-mode  as character no-undo .
 /*может быть {&add-def} {&update} {&deletion}*/
 define output parameter p-correct     as logical no-undo .
 define output parameter p-error-code  as character no-undo .
+define variable MarkType as ibs.th.str.marking.Types no-undo.
 
 define buffer buf_goods for ub.goods.
 define buffer buf_gds-host-attr for ub.gds-host-attr.
@@ -7558,10 +7560,11 @@ on error undo, return error return-value
 /*        return error substitute("(Еще) Нет товара с кодом &1, невозможно выполнить проверку корректности установки атрибута"*/
 /*                                , p-gds-code).                                                                              */
 /*      end.                                                                                                                  */
-
-      if lookup(p-value, {&prop-list-attr-mark-type}) = 0 then do:
-        p-error-code = "Значение атрибута должно быть одним из списка {&prop-list-attr-office-type}".
+      MarkType = new ibs.th.str.marking.Types ().
+      if MarkType:GetKeyIntDB(p-value) < 0 then do:
+        p-error-code = "Неизвестное значение атрибута".
       end.
+      delete object MarkType. 
      
      if p-error-code <> "" then
         return p-error-code.

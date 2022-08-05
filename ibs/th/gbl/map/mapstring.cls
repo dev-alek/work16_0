@@ -29,19 +29,33 @@ class ibs.th.gbl.map.mapstring inherits ibs.th.gbl.sys.objth:
   define property SubjectObjCurr as class Progress.Lang.Object no-undo
     get.
     set.
-    
+  
+  define property UncnowObj as class Progress.Lang.Object no-undo
+    get.
+    private set.
+  
   define property IsDelChildObj as logical init true no-undo
     get.
     set.    
   
+  define property isSort as logical init false no-undo
+    get.
+    private set.    
+  
   define private temp-table ttListObj no-undo
     field iNum as integer
     field keyStr as character
-    field keyInt as integer 
+    field ByKeyStr as int
+    field keyInt as integer
+    field ByKeyInt as integer 
+    field LabStr as character
+    field ByLabStr as int
     field SubObj as class Progress.Lang.Object
     index pi is primary unique iNum 
     index keyStr is unique keyStr
     index keyInt is unique keyInt
+    index ByKeyStr ByKeyStr
+    index ByKeyInt ByKeyInt
     index obj is unique SubObj.
     
   
@@ -49,48 +63,54 @@ class ibs.th.gbl.map.mapstring inherits ibs.th.gbl.sys.objth:
  Purpose:
  Notes:
 ------------------------------------------------------------------------------*/
-    
+  
   constructor public mapstring ( isDelChild as log ):
     
     IsDelChildObj = isDelChild.
     
   end constructor.
   
-  method public void AddItem (subObj as Progress.Lang.Object, keyStr as character):
- 
-    assign 
-      iCounter = iCounter + 1.
-    create ttListObj.
-    assign
-      ttListObj.iNum = iCounter
-      ttListObj.SubObj = subObj
-      ttListObj.keyStr = keyStr
-      ttListObj.keyInt = iCounter
-    no-error.
-    if error-status:error
-    then do:
-      /*ругаться*/
-    end.
-    SubjectObjCurr = subObj.
     
+  constructor public mapstring ( isDelChild as log, iobj as Progress.Lang.Object ):
+    
+    IsDelChildObj = isDelChild.
+    UncnowObj = iobj.
+    
+  end constructor.
+  
+  method public void AddItem (subObj as Progress.Lang.Object, keyStr as character):
+     AddItem (subObj, ?, keyStr).
   end.
-
-  method public void AddItem (subObj as Progress.Lang.Object, keyInt as Int, keyStr as character):
+  
+  method public void AddItem (subObj as Progress.Lang.Object, keyInt as integer , keyStr as character):
+     AddItem (subObj, keyInt, keyStr, ? ).
+  end.
+  
+  method public void AddItem (subObj as Progress.Lang.Object, keyInt as integer, keyStr as character, LabStr as character):
  
-    assign 
-      iCounter = iCounter + 1.
-    create ttListObj.
-    assign
-      ttListObj.iNum = iCounter
-      ttListObj.SubObj = subObj
-      ttListObj.keyStr = keyStr
-      ttListObj.keyInt = keyInt
+    find first ttListObj where ttListObj.SubObj = subObj
     no-error.
-    if error-status:error
+    if not available ttListObj
     then do:
+       iCounter = iCounter + 1.
+       create ttListObj.
+       assign
+         ttListObj.iNum = iCounter
+         ttListObj.SubObj = subObj
+      .
+   end.
+   assign
+      ttListObj.keyStr = keyStr
+      ttListObj.keyInt = if keyInt eq ? then iCounter         else keyInt
+      ttListObj.LabStr = if LabStr eq ? then ttListObj.keyStr else LabStr
+   
+   no-error.
+   if error-status:error
+   then do:
       /*ругаться*/
-    end.
-    SubjectObjCurr = subObj.
+   end.
+   isSort = no.
+   SubjectObjCurr = subObj.
     
   end. 
 
@@ -102,6 +122,7 @@ class ibs.th.gbl.map.mapstring inherits ibs.th.gbl.sys.objth:
       assign
         ttListObj.iNum = ttListObj.iNum - 1.
     end.
+    isSort = no.
     iCounter = iCounter - 1.
     
   end.
@@ -117,24 +138,78 @@ class ibs.th.gbl.map.mapstring inherits ibs.th.gbl.sys.objth:
     end.
     iCounter = iCounter - 1.
   end.
+  
+  method public void SortTab ():
+     define variable vi as integer no-undo.
+     if not isSort
+     then do: 
+        vi = 0.
+        for each ttListObj where ttListObj.KeyInt ne ? by ttListObj.keyStr:
+           vi = vi + 1.
+           ttListObj.ByKeyStr = vi. 
+        end.
+        
+        vi = 0.
+        for each ttListObj where ttListObj.KeyInt ne ? by ttListObj.keyInt:
+           vi = vi + 1.
+           ttListObj.ByKeyInt = vi. 
+        end.
+        
+        vi = 0.
+        for each ttListObj where ttListObj.KeyInt ne ?  by ttListObj.LabStr:
+           vi = vi + 1.
+           ttListObj.ByLabStr = vi. 
+        end.
+        
+        isSort = yes.
+     end.
+  end.
 
   method public integer GetItem (iNum as int):
+    SubjectObjCurr = UncnowObj.
     for first ttListObj where ttListObj.iNum = iNum:
       SubjectObjCurr = ttListObj.SubObj.
     end.
     return iCounter.
   end.
+  
+  method public integer GetItemByInt (iNum as int):
+    SortTab().
+    SubjectObjCurr = UncnowObj.
+    for first ttListObj where ttListObj.ByKeyInt = iNum:
+      SubjectObjCurr = ttListObj.SubObj.
+    end.
+    return iCounter.
+  end.
 
+  method public integer GetItemByStr (iNum as int):
+    SortTab().
+    SubjectObjCurr = UncnowObj.
+    for first ttListObj where ttListObj.ByKeyStr = iNum:
+      SubjectObjCurr = ttListObj.SubObj.
+    end.
+    return iCounter.
+  end.
+  
+  method public integer GetItemByLab (iNum as int):
+    SortTab().
+    SubjectObjCurr = UncnowObj.
+    for first ttListObj where ttListObj.ByLabStr = iNum:
+      SubjectObjCurr = ttListObj.SubObj.
+    end.
+    return iCounter.
+  end.
+  
   method public class Progress.Lang.Object GetItemKeyStr (keyStr as character):
-    SubjectObjCurr = ?.
+    SubjectObjCurr = UncnowObj.
     for first ttListObj where ttListObj.keyStr = keyStr:
       SubjectObjCurr = ttListObj.SubObj.
     end.
     return SubjectObjCurr.
   end.
 
-  method public class Progress.Lang.Object GetItemKeyInt (keyInt as Integer):
-    SubjectObjCurr = ?.
+  method public class Progress.Lang.Object GetItemKeyInt (keyInt as integer):
+    SubjectObjCurr = UncnowObj.
     for first ttListObj where ttListObj.keyInt = keyint:
       SubjectObjCurr = ttListObj.SubObj.
     end.

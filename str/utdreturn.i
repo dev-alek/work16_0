@@ -210,7 +210,8 @@ function  crUtdReturn returns logical
                               buf_utd-lines.Vat =   utd-lines.vat / utd-lines.Quantity * parts.fact-qnty.
                               buf_utd-lines.Quantity = parts.fact-qnty.
                            
-                           end.     
+                           end.
+                           release buf_utd-lines.     
                         end.
                         
                         if buf_utd-marking-lines.doc-level eq 1
@@ -339,6 +340,7 @@ function  crUtdReturn returns logical
                         AddUtdErr(buf_utd.db-num,buf_utd.doc-id,buffer buf_utd-marking-lines:handle,"return","Mark",marking-lines.mark + {&delim-par} + buf_utd-lines.ProductCode).
                      release buf_utd-marking-lines.
                   end.
+                  release buf_utd-lines.
                   if last-of(parts.in-code)
                   then do:
                      buf_utd.Total = 0.

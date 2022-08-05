@@ -53,7 +53,7 @@ define variable vss-description as character no-undo init "Загрузка товара из ER
 { gbl/getcntxa.i }
 { ref/gds-attr.i}
 { ref/gdsoattr.i }
-
+{ gbl/objsrv.i } 
 define input parameter p-GdsObj         as class goods .
 
 define buffer buf_goods for ub.goods.
@@ -140,7 +140,9 @@ define variable v-size  as integer no-undo .
   define variable v-cntxt-obj-code      as integer   no-undo . /* код текущего объекта  */
   define variable v-cntxt-db-num-obj    as integer   no-undo . /* база текущего объекта */
   define variable v-cntxt-is-admin      as logical   no-undo . /* база текущего объекта */
-
+  define variable MarkType as ibs.th.str.marking.Types no-undo.
+   MarkType = ObjSrv:Env:Marking:Types. 
+ 
 define variable mImp2CdH as handle no-undo.
 run str/imp2cdgeth.p(output mImp2CdH).
 /* ********************  Preprocessor Definitions  ******************** */
@@ -426,9 +428,7 @@ end.
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-office-type}, output v-attr-del).     
   end.
-  
-  v-mark-type = ?.
-  v-mark-type = entry(p-GdsObj:mark-type + 1 ,{&prop-list-attr-mark-type}) no-error.
+  v-mark-type = MarkType:GetNameProp(p-GdsObj:mark-type) no-error.
   
   if v-mark-type <> ?
   and v-mark-type <> "not-type"

@@ -86,223 +86,83 @@ end.
 subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
 MySeqUtd = ?.
 /* ------------------------------- utd-attr ---------------------------------------------- */
-for each buf_utd-attr where buf_utd-attr.db-num     = wt-utd.db-num
-                                   and buf_utd-attr.doc-id = wt-utd.doc-id
-
-on error  undo, return error
-:
-  delete buf_utd-attr.
-  validate buf_utd-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-for each locb-utd-attr where locb-utd-attr.db-num     = wt-utd.db-num
-                                   and locb-utd-attr.doc-id = wt-utd.doc-id
-
-no-lock
-on error  undo, return error
-:
-  create buf_utd-attr.
-  buffer-copy locb-utd-attr to buf_utd-attr.
-  validate buf_utd-attr  no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-
+&glob main-tbl utd-attr
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "doc-id db-num"
+   &bufHead = "wt-utd"
+}
 /* ------------------------------- utd-lines ---------------------------------------------- */
-for each buf_utd-lines where buf_utd-lines.db-num     = wt-utd.db-num
-                                   and buf_utd-lines.doc-id = wt-utd.doc-id
-
-on error  undo, return error
-:
-  delete buf_utd-lines.
-  validate buf_utd-lines no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-for each locb-utd-lines where locb-utd-lines.db-num     = wt-utd.db-num
-                                   and locb-utd-lines.doc-id = wt-utd.doc-id
-
-no-lock
-on error  undo, return error
-:
-  create buf_utd-lines.
-  buffer-copy locb-utd-lines to buf_utd-lines.
-  validate buf_utd-lines no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
+&glob main-tbl utd-lines
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "doc-id db-num"
+   &bufHead = "wt-utd"
+}
 /* ------------------------------- utd-lines-attr ---------------------------------------------- */
-for each buf_utd-lines-attr where buf_utd-lines-attr.db-num     = wt-utd.db-num
-                                   and buf_utd-lines-attr.doc-id = wt-utd.doc-id
-
-on error  undo, return error
-:
-  delete buf_utd-lines-attr.
-  validate buf_utd-lines-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-for each locb-utd-lines-attr where locb-utd-lines-attr.db-num     = wt-utd.db-num
-                                   and locb-utd-lines-attr.doc-id = wt-utd.doc-id
-
-no-lock
-on error  undo, return error
-:
-  create buf_utd-lines-attr.
-  buffer-copy locb-utd-lines-attr to buf_utd-lines-attr.
-  validate buf_utd-lines-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
+&glob main-tbl utd-lines-attr
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "doc-id db-num"
+   &bufHead = "wt-utd"
+}
 /* ------------------------------- utd-err ---------------------------------------------- */
-for each buf_utd-err where buf_utd-err.db-num     = wt-utd.db-num
-                                   and buf_utd-err.doc-id = wt-utd.doc-id
-
-on error  undo, return error
-:
-  delete buf_utd-err.
-  validate buf_utd-err no-error.
-  if error-status:error
-  then
-     return error return-value. 
-end.
-
-for each locb-utd-err where locb-utd-err.db-num     = wt-utd.db-num
-                                    and locb-utd-err.doc-id = wt-utd.doc-id
-
-no-lock
-on error  undo, return error
-:
-  create buf_utd-err.
-  buffer-copy locb-utd-err to buf_utd-err.
-  validate buf_utd-err no-error.
-  if error-status:error
-  then
-     return error return-value. 
-end.
-
+&glob main-tbl utd-err
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "doc-id db-num"
+   &bufHead = "wt-utd"
+}
 /* ------------------------------- utd-err-attr ---------------------------------------------- */
-for each buf_utd-err-attr where buf_utd-err-attr.db-num     = wt-utd.db-num
-                                   and buf_utd-err-attr.doc-id = wt-utd.doc-id
-
-on error  undo, return error
-:
-  delete buf_utd-err-attr.
-  validate buf_utd-err-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-for each locb-utd-err-attr where locb-utd-err-attr.db-num     = wt-utd.db-num
-                                    and locb-utd-err-attr.doc-id = wt-utd.doc-id
-
-no-lock
-on error  undo, return error
-:
-  create buf_utd-err-attr.
-  buffer-copy locb-utd-err-attr to buf_utd-err-attr.
-  validate buf_utd-err-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
+&glob main-tbl utd-err-attr
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "doc-id db-num"
+   &bufHead = "wt-utd"
+}
 /* ------------------------------- utd-marking-lines ---------------------------------------------- */
-for each buf_utd-marking-lines where buf_utd-marking-lines.db-num     = wt-utd.db-num
-                                   and buf_utd-marking-lines.doc-id = wt-utd.doc-id
+&glob main-tbl utd-marking-lines
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "doc-id db-num"
+   &bufHead = "wt-utd"
+}
+&glob main-tbl marking
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+}
 
-on error  undo, return error
-:
-  delete buf_utd-marking-lines.
-  validate buf_utd-marking-lines no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-for each locb-utd-marking-lines where locb-utd-marking-lines.db-num     = wt-utd.db-num
-                                    and locb-utd-marking-lines.doc-id = wt-utd.doc-id
-
-no-lock
-on error  undo, return error
-:
-  create buf_utd-marking-lines.
-  buffer-copy locb-utd-marking-lines to buf_utd-marking-lines.
-  validate buf_utd-marking-lines no-error.
-  if error-status:error
-  then
-     return error return-value.
-  for each locb-marking where locb-marking.mark     = buf_utd-marking-lines.mark
-  no-lock
-  on error  undo, return error
-  :
-    find first buf_marking where buf_marking.mark = locb-marking.mark no-error.
-    if not available buf_marking
-      then create buf_marking.
-    buffer-copy locb-marking to buf_marking.
-    validate buf_marking no-error.
-  if error-status:error
-  then
-     return error return-value.
-    for each locb-marking-attr where locb-marking-attr.mark     = buf_utd-marking-lines.mark
-      no-lock
-      on error  undo, return error
-      :
-        find first buf_marking-attr where buf_marking-attr.mark = locb-marking-attr.mark and buf_marking-attr.attr-code = locb-marking-attr.attr-code no-error.
-        if not available buf_marking-attr
-          then create buf_marking-attr.
-        buffer-copy locb-marking-attr to buf_marking-attr.
-        validate buf_marking-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-    end.
-  end.
-end.
-
+&glob main-tbl marking-attr
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+}
 
 
 /* ------------------------------- utd-marking-lines-attr ---------------------------------------------- */
-for each buf_utd-marking-lines-attr where buf_utd-marking-lines-attr.db-num     = wt-utd.db-num
-                                   and buf_utd-marking-lines-attr.doc-id = wt-utd.doc-id
-
-on error  undo, return error
-:
-  delete buf_utd-marking-lines-attr.
-  validate buf_utd-marking-lines-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-for each locb-utd-marking-lines-attr where locb-utd-marking-lines-attr.db-num     = wt-utd.db-num
-                                    and locb-utd-marking-lines-attr.doc-id = wt-utd.doc-id
-
-no-lock
-on error  undo, return error
-:
-  create buf_utd-marking-lines-attr.
-  buffer-copy locb-utd-marking-lines-attr to buf_utd-marking-lines-attr.
-  validate buf_utd-marking-lines-attr no-error.
-  if error-status:error
-  then
-     return error return-value.
-end.
-
-
+&glob main-tbl utd-marking-lines-attr
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "doc-id db-num"
+   &bufHead = "wt-utd"
+}
 /* ------------------------------- utd ---------------------------------------------- */
 if not available tb-utd then do:
   create tb-utd.

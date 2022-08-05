@@ -59,7 +59,7 @@ on error undo, return error return-value
     "Подождите..." space(5)
     with view-as dialog-box side-labels 1 columns three-d title "Online backup".
 
-  view frame inf.
+  
 
   run check-need-onlinebkp in this-procedure
     ( output v-need-bkp
@@ -90,7 +90,7 @@ on error undo, return error return-value
     .
   end.
   else do:
-
+    view frame inf.
     if search( v-bat-name ) = ? then do
     :
       return error substitute( "&1. Не найден файл запуска online backup (&2).", vss-workfile, v-bat-name ) .

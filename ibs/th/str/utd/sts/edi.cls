@@ -11,11 +11,9 @@
 
 using Progress.Lang.*.
 using ibs.th.gbl.propmap.
-using ibs.th.gbl.map.mapstring.
-using ibs.th.gbl.sys.objth.
+using ibs.th.gbl.TypeMap.
 
-
-class ibs.th.str.utd.sts.edi inherits objth:
+class ibs.th.str.utd.sts.edi inherits TypeMap:
 
     define public property HaveToCreateReceipt as class propmap no-undo get. 
     protected set.
@@ -37,6 +35,8 @@ class ibs.th.str.utd.sts.edi inherits objth:
     define public property WaitingForRecipientSignature  as class propmap no-undo get. 
     protected set.
     define public property WithRecipientSignature  as class propmap no-undo get. 
+    protected set.
+    define public property WithRecipientPartiallySignature  as class propmap no-undo get. 
     protected set.
     define public property RecipientSignatureRequestReject  as class propmap no-undo get. 
     protected set.
@@ -89,23 +89,8 @@ class ibs.th.str.utd.sts.edi inherits objth:
     
     
                         
-  define public property EDIMap as class mapstring no-undo get. 
-    protected set.
-    
-  define public property CurrEDIMapProp as class propmap no-undo 
-  get:
-    def var currP as class propmap no-undo. 
-    currP = cast (EDIMap:SubjectObjCurr, propmap) no-error.
-    if currP = ? or error-status:error
-    then do:
-      "Залогируем".
-      return ?.
-    end.
-    else return currP.
-  end. 
- 
-  constructor public edi ():
-    {utl\objreg.i EDIMap mapstring true}
+   constructor public edi ():
+     super().
     HaveToCreateReceipt = crProp(11,"HaveToCreateReceipt","Подписать ИОП").
 
     RequestsMyRevocation      = crProp(32,"RequestsMyRevocation","Подписать аннуляцию").
@@ -118,6 +103,7 @@ class ibs.th.str.utd.sts.edi inherits objth:
     InvalidRecipientSignature            = crProp(156,"InvalidRecipientSignature","Ош. подписи").
     RecipientResponseStatusNotAccep      = crProp(352,"RecipientResponseStatusNotAcceptable","Не требуется").
     WithRecipientSignature               = crProp(354,"WithRecipientSignature","Подписан").
+    WithRecipientPartiallySignature      = crProp(356,"WithRecipientPartiallySignature","Принято с разногласиями").
     RecipientSignatureRequestReject      = crProp(355,"RecipientSignatureRequestRejected","Отказ").
     
     
@@ -136,75 +122,8 @@ class ibs.th.str.utd.sts.edi inherits objth:
     SignatureAutoRejected                = crProp(379,"SignatureAutoRejected","Отказ авт.").
     Changed                              = crProp(374,"Changed","Изменен").
     AvailAdjustment                      = crProp(378,"AvailAdjustment","По документу нельзя запросить корректировку").
-
   end.
 
-  /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
 
-  method public char GetLabel(inKey as int):
-     def var prop as class propmap no-undo.    
-    if valid-object (EDIMap:GetItemKeyint(inKey))
-      then return cast (EDIMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
-      else return string(inKey). /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
-  end method. 
-
-  method private char GetLabel(inKeyStr as char):
-    def var prop as class propmap no-undo.    
-    if valid-object (EDIMap:GetItemKeyStr(inKeyStr))
-      then return cast (EDIMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
-      else return inKeyStr. /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
-  end method. 
-
-  method public char GetNameProp(inKey as int):
-    return GetNameProp(string (inKey)).
-  end method. 
- 
-  method private char GetNameProp(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (EDIMap:GetItemKeyStr(inKeyStr))
-      then return cast (EDIMap:SubjectObjCurr, ibs.th.gbl.propmap):NameProp. 
-      else return ?.
-  end method. 
-
-  method public int GetKeyIntDB(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (EDIMap:GetItemKeyStr(inKeyStr))
-      then return cast (EDIMap:SubjectObjCurr, ibs.th.gbl.propmap):KeyIntDB. 
-      else return ?.
-  end method. 
-
-  method public char GetKeyStrDB(inKeyInt as int):
-    def var prop as class propmap no-undo.
-    if valid-object (EDIMap:GetItemKeyInt(inKeyInt))
-      then return cast (EDIMap:SubjectObjCurr, ibs.th.gbl.propmap):KeycharDB. 
-      else return ?.
-  end method. 
-  
-  method class propmap GetProp(inKey as int):
-    def var prop as class propmap no-undo.
-    if valid-object (EDIMap:GetItemKeyInt(inKey))
-      then return cast(EDIMap:SubjectObjCurr, propmap). 
-      else return ?.
-  end method. 
-
-  method private class propmap GetProp(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (EDIMap:GetItemKeyStr(inKeyStr))
-      then return cast(EDIMap:SubjectObjCurr, propmap). 
-      else return ?.
-  end method.
-  
-   method private class propmap crProp(inKeyInt as int, inNameProp as char, inLabel as char):
-    def var prop as class propmap no-undo.
-    {utl\objreg.i prop propmap string(inKeyInt) inLabel}
-    prop:KeyIntDB = inKeyInt.
-    prop:KeyCharDB = inNameProp.
-    EDIMap:AddItem(prop, inKeyInt,inNameProp).
-    return prop.
-    
-  end method. 
 
 end class.

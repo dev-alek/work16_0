@@ -61,25 +61,44 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
       
   end method. 
 
-  method public integer StatusDownUTD(mark as char, doc-id as integer, db-num as integer, sts as integer):
+  method public logical StatusDownUTD(mark as char, doc-id as integer, db-num as integer, sts as integer):
     do trans:
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
     define buffer buf_marking           for ub.marking .
-    define variable qnty-check  as integer no-undo .
+    define variable vOk  as logical no-undo init yes.
+    define variable vBad as logical no-undo.
     
     for each buf_marking no-lock where buf_marking.mark-parent = mark :
       for each buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.doc-id = doc-id
         and buf_utd-marking-lines.mark = buf_marking.mark:
-          buf_utd-marking-lines.sts = sts .
-          qnty-check = qnty-check + 1 .
           if LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:
-            qnty-check = qnty-check + StatusDownUTD(buf_utd-marking-lines.mark,buf_utd-marking-lines.doc-id,buf_utd-marking-lines.db-num,buf_utd-marking-lines.sts) .
+            vOk =  StatusDownUTD(buf_utd-marking-lines.mark,buf_utd-marking-lines.doc-id,buf_utd-marking-lines.db-num,buf_utd-marking-lines.sts) .
           end.
+          else 
+             vOk = yes.
+          if vOk
+             and ( sts ne ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                   or ( sts eq ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+                        )
+                )
+          then do:
+             
+             buf_utd-marking-lines.sts = sts .
+          end.
+          else 
+             vBad = yes.
+          
       end.
       
     end.
     end.
-    return qnty-check .    
+    return not vBad .    
   end method. 
 
   method public integer StatusDownDoc(mark as char, obj-code as integer, obj-type as character, in-code as character, out-code as character, sts as integer):
@@ -112,7 +131,7 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
     for each buf_marking exclusive-lock where buf_marking.mark-parent = mark :
       for each buf_marking-lines exclusive-lock where buf_marking-lines.obj-code = obj-code and buf_marking-lines.obj-type = obj-type
         and buf_marking-lines.mark = buf_marking.mark and buf_marking-lines.in-code = in-code and buf_marking-lines.out-code = out-code:
-          buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB. .
+          buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB.
 
           if LevelDownDoc(buf_marking-lines.mark, buf_marking-lines.obj-code, buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code) then do:
             DeleteDownDoc(buf_marking-lines.mark,buf_marking-lines.obj-code,buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code) .
@@ -134,17 +153,17 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
     
     for first marking where marking.mark = mark no-lock:
       for first buf_marking exclusive-lock where buf_marking.mark = marking.mark-parent:
-/*        for each bf_marking no-lock where bf_marking.mark-parent = buf_marking.mark:*/
-/*          for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.doc-id = doc-id*/
-/*            and buf_utd-marking-lines.mark = bf_marking.mark:                                                                                 */
-/*            buf_utd-marking-lines.doc-level = buf_utd-marking-lines.doc-level - 1 .                                                           */
-/*          end.                                                                                                                                */
-/*        end.*/
+        for each bf_marking no-lock where bf_marking.mark-parent = buf_marking.mark:
+          for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.doc-id = doc-id
+            and buf_utd-marking-lines.mark = bf_marking.mark:
+            buf_utd-marking-lines.doc-level = buf_utd-marking-lines.doc-level - 1 .          
+          end.
+        end.
         buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB. .
         for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.doc-id = doc-id
             and buf_utd-marking-lines.mark = buf_marking.mark:
-              buf_utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB. .
-/*              buf_utd-marking-lines.doc-level = 0 .*/
+              buf_utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB. .
+              buf_utd-marking-lines.doc-level = 0 .
         end.       
         v-is = yes .
       end.
@@ -248,5 +267,41 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
     release buf_mark.
     
   end method.
+
+  method public integer  GetQntySts(mark as char, sts as integer):
+     define buffer buf_marking for marking.
+     define variable v-q as integer no-undo.
+     find first buf_marking where buf_marking.mark = mark no-lock no-error.
+     if available buf_marking
+     then do:
+        if     buf_marking.sts = sts
+           and buf_marking.box-qnty <> ?
+        then
+           v-q = buf_marking.box-qnty.
+        else do:
+           for each buf_marking where buf_marking.mark-parent = mark no-lock:
+              v-q = v-q + GetQntySts(buf_marking.mark, sts).
+           end.
+        end.
+     end.
+     return v-q.
+   end method. 
+ 
+  method public integer  GetQntyStsUnit(db-num as integer,doc-id as integer, line-num as integer , sts as integer):
+     define buffer buf_utd-marking-lines for utd-marking-lines.
+     define buffer buf_marking  for marking.
+     define variable v-q as integer no-undo.
+     for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = db-num
+          and buf_utd-marking-lines.doc-id = doc-id
+          and buf_utd-marking-lines.LineNum = line-num
+          :
+          
+          find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.unit-ext = "UNIT"
+            and buf_marking.sts = sts no-error.
+          if available (buf_marking)
+            then v-q = v-q + 1.
+      end.
+      return v-q.
+  end method. 
  
 end class.

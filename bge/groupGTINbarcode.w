@@ -22,7 +22,8 @@ Creation date: 01/16/07
           This .W file was created with the Progress AppBuilder.       */
 /*----------------------------------------------------------------------*/
 { bge/temp_gtin.i }
-       
+{ gbl/objsrv.i } 
+{ gbl/getcntxt.i def }
 /* ***************************  Definitions  ************************** */
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .
@@ -39,11 +40,21 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "—бор данных по GTIN и штрих-кодам".
 
 { cmp/vssrevis.i }
+{ cmp/showinf.i  }
 { cmp/str-glbl.i }
 { ref/gds-attr.i }
+ 
 { gbl/is-num.i }
 define variable v-scan-str as character no-undo.
 define variable iLang      as integer   no-undo.
+define variable p-value-logical as logical no-undo.
+define variable p-value-character  as character no-undo.
+define variable p-value-date       as date no-undo.
+define variable p-value-decimal    as decimal no-undo.
+define variable p-value-integer    as integer no-undo.
+define variable p-param-type       as character no-undo.
+define variable v-tth as handle no-undo .
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -210,6 +221,22 @@ ON CHOOSE OF Btn_OK IN FRAME Dialog-Frame /* ¬вод */
 ON ENTRY OF f-bar-code IN FRAME Dialog-Frame /* Ўтрих-код упаковки */
    DO:
       run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
       run ActivateKeyboardLayout (input iLang, input 0).
    END.
 
@@ -262,6 +289,22 @@ ON LEAVE OF f-bar-code IN FRAME Dialog-Frame /* Ўтрих-код упаковки */
 ON ENTRY OF f-bar-code-2 IN FRAME Dialog-Frame /* Ўтрих-код индивидуальной упаковки */
    DO:
       run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
       run ActivateKeyboardLayout (input iLang, input 0).
    END.
 
@@ -295,6 +338,22 @@ ON return,tab,LEAVE OF f-bar-code-2 IN FRAME Dialog-Frame /* Ўтрих-код индивидуа
 ON ENTRY OF f-GTIN IN FRAME Dialog-Frame /* GTIN упаковки */
    DO:
       run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
       run ActivateKeyboardLayout (input iLang, input 0).
    END.
 
@@ -418,8 +477,25 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+   run init-proc.
       f-type-mark = p-type-mark .
    run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+   run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
    run ActivateKeyboardLayout (input iLang, input 0).
    for each tt-goods where gds-code = 0:
       delete tt-goods .
@@ -434,6 +510,32 @@ RUN disable_UI.
 
 
 /* **********************  Internal Procedures  *********************** */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame 
+PROCEDURE init-proc :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+define variable v-list as character no-undo.
+define variable vi as integer no-undo.
+define variable MarkType as ibs.th.gbl.map.mapstring no-undo.
+define variable objType  as ibs.th.gbl.propmap no-undo.
+
+MarkType = ObjSrv:Env:Marking:Types:MAPTYPE.
+do vi = 1 to MarkType:GetItemByLab(vi):     
+objType  = ObjSrv:Env:Marking:Types:CurrProp.
+
+    v-list = v-list + "," + objType:Label_ + "," + objType:NameProp.
+end.
+
+v-list = trim(v-list, ",").
+f-type-mark:list-item-pairs in frame {&FRAME-NAME} = v-list.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ActivateKeyboardLayout Dialog-Frame 
 PROCEDURE ActivateKeyboardLayout external "user32" :

@@ -88,13 +88,13 @@ method public void CrContentToSW (insw as handle):
       insw:write-data-element (  "edoc-num":U,       utd.DocumentNumber   ).
       insw:write-data-element (  "edoc-date":U,       iso-date(utd.DocumentDate)    ).
       define variable VText as character no-undo.
-      VText = ObjSrv:Env:Utd:edoctype:GetKeyStrDB(utd.EDocType).
+      VText = ObjSrv:Env:Utd:edoctype:GetNameProp(utd.EDocType).
       if VText eq ?
       then
          VText = "".
       
       insw:write-data-element (  "edoc-type":U,       VText).
-      insw:write-data-element (  "edoc-stts":U,       ObjSrv:Env:Utd:Sts:th:GetKeystrDB(utd.sts)   ).
+      insw:write-data-element (  "edoc-stts":U,       ObjSrv:Env:Utd:Sts:th:GetNameProp(utd.sts)   ).
       insw:write-data-element (  "contr-code":U,       utd.CounteragentId   ).
       insw:write-data-element (  "dog-code":U,       string(utd.contract-code)   ).
       insw:write-data-element (  "orig-edoc-id":U,       utd.parentDocumentExt   ).
@@ -151,12 +151,12 @@ method public void CrContentToSW (insw as handle):
                      no-lock no-error.
                      if available marking
                      then 
-                        insw:write-data-element (  "stts",      ObjSrv:Env:marking:Sts:mark:GetKeystrDB(    marking.sts      )        ) . 
+                        insw:write-data-element (  "stts",      ObjSrv:Env:marking:Sts:mark:GetNameProp(    marking.sts      )        ) . 
                      else
-                        insw:write-data-element (  "stts",      ObjSrv:Env:marking:Sts:mark:GetKeystrDB(utd-marking-lines.sts)        ) .  
+                        insw:write-data-element (  "stts",      ObjSrv:Env:marking:Sts:mark:GetNameProp(utd-marking-lines.sts)        ) .  
                   end.
                   else
-                     insw:write-data-element (  "stts",         ObjSrv:Env:marking:Sts:mark:GetKeystrDB(utd-marking-lines.sts)        ) . 
+                     insw:write-data-element (  "stts",         ObjSrv:Env:marking:Sts:mark:GetNameProp(utd-marking-lines.sts)        ) . 
           
                   insw:end-element ({&tag-item2}) .
                end.

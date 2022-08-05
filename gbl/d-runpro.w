@@ -35,7 +35,8 @@ def var vss-description as character no-undo init "Запуск произвольной процедуры
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/showinf.i  }
-
+{ gbl/objsrv.i}
+{utl\search.i}
 define temp-table temp-param no-undo
   field run-name          as character
   field run-date          as date
@@ -54,7 +55,7 @@ define temp-table temp-param no-undo
 define stream runpr.
 define stream sReadfile.
 define variable v-store-file-name as character no-undo initial "d-runpro.txt" .
-
+       
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -72,9 +73,10 @@ define variable v-store-file-name as character no-undo initial "d-runpro.txt" .
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit b-help COMBO-BOX-1 ~
 fi-procedure T-persistent rs-num-parameters FI-Parameter1 FI-Parameter2 ~
-FI-Parameter3 
+FI-Parameter3 T-compil T-notsign 
 &Scoped-Define DISPLAYED-OBJECTS COMBO-BOX-1 fi-procedure T-parparentproc ~
-T-persistent rs-num-parameters FI-Parameter1 FI-Parameter2 FI-Parameter3 
+T-persistent rs-num-parameters FI-Parameter1 FI-Parameter2 FI-Parameter3 ~
+T-compil T-notsign 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -111,15 +113,15 @@ DEFINE VARIABLE COMBO-BOX-1 AS CHARACTER FORMAT "X(256)":U
 
 DEFINE VARIABLE FI-Parameter1 AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 35.5 BY 1 NO-UNDO.
+     SIZE 35.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE FI-Parameter2 AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 35.5 BY 1 NO-UNDO.
+     SIZE 35.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE FI-Parameter3 AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 35.5 BY 1 NO-UNDO.
+     SIZE 35.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE fi-procedure AS CHARACTER FORMAT "X(256)":U 
      LABEL "Процедура" 
@@ -135,15 +137,25 @@ DEFINE VARIABLE rs-num-parameters AS INTEGER
 "3 параметра", 3
      SIZE 23 BY 5.04 NO-UNDO.
 
+DEFINE VARIABLE T-compil AS LOGICAL INITIAL no 
+     LABEL "Не компилировать" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 22 BY .83 NO-UNDO.
+
+DEFINE VARIABLE T-notsign AS LOGICAL INITIAL no 
+     LABEL "Без подписи" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 17.5 BY .83 NO-UNDO.
+
 DEFINE VARIABLE T-parparentproc AS LOGICAL INITIAL no 
      LABEL "parparentproc" 
      VIEW-AS TOGGLE-BOX
-     SIZE 17.5 BY .83 NO-UNDO.
+     SIZE 17.63 BY .79 NO-UNDO.
 
 DEFINE VARIABLE T-persistent AS LOGICAL INITIAL no 
      LABEL "persistent" 
      VIEW-AS TOGGLE-BOX
-     SIZE 17 BY .83 NO-UNDO.
+     SIZE 17 BY .79 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -152,15 +164,17 @@ DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      b-help AT ROW 1 COL 21
-     COMBO-BOX-1 AT ROW 2.42 COL 14.88 COLON-ALIGNED NO-LABEL
-     fi-procedure AT ROW 2.46 COL 14.75 COLON-ALIGNED
+     COMBO-BOX-1 AT ROW 2.42 COL 14.75 COLON-ALIGNED NO-LABEL
+     fi-procedure AT ROW 2.5 COL 14.75 COLON-ALIGNED
      T-parparentproc AT ROW 4 COL 3
      T-persistent AT ROW 4 COL 27
      rs-num-parameters AT ROW 5.25 COL 3 NO-LABEL
-     FI-Parameter1 AT ROW 6.5 COL 25.5 COLON-ALIGNED NO-LABEL
-     FI-Parameter2 AT ROW 7.88 COL 25.5 COLON-ALIGNED NO-LABEL
-     FI-Parameter3 AT ROW 9.17 COL 25.5 COLON-ALIGNED NO-LABEL
-     SPACE(0.74) SKIP(1.99)
+     FI-Parameter1 AT ROW 6.5 COL 25.63 COLON-ALIGNED NO-LABEL
+     FI-Parameter2 AT ROW 7.88 COL 25.63 COLON-ALIGNED NO-LABEL
+     FI-Parameter3 AT ROW 9.21 COL 25.63 COLON-ALIGNED NO-LABEL
+     T-compil AT ROW 10.5 COL 3 WIDGET-ID 2
+     T-notsign AT ROW 10.5 COL 26 WIDGET-ID 4
+     SPACE(20.24) SKIP(0.83)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Запуск процедуры"
@@ -186,6 +200,12 @@ DEFINE FRAME Dialog-Frame
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+ASSIGN 
+       T-compil:HIDDEN IN FRAME Dialog-Frame           = TRUE.
+
+ASSIGN 
+       T-notsign:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* SETTINGS FOR TOGGLE-BOX T-parparentproc IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
@@ -262,7 +282,7 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
-  if search(v-store-file-name) <> ?
+  if SearchFile(v-store-file-name) <> ?
   then do:
     run fill-temp in this-procedure .
 
@@ -279,7 +299,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       t-parparentproc :sensitive = true
     .
   end.
-
+  if not objSrv:SystemSetting:DeveloperMode
+  then
+     assign
+        T-compil:hidden  = no
+        T-notsign:hidden = no
+     .
   for each temp-param
   by temp-param.run-date descending
   by temp-param.run-time descending
@@ -372,10 +397,12 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY COMBO-BOX-1 fi-procedure T-parparentproc T-persistent 
-          rs-num-parameters FI-Parameter1 FI-Parameter2 FI-Parameter3 
+          rs-num-parameters FI-Parameter1 FI-Parameter2 FI-Parameter3 T-compil 
+          T-notsign 
       WITH FRAME Dialog-Frame.
   ENABLE b-exit b-quit b-help COMBO-BOX-1 fi-procedure T-persistent 
-         rs-num-parameters FI-Parameter1 FI-Parameter2 FI-Parameter3 
+         rs-num-parameters FI-Parameter1 FI-Parameter2 FI-Parameter3 T-compil 
+         T-notsign 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -510,6 +537,8 @@ PROCEDURE run-procedure :
       rs-num-parameters
       t-persistent
       t-parparentproc
+      t-compil
+      t-notsign
       .
 
     assign
@@ -530,7 +559,7 @@ PROCEDURE run-procedure :
     end.
 
     /* ищем процедуру */
-    if search(v-proc-name) = ?
+    if SearchFile(v-proc-name) = ?
     then do:
       search_block:
       do
@@ -566,7 +595,7 @@ PROCEDURE run-procedure :
             .
 
             assign
-              v-search-proc-name = search(v-sub-dir-item + v-proc-name + v-suffix-item)
+              v-search-proc-name = SearchFile(v-sub-dir-item + v-proc-name + v-suffix-item)
             .
             if v-search-proc-name <> ?
             then do:
@@ -586,7 +615,7 @@ PROCEDURE run-procedure :
         end.
       end.
     end.
-    if search(v-proc-name) = ?
+    if SearchFile(v-proc-name) = ?
     then do:
        message
           substitute("Не найдена процедура &1", v-proc-name) 
@@ -633,24 +662,34 @@ PROCEDURE run-procedure :
        define variable vlogfile as character no-undo.
        define variable vText as character no-undo.
        define variable vError as logical no-undo init yes.
-       define variable VRcode as logical no-undo.
        define variable vParamlist as character no-undo.
-       VRcode = search("gbl/d-runpro.r") ne ?.
-       if VRcode
+       if     objSrv:SystemSetting:DeveloperMode
+          and T-compil:sensitive
+          and not T-compil
        then do:
+          run utl\compiler.p(input-output v-proc-name).
+          if v-proc-name eq ?
+          then return error.
+       end.
+       if T-notsign:sensitive
+          and T-notsign
+       then
+          verror = no.
+       else do:
           vKey = random(1,999999999).
           define variable vAsyncHelper as class ibs.th.file.AsyncHelperth no-undo.
           vAsyncHelper = new ibs.th.file.AsyncHelperth().
-          vAsyncHelper:user-passwd = "".
+          vAsyncHelper:MyUser =  "".
+          vAsyncHelper:MyPass =  "nocrypt:".
+/*          vAsyncHelper:userDB = yes.*/
           vAsyncHelper:MyBachMode = no.
-vAsyncHelper:userdb = yes.
-          vAsyncHelper:AsyncProc("utl/proc-chekproc", substitute("&1":U  +  {&delim-par}  + "&2":U + {&delim-par} + "&3":U + {&delim-par} + "&4":U + {&delim-par} + "&5":U + {&delim-par} + "&6":U + {&delim-par} + "&7":U  + {&delim-par} + "&9":U 
-                                                                       , search(v-proc-name) ,v-num-parameters, t-parparentproc :checked, vKey,v-parameter1,v-parameter2,v-parameter3 ),1).
+          vAsyncHelper:AsyncProc("utl/proc-chekproc", substitute("&1&8&2&8&3&8&4&8&5&8&6&8&7":U 
+                                                    , SearchFile(v-proc-name) ,v-num-parameters, t-parparentproc :checked, vKey,v-parameter1,v-parameter2,v-parameter3,{&delim-par} ),1).
           vAsyncHelper:myTimeOut = 300.
           
-          vAsyncHelper:WaitFor("proc-chekproc", 1,"Проверка процедуры.").
+          run ibs\th\file\waithelper.p (vAsyncHelper,"proc-chekproc", 1,"Проверка процедуры.").
           vtext = "Процедура имеет не правильную подпись.".
-          vlogfile = vAsyncHelper:myWorkDir + "proc-chekprocerror.log".
+          vlogfile = vAsyncHelper:getlog(?).
           if vAsyncHelper:FileExists(vlogfile)
           then do:
              input stream sReadfile FROM  VALUE(vlogfile).
@@ -683,8 +722,6 @@ vAsyncHelper:userdb = yes.
           vAsyncHelper:delworkdir().
           delete object vAsyncHelper.
        end.
-       else
-          vError = no.
        if vError
        then do:
           run trg/userlog.p (
@@ -930,7 +967,7 @@ vAsyncHelper:userdb = yes.
                 , input "") no-error.
              return.
           end.
-          else if  vrcode
+          else if  not objSrv:SystemSetting:DeveloperMode
           then do:
              run trg/userlog.p (
                 input 'run-proc'

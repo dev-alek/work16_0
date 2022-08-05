@@ -60,10 +60,12 @@ define variable v-today         as date      no-undo .
 
 define variable log-exit as logical   no-undo .
 define variable v-hidden-mode as logical   no-undo .
+define variable writelogtype  as character no-undo .
 
 define stream VarStream .
 define variable v-varstr   as character no-undo .
 define variable v-varfile  as character no-undo .
+define variable mStart     as logical   no-undo .
 
 define temp-table tt-db no-undo
   field db-num as integer
@@ -123,6 +125,12 @@ DEFINE BUTTON b-hand DEFAULT
      SIZE 10 BY 1 TOOLTIP "Ручной режим приема и отправки новостей"
      BGCOLOR 8 .
 
+DEFINE BUTTON b-start DEFAULT
+     LABEL "&Запуск"
+     SIZE 10 BY 1 TOOLTIP "Запустить один цикл"
+     BGCOLOR 8 .
+
+
 DEFINE BUTTON b-help DEFAULT
      LABEL "Помо&щь"
      SIZE 10 BY 1 TOOLTIP "Помощь"
@@ -157,6 +165,7 @@ DEFINE FRAME f-amain
      b-exit AT ROW 1.17 COL 2.25
      b-hand AT ROW 1.17 COL 12.25
      b-prop AT ROW 1.17 COL 22.25
+     b-start AT ROW 1.17 COL 32.25
      b-help AT ROW 1.17 COL 89
      auto-log AT ROW 3.38 COL 2.25 NO-LABEL
      f-msg AT ROW 2.5 COL 13 COLON-ALIGNED NO-LABEL
@@ -221,6 +230,11 @@ ASSIGN
    NO-ENABLE                                                            */
 ASSIGN
        b-hand:HIDDEN IN FRAME f-amain           = TRUE.
+
+/* SETTINGS FOR BUTTON b-hand IN FRAME f-amain
+   NO-ENABLE                                                            */
+ASSIGN
+      b-start:HIDDEN IN FRAME f-amain           = TRUE.
 
 /* SETTINGS FOR BUTTON b-prop IN FRAME f-amain
    NO-ENABLE                                                            */
@@ -308,6 +322,16 @@ DO:
     .
   end.
 END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-start
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hand automain
+ON CHOOSE OF b-start IN FRAME f-amain /* РРежим */
+DO:
+   mstart = yes.
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -621,6 +645,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable v-interval            as integer   no-undo .
   define variable v-list-key            as character no-undo .
   define variable v-list-db             as character no-undo .
+  define variable v-list-key-all        as character no-undo .
+  define variable v-list-db-all         as character no-undo .
   define variable v-for-db              as character no-undo .
   define variable v-for-extsys          as character no-undo .
   define variable v-for-proc            as character no-undo .
@@ -737,10 +763,25 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   end.
 
+
   run adm/autoconn.p no-error.
   if error-status :error then do:
     run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
   end.
+  
+  define variable updschmObj      as class ibs.th.adm.upd.updschm no-undo.
+  updschmObj = new ibs.th.adm.upd.updschm ().
+
+  if updschmObj:isNeedUpd
+  then do:
+     run write-to-log ("Необходимо обновить базу. Запустите ТН") .
+     delete object updschmObj no-error.
+     return error "Необходимо обновить базу. Запустите ТН".  
+  end.
+  delete object updschmObj no-error.
+
+  { gbl/conf-rd.i "'writelog'" "''" "''" 0 "''" "''" "''" no writelogvalue writelogtype no-error }
+
   run adm/chk-db.p no-error .
   if error-status :error then do:
     run write-to-log (  substitute( "&1. Проверка возможности работы сессии.&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
@@ -802,6 +843,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             or choose of b-hand in frame {&frame-name}
             or choose of b-help in frame {&frame-name}
             or choose of b-prop in frame {&frame-name}
+            or choose of b-start in frame {&frame-name}
             focus frame {&frame-name}
             pause 5
             .
@@ -842,6 +884,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             or choose of b-hand in frame {&frame-name}
             or choose of b-help in frame {&frame-name}
             or choose of b-prop in frame {&frame-name}
+            or choose of b-start in frame {&frame-name}
             focus frame {&frame-name}
             pause 5
             .
@@ -867,6 +910,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             or choose of b-hand in frame {&frame-name}
             or choose of b-help in frame {&frame-name}
             or choose of b-prop in frame {&frame-name}
+            or choose of b-start in frame {&frame-name}
             focus frame {&frame-name}
             pause 5
             .
@@ -1037,8 +1081,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          then 
             vRun = yes.
       end.
- 
-      if vRun
+       
+      if    vRun
+         or mstart
       then do:
          for each  tt-BatchProcess :
             delete tt-BatchProcess .
@@ -1100,7 +1145,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
            ( input  p-auto-type
            , input  v-for-db
            , output v-list-db
+           , output v-list-db-all
            , output v-list-key
+           , output v-list-key-all
            , input v-for-extsys
            , input v-for-proc
            , output table tt-BatchProcess
@@ -1147,6 +1194,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             v-db-info = return-value
             {&window-name}:title = v-title + {&space-char} + v-db-info
          .
+         if mstart
+         then
+            assign
+               v-list-db  = v-list-db-all
+               v-list-key = v-list-key-all
+            .
          if num-entries( v-list-db ) > 0
          then do:
             run write-to-log ( "Текущая" + {&space-char} + v-db-info ) no-error.
@@ -1163,20 +1216,70 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             case p-auto-type :
                when {&btpr-type-autonws}
                then do:
-                  run nws/exch-nws.p
-                        ( input this-procedure:handle
-                        , input g#auto-user-id
-                        , input g#auto-user-password
-                        , input v-list-db
-                        ) no-error.
+                  define variable mreadini as character no-undo.
+                  define variable msesnws as integer no-undo.
+                  get-key-value section "THAutoSessions" key "NumAsyncSessionsNWS" value mreadini.
+                  
+                  assign
+                     msesnws = 0
+                     msesnws = integer (mreadini) 
+                  no-error.
+                  if msesnws > 1
+                  then do:     
+                     run gbl/dbdiscon.p no-error.
+                     if error-status :error then do:
+                        run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ) no-error.
+                        if error-status:error
+                        then do:
+                           run write-to-screen (return-value).
+                        end.
+                     end.
+                     run bge/auto-nws.p
+                        (input this-procedure
+                        ,input v-list-db
+                        ,input msesnws
+                        ,?
+                        ,?
+                        ,input no
+                     ) no-error.
+                     
+                     run adm/autoconn.p no-error.
+                     if error-status :error then do:
+                        run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
+                        assign
+                           {&window-name}:title = v-title
+                        .
+                     end.
+                  end.
+                  else do:
+                     run nws/exch-nws.p
+                           (input g#auto-user-id
+                           ,input g#auto-user-password
+                           ,input v-list-db
+                           ) no-error.
+                  end.
                end.
                when {&btpr-type-mercury}
                then do:
-                  run bge/auto-merc.p
-                     (input g#auto-user-id
-                     ,input g#auto-user-password
+                  run gbl/dbdiscon.p no-error.
+                  if error-status :error then do:
+                     run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ) no-error.
+                     if error-status:error
+                     then do:
+                        run write-to-screen (return-value).
+                     end.
+                  end.
+                  run bge/auto-merc-asunc.p
+                     (input this-procedure
                      ,input v-list-db
                   ) no-error.
+                  run adm/autoconn.p no-error.
+                  if error-status :error then do:
+                     run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
+                     assign
+                        {&window-name}:title = v-title
+                     .
+                  end.
                end.
                when {&btpr-type-is_motp}
                then do:
@@ -1458,7 +1561,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                ( input  p-auto-type
                , input  v-for-db
                , output v-list-db
+               , output v-list-db-all
                , output v-list-key
+               , output v-list-key-all
                , input v-for-extsys
                , input v-for-proc
                , output table tt-BatchProcess
@@ -1486,6 +1591,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    assign
       start-time = etime
     .
+    mStart = no.
     do while not log-exit:
       if v-hidden-mode = false then do:
         wait-for
@@ -1494,6 +1600,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           or choose of b-hand in frame {&frame-name}
           or choose of b-help in frame {&frame-name}
           or choose of b-prop in frame {&frame-name}
+          or choose of b-start in frame {&frame-name}
           focus frame {&frame-name}
           pause 1
         .
@@ -1562,8 +1669,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       then do:
         run myhide in this-procedure .
       end.
-
-      if etime - start-time > 60000
+      if    mStart
+         or etime - start-time > 60000
+         or time mod 60 = 1
       then do:
         leave .
       end.
@@ -1727,6 +1835,16 @@ PROCEDURE myenable :
   then do:
     enable b-hand b-prop with frame {&frame-name}.
   end.
+  
+  if session:debug-alert
+  then do:
+    enable b-start b-prop with frame {&frame-name}.
+  end.
+  /*  if    pe-auto-type = {&btpr-type-is_motp}
+     or pe-auto-type = {&btpr-type-is_diadoc}
+  then do:
+    enable b-hand with frame {&frame-name}.
+  end. */
 
 END PROCEDURE.
 

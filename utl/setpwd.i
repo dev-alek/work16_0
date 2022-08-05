@@ -8,7 +8,7 @@ define variable {&login} as character no-undo init "sysadm".
 &glob xpaswordcur "{&paswordold}":U
 &glob paswordcur pasCur()::pasw
 
-define temp-table PasSysAdm
+define temp-table PasSysAdm no-undo
     field fLogin as character  
     field num as int64 init ?
     field pasw as character
@@ -42,7 +42,7 @@ method private integer crpas ():
 &else
 function crpas returns integer  ():
 &endif
-   {utl/crpwd.i}
+   {utlcomp/crpwd.i}
 end. 
 &if "{1}" = "class" &then
 method private handle pascur ():
@@ -79,9 +79,9 @@ method private handle pasNew ():
 &else
 function pasNew returns handle ():
 &endif
-   define buffer  sys-ctrl for sys-ctrl.
-   define buffer  upgrade for upgrade.
-   define buffer  upgrade-attr for upgrade-attr.
+   define buffer  sys-ctrl for ub.sys-ctrl.
+   define buffer  upgrade for ub.upgrade.
+   define buffer  upgrade-attr for ub.upgrade-attr.
    find first gPasSysAdm where gPasSysAdm.fLogin eq {&login} no-error.
    if not available gPasSysAdm then crpas().
    define variable vReturn as handle no-undo.

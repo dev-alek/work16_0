@@ -58,7 +58,8 @@ define variable vss-description as character no-undo init "Сбор данных по GTIN и
 { rep/html-conv.i }
 { gbl/getcntxt.i def }
 { bge/temp_gtin.i }
-
+{ gbl/objsrv.i } 
+{ cmp/showinf.i  }
 function get-mark-integer returns character 
    (input p-mark as character) forward.
    
@@ -398,7 +399,10 @@ DO:
       message "Сохранить данные в файл?"
       view-as alert-box question buttons yes-no update undelete.
       if undelete then do:
-      run file-save in this-procedure no-error .
+         run file-save in this-procedure no-error .
+         if error-status:error
+         then
+            return no-apply.
       end.
       apply 'choose' to btn_save in frame {&frame-name} .
    END.
@@ -446,6 +450,7 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+   run init-proc.
    { gbl/getcntxt.i get }
    RUN enable_UI.
    WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -457,6 +462,33 @@ RUN disable_UI.
 
 
 /* **********************  Internal Procedures  *********************** */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-proc Dialog-Frame 
+PROCEDURE init-proc :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+define variable v-list as character no-undo.
+define variable vi as integer no-undo.
+define variable MarkType as ibs.th.gbl.map.mapstring no-undo.
+define variable objType  as ibs.th.gbl.propmap no-undo.
+
+MarkType = ObjSrv:Env:Marking:Types:MAPTYPE.
+do vi = 1 to MarkType:GetItemByLab(vi):     
+objType  = ObjSrv:Env:Marking:Types:CurrProp.
+
+    v-list = v-list + "," + objType:Label_ + "," + objType:NameProp.
+end.
+
+v-list = trim(v-list, ",").
+f-type-mark:list-item-pairs in frame {&FRAME-NAME} = v-list.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE create-file Dialog-Frame 
 PROCEDURE create-file :
@@ -759,14 +791,21 @@ PROCEDURE file-save :
    if error-status:error then
    do:
       message return-value view-as alert-box.
-      return . 
+      run waitfram-hide in this-procedure .
+   
+      return error. 
    end.
-/*ждем когда сформируется excel файл*/
-   do while search (v-file-name-rep-exl) = ?:
-   end.
+   
 
-   os-delete value(v-file-name-rep-htm) . 
    run waitfram-hide in this-procedure .
+   if  search (v-file-name-rep-exl) = ?
+   then do:
+      message "Oшибка создания файла. Промежуточный результат в " v-file-name-rep-htm
+      view-as alert-box.
+      return error.
+   end.
+   os-delete value(v-file-name-rep-htm) . 
+   
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -844,54 +883,10 @@ FUNCTION get-mark-char RETURNS CHARACTER
      Purpose:  
        Notes:  
    ------------------------------------------------------------------------------*/
-
-   define variable v-mark as character no-undo .
-   case p-mark:
-      when "0" then 
-         do:
-            v-mark = "not-type" .
-         end.   
-      when "1" then 
-         do:
-            v-mark = "tabak" .
-         end.   
-      when "2" then 
-         do:
-            v-mark = "shoes" .
-         end.   
-      when "3" then 
-         do:
-            v-mark = "perfume" .
-         end.
-      when "4" then 
-         do:
-            v-mark = "industry" .
-         end.   
-      when "5" then 
-         do:
-            v-mark = "tires" .
-         end.   
-      when "6" then 
-         do:
-            v-mark = "apteka" .
-         end.
-      when "7" then 
-         do:
-            v-mark = "photo" .
-         end.
-      when "8" then 
-         do:
-            v-mark = "milk" .
-         end.                         
-      when "9" then 
-         do:
-            v-mark = "water" .
-         end.                                                                                                        
-      when "10" then 
-         do:
-            v-mark = "stiki" .
-         end.   
-   end case .
+   define variable v-mark as character no-undo.
+   define variable MarkType as ibs.th.str.marking.Types no-undo.
+   MarkType = ObjSrv:Env:Marking:Types. 
+   v-mark = MarkType:GetNameProp(int(p-mark)).
    return v-mark .
 
 END FUNCTION.
@@ -906,56 +901,12 @@ FUNCTION get-mark-integer RETURNS CHARACTER
      Purpose:  
        Notes:  
    ------------------------------------------------------------------------------*/
-   define variable ii     as integer   no-undo .
+   
    define variable v-mark as character no-undo .
-
-   case p-mark:
-      when "not-type" or 
-      when "" then 
-         do:
-            v-mark = "0" .
-         end.   
-      when "tabak" then 
-         do:
-            v-mark = "1" .
-         end.   
-      when "shoes" then 
-         do:
-            v-mark = "2" .
-         end.   
-      when "perfume" then 
-         do:
-            v-mark = "3" .
-         end.
-      when "industry" then 
-         do:
-            v-mark = "4" .
-         end.   
-      when "tires" then 
-         do:
-            v-mark = "5" .
-         end.   
-      when "apteka" then 
-         do:
-            v-mark = "6" .
-         end.
-      when "photo" then 
-         do:
-            v-mark = "7" .
-         end.
-      when "milk" then 
-         do:
-            v-mark = "8" .
-         end.                         
-      when "water" then 
-         do:
-            v-mark = "9" .
-         end.   
-      when "stiki" then 
-         do:
-            v-mark = "10" .
-         end.                                                                                                        
-   end case .
+   define variable MarkType as ibs.th.str.marking.Types no-undo.
+   
+   MarkType = ObjSrv:Env:Marking:Types. 
+   v-mark = string(MarkType:GetKeyIntDB(p-mark)).
    return v-mark .
 END FUNCTION.
 

@@ -51,7 +51,8 @@ define variable impc as integer no-undo.
 define variable impc-saved as integer no-undo.
 define variable impc-Warn as integer no-undo.
 define variable not-saved as character no-undo.
-define variable text-string as char no-undo.
+define new shared variable text-string as char no-undo.
+define variable old-text-string as char no-undo init ?.
 define variable p-artic     AS integer NO-UNDO init 1.
 define variable p-name      AS integer NO-UNDO init 2.
 define variable p-engl-name AS integer NO-UNDO.
@@ -69,6 +70,7 @@ define variable p-alpha1 as integer no-undo .
 define variable p-grp-code as integer no-undo .
 define variable p-service as integer no-undo .
 define variable p-gds-code as integer no-undo .
+define variable p-ppr as integer no-undo .
 define variable i-artic as char no-undo.
 define variable i-prod-type as character no-undo .
 define variable i-prod-code as integer no-undo .
@@ -91,6 +93,9 @@ define variable choice as integer no-undo.
 define variable v-num-fields as integer no-undo .
 define variable p-mark as integer no-undo .
 define variable i-mark as integer  no-undo .
+define variable p-nomcode as integer no-undo .
+define variable i-nomcode as character  no-undo .
+define variable i-ppr as integer no-undo .
 
 define variable mnewrec as logical no-undo.
 define variable v-host-code     as integer           no-undo.
@@ -112,6 +117,10 @@ DEFINE VARIABLE vCh     AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-prod  as character no-undo .
 DEFINE VARIABLE vNoLine AS INTEGER   NO-UNDO.
 
+{ gbl/objsrv.i }
+define variable MarkType as ibs.th.str.marking.Types no-undo.
+MarkType = ObjSrv:Env:Marking:Types.
+define variable MarkTypeStr as character no-undo.
 { gbl/conf-rd.i
  "'is-custm'"
  "''"
@@ -148,6 +157,7 @@ function f-range returns character(input p-num as integer) :
         when 17 then return "Q":U .
         when 18 then return "R":U .
         when 19 then return "S":U .
+        when 20 then return "T":U .
     end case .
 end.
  
@@ -197,7 +207,9 @@ run ref/strtimp.w (
                       ,OUTPUT p-service
                       ,OUTPUT p-gds-code
                       ,OUTPUT p-mark
-                      ) no-error.
+                      ,output p-nomcode
+                      ,output p-ppr
+                      ) .
 if  error-status:error or f-name = "" then return error.
 CASE choice:
     WHEN 1 then do:
@@ -257,6 +269,8 @@ then do :
             i-user-rule = ?
             i-VAT-code = 0
             i-mark = ?
+            i-nomcode = ?
+            i-ppr = ?
         .  
         
         i-artic = mWorkSheet:Range(f-range(p-artic) + vChLine):VALUE NO-ERROR.  
@@ -316,6 +330,11 @@ then do :
         i-mark = integer (mWorkSheet:Range(f-range(p-mark) + vChLine):value) NO-ERROR. 
         if i-mark = ? then i-mark = (mWorkSheet:Range(f-range(p-mark) + vChLine):FORMULA) NO-ERROR.
         
+        i-nomcode = mWorkSheet:Range(f-range(p-nomcode) + vChLine):value NO-ERROR. 
+        if i-nomcode = ? then i-nomcode = (mWorkSheet:Range(f-range(p-nomcode) + vChLine):FORMULA) NO-ERROR.
+
+        i-ppr = integer(mWorkSheet:Range(f-range(p-ppr) + vChLine):VALUE) NO-ERROR. 
+        if i-ppr = ? then i-ppr = integer(mWorkSheet:Range(f-range(p-ppr) + vChLine):FORMULA) NO-ERROR.
 
         if length(i-artic) > 0 or length(i-alpha1) > 0 or length(i-attrib) > 0
         or length(i-destin) > 0 or length(i-engl-name) > 0 or length(i-engl-name) > 0
@@ -533,7 +552,7 @@ then do :
                    if mnewrec
                    then do:
                        define variable mflag as logical no-undo.
-                       run gds-attr-exist in this-procedure (i-gds-code,{&attr-mark-type},output mflag).
+                       run gds-attr-exist in this-procedure (goods.gds-code,{&attr-mark-type},output mflag).
                        if not mflag
                        then do:
                           run ggoattr-value(
@@ -549,32 +568,75 @@ then do :
                 /*Есть ли атрибут "Группа товаров на кассе" в группе товаров*/
                           if v-value > "" then do:
                               run gds-attr-write IN THIS-PROCEDURE(
-                                 input i-gds-code
+                                 input goods.gds-code
                                 ,INPUT {&attr-mark-type}
                                 ,INPUT v-value ) NO-ERROR.
-                              put stream str-log unformatted "Внимание Артикул " goods.artic " .  Признак маркировки установлен с группы Строка  " vLine  skip . 
+                              put stream str-log unformatted "Внимание Артикул " goods.artic " .  Признак маркировки установлен с группы Строка " vLine  skip . 
                               impc-Warn = impc-Warn + 1.
                           end.
                       end.  
                    end. 
                 end.
-             else if i-mark eq ? or i-mark eq 0
-             then do:
-                 run gds-attr-delete IN THIS-PROCEDURE(input i-gds-code
+                else if i-mark eq ? or i-mark eq 0
+                then do:
+                   run gds-attr-delete IN THIS-PROCEDURE(input goods.gds-code
+                      ,INPUT {&attr-mark-type}
+                      ,output mflag).
+                end.
+                else do:
+                   MarkTypeStr = MarkType:GetNameProp(i-mark).
+                   if MarkTypeStr eq MarkType:Unknow:NameProp
+                   then do:
+                      impc-Warn = impc-Warn + 1.
+                      put stream str-log unformatted "Внимание Артикул " goods.artic " .  Не известный тип маркировки  " i-mark " Строка " vLine  skip .
+                   end.
+                   else
+                   run gds-attr-write IN THIS-PROCEDURE(
+                    input goods.gds-code
                    ,INPUT {&attr-mark-type}
-                   ,output mflag).
-             end.
-             else do:
-                run gds-attr-write IN THIS-PROCEDURE(
-                    input i-gds-code
-                   ,INPUT {&attr-mark-type}
-                   ,INPUT if i-mark eq 1 
-                          then {&attr-mark-type_tabak} 
-                          else if i-mark eq 2 
-                          then {&attr-mark-type_shoes}
-                          else {&attr-mark-type_not-type} ) NO-ERROR.
-             end.
-             
+                   ,INPUT MarkTypeStr
+                          ) NO-ERROR.
+                end.
+  
+                if p-nomcode <> 0
+                then do:
+                if i-nomcode = ""
+                then do:
+                   run gds-attr-delete IN THIS-PROCEDURE(input goods.gds-code
+                      ,INPUT {&attr-gds-CommodityCode}
+                      ,output mflag).
+                end.
+                else do:
+                   run gds-attr-write IN THIS-PROCEDURE(
+                    input goods.gds-code
+                   ,INPUT {&attr-gds-CommodityCode}
+                   ,INPUT i-nomcode
+                          ) NO-ERROR.
+                end.   
+                end.        
+           if p-ppr <> ?
+              then 
+           do:
+              if i-ppr <> 0
+                 then 
+              do:
+                 entry(i-ppr,{&prop-list-attr-item-matter-mark}) no-error .
+                 if error-status:error then 
+                 do:
+                    impc-Warn = impc-Warn + 1.
+                    put stream str-log unformatted 
+                       "Внимание Артикул " goods.artic " .  Не известный признак предмета расчета  " i-ppr " Строка " vLine  skip .
+                 end.  
+                 else 
+                 do: 
+                    run gds-attr-write IN THIS-PROCEDURE(
+                       input goods.gds-code
+                       ,INPUT {&attr-item-matter-mark}
+                       ,INPUT i-ppr
+                       ) NO-ERROR.
+                 end.
+              end.   
+           end.                 
                 if  goods.artic ne i-artic
                 then do:
                     impc-Warn = impc-Warn + 1.
@@ -618,7 +680,7 @@ then do :
 end.    
 else do :
 repeat :
-    
+    old-text-string = text-string .
     ASSIGN
         vChLine = STRING(vLine)
         i-artic = ?
@@ -640,6 +702,8 @@ repeat :
         i-user-rule = ?
         i-VAT-code = 0
         i-mark = ?
+        i-nomcode = ?
+        i-ppr = ?
     .  
     run ref/nxtgdsi.p (   input integer({&vat-tax-code})
                          ,input integer({&slt-tax-code})
@@ -662,6 +726,8 @@ repeat :
                          ,input p-service
                          ,input p-gds-code
                          ,input p-mark
+                         ,input p-nomcode
+                         ,input p-ppr
                          ,input (impc + 1)
                          ,input-output i-artic
                          ,input-output i-prod-type
@@ -682,8 +748,10 @@ repeat :
                          ,input-output i-service
                          ,input-output i-gds-code
                          ,input-output i-mark
+                         ,input-output i-nomcode
+                         ,input-output i-ppr
                           ) no-error .
-    if return-value = "END" then leave .                      
+    if old-text-string = text-string then leave .                      
     if error-status :error
     then do :
         impc = impc + 1 .
@@ -701,7 +769,7 @@ repeat :
     end.
     v-num-fields = maximum(p-alpha1, p-artic, p-attrib, p-destin, p-engl-name, p-gds-code, p-grp-code,
                            p-name, p-prod, p-sert, p-service, p-SLT-code, p-struct, p-tnved,
-                           p-unit-base, p-user-rule, p-VAT-code,p-mark) .
+                           p-unit-base, p-user-rule, p-VAT-code,p-mark,p-nomcode,p-ppr) .
     if v-num-fields <> num-entries(text-string, ";")    
     then do :
         impc = impc + 1 .
@@ -885,7 +953,7 @@ repeat :
              then do:
                  if mnewrec 
                  then do:
-                     run gds-attr-exist in this-procedure (i-gds-code,{&attr-mark-type},output mflag).
+                     run gds-attr-exist in this-procedure (goods.gds-code,{&attr-mark-type},output mflag).
                      if not mflag
                      then do:
                         run ggoattr-value(
@@ -901,31 +969,91 @@ repeat :
         /*Есть ли атрибут "Группа товаров на кассе" в группе товаров*/
                         if v-value > "" then do:
                             run gds-attr-write IN THIS-PROCEDURE(
-                                input i-gds-code
+                                input goods.gds-code
                                ,INPUT {&attr-mark-type}
                                ,INPUT v-value ) NO-ERROR.
+                           impc-Warn = impc-Warn + 1.
+                 put stream str-log unformatted "Внимание Артикул " goods.artic " .  Признак маркировки установлен с группы Строка  " vLine  skip .
                         end. 
                      end.
                  end.    
              end.
              else if i-mark eq ? or i-mark eq 0
              then do:
-                 run gds-attr-delete IN THIS-PROCEDURE(input i-gds-code
+                 run gds-attr-delete IN THIS-PROCEDURE(input goods.gds-code
                    ,INPUT {&attr-mark-type}
                    ,output mflag).
              end.
              else do:
-                run gds-attr-write IN THIS-PROCEDURE(
-                    input i-gds-code
+                MarkTypeStr = MarkType:GetNameProp(i-mark).
+                if MarkTypeStr eq MarkType:Unknow:NameProp
+                then do:
+                      impc-Warn = impc-Warn + 1.
+                      put stream str-log unformatted "Внимание Артикул " goods.artic " .  Не известный тип маркировки  " i-mark " Строка " vLine  skip .
+                   end.
+                   else 
+                   run gds-attr-write IN THIS-PROCEDURE(
+                    input goods.gds-code
                    ,INPUT {&attr-mark-type}
-                   ,INPUT if i-mark eq 1 
-                          then {&attr-mark-type_tabak} 
-                          else if i-mark eq 2 
-                          then {&attr-mark-type_shoes}
-                          else {&attr-mark-type_not-type}) NO-ERROR. 
-                 impc-Warn = impc-Warn + 1.
-                 put stream str-log unformatted "Внимание Артикул " goods.artic " .  Признак маркировки установлен с группы Строка  " vLine  skip .
+                   ,INPUT MarkTypeStr
+                          ) NO-ERROR.
+                 
+                end.
+                if p-nomcode <> 0
+                then do:
+                if i-nomcode = ""
+                then do:
+                   run gds-attr-delete IN THIS-PROCEDURE(input goods.gds-code
+                      ,INPUT {&attr-gds-CommodityCode}
+                      ,output mflag).
+                end.
+                else do:
+                   run gds-attr-write IN THIS-PROCEDURE(
+                    input goods.gds-code
+                   ,INPUT {&attr-gds-CommodityCode}
+                   ,INPUT i-nomcode
+                          ) NO-ERROR.
+                end.   
+                end.  
+             find first goods where goods.gds-code = j-gds-code no-lock no-error.
+             if available goods then do:
+             if  goods.artic ne i-artic
+             then do:
+                put stream str-log unformatted "Внимание Артикул " goods.artic " . На товаре уже установлен другой Артикул. Строка  " vLine  skip .
+                impc-Warn = impc-Warn + 1.
              end.
+             if     (    i-prod-type ne ?
+                     and goods.prod-type ne i-prod-type) 
+                or  (i-prod-code ne ? 
+                     and goods.prod-code ne i-prod-code)
+             then do:
+                 impc-Warn = impc-Warn + 1.
+                 put stream str-log unformatted "Внимание Артикул " goods.artic " . На товаре уже установлен другой прозводитель. Строка  " vLine  skip .
+             end.
+            end.       
+           if p-ppr <> ?
+              then 
+           do:
+              if i-ppr <> 0
+                 then 
+              do:
+                 entry(i-ppr,{&prop-list-attr-item-matter-mark}) no-error .
+                 if error-status:error then 
+                 do:
+                    impc-Warn = impc-Warn + 1.
+                    put stream str-log unformatted 
+                       "Внимание Артикул " goods.artic " .  Не известный признак предмета расчета  " i-ppr " Строка " vLine  skip .
+                 end.  
+                 else 
+                 do: 
+                    run gds-attr-write IN THIS-PROCEDURE(
+                       input goods.gds-code
+                       ,INPUT {&attr-item-matter-mark}
+                       ,INPUT i-ppr
+                       ) NO-ERROR.
+                 end.
+              end.   
+           end.  
              find first goods where goods.gds-code = j-gds-code no-lock no-error.
              if available goods then do:
              if  goods.artic ne i-artic
@@ -943,8 +1071,7 @@ repeat :
                  impc-Warn = impc-Warn + 1.
                  put stream str-log unformatted "Внимание Артикул " goods.artic " . На товаре уже установлен другой прозводитель. Строка  " vLine  skip .
              end.
-            end.       
-                
+            end.                     
             if i-service
             then do :
                 for each clients no-lock where clients.obj-type = 'маг' :
@@ -980,5 +1107,8 @@ run waitfram-hide in this-procedure .
 message ("Импорт из файла " + f-name + " закончен" + {&new-line} + "прочитано " + string(impc) +
          ",  сохранено " + string(impc-saved) + ", предупреждений " + string(impc-Warn) + {&new-line} + {&new-line} + "Информация по незагруженным товарам находится в файле gds-imp.log" )
 view-as alert-box  INFORMATION.
- 
+
+release object mWorkSheet. /*удаление объекта*/
+mExcelApplication:quit. /* Завершает работу Microsoft Excel. */
+release object mExcelApplication. /*удаление объекта*/
  

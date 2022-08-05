@@ -26,7 +26,7 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Генерация списка БД где нужно удалять clob-data".
 { cmp/vssrevis.i }
-{ cmp/str-glbl.i }
+{ cmp/trg-def.i }
 
 do
 on error undo, return error return-value
@@ -40,6 +40,14 @@ on error undo, return error return-value
     where buf_db.db-num >= 0
   on error undo, return error
   :
+    if trim(buf_db.db-key) = ""
+    or buf_db.db-key = ?
+    then next.
+    
+    if buf_db.stts = 2 and g#db-num = 0
+    then do :
+        return error ("Обработка команды не возможна. Идёт выгрузка базы данных " + string(buf_db.db-num)) .
+    end.
     if p-list-db = "":U then do:
       assign
         p-list-db = string( buf_db.db-num ).

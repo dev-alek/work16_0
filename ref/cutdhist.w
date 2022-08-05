@@ -3,7 +3,7 @@ define input  parameter {&Param_1} as int64 no-undo.
 &glob param_2 p-doc-id-utd
 define input  parameter {&Param_2} as int64 no-undo.
  
-define variable vlable as character no-undo.
+
 
 &if defined(globobjSrv) eq 0
 &then 
@@ -83,7 +83,7 @@ function local-open-br returns logical
    end.
    if p-mode eq "one"
    then do:
-      if p-chip-num-utd eq ?
+      if p-chip-num eq ?
       then do:
          for each {&buf_obj-hist} where {&buf_obj-hist}.DB-NUM = p-DB-NUM-utd  
                                     and {&buf_obj-hist}.doc-id = p-doc-id-utd
@@ -97,13 +97,13 @@ function local-open-br returns logical
          for each {&buf_obj-hist} where {&buf_obj-hist}.DB-NUM             eq p-DB-NUM-utd  
                                     and {&buf_obj-hist}.doc-id             eq p-doc-id-utd
                                     and {&buf_obj-hist}.corr-user-db-num   eq v-corr-user-db-num
-                                    and {&buf_obj-hist}.chip-num           eq p-chip-num-utd  
+                                    and {&buf_obj-hist}.chip-num           eq p-chip-num  
          no-lock:
             &glob addTable utd-err
             for each c-{&addTable} where  c-{&addTable}.DB-NUM          eq p-DB-NUM-utd  
                                    and c-{&addTable}.doc-id             eq p-doc-id-utd
                                    and c-{&addTable}.corr-user-db-num   eq v-corr-user-db-num
-                                   and c-{&addTable}.chip-num           eq p-chip-num-utd
+                                   and c-{&addTable}.chip-num           eq p-chip-num
             no-lock:
                create X_c-obj-hist.
                buffer-copy {&buf_obj-hist} to X_c-obj-hist.
@@ -116,7 +116,7 @@ function local-open-br returns logical
             for each c-{&addTable} where  c-{&addTable}.DB-NUM          eq p-DB-NUM-utd  
                                    and c-{&addTable}.doc-id             eq p-doc-id-utd
                                    and c-{&addTable}.corr-user-db-num   eq v-corr-user-db-num
-                                   and c-{&addTable}.chip-num           eq p-chip-num-utd
+                                   and c-{&addTable}.chip-num           eq p-chip-num
             no-lock:
                create X_c-obj-hist.
                buffer-copy {&buf_obj-hist} to X_c-obj-hist.
@@ -129,7 +129,7 @@ function local-open-br returns logical
             for each c-{&addTable} where  c-{&addTable}.DB-NUM          eq p-DB-NUM-utd  
                                    and c-{&addTable}.doc-id             eq p-doc-id-utd
                                    and c-{&addTable}.corr-user-db-num   eq v-corr-user-db-num
-                                   and c-{&addTable}.chip-num           eq p-chip-num-utd
+                                   and c-{&addTable}.chip-num           eq p-chip-num
             no-lock:
                create X_c-obj-hist.
                buffer-copy {&buf_obj-hist} to X_c-obj-hist.
@@ -142,7 +142,7 @@ function local-open-br returns logical
             for each c-{&addTable} where  c-{&addTable}.DB-NUM          eq p-DB-NUM-utd  
                                    and c-{&addTable}.doc-id             eq p-doc-id-utd
                                    and c-{&addTable}.corr-user-db-num   eq v-corr-user-db-num
-                                   and c-{&addTable}.chip-num           eq p-chip-num-utd
+                                   and c-{&addTable}.chip-num           eq p-chip-num
                                    
             no-lock:
                create X_c-obj-hist.
@@ -156,7 +156,7 @@ function local-open-br returns logical
             for each c-{&addTable} where  c-{&addTable}.DB-NUM          eq p-DB-NUM-utd  
                                    and c-{&addTable}.doc-id             eq p-doc-id-utd
                                    and c-{&addTable}.corr-user-db-num   eq v-corr-user-db-num
-                                   and c-{&addTable}.chip-num           eq p-chip-num-utd
+                                   and c-{&addTable}.chip-num           eq p-chip-num
             no-lock:
                create X_c-obj-hist.
                buffer-copy {&buf_obj-hist} to X_c-obj-hist.
@@ -169,7 +169,7 @@ function local-open-br returns logical
             for each c-{&addTable} where  c-{&addTable}.DB-NUM          eq p-DB-NUM-utd  
                                    and c-{&addTable}.doc-id             eq p-doc-id-utd
                                    and c-{&addTable}.corr-user-db-num   eq v-corr-user-db-num
-                                   and c-{&addTable}.chip-num           eq p-chip-num-utd
+                                   and c-{&addTable}.chip-num           eq p-chip-num
             no-lock:
                create X_c-obj-hist.
                buffer-copy {&buf_obj-hist} to X_c-obj-hist.
@@ -182,7 +182,7 @@ function local-open-br returns logical
             for each c-{&addTable} where  c-{&addTable}.DB-NUM          eq p-DB-NUM-utd  
                                    and c-{&addTable}.doc-id             eq p-doc-id-utd
                                    and c-{&addTable}.corr-user-db-num   eq v-corr-user-db-num
-                                   and c-{&addTable}.chip-num           eq p-chip-num-utd
+                                   and c-{&addTable}.chip-num           eq p-chip-num
             no-lock:
                create X_c-obj-hist.
                buffer-copy {&buf_obj-hist} to X_c-obj-hist.
@@ -195,7 +195,7 @@ function local-open-br returns logical
             for each c-{&addTable} where  c-{&addTable}.DB-NUM          eq p-DB-NUM-utd  
                                    and c-{&addTable}.doc-id             eq p-doc-id-utd
                                    and c-{&addTable}.corr-user-db-num   eq v-corr-user-db-num
-                                   and c-{&addTable}.chip-num           eq p-chip-num-utd
+                                   and c-{&addTable}.chip-num           eq p-chip-num
                                    
             no-lock:
                create X_c-obj-hist.
@@ -252,7 +252,7 @@ on error undo, return error return-value
 :
   find first current_c-utd no-lock where
                current_c-utd.db-num = X_c-obj-hist.db-num
-           and current_c-utd.db-num = X_c-obj-hist.db-num
+           and current_c-utd.doc-id = X_c-obj-hist.doc-id
        
           and current_c-utd.chip-num = X_c-obj-hist.chip-num
           and current_c-utd.corr-user-db-num = X_c-obj-hist.corr-user-db-num no-error .
@@ -265,7 +265,7 @@ on error undo, return error return-value
 &scop fields-name-list "DocumentExt,OrganizationExt,LoadDate,parentDocumentExt,parentOrganizationExt,RevocationStatus,RecipientResponseStatus,TypeId,CounteragentId,~
 CustomDocumentId,DocumentNumber,DocumentDate,Timestamp,ReceiptStatus,Direction,ModifyDate,PackageId,EDocType,AmendmentRequested,BaseDocumentNumber,BaseDocumentName,~
 BaseDocumentDate,cli-FnsParticipantId,cli-info,obj-FnsParticipantId,obj-info,sts,sts-edi,cli-type,cli-code,host-code,contract-code,obj-type,obj-code,~
-ModifyTime,doc-code,AdditInfo"
+ModifyTime,doc-code,AdditInfo,comment"
 
 define variable v-label-param as character no-undo .
   v-label-param =
@@ -305,7 +305,9 @@ define variable v-label-param as character no-undo .
  + "obj-code"    + {&delim-par} + "Код объекта"                            + {&delim-par} + "" + {&delim-flf}
  + "doc-code"    + {&delim-par} + "Номер накладной"                            + {&delim-par} + "" + {&delim-flf}
  + "total"    + {&delim-par} + "Сумма"                            + {&delim-par} + "" + {&delim-flf}
+ + "comment"    + {&delim-par} + "Комментарий"                            + {&delim-par} + "" + {&delim-flf}
  + "Vat"    + {&delim-par} + "НДС"                            + {&delim-par} + "" + {&delim-flf}
+  
  + "AdditInfo"        + {&delim-par} + "Ошибки"  + {&delim-par} + "" .
 
   run proc-full-temp-changes in this-procedure (
@@ -330,7 +332,7 @@ define variable v-mess as character no-undo.
    :
      find first current_c-{&tab-attr} no-lock where
                   current_c-{&tab-attr}.db-num = X_c-obj-hist.db-num
-              and current_c-{&tab-attr}.db-num = X_c-obj-hist.db-num
+              and current_c-{&tab-attr}.doc-id = X_c-obj-hist.doc-id
              and current_c-{&tab-attr}.attr-code = X_c-obj-hist.attr-code
              and current_c-{&tab-attr}.chip-num = X_c-obj-hist.chip-num
              and current_c-{&tab-attr}.corr-user-db-num = X_c-obj-hist.corr-user-db-num no-error .
@@ -360,7 +362,7 @@ define variable mCodeErr as character no-undo.
 
 function  err-text returns character (iCheckObj as character ):
    
-   return if iCheckObj  eq "" then "" else GetTextError( mCheckType, mCodeErr, iCheckObj).
+   return if iCheckObj  eq "" then "" else GetTextErrortype( mCheckType, mCodeErr, iCheckObj,"all").
    
 end.
 
@@ -374,7 +376,7 @@ on error undo, return error return-value
 :
   find first current_c-utd-err no-lock where
                current_c-utd-err.db-num = X_c-obj-hist.db-num
-           and current_c-utd-err.db-num = X_c-obj-hist.db-num
+           and current_c-utd-err.doc-id = X_c-obj-hist.doc-id
        and current_c-utd-err.CheckType = X_c-obj-hist.CheckType
        and current_c-utd-err.CodeErr = X_c-obj-hist.CodeErr
        and current_c-utd-err.CheckObj = X_c-obj-hist.CheckObj
@@ -390,11 +392,12 @@ on error undo, return error return-value
  mCodeErr = current_c-utd-err.CodeErr.
  
          
-&scop fields-name-list "CheckType,CodeErr,CheckObj,reckey"
+&scop fields-name-list "CheckType,CodeErr,CheckObj,reckey,LineNum"
 
 define variable v-label-param as character no-undo .
   v-label-param =
    "CheckType"     + {&delim-par} + "Тип ошибки"                              + {&delim-par} + "" + {&delim-flf}
+ + "LineNum" + {&delim-par} + "Линия"                          + {&delim-par} + "" + {&delim-flf}
  + "CodeErr" + {&delim-par} + "Код ошибки"                          + {&delim-par} + "" + {&delim-flf}
  + "CheckObj"      + {&delim-par} + "Текст"    + {&delim-par} + "err-text" + {&delim-flf}
  + "reckey"        + {&delim-par} + "ключ записи с ошибкой"  + {&delim-par} + "" .
@@ -422,7 +425,7 @@ define variable v-mess as character no-undo.
    :
      find first current_c-{&tab-attr} no-lock where
                   current_c-{&tab-attr}.db-num = X_c-obj-hist.db-num
-              and current_c-{&tab-attr}.db-num = X_c-obj-hist.db-num
+              and current_c-{&tab-attr}.doc-id = X_c-obj-hist.doc-id
               and current_c-{&tab-attr}.CheckType = X_c-obj-hist.CheckType
               and current_c-{&tab-attr}.CodeErr = X_c-obj-hist.CodeErr
               and current_c-{&tab-attr}.CheckObj = X_c-obj-hist.CheckObj
@@ -435,11 +438,13 @@ define variable v-mess as character no-undo.
         
          return error  v-mess .
      end.
-      &scop fields-name-list "attr-code,attr-value"
+      &scop fields-name-list "CheckType,CodeErr,CheckObj,reckey,attr-code,attr-value,LineNum"
    
    define variable v-label-param as character no-undo .
      v-label-param =
      "CheckType"     + {&delim-par} + "Тип ошибки"                              + {&delim-par} + "" + {&delim-flf}
++ "LineNum" + {&delim-par} + "Линия"                          + {&delim-par} + "" + {&delim-flf}
+ 
     + "CodeErr" + {&delim-par} + "Код ошибки"                          + {&delim-par} + "" + {&delim-flf}
     + "CheckObj"      + {&delim-par} + "Текст"    + {&delim-par} + "err-text" + {&delim-flf}
     + "reckey"        + {&delim-par} + "ключ записи с ошибкой"  + {&delim-par} + "" + {&delim-flf}
@@ -466,7 +471,7 @@ on error undo, return error return-value
 :
   find first current_c-utd-lines no-lock where
                current_c-utd-lines.db-num = X_c-obj-hist.db-num
-           and current_c-utd-lines.db-num = X_c-obj-hist.db-num
+           and current_c-utd-lines.doc-id = X_c-obj-hist.doc-id
            and current_c-utd-lines.linenum = X_c-obj-hist.linenum
           and current_c-utd-lines.chip-num = X_c-obj-hist.chip-num
           and current_c-utd-lines.corr-user-db-num = X_c-obj-hist.corr-user-db-num no-error .
@@ -518,7 +523,7 @@ define variable v-mess as character no-undo.
    :
      find first current_c-{&tab-attr} no-lock where
                   current_c-{&tab-attr}.db-num = X_c-obj-hist.db-num
-              and current_c-{&tab-attr}.db-num = X_c-obj-hist.db-num
+              and current_c-{&tab-attr}.doc-id = X_c-obj-hist.doc-id
               and current_c-{&tab-attr}.linenum = X_c-obj-hist.linenum
              and current_c-{&tab-attr}.attr-code = X_c-obj-hist.attr-code
              and current_c-{&tab-attr}.chip-num = X_c-obj-hist.chip-num
@@ -528,7 +533,7 @@ define variable v-mess as character no-undo.
         
          return error  v-mess .
      end.
-      &scop fields-name-list "attr-code,attr-value"
+      &scop fields-name-list "LineNum,attr-code,attr-value"
    
    define variable v-label-param as character no-undo .
      v-label-param =
@@ -556,7 +561,7 @@ on error undo, return error return-value
 :
   find first current_c-utd-marking-lines no-lock where
                current_c-utd-marking-lines.db-num = X_c-obj-hist.db-num
-           and current_c-utd-marking-lines.db-num = X_c-obj-hist.db-num
+           and current_c-utd-marking-lines.doc-id = X_c-obj-hist.doc-id
            and current_c-utd-marking-lines.linenum = X_c-obj-hist.linenum
         and current_c-utd-marking-lines.mark = X_c-obj-hist.mark
           and current_c-utd-marking-lines.chip-num = X_c-obj-hist.chip-num
@@ -600,7 +605,7 @@ define output parameter p-description as character no-undo .
    :
      find first current_c-{&tab-attr} no-lock where
                   current_c-{&tab-attr}.db-num = X_c-obj-hist.db-num
-              and current_c-{&tab-attr}.db-num = X_c-obj-hist.db-num
+              and current_c-{&tab-attr}.doc-id = X_c-obj-hist.doc-id
               and current_c-{&tab-attr}.linenum = X_c-obj-hist.linenum
               and current_c-{&tab-attr}.mark = X_c-obj-hist.mark
              and current_c-{&tab-attr}.attr-code = X_c-obj-hist.attr-code
@@ -611,7 +616,7 @@ define output parameter p-description as character no-undo .
         
          return error  v-mess .
      end.
-      &scop fields-name-list "attr-code,attr-value"
+      &scop fields-name-list "LineNum,mark,attr-code,attr-value"
    
    define variable v-label-param as character no-undo .
      v-label-param =

@@ -38,6 +38,9 @@ define variable v-i-cli     as integer no-undo .
 define variable v-i-cli-qnty     as dec no-undo .
 define variable v-dop-alt-name as character no-undo.
 define variable vGdsTabak as logical no-undo.
+{ gbl/objsrv.i }
+define variable MarkType as ibs.th.str.marking.Types no-undo.
+MarkType = ObjSrv:Env:Marking:Types.
 
 define buffer buf_prod-bc-attr for ub.prod-bc-attr .
 define buffer buf_prod-bc for ub.prod-bc .
@@ -139,6 +142,8 @@ if vaction = "U":U then do:
     run bgelib-tag-put in this-procedure ( input 3, input "ItemUnitWeight" , input string( bb_goods.wt-cart), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemUnitVolume" , input string( bb_goods.ms-cart), input 1 ).
     run bgelib-tag-put in this-procedure ( input 3, input "ItemCountry" , input string( cash-gds.alpha1), input 1 ).
+   
+    
   end.
   else do: /*не инфокиоск*/
   
@@ -463,42 +468,19 @@ end.
 vGdsTabak = no.
 
 find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
-              and buf_goods-attr.attr-code  = {&attr-mark-type} no-error . 
-    if available (buf_goods-attr) then do:
+              and buf_goods-attr.attr-code  = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" no-error . 
+    if available (buf_goods-attr) 
+       and MarkType:GetKeyIntDB(buf_goods-attr.attr-value) > 0
+    then do:
+      if      buf_goods-attr.attr-value = MarkType:stiki  :NameProp then run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input string(MarkType:tabak:KeyIntDB ) , input 1 ).
+      else if buf_goods-attr.attr-value = MarkType:milk-40:NameProp then run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input string(MarkType:milk:KeyIntDB )  , input 1 ).
+      else run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input string(MarkType:GetKeyIntDB(buf_goods-attr.attr-value)) , input 1 ).
       v-mark = yes .
-      case buf_goods-attr.attr-value:
-        when "not-type" then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "0", input 1 ).
-        end.
-        when "stiki" then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "1", input 1 ).
-        end.
-        when "tabak" then do:
-          vGdsTabak = yes.
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "1", input 1 ).
-        end.
-        when "shoes" then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "2", input 1 ).
-        end.                
-        when "perfume" then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "3", input 1 ).
-        end.                
-        when "industry" then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "4", input 1 ).
-        end.                
-        when "tires" then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "5", input 1 ).
-        end.                
-        when "apteka" then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "6", input 1 ).
-        end.                
-        when "photo" then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "7", input 1 ).
-        end.                
-        when "milk" then do:
-          run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "8", input 1 ).
-        end.  
-      end case .
+      if buf_goods-attr.attr-value eq MarkType:tabak:NameProp 
+      then do:
+         vGdsTabak = yes.
+      end.
+       
     end.
     else do:
       run bgelib-tag-put in this-procedure ( input 3, input "ItemDataMatrixType"  , input "0", input 1 ).
@@ -628,19 +610,55 @@ for each buf_cash-gds no-lock where
   
   find first ub.prod-bc no-lock where ub.prod-bc.b-str = buf_cash-gds.b-str and ub.prod-bc.b-str <> "" and ub.prod-bc.bc-on-type = {&gtin} 
   no-error .
-  
+  define variable vBarCode1 as int no-undo.
+  define variable vBarCode2 as int no-undo.
   if available (ub.prod-bc) then do:
+    if cash-gds.cli-base-rate eq 1
+    then do:
+       v-i-cli-qnty = 999999999.
+       for each buf_bar-code_cl where buf_bar-code_cl.gds-code      eq cash-gds.gds-code
+                                  and buf_bar-code_cl.cli-base-rate ne cash-gds.cli-base-rate
+       no-lock:
+         v-i-cli-qnty = min (v-i-cli-qnty, buf_bar-code_cl.cli-base-rate).
+         if v-i-cli-qnty =  buf_bar-code_cl.cli-base-rate
+         then 
+            vBarCode1 = buf_bar-code_cl.b-code.
+       end.
+    end.
+    else do:
+       v-i-cli-qnty = 999999999.
+       for first buf_bar-code_cl where buf_bar-code_cl.gds-code      eq cash-gds.gds-code
+                                  and buf_bar-code_cl.cli-base-rate eq 1
+       no-lock:
+         v-i-cli-qnty = min (v-i-cli-qnty, buf_bar-code_cl.cli-base-rate).
+         vBarCode2 = buf_bar-code_cl.b-code.
+       end.
+    end.
     if vGdsTabak then do:
+       block-cli:
        do v-i-cli = 1 to 2:
+         if (      v-i-cli-qnty eq 999999999 
+               and v-i-cli eq 2 
+               and cash-gds.cli-base-rate eq 1  )
+            or (   v-i-cli-qnty eq 999999999 
+               and v-i-cli eq 1 
+               and cash-gds.cli-base-rate ne 1  )
+         then 
+            next block-cli.
          v-cli-base = string (v-i-cli,"99").
+   
          run bgelib-tag-open in this-procedure ( input 2, input "ItemBarCode", input substitute("ctrl='&1' tms='&2' code='&3'" 
-                                             , (if action = "U" 
+                                             , (if vaction = "U" 
                                                 then "ADD":U    
                                                 else "DEL":U)   
                                              , OS2-time         
                                              , string(v-cli-base + buf_cash-gds.b-str))).                                              
          run bgelib-tag-put in this-procedure ( input 3, input "IBCCode"                                          
-                                              , input string( cash-gds.main-prt-b-code )
+                                              , input string( if v-i-cli eq 1 and cash-gds.cli-base-rate ne 1
+                                                               then vBarCode2
+                                                               else if v-i-cli eq 2 and cash-gds.cli-base-rate eq 1
+                                                               then vBarCode1
+                                                               else cash-gds.main-prt-b-code )
                                               , input 1 ).                                                       
          if vaction = 'U':U then do:                                                                               
            run bgelib-tag-put in this-procedure ( input 3, input "IBCProducer"                                      
@@ -656,7 +674,11 @@ for each buf_cash-gds no-lock where
                                                , input country.short-name, input 1 ).                              
            
            run bgelib-tag-put in this-procedure ( input 3, input "IBCPrice"                                         
-                                                , input string( cash-gds.price-sale )
+                                                , input string( if v-i-cli eq 1 and cash-gds.cli-base-rate ne 1
+     	                                            then cash-gds.price-sale / cash-gds.cli-base-rate
+     	                                            else if v-i-cli eq 2 and cash-gds.cli-base-rate eq 1
+                                                         then cash-gds.price-sale * v-i-cli-qnty
+                                                         else cash-gds.price-sale )
                                                 , input 1 ).                   
            run bgelib-tag-put in this-procedure ( input 3, input "IBCType"                                         
                                                , input string( v-IBCType ), input 1 ).                   
@@ -666,6 +688,7 @@ for each buf_cash-gds no-lock where
     end.
     else do: /* vGdsTabak = NO */
       v-cli-base = if cash-gds.cli-base-rate = 1 then "01" else "02".
+
       run bgelib-tag-open in this-procedure ( input 2, input "ItemBarCode", input substitute("ctrl='&1' tms='&2' code='&3'" 
                                           , (if vaction = "U" 
                                              then "ADD":U    
@@ -695,7 +718,6 @@ for each buf_cash-gds no-lock where
                                             , input string( v-IBCType ), input 1 ).                   
       end.
       run bgelib-tag-close in this-procedure ( input 2, input "ItemBarCode") .
-
     end.
   end.  
   else do: 

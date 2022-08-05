@@ -1,9 +1,441 @@
-{ref/extclass.i}
 
+{ref/extclass.i}
 define temp-table tt-utd-mark no-undo like utd-marking-lines 
   field side as character.
-{utl/gtin.i {1}}
+{ utl/gtin.i {1}}
 { gbl/attr-lib.i {1}}
+{ str/utd-typemark.i {1}}
+{ str/utd-attr.i {1}}
+&if "{1}" = "class"
+&then
+method public void CheckQnty
+&else
+function CheckQnty returns logical 
+&endif 
+(  input idb-num  as integer,
+   input idoc-id  as integer,
+   input iErrType as character   
+):
+   
+   if iErrType ne "loadUTD"
+   then do:
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","MarkNotFormatqnty").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","QntyMark").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","Qnty").
+   end.
+   if iErrType ne "CheckQnty"
+   then do:
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckQnty","MarkNotFormatqnty").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckQnty","QntyMark").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckQnty","Qnty").
+   end.
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"QntyMark").
+   
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"MarkNotFormatqnty").
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"Qnty").
+  
+  
+   define buffer marking               for marking.
+   define buffer utd-lines             for utd-lines.
+   define buffer utd-marking-lines     for utd-marking-lines.
+   define buffer Buf_utd-marking-lines for utd-marking-lines.
+   
+   block-line:
+   for each utd-lines where utd-lines.db-num eq idb-num
+                        and utd-lines.doc-id eq idoc-id
+   no-lock:
+      define variable Vflagmark as logical no-undo.
+      find first buf_utd-marking-lines 
+                    where buf_utd-marking-lines.db-num   = utd-lines.db-num 
+                      and buf_utd-marking-lines.doc-id   = utd-lines.doc-id
+                      and buf_utd-marking-lines.LineNum  = utd-lines.LineNum
+                      and length(buf_utd-marking-lines.mark) > 13
+      no-lock no-error.
+      if not available buf_utd-marking-lines
+      then 
+         next block-line.       
+        
+      define variable vqntyMark as integer no-undo.
+      define variable vqntyOAD  as integer no-undo.
+      vqntyMark = 0.
+      vqntyOAD  = 0.
+      block-mark:
+      for each utd-marking-lines 
+           where utd-marking-lines.db-num  = utd-lines.db-num 
+             and utd-marking-lines.doc-id  = utd-lines.doc-id
+             and utd-marking-lines.LineNum = utd-lines.LineNum
+             and length(utd-marking-lines.mark) > 13
+             and utd-marking-lines.doc-level  = 1
+      no-lock:
+         if isMark(utd-marking-lines.mark)
+         then do:
+            find first marking where marking.mark eq utd-marking-lines.mark
+            no-lock no-error.
+            if available marking
+            then do:
+               if marking.box-qnty ne ?
+               then
+                  vqntyMark = vqntyMark + marking.box-qnty.
+               
+            end.
+         end.
+         else do:
+            find first utd-marking-lines-attr where utd-marking-lines-attr.db-num    eq utd-marking-lines.db-num
+                                                and utd-marking-lines-attr.doc-id    eq utd-marking-lines.doc-id
+                                                and utd-marking-lines-attr.LineNum   eq utd-marking-lines.LineNum
+                                                and utd-marking-lines-attr.mark      eq utd-marking-lines.mark
+                                                and utd-marking-lines-attr.attr-code eq "box-qnty"
+            no-lock no-error.
+            if available utd-marking-lines-attr
+            then
+               vqntyOAD = vqntyOAD + dec(utd-marking-lines-attr.attr-value).
+ 
+         end.
+      end.
+      if     utd-lines.gds-code   gt 0 
+         and utd-lines.gds-code   ne ? 
+         and vqntyMark            ne 0
+      then do:
+         if utd-lines.Quantity  < vqntyMark
+         then                        
+            AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,iErrType,"Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity ) + {&delim-par} + string(vqntyMark)).
+         else if utd-lines.Quantity  <> vqntyMark
+         then                        
+            AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,iErrType,"QntyMark",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity ) + {&delim-par} + string(vqntyMark)).
+      
+      end.
+      else if     utd-lines.gds-code   gt 0 
+         and utd-lines.gds-code   ne ?
+         and vqntyOAD ne 0 
+         and utd-lines.Quantity  ne vqntyOAD
+      then                        
+         AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,iErrType,"Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity ) + {&delim-par} + string(vqntyOAD)).
+      
+      
+/*      if     utd-lines.gds-code   gt 0                                                                                                                                                                   */
+/*         and utd-lines.gds-code   ne ?                                                                                                                                                                   */
+/*         and vqntyMark ne 0                                                                                                                                                                              */
+/*         and vqntyOAD  ne 0                                                                                                                                                                              */
+/*         and vqntyMark ne vqntyOAD                                                                                                                                                                       */
+/*      then                                                                                                                                                                                               */
+/*         AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,iErrType,"QntyMarkAndOAD",string(utd-lines.LineNum ) + {&delim-par} + string(vqntyOAD ) + {&delim-par} + string(vqntyMark)).*/
+/*                                                                                                                                                                                                         */
+   end.
+end.   
+
+&if "{1}" = "class"
+&then
+method public void CheckGds
+&else
+function CheckGds returns logical 
+&endif 
+(  input idb-num   as integer,
+   input idoc-id   as integer,
+   input iobj-type as character,
+   input iobj-code as integer,
+   input iErrType as character   
+):
+   
+   if iErrType ne "loadUTD"
+   then do:
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","InLineNotMark").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","NoGtinForMark").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","NoBarcodForGtin").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","MarkNotFormatqnty").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","MarkingForTypeEDO").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","NotMarkForLine").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","MultGtinForLine").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","NoBarCodeForLine").
+      
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","NotFindGdsForBarCode").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","NotEqGgsForLineAndMark").
+  
+      ClearUtdErrTypeCode(idb-num,idoc-id,"loadUTD","GtinQntyNotOne").
+  
+   end.
+   if iErrType ne "CheckGds"
+   then do:
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","InLineNotMark").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","NoGtinForMark").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","NoBarcodForGtin").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","MarkNotFormatqnty").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","MarkingForTypeEDO").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","NotMarkForLine").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","MultGtinForLine").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","NoBarCodeForLine").
+      
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","NotFindGdsForBarCode").
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","NotEqGgsForLineAndMark").
+   
+      ClearUtdErrTypeCode(idb-num,idoc-id,"CheckGds","GtinQntyNotOne").
+   end.
+   
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"InLineNotMark").
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"NoGtinForMark").
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"NoBarcodForGtin").
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"MarkNotFormatqnty").
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"MarkingForTypeEDO").
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"NotMarkForLine").
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"MultGtinForLine").
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"NoBarCodeForLine").
+   
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"NotFindGdsForBarCode").
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"NotEqGgsForLineAndMark").
+  
+   ClearUtdErrTypeCode(idb-num,idoc-id,iErrType,"GtinQntyNotOne").
+   
+  
+   define variable v-par-type as character no-undo.
+   define variable v-par-val  as character no-undo.
+   define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+   
+   define buffer marking               for marking.
+   define buffer utd-lines             for utd-lines.
+   define buffer buf_utd-lines         for utd-lines.
+   define buffer utd-marking-lines     for utd-marking-lines.
+   define buffer Buf_utd-marking-lines for utd-marking-lines.
+   define variable vGdsCode as integer no-undo.
+   
+   EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(iobj-type, iobj-code).
+         
+   block-line:
+   for each utd-lines where utd-lines.db-num eq idb-num
+                        and utd-lines.doc-id eq idoc-id
+   no-lock:
+      vGdsCode = ?.
+      define variable Vflagmark as logical no-undo.
+      define variable VflagOAD  as logical no-undo.
+      assign
+         Vflagmark = no
+         VflagOAD = no
+      .
+      block-mark:
+      for each utd-marking-lines 
+               where utd-marking-lines.db-num  = utd-lines.db-num 
+                 and utd-marking-lines.doc-id  = utd-lines.doc-id
+                 and utd-marking-lines.LineNum = utd-lines.LineNum
+      no-lock:
+         if length(utd-marking-lines.mark) > 13
+         then do:
+            define variable vnewGdsCode as integer no-undo.
+            vnewGdsCode = getGdsCodeByDM(utd-marking-lines.mark).
+                  
+            if isMark(utd-marking-lines.mark)
+            then do:
+               Vflagmark = yes.
+               find first marking where marking.mark eq utd-marking-lines.mark
+               no-lock no-error.
+               if not available marking
+               then do:
+                  AddUtdErr(utd-marking-lines.db-num,utd-marking-lines.doc-id,buffer utd-marking-lines:handle,iErrType,"InLineNotMark",utd-marking-lines.mark).
+                  next block-mark.
+               end.
+               if vnewGdsCode eq ?
+               then
+                  vnewGdsCode = GetGdsCodeByGtin(marking.gds-ext-id).
+               if    marking.gds-code eq 0 
+                  or marking.gds-code eq ?
+                  or marking.sts eq 0
+                  or marking.sts eq ?
+                  or marking.box-qnty eq ?
+                  or (marking.gds-code ne vnewGdsCode
+                      and vnewGdsCode ne ?
+                      and vnewGdsCode ne 0)
+               then do:
+                  find first marking where marking.mark eq utd-marking-lines.mark
+                  exclusive-lock no-error.
+                  
+                  if marking.box-qnty = ? then marking.box-qnty = getQntyUTDByDM(marking.mark).
+                  if marking.gds-ext-id = "" then marking.gds-ext-id = getGtinByDM(marking.mark).
+                  if marking.gds-code = ? then marking.gds-code = GetGdsCodeByGtin(marking.gds-ext-id).
+                        
+                  if    marking.gds-ext-id eq ""
+                     or marking.gds-ext-id eq ?
+                  then do:
+/*                     marking.sts = objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB.*/
+                     AddUtdErr(utd-marking-lines.db-num,utd-marking-lines.doc-id,buffer utd-marking-lines:handle,iErrType,"NoGtinForMark",string(utd-lines.LineNum ) + {&delim-par} + marking.mark).
+                  end.
+                  else if    marking.gds-code eq 0
+                          or marking.gds-code eq ?
+                  then
+                     AddUtdErr(utd-marking-lines.db-num,utd-marking-lines.doc-id,buffer utd-marking-lines:handle,iErrType,"NoBarcodForGtin",string(utd-lines.LineNum ) + {&delim-par} + marking.gds-ext-id).
+                  else if     marking.sts eq 0
+                          or  marking.sts eq ?
+                  then
+                     marking.sts = objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB. 
+               end.
+               if utd-marking-lines.doc-level eq 1
+               then do:
+                  if marking.box-qnty eq ?
+                  then
+                     AddUtdErr(utd-marking-lines.db-num,utd-marking-lines.doc-id,buffer utd-marking-lines:handle,iErrType,"MarkNotFormatqnty",string(utd-lines.LineNum ) + {&delim-par} + utd-marking-lines.mark).
+               end.
+            end.
+            else do:
+               VflagOAD = yes.
+               define variable vQnty as decimal no-undo.
+               vQnty = getQntyUTDByCodId(utd-marking-lines.mark) .
+               setAttrUtdMarkingLines (utd-marking-lines.db-num,
+                                       utd-marking-lines.doc-id,
+                                       utd-marking-lines.LineNum,
+                                       utd-marking-lines.mark,
+                                       "box-qnty",
+                                        string(vQnty)).
+               define variable vgtin as character no-undo.
+               vgtin = getGtinByDM(utd-marking-lines.mark).
+               if getQntyCodeByGtin(vgtin) ne 1
+               then
+                  AddUtdErr(utd-marking-lines.db-num,utd-marking-lines.doc-id,buffer utd-marking-lines:handle,iErrType,"GtinQntyNotOne",string(utd-lines.LineNum ) + {&delim-par} + vgtin).
+            end.
+            if utd-marking-lines.gds-code ne vnewGdsCode
+            and vnewGdsCode ne ?
+            and vnewGdsCode ne 0
+            then do:
+               find first buf_utd-marking-lines 
+                        where buf_utd-marking-lines.db-num   = utd-marking-lines.db-num 
+                          and buf_utd-marking-lines.doc-id   = utd-marking-lines.doc-id
+                          and buf_utd-marking-lines.LineNum  = utd-marking-lines.LineNum
+                          and buf_utd-marking-lines.mark     = utd-marking-lines.mark
+               exclusive-lock no-error.
+               if available buf_utd-marking-lines
+               then do:
+                  buf_utd-marking-lines.gds-code = vnewGdsCode.
+   /*                     buf_utd-marking-lines.sts = objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB.*/
+               end. 
+            end.
+         end.
+         else  do:
+            define variable vgdsbar as integer no-undo.
+            vgdsbar = GetGdsCodeByGtin(utd-marking-lines.mark).
+            if    utd-marking-lines.gds-code ne vgdsbar
+            then do:
+               find first buf_utd-marking-lines 
+                          where buf_utd-marking-lines.db-num   = utd-marking-lines.db-num 
+                            and buf_utd-marking-lines.doc-id   = utd-marking-lines.doc-id
+                            and buf_utd-marking-lines.LineNum  = utd-marking-lines.LineNum
+                            and buf_utd-marking-lines.mark     = utd-marking-lines.mark
+               exclusive-lock no-error.
+               if available buf_utd-marking-lines
+               then do:
+                  buf_utd-marking-lines.gds-code = vgdsbar.
+   /*                     buf_utd-marking-lines.sts = objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB.*/
+               end.
+            end.
+            if vgdsbar ne ?
+            then do:
+               &scop proc-name gds-attr-value
+               {&run_proc_attr-lib}
+                         ( vgdsbar,
+                           {&attr-mark-type},
+                           output v-par-val,
+                           output v-par-type
+                          ).
+               if      (EDOParSec:GetIsEDOForType(v-par-val)
+                    or  EDOParSec:GetIsArticForType(v-par-val)) 
+                and not EDOParSec:GetIsTransitionalForType(v-par-val)
+                and     EDOParSec:IsEdo
+               then do:
+                  AddUtdErr(utd-marking-lines.db-num,
+                            utd-marking-lines.doc-id,
+                            buffer utd-marking-lines:handle,
+                            iErrType,
+                            "MarkingForTypeEDO",
+                            string(utd-lines.LineNum ) + {&delim-par} + utd-marking-lines.mark).
+               end.
+            end.
+         end.
+         if vGdsCode eq ?
+         then
+            vGdsCode = utd-marking-lines.gds-code.
+         if vGdsCode ne utd-marking-lines.gds-code
+         and utd-marking-lines.gds-code > 0
+         then do:
+            vGdsCode = -1.
+         end.
+         
+      end.
+      if  vGdsCode = -1
+      then do:
+         vGdsCode = ?.
+         AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,iErrType,"MultGtinForLine",string(utd-lines.LineNum )).
+   /*            vError = vError + "," + "  линии " + string(utd-lines.LineNum) + " прив€заны марки от разных товаров." no-error.*/
+         next block-line.
+      end.
+      if vGdsCode ne ?
+      then do:
+         &scop proc-name gds-attr-value
+         {&run_proc_attr-lib}
+                   ( vGdsCode,
+                     {&attr-mark-type},
+                     output v-par-val,
+                     output v-par-type
+                    ).
+         if      (    EDOParSec:GetIsEDOForType(v-par-val)
+                  and not Vflagmark)
+              or  (EDOParSec:GetIsArticForType(v-par-val)
+                  and not VflagOAD
+                  and not Vflagmark) 
+         then do:
+            AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,iErrType,"NotMarkForLine",string(utd-lines.LineNum)).
+         end.
+      end.
+      if utd-lines.gds-code ne vGdsCode
+      then do:
+         find first  buf_utd-lines where buf_utd-lines.db-num  eq utd-lines.db-num
+                                     and buf_utd-lines.doc-id  eq utd-lines.doc-id
+                                     and buf_utd-lines.LineNum eq utd-lines.LineNum
+         exclusive-lock no-error.
+         if available buf_utd-lines
+         then
+            buf_utd-lines.gds-code = vGdsCode.
+         release buf_utd-lines.
+      end.
+      define variable VBarCode as character no-undo.
+      VBarCode = getattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"BarCode").
+      if VBarCode ne ?
+      then do: 
+         vgdsbar = GetGdsCodeByGtin(VBarCode).
+         if vgdsbar eq ? or vgdsbar eq 0
+         then do:
+            AddUtdErr(utd-lines.db-num,
+                      utd-lines.doc-id,
+                      buffer utd-lines:handle,
+                      iErrType,
+                      "NotFindGdsForBarCode",
+                      string(utd-lines.LineNum ) + {&delim-par} + VBarCode).
+         end.
+         else do:
+            if    utd-lines.gds-code eq ? 
+               or utd-lines.gds-code eq 0
+            then do:
+               find first  buf_utd-lines where buf_utd-lines.db-num  eq utd-lines.db-num
+                                           and buf_utd-lines.doc-id  eq utd-lines.doc-id
+                                           and buf_utd-lines.LineNum eq utd-lines.LineNum
+               exclusive-lock no-error.
+               if available buf_utd-lines
+               then
+                  buf_utd-lines.gds-code = vgdsbar.
+               release buf_utd-lines.
+            end.
+            else if utd-lines.gds-code ne vgdsbar
+            then do:
+               AddUtdErr(utd-lines.db-num,
+                      utd-lines.doc-id,
+                      buffer utd-lines:handle,
+                      iErrType,
+                      "NotEqGgsForLineAndMark",
+                      string(utd-lines.LineNum ) + {&delim-par} + String(vgdsbar) + {&delim-par} + String(utd-lines.gds-code)).
+            end.
+         end.
+      end.
+      if vGdsCode eq ? and utd-lines.gds-code eq ?
+      then
+         AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,iErrType,"NoBarCodeForLine",string(utd-lines.LineNum )).
+   
+   end.
+end.   
+
+
 &if "{1}" = "class"
 &then
 method public logical GetUtdLineForOrig
@@ -34,12 +466,12 @@ function GetUtdLineForOrig return logical
                                  and edoc-lines.LineNum           = edoc-marking-lines.LineNum
          no-lock no-error.
             leave block-mark.
-
+         
        end.
    end.
     if not available edoc-lines
     then do: /* только если одна строка */                             
-
+   
        find  first  utd-lines where utd-lines.db-num      = idb-num
                                 and utd-lines.doc-id      = idoc-id
                                 and utd-lines.LineNum     = ilinenum
@@ -57,7 +489,7 @@ function GetUtdLineForOrig return logical
                                and edoc-lines.doc-id      = idoc-idOrig
                                and edoc-lines.gds-code    = utd-lines.gds-code
        no-lock no-error.
-
+   
 end.
 
 &if "{1}" ne "class"
@@ -157,6 +589,7 @@ function getObgFns return logical
     end.
     return ?.
 end.
+
 &if "{1}" = "class"
 &then
 method public logical CheckUcdForReturn
@@ -250,7 +683,8 @@ function SaturateAndCheckUTD return character
    define variable VFileMark as logical no-undo.
    define variable vunit     as int no-undo.
    define variable vunitCode as character no-undo.
-   
+   define variable vMarkingUtd as logical no-undo.
+               
    find first Utd where utd.db-num eq idb-num
                     and utd.doc-id eq idoc-id
    no-lock no-error. 
@@ -285,11 +719,12 @@ function SaturateAndCheckUTD return character
          .
        
          EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(vobj-type, vobj-code).
-         
+         CheckGds (utd.db-num,utd.doc-id,vobj-type,vobj-code,"loadUTD").
          block-line:
          for each utd-lines where utd-lines.db-num eq utd.db-num
                               and utd-lines.doc-id eq utd.doc-id
          no-lock:
+            vGdsCode =?.
             define variable vNotMarkForLine as logical no-undo.
             vNotMarkForLine = no.
             if not VUcd
@@ -306,180 +741,53 @@ function SaturateAndCheckUTD return character
                   /*next block-line.*/
                end.
             end.
-            vGdsCode = ?.
-            define variable Vflagmark as logical no-undo.
-            find first buf_utd-marking-lines 
-                          where buf_utd-marking-lines.db-num   = utd-lines.db-num 
-                            and buf_utd-marking-lines.doc-id   = utd-lines.doc-id
-                            and buf_utd-marking-lines.LineNum  = utd-lines.LineNum
-                            and length(buf_utd-marking-lines.mark) > 13
-                     no-lock no-error.
-            Vflagmark = available buf_utd-marking-lines.
-            define variable vqnty as integer no-undo.
-            vqnty = 0.
+/*            define variable Vflagmark as logical no-undo.                         */
+/*            find first buf_utd-marking-lines                                      */
+/*                          where buf_utd-marking-lines.db-num   = utd-lines.db-num */
+/*                            and buf_utd-marking-lines.doc-id   = utd-lines.doc-id */
+/*                            and buf_utd-marking-lines.LineNum  = utd-lines.LineNum*/
+/*                            and length(buf_utd-marking-lines.mark) > 13           */
+/*                     no-lock no-error.                                            */
+/*            Vflagmark = available buf_utd-marking-lines.                          */
             block-mark:
             for each utd-marking-lines 
                where utd-marking-lines.db-num  = utd-lines.db-num 
                  and utd-marking-lines.doc-id  = utd-lines.doc-id
                  and utd-marking-lines.LineNum = utd-lines.LineNum
             no-lock:
-               
                vMark = yes.
-               if length(utd-marking-lines.mark) > 13
+               if     isMark(utd-marking-lines.mark)
+                  and utd-marking-lines.gds-code  ne 0 
+                  and utd-marking-lines.gds-code ne ?
                then do:
-                  
-               find first marking where marking.mark eq utd-marking-lines.mark
-               no-lock no-error.
-               if not available marking
-               then do:
-                  AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"loadUtd","NotMark",utd-marking-lines.mark).
-                  next block-mark.
-               end.
-               
-                  
-               
-               define variable vnewGdsCode as integer no-undo.
-               vnewGdsCode = getGdsCodeByDM(marking.mark).
-               if    marking.gds-code eq 0 
-                  or marking.gds-code eq ?
-                  or marking.sts eq 0
-                  or  marking.sts eq ?
-                     or marking.box-qnty eq ?
-                  or (marking.gds-code ne vnewGdsCode
-                      and vnewGdsCode ne ?
-                      and vnewGdsCode ne 0)
-                     
-               then do:
-                  find first marking where marking.mark eq utd-marking-lines.mark
-                  exclusive-lock no-error.
-                     marking.box-qnty             = getQntyUTDByDM(marking.mark).
-                  marking.gds-ext-id           = getGtinByDM(marking.mark).
-                  marking.gds-code             = GetGdsCodeByGtin(marking.gds-ext-id).
-                  
-                  if    marking.gds-ext-id eq ""
-                     or marking.gds-ext-id eq ?
-                  then do:
-                     marking.sts = objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB.
-                     AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"loadUtd","NoGtinForMark",string(utd-lines.LineNum ) + {&delim-par} + marking.mark).
-                  end.
-                  else if    marking.gds-code eq 0
-                          or marking.gds-code eq ?
-                  then
-                     AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"loadUtd","NoBarcodForGtin",string(utd-lines.LineNum ) + {&delim-par} + marking.gds-ext-id).
-                  else if     marking.sts eq 0
-                          or  marking.sts eq ?
-                  then
-                     marking.sts = objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB. 
-               end.
-                  if utd-marking-lines.doc-level eq 1
-                     then do:
-                     if marking.box-qnty eq ?
-                     then
-                        AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"loadUtd","MarkNotFormatqnty",string(utd-lines.LineNum ) + {&delim-par} + marking.mark).
-                     else
-                        vqnty = vqnty + marking.box-qnty.
-                     end.
-               if    utd-marking-lines.gds-code eq 0 
-                  or utd-marking-lines.gds-code eq ?
-                  or utd-marking-lines.sts ne marking.sts
-                  or utd-marking-lines.gds-code ne marking.gds-code
-               then do:
-                  find first buf_utd-marking-lines 
-                       where buf_utd-marking-lines.db-num   = utd-marking-lines.db-num 
-                         and buf_utd-marking-lines.doc-id   = utd-marking-lines.doc-id
-                         and buf_utd-marking-lines.LineNum  = utd-marking-lines.LineNum
-                         and buf_utd-marking-lines.mark     = utd-marking-lines.mark
-                  exclusive-lock no-error.
-                  if available buf_utd-marking-lines
-                  then do:
-                     buf_utd-marking-lines.gds-code = marking.gds-code.
-/*                     buf_utd-marking-lines.sts = objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB.*/
-                  end. 
-               end.
-                  if    utd-marking-lines.gds-code  ne 0 
-                     and utd-marking-lines.gds-code ne ?
-                  then do:
-                     &scop proc-name gds-attr-value
-                     {&run_proc_attr-lib}
-                           ( marking.gds-code,
-                            {&attr-mark-type},
-                            output v-par-val,
-                            output v-par-type
-                            ).
-                      if     not VFileMark
-                         and not VUcd
-                         and EDOParSec:GetIsMarkingForTypeEDO(v-par-val) and EDOParSec:IsEdo
-                      then do:
-                          AddUtdErr(utd.db-num,
-                                     utd.doc-id,
-                                     buffer utd-marking-lines:handle,
-                                     "loadUtd",
-                                     "NotON_NSCHFDOPPRMARK",
-                                     string(utd-lines.LineNum ) + {&delim-par} + utd-marking-lines.mark).
-                     end.
-                  end.
-               end.
-               else  do:
-                  define variable vgdsbar as integer no-undo.
-                  vgdsbar = GetGdsCodeByGtin(utd-marking-lines.mark).
-                  if    utd-marking-lines.gds-code ne vgdsbar
-                  then do:
-                     find first buf_utd-marking-lines 
-                          where buf_utd-marking-lines.db-num   = utd-marking-lines.db-num 
-                            and buf_utd-marking-lines.doc-id   = utd-marking-lines.doc-id
-                            and buf_utd-marking-lines.LineNum  = utd-marking-lines.LineNum
-                            and buf_utd-marking-lines.mark     = utd-marking-lines.mark
-                     exclusive-lock no-error.
-                     if available buf_utd-marking-lines
-                     then do:
-                        buf_utd-marking-lines.gds-code = vgdsbar.
-   /*                     buf_utd-marking-lines.sts = objSrv:Env:marking:Sts:Mark:PendingVerification:KeyIntDB.*/
-                     end.
-                  end.
-                  if vgdsbar ne ?
-                  then do:
-                     &scop proc-name gds-attr-value
-                     {&run_proc_attr-lib}
-                          ( vgdsbar,
-                           {&attr-mark-type},
-                           output v-par-val,
-                           output v-par-type
-                          ).
-                     if EDOParSec:GetIsMarkingForTypeEDO(v-par-val) and EDOParSec:IsEdo
-                     then do:
-                        AddUtdErr(utd.db-num,
+                  &scop proc-name gds-attr-value
+                  {&run_proc_attr-lib}
+                        ( utd-marking-lines.gds-code,
+                         {&attr-mark-type},
+                         output v-par-val,
+                         output v-par-type
+                         ).
+                   if     not VFileMark
+                      and not VUcd
+                      and EDOParSec:GetIsEDOForType(v-par-val) and EDOParSec:IsEdo
+                   then do:
+                       AddUtdErr(utd.db-num,
                                   utd.doc-id,
                                   buffer utd-marking-lines:handle,
                                   "loadUtd",
-                                  "MarkingForTypeEDO",
+                                  "NotON_NSCHFDOPPRMARK",
                                   string(utd-lines.LineNum ) + {&delim-par} + utd-marking-lines.mark).
-                        if not Vflagmark
-                        then
-                           AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum)).
-                  
-                     end.
                   end.
                end.
-               
-               if vGdsCode eq ?
-               then
-                  vGdsCode = utd-marking-lines.gds-code.
-                 
-               if vGdsCode ne utd-marking-lines.gds-code
-               then do:
-                  vGdsCode = -1.
-
-               end.
-                
             end.
-            if vGdsCode eq 0 or vGdsCode eq ?
+            if utd-lines.gds-code eq 0 or utd-lines.gds-code eq ?
             then do :
                if     VUcd
                then do:
                   GetLastUTDinPack (utd.db-num,utd.doc-id,volddb-num,volddoc-id).
                   GetUtdLineForOrig(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,volddb-num,volddoc-id, buffer buf_utddoc-lines).
                   if available buf_utddoc-lines
-            then do:
+                  then do:
                      vGdsCode = buf_utddoc-lines.gds-code.
                      vunitCode = buf_utddoc-lines.UnitCode.
                      if     getattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"unitcode_old") ne ?
@@ -506,16 +814,20 @@ function SaturateAndCheckUTD return character
                   
                end.
             end.
-               define variable vValText as character no-undo.
-               define variable vValDec  as decimal no-undo.
-               VValText = GetAttrUtdlines (utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity").
-               if VValText = ?
-               then do:
-                  vValDec = utd-lines.Quantity.
-                  setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(utd-lines.Quantity)).
-               end.
-               else
-                  vValDec = dec(VValText).         
+            else
+               vGdsCode = utd-lines.gds-code.
+                     
+   
+            define variable vValText as character no-undo.
+            define variable vValDec  as decimal no-undo.
+            VValText = GetAttrUtdlines (utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity").
+            if VValText = ?
+            then do:
+               vValDec = utd-lines.Quantity.
+               setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity",string(utd-lines.Quantity)).
+            end.
+            else
+               vValDec = dec(VValText).
             release bar-code .
             if     vGdsCode > 0 and vGdsCode ne ?
                
@@ -534,7 +846,7 @@ function SaturateAndCheckUTD return character
                      vunitCode = units.unit-name.
                   
                end.
-               find first bar-code where bar-code.gds-code  eq vGdsCode
+               find first bar-code where bar-code.gds-code eq vGdsCode
                                      and bar-code.unit-cli eq vUnitCode
                no-lock no-error.
                if not available bar-code
@@ -549,55 +861,30 @@ function SaturateAndCheckUTD return character
            
                 
             end.
-               if utd-lines.Quantity ne vValDec * (if avail bar-code then bar-code.cli-base-rate else 1)
-               then do:
-                  find first  buf_utd-lines where buf_utd-lines.db-num  eq utd-lines.db-num
-                                              and buf_utd-lines.doc-id  eq utd-lines.doc-id
-                                              and buf_utd-lines.LineNum eq utd-lines.LineNum
-                  exclusive-lock no-error.
-                  if available buf_utd-lines
-                  then do:
-                     buf_utd-lines.Quantity = vValDec * (if avail bar-code then bar-code.cli-base-rate else 1).
-                     release buf_utd-lines.
-                  end.
-               end.
-               vValDec  = decimal(getAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity_old")) no-error.
-               setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity_old_new",string(vValDec * (if avail bar-code then bar-code.cli-base-rate else 1))).
-            
-               if     not VUcd 
-               and Vflagmark
-               and vGdsCode > 0 
-               and vGdsCode ne ? 
-                  and utd-lines.Quantity  ne vqnty
-               then                        
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity ) + {&delim-par} + string(vqnty)).
-            if  vGdsCode = -1
-            then do:
-               vGdsCode = ?.
-               
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","MultGtinForLine",string(utd-lines.LineNum )).
-   /*            vError = vError + "," + "  линии " + string(utd-lines.LineNum) + " прив€заны марки от разных товаров." no-error.*/
-               next block-line.
-            end.
-            if utd-lines.gds-code ne vGdsCode
+            if utd-lines.Quantity ne vValDec * (if avail bar-code then bar-code.cli-base-rate else 1)
             then do:
                find first  buf_utd-lines where buf_utd-lines.db-num  eq utd-lines.db-num
                                            and buf_utd-lines.doc-id  eq utd-lines.doc-id
                                            and buf_utd-lines.LineNum eq utd-lines.LineNum
                exclusive-lock no-error.
                if available buf_utd-lines
-               then
-                  buf_utd-lines.gds-code = vGdsCode.
-               
-               release buf_utd-lines.
+               then do:
+                  buf_utd-lines.Quantity = vValDec * (if avail bar-code then bar-code.cli-base-rate else 1).
+                  release buf_utd-lines.
+               end.
             end.
-            if vGdsCode eq ? and utd-lines.gds-code eq ?
-               and not VUcd
-               and not vNotMarkForLine 
+            vValDec  = decimal(getAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity_old")) no-error.
+            setAttrUtdLines(utd-lines.db-num,utd-lines.doc-id,utd-lines.Linenum,"Quantity_old_new",string(vValDec * (if avail bar-code then bar-code.cli-base-rate else 1))).
+            
+            if     not VUcd
+               and CheckMarkUtdLine(utd.db-num,utd.doc-id,utd-lines.LineNum)
             then
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NoBarCodeForLine",string(utd-lines.LineNum )).
+               vMarkingUtd = yes .
                 
          end.
+         if not VUcd
+         then
+            CheckQnty(utd.db-num, utd.doc-id, "loadUtd").
          find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
                                   and ext-classif.charkey_three eq utd.cli-FnsParticipantId
          no-lock no-error.
@@ -616,7 +903,7 @@ function SaturateAndCheckUTD return character
    /*          vError = vError + "," + "не найден поставщик " + utd.FnsParticipantId-cli.*/
          end.
          
-       
+         
          find first contract  where contract.host-code eq vhost-code
                                 and contract.cli-type  eq vcli-type
                                 and contract.cli-code  eq vcli-code
@@ -659,7 +946,7 @@ function SaturateAndCheckUTD return character
             vdoc-code = utd_ret.doc-code.
             CheckUcdForReturn(utd.db-num,utd.doc-id,utd_ret.db-num,utd_ret.doc-id).
          end.
-      end.
+      end.                
                       
    end.
    
@@ -690,12 +977,7 @@ function SaturateAndCheckUTD return character
       then 
          AddUtdErr(utd.db-num,utd.doc-id,buffer utd:handle,"loadUtd","NoShopForKpp",utd.obj-kpp).
    end.
-   define variable vMarkingUtd as logical no-undo.
          
-   if not VUcd
-   then do:
-      vMarkingUtd = CheckMarkUtd(utd.db-num,utd.doc-id).
-   end.      
    vError = GetErrForUtdstr(utd.db-num,utd.doc-id,"loadUtd").
    if vError eq ""
    then do:
@@ -713,7 +995,7 @@ function SaturateAndCheckUTD return character
       then do:
             /* переводим статус чтобы пропустить отправку данных в мотп */
          if not vMarkingUtd
-      then
+         then
             utd.sts = objSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB.
       end.
 /*      utd.AdditInfo = "".*/
@@ -738,7 +1020,7 @@ function SaturateAndCheckUTD return character
    if error-status:error
    then
       return error return-value.
- 
+          
    return vError.
 end.
 
@@ -773,6 +1055,7 @@ function ReCheckload returns logical
       end.
 
       if    buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB 
+         or buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:LinesInError:KeyIntDB 
          or buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB 
          or buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB 
       then do:
@@ -787,7 +1070,8 @@ function ReCheckload returns logical
             buf_utd.sts-edi = buf_c-utd.sts-edi .
          end.
          else do:
-            if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB 
+            if    buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB
+               or buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:LinesInError:KeyIntDB 
             then 
                buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:VerificationPassed:KeyIntDB .
             else 
@@ -804,7 +1088,6 @@ function ReCheckload returns logical
    release buf_utd.
    &if "{1}" ne "class"
    &then
-   
    unsubscribe "getNextseq".
    &endif
 end.
@@ -1097,9 +1380,9 @@ function UnLockUTDMarkbuf returns logical
          or (    marking.sts eq  ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
              and marking.sts eq  ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB )
       then do:
-      marking.loc-key = "".
-      marking.sts =  ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB.
-   end.
+         marking.loc-key = "".
+         marking.sts =  ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB.
+      end.
    end.
    
 end.
@@ -1144,6 +1427,7 @@ function changSts returns logical
    
    if     old_sts_edo ne new_sts_edo
       and ( new_sts_edo eq "WithRecipientSignature"
+        or  new_sts_edo eq "WithRecipientPartiallySignature"
            )
    then
       UnLockUTDMark(idb-num,idoc-id,no).

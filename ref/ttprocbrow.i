@@ -2,6 +2,8 @@ define temp-table procAsunc no-undo
     field procid            as character 
     field procval           as character 
     field procname          as character 
+    field proctyperun       as character 
+    
     index pi is primary unique
         procid
 .

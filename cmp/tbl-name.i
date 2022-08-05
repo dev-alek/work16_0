@@ -217,6 +217,7 @@ Creation date: 04/05/06
 &glob table_c-cli-hist 'c-cli-hist':U
 &glob table_c-clients 'c-clients':U
 &glob table_c-clients-attr 'c-clients-attr':U
+&glob table_c-Code 'c-Code':U
 &glob table_c-condition-keeping 'c-condition-keeping':U
 &glob table_c-condition-keeping-attr 'c-condition-keeping-attr':U
 &glob table_c-config 'c-config':U

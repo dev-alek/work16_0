@@ -228,6 +228,9 @@ define variable v-show-str       as character no-undo .
 define variable v-add-nat-gas    as logical no-undo .
 define variable var-is-auto-trn  as logical no-undo .
 define variable v-return-qnty    as decimal no-undo .
+define variable varvalue                    as   character              no-undo.
+define variable vartype                     as   character              no-undo.
+
 {str/tt-nomark.i}
 
 

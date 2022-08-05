@@ -26,7 +26,7 @@ define input parameter p-obj-code like ub.clients.obj-code no-undo .
 define input parameter p-host-code like ub.sysconf.host-code no-undo .
 define input parameter p-pos-type as character no-undo .
 define input parameter p-encoding as character no-undo .
-DEFINE INPUT PARAMETER file_ as character no-undo.
+DEFINE INPUT PARAMETER file_ as longchar no-undo.
 define input parameter p-spool-or-data as character no-undo .
 define input-output parameter p-view-log as logical  no-undo .
 
@@ -39,8 +39,6 @@ DEFINE VARIABLE vss-description as character no-undo init "Программа приема чеко
 { cmp/vssrevis.i }
 { str/get-chk.i }
 /*общие для кассовой части и чековой*/
-
-
 { str/get-chkc.i def }
 { gbl/key-rec.i }
 /*только чековая часть*/
@@ -100,6 +98,7 @@ field last-chk-num like ub.chk-doc.chk-num
 field cash-num like ub.cash-desk.cash-num
 index pi is unique primary
 cash-num.
+
 
 define temp-table achd no-undo
 field num as integer
@@ -237,24 +236,58 @@ if num-entries(p-spool-or-data, {&delim-par} ) > 1 then do:
 get-chkc_context.pos-type = p-pos-type.
 
 process events.
-RUN get-xml-ibm-c(input file_) no-error .
-if error-status :error
-then do:
-    run write-log-and-file in p-log-handle (
-          input 1
-        , input log-file-name
-        , input 1
-        , input substitute( "!!!Ошибка при обработке файла &1: &2"
-                            , file_
-                            , return-value
-                          )
-                                         ).
-  assign
-  p-view-log = yes
-  .
-  undo, return .
-end.
 
+if p-spool-or-data begins "readbuffer" + {&delim-par}
+then do:
+   assign
+     p-second-mode = entry(2, p-spool-or-data, {&delim-par} )
+     p-spool-or-data = ""
+   .
+   output to answerblock.txt .
+   export file_ .
+   output close .
+
+   RUN get-xml-ibm-c-buff-or-file(input "longchar",input file_) no-error .
+   if error-status :error
+   then do:
+       run write-log-and-file in p-log-handle (
+             input 1
+           , input log-file-name
+           , input 1
+           , input substitute( "!!!Ошибка при обработке ответа &1"
+                               , return-value
+                             )
+                                            ).
+     assign
+     p-view-log = yes
+     .
+     undo, return .
+   end.
+end.
+else do:
+   assign
+     p-second-mode   = p-spool-or-data
+     p-spool-or-data = ""
+   .
+   RUN get-xml-ibm-c-buff-or-file(input "file",input file_) no-error .
+/*   RUN get-xml-ibm-c(input file_) no-error .*/
+   if error-status :error
+   then do:
+       run write-log-and-file in p-log-handle (
+             input 1
+           , input log-file-name
+           , input 1
+           , input substitute( "!!!Ошибка при обработке файла &1: &2"
+                               , file_
+                               , return-value
+                             )
+                                            ).
+     assign
+     p-view-log = yes
+     .
+     undo, return .
+   end.
+end.
 /* --- получение версии кассового ПО --- */
 define variable v-rowid as rowid no-undo .
 define variable v-tbl-name as character no-undo .

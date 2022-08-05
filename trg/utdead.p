@@ -29,7 +29,7 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
   &hist = yes 
   &seqnamehist = "s-c-utd-chip-num"
   &histheadtbl = "c-utd-head"
-  
+  &fieldmainheadtab  = "db-num doc-id" 
   &nws  = yes
   &del  = yes
 }

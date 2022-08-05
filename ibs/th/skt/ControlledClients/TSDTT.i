@@ -104,6 +104,7 @@ define temp-table TempMarkLineMT no-undo
   field MarkCode as character
   field PartIDTH as character
   field Sts      as character
+  field MarkParent as character
   index pi
   DocName
   MarkCode

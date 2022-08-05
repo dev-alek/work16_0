@@ -298,6 +298,10 @@ DEFINE BUTTON B-write-sertif
 DEFINE BUTTON B-write-Token 
     LABEL "Получить Token" 
     SIZE 27 BY 1.13.
+    
+DEFINE BUTTON B-LK_RECEIPT 
+    LABEL "Док-ты Вывода из оборота (ОСУ)" 
+    SIZE 31 BY 1.13.    
 
 DEFINE BUTTON bt-not-sel-all 
     LABEL "+" 
@@ -480,6 +484,7 @@ DEFINE FRAME d-utd
     b_anul AT ROW 26.38 COL 68.75 WIDGET-ID 246
     b_oneUtd AT ROW 26.38 COL 101.63 WIDGET-ID 254
     B-write-Token AT ROW 27.67 COL 4 WIDGET-ID 240
+    B-LK_RECEIPT AT ROW 27.67 COL 63 WIDGET-ID 440
     F-timeToken AT ROW 27.67 COL 128 RIGHT-ALIGNED NO-LABEL WIDGET-ID 294
     mark-num AT ROW 7.21 COL 1.5 NO-LABEL WIDGET-ID 8
     "Время Token:" VIEW-AS TEXT
@@ -720,6 +725,7 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
                     when ObjSrv:Env:Utd:Sts:TH:LoadError:KeyIntDB or
                     when ObjSrv:Env:Utd:Sts:TH:LackOfMarkingCodesInCirculation:KeyIntDB or
                     when ObjSrv:Env:Utd:Sts:TH:InconsistencyWithSupplyContract:KeyIntDB or
+                    when ObjSrv:Env:Utd:Sts:TH:LinesInError:KeyIntDB or
                     when ObjSrv:Env:Utd:Sts:TH:edocError:KeyIntDB then
                         do:
                             X_utd.DocumentNumber:fGCOLOR in browse br-utd = RED_COLOR.
@@ -917,6 +923,15 @@ ON CHOOSE OF b-exit IN FRAME d-utd /* Выход  */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME B-LK_RECEIPT
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-LK_RECEIPT d-utd
+ON choose OF B-LK_RECEIPT IN FRAME d-utd /* История */
+DO:
+  define variable v-lk_receipt-list as character no-undo .
+  run str/LK_RECEIPT-docs.w ( parparentproc, "", output v-lk_receipt-list) .
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-hist
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist d-utd
@@ -1058,7 +1073,9 @@ ON CHOOSE OF b-update IN FRAME d-utd /* Изменить */
                     .
                 subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
                 MySeqUtd = ?.
-                if v-obj-active or X_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or X_utd.EDocType = objSrv:Env:Utd:EDocType:UCD:KeyIntDB then 
+                if v-obj-active or X_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or X_utd.EDocType = objSrv:Env:Utd:EDocType:UCD:KeyIntDB 
+                  or X_utd.EDocType = objSrv:Env:utd:EDocType:edoc:KeyIntDB
+                then 
                 do: 
 
                     run str/upd_browse.w (input parparentproc,
@@ -1797,7 +1814,9 @@ ON CHOOSE OF MENU-ITEM m_checknakl /* Привязать накладную */
     
         if available (X_utd) then 
         do:
-           if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and X_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
+           if ((X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:WithRecipientSignature:KeyIntDB)
+           or (X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:WithRecipientPartiallySignature:KeyIntDB))
+              and X_utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
            do:
               find first buf_trn-doc no-lock where buf_trn-doc.doc-code = X_utd.doc-code no-error .
               if available (buf_trn-doc) then 
@@ -2446,6 +2465,7 @@ PROCEDURE enable_UI :
             f-DocumentNumber
             radio-set-2
             bt-not-sel-desel-all
+            B-LK_RECEIPT
             WITH FRAME {&frame-name}.
         display
             B-write-Token
@@ -2463,6 +2483,9 @@ PROCEDURE enable_UI :
             with frame {&frame-name} .   
         hide b-sel in frame {&frame-name} . 
         if v-obj-active then enable b-add with frame {&frame-name} .    
+        if v-cntxt-db-num <> 0 
+        then
+          hide B-LK_RECEIPT in frame {&frame-name} . 
     end.
     if p-mode = {&select} then 
     do:
@@ -2658,6 +2681,12 @@ PROCEDURE init-sort :
             f-date-to = buf_utd.DocumentDate.
             display f-date-to. 
         end.
+        
+        if buf_utd.EDocType = EdocType:LK_RECEIPT:KeyIntDB
+        then do :
+          mQuery:get-next (). /* Вывод из оборота */
+          next .
+        end .
     
         create X_utd .
         buffer-copy buf_utd to X_utd . 
@@ -2737,13 +2766,10 @@ PROCEDURE init-sort :
             end.  
         when 2 then 
             do:
-                for each X_utd where (X_utd.EDocType <> objSrv:Env:Utd:EDocType:UCD:KeyIntDB and
-                   (X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB or
+                for each X_utd where X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB or
                     X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Canceled:KeyIntDB or 
                     X_utd.sts = ObjSrv:Env:Utd:Sts:TH:ConfirmedUcd:KeyIntDB or
-                    X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB)) or
-                   (X_utd.EDocType = objSrv:Env:Utd:EDocType:UCD:KeyIntDB and
-                    X_utd.sts = ObjSrv:Env:Utd:Sts:TH:PackProcess:KeyIntDB):
+                    X_utd.sts = ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB:
                     delete X_utd .
                 end.  
             end.  
@@ -2801,20 +2827,25 @@ PROCEDURE init-temp :
 
     Status_ = "Все" + {&comma-char} + '-1':U .
 
-    do ii = 1 to StatusTH:THMap:GetItem(ii):
-        Status_ = Status_ + {&comma-char} + StatusTH:CurrTHMapProp:Label_ + {&comma-char} + string(StatusTH:CurrTHMapProp:KeyIntDB) .
+    do ii = 1 to StatusTH:mapType:GetItemByLab(ii):
+        if StatusTH:CurrProp:KeyIntDB >= 50
+        and StatusTH:CurrProp:KeyIntDB < 60
+        then next . /* Вывод из оборота */
+        Status_ = Status_ + {&comma-char} + StatusTH:CurrProp:Label_ + {&comma-char} + string(StatusTH:CurrProp:KeyIntDB) .
     end.
 
     Status_EDI = "Все" + {&comma-char} + '0':U .
 
-    do ii = 1 to StatusEDI:EDIMap:GetItem(ii):
-        Status_EDI = Status_EDI + {&comma-char} + replace(StatusEDI:CurrEDIMapProp:Label_,",","") + {&comma-char} + string(StatusEDI:CurrEDIMapProp:NameProp) .
+    do ii = 1 to StatusEDI:mapType:GetItemByLab(ii):
+        Status_EDI = Status_EDI + {&comma-char} + replace(StatusEDI:CurrProp:Label_,",","") + {&comma-char} + string(StatusEDI:CurrProp:KeyIntDB) .
     end.
   
     Edoc_Type = "Все" + {&comma-char} + '0':U .
   
-    do ii = 1 to EdocType:EDocTypeMap:GetItem(ii):
-        Edoc_type = Edoc_type + {&comma-char} + EdocType:CurrEDocTypeMapProp:Label_ + {&comma-char} + string(EdocType:CurrEDocTypeMapProp:NameProp) .
+    do ii = 1 to EdocType:mapType:GetItemByLab(ii):
+      if EdocType:CurrProp = EdocType:LK_RECEIPT
+      then next . /* Вывод из оборота */
+        Edoc_type = Edoc_type + {&comma-char} + EdocType:CurrProp:Label_ + {&comma-char} + string(EdocType:CurrProp:KeyIntDB) .
     end.
 
     ASSIGN
@@ -3059,13 +3090,8 @@ FUNCTION EdoTypeName RETURNS CHARACTER
       Purpose:  
         Notes:  
     ------------------------------------------------------------------------------*/
-    define buffer buf_edoc-attr for ub.utd-attr .
-    find first buf_edoc-attr no-lock where buf_edoc-attr.attr-code = "UtdType" and
-                                           buf_edoc-attr.attr-value = string(objSrv:Env:Utd:EDocType:edoc:KeyIntDB) and
-                                           buf_edoc-attr.db-num = X_utd.db-num and
-                                           buf_edoc-attr.doc-id = X_utd.doc-id no-error .
-    if available (buf_edoc-attr) then RETURN EdocType:GetLabel(p-stsTH) + "_E" .
-    else RETURN EdocType:GetLabel(p-stsTH) .   /* Function return value. */
+
+    RETURN EdocType:GetLabel(p-stsTH) .   /* Function return value. */
 
 END FUNCTION.
 

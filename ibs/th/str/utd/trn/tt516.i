@@ -50,7 +50,6 @@ define temp-table temp_trn-doc no-undo
   field hold-obj-code      as integer
   field ship-num           as character
   field ship-date          as date
-
   index pi line-num doc-code .
 
 define temp-table temp_doc-line no-undo
@@ -65,6 +64,7 @@ define temp-table temp_doc-line no-undo
   field prod-type          as character     /* не присылают */
   field prod-code          as integer       /* не присылают */
   field cli-qnty           as decimal
+  field unit-cli           as character
   field doc-qnty           as decimal
   field fact-qnty          as decimal
   field price-rubl         as decimal
@@ -78,6 +78,9 @@ define temp-table temp_doc-line no-undo
   field alc-type-code      as character
   field importer-th        as character
   field line-num-str       as character /* порядок чтения из xml */ /* не присылают */
+  field gtinList           as character
+  field gtinDocQntyList    as character
+  field gtinFactQntyList   as character
   index pi
   doc-code
   line-num

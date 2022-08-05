@@ -14,9 +14,10 @@ using ibs.th.gbl.propmap.
 using ibs.th.gbl.map.mapstring.
 using ibs.th.gbl.sys.objth.
 using ibs.th.gbl.sys.objsrv.
+using ibs.th.gbl.TypeMap.
 
 
-class ibs.th.str.utd.sts.th inherits objth:
+class ibs.th.str.utd.sts.th inherits TypeMap:
   
   define public property  NewStatus  as class propmap no-undo get.  protected set.
   define public property  ReceivedFromSupplier  as class propmap no-undo get.  protected set.
@@ -37,27 +38,18 @@ class ibs.th.str.utd.sts.th inherits objth:
   define public property  edocError as class propmap no-undo get.  protected set.
   define public property  RejectionUtd as class propmap no-undo get.  protected set.
   define public property  ConfirmedUcd as class propmap no-undo get.  protected set.
-  define public property  Rejection as class propmap no-undo get. protected set.
-  define public property  PackProcess as class propmap no-undo get.  protected set.
-    protected set.    
+  define public property  LinesInError as class propmap no-undo get.  protected set.
+  define public property  Rejection as class propmap no-undo get.  protected set.    
+  
+  /* Статусы для Вывода из Оборота */
+  define public property  LK_RECEIPT_New as class propmap no-undo get.  protected set.
+  define public property  LK_RECEIPT_Signed as class propmap no-undo get.  protected set.
+  define public property  LK_RECEIPT_Sent as class propmap no-undo get.  protected set.
+  define public property  LK_RECEIPT_Confirmed as class propmap no-undo get.  protected set.
+  define public property  LK_RECEIPT_Error as class propmap no-undo get.  protected set.    
 
-  define public property THMap as class mapstring no-undo get. 
-    protected set.
-
-  define public property CurrTHMapProp as class propmap no-undo 
-  get:
-    def var currP as class propmap no-undo. 
-    currP = cast (THMap:SubjectObjCurr, propmap) no-error.
-    if currP = ? or error-status:error
-    then do:
-      "Залогируем".
-      return ?.
-    end.
-    else return currP.
-  end. 
- 
   constructor public th ():
-    {utl\objreg.i THMap mapstring true}
+    super().
     NewStatus            = crProp(0, "NewStatus", "Новый").
     ReceivedFromSupplier = crProp(1, "ReceivedFromSupplier", "Получен от поставщика").
     VerificationPassed   = crProp(2, "VerificationPassed", "Пройдена проверка МОТП").
@@ -70,82 +62,24 @@ class ibs.th.str.utd.sts.th inherits objth:
     CancellationRequest  = crProp(9, "CancellationRequest", "Запрос аннуляции").
     Canceled             = crProp(10, "Canceled", "Аннулирован").
     Rejection            = crProp(11, "Rejection", "Отказ").
-    PackProcess          = crProp(12, "PackProcess", "Пакетная обработка").
     LackOfMarkingCodesInCirculation = crProp(31, "LackOfMarkingCodesInCirculation", "Отсутствие КМ в обороте").
     DeliveryCodeMismatch = crProp(32, "DeliveryCodeMismatch", "Частичная приемка").
     InconsistencyWithSupplyContract = crProp(33, "InconsistencyWithTheSupplyContract", "Несоответсвие договору поставки ").
+    LinesInError         = crProp(38, "LinesInError", "Нет строк для приема").
     LoadError            = crProp(34, "LoadError", "Ошибка загрузки ").
     edocError            = crProp(35, "edocError", "Ошибка").
     RejectionUtd         = crProp(36, "RejectionUtd", "Отказать").
     ConfirmedUcd         = crProp(37, "ConfirmedUcd", "Подтвердить").
     
+    /* Статусы для Вывода из Оборота */
+    LK_RECEIPT_New       = crProp(50, "LK_RECEIPT_New", "Сформированные и ожидающие подписи в ГИС МТ").
+    LK_RECEIPT_Signed    = crProp(51, "LK_RECEIPT_Signed", "Подписанные и ожидающие отправки в ГИС МТ").
+    LK_RECEIPT_Sent      = crProp(52, "LK_RECEIPT_Sent", "Отправленные и ожидающие обработки ГИС МТ").
+    LK_RECEIPT_Confirmed = crProp(53, "LK_RECEIPT_Confirmed", "Успешно обработанные ГИС МТ").
+    LK_RECEIPT_Error     = crProp(54, "LK_RECEIPT_Error", "Обработанные ГИС МТ с ошибкой").
     
   end.
 
-  /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
-
-  method public char GetLabel(inKey as int):
-    def var prop as class propmap no-undo.    
-    if valid-object (THMap:GetItemKeyInt(inKey))
-      then return cast (THMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
-      else return string(inKey). /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
-  end method. 
-
-  method private char GetLabel(inKeyStr as char):
-    def var prop as class propmap no-undo.    
-    if valid-object (THMap:GetItemKeyStr(inKeyStr))
-      then return cast (THMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
-      else return inKeyStr. /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
-  end method. 
-
-  method public char GetNameProp(inKey as int):
-    return GetNameProp(string (inKey)).
-  end method. 
- 
-  method private char GetNameProp(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (THMap:GetItemKeyStr(inKeyStr))
-      then return cast (THMap:SubjectObjCurr, ibs.th.gbl.propmap):NameProp. 
-      else return ?.
-  end method. 
-
-  method public int GetKeyIntDB(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (THMap:GetItemKeyStr(inKeyStr))
-      then return cast (THMap:SubjectObjCurr, ibs.th.gbl.propmap):KeyIntDB. 
-      else return ?.
-  end method. 
-  
-  method class propmap GetProp(inKey as int):
-    return GetProp(string (inKey)).
-  end method. 
-
-  method private class propmap GetProp(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (THMap:GetItemKeyStr(inKeyStr))
-      then return cast(THMap:SubjectObjCurr, propmap). 
-      else return ?.
-  end method.
-  
-  method public char GetKeyStrDB(inKeyint as int):
-    def var prop as class propmap no-undo.
-    if valid-object (THMap:GetItemKeyint(inKeyint))
-      then return cast (THMap:SubjectObjCurr, ibs.th.gbl.propmap):KeycharDB. 
-      else return ?.
-  end method. 
-   
-  method private class propmap crProp(inKeyInt as int, inNameProp as char, inLabel as char):
-    def var prop as class propmap no-undo.
-    prop = new propmap (string(inKeyInt), inLabel).
-    prop:KeyIntDB = inKeyInt.
-    prop:KeyCharDB = inNameProp.
-    THMap:AddItem(prop, inKeyInt,inNameProp).
-    return prop.
-    
-  end method.
   
   method public logical CheckStsErr(inKey as int):
     

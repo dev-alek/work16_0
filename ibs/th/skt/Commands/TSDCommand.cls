@@ -24,7 +24,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
 
   { cmp/str-glbl.i class}  
   {ibs/th/skt/ControlledClients/TSDTT.i}
-  
+  {utl\search.i class}
   &scop CRLF chr(13) + chr(10)
   &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
   
@@ -37,7 +37,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     private set.
 
   define private variable tsd         as class     TSD .
-  define private variable logWrite    as class     LogWrite no-undo.
+  define private variable logWrite    as class     logWrite no-undo.
   define private variable hRoot       as handle    no-undo.
   define private variable hDoc        as handle    no-undo.
   define private variable hRow        as handle    no-undo.
@@ -85,6 +85,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     define variable tempStr       as char     no-undo.
     define variable glog          as logical  no-undo.
     define variable is-ProcArch64 as logical  no-undo init no.
+    define variable vobjtype as character no-undo.
 
     logWrite = new LogWrite().
     copy-lob
@@ -93,21 +94,42 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     no-convert
     no-error .
     
-    
     tsd = new tsd().
+    vobjtype = entry (1, list-par, "?").
+    if vobjtype eq "" or vobjtype eq ?
+    then do:
+      logWrite:LogStr = "Не задан тип объекта".
+      ErrStatus = true.
+      return.
+    end.
+    else if vobjtype eq "shop"
+    then  
+       vobjtype = {&Shop}.
+    else if vobjtype eq "stock"
+    then  
+       vobjtype = {&stock}.
+    else if vobjtype eq "cmp"
+    then  
+       vobjtype = {&cmp}.
+    tsd:ObjCode = integer (entry (2, list-par, "?")) no-error.
+    if error-status:error
+    then do:
+      logWrite:LogStr = "Не задан код объекта".
+      ErrStatus = true.
+      return.
+    end.
+    assign    
     
-    assign
-    tsd:ObjCode = integer (entry (2, list-par, "?"))
-    tsd:ObjType = entry (1, list-par, "?")
+    tsd:ObjType = vobjtype
     tsd:ReqType = entry (3, list-par, "?")
     tsd:CurrDecSeparator = entry (4, list-par, "?")
     tsd:IsMarkOn = if entry (5, list-par, "?") = "true" then true else false
-    .
+    no-error.
 
     os-command silent value( 'set pro >>procarch') .
     if search ("procarch") = ? 
     then do:
-      LogWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
+      logWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
       ErrStatus = true.
       return.
     end.    
@@ -152,7 +174,10 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     import mbuffer1.
     input close.
     
-    tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1)).
+    if logWrite:LogStr = ""
+      then tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1)).
+      else tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&1ETag: &4&1&5&2",{&CRLF},{&HdEnd},get-size(mbuffer1), "При обмене возникли ошибки.",logWrite:LogStr). 
+    
     set-size(mbuffer) = 0.
     set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
     put-string(mbuffer,1) = tempLongCh.
@@ -160,7 +185,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       glog = hndlsocket1:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
     if not glog 
       then do:
-        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
+        logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
         ErrStatus = true.
         undo.
       end.
@@ -168,7 +193,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       glog = hndlsocket1:write(mbuffer1,1,get-size(mbuffer1)) no-error.
     if not glog
       then do:
-        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
+        logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
         ErrStatus = true.
         undo.
       end.
@@ -192,7 +217,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     
     resp = new SimpleResponse().
     tsd = new tsd().
-    logWrite = new LogWrite().
+    logWrite = new logWrite().
 
     create x-document hDoc.
     create x-noderef  hRoot.
@@ -292,7 +317,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
               end.
               
               if not available buf_bar-code then do:
-                LogWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
+                logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
                 tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
                 writeSock("").
               end.
@@ -349,23 +374,23 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     case tsd:ReqType :
       when "SETTINGS" then 
         do:
-          LogWrite:LogStr = 'Отправлен ответ на запрос типа "SETTINGS".' + {&new-line} + LogWrite:LogStr.
+          logWrite:LogStr = 'Отправлен ответ на запрос типа "SETTINGS".' + {&new-line} + logWrite:LogStr.
         end.
       when "TH_ALL" then 
         do:
-          LogWrite:LogStr = 'Отправлен ответ на запрос типа "TH_ALL".' + {&new-line} + LogWrite:LogStr.
+          logWrite:LogStr = 'Отправлен ответ на запрос типа "TH_ALL".' + {&new-line} + logWrite:LogStr.
         end.
       when "TH_WB" then 
         do:
-          LogWrite:LogStr = 'Отправлен ответ на запрос типа "TH_WB".' + {&new-line} + LogWrite:LogStr.
+          logWrite:LogStr = 'Отправлен ответ на запрос типа "TH_WB".' + {&new-line} + logWrite:LogStr.
         end.
       when "WAYBILL" then 
         do:
-          LogWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + LogWrite:LogStr.
+          logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + logWrite:LogStr.
         end.
       when "INVENTORY" then 
         do:
-          LogWrite:LogStr = 'Отправлен ответ на запрос типа "INVENTORY".' + {&new-line} + LogWrite:LogStr.
+          logWrite:LogStr = 'Отправлен ответ на запрос типа "INVENTORY".' + {&new-line} + logWrite:LogStr.
         end.
         
     end case.
@@ -394,6 +419,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     define variable RowSum     as decimal   no-undo.
     define variable iDbNum     as integer   no-undo.
     define variable docType    as character no-undo.
+    define variable vFilename  as character no-undo.
     define buffer buf_bar-code  for ub.bar-code.
     define buffer buf_prod-bc   for ub.prod-bc.
     define buffer buf_place     for ub.place.
@@ -404,28 +430,38 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
 
     iDbNum = tsd:GetDbNum().
 
+    vFilename = "MT_documentsSend.txt".
+    if SearchFile(vFilename) ne ? 
+    then do:
+       input from value(SearchFile(vFilename)) convert source "UTF-8". 
+       repeat:  
+         create TempTrnDocMT.
+         import TempTrnDocMT.
+       end. 
+       input close.
+    end.
 
-    input from value(search("MT_documentsSend.txt")) convert source "UTF-8". 
-    repeat:  
-      create TempTrnDocMT.
-      import TempTrnDocMT.
-    end. 
-    input close.
-
-    input from value(search("MT_lineSend.txt")) convert source "UTF-8".
-    repeat:  
-      create TempTrnLineMT.
-      import TempTrnLineMT.
-    end. 
-    input close.
+    vFilename = "MT_lineSend.txt".
+    if SearchFile(vFilename) ne ?
+    then do:
+       input from value(SearchFile(vFilename)) convert source "UTF-8".
+       repeat:  
+         create TempTrnLineMT.
+         import TempTrnLineMT.
+       end. 
+       input close.
+    end.
  
-    input from value(search("MT_MarkLinesSend.txt")) convert source "UTF-8".
-    repeat:  
-      create TempMarkLineMT.
-      import TempMarkLineMT.
-    end. 
-    input close.
-
+    vFilename = "MT_MarkLinesSend.txt".
+    if SearchFile(vFilename) ne ?
+    then do:
+       input from value(SearchFile(vFilename)) convert source "UTF-8".
+       repeat:  
+         create TempMarkLineMT.
+         import TempMarkLineMT.
+       end. 
+       input close.
+    end.
     for each TempTrnDocMT where TempTrnDocMT.Complete_ = true:
     
       empty temp-table TempTrnDoc.
@@ -539,7 +575,8 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
           TempMarkLine.DocName     =  TempMarkLineMT.DocName 
           TempMarkLine.PartIDTH    =  TempMarkLineMT.PartIDTH
           TempMarkLine.MarkCode    =  TempMarkLineMT.MarkCode
-          TempMarkLine.Sts         =  TempMarkLineMT.Sts     
+          TempMarkLine.Sts         =  TempMarkLineMT.Sts
+          TempMarkLine.MarkParent  =  TempMarkLineMT.MarkParent     
           .
       end.
       
@@ -601,7 +638,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
               
               if not available buf_bar-code then 
               do:
-                LogWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
+                logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
                 tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
                 writeSock("").
               end.
@@ -793,50 +830,51 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     define variable glog          as logical  no-undo.
     define variable is-ProcArch64 as logical  no-undo init no.
     
+    define variable mTypeResp as character no-undo init "text/csv".
     
     set-size(mbuffer1) = 0.
     if arg = "dictionaries" then 
     do:
-    os-command silent value( 'set pro >>procarch') .
-    if search ("procarch") = ? 
-    then do:
-      LogWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
-      return false.
-    end.    
+      os-command silent value( 'set pro >>procarch') .
+      if search ("procarch") = ? 
+      then do:
+         logWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
+         return false.
+      end.    
 
-    input from value (search('procarch')) no-convert.
-    import tempStr.
-    if not index ("PROCESSOR_ARCHITECTURE=AMD64", tempStr) = 0
+      input from value (search('procarch')) no-convert.
+      import tempStr.
+      if not index ("PROCESSOR_ARCHITECTURE=AMD64", tempStr) = 0
       then assign is-ProcArch64 = true.
-    import tempStr.
-    if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
+      import tempStr.
+      if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
       then assign is-ProcArch64 = true.
-    input close.
-    startStep("Начало конвертации справочника.").
-    os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
-    if is-ProcArch64 
-    then do:
-      os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-    end.
-    else do:
-      os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-    end.    
+      input close.
+      startStep("Начало конвертации справочника.").
+      os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
+      if is-ProcArch64 
+      then do:
+         os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
+      end.
+      else do:
+         os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
+      end.    
     
-    
-    os-command silent value( 'DBInit.exe Dict 30 31') .
-    if search ("dictionaries.s3db") = ? 
-    then do:
-        LogWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
-      return false.
-    end.
-    assign
-      file-info:file-name = "dictionaries.s3db"
+      os-command silent value( 'DBInit.exe Dict 30 31 >>DBInitDict.txt') .
+      if search ("dictionaries.s3db") = ? 
+      then do:
+        logWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
+         return false.
+      end.
+      assign
+         file-info:file-name = "dictionaries.s3db"
       .
       set-size (mbuffer1) = file-info:file-size.
       input from value (file-info:file-name) binary no-convert.
       import mbuffer1.
       input close.
       endStep("Завершена конвертация справочника.").
+      mTypeResp = "raw".
     end.
     else 
     do:
@@ -844,7 +882,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     os-command silent value( 'set pro >>procarch') .
     if search ("procarch") = ? 
     then do:
-      LogWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
+      logWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
       return false.
     end.    
 
@@ -871,7 +909,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     os-command silent value( 'DBInit.exe 30 31') .
     if search ("documents.s3db") = ? 
     then do:
-        LogWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
+        logWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
       return false.
     end.
     assign
@@ -887,7 +925,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       put-string(mbuffer1,1) = tsd:SomeStr.        
     end.
       
-    tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1)).
+    tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: &4&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1),mTypeResp).
     set-size(mbuffer) = 0.
     set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
     put-string(mbuffer,1) = tempLongCh.
@@ -896,14 +934,14 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       glog = hndlsocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
     if not glog 
       then do:
-        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
+        logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
         ErrStatus = true.
       end.
     assign
       glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
     if not glog
       then do:
-        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
+        logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
         ErrStatus = true.
       end.
     endStep("Завершена отправка справочника на ТСД.").

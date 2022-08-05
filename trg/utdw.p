@@ -72,6 +72,18 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   define variable vOldSts as integer no-undo.
   vOldSts = new-{&main-tbl}.sts-edi.
   
+   
+  if     (    g#db-num = new-{&main-tbl}.db-num
+          and g#news )
+         or (    g#db-num ne new-{&main-tbl}.db-num
+             and not g#news )
+  then
+     assign
+        new-{&main-tbl}.OrganizationExt = old-{&main-tbl}.OrganizationExt
+        new-{&main-tbl}.DocumentExt     = old-{&main-tbl}.DocumentExt
+     .
+     
+  
   if not g#news  
   then do:
      if new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:edoc:KeyIntDB
@@ -83,6 +95,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                          and buf_utd.EDocType    eq objSrv:Env:Utd:EDocType:ucd:KeyIntDB
                          and buf_utd.Timestamp   le new-{&main-tbl}.Timestamp
                          and buf_utd.sts-edi     ne utdEDISts:WithRecipientSignature:KeyIntDB
+                         and buf_utd.sts-edi     ne utdEDISts:WithRecipientPartiallySignature:KeyIntDB
                          and buf_utd.sts-edi     ne utdEDISts:RecipientSignatureRequestReject:KeyIntDB
         no-lock:
            assign 
@@ -91,6 +104,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
            leave block-ucd.
         end.
         if new-{&main-tbl}.sts-edi eq  utdEDISts:WithRecipientSignature:KeyIntDB
+           or new-{&main-tbl}.sts-edi eq  utdEDISts:WithRecipientPartiallySignature:KeyIntDB
         then
            new-{&main-tbl}.sts = utdTHSts:Confirmed:KeyIntDB.
      end.
@@ -101,6 +115,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       
      else if    new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
              or new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:Receipt:KeyIntDB
+             or new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:LK_RECEIPT:KeyIntDB
          
      then
         new-{&main-tbl}.sts-edi eq  utdEDISts:RecipientResponseStatusNotAccep:KeyIntDB.
@@ -119,10 +134,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                and new-{&main-tbl}.sts-edi < utdEDISts:StatFinesh)
          or new-{&main-tbl}.sts-edi eq ?
       then do:
-         new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.RevocationStatus).
-         if new-{&main-tbl}.sts-edi eq ?
-         then
-            new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.ReceiptStatus).
+         if new-{&main-tbl}.sts ne  utdTHSts:RejectionUtd:KeyIntDB
+         then do:   /* пользователь отказался от документа и эти статусы мы не трогаем до полного подписания документа */
+            new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.RevocationStatus).
+            if new-{&main-tbl}.sts-edi eq ?
+            then
+               new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.ReceiptStatus).
+         end.
          if     new-{&main-tbl}.sts-edi < utdEDISts:StatFinesh
              or new-{&main-tbl}.sts-edi eq ?
          then do:
@@ -139,8 +157,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
             if      new-{&main-tbl}.sts-edi eq utdEDISts:WaitingForRecipientSignature:KeyIntDB
             then do:
                if new-{&main-tbl}.sts eq  utdTHSts:RejectionUtd:KeyIntDB
-               then
-                  new-{&main-tbl}.sts-edi = vOldSts.
+               then do:
+                  if vOldSts ne ?
+                  then
+                     new-{&main-tbl}.sts-edi = vOldSts.
+                  else
+                     new-{&main-tbl}.sts-edi = old-{&main-tbl}.sts-edi.
+               end.
                else /*if new-{&main-tbl}.sts eq  utdTHSts:LoadError:KeyIntDB
                then
                   new-{&main-tbl}.sts-edi = utdEDISts:SignatureAdjustment:KeyIntDB. 
@@ -163,6 +186,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       then 
          new-{&main-tbl}.sts = utdTHSts:Rejection:KeyIntDB.
       else if      new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientSignature:KeyIntDB
+               or new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientPartiallySignature:KeyIntDB
       then do:
          if can-find(first utd-attr no-lock where utd-attr.doc-id = new-{&main-tbl}.doc-id 
                                                     and utd-attr.db-num = new-{&main-tbl}.db-num 
@@ -185,6 +209,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
          
       if  (    (
                new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientSignature:KeyIntDB
+          or   new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientPartiallySignature:KeyIntDB
           or   new-{&main-tbl}.sts-edi = utdEDISts:Changed:KeyIntDB
                )
                and new-{&main-tbl}.sts = utdTHSts:Rejectionutd:KeyIntDB
@@ -200,7 +225,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
          new-{&main-tbl}.sts = utdTHSts:RejectionUtd:KeyIntDB.
         
       if     
-             new-{&main-tbl}.sts-edi eq utdEDISts:WithRecipientSignature:KeyIntDB
+            (    new-{&main-tbl}.sts-edi eq utdEDISts:WithRecipientSignature:KeyIntDB
+             or new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientPartiallySignature:KeyIntDB)
          and (       old-{&main-tbl}.sts     eq utdTHSts:DeliveryCodeMismatch:KeyIntDB
                 or
                 (     old-{&main-tbl}.sts eq utdTHSts:CorrectionRequested:KeyIntDB
@@ -227,11 +253,18 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       end.
       
    end.
+   if         new-{&main-tbl}.sts      = utdTHSts:AwaitingConfirmation:KeyIntDB
+       and    (   new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:utd:KeyIntDB
+               or new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:edoc:KeyIntDB)
+   then
+       new-{&main-tbl}.sts     = utdTHSts:Confirmed:KeyIntDB.
    if new-{&main-tbl}.sts ne old-{&main-tbl}.sts
       and new-{&main-tbl}.sts eq utdTHSts:CorrectionRequested:KeyIntDB    
    then
       setattrutd (new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id,"ststhbeforeCorrection",string(old-{&main-tbl}.sts)).
-   SetLockUTDMark(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id).
+   if new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB
+   then
+      SetLockUTDMark(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id).
    
    changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RevocationStatus , new-{&main-tbl}.RevocationStatus).
    changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RecipientResponseStatus , new-{&main-tbl}.RecipientResponseStatus).
@@ -244,6 +277,17 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
        utd-lines.gds-code = ?.
        
    end.
+   for each utd-marking-lines where utd-marking-lines.db-num eq  new-{&main-tbl}.db-num
+                        and utd-marking-lines.doc-id eq  new-{&main-tbl}.doc-id
+                        and utd-marking-lines.gds-code eq 0
+   exclusive-lock:                    
+       utd-marking-lines.gds-code = ?.
+       for first marking where marking.mark     eq utd-marking-lines.mark
+                           and marking.gds-code eq 0
+       exclusive-lock:
+          marking.gds-code = ?.
+       end.
+   end.
    
        
 &Glob main-tbl utd
@@ -251,8 +295,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   &hist = yes 
   &seqnamehist = "s-c-utd-chip-num"
   &histheadtbl = "c-utd-head"
+  &fieldmainheadtab  = "db-num doc-id" 
   
 } 
+        
   if not g#news and not (buffer new-{&main-tbl}:handle:buffer-compare (buffer old-utd:handle)) 
   then do:
     new-{&main-tbl}.ModifyDate = date (now).
@@ -310,7 +356,11 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         ,input (buffer new-{&main-tbl}:handle)
         ) no-error .
       if error-status:error then do:
-        undo main-block,  return error return-value .
+         if not G#auto
+         then
+             message  return-value
+             view-as  alert-box.
+        undo main-block,  return error return-value . 
       end.
     end.
     if not g#db-num = 0 and 
@@ -332,7 +382,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     then do:
       if g#db-num = 0 and (new-{&main-tbl}.sts-edi <> old-{&main-tbl}.sts-edi
         and (
-              new-{&main-tbl}.sts = utdEDISts:RevocationAccepted:KeyIntDB
+              new-{&main-tbl}.sts-edi = utdEDISts:RevocationAccepted:KeyIntDB
         ))
       then do:
         run nws/cmdchgutd.p (buffer new-{&main-tbl}).
@@ -352,10 +402,12 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     ((g#db-num ne 0 and g#news) or (g#db-num eq 0 and not g#news)) and new-{&main-tbl}.doc-code = "" and new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
     and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
  */   
-  if    (new-{&main-tbl}.doc-code = "" or new-{&main-tbl}.doc-code eq ?) 
-    and  (new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB  and new-{&main-tbl}.sts <> old-{&main-tbl}.sts)
+  if    (new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB  and new-{&main-tbl}.sts <> old-{&main-tbl}.sts)
     and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
-    and ((g#db-num ne 0 and g#news) or (g#db-num eq 0 and not g#news))
+    and ((g#db-num ne 0 and g#news) or 
+    ((new-{&main-tbl}.doc-code = "" or new-{&main-tbl}.doc-code eq ?) 
+    and g#db-num eq 0 and not g#news))
+    and available ub.clients
     and ub.clients.db-num = g#db-num 
     and g#db-num ne 0
   then do:
@@ -370,14 +422,29 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     then do:
       if return-value matches "*ошибка*"
       then v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value).
-      else v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
+      else do:
+         if     new-{&main-tbl}.sts ne objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
+              
+         then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &6 &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value, 
+         if ChecknotMarkUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id) then "Немаркированной продукцией(товарами)данной поставки можно торговать на кассе." else "",
+         if CheckMarkUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id) then "Маркированной продукцией (товарами) данной поставки торговать на кассе нельзя. Ожидайте по маркированной продукции (товарам) дополнительного уведомления." else "").
+         
+         
+         else if     new-{&main-tbl}.sts eq objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
+                 and CheckMarkUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id) 
+         then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value, "Маркированной продукцией(товарами)данной поставки можно торговать на кассе.").
+      end.
+      
     end.
       else v-msg = substitute ('Получен УПД. Документ: &1 от &2. Ошибка при формировании ПН. &3. &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate), trim(return-value, ".")).
-    
-    run utl\proc-msg.p (v-msg) no-error.
+    if v-msg ne ""
+    then
+       run utl\proc-msg.p (v-msg) no-error.
   
   end.
-  else if new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB and g#db-num > 0 then do:
+  else if new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB and g#db-num > 0 
+          and available (ub.clients)
+  then do:
       def var v-mes as char no-undo.
       v-mes = substitute("DB&1,gnews&2,stts&3,old-stts&4,clientdb&5",g#db-num,g#news,new-{&main-tbl}.sts,old-{&main-tbl}.sts,ub.clients.db-num).
        
@@ -394,6 +461,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       v-msg = substitute ('Получен документ первоначального ввода. Документ № &1 от &2. Обратитесь в Техническую поддержку.', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate)).
       run utl\proc-msg.p (v-msg) no-error.
   end.
+  
+  
 
 
 end. /* main-block */

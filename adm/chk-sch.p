@@ -24,7 +24,10 @@ define temp-table tt-BatchProcess
 define input  parameter p-task-type   as character no-undo .
 define input  parameter p-for-db      as character no-undo .
 define output parameter p-list-db     as character no-undo .
+define output parameter p-list-db-All as character no-undo .
 define output parameter p-list-key     as character no-undo .
+define output parameter p-list-key-all  as character no-undo .
+
 define input  parameter p-for-extsys  as character no-undo .
 define input  parameter p-for-proc    as character no-undo .
 define output parameter table for tt-BatchProcess .
@@ -475,45 +478,59 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       end.
        
     end.
-    if vWaitNextRunTime
-    then do:
-        for each buf_BatchProcess no-lock
-            where buf_BatchProcess.BP_Status         = {&btpr-normal}
-              and buf_BatchProcess.BP_Type           = p-task-type
-              and buf_BatchProcess.CharKey_One       = string( buf_db.db-num )
-              and buf_BatchProcess.CharKey_Two       = "auto":U
-              and ( buf_BatchProcess.BP_ExecSysDate > v-today
-                    or (buf_BatchProcess.BP_ExecSysDate = v-today
-                        and buf_BatchProcess.BP_ExecSysTimeInt > v-time
-                      )
+    
+     for each buf_BatchProcess no-lock
+         where buf_BatchProcess.BP_Status         = {&btpr-normal}
+           and buf_BatchProcess.BP_Type           = p-task-type
+           and buf_BatchProcess.CharKey_One       = string( buf_db.db-num )
+           and buf_BatchProcess.CharKey_Two       = "auto":U
+           and ( buf_BatchProcess.BP_ExecSysDate > v-today
+                 or (buf_BatchProcess.BP_ExecSysDate = v-today
+                     and buf_BatchProcess.BP_ExecSysTimeInt > v-time
+                   )
+               )
+           and (p-task-type <> {&btpr-type-autooxml} or 
+                 (p-task-type = {&btpr-type-autooxml} and 
+                   (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
+                       ) 
+                   or (p-for-extsys <> "" 
+                       and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                       and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
+                       )
+                    )
                   )
-              and (p-task-type <> {&btpr-type-autooxml} or 
-                    (p-task-type = {&btpr-type-autooxml} and 
-                      (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-extsys = ""
-                          ) 
-                      or (p-for-extsys <> "" 
-                          and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
-                          and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-extsys
-                          )
+                )
+           and (p-task-type <> {&btpr-type-autofree} or 
+                 (p-task-type = {&btpr-type-autofree} and 
+                   (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
+                       ) 
+                   or (p-for-proc <> "" 
+                       and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
+                       and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
                        )
-                     )
-                   )
-              and (p-task-type <> {&btpr-type-autofree} or 
-                    (p-task-type = {&btpr-type-autofree} and 
-                      (  (num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) <= 3 and p-for-proc = ""
-                          ) 
-                      or (p-for-proc <> "" 
-                          and num-entries (buf_BatchProcess.CharKey_Three, {&delim-key}) > 3 
-                          and entry (4, buf_BatchProcess.CharKey_Three, {&delim-key}) = p-for-proc
-                          )
-                       )
-                     )
-                   )
-        :
+                    )
+                  )
+                )
+     :
+        if vWaitNextRunTime
+        then do:
            create tt-BatchProcess.
-             buffer-copy buf_BatchProcess to tt-BatchProcess .
+           buffer-copy buf_BatchProcess to tt-BatchProcess .
         end.
+        if p-list-db = "":U then do:
+        assign
+          p-list-db-all  = string( buf_db.db-num )
+          p-list-key-all = buf_BatchProcess.CharKey_Three
+        .
+      end.
+      else do:
+        assign
+          p-list-db-all  = p-list-db-all  + {&comma-char} + string( buf_db.db-num )
+          p-list-key-all = p-list-key-all + {&delim-nws} + buf_BatchProcess.CharKey_Three
+        .
+      end.
      end.
+     
   end.
   run gbl/delatrlb.p .
 end.

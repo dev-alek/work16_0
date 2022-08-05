@@ -62,6 +62,7 @@ END FUNCTION .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
@@ -137,7 +138,7 @@ DEFINE BROWSE BROWSE-2
   QUERY BROWSE-2 NO-LOCK DISPLAY
       tt-utd-err.LineNum COLUMN-LABEL "№" FORMAT "999":U
       tt-utd-err.gds-code COLUMN-LABEL "Код товара" FORMAT ">>>>>>>>>>>>9":U
-      tt-utd-err.CheckType FORMAT "x(10)":U
+      tt-utd-err.CheckType FORMAT "x(15)":U
       tt-utd-err.CodeErr FORMAT "x(15)":U
       tt-utd-err.descr FORMAT "x(256)":U
 /* _UIB-CODE-BLOCK-END */
@@ -186,10 +187,11 @@ DEFINE FRAME Dialog-Frame
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
-ASSIGN 
-       browse-2:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
 
-/* SETTINGS FOR EDITOR f-error IN FRAME Dialog-Frame 
+ASSIGN 
+       BROWSE-2:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
+
+/* SETTINGS FOR EDITOR f-error IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -348,49 +350,90 @@ PROCEDURE init-temp :
  define variable vHn as handle no-undo.
 
   for each buf_utd-err no-lock where buf_utd-err.db-num = p-db-num and buf_utd-err.doc-id = p-doc-id:
-    create tt-utd-err .
-    buffer-copy buf_utd-err to tt-utd-err .
-    assign
-    tt-utd-err.descr = GetTextError(tt-utd-err.CheckType,tt-utd-err.CodeErr,tt-utd-err.CheckObj)
-    .
-    if buf_utd-err.reckey begins "utd-lines" or buf_utd-err.reckey begins "utd-marking-lines" 
-    or buf_utd-err.reckey begins "marking" then do:
-/*        vline  = integer (entry(4,buf_utd-err.reckey,{&delim-key})).*/
-      run gen-hn-keyr(input buf_utd-err.reckey,input ?,input "{&db-name_schema}" , input ? ,input no-lock , output vHn).
-      if vHn:available
+    define variable verror as character no-undo.
+    verror = GetTextErrorType(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj,"error").
+    if     verror ne ""
+       and verror ne ?
+    then do:
+       create tt-utd-err .
+       buffer-copy buf_utd-err to tt-utd-err .
+       assign
+       tt-utd-err.descr = verror
+       .
+       if buf_utd-err.reckey begins "utd-lines" or buf_utd-err.reckey begins "utd-marking-lines" 
+       or buf_utd-err.reckey begins "marking" then do:
+   /*        vline  = integer (entry(4,buf_utd-err.reckey,{&delim-key})).*/
+         run gen-hn-keyr(input buf_utd-err.reckey,input ?,input "{&db-name_schema}" , input ? ,input no-lock , output vHn).
+         if vHn:available
+         then do:
+            if buf_utd-err.reckey begins "marking" then do:
+                tt-utd-err.gds-code = vHn::gds-code .
+                tt-utd-err.LineNum  = 0 . 
+            end.                
+            else do:
+                tt-utd-err.LineNum = vHn::lineNum . 
+                tt-utd-err.gds-code = vHn::gds-code .
+            end.
+         end.  
+       end.
+     end.     
+  end.
+        
+   define buffer cancel_utd-lines for utd-lines.
+   for each cancel_utd-lines where cancel_utd-lines.db-num eq p-db-num
+                               and cancel_utd-lines.doc-id eq p-doc-id
+   no-lock:
+      if logical(getattrutdlinesex  (cancel_utd-lines.db-num,cancel_utd-lines.doc-id,cancel_utd-lines.LineNum,"MarkUtdLine"        ,"no"))
       then do:
-      if buf_utd-err.reckey begins "marking" then do:
-          tt-utd-err.gds-code = vHn::gds-code .
-          tt-utd-err.LineNum  = 0 . 
-      end.                
-      else do:
-          tt-utd-err.LineNum = vHn::lineNum . 
-          tt-utd-err.gds-code = vHn::gds-code .
+         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = p-db-num and 
+                                                      buf_utd-marking-lines.doc-id = p-doc-id and 
+                                                      buf_utd-marking-lines.LineNum = cancel_utd-lines.LineNum,
+/*                                                       and*/
+/*                                                      buf_utd-marking-lines.doc-level = 1,*/
+            first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark and
+            buf_marking.sts =  Marking:NotAvailable:KeyIntDB :
+            create tt-utd-err .
+            ii = ii + 1 .
+            assign
+              tt-utd-err.CheckType = "CheckShip"
+              tt-utd-err.CheckObj  = "По товару " + string(buf_utd-marking-lines.gds-code) + " по линии " + string(buf_utd-marking-lines.LineNum)
+              tt-utd-err.CodeErr   = "MARKDECLINED"
+              tt-utd-err.db-num    = buf_utd-marking-lines.db-num 
+              tt-utd-err.doc-id    = buf_utd-marking-lines.doc-id
+              tt-utd-err.reckey    = string(ii)
+              tt-utd-err.LineNum   = buf_utd-marking-lines.LineNum
+              tt-utd-err.gds-code  = buf_utd-marking-lines.gds-code
+              .
+            status_ = StatusTHName(buf_marking.sts) .
+            tt-utd-err.descr = "Ошибка № 15. В результате проверки товаров на АЗК по строке " + string(buf_utd-marking-lines.LineNum) +  " марка " + buf_utd-marking-lines.mark + " не была принята."
+              .    
+         end.
       end.
-      end.  
-    end.     
-  end.  
-      for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = p-db-num and 
-      buf_utd-marking-lines.doc-id = p-doc-id and buf_utd-marking-lines.doc-level = 1,
-      first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark and
-      buf_marking.sts =  Marking:NotAvailable:KeyIntDB :
-      create tt-utd-err .
-      ii = ii + 1 .
-      assign
-        tt-utd-err.CheckType = "UCDСompar"
-        tt-utd-err.CheckObj  = "По товару " + string(buf_utd-marking-lines.gds-code) + " по линии " + string(buf_utd-marking-lines.LineNum)
-        tt-utd-err.CodeErr   = "MARKDECLINED"
-        tt-utd-err.db-num    = buf_utd-marking-lines.db-num 
-        tt-utd-err.doc-id    = buf_utd-marking-lines.doc-id
-        tt-utd-err.reckey    = string(ii)
-        tt-utd-err.LineNum   = buf_utd-marking-lines.LineNum
-        tt-utd-err.gds-code  = buf_utd-marking-lines.gds-code
-        .
-      status_ = StatusTHName(buf_marking.sts) .
-      tt-utd-err.descr = "Ошибка № 15. В результате проверки товаров на АЗК по строке " + string(buf_utd-marking-lines.LineNum) +  " марка " + buf_utd-marking-lines.mark + " не была принята."
-        .    
-    end.     
+      else do:
+         define variable vqnty as decimal no-undo.
+         vqnty = decimal(GetAttrUtdlines(cancel_utd-lines.db-num,cancel_utd-lines.doc-id,cancel_utd-lines.linenum,"QuantityBarCode")).
+         if vqnty eq ? then vqnty = 0.
+         if vqnty ne cancel_utd-lines.Quantity
+         then do:
+            create tt-utd-err .
+            ii = ii + 1 .
+            assign
+               tt-utd-err.CheckType = "CheckShip"
+               tt-utd-err.CheckObj  = "По товару " + string(cancel_utd-lines.gds-code) + " по линии " + string(cancel_utd-lines.LineNum)
+               tt-utd-err.CodeErr   = "NotAcceptQuantity"
+               tt-utd-err.db-num    = cancel_utd-lines.db-num 
+               tt-utd-err.doc-id    = cancel_utd-lines.doc-id
+               tt-utd-err.reckey    = string(ii)
+               tt-utd-err.LineNum   = cancel_utd-lines.LineNum
+               tt-utd-err.gds-code  = cancel_utd-lines.gds-code
+            .
+            tt-utd-err.descr = "В результате проверки товаров на АЗК по строке " + string(cancel_utd-lines.LineNum) +  " не принято " +  string(cancel_utd-lines.Quantity - vqnty) + " единиц товара."
+        . 
+         end.
+      end.
+   end.   
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

@@ -33,5 +33,24 @@ class ibs.th.skt.ControlledClients.flagsdocline inherits flags:
       isNotEditManualQnty = arg.
     end.
 
+    define property isMarkOn as logical no-undo /*Строка с товары требующие обязательной маркировки*/
+    get:
+      return logical (get-bits (FlagsToInt, 3, 1)).
+    end.
+    set (arg as log):
+      put-bits (FlagsToInt, 3, 1) = int(arg).
+      isMarkOn = arg.
+    end.
+    
+    define property isVarietalVolumeOn as logical no-undo /*Строка с товары требующие объемно сортовой учет */
+    get:
+      return logical (get-bits (FlagsToInt, 4, 1)).
+    end.
+    set (arg as log):
+      put-bits (FlagsToInt, 4, 1) = int(arg).
+      isVarietalVolumeOn = arg.
+    end.
+ 
+
 
 end class.

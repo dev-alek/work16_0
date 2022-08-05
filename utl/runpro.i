@@ -4,4 +4,13 @@ if userid("ub") eq ""
 then do:
    oChekSum = {utl/chekproc.i iKey }.
    return.
-end. 
+end.
+&if defined (checkdate)
+&then
+    if today > date("{&checkdate}")
+    then do:
+       message "Процедура не действитльна обратитесь в Экспертек."
+       view-as alert-box.
+       return.
+    end.
+&endif

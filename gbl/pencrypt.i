@@ -21,12 +21,19 @@ Required:
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
 
-&if "{1}" eq "defproc"
+&if    "{1}" eq "defproc"
+    or "{1}" eq "defproc_long"
 &then
 &glob defproc_pencrypt yes 
 procedure pencrypt :
-  define input parameter ip-value-to-enc as character no-undo.
-  define output parameter op-char-value  as character no-undo.
+   &if "{1}" eq "defproc_log"
+   &then
+       define input parameter ip-value-to-enc as longchar no-undo.
+       define output parameter op-char-value  as longchar no-undo.
+   &else
+       define input parameter ip-value-to-enc as character no-undo.
+       define output parameter op-char-value  as character no-undo.
+   &endif
   define variable crypto-value           as raw       no-undo.
   do
   on error undo, return error return-value

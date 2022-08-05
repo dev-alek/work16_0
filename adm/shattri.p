@@ -1379,14 +1379,14 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-      v-prop-code = "{&bef-attr-marking_marking-type}".
-&scop ptype character
-&scop prop-value ''
+      v-prop-code = "{&bef-attr-marking_marking-EDO-NotMark}".
+&scop ptype logical
+&scop prop-value no
 &scop prop-code  entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
-      end.
-      v-prop-code = "{&bef-attr-marking_marking-type-edo}".
+      end.      
+      v-prop-code = "{&bef-attr-marking_marking-type},{&bef-attr-marking_marking-type-edo},{&bef-attr-marking_marking-type-artic},{&bef-attr-marking_marking-type-transitional}".
 &scop ptype character
 &scop prop-value ''
 &scop prop-code  entry(v-ii,v-prop-code)
@@ -1407,7 +1407,7 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
-     v-prop-code = "{&bef-attr-marking_ban-recipes}".
+     v-prop-code = "{&bef-attr-marking_ban-recipes},{&bef-attr-marking_rus-key}".
 &scop ptype logical
 &scop prop-value no
 &scop prop-code  entry(v-ii,v-prop-code)
@@ -3006,26 +3006,40 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
           {&create-thbj-attr}.
       end.
-    end.
-    when {&attr-staff-options} then do:
-    v-prop-code = "{&bef-attr-staff-options_noanshftstaff},{&bef-attr-staff-options_obyznumbukv}".
-&scop ptype logical
-&scop prop-value no
-&scop prop-code entry(v-ii, v-prop-code)
 
-        do v-ii = 1 to num-entries(v-prop-code):
-          {&create-thbj-attr}.
-        end.
+
+end.
+        when {&attr-staff-options} then do:
+            v-prop-code = "~
+{&bef-attr-staff-options_noanshftstaff},~
+{&bef-attr-staff-options_obyznumbukv},
+{&bef-attr-staff-options_obyznumbukv}{&bef-staff-options_adm}".
         
-    v-prop-code = "{&bef-attr-staff-options_minparol}".
-&scop ptype integer
-&scop prop-value 0
-&scop prop-code entry(v-ii, v-prop-code)
-
-        do v-ii = 1 to num-entries(v-prop-code):
-          {&create-thbj-attr}.
-        end.
-    end.
+        &scop ptype logical
+        &scop prop-value no
+        &scop prop-code entry(v-ii, v-prop-code)
+        
+              do v-ii = 1 to num-entries(v-prop-code):
+                {&create-thbj-attr}.
+              end.
+            
+            v-prop-code = "~
+{&bef-attr-staff-options_minparol}{&bef-staff-options_adm},~
+{&bef-attr-staff-options_minparol},~
+{&bef-attr-staff-options_TimeAvail}{&bef-staff-options_adm},~
+{&bef-attr-staff-options_TimeAvail},~
+{&bef-attr-staff-options_TimeBlock}{&bef-staff-options_adm},~
+{&bef-attr-staff-options_TimeBlock},~
+{&bef-attr-staff-options_LastPaswd}{&bef-staff-options_adm},~
+{&bef-attr-staff-options_LastPaswd}".
+        &scop ptype integer
+        &scop prop-value 0
+        &scop prop-code entry(v-ii, v-prop-code)
+        
+                do v-ii = 1 to num-entries(v-prop-code):
+                  {&create-thbj-attr}.
+                end.
+            end.
     when {&attr-izt-rul} then do:
       v-prop-code = "izt-rul".
 &scop ptype character

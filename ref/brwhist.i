@@ -67,7 +67,7 @@ define input parameter p-corr-user-name  like ub.c-cli-hist.corr-user-name no-un
 define input parameter p-subject  like ub.c-cli-hist.subject no-undo .
 /*стартуем с текущей БД обычно*/
 define input parameter p-db-num  like ub.c-cli-hist.corr-user-db-num no-undo .
-define input parameter p-chip-num-utd  as int64 no-undo.
+define input parameter p-chip-num  as int64 no-undo.
 
 /*записи в выборке*/
 define input-output param p-rid-list    as  char no-undo .
@@ -89,7 +89,7 @@ define variable vss-description AS CHAR NO-UNDO INIT "Список полной истории":U.
 { gbl/flt-def.i }
 { gbl/cur-time.i }
 { cmp/r-pril.i new }
-{ gbl/waitfram.i }
+{ gbl/waitfram.i noprocess}
 { gbl/fltfield.i }
 { gbl/prn-lib.i }
 { cmp/mrk-strf.i }
@@ -1345,7 +1345,7 @@ PROCEDURE proc-b-sch :
   Notes:
 ------------------------------------------------------------------------------*/
 assign
-  tbl = 'c-obj-hist'
+  tbl = "{&buf_obj-hist}"
   join-tbl = 'X_c-obj-hist'
   fld = ""
   lab = ""
@@ -1353,11 +1353,11 @@ assign
   dim = '0'
   .
 
-run fltfield-add in this-procedure('corr-date', '', '',
+run fltfield-add in this-procedure('corr-date', 'Дата корр.', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('corr-time', 'Время корр.', 'time',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-run fltfield-add in this-procedure('corr-user-db-num', '', '',
+run fltfield-add in this-procedure('corr-user-db-num', 'БД корр.', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('corr-user-name', 'Изменил', 'usr',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
@@ -1365,9 +1365,9 @@ run fltfield-add in this-procedure('subject', 'Предмет изменения', 'obj-hist-sub
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('action', 'Действие', 'hist-action',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-run fltfield-add in this-procedure('source-type', 'Источник_измен-я', 'hist-source-type',
+run fltfield-add in this-procedure('source-type', 'Источник измен-я', 'hist-source-type',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-run fltfield-add in this-procedure('source-ref', '', '',
+run fltfield-add in this-procedure('source-ref', 'Код источника измен-я', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 
 

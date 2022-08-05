@@ -31,6 +31,8 @@ define variable vss-description as character no-undo init "Обмен данными с кассо
 { cmp/str-glbl.i }
 { cmp/ini-lib.i  }
 { str/get-chk.i }
+{ bge/socet.i }
+define variable Mreq as longchar no-undo.
 /*{ gbl/getcntxt.i def }*/
 /*{ gbl/getcntxt.i get }*/
 
@@ -190,34 +192,57 @@ procedure MainProc:
                          m-pos-type,
                          m-cash-num,
                          output m-timestamp).
-
+       run write-log-and-file in p-log-handle (
+                      input 1
+                    , input p-log-file-name
+                    , input 1
+                    , input substitute('Получаем данных по топливным транзакциям с кассы &1://&2'
+                                  ,entry(1, cash-desk.addr-path, {&delim-par})
+                                  ,entry(2, cash-desk.addr-path, {&delim-par})
+                                )
+                                                      ).
+   
       run SaxWriter no-error.
       if error-status:error then do:
          return error return-value.
       end.
-
-      run str/post-xml.p
-        (
-        input parparentproc
-        ,input p-parent-handle
-        ,input p-log-handle
-        ,input g#news
-        ,input g#auto
-        ,input 'get'
-        ,input p-log-file-name
-        ,input (entry(1, cash-desk.addr-path, {&delim-par}) + '://' + entry(2, cash-desk.addr-path, {&delim-par}))
-        ,input m-post-file-name
-        ,input m-response-file-name
-        ,input 30
-        ,input substitute('Чтение данных по топливным транзакциям с кассы &1://&2'
-                          ,entry(1, cash-desk.addr-path, {&delim-par})
-                          ,entry(2, cash-desk.addr-path, {&delim-par}))
-        ) no-error .
-
-      if error-status:error or return-value = "error" then do:
-         return error substitute ("Ошибка при чтении данных с кассы: &1&2", {&new-line}, error-status:get-message (1)) .
+      mWriteRespFile = m-response-file-name + "sckt".
+      run ConectSocet (entry(1,entry(2, cash-desk.addr-path, {&delim-par}),":"),
+                       entry(2,entry(2, cash-desk.addr-path, {&delim-par}),":"),
+                       "",
+                       Mreq,
+                       "xml",
+                       300,
+                       no,
+                       substitute ("Чтение данных по топливным транзакциям с кассы &1. ",entry(2, cash-desk.addr-path, {&delim-par}))
+                       ).
+      if    mWebResp eq ""
+         or OerrMsg  ne ""
+      then do:
+         run write-log-and-file in p-log-handle (
+             input 1
+           , input p-log-file-name
+           , input 1
+           , input substitute( "!!!Касса &1 маг&2 не ответила:&3&4 &5"
+                                 ,cash-desk.cash-num
+                                 ,cash-desk.obj-code
+                                 , {&new-line}
+                                 , OerrMsg
+/*                                , return-value*/
+                             )
+                                             ).
+          nEXT _cash-desk.
+       end.
+       else do:
+          run write-log-and-file in p-log-handle (
+             input 1
+           , input p-log-file-name
+           , input 1
+           , input substitute('Время ожидания выполнения задания на кассе - &1 c',
+                         mSocetEndTime
+                       )
+                                             ).
       end.
-
       run SaxReader no-error.
       if ErrorMessage <> "" or error-status:error then do:
          return error ErrorMessage + " " + return-value.
@@ -282,9 +307,9 @@ end procedure.
 procedure SaxWriter:
   define variable hSAXWriter as handle no-undo.
   create sax-writer hSAXWriter.
-  hSAXWriter:set-output-destination("file", m-post-file-name) no-error.
+  hSAXWriter:set-output-destination("longchar", Mreq) no-error.
   hSAXWriter:formatted = true.
-  hSAXWriter:encoding = "UTF-8".
+  hSAXWriter:encoding = "windows-1251".
 
   hSAXWriter:start-document() no-error.
 
@@ -308,7 +333,7 @@ procedure SaxReader:
   define variable hParser as handle no-undo.
   
   create sax-reader hParser.
-  hParser:set-input-source("FILE", m-response-file-name).
+  hParser:set-input-source("longchar", mWebResp).
   hParser:sax-parse () no-error.
   if error-status:error then do:
       if error-status:num-messages > 0 then
@@ -398,6 +423,9 @@ PROCEDURE Characters:
          tt-one-tranfuel.transfer-from = integer(vCurrContent) no-error.
       when "TFUuidCheq" then
          tt-one-tranfuel.uuid-cheq     = vCurrContent.
+      when "ErrorMessage" then
+         ErrorMessage = vCurrContent.
+         
    end case.
 
 END PROCEDURE.
@@ -413,8 +441,11 @@ PROCEDURE EndElement:
    define buffer goods   for goods.
 
    define variable v-gds-code as integer no-undo.
-   
-   if qName = "TranFuel" then do:
+   if qname = "ErrorMessage" then do:
+/*      ErrorMessage = mcurrentContent.*/
+      self:stop-parsing ().
+   end.
+   else if qName = "TranFuel" then do:
       find first tt-tranfuel where
                  tt-tranfuel.db-num    = tt-one-tranfuel.db-num
              and tt-tranfuel.uuid      = tt-one-tranfuel.uuid

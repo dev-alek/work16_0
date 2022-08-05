@@ -17,6 +17,7 @@ using ibs.th.gbl.logger.
 using ibs.th.gbl.logger.putout.
 using ibs.th.gbl.sys.env.ini.
 using ibs.th.gbl.lib.
+using ibs.th.gbl.systemsetting.
 
 
 class ibs.th.gbl.sys.objsrv:
@@ -34,6 +35,10 @@ class ibs.th.gbl.sys.objsrv:
     private set.
 
   define public property Lib as class lib no-undo
+    get.
+    private set.
+
+  define public property SystemSetting as class systemsetting no-undo
     get.
     private set.
 
@@ -55,7 +60,7 @@ class ibs.th.gbl.sys.objsrv:
 
   constructor public objsrv (  ):
     super ().
-    SysLog = new logger (out) .
+    SysLog = new logger (out). 
     SysLog:EventHndlr("Родился objsrv").
   end constructor.
   
@@ -70,6 +75,9 @@ class ibs.th.gbl.sys.objsrv:
     {utl\objreg.i out putout "SysINI:SystemLogFileName:Value_" }
     {utl\objreg.i Env env }
     {utl\objreg.i Lib lib}.
+    define variable vtext as character no-undo.
+    vtext = {utlcomp/keypub.i}.
+    {utl\objreg.i SystemSetting systemsetting vtext}.
     return.
   end method.
 
@@ -88,12 +96,12 @@ class ibs.th.gbl.sys.objsrv:
        find first tt-objth where tt-objth.objname eq IdObj no-error.
        if not available tt-objth
        then do:
-      create tt-objth.
-      assign
+          create tt-objth.
+          assign
              tt-objth.objname = IdObj
              tt-objth.objhndl = iobj
              tt-objth.objparent = cast (this-object, Progress.Lang.Object):ToString()
-        .
+          .
        end.
       SysLog:EventHndlr("Зарегистрирован - " + iobj:ToString()).
     end.

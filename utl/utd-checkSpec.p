@@ -23,7 +23,8 @@ define variable vss-description as character no-undo init "Проверка по специфика
 { cmp/trg-def.i }
 { str/lib-trn.i }
 { gbl/key-rec.i }
-{ str/utd-err.i }
+{ gbl/ObjSrv.i }
+{ str/utd.i }
 
 define input parameter pDb-num as integer no-undo .
 define input parameter pDoc-id as integer no-undo .
@@ -46,7 +47,6 @@ define variable objKeyRec as class ibs.th.gbl.keyrec no-undo.
 define variable vRecKey   as character no-undo.
 define variable vMarkUtd   as logical no-undo init no .
 
-    
 find first buf_utd no-lock where buf_utd.db-num = pDb-num
                              and buf_utd.doc-id = pDoc-id
                              no-error .
@@ -75,33 +75,27 @@ for first buf_contract no-lock where buf_contract.host-code = buf_utd.host-code
               (buf_contract.contract-name + {&delim-par} + string(buf_contract.contract-date-end)) ) .
   end .
   else do :
-    for each buf_utd-err exclusive-lock where buf_utd-err.db-num = buf_utd.db-num
-                                          and buf_utd-err.doc-id = buf_utd.doc-id
-                                          and buf_utd-err.CheckType = "CheckMOTP"
-                                          and buf_utd-err.CodeErr = "ContrDate"
-                                          :
-      delete buf_utd-err .                                      
-    end .
+    ClearUtdErrTypeCode(buf_utd.db-num,buf_utd.doc-id,"CheckMOTP","ContrDate").
+    
   end .
-end .                                                               
-
+end .
+CheckGds (buf_utd.db-num,buf_utd.doc-id,buf_utd.obj-type,buf_utd.obj-code,"CheckGds").
+CheckQnty(buf_utd.db-num, buf_utd.doc-id, "CheckQnty").
 if v-ok
 then do :
   ClearUtdErr(buf_utd.db-num,buf_utd.doc-id,"CheckСontract").
   /* Пока оставим для старых документов */
-  for each buf_utd-err exclusive-lock where buf_utd-err.db-num = buf_utd.db-num
-                                        and buf_utd-err.doc-id = buf_utd.doc-id
-                                        and buf_utd-err.CheckType = "CheckMOTP"
-                                        and buf_utd-err.CodeErr = "SpecifErr"
-                                        :
-    delete buf_utd-err .                                      
-  end .   
-  vMarkUtd = CheckMarkUtd(buf_utd.db-num,buf_utd.doc-id).
+  ClearUtdErrTypeCode(buf_utd.db-num,buf_utd.doc-id,"CheckMOTP","SpecifErr").
+    
   objKeyRec = new ibs.th.gbl.keyrec().
   lines_ :
   for each buf_utd-lines no-lock where buf_utd-lines.db-num = pDb-num
                                    and buf_utd-lines.doc-id = pDoc-id
                                    :
+    vMarkUtd = CheckMarkUtdLine(buf_utd-lines.db-num,
+                                buf_utd-lines.doc-id,
+                                buf_utd-lines.LineNum).
+  
     objKeyRec:GenKeyRec ( input "utd-lines"
                          ,input buffer buf_utd-lines:handle
                          ,output vRecKey).
@@ -204,7 +198,15 @@ then do :
   
   delete object objKeyRec.
 end .
-  
+if v-ok
+then do:
+   if      GetErrForUtdstr(buf_utd.db-num,buf_utd.doc-id,"CheckGds") ne ""
+   then
+      v-ok = no.
+   else if GetErrForUtdstr(buf_utd.db-num,buf_utd.doc-id,"CheckQnty") ne ""
+   then
+      v-ok = no. 
+end.
 find current buf_utd exclusive-lock .
 if not v-ok
 then do :
@@ -213,27 +215,36 @@ then do :
   .
 end .
 else do :
-  vMarkUtd = CheckMarkUtd(buf_utd.db-num,buf_utd.doc-id).
-  if vMarkUtd
-  then do :
-    for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num   = buf_utd.db-num
-                                             and buf_utd-marking-lines.doc-id   = buf_utd.doc-id,
-    first buf_marking exclusive-lock where buf_marking.mark = buf_utd-marking-lines.mark :
-  /*        for each buf_marking-childs exclusive-lock where buf_marking-childs.mark-parent = buf_marking.mark :*/
-  /*          assign                                                                                            */
-  /*            buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB                   */
-  /*          .                                                                                                 */
-  /*        end .                                                                                               */
-      if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then next .
-      assign
-        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
-      .
-    end .
-  end . /* vMarkUtd */
-  assign
-    buf_utd.sts = objSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB
-  .
+   if CheckErrForUtd(pDb-num,pDoc-id)
+   then do:
+      buf_utd.sts = objSrv:Env:Utd:Sts:TH:LinesInError:KeyIntDB.
+   end.
+   else do:
+      for each buf_utd-lines no-lock where buf_utd-lines.db-num = pDb-num
+                                       and buf_utd-lines.doc-id = pDoc-id
+      :
+   /*      vMarkUtd = CheckMarkUtd(buf_utd.db-num,buf_utd.doc-id, buf_utd-lines.LineNum).*/
+   /*      if vMarkUtd                                                                   */
+   /*      then do :                                                                     */
+         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num eq buf_utd.db-num
+                                             and buf_utd-marking-lines.doc-id      eq buf_utd.doc-id
+                                             and buf_utd-marking-lines.LineNum     eq buf_utd-lines.LineNum,
+         first buf_marking exclusive-lock where buf_marking.mark = buf_utd-marking-lines.mark :
+     /*        for each buf_marking-childs exclusive-lock where buf_marking-childs.mark-parent = buf_marking.mark :*/
+     /*          assign                                                                                            */
+     /*            buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB                   */
+     /*          .                                                                                                 */
+     /*        end .                                                                                               */
+            if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then next .
+            assign
+              buf_marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
+            .
+         end.
+      end .
+   /*   end . /* vMarkUtd */*/
+      buf_utd.sts = objSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB.
+   end.
 end .
 CheckMarking(buf_utd.db-num,buf_utd.doc-id,"CheckСontract").
-vMarkUtd = CheckMarkUtd(buf_utd.db-num,buf_utd.doc-id).
+CheckMarkUtd-28rel(buf_utd.db-num,buf_utd.doc-id).
 release buf_utd no-error .

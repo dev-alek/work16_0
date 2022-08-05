@@ -19,6 +19,7 @@ Input:
 Output:
 
 */
+using ibs.th.gbl.sys.objsrv.
 
 define input parameter parparentproc    as widget-handle    no-undo.
 define input parameter p-status-available   as character        no-undo.
@@ -498,6 +499,27 @@ else do:
   }
   {&if-not-true}
   /* закрытие всего по факту */
+/*  /*Проверка на маркированность*/                                                         */
+/*  define variable varvalue as character no-undo .                                         */
+/*  varvalue = "" .                                                                         */
+/*   define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.                         */
+/*   define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .                         */
+/*  run gbl/getobjsrvhndl.p (input-output ObjSrv).                                          */
+/*  EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(f-doc.obj-type, f-doc.obj-code).*/
+/*                                                                                          */
+/*  RUN gds-attr-value (                                                                    */
+/*                      INPUT bf_goods.gds-code,                                            */
+/*                      INPUT {&attr-mark-type},                                            */
+/*                      OUTPUT varvalue,                                                    */
+/*                      OUTPUT vartype                                                      */
+/*                      ).                                                                  */
+/*  if varvalue > "" then do:                                                               */
+/*        if EDOParSec:GetIsMarkingForTypeArtic(varvalue)                                   */
+/*  then do :                                                                               */
+/*  end .                                                                                   */
+/*  end.                                                                                    */
+
+  
     run str/fbr-fact.p ( input parparentproc
                        , input recid( f-doc )
                        , no                   /* p-silent */

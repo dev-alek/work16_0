@@ -266,7 +266,7 @@ on error undo, return error return-value
     v-obj-type  = ub.trn-doc.obj-type
     v-obj-code  = ub.trn-doc.obj-code
   .
-if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-obj-type, v-obj-code):IsMarking then v-mark = yes .
+  v-mark = yes .
   run check-input-parameters in this-procedure
     ( buffer ub.trn-doc
     ) no-error .

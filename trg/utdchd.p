@@ -29,5 +29,6 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
   &nws = yes 
   &del  = yes
   &nobufhist  = yes
+  &fieldmainheadtab  = "db-num doc-id" 
 }
 
