@@ -52,6 +52,7 @@ define temp-table tt-utd-lines like ub.utd-lines
   field TaxRate_  as character
   field fact-qnty as decimal
   field sts_err   as logical
+  field DelivCodeMis   as logical
   field UnitCli   as character
   field UnitCliQnty as decimal
   field isMarking   as logical
@@ -62,7 +63,7 @@ define temp-table tt-utd-lines like ub.utd-lines
   .
   
 define temp-table tt-marking-lines like ub.marking-lines
-  field mark-parent as character 
+  field mark-parent like ub.marking.mark-parent
   field stts        as character
   field sts-utd     as integer
   field stts-utd    as character

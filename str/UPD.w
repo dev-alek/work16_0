@@ -2391,23 +2391,23 @@ END PROCEDURE.
 function checkMark returns logical 
    (idb-num as integer, 
     idoc-id as integer ):
-   define buffer cancel_utd-marking-lines for ub.utd-marking-lines .
+   define buffer cancel_utd-lines for ub.utd-marking-lines .
    define buffer cancel_marking           for ub.marking .
    define buffer X_utd                    for X_utd .
    define variable v-write-cancel as logical no-undo .
    v-write-cancel = false .
    define variable vpen as integer no-undo.
    define variable vdel as integer no-undo.
-   if not logical(getattrutdex(idb-num,idoc-id,"MarkUtd","yes")) 
-   then
-      return yes.
-   vpen = Marking:PendingVerification:KeyIntDB.
-   vdel = Marking:DeliveryControl:KeyIntDB.
-   for each cancel_utd-marking-lines where cancel_utd-marking-lines.doc-id = idoc-id and cancel_utd-marking-lines.db-num = idb-num no-lock, 
-            first cancel_marking where cancel_marking.mark = cancel_utd-marking-lines.mark and (cancel_marking.sts = vpen 
-                                                                                             or cancel_marking.sts = vdel) no-lock: 
-            v-write-cancel = true .
-            leave .
+   v-write-cancel = true.
+   define variable vqnty as decimal no-undo.
+   block-line:
+   for each cancel_utd-lines where cancel_utd-lines.doc-id = idoc-id and cancel_utd-lines.db-num = idb-num no-lock: 
+      vqnty = decimal(GetAttrUtdlinesex(cancel_utd-lines.db-num,cancel_utd-lines.doc-id,cancel_utd-lines.linenum,"QuantityBarCode","0")).
+      if vqnty ne 0
+      then do:
+         v-write-cancel = false .
+         leave block-line.
+      end.
    end.
    if     v-write-cancel
    then do:

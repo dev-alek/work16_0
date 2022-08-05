@@ -429,7 +429,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    CheckMarking(utd.db-num,utd.doc-id,"CheckСontract").
 /*   vMarkUtd =*/
    CheckMarkUtd(utd.db-num,utd.doc-id).
-   if ibs.th.gbl.gbl-var:g#db-num ne 0 and utd.doc-code = "" and utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
+   if ibs.th.gbl.gbl-var:g#db-num ne 0 and utd.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
       and (utd.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB )
      then 
    do:
@@ -441,20 +441,28 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
        ibs.th.gbl.gbl-var:g#userid /*User-Id*/
        ) no-error.
      if not error-status:error
-       then 
-     do:
-      if return-value matches "*ошибка*"
-       then v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value).
-       else v-msg = substitute ('MsgBox "Документ № &1 от &2. Сформирована ПН: &3. &5 &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value, "Товары данной поставки можно продавать на кассе.").
+     then do:
+        v-msg = "".
+        if return-value matches "*ошибка*"
+        then v-msg = substitute ('Документ № &1 от &2. Сформирована ПН: &3. &4', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value).
+        else do:
+           if     utd.sts ne objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
+           then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &6 &4', 
+                                       utd.DocumentNumber, 
+                                       string (utd.DocumentDate) , 
+                                       utd.doc-code, 
+                                       return-value, 
+                                       if ChecknotMarkUtd(utd.db-num,utd.doc-id) then "Немаркированной продукцией (товарами) данной поставки можно торговать на кассе." else "",
+                                       if CheckMarkUtd(utd.db-num,utd.doc-id) then "Маркированной продукцией (товарами) данной поставки торговать на кассе нельзя. Ожидайте по маркированной продукции (товарам) дополнительного уведомления." else "").
+           else if     utd.sts eq objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
+                   and CheckMarkUtd(utd.db-num,utd.doc-id) 
+           then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value, "Маркированной продукцией(товарами)данной поставки можно торговать на кассе.").
+        end.
      end.
-     else v-msg = substitute ('MsgBox "Документ: &1 от &2. Ошибка при формировании ПН. &3. &4", ,"Получен УПД"', utd.DocumentNumber, string (utd.DocumentDate), trim(return-value, ".")).
-     
-     v-file-name = string (guid(generate-uuid)) + ".vbs".
-     output to value (v-file-name).
-     put unformatted v-msg. 
-     output close.
-     file-info:file-name = (v-file-name).    
-     os-command no-wait value (file-info:full-pathname).
+     else v-msg = substitute ('Документ: &1 от &2. Ошибка при формировании ПН. &3. &4', utd.DocumentNumber, string (utd.DocumentDate), trim(return-value, ".")).
+     if v-msg ne ""
+     then
+        run utl\proc-msg.p (v-msg) no-error.
    
    end.
 

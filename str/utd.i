@@ -370,11 +370,13 @@ function CheckGds returns logical
                      output v-par-val,
                      output v-par-type
                     ).
-         if      (    EDOParSec:GetIsEDOForType(v-par-val)
+         if   not EDOParSec:GetIsTransitionalForType(v-par-val)
+             and(   
+              (    EDOParSec:GetIsEDOForType(v-par-val)
                   and not Vflagmark)
               or  (EDOParSec:GetIsArticForType(v-par-val)
                   and not VflagOAD
-                  and not Vflagmark) 
+                  and not Vflagmark)) 
          then do:
             AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,iErrType,"NotMarkForLine",string(utd-lines.LineNum)).
          end.

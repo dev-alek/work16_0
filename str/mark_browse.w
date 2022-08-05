@@ -757,7 +757,7 @@ DO:
     
     if  p-type = 6 then 
     do:
-       find first buf_utd no-lock where buf_utd.db-num = X_marking.db-num and buf_utd.doc-id = X_marking.doc-id no-error .
+      find first buf_utd no-lock where buf_utd.db-num = X_marking.db-num and buf_utd.doc-id = X_marking.doc-id no-error .
       if X_marking.box-qnty = qnty-mark-2 then 
       do:
         find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark and buf_utd-marking-lines.db-num = X_marking.db-num and
@@ -775,12 +775,7 @@ DO:
           X_marking.stts = StatusTHName(X_marking.sts) .
         end.
         run save-mark .
-        for each X_marking-line where X_marking-line.mark <> X_marking.mark:
-          for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking-line.mark and 
-            buf_utd-marking-lines.db-num = X_marking-line.db-num and
-            buf_utd-marking-lines.doc-id = X_marking-line.doc-id:
-          end.  
-        end.    
+            
       end .  
       else 
       do:
@@ -822,6 +817,37 @@ DO:
           return no-apply .
         end.  
       end. 
+    end.
+  
+   else if p-type = 7 then 
+    do:
+      define variable vQnty as integer no-undo.
+      
+      find first buf_utd no-lock where buf_utd.db-num = X_marking.db-num and buf_utd.doc-id = X_marking.doc-id no-error .
+      for each tt-gray-marking-lines where tt-gray-marking-lines.mark-parent eq X_marking.mark
+                                       and   tt-gray-marking-lines.sts-utd = Marking:Checked_:KeyIntDB 
+                                          or tt-gray-marking-lines.sts-utd = Marking:MarkError:KeyIntDB
+      no-lock: 
+         vQnty = vqnty + tt-gray-marking-lines.box-qnty.
+      end.
+      
+      if X_marking.box-qnty ne vQnty then 
+      do:
+         message "Марки просканированы не полностью." skip
+          "Не просканировааные марки будут не приняты" skip
+          "Продолжить сканирование?" skip
+          "Да – возврат к сканированию" skip
+          "Нет" 
+          view-as alert-box question buttons yes-no update quest-ok.
+        if not quest-ok then 
+        do:
+           run save-mark .
+        end.    
+      end .  
+      else 
+      do:
+         run save-mark .
+      end.
     end.
   END.
 
@@ -1033,7 +1059,7 @@ ON value-changed OF br-mark-item IN FRAME d-mark /* Номер документа */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark d-mark
 ON ROW-DISPLAY OF br-mark IN FRAME d-mark
     DO:
-        if p-type = 1 or p-type = 6 then 
+        if p-type = 1 or p-type = 6 or p-type = 7 then 
         do:
             case X_marking.sts-utd:
                 when Marking:Checked_:KeyIntDB then
@@ -1145,7 +1171,7 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark-item d-mark
 ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
     DO:
-        if p-type = 1 or p-type = 6 then 
+        if p-type = 1 or p-type = 6 or p-type = 7  then 
         do:
             case X_marking-line.sts-utd:
                 when Marking:Checked_:KeyIntDB then

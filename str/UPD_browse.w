@@ -1346,6 +1346,25 @@ ON ROW-DISPLAY OF br-utd IN FRAME d-utd
                X_utd-lines.stts:fGCOLOR in browse br-utd = red_COLOR.
                mgdsunit:fGCOLOR in browse br-utd = red_COLOR.
             end.
+         if X_utd-lines.DelivCodeMis then 
+            do:
+               X_utd-lines.LineNum:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.gds-code:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.ProductCode:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.Gds-Name:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.UnitCode:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.UnitCliQnty:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.Quantity:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.price:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.total:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.TaxRate_:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.qnty-scan:fGCOLOR in browse br-utd = 13.
+/*               X_utd-lines.fact-qnty:fGCOLOR in browse br-utd = red_COLOR.*/
+               much:fGCOLOR in browse br-utd = 13.
+               X_utd-lines.stts:fGCOLOR in browse br-utd = 13.
+               mgdsunit:fGCOLOR in browse br-utd = 13.
+            end.
+            
    END .
 
 /* _UIB-CODE-BLOCK-END */
@@ -3485,8 +3504,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 /*   /*проверка на признак маркированности УПД*/                                                                                                          */
 /*   find first ub.utd-attr no-lock where ub.utd-attr.doc-id = p-doc-id and ub.utd-attr.db-num = p-db-num and ub.utd-attr.attr-code = "MarkUtd" no-error .*/
 /*   if available (ub.utd-attr) then upd_mark = logical(ub.utd-attr.attr-value) .                                                                         */
-   
-   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBarCode
+   define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+   EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code).
+      
+   if EDOParSec:IsBarCode
       then v-barcode = yes . 
    else v-barcode = no .    
    run init-temp in this-procedure .
@@ -3498,7 +3519,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    end.
    {  gbl/diasize.i }
    run diasize_init in this-procedure .
-   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsManual
+   if EDOParSec:IsManual
    then v-manual = yes . 
    else v-manual = no .
 
@@ -4774,8 +4795,6 @@ PROCEDURE mark-temp :
    define buffer buf_bar-code          for ub.bar-code .
    define variable v-db-num       as integer   no-undo .
    define variable v-doc-id       as integer   no-undo .
-   define variable vRecKeyLine    as character no-undo .
-   define variable vRecKeyUTDLine as character no-undo .
    empty temp-table  tt-utd-lines-filtr.
    run add-filter(?  ,
                   ?  ,
@@ -4855,12 +4874,24 @@ PROCEDURE mark-temp :
          X_utd-lines.Price = buf_utd-lines.Price / buf_bar-code.cli-base-rate .                                      
       end.                                            
 
-      run gen-key-rec ("utd-lines", 
-         input  buffer X_utd-lines:handle, 
-         output vRecKeyLine).
-
-      vRecKeyUTDLine = replace(vRecKeyLine,"utd-lines","utd-marking-lines") + {&delim-key}.  
       X_utd-lines.sts_err = CheckErrForLine(buffer X_utd-lines:handle).
+      if not X_utd-lines.sts_err
+      then do:
+         X_utd-lines.DelivCodeMis = CheckErrForLineTypeCode (buffer X_utd-lines:handle,"CheckQnty","QntyMArk","warning",no).
+         if not X_utd-lines.DelivCodeMis
+         then do:
+            block-war:
+            for each buf_utd-marking-lines         where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and
+                                                         buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and 
+                                                         buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+            no-lock:
+               X_utd-lines.DelivCodeMis = CheckTypeForMarkLineType(buffer utd-marking-lines:handle,"*","*","warning").
+               if X_utd-lines.DelivCodeMis
+               then
+                  leave block-war.
+            end.
+         end.
+      end.
       if x_utd-lines.isMarking then 
       do:
          /*Определить какие должны быть ошибочные статусы*/
@@ -4890,14 +4921,14 @@ PROCEDURE mark-temp :
          end.
 
          X_utd-lines.qnty-mark = 0 .
-         X_utd-lines.qnty-scan = 0 .
+/*         X_utd-lines.qnty-scan = 0 .*/
          for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and
             buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum:
             find first buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark no-error .
             if buf_utd-marking-lines.doc-level = 1 then 
             do:
                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
-               if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1 .
+/*               if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1 .*/
             end .
             if  avail buf_marking and (
                buf_marking.sts = Marking:GrayZone:KeyIntDB or 
@@ -5284,12 +5315,7 @@ PROCEDURE save_mark :
                      if X_utd-lines.isMarking
                      then do:
                         define variable vCheck as logical no-undo init yes.
-                        if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
                         do:
-                           vCheck = tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
-                        end.
-                        if vCheck
-                        then do:
                            for first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num and
                               bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id:
                                  find first buf_marking where buf_marking.mark eq bf_utd-marking-lines.mark no-lock no-error.
@@ -5297,26 +5323,82 @@ PROCEDURE save_mark :
                               if     available buf_marking
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
-                                 and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+/*                                 and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB */
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
-                              then 
-                                 bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .  
+                              then do: 
+                                 bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .
+                                 if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                                 do:
+                                    vCheck = tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
+                                 end.
+                              end.
+                              else do:
+                                 empty temp-table tt-marking-lines .
+                                 for first gray_utd-marking-lines no-lock where gray_utd-marking-lines.db-num = X_utd-lines.db-num and gray_utd-marking-lines.doc-id = X_utd-lines.doc-id
+                                    and gray_utd-marking-lines.LineNum = X_utd-lines.LineNum and gray_utd-marking-lines.mark = buf_utd-marking-lines.mark:
+                                    for first gray_marking no-lock where gray_marking.mark = buf_utd-marking-lines.mark :
+                                       create tt-marking-lines .
+                                       assign
+                                          tt-marking-lines.gds-name    = GdsName(gray_utd-marking-lines.gds-code)
+                                          tt-marking-lines.stts-utd    = StatusTHName(gray_utd-marking-lines.sts)
+                                          tt-marking-lines.stts        = StatusTHName(gray_marking.sts)
+                                          tt-marking-lines.mark        = gray_marking.mark
+                                          tt-marking-lines.mark-parent = gray_marking.mark-parent
+                                          tt-marking-lines.gds-code    = gray_utd-marking-lines.gds-code
+                                          tt-marking-lines.sts         = gray_marking.sts
+                                          tt-marking-lines.sts-utd     = gray_utd-marking-lines.sts
+                                          tt-marking-lines.unit        = gray_marking.unit
+                                          tt-marking-lines.box-qnty    = gray_marking.box-qnty
+                                          tt-marking-lines.LineNum     = gray_utd-marking-lines.LineNum
+                                          tt-marking-lines.db-num      = gray_utd-marking-lines.db-num
+                                          tt-marking-lines.doc-id      = gray_utd-marking-lines.doc-id
+                                          tt-marking-lines.doc-level   = gray_utd-marking-lines.doc-level
+                                          .
+                                    end.
+                                    for each gray_unit-marking no-lock where gray_unit-marking.mark-parent = gray_utd-marking-lines.mark:
+                                       for first gray_unit_utd-marking-lines no-lock where gray_unit_utd-marking-lines.db-num = X_utd-lines.db-num and gray_unit_utd-marking-lines.doc-id = X_utd-lines.doc-id
+                                          and gray_unit_utd-marking-lines.LineNum = X_utd-lines.LineNum and gray_unit_utd-marking-lines.mark = gray_unit-marking.mark:
+                                          create tt-marking-lines .
+                                          assign
+                                             tt-marking-lines.gds-name    = GdsName(gray_unit_utd-marking-lines.gds-code)
+                                             tt-marking-lines.stts-utd    = StatusTHName(gray_unit_utd-marking-lines.sts)
+                                             tt-marking-lines.stts        = StatusTHName(gray_unit-marking.sts)
+                                             tt-marking-lines.mark        = gray_unit-marking.mark
+                                             tt-marking-lines.mark-parent = gray_unit-marking.mark-parent
+                                             tt-marking-lines.gds-code    = gray_unit_utd-marking-lines.gds-code
+                                             tt-marking-lines.sts         = gray_unit-marking.sts
+                                             tt-marking-lines.sts-utd     = gray_unit_utd-marking-lines.sts
+                                             tt-marking-lines.unit        = gray_unit-marking.unit
+                                             tt-marking-lines.unit-ext    = gray_unit-marking.unit-ext
+                                             tt-marking-lines.box-qnty    = gray_unit-marking.box-qnty
+                                             tt-marking-lines.LineNum     = gray_unit_utd-marking-lines.LineNum
+                                             tt-marking-lines.db-num      = gray_unit_utd-marking-lines.db-num
+                                             tt-marking-lines.doc-id      = gray_unit_utd-marking-lines.doc-id
+                                             tt-marking-lines.doc-level   = gray_unit_utd-marking-lines.doc-level
+                                             .
+                                       end.
+                                    end.
+                                 end.
+                                 run str/mark_browse.w (input parparentproc,
+                                    input-output table tt-marking-lines by-reference,
+                                    input p-mode,
+                                    input "Марки по товару " + string(X_utd-lines.gds-code) + " " + GdsName(X_utd-lines.gds-code) + " имеют ошибки. " ,
+                                    input 7,
+                                    input "" /*тип продукции*/
+                                    ) no-error .
+                                 { gbl/brwrepos.i
+                             &line-num= 5
+                           }
+                           end.
+                                       
    /*                           find first buf_marking where buf_marking.mark eq bf_utd-marking-lines.mark no-lock no-error.*/
    /*                           X_utd-lines.qnty-scan     = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1  .*/
                            end.
                         end.
                         define variable v-q as decimal no-undo.
-                        v-q = 0.
-                        for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num and
-                           bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id and
-                           bf_utd-marking-lines.LineNum = buf_utd-marking-lines.LineNum and
-                           bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB and 
-                           bf_utd-marking-lines.doc-level eq 1:
-                           find first buf_marking where buf_marking.mark eq bf_utd-marking-lines.mark no-lock no-error.
-                           v-q =  v-q + + if available buf_marking then buf_marking.box-qnty else 1  .
-                        end.
+                        v-q = ObjSrv:Lib:MarkingTree:GetQntyCheckMark(buf_utd-marking-lines.db-num, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.LineNum).
                         SetAttrUtdlines(buf_utd-marking-lines.db-num,buf_utd-marking-lines.doc-id,buf_utd-marking-lines.linenum,"QuantityBarCode",string(v-q)).
                      end.
                      else if X_utd-lines.isArtic
@@ -5335,20 +5417,20 @@ PROCEDURE save_mark :
                         v-mark = "" .
                      end.
 /* Если марка то не ищем бакркод*/
-/*                     else do:                                                                                         */
-/*                        b_cleaggds:sensitive = yes.                                                                   */
-/*                        b_cleaggds:visible = yes.                                                                     */
-/*                        m-gds-code:visible = yes.                                                                     */
-/*                        F-text:screen-value = "               Введите количество или просканируйте другой штрих-код" .*/
-/*                        m-gds-code = string(getgdscodeBydm(v-mark)).                                                  */
-/*                        m-gds-code:screen-value = string(v-gds-code).                                                 */
-/*                                                                                                                      */
-/*                        {&OPEN-QUERY-br-utd}                                                                          */
-/*                        reposition br-utd to recid recid_utd no-error .                                               */
-/*                        apply "VALUE-CHANGED" to br-utd IN FRAME d-utd.                                               */
-/*                        v-mark:screen-value = "" .                                                                    */
-/*                        v-mark = "" .                                                                                 */
-/*                     end.                                                                                             */
+                     else do:
+                        b_cleaggds:sensitive = yes.
+                        b_cleaggds:visible = yes.
+                        m-gds-code:visible = yes.
+                        F-text:screen-value = "               Введите количество или просканируйте другой штрих-код" .
+                        m-gds-code = string(getgdscodeBydm(v-mark)).
+                        m-gds-code:screen-value = string(v-gds-code).
+
+                        {&OPEN-QUERY-br-utd}
+                        reposition br-utd to recid recid_utd no-error .
+                        apply "VALUE-CHANGED" to br-utd IN FRAME d-utd.
+                        v-mark:screen-value = "" .
+                        v-mark = "" .
+                     end.
                   end.
                end.  
             /*            if available (gray_marking) then do:                                               */
@@ -6166,7 +6248,18 @@ PROCEDURE save_bar-code :
       for first buf_prod-bc no-lock where buf_prod-bc.b-str = v-Mark,
          first buf_bar-code no-lock where buf_bar-code.b-code = buf_prod-bc.b-code and
          buf_bar-code.stts_ = 0:
-         if IS-NeedMark(buf_prod-bc.b-code,buf_prod-bc.b-str)
+         define variable v-par-val  as character no-undo.
+         define variable v-par-type as character no-undo.
+         &scop proc-name gds-attr-value
+                {&run_proc_attr-lib}
+                    ( buf_bar-code.gds-code,
+                      {&attr-mark-type},
+                       output v-par-val,
+                       output v-par-type
+                    ).
+         if (  EDOParSec:GetIsEDOForType(v-par-val) 
+            or EDOParSec:GetIsArticForType(v-par-val))
+          and IS-NeedMark(buf_prod-bc.b-code,buf_prod-bc.b-str)
          then do:
             F-text = "           Штрих-код подлежит обязательной маркировке. Просканируйте марку." .
             display F-text with frame {&frame-name}.
@@ -6177,6 +6270,14 @@ PROCEDURE save_bar-code :
          end.
          else
             v-gds-code = buf_bar-code.gds-code .
+      end.
+      if v-gds-code eq ?
+      then do:
+         F-text = "   Просканированный код не найден. Просканируйте Data Matrix или верните товар поставщику." .
+         display F-text with frame {&frame-name}.
+         v-Mark:screen-value = "" .
+         v-Mark = "" .
+         return no-apply.
       end.   
    end.   
 
@@ -6281,6 +6382,7 @@ PROCEDURE save_bar-code :
          apply "VALUE-CHANGED" to br-utd IN FRAME d-utd.
          v-mark:screen-value = "" .
          v-mark = "" .
+         return no-apply .
       /*            end.*/
       end.
       else 
@@ -6293,7 +6395,8 @@ PROCEDURE save_bar-code :
          m-gds-code:visible = no.
          m-gds-code = ?.
          {&OPEN-QUERY-br-utd}            
-         apply "VALUE-CHANGED" to br-utd IN FRAME d-utd.   
+         apply "VALUE-CHANGED" to br-utd IN FRAME d-utd.
+          return no-apply .
       end.
    end.
    

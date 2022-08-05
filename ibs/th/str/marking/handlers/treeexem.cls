@@ -304,4 +304,66 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
       return v-q.
   end method. 
  
+ method public integer  GetQntyCheckMark(db-num as integer,doc-id as integer, line-num as integer):
+     define buffer bf_utd-marking-lines for ub.utd-marking-lines.
+     define buffer bf_marking  for ub.marking.
+     define variable v-q as integer no-undo.
+     define variable Marking as class mark no-undo .
+     Marking = ObjSrv:Env:Marking:Sts:Mark.
+   
+     block-mark-line:
+     for each bf_utd-marking-lines where bf_utd-marking-lines.db-num    = db-num   and
+                                         bf_utd-marking-lines.doc-id    = doc-id   and
+                                         bf_utd-marking-lines.LineNum   = Line-Num  and
+                                         bf_utd-marking-lines.doc-level = 1
+     no-lock:
+        if not isMark(bf_utd-marking-lines.mark)
+        then
+           next block-mark-line.
+        
+        if     bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB
+        then do:
+            
+           find first bf_marking where bf_marking.mark eq bf_utd-marking-lines.mark no-lock no-error.
+           v-q =  v-q + if available bf_marking then bf_marking.box-qnty else 1  .
+        end.
+        else do:
+           if LevelDownUTD(bf_utd-marking-lines.mark, bf_utd-marking-lines.doc-id, bf_utd-marking-lines.db-num)
+           then
+              v-q =  v-q + GetQntyCheckMark(db-num, doc-id, line-num, bf_utd-marking-lines.mark).
+        end.
+     end.
+     return v-q.
+  end method. 
+ 
+  method public integer  GetQntyCheckMark(db-num as integer,doc-id as integer, line-num as integer,  imark as character ):
+     define buffer bf_utd-marking-lines for ub.utd-marking-lines.
+     define buffer bf_marking  for ub.marking.
+     define variable Marking as class mark no-undo .
+     Marking = ObjSrv:Env:Marking:Sts:Mark.
+   
+     define variable v-q as integer no-undo.
+     block-mark-line:
+     for each bf_marking where bf_marking.mark-parent eq imark 
+     no-lock,
+            
+        first bf_utd-marking-lines where bf_utd-marking-lines.db-num  = db-num   and
+                                         bf_utd-marking-lines.doc-id  = doc-id   and
+                                         bf_utd-marking-lines.LineNum = LineNum  and
+                                         bf_utd-marking-lines.mark    = bf_marking.mark
+     no-lock:
+        if     bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB
+        then do:
+           v-q =  v-q + if available bf_marking then bf_marking.box-qnty else 1  .
+        end.
+        else do:
+           if LevelDownUTD(bf_utd-marking-lines.mark, bf_utd-marking-lines.doc-id, bf_utd-marking-lines.db-num)
+           then
+              v-q =  v-q + GetQntyCheckMark(db-num, doc-id, line-num, bf_utd-marking-lines.mark).
+        end.
+     end.
+     return v-q.
+  end method. 
+ 
+  {utl/gtin.i class }
 end class.

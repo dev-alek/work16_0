@@ -153,83 +153,82 @@ function CheckEdoc returns character
    define variable vSts as integer no-undo.
    define variable vMarkutd as logical no-undo.
    vSts = objSrv:Env:utd:Sts:th:ReceivedFromSupplier:KeyIntDB.
-   vMarkutd = logical(getattrutdex (idb-numOrig,idoc-idOrig,"MarkUtd","yes")).
-   if vMarkutd
-   then do:
-      for each utd-lines where utd-lines.db-num eq idb-num
-                            and utd-lines.doc-id eq idoc-id
-       exclusive-lock:
-          
-          find first utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
-                                         and utd-marking-lines.doc-id  eq utd-lines.doc-id
-                                         and utd-marking-lines.linenum eq utd-lines.LineNum
-          no-lock no-error.
-          
-          if available utd-marking-lines
-          then do:
-             if    utd-lines.Price                eq 0
-                or utd-lines.Total                eq 0
-                or utd-lines.TotalWithVatExcluded eq 0
-                or utd-lines.Quantity             eq 0
-             then
-                AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,"Edoc","Amount" , string(utd-lines.LineNum )).
-          end.
-          else do:
-             if    utd-lines.Total                ne 0
-   /*            or utd-lines.TotalWithVatExcluded ne 0*/
-                or utd-lines.Quantity             ne 0
-             then
-                AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,"Edoc","Mark" ,string(utd-lines.LineNum)).
-             else
-                delete utd-lines.
-          end.
-       end.
-      find first utd-marking-lines where utd-marking-lines.db-num eq idb-numOrig
-                                     and utd-marking-lines.doc-id eq idoc-idOrig
-                                     and utd-marking-lines.sts    eq objSrv:Env:marking:Sts:Mark:Checked_:KeyIntDB
-      no-lock no-error.
-   end.
-   if    not vMarkutd
-      or available utd-marking-lines
-   then do:
-      
-      for each utd-lines where utd-lines.db-num eq idb-numOrig
-                           and utd-lines.doc-id eq idoc-idOrig
-      no-lock:
-         find first edoc-lines where edoc-lines.db-num eq idb-num
-                                 and edoc-lines.doc-id eq idoc-id
-                                 and edoc-lines.LineNum eq utd-lines.LineNum
-         no-lock no-error.
-         if     available edoc-lines
-         then do:
-            if edoc-lines.Quantity ne 0
+   Block-line:
+   for each utd-lines where utd-lines.db-num eq idb-num
+                        and utd-lines.doc-id eq idoc-id
+   exclusive-lock:
+      define variable ismarkin as logical no-undo.
+      define variable isOAD as logical no-undo.
+      define variable isper as logical no-undo.
+      getMarkUtdLine(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,
+           output ismarkin, output isOAD, output isper).
+      if    utd-lines.Price                eq 0
+         or utd-lines.Total                eq 0
+         or utd-lines.TotalWithVatExcluded eq 0
+         or utd-lines.Quantity             eq 0
+      then do:
+         for each utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
+                                      and utd-marking-lines.doc-id  eq utd-lines.doc-id
+                                      and utd-marking-lines.linenum eq utd-lines.LineNum
+         no-lock:
+            if    isMark(utd-marking-lines.mark)
+               or isOad(utd-marking-lines.mark)
             then do:
-               if edoc-lines.Price ne utd-lines.Price
-               then
-                  AddUtdErr(edoc-lines.db-num,edoc-lines.doc-id,buffer edoc-lines:handle,"Edoc","Price" ,string(edoc-lines.LineNum)).
-            end.
-            else do:
-               find first utd-marking-lines where utd-marking-lines.db-num  eq edoc-lines.db-num
-                                              and utd-marking-lines.doc-id  eq edoc-lines.doc-id
-                                              and utd-marking-lines.linenum eq edoc-lines.LineNum
-                                              and length(utd-marking-lines.mark) > 13
-               no-lock no-error.
-               if not available utd-marking-lines
-               then do:
-                  find current edoc-lines exclusive-lock.
-                  delete edoc-lines.
-               end.
-               else
-                  AddUtdErr(edoc-lines.db-num,edoc-lines.doc-id,buffer edoc-lines:handle,"Edoc","Amount" , string(edoc-lines.LineNum )).
+               AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,"Edoc","Amount" , string(utd-lines.LineNum )).
+               next Block-line.
             end.
          end.
+         delete utd-lines.
       end.
+      else if   ( utd-lines.Total                ne 0
+   /*         or utd-lines.TotalWithVatExcluded ne 0*/
+              or utd-lines.Quantity             ne 0)
+              and ismarkin or isOAD
+      then do:
+         Block-mark:
+         for each utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
+                                      and utd-marking-lines.doc-id  eq utd-lines.doc-id
+                                      and utd-marking-lines.linenum eq utd-lines.LineNum
+         no-lock:
+            if  (isOAD and
+                  isMark(utd-marking-lines.mark)
+               or isOad(utd-marking-lines.mark) )
+               or (ismarkin and
+                  isMark(utd-marking-lines.mark))
+               
+            then do:
+               leave Block-mark.
+            end.
+         end.
+         if not available utd-marking-lines
+         then
+            AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,"Edoc","Mark" ,string(utd-lines.LineNum)).
+      end.
+   end.
+   for each utd-lines where utd-lines.db-num eq idb-numOrig
+                        and utd-lines.doc-id eq idoc-idOrig
+   no-lock:
+      find first edoc-lines where edoc-lines.db-num eq idb-num
+                              and edoc-lines.doc-id eq idoc-id
+                              and edoc-lines.LineNum eq utd-lines.LineNum
+      no-lock no-error.
+      if     available edoc-lines
+      then do:
+         if edoc-lines.Quantity ne 0
+         then do:
+            if edoc-lines.Price ne utd-lines.Price
+            then
+               AddUtdErr(edoc-lines.db-num,edoc-lines.doc-id,buffer edoc-lines:handle,"Edoc","Price" ,string(edoc-lines.LineNum)).
+         end.
+
+      end.
+      
       vSts = objSrv:Env:utd:Sts:th:SignatureRequired:KeyIntDB. /* Требует подписания */
       CheckedocMark(idb-numOrig , idoc-idOrig , idb-num , idoc-id).
    end.
    
    define variable vError as character no-undo.
-   vError = GetErrForUtdstr(idb-num,idoc-id,"edoc").
+   vError = GetErrForUtdstr(idb-num , idoc-id ,"edoc").
    if vError ne ""
    then
       vSts = objSrv:Env:utd:Sts:th:edocError:KeyIntDB.
@@ -410,10 +409,20 @@ function CrEdoc returns character
                                          and utd-marking-lines.LineNum eq utd-lines.LineNum
                                          and utd-marking-lines.site eq "-"
                                          no-lock:
-               find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc.db-num 
+               if isOAD(utd-marking-lines.mark)
+               then do:
+                  define variable VOAD as character no-undo.
+                  VOAD = "02" + getGtinByDM(utd-marking-lines.mark) + "37".
+                  find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc.db-num 
                                                and edoc-marking-lines.doc-id eq edoc.doc-id
-                                               and edoc-marking-lines.mark   eq utd-marking-lines.mark
+                                               and edoc-marking-lines.mark   begins VOAD
                   no-lock no-error.
+               end.
+               else
+                  find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc.db-num 
+                                                  and edoc-marking-lines.doc-id eq edoc.doc-id
+                                                  and edoc-marking-lines.mark   eq utd-marking-lines.mark
+                     no-lock no-error.
                if available edoc-marking-lines
                then do:
                   find first edoc-lines where edoc-lines.db-num      = edoc-marking-lines.db-num
@@ -478,22 +487,110 @@ function CrEdoc returns character
             for each utd-marking-lines where utd-marking-lines.db-num eq utd-lines.db-num 
                                          and utd-marking-lines.doc-id eq utd-lines.doc-id
                                          and utd-marking-lines.LineNum eq utd-lines.LineNum
-            no-lock:
+            no-lock by utd-marking-lines.site:
                if utd-marking-lines.site eq "-"
                then do:
-                  find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc-lines.db-num 
-                                                  and edoc-marking-lines.doc-id eq edoc-lines.doc-id
-                                                  and edoc-marking-lines.mark   eq utd-marking-lines.mark
-                  exclusive-lock no-error.
-                  if available edoc-marking-lines
-                  then
-                     delete edoc-marking-lines.
-                  else
-                     AddUtdErr(edoc.db-num,edoc.doc-id,buffer edoc-lines:handle,"edoc","Mark" + utd-marking-lines.site,utd-marking-lines.mark).
+                  if isOAD(utd-marking-lines.mark)
+                  then do:
+                     VOAD = "02" + getGtinByDM(utd-marking-lines.mark) + "37".
+                     find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc-lines.db-num 
+                                                     and edoc-marking-lines.doc-id eq edoc-lines.doc-id
+                                                     and edoc-marking-lines.mark   eq utd-marking-lines.mark
+                     exclusive-lock no-error.
+                     if not available edoc-marking-lines
+                     then
+                        find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc.db-num 
+                                                     and edoc-marking-lines.doc-id eq edoc.doc-id
+                                                     and edoc-marking-lines.mark   begins VOAD
+                        exclusive-lock no-error.
+                     if not available edoc-marking-lines
+                     then 
+                        AddUtdErr(edoc.db-num,edoc.doc-id,buffer edoc-lines:handle,"edoc","Mark" + utd-marking-lines.site,utd-marking-lines.mark).
+                     else do:
+                        define variable v37tegdoc as character no-undo.
+                        define variable v37tegedoc as character no-undo.
+                        v37tegdoc  = GetTegCod( utd-marking-lines.mark,"37").
+                        v37tegedoc = GetTegCod(edoc-marking-lines.mark,"37").
+                        vqnty = int(v37tegedoc) - int(v37tegdoc) no-error.
+                        if error-status:error
+                        then
+                           message "беда с маркой" skip edoc-marking-lines.mark skip utd-marking-lines.mark
+                           view-as alert-box.
+                        else if vqnty = 0
+                        then
+                           delete edoc-marking-lines.
+                        else do:
+                           edoc-marking-lines.mark  = VOAD + string(vqnty).
+                           setAttrUtdMarkingLines (edoc-marking-lines.db-num,
+                                          edoc-marking-lines.doc-id,
+                                          edoc-marking-lines.LineNum,
+                                          edoc-marking-lines.mark,
+                                          "box-qnty",
+                                           string(vQnty)).
+                        end.
+                     end.
+                  end.
+                  else do:
+                     find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc-lines.db-num 
+                                                     and edoc-marking-lines.doc-id eq edoc-lines.doc-id
+                                                     and edoc-marking-lines.mark   eq utd-marking-lines.mark
+                     exclusive-lock no-error.
+                     if available edoc-marking-lines
+                     then
+                        delete edoc-marking-lines.
+                     else
+                        AddUtdErr(edoc.db-num,edoc.doc-id,buffer edoc-lines:handle,"edoc","Mark" + utd-marking-lines.site,utd-marking-lines.mark).
+                  end.
                end.
                
                else if utd-marking-lines.site eq "+"
                then do:
+                  if isOAD(utd-marking-lines.mark)
+                  then do:
+                     VOAD = "02" + getGtinByDM(utd-marking-lines.mark) + "37".
+                     find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc.db-num 
+                                                  and edoc-marking-lines.doc-id eq edoc.doc-id
+                                                  and edoc-marking-lines.mark   begins VOAD
+                     exclusive-lock no-error.
+                     if available edoc-marking-lines
+                     then do:
+                        
+                        v37tegdoc  = GetTegCod( utd-marking-lines.mark,"37").
+                        v37tegedoc = GetTegCod(edoc-marking-lines.mark,"37").
+                        vqnty = int(v37tegedoc) + int(v37tegdoc) no-error.
+                        if error-status:error
+                        then
+                           message "беда с маркой" skip edoc-marking-lines.mark skip utd-marking-lines.mark
+                           view-as alert-box.
+                        else if vqnty = 0
+                        then
+                           delete edoc-marking-lines.
+                        else do:
+                           edoc-marking-lines.mark  = VOAD + string(vqnty).
+                           setAttrUtdMarkingLines (edoc-marking-lines.db-num,
+                                          edoc-marking-lines.doc-id,
+                                          edoc-marking-lines.LineNum,
+                                          edoc-marking-lines.mark,
+                                          "box-qnty",
+                                           string(vQnty)).
+                        end.
+                     end.
+                     else do:
+                        create edoc-marking-lines.
+                        buffer-copy utd-marking-lines except doc-id db-num to edoc-marking-lines
+                        assign
+                           edoc-marking-lines.db-num = edoc.db-num
+                           edoc-marking-lines.doc-id = edoc.doc-id
+                        .
+                        setAttrUtdMarkingLines (edoc-marking-lines.db-num,
+                                          edoc-marking-lines.doc-id,
+                                          edoc-marking-lines.LineNum,
+                                          edoc-marking-lines.mark,
+                                          "box-qnty",
+                                           string(int(GetTegCod(edoc-marking-lines.mark,"37")))) no-error.
+                     end.
+                  end.
+                  else do:
                   find first edoc-marking-lines where edoc-marking-lines.db-num eq edoc-lines.db-num 
                                                   and edoc-marking-lines.doc-id eq edoc-lines.doc-id
                                                   and edoc-marking-lines.mark   eq utd-marking-lines.mark
@@ -523,7 +620,8 @@ function CrEdoc returns character
       if not avail utd_ret
       then
          CheckEdoc (vdb-num,vdoc-id,edoc.db-num,edoc.doc-id) .
-      for each utd where utd.PackageId eq iPack
+   end.
+   for each utd where utd.PackageId eq iPack
                      and utd.EDocType  eq objSrv:Env:Utd:EDocType:edoc:KeyIntDB
                      and utd.Timestamp < iTimestamp
       exclusive-lock:

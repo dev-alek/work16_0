@@ -151,4 +151,12 @@ class ibs.th.str.marking.handlers.tree inherits objth:
      return vqnty-check.   
   end method.
  
+ method public integer  GetQntyCheckMark(db-num as integer, doc-id as integer, line-num as integer):
+     define variable vqnty-check as integer  no-undo.
+     define variable mExem as class ibs.th.str.marking.handlers.treeexem no-undo.
+     {utl\objreg.i mExem ibs.th.str.marking.handlers.treeexem }
+     vqnty-check = mExem:GetQntyCheckMark( db-num ,doc-id , line-num).
+     delete object mExem no-error.
+     return vqnty-check.   
+  end method.
 end class.

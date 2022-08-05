@@ -648,12 +648,14 @@ end.
 
 &if "{1}" = "class"
 &then
-method private logical  CheckErrForMarkLineType
+method private logical  CheckTypeForMarkLineType
 &else
-function CheckErrForMarkLineType returns logical 
+function CheckTypeForMarkLineType returns logical 
 &endif
 (iObj            as handle,
- iType           as character  ):
+ iCheckType      as character,
+ iCodeErr        as character ,
+ iTypeErr        as character ):
    define variable vRecKey-markLine as character no-undo.
    define variable vGoodMark        as logical no-undo.
    define variable vdb-num          as integer no-undo.
@@ -686,9 +688,10 @@ function CheckErrForMarkLineType returns logical
    for each buf_utd-err  where  buf_utd-err.doc-id = vdoc-id
                             and buf_utd-err.db-num = vdb-num
                             and buf_utd-err.reckey = vRecKey-markLine
-                            and if iType eq "*" or iType eq ? then yes else buf_utd-err.CheckType = iType
+                            and if iCheckType  eq "*" or iCheckType eq ? then yes else buf_utd-err.CheckType = iCheckType
+                            and if iCodeErr    eq "*" or iCodeErr   eq ? then yes else buf_utd-err.CodeErr   = iCodeErr
    no-lock:
-      vErrorOne = GetTextErrorType(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj,"error").
+      vErrorOne = GetTextErrorType(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj,iTypeErr).
       if     vErrorOne ne ?
          and vErrorOne ne ""
       then do:
@@ -701,6 +704,17 @@ end.
 
 &if "{1}" = "class"
 &then
+method private logical  CheckErrForMarkLineType
+&else
+function CheckErrForMarkLineType returns logical 
+&endif
+(iObj            as handle,
+ iType           as character  ):
+   return CheckTypeForMarkLineType (iObj,iType,"*","error").
+end.
+
+&if "{1}" = "class"
+&then
 method private logical  CheckErrForMarkLine
 &else
 function CheckErrForMarkLine returns logical 
@@ -709,11 +723,91 @@ function CheckErrForMarkLine returns logical
    return CheckErrForMarkLineType(iObj,"*").
 end.
 
+
 &if "{1}" = "class"
 &then
-method private logical  CheckErrForLineType
+method private logical  CheckErrForLineTypeCode
 &else
-function CheckErrForLineType returns logical 
+function CheckErrForLineTypeCode returns logical 
+&endif
+(iObj                 as handle,
+ iCheckType           as character,  
+ iCodeErr             as character,
+ iTypeErr             as character,
+ iOneErr              as logical):
+   define variable vRecKey-line     as character no-undo.
+   define buffer buf_utd-err for utd-err.
+   define variable vUtdlineError as logical no-undo.
+   define variable vErrorOne as character no-undo.
+         
+     &if "{1}" = "class"
+      &then
+         define variable objKeyRec as class ibs.th.gbl.keyrec no-undo.
+         objKeyRec = new ibs.th.gbl.keyrec().
+         objKeyRec:GenKeyRec ( input "utd-lines"
+                              ,input iObj
+                              ,output vRecKey-line).
+         delete object objKeyRec.
+                            
+      &else
+         run gen-key-rec (input "utd-lines", 
+                          input  iObj, 
+                          output vRecKey-line).
+      &endif
+      define variable vdb-num as integer no-undo.
+      define variable vdoc-id as integer no-undo.
+      define variable vlinenum as integer no-undo.
+      vdb-num = iObj::db-num.
+      vdoc-id = iObj::doc-id.
+      vlinenum = iObj::linenum.
+      block-err:
+      for each buf_utd-err  where  buf_utd-err.doc-id = vdoc-id
+                               and buf_utd-err.db-num = vdb-num
+                               and buf_utd-err.reckey = vRecKey-line
+                               and if iCheckType eq "*" or iCheckType eq ? then yes else buf_utd-err.CheckType = iCheckType
+                               and if iCodeErr   eq "*" or iCodeErr   eq ? then yes else buf_utd-err.CodeErr   = iCodeErr
+                                  
+      no-lock:
+         vErrorOne = GetTextErrorType(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj,iTypeErr).
+         if     vErrorOne ne ?
+            and vErrorOne ne ""
+         then do:
+            vUtdlineError = yes.
+            leave block-err.
+         end.
+      end.
+      if  not vUtdlineError
+      then do:
+         define variable vGoodMark as logical no-undo.
+         vGoodMark = no.
+         block-line-err:
+         for each utd-marking-lines where utd-marking-lines.db-num  eq vdb-num
+                                      and utd-marking-lines.doc-id  eq vdoc-id
+                                      and utd-marking-lines.LineNum eq vLineNum
+         no-lock:
+            vGoodMark = not CheckTypeForMarkLineType(buffer utd-marking-lines:handle,iCheckType,iCodeErr,iTypeErr).
+            if     vGoodMark
+               and iOneErr eq no  
+            then
+               leave block-line-err.
+            if     iOneErr = yes
+               and not vGoodMark
+            then
+               leave block-line-err.
+               
+         end.
+         vUtdlineError = not vGoodMark. 
+      end.
+   
+   return vUtdlineError.
+end.
+
+
+&if "{1}" = "class"
+&then
+method private character   getErrForLineType
+&else
+function getErrForLineType returns character  
 &endif
 (iObj            as handle,
  iType           as character  ):
@@ -721,6 +815,7 @@ function CheckErrForLineType returns logical
    define buffer buf_utd-err for utd-err.
    define variable vUtdlineError as logical no-undo.
    define variable vErrorOne as character no-undo.
+   define variable oError as character no-undo.
          
      &if "{1}" = "class"
       &then
@@ -753,29 +848,23 @@ function CheckErrForLineType returns logical
          if     vErrorOne ne ?
             and vErrorOne ne ""
          then do:
-            vUtdlineError = yes.
-            leave block-err.
+            oError = oError + vErrorOne + " ".
          end.
       end.
-      if  not vUtdlineError
-      then do:
-         define variable vGoodMark as logical no-undo.
-         vGoodMark = yes.
-         block-line-err:
-         for each utd-marking-lines where utd-marking-lines.db-num  eq vdb-num
-                                      and utd-marking-lines.doc-id  eq vdoc-id
-                                      and utd-marking-lines.LineNum eq vLineNum
-         no-lock:
-            vGoodMark = not CheckErrForMarkLineType(buffer utd-marking-lines:handle,iType).
-            if vGoodMark
-            then
-               leave block-line-err.
-         end.
-         vUtdlineError = not vGoodMark. 
-      end.
-   
-   return vUtdlineError.
+      
+   return oError.
 end.
+&if "{1}" = "class"
+&then
+method private logical  CheckErrForLineType
+&else
+function CheckErrForLineType returns logical 
+&endif
+(iObj            as handle,
+ iType           as character  ):
+    return CheckErrForLineTypeCode (iObj,itype,"*","error",no).
+end.
+
 &if "{1}" = "class"
 &then
 method private logical  CheckErrForLine
