@@ -537,6 +537,7 @@ class ibs.th.bge.is_PM.is_PM:
     define buffer buf_goods for ub.goods .
     define buffer buf_clients-attr for ub.clients-attr .
     define buffer before_rvs-doc for ub.rvs-doc .
+    define buffer buf_shift-obj for ub.shift-obj .
     
     define variable v-found-income as logical no-undo .
     define variable v-income-doc-code as character no-undo .
@@ -829,19 +830,36 @@ class ibs.th.bge.is_PM.is_PM:
                                            
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
-              v-density = 0 .       
-              { str/avrgdens.i
-                tt-place.gds-code
-                buf_chk-doc.obj-type
-                buf_chk-doc.obj-code
-                tt-place.pl-code
-                buf_chk-doc.shift-date
-                buf_chk-doc.shift-num
-                buf_chk-doc.chk-date
-                buf_chk-doc.chk-time
-                v-density
-                no-error
-              }
+              v-density = 0 .
+              if lookup({&shift-err}, buf_chk-doc.office) > 0
+              then do :        
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  new_rvs-doc.shift-date
+                  new_rvs-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+              end .
+              else do :
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  buf_chk-doc.shift-date
+                  buf_chk-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+              end .
               tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
             end .
             else do :                     
@@ -988,19 +1006,58 @@ class ibs.th.bge.is_PM.is_PM:
                                              
               if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
               then do :   
-                v-density = 0 .       
-                { str/avrgdens.i
-                  tt-place.gds-code
-                  buf_chk-doc.obj-type
-                  buf_chk-doc.obj-code
-                  tt-place.pl-code
-                  buf_chk-doc.shift-date
-                  buf_chk-doc.shift-num
-                  buf_chk-doc.chk-date
-                  buf_chk-doc.chk-time
-                  v-density
-                  no-error
-                }
+                v-density = 0 .   
+                if lookup({&shift-err}, buf_chk-doc.office) > 0
+                then do :    
+                  find last buf_shift-obj no-lock where buf_shift-obj.obj-type = buf_chk-doc.obj-type
+                                                    and buf_shift-obj.obj-code = buf_chk-doc.obj-code
+                                                    and ((buf_shift-obj.open-date < buf_chk-doc.chk-date)
+                                                      or (buf_shift-obj.open-date = buf_chk-doc.chk-date and buf_shift-obj.open-time < buf_chk-doc.chk-time))
+                                                    no-error .
+                  if available buf_shift-obj
+                  then do :                                    
+                    { str/avrgdens.i
+                      tt-place.gds-code
+                      buf_chk-doc.obj-type
+                      buf_chk-doc.obj-code
+                      tt-place.pl-code
+                      buf_shift-obj.shift-date
+                      buf_shift-obj.shift-num
+                      buf_chk-doc.chk-date
+                      buf_chk-doc.chk-time
+                      v-density
+                      no-error
+                    }
+                  end .
+                  else do :
+                    { str/avrgdens.i
+                      tt-place.gds-code
+                      buf_chk-doc.obj-type
+                      buf_chk-doc.obj-code
+                      tt-place.pl-code
+                      buf_chk-doc.chk-date
+                      1
+                      buf_chk-doc.chk-date
+                      buf_chk-doc.chk-time
+                      v-density
+                      no-error
+                    }
+                  end .
+                end .
+                else do :
+                  { str/avrgdens.i
+                    tt-place.gds-code
+                    buf_chk-doc.obj-type
+                    buf_chk-doc.obj-code
+                    tt-place.pl-code
+                    buf_chk-doc.shift-date
+                    buf_chk-doc.shift-num
+                    buf_chk-doc.chk-date
+                    buf_chk-doc.chk-time
+                    v-density
+                    no-error
+                  }
+                end .
                 tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
               end .
               else do :                     
@@ -1160,19 +1217,58 @@ class ibs.th.bge.is_PM.is_PM:
                                            
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
-              v-density = 0 .       
-              { str/avrgdens.i
-                tt-place.gds-code
-                buf_chk-doc.obj-type
-                buf_chk-doc.obj-code
-                tt-place.pl-code
-                buf_chk-doc.shift-date
-                buf_chk-doc.shift-num
-                buf_chk-doc.chk-date
-                buf_chk-doc.chk-time
-                v-density
-                no-error
-              }
+              v-density = 0 .    
+              if lookup({&shift-err}, buf_chk-doc.office) > 0
+              then do :   
+                find last buf_shift-obj no-lock where buf_shift-obj.obj-type = buf_chk-doc.obj-type
+                                                  and buf_shift-obj.obj-code = buf_chk-doc.obj-code
+                                                  and ((buf_shift-obj.open-date < buf_chk-doc.chk-date)
+                                                    or (buf_shift-obj.open-date = buf_chk-doc.chk-date and buf_shift-obj.open-time < buf_chk-doc.chk-time))
+                                                  no-error .
+                if available buf_shift-obj
+                then do :                                    
+                  { str/avrgdens.i
+                    tt-place.gds-code
+                    buf_chk-doc.obj-type
+                    buf_chk-doc.obj-code
+                    tt-place.pl-code
+                    buf_shift-obj.shift-date
+                    buf_shift-obj.shift-num
+                    buf_chk-doc.chk-date
+                    buf_chk-doc.chk-time
+                    v-density
+                    no-error
+                  }
+                end .
+                else do :
+                  { str/avrgdens.i
+                    tt-place.gds-code
+                    buf_chk-doc.obj-type
+                    buf_chk-doc.obj-code
+                    tt-place.pl-code
+                    buf_chk-doc.chk-date
+                    1
+                    buf_chk-doc.chk-date
+                    buf_chk-doc.chk-time
+                    v-density
+                    no-error
+                  }
+                end .
+              end .
+              else do :
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  buf_chk-doc.shift-date
+                  buf_chk-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+              end .
               tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
             end .
             else do :                     
@@ -1328,19 +1424,58 @@ class ibs.th.bge.is_PM.is_PM:
                                            
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
-              v-density = 0 .       
-              { str/avrgdens.i
-                tt-place.gds-code
-                buf_chk-doc.obj-type
-                buf_chk-doc.obj-code
-                tt-place.pl-code
-                buf_chk-doc.shift-date
-                buf_chk-doc.shift-num
-                buf_chk-doc.chk-date
-                buf_chk-doc.chk-time
-                v-density
-                no-error
-              }
+              v-density = 0 . 
+              if lookup({&shift-err}, buf_chk-doc.office) > 0
+              then do :      
+                find last buf_shift-obj no-lock where buf_shift-obj.obj-type = buf_chk-doc.obj-type
+                                                  and buf_shift-obj.obj-code = buf_chk-doc.obj-code
+                                                  and ((buf_shift-obj.open-date < buf_chk-doc.chk-date)
+                                                    or (buf_shift-obj.open-date = buf_chk-doc.chk-date and buf_shift-obj.open-time < buf_chk-doc.chk-time))
+                                                  no-error .
+                if available buf_shift-obj
+                then do :                                    
+                  { str/avrgdens.i
+                    tt-place.gds-code
+                    buf_chk-doc.obj-type
+                    buf_chk-doc.obj-code
+                    tt-place.pl-code
+                    buf_shift-obj.shift-date
+                    buf_shift-obj.shift-num
+                    buf_chk-doc.chk-date
+                    buf_chk-doc.chk-time
+                    v-density
+                    no-error
+                  }
+                end .
+                else do :
+                  { str/avrgdens.i
+                    tt-place.gds-code
+                    buf_chk-doc.obj-type
+                    buf_chk-doc.obj-code
+                    tt-place.pl-code
+                    buf_chk-doc.chk-date
+                    1
+                    buf_chk-doc.chk-date
+                    buf_chk-doc.chk-time
+                    v-density
+                    no-error
+                  }
+                end .
+              end .
+              else do :
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  buf_chk-doc.shift-date
+                  buf_chk-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+              end .
               tt-place.end-chk-fact-qnty = tt-place.end-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
             end .
             else do :                     
@@ -1550,19 +1685,36 @@ class ibs.th.bge.is_PM.is_PM:
             
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
-              v-density = 0 .       
-              { str/avrgdens.i
-                tt-place.gds-code
-                buf_chk-doc.obj-type
-                buf_chk-doc.obj-code
-                tt-place.pl-code
-                buf_chk-doc.shift-date
-                buf_chk-doc.shift-num
-                buf_chk-doc.chk-date
-                buf_chk-doc.chk-time
-                v-density
-                no-error
-              }
+              v-density = 0 .  
+              if lookup({&shift-err}, buf_chk-doc.office) > 0
+              then do :     
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  start_rvs-doc.shift-date
+                  start_rvs-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+              end .
+              else do :
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  buf_chk-doc.shift-date
+                  buf_chk-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+              end .
               tt-place.start-chk-doc-qnty = tt-place.start-chk-doc-qnty + (buf_chk-gds.doc-qnty * v-density) .
               if session:debug-alert 
               then do:
@@ -1778,19 +1930,36 @@ class ibs.th.bge.is_PM.is_PM:
             
               if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
               then do :   
-                v-density = 0 .       
-                { str/avrgdens.i
-                  tt-place.gds-code
-                  buf_chk-doc.obj-type
-                  buf_chk-doc.obj-code
-                  tt-place.pl-code
-                  buf_chk-doc.shift-date
-                  buf_chk-doc.shift-num
-                  buf_chk-doc.chk-date
-                  buf_chk-doc.chk-time
-                  v-density
-                  no-error
-                }
+                v-density = 0 .  
+                if lookup({&shift-err}, buf_chk-doc.office) > 0
+                then do :     
+                  { str/avrgdens.i
+                    tt-place.gds-code
+                    buf_chk-doc.obj-type
+                    buf_chk-doc.obj-code
+                    tt-place.pl-code
+                    start_rvs-doc.shift-date
+                    start_rvs-doc.shift-num
+                    buf_chk-doc.chk-date
+                    buf_chk-doc.chk-time
+                    v-density
+                    no-error
+                  }
+                end .
+                else do :
+                  { str/avrgdens.i
+                    tt-place.gds-code
+                    buf_chk-doc.obj-type
+                    buf_chk-doc.obj-code
+                    tt-place.pl-code
+                    buf_chk-doc.shift-date
+                    buf_chk-doc.shift-num
+                    buf_chk-doc.chk-date
+                    buf_chk-doc.chk-time
+                    v-density
+                    no-error
+                  }
+                end .
                 tt-place.start-chk-fact-qnty = tt-place.start-chk-fact-qnty + (buf_chk-gds.doc-qnty * v-density) .
               end .
               else do :
@@ -1943,7 +2112,8 @@ class ibs.th.bge.is_PM.is_PM:
     define buffer buf_bar-code for ub.bar-code .
     define buffer buf_goods for ub.goods .
     define buffer buf_clients-attr for ub.clients-attr .
-    define buffer buf_inv-line for ub.inv-line.
+    define buffer buf_inv-line for ub.inv-line .
+    define buffer buf_shift-obj for ub.shift-obj .
     
     define variable v-is-npz    as logical no-undo .
     define variable v-is-own    as logical no-undo .
@@ -1997,19 +2167,58 @@ class ibs.th.bge.is_PM.is_PM:
           else do :
             v-pl-code = buf_chk-gds.pl-code .
           end .
-          v-density = 0 .       
-          { str/avrgdens.i
-            tt-result.gds-code
-            buf_chk-doc.obj-type
-            buf_chk-doc.obj-code
-            v-pl-code
-            buf_chk-doc.shift-date
-            buf_chk-doc.shift-num
-            buf_chk-doc.chk-date
-            buf_chk-doc.chk-time
-            v-density
-            no-error
-          }
+          v-density = 0 .  
+          if lookup({&shift-err}, buf_chk-doc.office) > 0
+          then do :     
+            find last buf_shift-obj no-lock where buf_shift-obj.obj-type = buf_chk-doc.obj-type
+                                              and buf_shift-obj.obj-code = buf_chk-doc.obj-code
+                                              and ((buf_shift-obj.open-date < buf_chk-doc.chk-date)
+                                                or (buf_shift-obj.open-date = buf_chk-doc.chk-date and buf_shift-obj.open-time < buf_chk-doc.chk-time))
+                                              no-error .
+            if available buf_shift-obj
+            then do :                                    
+              { str/avrgdens.i
+                tt-result.gds-code
+                buf_chk-doc.obj-type
+                buf_chk-doc.obj-code
+                v-pl-code
+                buf_shift-obj.shift-date
+                buf_shift-obj.shift-num
+                buf_chk-doc.chk-date
+                buf_chk-doc.chk-time
+                v-density
+                no-error
+              }
+            end .
+            else do :
+              { str/avrgdens.i
+                tt-result.gds-code
+                buf_chk-doc.obj-type
+                buf_chk-doc.obj-code
+                v-pl-code
+                buf_chk-doc.chk-date
+                1
+                buf_chk-doc.chk-date
+                buf_chk-doc.chk-time
+                v-density
+                no-error
+              }
+            end .
+          end .
+          else do :
+            { str/avrgdens.i
+              tt-result.gds-code
+              buf_chk-doc.obj-type
+              buf_chk-doc.obj-code
+              v-pl-code
+              buf_chk-doc.shift-date
+              buf_chk-doc.shift-num
+              buf_chk-doc.chk-date
+              buf_chk-doc.chk-time
+              v-density
+              no-error
+            }
+          end .
           /* Формула 6 */
           tt-result.wght-sale = tt-result.wght-sale + (buf_chk-gds.doc-qnty * v-density) .
           if session:debug-alert
@@ -2222,6 +2431,7 @@ class ibs.th.bge.is_PM.is_PM:
     define buffer buf_bar-code for ub.bar-code .
     define buffer buf_goods for ub.goods .
     define buffer buf_clients-attr for ub.clients-attr .
+    define buffer buf_shift-obj for ub.shift-obj .
     
     run write-to-log in p-parent-handle (" START BOOK-END UTC " + utc-time() ) .
     
@@ -2299,19 +2509,58 @@ class ibs.th.bge.is_PM.is_PM:
             
             if not valid-density (buf_chk-gds.density, (buf_goods.unit-base = buf_goods.unit-cli))
             then do :   
-              v-density = 0 .       
-              { str/avrgdens.i
-                tt-place.gds-code
-                buf_chk-doc.obj-type
-                buf_chk-doc.obj-code
-                tt-place.pl-code
-                buf_chk-doc.shift-date
-                buf_chk-doc.shift-num
-                buf_chk-doc.chk-date
-                buf_chk-doc.chk-time
-                v-density
-                no-error
-              }
+              v-density = 0 .    
+              if lookup({&shift-err}, buf_chk-doc.office) > 0
+              then do :   
+                find last buf_shift-obj no-lock where buf_shift-obj.obj-type = buf_chk-doc.obj-type
+                                                  and buf_shift-obj.obj-code = buf_chk-doc.obj-code
+                                                  and ((buf_shift-obj.open-date < buf_chk-doc.chk-date)
+                                                    or (buf_shift-obj.open-date = buf_chk-doc.chk-date and buf_shift-obj.open-time < buf_chk-doc.chk-time))
+                                                  no-error .
+                if available buf_shift-obj
+                then do :                                    
+                  { str/avrgdens.i
+                    tt-place.gds-code
+                    buf_chk-doc.obj-type
+                    buf_chk-doc.obj-code
+                    tt-place.pl-code
+                    buf_shift-obj.shift-date
+                    buf_shift-obj.shift-num
+                    buf_chk-doc.chk-date
+                    buf_chk-doc.chk-time
+                    v-density
+                    no-error
+                  }
+                end .
+                else do :
+                  { str/avrgdens.i
+                    tt-place.gds-code
+                    buf_chk-doc.obj-type
+                    buf_chk-doc.obj-code
+                    tt-place.pl-code
+                    buf_chk-doc.chk-date
+                    1
+                    buf_chk-doc.chk-date
+                    buf_chk-doc.chk-time
+                    v-density
+                    no-error
+                  }
+                end .
+              end .
+              else do :
+                { str/avrgdens.i
+                  tt-place.gds-code
+                  buf_chk-doc.obj-type
+                  buf_chk-doc.obj-code
+                  tt-place.pl-code
+                  buf_chk-doc.shift-date
+                  buf_chk-doc.shift-num
+                  buf_chk-doc.chk-date
+                  buf_chk-doc.chk-time
+                  v-density
+                  no-error
+                }
+              end .
               tt-place.end-chk-doc-qnty = tt-place.end-chk-doc-qnty + (buf_chk-gds.doc-qnty * v-density) .
             end .
             else do :                               
