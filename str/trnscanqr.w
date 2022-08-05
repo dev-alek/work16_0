@@ -1287,6 +1287,10 @@ procedure checkcrc:
   v-crc32 =  intToHex(CRC32(INPUT mpData)) .
   set-size(mpData) = 0. 
   
+  if length(v-crc32) < 8
+  then
+    v-crc32 = fill("0", 8 - length(v-crc32)) + v-crc32 .
+  
   if p-crc32 = v-crc32
   then do :
     p-ok = true.
@@ -1299,10 +1303,12 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-any-key Dialog-Frame 
 procedure proc-any-key :
   if v-scan-str = ""
-    then v-timedelay = etime.
-    else
-      if etime - v-timedelay > qr-scan-time
-        then v-scan-str = "".
+  then
+    v-timedelay = etime.
+  else
+  if etime - v-timedelay > qr-scan-time
+  then
+    v-scan-str = "".
   v-scan-str = v-scan-str + last-event:label.
 end.
 
