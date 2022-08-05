@@ -906,7 +906,7 @@ procedure print-total .
                     <td rowspan="2" text_wrap="true">&1</td>
                     <td rowspan="2" style="text-align: right;">&2</td>
                     <td rowspan="2" style="text-align: right;">&3</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: left;">&5</td>
                     <td text_wrap="true" rowspan="2">&6</td>
                     <td text_wrap="true" style="text-align: right;">&8</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&7</td>
@@ -925,7 +925,7 @@ procedure print-total .
           put stream OutStr-html unformatted
             substitute (
             '
-                    <td rowspan="2" style="text-align: right;">&1</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&1</td>
                     <td text_wrap="true" rowspan="2" >&2</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&3</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&4</td>
@@ -1070,9 +1070,9 @@ procedure print-total .
               substitute (
               '  <tr>
                     <td rowspan="2" text_wrap="true">&1</td>
-                    <td rowspan="2" style="text-align: right;">&2</td>
-                    <td rowspan="2" style="text-align: right;">&3</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&2</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&3</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: left;">&5</td>
                     <td text_wrap="true" rowspan="2">&6</td>
                     <td text_wrap="true" style="text-align: right;">&8</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&7</td>
@@ -1092,7 +1092,7 @@ procedure print-total .
             put stream OutStr-html unformatted
               substitute (
               '
-                    <td rowspan="2" style="text-align: right;">&1</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&1</td>
                     <td text_wrap="true" rowspan="2" >&2</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&3</td>
                     <td text_wrap="true" rowspan="2" style="text-align: right;">&4</td>
@@ -1190,7 +1190,7 @@ procedure print-total .
                     <th text_wrap="true" rowspan="2" style="text-align: left; vertical-align: middle;">&1</th>
                     <th rowspan="2"></th>
                     <th rowspan="2" style="text-align: right; vertical-align: middle;">&2</th>
-                    <th text_wrap="true" rowspan="2" style="text-align: right; vertical-align: middle;">&3</th>
+                    <th text_wrap="true" rowspan="2" style="text-align: left; vertical-align: middle;">&3</th>
                     <th rowspan="2"></th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
                     <th rowspan="2"></th>
