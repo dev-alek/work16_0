@@ -203,6 +203,14 @@ do:
       
       v-q-doc-base = buf_utd-lines.Quantity.
       v-q-doc = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity")) .
+      if v-q-doc = ?
+      then do :
+        find first buf_bar-code where 
+                   buf_bar-code.gds-code = buf_utd-lines.gds-code
+               and buf_bar-code.unit-cli = buf_utd-lines.UnitCode
+        no-lock no-error.
+        v-q-doc = v-q-doc-base / (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1) .
+      end .
     end .
     else do :
       vIsMarkLine = no .
@@ -215,6 +223,11 @@ do:
       if v-q = ? then v-q = 0.
       v-q-doc = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity")) .
       v-q-doc-base = v-q-doc * (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1).
+      if v-q-doc = ?
+      then do :
+        v-q-doc = buf_utd-lines.Quantity.
+        v-q-doc-base = v-q-doc * (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1).
+      end . 
     end .
     if CheckErrForLine(buffer buf_utd-lines:handle)
     then
