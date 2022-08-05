@@ -443,15 +443,15 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
             v-promo-gift:qnty    = v-gift-gd:gd-qnty
             v-promo-gift:Mode    = v-promo-crit:Mode
           .
-   if v-ban-recipes then do:       
-   if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = v-promo-gift:GdsCode and 
-      buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
-      buf_goods-attr.attr-value <> "") then 
-   do:
-      v-promo-action:end-date = today - 1 .
-      v-promo-action:status_ = 2 .
-   end.        
-   end.    
+          if v-ban-recipes then do:       
+            if can-find (first buf_goods-attr no-lock where buf_goods-attr.gds-code = v-promo-gift:GdsCode and 
+               buf_goods-attr.attr-code = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" and 
+               buf_goods-attr.attr-value <> "") then 
+            do:
+               v-promo-action:end-date = today - 1 .
+               v-promo-action:status_ = 2 .
+            end.        
+          end.    
           v-promo-gifts:AddItem (v-promo-gift) .
         end . // end_of_threshold:gifts[]
       end .
@@ -641,100 +641,27 @@ end. // end_of_gifts
     
     v-storage:insertDB(v-promo-action) .
 
-    define variable mAction as character no-undo.
-    if     (v-promo-action:changeDate <> ? 
-       and v-promo-action:changeDate <= today)
-       or  v-promo-action:end-date  < today
-    then 
-       mAction = "D".
-    else
-       mAction = "U".
-   if v-ban-recipes then mAction = "U".
-     if v-message then 
-     do:
-        create ub.PromoAttr .
-        assign
+    define variable mDelCd as logical no-undo.
+    mDelCd =
+              (v-promo-action:changeDate <> ? 
+           and v-promo-action:changeDate <= today)
+            or  v-promo-action:end-date  < today.
+    if v-message then 
+    do:
+       create ub.PromoAttr .
+       assign
            ub.PromoAttr.tablename  = "PromoAction"
            ub.PromoAttr.p-key      = string(v-promo-action:ID) + {&delim-key} + string(v-promo-action:db-num)
            ub.PromoAttr.attr-code  = "promo-message"
            ub.PromoAttr.attr-value = "Внимание!!! Перезагрузите кассу, для обновления промоакций!"
            .
-     end.
-
-    run str/diallog.w (
-        input parparentproc
-      , input p-parent-handle
-      , input "str/promosendoxml.p":U  + {&delim-par} +
-                "1":U  + {&delim-par} +  /*error-message-option*/
-                "1":U + {&delim-par} +  /*auto-go-option*/
-                "1":U                  /*return-value-option*/
-      , input ({&cd-type-IBm-XML} + {&delim-par} + v-obj-type + {&delim-par} + string(v-obj-code) + {&delim-par} + mAction + {&delim-par} + string(v-promo-action:db-num) + {&delim-par} + string(v-promo-action:ID))
-      , input yes /*p-auto-go*/
-      , input "":U
-      , input substitute("Отсылка промоакций на кассы &1", {&cd-type-IBm-XML})
-  ) no-error.
-  if error-status:error 
-  then
-     undo, throw new Progress.Lang.AppError( substitute(
-           "Ошибку при отправке акции '&1' на кассу &2"
-           , v-promo-action:NameAction , return-value
-        ) ) .
-
-do: // предыдущая версия (ранее 24/VI-2018)
-/*    
-      define variable v-profile             as integer          no-undo .
-            
-      if objImp:dscnt-type = 2 and  objImp:dscnt-value-type = 1 and
-         (trim(objImp:pmnt-types) = "" or objImp:pmnt-types = ?)
-      then
-          v-profile = 5 .
-      else
-      if objImp:dscnt-type = 2 and  objImp:dscnt-value-type = 1 and
-         objImp:pmnt-types <> ? and trim(objImp:pmnt-types) <> ""
-      then
-          v-profile = 73 .
-      else
-      if objImp:dscnt-type = 2 and  objImp:dscnt-value-type = 2 and
-         objImp:pmnt-types <> ? and trim(objImp:pmnt-types) <> ""
-      then
-          v-profile = 74 .
-      else
-      if objImp:dscnt-type = 1 and  objImp:dscnt-value-type = 1 and
-         (trim(objImp:pmnt-types) = "" or objImp:pmnt-types = ?)
-      then
-          v-profile = 28 .
-      else
-      if objImp:dscnt-type = 3 and  objImp:dscnt-value-type = 1 and
-         (trim(objImp:pmnt-types) = "" or objImp:pmnt-types = ?)
-      then
-          v-profile = 20 .
-      else
-      if objImp:dscnt-type = 3 and  objImp:dscnt-value-type = 1 and
-         objImp:pmnt-types <> ? and trim(objImp:pmnt-types) <> ""
-      then
-          v-profile = 42 .
-      else
-      if objImp:dscnt-type = 3 and  objImp:dscnt-value-type = 2 and
-         objImp:pmnt-types <> ? and trim(objImp:pmnt-types) <> ""
-      then
-          v-profile = 43 .
-      else do :
-          Msg = "Не верная комбинация параметров типов скидки, типов значния скидки и кодов типов платежей. Промоакция с номером " + objPromotion:code_ .
-          return false .
-      end.
-      
-      run ref/imp-promotion-1C-RN.p (input objImp,
-                                     input v-profile) no-error.
-      if error-status:error
-      then do :
-          Msg = "Ошибка при загрузке промоакции с номером " + objImp:code_ + " .   " + return-value .
-          return false.
-      end.                                
-      
-      return true .
-*/
-end.
-
+    end.
+    define variable mImp2CdH as handle no-undo.
+    run str/imp2cdgeth.p(output mImp2CdH).
+    run fill-PromoAction in mImp2CdH (v-promo-action:db-num,
+                                      v-promo-action:ID,             
+    mDelCd).    
+    
     v-retfl = true .
     catch exAppErrors as class Progress.Lang.AppError :
       Msg = exAppErrors:ReturnValue .

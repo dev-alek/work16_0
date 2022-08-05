@@ -78,6 +78,7 @@ define variable vss-description as character no-undo init "Библиотека процедур д
 { rul/ruleset_.i }
 { gbl/db-attr.i  }
 { bge/esysattr.i } // ext-system-attr-value для проверки сертификатов
+{ str/imp2cd.i &imp2cd_parparentproc = parparentproc }
 
 define temp-table temp-asmg no-undo
 field gds-code as integer
@@ -296,7 +297,7 @@ run write-log  in p-log-handle (
            ,output v-sender-id
            ,output v-type
            ) no-error .
-    
+  run str/imp2cdseth.p(this-procedure).  
   do transaction:
     v-err-message = "" .
     subscribe "getNextseq" anywhere run-procedure "MySeqTable".
@@ -371,7 +372,7 @@ run write-log  in p-log-handle (
       if v-err-message > "" then return error v-err-message .
     end finally .
   end.
-
+  run send-to-cash in this-procedure no-error.
 end. /*doe _main*/
 end procedure. /* proc-main */
 

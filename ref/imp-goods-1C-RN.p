@@ -141,6 +141,8 @@ define variable v-size  as integer no-undo .
   define variable v-cntxt-db-num-obj    as integer   no-undo . /* база текущего объекта */
   define variable v-cntxt-is-admin      as logical   no-undo . /* база текущего объекта */
 
+define variable mImp2CdH as handle no-undo.
+run str/imp2cdgeth.p(output mImp2CdH).
 /* ********************  Preprocessor Definitions  ******************** */
 
 
@@ -546,22 +548,17 @@ end.
                     then
                        prod-bc-attr.attr-value = string(vmaken).
                  end.
-                  find first buf_prod-bc no-lock  where buf_prod-bc.b-str     eq v-b-str
-                                                    and buf_prod-bc.b-code    eq bar-code.b-code.
-                                                    
-                  v-rid-pbc = recid(buf_prod-bc).
-                  if    buf_prod-bc.bc-on
+                  v-rid-pbc = recid(ub.prod-bc).
+                  if    ub.prod-bc.bc-on
                     and send-ref
                   then do:
-                      run str/diallog.w
-                        (input parparentproc
-                        ,input this-procedure
-                        ,input 'str/s-prodbc.p':U
-                        ,input string(v-rid-pbc) + {&delim-par} + "U":U
-                        ,input yes /*p-auto-go*/
-                        ,input '':U
-                        ,input "Пересылка ДопБК на кассы"
-                        ) .
+                     run fill-pbc-list in mImp2CdH
+                     (v-rid-pbc,
+                     bar-code.gds-code,
+                     prod-bc.b-code,
+                     prod-bc.b-str,
+                     prod-bc.bc-on,
+                     no).
                   end.
                   next ii_ .
               end. 
@@ -611,15 +608,19 @@ end.
                 find first ub.bar-code where recid(ub.bar-code) = v-bc-rid.
                 if send-ref
                 then do:
-                  run str/diallog.w
-                    (input  parparentproc
-                    ,input  this-procedure
-                    ,input  'str/send-bc.p':U
-                    ,input  string(recid(ub.bar-code)) + {&delim-par} + 'U':U
-                    ,input  yes /* p-auto-go */
-                    ,input  '':U
-                    ,input  "Пересылка бар-кода на кассы"
-                    ) .
+                   run fill-bar-code in mImp2CdH (
+                                                input   ub.bar-code.b-code
+                                               ,input   ub.bar-code.gds-code
+                                               ,input  (if  ub.bar-code.stts_ = integer({&hn-delete})
+                                                        then yes
+                                                        else no)
+                                               ,input   ub.bar-code.node-code
+                                               ,input   ub.bar-code.in-code
+                                               ,input   ub.bar-code.part-code
+                                               ,input   ub.bar-code.cli-base-rate
+                                               ,input   ub.bar-code.unit-cli
+                                                ) no-error.
+      
                 end.
             end.    
             v-b-str = v-barcode:bcode .
@@ -652,15 +653,13 @@ end.
               if  buf_prod-bc.bc-on
               and send-ref
               then do:
-                run str/diallog.w
-                  (input parparentproc
-                  ,input this-procedure
-                  ,input 'str/s-prodbc.p':U
-                  ,input string(v-rid-pbc) + {&delim-par} + "U":U
-                  ,input yes /*p-auto-go*/
-                  ,input '':U
-                  ,input "Пересылка ДопБК на кассы"
-                  ) .
+                 run fill-pbc-list in mImp2CdH
+                     (v-rid-pbc,
+                     ub.bar-code.gds-code,
+                     buf_prod-bc.b-code,
+                     buf_prod-bc.b-str,
+                     buf_prod-bc.bc-on,
+                     no).
               end.
             end.
         end.
@@ -696,16 +695,15 @@ end.
               if  buf_prod-bc.bc-on
               and send-ref
               then do:
-                run str/diallog.w
-                  (input parparentproc
-                  ,input this-procedure
-                  ,input 'str/s-prodbc.p':U
-                  ,input string(v-rid-pbc) + {&delim-par} + "U":U
-                  ,input yes /*p-auto-go*/
-                  ,input '':U
-                  ,input "Пересылка ДопБК на кассы"
-                  ) .
-              end.
+                    run fill-pbc-list in mImp2CdH
+                     (v-rid-pbc,
+                     ub.goods.gds-code,
+                     buf_prod-bc.b-code,
+                     buf_prod-bc.b-str,
+                     buf_prod-bc.bc-on,
+                     no).
+              
+              end.  
             end.
         end.
       end.

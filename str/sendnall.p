@@ -37,22 +37,10 @@ define variable vss-description as character no-undo init "Посылка всей информац
 { cmp/trg-def.i }
 define variable p-db-num like ub.db.db-num no-undo .
 
-{ str/defc-txn.i "shared" }
-{ str/defc-txr.i "shared" }
-{ cmp/gds-list.i gds-list def "shared" }
-{ cmp/gdsolist.i gdsolist def "shared" }
-{ cmp/pbc-list.i pbc-list def  }
-{ cmp/bc-list.i bc-list def  }
-{ cmp/dc-list.i  dc-list  def "shared" }
-{ cmp/stpllist.i stpl-list  def "shared" }
+{ str/imp2cd_def.i}
 { str/defc-cli.i "new shared" }
-{ str/pdf-list.i pdf-list def "shared" }
-{ str/defc-pay-list.i "shared" }
-{ str/defc-ext-classif.i "shared" }
 { ref/extclass.i }     
 { str/cdsnddef.i }  
-define shared temp-table dc-dis-card-mask no-undo like ub.dis-card-mask.
-
 
 define buffer buf_clients for ub.clients.
 define buffer buf_shop for ub.shop.
@@ -123,6 +111,75 @@ for each buf_clients no-lock
                      , input-output v-view-log
                      ) no-error .
 end.
+
+
+define variable v-promo-actions-upd as class ibs.th.ref.promo.promoactionsubs no-undo .
+define variable v-promo-actions-del as class ibs.th.ref.promo.promoactionsubs no-undo .
+
+define variable v-promo-stor as class ibs.th.gbl.storage.promoactionstorage no-undo .
+v-promo-stor = new ibs.th.gbl.storage.promoactionstorage().
+for each PromoAction-list no-lock:
+   if PromoAction-list.del_
+   then v-promo-stor:getpromoactionsubs(input-output v-promo-actions-del,PromoAction-list.db-num,PromoAction-list.id).
+   else v-promo-stor:getpromoactionsubs(input-output v-promo-actions-upd,PromoAction-list.db-num,PromoAction-list.id).
+end.
+
+delete object v-promo-stor.
+if valid-Object(v-promo-actions-upd)
+then do:
+   for each buf_clients no-lock
+         where buf_clients.obj-type = {&shop}
+           and buf_clients.db-num   = g#db-num,
+         first buf_cash-desk no-lock where
+              buf_cash-desk.db-num = p-db-num
+          AND buf_cash-desk.obj-code = buf_clients.obj-code
+          AND buf_cash-desk.cash-on = yes
+     on error undo, return error
+     :
+      run str/send-promo.p (
+                       input parparentproc
+                      ,input p-parent-handle
+                      ,input p-log-handle
+                      ,input buf_cash-desk.obj-code
+                      ,input "U"
+                      ,input (if not valid-object (v-promo-actions-upd)
+                              then 0  /* all  */
+                              else 1) /* list */
+                     , input v-promo-actions-upd /* list */
+                     , input log-file-name
+                     , input-output v-view-log
+                     ) no-error .
+      
+   end.
+end.
+if valid-Object(v-promo-actions-del)
+then do:
+   for each buf_clients no-lock
+         where buf_clients.obj-type = {&shop}
+           and buf_clients.db-num   = g#db-num,
+         first buf_cash-desk no-lock where
+              buf_cash-desk.db-num = p-db-num
+          AND buf_cash-desk.obj-code = buf_clients.obj-code
+          AND buf_cash-desk.cash-on = yes
+     on error undo, return error
+     :
+      run str/send-promo.p (
+                       input parparentproc
+                      ,input p-parent-handle
+                      ,input p-log-handle
+                      ,input buf_cash-desk.obj-code
+                      ,input "D"
+                      ,input (if not valid-object (v-promo-actions-del)
+                              then 0  /* all  */
+                              else 1) /* list */
+                     , input v-promo-actions-del /* list */
+                     , input log-file-name
+                     , input-output v-view-log
+                     ) no-error .
+      
+   end.
+end.
+
 
 for each buf_clients no-lock
       where buf_clients.obj-type = {&shop}
@@ -374,7 +431,9 @@ then do:
     end.
   end.
 end.
-if can-find(first dc-list no-lock) then do:
+if    can-find(first dc-list no-lock) 
+   or can-find(first dc-dis-card-mask no-lock) 
+   then do:
     run set-title in p-log-handle (
           input 'Отправка информации по клиентским картам на кассу'
                                     ).

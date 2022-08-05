@@ -18,21 +18,9 @@ Creation date: 02/27/09
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
-{ cmp/gds-list.i gds-list def "new shared" }
-{ cmp/dc-list.i  dc-list  def " new shared "  } /*не должен использоваться в load-rec.p*/
-define new shared temp-table dc-dis-card-mask no-undo like ub.dis-card-mask.
-define new shared temp-table dc-dis-card-mask-attr no-undo like ub.dis-card-mask-attr.
-{ cmp/dcp-list.i  dcp-list  def " new shared "  } /*не должен использоваться в load-rec.p*/
-{ cmp/stpllist.i stpl-list  def " new shared "  }
-{ cmp/pbc-list.i pbc-list def new } /*не должен использоваться в load-rec.p*/
-{ cmp/bc-list.i bc-list def new }  /*не должен использоваться в load-rec.p*/
-{ cmp/gdsolist.i gdsolist def "new shared" } /*не должен использоваться в load-rec.p*/
-{ str/defc-txn.i "new shared" } /*не должен использоваться в load-rec.p*/
-{ str/defc-txr.i "new shared" } /*не должен использоваться в load-rec.p*/
-{ str/pdf-list.i pdf-list def "new shared" }
-{ str/defc-pay-list.i "new shared" } /*не должен использоваться в load-rec.p*/
-{ str/defc-ext-classif.i "new shared" } /*не должен использоваться в load-rec.p*/
+{str/imp2cd_def.i new }
 { ref/extclass.i }
+
 procedure send-to-cash:
   if not can-find(first ub.cash-desk where
                   ub.cash-desk.db-num = ibs.th.gbl.gbl-var:g#db-num AND
@@ -57,6 +45,7 @@ procedure send-to-cash:
     or can-find(first cash-pay-list no-lock)
     or can-find(first ext-classif-list no-lock)
     or can-find(first c-ext-classif-list no-lock)
+    or can-find(first PromoAction-list no-lock)
     then do:
       run str/diallog.w (
                          &if "{&imp2cd_parparentproc}" <> '' &then
@@ -198,6 +187,30 @@ on error undo, return error
     .
     release cash-pay-list.
   end.
+end.
+end procedure. /* fill-dc-list */
+
+procedure fill-PromoAction :
+define input parameter p-db-num  as integer no-undo .
+define input parameter p-id      as int64   no-undo .
+define input parameter p-del     as logical no-undo.
+
+do
+on error undo, return error
+:
+  find first PromoAction-list where PromoAction-list.db-num  = p-db-num
+                                and PromoAction-list.id      = p-id
+  no-lock no-error.
+  if not available PromoAction-list
+  then do: 
+    create PromoAction-list.
+    assign
+       PromoAction-list.db-num  = p-db-num
+       PromoAction-list.id      = p-id
+    .
+  end.
+  PromoAction-list.del_ = p-del.
+  release PromoAction-list.
 end.
 end procedure. /* fill-dc-list */
 
