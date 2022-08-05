@@ -107,12 +107,18 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         and buf_c-chk-gds.chip-num = buf_c-chk-doc.chip-num
      on error undo main-block, return error:
        create buf_chk-gds.
-       buffer-copy buf_c-chk-gds to buf_chk-gds.
+       buffer-copy buf_c-chk-gds to buf_chk-gds
+       assign
+         buf_chk-gds.depart-type = ""
+         buf_chk-gds.depart-code = 0
+       .
        create buf2_c-chk-gds.
        buffer-copy buf_c-chk-gds
        except chip-num to buf2_c-chk-gds
        assign
        buf2_c-chk-gds.chip-num = buf2_c-chk-doc.chip-num
+       buf2_c-chk-gds.depart-type = ""
+       buf2_c-chk-gds.depart-code = 0
        .
      end.
      for each buf_c-chk-discnt no-lock where
