@@ -490,13 +490,35 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   method public void MarkGray(imark as char):
      define buffer marking for marking.
      define buffer BuF_marking for marking.
+     define buffer bf_bar-code for ub.bar-code .
+     define buffer bf2_bar-code for ub.bar-code .
+     define buffer bf_goods-attr for ub.goods-attr .
      define variable vAllQnty as integer no-undo init ?.
      define variable vQnty as integer no-undo.
+     define variable v-must-be-childs as integer no-undo .
+     define variable cisGdsCode as integer no-undo .
+     define variable v-mark-type  as character no-undo .
+     define variable v-err-childs as logical no-undo .
+     define variable v-gray-zone  as logical no-undo .
+     
      find first marking where marking.mark eq imark
      no-lock no-error.
      if available marking
         and marking.box-qnty ne 1
      then do:
+        if marking.gds-code > 0
+        then do :
+           cisGdsCode = marking.gds-code . 
+        end .
+        else do :
+           cisGdsCode = getGdsCodeByGtin(marking.gds-ext-id) .
+        end .
+        v-mark-type = "" .
+        for first bf_goods-attr no-lock where bf_goods-attr.attr-code = {&attr-mark-type}
+                                          and bf_goods-attr.gds-code = cisGdsCode
+                                          :
+           v-mark-type = bf_goods-attr.attr-value .
+        end .
         for each buf_marking where buf_marking.mark-parent eq marking.mark
         no-lock:
            if vAllQnty eq ?
@@ -504,12 +526,123 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
               vAllQnty = marking.box-qnty / buf_marking.box-qnty.
            vQnty = vQnty + 1.
         end.
-        if vAllQnty <> vQnty and GrayZoneQnty <> 100
-        then do:
-           find current marking exclusive-lock.
-           marking.sts = if vAllQnty - vQnty <= GrayZoneQnty 
-                         then objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
-                         else objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
+        if marking.unit-ext = "LEVEL2"
+        then do :
+           if cisGdsCode > 0
+           then do :
+              v-must-be-childs = 50 .
+              find first bf_bar-code no-lock where bf_bar-code.gds-code = cisGdsCode
+                                               and bf_bar-code.unit-cli = "кор"
+                                               and bf_bar-code.stts_ = 0
+              no-error .
+              if available bf_bar-code
+              then do :
+                v-must-be-childs = bf_bar-code.cli-base-rate .
+                find first bf2_bar-code no-lock where bf2_bar-code.gds-code = cisGdsCode
+                                                  and bf2_bar-code.unit-cli = "блк"
+                                                  and bf2_bar-code.stts_ = 0
+                no-error .
+                if available bf2_bar-code
+                then do :
+                  v-must-be-childs = v-must-be-childs / bf2_bar-code.cli-base-rate .
+                end .
+                else do :
+/*                  MSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'блк'" .*/
+                  v-err-childs = true .
+                end .
+              end .
+              else do :
+/*                MSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'кор'" .*/
+                v-err-childs = true .
+              end .
+              if not v-err-childs
+              then do :
+                if v-mark-type = "tabak"
+                or v-mark-type = "stiki"
+                then do :
+                  if vQnty <> v-must-be-childs
+                  then do:
+                    if GrayZoneQnty = 100
+                    then do :
+                      v-gray-zone = true .
+                    end .
+                    else do :
+                      if (v-must-be-childs - vQnty) <= GrayZoneQnty
+                      then v-gray-zone = true .
+                      else v-err-childs = true .
+                    end .
+                  end .
+                  if v-gray-zone
+                  then do :
+                     find current marking exclusive-lock.
+                     marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB .
+                  end .
+                end .
+                else do :
+                  if vQnty <> v-must-be-childs then v-err-childs = true .
+                end .
+              end .
+              if v-err-childs
+              then do :
+                 find current marking exclusive-lock.
+                 marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
+              end .
+           end .
+        end .
+        else
+        if marking.unit-ext = "LEVEL1"
+        then do :
+           if cisGdsCode > 0
+           then do :
+              v-must-be-childs = 10 .
+              find first bf_bar-code no-lock where bf_bar-code.gds-code = cisGdsCode
+                                              and bf_bar-code.unit-cli = "блк"
+                                              and bf_bar-code.stts_ = 0
+              no-error .
+              if available bf_bar-code
+              then do :
+                v-must-be-childs = bf_bar-code.cli-base-rate .
+              end .
+              else do :
+/*                MSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'блк'" .*/
+                v-err-childs = true .
+              end .
+              if not v-err-childs
+              then do :
+                if v-mark-type = "tabak"
+                or v-mark-type = "stiki"
+                then do :
+                  if vQnty <> v-must-be-childs and GrayZoneQnty <> 100
+                  then do:
+                    if (v-must-be-childs - vQnty) <= GrayZoneQnty
+                    then v-gray-zone = true .
+                    else v-err-childs = true .
+                  end .
+                  if v-gray-zone
+                  then do :
+                     find current marking exclusive-lock.
+                     marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB .
+                  end .
+                end .
+                else do :
+                  if vQnty <> v-must-be-childs then v-err-childs = true .
+                end .
+              end .
+              if v-err-childs
+              then do :
+                 find current marking exclusive-lock.
+                 marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
+              end .
+           end .
+        end .
+        else do :
+           if vAllQnty <> vQnty and GrayZoneQnty <> 100
+           then do:
+              find current marking exclusive-lock.
+              marking.sts = if vAllQnty - vQnty <= GrayZoneQnty 
+                            then objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+                            else objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
+           end.
         end.
      end.
   end.
