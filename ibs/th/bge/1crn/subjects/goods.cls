@@ -24,7 +24,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property chk-name      as character    no-undo get. private set.
   define property artic         as character    no-undo get. private set.
   define property unit-code     as character    no-undo get. private set.
-  define property prod-code     as character    no-undo get. private set.
+  define property prod-code     as integer      no-undo get. private set.
   define property wt            as decimal      no-undo get. private set.
   define property ms            as decimal      no-undo get. private set.
   define property gds-type      as character    no-undo get. private set.
@@ -82,7 +82,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
       when "chk-name"      then chk-name      = {&attr-str} .
       when "artic"         then artic         = {&attr-str} .
       when "unit-code"     then unit-code     = {&attr-str} .
-      when "prod-code"     then prod-code     = {&attr-str} .
+      when "prod-code"     then prod-code     = {&attr-integer} .
       when "wt"            then wt            = {&attr-dec} .
       when "ms"            then ms            = {&attr-dec} .
       when "gds-type"      then gds-type      = {&attr-str} .

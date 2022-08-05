@@ -284,14 +284,17 @@ end.
     tt-tax.rate-code = v-nds-rate-code
     .
     /* Проверим не изменился ли производитель. Если изменился, запустим утилититу переименования производителя. */
-    if v-gds-mode = {&update} and integer(p-GdsObj:prod-code) <> buf_goods.prod-code then do:
+    if    v-gds-mode = {&update} 
+      and (   p-GdsObj:prod-code ne buf_goods.prod-code 
+           or p-GdsObj:artic     ne buf_goods.artic ) 
+    then do:
         run utl\ren-art.p(buf_goods.gds-code,
             buf_goods.artic,
             buf_goods.prod-type,
             buf_goods.prod-code,
-            buf_goods.artic,
+            p-GdsObj:artic,
             buf_goods.prod-type,
-            integer(p-GdsObj:prod-code)
+            p-GdsObj:prod-code
         ) no-error.
         if error-status:error then do:
             v-err-mess = substitute("Ошибка при смене производителя у товара  &1. &2&3&2"
@@ -321,7 +324,7 @@ end.
                   , input v-gds-code
                   , input p-GdsObj:artic
                   , input "орг":U
-                  , input integer(p-GdsObj:prod-code)
+                  , input p-GdsObj:prod-code
                   , input v-node-code
                   , input integer(p-GdsObj:grp-code)
                   , input p-GdsObj:name_

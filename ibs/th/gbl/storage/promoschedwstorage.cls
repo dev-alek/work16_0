@@ -139,6 +139,9 @@ class ibs.th.gbl.storage.promoSchedwstorage:
   end method.
   
   method public void deleteDB( input inObj as {&class_sub} ):
+    if not valid-object (inObj)
+    then
+       return.
     define buffer {&buf_db} for ub.promo-schedule-week . 
     find first {&buf_db} where {&buf_db}.id = inObj:ID no-error.
 
