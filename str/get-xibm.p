@@ -51,8 +51,7 @@ define stream stmXMLOut.
 { str/magiachk.i }
 { str/magiachk.i -line " extent 2 "}
 { str/magiachk.i proc }
-/*{ gbl/thbj-def.i } 14/II-2019 - подключается внутри str/get-chkc.i */
-
+/*{ gbl/thbj-def.i } 15/I-2019 - подключается внутри str/get-chkc.i */
 DEFINE VARIABLE n-entry                    as   char no-undo extent 20.
 DEFINE VARIABLE accept-types               as   character no-undo .
 define variable v-flag-salesman            as   logical   no-undo .

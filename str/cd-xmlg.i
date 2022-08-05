@@ -84,6 +84,240 @@ define variable v-errornum as character no-undo .
 define variable v-group as character no-undo .
 define variable v-key as character no-undo .
 
+define variable ErrorMessage as character no-undo.
+define variable mOk as logical no-undo.
+define variable mtagbeg as int64  no-undo.
+define variable mtagend as int64 no-undo.
+
+procedure get-xml-ibm-c-buff-or-file.
+   define input parameter p-Type as character  no-undo.
+   define input parameter p-str  as longchar   no-undo.
+   define variable hParser as handle no-undo.
+   mtagbeg = 0.
+   mtagend = 0.
+&if "{1}" = "spool" &then
+run get-ibm-parameters in this-procedure no-error.
+if error-status:error then do:
+  assign
+  p-view-log = yes
+  .
+  run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute( "!!!При обработке данных от кассы произошла ошибка при получении значений настроечных параметров: &1"
+                          , return-value
+                        )
+                                        ).
+  undo, return .
+end.
+&endif
+  
+   create sax-reader hParser.
+   if p-Type eq "file"
+   then
+      hParser:set-input-source(p-Type, string(p-str)).
+   else
+      hParser:set-input-source(p-Type, p-str).
+   
+   hParser:sax-parse () no-error.
+   if error-status:error then do:
+      delete object hParser.
+      if error-status:num-messages > 0 
+      then do:
+          /* unable to begin the parse */
+          run write-log-and-file in p-log-handle (
+           input 1
+         , input log-file-name
+         , input 1
+         , input substitute( "!!!При  произошла ошибка при получении полного пути файлу: &1 &2"
+                             , ErrorMessage
+                             , return-value
+                           )
+                                     ).
+          return error error-status:get-message(1).
+      end.
+      else do:
+          /* error detected in a callback */
+           return error return-value.
+      end.
+   end.
+   delete object hParser.
+   if ErrorMessage <> "" 
+   then do:
+      run write-log-and-file in p-log-handle (
+           input 1
+         , input log-file-name
+         , input 1
+         , input substitute( "!!!При  произошла ошибка при получении полного пути файлу: &1 "
+                             , ErrorMessage
+                           )
+                                     ).
+       
+      return error ErrorMessage .
+   end.
+&if "{1}" = "spool" &then
+DO TRANSACTION:
+  run proc-end in this-procedure no-error .
+END.
+assign
+error-status:error = false.
+define buffer buf_cash-desk for ub.cash-desk.
+for each temp-cash-desk:
+  find first buf_cash-desk no-lock where
+            buf_cash-desk.db-num = g#db-num
+        AND buf_cash-desk.obj-code = p-obj-code
+        AND buf_cash-desk.pos-type = p-pos-type
+        AND buf_cash-desk.cash-num = temp-cash-desk.cash-num no-error .
+  if available buf_cash-desk then do:
+    run cd-attr-write in this-procedure (
+                                          input g#db-num
+                                         ,input p-obj-code
+                                        ,input p-pos-type
+                                        ,input temp-cash-desk.cash-num
+                                        ,input (if buf_cash-desk.pos-type = {&cd-type-ibm-xml}
+                                                then {&cda-ibm-xml_operative}
+                                                else if  buf_cash-desk.pos-type = {&cd-type-autotank}
+                                                then {&cda-autotank_operative}
+                                                else {&cda-magia-xml_operative})
+                                        ,input (if buf_cash-desk.pos-type = {&cd-type-ibm-xml}
+                                                then {&cda-ibm-xml_operative_last-check-params}
+                                                else if  buf_cash-desk.pos-type = {&cd-type-autotank}
+                                                then {&cda-autotank_operative_last-check-params}
+                                                else {&cda-magia-xml_operative_last-check-date-time}
+                                               )
+                                        ,input (cd-attr-CD-DatetoString (temp-cash-desk.last-date) + {&space-char}  +  string(temp-cash-desk.last-time, "HH:MM:SS":U)
+                                             +  (if buf_cash-desk.pos-type = {&cd-type-ibm-xml}
+                                                 or buf_cash-desk.pos-type = {&cd-type-autotank}
+                                               then ({&space-char} + string(temp-cash-desk.last-shift-num) +
+                                                      {&space-char} + string(temp-cash-desk.last-z-count) +
+                                                      {&space-char} + string(temp-cash-desk.last-chk-num))
+                                               else  "":U)
+                                               )
+                                        ,input ?
+                                        ,input 0.0
+                                        ,input 0
+                                        ,input no
+                                        ) no-error.
+  end. /*if available buf_cash-desk then do:*/
+end.
+&endif
+   
+end.
+
+/* SAXCallbacks */
+
+/* Invoked when the XML parser detects the start of an XML document. */
+procedure StartDocument:
+   /* assign
+      refund-type = ""
+      Check-ctrl = ""
+      CSGCode = ""
+      CSPrice = ""
+      ErrorMessage = ""
+    . */
+end procedure.
+
+/* Invoked when the XML parser detects the beginning of an element. */
+procedure StartElement:
+   define input parameter namespaceURI as character.
+   define input parameter localName    as character.
+   define input parameter qname        as character.
+   define input parameter ihAttributes as handle.
+
+   define variable v-attr-num    as integer   no-undo.
+   define variable v-temp-string as character no-undo.
+   
+   do v-attr-num = 1 to ihAttributes:num-items:
+      v-temp-string = substitute ('&1 &2="&3"',
+                                  v-temp-string,
+                                  ihAttributes:get-qname-by-index(v-attr-num),
+                                  ihAttributes:get-value-by-index(v-attr-num)).
+   end.
+   v-temp-string = trim(v-temp-string).
+     mtagbeg =  mtagbeg + 1.
+    run run-callback-procedure in this-procedure (
+                      input this-procedure:handle
+                    , input {&xmlparse-call-all}
+                    , input "tag-start"
+                    , input qname
+                    , input v-temp-string
+                ).
+end procedure.
+define variable mcurrentContent as character no-undo.
+/* Invoked when the XML parser detects character data. */
+procedure Characters:
+    define input parameter charData as memptr.
+    define input parameter numChars as integer.
+    
+    define variable mcurrentContent as character no-undo.
+    mcurrentContent = get-string(charData, 1, get-size(charData)).
+    
+    run run-callback-procedure in this-procedure (
+                      input this-procedure:handle
+                    , input {&xmlparse-call-all}
+                    , input "text"
+                    , input ""
+                    , input mcurrentContent
+                ).
+                
+end procedure.
+
+/* Invoked when the XML parser detects the end of an element. */
+procedure EndElement:
+define input parameter name_     as character.
+define input parameter localName as character.
+define input parameter qName     as character.
+
+    if qname = "ErrorMessage" then do:
+      ErrorMessage = mcurrentContent.
+      self:stop-parsing ().
+    end.
+    mtagend = mtagend + 1. 
+    if mtagend mod 100 = 0 or qName eq "check" 
+    then do:
+      run show-counter in p-log-handle .
+      run write-counter in p-log-handle (substitute("Прочитано открытых тегов &1 из них закрытых &2", mtagbeg, mtagend)).
+    end.
+    run run-callback-procedure in this-procedure (
+                      input this-procedure:handle
+                    , input {&xmlparse-call-all}
+                    , input "tag-end"
+                    , input qname
+                    , input ""
+                ).
+end procedure.
+
+/* Invoked when the XML parser detects the end of an XML document. */
+procedure EndDocument:
+    run hide-counter in p-log-handle .
+    mOk = true.
+end procedure.
+
+/* Invoked to report a warning. */
+procedure Warning:
+    define input parameter ErrMessage as character no-undo.
+    message "The following WARNING was generated:~n" + ErrMessage
+        view-as alert-box information buttons ok.
+end procedure.
+    
+/* Invoked to report an error encountered by the parser while parsing the XML document. */
+procedure Error:
+    define input parameter ErrMessage as character no-undo.
+    mOk = false.
+    message "The following NONFATAL ERROR was generated:~n" + ErrMessage
+        view-as alert-box information buttons ok.
+end procedure.
+
+/* Invoked to report a fatal error. */
+procedure FatalError:
+    define input parameter ErrMessage as character no-undo.
+    mOk = false.
+    return error "The following FATAL ERROR was generated:~n" + ErrMessage.
+end procedure.
+
+
+
 PROCEDURE get-xml-ibm-c.
 define input parameter p-filename as char no-undo.
 
@@ -111,6 +345,10 @@ if error-status:error then do:
   undo, return .
 end.
 &endif
+/* 23/XI-2018 - знчение p-filename во всех случаях поступает сюда
+                (вызывается из get-xibm.p, get-xrpl.p - оба идут из getxibmf.p - и из rsndxibm.p)
+                из перечня input from os-dir value(...).
+                Повторная проверка наличия в каталоге файла, прочитанного из каталога, избыточна.
 run gbl/filename.p (
               input p-filename
               ,output v-full-path
@@ -134,6 +372,7 @@ if error-status:error then do:
                                   ).
   return.
 end.
+*/
 error-status:error = FALSE.
    
 run gbl/fileapnd.p
@@ -897,8 +1136,7 @@ define input parameter p-field-value as character no-undo .
   do
   on error undo, return error
   :
-     
-    if p-record-name = "Param" then do:
+    if p-record-name = "Param" or p-record-name = "FuelPump" then do:
     find first temp-param where
                temp-param.cr = cri + 1 no-error .
     if not avail temp-param then do:
