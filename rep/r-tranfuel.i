@@ -497,7 +497,6 @@ procedure InitTT:
       end.
 
       &if "{1}" <> "class" &then
-message "Отбор транзакций, по которым нет чеков" view-as alert-box.
       /* Отбор транзакций, по которым нет чеков */
       TRAN-FUEL-WITHOUT-CHECK:
       for each tran-fuel where
@@ -510,13 +509,11 @@ message "Отбор транзакций, по которым нет чеков" view-as alert-box.
                obj-list.obj-type = {&shop}
            and obj-list.obj-code = tran-fuel.obj-code
       no-lock:
-message "tran-fuel.tran-num = " tran-fuel.tran-num view-as alert-box.
          find first chk-doc-attr where
                     chk-doc-attr.attr-code  = "CheckId"
                 and chk-doc-attr.attr-value = tran-fuel.uuid-cheq
          no-lock no-error.
          if avail chk-doc-attr then next.
-message "!1" view-as alert-box.         
          /* Если это транзакция заказа техпролива, то исключаем */
          for first b-tran-fuel where
                    b-tran-fuel.uuid      =  tran-fuel.uuid
@@ -532,7 +529,6 @@ message "!1" view-as alert-box.
          no-lock:
             next TRAN-FUEL-WITHOUT-CHECK.
          end.
-message "!2" view-as alert-box.         
          v-gds-code = tran-fuel.fuel-code.
          if v-gds-code < 100 then do: /* Если короткий код, то ищем полный код */
             find first prod-bc where
@@ -555,9 +551,7 @@ message "!2" view-as alert-box.
             then
                next.
          end.
-message "!3" view-as alert-box.         
          if not can-do(iGdsCodeList, string(v-gds-code)) then next.
-message "Create" view-as alert-box.
          /* Корректировка по часовому поясу */
          assign
             vDateBeg = tran-fuel.date-beg + Timezone * 60000
