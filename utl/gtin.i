@@ -555,6 +555,26 @@ function getLevelMotpBycodid return character
 end.
 
 {&CommentStartNoClass}
+method private character    getLevelUTDByLevelMotp
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function getLevelUTDByLevelMotp return character    
+{utl\comment.i} */ 
+(iUnit as char):
+   define variable vLevel as integer no-undo.
+   define variable vListMOTP    as character no-undo init "Unit,kin,Level1,Level2,Level3,Level4,Level5".
+   define variable vListutd as character no-undo init "КИ,КИН,КИГУ,КИТУ".
+   
+   vLevel = lookup(iUnit,vListMOTP).
+   if    vLevel eq ?
+      or vLevel < 1
+      or vLevel > 4
+   then
+      return ?.
+   else
+      return entry(vlevel,vListutd).
+end.
+
+{&CommentStartNoClass}
 method private character  getLevelMotpByDM
 {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function getLevelMotpByDM return character  

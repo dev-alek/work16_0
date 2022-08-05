@@ -329,7 +329,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                                  utd-lines.doc-id,
                                  utd-lines.Linenum,
                                  vmark,
-                                 "",
+                                 "1c",
                                  objImp:edoc-type).
                   
                   find first utd-marking-lines where recid(utd-marking-lines)   eq vrec
@@ -346,7 +346,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   then do:
                      define variable vQntyMark as decimal no-undo.
                      vQntyMark = getQntyUTDByCodId(vmark) .
-                     setattrUtdMarkingLines(utd-lines.db-num, utd-lines.doc-id, utd-lines.Linenum, vmark,"box-qnty",string(vQnty)).
+                     setattrUtdMarkingLines(utd-lines.db-num, utd-lines.doc-id, utd-lines.Linenum, vmark,"box-qnty",string(vQntyMark)).
                   end.
                   else
                      vQntyMark = marking.box-qnty.
@@ -372,11 +372,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
 /*                  tt-mark.mark = utd-marking-lines.mark .*/
                   release utd-marking-lines.
                end.
-               if     v-gds-gd:stts-desc eq ?
-                  and utd-lines.Quantity ne vqnty
-               then
-                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity) + {&delim-par} + string(vqnty)).                        
-                  
+/*               if     v-gds-gd:stts-desc eq ?                                                                                                                                                      */
+/*                  and utd-lines.Quantity ne vqnty                                                                                                                                                  */
+/*               then                                                                                                                                                                                */
+/*                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity) + {&delim-par} + string(vqnty)).*/
+
    
                for each utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
                                             and utd-marking-lines.doc-id  eq utd-lines.doc-id

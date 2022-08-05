@@ -416,7 +416,8 @@ DEFINE BROWSE br-mark
 /*  X_marking-line.in-code COLUMN-LABEL "ÏÍ" FORMAT "X(15)":U */
 /*  X_marking-line.out-code COLUMN-LABEL "ÐÍ" FORMAT "X(15)":U*/
   X_marking.site COLUMN-LABEL "" FORMAT "X(1)":U
-  X_marking.unit COLUMN-LABEL "Åä.èçì." FORMAT "x(8)":U
+  if X_marking.unit eq ? or X_marking.unit eq "" then getLevelUTDByLevelMotp( X_marking.unit-ext) else X_marking.unit @ X_marking.unit COLUMN-LABEL "Åä.èçì." FORMAT "x(8)":U
+/*  X_marking.unit-ext COLUMN-LABEL "Åä.èçì." FORMAT "x(8)":U*/
 Enable
 X_marking.mark  
 
@@ -1156,7 +1157,7 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
                         X_marking-line.unit:fGCOLOR in browse br-mark-item = CYAN_COLOR.
                         X_marking-line.stts:fGCOLOR in browse br-mark-item = CYAN_COLOR.
 /*                        X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = CYAN_COLOR.*/
-                        typem:fGCOLOR in browse br-mark = CYAN_COLOR.
+                        typem:fGCOLOR in browse br-mark-item = CYAN_COLOR.
 /*                        X_marking-line.in-code:fGCOLOR in browse br-mark-item = CYAN_COLOR. */
 /*                        X_marking-line.out-code:fGCOLOR in browse br-mark-item = CYAN_COLOR.*/
                     end.
@@ -1182,7 +1183,7 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
                         X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
 /*                        X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.*/
-                        typem:fGCOLOR in browse br-mark = red_COLOR.
+                        typem:fGCOLOR in browse br-mark-item = red_COLOR.
 /*                        X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR. */
 /*                        X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.*/
                     end. 
@@ -1196,7 +1197,7 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
                 X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
                 X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
 /*                X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.*/
-                typem:fGCOLOR in browse br-mark = red_COLOR.
+                typem:fGCOLOR in browse br-mark-item = red_COLOR.
 /*                X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR. */
 /*                X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.*/
             end. 
@@ -1214,7 +1215,7 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
                         X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
 /*                        X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.*/
-                        typem:fGCOLOR in browse br-mark = red_COLOR.
+                        typem:fGCOLOR in browse br-mark-item = red_COLOR.
 /*                        X_marking-line.in-code:fGCOLOR in browse br-mark-item = red_COLOR. */
 /*                        X_marking-line.out-code:fGCOLOR in browse br-mark-item = red_COLOR.*/
                     end. 
