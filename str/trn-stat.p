@@ -4122,7 +4122,7 @@ procedure ie-date:
          ,input-output bf_trn-doc.shift-date
          ,input-output bf_trn-doc.shift-num
          ,input-output bf_trn-doc.shift-name
-         ,input        yes
+         ,input        NOT(g#auto OR g#oxml OR g#esys OR g#news) 
         ).
         run str/chk-back.p
           (input bf_trn-doc.doc-code  /* p-doc-code  */
