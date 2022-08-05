@@ -27,8 +27,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   /* { gbl/attr-lib.i class } gds-attr-write() заинлайнена */
   {str\utd-err.i  class}
   {str\utd-attr.i class}
-  {str\utd.i class}
-  
+  {str\utd.i class}     
   define private temp-table tt-mark no-undo 
      field mark as character case-sensitive 
   .
@@ -125,6 +124,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                                    and utd-marking-lines.doc-id    eq utd.doc-id
                                    and utd-marking-lines.doc-level eq 1
       exclusive-lock:
+         
          addMark(buffer utd-marking-lines ).
                      find first marking exclusive-lock where marking.mark = utd-marking-lines.mark no-error .
                        if available (marking) then do:
@@ -303,17 +303,19 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                for each tt-mark:
                   delete tt-mark.
                end.
+               for each utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
+                                            and utd-marking-lines.doc-id  eq utd-lines.doc-id
+                                            and utd-marking-lines.LineNum eq utd-lines.LineNum
+               exclusive-lock:
+                  delete utd-marking-lines.
+               end.
                   
                do v-i-num2 = 1 to v-i-counter2 :
                   v-objlistmark:Get(v-i-num2) .
                   v-marks-mark = cast(v-objlistmark:SubjectObjCurr, ibs.th.bge.1crn.subjects.mark) .
                   define variable vmark as character no-undo.
                   vmark = repTegforDm(v-marks-mark:mark-code).
-                  find first utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
-                                                 and utd-marking-lines.doc-id  eq utd-lines.doc-id
-                                                 and utd-marking-lines.LineNum eq utd-lines.LineNum
-                                                 and utd-marking-lines.mark    eq vmark
-                  exclusive-lock no-error.
+
                   if ismark(vmark)
                   then do:
                      find first marking where marking.mark eq vmark
@@ -322,20 +324,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                      then
                         undo, throw new Progress.Lang.AppError(substitute("Нет марки &1 .",v-marks-mark:mark-code)) .
                   end.
-                     
-                  if not available utd-marking-lines
-                  then do:
-                     create utd-marking-lines.
-                     assign
-                        utd-marking-lines.db-num  = utd-lines.db-num
-                        utd-marking-lines.doc-id  = utd-lines.doc-id
-                        utd-marking-lines.LineNum = utd-lines.LineNum
-                        utd-marking-lines.mark    = vmark
-                        utd-marking-lines.doc-level = 1
-                        utd-marking-lines.gds-code  = if available marking then marking.gds-code else getGdsCodeByDM(vmark)       
-                     .
-                  end.
+                  define variable vrec as recid no-undo.
+                  vrec = addMarkforUtd (utd-lines.db-num ,
+                                 utd-lines.doc-id,
+                                 utd-lines.Linenum,
+                                 vmark,
+                                 "",
+                                 objImp:edoc-type).
                   
+                  find first utd-marking-lines where recid(utd-marking-lines)   eq vrec
+                  exclusive-lock no-error.
                   if     vGdsCode eq 0
                      and utd-marking-lines.gds-code ne ?
                   then
@@ -358,7 +356,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                      vqnty = vqnty + vQntyMark.
                   define variable vsts as integer no-undo.
                    
-                  
+                   
                   vsts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).
                   if     vsts = ObjSrv:Env:marking:Sts:mark:DeliveryControl:KeyIntDB
                      or  vsts = ObjSrv:Env:marking:Sts:mark:GrayZone:KeyIntDB
@@ -366,13 +364,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                      utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:PendingVerification:KeyIntDB.
                   else 
                      utd-marking-lines.sts = vsts.
-                  
                   if     v-marks-mark:stts-desc ne ?
                      and available marking
                   then
                      AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"Load1C","stts-desc-mark",v-marks-mark:stts-desc + {&delim-par} + string( utd-lines.LineNum) + {&delim-par} +  vmark).
-                  create tt-mark.
-                  tt-mark.mark = utd-marking-lines.mark .
+/*                  create tt-mark.                        */
+/*                  tt-mark.mark = utd-marking-lines.mark .*/
                   release utd-marking-lines.
                end.
                if     v-gds-gd:stts-desc eq ?
@@ -387,21 +384,22 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                                             and utd-marking-lines.doc-level = 1 
                exclusive-lock:
                   
-                  find first tt-mark where tt-mark.mark = utd-marking-lines.mark
-                  no-error.
-                  if not available tt-mark
-                  then do:
-                     delMark(buffer utd-marking-lines).
-                     delete utd-marking-lines.
-                  end.
-                  else do:
+/*                  find first tt-mark where tt-mark.mark = utd-marking-lines.mark*/
+/*                  no-error.                                                     */
+/*                  if not available tt-mark                                      */
+/*                  then do:                                                      */
+/*                     delMark(buffer utd-marking-lines).                         */
+/*                     delete utd-marking-lines.                                  */
+/*                  end.                                                          */
+/*                  else*/
+                  do:
                      MarkGray(utd-marking-lines.mark).
                      addMark( buffer utd-marking-lines).
                        find first marking exclusive-lock where marking.mark = utd-marking-lines.mark no-error .
                        if available (marking) then do:
-                       if marking.unit-ext <> "UNIT" and utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB 
-                       and marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
-                       marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB.
+                          if marking.unit-ext <> "UNIT" and utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB 
+                          and marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
+                          marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB.
                        end. 
                   end.
                      
@@ -502,6 +500,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       return v-retfl .
     end finally .
   end method. /* end_of Excute */
+  
   
   method public void MarkGray(imark as char):
      define buffer marking for marking.
