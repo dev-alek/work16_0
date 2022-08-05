@@ -36,7 +36,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
   define buffer buf_doc-attr for ub.doc-attr.
   define buffer buf_parts for ub.parts.
   define buffer buf_recipe for ub.recipe.
-  define buffer buf_recipe-gds for ub.recipe-gds.
+  define buffer buf_fbr-recipe-gds for ub.fbr-recipe-gds.
   
   define property Msg as character no-undo
     get:
@@ -203,25 +203,35 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
     for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code
       and not buf_fbr-line.is-comp:    
 
-      find first buf_gds where
+      find first buf_gds no-lock where
             buf_gds.artic = buf_fbr-line.artic 
         and buf_gds.prod-code = buf_fbr-line.prod-code
         and buf_gds.prod-type = buf_fbr-line.prod-type.
 
-      find first buf_recipe where
+      find first buf_recipe no-lock where
             buf_recipe.recipe-code = buf_fbr-line.recipe-code no-error.
+            
+      find first fbr-recipe no-lock where fbr-recipe.doc-code = buf_fbr-line.doc-code
+                                      and fbr-recipe.recipe-code = buf_fbr-line.recipe-code no-error.
 
-      find first buf_recipe-gds where
-            buf_recipe-gds.recipe-code = buf_fbr-line.recipe-code 
-        and buf_recipe-gds.gds-code = buf_gds.gds-code
-        no-error.
+/*      find first buf_recipe-gds no-lock where                    */
+/*            buf_recipe-gds.recipe-code = buf_fbr-line.recipe-code*/
+/*        and buf_recipe-gds.gds-code = buf_gds.gds-code           */
+/*        no-error.                                                */
+      
+      find first buf_fbr-recipe-gds no-lock where buf_fbr-recipe-gds.doc-code = buf_fbr-line.doc-code
+                                              and buf_fbr-recipe-gds.recipe-code = buf_fbr-line.recipe-code
+                                              and buf_fbr-recipe-gds.prod-type = buf_fbr-line.prod-type
+                                              and buf_fbr-recipe-gds.prod-code = buf_fbr-line.prod-code
+                                              and buf_fbr-recipe-gds.artic = buf_fbr-line.artic
+                                              no-error .
 
       
-      def var brutto as decimal no-undo.
-      def var netto as decimal no-undo.    
+      define variable brutto as decimal no-undo.
+      define variable netto as decimal no-undo.    
       assign
         brutto = buf_fbr-line.fact-qnty
-        netto = (buf_fbr-line.fact-qnty / buf_recipe-gds.brutto-qnty) * buf_recipe-gds.qnty
+        netto = (buf_fbr-line.fact-qnty / buf_fbr-recipe-gds.recipe-brutto-qnty) * buf_fbr-recipe-gds.recipe-qnty
       .   
       sw:start-element ("ingr").
         write-data-element ("dish-code", string-mth (buf_recipe.gds-code)).
