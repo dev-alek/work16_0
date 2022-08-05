@@ -202,7 +202,7 @@ do:
       end.
       
       v-q-doc-base = buf_utd-lines.Quantity.
-      v-q-doc = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity")) .
+      v-q-doc = decimal(GetAttrUtdlinesex(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity",string(v-q-doc-base))) .
       if v-q-doc = ?
       then do :
         find first buf_bar-code where 
@@ -221,7 +221,7 @@ do:
       no-lock no-error.
       v-q = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"QuantityBarCode")).
       if v-q = ? then v-q = 0.
-      v-q-doc = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity")) .
+      v-q-doc = decimal(GetAttrUtdlinesex(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity",string(buf_utd-lines.Quantity))) .
       v-q-doc-base = v-q-doc * (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1).
       if v-q-doc = ?
       then do :
