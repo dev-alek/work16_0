@@ -404,6 +404,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
          end.
       end.
    end.
+   for each utd-lines where utd-lines.db-num eq utd.db-num
+                        and utd-lines.doc-id eq utd.doc-id
+   no-lock:
+      CheckMarkUtdLine(utd-lines.db-num,
+                       utd-lines.doc-id,
+                       utd-lines.LineNum).
+   end.
    CheckMarkUtd(utd.db-num,utd.doc-id).
    CheckMarking(utd.db-num,utd.doc-id,"Check—ontract").
 /*   vMarkUtd =*/
