@@ -1159,7 +1159,8 @@ define private temp-table tt-recid-TranFuel no-undo
     
     if v-pl-code > 0 then do:
       find first buf_place no-lock where buf_place.pl-code = v-pl-code no-error .
-      v-loc1 = if available buf_place then buf_place.loc1 else "0" .
+      v-loc1 = if available buf_place then string(buf_place.pl-code) else "0" .
+/*      v-loc1 = if available buf_place then buf_place.loc1 else "0" .*/
     end.
     else v-loc1 = "0" .
 
