@@ -437,12 +437,13 @@ function addBracketForCode return character
    define variable vteg as character no-undo.
    define variable vtegval as character no-undo.
    
-   if     length(icodeIdent) le 24
+   if     length(icodeIdent) le 25
    then do:
       oTeg = icodeIdent.
    end.
    else do:
       mMRCCode = yes. 
+      ChekTypeMarkByDm(icodeIdent).
       block-teg:
       do while Velement ne "" and icodeIdent ne "":
          Velement = GetNextElement(no,output vteg, output vtegval, input-output icodeIdent).
@@ -452,7 +453,7 @@ function addBracketForCode return character
          
       end.
       mMRCCode = no.
-   end.
+   end.   
    return oTeg.
 
 end.
