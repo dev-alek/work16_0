@@ -6737,7 +6737,7 @@ PROCEDURE proc-b-slip :
   if not available buf_chk-doc-attr 
   or (available buf_chk-doc-attr and trim(buf_chk-doc-attr.attr-value) = "")
   then do :
-    message "В чеке нет атрибута 'CheckId' для поиска слипов!" view-as alert-box error .
+    message "Слипы не найдены!" view-as alert-box .
     return .
   end .
     
