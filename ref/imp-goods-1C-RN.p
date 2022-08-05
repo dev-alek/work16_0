@@ -432,6 +432,7 @@ end.
   
   if v-mark-type <> ?
   and v-mark-type <> "not-type"
+  and v-mark-type <>  "Unknow"
   then do :
     RUN gds-attr-write (v-nbc, {&attr-mark-type}, v-mark-type).  
   end.

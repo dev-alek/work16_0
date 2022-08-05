@@ -89,11 +89,11 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
     
     assign
       v-str = v-str + ",mark-code"          when mark-code         = ? 
-      v-str = v-str + ",unit-ext"           when unit-ext          = ? and obj-load eq "mark"
+/*      v-str = v-str + ",unit-ext"           when unit-ext          = ? and obj-load eq "mark"    */
       v-str = v-str + ",qnty-box"           when qnty-box          = ? and obj-load eq "mark"
 /*      v-str = v-str + ",GTIN"               when GTIN              = ? and obj-load eq "mark" */
 /*      v-str = v-str + ",gds-code"           when gds-code          = ? and obj-load eq "mark"*/
-      v-str = v-str + ",stts"               when stts              = ? 
+/*      v-str = v-str + ",stts"               when stts              = ?  */
     .
    
     v-str = substring(v-str, 2).

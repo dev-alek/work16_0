@@ -25,7 +25,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   
   { cmp/str-glbl.i class } /* &add-def, &update, &deletion, &shop, &attr-cash-book-id, &attr-oper-serv-id */
   /* { gbl/attr-lib.i class } gds-attr-write() заинлайнена */
-  {str\utd-err.i class}
+  {str\utd-err.i  class}
+  {str\utd-attr.i class}
   {str\utd.i class}
   
   define private temp-table tt-mark no-undo 
@@ -313,11 +314,15 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                                                  and utd-marking-lines.LineNum eq utd-lines.LineNum
                                                  and utd-marking-lines.mark    eq vmark
                   exclusive-lock no-error.
-                  find first marking where marking.mark eq vmark
-                     no-lock no-error.
-                  if not available marking
-                  then
-                     undo, throw new Progress.Lang.AppError(substitute("Нет марки &1 .",v-marks-mark:mark-code)) .
+                  if ismark(vmark)
+                  then do:
+                     find first marking where marking.mark eq vmark
+                        no-lock no-error.
+                     if not available marking
+                     then
+                        undo, throw new Progress.Lang.AppError(substitute("Нет марки &1 .",v-marks-mark:mark-code)) .
+                  end.
+                     
                   if not available utd-marking-lines
                   then do:
                      create utd-marking-lines.
@@ -327,7 +332,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                         utd-marking-lines.LineNum = utd-lines.LineNum
                         utd-marking-lines.mark    = vmark
                         utd-marking-lines.doc-level = 1
-                        utd-marking-lines.gds-code  = marking.gds-code       
+                        utd-marking-lines.gds-code  = if available marking then marking.gds-code else getGdsCodeByDM(vmark)       
                      .
                   end.
                   
@@ -339,11 +344,21 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                       and vGdsCode ne utd-marking-lines.gds-code
                   then
                      vGdsCode = ?.
-                  
+                  if not ismark(vmark)
+                  then do:
+                     define variable vQntyMark as decimal no-undo.
+                     vQntyMark = getQntyUTDByCodId(vmark) .
+                     setattrUtdMarkingLines(utd-lines.db-num, utd-lines.doc-id, utd-lines.Linenum, vmark,"box-qnty",string(vQnty)).
+                  end.
+                  else
+                     vQntyMark = marking.box-qnty.
+   
                   if utd-marking-lines.doc-level eq 1
                   then
-                     vqnty = vqnty + marking.box-qnty.
+                     vqnty = vqnty + vQntyMark.
                   define variable vsts as integer no-undo.
+                   
+                  
                   vsts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).
                   if     vsts = ObjSrv:Env:marking:Sts:mark:DeliveryControl:KeyIntDB
                      or  vsts = ObjSrv:Env:marking:Sts:mark:GrayZone:KeyIntDB
@@ -352,7 +367,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   else 
                      utd-marking-lines.sts = vsts.
                   
-                  if v-marks-mark:stts-desc ne ?
+                  if     v-marks-mark:stts-desc ne ?
+                     and available marking
                   then
                      AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"Load1C","stts-desc-mark",v-marks-mark:stts-desc + {&delim-par} + string( utd-lines.LineNum) + {&delim-par} +  vmark).
                   create tt-mark.
