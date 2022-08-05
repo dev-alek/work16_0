@@ -393,7 +393,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
 /*                  end.                                                          */
 /*                  else*/
                   do:
-                     MarkGray(utd-marking-lines.mark).
+                     MarkGray(utd-marking-lines.mark, utd.db-num, utd.doc-id).
                      addMark( buffer utd-marking-lines).
                        find first marking exclusive-lock where marking.mark = utd-marking-lines.mark no-error .
                        if available (marking) then do:
@@ -502,12 +502,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   end method. /* end_of Excute */
   
   
-  method public void MarkGray(imark as char):
+  method public void MarkGray(imark as char, idb-num as int, idoc-id as int):
      define buffer marking for marking.
      define buffer BuF_marking for marking.
      define buffer bf_bar-code for ub.bar-code .
      define buffer bf2_bar-code for ub.bar-code .
      define buffer bf_goods-attr for ub.goods-attr .
+     define buffer bf_utd-marking-lines for utd-marking-lines .
      define variable vAllQnty as integer no-undo init ?.
      define variable vQnty as integer no-undo.
      define variable v-must-be-childs as integer no-undo .
@@ -515,12 +516,17 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
      define variable v-mark-type  as character no-undo .
      define variable v-err-childs as logical no-undo .
      define variable v-gray-zone  as logical no-undo .
+     define variable errMsg as character no-undo .
      
      find first marking where marking.mark eq imark
      no-lock no-error.
      if available marking
         and marking.box-qnty ne 1
      then do:
+        find first bf_utd-marking-lines where bf_utd-marking-lines.db-num eq idb-num
+                                          and bf_utd-marking-lines.doc-id eq idoc-id
+                                          and bf_utd-marking-lines.mark   eq marking.mark
+        no-lock no-error.
         if marking.gds-code > 0
         then do :
            cisGdsCode = marking.gds-code . 
@@ -562,12 +568,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   v-must-be-childs = v-must-be-childs / bf2_bar-code.cli-base-rate .
                 end .
                 else do :
-/*                  MSG = "Для товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'блк'" .*/
+                  errMSG = "Для товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'блк'" .
                   v-err-childs = true .
                 end .
               end .
               else do :
-/*                MSG = "Для товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'кор'" .*/
+                errMSG = "Для товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'кор'" .
                 v-err-childs = true .
               end .
               if not v-err-childs
@@ -596,16 +602,30 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                 else do :
                   if vQnty <> v-must-be-childs then v-err-childs = true .
                 end .
+                if v-err-childs
+                then do :
+                  errMSG = "В коробе " + string(vQnty) + " блоков." .
+                end .
               end .
               if v-err-childs
               then do :
                  find current marking exclusive-lock.
                  marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
+                 marking.comment = errMSG .
+                 AddUtdErr(idb-num,
+                           idoc-id,
+                           if available bf_utd-marking-lines 
+                           then buffer bf_utd-marking-lines:handle
+                           else buffer marking:handle,
+                           "CheckMOTP",
+                           "MotpMarkErr",
+                           (marking.mark + {&delim-par} + errMSG)).
               end .
            end .
         end .
         else
         if marking.unit-ext = "LEVEL1"
+        or marking.unit-ext = "GROUP"
         then do :
            if cisGdsCode > 0
            then do :
@@ -619,7 +639,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                 v-must-be-childs = bf_bar-code.cli-base-rate .
               end .
               else do :
-/*                MSG = "Для товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'блк'" .*/
+                errMSG = "Для товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'блк'" .
                 v-err-childs = true .
               end .
               if not v-err-childs
@@ -642,11 +662,24 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                 else do :
                   if vQnty <> v-must-be-childs then v-err-childs = true .
                 end .
+                if v-err-childs
+                then do :
+                  errMSG = "В блоке " + string(vQnty) + " пачек." .
+                end .
               end .
               if v-err-childs
               then do :
                  find current marking exclusive-lock.
                  marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
+                 marking.comment = errMSG .
+                 AddUtdErr(idb-num,
+                           idoc-id,
+                           if available bf_utd-marking-lines 
+                           then buffer bf_utd-marking-lines:handle
+                           else buffer marking:handle,
+                           "CheckMOTP",
+                           "MotpMarkErr",
+                           (marking.mark + {&delim-par} + errMSG)).
               end .
            end .
         end .
@@ -654,9 +687,23 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
            if vAllQnty <> vQnty and GrayZoneQnty <> 100
            then do:
               find current marking exclusive-lock.
-              marking.sts = if vAllQnty - vQnty <= GrayZoneQnty 
-                            then objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
-                            else objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
+              if vAllQnty - vQnty <= GrayZoneQnty
+              then do :
+                marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB .
+              end .
+              else do :
+                errMSG = "В блоке " + string(vQnty) + " пачек." .
+                marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
+                marking.comment = errMSG .
+                AddUtdErr(idb-num,
+                          idoc-id,
+                          if available bf_utd-marking-lines 
+                          then buffer bf_utd-marking-lines:handle
+                          else buffer marking:handle,
+                          "CheckMOTP",
+                          "MotpMarkErr",
+                          (marking.mark + {&delim-par} + errMSG)).
+              end .
            end.
         end.
      end.
