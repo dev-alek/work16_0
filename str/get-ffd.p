@@ -69,6 +69,10 @@ define variable v-uniq-key-rec as character no-undo .
 define variable v-view-log     as logical   no-undo .
 define variable v-spec-command as character no-undo .
 define variable vMsg           as character no-undo.
+define variable Mreq           as longchar  no-undo.
+define variable hSAXWriter     as handle    no-undo.
+
+{ bge/socet.i }
 
 { gbl/hostcode.i p-obj-type p-obj-code v-host-code }
 
@@ -117,37 +121,46 @@ FOR EACH buf_cash-desk WHERE
    assign
       v-obj-list = {&shop} + string(buf_cash-desk.obj-code)
       .
-                                                                       
-   run xml-cd-write-header in this-procedure (
-      input v-xml-file-name
-      , input v-xml-file-name-path
-      , input "config":U
-      , input {&version-string}
-      , input v-obj-list
-      , input (v-obj-list + "_":U + "касса" + string(buf_cash-desk.cash-num))
-      , no
-      ).   
-
-   output stream stmxmlout to value( v-xml-file-name-path + "xm1" ) convert target "1251" append.
-
-   run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='USE_FFD_VERSION'":U).
-   run bgelib-tag-close in this-procedure ( input 2, input "Param").
-   run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='KKT_FFD_VERSION'":U).
-   run bgelib-tag-close in this-procedure ( input 2, input "Param").
-   run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='KKT_SCHEMA'":U).
-   run bgelib-tag-close in this-procedure ( input 2, input "Param").
-   run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='GISMT_CHECK_TIMEOUT'":U).
-   run bgelib-tag-close in this-procedure ( input 2, input "Param").
-   run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='GISMT_OPENCON_TIMEOUT'":U).
-   run bgelib-tag-close in this-procedure ( input 2, input "Param").
-   run bgelib-tag-open in this-procedure ( input 2, input "Param", input "ctrl='READ' group='OFD' key='GISMT_FAST_ANSWER'":U).
-   run bgelib-tag-close in this-procedure ( input 2, input "Param").
+   create sax-writer hSAXWriter.
+   hSAXWriter:set-output-destination("longchar", Mreq) no-error.
+               
+   hSAXWriter:formatted = true.
+   hSAXWriter:encoding = "windows-1251".
+               
+   hSAXWriter:start-document() no-error.
+   define variable OS-time as character  no-undo.
+   OS-time =  string( ( today - date( "01/01/1996" ) ) * 24 * 3600 + time, ">>>>>>>>9" ).
+   hSAXWriter:start-element("config") no-error.
+   hSAXWriter:insert-attribute("type",   "REQUEST")       no-error.
+   hSAXWriter:insert-attribute("id",     v-xml-file-name) no-error.
+   hSAXWriter:insert-attribute("from",   string(v-obj-list))      no-error.
+   hSAXWriter:insert-attribute("to",     (v-obj-list + "_":U + "касса" + string(buf_cash-desk.cash-num))) no-error.
+   hSAXWriter:insert-attribute("tstamp", string(OS-time))     no-error.
    
-   output stream stmxmlout close.
+   define variable mi as integer no-undo.
+   define variable vListParam as character no-undo init "~
+USE_FFD_VERSION,~
+KKT_FFD_VERSION,~
+KKT_SCHEMA,~
+GISMT_CHECK_TIMEOUT,~
+GISMT_OPENCON_TIMEOUT,~
+GISMT_FAST_ANSWER".
    
-   run xml-cd-write-footer in this-procedure ( input buf_cash-desk.pos-type, input v-xml-file-name-path, input "config":U ) no-error . 
-   assign
-      log-file-name = (if p-auto = 0 then 'get-chkf.log' else 'extgetcd.log').
+   do mi = 1 to num-entries(vListParam):
+      hSAXWriter:START-ELEMENT("Param").
+      hSAXWriter:insert-attribute("ctrl",   "READ"              )   no-error.
+      hSAXWriter:insert-attribute("group",  "OFD"               )    no-error.
+      hSAXWriter:insert-attribute("key",    entry(mi,vListParam))    no-error.
+      hSAXWriter:END-ELEMENT("Param" ).
+   end.
+   hSAXWriter:end-element("config") no-error.
+   hSAXWriter:end-document() no-error.
+   if hSAXWriter:write-status = 7 then do:
+      delete object hSAXWriter no-error.
+      return error.
+   end.
+   delete object hSAXWriter no-error.
+   log-file-name = (if p-auto = 0 then 'get-chkf.log' else 'extgetcd.log').
 
    run str/get-inis.p (
       input p-obj-type
@@ -178,42 +191,51 @@ FOR EACH buf_cash-desk WHERE
          )).
       assign
          v-view-log = yes.
-   end.                       
-   run str/post-xml.p
-      (
-      input parparentproc
-      ,input p-parent-handle
-      ,input p-log-handle
-      ,input g#news
-      ,input g#auto
-      ,input 'get'
-      ,input log-file-name
-      ,input (entry(1, buf_cash-desk.addr-path, {&delim-par}) + '://' + entry(2, buf_cash-desk.addr-path, {&delim-par}))
-      ,input (v-xml-file-name-path + 'xml':U)
-      ,input (replace(in_ + spl + "/" + v-xml-file-name, "/", "\" ) + ".xml")
-      ,input 30
-      ,input substitute('Получение параметров ФФД с кассы &1://&2'
-      ,entry(1, buf_cash-desk.addr-path, {&delim-par})
-      ,entry(2, buf_cash-desk.addr-path, {&delim-par})
-      )
-      ) no-error .
-   if error-status:error
-      or return-value = "error" then 
-   do:
+   end.
+   run write-log-and-file in p-log-handle (
+                      input 1
+                    , input log-file-name
+                    , input 1
+                    , input substitute('Получаем параметры ФФД с кассы &1://&2'
+                                  ,entry(1, buf_cash-desk.addr-path, {&delim-par})
+                                  ,entry(2, buf_cash-desk.addr-path, {&delim-par})
+                                )
+                                                      ).
+   mWriteRespFile = replace(in_ + sav + "/" + v-xml-file-name, "/", "\" ) + ".xml_sckt".
+   run ConectSocet (entry(1,entry(2, buf_cash-desk.addr-path, {&delim-par}),":"),
+                    entry(2,entry(2, buf_cash-desk.addr-path, {&delim-par}),":"),
+                    "",
+                    Mreq,
+                    "xml",
+                    30,
+                    no,
+                    substitute ("Чтение параметры ФФД с кассы &1. ",entry(2, buf_cash-desk.addr-path, {&delim-par}))
+                    ).
+   if mWebResp eq "" 
+   then do:
       run write-log-and-file in p-log-handle (
-         input 1
-         , input log-file-name
-         , input 1
-         , input substitute( "!!!Касса &1 маг&2 не ответила:&3&4 &5"
-         ,buf_cash-desk.cash-num
-         ,buf_cash-desk.obj-code
-         , {&new-line}
-         , error-status:get-message(1)
-         , return-value
-         )
-         ).
-
-      NEXT _cash-desk.
+          input 1
+        , input log-file-name
+        , input 1
+        , input substitute( "!!!Касса &1 маг&2 не ответила:&3&4 &5"
+                              ,buf_cash-desk.cash-num
+                              ,buf_cash-desk.obj-code
+                              , {&new-line}
+                              , OerrMsg
+                              , return-value
+                          )
+                                          ).
+       NEXT _cash-desk.
+    end.
+    else do:
+       run write-log-and-file in p-log-handle (
+          input 1
+        , input log-file-name
+        , input 1
+        , input substitute('Время ожидания выполнения задания на кассе - &1 c',
+                      mSocetEndTime
+                    )
+                                          ).
    end.
    assign
       v-index = index(p-other, buf_cash-desk.pos-type + '=').
@@ -243,8 +265,8 @@ FOR EACH buf_cash-desk WHERE
       ,input buf_cash-desk.pos-type
       ,input "utf-8":U
       ,input log-file-name
-      ,input "config":U + {&delim-par} + v-spec-command
-      ,input "":U /*ждем любых файлов только при чтении версии своего единственного*/
+      ,input "readbuffer_config":U + {&delim-par} + v-spec-command
+      ,input mWebResp
       ,input-output v-view-log
       ) no-error .
 

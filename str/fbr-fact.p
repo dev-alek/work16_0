@@ -42,6 +42,7 @@ define variable vss-description as character no-undo init "Создание, заполнение 
 { str/writelog.i def "'fbr.log'" no-create }
 { gbl/waitfram.i }
 { gbl/getsect.i def }
+{ ref/gds-attr.i }
 
 define variable v-in-qnty           like ub.doc-line.doc-qnty      no-undo.    /* количество для резервирования */
 define variable v-in-doc-code       like ub.trn-doc.doc-code       no-undo.    /* номер ПН */
@@ -79,19 +80,36 @@ define buffer buf_in_trn-doc            for ub.trn-doc.
 define buffer buf_out_trn-doc           for ub.trn-doc.
 define buffer buf_fbr-doc               for ub.fbr-doc.
 define buffer buf_fbr-line              for ub.fbr-line.
+define buffer bf_fbr-line               for ub.fbr-line.
 define buffer buf_goods                 for ub.goods.
 define buffer buf_temp_fbrlib_recipe    for temp_fbrlib_recipe.
 define buffer buf_temp_fbrrep-goods     for temp_fbrrep-goods.
 define buffer buf_shift-obj             for ub.shift-obj.
+define buffer buf_recipe                for ub.recipe .
+define buffer buf_fbr-recipe            for ub.fbr-recipe .
+define buffer buf_doc-line              for ub.doc-line .
+define buffer buf_doc-line-attr         for ub.doc-line-attr .
+define buffer buf_parts                 for ub.parts .
+
+define variable varvalue as character no-undo .
+define variable vartype  as character no-undo .
+define variable v-qnty   as integer   no-undo .
+define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 do
 for buf_in_trn-doc
   , buf_out_trn-doc
   , buf_fbr-doc
   , buf_fbr-line
+  , bf_fbr-line
+  , buf_recipe
   , buf_goods
   , buf_temp_fbrlib_recipe
   , buf_temp_fbrrep-goods
+  , buf_doc-line
+  , buf_doc-line-attr
+  , buf_parts
 on error undo, return error return-value
 :
     { gbl/working.i }
@@ -142,6 +160,43 @@ fact-close:
     .
 
     { gbl/hostcode.i buf_fbr-doc.obj-type buf_fbr-doc.obj-code v-host-code }
+    run gbl/getobjsrvhndl.p (input-output ObjSrv).
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code).
+    
+  /*Проверка на маркированность альтернативных рецептов*/
+  varvalue = "" .
+  for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code and
+                                      buf_fbr-line.recipe-code <> "" and
+                                      buf_fbr-line.is-comp,
+      first buf_recipe no-lock where buf_recipe.recipe-code = buf_fbr-line.recipe-code and
+                                     buf_recipe.recipe-type = {&alternative},
+      first buf_goods no-lock  where buf_goods.artic = buf_fbr-line.artic and
+                                     buf_goods.prod-code = buf_fbr-line.prod-code and
+                                     buf_goods.prod-type = buf_fbr-line.prod-type
+  :                                
+    run gds-attr-value (
+                        input buf_goods.gds-code,
+                        input {&attr-mark-type},
+                        output varvalue,
+                        output vartype
+                        ).
+    if varvalue > "" then do:
+      if EDOParSec:GetIsArticForType(varvalue) 
+      then do :
+        /*Считаем кол-во марок*/
+        v-qnty = v-qnty + buf_fbr-line.fact-qnty .
+      end . 
+    end.   
+  end.
+  if v-qnty > 0
+  then do :
+    /*Запрашиваем марки*/
+    run str/chs-fbr-marks.w (parparentproc, buf_fbr-doc.doc-code, v-qnty, this-procedure) no-error.
+    if error-status:error then do:
+      undo, return error substitute( "Документ производства закрыть невозможно. &1. &2", return-value, trim(error-status :get-message(1)) ).
+    end.
+  end .
+  
 /* Получим из секции Складские документы   нужные переменные */
 
         v-reasonm = no.
@@ -400,6 +455,79 @@ fact-close:
         end.
         { str/st-fo.i buf_out_trn-doc.doc-code }
         { str/st-fo.i buf_in_trn-doc.doc-code  }
+        
+        define variable v-gtin-qnty as character no-undo .
+        define variable v-gtin as character no-undo .
+        LK_RECEIPT_ :
+        for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_out_trn-doc.doc-code,
+        first buf_goods no-lock  where buf_goods.artic = buf_doc-line.artic
+                                   and buf_goods.prod-code = buf_doc-line.prod-code
+                                   and buf_goods.prod-type = buf_doc-line.prod-type
+        :
+          for first buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_doc-line.doc-code
+                                           and buf_fbr-line.trn-type = {&write-off}
+                                           and buf_fbr-line.artic = buf_doc-line.artic
+                                           and buf_fbr-line.prod-type = buf_doc-line.prod-type
+                                           and buf_fbr-line.prod-code = buf_doc-line.prod-code
+                                           ,
+          first buf_fbr-recipe no-lock where buf_fbr-recipe.doc-code = buf_fbr-line.doc-code
+                                         and buf_fbr-recipe.recipe-code = buf_fbr-line.recipe-code
+          :
+            if buf_fbr-recipe.recipe-type <> {&alternative}
+            then next LK_RECEIPT_ .
+          end .
+          v-gtin-qnty = "" .
+          RUN gds-attr-value (
+                              INPUT buf_goods.gds-code,
+                              INPUT {&attr-mark-type},
+                              OUTPUT varvalue,
+                              OUTPUT vartype
+                              ).
+          if varvalue > ""
+          and EDOParSec:GetIsArticForType(varvalue)
+          then do:
+            for each buf_parts no-lock where buf_parts.out-code = buf_doc-line.doc-code
+                                         and buf_parts.obj-type = buf_doc-line.obj-type
+                                         and buf_parts.obj-code = buf_doc-line.obj-code
+                                         and buf_parts.artic = buf_doc-line.artic
+                                         and buf_parts.prod-type = buf_doc-line.prod-type
+                                         and buf_parts.prod-code = buf_doc-line.prod-code
+            :
+              if num-entries(buf_parts.part-code, "_") = 2
+              then do :
+                v-gtin = entry(1, buf_parts.part-code, "_") .
+                if length(v-gtin) = 8
+                or length(v-gtin) = 12
+                or length(v-gtin) = 13
+                or length(v-gtin) = 14
+                then do :
+                  v-gtin-qnty = v-gtin-qnty + v-gtin + "=" + string(integer(buf_parts.qnty)) + ";" .
+                end .
+              end .
+            end .
+          end .
+          v-gtin-qnty = trim(v-gtin-qnty, ";") .
+        
+          if v-gtin-qnty > ""
+          then do :
+            find first buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = buf_doc-line.doc-code
+                                                          and buf_doc-line-attr.gds-code = buf_goods.gds-code
+                                                          and buf_doc-line-attr.attr-code = "GTIN-qnty"
+                                                          no-error .
+            if not available buf_doc-line-attr
+            then do :
+              create buf_doc-line-attr .
+              assign
+                buf_doc-line-attr.doc-code = buf_doc-line.doc-code
+                buf_doc-line-attr.gds-code = buf_goods.gds-code
+                buf_doc-line-attr.attr-code = "GTIN-qnty"
+              .
+            end .
+            buf_doc-line-attr.attr-value = v-gtin-qnty .
+          end .
+        end .
+        
+        
         find first buf_out_trn-doc        /* НС - услуги */
             where buf_out_trn-doc.doc-code = v-in-doc-code
         no-error.

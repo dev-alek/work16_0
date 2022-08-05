@@ -34,13 +34,21 @@ define output parameter p-b-code like ub.bar-code.b-code no-undo .
 /* Local Variable Definitions ---                                       */
 { cmp/str-glbl.i }
 { utl/gtin.i }
-
+{ gbl/getcntxt.i def }
 
 define buffer buf_marking for ub.marking .
 define buffer buf_prod-bc for ub.prod-bc .
 define buffer buf_bar-code for ub.bar-code .
 
 define variable iLang           as integer   no-undo.
+define variable p-value-logical as logical no-undo.
+define variable p-value-character  as character no-undo.
+define variable p-value-date       as date no-undo.
+define variable p-value-decimal    as decimal no-undo.
+define variable p-value-integer    as integer no-undo.
+define variable p-param-type       as character no-undo.
+define variable v-tth as handle no-undo .
+
 define variable vCodeIdent        as character no-undo .
 define variable v-GTIN        as character no-undo .
 define variable v-find        as logical no-undo .
@@ -198,6 +206,22 @@ end .
 on entry of f-mark in frame Dialog-Frame /* Марка */
 do :
   run LoadKeyboardLayoutA (input f-mark, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).
 end .
 
@@ -233,6 +257,22 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   run gbl/getobjsrvhndl.p (input-output ObjSrv).
   run LoadKeyboardLayoutA (input f-mark, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.

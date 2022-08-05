@@ -29,6 +29,8 @@ define variable vss-archive     as character no-undo init "$archive: /ver14_0/ad
 define variable vss-description as character no-undo init "Обновление r-кодов, обновления должны лежать передаваемом в каталоге".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }
+{ utl/search.i }
+{ cmp/str-glbl.i }
 
 define variable p0-pathrc as character no-undo .
 define variable v-pathrc         as character no-undo .
@@ -87,7 +89,14 @@ run gbl/vertag.p (
     , output v-patch
     , output v-branch
 ) .
+define variable mRunFile as character no-undo.
+mRunFile = SearchFile ("!upd-rc-before.bat").
 
+if mRunFile ne ?
+then do:
+   run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
+   os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
+end.
 run waitfram-show in this-procedure ( input "Идет обновление программ ТН. Ждите..." ).
 
 /* Ищем где лежат r-коды   */
@@ -299,6 +308,13 @@ for each upgfile-tbl :
 end.
 def var v-file-name as character no-undo.
 def var v-msg       as character no-undo.
+mRunFile = SearchFile ("!upd-rc-after.bat").
+
+if mRunFile ne ?
+then do:
+   run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
+   os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
+end.
 
 v-msg = "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова.".
 run utl\proc-msg.p (v-msg) no-error.

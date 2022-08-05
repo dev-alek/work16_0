@@ -78,7 +78,7 @@ method public void CrContentToSW (insw as handle):
       insw:write-data-element (  "mark-code":U,     repSpecSimbforXlm(   addBracketForCode(marking.mark))   ).
       insw:write-data-element (  "unit-ext":U,        if marking.unit-ext eq ? then "" else marking.unit-ext  ).
       insw:write-data-element (  "qnty-box":U,        if marking.box-qnty eq ? then "" else string( marking.box-qnty )   ).
-      insw:write-data-element (  "stts":U,       ObjSrv:Env:marking:sts:mark:GetKeyStrDB(marking.sts)).
+      insw:write-data-element (  "stts":U,       ObjSrv:Env:marking:sts:mark:GetNameProp(marking.sts)).
       insw:write-data-element (  "mark-parent":U,     repSpecSimbforXlm(  addBracketForCode( marking.mark-parent ))  ).
       insw:write-data-element (  "GTIN":U,       marking.gds-ext-id   ).
       insw:write-data-element (  "gds-code":U,       if marking.gds-code eq ? then "" else string(marking.gds-code)   ).

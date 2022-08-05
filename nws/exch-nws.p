@@ -54,7 +54,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       view-as alert-box error .
     return error .
   end.
-  if valid-handle( session :first-procedure ) then do:
+  if p-user-login ne ? and valid-handle( session :first-procedure ) then do:
     assign
       v-main-proc-name = "gbl/mainproc.p":U
       v-proc-handle    = session :first-procedure
@@ -100,6 +100,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     g#news                = true
     v-num-entries-db-list = num-entries( p-list-db )
   .
+if     p-user-login    ne ?
+     and p-user-password ne ?
+  then do:
   run gbl/set-gbl.p
     (input true
     ,input p-user-login
@@ -116,6 +119,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                     ) .
     return error.
   end.
+end.
   assign
     g#news = true
   .

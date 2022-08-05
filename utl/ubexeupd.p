@@ -36,7 +36,7 @@ define variable mlogfile as character no-undo.
 define stream  sReadfile.
 define variable mText as character no-undo.
 define variable mError as logical no-undo.  
-mlogfile = mAsyncHelper:getErrLog("proc-ubexeupd").
+mlogfile = mAsyncHelper:getLog(?).
 if SearchFile(mlogfile) ne ?
 then do:
    input stream sReadfile FROM  VALUE(SearchFile(mlogfile)).

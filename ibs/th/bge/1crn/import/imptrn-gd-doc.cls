@@ -150,9 +150,13 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
         objMark = cast (objMarks:SubjectObjCurr, trn-mark).
         create TempDocMark.
         assign
-          TempDocMark.mark = replace (replace (objMark:mark-code, "(", "" ), ")", "").
-          TempDocMark.prt-id = objMark:prt-id.
-          TempDocMark.gds-code = objGd:gd-code.
+          TempDocMark.mark = replace (replace (objMark:mark-code, "(", "" ), ")", "")
+          TempDocMark.prt-id = objMark:prt-id
+          TempDocMark.gtin = objMark:gtin
+          TempDocMark.gtin_qnt = objMark:gtin_qnt
+          TempDocMark.upd_id = objMark:upd_id
+          TempDocMark.gds-code = objGd:gd-code
+        .
       end.
       
     end.

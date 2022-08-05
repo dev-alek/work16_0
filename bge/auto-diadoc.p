@@ -36,70 +36,55 @@ define stream sReadfile.
 { cmp/vssrevis.i }
 
 { adm/auto-def.i }
-
+ 
 define variable vasynchelper as class ibs.th.file.asynchelperTh no-undo.
 define variable mi as integer no-undo.
 define variable vlog as character no-undo.
 
 vAsyncHelper = new ibs.th.file.AsyncHelperth().
 vAsyncHelper:mProcPublish = this-procedure.
-vAsyncHelper:user-passwd = "current".
+vAsyncHelper:setCurrentUserPasswd().
 vAsyncHelper:MyBachMode = yes.
-vAsyncHelper:paramSession = " -clientlog  mylog.lg -logginglevel 4 -logentrytypes 4GLTrace ".
-vAsyncHelper:SaveFile = yes .
+vAsyncHelper:WritelogInter = 5.
 /* vAsyncHelper:myTimeOut  = 60 * 60. */
+p-list-db = trim(p-list-db,",").
 do mi = 1 to num-entries (p-list-db):
-   vAsyncHelper:AsyncProc("utl/proc-diadoc", substitute("&2&1&3":U ,{&delim-par},entry(mi,p-list-db),yes),1).
-   /*vAsyncHelper:myTimeOut = 00.*/
-           
-   run ibs\th\file\waithelper.p (vAsyncHelper,"proc-diadoc", 1,substitute("Получение данных из Диадок. По БД &1.",entry(mi,p-list-db))).
-   .
-   run write-to-log in p-logHand (substitute("Результат сохранет в &1.",vAsyncHelper:SaveArh("-db-" + entry(mi,p-list-db)))).
-   vlogfile = vAsyncHelper:geterrlog("proc-diadoc").
-   if vAsyncHelper:FileExists(vlogfile)
-   then do:
-      input stream sReadfile FROM  VALUE(vlogfile).
-      repeat:
-         import stream sReadfile unformatted vText.
-         if vtext begins "error" 
-         then assign
-                 vtext = substring(vtext,7)
-   /*             vError = yes*/
-              .
-         if valid-handle (p-logHand)
-         then
-            run write-to-log in p-logHand (vtext).
-        /* else do: 
-            vCheksum = vText.
-            if (vCheksum ne {utl/chekproc.i vKey})
-            then assign
-                    vtext = "Процедура имеет не правильную подпись."
-   /*               vError = yes*/
-                 .
-            else
-               vError = no.
-         end.*/    
-      end.
-      input stream sReadfile close  .
-      /*os-delete value(vAsyncHelper:getProcDir("proc-diadoc")) RECURSIVE.*/
-   end.
-   else do:
-       assign
-           vtext = "Процедура закачки данных не завершена"
-           vError = yes.
-       if valid-handle (p-logHand)
-       then
-          run write-to-log in p-logHand (vtext).
-   end.
-   vlog = vlog + (if vlog eq "" then "" else ", ") + vtext no-error.  
+/*   vAsyncHelper:AsyncProc("Diadoc" +  string(mi),"utl/proc-diadoc", substitute("&1":U ,entry(mi,p-list-db)),1).*/
+     vAsyncHelper:AddTask("Diadoc","utl/proc-diadoc", substitute("&1":U ,entry(mi,p-list-db))).
+
 end.
 
-if valid-handle (p-logHand)
-       then
+subscribe "PutFileLogAsunc" anywhere run-procedure "WriteLog".         
+run ibs\th\file\waithelper.p (vAsyncHelper,?, 1,substitute("Получение данных из Диадок. По БД &1.", p-list-db)).
+unsubscribe "PutFileLogAsunc".
 
 vAsyncHelper:delworkdir().
 delete object vAsyncHelper.
 return vlog. 
    
+procedure WriteLog:
+   define input  parameter iFile as character no-undo.
+   if vAsyncHelper:FileExists(iFile)
+   then do:
+  
    
+      input stream sReadfile FROM  VALUE(iFile).
+      repeat:
+         import stream sReadfile unformatted vText.
+         if valid-handle (p-logHand)
+         then
+            run write-to-log-notime in p-logHand (vtext).
+      end.
+      input stream sReadfile close  .
+
+   end.
+   else do:
+       assign
+           vtext = substitute ("Процедура закачки данных не завершена. &1",ifile).
+           vError = yes.
+       if valid-handle (p-logHand)
+       then
+          run write-to-log in p-logHand (vtext).
+   end.
+end.
 /* $Workfile$ end */

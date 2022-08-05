@@ -55,6 +55,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 ,{&bef-attr-esys-diadoc-pwd}~
 ,{&bef-attr-esys-diadoc-key}~
 ,{&bef-attr-esys-diadoc-lastload}~
+,{&bef-attr-esys-diadoc-ssl}~
 ':U
 
 procedure ext-system-attr-code :

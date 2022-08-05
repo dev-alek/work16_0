@@ -937,6 +937,12 @@ class ibs.th.str.InfoSectionsTotal:
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'dop-volume' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:DopVolume).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'doc-dens-st' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string ( InfoSectionCurr:DocDensST ).
       create buf_doc-line-attr.
@@ -1008,7 +1014,7 @@ class ibs.th.str.InfoSectionsTotal:
       dMEd = MTTH * NPE * 0.001.
       ME = MTTH - MF - dmd.
     .
-    
+    if ME < 0 then ME = 0 .
 
     if not InfoSectionCurr:IsKP or IsManual
     then do: 
@@ -1769,12 +1775,15 @@ class ibs.th.str.InfoSectionsTotal:
       dMEd = MTTH * NPE * 0.001.
       ME = MTTH - MF - dmd.
     .
-    if abs(dMP) > dmd + dMed
+    
+    if MTTH > MF
+    and abs(dMP) > dmd + dMed
     then do:
       ME = dMEd.
     end.
-    if ME > 0
-      then InfoSectionCurr:NaturalLoss = ME.
+    if ME < 0 then ME = 0 .
+    
+    InfoSectionCurr:NaturalLoss = ME.
     
     find first ub.place no-lock where ub.place.obj-type = ObjType and ub.place.obj-code = ObjCode and ub.place.loc1 = InfoSectionCurr:ListTank no-error. 
     if available (ub.place)

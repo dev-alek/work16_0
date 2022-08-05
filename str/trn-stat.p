@@ -228,6 +228,9 @@ define variable v-show-str       as character no-undo .
 define variable v-add-nat-gas    as logical no-undo .
 define variable var-is-auto-trn  as logical no-undo .
 define variable v-return-qnty    as decimal no-undo .
+define variable varvalue                    as   character              no-undo.
+define variable vartype                     as   character              no-undo.
+
 {str/tt-nomark.i}
 
 
@@ -581,6 +584,8 @@ then do:
     keyrecObj = new keyrec ().
 
     for each bf_parts where bf_parts.out-code = bf_trn-doc.doc-code:
+      
+      if bf_parts.fact-qnty <= 0 then next .
       
       find first bf_goods where 
         bf_goods.artic = bf_parts.artic and
@@ -3347,11 +3352,89 @@ vartechproliv = no
         { str/st-fo.i bf_trn-doc.doc-code }
       if bf_trn-doc.status_ = {&fact}
       then do:
-        /* Отпускаем запись trn-doc. Больше редактировать нельзя. */
+        
+        define buffer buf_parts for ub.parts  .
+        
+        /* Формируем информацию по количествам в разрезе GTIN для товаров с объемно-артикульным (ОСУ) типом учёта */
+        if bf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} 
+        or bf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+        then do:
+          define buffer buf_doc-line for ub.doc-line  .
+          define buffer buf_doc-line-attr for ub.doc-line-attr  .
+          define buffer buf_goods for ub.goods .
+          
+          define variable v-gtin-qnty as character no-undo .
+          define variable v-gtin as character no-undo .
+          
+          EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code).
+          
+          LK_RECEIPT_ :
+          for each buf_doc-line no-lock where buf_doc-line.doc-code = bf_trn-doc.doc-code,
+          first buf_goods no-lock  where buf_goods.artic = buf_doc-line.artic
+                                     and buf_goods.prod-code = buf_doc-line.prod-code
+                                     and buf_goods.prod-type = buf_doc-line.prod-type
+          :
+            if bf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+            and buf_doc-line.fact-qnty >= 0
+            then next LK_RECEIPT_ .
+            
+            v-gtin-qnty = "" .
+            RUN gds-attr-value (
+                                INPUT buf_goods.gds-code,
+                                INPUT {&attr-mark-type},
+                                OUTPUT varvalue,
+                                OUTPUT vartype
+                                ).
+            if varvalue > ""
+            and EDOParSec:GetIsArticForType(varvalue)
+            then do:
+              for each buf_parts no-lock where buf_parts.out-code = buf_doc-line.doc-code
+                                           and buf_parts.obj-type = buf_doc-line.obj-type
+                                           and buf_parts.obj-code = buf_doc-line.obj-code
+                                           and buf_parts.artic = buf_doc-line.artic
+                                           and buf_parts.prod-type = buf_doc-line.prod-type
+                                           and buf_parts.prod-code = buf_doc-line.prod-code
+              :
+                if num-entries(buf_parts.part-code, "_") = 2
+                then do :
+                  v-gtin = entry(1, buf_parts.part-code, "_") .
+                  if length(v-gtin) = 8
+                  or length(v-gtin) = 12
+                  or length(v-gtin) = 13
+                  or length(v-gtin) = 14
+                  then do :
+                    v-gtin-qnty = v-gtin-qnty + v-gtin + "=" + string(integer(abs(buf_parts.qnty))) + ";" .
+                  end .
+                end .
+              end .
+            end .
+            v-gtin-qnty = trim(v-gtin-qnty, ";") .
+          
+            if v-gtin-qnty > ""
+            then do :
+              find first buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = buf_doc-line.doc-code
+                                                            and buf_doc-line-attr.gds-code = buf_goods.gds-code
+                                                            and buf_doc-line-attr.attr-code = "GTIN-qnty"
+                                                            no-error .
+              if not available buf_doc-line-attr
+              then do :
+                create buf_doc-line-attr .
+                assign
+                  buf_doc-line-attr.doc-code = buf_doc-line.doc-code
+                  buf_doc-line-attr.gds-code = buf_goods.gds-code
+                  buf_doc-line-attr.attr-code = "GTIN-qnty"
+                .
+              end .
+              buf_doc-line-attr.attr-value = v-gtin-qnty .
+            end .
+          end .
+        end .
+
+        /* Отпускаем запись ub.trn-doc. Больше редактировать нельзя. */
         release bf_trn-doc.
 
         find first bf_trn-doc where bf_trn-doc.doc-code = pardoc-code no-lock no-error.
-        define buffer buf_parts for ub.parts  .
+        
 
         for each buf_parts no-lock where
                 buf_parts.out-code = bf_trn-doc.doc-code and
@@ -4122,7 +4205,7 @@ procedure ie-date:
          ,input-output bf_trn-doc.shift-date
          ,input-output bf_trn-doc.shift-num
          ,input-output bf_trn-doc.shift-name
-         ,input        yes
+         ,input        NOT(g#auto OR g#oxml OR g#esys OR g#news) 
         ).
         run str/chk-back.p
           (input bf_trn-doc.doc-code  /* p-doc-code  */

@@ -2727,6 +2727,7 @@ define variable old-doc-qnty like tt-chk-gds.doc-qnty no-undo .
 define variable old-src-price like tt-chk-gds.src-price no-undo .
 define variable old-src-sum like tt-chk-gds.src-sum no-undo .
 define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
+define variable old-vat-summ like tt-chk-gds.VAT-sum-rubl no-undo .
 
     if not avail tt-chk-gds then return no-apply.
     if self:name = "b-code":U and par-mode = {&update} and
@@ -2746,6 +2747,7 @@ define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
       old-src-price    = tt-chk-gds.src-price
       old-src-sum      = tt-chk-gds.src-sum
       old-src-discnt   = tt-chk-gds.src-discnt
+      old-vat-summ     = tt-chk-gds.VAT-sum-rubl
       .
       if old-src-discnt = 0
       and decimal(tt-chk-gds.src-discnt:screen-value in browse br-gds    ) <> 0 then do:
@@ -2770,6 +2772,7 @@ define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
       tt-chk-gds.src-discnt = decimal(tt-chk-gds.src-discnt:screen-value in browse br-gds    )
       tt-chk-gds.src-price = decimal(tt-chk-gds.src-price:screen-value in browse br-gds    )
       tt-chk-gds.src-sum = tt-chk-gds.src-qnty * tt-chk-gds.src-price
+      tt-chk-gds.VAT-sum-rubl = ((tt-chk-gds.src-price * tt-chk-gds.VAT-pc)/(100 + tt-chk-gds.VAT-pc)) * tt-chk-gds.src-qnty
       .
       run get-b-code in this-procedure ( input v-vchoice
                                         ,input v-dchoice
@@ -2783,6 +2786,7 @@ define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
         tt-chk-gds.src-price  =   old-src-price
         tt-chk-gds.src-sum    =   old-src-sum
         tt-chk-gds.src-discnt =   old-src-discnt
+        tt-chk-gds.VAT-sum-rubl = old-vat-summ
         .
         display
         tt-chk-gds.b-code
@@ -2791,6 +2795,7 @@ define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
         tt-chk-gds.doc-qnty
         tt-chk-gds.src-price
         tt-chk-gds.src-discnt
+        tt-chk-gds.VAT-sum-rubl
         with browse br-gds.
         undo, return no-apply.
       end.
@@ -2807,6 +2812,7 @@ define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
           tt-chk-gds.src-price  =   old-src-price
           tt-chk-gds.src-sum    =   old-src-sum
           tt-chk-gds.src-discnt =   old-src-discnt
+          tt-chk-gds.VAT-sum-rubl = old-vat-summ
         .
         display
           tt-chk-gds.b-code
@@ -2815,6 +2821,7 @@ define variable old-src-discnt like tt-chk-gds.src-discnt no-undo .
           tt-chk-gds.doc-qnty
           tt-chk-gds.src-price
           tt-chk-gds.src-discnt
+          tt-chk-gds.VAT-sum-rubl
         with browse br-gds.
       end .                                     
     end.
@@ -6394,6 +6401,7 @@ define buffer lng_chk-gds for ub.chk-gds.
 define buffer loc_tt-chk-gds for tt-chk-gds.
 define buffer loc_bar-code for ub.bar-code.
 define buffer loc_goods for ub.goods.
+
 if not br-gds:visible in frame {&frame-name}
 then do:
 
@@ -6511,7 +6519,9 @@ FIND LAST lng_chk-gds No-LOCK WHERE
       tt-chk-gds.pump = 0
       tt-chk-gds.loc1 = '':U
       .
-      
+
+    { gbl/pftxvalg.i loc_goods.gds-code {&vat-tax-code} ? v-host-code p-obj-type p-obj-code tt-chk-gds.VAT-pc no-error }
+    
       EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(tt-chk-doc.obj-type, tt-chk-doc.obj-code).
       RUN gds-attr-value (
                           INPUT loc_goods.gds-code,
@@ -6737,7 +6747,7 @@ PROCEDURE proc-b-slip :
   if not available buf_chk-doc-attr 
   or (available buf_chk-doc-attr and trim(buf_chk-doc-attr.attr-value) = "")
   then do :
-    message "В чеке нет атрибута 'CheckId' для поиска слипов!" view-as alert-box error .
+    message "Слипы не найдены!" view-as alert-box .
     return .
   end .
     

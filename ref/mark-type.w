@@ -36,7 +36,7 @@ define variable vss-description as character no-undo init "Выбор типа маркировки
 { cmp/str-glbl.i }
 { cmp/showinf.i }
 { rep/frmlib.i }
-
+{ gbl/objsrv.i }
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -223,17 +223,16 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-load Dialog-Frame 
 PROCEDURE proc-load :
-define variable v-list-names as character no-undo init "Не определен,Табачная продукция,Обувь,Духи и парфюмерия,Легпром,Шины,Лекарства,Фотокамеры/фотовспышки,Молочная продукция,Упакованная вода,Стики".
 define variable v-list as character no-undo.
-define variable i as integer no-undo.
-define variable v-val as character no-undo.
-define variable v-text as character no-undo.
+define variable vi as integer no-undo.
+define variable MarkType as ibs.th.gbl.map.mapstring no-undo.
+define variable objType  as ibs.th.gbl.propmap no-undo.
 
-do i = 1 to num-entries({&prop-list-attr-mark-type}):
-    v-val  = entry(i, {&prop-list-attr-mark-type}).
-    v-text = entry(i, v-list-names).
-    
-    v-list = v-list + "," + v-text + "," + v-val.
+MarkType = ObjSrv:Env:Marking:Types:MAPTYPE.
+do vi = 1 to MarkType:GetItemByLab(vi):     
+objType  = ObjSrv:Env:Marking:Types:CurrProp.
+
+    v-list = v-list + "," + objType:Label_ + "," + objType:NameProp.
 end.
 
 v-list = trim(v-list, ",").

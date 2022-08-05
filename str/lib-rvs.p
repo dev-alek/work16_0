@@ -1317,6 +1317,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
     define variable vartarirtype  as   character     no-undo.
     define variable varlevel-sm   as   integer       no-undo.
     define variable Vrevis        as   longchar      no-undo.
+    define variable v-reviserr    as   character     no-undo.
 
       define variable tt-level-water     as integer no-undo.
       define variable tt-level-water-dec as decimal no-undo.
@@ -1330,8 +1331,6 @@ procedure lib-rvs_rvsplace : /* revision-place */
       define buffer buf_pl-gds for ub.pl-gds .
 
     run gbl/conf-rd.p ("tarir", "", "", 0, "", "", "", no, output vartarirvalue, output vartarirtype) no-error.
-    output stream str-err to     "revis.err" .
-    output stream str-err to     close .
     
     define variable v_comstring   as   character     no-undo.
     define variable v_comment     as   character     no-undo.
@@ -1441,9 +1440,17 @@ procedure lib-rvs_rvsplace : /* revision-place */
         end.
       end.
     end case .
+    v-reviserr = "revis" + string(random(0,9)) + ".err" .
+    if searchfile(v-reviserr) ne ?
+    then do :
+      v-reviserr = "revis" + string(random(0,9)) + ".err" .
+      if searchfile(v-reviserr) ne ?
+      then do :
+        os-delete value(searchfile(v-reviserr)) no-error .
+      end .
+    end .
+    output stream str-err to value(v-reviserr) .
     run creatett-meas-file(p-obj-type, p-obj-code).
-    output stream str-err to     "revis.err" append .
-    
       _recalc:                
       for each tt-meas-file where not tt-meas-file.is-error
           on error undo, return error return-value
@@ -1846,7 +1853,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
     put unformatted string(today) ' ' string(time, "HH:MM:SS") skip .
     output close .
     
-    OS-APPEND value("revis.err") value(v-err-file-name).
+    OS-APPEND value(v-reviserr) value(v-err-file-name).
 
     if is_FatalError = yes then do:
       return error 'Ïğè ñ÷èòûâàíèè äàííûõ ñ ğåçåğâóàğîâ ïğîèçîøëè îøèáêè ÍÅÏÎÇÂÎËßŞÙÈÅ ÇÀÃĞÓÇÈÒÜ ÄÀÍÍÛÅ.' .

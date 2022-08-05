@@ -362,7 +362,7 @@ DEFINE FRAME d-pl-form
      tt-place.pl-code AT ROW 6.75 COL 5.63 COLON-ALIGNED format "99999999999"
           LABEL "Код"
           VIEW-AS FILL-IN 
-          SIZE 10.93 BY 1
+          SIZE 12.93 BY 1
      rvd-dnstv AT ROW 6.75 COL 35 WIDGET-ID 40
      rvd-lvl AT ROW 6.75 COL 52 WIDGET-ID 44
      rvd-tmp AT ROW 6.75 COL 68 WIDGET-ID 46

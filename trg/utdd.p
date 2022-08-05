@@ -26,14 +26,18 @@ define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер удаления {&main-tbl}". 
 define variable v-msg as character no-undo.
+
+{gbl\objsrv.i}
+{ gbl/key-rec.i }
+{str/utd-err.i}
+{str\utd.i} 
 { trg/trghistnws.i 
   &hist = yes 
   &seqnamehist = "s-c-utd-chip-num"
   &histheadtbl = "c-utd-head"
+  &fieldmainheadtab  = "db-num doc-id" 
   &del  = yes
 }
-{str\utd-err.i}
-{str\utd.i}
 
 if not g#news 
 then do:
@@ -49,7 +53,8 @@ then do:
   if g#db-num = 0
   then do:
     find first ub.clients no-lock where ub.clients.obj-type = {&main-tbl}.obj-type and ub.clients.obj-code = {&main-tbl}.obj-code no-error.
-     if avail  ub.clients
+     if     avail  ub.clients
+        and ub.clients.db-num ne 0
      then
         v-list-db = string (ub.clients.db-num).
   end.  
@@ -79,26 +84,9 @@ exclusive-lock:
    delete {&main-tbl}-lines.
 end.
 
-for each {&main-tbl}-marking-lines where {&main-tbl}-marking-lines.db-num eq  {&main-tbl}.db-num
-                                     and {&main-tbl}-marking-lines.doc-id eq  {&main-tbl}.doc-id
-exclusive-lock:
-   delete {&main-tbl}-marking-lines.
-end.
-
 for each utd-err-attr where {&main-tbl}-err-attr.db-num eq  {&main-tbl}.db-num
-                   and {&main-tbl}-err-attr.doc-id eq  {&main-tbl}.doc-id
+                        and {&main-tbl}-err-attr.doc-id eq  {&main-tbl}.doc-id
 exclusive-lock:
    delete {&main-tbl}-err-attr.
 end.
 
-for each {&main-tbl}-lines-attr where {&main-tbl}-lines-attr.db-num eq  {&main-tbl}.db-num
-                             and {&main-tbl}-lines-attr.doc-id eq  {&main-tbl}.doc-id
-exclusive-lock:
-   delete {&main-tbl}-lines-attr.
-end.
-
-for each {&main-tbl}-marking-lines-attr where {&main-tbl}-marking-lines-attr.db-num eq  {&main-tbl}.db-num
-                                     and {&main-tbl}-marking-lines-attr.doc-id eq  {&main-tbl}.doc-id
-exclusive-lock:
-   delete {&main-tbl}-marking-lines-attr.
-end.

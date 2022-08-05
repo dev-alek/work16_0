@@ -32,7 +32,10 @@ define variable vss-description as character no-undo init "Тригер изменение {&ma
   &hist = yes 
   &seqnamehist = "s-c-utd-chip-num"
   &histheadtbl = "c-utd-head"
-  
-  
+  &fieldmainheadtab  = "db-num doc-id" 
 } 
 
+/*  &{&main-tbl}_primary_key      = "db-num doc-id LineNum mark attr-code"*/
+  
+  
+  

@@ -110,6 +110,7 @@ function  crUtdReturn returns logical
             subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
             if available marking-lines
             then do trans:
+               
                find first utd where utd.doc-code eq parts.in-code no-lock no-error.
                if available utd
                then do:
@@ -120,38 +121,38 @@ function  crUtdReturn returns logical
                      vFlag = yes.
                      create buf_utd.
                      buffer-copy utd  except Timestamp  
-                                          RevocationStatus 
-                                          RecipientResponseStatus 
-                                          ReceiptStatus 
-                                          OrganizationExt  
-                                          ModifyTime 
-                                          ModifyDate  
-                                          LoadTime  
-                                          LoadDate 
-                                          EDocType  
-                                          DocumentExt 
-                                          db-num 
-                                          doc-id
-                                          AdditInfo
-                                          doc-code
-                                          sts 
-                  to buf_utd
-                  assign
-                     buf_utd.parentDocumentExt     = utd.DocumentExt
-                     buf_utd.parentOrganizationExt = utd.OrganizationExt
-                     buf_utd.doc-code              = trn-doc.doc-code
-                     buf_utd.EDocType              = objSrv:Env:Utd:EDocType:returns:KeyIntDB
-                     buf_utd.DocumentDate    = today
-                     buf_utd.DocumentNumber  = "Возврат по " + utd.DocumentNumber + " за " + string(utd.DocumentDate,"99/99/9999")
+                                             RevocationStatus 
+                                             RecipientResponseStatus 
+                                             ReceiptStatus 
+                                             OrganizationExt  
+                                             ModifyTime 
+                                             ModifyDate  
+                                             LoadTime  
+                                             LoadDate 
+                                             EDocType  
+                                             DocumentExt 
+                                             db-num 
+                                             doc-id
+                                             AdditInfo
+                                             doc-code
+                                             sts 
+                     to buf_utd
+                     assign
+                        buf_utd.parentDocumentExt     = utd.DocumentExt
+                        buf_utd.parentOrganizationExt = utd.OrganizationExt
+                        buf_utd.doc-code              = trn-doc.doc-code
+                        buf_utd.EDocType              = objSrv:Env:Utd:EDocType:returns:KeyIntDB
+                        buf_utd.DocumentDate    = today
+                        buf_utd.DocumentNumber  = "Возврат по " + utd.DocumentNumber + " за " + string(utd.DocumentDate,"99/99/9999")
+                           
                         
-                     
-                  .
-                  validate buf_utd.
-                  Buf_utd.sts                   = ObjSrv:Env:Utd:Sts:th:SignatureRequired:KeyIntDB. /* меняе после получения doc-id */ 
-                  Buf_utd.sts-edi               = if utd.AmendmentRequested 
-                                                  then ObjSrv:Env:Utd:Sts:edi:AvailAdjustment:KeyIntDB 
-                                                  else ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
-                  assign 
+                     .
+                     validate buf_utd.
+                     Buf_utd.sts                   = ObjSrv:Env:Utd:Sts:th:SignatureRequired:KeyIntDB. /* меняе после получения doc-id */ 
+                     Buf_utd.sts-edi               = if utd.AmendmentRequested 
+                                                     then ObjSrv:Env:Utd:Sts:edi:AvailAdjustment:KeyIntDB 
+                                                     else ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
+                     assign 
                         vdb-num = Buf_utd.db-num
                         vdoc-id = Buf_utd.doc-id
                      .
@@ -210,7 +211,8 @@ function  crUtdReturn returns logical
                               buf_utd-lines.Vat =   utd-lines.vat / utd-lines.Quantity * parts.fact-qnty.
                               buf_utd-lines.Quantity = parts.fact-qnty.
                            
-                           end.     
+                           end.
+                           release buf_utd-lines.     
                         end.
                         
                         if buf_utd-marking-lines.doc-level eq 1
@@ -339,6 +341,7 @@ function  crUtdReturn returns logical
                         AddUtdErr(buf_utd.db-num,buf_utd.doc-id,buffer buf_utd-marking-lines:handle,"return","Mark",marking-lines.mark + {&delim-par} + buf_utd-lines.ProductCode).
                      release buf_utd-marking-lines.
                   end.
+                  release buf_utd-lines.
                   if last-of(parts.in-code)
                   then do:
                      buf_utd.Total = 0.

@@ -14,16 +14,16 @@
 using Progress.Lang.*.
 using ibs.th.adm.upd.*.
 
-
 class ibs.th.adm.upd.updschm: 
+
+define variable vss-revision    as character no-undo init "$Revision:$":U .
+define variable vss-author      as character no-undo init "$Author:$":U .
+define variable vss-date        as character no-undo init "$Date:$":U .
+define variable vss-workfile    as character no-undo init "$Workfile:$":U .
+define variable vss-archive     as character no-undo init "$Archive:$":U .
+define variable vss-description as character no-undo init "Обновление БД.".
+
   {cmp/str-glbl.i class}
-  
-  define variable vss-revision    as character no-undo init "$Revision:$":U .
-  define variable vss-author      as character no-undo init "$Author:$":U .
-  define variable vss-date        as character no-undo init "$Date:$":U .
-  define variable vss-workfile    as character no-undo init "$Workfile:$":U .
-  define variable vss-archive     as character no-undo init "$Archive:$":U .
-  define variable vss-description as character no-undo init "Класс обновления БД".
   
   
   define variable loadDFprocFile as character no-undo.
@@ -70,10 +70,19 @@ class ibs.th.adm.upd.updschm:
     get.
     set (iarg as character ):
        modeupd = iarg.
-       QuestionUpd = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
-       UpdAllDB    = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
-       UpdPart     = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
-       silent      = lookup("updblank",iarg) ne 0.
+       if lookup("OneDf",iarg) ne 0
+       then do:
+          QuestionUpd = no.
+          UpdAllDB    = yes.
+          UpdPart     = no.
+          silent      = yes.
+       end.
+       else do:
+          QuestionUpd = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
+          UpdAllDB    = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
+          UpdPart     = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
+          silent      = lookup("updblank",iarg) ne 0.
+       end.
     end.
     
   define property ConPar as character no-undo /*без &1*/ 
@@ -111,22 +120,35 @@ class ibs.th.adm.upd.updschm:
     get.
     private set.
   
+  define private variable myUser         as character no-undo .
+  define private variable myPasswd       as character no-undo .
   
+  define property m-user-passwd-upd   as character no-undo 
+  get:
+     define variable vpas as character no-undo.
+     
+     vpas = myPasswd  no-error.
+     if vpas begins "nocrypt:"
+     then
+        vpas = substring (vpas,9).
+     return substitute(" -U &1 -P &2":U
+                                ,myUser
+                                ,vpas 
+                                ).
+  end.
     
   define variable isRcode as logical init false no-undo.
   define variable obsrvdbObj as class observupd no-undo.
   define variable analisdfObj as class analisdf no-undo.
-  define private variable m-user-passwd       as character no-undo .
   define private variable m-prowin32FileName  as character no-undo.
   define private variable m-FileDf            as character no-undo.
   define private variable m-Batch             as logical   no-undo.
   define variable mDfUpdaLL as character no-undo.
-
+  define stream sReadfile.
   constructor public updschm ():
      putStat ("Установка контекста для проверки обновления ... ").
      
      obsrvdbObj = new observupd ().
-     
      obsrvdbObj:ModeUpd = modeupd.
      obsrvdbObj:PublisHandle = PublisHandle.
      
@@ -144,83 +166,108 @@ class ibs.th.adm.upd.updschm:
      
   end constructor.
 
-  constructor public updschm (input inConPar as char,input iMode as character,ipubhan as handle):
+  
+  
+  constructor public updschm (input inConPar as char,input iMode as character,ipubhan as handle,iDfFile as character ):
     putStat  ("Установка контекста для обновления ...").
-     
+    define variable vupd as logical no-undo.
+    define variable vok  as logical no-undo.
+       
+    
     modeupd = iMode.
     PublisHandle = iPubHan. 
-    obsrvdbObj = new observupd ().
     ConPar      = inConPar.
+    obsrvdbObj = new observupd ().
     obsrvdbObj:modeupd = modeupd.
-    obsrvdbObj:PublisHandle = PublisHandle. 
-    CurrDBShm   = obsrvdbObj:CurrDBShm.  
-    CurrDB0Shm  = obsrvdbObj:CurrDB0Shm. 
-    DbNum       = obsrvdbObj:DbNum.      
-    TargetDBShm = obsrvdbObj:TargetDBShm.
     
-    mDfUpdaLL   = obsrvdbObj:upd-all-list-df.
-   
-    m-FileDf    = obsrvdbObj:upd-df.
-    define variable vupd as logical no-undo.
+    if iDfFile eq ?
+    then do:
+       
+       obsrvdbObj:PublisHandle = PublisHandle. 
+       CurrDBShm   = obsrvdbObj:CurrDBShm.  
+       CurrDB0Shm  = obsrvdbObj:CurrDB0Shm. 
+       DbNum       = obsrvdbObj:DbNum.      
+       TargetDBShm = obsrvdbObj:TargetDBShm.
+       m-FileDf    = obsrvdbObj:upd-df.
+       isNeedUpd = obsrvdbObj:isneedupg(yes).
+       if not isNeedUpd
+       then
+          run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
+       if QuestionUpd and not isRcode and isNeedUpd 
+       then do:
+          putStat  ("Предоставлен выбор пользователя обновлять Бд или нет").
+          message "Обновить базу с версии " CurrDBShm  " до " TargetDBShm "?" view-as alert-box question 
+             buttons yes-no title "[ ВНИМАНИЕ! ]" update vupd.
+          if not vupd
+          then do:
+             putStat  ("Пользователя отказался от обновления Бд").
+             isNeedUpd = no.
+             return.
+          end.
+          else
+             putStat  ("Пользователя согласился на обновление Бд").
+       end.
+       isNeedUpd = obsrvdbObj:isneedupg().
+       if obsrvdbObj:IsErr
+       then do:
+         Msg = obsrvdbObj:Msg.
+         IsErr = true.
+       end.
+       run utl\chekupd.p (no, TargetDBShm , output vok).
+       if not vok
+       then do:
+          msg = return-value.
+          IsErr = true.
+       end.
+       
+    
+    end.
+    else do:
+      isNeedUpd = yes.
+      
+      CurrDBShm   = -10. 
+      TargetDBShm = CurrDBShm.
+      analisdfObj = new analisdf ().
+      analisdfObj:modeupd = modeupd.
+      
+      if analisdfObj:readDF(iDfFile) 
+      then do:
+         Msg =
+           substitute("Ошибка при обновлении схемы базы данных &1&2",  {&new-line} ,
+           analisdfObj:msg)
+         .
+         IsErr = true.
+         
+      end.
+      else do:
+         mDfUpdaLL = replace(iDfFile,".df","_new.df").
+         analisdfObj:dumpTable(mDfUpdaLL).
+      end.
+      delete object analisdfObj. 
+    end.
+    assign
+       myUser   = "sysadm".
+       myPasswd = substitute("nocrypt:&1":U
+                                
+                                ,obsrvdbObj:pwd 
+                                )
+    .
+    delete object obsrvdbObj.
     loadDFProcFile = search ("ibs/th/adm/upd/loaddf.r").
     if loadDFProcFile <> ?
     then isRcode = true.
     else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
-    isNeedUpd = obsrvdbObj:isneedupg(yes).
-    if not isNeedUpd
-    then
-       run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
+           
     
-    if QuestionUpd and not isRcode and isNeedUpd 
-    then do:
-       putStat  ("Предоставлен выбор пользователя обновлять Бд или нет").
-    
-       message "Обновить базу с версии " CurrDBShm  " до " TargetDBShm "?" view-as alert-box question 
-          buttons yes-no title "[ ВНИМАНИЕ! ]" update vupd.
-       if not vupd
-       then do:
-          putStat  ("Пользователя отказался от обновления Бд").
-    
-          isNeedUpd = no.
-          return.
-       end.
-       else
-          putStat  ("Пользователя согласился на обновление Бд").
-    
-    end.
-    isNeedUpd = obsrvdbObj:isneedupg().
-    if obsrvdbObj:IsErr
-    then do:
-      Msg = obsrvdbObj:Msg.
-      IsErr = true.
-    end.
-    define variable vok as logical no-undo.
-    run utl\chekupd.p (no, TargetDBShm , output vok).
-    if not vok
-    then do:
-       msg = return-value.
-       IsErr = true.
-    end.
-    /* else do:
-       delete object obsrvdbObj.
-       obsrvdbObj = new observupd ().
-       obsrvdbObj:IsComp = IsComp. 
-       CurrDBShm  = obsrvdbObj:CurrDBShm.
-       isNeedUpd  = obsrvdbObj:isneedupg().
-    end. */
-       
-    assign
-      m-user-passwd = substitute("-U &1 -P &2":U
-                                ,"sysadm"
-                                ,obsrvdbObj:pwd 
-                                )
-    .
     
     m-prowin32FileName =  search ("bin/prowin32.exe").
-    delete object obsrvdbObj.
-    putStat  ("Установка контекста для обновления завершена").
     
+    putStat  ("Установка контекста для обновления завершена").
   end constructor.
+  
+  constructor public updschm (input inConPar as char,input iMode as character,ipubhan as handle):
+       this-object(inConPar,input iMode,ipubhan,?).
+  end.
   
   constructor public updschm (input inConPar as char ):
      this-object(input inConPar,"").
@@ -336,7 +383,7 @@ class ibs.th.adm.upd.updschm:
         IsErr = true.
         return.
       end.
-      connect value(substitute(ConPar + " &1", m-user-passwd)).
+      connect value(substitute(ConPar + " &1", m-user-passwd-upd)).
     end.
     
     
@@ -388,7 +435,7 @@ class ibs.th.adm.upd.updschm:
     
    /* message CurrDBShm
     view-as alert-box. */
-/*    connect value(substitute(ConPar + " &1", m-user-passwd)).*/
+/*    connect value(substitute(ConPar + " &1", m-user-passwd-upd)).*/
     if CurrDBShm < TargetDBShm
     then do:
       analisdfObj = new analisdf ().
@@ -428,7 +475,7 @@ class ibs.th.adm.upd.updschm:
         IsErr = true.
         return.
       end.
-      connect value(substitute(ConPar + " &1", m-user-passwd)).
+      connect value(substitute(ConPar + " &1", m-user-passwd-upd)).
     end.
    /* message 3
     view-as alert-box. */ 
@@ -516,12 +563,52 @@ class ibs.th.adm.upd.updschm:
      if iproc eq loadDFprocFile and isRcode
      then 
         vParamStart = vParamStart + " -rx " .
-     def var v-cmd-comm as character no-undo.
+    /* def var v-cmd-comm as character no-undo.
      if isRcode
      then v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
      else v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
      
-    os-command silent value (v-cmd-comm).
+    os-command silent value (v-cmd-comm). */
+    define variable vAsyncHelper as class ibs.th.file.AsyncHelperth no-undo.
+    vAsyncHelper = new ibs.th.file.AsyncHelperth().
+    vAsyncHelper:myUser = myUser.
+    vAsyncHelper:myPass = myPasswd.
+    vAsyncHelper:MyBachMode = no.
+    vAsyncHelper:WritelogInter = 5.
+    vAsyncHelper:mProcPublish = PublisHandle.
+    vAsyncHelper:AsyncProc("utl/proc-anyproc", substitute("&1&3&2":U 
+                                              , iProc 
+                                              ,if iParam eq "" then "" else iParam , 
+                                               if iParam eq "" then "" else {&delim-par} ),1).
+    vAsyncHelper:myTimeOut = 60.
+    
+    run ibs\th\file\waithelper.p (vAsyncHelper,?, 1,substitute ("Обновление БД с &1 версии до &2 версии",CurrDBShm,NewCurrDBShm)).
+    define variable vLogFile as character no-undo.
+    vLogFile = searchfile(vAsyncHelper:getLog(?)).
+    if vLogFile ne ?
+    then do:
+       input STREAM sReadfile FROM  VALUE(vLogFile).
+       block-read:
+       repeat:
+          define variable vstr as character no-undo.
+          import stream sReadfile unformatted vStr.
+          define variable vtext1 as character no-undo.
+          define variable vtext3 as character no-undo.
+          assign
+             vtext1 = entry(1,vStr," ")
+             vtext3 = entry(3,vStr," ")
+          no-error.
+          if    vtext1 = "error"
+             or vtext3 = "error"
+          then do:
+             IsErr = yes.
+             leave block-read.
+          end.
+       end.
+       input stream sReadfile close.
+    end.
+    
+    delete object vAsyncHelper.
   end method.
    
    method public character GetStartupParam (input iParam as character  ):
@@ -553,13 +640,13 @@ class ibs.th.adm.upd.updschm:
        message itext
        view-as alert-box.
     end.
-    putStat  (itext).
+    publish "WriteLogAsunc" from PublisHandle (itext ).
     
    end.
    method public void putstat (input itext as char):
       if valid-handle(PublisHandle)
      then
-        publish "putstat" from PublisHandle (itext ).
+        publish "PutStatAsunc"  from PublisHandle (itext, no ).
    end.
    {utl\search.i class}
 end class.

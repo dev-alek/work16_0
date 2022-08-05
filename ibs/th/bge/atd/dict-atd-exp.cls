@@ -199,7 +199,7 @@ class ibs.th.bge.atd.dict-atd-exp:
       
       define variable vAddr   as character no-undo.
       define variable vN      as int64     no-undo.  
-      
+
       assign 
          vAddr = pAtdReg
          vN = length(vAddr)
@@ -216,7 +216,7 @@ class ibs.th.bge.atd.dict-atd-exp:
             
             create ttclients.
             assign 
-               ttclients.objname = bclients.obj-name 
+               ttclients.objname = replace(bclients.obj-name, '"', "&quot;")
                ttclients.objcode = bclients.obj-code
                ttclients.objaddr = vAddr              
             .

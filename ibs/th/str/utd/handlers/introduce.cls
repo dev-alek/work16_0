@@ -160,6 +160,12 @@ method public character AddLineUTD(gds-code as int, doc-id as integer, db-num as
 end.
 
 method public character AddMarkUTD(mark as char, doc-id as integer, db-num as integer):
+  AddMarkUTD(mark, doc-id, db-num, "") no-error.
+  if error-status:error
+    then undo, return error return-value.
+end.
+
+method public character AddMarkUTD(mark as char, doc-id as integer, db-num as integer, argPar as char):
   define buffer buf_utd-marking-lines for ub.utd-marking-lines .
   define buffer bf_utd-marking-lines  for ub.utd-marking-lines .
   define buffer buf_goods             for ub.goods .
@@ -201,9 +207,21 @@ method public character AddMarkUTD(mark as char, doc-id as integer, db-num as in
           find first buf_utd-lines exclusive-lock where buf_utd-lines.doc-id = doc-id and buf_utd-lines.db-num = db-num
             and buf_utd-lines.gds-code = buf_goods.gds-code no-error .
         end.
-        find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.mark begins v-mark-short and buf_utd-marking-lines.doc-id = doc-id and buf_utd-marking-lines.db-num = db-num no-error.
+        
+        find first buf_utd-marking-lines no-lock where (buf_utd-marking-lines.mark begins v-mark-short and buf_utd-marking-lines.doc-id = doc-id and buf_utd-marking-lines.db-num = db-num) no-error.
         if available ( buf_utd-marking-lines)
-          then undo, return error "Марка уже была сканирована " + mark.
+        then do:
+          find first ub.utd-marking-lines-attr where
+                ub.utd-marking-lines-attr.db-num    = buf_utd-marking-lines.db-num
+            and ub.utd-marking-lines-attr.doc-id    = buf_utd-marking-lines.doc-id
+            and ub.utd-marking-lines-attr.LineNum   = buf_utd-marking-lines.LineNum
+            and ub.utd-marking-lines-attr.mark      = v-mark-short
+            and ub.utd-marking-lines-attr.attr-code = "CrTsd" no-lock no-error
+          .
+          if available (ub.utd-marking-lines-attr)
+            then return "". 
+            else undo, return error "Марка уже была сканирована " + mark.
+        end.
         create buf_utd-marking-lines .
         assign
           buf_utd-marking-lines.db-num    = db-num
@@ -212,6 +230,29 @@ method public character AddMarkUTD(mark as char, doc-id as integer, db-num as in
           buf_utd-marking-lines.LineNum   = buf_utd-lines.LineNum
           buf_utd-marking-lines.doc-level = 1
          .
+        if argPar = "CrTsd"
+        then do:
+          find first ub.utd-marking-lines-attr where
+                ub.utd-marking-lines-attr.db-num    = buf_utd-marking-lines.db-num
+            and ub.utd-marking-lines-attr.doc-id    = buf_utd-marking-lines.doc-id
+            and ub.utd-marking-lines-attr.LineNum   = buf_utd-marking-lines.LineNum
+            and ub.utd-marking-lines-attr.mark      = v-mark-short
+            and ub.utd-marking-lines-attr.attr-code = "CrTsd" no-lock no-error
+          .
+          if not available (ub.utd-marking-lines-attr)
+          then do:
+            create ub.utd-marking-lines-attr.
+            assign
+              ub.utd-marking-lines-attr.db-num    = buf_utd-marking-lines.db-num
+              ub.utd-marking-lines-attr.doc-id    = buf_utd-marking-lines.doc-id
+              ub.utd-marking-lines-attr.LineNum   = buf_utd-marking-lines.LineNum
+              ub.utd-marking-lines-attr.mark       = v-mark-short
+              ub.utd-marking-lines-attr.attr-code  = "CrTsd"
+              ub.utd-marking-lines-attr.attr-value = mark
+             .
+          end.
+        end.
+
         find first buf_marking exclusive-lock where buf_marking.mark begins v-mark-short no-error .
         if not available (buf_marking) then 
         do:
@@ -240,7 +281,8 @@ method public character AddMarkUTD(mark as char, doc-id as integer, db-num as in
             ub.marking.sts = Marking:PendingVerification:KeyIntDB .
           end.
         end.
-        if buf_marking.box-qnty = ? or buf_marking.box-qnty = 0 then 
+        
+        if (buf_marking.box-qnty = ? or buf_marking.box-qnty = 0) then 
         do:
           run gbl/d-prompt.w (
             'title=':u + "Ввод количества" + '\':u

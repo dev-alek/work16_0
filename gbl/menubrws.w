@@ -57,8 +57,8 @@ define temp-table br-proc no-undo
   field proc-db-ver     as character format "x(10)" label "Версия БД"
   field proc-run-order  as character format "x(10)" label "Порядок запуска"
   field proc-client     as character format "x(10)" label "Для клиента"
-  index i-up            is unique primary proc-index c-point
-  index i-name          proc-index c-point proc-name
+  index i-up            is unique proc-index c-point
+  index i-name          is primary c-point proc-name
   index i-file          proc-index c-point proc-file
 .
 
@@ -133,9 +133,9 @@ DEFINE BUTTON i-exit
      LABEL ""
      SIZE 2.5 BY .75.
 
-DEFINE VARIABLE find-file AS CHARACTER FORMAT "x(15)":U
+DEFINE VARIABLE find-file AS CHARACTER FORMAT "x(30)":U
      VIEW-AS FILL-IN
-     SIZE 15.5 BY 1 NO-UNDO.
+     SIZE 30.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE find-name AS CHARACTER FORMAT "x(60)":U
      VIEW-AS FILL-IN
@@ -152,13 +152,13 @@ DEFINE BROWSE br-proc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-proc d-menubrsw _FREEFORM
   QUERY br-proc DISPLAY
       proc-name
-      proc-file
+      proc-file  format "x(30)"
       proc-install
       proc-db-ver
       proc-run-order
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 78.75 BY 15.92.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 90.75 BY 15.92.
 
 
 /* ************************  Frame Definitions  *********************** */

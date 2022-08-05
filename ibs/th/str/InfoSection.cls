@@ -713,6 +713,11 @@ class ibs.th.str.InfoSection:
           assign
             Shape = inAttrValue no-error.
         end.
+      when 'dop-volume' then 
+        do:
+          assign
+            DopVolume = decimal (inAttrValue) no-error.
+        end.
       when 'pasp-dens' then 
         do:
           assign

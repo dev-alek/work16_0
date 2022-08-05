@@ -302,8 +302,11 @@ procedure prn-lib-reportviewer :
    end.
 
    v-command = substitute('&1 &2 &3 &4 &5 ',v-fill-path-RepView,v-GUI,v-password,v-excel,p-report-name-html).            
-
-   os-command no-wait value(v-command). 
+   if v-GUI = 'False'
+   then
+      os-command SILENT value(v-command). 
+   else
+      os-command no-wait value(v-command). 
     
 
 end procedure. /* prn-lib-reportviewer */

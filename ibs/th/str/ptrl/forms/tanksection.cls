@@ -723,7 +723,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       label24:Visible = false.
       
       groupBox4:Location = groupBox7:Location.
-      groupBox5:Location = new System.Drawing.Point(10, 470).
+      groupBox5:Location = new System.Drawing.Point(10, 530).
       buttonCalcWeight:Visible = false.
       label20:Visible = false.      
 
@@ -3438,7 +3438,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     if not infoSecsObj:FlagTrn 
       then return.
     
-    
+    infoSecsObj:GetInfoSectionProp(idSecTabPage).
     /*  assign                                                                              */
     /*    maskedTextBoxMouth:Text = string (decimal (maskedTextBoxMouth:Text))              */
     /*    maskedTextBoxMouth:Text:screen-value  = string (decimal (maskedTextBoxMouth:Text))*/

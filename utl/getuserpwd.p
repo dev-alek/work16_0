@@ -19,13 +19,14 @@ define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
-define input  parameter IBuff as handle no-undo.
+define input  parameter SystemUser as ibs.th.file.asyncparam no-undo.
+define input  parameter SystemPass as ibs.th.file.asyncparam no-undo.
 
 find first user-login where user-login.user-id = g#userid no-lock no-error .
       
-IBuff::Usr = if available user-login then user-login.user-login else g#userid.
+SystemUser:valueParam = if available user-login then user-login.user-login else g#userid.
 release user-login.
-IBuff::Pwd = g#passwd.
+SystemPass:valueParam = g#passwd.
 if g#userid eq ""
 then
    return error.

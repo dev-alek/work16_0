@@ -37,10 +37,10 @@ then do:
    return.
 end.
   
+{ gbl/objsrv.i}
 
 define variable v-today as date      no-undo.
 define variable v-time  as integer   no-undo.
-
 assign
   p-permit = false
 .
@@ -48,7 +48,7 @@ assign
 FUNCTION make-num-string RETURN CHAR
 ( input in-str as character )
 :
-  def var v-out-str as character no-undo .                                           
+  def var v-out-str as character no-undo .
   assign
     v-out-str = ''
   .
@@ -161,7 +161,7 @@ end procedure. /* input-user-and-passwd */
 procedure generate-passwd :
   def var v-passwd as character no-undo .
   def var v-seed as character no-undo .
-  if ibs.th.gbl.gbl-var:rcode
+  if not objSrv:SystemSetting:DeveloperMode
   then do:
      run gbl/d-prompt.w (
         'title=One time password generation\'
@@ -307,7 +307,7 @@ procedure check-passwd :
     return error . /* --->>>--- */
   end.
 
-  if encode(p-password) = buf__User._Password or not ibs.th.gbl.gbl-var:rcode then do:
+  if encode(p-password) = buf__User._Password or objSrv:SystemSetting:DeveloperMode then do:
      run trg/userlog.p (
                 input 'one-pwd'
                 , input (substitute("¬веден пароль дл€ &1", p-user-name)  + {&delim-key} + program-name(3) )

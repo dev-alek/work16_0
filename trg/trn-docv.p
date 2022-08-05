@@ -236,16 +236,14 @@ on error undo, return error return-value
         v-doc-qnty  = v-doc-qnty + buf_gds-dtl.doc-qnty .
     end.
 
-  if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_doc-line.obj-type, buf_doc-line.obj-code):IsMarking then do:
     find first ub.goods no-lock where ub.goods.artic = buf_doc-line.artic and ub.goods.prod-code = buf_doc-line.prod-code and ub.goods.prod-type = buf_doc-line.prod-type no-error .
     if available (ub.goods) then do:
-        RUN gds-attr-value (
+        run gds-attr-value (
                         INPUT ub.goods.gds-code,
                         INPUT {&attr-mark-type},
                         OUTPUT v-gds-attr-value-old,
                         OUTPUT v-gds-attr-type
                         ).
-    end.                        
     end.
     find first goods no-lock where goods.artic = buf_doc-line.artic
                                and goods.prod-type = buf_doc-line.prod-type
@@ -271,12 +269,15 @@ end.
           return.
   
       end.
+if buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} and not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_doc-line.obj-type, buf_doc-line.obj-code):GetIsMarkingForType(v-gds-attr-value-old) then do:
+
       if v-fact-qnty <> buf_doc-line.fact-qnty and v-fact-qnty-p <> 0 then do:
           p-mess = "В документе не соответствует количество по партиям и строкам для производства (fact)!!!" .
           p-err = true .
           return.
   
       end.
+end.
       if v-doc-qnty <> buf_doc-line.doc-qnty and v-doc-qnty-p <> 0 then do:
           p-mess = "В документе не соответствует количество по признакам и строкам для производства (doc)!!!" .
           p-err = true .
@@ -284,23 +285,29 @@ end.
       end.
     end.                                         
     else do :
+      if buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} and not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_doc-line.obj-type, buf_doc-line.obj-code):GetIsMarkingForType(v-gds-attr-value-old) then do:
+
       if v-fact-qnty-p <> v-fact-qnty  and v-fact-qnty-p <> 0 then do:
           p-mess = "В документе не соответствует количество по партиям и признакам (fact) !!!"   .
           p-err = true .
           return.
       end.
+     end. 
       if v-doc-qnty-p <> v-doc-qnty and v-doc-qnty-p <> 0 then do:
           p-mess = "В документе не соответствует количество по партиям и признакам (doc) !!!" .
           p-err = true .
           return.
   
       end.
+if buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} and not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_doc-line.obj-type, buf_doc-line.obj-code):GetIsMarkingForType(v-gds-attr-value-old) then do:
+
       if v-fact-qnty <> buf_doc-line.fact-qnty and v-fact-qnty-p <> 0 then do:
           p-mess = "В документе не соответствует количество по партиям и строкам (fact)!!!" .
           p-err = true .
           return.
   
       end.
+end.
       if v-doc-qnty <> buf_doc-line.doc-qnty and v-doc-qnty-p <> 0 then do:
           p-mess = "В документе не соответствует количество по признакам и строкам (doc)!!!" .
           p-err = true .

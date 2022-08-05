@@ -21,30 +21,24 @@ define variable mError as logical no-undo.
 { cmp/vssrevis.i }
 { gbl/getcntxt.i def }
 { cmp/trg-def.i }
-
+{ utl/proc-async.i proc_def}
+{ str/edo.i }
+/*
 session:system-alert-boxes = yes.
 session:appl-alert-boxes = yes.
 session:debug-alert = yes.
-
-&glob xdebug yes
-define variable mAsyncHelper as class ibs.th.file.AsyncHelperth. 
-mAsyncHelper = new ibs.th.file.AsyncHelperth().
-{str/edo.i}
+*/
 mPublishHand = this-procedure .
 define variable mParam as character no-undo.
-mParam = mAsyncHelper:GetPARAM( "ParamProc_1").
+mParam = GetPARAMAsunc( 1).
 if mParam eq ? then do:
-   run SetErr( "error   Получение данных было преврвано пользователем." ).
-   
-   delete object mAsyncHelper.
-   output to "endproc.txt". 
-   put unformatted "end" skip.
-   output close.
-   quit.
+   run PutstatAsunc( "error   Получение данных было преврвано пользователем." ).
+   { utl/proc-async.i proc_end}
+   return.
 end.
 mdb-num-local  = int(mParam).
 define variable MdebugStr as character no-undo. 
-MdebugStr = mAsyncHelper:GetPARAM( "ParamProc_2").
+MdebugStr = GetParamAsunc( 2).
 if MdebugStr ne ? 
 then
    mdebug = logical(MdebugStr) no-error.
@@ -52,18 +46,14 @@ if mdebug eq ?
 then
    mdebug = no.
 
-&if defined (debug) eq 0
-&then
-output to "error.log".
-&endif
 if mDiadocApi eq ?
 then
-   run SetErr(substitute("Error Не удалось создать объект Diadoc.DiadocClient. Проверьте установку библиоткеки Diadoc.") ).
+   run PutstatAsunc(substitute("Error Не удалось создать объект Diadoc.DiadocClient. Проверьте установку библиоткеки Diadoc.") ).
  
 else do:
-   
+   run PutstatAsunc (substitute ("Версия библиотеки Diadoc &1" , mDiadocApi:GetFullVersion())).   
    define variable mFirst as logical no-undo init no.
-   run SetErr(substitute("Загрузка данных по БД &1",mdb-num-local) ).
+   run PutstatAsunc(substitute("Загрузка данных по БД &1",mdb-num-local) ).
    g#esys = yes.
    Block-extsys:   
    for each ext-system  where ext-system.db-num  eq mdb-num-local
@@ -74,83 +64,47 @@ else do:
                                        and ext-system-attr.esya-attr-code eq {&attr-esys-host-code}
    no-lock:
       mFirst = yes.
-      run SetErr(substitute("Загрузка данных по ВС &1",ext-system.esys-id) ).
+      run PutstatAsunc(substitute("Загрузка данных по ВС &1",ext-system.esys-id) ).
       v-cntxt-host-code-obj = int(ext-system-attr.esya-attr-value).
       g#esys-source-esys = ext-system.esys-id.
       mext-sys = ext-system.esys-id.
-      if    mAsyncHelper:CheckStop()
+      if    StopCheck()
       then 
          leave Block-extsys.
-      subscribe "PutErr" anywhere run-procedure "SetErr".
-      subscribe "StopProc" anywhere run-procedure "StopChek".
-      
+         
       mDiadocConnection = conectbylogin().
       if mDiadocConnection eq ?
       then do:
-         run SetErr ( substitute("error Не удалось подключиться к серверу Диадок в БД &1 ВС &2" ,
-                                  mAsyncHelper:GetPARAM("param.txt", "ParamProc_1"), mext-sys)) .
+         run PutstatAsunc ( substitute("error Не удалось подключиться к серверу Диадок в БД &1 ВС &2" ,
+                                  mdb-num-local, mext-sys)) .
          
       end.
       else do:
          run getNewUpd.
       end.
-         unsubscribe "StopProc".
-         unsubscribe "PutErr".
       
-      if    mAsyncHelper:CheckStop()
+      
+      if    StopCheck()
       then 
          leave Block-extsys.
-      run SetErr(substitute("Загрузка данных по ВС &1 завершена.",ext-system.esys-id) ).
+      run PutstatAsunc(substitute("Загрузка данных по ВС &1 завершена.",ext-system.esys-id) ).
    end.
-   if    mAsyncHelper:CheckStop()
+   if    StopCheck()
    then .
    else if not mFirst
    then
-      run SetErr( substitute("Нет ВС Диадок для БД &1" , mAsyncHelper:GetPARAM("param.txt", "ParamProc_1"))).
+      run PutstatAsunc( substitute("Нет ВС Диадок для БД &1" , mdb-num-local)).
    else if not mError
    then do: 
-      run SetErr( substitute("Данные загруженны в БД &1" , mAsyncHelper:GetPARAM("param.txt", "ParamProc_1"))).
+      run PutstatAsunc( substitute("Данные загруженны в БД &1" , mdb-num-local)).
    end.
    else
-      run SetErr( substitute("Данные загруженны в БД &1 загружены с ошибками." , mAsyncHelper:GetPARAM("param.txt", "ParamProc_1"))).
+      run PutstatAsunc( substitute("Данные загруженны в БД &1 загружены с ошибками." , mdb-num-local)).
 end.
-if    mAsyncHelper:CheckStop()
+if    StopCheck()
 then do:
-   run SetErr( "error   Получение данных было преврвано пользователем." ).
+   run PutstatAsunc( "error   Получение данных было преврвано пользователем." ).
 end.
-&if defined (debug) eq 0
-&then
-output close.
-&endif
- output to "endproc.txt". 
- put unformatted "end" skip.
- output close.
- delete object mAsyncHelper.
- quit.      
- procedure SetErr:
-    define input  parameter Itext as character no-undo.
-&if defined (debug) ne 0
-&then
-    output to "error.log" append.
-&endif
-    if Itext begins "error"
-    then
-       mError = yes.
-    put unformatted Itext skip .
-&if defined (debug) ne 0
-&then
-    output close.
-&endif
-    
-end.
-define variable mstop as logical no-undo.
-procedure StopChek:
-    define output  parameter oFlag as logical no-undo.
-    if mstop
-    then 
-       oFlag = mstop.
-    else do:
-       oFlag = mAsyncHelper:CheckStop().
-       mstop = oFlag.
-    end.
-end.
+release object mDiadocApi.      
+{ utl/proc-async.i proc_end}
+      

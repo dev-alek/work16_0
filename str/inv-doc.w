@@ -2545,9 +2545,10 @@ end.
   if t-doc.status_ = {&wayb} and not t-doc.flag_ and not pardoc-mode = {&lookup}
     then do:
       MENU-ITEM m_add-marks:SENSITIVE IN MENU m-marks = TRUE.
-      if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code):IsMarking
-        then MENU-ITEM m_introduce-marks:SENSITIVE IN MENU m-marks = FALSE.
-        else MENU-ITEM m_introduce-marks:SENSITIVE IN MENU m-marks = TRUE.
+/*      if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code):IsMarking*/
+/*        then                                                                                  */
+        MENU-ITEM m_introduce-marks:SENSITIVE IN MENU m-marks = FALSE.
+/*        else MENU-ITEM m_introduce-marks:SENSITIVE IN MENU m-marks = TRUE.*/
       MENU-ITEM m_lookup:SENSITIVE IN MENU m-marks = TRUE.
 /*      b-marks:visible = true.*/
     end.
@@ -2571,6 +2572,7 @@ end.
                           output v-marking-type,
                           output v-type
                           ).
+    if v-marking-type <> "" and v-marking-type <> "not-type" then do:
     if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ub.doc-line.obj-type, ub.doc-line.obj-code):GetIsMarkingForType(v-marking-type) or v-is-introduce
     then do:
       v-is-marking = true.
@@ -2587,7 +2589,7 @@ end.
             var-qnty-mark-chk  :visible in browse {&browse-name} = true
           .
     end.
-
+   end.
   end.
   extent (bcol) = ?.
   hbrowse = browse {&BROWSE-NAME}:handle.
@@ -2998,7 +3000,7 @@ procedure local-add :
       
       if can-find (first ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code)
       then do:
-        if not v-is-introduce and
+        if not v-is-introduce and v-marking-type <> "" and v-marking-type <> "not-type" and
         ((not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code):GetIsMarkingForType(v-marking-type) and (v-is-marking = true))
         or (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code):GetIsMarkingForType(v-marking-type) and v-is-marking = false))
         then do:
@@ -3009,10 +3011,12 @@ procedure local-add :
         end.
       end.
       else do: 
+        if v-marking-type <> "" and v-marking-type <> "not-type" then do:
         if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code):GetIsMarkingForType(v-marking-type)
           then v-is-marking = true.
+        end.  
       end. 
-
+      
       find first bf_doc-line where
                  bf_doc-line.doc-code  = t-doc.doc-code         and
                  bf_doc-line.artic     = ub.goods.artic     and

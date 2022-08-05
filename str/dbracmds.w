@@ -56,7 +56,7 @@ define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
 define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
 define variable vss-description AS CHAR NO-UNDO INIT "Выполняющиеся распределенные команды СПН":U.
 { cmp/vssrevis.i }
-
+{cmp\trg-def.i}
 /* Local Variable Definitions ---                                       */
 { cmp/str-glbl.i }
 { cmp/library.i }
@@ -339,6 +339,9 @@ END.
 ON CHOOSE OF b-refresh IN FRAME Dialog-Frame /* Обновить */
 DO:
   DEFINE VARIABLE v-rec-recid AS RECID NO-UNDO.
+  if g#db-num eq 0
+  then
+     run adm\comcom.p (0).
   v-rec-recid = recid(X_db-rec-attr).
   run openbr in this-procedure ( input yes, input no, input "").
   reposition br-db-rec-attr to recid v-rec-recid no-error.
@@ -729,6 +732,8 @@ input-output fld, input-output lab, input-output spr, input-output dim)  no-erro
 run fltfield-add in this-procedure('attr-value-decimal', 'БД-инициатор', 'db',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('attr-type', 'Статус команды', 'db-rec-attr-type',
+input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+run fltfield-add in this-procedure('attr-value-logical', 'Выполнение команды', 'db-rec-attr-type',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 
 

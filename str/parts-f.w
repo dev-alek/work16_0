@@ -4165,7 +4165,11 @@ PROCEDURE enable-fields :
                 )
         ,output v-enable-qnty            /* p-enable-qnty          */
         ).
-
+      define buffer buf_utd for ub.utd .
+      if can-find(first buf_utd no-lock where buf_utd.doc-code = buf_trn-doc.doc-code)
+      then do :
+        v-enable-qnty = "fact-qnty" .
+      end .
       /* определ€ем, можно ли мен€ть поставщика */
       /* поставщика можно мен€ть дл€ любой порожденной партии */
       /* возвратной накладной и дл€ инвентаризации */

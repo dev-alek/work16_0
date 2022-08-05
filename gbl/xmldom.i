@@ -93,6 +93,17 @@ define temp-table temp_testXML-entity no-undo
         xmh-key
         xmeEntName
 .
+define temp-table temp_testXML-atribut no-undo
+    field xme-key       as integer
+    field xmeAtrName    as character
+    field xmeAtrValue   as character
+
+    index pi is primary unique
+        xme-key
+        xmeAtrName
+.
+
+define variable mRoot  as character no-undo init "Root".
 
 define stream xmldom-out.
 define variable mverfile_text as character   no-undo.
@@ -108,13 +119,16 @@ procedure xmldom-clear :
 &endif
     define buffer buf_temp_testXML-node         for temp_testXML-node.
     define buffer buf_temp_testXML-entity       for temp_testXML-entity.
+    define buffer buf_temp_testXML-atribut      for temp_testXML-atribut.
 do
 for buf_temp_testXML-node
   , buf_temp_testXML-entity
+  , buf_temp_testXML-atribut
 on error undo, return error
 :
     empty temp-table buf_temp_testXML-node   .
     empty temp-table buf_temp_testXML-entity .
+    empty temp-table buf_temp_testXML-atribut.
     assign
         v-xmldom-key = 0
     .
@@ -202,6 +216,7 @@ function  xmldom-save-next-level  returns character
    i-row-handle as handle):
    
    define buffer buf_temp_testXML-entity       for temp_testXML-entity.
+   define buffer temp_testXML-atribut          for temp_testXML-atribut.
    define variable v-field-handle  as handle           no-undo.
    define variable v-text-handle   as handle           no-undo.
    
@@ -213,11 +228,16 @@ function  xmldom-save-next-level  returns character
         and not buf_temp_testXML-entity.xmeEntName begins "#"
    on error undo, return error:
       i-doc-handle :create-node ( v-field-handle, buf_temp_testXML-entity.xmeEntName , "ELEMENT" ).
+      for each temp_testXML-atribut where temp_testXML-atribut.xme-key eq buf_temp_testXML-entity.xme-key
+      no-lock:
+         v-field-handle:SET-ATTRIBUTE(temp_testXML-atribut.xmeatrName,temp_testXML-atribut.xmeAtrValue).
+      end.
       i-row-handle :append-child ( v-field-handle ).
       i-doc-handle :create-node ( v-text-handle, buf_temp_testXML-entity.xmeEntValue, "TEXT" ).
       v-field-handle :append-child ( v-text-handle ).
       if buf_temp_testXML-entity.xmeEntValue eq ?  then buf_temp_testXML-entity.xmeEntValue = "unknown_value".
       v-text-handle :node-value = buf_temp_testXML-entity.xmeEntValue.
+       
      xmldom-save-next-level(buf_temp_testXML-entity.xme-key, i-doc-handle,v-field-handle).
    end.        /* for each buf_temp_testXML-entity */
    delete object v-field-handle.
@@ -251,7 +271,7 @@ on error undo, return error
         v-doc-handle :encoding = "windows-1251":U
     .
     create x-noderef v-root-handle.
-    v-doc-handle :create-node ( v-root-handle, "Root", "ELEMENT" ).
+    v-doc-handle :create-node ( v-root-handle, mRoot, "ELEMENT" ).
     v-doc-handle :append-child ( v-root-handle ).
     for each buf_temp_testXML-node where not buf_temp_testXML-node.xmhNodName begins "#"
     on error undo, return error
@@ -262,6 +282,11 @@ on error undo, return error
         create x-noderef v-row-handle.
         
         v-doc-handle :create-node ( v-row-handle, buf_temp_testXML-node.xmhNodName, "ELEMENT" ).
+        for each temp_testXML-atribut where temp_testXML-atribut.xme-key eq buf_temp_testXML-node.xmh-key
+        no-lock:
+           v-row-handle:SET-ATTRIBUTE(temp_testXML-atribut.xmeatrName,temp_testXML-atribut.xmeAtrValue).
+        end.
+      
         v-root-handle :append-child ( v-row-handle ).
 /*        v-row-handle :SET-ATTRIBUTE ( "Cust-num", STRING ( cust-num ) ).*/
 /*        v-row-handle :SET-ATTRIBUTE ( "Name", NAME ).*/
@@ -301,6 +326,31 @@ on error undo, return error
 end.
 end . /* xmldom-save */
 /*==================================================*/
+&if "{1}" eq "class"
+&then
+method public logical  xmldom-load-atribut 
+&else
+function  xmldom-load-atribut returns logical 
+&endif
+   (IParent    as handle,
+   iParentkey as integer 
+   ):
+   def var vanames as char no-undo.
+   def var vname as char no-undo.
+   define buffer temp_testXML-atribut          for temp_testXML-atribut.
+   
+   def var vi      as integer  no-undo.
+   vanames = IParent:ATTRIBUTE-NAMES.
+   do vi = 1 TO NUM-ENTRIES(vanames):
+      vname = ENTRY(vi, vanames).
+      create temp_testXML-atribut.
+      assign
+         temp_testXML-atribut.xme-key     = iParentkey
+         temp_testXML-atribut.xmeatrName  = vname
+         temp_testXML-atribut.xmeAtrValue = IParent:GET-ATTRIBUTE(vname)
+      .
+   END.
+end.
 define variable m-xme-key       as integer      no-undo.
 &if "{1}" eq "class"
 &then
@@ -315,6 +365,7 @@ function  xmldom-load-next-level returns logical
    define variable v-text-handle   as handle           no-undo.
    define variable v-field-counter as integer          no-undo.
    define variable v-field-amount  as integer          no-undo.
+   define variable vDateActive as date no-undo.
    define buffer buf_temp_testXML-entity       for temp_testXML-entity.
    create x-noderef v-field-handle.
    create x-noderef v-text-handle.
@@ -355,12 +406,30 @@ function  xmldom-load-next-level returns logical
             end.
          end.
       end.
+      else if     IParent:name         eq "file-info"
+              and v-field-handle :name eq "DateActive"
+      then do:
+         vDateActive = date(v-text-handle :node-value)no-error.
+         if     vDateActive ne ? 
+         then do:
+            
+            if  vDateActive  lt today
+            then do:
+               for each buf_temp_testXML-entity:
+                  delete buf_temp_testXML-entity.
+               end.
+               
+               return yes.
+            end.
+         end.
+      end.
       assign
          buf_temp_testXML-entity.xmeEntName   = v-field-handle :name
          buf_temp_testXML-entity.xmeEntValue  = v-text-handle :node-value
       .
       if buf_temp_testXML-entity.xmeEntValue eq "unknown_value"  then buf_temp_testXML-entity.xmeEntValue = ?.
-       xmldom-load-next-level (v-field-handle,buf_temp_testXML-entity.xme-key, ifilever ).
+      xmldom-load-atribut(v-field-handle,buf_temp_testXML-entity.xme-key).
+      xmldom-load-next-level (v-field-handle,buf_temp_testXML-entity.xme-key, ifilever ).
    end.
    delete object v-text-handle.
    delete object v-field-handle.
@@ -429,6 +498,7 @@ function  xmldom-load-ver returns character
             buf_temp_testXML-node.xmh-key       = v-table-counter
             buf_temp_testXML-node.xmhNodName    = v-table-handle :name
          .
+         xmldom-load-atribut(v-table-handle,buf_temp_testXML-node.xmh-key).
 /*        cust-num = integer (hTable :GET-ATTRIBUTE ("Cust-num")).*/
 /*        NAME = hTable :GET-ATTRIBUTE ("Name").*/
          if xmldom-load-next-level (v-table-handle,buf_temp_testXML-node.xmh-key,ifilever)

@@ -79,7 +79,9 @@ ON ERROR UNDO, RETURN ERROR RETURN-VALUE
                      , INPUT  v-cntxt-db-num
                      , INPUT  v-cntxt-userid
                      , INPUT  ""             /* p-name */
-                     , INPUT  v-user-adm
+                     , INPUT  no
+/*                     v-user-adm*/
+                     , input yes
                      , INPUT  lock_user-login.user-password-encoded
                      , yes
                      , OUTPUT v-password
@@ -110,7 +112,7 @@ ON ERROR UNDO, RETURN ERROR RETURN-VALUE
     ASSIGN
       lock_user-login.user-password-encoded = v-password
     .
-    if v-nextcon ne ?
+    if no /* v-nextcon ne ? */
     then do:
         find first user-login-attr where user-login-attr.db-num    = lock_user-login.db-num
                                      and user-login-attr.user-id   = lock_user-login.user-id

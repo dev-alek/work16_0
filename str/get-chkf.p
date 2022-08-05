@@ -59,7 +59,8 @@ define variable vss-description as character no-undo init "ѕрограмма приема чеко
 { str/tekkatsk.i  " " Dirstream }
 { gbl/thbj-def.i }
 { gbl/key-rec.i }
-
+{ bge/socet.i}
+{ gbl/objsrv.i}
 /*образыв бывших input parameter*/
 define variable p-obj-type like ub.clients.obj-type no-undo .
 define variable p-obj-code like ub.clients.obj-code no-undo .
@@ -90,11 +91,7 @@ define variable log-file-name as character no-undo .
 define variable ii as integer no-undo .
 define variable v-spec-command as character no-undo .
 define variable v-entry as character no-undo .
-define variable v-character as character no-undo .
-define variable v-attr-date as date no-undo .
-define variable v-decimal as decimal no-undo .
-define variable v-integer as integer no-undo .
-define variable v-logical as logical no-undo .
+define variable v-attr-value as character no-undo .
 define variable v-attr-type as character no-undo .
 define variable v-is-script as logical no-undo .
 define variable imaria as integer no-undo .
@@ -111,9 +108,19 @@ define variable v-value-decimal as decimal no-undo .
 define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-tth as handle no-undo .
-define variable v-disp-msg as character no-undo .
-define variable vi as INTEGER no-undo .
+define variable vi as integer no-undo.
+assign
+v-tth = buffer thbjattr_thbj-attr:table-handle .
 
+
+&scop view-log   if p-auto = 0 then do: ~
+                   ~{ str/cdviewlg.i   ~
+                    "substitute('!!!ѕри приеме информации с касс &1&2 произошли ошибки!!!'  ~
+                                 ,p-obj-type                                                ~
+                                 ,p-obj-code)"                                               ~
+                    "'get-chkf.log'" ~}   ~
+                    return "error":U. ~
+                 end
 
 if num-entries(p-parameter, {&delim-par}) < 3
 then do:
@@ -168,6 +175,7 @@ end.
 assign
 log-file-name = (if p-auto = 0 then 'get-chkf.log' else 'extgetcd.log').
 
+
 if v-input-error = yes then do:
   run write-log-and-file in p-log-handle (
         input 1
@@ -181,7 +189,7 @@ if v-input-error = yes then do:
                          )).
   assign
   v-view-log = yes.
-  undo, return .
+  {&view-log}.
 end.
 
 { str/waitp.i }
@@ -209,7 +217,7 @@ if TRANSACTION then do:
                          )).
   assign
   v-view-log = yes.
-  undo, return .
+  {&view-log}.
 end.
 
 for each thbjattr_thbj-attr:
@@ -233,6 +241,7 @@ run adm/shattri.p (
     ) no-error .
 IF error-status:error then do:
   delete object v-tth.
+  define variable v-disp-msg as character no-undo.
   v-disp-msg = substitute("ќшибка при получении опций работы со справочником товаров:&1&2 &3"
             , {&new-line}
             , error-status:get-message(1)
@@ -437,7 +446,8 @@ with frame a :
                                 )).
           assign
           v-view-log = yes.
-          undo,  return "error".
+          {&view-log}.
+          else undo,  return "error".
         end.
         if cash-desk.pos-type = {&cd-type-magia-XML} then do:
           assign
@@ -830,82 +840,7 @@ with frame a :
                                       ,string(v-time, "HH:MM:SS")
                                       ,string(v-today-date + 2, "99/99/9999")
                                       ,string(0, "HH:MM:SS"))).
-
-              end.
-              else do:
-                if entry(1, v-spec-command) = "version" then do:
-                  /*пустой запрос*/
-                end.
-                else do:
-                  /*найдем последний чек в закрытой продаже по данной кассе*/
-                  run get-last-check-params in this-procedure (
-                                                                            input g#db-num
-                                                                            ,input for-cash-desk.obj-code
-                                                                            ,input for-cash-desk.pos-type
-                                                                            ,input for-cash-desk.cash-num
-                                                                            ,output v-date
-                                                                            ,output v-time
-                                                                            ,output v-shift-num
-                                                                            ,output v-z-count
-                                                                            ,output v-chk-num
-                                                                            ) no-error.
-                  if error-status:error then do:
-                    run write-log-and-file in p-log-handle (
-                          input 1
-                        , input log-file-name
-                        , input 1
-                        , input substitute(
-                                          "!!!ќшибка при получении данных о последнем прин€том чеке по кассе &1 &2&3:&4" +
-                                          "&5 &6!"
-                                          , for-cash-desk.cash-num
-                                          , {&shop}
-                                          , p-obj-code
-                                          , {&new-line}
-                                          , error-status:get-message(1)
-                                          , return-value
-                                          )).
-                    assign
-                    v-view-log = yes.
-                    assign
-                    v-date = v-today-date - 10
-                    v-time = v-today-time
-                    .
-                    run bgelib-tag-open in this-procedure ( input 2, input "Check", input "ctrl='READ' id='>'":U).
-                    run bgelib-tag-put in this-procedure ( input 3, input "CDateFrom":U,
-                                                          input (Xml-CD-DatetoString (v-date) + {&space-char}  + string(v-time, "HH:MM:SS":U)), input 1 ).
-                    /*
-                    run bgelib-tag-put in this-procedure ( input 3, input "CDateTo":U,
-                                                          input (Xml-CD-DatetoString (v-today-date + 2) + {&space-char}  + string(0), "HH:MM:SS":U)), input 1 ).
-                    */
-                    run bgelib-tag-close in this-procedure ( input 2, input "Check").
-                  end.
-                  else do:
-                    run bgelib-tag-open in this-procedure ( input 2, input "Check", input "ctrl='READ' id='>'":U).
-                    run bgelib-tag-put in this-procedure ( input 3, input "CDateFrom":U,
-                                                          input (Xml-CD-DatetoString (v-date) + {&space-char}  + string(v-time, "HH:MM:SS":U)), input 1 ).
-                    /*
-                    run bgelib-tag-put in this-procedure ( input 3, input "CDateTo":U,
-                                                          input (Xml-CD-DatetoString (v-today-date + 2) + {&space-char}  + string(0), "HH:MM:SS":U)), input 1 ).
-                    run bgelib-tag-put in this-procedure ( input 3, input "CShiftFrom":U,
-                                                          input string(v-shift-num), input 1 ).
-                    run bgelib-tag-put in this-procedure ( input 3, input "CZCountFrom":U,
-                                                          input string(v-z-count), input 1 ).
-                    run bgelib-tag-put in this-procedure ( input 3, input "CCNumFrom":U,
-                                                          input string(v-chk-num), input 1 ).
-                    */
-                    run bgelib-tag-close in this-procedure ( input 2, input "Check").
-                  end.
-                run write-log-and-file in p-log-handle (
-                      input 1
-                    , input log-file-name
-                    , input 1
-                    , input substitute(
-                                      "«апрашиваем чеки с &1 &2"
-                                      ,string(v-date, "99/99/9999")
-                                      ,string(v-time, "HH:MM:SS"))).
-                end. /*else if entry(1, v-spec-command) = "version" then do:*/
-              end. /*else if cash-desk.pos-type = {&cd-type-magia-XML} then do:*/
-              output stream stmxmlout close.
+             output stream stmxmlout close.
               run xml-cd-write-footer in this-procedure ( input for-cash-desk.pos-type, input v-xml-file-name-path, input "spool":U ) no-error .
               if error-status:error then do:
                 run write-log-and-file in p-log-handle (
@@ -922,8 +857,104 @@ with frame a :
                                       )).
                 assign
                 v-view-log = yes.
-                undo, return .
+                {&view-log}.
+                else undo,  return .
               end.
+
+              end.
+              else do:
+                 define variable Mreq as longchar no-undo.
+                 define variable hSAXWriter as handle no-undo.
+                 define variable mReadBuffer as logical no-undo.
+                  
+                 mReadBuffer = not objSrv:SystemSetting:GetCashCurl.
+
+                 create sax-writer hSAXWriter.
+                 if mReadBuffer
+                 then
+                    hSAXWriter:set-output-destination("longchar", Mreq) no-error.
+                 else
+                    hSAXWriter:set-output-destination("file"    , v-xml-file-name-path + 'xml':U) no-error.
+                 
+                 hSAXWriter:formatted = true.
+                 hSAXWriter:encoding = "windows-1251".
+               
+                 hSAXWriter:start-document() no-error.
+                 define variable OS-time as character  no-undo.
+                 OS-time =  string( ( today - date( "01/01/1996" ) ) * 24 * 3600 + time, ">>>>>>>>9" ).
+                 hSAXWriter:start-element("spool") no-error.
+                 hSAXWriter:insert-attribute("type",   "REQUEST")       no-error.
+                 hSAXWriter:insert-attribute("id",     v-xml-file-name) no-error.
+                 hSAXWriter:insert-attribute("from",   string(v-obj-list))      no-error.
+                 hSAXWriter:insert-attribute("to",     (v-obj-list + "_":U + "касса" + string(for-cash-desk.cash-num))) no-error.
+                 hSAXWriter:insert-attribute("tstamp", string(OS-time))     no-error.
+                   
+                 
+                 if entry(1, v-spec-command) = "version" then do:
+                  /*пустой запрос*/
+                 end.
+                 else do:
+                  /*найдем последний чек в закрытой продаже по данной кассе*/
+                    run get-last-check-params in this-procedure (
+                                                                               input g#db-num
+                                                                               ,input for-cash-desk.obj-code
+                                                                               ,input for-cash-desk.pos-type
+                                                                               ,input for-cash-desk.cash-num
+                                                                               ,output v-date
+                                                                               ,output v-time
+                                                                               ,output v-shift-num
+                                                                               ,output v-z-count
+                                                                               ,output v-chk-num
+                                                                               ) no-error.
+                    hSAXWriter:START-ELEMENT("Check").
+                    hSAXWriter:insert-attribute("ctrl",   "READ")      no-error.
+                    hSAXWriter:insert-attribute("id",     '>') no-error.
+                    hSAXWriter:WRITE-data-ELEMENT("CDateFrom" , Xml-CD-DatetoString (v-date) + {&space-char}  + string(v-time, "HH:MM:SS":U) ) no-error.
+                  
+                    if error-status:error then do:
+                       run write-log-and-file in p-log-handle (
+                          input 1
+                        , input log-file-name
+                        , input 1
+                        , input substitute(
+                                          "!!!ќшибка при получении данных о последнем прин€том чеке по кассе &1 &2&3:&4" +
+                                          "&5 &6!"
+                                          , for-cash-desk.cash-num
+                                          , {&shop}
+                                          , p-obj-code
+                                          , {&new-line}
+                                          , error-status:get-message(1)
+                                          , return-value
+                                          )).
+                       v-view-log = yes.
+                       assign
+                          v-date = v-today-date - 10
+                          v-time = v-today-time
+                       .
+                  end.
+                  hSAXWriter:END-ELEMENT("Check" ).
+                end.
+                hSAXWriter:end-element("spool") no-error.
+               
+                hSAXWriter:end-document() no-error.
+                if hSAXWriter:write-status = 7 then do:
+                   delete object hSAXWriter no-error.
+                   return error.
+                end.
+                delete object hSAXWriter no-error.
+                run write-log-and-file in p-log-handle (
+                      input 1
+                    , input log-file-name
+                    , input 1
+                    , input substitute(
+                                      if entry(1, v-spec-command) = "version"
+                                      then "«апрашиваем версию кассы"
+                                      else "«апрашиваем чеки с &1 &2"
+                                      ,string(v-date, "99/99/9999")
+                                      ,string(v-time, "HH:MM:SS"))).
+                 
+              end. /*else if cash-desk.pos-type = {&cd-type-magia-XML} then do:*/
+ 
               if for-cash-desk.remote = 1 then do:
                 /*проверим директорию*/
                 run gbl/dir-cre.p ( input v-dir-remote) no-error .
@@ -962,46 +993,102 @@ with frame a :
                     for-cash-desk.pos-type = {&cd-type-autotank})
                 then do:
                   if not v-podbor then do:
-                    run str/post-xml.p
-                      (
-                      input parparentproc
-                      ,input p-parent-handle
-                      ,input p-log-handle
-                      ,input g#news
-                      ,input g#auto
-                      ,input 'get'
-                      ,input log-file-name
-                      ,input (entry(1, for-cash-desk.addr-path, {&delim-par}) + '://' + entry(2, for-cash-desk.addr-path, {&delim-par}))
-                      ,input (v-xml-file-name-path + 'xml':U)
-                      ,input (replace(in_ + spl + "/" + v-xml-file-name, "/", "\" ) + ".xml")
-                      ,input 30
-                      ,input substitute('„тение данных с кассы &1://&2'
-                                        ,entry(1, for-cash-desk.addr-path, {&delim-par})
-                                        ,entry(2, for-cash-desk.addr-path, {&delim-par})
-                                      )
-                      ) no-error .
-                    if error-status:error
-                    or return-value = "error" then do:
-                      run write-log-and-file in p-log-handle (
-                            input 1
-                          , input log-file-name
-                          , input 1
-                          , input substitute( "!!! асса &1 маг&2 не ответила:&3&4 &5"
-                                                ,for-cash-desk.cash-num
-                                                ,for-cash-desk.obj-code
-                                                , {&new-line}
-                                                , error-status:get-message(1)
-                                                , return-value
-                                            )
-                                                            ).
-                      assign
-                      v-view-log = yes
-                      .
-                      if not g#auto then do:
-                        /*в режиме автоприема чеков должны считать чего-нибудь чтое сть в директории*/
-                      return "error":U.
+                    if not mReadBuffer
+                    then do:
+                       run str/post-xml.p
+                         (
+                          input parparentproc
+                         ,input p-parent-handle
+                         ,input p-log-handle
+                         ,input g#news
+                         ,input g#auto
+                         ,input 'get'
+                         ,input log-file-name
+                         ,input (entry(1, for-cash-desk.addr-path, {&delim-par}) + '://' + entry(2, for-cash-desk.addr-path, {&delim-par}))
+                         ,input (v-xml-file-name-path + 'xml':U)
+                         ,input (replace(in_ + spl + "/" + v-xml-file-name, "/", "\" ) + ".xml")
+                         ,input 30
+                         ,input substitute('„тение данных с кассы &1://&2'
+                                           ,entry(1, for-cash-desk.addr-path, {&delim-par})
+                                           ,entry(2, for-cash-desk.addr-path, {&delim-par})
+                                         )
+                         ) no-error .
+                       if error-status:error
+                       or return-value = "error" then do:
+                         run write-log-and-file in p-log-handle (
+                               input 1
+                             , input log-file-name
+                             , input 1
+                             , input substitute( "!!! асса &1 маг&2 не ответила:&3&4 &5"
+                                                   ,for-cash-desk.cash-num
+                                                   ,for-cash-desk.obj-code
+                                                   , {&new-line}
+                                                   , error-status:get-message(1)
+                                                   , return-value
+                                               )
+                                                               ).
+                         assign
+                         v-view-log = yes
+                         .
+                         nEXT _IBM-CASH-DESK.
+                         /* продолжаем обработку других касс
+                         if not g#auto then do:
+                             /*в режиме автоприема чеков должны считать чего-нибудь чтое сть в директории*/
+                           return "error":U.
+                         end. */
+                       end.
                     end.
-                  end.
+                    else do:
+                       run write-log-and-file in p-log-handle (
+                               input 1
+                             , input log-file-name
+                             , input 1
+                             , input substitute('„тение данных с кассы &1://&2'
+                                           ,entry(1, for-cash-desk.addr-path, {&delim-par})
+                                           ,entry(2, for-cash-desk.addr-path, {&delim-par})
+                                         )
+                                                               ).
+                       mWriteRespFile = replace(in_ + sav + "/" + v-xml-file-name, "/", "\" ) + ".xml_sckt".
+                       run ConectSocet (entry(1,entry(2, for-cash-desk.addr-path, {&delim-par}),":"),
+                                        entry(2,entry(2, for-cash-desk.addr-path, {&delim-par}),":"),
+                                         "",
+                                         Mreq,
+                                         "xml",
+                                         30,
+                                         no,
+                                         substitute ("„тение данных с кассы &1. ",entry(2, for-cash-desk.addr-path, {&delim-par}))
+                                         ).
+                        if mWebResp eq "" 
+                        then do:
+                           run write-log-and-file in p-log-handle (
+                               input 1
+                             , input log-file-name
+                             , input 1
+                             , input substitute( "!!! асса &1 маг&2 не ответила:&3&4 &5"
+                                                   ,for-cash-desk.cash-num
+                                                   ,for-cash-desk.obj-code
+                                                   , {&new-line}
+                                                   , OerrMsg
+                                                   , return-value
+                                               )
+                                                               ).
+                            assign
+                            v-view-log = yes
+                            .
+                            nEXT _IBM-CASH-DESK.
+                         end.
+                         else do:
+                            run write-log-and-file in p-log-handle (
+                               input 1
+                             , input log-file-name
+                             , input 1
+                             , input substitute('¬рем€ ожидани€ выполнени€ задани€ на кассе - &1 c',
+                                           mSocetEndTime
+                                         )
+                                                               ).
+                        end.
+                        
+                    end.
                   end. /*if not v-podbor then do:*/
                 end. /*if for-cash-desk.autonomy = integer({&cd-self})*/
                 else do:
@@ -1021,7 +1108,6 @@ with frame a :
               end.
             end. /*cd-type-ibm-xml*/
           end. /*конец блока запроса*/
-        END . /* FOR EACH for-cash-desk NO-LOCK WHERE */
         /*if p-remote = 1 - только запрос - чеки не читаем - конец работы*/
         if p-remote = 1 then do:
           return.
@@ -1098,7 +1184,7 @@ with frame a :
                         ) no-error .
           if return-value = "error":U then do:
             v-view-log = yes.
-            undo, return .
+            {&view-log}.
           end.
         end.
         else do:
@@ -1150,18 +1236,26 @@ with frame a :
                                 then "utf-8":U
                                 else "windows-1251")
                         ,input log-file-name
-                        ,input "spool":U + (if p-other <> '':U then {&delim-par} + v-spec-command else '':U)
-                        ,input (if entry(1, v-spec-command) = "version"
+                        ,input (if mReadBuffer then "readbuffer_" else "") +  "spool":U + (if p-other <> '':U then {&delim-par} + v-spec-command else '':U)
+                        ,input
+                          if mReadBuffer then mWebResp else
+                                (if entry(1, v-spec-command) = "version"
                                 and cash-desk.pos-type = {&cd-type-ibm-xml}
                                 then v-xml-file-name-path
                                 else "":U) /*ждем любых файлов только при чтении версии своего единственного*/
                         ,input-output v-view-log
                         ) no-error .
+
+
           if return-value = "error":U then do:
+            assign
             v-view-log = yes.
-            undo, return .
+            {&view-log}.
           end.
         end.
+        END . /* FOR EACH for-cash-desk NO-LOCK WHERE */
+/*---------------------------------------------------------------------------------*/
+        
         _ibm-cash-desk-remote:
         FOR EACH for-cash-desk NO-LOCK WHERE
                 for-cash-desk.db-num = g#db-num and
@@ -1215,7 +1309,7 @@ with frame a :
                             ) no-error .
               if return-value = "error":U then do:
                 v-view-log = yes.
-                undo, return .
+                {&view-log}.
               end.
             end.
             else do:
@@ -1245,7 +1339,7 @@ with frame a :
                             ) no-error .
               if return-value = "error":U then do:
                 v-view-log = yes.
-                undo, return .
+                {&view-log}.
               end.
             end.
           end.
@@ -1283,7 +1377,8 @@ with frame a :
                                 , return-value
                                 )).
           v-view-log = yes.
-           undo,  return .
+          {&view-log}.
+          else undo,  return .
         end.
         for each thbjattr_thbj-attr:
           delete thbjattr_thbj-attr.
@@ -2063,6 +2158,11 @@ with frame a :
             end. /*            do ii = 1 to num-entries(v-spec-command, ';'):*/
           end. /*if v-spec-command <> '':U then do:*/
           else do:
+             define variable v-character as character no-undo.
+             define variable v-attr-date as date      no-undo.
+             define variable v-decimal   as decimal   no-undo.
+             define variable v-integer   as integer   no-undo.
+             define variable v-logical   as logical   no-undo.
              v-character = ''.
              run cd-attr-value in this-procedure (
                                                  input for-cash-desk.db-num

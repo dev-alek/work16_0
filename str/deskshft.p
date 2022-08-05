@@ -119,56 +119,40 @@ for each buf_chk-doc No-lock where
   end.
 end.
 
-
-
-if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(p-obj-type, p-obj-code):IsMarking then do:
 /*проверка марок*/
   Marking = ObjSrv:Env:Marking:Sts:Mark.
-for first buf_marking no-lock where 
-          buf_marking.obj-code = p-obj-code and 
+define buffer  buf_marking-attr for ub.marking-attr. 
+for first buf_marking no-lock where
+          (buf_marking.obj-code = p-obj-code and
           buf_marking.obj-type = p-obj-type and
-          buf_marking.sts = Marking:SaleLock:KeyIntDB:
+          buf_marking.sts = Marking:SaleLock:KeyIntDB) or
+          (buf_marking.obj-code = p-obj-code and
+          buf_marking.obj-type = p-obj-type and
+          buf_marking.sts = Marking:ReturnLock:KeyIntDB) or
+          (buf_marking.obj-code = p-obj-code and
+          buf_marking.obj-type = p-obj-type and
+          buf_marking.sts = Marking:SaleWaitLock:KeyIntDB) or
+          (buf_marking.obj-code = p-obj-code and
+          buf_marking.obj-type = p-obj-type and
+          buf_marking.sts = Marking:ReturnWaitLock:KeyIntDB),
+   first buf_marking-attr no-lock where buf_marking-attr.mark = buf_marking.mark and 
+                                        buf_marking-attr.attr-code = "shift-date" and
+                                        date(buf_marking-attr.attr-value) <= p-shift-date:
+   find first ub.marking-attr no-lock where ub.marking-attr.mark = buf_marking.mark and 
+                                            ub.marking-attr.attr-code = "shift-num" no-error .
+     if date(buf_marking-attr.attr-value) = p-shift-date then do:
+        if available (ub.marking-attr) then do:
+           if integer(ub.marking-attr.attr-value) > p-shift-num then leave. 
+        end.   
+     end.                                               
      vReason = substitute("Не все чеки с маркированной табачной продукцией загружены в смену. Закрытие смены № &1 от &2 не возможно"
                         ,varshift-name-num
                         ,string(p-shift-date, "99/99/9999")
                         ).
-    return error vreason.         
- 
+    return error vreason.
+
 end.
-for first buf_marking no-lock where 
-          buf_marking.obj-code = p-obj-code and 
-          buf_marking.obj-type = p-obj-type and
-          buf_marking.sts = Marking:ReturnLock:KeyIntDB:
-     vReason = substitute("Не все чеки с маркированной табачной продукцией загружены в смену. Закрытие смены № &1 от &2 не возможно"
-                        ,varshift-name-num
-                        ,string(p-shift-date, "99/99/9999")
-                        ).
-    return error vreason.         
- 
-end.
-for first buf_marking no-lock where 
-          buf_marking.obj-code = p-obj-code and 
-          buf_marking.obj-type = p-obj-type and
-          buf_marking.sts = Marking:SaleWaitLock:KeyIntDB:
-     vReason = substitute("Не все чеки с маркированной табачной продукцией загружены в смену. Закрытие смены № &1 от &2 не возможно"
-                        ,varshift-name-num
-                        ,string(p-shift-date, "99/99/9999")
-                        ).
-    return error vreason.         
- 
-end.
-for first buf_marking no-lock where 
-          buf_marking.obj-code = p-obj-code and 
-          buf_marking.obj-type = p-obj-type and
-          buf_marking.sts = Marking:ReturnWaitLock:KeyIntDB:
-     vReason = substitute("Не все чеки с маркированной табачной продукцией загружены в смену. Закрытие смены № &1 от &2 не возможно"
-                        ,varshift-name-num
-                        ,string(p-shift-date, "99/99/9999")
-                        ).
-    return error vreason.         
- 
-end.
-end.
+
 
 /* 23/III-2019  исключена проверка на всех ли кассах магазина закрыты смены. Задача #4968.
                 На станции специально выключают кассу, чтобы избежать докачки чеков и проверки закрытия смены на кассе.

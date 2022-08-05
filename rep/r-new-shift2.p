@@ -577,27 +577,27 @@ FOR EACH t-2 NO-LOCK
       if not available treal-2 then do:
         put stream OutStr-html unformatted
             '<tr>' skip
-                    '<td rowspan="2">' + pol1 + '</td>' skip
-                    '<td rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol2) <> ? then string(pol2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol3) <> ? then fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol4) <> ? then fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td rowspan="2">' + if supp-line <> no or pol6 <> ? then pol6 + '</td>' else "" + '</td>' skip
-                    '<td rowspan="2" style="text-align: right;">' + if pol7 <> 0 then string(pol7) + '</td>' else "" + '</td>' skip
-                    '<td rowspan="2">' + if pol8 <> "" then string(pol8) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol9) <> ? then fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.0000" val="' + fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol10) <> ? then fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
-                    '<td num="0.000" val="' + fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol9_1) <> ? then fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '</td>' else "" + '</td>' skip
-                    '<td num="0" val="' + fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol12) <> ? then fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '</td>' else "" + '</td>' skip
-                    '<td rowspan="2">' + if pay-line <> no or pol13 <> "" then pol13 + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol14) <> ? then fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol15) <> ? then fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol16) <> ? then fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol17) <> ? then fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2">' + pol1 + '</td>' skip
+                    '<td text_wrap="true" rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol2) <> ? then string(pol2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol3) <> ? then fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol4) <> ? then fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2">' + if supp-line <> no or pol6 <> ? then pol6 + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2" style="text-align: right;">' + if pol7 <> 0 then string(pol7) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2">' + if pol8 <> "" then string(pol8) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol9) <> ? then fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol10) <> ? then fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol9_1) <> ? then fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol12) <> ? then fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2">' + if pay-line <> no or pol13 <> "" then pol13 + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol14) <> ? then fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol15) <> ? then fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol16) <> ? then fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol17) <> ? then fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
              '</tr>'
             '<tr>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol5) <> ? then fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol11) <> ? then fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol18) <> ? then fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol5) <> ? then fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol11) <> ? then fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol18) <> ? then fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
              '</tr>' skip  
              .         
           leave _not-empty-group.
@@ -692,27 +692,27 @@ FOR EACH t-2 NO-LOCK
 
         put stream OutStr-html unformatted
              '<tr>' skip
-                    '<td rowspan="2">' + pol1 + '</td>' skip
-                    '<td rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol2) <> ? then string(pol2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol3) <> ? then fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol4) <> ? then fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td rowspan="2">' + if supp-line <> no or pol6 <> ? then pol6 + '</td>' else "" + '</td>' skip
-                    '<td rowspan="2" style="text-align: right;">' + if pol7 <> 0 then string(pol7) + '</td>' else "" + '</td>' skip
-                    '<td rowspan="2">' + if pol8 <> "" then string(pol8) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol9) <> ? then fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.0000" val="' + fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol10) <> ? then fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
-                    '<td num="0.000" val="' + fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol9_1) <> ? then fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '</td>' else "" + '</td>' skip
-                    '<td num="0" val="' + fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol12) <> ? then fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '</td>' else "" + '</td>' skip
-                    '<td rowspan="2">' + if pay-line <> no or pol13 <> "" then pol13 + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol14) <> ? then fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol15) <> ? then fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol16) <> ? then fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol17) <> ? then fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2">' + pol1 + '</td>' skip
+                    '<td text_wrap="true" rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol2) <> ? then string(pol2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if main-line <> no or string(pol3) <> ? then fnc-convert-dot-to-colon(pol3,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol4) <> ? then fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2">' + if supp-line <> no or pol6 <> ? then pol6 + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2" style="text-align: right;">' + if pol7 <> 0 then string(pol7) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2">' + if pol8 <> "" then string(pol8) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol9) <> ? then fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol10) <> ? then fnc-convert-dot-to-colon(pol10,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol9_1) <> ? then fnc-convert-dot-to-colon(pol9_1,"->>>>>>>>>>>9.999",3) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '" rowspan="2" style="text-align: right;">' + if supp-line <> no or string(pol12) <> ? then fnc-convert-dot-to-colon(pol12,"->>>>>>>>>>>9",0) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" rowspan="2">' + if pay-line <> no or pol13 <> "" then pol13 + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol14) <> ? then fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol15) <> ? then fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + if pay-line <> no or string(pol16) <> ? then fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol17) <> ? then fnc-convert-dot-to-colon(pol17,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
              '</tr>'
             '<tr>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol5) <> ? then fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol11) <> ? then fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol18) <> ? then fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol5) <> ? then fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if supp-line <> no or string(pol11) <> ? then fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if main-line <> no or string(pol18) <> ? then fnc-convert-dot-to-colon(pol18,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
              '</tr>' skip  
              .
           leave _not-empty-group.
@@ -761,26 +761,26 @@ FOR EACH t-2 NO-LOCK
 
         put stream OutStr-html unformatted
             '<tr>' skip
-                    '<td rowspan="2">' + pol1 + '</td>' skip
-                    '<td rowspan="2" style="text-align: right;"></td>' skip
-                    '<td rowspan="2" style="text-align: right;"></td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '</td>' skip
-                    '<td rowspan="2"></td>' skip
-                    '<td rowspan="2" style="text-align: right;"></td>' skip
-                    '<td rowspan="2"></td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '</td>' skip
-                    '<td rowspan="2"></td>' skip
-                    '<td rowspan="2"></td>' skip
-                    '<td rowspan="2"></td>' skip
-                    '<td rowspan="2">' + pol13 + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '</td>' skip
-                    '<td rowspan="2"></td>' skip
+                    '<td text_wrap="true" rowspan="2">' + pol1 + '</td>' skip
+                    '<td text_wrap="true" rowspan="2" style="text-align: right;"></td>' skip
+                    '<td text_wrap="true" rowspan="2" style="text-align: right;"></td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol4,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td text_wrap="true" rowspan="2"></td>' skip
+                    '<td text_wrap="true" rowspan="2" style="text-align: right;"></td>' skip
+                    '<td text_wrap="true" rowspan="2"></td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol9,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td text_wrap="true" rowspan="2"></td>' skip
+                    '<td text_wrap="true" rowspan="2"></td>' skip
+                    '<td text_wrap="true" rowspan="2"></td>' skip
+                    '<td text_wrap="true" rowspan="2">' + pol13 + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + fnc-convert-dot-to-colon(pol14,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + fnc-convert-dot-to-colon(pol15,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '" rowspan="2" style="text-align: right;">' + fnc-convert-dot-to-colon(pol16,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td text_wrap="true" rowspan="2"></td>' skip
              '</tr>'
             '<tr>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '</td>' skip
-                    '<td num="0.00" val="' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol5,"->>>>>>>>>>>9.99",2) + '</td>' skip
+                    '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(pol11,"->>>>>>>>>>>9.99",2) + '</td>' skip
              '</tr>' skip  
              .  
 
@@ -801,7 +801,7 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th></th>
-                    <th style="text-align: left;">&1</th>
+                    <th text_wrap="true" style="text-align: left;">&1</th>
                     <th></th>
                     <th></th>
                     <th></th>
@@ -854,11 +854,11 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th></th>
-                    <th style="text-align: left;">&1</th>
-                    <th style="text-align: right;">&2</th>
-                    <th style="text-align: right;">&3</th>
-                    <th style="text-align: right;">&4</th>
-                    <th style="text-align: right;"></th>
+                    <th text_wrap="true" style="text-align: left;">&1</th>
+                    <th text_wrap="true" style="text-align: right;">&2</th>
+                    <th text_wrap="true" style="text-align: right;">&3</th>
+                    <th text_wrap="true" style="text-align: right;">&4</th>
+                    <th text_wrap="true" style="text-align: right;"></th>
                </tr>'
             ,
             pol13,
@@ -895,10 +895,10 @@ FOR EACH t-2 NO-LOCK
                     <th></th>
                     <th></th>
                     <th></th>
-                    <th style="text-align: left;">&1</th>
-                    <th style="text-align: right;">&2</th>
-                    <th style="text-align: right;">&3</th>
-                    <th style="text-align: right;">&4</th>
+                    <th text_wrap="true" style="text-align: left;">&1</th>
+                    <th text_wrap="true" style="text-align: right;">&2</th>
+                    <th text_wrap="true" style="text-align: right;">&3</th>
+                    <th text_wrap="true" style="text-align: right;">&4</th>
                     <th></th>
                </tr>'
             ,

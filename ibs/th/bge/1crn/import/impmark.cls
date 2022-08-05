@@ -134,7 +134,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    if vgtin eq ""
    then
       vgtin = ?.
-   if marking.gds-ext-id ne vgtin
+   if vgtin ne ?
+      and marking.gds-ext-id ne vgtin
    then
       undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 макрки не равен &2",getGtinByDM(marking.mark),marking.gds-ext-id)) .
    if marking.gds-code ne getGdsCodeByGtin(marking.gds-ext-id)

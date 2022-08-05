@@ -21,14 +21,22 @@ Required:
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
 
-&if "{1}" eq "defproc" 
+&if    "{1}" eq "defproc"
+    or "{1}" eq "defproc_long" 
 &then
 &glob defproc_pdecrypt yes 
 
 procedure pdecrypt :
-  define input parameter ip-value-to-dec as character no-undo.
-  define output parameter op-char-value  as character no-undo.
-
+  &if "{1}" eq "defproc_log"
+  &then
+     define input  parameter ip-value-to-dec as longchar no-undo.
+     define output parameter op-char-value   as longchar no-undo.
+  &else
+     define input  parameter ip-value-to-dec as character no-undo. 
+     define output parameter op-char-value   as character no-undo.
+  &endif
+  
+  
   define variable decrypt-value          as raw       no-undo.
   define variable long-char-value        as longchar  no-undo.
   do

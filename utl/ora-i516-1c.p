@@ -946,7 +946,8 @@ assign
             tt-parts.prod-code = buf_goods.prod-code
             no-lock no-error .
           assign
-            tt-parts.part-code      =  temp_doc-line.part-id when temp_doc-line.part-id <> "".
+            tt-parts.part-code      =  temp_doc-line.part-id when temp_doc-line.part-id <> ""
+          .
           for each temp_doc-mark where temp_doc-mark.gds-code = buf_goods.gds-code and (temp_doc-mark.part-id = ? or temp_doc-mark.part-id = tt-parts.part-code) :
             create ub.marking-lines.
             assign
@@ -959,6 +960,9 @@ assign
               ub.marking-lines.mark = temp_doc-mark.mark
             .
             ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
+            assign
+              tt-parts.PS =  temp_doc-mark.upd_id when temp_doc-mark.upd_id <> ""
+            .
             find first ub.marking where ub.marking.mark = ub.marking-lines.mark no-error.
             if available (ub.marking)
               then do:

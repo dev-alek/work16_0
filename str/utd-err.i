@@ -1,13 +1,18 @@
+&if defined(utd-err_def) eq 0
+&then
+&glob utd-err_def yes
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
-{gbl\objsrv.i {1}}
-{ gbl/attr-lib.i {1}}
-{str/utd-attr.i {1} }
-define temp-table TT-err no-undo
-  field code_ as character 
-  field text_ as character
-index code_ code_.
+{ gbl/objsrv.i   {1} }
+{ gbl/attr-lib.i {1} }
+{ str/utd-attr.i {1} }
+{ utl/gtin.i         }
+&if "{1}" = ""
+&then
+{ gbl/key-rec.i }
+&endif
+
 &if "{1}" = "class"
 &then
 method private logical AddUtdErrForTab
@@ -84,6 +89,57 @@ function AddUtdErr returns logical
        iCheckObj).
 end.
 
+&if "{1}" = "class"
+&then
+method private void ClearUtdErrTypeCode
+&else
+function ClearUtdErrTypeCode returns logical
+&endif
+(idb-num         as integer,
+ idoc-id         as integer ,
+ iCheckType      as character,
+ iCodeErr        as character
+ 
+ ):
+   define buffer utd-err for utd-err.
+   if    iCheckType eq "*"
+      or iCheckType eq ?
+   then do:
+      if     iCodeErr ne ?
+         and iCodeErr ne "*"
+      then
+         message "Задан код ошибки " iCodeErr " для удаления, но не задан тип"
+         view-as alert-box.
+      else
+      for each utd-err where utd-err.db-num  eq idb-num
+                         and utd-err.doc-id  eq idoc-id 
+      exclusive-lock:
+         delete utd-err.
+      end.
+   end.
+   else do:
+      if    iCodeErr eq ?
+         or iCodeErr eq "*"
+      then do:
+         for each utd-err where utd-err.db-num     eq idb-num
+                            and utd-err.doc-id     eq idoc-id 
+                            and utd-err.CheckType  eq iCheckType
+         exclusive-lock:
+            delete utd-err.
+         end.
+      end.
+      else do:
+         for each utd-err where utd-err.db-num     eq idb-num
+                            and utd-err.doc-id     eq idoc-id 
+                            and utd-err.CheckType  eq iCheckType
+                            and ub.utd-err.CodeErr eq iCodeErr
+         exclusive-lock:
+            delete utd-err.
+         end.
+      end.
+   end.
+end.
+
 
 &if "{1}" = "class"
 &then
@@ -95,24 +151,7 @@ function ClearUtdErr returns logical
  idoc-id         as integer ,
  iCheckType      as character
  ):
-   define buffer utd-err for utd-err.
-   if    iCheckType eq "*"
-      or iCheckType eq ?
-   then do:
-      for each utd-err where utd-err.db-num  eq idb-num
-                         and utd-err.doc-id  eq idoc-id 
-      exclusive-lock:
-         delete utd-err.
-      end.
-   end.
-   else do:
-      for each utd-err where utd-err.db-num     eq idb-num
-                         and utd-err.doc-id     eq idoc-id 
-                         and utd-err.CheckType  eq iCheckType
-      exclusive-lock:
-         delete utd-err.
-      end.
-   end.
+   ClearUtdErrTypeCode(idb-num,idoc-id,iCheckType,?).
 end.
 
 &if "{1}" = "class"
@@ -147,16 +186,28 @@ function GetTextErrorType returns character
    no-lock no-error.
    if available code
    then do:
+      define variable vType as integer no-undo.
+      if code.misc3 eq "error"
+      then
+         vType = 0.
+      else if code.misc3 eq "warning"
+      then
+         vType = 1.
+      else if code.misc3 eq "Hiden"
+      then
+         vType = 2.
+      else
+         vtype = int(code.misc3) no-error.
       case itype:
          when "error" 
          then do:
-            if int(code.misc3) eq 0
+            if vtype eq 0
             then
                vError = GetMesError(Code.CodeValue,iChechObj).
          end.
          when "warning" 
          then do:
-            if int(code.misc3) <= 1
+            if vtype <= 1
             then
                vError = GetMesError(Code.CodeValue,iChechObj).
          end.
@@ -179,10 +230,24 @@ function GetTypeError returns integer
 (iCheckType as character, 
  iCodeErr   as character):
    define buffer code    for code.
+   define variable vType as integer no-undo.
    find first code where code.parent eq "CodeError" +  {&delim-par}  + "UTD" +  {&delim-par} + iCheckType
                      and code.code   eq iCodeErr
    no-lock no-error.
-   return if available code then int(code.misc3) else 0.
+   if     not available code
+      and code.misc3 eq "error"
+   then
+      vType = 0.
+   else if code.misc3 eq "warning"
+   then
+      vType = 1.
+   else if code.misc3 eq "Hiden"
+   then
+      vType = 2.
+   else
+      vtype = int(code.misc3) no-error.
+      
+   return vtype.
 end.
 
 
@@ -267,14 +332,9 @@ function GetErrJsonForUtd returns character
    define buffer utd-err for utd-err.
    define variable vHQry as handle no-undo.
    define variable vError as longchar no-undo.
-   define variable vErrorOne as longchar  no-undo.
-   
    define variable oError as character no-undo.
    create query vHQry.
    define variable vi as integer no-undo.
-   for each tt-err :
-      delete tt-err.
-   end. 
    vHQry:set-buffers(buffer utd-err:handle).
    vHQry:query-prepare("for each utd-err where utd-err.db-num         eq " + QUOTER(idb-num) 
                             +            " and utd-err.doc-id         eq " + QUOTER(idoc-id)  
@@ -287,6 +347,7 @@ function GetErrJsonForUtd returns character
 
    QRY-BLOCK:
    repeat while not vHQry:query-off-end:
+      define variable vErrorOne as character no-undo.
       vErrorOne = GetTextErrorType(utd-err.CheckType,utd-err.CodeErr,utd-err.CheckObj,"error").
       if     vErrorOne ne ?
          and vErrorOne ne ""
@@ -298,41 +359,25 @@ function GetErrJsonForUtd returns character
       end.
       vHQry:get-next().
    end.
-   define variable vMarkUtd as logical no-undo.
-   define buffer buf_utd-attr for utd-attr.
-   find first buf_utd-attr no-lock where buf_utd-attr.doc-id = idoc-id
-                                     and buf_utd-attr.db-num = idb-num
-                                     and buf_utd-attr.attr-code = "MarkUtd"
-                                     no-error .
-   if available buf_utd-attr
-   then do :                                 
-      vMarkUtd = logical(buf_utd-attr.attr-value) .                             
-   end .
-   else do :
-      vMarkUtd = yes .
-   end.
-   if vMarkUtd
-   then do:
-      for first utd where utd.db-num eq idb-num
-                      and utd.doc-id eq idoc-id
-                      and utd.sts    eq ObjSrv:Env:Utd:Sts:th:DeliveryCodeMismatch:KeyIntDB
-      no-lock,
-         each utd-marking-lines where utd-marking-lines.db-num eq idb-num
-                                  and utd-marking-lines.doc-id eq idoc-id
-                                  and utd-marking-lines.doc-level eq 1
-      no-lock,
-         first marking where marking.mark eq utd-marking-lines.mark
-                         and marking.sts  eq ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
-      no-lock:
-         vErrorOne = GetTextErrortype("CheckShip","NotMark",marking.mark,"error").
-         if     vErrorOne ne ?
-            and vErrorOne ne ""
-         then do:
-         
-            vError = vError + ',"Ошибка_' + string(vi) +  '":~{"КодОш":"'    + "CheckShip" + "_" + "NotMark" 
-                            + '","ОбъектОш":"' + marking.mark 
-                            + '","ТекстОш":"' + vErrorOne + '"}'.
-         end.
+   for first utd where utd.db-num eq idb-num
+                   and utd.doc-id eq idoc-id
+                   and utd.sts    eq ObjSrv:Env:Utd:Sts:th:DeliveryCodeMismatch:KeyIntDB
+   no-lock,
+      each utd-marking-lines where utd-marking-lines.db-num eq idb-num
+                               and utd-marking-lines.doc-id eq idoc-id
+                               and utd-marking-lines.doc-level eq 1
+   no-lock,
+      first marking where marking.mark eq utd-marking-lines.mark
+                      and marking.sts  eq ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+   no-lock:
+      vErrorOne = GetTextErrortype("CheckShip","NotMark",marking.mark,"error").
+      if     vErrorOne ne ?
+         and vErrorOne ne ""
+      then do:
+      
+         vError = vError + ',"Ошибка_' + string(vi) +  '":~{"КодОш":"'    + "CheckShip" + "_" + "NotMark" 
+                         + '","ОбъектОш":"' + marking.mark 
+                         + '","ТекстОш":"' + vErrorOne + '"}'.
       end.
    end.
    if vError ne ""
@@ -411,7 +456,10 @@ function GetCodeTextError returns character
    no-lock no-error.
    if     available code
    then do:
-      if     int(Code.misc3) > 0
+      define variable vi as integer no-undo init ?.
+      vi = int(Code.misc3) no-error.
+      if    code.misc3 ne "error"
+         and vi ne 0 
       then
          oCode = ?.
       else if     Code.misc1 ne ?
@@ -429,6 +477,11 @@ function GetCodeTextError returns character
           else (oCode + "_" + ovalue).
           
 end.
+
+define temp-table TT-err no-undo
+  field code_ as character 
+  field text_ as character
+index code_ code_.
 
 &if "{1}" = "class"
 &then
@@ -481,53 +534,42 @@ function GetErrTxtForUtd returns character
       end.
       vHQry:get-next().
    end.
-   define variable vMarkUtd as logical no-undo.
-   define buffer buf_utd-attr for utd-attr.
-   find first buf_utd-attr no-lock where buf_utd-attr.doc-id = idoc-id
-                                     and buf_utd-attr.db-num = idb-num
-                                     and buf_utd-attr.attr-code = "MarkUtd"
-                                     no-error .
-   if available buf_utd-attr
-   then do :                                 
-      vMarkUtd = logical(buf_utd-attr.attr-value) .                             
-   end .
-   else do :
-      vMarkUtd = yes .
-   end.
-   if vMarkUtd
-   then do:
-      for first utd where utd.db-num eq idb-num
+  find first utd where utd.db-num eq idb-num
                       and utd.doc-id eq idoc-id
    /*                   and utd.sts    eq ObjSrv:Env:Utd:Sts:th:DeliveryCodeMismatch:KeyIntDB */
-      no-lock,
-         each utd-marking-lines where utd-marking-lines.db-num eq idb-num
-                                  and utd-marking-lines.doc-id eq idoc-id
-                                  and utd-marking-lines.doc-level eq 1
-      no-lock,
-         first marking where marking.mark eq utd-marking-lines.mark
-                         and marking.sts  eq ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
-      no-lock:
-         GetCodeTextError ("CheckShip", "MARKDECLINED", utd-marking-lines.mark + {&delim-par} + string(utd-marking-lines.LineNum), output vcode, output vvalue).
-         find first tt-err where tt-err.code eq vcode
-         no-error.
-         if not available tt-err
-         then do:
-            create tt-err.
-            assign
-               tt-err.code_ = vcode
-               tt-err.text_ = vvalue
-            .
+      no-lock.
+      
+   define buffer cancel_utd-lines for utd-lines.
+   for each cancel_utd-lines where cancel_utd-lines.db-num eq idb-num
+                               and cancel_utd-lines.doc-id eq idoc-id
+   no-lock:
+      if logical(getattrutdlinesex  (idb-num,idoc-id,cancel_utd-lines.LineNum,"MarkUtdLine"        ,"no"))
+      then do:
+         for   each utd-marking-lines where utd-marking-lines.db-num eq idb-num
+                                     and utd-marking-lines.doc-id eq idoc-id
+                                     and utd-marking-lines.LineNum eq cancel_utd-lines.LineNum
+/*                                     and utd-marking-lines.doc-level eq 1*/
+         no-lock,
+            first marking where marking.mark eq utd-marking-lines.mark
+                            and marking.sts  eq ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+         no-lock:
+            GetCodeTextError ("CheckShip", "MARKDECLINED", utd-marking-lines.mark + {&delim-par} + string(utd-marking-lines.LineNum), output vcode, output vvalue).
+            find first tt-err where tt-err.code eq vcode
+            no-error.
+            if not available tt-err
+            then do:
+               create tt-err.
+               assign
+                  tt-err.code_ = vcode
+                  tt-err.text_ = vvalue
+               .
+            end.
+            else
+               tt-err.text_ = tt-err.text_ + "||" + vvalue.
+           
          end.
-         else
-            tt-err.text_ = tt-err.text_ + "||" + vvalue.
-        
       end.
-   end.
-   else do:
-      define buffer cancel_utd-lines for utd-lines.
-      for each cancel_utd-lines where cancel_utd-lines.db-num eq idb-num
-                                  and cancel_utd-lines.doc-id eq idoc-id
-      no-lock:
+      else do:
          define variable vqnty as decimal no-undo.
          vqnty = decimal(GetAttrUtdlines(cancel_utd-lines.db-num,cancel_utd-lines.doc-id,cancel_utd-lines.linenum,"QuantityBarCode")).
          if vqnty eq ? then vqnty = 0.
@@ -603,17 +645,101 @@ function GetErrComText returns longchar
    return vText.
       
 end.
+
 &if "{1}" = "class"
 &then
-method private logical  CheckErrForLine
+method private logical  CheckTypeForMarkLineType
 &else
-function CheckErrForLine returns logical 
+function CheckTypeForMarkLineType returns logical 
 &endif
-(iObj            as handle ):
-   define variable vRecKey-line     as character no-undo.
+(iObj            as handle,
+ iCheckType      as character,
+ iCodeErr        as character ,
+ iTypeErr        as character ):
    define variable vRecKey-markLine as character no-undo.
-     define buffer buf_utd-err for utd-err.
-     define variable vUtdlineError as logical no-undo.
+   define variable vGoodMark        as logical no-undo.
+   define variable vdb-num          as integer no-undo.
+   define variable vdoc-id          as integer no-undo.
+   define variable vlinenum         as integer no-undo.
+   define variable vErrorOne as character no-undo.
+   
+   define buffer buf_utd-err for utd-err.
+   
+&if "{1}" = "class"
+&then
+    define variable objKeyRec as class ibs.th.gbl.keyrec no-undo.
+    objKeyRec = new ibs.th.gbl.keyrec().
+    objKeyRec:GenKeyRec ( input "utd-marking-lines"
+                         ,input iObj
+                         ,output  vRecKey-markLine).
+    delete object objKeyRec.
+                            
+&else
+   run gen-key-rec (input "utd-marking-lines", 
+                    input  iObj, 
+                    output vRecKey-markLine).
+&endif
+   vGoodMark = yes.
+   vdb-num = iObj::db-num.
+   vdoc-id = iObj::doc-id.
+   vlinenum = iObj::linenum.
+      
+   block-mark-err:
+   for each buf_utd-err  where  buf_utd-err.doc-id = vdoc-id
+                            and buf_utd-err.db-num = vdb-num
+                            and buf_utd-err.reckey = vRecKey-markLine
+                            and if iCheckType  eq "*" or iCheckType eq ? then yes else buf_utd-err.CheckType = iCheckType
+                            and if iCodeErr    eq "*" or iCodeErr   eq ? then yes else buf_utd-err.CodeErr   = iCodeErr
+   no-lock:
+      vErrorOne = GetTextErrorType(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj,iTypeErr).
+      if     vErrorOne ne ?
+         and vErrorOne ne ""
+      then do:
+         vGoodMark = no.
+         leave block-mark-err.
+      end.
+   end.
+   return not vGoodMark.
+end.
+
+&if "{1}" = "class"
+&then
+method private logical  CheckErrForMarkLineType
+&else
+function CheckErrForMarkLineType returns logical 
+&endif
+(iObj            as handle,
+ iType           as character  ):
+   return CheckTypeForMarkLineType (iObj,iType,"*","error").
+end.
+
+&if "{1}" = "class"
+&then
+method private logical  CheckErrForMarkLine
+&else
+function CheckErrForMarkLine returns logical 
+&endif
+(iObj            as handle):
+   return CheckErrForMarkLineType(iObj,"*").
+end.
+
+
+&if "{1}" = "class"
+&then
+method private logical  CheckErrForLineTypeCode
+&else
+function CheckErrForLineTypeCode returns logical 
+&endif
+(iObj                 as handle,
+ iCheckType           as character,  
+ iCodeErr             as character,
+ iTypeErr             as character,
+ iOneErr              as logical):
+   define variable vRecKey-line     as character no-undo.
+   define buffer buf_utd-err for utd-err.
+   define variable vUtdlineError as logical no-undo.
+   define variable vErrorOne as character no-undo.
+         
      &if "{1}" = "class"
       &then
          define variable objKeyRec as class ibs.th.gbl.keyrec no-undo.
@@ -638,10 +764,11 @@ function CheckErrForLine returns logical
       for each buf_utd-err  where  buf_utd-err.doc-id = vdoc-id
                                and buf_utd-err.db-num = vdb-num
                                and buf_utd-err.reckey = vRecKey-line
+                               and if iCheckType eq "*" or iCheckType eq ? then yes else buf_utd-err.CheckType = iCheckType
+                               and if iCodeErr   eq "*" or iCodeErr   eq ? then yes else buf_utd-err.CodeErr   = iCodeErr
                                   
       no-lock:
-         define variable vErrorOne as character no-undo.
-         vErrorOne = GetTextErrorType(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj,"error").
+         vErrorOne = GetTextErrorType(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj,iTypeErr).
          if     vErrorOne ne ?
             and vErrorOne ne ""
          then do:
@@ -652,58 +779,125 @@ function CheckErrForLine returns logical
       if  not vUtdlineError
       then do:
          define variable vGoodMark as logical no-undo.
-         find first utd-marking-lines where utd-marking-lines.db-num  eq vdb-num
-                                        and utd-marking-lines.doc-id  eq vdoc-id
-                                        and utd-marking-lines.LineNum eq vLineNum
-         no-lock no-error.
-         vGoodMark = not available utd-marking-lines.
+         vGoodMark = no.
          block-line-err:
          for each utd-marking-lines where utd-marking-lines.db-num  eq vdb-num
                                       and utd-marking-lines.doc-id  eq vdoc-id
                                       and utd-marking-lines.LineNum eq vLineNum
          no-lock:
-            &if "{1}" = "class"
-            &then
-               objKeyRec = new ibs.th.gbl.keyrec().
-               objKeyRec:GenKeyRec ( input "utd-lines"
-                                    ,input iObj
-                                    ,output vRecKey-line).
-               delete object objKeyRec.
-                            
-            &else
-               run gen-key-rec (input "utd-marking-lines", 
-                                input  buffer utd-marking-lines:handle, 
-                                output vRecKey-markLine).
-            &endif
-            vGoodMark = yes.
-            block-mark-err:
-            for each buf_utd-err  where  buf_utd-err.doc-id = vdoc-id
-                                     and buf_utd-err.db-num = vdb-num
-                                     and buf_utd-err.reckey = vRecKey-markLine
-                                        
-            no-lock:
-               vErrorOne = GetTextErrorType(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj,"error").
-               if     vErrorOne ne ?
-                  and vErrorOne ne ""
-               then do:
-                  vGoodMark = no.
-                  leave block-mark-err.
-               end.
-            end.
-            if vGoodMark
+            vGoodMark = not CheckTypeForMarkLineType(buffer utd-marking-lines:handle,iCheckType,iCodeErr,iTypeErr).
+            if     vGoodMark
+               and iOneErr eq no  
             then
                leave block-line-err.
+            if     iOneErr = yes
+               and not vGoodMark
+            then
+               leave block-line-err.
+               
          end.
          vUtdlineError = not vGoodMark. 
       end.
    
    return vUtdlineError.
 end.
+
+
 &if "{1}" = "class"
 &then
-method public logical CheckMarkUtd
+method private character   getErrForLineType
 &else
-function CheckMarkUtd return logical 
+function getErrForLineType returns character  
+&endif
+(iObj            as handle,
+ iType           as character  ):
+   define variable vRecKey-line     as character no-undo.
+   define buffer buf_utd-err for utd-err.
+   define variable vUtdlineError as logical no-undo.
+   define variable vErrorOne as character no-undo.
+   define variable oError as character no-undo.
+         
+     &if "{1}" = "class"
+      &then
+         define variable objKeyRec as class ibs.th.gbl.keyrec no-undo.
+         objKeyRec = new ibs.th.gbl.keyrec().
+         objKeyRec:GenKeyRec ( input "utd-lines"
+                              ,input iObj
+                              ,output vRecKey-line).
+         delete object objKeyRec.
+                            
+      &else
+         run gen-key-rec (input "utd-lines", 
+                          input  iObj, 
+                          output vRecKey-line).
+      &endif
+      define variable vdb-num as integer no-undo.
+      define variable vdoc-id as integer no-undo.
+      define variable vlinenum as integer no-undo.
+      vdb-num = iObj::db-num.
+      vdoc-id = iObj::doc-id.
+      vlinenum = iObj::linenum.
+      block-err:
+      for each buf_utd-err  where  buf_utd-err.doc-id = vdoc-id
+                               and buf_utd-err.db-num = vdb-num
+                               and buf_utd-err.reckey = vRecKey-line
+                               and if iType eq "*" or iType eq ? then yes else buf_utd-err.CheckType = iType
+                                  
+      no-lock:
+         vErrorOne = GetTextErrorType(buf_utd-err.CheckType,buf_utd-err.CodeErr,buf_utd-err.CheckObj,"error").
+         if     vErrorOne ne ?
+            and vErrorOne ne ""
+         then do:
+            oError = oError + vErrorOne + " ".
+         end.
+      end.
+      
+   return oError.
+end.
+&if "{1}" = "class"
+&then
+method private logical  CheckErrForLineType
+&else
+function CheckErrForLineType returns logical 
+&endif
+(iObj            as handle,
+ iType           as character  ):
+    return CheckErrForLineTypeCode (iObj,itype,"*","error",no).
+end.
+
+&if "{1}" = "class"
+&then
+method private logical  CheckErrForLine
+&else
+function CheckErrForLine returns logical 
+&endif
+(iObj            as handle):
+   return CheckErrForLineType(iobj,"*").
+end.
+
+&if "{1}" = "class"
+&then
+method private logical  CheckErrForUtd
+&else
+function CheckErrForUtd returns logical 
+&endif
+(idb-num         as integer ,
+ idoc-id         as integer ):
+   for each utd-lines where utd-lines.db-num eq idb-num
+                        and utd-lines.doc-id eq idoc-id
+   no-lock :
+      if not CheckErrForLine (buffer ub.utd-lines:handle)
+      then
+         return no.
+   end.
+   return yes.
+end.
+
+&if "{1}" = "class"
+&then
+method public logical CheckMarkUtd-28rel
+&else
+function CheckMarkUtd-28rel return logical 
 &endif
  (input idb-num as integer, 
  input idoc-id as integer):
@@ -740,7 +934,7 @@ function CheckMarkUtd return logical
                        output v-par-type
                     ).
                if     EDOParSec:IsEdo 
-                  and EDOParSec:GetIsMarkingForTypeEDO(v-par-val)  
+                  and EDOParSec:GetIsEDOForType(v-par-val)  
                then do:
             
                   find first utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
@@ -764,51 +958,4 @@ function CheckMarkUtd return logical
    return yes.
 end.
 
-&if "{1}" = "class"
-&then
-method public logical CheckMarking
-&else
-function CheckMarking return logical 
 &endif
- (input idb-num as integer, 
- input idoc-id as integer,
- input iTypeErr as character ):
-  define variable vMarkutd as logical no-undo.
-  define variable vCrErr   as logical no-undo.
-  define buffer utd-lines         for utd-lines.
-  define buffer utd-err           for utd-err.
-  define buffer utd-marking-lines for utd-marking-lines.
-  define buffer marking           for marking.
-  for each utd-err where utd-err.db-num     eq idb-num
-                     and utd-err.doc-id     eq idoc-id 
-                     and utd-err.CheckType  eq iTypeErr
-                     and utd-err.CodeErr    eq "NotMark"
-  exclusive-lock:
-     delete utd-err.
-  end.
-  CheckMarkUtd(idb-num,idoc-id).
-  vMarkutd = logical(getattrutdex (idb-num,idoc-id,"MarkUtd","yes")).
-  if vMarkutd
-  then do: 
-      block-line:
-      for each utd-lines where utd-lines.db-num eq idb-num
-                           and utd-lines.doc-id eq idoc-id
-      no-lock:
-         for each utd-marking-lines 
-                  where utd-marking-lines.db-num  = utd-lines.db-num 
-                    and utd-marking-lines.doc-id  = utd-lines.doc-id
-                    and utd-marking-lines.LineNum = utd-lines.LineNum
-         no-lock:
-            find first marking where marking.mark eq utd-marking-lines.mark
-            no-lock no-error.
-            if not available marking
-            then do:
-               AddUtdErr(utd-lines.db-num,utd-lines.doc-id,buffer utd-lines:handle,iTypeErr,"NotMark",string(utd-lines.LineNum)).
-               vCrErr = yes.
-               next block-line.
-            end.
-         end.      
-      end.
-   end.
-   return vCrErr.
-end.

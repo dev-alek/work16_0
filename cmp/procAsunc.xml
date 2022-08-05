@@ -58,6 +58,82 @@
     </procParam>
   </procAsunc>
   
+  <procAsunc>
+    <procid>is_NWS</procid>
+    <procval>utl/autorunindia.p</procval>
+    <procname>Новости</procname>
+    <proctypeRun>diallog</proctypeRun>
+    <procParam>
+      <procid>is_NWS</procid>
+      <paramName>Процедура</paramName>
+      <numparam>1</numparam>
+      <ParamValue>bge/auto-nws.p</ParamValue>
+      <ParamHiden>yes</ParamHiden>
+    </procParam>
+    <procParam>
+      <procid>is_Nws</procid>
+      <paramName>log-handle</paramName>
+      
+      <numparam>2</numparam>
+      <ParamValue>#log-handle#</ParamValue>
+      <ParamHiden>yes</ParamHiden>
+    </procParam>
+    <procParam>
+      <procid>is_NWS</procid>
+      <paramName>Список БД</paramName>
+      <numparam>3</numparam>
+      <ParamValue>*</ParamValue>
+    </procParam>
+      
+    <procParam>
+      <procid>is_NWS</procid>
+      <paramName>Количество потоков</paramName>
+      <ParamType>integer</ParamType>
+      <numparam>4</numparam>
+      <ParamValue>5</ParamValue>
+    </procParam>
+    <procParam>
+      <procid>is_Nws</procid>
+      <paramName>Параметры сессии</paramName>
+      <numparam>5</numparam>
+      <ParamValue>#paramSession#</ParamValue>
+      <ParamHiden>yes</ParamHiden>
+    
+    </procParam>
+    <procParam>
+      <procid>is_Nws</procid>
+      <paramName>Ожидаемые файлы</paramName>
+      <numparam>6</numparam>
+      <ParamValue>#WaitFile#</ParamValue>
+      <ParamHiden>yes</ParamHiden>
+    
+    </procParam>
+    <procParam>
+      <procid>is_Nws</procid>
+      <paramName>Сохранить результат в архив</paramName>
+      <numparam>7</numparam>
+      <ParamValue>#SaveFile#</ParamValue>
+      <ParamType>logical</ParamType>
+      <ParamHiden>yes</ParamHiden>
+    
+
+    </procParam>
+  </procAsunc>
+  
+  <procAsunc>
+    <procid>is_merc</procid>
+    <procval>utl\proc-merc.p</procval>
+    <procname>Меркурий</procname>
+    <procParam>
+      <procid>is_merc</procid>
+      <paramName>БД</paramName>
+      <numparam>1</numparam>
+      <ParamValue>*</ParamValue>
+      <ParamHiden>no</ParamHiden>
+    </procParam>
+  </procAsunc>
+  
+
   <SesParam>
     <parCheck>false</parCheck>
     <parCode>clientlog</parCode>

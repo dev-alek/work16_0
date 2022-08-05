@@ -880,7 +880,7 @@ DO:
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
-    'actn_atd-obj-sched':U
+    'actn_atd-pl-alarm':U
     {&cntxt-object}
     v-cntxt-host-code-obj
     v-cntxt-obj-type

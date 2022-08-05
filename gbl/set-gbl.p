@@ -94,7 +94,7 @@ on error undo, return error return-value
   assign
     g#language = buf_sys-ctrl.language
   .
-
+  release buf_sys-ctrl.
   if g#language <> 'eng':U
     and g#language <> 'rus':U
   then do:
@@ -123,7 +123,8 @@ on error undo, return error return-value
     end.
     undo, return error v-msg .
   end.
-
+   if not p-user-passwd begins "nocrypt:"
+  then do:
     { gbl/conf-rd.i
         "'oxmlthon':u"
         "'':u"
@@ -157,4 +158,5 @@ on error undo, return error return-value
             .
         end.
     end.
+end.
 end.

@@ -373,6 +373,11 @@ DEFINE VARIABLE f-diadoc-lastload AS date FORMAT "99/99/9999":U
      VIEW-AS FILL-IN  
      SIZE 11 BY 1 NO-UNDO.     
           
+DEFINE VARIABLE t-diadoc-ssl AS LOGICAL 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 2.5 BY .83 NO-UNDO.     
+
 DEFINE VARIABLE t-proxy-ssl AS LOGICAL 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
@@ -586,18 +591,24 @@ define frame diadoc-frame
           VIEW-AS FILL-IN 
           SIZE 29 BY 1
      f-host-code at row 5 col 17
-     b-host-code at row 5 col 37
-     f-diadoc-addres at row 6.5 col 10
-     f-diadoc-user at row 8 col 10
-     f-diadoc-pwd at row 9.5 col 9  blank
-     f-diadoc-pwd-screen at row 9.4 col 9.4  no-label
-     f-diadoc-key at row 11 col 5
+     b-host-code at row 5 col 40
+     f-obj at row 6.5 col 16
+     b-obj at row 6.5 col 40   
      
-     f-proxy-addres at row 12.5 col 2
-     f-proxy-login at row 14 col 17
-     f-proxy-password at row 15.5 col 16  blank
-     f-proxy-password-screen at row 15.4 col 16.4  no-label
-     f-diadoc-lastload at row 17 col 10
+     f-diadoc-addres at row 8 col 10
+     
+     f-diadoc-user at row 9.5 col 10
+     f-diadoc-pwd at row 11 col 9  blank
+     f-diadoc-pwd-screen at row 10.9 col 9.4  no-label
+     f-diadoc-key at row 12.5 col 5
+     
+     f-proxy-addres at row 14 col 2
+     f-proxy-login at row 15.5 col 17
+     f-proxy-password at row 17 col 16  blank
+     f-proxy-password-screen at row 16.9 col 16.4  no-label
+     f-diadoc-lastload at row 18.5 col 10
+     t-diadoc-ssl at row 20.1 col 28 no-label
+     "Без проверки шифрования:" at row 20 col 3 view-as text size 24 by 1
      SPACE(83.11) SKIP(5.12)  
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -947,6 +958,29 @@ do :
 end .
 
 on value-changed of f-obj in frame motp-frame
+do :
+  assign f-obj .
+end .
+
+on choose of b-obj in frame diadoc-frame
+do :
+  define variable v-rid-list as character no-undo .
+  define variable v-rid-rec  as recid no-undo .
+  define buffer buf_shop for ub.shop .
+  
+  v-rid-list = "" .
+  run adm/shops.w ( input parparentproc
+                   ,input "b-sel"
+                   ,input-output v-rid-list
+                   ,no ).
+  if v-rid-list = "":U then return.
+  v-rid-rec = integer(v-rid-list) no-error .
+  find first buf_shop no-lock where recid(buf_shop) = v-rid-rec no-error .
+  if available buf_shop then f-obj:screen-value = {&shop} + string(buf_shop.obj-code) .
+  assign f-obj .
+end .
+
+on value-changed of f-obj in frame diadoc-frame
 do :
   assign f-obj .
 end .
@@ -1680,6 +1714,9 @@ procedure Diadoc-Enable :
   end.
   for each tt-ext-system-attr:
     case tt-ext-system-attr.esya-attr-code:
+      when {&attr-esys-obj} then do:
+        assign f-obj = tt-ext-system-attr.esya-attr-value .
+      end.
       when {&attr-esys-host-code} then do:
         assign f-host-code = integer(tt-ext-system-attr.esya-attr-value) .
       end.
@@ -1697,6 +1734,9 @@ procedure Diadoc-Enable :
       end.
       when {&attr-esys-diadoc-lastload} then do:
         assign f-diadoc-lastload = date(tt-ext-system-attr.esya-attr-value) .
+      end.
+      when {&attr-esys-diadoc-ssl} then do:
+        assign t-diadoc-ssl = logical(tt-ext-system-attr.esya-attr-value) .
       end.
       
       when {&attr-esys-proxy-addr} then do:
@@ -1731,7 +1771,8 @@ procedure Diadoc-Enable :
     tt-ext-system.esys-type
     f-diadoc-user
     f-diadoc-pwd
-    f-host-code 
+    f-host-code
+    f-obj 
     f-diadoc-addres
     f-diadoc-key
     f-proxy-addres
@@ -1740,6 +1781,7 @@ procedure Diadoc-Enable :
     f-proxy-password-screen
     f-diadoc-pwd-screen
     f-diadoc-lastload
+    t-diadoc-ssl
     
   WITH FRAME diadoc-frame .
   ENABLE
@@ -1751,6 +1793,7 @@ procedure Diadoc-Enable :
     f-diadoc-pwd            when p-mode <> {&lookup}
     f-diadoc-addres         when p-mode <> {&lookup}
     f-diadoc-key            when p-mode <> {&lookup}
+    t-diadoc-ssl    when p-mode <> {&lookup}
     f-proxy-addres          when p-mode <> {&lookup}
     f-proxy-login           when p-mode <> {&lookup}
     f-proxy-password        when p-mode <> {&lookup}
@@ -1759,6 +1802,8 @@ procedure Diadoc-Enable :
     f-diadoc-lastload       when p-mode <> {&lookup}
     f-host-code             when p-mode <> {&lookup}
     b-host-code             when p-mode <> {&lookup}
+    f-obj                   when p-mode <> {&lookup}
+    b-obj                   when p-mode <> {&lookup}
   WITH FRAME diadoc-frame .
   view frame diadoc-frame .
 end procedure .
@@ -2340,6 +2385,8 @@ PROCEDURE proc-save-diadoc :
    f-proxy-login
    f-proxy-password
    f-host-code
+   f-obj
+   t-diadoc-ssl
    .
    if tt-ext-system.esys-type = 0 then do:
        MESSAGE
@@ -2383,6 +2430,10 @@ PROCEDURE proc-save-diadoc :
 
    for each tt-ext-system-attr:
      case tt-ext-system-attr.esya-attr-code:
+        when {&attr-esys-obj} then do:
+            assign
+            tt-ext-system-attr.esya-attr-value = f-obj .
+        end.
         when {&attr-esys-host-code} then do:
            assign
               tt-ext-system-attr.esya-attr-value = string(f-host-code).
@@ -2406,6 +2457,10 @@ PROCEDURE proc-save-diadoc :
         when {&attr-esys-diadoc-lastload} then do:
            assign
            tt-ext-system-attr.esya-attr-value = string(f-diadoc-lastload).
+        end.
+        when {&attr-esys-diadoc-ssl} then do:
+           assign
+           tt-ext-system-attr.esya-attr-value = string(t-diadoc-ssl).
         end.
         when {&attr-esys-proxy-addr} then do:
            assign

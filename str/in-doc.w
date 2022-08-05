@@ -269,6 +269,7 @@ define variable v-fact-qnty as character no-undo.
 
 define variable v-can-edit as logical init yes .
 define variable v-trnscanqr as logical no-undo .
+define variable v-by-utd as logical no-undo .
 
 define new shared variable PrintScale   as logical init true no-undo.
 define new shared variable CostPrice    as logical no-undo.
@@ -1331,6 +1332,7 @@ DO:
   run init-attr-general in this-procedure .
 
   if v-can-edit
+  and not v-by-utd
   then do :
     if t-doc.status_ <> {&fact} then do:
       run str/doc-attr.w (input ParParentproc, input "b-lkp,b-chg,b-add,b-del", input t-doc.doc-code, input table tt-upd-attr) no-error.
@@ -2855,11 +2857,18 @@ do on error undo main-block, leave main-block :
         ,output v-value-logical
         ,output par-type
         ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
-      ) no-error .
-      if error-status :error then.
-
-      else v-edit-fact-wayb = v-value-logical.
-    end.
+    ) no-error .
+    if error-status :error then.
+    else v-edit-fact-wayb = v-value-logical.
+    
+    v-by-utd = false .
+    define buffer buf_utd for ub.utd .
+    if can-find(buf_utd no-lock where buf_utd.doc-code = t-doc.doc-code)
+    and parext-doc-mode = ""
+    then do :
+      v-by-utd = true .
+    end .
+  end.
 
   if is-copy
   then do:
@@ -3852,6 +3861,20 @@ do transaction on error   undo, return error return-value :
      BUFFER-COPY  ub.doc-line to old-doc-line.
    end.
    else varline-mode = {&lookup}.
+   
+   if v-by-utd
+   then do :
+     parext-doc-mode = "vsd_corr-parts" .
+   end .
+   
+   if parext-doc-mode = "vsd_corr-parts"
+   or parext-doc-mode = "vsd"
+   or  parext-doc-mode = "corr-parts"
+   then do :
+     find t-doc where recid (t-doc) = pardoc-rec exclusive.
+     find doc-line where recid (doc-line) = line-rec exclusive.
+     varline-mode = parext-doc-mode.
+   end .
    run str/parts-l.w
      (  input parparentproc
      ,  input t-doc.obj-type            /* v-obj-type   */
@@ -4487,12 +4510,12 @@ do while varlns-cnt <= num-entries (varnotes):
       next.
     end.
 
-
   end.
   
   varvalue = "" .
   run gbl/getobjsrvhndl.p (input-output ObjSrv).
   EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+ 
   RUN gds-attr-value (
                       INPUT bf_goods.gds-code,
                       INPUT {&attr-mark-type},
@@ -4500,7 +4523,7 @@ do while varlns-cnt <= num-entries (varnotes):
                       OUTPUT vartype
                       ).
   if varvalue > "" then do:
-   if EDOParSec:GetIsMarkingForType(varvalue)
+   if EDOParSec:GetIsMarkingForType(varvalue) 
   then do :
       if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then 
       do:
@@ -4521,18 +4544,30 @@ do while varlns-cnt <= num-entries (varnotes):
           next.
       end.
   end .
-   if EDOParSec:GetIsMarkingForTypeEDO(varvalue) and EDOParSec:IsEdo
+   if EDOParSec:GetIsArticForType(varvalue) 
   then do :
       if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then 
       do:
           message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
-              "нельзя добавлять, так как он подлежит маркировке."
+              "нельзя добавлять в ручном режиме, так как он подлежит маркировке."
               view-as alert-box error.
           assign 
               varlns-cnt = varlns-cnt + 1.
           next.          
       end.
-  end .
+  end .  
+/*   if EDOParSec:GetIsMarkingForTypeEDO(varvalue) and EDOParSec:IsEdo                                                  */
+/*  then do :                                                                                                           */
+/*      if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then                                                                */
+/*      do:                                                                                                             */
+/*          message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip*/
+/*              "нельзя добавлять, так как он подлежит маркировке."                                                     */
+/*              view-as alert-box error.                                                                                */
+/*          assign                                                                                                      */
+/*              varlns-cnt = varlns-cnt + 1.                                                                            */
+/*          next.                                                                                                       */
+/*      end.                                                                                                            */
+/*  end .                                                                                                               */
   end.
   
   
@@ -4560,7 +4595,6 @@ do while varlns-cnt <= num-entries (varnotes):
   end.
   assign
     pardoc-rec = recid(t-doc).
-
   run str/in-line.w (input  parparentproc,
                      input  ((if varlns-cnt > 1 then "ЦИКЛ":U else {&add-def}) + v-modeetc),
                      input  pardoc-rec,
@@ -4583,7 +4617,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE del-doc-line d-in-doc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE del-doc-line d-in-doc 
 PROCEDURE del-doc-line :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -6687,6 +6721,12 @@ if lookup( fnc, "enable" ) > 0 then do:
          ub.doc-line.wt-brutto :read-only in browse {&BROWSE-NAME} = yes
          ub.doc-line.num-place :read-only in browse {&BROWSE-NAME} = yes
       .
+      if parext-doc-mode = "vsd_corr-parts"
+      or parext-doc-mode = "vsd"
+      or parext-doc-mode = "corr-parts"
+      then do :
+        enable t-doc.cst-code with frame {&frame-name}.
+      end .
     end.
     when {&update} then do:
       /* Пересчитаем документ, потому что например НДС может быть приведен к НДС
@@ -6890,6 +6930,27 @@ if lookup( fnc, "enable" ) > 0 then do:
          enable b-revis t-doc.ord-num with frame {&frame-name}.
       end.
       
+      if v-by-utd
+      then do :
+        disable
+          b-add b-del b-chg
+          t-doc.pay-code r-pay t-doc.doc-date t-doc.fact-date
+          varpurch-code-name varinplnsum
+          t-doc.out-code m-inc r-outs
+          t-doc.tot-cli
+          t-doc.base-rate t-doc.base-scale
+          t-doc.shift-date t-doc.shift-num r-sht
+          t-doc.tot-transp t-doc.tot-other
+          t-doc.SLT-type t-doc.VAT-type ov-pc
+        with frame {&frame-name}.
+        assign
+          doc-line.cli-qnty  :read-only in browse {&BROWSE-NAME} = yes
+          doc-line.fact-qnty :read-only in browse {&BROWSE-NAME} = yes
+          doc-line.wt-brutto :read-only in browse {&BROWSE-NAME} = yes
+          doc-line.num-place :read-only in browse {&BROWSE-NAME} = yes
+        .
+      end .
+      
       define variable v-tmp-char like ub.thbj-attr.property-value-character no-undo .
       define variable v-tmp-date      like ub.thbj-attr.property-value-date    no-undo .
       define variable v-tmp-decimal   like ub.thbj-attr.property-value-decimal no-undo .
@@ -6968,7 +7029,9 @@ else do:
    if t-doc.status_ = {&wayb} and
        t-doc.flag_   = no     and
        pardoc-mode = {&update}   and
-       varadd-back-date = yes then do:
+       varadd-back-date = yes and 
+       not v-by-utd
+   then do:
      enable t-doc.fact-date with frame {&frame-name}.
    end.
    { gbl/objat.i
@@ -6991,8 +7054,10 @@ else do:
      display t-doc.shift-date t-doc.shift-num t-doc.shift-name r-sht with frame {&frame-name}.
      if t-doc.status_ = {&wayb} and
         t-doc.flag_   = no      and
-        pardoc-mode = {&update}    and
-        varadd-back-date = yes  then do:
+        pardoc-mode = {&update} and
+        varadd-back-date = yes  and
+        not v-by-utd
+     then do:
        enable t-doc.shift-date t-doc.shift-num t-doc.shift-name r-sht with frame {&frame-name}.
      end.
    end.

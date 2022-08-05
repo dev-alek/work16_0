@@ -68,9 +68,17 @@ define variable v-is-deploy as logical   no-undo .
 define variable v-rid-list  as character no-undo .
 define variable v-db-list   as character no-undo .
 define variable iLang            as integer   no-undo.
+define variable p-value-logical as logical no-undo.
+define variable p-value-character  as character no-undo.
+define variable p-value-date       as date no-undo.
+define variable p-value-decimal    as decimal no-undo.
+define variable p-value-integer    as integer no-undo.
+define variable p-param-type       as character no-undo.
+define variable v-tth as handle no-undo .
 define variable v-marking   as character no-undo .
 
 define buffer buf_marking       for ub.marking .
+define buffer buf_marking-attr  for ub.marking-attr .
 define buffer buf_marking-lines for ub.marking-lines .
 define buffer buf_utd-marking-lines for ub.utd-marking-lines .
 define buffer buf_parts         for ub.parts . 
@@ -146,10 +154,11 @@ X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-lin
     ~{&OPEN-QUERY-br-mark}
     
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit B-1 v-mark v-mark-2 Btn_rn br-mark ~
-Btn_pn 
+&Scoped-Define ENABLED-OBJECTS b-exit B-1 v-mark v-mark-2 emission_Date ~
+Btn_rn br-mark Btn_pn 
 &Scoped-Define DISPLAYED-OBJECTS v-mark v-mark-2 f-status f-GTIN f-gds-code ~
-f-gds-name f-obj-code f-obj-type f-loc-key f-rn f-unit f-unit-2 f-pn 
+f-gds-name f-obj-code f-obj-type mrc produced_Date emission_Date f-rn ~
+f-unit f-unit-2 f-loc-key f-pn 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -201,6 +210,11 @@ DEFINE BUTTON Btn_rn
      IMAGE-INSENSITIVE FILE "cmp/btn-fnd.bmp":U NO-CONVERT-3D-COLORS
      LABEL "" 
      SIZE 3 BY 1.
+
+DEFINE VARIABLE emission_Date AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Дата эмиссии кода маркировки" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-gds-code AS CHARACTER FORMAT "X(256)":U 
      LABEL "Код" 
@@ -256,6 +270,16 @@ DEFINE VARIABLE f-unit-2 AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 7.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE mrc AS CHARACTER FORMAT "X(256)":U 
+     LABEL "МРЦ" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE produced_Date AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Дата нанесения кода маркировки" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
 DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(255)" 
      LABEL "Марка" 
      VIEW-AS FILL-IN 
@@ -310,17 +334,20 @@ DEFINE FRAME d-mark
      f-GTIN AT ROW 3.5 COL 62 COLON-ALIGNED WIDGET-ID 220
      f-gds-code AT ROW 4.75 COL 10.5 COLON-ALIGNED WIDGET-ID 224
      f-gds-name AT ROW 4.75 COL 62 COLON-ALIGNED WIDGET-ID 222
-     f-obj-code AT ROW 5.88 COL 10.5 COLON-ALIGNED WIDGET-ID 256
-     f-obj-type AT ROW 5.88 COL 18.75 COLON-ALIGNED NO-LABEL WIDGET-ID 258
-     f-loc-key AT ROW 5.92 COL 62 COLON-ALIGNED WIDGET-ID 260
-     f-rn AT ROW 7 COL 10.5 COLON-ALIGNED WIDGET-ID 246
-     Btn_rn AT ROW 7 COL 34.13 WIDGET-ID 250
-     f-unit AT ROW 7 COL 81.13 COLON-ALIGNED WIDGET-ID 226
-     f-unit-2 AT ROW 7 COL 107 RIGHT-ALIGNED WIDGET-ID 254
-     br-mark AT ROW 8 COL 1.5 WIDGET-ID 200
-     f-pn AT ROW 21.25 COL 81 COLON-ALIGNED WIDGET-ID 244
-     Btn_pn AT ROW 21.25 COL 104.75 WIDGET-ID 68
-     SPACE(0.87) SKIP(0.24)
+     f-obj-code AT ROW 6 COL 10.5 COLON-ALIGNED WIDGET-ID 256
+     f-obj-type AT ROW 6 COL 18.75 COLON-ALIGNED NO-LABEL WIDGET-ID 258
+     mrc AT ROW 6 COL 107 RIGHT-ALIGNED WIDGET-ID 266
+     produced_Date AT ROW 7.25 COL 107 RIGHT-ALIGNED WIDGET-ID 262
+     emission_Date AT ROW 8.5 COL 107 RIGHT-ALIGNED WIDGET-ID 264
+     f-rn AT ROW 10.25 COL 10.5 COLON-ALIGNED WIDGET-ID 246
+     Btn_rn AT ROW 10.25 COL 34.13 WIDGET-ID 250
+     f-unit AT ROW 10.25 COL 81.13 COLON-ALIGNED WIDGET-ID 226
+     f-unit-2 AT ROW 10.25 COL 107 RIGHT-ALIGNED WIDGET-ID 254
+     br-mark AT ROW 11.25 COL 1.5 WIDGET-ID 200
+     f-loc-key AT ROW 24.5 COL 18.25 COLON-ALIGNED WIDGET-ID 260
+     f-pn AT ROW 24.5 COL 81 COLON-ALIGNED WIDGET-ID 244
+     Btn_pn AT ROW 24.5 COL 104.75 WIDGET-ID 68
+     SPACE(0.87) SKIP(0.32)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Движение марки":L.
@@ -349,6 +376,8 @@ DEFINE FRAME d-mark
 ASSIGN 
        FRAME d-mark:SCROLLABLE       = FALSE.
 
+/* SETTINGS FOR FILL-IN emission_Date IN FRAME d-mark
+   ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN f-gds-code IN FRAME d-mark
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-gds-name IN FRAME d-mark
@@ -370,6 +399,10 @@ ASSIGN
 /* SETTINGS FOR FILL-IN f-unit IN FRAME d-mark
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-unit-2 IN FRAME d-mark
+   NO-ENABLE ALIGN-R                                                    */
+/* SETTINGS FOR FILL-IN mrc IN FRAME d-mark
+   NO-ENABLE ALIGN-R                                                    */
+/* SETTINGS FOR FILL-IN produced_Date IN FRAME d-mark
    NO-ENABLE ALIGN-R                                                    */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -490,6 +523,22 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   Marking = ObjSrv:Env:Marking:Sts:Mark. .
   if p-mark <> "" then v-mark = p-mark .
   run LoadKeyboardLayoutA (input v-mark, input 0, output iLang).
+      run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+      IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).   
   run init-temp in this-procedure .
   run enable_UI in this-procedure .
@@ -546,6 +595,9 @@ PROCEDURE enable_mark :
     f-GTIN
     v-mark-2
     f-loc-key
+    mrc
+    produced_Date
+    emission_Date
     with frame {&frame-name} .
   if available (buf_marking) and buf_marking.sts = Marking:MarkError:KeyIntDB then do:
     f-status:fgcolor in frame {&frame-name} = 12.
@@ -663,11 +715,12 @@ PROCEDURE init-temp :
                    -------------------------------------------------------------------- */
   /*GTIN в любом случае показывать*/
   empty temp-table X_marking-line.
-  
+
   /*  f-GTIN:screen-value =*/
 
   if v-mark <> "" then 
   do:
+/*	 mMRCCode = yes .*/
   v-marking = GetCodeIdent(v-mark) .
 
   v-mark-2   = v-marking .
@@ -687,7 +740,18 @@ PROCEDURE init-temp :
       f-obj-code = buf_marking.obj-code .
       f-obj-type = buf_marking.obj-type .
       f-loc-key = buf_marking.loc-key .
-    
+     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "MRC"
+                                          and buf_marking-attr.mark begins buf_marking.mark:
+        mrc = buf_marking-attr.attr-value .                                              
+     end.                                                
+     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "emissionDate"
+                                          and buf_marking-attr.mark begins buf_marking.mark:
+        emission_Date = buf_marking-attr.attr-value .                                              
+     end.                                  
+     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "producedDate"
+                                          and buf_marking-attr.mark begins buf_marking.mark:
+        produced_Date = buf_marking-attr.attr-value .                                              
+     end.                                       
       for each buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark:
         /*      if NumUPD = "" then NumUPD = buf_marking-lines.DocumentExt .*/
         create X_marking-line .
@@ -732,6 +796,11 @@ PROCEDURE init-temp :
       f-obj-code = ? .
       f-obj-type = "" .     
       f-loc-key = "" .   
+      f-pn = "" .
+      f-rn = "" .
+      mrc  = "" .
+      emission_Date = "" .
+      produced_Date = "" .
     end.  
   end.   
   else do:
@@ -745,7 +814,11 @@ PROCEDURE init-temp :
       f-obj-code = ? .
       f-obj-type = "" .   
       f-loc-key = "".
-
+      f-pn = "" .
+      f-rn = "" .
+      mrc  = "" .
+      emission_Date = "" .
+      produced_Date = "" .      
   end. 
   end.  
   else do:
@@ -760,6 +833,11 @@ PROCEDURE init-temp :
       f-obj-type = "" .   
       v-mark-2 = "" .
       f-loc-key = "" .
+      f-pn = "" .
+      f-rn = "" .
+      mrc  = "" .
+      emission_Date = "" .
+      produced_Date = "" .      
   end.      
   {&OPEN-QUERY-br-mark}
 END PROCEDURE.
@@ -863,6 +941,22 @@ END FUNCTION.
 ON ENTRY OF v-mark IN FRAME d-mark /* Марка */
 DO:
             run LoadKeyboardLayoutA (input v-mark, input 0, output iLang).
+            run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+            IF p-value-logical = yes THEN  iLang = 68748313.
+
             run ActivateKeyboardLayout (input iLang, input 0).
         END.
 

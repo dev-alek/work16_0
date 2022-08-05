@@ -1,7 +1,25 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
+/* Connected Databases 
+          ub               PROGRESS
+*/
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
+
+
+/* Temp-Table and Buffer definitions                                    */
+DEFINE TEMP-TABLE type-marking NO-UNDO
+       field mark-orig as character
+       field mark-type as character
+       field EDO as logical
+       field mark as logical
+       field artic as logical
+       field transitional as logical
+index mark-type mark-type
+       .
+
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
@@ -39,10 +57,11 @@ define variable vss-description as character no-undo init "Редактирование секции
 { cmp/library.i  }
 { cmp/showinf.i  }
 { gbl/thbjattr.i }
-
-def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
+{ gbl/color.i        }
+{ gbl/objsrv.i }
+define variable Types as ibs.th.str.marking.Types no-undo.
+Types = ObjSrv:Env:Marking:Types.
+   
 define temp-table temp-thbj-attr no-undo like ub.thbj-attr.
 
 define variable v-tth     as handle no-undo .
@@ -50,7 +69,10 @@ define variable v-tth     as handle no-undo .
 define variable v-tth-host as handle no-undo .
 define variable v-to-create-host as logical no-undo.
 define variable str-attr as character no-undo .
-
+define variable S-type-mark as character no-undo .
+define variable S-type-EDO as character no-undo .
+define variable S-type-artic as character no-undo .
+define variable S-type-transitional as character no-undo .
 assign
 v-tth      = buffer temp-thbj-attr:table-handle .
 
@@ -72,18 +94,73 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 
 /* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
+&Scoped-define BROWSE-NAME br_marking-type
+
+/* Internal Tables (found by Frame, Query & Browse Queries)             */
+&Scoped-define INTERNAL-TABLES type-marking
+
+/* Definitions for BROWSE br_marking-type                                      */
+&Scoped-define FIELDS-IN-QUERY-br_marking-type type-marking.mark-type ~
+type-marking.mark type-marking.edo type-marking.artic type-marking.transitional
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br_marking-type type-marking.mark-type ~
+type-marking.mark type-marking.edo type-marking.artic type-marking.transitional
+&Scoped-define ENABLED-TABLES-IN-QUERY-br_marking-type type-marking
+&Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br_marking-type type-marking
+&Scoped-define QUERY-STRING-br_marking-type FOR EACH type-marking INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-br_marking-type OPEN QUERY br_marking-type FOR EACH type-marking INDEXED-REPOSITION.
+&Scoped-define TABLES-IN-QUERY-br_marking-type type-marking
+&Scoped-define FIRST-TABLE-IN-QUERY-br_marking-type type-marking
+
+
+/* Definitions for DIALOG-BOX Dialog-Frame                              */
+&Scoped-define OPEN-BROWSERS-IN-QUERY-Dialog-Frame ~
+    ~{&OPEN-QUERY-br_marking-type}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit t-edo t-manual t-ban_recipes ~
-t-ban-altr cb-gray_zone_qnty S-type S-type-edo t-bar-code 
-&Scoped-Define DISPLAYED-OBJECTS t-edo t-manual t-ban_recipes t-ban-altr ~
-cb-gray_zone_qnty S-type S-type-edo t-bar-code
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit t-edo t-edo-NotMark t-manual ~
+t-ban_recipes t-ban-altr t-bar-code t-rus-key cb-gray_zone_qnty br_marking-type 
+&Scoped-Define DISPLAYED-OBJECTS t-edo t-edo-NotMark t-manual t-ban_recipes ~
+t-ban-altr t-bar-code t-rus-key cb-gray_zone_qnty 
+
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
+
+/* ************************  Function Prototypes ********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD isArticAvail Dialog-Frame  _DB-REQUIRED
+FUNCTION isArticAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD isMarkVnAvail Dialog-Frame  _DB-REQUIRED
+
+FUNCTION isMarkVnAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD istransitionalAvail Dialog-Frame  _DB-REQUIRED
+
+FUNCTION istransitionalAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD isMarkAZkAvail Dialog-Frame  _DB-REQUIRED
+
+function isMarkAZkAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 
 /* ***********************  Control Definitions  ********************** */
@@ -98,7 +175,6 @@ DEFINE BUTTON B-exit AUTO-GO
 DEFINE BUTTON B-quit AUTO-END-KEY 
      LABEL "&Отмена" 
      SIZE 10 BY 1.
-
 
 DEFINE VARIABLE cb-gray_zone_qnty AS INTEGER FORMAT "->>9":U INITIAL 0 
      LABEL "Допустимое отсутствие КМ для ~"Серой зоны~"" 
@@ -118,35 +194,7 @@ DEFINE VARIABLE cb-gray_zone_qnty AS INTEGER FORMAT "->>9":U INITIAL 0
      DROP-DOWN-LIST
      SIZE 27.75 BY 1 NO-UNDO.
 
-DEFINE VARIABLE S-type AS CHARACTER 
-     VIEW-AS SELECTION-LIST MULTIPLE SCROLLBAR-VERTICAL 
-     LIST-ITEM-PAIRS "","",
-                     "Табачная продукция","tabak",
-                     "Обувь","shoes",
-                     "Духи и парфюмерия","perfume",
-                     "Легпром","industry",
-                     "Шины","tires",
-                     "Лекарства","apteka",
-                     "Фотокамеры/фотовспышки","photo",
-                     "Молочная продукция","milk",
-                     "Упакованная вода","water",
-                     "Стики","stiki" 
-     SIZE 31 BY 5 NO-UNDO.
 
-DEFINE VARIABLE S-type-edo AS CHARACTER 
-     VIEW-AS SELECTION-LIST MULTIPLE SCROLLBAR-VERTICAL 
-     LIST-ITEM-PAIRS "","",
-                     "Табачная продукция","tabak",
-                     "Обувь","shoes",
-                     "Духи и парфюмерия","perfume",
-                     "Легпром","industry",
-                     "Шины","tires",
-                     "Лекарства","apteka",
-                     "Фотокамеры/фотовспышки","photo",
-                     "Молочная продукция","milk",
-                     "Упакованная вода","water",
-                     "Стики","stiki" 
-     SIZE 31 BY 5 NO-UNDO.
 
 DEFINE VARIABLE t-ban-altr AS LOGICAL INITIAL no 
      LABEL "Использования рецепта Альтернатива только для получения ингредиентов" 
@@ -163,15 +211,50 @@ DEFINE VARIABLE t-bar-code AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 74.75 BY .83 NO-UNDO.
 
-DEFINE VARIABLE t-edo AS LOGICAL INITIAL no 
-     LABEL "Включена работа с ЭДО" 
+DEFINE VARIABLE t-rus-key AS LOGICAL INITIAL no 
+     LABEL "Автоматическое переключение раскладки на русский" 
      VIEW-AS TOGGLE-BOX
-     SIZE 30.5 BY .83 NO-UNDO.
+     SIZE 74.75 BY .83 NO-UNDO.
+
+DEFINE VARIABLE t-edo AS LOGICAL INITIAL no 
+     LABEL "Включена работа с ЭДО для маркированных документов" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60 BY .83 NO-UNDO.
+
+DEFINE VARIABLE t-edo-NotMark AS LOGICAL INITIAL no 
+     LABEL "Включена работа с ЭДО для не маркированных документов" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60 BY .83 NO-UNDO.
 
 DEFINE VARIABLE t-manual AS LOGICAL INITIAL no 
      LABEL "Ручной ввод марок" 
      VIEW-AS TOGGLE-BOX
      SIZE 30.5 BY .83 NO-UNDO.
+
+/* Query definitions                                                    */
+&ANALYZE-SUSPEND
+DEFINE QUERY br_marking-type FOR 
+      type-marking SCROLLING.
+&ANALYZE-RESUME
+
+/* Browse definitions                                                   */
+DEFINE BROWSE br_marking-type
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br_marking-type Dialog-Frame _STRUCTURED
+  QUERY br_marking-type NO-LOCK DISPLAY
+      type-marking.mark-type COLUMN-LABEL "Тип!маркировки" LABEL-BGCOLOR 8 FORMAT "X(30)":U  
+      type-marking.mark COLUMN-LABEL "Помарочный!учет АЗК" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+      type-marking.EDO column-label "Приходование!учет внеш." LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+      type-marking.artic column-label "Объемно-артикульный!учет" LABEL-BGCOLOR 8 FORMAT "yes/no":U 
+      view-as toggle-box
+      type-marking.transitional column-label "Переходный" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  ENABLE
+      type-marking.mark
+      type-marking.EDO
+      type-marking.artic
+      type-marking.transitional
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 85.5 BY 9.3 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -179,21 +262,18 @@ DEFINE VARIABLE t-manual AS LOGICAL INITIAL no
 DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      B-quit AT ROW 1 COL 11
-     t-edo AT ROW 2.79 COL 5.75 WIDGET-ID 142
+     t-edo AT ROW 2 COL 5.75 WIDGET-ID 142
+     t-edo-NotMark AT ROW 3 COL 5.75 WIDGET-ID 164
      t-manual AT ROW 3.88 COL 5.75 WIDGET-ID 148
      t-ban_recipes AT ROW 4.92 COL 5.75 WIDGET-ID 156
      t-ban-altr AT ROW 6.63 COL 5.75 WIDGET-ID 160
      t-bar-code AT ROW 7.79 COL 5.75 WIDGET-ID 162
+     t-rus-key AT ROW 8.79 COL 5.75 WIDGET-ID 162
      cb-gray_zone_qnty AT ROW 9.58 COL 49.38 COLON-ALIGNED WIDGET-ID 150
-     S-type AT ROW 11.83 COL 51.5 NO-LABEL WIDGET-ID 144
-     S-type-edo AT ROW 17.04 COL 51.5 NO-LABEL WIDGET-ID 152
+     br_marking-type AT ROW 11.5 COL 2 WIDGET-ID 200
      "с маркированными товарами" VIEW-AS TEXT
           SIZE 33 BY .67 AT ROW 5.75 COL 8 WIDGET-ID 158
-     "Типы маркировки для помарочного учета:" VIEW-AS TEXT
-          SIZE 39 BY .67 AT ROW 11.96 COL 6 WIDGET-ID 146
-     "Типы маркировки для оприходования по ЭДО:" VIEW-AS TEXT
-          SIZE 41.5 BY .67 AT ROW 17.17 COL 6 WIDGET-ID 154
-     SPACE(40.87) SKIP(4.61)
+     SPACE(0.37) SKIP(10.20)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для Электронного документооборота"
@@ -206,6 +286,16 @@ DEFINE FRAME Dialog-Frame
 /* Settings for THIS-PROCEDURE
    Type: Dialog-Box
    Allow: Basic,Browse,DB-Fields,Query
+   Temp-Tables and Buffers:
+      TABLE: type-marking T "?" NO-UNDO 
+      ADDITIONAL-FIELDS:
+       field mark-type as character
+       field EDO as logical
+       field mark as logical
+       field artic as logical
+       field transitional  as logical
+      END-FIELDS.
+   END-TABLES.
  */
 &ANALYZE-RESUME _END-PROCEDURE-SETTINGS
 
@@ -216,14 +306,27 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
+/* BROWSE-TAB br_marking-type cb-gray_zone_qnty Dialog-Frame */
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+ASSIGN 
+       type-marking.mark-type:COLUMN-READ-ONLY IN BROWSE br_marking-type = true.
+
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
+
+/* Setting information for Queries and Browse Widgets fields            */
+
+&ANALYZE-SUSPEND _QUERY-BLOCK BROWSE br_marking-type
+&ANALYZE-RESUME
+
  
+
+
+
 /* ************************  Control Triggers  ************************ */
 
 &Scoped-define SELF-NAME Dialog-Frame
@@ -252,30 +355,22 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-gray_zone_qnty Dialog-Frame
 ON VALUE-CHANGED OF cb-gray_zone_qnty IN FRAME Dialog-Frame /* Допустимое отсутствие КМ для "Серой зоны" */
 DO:
+  define buffer tt-mark for type-marking.
+  if  cb-gray_zone_qnty:screen-value  eq "100"
+  then do:
+     for each tt-mark where     tt-mark.mark-orig eq Types:tabak:NameProp
+                             or tt-mark.mark-orig eq Types:stiki:NameProp
+     no-lock:
+        if tt-mark.mark
+        then do:
+           message 'При помарочном учете для "' tt-mark.mark-type '" нельзя выставлять серую зону в 100'
+              view-as alert-box.
+           cb-gray_zone_qnty:screen-value = string(cb-gray_zone_qnty).
+           return no-apply.
+        end.
+     end.
+  end.
   assign cb-gray_zone_qnty .
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME S-type
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL S-type Dialog-Frame
-ON VALUE-CHANGED OF S-type IN FRAME Dialog-Frame
-DO:
-  assign S-type.
-  
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME S-type-edo
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL S-type-edo Dialog-Frame
-ON VALUE-CHANGED OF S-type-edo IN FRAME Dialog-Frame
-DO:
-  assign S-type-edo.
-  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -284,7 +379,7 @@ END.
 
 &Scoped-define SELF-NAME t-ban-altr
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-ban-altr Dialog-Frame
-ON VALUE-CHANGED OF t-ban-altr IN FRAME Dialog-Frame /* Запрет на создание рецептов «Альтернатива» */
+ON VALUE-CHANGED OF t-ban-altr IN FRAME Dialog-Frame /* Использования рецепта Альтернатива только для получения ингредиентов */
 DO:
   assign t-ban-altr .
 END.
@@ -295,7 +390,7 @@ END.
 
 &Scoped-define SELF-NAME t-ban_recipes
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-ban_recipes Dialog-Frame
-ON VALUE-CHANGED OF t-ban_recipes IN FRAME Dialog-Frame /* Запрет на создание рецептов и маркетинговых акций без учета */
+ON VALUE-CHANGED OF t-ban_recipes IN FRAME Dialog-Frame /* Запрет на создание рецептов и маркетинговых акций */
 DO:
   assign t-ban_recipes .
 END.
@@ -314,12 +409,45 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME t-rus-key
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-rus-key Dialog-Frame
+ON VALUE-CHANGED OF t-rus-key IN FRAME Dialog-Frame /* Авто переключение раскладки на русский */
+DO:
+  assign t-rus-key .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME t-edo
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-edo Dialog-Frame
-ON VALUE-CHANGED OF t-edo IN FRAME Dialog-Frame /* Включена работа с ЭДО */
+ON VALUE-CHANGED OF t-edo IN FRAME Dialog-Frame /* Включена работа с ЭДО для маркированных документов */
 DO:
   assign t-edo .
+  /* if t-edo then do:
+     t-edo-NotMark = true .
+     display t-edo-NotMark with frame {&frame-name} .
+     disable 
+     t-edo-NotMark
+     with frame {&frame-name} .
+  end.   
+  else */ do:
+     enable
+     t-edo-NotMark
+     with frame {&frame-name} .
+  end.   
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME t-edo-NotMark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-edo-NotMark Dialog-Frame
+ON VALUE-CHANGED OF t-edo-NotMark IN FRAME Dialog-Frame /* Включена работа с ЭДО для не маркированных документов */
+DO:
+  assign t-edo-NotMark .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -336,7 +464,105 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define BROWSE-NAME br_marking-type
+&Scoped-define SELF-NAME br_marking-type
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br_marking-type Dialog-Frame
+ON ROW-DISPLAY OF br_marking-type IN FRAME Dialog-Frame
+   DO:
+   type-marking.artic       :bgcolor  IN BROWSE br_marking-type = if isArticAvail()        then WHITE_COLOR else GRAY_COLOR .
+   type-marking.edo         :bgcolor  IN BROWSE br_marking-type = if isMarkVnAvail()       then WHITE_COLOR else GRAY_COLOR .
+   type-marking.transitional:bgcolor  IN BROWSE br_marking-type = if isTransitionalAvail() then WHITE_COLOR else GRAY_COLOR .
+   type-marking.mark        :bgcolor  IN BROWSE br_marking-type = if isMarkAZKAvail()      then WHITE_COLOR else GRAY_COLOR .
 
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br_marking-type Dialog-Frame
+ON row-leave OF br_marking-type IN FRAME Dialog-Frame
+DO:
+define variable vMarkvn as logical no-undo.
+define variable vartic as logical no-undo.
+define variable vtransitional as logical no-undo.
+define variable vMarkAZK as logical no-undo.
+
+   assign
+      vMarkvn = type-marking.edo
+      vartic  = type-marking.artic
+      vtransitional = type-marking.transitional
+      vMarkAZK      = type-marking.mark
+      browse br_marking-type type-marking.edo
+      browse br_marking-type type-marking.artic
+      browse br_marking-type type-marking.transitional
+      browse br_marking-type type-marking.mark
+   .
+   if      not isArticAvail()
+      and  type-marking.artic ne vartic
+      and  type-marking.artic ne no
+   then do:
+      type-marking.artic:checked IN BROWSE br_marking-type = no.
+      type-marking.artic = no.
+   end.
+   if      not isMarkVnAvail()
+      and  type-marking.edo ne vMarkvn
+      and  type-marking.edo ne no
+   then do:
+      assign
+      type-marking.edo:checked IN BROWSE br_marking-type = no.
+      type-marking.edo = no.
+   end.
+   if    not  type-marking.edo   
+     or   (not isMarkAZKAvail()
+      and  type-marking.mark ne vMarkAZK
+      and  type-marking.mark ne no)
+   then do:
+      assign
+      type-marking.mark:checked IN BROWSE br_marking-type = no.
+      type-marking.mark = no.
+      vMarkAZK = no.
+   end.
+   if      not isTransitionalAvail()
+      and  type-marking.transitional ne vtransitional
+      and  type-marking.transitional ne no
+   then do:
+      type-marking.transitional:checked IN BROWSE br_marking-type = no.
+      type-marking.transitional = no.
+   end.
+   apply "ROW-DISPLAY" to br_marking-type IN FRAME Dialog-Frame.
+   
+   
+   if    (type-marking.mark-orig eq Types:tabak:NameProp
+       or type-marking.mark-orig eq Types:stiki:NameProp)
+       and type-marking.mark ne vMarkAZK
+       and type-marking.mark eq yes
+       and cb-gray_zone_qnty :screen-value = "100"
+   then do:
+      cb-gray_zone_qnty = 2.
+      cb-gray_zone_qnty :screen-value = "2".
+      message 'Значение для Серой зоны изменено со 100  на ' cb-gray_zone_qnty
+              view-as alert-box.
+ 
+   end.
+      
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br_marking-type Dialog-Frame
+ON VALUE-CHANGED  OF br_marking-type IN FRAME Dialog-Frame
+DO:
+   apply "row-leave" to br_marking-type IN FRAME Dialog-Frame.
+end.
+
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+/*ON RETURN, MOUSE-SELECT-DBLCLICK OF br-list IN FRAME {&frame-name} DO:*/
+/*    apply "choose" to b-lkp in frame {&frame-name}.                   */
+/*END.                                                                  */
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -357,10 +583,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   if p-obj-type <> "" then do:
      FRAME {&FRAME-NAME}:TITLE = FRAME {&FRAME-NAME}:TITLE + (if p-obj-type = {&cmp} then " фирма" else " маг") + STRING(p-obj-code) .
   end.
+/*    type-marking.mark-type:column-bgcolor = 8 .*/
     RUN init-tt.
-    RUN enable_UI.
     RUN fill-widgets.
-
+    RUN enable_UI.
+    
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 
 END.
@@ -400,14 +627,14 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-edo t-manual t-ban_recipes t-ban-altr  cb-gray_zone_qnty 
-          S-type S-type-edo t-bar-code
+  DISPLAY t-edo t-edo-NotMark t-manual t-ban_recipes t-ban-altr t-bar-code t-rus-key
+          cb-gray_zone_qnty 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit t-edo t-manual t-ban_recipes t-ban-altr 
-         cb-gray_zone_qnty S-type S-type-edo t-bar-code
+  ENABLE B-exit B-quit t-edo t-edo-NotMark t-manual t-ban_recipes t-ban-altr 
+         t-bar-code t-rus-key cb-gray_zone_qnty br_marking-type 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
-  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -422,18 +649,17 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-param-type as character no-undo .
 define variable v-param-value as character no-undo .
-
 for each temp-thbj-attr:
   delete temp-thbj-attr.
 end.
 
   if p-mode = {&update} then 
   do:
-    ENABLE S-type S-type-edo t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr t-bar-code
+    ENABLE  t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr t-edo-NotMark t-bar-code t-rus-key br_marking-type
       WITH FRAME Dialog-Frame.
   end.  
   else do:
-    Display S-type S-type-edo t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr t-bar-code
+    Display  t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr t-edo-NotMark t-bar-code t-rus-key br_marking-type
       WITH FRAME Dialog-Frame. 
    end.  
 run adm/shattri.p (
@@ -464,36 +690,65 @@ FOR EACH temp-thbj-attr where temp-thbj-attr.obj-code = p-obj-code and temp-thbj
       t-edo = temp-thbj-attr.property-value-logical .
       display t-edo with frame {&frame-name} .
     END.
-    IF temp-thbj-attr.prop-code = {&attr-marking_marking-manual} THEN DO:
+    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-EDO-NotMark} THEN DO:
+      t-edo-NotMark = temp-thbj-attr.property-value-logical .
+      display t-edo-NotMark with frame {&frame-name} .
+    END.
+    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-manual} THEN DO:
       t-manual = temp-thbj-attr.property-value-logical .
       display t-manual with frame {&frame-name} .
     END.
-    
-    IF temp-thbj-attr.prop-code = {&attr-marking_marking-type} THEN DO:
-       S-type = temp-thbj-attr.property-value-character .
-       display s-type with frame {&frame-name} .
+    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type} THEN DO:
+       S-type-mark = temp-thbj-attr.property-value-character .
+/*       display s-type with frame {&frame-name} .*/
     END.
-    IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} THEN DO:
+    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} THEN DO:
        S-type-edo = temp-thbj-attr.property-value-character .
-       display S-type-edo with frame {&frame-name} .
+/*       display S-type-edo with frame {&frame-name} .*/
     END.
-    IF temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} THEN DO:
+    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-artic} THEN DO:
+       S-type-artic = temp-thbj-attr.property-value-character .
+    END.
+    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-transitional} THEN DO:
+       S-type-transitional = temp-thbj-attr.property-value-character .
+    END.
+    else IF temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} THEN DO:
        cb-gray_zone_qnty = temp-thbj-attr.property-value-integer .
        display cb-gray_zone_qnty with frame {&frame-name} .
     END.
-    IF temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} THEN DO:
+    else IF temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} THEN DO:
        t-ban_recipes = temp-thbj-attr.property-value-logical .
        display t-ban_recipes with frame {&frame-name} .
     END.    
-    IF temp-thbj-attr.prop-code = {&attr-marking_ban-altr} THEN DO:
+    else IF temp-thbj-attr.prop-code = {&attr-marking_ban-altr} THEN DO:
        t-ban-altr = temp-thbj-attr.property-value-logical .
        display t-ban-altr with frame {&frame-name} .
     END.    
-    IF temp-thbj-attr.prop-code = {&attr-marking_bar-code} THEN DO:
+    else IF temp-thbj-attr.prop-code = {&attr-marking_bar-code} THEN DO:
        t-bar-code = temp-thbj-attr.property-value-logical .
        display t-bar-code with frame {&frame-name} .
     END.
+
+    else IF temp-thbj-attr.prop-code = {&attr-marking_rus-key} THEN DO:
+       t-rus-key = temp-thbj-attr.property-value-logical .
+       display t-rus-key with frame {&frame-name} .
+    END.
+
+         
 END.
+for each type-marking:
+   if lookup (type-marking.mark-orig,S-type-mark) > 0 then type-marking.mark = true .
+   else type-marking.mark = false .
+   if lookup (type-marking.mark-orig,S-type-EDO) > 0 then type-marking.EDO = true .
+   else type-marking.EDO = false .
+   if lookup (type-marking.mark-orig,S-type-artic) > 0 then type-marking.artic = true .
+   else type-marking.artic = false . 
+   if lookup (type-marking.mark-orig,S-type-transitional) > 0 then type-marking.transitional = true .
+   else type-marking.transitional = false .
+     
+end.   
+  
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}    
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -506,6 +761,21 @@ PROCEDURE init-tt :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
+define variable ii as integer no-undo .
+define variable MarkType as ibs.th.gbl.map.mapstring no-undo.
+define variable objType  as ibs.th.gbl.propmap no-undo.
+
+define variable Types as ibs.th.gbl.TypeMap no-undo.
+Types = ObjSrv:Env:Marking:Types.
+MarkType = Types:mapType.
+
+do ii = 1 to MarkType:GetItemByLab(ii):
+objType  = ObjSrv:Env:Marking:Types:CurrProp.
+create type-marking .
+assign
+   type-marking.mark-orig = objType:NameProp 
+   type-marking.mark-type = objType:Label_ .
+end.
 
 END PROCEDURE.
 
@@ -538,22 +808,41 @@ IF p-mode = {&LOOKUP} THEN RETURN ERROR.
 
 ASSIGN FRAME {&FRAME-NAME}
     t-edo
-    S-type
-    S-type-edo
+    t-edo-NotMark
+/*    S-type    */
+/*    S-type-edo*/
     t-manual
     cb-gray_zone_qnty
     t-ban_recipes
     t-ban-altr
-	t-bar-code
+        t-bar-code
+        t-rus-key
     .
+S-type-mark = "" .
+S-type-artic = "" .
+S-type-EDO = "" .
+S-type-transitional = "".    
+for each type-marking:
+   if type-marking.mark = true then S-type-mark = S-type-mark + "," + type-marking.mark-orig . 
+   if type-marking.edo = true then S-type-EDO = S-type-edo + "," + type-marking.mark-orig .
+   if type-marking.artic = true then S-type-artic = S-type-artic + "," + type-marking.mark-orig .
+   if type-marking.transitional = true then S-type-transitional = S-type-transitional + "," + type-marking.mark-orig .   
+end.    
+
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-logical = t-edo.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-EDO-NotMark} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+    temp-thbj-attr.property-value-logical = t-edo-NotMark.
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-manual} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-logical = t-manual.
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-    temp-thbj-attr.property-value-character = trim(s-type,",").
+    temp-thbj-attr.property-value-character = trim(S-type-mark,",").
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-character = trim(S-type-edo,",").
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-artic} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+    temp-thbj-attr.property-value-character = trim(S-type-artic,",").
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-transitional} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+    temp-thbj-attr.property-value-character = trim(S-type-transitional,",").
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-integer = cb-gray_zone_qnty.    
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
@@ -562,6 +851,8 @@ ASSIGN FRAME {&FRAME-NAME}
     temp-thbj-attr.property-value-logical = t-ban-altr. 
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_bar-code} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
     temp-thbj-attr.property-value-logical = t-bar-code. 
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_rus-key} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-rus-key.  
 
 
     do transaction:
@@ -583,4 +874,67 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+/* ************************  Function Implementations ***************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION isArticAvail Dialog-Frame 
+FUNCTION isArticAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+
+  RETURN not type-marking.EDO .   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION isMarkVnAvail Dialog-Frame 
+FUNCTION isMarkVnAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+
+  RETURN not type-marking.artic and not type-marking.transitional.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION isTransitionalAvail Dialog-Frame 
+FUNCTION isTransitionalAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+
+  RETURN not type-marking.mark and ( type-marking.EDO or type-marking.artic).   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION isMarkAZKAvail Dialog-Frame 
+FUNCTION isMarkAZKAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+
+  RETURN not type-marking.artic and type-marking.EDO and not type-marking.transitional.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 

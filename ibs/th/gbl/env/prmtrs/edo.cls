@@ -21,34 +21,49 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
 
   define public property MarkingType as character initial "" no-undo 
     get.
-    private set. 
-
+    private set.
+  
   define public property MarkingTypeobj as class markingtype no-undo 
     get.
-    private set. 
-
+    private set.
+  
   define public property MarkingTypeEDO as character initial "" no-undo 
     get.
-    private set. 
+    private set.
 
   define public property MarkingTypeEDOobj as class markingtype no-undo 
     get.
-    private set. 
-    
-    
-  define public property IsMarking as logical initial false no-undo 
-    get:
-       return MarkingTypeobj:IsMarking.
-    end.
-
-  define public property IsEdo as logical initial false no-undo 
+    private set.
+  
+  define public property MarkingTypeArticObj as class markingtype no-undo 
     get.
-    private set.   
+    private set.
+
+  define public property MarkingTypeArtic as character initial "" no-undo 
+    get.
+    private set.
+
+  define public property MarkingTypeTransitionalObj as class markingtype no-undo 
+    get.
+    private set.
+
+  define public property MarkingTypeTransitional as character initial "" no-undo 
+    get.
+    private set.
         
-  define public property IsEdoNotMark as logical initial false no-undo 
+/*  define public property IsMarking as logical initial false no-undo*/
+/*    get:                                                           */
+/*       return MarkingTypeobj:IsMarking.                            */
+/*    end.                                                           */
+/*                                                                   */
+  define public property IsEdo as logical initial false no-undo 
     get.
     private set.
     
+  define public property IsEdoNotMark as logical initial false no-undo 
+    get.
+    private set.
+        
   define public property IsManual as logical initial false no-undo 
     get.
     private set.
@@ -64,7 +79,7 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
   define public property IsBarCode as logical initial false no-undo 
     get.
     private set.
-            
+        
   define public property ObjType as character no-undo 
     get.
     private set.
@@ -227,8 +242,42 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
     if v-value-logical = true
       then IsBarCode = true.
       else IsBarCode = false.   
-
+      
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "marking-type-artic"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    MarkingTypeArtic = v-value-character.
+    {utl\objreg.i MarkingTypeArticObj markingtype MarkingTypeArtic}
+        
     
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "marking-type-transitional"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    MarkingTypeTransitional = v-value-character.
+    {utl\objreg.i MarkingTypeTransitionalObj markingtype MarkingTypeTransitional}
+        
   end constructor.
 
   /*------------------------------------------------------------------------------
@@ -242,11 +291,22 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
 
   end method.  
   
-  method public logical GetIsMarkingForTypeEDO(pType as char):
+  method public logical GetIsEDOForType(pType as char):
 
     return MarkingTypeEDOobj:GetValForType(pType).
 
   end method.  
     
-  
+  method public logical GetIsArticForType(pType as char):
+
+    return MarkingTypeArticObj:GetValForType(pType).
+
+  end method.  
+
+  method public logical GetIsTransitionalForType(pType as char):
+
+    return MarkingTypeTransitionalObj:GetValForType(pType).
+
+  end method.  
+      
 end class.

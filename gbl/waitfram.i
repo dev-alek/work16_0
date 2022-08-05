@@ -70,6 +70,23 @@ do:
 end.
 */
 
+function waitfram-check-timeout returns logical():
+   define variable vtime as int64 no-undo.
+   if mWaitFramStopTimeOut
+   then
+      return yes.
+   
+   vtime = ( now - mWaitFramStartProc ) / 1000 .
+         
+   if     mWaitFramTimeOut ne ?
+      and mWaitFramTimeOut ne 0 
+      and mWaitFramTimeOut lt vtime
+   then do:
+      mWaitFramStopTimeOut = yes.
+   end.
+   return mWaitFramStopTimeOut.
+end.
+
 procedure waitfram-hide :
 
   if not session:batch-mode
@@ -219,6 +236,7 @@ end procedure. /* waitfram-show */
       if iInterval ne ?
       then
          publish "WaitFramStop".
+      waitfram-check-timeout().
    end.
    
    procedure WaitFramWaitFor:
@@ -235,13 +253,8 @@ end procedure. /* waitfram-show */
       block-wait:
       do while not mWaitFramStop:
          run WaitFramRunPause (iInterval).
-         define variable vtime as int64 no-undo.
-         vtime = ( now - mWaitFramStartProc ) / 1000 .
-         if     mWaitFramTimeOut ne ?
-            and mWaitFramTimeOut ne 0 
-            and mWaitFramTimeOut lt vtime
+         if  waitfram-check-timeout()
          then do:
-            mWaitFramStopTimeOut = yes.
             leave block-wait.
          end.
       end.
@@ -286,5 +299,7 @@ function waitfram-join-function returns character
   return v-message .
 
 end function .
+
+
 &endif
 /* $Workfile$ e n d */

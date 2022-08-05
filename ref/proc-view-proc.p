@@ -7,7 +7,8 @@ define variable mDir as character no-undo.
 vAsyncHelper = new ibs.th.file.AsyncHelperth().
 vAsyncHelper:creatProcInfo(1,1,1).
 assign
-   mdir = vAsyncHelper:GetPARAM("param.txt", "ParamProc_1")
+   mdir = 
+   vAsyncHelper:GetPARAM(1)
     .
     
 output to "endproc.txt". 

@@ -35,6 +35,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   
   define buffer buf_inv-line for ub.inv-line.
   define buffer buf_doc-line for ub.doc-line.
+  define buffer buf_doc-line-attr for ub.doc-line-attr.
   define buffer bf_doc-line-sum for ub.doc-line-sum.
   define buffer buf_doc-pl for ub.doc-pl.
   define buffer buf_gds for ub.goods.
@@ -201,6 +202,9 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
 
 
   method private void GdsLine ():
+    define variable vGT as integer no-undo .
+    define variable vGtin as character no-undo .
+    define variable vGtinQnty as integer no-undo .
     
     sw:start-element ("gds").
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
@@ -208,6 +212,10 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
             buf_gds.artic = buf_doc-line.artic 
         and buf_gds.prod-code = buf_doc-line.prod-code
         and buf_gds.prod-type = buf_doc-line.prod-type.
+      find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_doc-line.doc-code
+                                             and buf_doc-line-attr.gds-code = buf_gds.gds-code
+                                             and buf_doc-line-attr.attr-code = "GTIN-qnty"
+                                             no-error .
       sw:start-element ("gd").
         write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
         write-data-element ("qnty-b", string-mth (round (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty, 3))).
@@ -240,6 +248,28 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
           sw:end-element ("marks").
 
         end.
+        else
+        if available buf_doc-line-attr
+        and buf_doc-line-attr.attr-value > ""
+        then do :
+          sw:start-element ("marks").
+          GT_ :
+          do vGT = 1 to num-entries(buf_doc-line-attr.attr-value, ";") :
+            assign
+              vGtin = entry(1, entry(vGT, buf_doc-line-attr.attr-value, ";"), "=")
+              vGtinQnty = integer(entry(2, entry(vGT, buf_doc-line-attr.attr-value, ";"), "="))
+            no-error .
+            if error-status:error
+            then next GT_ .
+            
+            sw:start-element ("mark").
+            write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vGtinQnty)) .
+            write-data-element ("gtin", vGtin) .
+            write-data-element ("gtin_qnt", string-mth(vGtinQnty)) .
+            sw:end-element ("mark").
+          end .
+          sw:end-element ("marks").
+        end .
       sw:end-element ("gd").
     end.
     sw:end-element ("gds").

@@ -44,16 +44,19 @@ on quit   undo, return error substitute( "&1. QUIT", vss-workfile )
   then do:
     return error substitute( "&1. (1) Не удалось отсоединиться от БД", vss-workfile ).
   end.
-
-  run adm/pswd-enc.p
-    (input  encode(g#auto-user-password)
-    ,output v-user-password-enc
-    ) no-error .
-  if error-status:error
+  if not g#auto-user-password begins "nocrypt:"
   then do:
-    return error substitute( "&1. Ошибка кодировки. &2", vss-workfile, return-value ).
+     run adm/pswd-enc.p
+       (input  encode(g#auto-user-password)
+       ,output v-user-password-enc
+       ) no-error .
+     if error-status:error
+     then do:
+       return error substitute( "&1. Ошибка кодировки. &2", vss-workfile, return-value ).
+     end.
   end.
-
+  else
+     v-user-password-enc = substring (g#auto-user-password,9).
   /* параметры для подключения к БД */
   get-key-value section "REP-SETS"
                     key "ConPar"
@@ -70,7 +73,7 @@ on quit   undo, return error substitute( "&1. QUIT", vss-workfile )
     v-connect-option = substitute('-U &1 -P &2':u
                               ,g#auto-user-login
                               ,v-user-password-enc
-                              )
+                              ) when  g#auto-user-login ne ""
   .
 
 
@@ -81,7 +84,7 @@ on quit   undo, return error substitute( "&1. QUIT", vss-workfile )
   if error-status :error
   then do:
 
-    connect value( substitute(conn-par, '-U odbc -P odbc':U) ) no-error.
+    connect value( substitute(conn-par, /* '-U odbc -P odbc':U */ "") ) no-error.
     if error-status :error
     then do:
       return error substitute("&1. Не удалось подключиться к БД с параметрами &2", vss-workfile, conn-par ).
@@ -99,10 +102,13 @@ on quit   undo, return error substitute( "&1. QUIT", vss-workfile )
   os-delete value( v-file-name ) .
 
   /* определить user-id пользователя */
-  run adm/autousid.p no-error .
-  if error-status :error
+  if not g#auto-user-password begins "nocrypt:"
   then do:
-    undo, return error return-value .
+     run adm/autousid.p no-error .
+     if error-status :error
+     then do:
+       undo, return error return-value .
+     end.
   end.
 
   assign

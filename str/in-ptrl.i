@@ -715,11 +715,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               ( output v-today
               , output v-time
               ) .
-            { gbl/curobjdt.i
-              t-doc.obj-type
-              t-doc.obj-code
-              v-today
-            }
 
             assign
               buf_rvs-line.real-date = v-today
@@ -727,12 +722,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             .
             infoSectionsTotal:CalculateTotal().
             if p-rvs-type = {&rvs-before-doc}  then do:
-                 if v-prt-start-real-date = ? then v-prt-start-real-date = today.
-                if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = time.
+              if v-prt-start-real-date = ? then v-prt-start-real-date = buf_rvs-line.real-date .
+              if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = buf_rvs-line.real-time .
             end.
             else do:
-                if v-prt-end-real-date = ? then v-prt-end-real-date = today.
-                if v-prt-end-real-time = ? or v-prt-end-real-time = 0 then v-prt-end-real-time = time.
+              v-prt-end-real-date = buf_rvs-line.real-date .
+              v-prt-end-real-time = buf_rvs-line.real-time .
             end.
           end.
           when "edit":U then do:
@@ -753,14 +748,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             
             else do:
-              if p-rvs-type = {&rvs-before-doc}  then do:
-                  if v-prt-start-real-date = ? then v-prt-start-real-date = today.
-                  if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = time.
-              end.
-              else do:
-                  if v-prt-end-real-date = ? then v-prt-end-real-date = today.
-                  if v-prt-end-real-time = ? or v-prt-end-real-time = 0 then v-prt-end-real-time = time.
-              end.
               if available buf_goods
               and is-sug(buf_goods.gds-code) then do:
                  
@@ -786,6 +773,25 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                     ,buf_goods.prod-type
                                     ,buf_goods.prod-code
                                     ,v-pl-code)) no-error.
+              end.
+              
+              run cur-time in this-procedure
+                ( output v-today
+                , output v-time
+                ) .
+  
+              assign
+                buf_rvs-line.real-date = v-today
+                buf_rvs-line.real-time = v-time
+              .
+              infoSectionsTotal:CalculateTotal().
+              if p-rvs-type = {&rvs-before-doc}  then do:
+                if v-prt-start-real-date = ? then v-prt-start-real-date = buf_rvs-line.real-date .
+                if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = buf_rvs-line.real-time .
+              end.
+              else do:
+                v-prt-end-real-date = buf_rvs-line.real-date .
+                v-prt-end-real-time = buf_rvs-line.real-time .
               end.
             end.
             

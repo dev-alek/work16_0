@@ -99,6 +99,13 @@ define variable v-vozvr-perem-no-fact as logical no-undo.
 define variable v-marking as logical no-undo .
 define variable v-marking-value as character no-undo .
 define variable v-marking-type as character no-undo .
+define variable varvalue as character no-undo .
+define variable vartype as character no-undo .
+define variable v-ext-mode as character no-undo .
+define variable v-sum-parts-qnty as decimal no-undo .
+
+define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 define new shared buffer  parts for ub.parts  .
 define buffer  buf_trn for ub.trn-doc  .
@@ -1269,7 +1276,9 @@ ON CHOOSE OF b-vsd IN FRAME Dialog-Frame /* АлкАтр */
     
     if vsdsubsObj:iCounter = 0
     then do:
-      if p-edit-mode = {&lookup} and not v-vozvr-perem-no-fact
+      if p-edit-mode = {&lookup}
+      and not (v-vozvr-perem-no-fact and p-doc-code = ub.parts.out-code)
+      and not (v-ext-mode = "vsd_corr-parts" or v-ext-mode = "vsd")
       then do:
         message "К партии отсутсвуют ВСД" view-as alert-box.
         return.
@@ -1569,6 +1578,39 @@ END.
 ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
   { gbl/stdbtn.i }
+  if v-ext-mode = "vsd_corr-parts"
+  or v-ext-mode = "corr-parts"
+  then do :
+    define buffer buf_doc-line for ub.doc-line .
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_goods for ub.goods .
+    define buffer doc_parts for ub.parts .
+    find first buf_goods no-lock where buf_goods.gds-code = p-gds-code .
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code .
+    find first buf_doc-line no-lock
+      where buf_doc-line.doc-code  = p-doc-code
+        and buf_doc-line.artic     = buf_goods.artic
+        and buf_doc-line.prod-type = buf_goods.prod-type
+        and buf_doc-line.prod-code = buf_goods.prod-code
+    .
+    v-sum-parts-qnty = 0 .
+    for each doc_parts no-lock where doc_parts.out-code = buf_trn-doc.doc-code
+                                 and doc_parts.obj-type = v-cntxt-obj-type
+                                 and doc_parts.obj-code = v-cntxt-obj-code
+                                 and doc_parts.artic = buf_goods.artic
+                                 and doc_parts.prod-type = buf_goods.prod-type
+                                 and doc_parts.prod-code = buf_goods.prod-code
+    :
+      v-sum-parts-qnty = v-sum-parts-qnty + doc_parts.fact-qnty .
+    end .
+    if buf_doc-line.fact-qnty <> v-sum-parts-qnty
+    then do :
+      message substitute("Сумма количеств по партиям документа &1 не равна фактическому количеству по строке &2 .", v-sum-parts-qnty, buf_doc-line.fact-qnty) skip
+              "Скорректируйте количество по партиям."
+      view-as alert-box .
+      return no-apply .
+    end .
+  end .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2359,6 +2401,14 @@ end.
   &mv-brw-default = "no"
 }
 
+
+if p-edit-mode = "vsd_corr-parts"
+or p-edit-mode = "vsd"
+or p-edit-mode = "corr-parts"
+then do :
+  v-ext-mode = p-edit-mode .
+  p-edit-mode = {&lookup} .
+end .
 /* Название режима работы, отображаемое в заголовке */
 assign
   v-mode-name = (if p-edit-mode = 'update-alc-attr':u
@@ -2403,7 +2453,7 @@ end.
                         OUTPUT v-marking-type
                         ).
 
-if not error-status:error and v-marking-value <> {&attr-mark-type_not-type} then 
+if not error-status:error and v-marking-value <> "" then 
   v-marking = true .
                     
     define variable v-alcohol-value as character no-undo .
@@ -2513,6 +2563,8 @@ define variable v-alcohol-prod as logical.
 if  p-call-point = {&parts-l_call-document}
 and (p-edit-mode = {&update}
      or p-edit-mode = {&add-def}
+     or v-ext-mode = "vsd_corr-parts"
+     or v-ext-mode = "corr-parts"
     )
 then do:
   assign
@@ -3627,7 +3679,7 @@ PROCEDURE main-block-procedure :
       end.
       else do:
         assign
-          v-part-part-code-width = 10
+          v-part-part-code-width = 14
         .
       end.
 

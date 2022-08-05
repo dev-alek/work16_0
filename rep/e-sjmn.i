@@ -104,10 +104,11 @@ if X-SelectGood = {&g-prod} then do:
         PUT STREAM PrnLibStream  cli-obj.obj-name format "x(80)" skip space(50) .
     END.
 end.
-if X-SelectGood = {&g-choice} then do:
+/*if X-SelectGood = {&g-choice} then do:
     counter = 0.
     PUT STREAM PrnLibStream  "По списку товаров: " skip space(10) .
     FOR EACH gds-list :
+        message '*' view-as alert-box.
         PUT STREAM PrnLibStream  unformatted
         substitute("&1 &2 &3&4&5"
                    , gds-list.gds-code
@@ -123,7 +124,7 @@ if X-SelectGood = {&g-choice} then do:
           counter = 0.
         end.
     END.
-end.
+end.*/
 PUT STREAM PrnLibStream
  " " skip
 SPACE(5) cash_string format "x(115)" SKIP

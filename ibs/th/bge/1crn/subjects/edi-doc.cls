@@ -113,7 +113,7 @@ class ibs.th.bge.1crn.subjects.edi-doc inherits ibs.th.bge.1crn.subjects.asubjec
       v-str =         ",edoc-num"           when edoc-num          = ? and obj-load = "edi-doc"
       v-str = v-str + ",edoc-date"          when edoc-date         = ? and obj-load = "edi-doc"
       v-str = v-str + ",edoc-type"          when edoc-type         = ? and obj-load = "edi-doc"
-      v-str = v-str + ",edoc-stts"          when edoc-stts         = ?
+      v-str = v-str + ",edoc-stts"          when edoc-stts         = ? 
       v-str = v-str + ",del-f"              when edoc-stts         = ? and obj-load = "edi-doc"
       
     .

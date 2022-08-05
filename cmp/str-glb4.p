@@ -648,12 +648,6 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gds-attr-
 attr-office-type
 }
 
-/* типы маркировки */
-{ cmp/cr-prepc.i 1 prop-list-attr-mark-type
-"not-type,tabak,shoes,perfume,industry,tires,apteka,photo,milk,water,stiki"
-attr-mark-type
-}
-
 /*"Реализуемый товар кроме подакцизного;
 Реализуемый подакцизный товар;
 Выполняемая работа;
@@ -1163,6 +1157,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define db-attr-l
 { cmp/cr-prep.i 1 attr-esys-diadoc-pwd         diadoc-pwd           " " diadoc-pwd   }
 { cmp/cr-prep.i 1 attr-esys-diadoc-key         diadoc-key           " " diadoc-key   }
 { cmp/cr-prep.i 1 attr-esys-diadoc-lastload    diadoc-lastload      " " diadoc-lastload    }
+{ cmp/cr-prep.i 1 attr-esys-diadoc-ssl         diadoc-ssl           " " diadoc-ssl    }
 /* Использование цифровой подписи при обмене с ВС */
 { cmp/cr-prep.i 1 attr-esys-cert-sign          cert-sign            " " cert-sign         }
 { cmp/cr-prep.i 1 attr-esys-cert-sign-subject  cert-sign-subject    " " cert-sign-subject }

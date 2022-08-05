@@ -62,6 +62,7 @@ define variable vss-description as character no-undo init "Импорт накладных из в
 { cmp/trg-def.i }
 { str/trdcalib.i }
 { ref/gds-attr.i }
+{ utl/gtin.i }
 
 def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
 run gbl/getobjsrvhndl.p (input-output ObjSrv).
@@ -88,12 +89,14 @@ define variable v-specif as logical   no-undo .
 define buffer new_trn-doc  for ub.trn-doc  .
 define buffer new_doc-line for ub.doc-line .
 define buffer new_gds-dtl  for ub.gds-dtl .
+define buffer new_parts for ub.parts .
 
 define buffer t_trn-doc  for ub.trn-doc  .
 define buffer t_doc-line for ub.doc-line .
 define buffer t_gds-dtl  for ub.gds-dtl .
 define buffer buf_goods  for ub.goods .
 define buffer buf_contract for ub.contract  .
+define buffer buf_bar-code for ub.bar-code.
 
 define variable parrec-doc      as recid    no-undo .
 define variable parrecalc-price as logical  no-undo init false .
@@ -143,6 +146,28 @@ define variable is-unit-error   as logical no-undo .
 define variable v-internal      as logical no-undo .
 define variable v-marking-type as character no-undo.
 define variable v-type          as character no-undo.
+
+/* Для ОСУ */
+define variable vGT as integer no-undo .
+define variable vGtin as character no-undo .
+define variable vGtinDocQnty as decimal no-undo .
+define variable vGtinFactQnty as decimal no-undo .
+define variable vGtinSumDocQnty as decimal no-undo .
+define variable v-need-corr-parts as logical no-undo init false .
+
+/*Для ВСД (ФГИС Меркурий) */
+define variable v-mercury-value as character no-undo .
+define variable v-mercury-type  as character no-undo .
+define variable v-mercury-prod as logical no-undo init false .
+
+define variable v-mess-in-doc as character no-undo .
+define variable v-in-doc-mode as character no-undo .
+
+define variable varnext-prev as logical no-undo .
+define variable br-handle    as handle  no-undo .
+define variable bf-handle    as handle  no-undo .
+define variable v-doc-rec    as recid   no-undo .
+define variable varline-rec  as recid   no-undo .
 
 /*define variable objMarks as class excisemarks no-undo.*/
 
@@ -821,6 +846,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         v-root-node
         }
       k = k + 1  .
+      find first buf_bar-code where 
+                 buf_bar-code.gds-code = buf_goods.gds-code
+             and buf_bar-code.unit-cli = temp_doc-line.unit-cli
+      no-lock no-error.
       find first tt2-doc-line where 
         tt2-doc-line.artic = temp_doc-line.artic and
         tt2-doc-line.prod-code = temp_doc-line.prod-code and
@@ -830,28 +859,27 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         create tt2-doc-line .
         BUFFER-COPY temp_doc-line  to tt2-doc-line
           assign
-            tt2-doc-line.cli-qnty       = temp_doc-line.fact-qnty when not is-egais
             tt2-doc-line.doc-qnty       = if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty when not is-egais
             tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty when not is-egais
             
-            tt2-doc-line.cli-qnty       = temp_doc-line.cli-qnty when is-egais
-            tt2-doc-line.doc-qnty       = temp_doc-line.doc-qnty when is-egais
-            tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty when is-egais
+            tt2-doc-line.cli-qnty       = temp_doc-line.cli-qnty
+            tt2-doc-line.doc-qnty       = temp_doc-line.doc-qnty
+            tt2-doc-line.fact-qnty      = temp_doc-line.fact-qnty
             
             tt2-doc-line.price-cli      = temp_doc-line.price-cli
-            tt2-doc-line.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / buf_goods.cli-base-rate
+            tt2-doc-line.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / (if avail buf_bar-code then buf_bar-code.cli-base-rate else buf_goods.cli-base-rate)
             tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
             tt2-doc-line.VAT-pc         = temp_doc-line.vat-pc 
             tt2-doc-line.doc-code       = n-d
             tt2-doc-line.status_        = "temp"
             tt2-doc-line.ext-doc-type   = v-ext-doc-type
             tt2-doc-line.slt-pc         = 0
-            tt2-doc-line.cli-base-rate  = 1 when not is-egais
+            tt2-doc-line.cli-base-rate  = (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1) when not is-egais
             tt2-doc-line.cli-base-rate  = buf_goods.cli-base-rate when is-egais
             
             tt2-doc-line.line-num       = next-value (s-line-num, {&db-name_schema})
             tt2-doc-line.prt-root       = buf_goods.prt-root
-            tt2-doc-line.unit-cli       = buf_goods.unit-base when not is-egais
+            tt2-doc-line.unit-cli       = temp_doc-line.unit-cli when not is-egais
             tt2-doc-line.unit-cli       = buf_goods.unit-cli when is-egais 
             tt2-doc-line.doc-density    = 1 / tt2-doc-line.cli-base-rate
             tt2-doc-line.fact-density   = 1 / tt2-doc-line.cli-base-rate
@@ -863,12 +891,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         if not is-egais
         then do:
           assign
-            tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + temp_doc-line.fact-qnty
-            tt2-doc-line.price-cli      = (tt2-doc-line.price-cli * tt2-doc-line.doc-qnty + temp_doc-line.price-cli * if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty) 
-                                        / (tt2-doc-line.doc-qnty + if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty)
-            tt2-doc-line.doc-qnty       = tt2-doc-line.doc-qnty + if not is-tsd then temp_doc-line.fact-qnty else temp_doc-line.doc-qnty
+            tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + (temp_doc-line.cli-qnty * (if avail buf_bar-code then buf_bar-code.cli-base-rate else buf_goods.cli-base-rate) ) 
+            tt2-doc-line.price-cli      = (tt2-doc-line.price-cli * tt2-doc-line.doc-qnty
+                                        + (temp_doc-line.price-cli * temp_doc-line.doc-qnty) / (if avail buf_bar-code then buf_bar-code.cli-base-rate else buf_goods.cli-base-rate) ) 
+                                        / (tt2-doc-line.doc-qnty + temp_doc-line.doc-qnty)
+            tt2-doc-line.doc-qnty       = tt2-doc-line.doc-qnty + temp_doc-line.doc-qnty
             tt2-doc-line.fact-qnty      = tt2-doc-line.fact-qnty + temp_doc-line.fact-qnty
-            tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
+            tt2-doc-line.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale)
             tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
   /*            tt2-doc-line.price-cli      = temp_doc-line.price-cli
               tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
@@ -888,6 +917,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             tt2-doc-line.fact-qnty      = tt2-doc-line.fact-qnty + temp_doc-line.fact-qnty
             .
         end.
+/*        tt2-doc-line.price-cli = round(tt2-doc-line.price-cli, 3) .  */
+/*        tt2-doc-line.price-rubl = round(tt2-doc-line.price-rubl, 3) .*/
+/*        tt2-doc-line.price-base = round(tt2-doc-line.price-base, 3) .*/
       end.
         
 /*        if is-egais or is-tsd*/
@@ -931,6 +963,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       else do:
       BUFFER-COPY tt2-doc-line  to tt-gds-dtl
         assign
+          tt-gds-dtl.doc-qnty  = tt-gds-dtl.doc-qnty  +  temp_doc-line.doc-qnty
+          tt-gds-dtl.fact-qnty = tt-gds-dtl.fact-qnty +  temp_doc-line.fact-qnty
           tt-gds-dtl.prt-code  = v-root-node
           tt-gds-dtl.ov = yes     /*  yes  зафиксируем цены для внутреннего перемещения . Они определены в заказе */
                                   /*  no - будет спрашивать */
@@ -941,14 +975,127 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end. /*temp_doc-line*/
     
     def var jj as int no-undo.
+    
     for each tt2-doc-line :
       jj = 0.
       for each temp_doc-line no-lock where temp_doc-line.artic = tt2-doc-line.artic
                 and temp_doc-line.prod-code = tt2-doc-line.prod-code
                 and temp_doc-line.prod-type = tt2-doc-line.prod-type:
-        jj = jj + 1.
-        create tt-parts.
-        buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
+        find first buf_goods where buf_goods.gds-code  = temp_doc-line.gds-code no-lock no-error .
+        find first buf_bar-code where 
+                   buf_bar-code.gds-code = buf_goods.gds-code
+               and buf_bar-code.unit-cli = temp_doc-line.unit-cli
+        no-lock no-error.
+        if temp_doc-line.gtinList > ""
+        then
+        do vGT = 1 to num-entries(temp_doc-line.gtinList) :
+          jj = jj + 1.
+          vGtin = entry(vGT, temp_doc-line.gtinList) .
+          vGtinDocQnty = decimal(entry(vGT, temp_doc-line.gtinDocQntyList)) .
+          vGtinFactQnty = decimal(entry(vGT, temp_doc-line.gtinFactQntyList)) .
+          
+          create tt-parts.
+          buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
+          assign
+            tt-parts.prod-type      = tt2-doc-line.prod-type
+            tt-parts.prod-code      = tt2-doc-line.prod-code
+            tt-parts.artic          = tt2-doc-line.artic
+            tt-parts.in-code        = new_trn-doc.doc-code
+            tt-parts.out-code       = new_trn-doc.doc-code
+            tt-parts.cli-base-rate  = tt2-doc-line.cli-base-rate
+            tt-parts.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / tt-parts.cli-base-rate
+            tt-parts.price-cli      = tt-parts.price-rubl          
+            tt-parts.price-base     = tt-parts.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
+            tt-parts.qnty           = vGtinDocQnty
+            tt-parts.obj-type       = new_trn-doc.obj-type
+            tt-parts.obj-code       = new_trn-doc.obj-code
+            tt-parts.fact-date      = new_trn-doc.fact-date
+            tt-parts.fact-num       = new_trn-doc.fact-num
+            tt-parts.VAT-pc         = tt2-doc-line.vat-pc
+            tt-parts.part-code      = vGtin + "_" + string(temp_doc-line.line-num)
+            tt-parts.PS             = temp_trn-doc.utdDocumentExt
+            tt-parts.pay-code       = new_trn-doc.pay-code
+            tt-parts.status_        = no
+            tt-parts.fact-qnty      = vGtinFactQnty
+            tt-parts.supp-type      = new_trn-doc.cli-type
+            tt-parts.supp-code      = new_trn-doc.cli-code
+            tt-parts.rsrv-free      = ?
+            tt-parts.doc-type       = new_trn-doc.doc-type
+            tt-parts.cli-qnty       = vGtinDocQnty / tt-parts.cli-base-rate /* temp_doc-line.cli-qnty */
+            tt-parts.pl-code        = ?
+            tt-parts.VAT-type       = temp_trn-doc.vat-type
+            tt-parts.exch-code      = 0
+            tt-parts.SLT-pc         = 0
+            tt-parts.host-code      = new_trn-doc.host-code
+            tt-parts.is-supp        = yes
+            tt-parts.SLT-type       = {&without-slt}
+            tt-parts.cst-code       = ""
+            tt-parts.last-date      = ?
+            tt-parts.road-tax-base  = 0
+            tt-parts.road-tax-rubl  = 0
+            tt-parts.transport-base = 0
+            tt-parts.transport-rubl = 0
+            tt-parts.other-base     = 0
+            tt-parts.other-rubl     = 0
+            tt-parts.purch-code     = new_trn-doc.purch-code
+            tt-parts.contract-code  = new_trn-doc.contract-code
+          no-error.
+          if error-status:error then do :
+              v-end-message = substitute(" Ошибка &1 &2 " , error-status :get-message(1)  , return-value) .
+              run pcall-log-file in p-log-handle ( input v-end-message ) .
+              undo, return error v-end-message.
+          end.
+          
+          if temp_doc-line.doc-qnty <> temp_doc-line.fact-qnty
+          and temp_doc-line.fact-qnty > 0
+          and vGT > 1
+          then do :
+            v-need-corr-parts = yes .
+          end .
+          
+          run gds-attr-value (
+              input temp_doc-line.gds-code,
+              input {&attr-mark-type},
+              output v-marking-type,
+              output v-type
+              ).
+
+/*          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsArticForType(v-marking-type)*/
+/*          then do:                                                                                                                    */
+            fe1_:
+            for each ub.utd-marking-lines where 
+                ub.utd-marking-lines.db-num = temp_doc-line.db-num
+            and ub.utd-marking-lines.doc-id = temp_doc-line.doc-id
+            and ub.utd-marking-lines.gds-code = temp_doc-line.gds-code
+            and ub.utd-marking-lines.LineNum = temp_doc-line.line-num
+            :
+
+/*              find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.*/
+/*              if not available (ub.marking)                                                                                                                               */
+/*              then next fe1_.                                                                                                                                             */
+              
+              if getGtinByDM(ub.utd-marking-lines.mark) <> vGtin
+              then next fe1_ .
+              
+              create ub.marking-lines.
+              assign
+                ub.marking-lines.obj-type = tt-parts.obj-type
+                ub.marking-lines.obj-code = tt-parts.obj-code
+                ub.marking-lines.in-code = tt-parts.in-code
+                ub.marking-lines.out-code = tt-parts.out-code
+                ub.marking-lines.part-code = tt-parts.part-code
+                ub.marking-lines.gds-code = temp_doc-line.gds-code
+                ub.marking-lines.mark = ub.utd-marking-lines.mark
+                ub.marking-lines.doc-level = ub.utd-marking-lines.doc-level
+              .
+            end.
+/*          end .*/
+          
+        end .
+        else do :       
+          jj = jj + 1.
+          create tt-parts.
+          buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
           assign
             tt-parts.prod-type      = tt2-doc-line.prod-type
             tt-parts.prod-code      = tt2-doc-line.prod-code
@@ -995,85 +1142,84 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             tt-parts.other-rubl     = 0
             tt-parts.purch-code     = new_trn-doc.purch-code
             tt-parts.contract-code  = new_trn-doc.contract-code
-            no-error.
-            if error-status:error then do :
-                v-end-message = substitute(" Ошибка &1 &2 " , error-status :get-message(1)  , return-value) .
-                run pcall-log-file in p-log-handle ( input v-end-message ) .
-                undo, return error v-end-message.
+          no-error.
+          if error-status:error then do :
+              v-end-message = substitute(" Ошибка &1 &2 " , error-status :get-message(1)  , return-value) .
+              run pcall-log-file in p-log-handle ( input v-end-message ) .
+              undo, return error v-end-message.
+          end.
+              
+          find first ub.utd where 
+                ub.utd.db-num = temp_doc-line.db-num
+            and ub.utd.doc-id = temp_doc-line.doc-id.
+          
+          ub.utd.doc-code = new_trn-doc.doc-code.
+          new_trn-doc.contract-code = ub.utd.contract-code.
+          new_trn-doc.host-code = ub.utd.host-code.
+          
+          
+          run gds-attr-value (
+              input temp_doc-line.gds-code,
+              input {&attr-mark-type},
+              output v-marking-type,
+              output v-type
+              ).
+
+          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)
+          then do:
+            fe1_:
+            for each ub.utd-marking-lines where 
+                ub.utd-marking-lines.db-num = temp_doc-line.db-num
+            and ub.utd-marking-lines.doc-id = temp_doc-line.doc-id
+            and ub.utd-marking-lines.gds-code = temp_doc-line.gds-code
+            and ub.utd-marking-lines.LineNum = temp_doc-line.line-num
+            :
+
+              find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
+              if not available (ub.marking)
+                then next fe1_.
+              
+              create ub.marking-lines.
+              assign
+                ub.marking-lines.obj-type = tt-parts.obj-type
+                ub.marking-lines.obj-code = tt-parts.obj-code
+                ub.marking-lines.in-code = tt-parts.in-code
+                ub.marking-lines.out-code = tt-parts.out-code
+                ub.marking-lines.part-code = tt-parts.part-code
+                ub.marking-lines.gds-code = temp_doc-line.gds-code
+                ub.marking-lines.mark = ub.utd-marking-lines.mark
+                ub.marking-lines.doc-level = ub.utd-marking-lines.doc-level
+              .
             end.
-            
-            find first ub.utd where 
-                  ub.utd.db-num = temp_doc-line.db-num
-              and ub.utd.doc-id = temp_doc-line.doc-id.
-            
-            ub.utd.doc-code = new_trn-doc.doc-code.
-            new_trn-doc.contract-code = ub.utd.contract-code.
-            new_trn-doc.host-code = ub.utd.host-code.
-            
-            
-            run gds-attr-value (
-                input temp_doc-line.gds-code,
-                input {&attr-mark-type},
-                output v-marking-type,
-                output v-type
-                ).
-            
-  
-            if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)
-            then do:
-              fe1_:
-              for each ub.utd-marking-lines where 
-                  ub.utd-marking-lines.db-num = temp_doc-line.db-num
-              and ub.utd-marking-lines.doc-id = temp_doc-line.doc-id
-              and ub.utd-marking-lines.gds-code = temp_doc-line.gds-code
-              and ub.utd-marking-lines.LineNum = temp_doc-line.line-num
-              :
-                
-  
-                find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
-                if not available (ub.marking)
-                  then next fe1_.
-                
-                create ub.marking-lines.
-                assign
-                  ub.marking-lines.obj-type = tt-parts.obj-type
-                  ub.marking-lines.obj-code = tt-parts.obj-code
-                  ub.marking-lines.in-code = tt-parts.in-code
-                  ub.marking-lines.out-code = tt-parts.out-code
-                  ub.marking-lines.part-code = tt-parts.part-code
-                  ub.marking-lines.gds-code = temp_doc-line.gds-code
-                  ub.marking-lines.mark = ub.utd-marking-lines.mark
-                  ub.marking-lines.doc-level = ub.utd-marking-lines.doc-level
-                .
-              end.
-            end.
-  /*          else do:                                                                                                                                              */
-  /*            fe2_:                                                                                                                                               */
-  /*            for each ub.utd-marking-lines where                                                                                                                 */
-  /*                ub.utd-marking-lines.db-num = temp_doc-line.db-num                                                                                              */
-  /*            and ub.utd-marking-lines.doc-id = temp_doc-line.doc-id                                                                                              */
-  /*            and ub.utd-marking-lines.gds-code = temp_doc-line.gds-code                                                                                          */
-  /*            and ub.utd-marking-lines.LineNum = temp_doc-line.line-num                                                                                           */
-  /*            :                                                                                                                                                   */
-  /*              find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB*/
-  /*                and ub.marking.unit-ext = "Levele1" no-error.                                                                                                   */
-  /*              if not available (ub.marking)                                                                                                                     */
-  /*                then next fe2_.                                                                                                                                 */
-  /*                                                                                                                                                                */
-  /*              create ub.marking-lines.                                                                                                                          */
-  /*              assign                                                                                                                                            */
-  /*                ub.marking-lines.obj-type = tt-parts.obj-type                                                                                                   */
-  /*                ub.marking-lines.obj-code = tt-parts.obj-code                                                                                                   */
-  /*                ub.marking-lines.in-code = tt-parts.in-code                                                                                                     */
-  /*                ub.marking-lines.out-code = tt-parts.out-code                                                                                                   */
-  /*                ub.marking-lines.part-code = tt-parts.part-code                                                                                                 */
-  /*                ub.marking-lines.gds-code = temp_doc-line.gds-code                                                                                              */
-  /*                ub.marking-lines.mark = ub.utd-marking-lines.mark                                                                                               */
-  /*                ub.marking-lines.doc-level = ub.utd-marking-lines.doc-level                                                                                     */
-  /*              .                                                                                                                                                 */
-  /*            end.                                                                                                                                                */
-  /*          end.                                                                                                                                                  */
-  /*                                                                                                                                                                */
+          end.
+    /*          else do:                                                                                                                                              */
+    /*            fe2_:                                                                                                                                               */
+    /*            for each ub.utd-marking-lines where                                                                                                                 */
+    /*                ub.utd-marking-lines.db-num = temp_doc-line.db-num                                                                                              */
+    /*            and ub.utd-marking-lines.doc-id = temp_doc-line.doc-id                                                                                              */
+    /*            and ub.utd-marking-lines.gds-code = temp_doc-line.gds-code                                                                                          */
+    /*            and ub.utd-marking-lines.LineNum = temp_doc-line.line-num                                                                                           */
+    /*            :                                                                                                                                                   */
+    /*              find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB*/
+    /*                and ub.marking.unit-ext = "Levele1" no-error.                                                                                                   */
+    /*              if not available (ub.marking)                                                                                                                     */
+    /*                then next fe2_.                                                                                                                                 */
+    /*                                                                                                                                                                */
+    /*              create ub.marking-lines.                                                                                                                          */
+    /*              assign                                                                                                                                            */
+    /*                ub.marking-lines.obj-type = tt-parts.obj-type                                                                                                   */
+    /*                ub.marking-lines.obj-code = tt-parts.obj-code                                                                                                   */
+    /*                ub.marking-lines.in-code = tt-parts.in-code                                                                                                     */
+    /*                ub.marking-lines.out-code = tt-parts.out-code                                                                                                   */
+    /*                ub.marking-lines.part-code = tt-parts.part-code                                                                                                 */
+    /*                ub.marking-lines.gds-code = temp_doc-line.gds-code                                                                                              */
+    /*                ub.marking-lines.mark = ub.utd-marking-lines.mark                                                                                               */
+    /*                ub.marking-lines.doc-level = ub.utd-marking-lines.doc-level                                                                                     */
+    /*              .                                                                                                                                                 */
+    /*            end.                                                                                                                                                */
+    /*          end.                                                                                                                                                  */
+    /*                                                                                                                                                                */
+        end .
       end.
     end.
   
@@ -1165,12 +1311,126 @@ end.
             run pcall-log-file in p-log-handle ( input v-end-message ) .
             undo, return error v-end-message.
         end.
-        for each tt2-doc-line:
-          tt2-doc-line.fact-qnty.
-        end.
-        for each doc-line where new_trn-doc.doc-code = ub.doc-line.doc-code:
-          doc-line.fact-qnty.
-        end.
+        
+        for each new_doc-line exclusive-lock where new_doc-line.doc-code = new_trn-doc.doc-code :
+          find first tt2-doc-line where tt2-doc-line.artic = new_doc-line.artic
+                                    and tt2-doc-line.prod-type = new_doc-line.prod-type
+                                    and tt2-doc-line.prod-code = new_doc-line.prod-code
+                                    no-error .
+          if available tt2-doc-line
+          and tt2-doc-line.fact-qnty = new_doc-line.fact-qnty
+          then do :
+            assign                 
+              new_doc-line.doc-qnty = tt2-doc-line.doc-qnty 
+              new_doc-line.cli-qnty = tt2-doc-line.cli-qnty
+            .
+          end .
+          find first new_gds-dtl exclusive-lock where new_gds-dtl.doc-code = new_doc-line.doc-code
+                                                  and new_gds-dtl.artic = new_doc-line.artic
+                                                  and new_gds-dtl.prod-type = new_doc-line.prod-type
+                                                  and new_gds-dtl.prod-code = new_doc-line.prod-code
+                                                  no-error .
+          if available new_gds-dtl
+          and new_gds-dtl.fact-qnty = new_doc-line.fact-qnty
+          then do :
+            assign
+              new_gds-dtl.doc-qnty = new_doc-line.doc-qnty
+            .
+          end .
+          for each tt-parts where tt-parts.out-code = new_doc-line.doc-code
+                              and tt-parts.obj-type = new_doc-line.obj-type
+                              and tt-parts.obj-code = new_doc-line.obj-code
+                              and tt-parts.artic = new_doc-line.artic
+                              and tt-parts.prod-type = new_doc-line.prod-type
+                              and tt-parts.prod-code = new_doc-line.prod-code
+          :
+            find first new_parts exclusive-lock where new_parts.out-code = tt-parts.out-code
+                                                  and new_parts.obj-type = tt-parts.obj-type
+                                                  and new_parts.obj-code = tt-parts.obj-code
+                                                  and new_parts.artic = tt-parts.artic
+                                                  and new_parts.prod-type = tt-parts.prod-type
+                                                  and new_parts.prod-code = tt-parts.prod-code
+                                                  and new_parts.part-code = tt-parts.part-code
+                                                  no-error .
+            if available new_parts
+            and tt-parts.fact-qnty = new_parts.fact-qnty
+            then do :
+              assign
+                new_parts.qnty = tt-parts.qnty
+                new_parts.cli-qnty = tt-parts.cli-qnty
+              .
+            end .
+            else
+            if tt-parts.fact-qnty = 0
+            then do :
+              create new_parts .
+              buffer-copy tt-parts to new_parts
+              assign
+                new_parts.pl-code = (if tt-parts.pl-code = ? then 0 else tt-parts.pl-code)
+              .
+            end .
+          end .      
+          vGtinSumDocQnty = 0 .    
+          for each new_parts no-lock where new_parts.out-code = new_doc-line.doc-code
+                                       and new_parts.obj-type = new_doc-line.obj-type
+                                       and new_parts.obj-code = new_doc-line.obj-code
+                                       and new_parts.artic = new_doc-line.artic
+                                       and new_parts.prod-type = new_doc-line.prod-type
+                                       and new_parts.prod-code = new_doc-line.prod-code     
+          :
+            vGtinSumDocQnty = vGtinSumDocQnty + new_parts.qnty .
+          end .           
+          if vGtinSumDocQnty < new_doc-line.doc-qnty
+          then do :
+            create new_parts .
+            buffer-copy new_doc-line except new_doc-line.status_ to new_parts 
+            assign
+              new_parts.prod-type      = tt2-doc-line.prod-type
+              new_parts.prod-code      = tt2-doc-line.prod-code
+              new_parts.artic          = tt2-doc-line.artic
+              new_parts.in-code        = new_trn-doc.doc-code
+              new_parts.out-code       = new_trn-doc.doc-code
+              new_parts.cli-base-rate  = tt2-doc-line.cli-base-rate
+              new_parts.price-cli      = tt2-doc-line.price-cli
+              new_parts.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / new_parts.cli-base-rate
+              new_parts.price-base     = new_parts.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
+              new_parts.qnty           = new_doc-line.doc-qnty - vGtinSumDocQnty
+              new_parts.obj-type       = new_trn-doc.obj-type
+              new_parts.obj-code       = new_trn-doc.obj-code
+              new_parts.fact-date      = new_trn-doc.fact-date
+              new_parts.fact-num       = new_trn-doc.fact-num
+              new_parts.VAT-pc         = tt2-doc-line.vat-pc
+              new_parts.part-code      = "empty"
+              new_parts.PS             = ""
+              new_parts.pay-code       = new_trn-doc.pay-code
+              new_parts.status_        = no
+              new_parts.fact-qnty      = 0
+              new_parts.supp-type      = new_trn-doc.cli-type
+              new_parts.supp-code      = new_trn-doc.cli-code
+              new_parts.rsrv-free      = ?
+              new_parts.doc-type       = new_trn-doc.doc-type
+              new_parts.cli-qnty       = new_doc-line.doc-qnty - vGtinSumDocQnty /* temp_doc-line.cli-qnty */
+              new_parts.pl-code        = 0
+              new_parts.VAT-type       = new_trn-doc.vat-type
+              new_parts.exch-code      = 0
+              new_parts.SLT-pc         = 0
+              new_parts.host-code      = new_trn-doc.host-code
+              new_parts.is-supp        = yes
+              new_parts.SLT-type       = {&without-slt}
+              new_parts.cst-code       = ""
+              new_parts.last-date      = ?
+              new_parts.road-tax-base  = 0
+              new_parts.road-tax-rubl  = 0
+              new_parts.transport-base = 0
+              new_parts.transport-rubl = 0
+              new_parts.other-base     = 0
+              new_parts.other-rubl     = 0
+              new_parts.purch-code     = new_trn-doc.purch-code
+              new_parts.contract-code  = new_trn-doc.contract-code
+            .
+          end .                       
+        end .
+        
   /*                                                                                                          */
   /*                                                                                                          */
   /*          for each ub.doc-line exclusive-lock where new_trn-doc.doc-code = ub.doc-line.doc-code:          */
@@ -1194,15 +1454,15 @@ end.
   /*            ub.doc-line.cli-qnty = temp_doc-line.doc-qnty.                                                */
   /*                                                                                                          */
   /*          end.                                                                                            */
-            
-        if not is-tsd then do:
+       
+/*        if not is-tsd then do:*/
           run gbl/calc-trn.p ( this-procedure  , recid(new_trn-doc)) no-error .
           if error-status :error then do:
             v-end-message = substitute(" Ошибка пересчета &1 &2 " , error-status :get-message(1)  , return-value ) .
             run pcall-log-file in p-log-handle ( input v-end-message ) .
             undo, return error v-end-message.
           end.
-        end.
+/*        end.*/
   
         find current new_trn-doc exclusive-lock .
             new_trn-doc.tot-cli =  new_trn-doc.tot-calc.
@@ -1210,18 +1470,18 @@ end.
     end case.
   
   
-    if new_trn-doc.vat-type = "" or new_trn-doc.vat-type = ? or
-       new_trn-doc.slt-type = "" or new_trn-doc.slt-type = ? then do:
-          v-end-message = substitute(" Не настроено значение тип НДС или тип НсП !!! АРМ Администратор/Глобальные параметры/ &1 &2" , error-status :get-message(1)  , return-value) .
-          run pcall-log-file in p-log-handle ( input v-end-message ) .
-          undo, return error v-end-message.
-  
+    if new_trn-doc.vat-type = "" or new_trn-doc.vat-type = ?
+    or new_trn-doc.slt-type = "" or new_trn-doc.slt-type = ?
+    then do:
+      v-end-message = substitute(" Не настроено значение тип НДС или тип НсП !!! АРМ Администратор/Глобальные параметры/ &1 &2" , error-status :get-message(1)  , return-value) .
+      run pcall-log-file in p-log-handle ( input v-end-message ) .
+      undo, return error v-end-message.
     end.
   
     if error-status:error then do :
-        v-end-message = substitute(" Ошибка записи атрибута документа &1 &2" , error-status :get-message(1)  , return-value) .
-        run pcall-log-file in p-log-handle ( input v-end-message ) .
-        undo, return error v-end-message.
+      v-end-message = substitute(" Ошибка записи атрибута документа &1 &2" , error-status :get-message(1)  , return-value) .
+      run pcall-log-file in p-log-handle ( input v-end-message ) .
+      undo, return error v-end-message.
     end.
     if temp_trn-doc.cargo-from <> ""
     then do:
@@ -1236,17 +1496,90 @@ end.
       .
     end.
     assign
-        v-end-message =  string(temp_trn-doc.obj-type) + string(temp_trn-doc.obj-code)
-                    + {&tabulation} + "Документ:" + string(new_trn-doc.doc-code) + " / " + string(temp_trn-doc.doc-code) + {&tabulation} + string( k ) + " товаров"
-                      .
+      v-end-message =  string(temp_trn-doc.obj-type) + string(temp_trn-doc.obj-code)
+                    + {&tabulation} + "Документ:" + string(new_trn-doc.doc-code) + " / " + string(temp_trn-doc.doc-code)
+                    + {&tabulation} + string( k ) + " товаров"
+    .
     run pcall-log-file in p-log-handle (input v-end-message) .
     release new_trn-doc.
   end .     
 
   p-ok-doc = p-ok-doc + 1.
   find first new_trn-doc where new_trn-doc.doc-code = n-d.
+  
+  v-mercury-prod = false .
+  { gbl/conf-rd.i
+    "'mercuri':u"
+    "'':u"
+    "'':u"
+    0
+    "'':u"
+    "'':u"
+    "'':u"
+    no
+    v-mercury-value
+    v-mercury-type
+    no-error
+  }
+  if  not error-status :error
+  and lookup(v-mercury-value, 'no':u) = 0
+  then do:
+    for each new_doc-line no-lock where new_doc-line.doc-code = new_trn-doc.doc-code,
+    first buf_goods no-lock where buf_goods.artic = new_doc-line.artic
+                              and buf_goods.prod-type = new_doc-line.prod-type
+                              and buf_goods.prod-code = new_doc-line.prod-code
+                              :
+      { gbl/gdscdat.i
+        buf_goods.gds-code
+        "'mercur_FGIS=request':u"
+        v-mercury-prod
+        no-error
+      }   
+      if error-status :error then v-mercury-prod = false .
+      if v-mercury-prod then leave .            
+    end .
+  end .
+  if v-mercury-prod
+  or v-need-corr-parts
+  then do :
+    if v-mercury-prod
+    and v-need-corr-parts
+    then do :
+      v-mess-in-doc = "Необходимо уточнение количества частично принятого товара в разрезе GTIN." + {&new-line}
+                    + "Также в поставке присутствуют товары, подконтрольные ФГИС Меркурий. Для таких товаров необходимо добавить ВСД." .
+      v-in-doc-mode = {&lookup} + '{&delim-flt}':U + "vsd_corr-parts" .              
+    end .
+    else
+    if v-mercury-prod
+    then do :
+      v-mess-in-doc = "В поставке присутствуют товары, подконтрольные ФГИС Меркурий. Для таких товаров необходимо добавить ВСД." .
+      v-in-doc-mode = {&lookup} + '{&delim-flt}':U + "vsd" .
+    end .
+    else
+    if v-need-corr-parts
+    then do :
+      v-mess-in-doc = "Необходимо уточнение количества частично принятого товара в разрезе GTIN." .
+      v-in-doc-mode = {&lookup} + '{&delim-flt}':U + "corr-parts" .
+    end .
+    v-doc-rec = recid(new_trn-doc) .
+    message v-mess-in-doc view-as alert-box .
+    run str/in-doc.w
+      ( input        parparentproc
+      , input-output v-doc-rec
+      , input        v-in-doc-mode
+      , input        {&income}
+      , input        no
+      , input-output varnext-prev
+      , input        new_trn-doc.ext-doc-type
+      , input        no
+      , input-output varline-rec
+      , input        br-handle
+      , input        bf-handle
+      , input        new_trn-doc.status_)
+    .
+  end .
+  
   run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
-      
   if error-status:error
     then p-msg  = "Ошибка закрытия на факт: " + replace (replace (return-value, {&new-line}, " "), '"', "'").
     else p-msg  = "Накладная закрыта на факт.".

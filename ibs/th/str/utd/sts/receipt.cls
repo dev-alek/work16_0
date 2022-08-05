@@ -13,9 +13,9 @@ using Progress.Lang.*.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.map.mapstring.
 using ibs.th.gbl.sys.objth.
+using ibs.th.gbl.TypeMap.
 
-
-class ibs.th.str.utd.sts.receipt inherits objth:
+class ibs.th.str.utd.sts.receipt inherits TypeMap:
   
   define public property GeneralReceiptStsNotAcceptable as class propmap no-undo get. 
     protected set.
@@ -42,6 +42,7 @@ class ibs.th.str.utd.sts.receipt inherits objth:
   end. 
  
   constructor public receipt ():
+    super().
     {utl\objreg.i ReceiptMap mapstring true}  
     GeneralReceiptStsNotAcceptable  = crProp("GeneralReceiptStsNotAcceptable", "ИОП на документ не запрошен").
     HaveToCreateReceipt  = crProp("HaveToCreateReceipt", "нужно подписать ИОП на документ").
@@ -50,38 +51,5 @@ class ibs.th.str.utd.sts.receipt inherits objth:
     
   end.
 
-  /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
-
-  method public char GetLabel(inKeyStr as char):
-    def var prop as class propmap no-undo.    
-    if valid-object (ReceiptMap:GetItemKeyStr(inKeyStr))
-      then return cast (ReceiptMap:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
-      else return inKeyStr. /* для неизвестного типа статуса в лейбл возвращается значения ключа (грубо говоря того, что лежит в базе*/
-  end method. 
- 
-  method public char GetNameProp(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (ReceiptMap:GetItemKeyStr(inKeyStr))
-      then return cast (ReceiptMap:SubjectObjCurr, ibs.th.gbl.propmap):NameProp. 
-      else return ?.
-  end method. 
-
-  method public class propmap GetProp(inKeyStr as char):
-    def var prop as class propmap no-undo.
-    if valid-object (ReceiptMap:GetItemKeyStr(inKeyStr))
-      then return cast(ReceiptMap:SubjectObjCurr, ibs.th.gbl.propmap). 
-      else return ?.
-  end method.
-  
-  method private class propmap crProp(inNameProp as char, inLabel as char):
-    def var prop as class propmap no-undo.
-    {utl\objreg.i prop propmap inNameProp inLabel}
-    prop:KeyCharDB = inNameProp.
-    ReceiptMap:AddItem(prop, inNameProp).
-    return prop.
-  end method. 
 
 end class.

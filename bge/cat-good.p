@@ -34,10 +34,15 @@ define variable vss-description as character no-undo init "Ёкспорт справочника т
 { str/fbrlib.i   }
 { gbl/temphost.i }
 { ref/gds-attr.i }
+{ gbl/objsrv.i }
 
 define input parameter p-mode       as character    no-undo.
 define input parameter table for temp_bge-xml_goods .
 define input parameter p-file-name  as character    no-undo.
+
+
+define variable MarkType as ibs.th.str.marking.Types no-undo.
+MarkType = ObjSrv:Env:Marking:Types.
 
 define temp-table temp_gds-host-attr no-undo
     field host-code as integer
@@ -329,7 +334,7 @@ RUN gds-attr-value (
                         OUTPUT v-gds-attr-type
                         ).
   def var mMark as integer no-undo.
-  mMark =   LOOKUP(v-gds-attr-value-old,{&prop-list-attr-mark-type}) - 1.
+  mMark = MarkType:GetKeyIntDB(v-gds-attr-value-old).
   
   run wp-XMLTagPut(3, "mark-type"        , if mMark < 0 then  "" else string(mmark),  0).
   RUN gds-attr-value (

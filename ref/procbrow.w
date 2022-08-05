@@ -43,7 +43,7 @@ define buffer tt-proc for procAsunc.
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
-
+define input  parameter parparentproc as handle no-undo.
 /* Local Variable Definitions ---                                       */
 
 /* _UIB-CODE-BLOCK-END */
@@ -198,7 +198,7 @@ on choose of b-edit in frame Dialog-Frame /* Отказать в подписи */
   do:
     if available (tt-proc) then 
     do:
-       run ref\procfrm.w (tt-proc.procid,input dataset ds-asuncProc).
+       run ref\procfrm.w (parparentproc,tt-proc.procid,input dataset ds-asuncProc).
     end.
     
   end.

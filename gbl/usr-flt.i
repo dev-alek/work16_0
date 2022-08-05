@@ -1428,6 +1428,25 @@ info
 &glob output-display-uf-UPD    no
 &glob other-uf-UPD             ""
 
+&scop bef-uf-LK_RECEIPT             LK_RECEIPT
+&glob uf-LK_RECEIPT                 '{&bef-uf-LK_RECEIPT}':U
+&glob label-uf-LK_RECEIPT           "Настройки справочника документов Вывода из оборота (ОСУ)"
+&glob tooltip-uf-LK_RECEIPT         "Настройки справочника документов Вывода из оборота (ОСУ)"
+&glob List_-use-uf-LK_RECEIPT       yes
+&glob List_-type-uf-LK_RECEIPT      {&type-char}
+&glob List_-format-uf-LK_RECEIPT    "X(256)"
+/*"in-date=":U +  string(v-in-date , "99/99/9999") +   ";" +  "fact-qnty=":U + string(v-fact-qnty)*/
+&glob Naim-use-uf-LK_RECEIPT        no
+&glob Naim-type-uf-LK_RECEIPT       {&type-char}
+&glob Naim-format-uf-LK_RECEIPT     "X(256)"
+&glob print-graft-use-uf-LK_RECEIPT no
+&glob sort-gr-use-uf-LK_RECEIPT     no
+&glob type-price-use-uf-LK_RECEIPT  no
+&glob type-val-use-uf-LK_RECEIPT    no
+&glob user-can-edit-uf-LK_RECEIPT   no
+&glob output-display-uf-LK_RECEIPT  no
+&glob other-uf-LK_RECEIPT           ""
+
 &scop bef-uf-barcodfi             barcodfi
 &glob uf-barcodfi                 '{&bef-uf-barcodfi}':U
 &glob label-uf-barcodfi           "Бар-код - доп поля"
@@ -1554,6 +1573,7 @@ info
 ,{&bef-uf-chkdocfi}~
 ,{&bef-uf-barcodfi}~
 ,{&bef-uf-UPD}~
+,{&bef-uf-LK_RECEIPT}~
 ':u
 
 
@@ -1744,6 +1764,8 @@ procedure uf-name :
       &scop uf-code uf-barcodfi
       {&uf-temp-full-code}
        &scop uf-code uf-UPD
+      {&uf-temp-full-code}
+      &scop uf-code uf-LK_RECEIPT
       {&uf-temp-full-code}
 
        /* сюда добавлять новые параметры */

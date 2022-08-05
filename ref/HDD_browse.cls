@@ -22,6 +22,7 @@ class ref.HDD_browse inherits Form:
   {cmp/str-glbl.i class}
   { gbl/getcntxt.i def }
   { gbl/color.i }
+  { cmp/library.i  class }
 
   define temp-table tt-devicePC no-undo
     field id          as integer
@@ -278,8 +279,7 @@ define temp-table tt-devicePCAttr no-undo
     { cmp/str-glbl.i class }
     { gbl/getcntxt.i def }
     { gbl/getcntxt.i get }
-    { cmp/library.i  class }
-
+    
     for each buf_userobjs_temp-user-obj
       on error undo, return error return-value
       :

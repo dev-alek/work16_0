@@ -7373,10 +7373,30 @@ PROCEDURE set-mainmenu-title :
     assign
       v-process-id-str = substitute("PID: &1", v-cntxt-process-id)
     .
-
+    { gbl/objsrv.i}
     define variable v-title as character no-undo .
+    if objSrv:SystemSetting:DeveloperMode then
+      v-title = substitute('&1, &2, &3&4&5, &6, PID &7 &8':U
+                          ,fi-menu-group-name /* группа меню */
+                          ,entry( 2,v-db-num-str,":") /* БД           */
+                          ,(if v-host-str <> '':U /* Фирма        */
+                              then entry( 2,v-host-str,":") + ', ':U
+                              else '':U
+                            )
+                          , (if v-obj-str <> '':U /* Объект       */
+                              then entry( 2,v-obj-str,":") + ', ':U
+                              else '':U
+                            )
+                          ,entry( 2,v-user-id-str,":") /* Пользователь */
+                          ,v-version-name-str /* Версия       */
+                          ,v-cntxt-process-id
+                          ,dbparam("ub")
+
+                          )
+    .
+    else
     assign
-      v-title = substitute('&1, &2, &3&4&5, &6, PID &7':U
+      v-title = substitute('&1, &2, &3&4&5, &6, PID &7 &8':U
                           ,fi-menu-group-name /* группа меню */
                           ,v-db-num-str /* БД           */
                           ,(if v-host-str <> '':U /* Фирма        */
@@ -7390,8 +7410,11 @@ PROCEDURE set-mainmenu-title :
                           ,v-user-id-str /* Пользователь */
                           ,v-version-name-str /* Версия       */
                           ,v-cntxt-process-id
+                          ,""
+
                           )
     .
+    
     assign
       {&window-name} :title = v-title
     .

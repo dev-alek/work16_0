@@ -415,6 +415,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     end.
     else do:
       if not available buf_rp-by-call then do:
+          find first buf_rp-by-call where
+              buf_rp-by-call.call_id = buf_temp-rp-by-call.call_id
+          and buf_rp-by-call.profile_id = buf_temp-rp-by-call.profile_id
+          and buf_rp-by-call.once-more = buf_temp-rp-by-call.once-more
+          no-error .
+          if not available buf_rp-by-call then
           create buf_rp-by-call.
       end.
       buffer-copy buf_temp-rp-by-call to buf_rp-by-call.
@@ -481,6 +487,14 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     end.
     else do:
       if not available buf_rule-call-param then do:
+         find first buf_rule-call-param where
+              buf_rule-call-param.call_id = buf_temp-rule-call-param.call_id
+          and buf_rule-call-param.codex_id = buf_temp-rule-call-param.codex_id
+          and buf_rule-call-param.ruleset_id = buf_temp-rule-call-param.ruleset_id
+          and buf_rule-call-param.order_id = buf_temp-rule-call-param.order_id
+          and buf_rule-call-param.param-name = buf_temp-rule-call-param.param-name
+          and buf_rule-call-param.p-index = buf_temp-rule-call-param.p-index    no-error .
+          if not available buf_rule-call-param then
           create buf_rule-call-param.
       end.
       buffer-copy buf_temp-rule-call-param to buf_rule-call-param.

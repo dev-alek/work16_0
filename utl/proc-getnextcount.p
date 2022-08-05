@@ -1,57 +1,39 @@
 
 .session:debug-alert = yes.
-{ utl/setpwd.i }
-{cmp/trg-def.i }
+/*{ utl/setpwd.i }*/
+/*{cmp/trg-def.i }*/
 
-output to "error.log".
-   put unformatted "error   Не удалось получить счетсчи".
-output close.
-define variable mAsyncHelper as class ibs.th.file.AsyncHelperth. 
-mAsyncHelper = new ibs.th.file.AsyncHelperth().
-mAsyncHelper:creatProcInfo(1,1,1).
-if    not mAsyncHelper:FileExists("stop.txt")
-   or not mAsyncHelper:FileExists("param.txt")
+{ utl/proc-async.i proc_def}
+
+if    StopCheck()
 then do:
-   output to "error.log".
-   put unformatted "error   Получение счетчика было преврвано пользователем или по TimeOut.".
-   output close.
-   output to "endproc.txt". 
-   put unformatted "end" skip.
-   output close.
-   quit.      
+   run PutstatAsunc(substitute("error   Получение счетчика было преврвано пользователем или по TimeOut.") ).
+   { utl/proc-async.i proc_end}
    
+   return.
 end.
 
 define variable  mfilename as character no-undo.
-mfilename = mAsyncHelper:GetPARAM("param.txt", "ParamProc_1").
+
+mfilename = GetPARAMAsunc(1).
 define variable mKey as character   no-undo.
-mkey = mAsyncHelper:GetPARAM("param.txt", "ParamProc_2").
+mkey = GetPARAMAsunc(2).
 define variable  mCode as character no-undo.
-mCode  = mAsyncHelper:GetPARAM("param.txt", "ParamProc_3").
-delete object mAsyncHelper.
+mCode  = GetPARAMAsunc(3).
+define variable  mParam as character no-undo.
+mParam  = GetPARAMAsunc(4).
 if     mfilename ne ? 
    and mkey      ne ? 
    and mCode     ne ?
 then do:
-   
- 
    /*v-connpar = "-db ub -ld ub  -H localhost -S 44441 ".*/
    define variable mCounterValue as int64 no-undo.
    define variable mCounterStor as class ibs.th.ref.counter.counterstorage.
    mCounterStor = new ibs.th.ref.counter.counterstorage(). 
-   mCounterValue = mCounterStor:GetNextcount(mFileName, mKey, mcode).
+   mCounterValue = mCounterStor:GetNextcount(mFileName, mKey, mcode,mParam).
    delete object mCounterStor.
-
-   output to "error.log". 
-   put unformatted string(mCounterValue) skip.
-   output close.
+   run PutMesAsuncNoTime(string(mCounterValue)).
 end.    
 
-
-
-finally:
-    output to "endproc.txt". 
-    put unformatted "end" skip.
-    output close.
-    quit.      
-end finally.    
+{ utl/proc-async.i proc_end}
+   

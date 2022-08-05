@@ -23,7 +23,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 procedure write-to-screen :
 define input param p-str as character no-undo .
-run write-log-and-file in p-log-handle (
+run write-log-and-file{1} in p-log-handle (
       input 1
     , input log-file-name
     , input 1
@@ -32,7 +32,16 @@ end procedure.
 
 procedure write-to-log :
 define input param p-str as character no-undo .
-run write-log-and-file in p-log-handle (
+run write-log-and-file{1} in p-log-handle (
+      input 1
+    , input log-file-name
+    , input 1
+    , input p-str).
+end procedure.
+
+procedure write-to-log-notime :
+define input param p-str as character no-undo .
+run write-log-and-file{1} in p-log-handle (
       input 1
     , input log-file-name
     , input 1

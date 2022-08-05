@@ -1,17 +1,19 @@
 
 .session:debug-alert = yes.
 
-define variable mAsyncHelper as class ibs.th.file.AsyncHelperth. 
-mAsyncHelper = new ibs.th.file.AsyncHelperth().
-mAsyncHelper:creatProcInfo(1,1,1).
-if    not mAsyncHelper:FileExists("stop.txt")
-   or not mAsyncHelper:FileExists("param.txt")
+{ utl/proc-async.i proc_def}
+if        StopCheck()
 then do:
-   output to "error.log".
-   put unformatted "error   Получение проверка была преврвана пользователем или по TimeOut.".
-   output close.
-   delete object mAsyncHelper.
+   run PutstatAsunc(substitute("error   Получение проверка была преврвана пользователем или по TimeOut.") ).
+   { utl/proc-async.i proc_end}
    return.
+end.
+if userid("ub") ne ""
+then do:
+    run PutstatAsunc(substitute("error   Не правильное подключение к Базе. ") ).
+   { utl/proc-async.i proc_end}
+     
+return.
 end.
 define variable v-num-parameters as integer no-undo.
 define variable mProc-name as character no-undo.
@@ -21,15 +23,15 @@ define variable MChekSum as character no-undo.
 define variable m-parameter1 as character no-undo.
 define variable m-parameter2 as character no-undo.
 define variable m-parameter3 as character no-undo.
-mProc-name = mAsyncHelper:GetPARAM("param.txt", "ParamProc_1").
-v-num-parameters = int(mAsyncHelper:GetPARAM("param.txt", "ParamProc_2")).
-mparparentproc = logical (mAsyncHelper:GetPARAM("param.txt", "ParamProc_3")).
-mkey  = int(mAsyncHelper:GetPARAM("param.txt", "ParamProc_4")).
-m-parameter1  = mAsyncHelper:GetPARAM("param.txt", "ParamProc_5").
-m-parameter2  = mAsyncHelper:GetPARAM("param.txt", "ParamProc_6").
-m-parameter3  = mAsyncHelper:GetPARAM("param.txt", "ParamProc_7").
+mProc-name        =          GetPARAMAsunc(1).
+v-num-parameters  = integer (GetPARAMAsunc(2)).
+mparparentproc    = logical (GetPARAMAsunc(3)).
+mkey              = integer (GetPARAMAsunc(4)).
+m-parameter1      =          GetPARAMAsunc(5).
+m-parameter2      =          GetPARAMAsunc(6).
+m-parameter3      =          GetPARAMAsunc(7).
 
-delete object mAsyncHelper.
+
 if     v-num-parameters ne ? 
    and mparparentproc   ne ? 
    and mkey     ne ?
@@ -116,17 +118,17 @@ then do:
          end.
       end.
    end case.
-    
-   output to "error.log". 
-   put unformatted (if error-status:error then "error " + error-status:get-message (1) else MChekSum )skip.
-   output close.
+
+   def var v-counter as int no-undo. 
+   if error-status:error 
+   then do v-counter = 1 to error-status :num-messages
+       :
+        run PutstatAsunc(substitute("error  &1",error-status:get-message (v-counter)) ).
+   end.
+   else 
+   run PutMesAsuncNoTime ( string(MChekSum) ).
+   
+   { utl/proc-async.i proc_end}
+   
 end.    
-
-
-
-finally:
-    output to "endproc.txt". 
-    put unformatted "end" skip.
-    output close.
-    quit.      
-end finally.    
+      

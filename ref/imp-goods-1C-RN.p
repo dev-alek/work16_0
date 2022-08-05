@@ -53,7 +53,7 @@ define variable vss-description as character no-undo init "Загрузка товара из ER
 { gbl/getcntxa.i }
 { ref/gds-attr.i}
 { ref/gdsoattr.i }
-
+{ gbl/objsrv.i } 
 define input parameter p-GdsObj         as class goods .
 
 define buffer buf_goods for ub.goods.
@@ -140,7 +140,11 @@ define variable v-size  as integer no-undo .
   define variable v-cntxt-obj-code      as integer   no-undo . /* код текущего объекта  */
   define variable v-cntxt-db-num-obj    as integer   no-undo . /* база текущего объекта */
   define variable v-cntxt-is-admin      as logical   no-undo . /* база текущего объекта */
-
+  define variable MarkType as ibs.th.str.marking.Types no-undo.
+   MarkType = ObjSrv:Env:Marking:Types. 
+ 
+define variable mImp2CdH as handle no-undo.
+run str/imp2cdgeth.p(output mImp2CdH).
 /* ********************  Preprocessor Definitions  ******************** */
 
 
@@ -284,14 +288,17 @@ end.
     tt-tax.rate-code = v-nds-rate-code
     .
     /* Проверим не изменился ли производитель. Если изменился, запустим утилититу переименования производителя. */
-    if v-gds-mode = {&update} and integer(p-GdsObj:prod-code) <> buf_goods.prod-code then do:
+    if    v-gds-mode = {&update} 
+      and (   p-GdsObj:prod-code ne buf_goods.prod-code 
+           or p-GdsObj:artic     ne buf_goods.artic ) 
+    then do:
         run utl\ren-art.p(buf_goods.gds-code,
             buf_goods.artic,
             buf_goods.prod-type,
             buf_goods.prod-code,
-            buf_goods.artic,
+            p-GdsObj:artic,
             buf_goods.prod-type,
-            integer(p-GdsObj:prod-code)
+            p-GdsObj:prod-code
         ) no-error.
         if error-status:error then do:
             v-err-mess = substitute("Ошибка при смене производителя у товара  &1. &2&3&2"
@@ -321,7 +328,7 @@ end.
                   , input v-gds-code
                   , input p-GdsObj:artic
                   , input "орг":U
-                  , input integer(p-GdsObj:prod-code)
+                  , input p-GdsObj:prod-code
                   , input v-node-code
                   , input integer(p-GdsObj:grp-code)
                   , input p-GdsObj:name_
@@ -421,12 +428,11 @@ end.
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-office-type}, output v-attr-del).     
   end.
-  
-  v-mark-type = ?.
-  v-mark-type = entry(p-GdsObj:mark-type + 1 ,{&prop-list-attr-mark-type}) no-error.
+  v-mark-type = MarkType:GetNameProp(p-GdsObj:mark-type) no-error.
   
   if v-mark-type <> ?
   and v-mark-type <> "not-type"
+  and v-mark-type <>  "Unknow"
   then do :
     RUN gds-attr-write (v-nbc, {&attr-mark-type}, v-mark-type).  
   end.
@@ -543,22 +549,17 @@ end.
                     then
                        prod-bc-attr.attr-value = string(vmaken).
                  end.
-                  find first buf_prod-bc no-lock  where buf_prod-bc.b-str     eq v-b-str
-                                                    and buf_prod-bc.b-code    eq bar-code.b-code.
-                                                    
-                  v-rid-pbc = recid(buf_prod-bc).
-                  if    buf_prod-bc.bc-on
+                  v-rid-pbc = recid(ub.prod-bc).
+                  if    ub.prod-bc.bc-on
                     and send-ref
                   then do:
-                      run str/diallog.w
-                        (input parparentproc
-                        ,input this-procedure
-                        ,input 'str/s-prodbc.p':U
-                        ,input string(v-rid-pbc) + {&delim-par} + "U":U
-                        ,input yes /*p-auto-go*/
-                        ,input '':U
-                        ,input "Пересылка ДопБК на кассы"
-                        ) .
+                     run fill-pbc-list in mImp2CdH
+                     (v-rid-pbc,
+                     bar-code.gds-code,
+                     prod-bc.b-code,
+                     prod-bc.b-str,
+                     prod-bc.bc-on,
+                     no).
                   end.
                   next ii_ .
               end. 
@@ -608,15 +609,19 @@ end.
                 find first ub.bar-code where recid(ub.bar-code) = v-bc-rid.
                 if send-ref
                 then do:
-                  run str/diallog.w
-                    (input  parparentproc
-                    ,input  this-procedure
-                    ,input  'str/send-bc.p':U
-                    ,input  string(recid(ub.bar-code)) + {&delim-par} + 'U':U
-                    ,input  yes /* p-auto-go */
-                    ,input  '':U
-                    ,input  "Пересылка бар-кода на кассы"
-                    ) .
+                   run fill-bar-code in mImp2CdH (
+                                                input   ub.bar-code.b-code
+                                               ,input   ub.bar-code.gds-code
+                                               ,input  (if  ub.bar-code.stts_ = integer({&hn-delete})
+                                                        then yes
+                                                        else no)
+                                               ,input   ub.bar-code.node-code
+                                               ,input   ub.bar-code.in-code
+                                               ,input   ub.bar-code.part-code
+                                               ,input   ub.bar-code.cli-base-rate
+                                               ,input   ub.bar-code.unit-cli
+                                                ) no-error.
+      
                 end.
             end.    
             v-b-str = v-barcode:bcode .
@@ -649,15 +654,13 @@ end.
               if  buf_prod-bc.bc-on
               and send-ref
               then do:
-                run str/diallog.w
-                  (input parparentproc
-                  ,input this-procedure
-                  ,input 'str/s-prodbc.p':U
-                  ,input string(v-rid-pbc) + {&delim-par} + "U":U
-                  ,input yes /*p-auto-go*/
-                  ,input '':U
-                  ,input "Пересылка ДопБК на кассы"
-                  ) .
+                 run fill-pbc-list in mImp2CdH
+                     (v-rid-pbc,
+                     ub.bar-code.gds-code,
+                     buf_prod-bc.b-code,
+                     buf_prod-bc.b-str,
+                     buf_prod-bc.bc-on,
+                     no).
               end.
             end.
         end.
@@ -693,16 +696,15 @@ end.
               if  buf_prod-bc.bc-on
               and send-ref
               then do:
-                run str/diallog.w
-                  (input parparentproc
-                  ,input this-procedure
-                  ,input 'str/s-prodbc.p':U
-                  ,input string(v-rid-pbc) + {&delim-par} + "U":U
-                  ,input yes /*p-auto-go*/
-                  ,input '':U
-                  ,input "Пересылка ДопБК на кассы"
-                  ) .
-              end.
+                    run fill-pbc-list in mImp2CdH
+                     (v-rid-pbc,
+                     ub.goods.gds-code,
+                     buf_prod-bc.b-code,
+                     buf_prod-bc.b-str,
+                     buf_prod-bc.bc-on,
+                     no).
+              
+              end.  
             end.
         end.
       end.

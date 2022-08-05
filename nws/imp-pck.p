@@ -39,7 +39,8 @@ define variable vss-description as character no-undo init "процедура импорта пак
 { gbl/gate-clb.i }
 { nws/lib-nws.i  }
 { nws/imp-pck1.i }
-
+define variable mFrameView      as logical   no-undo init yes.
+mFrameView = writelogvalue ne "AsyncProc". 
 
 define stream imp-stream.
 
@@ -107,6 +108,9 @@ on stop   undo, return error substitute("&1. stop main_block")
   for each cash-pay-list:
     delete cash-pay-list.
   end.
+  for each PromoAction-list:
+    delete PromoAction-list.
+  end.  
    for each ext-classif-list:
       delete ext-classif-list.
    end.
@@ -221,21 +225,24 @@ procedure local-imp-pck :
 
     run write-to-log( substitute("Разбор пакета N &1 из БД N &2", p-pck-num, p-db-src ) ) no-error.
 
-    view frame imp-pck.
+    if mFrameView
+    then do: 
+       view frame imp-pck.
 
-    assign
-      frame imp-pck:title = substitute( "&1 из БД &2", frame imp-pck:title, trim( string( p-db-src, ">>>>>>>>9" ) ) )
-    .
+       assign
+         frame imp-pck:title = substitute( "&1 из БД &2", frame imp-pck:title, trim( string( p-db-src, ">>>>>>>>9" ) ) )
+       .
+    
 
-    do with frame imp-pck
-    :
-      assign
-        p-db-src :screen-value        = string( p-db-src, p-db-src :format)
-        p-pck-num :screen-value       = string( p-pck-num, p-pck-num :format)
-        p-file-pck-name :screen-value = string( p-file-pck-name, p-file-pck-name :format)
-      .
+       do with frame imp-pck
+       :
+          assign
+             p-db-src :screen-value        = string( p-db-src, p-db-src :format)
+             p-pck-num :screen-value       = string( p-pck-num, p-pck-num :format)
+             p-file-pck-name :screen-value = string( p-file-pck-name, p-file-pck-name :format)
+          .
+       end.
     end.
-
     run cur-time in this-procedure
       ( output v-today
       , output v-time
@@ -983,8 +990,9 @@ procedure local-imp-pck :
       end.
       undo, return error.
     end.
-
-    hide frame imp-pck.
+    if mFrameView
+    then 
+       hide frame imp-pck.
 
   end.
 
@@ -1090,6 +1098,8 @@ procedure nws-imps :
                                         ,seek(imp-stream)
                                       ) .
       end.
+      if mFrameView
+      then  
       do with frame imp-pck
       :
         assign

@@ -34,12 +34,17 @@ class ibs.th.adm.upd.analisdf final:
     get.
     set.
 
+    define private property ActiveIndexAll as logical no-undo
+    get.
+    set.
+    
     define property ModeUpd as character  no-undo
     get.
     set (iarg as character ):
        modeupd = iarg.
        DelArea = lookup("iscomp",iarg) ne 0.
        silent  = lookup("updblank",iarg) ne 0.
+       ActiveIndexAll = lookup("OneDf",iarg) ne 0.
     end.
     
     define property Msg as character no-undo
@@ -123,17 +128,33 @@ class ibs.th.adm.upd.analisdf final:
       field {&prefixfil}DESCRIPTION as char
       field {&prefixfil}FORMAT as char
       field {&prefixfil}INITIAL as char
-      field {&prefixfil}LABEL as char
+      field {&prefixfil}INITIAL-SA as char
+      
       field {&prefixfil}POSITION as char
       field {&prefixfil}MAX-WIDTH as char
-      field {&prefixfil}COLUMN-LABEL as char
       field {&prefixfil}DECIMALS as char
       field {&prefixfil}HELP as char
       field {&prefixfil}ORDER as char
+      
       field {&prefixfil}MANDATORY as char
-      field {&prefixfil}CASE-SENSITIVE as char
-
       field {&prefixfil}NULL-ALLOWED as char
+      
+      field {&prefixfil}CASE-SENSITIVE as char
+      field {&prefixfil}NOT-CASE-SENSITIVE as char
+      
+      field {&prefixfil}VIEW-AS as char
+      field {&prefixfil}FORMAT-SA as char
+      field {&prefixfil}HELP-SA as char
+      field {&prefixfil}LABEL as char
+      field {&prefixfil}LABEL-SA as char
+      field {&prefixfil}COLUMN-LABEL as char
+      field {&prefixfil}COLUMN-LABEL-SA as char
+      field {&prefixfil}CAN-READ as char
+      field {&prefixfil}CAN-WRITE as char
+      field {&prefixfil}VALEXP as char
+      field {&prefixfil}VALMSG as char
+      field {&prefixfil}VALMSG-SA as char
+      field {&prefixfil}EXTENT as char
       
       field {&prefixfil}localIndex as integer 
      index {&prefixfil}localIndex {&prefixfil}localIndex
@@ -152,6 +173,7 @@ define temp-table {&prefixtt}INDEX
       field {&prefixfil}INDEX-FIELD as char
       field {&prefixfil}Word as char
       field {&prefixfil}localIndex as integer
+      field {&prefixfil}inactive as Char
      index {&prefixfil}localIndex {&prefixfil}localIndex
       
    .
@@ -505,10 +527,15 @@ define temp-table {&prefixtt}INDEX
       end.             
       else do: /* can-do("add,update,drop", vStrTmp) */
          if    mBufferName eq "table" and can-do("AREA,LABEL,DESCRIPTION,DUMP-NAME,TABLE-TRIGGER,CAN-CREATE,CAN-DELETE,CAN-READ,CAN-WRITE,CAN-DUMP,CAN-LOAD",trim(vMode,'"'))
-            or mBufferName eq "field" and can-do("DESCRIPTION,FORMAT,INITIAL,LABEL,POSITION,MAX-WIDTH,COLUMN-LABEL,DECIMALS,HELP,ORDER,MANDATORY,NULL-ALLOWED,CASE-SENSITIVE",trim(vMode,'"'))
-            or mBufferName eq "INDEX" and can-do("AREA,DESCRIPTION,UNIQUE,PRIMARY,INDEX-FIELD,WORD",trim(vMode,'"'))          
+            or mBufferName eq "field" and can-do("DESCRIPTION,FORMAT,INITIAL,LABEL,POSITION,MAX-WIDTH,COLUMN-LABEL,DECIMALS,HELP,ORDER,MANDATORY,NULL-ALLOWED,CASE-SENSITIVE,~
+NOT-CASE-SENSITIVE,VIEW-AS,FORMAT-SA,HELP-SA,LABEL-SA,COLUMN-LABEL-SA,CAN-READ,CAN-WRITE,VALEXP,VALMSG,VALMSG-SA,EXTENT,INITIAL-SA",trim(vMode,'"'))
+            or mBufferName eq "INDEX" and can-do("AREA,DESCRIPTION,UNIQUE,PRIMARY,INDEX-FIELD,WORD,inactive",trim(vMode,'"'))          
             or mBufferName eq "SEQUENCE" and can-do("INITIAL,INCREMENT,CYCLE-ON-LIMIT,MIN-VAL,MAX-VAL",trim(vMode,'"'))
          then do:
+               if     ActiveIndexAll
+                  and mBufferName eq "INDEX" and can-do("inactive",trim(vMode,'"'))
+               then
+                  return no.
                vFieldName = "{&prefixfil}" + vMode no-error.
                if error-status:error
                then do:
@@ -516,6 +543,13 @@ define temp-table {&prefixtt}INDEX
                   putmes(msg).
                   return yes.
                end.
+        /*       if vmode eq "inactive"
+               then do:
+                  msg = substitute( "Ошибка добавляется не активный индекс &1 таблице &2",  mName /* , {&prefixtt}index.{&prefixfil}table*/ ). 
+                  putmes(msg).
+                  message msg view-as alert-box.
+                  return yes.
+               end.  */
                define variable vval as character no-undo.
                vval = trim(
                                                                   (if can-do("INDEX-FIELD,TABLE-TRIGGER" ,vmode)  
@@ -540,7 +574,12 @@ define temp-table {&prefixtt}INDEX
                else if vMode eq "MANDATORY"
                then
                   mBuffer:buffer-field("{&prefixfil}NULL-ALLOWED"):BUFFER-VALUE () = "".
-             
+               else if vMode eq "NOT-CASE-SENSITIVE"
+               then
+                  mBuffer:buffer-field("{&prefixfil}CASE-SENSITIVE"):BUFFER-VALUE () = "".
+               else if vMode eq "CASE-SENSITIVE"
+               then
+                  mBuffer:buffer-field("{&prefixfil}NOT-CASE-SENSITIVE"):BUFFER-VALUE () = "".
          end.       
          else do:
             msg = substitute( "Ошибка структуре df  объекта &1 &2 неизвестное выражение &3",mBufferName, mName, vMode). 

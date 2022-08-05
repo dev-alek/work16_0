@@ -126,6 +126,7 @@ define variable create-window-option as integer no-undo .
 define variable is-internal-option as logical no-undo .
 define variable v-comp-name as character no-undo .
 define variable v-default-name-flag as integer no-undo .
+define variable mprocevent as logical no-undo init yes.
 define stream instream.
 
 define temp-table temp-file-name no-undo
@@ -827,13 +828,31 @@ define input parameter p-log-string     as character    no-undo.
                                 else fill( " ", p-tab-position) + p-log-string
                           ) ) in frame {&frame-name}.
     ed-log :insert-string ( {&new-line} ) in frame {&frame-name}.
-    process events.
+    if mprocevent
+    then
+       process events.
 
 end.
 END PROCEDURE. /* write-log */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-log-and-file Dialog-Frame
+PROCEDURE write-log-and-file-noprocevent :
+  define input parameter p-tab-position   as integer   no-undo.
+  define input parameter p-file-name      as character no-undo .
+  define input parameter p-log-level      as integer   no-undo .
+  define input parameter p-log-string     AS CHARacter NO-UNDO.
+   mprocevent = no.
+  
+   run write-log-and-file( p-tab-position,p-file-name,p-log-level,p-log-string)no-error.
+   mprocevent = yes.
+END PROCEDURE. /* write-log-and-file */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-log-and-file Dialog-Frame
 PROCEDURE write-log-and-file :

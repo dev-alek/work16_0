@@ -25,20 +25,21 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 &if defined(cur-time_i) = 0 &then
 
-&glob cur-time_i
-&if "{1}" = "class"
-&then
-method private void cur-time  (output  p-today as date ,output p-time  as integer ):
-&else
+&glob cur-time_i yes
+{ cmp/str-glbl.i} /* объявим на всякий случай для классов его всегда можно переопределить раньше */
+{&CommentStartNoClass}
+method private logical cur-time (output p-today as date,
+                                 output p-time  as integer ):
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 procedure cur-time :
    define output parameter p-today as date      no-undo .
    define output parameter p-time  as integer   no-undo .
-&endif
+{utl\comment.i} */
+   
   do
   on error undo, return error
   :
     
-
     define variable v-date1 as date      no-undo .
     define variable v-date2 as date      no-undo .
     define variable v-time  as integer   no-undo .
@@ -55,7 +56,7 @@ procedure cur-time :
       /* то необходимо сделать повторный запрос */
       assign
         v-date1 = today
-        v-time  = time
+        v-time  = v-time
       .
     end.
 
@@ -67,35 +68,46 @@ procedure cur-time :
 
 end. /* cur-time */
 
-&if "{1}" = "class"
-&then
-&else
+{&CommentStartNoClass}
+method private character  cur-time-date () 
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function cur-time-date returns character
+{utl\comment.i} */
 :
   /* возвращает текущую дату */
   /* длина строки 10 символов */
 
   return string(today, '99/99/9999':U) .
 
-end function .
+end.
 
-
+{&CommentStartNoClass}
+method private decimal cur-time-mjd () 
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function cur-time-mjd returns decimal
+{utl\comment.i} */
 :
   /* return modified julian day number for specified date */
   define variable v-date as date      no-undo .
   define variable v-time as integer   no-undo .
-
+  {&CommentStartNoClass}
+  cur-time
+  {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
   run cur-time in this-procedure
+  {utl\comment.i} */
     (output v-date
     ,output v-time
     ) .
 
   return integer(v-date) - 2400002 + (v-time / 86400) .
 
-end function .
+end.
 
+{&CommentStartNoClass}
+method private integer cur-time-get-ending-index 
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function cur-time-get-ending-index returns integer
+{utl\comment.i} */
 (input p-number as integer
 )
 :
@@ -138,9 +150,40 @@ function cur-time-get-ending-index returns integer
     end.
   end case .
 
-end function .
+end.
 
+{&CommentStartNoClass}
+method private character cur-time-mjd-to-date( 
+  input  i-mjd-diff as decimal
+,output  o-Date     as date
+,output  o-Time     as integer):
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+procedure cur-time-mjd-to-date :
+   define input  parameter i-mjd-diff as decimal no-undo.
+   define output parameter o-Date     as date    no-undo.
+   define output parameter o-Time     as integer no-undo.
+{utl\comment.i} */
+   
+   define variable v-day-number as integer   no-undo .
+  
+   if    i-mjd-diff < 0
+      or i-mjd-diff = ?
+   then do:
+      return "?" .
+   end.
+
+   assign
+      v-day-number = truncate(i-mjd-diff,0).
+      o-Date = date(v-day-number + 2400002).
+      o-Time = truncate((i-mjd-diff - v-day-number) * 86400, 0)
+  .
+end.
+
+{&CommentStartNoClass}
+method private character cur-time-mjd-to-string 
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function cur-time-mjd-to-string returns character
+{utl\comment.i} */
 (input p-mjd-diff as decimal
 )
 :
@@ -207,42 +250,59 @@ function cur-time-mjd-to-string returns character
     + string(v-seconds) + " " + v-second-name[cur-time-get-ending-index(v-seconds)]
     .
 
-end function .
+end.
 
-
-
+{&CommentStartNoClass}
+method private character cur-time-string ()
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function cur-time-string returns character
+{utl\comment.i} */
 :
   /* возвращает текущую дату и время, разделенные пробелом */
   /* длина строки 16 */
   define variable v-date as date      no-undo .
   define variable v-time as integer   no-undo .
 
+  {&CommentStartNoClass}
+  cur-time
+  {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
   run cur-time in this-procedure
+  {utl\comment.i} */
     (output v-date
     ,output v-time
     ) .
 
   return string(v-date, '99/99/9999':U) + ' ':u + string(v-time, 'HH:MM':U) .
-end function .
+end.
 
-
+{&CommentStartNoClass}
+method private character cur-time-string-sec ()
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function cur-time-string-sec returns character
+{utl\comment.i} */
 :
   /* возвращает текущую дату и время с точностью до секунды, разделенные пробелом */
   /* длина строки 19 */
   define variable v-date as date      no-undo .
   define variable v-time as integer   no-undo .
 
+  {&CommentStartNoClass}
+  cur-time
+  {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
   run cur-time in this-procedure
+  {utl\comment.i} */
     (output v-date
     ,output v-time
     ) .
   return string(v-date, '99/99/9999':U) + ' ':u + string(v-time, 'HH:MM:SS':U) .
 
-end function .
+end.
 
+{&CommentStartNoClass}
+method private character cur-time-custom 
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function cur-time-custom  returns character
+{utl\comment.i} */
 (input p-prefix as character
 ,input p-date-format as character
 ,input p-delimiter as character
@@ -254,7 +314,11 @@ function cur-time-custom  returns character
   define variable v-date as date      no-undo .
   define variable v-time as integer   no-undo .
 
+  {&CommentStartNoClass}
+  cur-time
+  {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
   run cur-time in this-procedure
+  {utl\comment.i} */
     (output v-date
     ,output v-time
     ) .
@@ -267,10 +331,13 @@ function cur-time-custom  returns character
     + p-suffix
     .
 
-end function .
+end.
 
-
+{&CommentStartNoClass}
+method private character cur-time-print ()
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function cur-time-print  returns character
+{utl\comment.i} */
 :
   /* возвращает текущую дату и время печати */
   /* длина строки 33 символа */
@@ -278,16 +345,24 @@ function cur-time-print  returns character
   define variable v-date as date      no-undo .
   define variable v-time as integer   no-undo .
 
+  {&CommentStartNoClass}
+  cur-time
+  {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
   run cur-time in this-procedure
+  {utl\comment.i} */
     (output v-date
     ,output v-time
     ) .
 
   return "Дата печати : " + string(v-date, '99.99.9999':U) + ' , ':U + string(v-time, 'HH:MM':U) .
 
-end function .
+end.
 
+{&CommentStartNoClass}
+method private datetime cur-time-datetime ()
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
 function cur-time-datetime returns datetime
+{utl\comment.i} */
 :
 
   define variable v-char as character no-undo .
@@ -298,7 +373,8 @@ function cur-time-datetime returns datetime
 
 
 
-end function.
+end.
+
 &endif
-&endif
+
 /* $Workfile$ */

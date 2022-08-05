@@ -35,7 +35,9 @@ define variable vss-description as character no-undo init "Импорт gtin".
 { gbl/getcntxt.i def }
 { gbl/thbj-def.i }
 { gbl/thbjattr.i }
-
+{ gbl/objsrv.i }
+define variable MarkType as ibs.th.str.marking.Types no-undo.
+MarkType = ObjSrv:Env:Marking:Types.
 define variable v-imp-file as character no-undo .
 define variable v-err-file as character no-undo .
 define variable v-log-file as character no-undo .
@@ -300,7 +302,7 @@ for each tt-gds-gtin no-lock :
         goods-attr.attr-code = {&attr-mark-type}
       .
     end.
-    assign goods-attr.attr-value = {&attr-mark-type_tabak} .
+    assign goods-attr.attr-value =  MarkType:tabak:nameprop.
     
     v-bar-code = buf_bar-code.b-code .
     
@@ -341,6 +343,12 @@ for each tt-gds-gtin no-lock :
                                        no-error.
       if available buf_prod-bc
       then do :
+        if buf_prod-bc.bc-on-type = {&gtin}
+        then do :
+          export stream s-err delimiter ";" tt-gds-gtin .
+          put stream s-log unformatted "В системе уже есть код " v-b-str ", который является GTIN'ом. Его нельзя сделать маркированным." skip skip .
+          undo, next .
+        end.
         find first buf_prod-bc-attr exclusive-lock where buf_prod-bc-attr.b-str = buf_prod-bc.b-str
                                                      and buf_prod-bc-attr.b-code = buf_prod-bc.b-code
                                                      and buf_prod-bc-attr.attr-code = {&mark}

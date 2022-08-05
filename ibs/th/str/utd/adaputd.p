@@ -26,14 +26,31 @@ Creation date: 01/30/15
 using ibs.th.skt.*.
 using ibs.th.skt.Adapters.*.
 using ibs.th.gbl.env.utd.
+using ibs.th.str.marking.handlers.*.
+def var vss-revision    as character no-undo init "$Revision$":U .
+def var vss-author      as character no-undo init "$Author$":U .
+def var vss-date        as character no-undo init "$Date$":U .
+def var vss-workfile    as character no-undo init "$Workfile$":U .
+def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-description as character no-undo init "Создание накладных по УПД".
 
 { cmp/trg-def.i }
 { cmp/library.i  }
 { ibs/th/str/utd/trn/tt516.i}
 { gbl/getcntxt.i def }
 { str/utd-attr.i}
+{ str/utd-err.i}
 { gbl/attr-lib.i}
+{ utl/gtin.i }
 /*define shared variable g#auto-user-id as character no-undo .*/
+
+
+define temp-table tt-gtin-qnty no-undo
+  field gtin as character
+  field qnty as integer
+  field qntyDoc as integer
+  field order as integer
+.
 
 define input  parameter  p-db-num as integer no-undo.
 define input  parameter  p-doc-id as integer no-undo.
@@ -62,9 +79,21 @@ do:
   def buffer buf_utd-marking-lines for ub.utd-marking-lines.
   def buffer buf_mark-lines for ub.marking-lines.
   def buffer buf_marking for ub.marking.
-  
-  def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
+  def buffer buf_bar-code for ub.bar-code.
+    
+  define variable vGtin as character no-undo .
+  define variable vGtinQnty as integer no-undo .
+  define variable vGtinList as character no-undo .
+  define variable vGtinDocQntyList as character no-undo .
+  define variable vGtinFactQntyList as character no-undo .
+  define variable vScanGtin as character no-undo .
+  define variable vFullQnty as integer no-undo .
+  define variable vGT as integer no-undo .
+  define variable vGtinSumDocQnty as integer no-undo .
+  define variable vOrder as integer no-undo .
+  define variable vIsMarkLine as logical no-undo .
+  define variable vMaxDocLevel as integer no-undo .
+  { gbl/objsrv.i  }
   
 /*  logWrite = new LogWrite().*/
   
@@ -72,24 +101,25 @@ do:
   if not available (buf_utd)
     then undo, return error "Не найден УТД - " + string(p-db-num) + "," + string(p-doc-id).
   
-  find first buf_utd-attr no-lock where buf_utd-attr.doc-id = p-doc-id
-                                    and buf_utd-attr.db-num = p-db-num
-                                    and buf_utd-attr.attr-code = "MarkUtd"
-                                    no-error .
-  if available buf_utd-attr
-  then do :                                 
-    vMarkUtd = logical(buf_utd-attr.attr-value) .                             
-  end .
-  else do :
-    vMarkUtd = yes .
-  end .
   
-  if (vMarkUtd  and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB)
+/*  if (vMarkUtd  and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB)
      or (not vMarkUtd
          and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB
-         and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB)
+         and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:SignatureRequired:KeyIntDB) */
+
+  if     buf_utd.sts ne objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
+     and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:KeyIntDB
+     and buf_utd.sts ne objSrv:Env:Utd:Sts:TH:SignatureRequired   :KeyIntDB 
   then do:
-    undo, return error "Неверный статус документа УТД " + string(p-db-num) + "," +  string(p-doc-id) + " - " + objSrv:Env:Utd:Sts:TH:GetLabel(buf_utd.sts).
+    undo, return error substitute ("Неверный статус документа УТД &1,&2 - &3&4Накладные можно создать в статусах: &4&5&4&6&4&7",
+                                   p-db-num,
+                                   p-doc-id,
+                                   objSrv:Env:Utd:Sts:TH:GetLabel(buf_utd.sts),
+                                   {&new-line},
+                                   objSrv:Env:Utd:Sts:TH:Confirmed           :Label_,
+                                   objSrv:Env:Utd:Sts:TH:DeliveryCodeMismatch:Label_,
+                                   objSrv:Env:Utd:Sts:TH:SignatureRequired   :Label_)
+                                   .
   end.
 
   if buf_utd.EDocType ne objSrv:Env:Utd:EDocType:UTD:KeyIntDB
@@ -99,7 +129,7 @@ do:
   
   if buf_utd.doc-code <> "" and can-find (first ub.trn-doc where ub.trn-doc.doc-code = buf_utd.doc-code)
   then do:
-    undo, return error "Для документа уже создана накладная " + string(p-db-num) + "," + string(p-doc-id) + " - " + buf_utd.doc-code.
+    undo, return "Для документа c вн. номером " + string(p-db-num) + "_" + string(p-doc-id) + " уже создана накладная - " + buf_utd.doc-code.
   end.
   
   
@@ -125,9 +155,10 @@ do:
     temp_trn-doc.exch-scale    = 1
     temp_trn-doc.contract-code = buf_utd.contract-code
     temp_trn-doc.host-code = buf_utd.host-code
-/*      temp_trn-doc.price-type    = if TempTrnDoc.ext-doc-type = {&TDEDT_Ras_Vnesh } then "TSFTSD" else ""*/
     .
-
+  define variable Tree           as class     tree no-undo .
+  Tree = ObjSrv:Lib:MarkingTree .
+   
   fe_:
   for each buf_utd-lines where buf_utd-lines.db-num = buf_utd.db-num
                            and buf_utd-lines.doc-id = buf_utd.doc-id
@@ -137,56 +168,73 @@ do:
       then next fe_.
     def var sum-vat as decimal no-undo.
     def var v-q as decimal no-undo.
+    def var v-q-doc as decimal no-undo.
+    def var v-q-doc-base  as decimal no-undo.
     v-q = 0.
 /*    if buf_utd.EDocType = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB*/
 /*    then                                                       */
 
-    if vMarkUtd
+    &scop proc-name gds-attr-value
+    {&run_proc_attr-lib}
+     ( buf_utd-lines.gds-code,
+       {&attr-mark-type},
+       output v-par-val,
+       output v-par-type
+     ).
+
+    if logical (getAttrUtdLinesEx(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.LineNum,"MarkUtdLine","no"))
     then do :
-      &scop proc-name gds-attr-value
-      {&run_proc_attr-lib}
-           ( buf_utd-lines.gds-code,
-             {&attr-mark-type},
-             output v-par-val,
-             output v-par-type
-           ).
+      vIsMarkLine = yes .
+      
       if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsMarkingForType(v-par-val)
       then do:
-        for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
-          and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
-          and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
-          :
-          
-          find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.unit-ext = "UNIT"
-            and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
-          if available (buf_marking)
-            then v-q = v-q + 1.
-        end.
+        v-q = Tree:GetQntyStsUnit(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum,objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
+        
       end.
       else do:
         for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
           and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
           and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
           and buf_utd-marking-lines.doc-level = 1
-          :
-          find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark
-                      and (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB) 
-  					and buf_marking.box-qnty <> ? no-lock no-error.
-          if available (buf_marking)
-            then v-q = v-q + buf_marking.box-qnty.
+          no-lock:
+             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
+          
         end.      
       end.
+      
+      v-q-doc-base = buf_utd-lines.Quantity.
+      v-q-doc = decimal(GetAttrUtdlinesex(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity",string(v-q-doc-base))) .
+      if v-q-doc = ?
+      then do :
+        find first buf_bar-code where 
+                   buf_bar-code.gds-code = buf_utd-lines.gds-code
+               and buf_bar-code.unit-cli = buf_utd-lines.UnitCode
+        no-lock no-error.
+        v-q-doc = v-q-doc-base / (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1) .
+      end .
     end .
     else do :
-      v-q = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"QuantityBarCode")) .
+      vIsMarkLine = no .
+      
+      find first buf_bar-code where 
+                 buf_bar-code.gds-code = buf_utd-lines.gds-code
+             and buf_bar-code.unit-cli = buf_utd-lines.UnitCode
+      no-lock no-error.
+      v-q = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"QuantityBarCode")).
+      if v-q = ? then v-q = 0.
+      v-q-doc = decimal(GetAttrUtdlinesex(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity",string(buf_utd-lines.Quantity))) .
+      v-q-doc-base = v-q-doc * (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1).
+      if v-q-doc = ?
+      then do :
+        v-q-doc = buf_utd-lines.Quantity.
+        v-q-doc-base = v-q-doc * (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1).
+      end . 
     end .
-    if    v-q eq 0
-       or v-q eq ?
-    then 
-       next fe_.
-        
-    sum-vat = (buf_utd-lines.Total - buf_utd-lines.TotalWithVatExcluded) / buf_utd-lines.Quantity. 
-    
+    if CheckErrForLine(buffer buf_utd-lines:handle)
+    then
+      v-q = 0.
+    sum-vat = (buf_utd-lines.Total - buf_utd-lines.TotalWithVatExcluded) / v-q-doc. 
+  
     create temp_doc-line.
     assign
       temp_doc-line.line-num   = buf_utd-lines.LineNum
@@ -194,12 +242,195 @@ do:
       temp_doc-line.doc-id = buf_utd-lines.doc-id
       temp_doc-line.gds-code   = buf_utd-lines.gds-code
       temp_doc-line.fact-qnty  = v-q
-      temp_doc-line.doc-qnty   = v-q
-      temp_doc-line.price-cli  = buf_utd-lines.Total / buf_utd-lines.Quantity
-      temp_doc-line.price-rubl = buf_utd-lines.Total / buf_utd-lines.Quantity 
+      temp_doc-line.doc-qnty   = v-q-doc-base
+      temp_doc-line.cli-qnty   = v-q-doc
+      temp_doc-line.unit-cli   = buf_utd-lines.UnitCode 
+      temp_doc-line.price-cli  = buf_utd-lines.Total / (if vMarkUtd then buf_utd-lines.Quantity else temp_doc-line.cli-qnty)
+      temp_doc-line.price-rubl = buf_utd-lines.Total / (if vMarkUtd then buf_utd-lines.Quantity else temp_doc-line.cli-qnty)
       temp_doc-line.doc-code   = temp_trn-doc.doc-code
-      temp_doc-line.vat-pc     = 100 * sum-vat / (buf_utd-lines.TotalWithVatExcluded / buf_utd-lines.Quantity)
+      temp_doc-line.vat-pc     = 100 * sum-vat / (buf_utd-lines.TotalWithVatExcluded / temp_doc-line.cli-qnty)
+    .
+    
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsArticForType(v-par-val)
+    then do:
+      
+      assign
+        vGtinList = ""
+        vGtinDocQntyList = ""
+        vGtinFactQntyList = ""
       .
+      
+      if vIsMarkLine
+      then do :
+        vMaxDocLevel = 1 .
+        for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                         and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                         and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+        :
+          vMaxDocLevel = max(vMaxDocLevel, buf_utd-marking-lines.doc-level) .
+        end .
+      end .
+      
+      utd-marking-lines_ :
+      for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                       and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                       and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+      : 
+        if vIsMarkLine
+        and buf_utd-marking-lines.doc-level < vMaxDocLevel
+        then do :
+          next utd-marking-lines_ .
+        end .
+        
+        vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
+        if vGtin > ""
+        then do :
+          vGtinQnty = 0 .
+          find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark
+/*                                     and (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB)*/
+                                   and buf_marking.box-qnty > 0
+          no-lock no-error.
+          if available (buf_marking)
+          then do :
+            vGtinQnty = buf_marking.box-qnty .
+          end .
+          else do :
+            if vIsMarkLine
+            then do :
+              next utd-marking-lines_ .
+            end .  
+            vGtinQnty = getQntyUTDByDM(buf_utd-marking-lines.mark) .
+          end .
+          if vGtinQnty > 0
+          then do :
+            if vGtinList > ""
+            and lookup(vGtin, vGtinList) > 0
+            then do :
+              entry(lookup(vGtin, vGtinList), vGtinDocQntyList) = string(integer(entry(lookup(vGtin, vGtinList), vGtinDocQntyList)) + vGtinQnty) .
+              entry(lookup(vGtin, vGtinList), vGtinFactQntyList) = string(integer(entry(lookup(vGtin, vGtinList), vGtinFactQntyList)) + (if temp_doc-line.fact-qnty = 0 then 0 else vGtinQnty)) .
+              if temp_doc-line.fact-qnty = 0
+              then
+                entry(lookup(vGtin, vGtinList), vGtinDocQntyList) = string(integer(temp_doc-line.doc-qnty)) 
+              .
+            end .
+            else do :
+              vGtinList = vGtinList + vGtin + "," .
+              vGtinDocQntyList = vGtinDocQntyList + string(if temp_doc-line.fact-qnty = 0 then temp_doc-line.doc-qnty else vGtinQnty) + "," .
+              vGtinFactQntyList = vGtinFactQntyList + string(if temp_doc-line.fact-qnty = 0 then 0 else vGtinQnty) + "," .
+            end .
+            if integer(entry(lookup(vGtin, vGtinList), vGtinDocQntyList)) > temp_doc-line.doc-qnty
+            then do :
+              entry(lookup(vGtin, vGtinList), vGtinDocQntyList) = string(integer(temp_doc-line.doc-qnty)) .
+            end .
+          end .
+        end .
+      end .
+      
+      vGtinList = trim(vGtinList, ",") .
+      vGtinDocQntyList = trim(vGtinDocQntyList, ",") .
+      vGtinFactQntyList = trim(vGtinFactQntyList, ",") .
+      
+      if temp_doc-line.fact-qnty <> temp_doc-line.doc-qnty
+      and temp_doc-line.fact-qnty > 0
+      then do : /* Частичная приёмка */
+        empty temp-table tt-gtin-qnty .
+        vFullQnty = temp_doc-line.fact-qnty .
+        vScanGtin = getAttrUtdLinesEx(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.LineNum,"ScanGtin","") .
+        vOrder = 0 .
+        if vScanGtin > ""
+        then do :
+          vOrder = vOrder + 1 .
+          create tt-gtin-qnty .
+          assign
+            tt-gtin-qnty.gtin = vScanGtin
+            tt-gtin-qnty.qnty = 0
+            tt-gtin-qnty.order = vOrder
+          .
+        end .
+        do vGT = 1 to num-entries(vGtinList) :
+          find first tt-gtin-qnty where tt-gtin-qnty.gtin = entry(vGT, vGtinList) no-error .
+          if not available tt-gtin-qnty
+          then do :
+            vOrder = vOrder + 1 .
+            create tt-gtin-qnty .
+            assign
+              tt-gtin-qnty.gtin = entry(vGT, vGtinList)
+              tt-gtin-qnty.qnty = 0
+              tt-gtin-qnty.qntyDoc = integer(entry(vGT, vGtinDocQntyList))
+              tt-gtin-qnty.order = vOrder
+            .
+          end .
+          else do :
+            tt-gtin-qnty.qntyDoc = integer(entry(vGT, vGtinDocQntyList)) .
+          end .
+        end .
+        for each tt-gtin-qnty by tt-gtin-qnty.order :
+          tt-gtin-qnty.qnty = tt-gtin-qnty.qnty + 1 .
+          vFullQnty = vFullQnty - 1 .
+          if vFullQnty = 0
+          then leave .
+        end .
+        for each tt-gtin-qnty where tt-gtin-qnty.qnty = 0 :
+          delete tt-gtin-qnty .
+        end .
+        if vFullQnty > 0
+        then do :
+          for each tt-gtin-qnty by tt-gtin-qnty.order :
+            if (tt-gtin-qnty.qntyDoc - 1) >= vFullQnty
+            then do :
+              tt-gtin-qnty.qnty = tt-gtin-qnty.qnty + vFullQnty .
+              vFullQnty = 0 .
+              leave .
+            end .
+            else do :
+              tt-gtin-qnty.qnty = tt-gtin-qnty.qntyDoc .
+              vFullQnty = vFullQnty - (tt-gtin-qnty.qntyDoc - 1) .
+            end .
+          end .
+        end .
+        
+        assign
+          vGtinList = ""
+          vGtinDocQntyList = ""
+          vGtinFactQntyList = ""
+        .
+        for each tt-gtin-qnty by tt-gtin-qnty.order :
+          vGtinList = vGtinList + tt-gtin-qnty.gtin + "," .
+          vGtinDocQntyList = vGtinDocQntyList + string(tt-gtin-qnty.qntyDoc) + "," .
+          vGtinFactQntyList = vGtinFactQntyList + string(tt-gtin-qnty.qnty) + "," .
+        end .
+        vGtinList = trim(vGtinList, ",") .
+        vGtinDocQntyList = trim(vGtinDocQntyList, ",") .
+        vGtinFactQntyList = trim(vGtinFactQntyList, ",") .
+      end . /* Частичная приёмка */
+      
+      vGtinSumDocQnty = 0 .
+      do vGT = 1 to num-entries(vGtinList) :
+        vGtinSumDocQnty = vGtinSumDocQnty + integer(entry(vGT, vGtinDocQntyList)) .
+      end .
+      
+      if vGtinSumDocQnty > temp_doc-line.doc-qnty
+      then do :
+        do while vGtinSumDocQnty <> temp_doc-line.doc-qnty :
+          do vGT = 1 to num-entries(vGtinList) :
+            if integer(entry(vGT, vGtinFactQntyList)) >= integer(entry(vGT, vGtinDocQntyList)) 
+            then
+              next .
+            entry(vGT, vGtinDocQntyList) = string(integer(entry(vGT, vGtinDocQntyList)) - 1) .
+            vGtinSumDocQnty = vGtinSumDocQnty - 1 .
+            if vGtinSumDocQnty = temp_doc-line.doc-qnty
+            then
+              leave .
+          end .
+        end .
+      end .
+      
+      assign
+        temp_doc-line.gtinList = vGtinList
+        temp_doc-line.gtinDocQntyList = vGtinDocQntyList
+        temp_doc-line.gtinFactQntyList = vGtinFactQntyList
+      .
+    end .
     
   end.
   
@@ -212,7 +443,11 @@ do:
       iDbNum
     }
   def var v-msg as character no-undo.
-    
+  def var v-gnews as logical no-undo.
+  def var v-gesys as logical no-undo.
+  v-gnews = g#news.
+  v-gesys = g#esys.
+  g#news = false.
   run ibs/th/str/utd/trnutd.p (
     input this-procedure ,
     input this-procedure ,
@@ -224,8 +459,12 @@ do:
     ) no-error .
   if error-status:error 
     then do:
-      return error (return-value + " " + v-msg).
+      g#news = v-gnews.
+      g#esys = v-gesys. 
+      undo, return error (return-value + " " + v-msg).
     end.
+  g#news = v-gnews.
+  g#esys = v-gesys.
   if iDbNum ne 0
   then do:
     run nws/cmdchgutd.p (buffer buf_utd) no-error.
@@ -320,3 +559,57 @@ define output parameter p-cntxt-is-admin              as logical   no-undo . /* 
 
   end.
 end procedure. /* mainmenu_getcntxt */
+
+
+/* Для str/in-doc.w */
+procedure chk-is-addcharges :
+
+  define output parameter p-enable-item as logical   no-undo .
+
+  define variable v-is-add as character no-undo .
+  define variable par-type   as character no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    { gbl/conf-rd.i
+      "'is-addch':u"
+      "'':u"
+      "'':u"
+      0
+      "'':u"
+      "'':u"
+      "'':u"
+      no
+      v-is-add
+      par-type
+      no-error
+    }
+
+    if v-is-add = 'yes'
+    then do:
+      assign
+        p-enable-item = true
+      .
+    end.
+    else do:
+      assign
+        p-enable-item = false
+      .
+    end.
+  end.
+
+end procedure. /* chk-is-addcharges */
+
+procedure get-report-num :
+  define output parameter p-report-num as integer no-undo .
+   do
+   on error undo, return error return-value
+   :
+    assign
+      p-report-num = 1
+    .
+   end.
+
+end procedure. /* get-report-num */
+ 

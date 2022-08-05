@@ -20,7 +20,8 @@ define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 
 { adm/auto-def.i}
-define input  parameter IBuff as handle no-undo.
-IBuff::Usr = g#auto-user-login.
-IBuff::Pwd = g#auto-user-password.
+define input  parameter SystemUser as ibs.th.file.asyncparam no-undo.
+define input  parameter SystemPass as ibs.th.file.asyncparam no-undo.
+SystemUser:valueParam = g#auto-user-login.
+SystemPass:valueParam = g#auto-user-password.
 return.

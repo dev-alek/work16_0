@@ -341,31 +341,31 @@ DO:
             .
         end.
     end.
-    if v-gds-list-not-empty = yes
-    then do:
-        enable
-            bt-attr
-            bt-set1
-            bt-set2
-            bt-set3
-            bt-set4
-            bt-set5
-            bt-set6
-            bt-set-obj
-        with frame {&frame-name}.
-    end.
-    else do:
-        disable
-            bt-attr
-            bt-set1
-            bt-set2
-            bt-set3
-            bt-set4
-            bt-set5
-            bt-set6
-            bt-set-obj
-        with frame {&frame-name}.
-    end.
+/*    if v-gds-list-not-empty = yes*/
+/*    then do:                     */
+/*        enable                   */
+/*            bt-attr              */
+/*            bt-set1              */
+/*            bt-set2              */
+/*            bt-set3              */
+/*            bt-set4              */
+/*            bt-set5              */
+/*            bt-set6              */
+/*            bt-set-obj           */
+/*        with frame {&frame-name}.*/
+/*    end.                         */
+/*    else do:                     */
+/*        disable                  */
+/*            bt-attr              */
+/*            bt-set1              */
+/*            bt-set2              */
+/*            bt-set3              */
+/*            bt-set4              */
+/*            bt-set5              */
+/*            bt-set6              */
+/*            bt-set-obj           */
+/*        with frame {&frame-name}.*/
+/*    end.                         */
     {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END.
 
@@ -801,7 +801,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
    run init-fields in this-procedure.
    RUN enable_UI.
-   disable
+   hide
         bt-attr
         bt-set1
         bt-set2
@@ -810,7 +810,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         bt-set5
         bt-set6
         bt-set-obj
-   with frame {&frame-name}.
+   in frame {&frame-name}.
    apply "entry" to b-goods.
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
