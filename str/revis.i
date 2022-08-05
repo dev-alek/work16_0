@@ -159,11 +159,19 @@ procedure get-from-struna :
    then do:
       return error 'Не задан парам. comstr в секции revision ini файла.' .
    end.
-   v_File-Name = "wrevis" + string(random(100000,999999)) + ".tmp".
+   v_File-Name = "wrevis" + string(random(1000000,9999999)) + ".tmp".
    if searchfile(v_File-Name) ne ?
-   then
-      return error "Удалите все файлы wrevis*.tmp".
-  
+   then do :
+      v_File-Name = "wrevis" + string(random(1000000,9999999)) + ".tmp".
+      if searchfile(v_File-Name) ne ?
+      then do :
+        os-delete value(searchfile(v_File-Name)) no-error .
+      end.
+      if searchfile(v_File-Name) ne ?
+      then
+        return error "Удалите все файлы wrevis*.tmp".
+   end.
+   
    assign
       v_command = substitute( "&1 &2 &3 &4", v-comstring, string(0), v_File-Name, i-obj-code)
    .
