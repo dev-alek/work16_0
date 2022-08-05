@@ -136,6 +136,7 @@ class ibs.th.gbl.map.mapstring inherits ibs.th.gbl.sys.objth:
       assign
         ttListObj.iNum = ttListObj.iNum - 1.
     end.
+    isSort = no.
     iCounter = iCounter - 1.
   end.
   
