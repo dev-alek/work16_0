@@ -11,6 +11,9 @@
 
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
+using ibs.th.gbl.sys.objsrv.
+using ibs.th.str.marking.sts.*.
+
 
 class ibs.th.str.marking.handlers.treeexem inherits objth: 
 
