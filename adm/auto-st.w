@@ -622,7 +622,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ) .
 
   assign
-    v-task-name = substitute( "OEApp AutoTaskÌanager &1", p-db-info )
+    v-task-name = substitute( "OEApp TH 16_0 AutoTaskÌanager &1", p-db-info )
   .
   if IsAppAlreadyRunning(true, v-task-name ) then do:
     assign
