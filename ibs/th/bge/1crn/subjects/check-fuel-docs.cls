@@ -82,6 +82,7 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define variable v-tmp-mi                as character no-undo .
   define variable varmeasure-water-qnty   as decimal no-undo.
   define variable varstate-water-qnty     as decimal no-undo.
+  define variable v-pl-code               as character no-undo .
   
 
   define property Msg as character no-undo
@@ -97,10 +98,13 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
     private set.
       
   define variable sw as handle no-undo.
+  define private variable libFindtank as class ibs.th.str.findtank no-undo . /* обёртка для findtank.i */
   
   method public void CrContentToSW (insw as handle):
 
-sw = insw .
+    sw = insw .
+    
+    libFindtank = new ibs.th.str.findtank ().
         
     find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-code = DocCode no-error.
     if available (buf_rvs-doc) then 
@@ -649,8 +653,22 @@ sw = insw .
     if available (tt-rvs-line-pump) then do:
     sw:start-element ("trk-ps") .
     for each tt-rvs-line-pump :
+      v-pl-code = getTankNum
+              (input tt-rvs-line-pump.obj-type
+              ,input tt-rvs-line-pump.obj-code
+              ,input tt-rvs-line-pump.pump-code
+              ,input tt-rvs-line-pump.nozzle-code
+              ,input ?
+              ,input ?  
+              ,input tt-rvs-line-pump.gds-code
+              ) .
+      if v-pl-code = ?
+      or v-pl-code = "0"
+      then 
+        v-pl-code = string(tt-rvs-line-pump.pl-code)
+      .       
       sw:start-element ("trk-p") .
-      sw:write-data-element ("tank-num" , if tt-rvs-line-pump.pl-code = ? then "0" else string-mth(tt-rvs-line-pump.pl-code)) no-error .
+      sw:write-data-element ("tank-num" , if v-pl-code = ? then "0" else v-pl-code) no-error .
       sw:write-data-element ("trk-num" , if tt-rvs-line-pump.pump-code = ? then "0" else string-mth(tt-rvs-line-pump.pump-code)) no-error .
       sw:write-data-element ("trk-p-num" , if tt-rvs-line-pump.nozzle-code = ? then "0" else string-mth(tt-rvs-line-pump.nozzle-code)) no-error .
       sw:write-data-element ("cnt-el" , if tt-rvs-line-pump.meas-el-cnt = ? then "0" else string-mth(tt-rvs-line-pump.meas-el-cnt)) no-error .
@@ -674,7 +692,51 @@ sw = insw .
   
     sw:end-element ("check-fuel-doc") .
     /*    sw:END-ELEMENT ("check-fuel-docs") .*/
+    
+    finally :
+      if valid-object(libFindtank) then delete object libFindtank .
+    end finally .
   end.
+  
+  /* найти номер резервуара */
+  method private character getTankNum (p-obj-type    as character,
+                                       p-obj-code    as integer,
+                                       p-pump        as integer,
+                                       p-nozzle-code as integer,
+                                       p-src-pl-code as integer,
+                                       p-pl-code     as integer,
+                                       p-gds-code    as integer) :
+    define buffer buf_place for ub.place .
+    define variable v-pl-code as integer no-undo .
+    define variable v-loc1    as character no-undo .
+                                       
+         if p-src-pl-code > 0 then v-pl-code = p-src-pl-code.
+    else if p-pl-code     > 0 then v-pl-code = p-pl-code.
+    else do:
+      /* если нет резервуара в чеке, найти в топологии текущую связку ТРК+Пистолет,
+         определить по ней резервуар и выгрузить полученный код резервура */
+      /* libFindtank всегда валидна: работа с классом ведётся только через метод CrContentToSW() */ 
+      libFindtank:findtank_
+      (input p-obj-type
+      ,input p-obj-code
+      ,input p-pump
+      ,input p-nozzle-code
+      ,input p-pl-code
+      ,input p-gds-code
+      ,output v-pl-code
+      ) .
+    end .
+    
+    if v-pl-code > 0 then do:
+      find first buf_place no-lock where buf_place.pl-code = v-pl-code no-error .
+      v-loc1 = if available buf_place then string(buf_place.pl-code) else "0" .
+/*      v-loc1 = if available buf_place then buf_place.loc1 else "0" .*/
+    end.
+    else v-loc1 = "0" .
+
+    return v-loc1 .        
+  end method .
+  
   method private character string-mth (inValue as decimal):
     
     def var v-str as character no-undo.
