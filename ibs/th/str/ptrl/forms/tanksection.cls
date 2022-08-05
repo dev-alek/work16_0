@@ -3438,7 +3438,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     if not infoSecsObj:FlagTrn 
       then return.
     
-    
+    infoSecsObj:GetInfoSectionProp(idSecTabPage).
     /*  assign                                                                              */
     /*    maskedTextBoxMouth:Text = string (decimal (maskedTextBoxMouth:Text))              */
     /*    maskedTextBoxMouth:Text:screen-value  = string (decimal (maskedTextBoxMouth:Text))*/

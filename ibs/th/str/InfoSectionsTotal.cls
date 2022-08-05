@@ -937,6 +937,12 @@ class ibs.th.str.InfoSectionsTotal:
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'dop-volume' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string (InfoSectionCurr:DopVolume).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'doc-dens-st' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string ( InfoSectionCurr:DocDensST ).
       create buf_doc-line-attr.
