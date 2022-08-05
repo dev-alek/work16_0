@@ -1941,6 +1941,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
         end .
         
         if v-unit = "LEVEL1"
+        or v-unit = "GROUP"
         then do :
           if cisGdsCode > 0
           then do :

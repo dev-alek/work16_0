@@ -91,7 +91,8 @@ do:
   define variable vGT as integer no-undo .
   define variable vGtinSumDocQnty as integer no-undo .
   define variable vOrder as integer no-undo .
-  define variable vIsMarkLine as logical .
+  define variable vIsMarkLine as logical no-undo .
+  define variable vMaxDocLevel as integer no-undo .
   { gbl/objsrv.i  }
   
 /*  logWrite = new LogWrite().*/
@@ -128,7 +129,7 @@ do:
   
   if buf_utd.doc-code <> "" and can-find (first ub.trn-doc where ub.trn-doc.doc-code = buf_utd.doc-code)
   then do:
-    undo, return "Для документа уже создана накладная " + string(p-db-num) + "," + string(p-doc-id) + " - " + buf_utd.doc-code.
+    undo, return "Для документа c вн. номером " + string(p-db-num) + "_" + string(p-doc-id) + " уже создана накладная - " + buf_utd.doc-code.
   end.
   
   
@@ -259,11 +260,28 @@ do:
         vGtinFactQntyList = ""
       .
       
+      if vIsMarkLine
+      then do :
+        vMaxDocLevel = 1 .
+        for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                         and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                         and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+        :
+          vMaxDocLevel = max(vMaxDocLevel, buf_utd-marking-lines.doc-level) .
+        end .
+      end .
+      
       utd-marking-lines_ :
       for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
                                        and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
                                        and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
       : 
+        if vIsMarkLine
+        and buf_utd-marking-lines.doc-level < vMaxDocLevel
+        then do :
+          next utd-marking-lines_ .
+        end .
+        
         vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
         if vGtin > ""
         then do :

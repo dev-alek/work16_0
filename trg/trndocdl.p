@@ -444,6 +444,9 @@ on error undo, return error return-value
     run show-action in this-procedure
       (input "Удаление архивных партий"
       ).
+      
+    define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
+    run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
     for each buf_parts exclusive-lock
       where buf_parts.out-code = buf_trn-doc.doc-code
@@ -519,8 +522,6 @@ on error undo, return error return-value
         no-error
       }
    
-      define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
-      run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
       for each buf_marking-lines exclusive-lock where buf_marking-lines.gds-code = v-gds-code
                                                   and buf_marking-lines.obj-type = buf_parts.obj-type
@@ -560,7 +561,8 @@ on error undo, return error return-value
                 free_marking-lines.prt-code   = buf_marking-lines.prt-code
               .
             end .
-            assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+            if not (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv})
+              then assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
           end .
         end . 
         delete buf_marking-lines .
@@ -678,12 +680,37 @@ on error undo, return error return-value
   then do:
     define variable v-deleted as logical no-undo .
     { str/tdat-del.i
-       buf_trn-doc.doc-code
-       ~{&trdcattr-need-saledc~}
-       v-deleted
-       no-error
+        buf_trn-doc.doc-code
+        ~{&trdcattr-need-saledc~}
+        v-deleted
+        no-error
       }
   end.
+  /* Смена статуса документа Вывода из оборота ГИС МТ LK_RECEIPT */
+  if g#news
+  and g#db-num = 0
+  and (buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+    or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Prvo}
+    or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
+  then do :
+    define buffer buf_utd for ub.utd .
+    for each buf_utd exclusive-lock where buf_utd.doc-code = buf_trn-doc.doc-code :
+      case buf_utd.sts :
+        when ObjSrv:Env:Utd:Sts:TH:LK_RECEIPT_New:KeyIntDB
+        or when ObjSrv:Env:Utd:Sts:TH:LK_RECEIPT_Signed:KeyIntDB
+        then do :
+          buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:LK_RECEIPT_NewDelete:KeyIntDB .
+        end .
+        when ObjSrv:Env:Utd:Sts:TH:LK_RECEIPT_Sent:KeyIntDB
+        or when ObjSrv:Env:Utd:Sts:TH:LK_RECEIPT_Error:KeyIntDB
+        or when ObjSrv:Env:Utd:Sts:TH:LK_RECEIPT_Confirmed:KeyIntDB
+        then do :
+          buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:LK_RECEIPT_SentDelete:KeyIntDB .
+        end .
+      end case .
+    end .
+  end .
+  
   run show-action in this-procedure
     (input "Документ удален"
     ).

@@ -337,15 +337,17 @@ define button b-trn-doc
 
 DEFINE VARIABLE c-status AS CHARACTER FORMAT "X(256)":U INITIAL "0" 
      LABEL "Статус" 
-     VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEM-PAIRS "Все","0",
-                     "Сформированные и ожидающие подписи в ГИС МТ","50",
-                     "Подписанные и ожидающие отправки в ГИС МТ","51",
-                     "Отправленные и ожидающие обработки ГИС МТ","52",
-                     "Успешно обработанные ГИС МТ","53",
-                     "Обработанные ГИС МТ с ошибкой","54"
+     VIEW-AS COMBO-BOX INNER-LINES 11
+     LIST-ITEM-PAIRS "Все","0"
      DROP-DOWN-LIST
      SIZE 55.6 BY 1 NO-UNDO.
+
+/*DEFINE VARIABLE rs-filt      AS INTEGER*/
+/*    VIEW-AS RADIO-SET HORIZONTAL       */
+/*    RADIO-BUTTONS                      */
+/*    "Все", 0,                          */
+/*    "В работе", 1                      */
+/*    SIZE 25 BY 1.25 NO-UNDO.           */
 
 DEFINE VARIABLE F-date-from AS DATE FORMAT "99/99/9999":U 
      VIEW-AS FILL-IN 
@@ -391,6 +393,8 @@ DEFINE BROWSE br-utd
       X_utd.LoadDate COLUMN-LABEL "Дата загрузки" FORMAT "99/99/9999":U
       X_utd.DocumentExt COLUMN-LABEL "ID документа" FORMAT "x(50)":U
             WIDTH 40.6
+  enable
+      X_utd.DocumentExt          
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 131 BY 14.95 FIT-LAST-COLUMN.
@@ -417,6 +421,7 @@ DEFINE FRAME d-utd
      bt-not-sel-all AT ROW 4.76 COL 2.6 WIDGET-ID 10 NO-TAB-STOP 
      bt-not-sel-desel-all AT ROW 4.76 COL 5.6 WIDGET-ID 12 NO-TAB-STOP 
      b-mark AT ROW 4.76 COL 8.6 WIDGET-ID 4 NO-TAB-STOP 
+/*     rs-filt AT ROW 4.6 COL 14 widget-id 40 no-label*/
      br-utd AT ROW 6.05 COL 1.6
      B-write-sertif AT ROW 21.5 COL 2 WIDGET-ID 236
      b-comment at row 21.5 col 30 WIDGET-ID 220
@@ -539,6 +544,7 @@ DO:
     {&OPEN-QUERY-br-utd} 
     br-utd:refresh ().
     reposition br-utd to rowid row_utd no-error .
+    apply "value-changed" to br-utd IN FRAME {&frame-name}.
   end .
 END.
 
@@ -583,7 +589,7 @@ DO:
   do:
     c-status = string(entry(1,v-current-sort-string,{&delim-key})) .
   end.  
-  v-current-sort-string =c-status .
+  v-current-sort-string = c-status .
   v-current-sertif-string = v-sertif_num.
   run uf-set(
       input {&uf-LK_RECEIPT}
@@ -801,6 +807,7 @@ DO:
     f-date-to   = date(f-date-to:screen-value) .
     run init-sort .
     {&OPEN-QUERY-br-utd}
+    apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -987,6 +994,7 @@ DO:
         end. 
         run init-sort in this-procedure .
         {&OPEN-QUERY-br-utd} 
+        apply "value-changed" to br-utd IN FRAME {&frame-name}.
       end.   
       else 
       do:
@@ -996,7 +1004,7 @@ DO:
           find first x_utd where rowid (x_utd) = row_utd .
           if x_utd.sts <> StatusTH:LK_RECEIPT_New:KeyIntDB
           then do :
-            message 'Возможно только для документов с статусе "Сформированные и ожидающие подписи в ГИС МТ"' view-as alert-box .
+            message 'Возможно только для документов в статусе "Требует подписания"' view-as alert-box .
             return no-apply .
           end .
           if not can-find(buf_trn-doc no-lock where buf_trn-doc.doc-code = X_utd.doc-code)
@@ -1021,6 +1029,7 @@ DO:
           end .
           run init-sort in this-procedure .
           {&OPEN-QUERY-br-utd} 
+          apply "value-changed" to br-utd IN FRAME {&frame-name}.
         end.  
       end.
     end .
@@ -1087,7 +1096,10 @@ DO:
       disable b-write-sertif with frame {&frame-name} .
     end .
     if x_utd.sts = StatusTH:LK_RECEIPT_Error:KeyIntDB
-    or x_utd.sts = StatusTH:LK_RECEIPT_Confirmed:KeyIntDB
+    or x_utd.sts = StatusTH:LK_RECEIPT_Signed:KeyIntDB
+    or x_utd.sts = StatusTH:LK_RECEIPT_SentDelete:KeyIntDB
+    or x_utd.sts = StatusTH:LK_RECEIPT_ConfirmedHand:KeyIntDB
+    or x_utd.sts = StatusTH:LK_RECEIPT_DeleteHand:KeyIntDB
     then do :
       enable b-comment with frame {&frame-name} .
     end .
@@ -1252,6 +1264,7 @@ DO:
   obj-list:screen-value = v-obj-list.
   run init-sort in this-procedure .
   {&OPEN-QUERY-br-utd}
+  apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1265,12 +1278,24 @@ DO:
   assign c-status .
   run init-sort .
   {&OPEN-QUERY-br-utd}
-
+  apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+/*&Scoped-define SELF-NAME rs-filt                       */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-filt d-utd*/
+/*ON VALUE-CHANGED OF rs-filt IN FRAME d-utd /* Статус */*/
+/*DO:                                                    */
+/*  assign rs-filt .                                     */
+/*  run init-sort .                                      */
+/*  {&OPEN-QUERY-br-utd}                                 */
+/*                                                       */
+/*END.                                                   */
+/*                                                       */
+/*/* _UIB-CODE-BLOCK-END */                              */
+/*&ANALYZE-RESUME                                        */
 
 &Scoped-define SELF-NAME F-date-from
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date-from d-utd
@@ -1299,6 +1324,7 @@ DO:
   end.
   run init-sort .
   {&OPEN-QUERY-br-utd}
+  apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1321,6 +1347,7 @@ DO:
   end.
   run init-sort .
   {&OPEN-QUERY-br-utd}
+  apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1353,6 +1380,7 @@ DO:
   end.
   run init-sort .
   {&OPEN-QUERY-br-utd}
+  apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1373,6 +1401,7 @@ DO:
   end.
   run init-sort .
   {&OPEN-QUERY-br-utd}
+  apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1405,6 +1434,7 @@ DO:
   
   run init-sort .
   {&OPEN-QUERY-br-utd}
+  apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1508,8 +1538,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   StatusTH = ObjSrv:Env:Utd:Sts:TH.
   EdocType = ObjSrv:Env:Utd:EDocType.      
 
-  F-date-to = today - 7.
-  F-date-from = today .
+  F-date-to = today - 8.
+  F-date-from = today - 1 .
 
   if v-current-sertif-string <> "" then 
   do:
@@ -1560,6 +1590,8 @@ PROCEDURE enable_UI :
                                        These statements here are based on the "Other
                                        Settings" section of the widget Property Sheets.
                            -------------------------------------------------------------------- */
+    X_utd.DocumentExt:column-read-only in browse br-utd = yes .
+    
     if p-mode = "" then 
     do:
         ENABLE
@@ -1572,6 +1604,7 @@ PROCEDURE enable_UI :
             b-hist
             b-print
             c-status
+/*            rs-filt*/
             b-refresh
             F-date-from
             F-date-to
@@ -1593,12 +1626,13 @@ PROCEDURE enable_UI :
     do:
         ENABLE
             b-mark
-            bt-not-sel-all
+            bt-not-sel-all 
             br-utd
             b-exit
             bt-not-sel-desel-all
             R-obj
             c-status
+/*            rs-filt*/
             F-date-from
             F-date-to
             WITH FRAME {&frame-name}.
@@ -1693,12 +1727,35 @@ PROCEDURE init-sort :
         if p-ok <> true then delete X_utd .  
       end.  
     end.
-    if c-status <> "-1" then 
-    do:
-      for each X_utd where X_utd.sts <> integer(c-status):
-        delete X_utd .
-      end.  
+    if c-status <> "-1"
+    then do:
+      if c-status = "0"
+      then do :
+        for each X_utd where X_utd.sts <> StatusTH:LK_RECEIPT_New:KeyIntDB
+                         and X_utd.sts <> StatusTH:LK_RECEIPT_Error:KeyIntDB
+                         and X_utd.sts <> StatusTH:LK_RECEIPT_SentDelete:KeyIntDB
+                         and X_utd.sts <> StatusTH:LK_RECEIPT_Signed:KeyIntDB
+        :
+          delete X_utd .
+        end.
+      end .
+      else do :
+        for each X_utd where X_utd.sts <> integer(c-status):
+          delete X_utd .
+        end.  
+      end .
     end.    
+/*    if rs-filt = 1                                                             */
+/*    then do :                                                                  */
+/*      for each X_utd where X_utd.sts <> StatusTH:LK_RECEIPT_New:KeyIntDB       */
+/*                       and X_utd.sts <> StatusTH:LK_RECEIPT_Error:KeyIntDB     */
+/*                       and X_utd.sts <> StatusTH:LK_RECEIPT_SentDelete:KeyIntDB*/
+/*                       and X_utd.sts <> StatusTH:LK_RECEIPT_Signed:KeyIntDB    */
+/*      :                                                                        */
+/*        delete X_utd .                                                         */
+/*      end.                                                                     */
+/*    end .                                                                      */
+    
     apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END PROCEDURE.
 
@@ -1722,7 +1779,8 @@ PROCEDURE init-temp :
     define variable Status_EDI as character no-undo .
     define variable Edoc_type  as character no-undo .
 
-    Status_ = "Все" + {&comma-char} + '-1':U .
+    Status_ = "Все" + {&comma-char} + '-1':U + {&comma-char}
+            + "В работе" + {&comma-char} + '0':U .
 
     do ii = 1 to StatusTH:mapType:GetItemByLab(ii):
         if StatusTH:CurrProp:KeyIntDB >= 50
@@ -1735,12 +1793,14 @@ PROCEDURE init-temp :
     ASSIGN
         c-status:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_ .
 
-    c-status = "50" .
+    c-status = "0" .
+/*    rs-filt = 1 .*/
     display c-status with frame {&frame-name} .
   
     run proc-Token .
     run init-sort .
     {&OPEN-QUERY-br-utd}
+    apply "value-changed" to br-utd IN FRAME {&frame-name}.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1818,39 +1878,43 @@ PROCEDURE proc-Token :
     /*Для авторизации по серийному номеру будет так:                                                             */
     /*vToken = oMotp:authorize(input “01957BD10043AB1685421BAAE6508FB175”, input ”SerialNumber”) .               */
 
-    /*Для авторизации по отпечатку:*/
+    if oMotp:currToken = ""
+    or oMotp:currToken = ?
+    then do :
     
-    if f-sertif <> ? and f-sertif <> "" then 
-    do:
-
-        vToken = oMotp:authorize(input f-sertif, input "SerialNumber") no-error .
-        if error-status:error
-            then 
+        if f-sertif <> ? and f-sertif <> "" then 
         do:
-            /*      time_motp = datetime-tz(now - 10500000) .*/
-            time_motp = oMotp:currTokenDT .
-            vtime = max(0,time_motp + 10500000 - now).
-            if vtime = 0 then v-Token-error = true .
-            else v-Token-error = false .
-
-            /*      v-Token-error = true .         */
-            /*      time_motp = oMotp:currTokenDT .*/
-            message "Ошибка авторизации в ГИС МТ." skip oMotp:MSG view-as alert-box .  
-        end.  
-        else 
-        do:
-            time_motp = oMotp:currTokenDT . 
-            v-Token-error = false.
-        end.
-
-    end.
-    else 
-    do:
-        time_motp = oMotp:currTokenDT .
-        vtime = max(0,time_motp + 10500000 - now).
-        if vtime = 0 then v-Token-error = true .
-        else v-Token-error = false .
-    end.     
+  
+          vToken = oMotp:authorize(input f-sertif, input "SerialNumber") no-error .
+          if error-status:error
+              then 
+          do:
+              /*      time_motp = datetime-tz(now - 10500000) .*/
+              time_motp = oMotp:currTokenDT .
+              vtime = max(0,time_motp + 10500000 - now).
+              if vtime = 0 then v-Token-error = true .
+              else v-Token-error = false .
+  
+              /*      v-Token-error = true .         */
+              /*      time_motp = oMotp:currTokenDT .*/
+              message "Ошибка авторизации в ГИС МТ." skip oMotp:MSG view-as alert-box .  
+          end.  
+          else 
+          do:
+              time_motp = oMotp:currTokenDT . 
+              v-Token-error = false.
+          end.
+  
+      end.
+      else 
+      do:
+          time_motp = oMotp:currTokenDT .
+          vtime = max(0,time_motp + 10500000 - now).
+          if vtime = 0 then v-Token-error = true .
+          else v-Token-error = false .
+      end.  
+      
+    end .   
     delete object oMotp.
 END PROCEDURE.
 

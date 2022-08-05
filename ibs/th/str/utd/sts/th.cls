@@ -47,6 +47,10 @@ class ibs.th.str.utd.sts.th inherits TypeMap:
   define public property  LK_RECEIPT_Sent as class propmap no-undo get.  protected set.
   define public property  LK_RECEIPT_Confirmed as class propmap no-undo get.  protected set.
   define public property  LK_RECEIPT_Error as class propmap no-undo get.  protected set.    
+  define public property  LK_RECEIPT_NewDelete as class propmap no-undo get.  protected set.
+  define public property  LK_RECEIPT_SentDelete as class propmap no-undo get.  protected set.
+  define public property  LK_RECEIPT_DeleteHand as class propmap no-undo get.  protected set.   
+  define public property  LK_RECEIPT_ConfirmedHand as class propmap no-undo get.  protected set.   
 
   constructor public th ():
     super().
@@ -72,11 +76,15 @@ class ibs.th.str.utd.sts.th inherits TypeMap:
     ConfirmedUcd         = crProp(37, "ConfirmedUcd", "Подтвердить").
     
     /* Статусы для Вывода из Оборота */
-    LK_RECEIPT_New       = crProp(50, "LK_RECEIPT_New", "Сформированные и ожидающие подписи в ГИС МТ").
-    LK_RECEIPT_Signed    = crProp(51, "LK_RECEIPT_Signed", "Подписанные и ожидающие отправки в ГИС МТ").
-    LK_RECEIPT_Sent      = crProp(52, "LK_RECEIPT_Sent", "Отправленные и ожидающие обработки ГИС МТ").
-    LK_RECEIPT_Confirmed = crProp(53, "LK_RECEIPT_Confirmed", "Успешно обработанные ГИС МТ").
-    LK_RECEIPT_Error     = crProp(54, "LK_RECEIPT_Error", "Обработанные ГИС МТ с ошибкой").
+    LK_RECEIPT_New       = crProp(50, "LK_RECEIPT_New", "Требует подписания").
+    LK_RECEIPT_Signed    = crProp(51, "LK_RECEIPT_Signed", "Подписан и ожидает отправки в ГИС МТ").
+    LK_RECEIPT_Sent      = crProp(52, "LK_RECEIPT_Sent", "Отправлен и ожидает обработки ГИС МТ").
+    LK_RECEIPT_Confirmed = crProp(53, "LK_RECEIPT_Confirmed", "Успешно обработан ГИС МТ").
+    LK_RECEIPT_Error     = crProp(54, "LK_RECEIPT_Error", "Обработан ГИС МТ с ошибкой").
+    LK_RECEIPT_NewDelete = crProp(55, "LK_RECEIPT_NewDelete", "Удален до отправки в ГИС МТ").
+    LK_RECEIPT_SentDelete = crProp(56, "LK_RECEIPT_SentDelete", "Удален после отправки в ГИС МТ").
+    LK_RECEIPT_DeleteHand = crProp(57, "LK_RECEIPT_DeleteHand", "Удален в ГИС МТ вручную").
+    LK_RECEIPT_ConfirmedHand = crProp(58, "LK_RECEIPT_ConfirmedHand", "Обработан в ГИС МТ вручную").
     
   end.
 

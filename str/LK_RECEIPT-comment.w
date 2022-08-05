@@ -77,7 +77,7 @@ DEFINE VARIABLE e-comment AS CHARACTER
      SIZE 78 BY 7.14 NO-UNDO.
 
 DEFINE VARIABLE t-ok-sts AS LOGICAL INITIAL no 
-     LABEL "Установить статус ~"Успешно обработанные ГИС МТ~"" 
+     LABEL "Работа с документом завершена" 
      VIEW-AS TOGGLE-BOX
      SIZE 59 BY .81 NO-UNDO.
 
@@ -164,8 +164,17 @@ DO:
   
     buf_utd.comment = e-comment .
     if t-ok-sts 
-    then
-      buf_utd.sts = 53 . /* StatusTH:LK_RECEIPT_Confirmed:KeyIntDB */
+    then do :
+      if buf_utd.sts = 54 /* StatusTH:LK_RECEIPT_Error:KeyIntDB */
+      or buf_utd.sts = 51 /* StatusTH:LK_RECEIPT_Signed:KeyIntDB */
+      then do :
+        buf_utd.sts = 58 . /* StatusTH:LK_RECEIPT_ConfirmedHand:KeyIntDB */
+      end .
+      if buf_utd.sts = 56 /* StatusTH:LK_RECEIPT_SentDelete:KeyIntDB */
+      then do :
+        buf_utd.sts = 57 . /* StatusTH:LK_RECEIPT_DeleteHand:KeyIntDB */
+      end .
+    end .
   end .
 END.
 
@@ -196,7 +205,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   RUN enable_UI.
   
-  if buf_utd.sts = 53 /* StatusTH:LK_RECEIPT_Confirmed:KeyIntDB */
+  if buf_utd.sts = 58 /* StatusTH:LK_RECEIPT_ConfirmedHand:KeyIntDB */
+  or buf_utd.sts = 57 /* StatusTH:LK_RECEIPT_DeleteHand:KeyIntDB */
   then do :
     disable
       Btn_OK
