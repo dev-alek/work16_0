@@ -89,7 +89,9 @@ do:
   define variable vScanGtin as character no-undo .
   define variable vFullQnty as integer no-undo .
   define variable vGT as integer no-undo .
+  define variable vGtinSumDocQnty as integer no-undo .
   define variable vOrder as integer no-undo .
+  define variable vIsMarkLine as logical .
   { gbl/objsrv.i  }
   
 /*  logWrite = new LogWrite().*/
@@ -181,6 +183,8 @@ do:
 
     if logical (getAttrUtdLinesEx(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.LineNum,"MarkUtdLine","no"))
     then do :
+      vIsMarkLine = yes .
+      
       if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsMarkingForType(v-par-val)
       then do:
         v-q = Tree:GetQntyStsUnit(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum,objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
@@ -201,6 +205,8 @@ do:
       v-q-doc = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity")) .
     end .
     else do :
+      vIsMarkLine = no .
+      
       find first buf_bar-code where 
                  buf_bar-code.gds-code = buf_utd-lines.gds-code
              and buf_bar-code.unit-cli = buf_utd-lines.UnitCode
@@ -240,6 +246,7 @@ do:
         vGtinFactQntyList = ""
       .
       
+      utd-marking-lines_ :
       for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
                                        and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
                                        and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
@@ -257,6 +264,10 @@ do:
             vGtinQnty = buf_marking.box-qnty .
           end .
           else do :
+            if vIsMarkLine
+            then do :
+              next utd-marking-lines_ .
+            end .  
             vGtinQnty = getQntyUTDByDM(buf_utd-marking-lines.mark) .
           end .
           if vGtinQnty > 0
@@ -361,6 +372,27 @@ do:
         vGtinDocQntyList = trim(vGtinDocQntyList, ",") .
         vGtinFactQntyList = trim(vGtinFactQntyList, ",") .
       end . /* Частичная приёмка */
+      
+      vGtinSumDocQnty = 0 .
+      do vGT = 1 to num-entries(vGtinList) :
+        vGtinSumDocQnty = vGtinSumDocQnty + integer(entry(vGT, vGtinDocQntyList)) .
+      end .
+      
+      if vGtinSumDocQnty > temp_doc-line.doc-qnty
+      then do :
+        do while vGtinSumDocQnty <> temp_doc-line.doc-qnty :
+          do vGT = 1 to num-entries(vGtinList) :
+            if integer(entry(vGT, vGtinFactQntyList)) >= integer(entry(vGT, vGtinDocQntyList)) 
+            then
+              next .
+            entry(vGT, vGtinDocQntyList) = string(integer(entry(vGT, vGtinDocQntyList)) - 1) .
+            vGtinSumDocQnty = vGtinSumDocQnty - 1 .
+            if vGtinSumDocQnty = temp_doc-line.doc-qnty
+            then
+              leave .
+          end .
+        end .
+      end .
       
       assign
         temp_doc-line.gtinList = vGtinList

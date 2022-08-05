@@ -896,6 +896,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     
     define variable v-gds-attr-value-old as character no-undo .
     define variable v-gds-attr-type      as character no-undo .
+    define variable vGT as integer no-undo .
+    define variable vGtin as character no-undo .
+    define variable vQnty as integer no-undo .
     
     for first buf_doc-line no-lock where buf_doc-line.doc-code = DocCode
                                     and buf_doc-line.line-num = p-line-num,
@@ -903,62 +906,115 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
       buf_goods.prod-code = buf_doc-line.prod-code and
       buf_goods.prod-type = buf_doc-line.prod-type  :
     
-    
-    
-      &scop proc-name gds-attr-value
-      {&run_proc_attr-lib}
-        ( input buf_goods.gds-code
-         ,input {&attr-mark-type} 
-         ,output v-gds-attr-value-old
-         ,output v-gds-attr-type
-        )        no-error .
-      if error-status :error
-      then do:
-         undo, return error return-value .
-      end.
-      define variable vAvailMarks as logical no-undo.
-/*      message           */
-/*      view-as alert-box.*/
-
-      for each buf_parts no-lock where buf_parts.out-code  = buf_doc-line.doc-code
-                                   and buf_parts.artic     = buf_doc-line.artic
-                                   and buf_parts.prod-type = buf_doc-line.prod-type
-                                   and buf_parts.prod-code = buf_doc-line.prod-code:
-        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old) 
+      find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_doc-line.doc-code
+                                             and buf_doc-line-attr.gds-code = buf_goods.gds-code
+                                             and buf_doc-line-attr.attr-code = "GTIN-qnty"
+                                             no-error .
+      if available buf_doc-line-attr
+      and buf_doc-line-attr.attr-value > ""
+      then do :
+        sw:start-element ("marks").
+        GT_ :
+        do vGT = 1 to num-entries(buf_doc-line-attr.attr-value, ";") :
+          assign
+            vGtin = entry(1, entry(vGT, buf_doc-line-attr.attr-value, ";"), "=")
+            vQnty = integer(entry(2, entry(vGT, buf_doc-line-attr.attr-value, ";"), "="))
+          no-error .
+          if error-status:error
+          then next GT_ .
+          
+          sw:start-element ("mark").
+          write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .
+          write-data-element ("gtin", vGtin) .
+          write-data-element ("gtin_qnt", string-mth(vQnty)) .
+          sw:end-element ("mark").
+        end .
+        sw:end-element ("marks").
+      end .
+      else do :
+        &scop proc-name gds-attr-value
+        {&run_proc_attr-lib}
+          ( input buf_goods.gds-code
+           ,input {&attr-mark-type} 
+           ,output v-gds-attr-value-old
+           ,output v-gds-attr-type
+          )        no-error .
+        if error-status :error
         then do:
-          for each buf_marking-lines no-lock where buf_marking-lines.doc-level = 1 and
-            buf_marking-lines.gds-code = buf_goods.gds-code and
-            buf_marking-lines.in-code = buf_parts.in-code and
-            buf_marking-lines.obj-code = buf_parts.obj-code and
-            buf_marking-lines.obj-type = buf_parts.obj-type and
-            buf_marking-lines.out-code = buf_parts.out-code and
-            buf_marking-lines.part-code = buf_parts.part-code and
-            buf_marking-lines.prt-code = buf_parts.prt-code  :
-
-              if buf_marking-lines.mark begins {&tech-mark-prefix} 
-              and buf_trn-doc.ext-doc-type <> {&TDEDT_Ras_Perem} and buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} 
-              then next .
-            if not vAvailMarks
-            then do:
-               sw:start-element ("marks").
-               vAvailMarks = yes.
-            end.
-            sw:start-element ("mark").   
-/*            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).*/
-            if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:
-            write-data-element ("prt-id", buf_parts.part-code).
-            end.
-            write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
-            sw:end-element ("mark").
-          end.
+          undo, return error return-value .
         end.
-      end.
-    end.
-    if vAvailMarks
-    then
-       sw:end-element ("marks").
+        define variable vAvailMarks as logical no-undo.
+  
+        for each buf_parts no-lock where buf_parts.out-code  = buf_doc-line.doc-code
+                                     and buf_parts.artic     = buf_doc-line.artic
+                                     and buf_parts.prod-type = buf_doc-line.prod-type
+                                     and buf_parts.prod-code = buf_doc-line.prod-code:
+          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old) 
+          then do:
+            for each buf_marking-lines no-lock where buf_marking-lines.doc-level = 1 and
+              buf_marking-lines.gds-code = buf_goods.gds-code and
+              buf_marking-lines.in-code = buf_parts.in-code and
+              buf_marking-lines.obj-code = buf_parts.obj-code and
+              buf_marking-lines.obj-type = buf_parts.obj-type and
+              buf_marking-lines.out-code = buf_parts.out-code and
+              buf_marking-lines.part-code = buf_parts.part-code and
+              buf_marking-lines.prt-code = buf_parts.prt-code  :
+  
+                if buf_marking-lines.mark begins {&tech-mark-prefix} 
+                and buf_trn-doc.ext-doc-type <> {&TDEDT_Ras_Perem} and buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} 
+                then next .
+              if not vAvailMarks
+              then do:
+                 sw:start-element ("marks").
+                 vAvailMarks = yes.
+              end.
+              sw:start-element ("mark").   
+  /*            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).*/
+              if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:
+              write-data-element ("prt-id", buf_parts.part-code).
+              end.
+              write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
+              sw:end-element ("mark").
+            end.
+          end.
+          else
+          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsArticForType(v-gds-attr-value-old)
+          and num-entries(buf_parts.part-code, "_") = 2
+          then do :
+            if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+            or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+            then do:
+              vGtin = entry(1, buf_parts.part-code, "_") .
+              if length(vGtin) = 8
+              or length(vGtin) = 12
+              or length(vGtin) = 13
+              or length(vGtin) = 14
+              then do :
+                vQnty = integer(abs(buf_parts.qnty)) .
+                if not vAvailMarks
+                then do:
+                  sw:start-element ("marks").
+                  vAvailMarks = yes.
+                end.
+                sw:start-element ("mark").
+                write-data-element ("prt-id", buf_parts.part-code).
+                write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .
+                write-data-element ("gtin", vGtin) .
+                write-data-element ("gtin_qnt", string-mth(vQnty)) .
+                write-data-element ("upd_id", buf_parts.PS) .
+                sw:end-element ("mark").
+              end .
+            end .
+          end .
+        end.
+        if vAvailMarks
+        then
+          sw:end-element ("marks").
+      end .
+    end .  
     
   end.
+  
   method private void write-data-element (inTag as char, inValue as char):
     
     if inValue = ?

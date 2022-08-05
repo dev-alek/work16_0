@@ -26,6 +26,15 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
   define property mark-code as character no-undo 
     get. 
     private set.
+  define property gtin as character no-undo 
+    get. 
+    private set.
+  define property gtin_qnt as integer no-undo 
+    get. 
+    private set.
+  define property upd_id as character no-undo 
+    get. 
+    private set.
     
   define override property InitTag as character no-undo init "mark"
     get. 
@@ -60,6 +69,9 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
     assign 
       prt-id   = ?
       mark-code = ?
+      gtin = ?
+      gtin_qnt = ?
+      upd_id = ?
     .
   end.
 

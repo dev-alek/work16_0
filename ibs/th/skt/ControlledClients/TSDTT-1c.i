@@ -54,7 +54,9 @@ Creation date: 01/30/15
     .
 
   define temp-table TempDocMark no-undo
-
+    field gtin as character
+    field gtin_qnt as integer
+    field upd_id as character
     field prt-id as character
     field mark as character
     field gds-code as integer

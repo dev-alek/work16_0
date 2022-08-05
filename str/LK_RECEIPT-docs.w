@@ -384,13 +384,13 @@ DEFINE BROWSE br-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-utd d-utd _STRUCTURED
   QUERY br-utd NO-LOCK DISPLAY
       mark-string(recid(X_utd), v-rid-list) Format "X(1)" COLUMN-LABEL "*"
-      X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(22)":U
+      X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(16)":U
       doc-type(X_utd.doc-code) COLUMN-LABEL "Тип" FORMAT "X(15)":U
       X_utd.DocumentDate COLUMN-LABEL "Дата документа" FORMAT "99/99/9999":U
-      X_utd.sts COLUMN-LABEL "Статус ТН" FORMAT "->,>>>,>>9":U
+      X_utd.stts COLUMN-LABEL "Статус ТН" FORMAT "X(44)":U
       X_utd.LoadDate COLUMN-LABEL "Дата загрузки" FORMAT "99/99/9999":U
-      X_utd.DocumentExt COLUMN-LABEL "ID документа" FORMAT "x(32)":U
-            WIDTH 27.6
+      X_utd.DocumentExt COLUMN-LABEL "ID документа" FORMAT "x(50)":U
+            WIDTH 40.6
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 131 BY 14.95 FIT-LAST-COLUMN.
@@ -944,7 +944,7 @@ DO:
     if oMotp:currToken = ""
     or oMotp:currToken = ?
     then do :
-      vToken = oMotp:authorize(input f-sertif, input "ThumbPrint") no-error .
+      vToken = oMotp:authorize(input f-sertif, input "SerialNumber") no-error .
       if error-status:error
           then 
       do:
@@ -1100,6 +1100,51 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-print
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print d-utd
+ON CHOOSE OF b-print IN FRAME d-utd /* + */
+DO:
+  define variable loc#log as logical no-undo .
+  define buffer bf_utd for ub.utd .
+  define variable v-rec-list as character no-undo .
+  v-rec-list = "" .
+
+  if v-rid-list > ""
+  then do :
+    do ii = 1 to num-entries (v-rid-list):
+      recid_utd = integer(entry(ii,v-rid-list)) .
+      find first X_utd where recid (x_utd) = recid_utd .
+      find first bf_utd no-lock where bf_utd.db-num = X_utd.db-num
+                                  and bf_utd.doc-id = X_utd.doc-id
+                                  no-error .
+      if available bf_utd
+      then do :
+        v-rec-list = v-rec-list + string(rowid(bf_utd)) + "," .
+      end .
+    end .
+  end .
+  else do :
+    if available X_utd 
+    then do:
+      find first bf_utd no-lock where bf_utd.db-num = X_utd.db-num
+                                  and bf_utd.doc-id = X_utd.doc-id
+                                  no-error .
+      if available bf_utd
+      then do :
+        v-rec-list = string(rowid(bf_utd)) .
+      end .
+    end.
+  end .
+  v-rec-list = trim(v-rec-list, ",") .
+  if v-rec-list > ""
+  then do :
+    run rep/LK_RECEIPT-print.p (input parparentproc,
+                                input v-rec-list) .
+  end .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME bt-not-sel-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-not-sel-all d-utd

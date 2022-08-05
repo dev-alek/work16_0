@@ -532,9 +532,14 @@ class ibs.th.gbl.storage.vsdtostorage:
     for each buf_parts no-lock where buf_parts.out-code = inbf_dl.doc-code 
                                  and buf_parts.obj-type  = inbf_dl.obj-type
                                  and buf_parts.obj-code  = inbf_dl.obj-code
-      and buf_parts.artic = inbf_dl.artic
-      and buf_parts.prod-type = inbf_dl.prod-type
-      and buf_parts.prod-code = inbf_dl.prod-code:
+                                 and buf_parts.artic = inbf_dl.artic
+                                 and buf_parts.prod-type = inbf_dl.prod-type
+                                 and buf_parts.prod-code = inbf_dl.prod-code
+    :
+      if buf_parts.fact-qnty <= 0
+      and inbf_dl.fact-qnty > 0
+      then next block-part .
+      
       keyrecObj:GenKeyRec({&table_parts}, buffer buf_parts:handle, output keyrec).
       vok = can-find (first buf_vsd where buf_vsd.part-key = keyrec and buf_vsd.UUID <> "" and buf_vsd.UUID <> ?) .
       if not vok then leave block-part.
@@ -557,9 +562,13 @@ class ibs.th.gbl.storage.vsdtostorage:
     for each buf_parts no-lock where buf_parts.out-code = inbf_gd-dtl.doc-code 
                                  and buf_parts.obj-type  = inbf_gd-dtl.obj-type
                                  and buf_parts.obj-code  = inbf_gd-dtl.obj-code
-      and buf_parts.artic = inbf_gd-dtl.artic
-      and buf_parts.prod-type = inbf_gd-dtl.prod-type
-      and buf_parts.prod-code = inbf_gd-dtl.prod-code:
+                                 and buf_parts.artic = inbf_gd-dtl.artic
+                                 and buf_parts.prod-type = inbf_gd-dtl.prod-type
+                                 and buf_parts.prod-code = inbf_gd-dtl.prod-code
+    :
+      if buf_parts.fact-qnty <= 0
+      and inbf_gd-dtl.fact-qnty > 0
+      then next block-part .
       
       keyrecObj:GenKeyRec({&table_parts}, buffer buf_parts:handle, output keyrec).
       

@@ -4424,7 +4424,18 @@ PROCEDURE enable_UI :
 /*      else                                                                                  */
       browse br-utd:GET-BROWSE-COLUMN(11):VISIBLE = no no-error. 
    end.
-  
+   
+   /* Для вывода из оборота изменим браузер со строками */
+   if p-type = objSrv:Env:Utd:EDocType:LK_RECEIPT:KeyIntDB
+   then do :
+      define variable brii as integer no-undo .
+      do brii = 6 to 14 :
+         browse br-utd:GET-BROWSE-COLUMN(brii):VISIBLE = no no-error. 
+      end .
+      browse br-utd:GET-BROWSE-COLUMN(3):label = "GTIN" no-error .
+      browse br-utd:GET-BROWSE-COLUMN(5):label = "Количество" no-error .
+   end .
+     
    if f-num-2 = "" then 
    do:
       hide 

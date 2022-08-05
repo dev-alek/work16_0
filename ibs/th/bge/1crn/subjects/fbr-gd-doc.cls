@@ -30,6 +30,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
   define buffer buf_fbr-line for ub.fbr-line.
   define buffer buf_trn-doc for ub.trn-doc.
   define buffer buf_doc-line for ub.doc-line.
+  define buffer buf_doc-line-attr for ub.doc-line-attr.
   define buffer buf_gds-dtl for ub.gds-dtl.
   define buffer buf_doc-pl for ub.doc-pl.
   define buffer buf_gds for ub.goods.
@@ -169,7 +170,10 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
 
   method private void FBR ():
 
-    def var ii as int no-undo.
+    define variable ii as integer no-undo.
+    define variable vGT as integer no-undo .
+    define variable vGtin as character no-undo .
+    define variable vQnty as integer no-undo .
 
     sw:start-element ("dishs").    
     for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code
@@ -225,7 +229,11 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
                                               and buf_fbr-recipe-gds.prod-code = buf_fbr-line.prod-code
                                               and buf_fbr-recipe-gds.artic = buf_fbr-line.artic
                                               no-error .
-
+      
+      find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_fbr-line.doc-code
+                                             and buf_doc-line-attr.gds-code = buf_gds.gds-code
+                                             and buf_doc-line-attr.attr-code = "GTIN-qnty"
+                                             no-error .
       
       define variable brutto as decimal no-undo.
       define variable netto as decimal no-undo.    
@@ -243,6 +251,27 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
         write-data-element ("perc-p", string-mth (round ((buf_fbr-line.coeff-value), 2))).
         write-data-element ("u-price",string-mth (round ((buf_fbr-line.price-rubl), 2))).
         write-data-element ("u-price-s", string-mth (round (buf_fbr-line.price-sum-rubl , 2))).
+        if available buf_doc-line-attr
+        and buf_doc-line-attr.attr-value > ""
+        then do :
+          sw:start-element ("marks").
+          GT_ :
+          do vGT = 1 to num-entries(buf_doc-line-attr.attr-value, ";") :
+            assign
+              vGtin = entry(1, entry(vGT, buf_doc-line-attr.attr-value, ";"), "=")
+              vQnty = integer(entry(2, entry(vGT, buf_doc-line-attr.attr-value, ";"), "="))
+            no-error .
+            if error-status:error
+            then next GT_ .
+            
+            sw:start-element ("mark").
+            write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .
+            write-data-element ("gtin", vGtin) .
+            write-data-element ("gtin_qnt", string-mth(vQnty)) .
+            sw:end-element ("mark").
+          end .
+          sw:end-element ("marks").
+        end .
       sw:end-element ("ingr").
           
     end.

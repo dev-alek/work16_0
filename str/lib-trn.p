@@ -3414,6 +3414,8 @@ else do:
                         chg-qnty = ca_lib-trn_ret-parts.fact-qnty
                         fix-qnty = chg-qnty
                       .
+                      assign
+                          varpl-inf = (if ca_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and trim(ca_lib-trn_ret-parts.part-code) > "" then "," +  {&rsrv-dtl_cre-part-code} + "=":U + str-encode(ca_lib-trn_ret-parts.part-code, "", ",=":u) else "":u).
                       if ca_trn-doc.hold-doc-code-parent <> "" then do:
                         run trg/rsrv-dtl.p
                           (input parparentproc,
@@ -3423,6 +3425,8 @@ else do:
                             + "," + {&rsrv-dtl_hold-date}        + "=" + str-encode(string(ca_lib-trn_ret-parts.hold-date), "", ",=":u)
                             + "," + {&rsrv-dtl_last-date}        + "=" + str-encode(string(ca_lib-trn_ret-parts.last-date), "", ",=":u)
                             + "," + {&rsrv-dtl_cst-code} + "=" + str-encode(ca_lib-trn_ret-parts.cst-code, "", ",=":u)
+                            + "," + {&rsrv-dtl_cli-qnty} + "=" + string(ca_lib-trn_ret-parts.cli-qnty)
+                            + varpl-inf
                             ,
                             buffer ca_gds-dtl,
                             input-output chg-qnty,

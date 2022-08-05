@@ -723,6 +723,12 @@ define variable v-ischg-ext-type as logical no-undo .
         :
           when 1
           then do:
+            define buffer buf_utd for ub.utd .
+            if can-find(first buf_utd no-lock where buf_utd.doc-code = buf_trn-doc.doc-code)
+            then do :
+              message "Для накладных созданных на основе электронных документов возможно только закрытие на Факт!" view-as alert-box .
+              return error .
+            end .
                 { gbl/chk-actg.i
                   v-cntxt-db-num
                   v-cntxt-userid

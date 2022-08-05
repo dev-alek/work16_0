@@ -1570,6 +1570,21 @@ end.
     end.
     undo main-block,  return error v-message.
   end.
+  
+  if g#news
+  and g#db-num = 0
+  and ub.trn-doc.status_ = {&fact}
+  then do :
+    if ub.trn-doc.ext-doc-type = {&TDEDT_Inv}
+    or ub.trn-doc.ext-doc-type = {&TDEDT_Spi_Prvo}
+    or ub.trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}
+    then do :
+      run show-action in this-procedure
+      (input "Создание документов Вывода из оборота (ОСУ) для отправки в ГИС МТ"
+      ).
+      run str/create-LK_RECEIPT.p (input ub.trn-doc.doc-code) .
+    end .
+  end .
 
   /****** Передача информации об остатках товара через новости ********/
   run show-action in this-procedure

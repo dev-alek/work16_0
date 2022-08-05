@@ -152,6 +152,9 @@ do:
       temp_doc-mark.part-id  = TempDocMark.prt-id
       temp_doc-mark.mark     = TempDocMark.mark
       temp_doc-mark.gds-code = TempDocMark.gds-code
+      temp_doc-mark.gtin     = TempDocMark.gtin
+      temp_doc-mark.gtin_qnt = TempDocMark.gtin_qnt
+      temp_doc-mark.upd_id   = TempDocMark.upd_id
     .
     
   end.
