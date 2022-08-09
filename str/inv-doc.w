@@ -321,12 +321,8 @@ define variable bcol                                as   handle                 
 define variable hBrowse                             as   handle                        no-undo.
 define variable ii                                  as   integer                       no-undo.
 
-def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
-
-
-
+{ gbl/objsrv.i }
+   
 DEFINE VARIABLE f-acc as decimal format "->>>,>>>,>>9.999":U
      LABEL "Погр. изм., кг " 
      VIEW-AS FILL-IN 

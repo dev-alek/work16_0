@@ -276,8 +276,6 @@ on error undo, return error return-value
       delete object vsds no-error.
       delete object vsdstr no-error.
       
-/*      define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .*/
-/*      run gbl/getobjsrvhndl.p (input-output ObjSrv).                 */
       for each buf_marking-lines exclusive-lock where buf_marking-lines.gds-code = v-gds-code
                                                   and buf_marking-lines.obj-type = buf_parts.obj-type
                                                   and buf_marking-lines.obj-code = buf_parts.obj-code

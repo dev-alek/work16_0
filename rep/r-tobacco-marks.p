@@ -62,9 +62,8 @@ define input parameter p-group-pack      as logical no-undo .
     define VARIABLE v-attr-value              as character no-undo .
     define VARIABLE v-value                   as character no-undo .
     
-    define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
-    
+    { gbl/objsrv.i }
+   
     define stream str-marks .
     define stream OutStr-html.
 

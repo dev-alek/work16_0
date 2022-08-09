@@ -63,8 +63,7 @@ define variable v-gds-attr-type      as character no-undo .
     
 define variable v-doc-qnty as decimal   no-undo .
 define variable v-fact-qnty as decimal   no-undo .
-define variable objSrv as class objsrv no-undo .
-run gbl/getobjsrvhndl.p (input-output ObjSrv). 
+{ gbl/objsrv.i }
 
 define variable v-fact-qnty-p as decimal   no-undo .
 define variable v-doc-qnty-p as decimal   no-undo .

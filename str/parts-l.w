@@ -104,7 +104,7 @@ define variable vartype as character no-undo .
 define variable v-ext-mode as character no-undo .
 define variable v-sum-parts-qnty as decimal no-undo .
 
-define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+{ gbl/objsrv.i }
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 define new shared buffer  parts for ub.parts  .

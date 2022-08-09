@@ -30,12 +30,7 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Сканирование акцизных марок".
-&if defined(globObjSrv) eq 0
-&then 
-&glob globObjSrv yes
-def    var      ObjSrv          as class     ibs.th.gbl.sys.ObjSrv no-undo.
-run gbl/getObjSrvhndl.p (input-output ObjSrv).
-&endif
+{ gbl/objsrv.i }
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }

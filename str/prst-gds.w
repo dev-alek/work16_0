@@ -2165,7 +2165,7 @@ define output parameter  v-nabor   as logical   no-undo .
 
 define variable varvalue        as character no-undo .
 define variable vartype         as character no-undo .
-define variable ObjSrv          as class     ibs.th.gbl.sys.objsrv     no-undo.
+{ gbl/objsrv.i }
 define variable EDOParSec       as class     ibs.th.gbl.env.prmtrs.edo .
   
 define buffer buf_goods-attr for goods-attr.
@@ -2173,7 +2173,6 @@ define buffer buf_goods-attr for goods-attr.
  on error undo, return error return-value
  :
    
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
   EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(parobj-type, parobj-code).
   
   RUN gds-attr-value (

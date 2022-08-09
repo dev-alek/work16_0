@@ -1,6 +1,5 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-using ibs.th.gbl.sys.objsrv.
 using ibs.th.str.marking.sts.*.
 /* Connected Databases 
           ub               PROGRESS
@@ -292,8 +291,7 @@ DEFINE VARIABLE v-mark-2 AS CHARACTER FORMAT "X(255)"
 
 
 
-def var objSrv as class objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
+{ gbl/objsrv.i }
 def var Marking as class mark no-undo .
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD EdoTypeName d-utd 

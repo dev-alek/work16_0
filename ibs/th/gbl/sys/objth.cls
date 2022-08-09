@@ -20,7 +20,7 @@ class ibs.th.gbl.sys.objth:
    Notes:
   ------------------------------------------------------------------------------*/
   
-  define protected variable ObjSrv as objsrv no-undo.
+  { gbl/objsrv.i def}
   
   constructor protected objth ():
 /*    message "1" view-as alert-box.*/
@@ -39,7 +39,7 @@ class ibs.th.gbl.sys.objth:
   end destructor.
 
   method public void getobjserv():
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
+    { gbl/objsrv.i get}
   end method.
 
 end class.

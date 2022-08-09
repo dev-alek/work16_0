@@ -32,8 +32,7 @@ define variable vss-description as character no-undo init "Триггер на изменение 
 
 
 { trg/trghistnws.i } 
-&glob globobjSrv yes
-def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+{ gbl/objsrv.i }
 def var utdTHSts as class ibs.th.str.utd.sts.th no-undo.
 def var utdEDISts as class ibs.th.str.utd.sts.edi no-undo.
 define variable volddb-num as integer no-undo.
@@ -64,8 +63,6 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   if new-{&main-tbl}.Timestamp eq ?
   then
      new-{&main-tbl}.Timestamp = now.
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
   utdTHSts = objSrv:Env:Utd:Sts:TH.
   utdEDISts = objSrv:Env:Utd:Sts:EDI.
   

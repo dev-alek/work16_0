@@ -2892,9 +2892,9 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     put stream LK_RECEIPT unformatted now " " itext skip .
     output stream LK_RECEIPT close .
   end.
-   
   { str/utd-err.i class }
   { str/utd-attr.i class }
-  { utl/gtin.i    class }
+  { utl/gtin.i class }
+  
   { utl/search.i  class }
 end class.

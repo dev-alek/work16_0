@@ -22,7 +22,8 @@ p-free-output-copy  false  копирование партии в документ, в свободную, расходную
                            закрытие документа до статуса {&fact}
 */
 { str/marks.i }
-
+{ gbl/objsrv.i }
+  
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
@@ -51,8 +52,6 @@ procedure partcopy :
   define variable v-parent-mark-sts as integer   no-undo .
   define variable v-mark-sts-list   as character no-undo .
   
-  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
   define variable oMarkSts as class ibs.th.str.marking.sts.mark .
   
   oMarkSts = objSrv:Env:Marking:Sts:Mark.
@@ -830,9 +829,6 @@ procedure partcopy-update-parts :
   define variable v-exch-rate  like ub.curr-accnt.exch-rate no-undo .
   define variable v-exch-scale like ub.curr-accnt.exch-scale no-undo .
   
-  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
   do
   on error undo, return error return-value
   :
@@ -1705,9 +1701,8 @@ procedure partcopy-update-parts-delete :
   define variable v-tth             as handle no-undo .
   define variable v-type            as character no-undo .
   
-  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
-  
+  { gbl/objsrv.i }
+
   define buffer buf_marking-lines for ub.marking-lines .
   define buffer del_marking-lines for ub.marking-lines .
   define buffer free_marking-lines for ub.marking-lines .
@@ -2500,9 +2495,7 @@ procedure partcopy-rsrv-parts :
   define buffer buf_goods for ub.goods .
 
   define variable v-rsrv-code as character no-undo .
-  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
+  { gbl/objsrv.i }
   do
   on error undo, return error return-value
   :

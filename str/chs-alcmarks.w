@@ -31,13 +31,7 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Сканирование акцизных марок".
-&if defined(globobjSrv) eq 0
-&then 
-&glob globobjSrv yes
-def    var      objSrv          as class     ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-&endif
-
+{ gbl/objsrv.i }
 define input  parameter parparentproc         as  handle              no-undo .
 define input  parameter p-doc-code            as  character           no-undo .
 define input  parameter p-mode                as character            no-undo .

@@ -227,11 +227,9 @@ define input parameter p-have-store             as logical          no-undo.  /*
     define buffer buf_new_temp_goods-qnty   for temp_goods-qnty.
     define buffer buf_start_temp_goods-qnty for temp_goods-qnty.
     define buffer buf_del_temp_goods-qnty   for temp_goods-qnty.
-    define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
-
+   { gbl/objsrv.i }
    define variable v-ban-recipes as logical no-undo .
    define variable v-ban-altr    as logical no-undo .
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanAltr then v-ban-altr = true .
     find first buf_fbr-doc no-lock

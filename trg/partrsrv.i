@@ -80,9 +80,8 @@ procedure partrsrv :
   define variable v-type            as character no-undo .
   define variable part-key-rec      as character no-undo .
   
-  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
+  { gbl/objsrv.i }
+  
   do transaction
   on error undo, return error
   :

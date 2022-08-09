@@ -25,6 +25,7 @@ class ibs.th.bge.1crn.subjects.check implements iexpsubject:
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
   { cmp/library.i  class }
+  { gbl/objsrv.i def }
   { utl/gtin.i class }
   { ref/extclass.i }
   { ref/chk-type-desc.i }
@@ -109,6 +110,8 @@ define private temp-table tt-recid-TranFuel no-undo
    Param:   insw = create sax-writer
   ------------------------------------------------------------------------------*/
   method public void CrContentToSW (insw as handle):
+     { gbl/objsrv.i get}
+  
     define variable v-fld-host-code  as handle no-undo .
     define variable v-fld-obj-type   as handle no-undo .
     define variable v-fld-obj-code   as handle no-undo .

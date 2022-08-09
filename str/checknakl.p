@@ -16,7 +16,6 @@ Creation date: 10/06/06
 
 
 */
-using ibs.th.gbl.sys.objsrv.
 using ibs.th.str.utd.sts.*.
 
 define input parameter parparentproc as widget-handle no-undo .
@@ -78,8 +77,7 @@ define variable v-DocumenNumber-fact as character no-undo .
 define variable v-file-name          as character no-undo .
 define variable v-doc-code           as character no-undo .
   
-def    var      objSrv               as class     ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
+{ gbl/objsrv.i }
 
 v-date-end = p-shift-date - 35 .
 

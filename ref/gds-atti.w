@@ -6,7 +6,6 @@
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
 
-using ibs.th.gbl.sys.objsrv.
 using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.bge.mercury.*.
@@ -65,7 +64,8 @@ define variable vss-description as character no-undo init "Атрибуты товара".
 { gbl/getcntxt.i def }
 { ref/attr-pop.i def }
 { ref/attr-pop.i proc }
-
+{ gbl/objsrv.i }
+   
 define variable updated      as logical   no-undo .
 DEFINE VARIABLE added        as logical   no-undo .
 define variable add-option   as character no-undo .
@@ -498,9 +498,7 @@ DO:
    DO:
       RETURN NO-APPLY.
    END.
-   define variable ObjSrv        as class   ibs.th.gbl.sys.objsrv no-undo.
    define variable v-ban-recipes as logical no-undo .
-   run gbl/getobjsrvhndl.p (input-output ObjSrv).
    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
    if v-ban-recipes then 
    do: 

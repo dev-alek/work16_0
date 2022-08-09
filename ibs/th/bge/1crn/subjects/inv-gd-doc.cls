@@ -23,13 +23,14 @@ using ibs.th.str.ptrl.* from propath.
 block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
-
+  
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
   { str/trdcalib.i class }
   { cmp/library.i  class }
   { gbl/thbj-def.i       }
-  {utl/gtin.i class      }
+  { gbl/objsrv.i def }
+  { utl/gtin.i class      }
   
   define temp-table buf_trn-doc like ub.trn-doc.
   
@@ -95,7 +96,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
     field mark as character.
   
   method public void CrContentToSW (insw as handle):
-    
+    { gbl/objsrv.i}
     define variable p-value      as character no-undo.
     define variable p-type       as character no-undo.
     

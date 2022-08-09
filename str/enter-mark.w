@@ -52,8 +52,7 @@ define variable v-tth as handle no-undo .
 define variable vCodeIdent        as character no-undo .
 define variable v-GTIN        as character no-undo .
 define variable v-find        as logical no-undo .
-define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-
+{ gbl/objsrv.i }
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -255,7 +254,6 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
   run LoadKeyboardLayoutA (input f-mark, input 0, output iLang).
       run adm/shattri.p (
                input "get":U

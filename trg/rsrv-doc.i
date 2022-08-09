@@ -127,8 +127,8 @@ procedure rsrv-doc :
   define variable v-mark-tobacco      as logical    no-undo .
   define variable v-box-qnty          as integer    no-undo .
   
-  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-  define buffer buf_marking         for ub.marking .
+  { gbl/objsrv.i }
+   define buffer buf_marking         for ub.marking .
   define buffer buf_marking-childs  for ub.marking .
   define buffer buf_marking-lines   for ub.marking-lines .
   define buffer buf_marking-chk     for ub.marking-chk .
@@ -239,8 +239,6 @@ procedure rsrv-doc :
     then
     v-izlcstpr = false .
     
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
     empty temp-table tt-alc-codes .
     output stream tobacco-rsrv to value ("tobacco-rsrv.log") .
     

@@ -29,9 +29,8 @@ define variable vss-description as character no-undo initial "Триггер на удалени
 { cmp/vssrevis.i "substitute('&1|&2', ub.trn-doc.doc-code, ub.trn-doc.status_) " }
 { cmp/trg-def.i }
 
-define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
+{ gbl/objsrv.i }
+   
 define variable v-message as character no-undo .
 define buffer bufz_trn-doc for ub.trn-doc.
 

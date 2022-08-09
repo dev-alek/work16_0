@@ -445,9 +445,7 @@ on error undo, return error return-value
       (input "Удаление архивных партий"
       ).
       
-    define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
+    { gbl/objsrv.i }
     for each buf_parts exclusive-lock
       where buf_parts.out-code = buf_trn-doc.doc-code
     on error undo, return error return-value

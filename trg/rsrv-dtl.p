@@ -156,12 +156,7 @@ define stream tobacco-rsrv .
 { trg/holdprts.i }
 { trg/partlist.i }
 
-&if defined(globobjSrv) eq 0
-&then 
-&glob globobjSrv yes
-def    var      objSrv          as class     ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-&endif
+{ gbl/objsrv.i }
 /* что резервируем: документ, товар, признак, объект */
 define variable v-obj-type   like ub.gds-dtl.obj-type  no-undo .
 define variable v-obj-code   like ub.gds-dtl.obj-code  no-undo .
