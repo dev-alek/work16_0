@@ -166,7 +166,6 @@ procedure MainProc:
   define buffer cash-desk for cash-desk.
    
   define variable vMsg as character no-undo.
-   
   _cash-desk:
   FOR EACH cash-desk WHERE
            cash-desk.db-num   = g#db-num
@@ -354,7 +353,9 @@ procedure SaxReader:
   define variable hParser as handle no-undo.
   
   create sax-reader hParser.
-  hParser:set-input-source("longchar", mWebResp).
+  define variable vmemptr as memptr no-undo.
+  copy-lob mWebResp to vmemptr.
+  hParser:set-input-source("memptr", vmemptr).
   hParser:sax-parse () no-error.
   if error-status:error then do:
       if error-status:num-messages > 0 then
@@ -427,9 +428,10 @@ PROCEDURE Characters:
       tt-one-chk-slip-head.cash-num = integer(vCurrContent) no-error.
     when "ErrorMessage" then
       ErrorMessage = vCurrContent.
+/*      codepage-convert(vCurrContent, "1251", "UTF-8") .*/
     when "STextCheq"
     then do :
-      vCurrContent = codepage-convert(vCurrContent, "1251", "UTF-8")  .
+/*      vCurrContent = codepage-convert(vCurrContent, "1251", "UTF-8")  .*/
       m-textCheq = m-textCheq + vCurrContent .
     end .
   end case.
@@ -450,28 +452,34 @@ PROCEDURE EndElement:
   end.
   else
   if qName = "slip" then do:
-    find first tt-chk-slip-head where tt-chk-slip-head.db-num    = tt-one-chk-slip-head.db-num
-                                  and tt-chk-slip-head.ID        = tt-one-chk-slip-head.ID
-                                  and tt-chk-slip-head.CheckID   = tt-one-chk-slip-head.CheckID
-                                  and tt-chk-slip-head.RRN       = tt-one-chk-slip-head.RRN
-                                  no-error .
-    if not available tt-chk-slip-head
+    if tt-one-chk-slip-head.ID > ""
     then do :
-      create tt-chk-slip-head .
-      buffer-copy tt-one-chk-slip-head to tt-chk-slip-head .
-    end .  
+      find first tt-chk-slip-head where tt-chk-slip-head.db-num    = tt-one-chk-slip-head.db-num
+                                    and tt-chk-slip-head.ID        = tt-one-chk-slip-head.ID
+                                    and tt-chk-slip-head.CheckID   = tt-one-chk-slip-head.CheckID
+                                    and tt-chk-slip-head.RRN       = tt-one-chk-slip-head.RRN
+                                    no-error .
+      if not available tt-chk-slip-head
+      then do :
+        create tt-chk-slip-head .
+        buffer-copy tt-one-chk-slip-head to tt-chk-slip-head .
+      end .  
+    end .
   end.
   if qName = "STextCheq" then do:
-    do ii = 1 to num-entries(m-textCheq, {&new-line}) :
-      create tt-chk-slip-string.
-      assign 
-        tt-chk-slip-string.db-num = tt-one-chk-slip-head.db-num
-        tt-chk-slip-string.ID = tt-one-chk-slip-head.ID
-        tt-chk-slip-string.CheckID = tt-one-chk-slip-head.CheckID
-        tt-chk-slip-string.RRN = tt-one-chk-slip-head.RRN
-        tt-chk-slip-string.str-num = ii
-        tt-chk-slip-string.str-value = entry(ii, m-textCheq, {&new-line})
-      .
+    if tt-one-chk-slip-head.ID > ""
+    then do :
+      do ii = 1 to num-entries(m-textCheq, {&new-line}) :
+        create tt-chk-slip-string.
+        assign 
+          tt-chk-slip-string.db-num = tt-one-chk-slip-head.db-num
+          tt-chk-slip-string.ID = tt-one-chk-slip-head.ID
+          tt-chk-slip-string.CheckID = tt-one-chk-slip-head.CheckID
+          tt-chk-slip-string.RRN = tt-one-chk-slip-head.RRN
+          tt-chk-slip-string.str-num = ii
+          tt-chk-slip-string.str-value = entry(ii, m-textCheq, {&new-line})
+        .
+      end .
     end .
   end .
 
