@@ -2283,11 +2283,11 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                                            string (buf_utd.DocumentDate) , 
                                            buf_utd.doc-code, 
                                            return-value, 
-                                           if ChecknotMarkUtd(buf_utd.db-num,buf_utd.doc-id) then "Немаркированной продукцией(товарами)данной поставки можно торговать на кассе." else "",
-                                           if CheckMarkUtd(buf_utd.db-num,buf_utd.doc-id) then "Маркированной продукцией (товарами) данной поставки торговать на кассе нельзя. Ожидайте по маркированной продукции (товарам) дополнительного уведомления." else "").
+                                           if ChecknotMarkUtd(buf_utd.db-num,buf_utd.doc-id) then "Немаркированные товары можно продавать на кассе. " else "",
+                                           if CheckMarkUtd(buf_utd.db-num,buf_utd.doc-id) then "Продажа маркированных товаров из данной поставки запрещена до получения дополнительного уведомления. " else "").
                else if     buf_utd.sts eq objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
                        and CheckMarkUtd(buf_utd.db-num,buf_utd.doc-id) 
-               then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate) , buf_utd.doc-code, return-value, "Маркированной продукцией(товарами)данной поставки можно торговать на кассе.").
+               then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate) , buf_utd.doc-code, return-value, "Маркированные товары данной поставки можно продавать на кассе").
             end.
          end.
          else v-msg = substitute ('Документ: &1 от &2. Ошибка при формировании ПН. &3. &4', buf_utd.DocumentNumber, string (buf_utd.DocumentDate), trim(return-value, ".")).

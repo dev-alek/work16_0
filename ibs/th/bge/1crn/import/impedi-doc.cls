@@ -452,11 +452,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                                        string (utd.DocumentDate) , 
                                        utd.doc-code, 
                                        return-value, 
-                                       if ChecknotMarkUtd(utd.db-num,utd.doc-id) then "Немаркированной продукцией (товарами) данной поставки можно торговать на кассе." else "",
-                                       if CheckMarkUtd(utd.db-num,utd.doc-id) then "Маркированной продукцией (товарами) данной поставки торговать на кассе нельзя. Ожидайте по маркированной продукции (товарам) дополнительного уведомления." else "").
+                                       if ChecknotMarkUtd(utd.db-num,utd.doc-id) then "Немаркированные товары можно продавать на кассе." else "",
+                                       if CheckMarkUtd(utd.db-num,utd.doc-id) then "Продажа маркированных товаров из данной поставки запрещена до получения дополнительного уведомления." else "").
            else if     utd.sts eq objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
                    and CheckMarkUtd(utd.db-num,utd.doc-id) 
-           then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value, "Маркированной продукцией(товарами)данной поставки можно торговать на кассе.").
+           then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value, "Маркированные товары данной поставки можно продавать на кассе").
         end.
      end.
      else v-msg = substitute ('Документ: &1 от &2. Ошибка при формировании ПН. &3. &4', utd.DocumentNumber, string (utd.DocumentDate), trim(return-value, ".")).
