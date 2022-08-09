@@ -14,7 +14,6 @@ Author: Bakhtadze Natalya
 Creation date: 04/12/04
 
 */
-using ibs.th.gbl.sys.objsrv.
 
 TRIGGER PROCEDURE FOR WRITE OF ub.goods-attr OLD old-goods-attr .
  
@@ -42,12 +41,10 @@ define buffer buf_c-gds-hist for ub.c-gds-hist.
 define buffer locked_goods-attr for ub.goods-attr.
 
     
-    define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
-    define variable v-ban-recipes as logical no-undo init false.
+{ gbl/objsrv.i }
+define variable v-ban-recipes as logical no-undo init false.
 
 
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
-    
 main-block:
 do
 on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )

@@ -5670,20 +5670,26 @@ procedure getpump:
    mFileLogSocet = ilogfile.
    
     define variable vuser as character no-undo.
-    create tt-User.
-    run utl/getuserpwdauto.p(input buffer tt-User:handle) no-error.
+    define variable vuserobj as ibs.th.file.asyncparam no-undo.
+    define variable vPassobj as ibs.th.file.asyncparam no-undo.
+    vuserobj =  new ibs.th.file.asyncparam("user").
+    vpassobj =  new ibs.th.file.asyncparam("pass").
+    
+    run utl/getuserpwdauto.p(input vuserobj, input vpassobj) no-error.
     if not error-status:error
     then do:
-       vuser =  tt-User.usr.
+       vuser =  vuserobj:valueParam.
     end.
     else do:
-       run utl/getuserpwd.p( input buffer tt-User:handle) no-error.
+       run utl/getuserpwd.p(input vuserobj, input vpassobj) no-error.
        if not error-status:error
        then do:
-          vuser =  tt-User.usr.
+          vuser =  vuserobj:valueParam.
        end.
     end.
-    delete tt-User.
+    delete object vuserobj.
+    delete object vpassobj.
+  
    define variable vnoActivCash as logical no-undo.
    block-cash:
    for each cash-desk  where cash-desk.db-num   = g#db-num 

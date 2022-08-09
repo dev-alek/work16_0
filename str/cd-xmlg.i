@@ -117,9 +117,16 @@ end.
    if p-Type eq "file"
    then
       hParser:set-input-source(p-Type, string(p-str)).
-   else
-      hParser:set-input-source(p-Type, p-str).
-   
+   else do:
+      if p-Type = "longchar"
+      then do:
+         define variable vmemptr as memptr no-undo.
+         copy-lob p-str to vmemptr.
+         hParser:set-input-source("memptr", vmemptr).
+      end.
+      else
+         hParser:set-input-source(p-Type, p-str).
+   end.
    hParser:sax-parse () no-error.
    if error-status:error then do:
       delete object hParser.

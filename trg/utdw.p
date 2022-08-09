@@ -32,8 +32,7 @@ define variable vss-description as character no-undo init "Триггер на изменение 
 
 
 { trg/trghistnws.i } 
-&glob globobjSrv yes
-def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+{ gbl/objsrv.i }
 def var utdTHSts as class ibs.th.str.utd.sts.th no-undo.
 def var utdEDISts as class ibs.th.str.utd.sts.edi no-undo.
 define variable volddb-num as integer no-undo.
@@ -64,8 +63,6 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   if new-{&main-tbl}.Timestamp eq ?
   then
      new-{&main-tbl}.Timestamp = now.
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
   utdTHSts = objSrv:Env:Utd:Sts:TH.
   utdEDISts = objSrv:Env:Utd:Sts:EDI.
   
@@ -426,13 +423,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
          if     new-{&main-tbl}.sts ne objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
               
          then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &6 &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value, 
-         if ChecknotMarkUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id) then "Немаркированной продукцией(товарами)данной поставки можно торговать на кассе." else "",
-         if CheckMarkUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id) then "Маркированной продукцией (товарами) данной поставки торговать на кассе нельзя. Ожидайте по маркированной продукции (товарам) дополнительного уведомления." else "").
+         if ChecknotMarkUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id) then "Немаркированные товары можно продавать на кассе." else "",
+         if CheckMarkUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id) then "Продажа маркированных товаров из данной поставки запрещена до получения дополнительного уведомления. " else "").
          
          
          else if     new-{&main-tbl}.sts eq objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
                  and CheckMarkUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id) 
-         then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value, "Маркированной продукцией(товарами)данной поставки можно торговать на кассе.").
+         then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &4', new-{&main-tbl}.DocumentNumber, string (new-{&main-tbl}.DocumentDate) , new-{&main-tbl}.doc-code, return-value, "Маркированные товары данной поставки можно продавать на кассе.").
       end.
       
     end.

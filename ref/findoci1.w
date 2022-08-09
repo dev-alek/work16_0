@@ -116,6 +116,8 @@ define buffer X_payer-person for ub.person.
 define buffer X_receiver-firm for ub.firm.
 define buffer X_receiver-person for ub.person.
 
+define variable MParam as character no-undo.
+
 DEFINE TEMP-TABLE ttc-fin-doc NO-UNDO LIKE ub.fin-doc.
 
 
@@ -1553,7 +1555,7 @@ define input  parameter iFileName as character no-undo.
 define input  parameter ikey      as character no-undo.
 define input  parameter icode     as character no-undo.
 define output parameter oCount    as int64 no-undo.
- run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko  ,output oCount    ).
+ run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko, MParam  ,output oCount    ).
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1819,7 +1821,10 @@ define variable vCashBook as class ibs.th.ref.cashbookstorage no-undo.
   vCashBook = new ibs.th.ref.cashbookstorage () .
       
   vmask = vCashBook:getSinglRule(tt-fin-doc.cashbookId, p-obj-type,p-obj-code, "PkoMask") .
-
+  MParam = if vCashBook:getSinglRule(tt-fin-doc.cashbookId, p-obj-type,p-obj-code, "uchet") eq "1"
+           then "year," + string(year(tt-fin-doc.shift-date))
+           else "".                                      
+  
   
   delete object vCashBook no-error .
   

@@ -6,7 +6,6 @@
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
 using ibs.th.gbl.env.prmtrs.edo.
-using ibs.th.gbl.sys.objsrv.
 using ibs.th.str.marking.sts.*.
 
 /* Temp-Table and Buffer definitions                                    */
@@ -156,8 +155,7 @@ define variable p-pos-type as character no-undo .
 { str/paycardv.i }
 
 define buffer buf_marking-chk for ub.marking-chk .
-def var objSrv as class objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
+{ gbl/objsrv.i }
 def var Marking as class mark no-undo .
 define variable EDOParSec as class edo.
 &SCOP discnt-v-code string(tt-chk-discnt.value-type)

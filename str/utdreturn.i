@@ -1,11 +1,6 @@
-{cmp\str-glbl.i {1}}
-{str\utd-err.i {1}}
-&if defined(globobjSrv) eq 0
-&then 
-&glob globobjSrv yes
-def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-&endif
+{cmp/str-glbl.i {1}}
+{str/utd-err.i {1}}
+{ gbl/objsrv.i {1}}
 define temp-table tt-return
   field db-num as integer 
   field doc-id as integer

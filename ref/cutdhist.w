@@ -5,12 +5,7 @@ define input  parameter {&Param_2} as int64 no-undo.
  
 
 
-&if defined(globobjSrv) eq 0
-&then 
-&glob globobjSrv yes
-def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-&endif
+{ gbl/objsrv.i }
 define variable StatusTH   as class     ibs.th.str.utd.sts.th  no-undo .
 define variable StatusEDI  as class     ibs.th.str.utd.sts.edi no-undo .
 define variable EdocType  as class     ibs.th.str.utd.edoctype no-undo .

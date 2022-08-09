@@ -15,7 +15,6 @@ Creation date: 07/23/08
 
 
 */
-using ibs.th.gbl.sys.objsrv.
 using ibs.th.str.marking.sts.*.
 
 define variable vss-revision as character no-undo init "$Revision$":U .
@@ -38,9 +37,8 @@ define variable v-marking as character no-undo .
 define var      v-DocumentNumber  as character no-undo .
 define variable v-leave as logical no-undo .
 def var Marking as class mark no-undo .
-def var objSrv as class objsrv no-undo.
+{ gbl/objsrv.i }
 def var v-message as character no-undo .
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
 Marking = ObjSrv:Env:Marking:Sts:Mark .
 
 run gbl/d-prompt.w (

@@ -97,7 +97,8 @@ define buffer doc-line for ub.doc-line  .
 { str/temp_upd.i }
 {ibs/th/bge/egais/ab-egais.i 1 new shared}
 { str/marks.i         }
-
+{ gbl/objsrv.i }
+      
 &global-define is-fuel 1
 &global-define is-lgas 2
 &global-define is-lgas-corr 3
@@ -1824,8 +1825,6 @@ DO:
       if error-status :error then do: return no-apply. end.
     end.
     when true then do:
-      def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
-      run gbl/getobjsrvhndl.p (input-output ObjSrv).
       for each bf_parts no-lock where bf_parts.out-code = t-doc.doc-code and 
       bf_parts.artic = goods.artic and bf_parts.prod-code = goods.prod-code and bf_parts.prod-type = goods.prod-type:
         for each ub.marking-lines no-lock where 
@@ -4427,7 +4426,6 @@ define variable varext-cycle    as logical no-undo.
 define variable v-is-petrol     as logical no-undo.
 define variable v-is-pieces     as logical no-undo.
 define variable v-log           as logical no-undo.
-define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 assign
@@ -4513,7 +4511,6 @@ do while varlns-cnt <= num-entries (varnotes):
   end.
   
   varvalue = "" .
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
   EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
  
   RUN gds-attr-value (

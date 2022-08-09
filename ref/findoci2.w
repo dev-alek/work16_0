@@ -95,6 +95,7 @@ define variable v-limit-access  as integer no-undo .
 define variable mprn-doc-code-old as character no-undo. 
 define variable current-pko-rko as character no-undo.
 define variable current-ruleID  as character no-undo. 
+define variable MParam as character no-undo.
 
 define buffer X_fin-code-cor-acc for ub.fin-code-cor-acc.
 define buffer X_fin-code-an-uchet for ub.fin-code-an-uchet.
@@ -1574,33 +1575,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MycounterCurr Dialog-Frame 
-PROCEDURE MycounterCurr :
-define input  parameter iFileName as character no-undo.
-define input  parameter ikey      as character no-undo.
-define input  parameter icode     as character no-undo.
-define output parameter oCount    as int64 no-undo.
- define variable mCounterStor as class ibs.th.ref.counter.counterstorage.
- mCounterStor = new ibs.th.ref.counter.counterstorage().
- oCount = mCounterStor:GetCountValue(G#db-num,"cashbookrule", current-ruleID, current-pko-rko ) + 1.
- delete object mCounterStor.
-end procedure.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MycounterNext Dialog-Frame 
-PROCEDURE MycounterNext :
-define input  parameter iFileName as character no-undo.
-define input  parameter ikey      as character no-undo.
-define input  parameter icode     as character no-undo.
-define output parameter oCount    as int64 no-undo.
- run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko  ,output oCount    ).
-end procedure.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable Dialog-Frame 
 PROCEDURE Myenable :
 /*------------------------------------------------------------------------------
@@ -1912,7 +1886,9 @@ define variable vCashBook as class ibs.th.ref.cashbookstorage no-undo.
   vCashBook = new ibs.th.ref.cashbookstorage () .
       
   vmask = vCashBook:getSinglRule(tt-fin-doc.cashbookId, p-obj-type,p-obj-code, "RkoMask") .
-
+  MParam = if vCashBook:getSinglRule(tt-fin-doc.cashbookId, p-obj-type,p-obj-code, "uchet") eq "1"
+           then "year," + string(year(tt-fin-doc.shift-date))
+           else "".                                      
   
   delete object vCashBook no-error .
   
@@ -1946,7 +1922,8 @@ define variable vCashBook as class ibs.th.ref.cashbookstorage no-undo.
         current-pko-rko = "currRKO" 
         current-ruleID = v-key
       .
-      run utl/maskproc.p(parparentproc, vmask, "cashbook", tt-fin-doc.cashbookId, output vValue).
+
+      run utl/maskproc.p(parparentproc, vmask, "cashbook", tt-fin-doc.cashbookId,  output vValue).
       mprn-doc-code-old =  vValue.
       tt-fin-doc.prn-doc-code = vValue.
       display  tt-fin-doc.prn-doc-code with frame Dialog-Frame.
@@ -1956,3 +1933,29 @@ end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MycounterCurr Dialog-Frame 
+PROCEDURE MycounterCurr :
+define input  parameter iFileName as character no-undo.
+define input  parameter ikey      as character no-undo.
+define input  parameter icode     as character no-undo.
+define output parameter oCount    as int64 no-undo.
+ define variable mCounterStor as class ibs.th.ref.counter.counterstorage.
+ mCounterStor = new ibs.th.ref.counter.counterstorage().
+ oCount = mCounterStor:GetCountValue(G#db-num,"cashbookrule", current-ruleID, current-pko-rko ) + 1.
+ delete object mCounterStor.
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MycounterNext Dialog-Frame 
+PROCEDURE MycounterNext :
+define input  parameter iFileName as character no-undo.
+define input  parameter ikey      as character no-undo.
+define input  parameter icode     as character no-undo.
+define output parameter oCount    as int64 no-undo.
+ run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko, MParam ,output oCount    ).
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME

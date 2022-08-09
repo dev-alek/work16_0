@@ -43,13 +43,8 @@ define variable mode-erprn as logical no-undo.
 { nws/nws-tabs.i      }
 { cmp/rest-rdb.i      }
 { nws/lib-nws.i       }
-&if defined(globobjSrv) eq 0
-&then 
-&glob globobjSrv yes
-def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-&endif
-
+{ gbl/objsrv.i }
+   
 define buffer buf_rrdb-option for rrdb-option.
 define variable conf-par as character no-undo.
 define variable ser-wth-conf-par as logical no-undo.

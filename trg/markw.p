@@ -36,9 +36,8 @@ on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 :
 
-define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
+{ gbl/objsrv.i }
+   
 if (old-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or old-marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
   or old-marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
@@ -87,41 +86,5 @@ if ub.marking.sts <> old-marking.sts then do:
       .
    end.                                          
 end .   
-/*define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.       */
-/*run gbl/getobjsrvhndl.p (input-output ObjSrv).                       */
-/*                                                                     */
-/*if not g#news and ub.marking.sts <> old-marking.sts and              */
-/*(ub.marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB or    */
-/*ub.marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB or    */
-/*ub.marking.sts = objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB or*/
-/*ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB)      */
-/*then do:                                                             */
-/*  objSrv:Lib:MarkingTree:UnGroupMark(ub.marking.mark).               */
-/*end.                                                                 */
-
-
-/*  return.                                                      */
-/*  def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.       */
-/*  def var markSts as class ibs.th.str.marking.sts.mark no-undo.*/
-/*  run gbl/getobjsrvhndl.p (input-output ObjSrv).               */
-/*                                                               */
-/*  markSts = objSrv:Env:Marking:Sts:Mark.                       */
-/*                                                               */
-/*  if ub.marking.sts <> old-marking.sts                         */
-/*  and (                                                        */
-/*        ub.marking.sts = markSts:FreeZone:KeyIntDB             */
-/*    or  ub.marking.sts = markSts:OutZone:KeyIntDB              */
-/*    or  ub.marking.sts = markSts:Checked_:KeyIntDB             */
-/*    or  ub.marking.sts = markSts:Ungrouped:KeyIntDB            */
-/*  )                                                            */
-/*  then do:                                                     */
-/*    run str/callnews.p                                         */
-/*      (input {&table_marking}                                  */
-/*      ,input (buffer ub.marking :handle)                       */
-/*      ) no-error .                                             */
-/*    if error-status:error then do:                             */
-/*      undo main-block,  return error return-value .            */
-/*    end.                                                       */
-/*  end.                                                         */
 
 end. /* main-block */

@@ -472,9 +472,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       define variable v-sts-edi      as integer   no-undo .
       define variable v-trn-doc-code as character no-undo .
       
-      def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-      run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
+      { gbl/objsrv.i }
       assign
         v-db-num-utd = integer (entry( 2, p-full-cmd, {&delim-cmd} ))
         v-doc-id     = integer (entry( 3, p-full-cmd, {&delim-cmd} ))

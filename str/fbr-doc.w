@@ -1,7 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DECLARATIONS Procedure
-using ibs.th.gbl.sys.objsrv.
 &ANALYZE-RESUME
 /* Connected Databases 
           ub               PROGRESS
@@ -47,6 +46,7 @@ define input  parameter p-doc-mode                as character no-undo .
 define input  parameter p-fbr-doc-recid           as recid     no-undo .
 define output parameter p-new-fbr-doc-recid       as recid     no-undo .
 define input-output parameter p-fbr-doc-next-prev as logical   no-undo .
+{ gbl/objsrv.i }
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -83,7 +83,6 @@ define shared query br-docs     for f-doc scrolling.
 
 define new shared buffer buf_comp_fbr-line for ub.fbr-line.
 define new shared buffer buf_ingr_fbr-line for ub.fbr-line.
-define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
 define variable ref-list                   as character no-undo.                    /* для вызова справочника */
 
 define variable v-fbr-doc-fbroperator-code as integer   no-undo.
@@ -2589,8 +2588,7 @@ ON CHOOSE OF shift-sel IN FRAME D-FBR-DOC
 /* ***************************  Main Block  *************************** */
 { gbl/getcntxt.i get }
 
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
-   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
+   if objSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanAltr then v-ban-altr = true .
 
 ON CHOOSE OF b-next IN FRAME {&frame-name}

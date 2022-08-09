@@ -3,8 +3,9 @@
 &glob utl_gtin_i yes
 &scoped-define vssseq {&sequence}
 def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
-{cmp\str-glbl.i {1}}
-{gbl\xmlchar.i}
+{ cmp/str-glbl.i {1}}
+{ gbl/xmlchar.i}
+{ gbl/objsrv.i {1}}
 define variable mMRCCode  as logical    no-undo.
 define variable mTypeMark as character  no-undo.
 
@@ -204,7 +205,7 @@ function ChekTypeMarkByGds return logical
    if available goods-attr
    then do:
       mTypeMark = goods-attr.attr-value.                        
-      return goods-attr.attr-value = "tabak" .
+      return goods-attr.attr-value = objsrv:Env:Marking:Types:tabak:NameProp or goods-attr.attr-value = objsrv:Env:Marking:Types:stiki:NameProp .
    end.
    else 
       return no.
@@ -275,7 +276,7 @@ function GetNextElement return character
      then do:
         entry (4,vlistleng) = "06".
      end.
-     else if mtypemark eq "tabak" or mtypemark eq "stiki"
+     else if mtypemark eq objsrv:Env:Marking:Types:tabak:NameProp or mtypemark eq objsrv:Env:Marking:Types:stiki:NameProp
      then do:
         entry (4,vlistleng) = "07".
      end.
@@ -437,22 +438,31 @@ function addBracketForCode return character
    define variable vteg as character no-undo.
    define variable vtegval as character no-undo.
    
-   if     length(icodeIdent) le 25
-   then do:
-      oTeg = icodeIdent.
-   end.
-   else do:
-      mMRCCode = yes. 
-      ChekTypeMarkByDm(icodeIdent).
-      block-teg:
-      do while Velement ne "" and icodeIdent ne "":
-         Velement = GetNextElement(no,output vteg, output vtegval, input-output icodeIdent).
-         if vteg ne ""
-         then
-            oTeg = oTeg + "(" + vteg + ")" + vtegval .
-         
+   if    not ChekTypeMarkByDm(icodeIdent)
+      or length(icodeIdent) le 24
+   then
+      oTeg = icodeIdent.  
+   else do: 
+      if (  icodeIdent begins "01" 
+         or icodeIdent begins "02"
+         ) and CheckGtin(substring (icodeIdent,3,14)) 
+         and substring (icodeIdent,17,2) eq "21"
+      then do:      
+         mMRCCode = yes. 
+         ChekTypeMarkByDm(icodeIdent).
+         block-teg:
+         do while Velement ne "" and icodeIdent ne "":
+            Velement = GetNextElement(no,output vteg, output vtegval, input-output icodeIdent).
+            if vteg ne ""
+            then
+               oTeg = oTeg + "(" + vteg + ")" + vtegval .
+            
+         end.
+         mMRCCode = no.
       end.
-      mMRCCode = no.
+      else do:
+         oTeg = icodeIdent.
+      end.
    end.   
    return oTeg.
 

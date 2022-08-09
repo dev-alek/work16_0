@@ -107,8 +107,7 @@ define buffer buf-first_parts   for ub.parts .
 define buffer doc-obj           for ub.clients .
 define buffer buf_cliobj        for ub.clients .
 
-define variable objSrv as class objsrv no-undo .
-run gbl/getobjsrvhndl.p (input-output ObjSrv). 
+{ gbl/objsrv.i }
 
 { str/in-vatp.i def }
 

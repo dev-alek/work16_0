@@ -28,7 +28,6 @@ Output:
 */
 /*          This .W file was created with the Progress UIB.             */
 /*----------------------------------------------------------------------*/
-using ibs.th.gbl.sys.objsrv.
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
@@ -70,9 +69,8 @@ define variable line-rec   as recid        no-undo.
 { gbl/fbrnutro.i   }
 { str/checkGroupAttr.i }
 define stream ListStream.
-define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
-
-
+{ gbl/objsrv.i }
+   
 define variable v-init-gds-unit-is-pieces   as logical        no-undo.
 define variable v-init-gds-code             as integer        no-undo.
 define variable v-have-rights-to-global     as logical        no-undo.
@@ -1229,7 +1227,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         output g#quest-print
     ).
     
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanAltr then v-ban-altr = true .
     find first buf_init_goods no-lock
@@ -1383,14 +1380,6 @@ define input parameter p-prod-code  as integer      no-undo.
 end.
 END PROCEDURE. /* add-recipe */
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE getobjserv Dialog-Frame 
-procedure getobjserv:
-   define input-output parameter objserv as class ibs.th.gbl.sys.objsrv.
-   objserv = ObjSrv.
-end procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 

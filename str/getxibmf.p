@@ -63,8 +63,58 @@ if num-entries(p-spool-or-data, {&delim-par} ) > 1 then do:
   v-second-mode = entry(2, p-spool-or-data, {&delim-par} )
   p-spool-or-data = entry(1, p-spool-or-data, {&delim-par} )
   .
+  /* вызовы из get-chkf.p и из cloc-xml.i;
+     значение параметра или "spool", или "spool" + {&delim-par} + command, или "data" */
 end.
 
+if p-spool-or-data begins "readbuffer_"
+then do:
+   if  p-spool-or-data = "readbuffer_spool" 
+    or p-spool-or-data = "readbuffer_config"
+   then do:
+      run str/get-xibm.p (
+                    input parparentproc
+                    ,input p-log-handle
+                    ,input p-obj-type
+                    ,input p-obj-code
+                    ,input p-host-code
+                    ,input p-pos-type
+                    ,input p-encoding
+                    ,input p-waiting-name
+/* 23/XI-2018                    ,input (if v-second-mode <> '':U then {&delim-par} + v-second-mode else '':U) */
+                    ,input "readbuffer" + {&delim-par} + v-second-mode
+                    ,input-output v-view-log
+                    )  no-error.
+      if error-status:error
+      then
+         run write-log-and-file in p-log-handle (
+            input 1
+          , input log-file-name
+          , input 1
+          , input substitute( "&1 Ошибка: &2 &3"
+                              , vss-description
+                              , return-value
+                              , error-status:get-message(1)
+                            )
+            ).
+      
+      assign
+      p-view-log = v-view-log or p-view-log
+      v-need-save-2 = p-view-log
+      .
+   end.
+   else
+      run write-log-and-file in p-log-handle (
+            input 1
+          , input log-file-name
+          , input 1
+          , input substitute( "Чтение данных на прямую не предусмотрено &1"
+                              , path
+                            )
+                                        ).
+    
+end.
+else do:
 input stream DirStream from os-dir ( p-in_ + p-spl ) .
 REPEAT :
   import stream DirStream file path atr.
@@ -202,6 +252,7 @@ REPEAT :
   end.
 END .
 input stream DirStream close.
+end.
 return v-rv.
 
 procedure cb_set-log-file-name :

@@ -16,8 +16,6 @@ using ibs.th.bge.1crn.subjects.{&impclass}.
 using ibs.th.ref.promo.enum-type-discount .
 using ibs.th.ref.promo.enum-promo-status .
 using ibs.th.ref.promo.enum-sched-status .
-using ibs.th.gbl.sys.objsrv.
-
 block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.iimpsubject: 
@@ -107,11 +105,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define buffer buf_goods       for ub.goods .
     define buffer buf_clients     for ub.clients .
     define buffer buf_goods-attr  for ub.goods-attr .
+    { gbl/objsrv.i}
     
-    define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
     define variable v-ban-recipes as logical no-undo init false.
-
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
     objImp = cast (subjectObj, {&impclass}).
     assign

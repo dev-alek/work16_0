@@ -169,9 +169,8 @@ procedure rsrvindl :
         buf_doc-parts.cli-qnty  = 0
       .
       
-      define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
-      run gbl/getobjsrvhndl.p (input-output ObjSrv).
-      
+      { gbl/objsrv.i }
+   
       { gbl/gds-code.i
         buf_doc-parts.artic
         buf_doc-parts.prod-type

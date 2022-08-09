@@ -159,7 +159,7 @@ define variable pr-genmrg                  as character initial ?         no-und
 
 define variable v-is-return                as logical   no-undo initial no  .
 
-define variable objSrv as class objsrv no-undo .
+{ gbl/objsrv.i }
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 define variable v-pack-qnty as integer no-undo .
 
@@ -2148,8 +2148,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define buffer buf_doc-pl   for ub.doc-pl.
   define buffer buf_currency for ub.currency  .
   define buffer buf_doc-pl-attr for ub.doc-pl-attr .
-  
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
   
   if num-entries(prt-mode, {&delim-par}) = 2
   then do :

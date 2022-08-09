@@ -396,8 +396,7 @@ define buffer bf-f_contract-specif    for ub.contract-specif.
 define variable v-master as character no-undo.
 
 
-define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
+{ gbl/objsrv.i }
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 define buffer bf_shop for ub.shop.

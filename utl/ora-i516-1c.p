@@ -141,9 +141,8 @@ define variable is-tsd as logical no-undo .
 define variable is-egais as logical no-undo .
 define variable is-unit-error   as logical no-undo .
 define variable v-internal      as logical no-undo .
-define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
+{ gbl/objsrv.i }
+   
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:

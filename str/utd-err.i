@@ -7,7 +7,7 @@ def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@
 { gbl/objsrv.i   {1} }
 { gbl/attr-lib.i {1} }
 { str/utd-attr.i {1} }
-{ utl/gtin.i         }
+{ utl/gtin.i     {1} }
 &if "{1}" = ""
 &then
 { gbl/key-rec.i }

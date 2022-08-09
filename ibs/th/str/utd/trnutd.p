@@ -64,8 +64,7 @@ define variable vss-description as character no-undo init "Импорт накладных из в
 { ref/gds-attr.i }
 { utl/gtin.i }
 
-def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
+{ gbl/objsrv.i }
 
 define temp-table tt2-doc-line      no-undo like lib-trn_ret-line.
 define temp-table tt2-doc-line-attr no-undo like lib-trn_ret-line-attr.

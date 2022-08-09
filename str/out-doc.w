@@ -59,12 +59,7 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo initial "Обработка РН (заведение, редактирование)":U .
-&if defined(globobjSrv) eq 0
-&then 
-&glob globobjSrv yes
-def    var      objSrv          as class     ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
-&endif
+{ gbl/objsrv.i }
 def    var      Marking     as class     mark no-undo .
 { cmp/vssrevis.i "substitute('&1|&2':u,parext-doc-type,paris-hold)" }
 { cmp/str-glbl.i  }
@@ -5881,7 +5876,6 @@ define variable v-rid       as   integer                    no-undo.
 define variable v-rid-list  as   char                       no-undo.
 define variable i           as   integer                    no-undo.
 
-define variable ObjSrv          as class     ibs.th.gbl.sys.objsrv     no-undo.
 define variable EDOParSec       as class     ibs.th.gbl.env.prmtrs.edo .
 
 do on error undo, return error return-value :
@@ -6083,7 +6077,6 @@ do while varlns-cnt <= num-entries (varnotes):
      if var_is-petrol = true then return error "Топливо нельзя продавать через ЗАПРОС ! " .
   end.
   
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
   EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
   find first bf_goods where recid(bf_goods) = gds-rec no-lock.
   RUN gds-attr-value (

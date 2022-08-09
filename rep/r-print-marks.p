@@ -16,7 +16,6 @@ Creation date: 10/06/06
 
 
 */
-using ibs.th.gbl.sys.objsrv.
 using ibs.th.str.marking.sts.*.
 
 define input parameter p-parent-proc as widget-handle no-undo .
@@ -65,8 +64,7 @@ define variable v-param-type        as character no-undo .
 define variable v-tth               as handle    no-undo .
 define variable jj                  as integer   no-undo .
 def    var      Marking             as class     mark no-undo .
-def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
+{ gbl/objsrv.i }
 Marking = ObjSrv:Env:Marking:Sts:Mark .
 
 FUNCTION GdsName RETURNS CHARACTER

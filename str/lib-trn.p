@@ -45,6 +45,8 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { str/valddnst.i def }
 { gbl/ptrlprop.i def }
 { ref/gds-attr.i }
+{ gbl/objsrv.i }
+  
 
 define variable g-varr-b as character no-undo. /* читается из gbl/curr-r-b.i один раз на всю библиотеку */
 
@@ -2365,9 +2367,6 @@ procedure lib-trn_copy-inh :
   define variable v-gds-mark       as   logical              no-undo.
   define variable v-gds-attr-value as   character            no-undo.
   define variable v-gds-attr-type  as   character            no-undo.
-  define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
-  run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
   { str/get-pr.i def }
 
   define buffer d-l-b       for ub.doc-line.
@@ -6851,8 +6850,6 @@ define variable v-density        like ub.doc-line.fact-density no-undo.
 define variable v-gds-mark       as   logical              no-undo.
 define variable v-gds-attr-value as   character            no-undo.
 define variable v-gds-attr-type  as   character            no-undo.
-define variable objSrv as class ibs.th.gbl.sys.objsrv no-undo .
-run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
 { gbl/getcntxt.i def }
 

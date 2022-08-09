@@ -94,7 +94,7 @@ define buffer buf_parts                 for ub.parts .
 define variable varvalue as character no-undo .
 define variable vartype  as character no-undo .
 define variable v-qnty   as integer   no-undo .
-define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+{ gbl/objsrv.i }
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 do
@@ -160,7 +160,6 @@ fact-close:
     .
 
     { gbl/hostcode.i buf_fbr-doc.obj-type buf_fbr-doc.obj-code v-host-code }
-    run gbl/getobjsrvhndl.p (input-output ObjSrv).
     EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code).
     
   /*Проверка на маркированность альтернативных рецептов*/

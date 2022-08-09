@@ -15,7 +15,7 @@ Creation date: 09/09/05
 
 */
 /* ***************************  definitions  ************************** */
-define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+{ gbl/objsrv.i }
 /* parameters definitions ---                                           */
 define input  parameter p-mainmenu-handle as handle       no-undo.
 define input  parameter bttns             as character    no-undo.
@@ -3361,8 +3361,6 @@ on error undo, return error
           assign
              v-goods-recid = integer( entry( 1, v-goods-recid-list ) )
              .
-          run gbl/getobjsrvhndl.p (input-output ObjSrv).
-
           if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanAltr then v-ban-altr = true .
           if v-ban-altr then 
           do:       

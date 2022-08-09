@@ -2465,7 +2465,7 @@ define variable v-ischg-ext-type as logical no-undo .
       define buffer buf_marking-lines for ub.marking-lines.
       define buffer bf_doc-line       for ub.doc-line.
       define buffer bf_gds-dtl        for ub.gds-dtl.
-      def var ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
+      { gbl/objsrv.i }
       def var v-attr-value as character no-undo.
       def var v-attr-type as character no-undo.
       def var v-is-introduce  as logical no-undo.
@@ -2483,7 +2483,6 @@ define variable v-ischg-ext-type as logical no-undo .
         v-is-introduce = true.
       end.
       
-      run gbl/getobjsrvhndl.p (input-output ObjSrv).
         if not v-is-introduce and 
           ((ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType("tabak") 
             or can-find (first ub.marking-attr where ub.marking-attr.attr-code = "inv-doc" and ub.marking-attr.attr-value = buf_trn-doc.doc-code))

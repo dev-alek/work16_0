@@ -57,8 +57,7 @@ define buffer buf_shift-cash for ub.shift-cash.
 define buffer buf_cash-desk for ub.cash-desk.
 define buffer buf_marking for ub.marking .
 def var Marking as class mark no-undo .
-define variable objSrv as class objsrv no-undo .
-run gbl/getobjsrvhndl.p (input-output ObjSrv). 
+{ gbl/objsrv.i }
 /*докачать все чеки*/
 /*если это не маркетер*/
 do
