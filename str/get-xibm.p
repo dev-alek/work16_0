@@ -225,12 +225,15 @@ shop-type = p-obj-type
 shop-code = p-obj-code
 .
 
+/* 23/XI-2018 разделение параметра p-spool-or-data на "spool" и "version" выполнено в
+              вызывающей процедуре str/getxibmf.p
 if num-entries(p-spool-or-data, {&delim-par} ) > 1 then do:
   assign
   p-second-mode = entry(2, p-spool-or-data, {&delim-par} )
   p-spool-or-data = entry(1, p-spool-or-data, {&delim-par} )
   .
  end.
+*/
 { str/get-chkc.i run }
 get-chkc_context.pos-type = p-pos-type.
 
