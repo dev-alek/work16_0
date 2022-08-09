@@ -51,16 +51,39 @@ function ApplyFormatChar returns character ( input iValue as character , input i
    return oValue.  
 end.
 
-function getTegValue returns character (input iTeg as character ,input iParam as character,input iformat as character  ):
-   define variable vValueRet as character no-undo.
+procedure getTegValue :
+   
+   define input  parameter iteg as character no-undo.
+   define input  parameter iParam as character no-undo.
+   define input  parameter iformat as character no-undo.
+   define output parameter oValueRet as character no-undo.
+
    define variable vValueInt as integer no-undo.
    define variable vLength as integer no-undo.
    define variable vFileName as character no-undo.
    define variable vKey      as character no-undo.
    if iTeg eq "obj-code"
-   then vValueRet =  ApplyFormatDec(v-cntxt-obj-code,iformat).
+   then oValueRet =  ApplyFormatDec(v-cntxt-obj-code,iformat).
    else if iTeg eq "obj-type"
-   then vValueRet = ApplyFormatChar(v-cntxt-obj-type,iformat).
+   then oValueRet = ApplyFormatChar(v-cntxt-obj-type,iformat).
+   else if iTeg eq "obj-altcode" then 
+      do:
+         find first ub.clients-attr no-lock where ub.clients-attr.attr-code = "alter-code" and
+                                                  ub.clients-attr.obj-code = v-cntxt-obj-code and
+                                                  ub.clients-attr.obj-type = v-cntxt-obj-type no-error .
+         if available (ub.clients-attr) then oValueRet = ub.clients-attr.attr-value .
+
+      end.   
+   else if iTeg eq "obj-altcode or obj-code" then 
+      do:
+         find first ub.clients-attr no-lock where ub.clients-attr.attr-code = "alter-code" and
+                                                  ub.clients-attr.obj-code = v-cntxt-obj-code and
+                                                  ub.clients-attr.obj-type = v-cntxt-obj-type no-error .
+         if available (ub.clients-attr) then oValueRet = ub.clients-attr.attr-value .
+         else oValueRet =  ApplyFormatDec(v-cntxt-obj-code,iformat).
+
+      end.   
+      
    else if iTeg eq "obj-name"
    then do:
       find first ub.clients where ub.clients.obj-type = v-cntxt-obj-type 
@@ -68,12 +91,12 @@ function getTegValue returns character (input iTeg as character ,input iParam as
       no-lock no-error.
       if available ub.clients
       then
-         vValueRet = ApplyFormatChar(ub.clients.obj-name,iformat).
+         oValueRet = ApplyFormatChar(ub.clients.obj-name,iformat).
    end.   
    else if iTeg eq "firm-code"
    then do:
-      { gbl/hostcode.i v-cntxt-obj-type v-cntxt-obj-code vValueRet }
-      vValueRet = ApplyFormatChar(vValueRet,iFormat).
+      { gbl/hostcode.i v-cntxt-obj-type v-cntxt-obj-code oValueRet }
+      oValueRet = ApplyFormatChar(oValueRet,iFormat).
    end.
    else if     length (iTeg) > 0
            and trim(caps(iTeg),"N") eq ""
@@ -108,20 +131,20 @@ function getTegValue returns character (input iTeg as character ,input iParam as
         publish "getCounter" (vFilename,vKey,iparam,output vValueInt).
         if vValueInt = ?
         then
-           run utl/getnextcount.p (vFilename,vKey,if iparam ne "" and iparam ne ? then iparam else "counter" ,output vValueInt).
+           run utl/getnextcount.p (vFilename,vKey,if iparam ne "" and iparam ne ? then iparam else "counter", "" ,output vValueInt).
         
            
            
         if iformat ne ""
         then
-           vValueRet = ApplyFormatDec (vValueInt,iFormat).
+           oValueRet = ApplyFormatDec (vValueInt,iFormat).
         else do:
            vLength = length (iTeg).
-           vValueRet = string (vValueInt).
+           oValueRet = string (vValueInt).
            
            if vLength > 1
            then do:
-              vValueRet = string (vValueInt,fill("9",vLength)) no-error.
+              oValueRet = string (vValueInt,fill("9",vLength)) no-error.
               if error-status:error
               then
                  message "Ошибка приведения тега " iteg " c Параметрами " iParam " к формату " fill("9",vLength) skip
@@ -131,7 +154,7 @@ function getTegValue returns character (input iTeg as character ,input iParam as
         end.
    end.
    
-   return vValueRet.
+   
 end.
 
 
@@ -187,7 +210,7 @@ procedure gettegbegend:
       iTegEnd = index (iMask,{&teg-end})
    .
    vttt = substring(imask, iTegEnd - 2,2) no-error.
-   if     iTegEnd > 2 ////------------------------------------------------------------------------------------------
+   if     iTegEnd > 2
       and substring(imask, iTegEnd - 2,2) eq {&teg-delim} + '"'
    then
       iTegEnd = index (iMask,'"' + {&teg-end},iTegEnd) + 1.
@@ -220,7 +243,7 @@ procedure parsTeg:
    else   
       vTeg    = entry(vPosForm,iTeg,"|").
    
-   oValue = getTegValue (vTeg,vParam,vformat).
+   run getTegValue (vTeg,vParam,vformat, output ovalue).
    
    if oValue eq ?
    then

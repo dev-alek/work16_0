@@ -64,7 +64,8 @@ define variable v-line-rec as recid no-undo .
 define variable v-update-counter-flag as logical no-undo .
 define variable v-update-counter as integer no-undo .
 define variable mValue as character no-undo .
-
+define variable MParam as character no-undo.
+  
 define variable mask-pko as character no-undo .
 define variable mask-rko as character no-undo .
 define variable current-pko-rko as character no-undo .
@@ -828,7 +829,7 @@ then do:
   mask-pko = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "PkoMask") .
   mask-rko = mCashBook:getSinglRule(buf_fin-doc.CashBookId, buf_fin-doc.obj-type, buf_fin-doc.obj-code, "RkoMask") .
   
-  delete object mCashBook no-error .
+  
   
   if mask-pko > ""
   then.
@@ -879,7 +880,10 @@ then do:
 /*      end.                                                                                                                      */
 /*    end case.                                                                                                                   */
 /*  end. /*for each  thbjattr_thbj-attr where*/                                                                                   */
-   
+  MParam = if mCashBook:getSinglRule(buf_fin-doc.cashbookId, buf_fin-doc.obj-type,buf_fin-doc.obj-code, "uchet") eq "1"
+           then "year," + string(year(buf_fin-doc.shift-date))
+           else "".                                      
+  delete object mCashBook no-error .
   subscribe   to "getCounter" anywhere run-procedure "Mycounter". 
    
   case buf_fin-doc.fin-ext-doc-type:
@@ -1211,6 +1215,6 @@ define input  parameter iFileName as character no-undo.
 define input  parameter ikey      as character no-undo.
 define input  parameter icode     as character no-undo.
 define output parameter oCount    as int64 no-undo.
-run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko  ,output oCount    ). 
+run utl/getnextcount.p ("cashbookrule", current-ruleID, current-pko-rko, mparam  ,output oCount    ). 
 end procedure.
 

@@ -80,7 +80,8 @@ define variable v-mastc           as logical   no-undo init false .
       if v-recount <> true then return no-apply .
 subscribe   to "getCounter" anywhere run-procedure "Mycounter". 
 mlisttype = {&FDEDT_Income_Cash} + "," + {&FDEDT_Expense_Cash}.
-
+define variable mCashBook as class ibs.th.ref.cashbookstorage no-undo.
+mCashBook = new ibs.th.ref.cashbookstorage () .
 objKeyRec = new ibs.th.gbl.keyrec().
 objCount  = new ibs.th.ref.counter.counterstorage().
 
@@ -98,18 +99,59 @@ for each cashbook where CashBook.id eq ICashbook no-lock:
       else
           mask = "[NNNN]/[obj-code]".
       mcount = 0.
+      
       do trans:
-         for each fin-doc where fin-doc.CashBookId   eq CashBook.id
-                            and fin-doc.obj-type     eq v-cntxt-obj-type
-                            and fin-doc.obj-code     eq v-cntxt-obj-code
-                            and fin-doc.fin-doc-type eq entry(mi,mlisttype)
-                            and fin-doc.fact-order  >= mFactOrder
-         exclusive-lock:
-             if mOldYear ne year(fin-doc.fact-date)
-             then assign
-                mOldYear =  year(fin-doc.fact-date)
-                mcount   = 0
-             .
+         define variable mQuery as handle    no-undo.
+         define variable vqry   as character no-undo.
+         create query mQuery.
+         mQuery:set-buffers(buffer fin-doc:HANDLE).
+         define variable mShift as logical no-undo.
+         mShift = mCashBook:getSinglRule(cashbook.id, v-cntxt-obj-type,v-cntxt-obj-code, "uchet") eq "1".       
+         if mShift
+         then
+            vqry = substitute("for each fin-doc where fin-doc.CashBookId   eq  &1 
+                                                  and fin-doc.obj-type     eq '&2'
+                                                  and fin-doc.obj-code     eq  &3
+                                                  and fin-doc.fin-doc-type eq '&4'
+                                                  and fin-doc.shift-date   ge  &5
+            exclusive-lock" ,  CashBook.id ,v-cntxt-obj-type,v-cntxt-obj-code,entry(mi,mlisttype),date (1,1,year(iBegDate))).
+           
+         else
+            vqry = substitute("for each fin-doc where fin-doc.CashBookId   eq  &1 
+                                                  and fin-doc.obj-type     eq '&2'
+                                                  and fin-doc.obj-code     eq  &3
+                                                  and fin-doc.fin-doc-type eq '&4'
+                                                  and fin-doc.fact-order   ge  &5
+            exclusive-lock" ,  CashBook.id ,v-cntxt-obj-type,v-cntxt-obj-code,entry(mi,mlisttype),mFactOrder).
+         mQuery:query-prepare(vqry).
+         mQuery:query-open ().
+         mQuery:get-first ().
+  
+         block-fin-doc:
+         do while not mQuery:query-off-end:
+             if not mShift
+             then do:
+                if mOldYear ne year(fin-doc.fact-date)
+                then do: 
+                   assign
+                      mOldYear =  year(fin-doc.fact-date)
+                      mcount   = 0
+                   .
+                end.
+             end.
+             else if fin-doc.shift-date eq ?
+             then do:
+                
+                next block-fin-doc.
+             end.
+             else if mOldYear ne year(fin-doc.shift-date)
+             then do:
+                assign
+                   mOldYear =  year(fin-doc.shift-date)
+                   mcount   = 0
+                .
+             end.
+             
              run utl/maskproc.p(parparentproc, mask, "cashbook", fin-doc.CashBookId, output fin-doc.prn-doc-code).
              /*if fin-doc.prn-doc-code ne mValue
              then do trans:
@@ -121,7 +163,9 @@ for each cashbook where CashBook.id eq ICashbook no-lock:
                 end.
              end.*/
               
+            mQuery:get-next ().
          end.
+         delete object mQuery.
          find first CashBookRule where CashBookRule.CashBookID eq cashbook.id
                                 and CashBookRule.Obj-type   eq v-cntxt-obj-type
                                 and CashBookRule.Obj-code   eq v-cntxt-obj-code
@@ -142,7 +186,8 @@ for each cashbook where CashBook.id eq ICashbook no-lock:
    end.
 end.      
 delete object objKeyRec.
-delete object objCount.    
+delete object objCount.
+delete object mCashBook.    
 unsubscribe to "getCounter".
 
  procedure Mycounter:
