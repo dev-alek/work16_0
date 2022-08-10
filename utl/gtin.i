@@ -353,7 +353,7 @@ function GetCodeIdent return character
             
    then
       oCodeIdent = substring(iDm,1,21).
-   else if checkGtin(substring(iDm,1,14)) and ( length(idm) eq 21 or length(idm) eq 25)
+   else if checkGtin(substring(iDm,1,14)) and ( length(idm) eq 21 or (length(idm) eq 25 and substring(iDm,22,1) eq "A"))
    then 
       oCodeIdent = substring(iDm,1,21).
    else do while Velement ne "" and idm ne "":
