@@ -2999,11 +2999,11 @@ do on error undo main-block, leave main-block :
    ub.goods.gds-name:width     in browse {&browse-name}   = 40.
   /*end.*/
    
- /* if not (trn-type = {&is-lgas} or trn-type = {&is-lgas-corr} or trn-type = {&is-fuel}) 
+  if not (trn-type = {&is-lgas} or trn-type = {&is-lgas-corr} or trn-type = {&is-fuel}) 
   then do:
     hide b-in-attr-fuel in frame {&frame-name}.
   end.
-  else*/ do :
+  else do :
     t-doc.cli-qnty:label = "КолТТН(кг)" .
     t-doc.doc-qnty:label = "Док.кол-во(л)" .
     t-doc.fact-qnty:label = "Факт.кол-во(л)" .
