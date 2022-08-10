@@ -1357,6 +1357,7 @@ end.
               assign
                 new_parts.qnty = tt-parts.qnty
                 new_parts.cli-qnty = tt-parts.cli-qnty
+                new_parts.PS = tt-parts.PS
               .
             end .
             else

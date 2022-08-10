@@ -47,6 +47,15 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
       when "mark-code" then do:
         assign mark-code = inValue.
       end.
+      when "gtin" then do:
+        assign gtin = inValue.
+      end.
+      when "gtin-qnt" then do:
+        assign gtin_qnt = integer(inValue) no-error .
+      end.
+      when "upd-id" then do:
+        assign upd_id = inValue.
+      end.
     end case.
   end.
 

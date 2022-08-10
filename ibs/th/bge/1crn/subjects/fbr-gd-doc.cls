@@ -267,7 +267,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
             sw:start-element ("mark").
             write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .
             write-data-element ("gtin", vGtin) .
-            write-data-element ("gtin_qnt", string-mth(vQnty)) .
+            write-data-element ("gtin-qnt", string-mth(vQnty)) .
             sw:end-element ("mark").
           end .
           sw:end-element ("marks").
