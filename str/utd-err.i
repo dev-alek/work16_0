@@ -779,7 +779,7 @@ function CheckErrForLineTypeCode returns logical
       if  not vUtdlineError
       then do:
          define variable vGoodMark as logical no-undo.
-         vGoodMark = no.
+         vGoodMark = yes.
          block-line-err:
          for each utd-marking-lines where utd-marking-lines.db-num  eq vdb-num
                                       and utd-marking-lines.doc-id  eq vdoc-id

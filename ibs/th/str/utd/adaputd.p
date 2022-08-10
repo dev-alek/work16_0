@@ -434,7 +434,7 @@ do:
     
   end.
   
-  if not can-find (first temp_doc-line no-lock)
+  if not can-find (first temp_doc-line no-lock where temp_doc-line.fact-qnty > 0)
   then do:
     return error substitute ("В УПД &1 от &2 нет позиций для включения в приходную накладную", buf_utd.DocumentNumber, buf_utd.DocumentDate).
   end.
