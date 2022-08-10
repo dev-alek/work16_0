@@ -1250,6 +1250,8 @@ v-custom-except-list-erprn =
 ,utd-marking-lines~
 ,utd-marking-lines-attr~
 ,tran-fuel~
+,chk-slip-head~
+,chk-slip-string~
 ":U.
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/
