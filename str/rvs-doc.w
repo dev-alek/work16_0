@@ -267,15 +267,15 @@ define button r-wrkr     like r-acc.
 
 define variable agnt-name as character format "x(256)":u
       view-as text
-     size 14 by 1 no-undo.
+     size 11.2 by 1 no-undo.
 
 define variable boss-name as character format "x(256)":u
       view-as text
-     size 14 by 1 no-undo.
+     size 11.2 by 1 no-undo.
 
 define variable wrkr-name as character format "x(256)":u
       view-as text
-     size 14 by 1 no-undo.
+     size 11.2 by 1 no-undo.
 
 define variable del-list as character no-undo.
 
