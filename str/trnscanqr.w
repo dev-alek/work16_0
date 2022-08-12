@@ -456,7 +456,7 @@ procedure save_update :
              + '*' + {&delim-par} + '(' + {&delim-par} + ')' + {&delim-par} + '-' + {&delim-par} + '_' + {&delim-par} + '=' + {&delim-par} + '+' + {&delim-par} 
              + '.' + {&delim-par} + ',' + {&delim-par} + '/' + {&delim-par} + '|' + {&delim-par} + '\' + {&delim-par} + '?' + {&delim-par} + '"' + {&delim-par}
              + ';' + {&delim-par} + ':' + {&delim-par} + '[' + {&delim-par} + ']' + {&delim-par} + chr(123) + {&delim-par} + '}' + {&delim-par}
-             + '`' + {&delim-par} + '¹' + {&delim-par} + ' ' + {&delim-par} + "'" .
+             + '`' + {&delim-par} + '¹' + {&delim-par} + ' ' + {&delim-par} + "'" + {&delim-par} + "RUS" .
              
   
   if v-mark:screen-value in frame {&frame-name} = ""
@@ -801,7 +801,7 @@ procedure save_update :
       undo, return error .
     end .
     else do :
-      infoSecsObj:CarNum = v-tmp-char .
+      infoSecsObj:CarNum = ub.auto-tank.auto-num .
       { str/tdat-wrt.i
           t_doc.doc-code
           {&trdcattr-car-num}
