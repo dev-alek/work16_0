@@ -924,7 +924,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           then next GT_ .
           
           sw:start-element ("mark").
-          write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .
+/*          write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .*/
           write-data-element ("gtin", vGtin) .
           write-data-element ("gtin-qnt", string-mth(vQnty)) .
           sw:end-element ("mark").
@@ -997,8 +997,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
                   vAvailMarks = yes.
                 end.
                 sw:start-element ("mark").
-                write-data-element ("prt-id", buf_parts.part-code).
-                write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .
+/*                write-data-element ("prt-id", buf_parts.part-code).                        */
+/*                write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .*/
                 write-data-element ("gtin", vGtin) .
                 write-data-element ("gtin-qnt", string-mth(vQnty)) .
                 write-data-element ("upd-id", buf_parts.PS) .

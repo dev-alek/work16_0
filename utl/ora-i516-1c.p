@@ -62,7 +62,7 @@ define variable vss-description as character no-undo init "Импорт накладных из в
 { str/in-vatp.i def  }
 { cmp/trg-def.i }
 { str/trdcalib.i }
-
+{ gbl/attr-lib.i }
 
 
 define temp-table tt2-doc-line      no-undo like lib-trn_ret-line.
@@ -879,15 +879,111 @@ assign
         end.
         
   end. /*temp_doc-line*/
+  
+  define variable v-gds-attr-value as character no-undo .
+  define variable v-gds-attr-type  as character no-undo .
   def var jj as int no-undo.
+  
   for each tt2-doc-line :
     jj = 0.
+    find first buf_goods where buf_goods.artic = tt2-doc-line.artic
+                           and buf_goods.prod-type = tt2-doc-line.prod-type
+                           and buf_goods.prod-code = tt2-doc-line.prod-code
+                           no-lock no-error .
+/*    &scop proc-name gds-attr-value     */
+/*    {&run_proc_attr-lib}               */
+/*      ( input buf_goods.gds-code       */
+/*       ,input {&attr-mark-type}        */
+/*       ,output v-gds-attr-value        */
+/*       ,output v-gds-attr-type         */
+/*      )        no-error .              */
+/*    if error-status :error             */
+/*    then do:                           */
+/*      undo, return error return-value .*/
+/*    end.                               */
     for each temp_doc-line no-lock where temp_doc-line.artic = tt2-doc-line.artic
               and temp_doc-line.prod-code = tt2-doc-line.prod-code
               and temp_doc-line.prod-type = tt2-doc-line.prod-type:
       jj = jj + 1.
-      create tt-parts.
-      buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
+      find first temp_doc-mark no-lock where temp_doc-mark.gds-code = buf_goods.gds-code
+                                         and temp_doc-mark.gtin > ""
+                                         no-error .
+      if available temp_doc-mark
+      then do :
+        for each temp_doc-mark where temp_doc-mark.gds-code = buf_goods.gds-code
+                                 and temp_doc-mark.gtin > "" 
+                                 and temp_doc-mark.gtin_qnt > 0
+        :
+          create tt-parts.
+          buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
+          assign
+            tt-parts.prod-type      = tt2-doc-line.prod-type
+            tt-parts.prod-code      = tt2-doc-line.prod-code
+            tt-parts.artic          = tt2-doc-line.artic
+            tt-parts.in-code        = new_trn-doc.doc-code
+            tt-parts.out-code       = new_trn-doc.doc-code
+  
+            tt-parts.price-cli      = temp_doc-line.price-cli
+            tt-parts.price-rubl     = (temp_doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / tt-parts.cli-base-rate
+                      
+            tt-parts.price-base     = tt-parts.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
+            tt-parts.qnty           = temp_doc-mark.gtin_qnt
+            tt-parts.obj-type       = new_trn-doc.obj-type
+            tt-parts.obj-code       = new_trn-doc.obj-code
+            tt-parts.fact-date      = new_trn-doc.fact-date
+            tt-parts.fact-num       = new_trn-doc.fact-num
+            tt-parts.VAT-pc         = tt2-doc-line.vat-pc
+            tt-parts.part-code      = temp_doc-mark.gtin + "_" + string(jj)
+            tt-parts.PS             = temp_doc-mark.upd_id when temp_doc-mark.upd_id <> ""
+            tt-parts.pay-code       = new_trn-doc.pay-code
+            tt-parts.status_        = no
+            tt-parts.fact-qnty      = temp_doc-mark.gtin_qnt
+            tt-parts.supp-type      = new_trn-doc.cli-type
+            tt-parts.supp-code      = new_trn-doc.cli-code
+            tt-parts.rsrv-free      = ?
+            tt-parts.doc-type       = new_trn-doc.doc-type
+            tt-parts.cli-qnty       = temp_doc-line.cli-qnty
+            tt-parts.pl-code        = ?
+            tt-parts.VAT-type       = temp_trn-doc.vat-type
+            tt-parts.exch-code      = 0
+            tt-parts.cli-base-rate  = 1 when not is-egais
+            tt-parts.cli-base-rate  = buf_goods.cli-base-rate when is-egais
+            tt-parts.SLT-pc         = 0
+            tt-parts.host-code      = new_trn-doc.host-code
+            tt-parts.is-supp        = yes
+            tt-parts.SLT-type       = {&without-slt}
+            tt-parts.cst-code       = ""
+            tt-parts.last-date      = ?
+            tt-parts.road-tax-base  = 0
+            tt-parts.road-tax-rubl  = 0
+            tt-parts.transport-base = 0
+            tt-parts.transport-rubl = 0
+            tt-parts.other-base     = 0
+            tt-parts.other-rubl     = 0
+            tt-parts.purch-code     = new_trn-doc.purch-code
+            tt-parts.contract-code  = new_trn-doc.contract-code
+          no-error.
+          if error-status:error then do :
+              v-end-message = substitute(" Ошибка &1 &2 " , error-status :get-message(1)  , return-value) .
+              run pcall-log-file in p-log-handle ( input v-end-message ) .
+              undo, return error v-end-message.
+          end.
+          create ub.marking-lines.
+          assign
+            ub.marking-lines.obj-type = tt-parts.obj-type
+            ub.marking-lines.obj-code = tt-parts.obj-code
+            ub.marking-lines.in-code = tt-parts.in-code
+            ub.marking-lines.out-code = tt-parts.out-code
+            ub.marking-lines.part-code = tt-parts.part-code
+            ub.marking-lines.gds-code = temp_doc-line.gds-code
+            ub.marking-lines.mark = "02" + temp_doc-mark.gtin + "37" + string(temp_doc-mark.gtin_qnt)
+          .
+          ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
+        end .
+      end .
+      else do :
+        create tt-parts.
+        buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
         assign
           tt-parts.prod-type      = tt2-doc-line.prod-type
           tt-parts.prod-code      = tt2-doc-line.prod-code
@@ -934,133 +1030,125 @@ assign
           tt-parts.other-rubl     = 0
           tt-parts.purch-code     = new_trn-doc.purch-code
           tt-parts.contract-code  = new_trn-doc.contract-code
-          no-error.
-          if error-status:error then do :
-              v-end-message = substitute(" Ошибка &1 &2 " , error-status :get-message(1)  , return-value) .
-              run pcall-log-file in p-log-handle ( input v-end-message ) .
-              undo, return error v-end-message.
-          end.
-          find first buf_goods where tt-parts.artic = buf_goods.artic and
-            tt-parts.prod-type = buf_goods.prod-type  and
-            tt-parts.prod-code = buf_goods.prod-code
-            no-lock no-error .
+        no-error.
+        if error-status:error then do :
+            v-end-message = substitute(" Ошибка &1 &2 " , error-status :get-message(1)  , return-value) .
+            run pcall-log-file in p-log-handle ( input v-end-message ) .
+            undo, return error v-end-message.
+        end.
+        assign
+          tt-parts.part-code      =  temp_doc-line.part-id when temp_doc-line.part-id <> ""
+        .
+        for each temp_doc-mark where temp_doc-mark.gds-code = buf_goods.gds-code and (temp_doc-mark.part-id = ? or temp_doc-mark.part-id = tt-parts.part-code) :
+          create ub.marking-lines.
           assign
-            tt-parts.part-code      =  temp_doc-line.part-id when temp_doc-line.part-id <> ""
+            ub.marking-lines.obj-type = tt-parts.obj-type
+            ub.marking-lines.obj-code = tt-parts.obj-code
+            ub.marking-lines.in-code = tt-parts.in-code
+            ub.marking-lines.out-code = tt-parts.out-code
+            ub.marking-lines.part-code = tt-parts.part-code
+            ub.marking-lines.gds-code = temp_doc-line.gds-code
+            ub.marking-lines.mark = temp_doc-mark.mark
           .
-          for each temp_doc-mark where temp_doc-mark.gds-code = buf_goods.gds-code and (temp_doc-mark.part-id = ? or temp_doc-mark.part-id = tt-parts.part-code) :
-            create ub.marking-lines.
-            assign
-              ub.marking-lines.obj-type = tt-parts.obj-type
-              ub.marking-lines.obj-code = tt-parts.obj-code
-              ub.marking-lines.in-code = tt-parts.in-code
-              ub.marking-lines.out-code = tt-parts.out-code
-              ub.marking-lines.part-code = tt-parts.part-code
-              ub.marking-lines.gds-code = temp_doc-line.gds-code
-              ub.marking-lines.mark = temp_doc-mark.mark
-            .
-            ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
-            assign
-              tt-parts.PS =  temp_doc-mark.upd_id when temp_doc-mark.upd_id <> ""
-            .
-            find first ub.marking where ub.marking.mark = ub.marking-lines.mark no-error.
-            if available (ub.marking)
-              then do:
-                ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
-                ub.marking.obj-type = ub.marking-lines.obj-type.
-                ub.marking.obj-code = ub.marking-lines.obj-code.
-                ub.marking-lines.doc-level = 1.
-                for each chi_marking where chi_marking.mark-parent = ub.marking.mark:
-                  create ub.marking-lines.
-                  assign
-                    ub.marking-lines.obj-type = tt-parts.obj-type
-                    ub.marking-lines.obj-code = tt-parts.obj-code
-                    ub.marking-lines.in-code = tt-parts.in-code
-                    ub.marking-lines.out-code = tt-parts.out-code
-                    ub.marking-lines.part-code = tt-parts.part-code
-                    ub.marking-lines.gds-code = temp_doc-line.gds-code
-                    ub.marking-lines.mark = chi_marking.mark
-                    ub.marking-lines.doc-level = 2
-                  .
-                  chi_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
-                  chi_marking.obj-type = ub.marking-lines.obj-type.
-                  chi_marking.obj-code = ub.marking-lines.obj-code.
-                  ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
-                end.
-              end.
-          end.
-          
-          
-/*          define variable vsdObj as class ibs.th.str.mercury.vsdsub no-undo.
-          define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
-          define variable vsdsts as class ibs.th.str.mercury.vsdstatustype no-undo.
-          define variable keyrecObj as class ibs.th.gbl.keyrec no-undo.
-          define variable keypart as character no-undo.
-          if temp_doc-line.vsd-uuid <> '' and temp_doc-line.vsd-uuid <> ?
+          ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
+          assign
+            tt-parts.PS =  temp_doc-mark.upd_id when temp_doc-mark.upd_id <> ""
+          .
+          find first ub.marking where ub.marking.mark = ub.marking-lines.mark no-error.
+          if available (ub.marking)
           then do:
-            vsdstr = new ibs.th.gbl.storage.vsdtostorage ().
-            keyrecObj = new ibs.th.gbl.keyrec ().
-            keyrecObj:GenKeyRec({&table_parts}, buffer parts:handle, output keypart).
-            vsdSts = new ibs.th.str.mercury.vsdstatustype ().
-            vsdObj = new ibs.th.str.mercury.vsdsub ().
-            vsdObj:VSDType = vsdSts:VSDIn.
-            vsdObj:PartKey = keypart.
-            vsdObj:GdsCode = temp_doc-line.gds-code.
-            vsdObj:ObjType = new_trn-doc.obj-type.
-            vsdObj:ObjCode = new_trn-doc.obj-code.
-            vsdObj:CliCode = new_trn-doc.cli-code.
-            vsdObj:CliType = new_trn-doc.cli-type.
-            vsdObj:UUID = temp_doc-line.vsd-uuid.
-            vsdstr:insertDB(vsdObj).
-            delete object vsdObj no-error.
-            delete object vsdSts no-error.
-            delete object vsdstr no-error.
-            delete object keyrecObj no-error.
-          end.*/
-          
-          if is-tsd and v-ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
-            run unitqnty1 (
-              input tt2-doc-line.unit-cli, 
-              input "",
-              input "",
-              input 0,
-              input "",
-              input tt2-doc-line.doc-qnty) 
-              no-error.
-
-            if error-status:error then 
-            do:
-              v-str-txt = "Товар - " + string (tt2-doc-line.artic) + ": " +  return-value.
-              run pcall-log-file in p-log-handle (input v-str-txt) .
-              is-unit-error  = true.
-              new_trn-doc.ps = new_trn-doc.ps + {&new-line} + v-str-txt.
-              delete tt2-doc-line.
+            ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
+            ub.marking.obj-type = ub.marking-lines.obj-type.
+            ub.marking.obj-code = ub.marking-lines.obj-code.
+            ub.marking-lines.doc-level = 1.
+            for each chi_marking where chi_marking.mark-parent = ub.marking.mark:
+              create ub.marking-lines.
+              assign
+                ub.marking-lines.obj-type = tt-parts.obj-type
+                ub.marking-lines.obj-code = tt-parts.obj-code
+                ub.marking-lines.in-code = tt-parts.in-code
+                ub.marking-lines.out-code = tt-parts.out-code
+                ub.marking-lines.part-code = tt-parts.part-code
+                ub.marking-lines.gds-code = temp_doc-line.gds-code
+                ub.marking-lines.mark = chi_marking.mark
+                ub.marking-lines.doc-level = 2
+              .
+              chi_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
+              chi_marking.obj-type = ub.marking-lines.obj-type.
+              chi_marking.obj-code = ub.marking-lines.obj-code.
+              ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
             end.
-            
-            if available tt2-doc-line then do:
-
-              run unitqnty1 (
-                input tt2-doc-line.unit-cli, 
-                input "",
-                input "",
-                input 0,
-                input "",
-                input tt2-doc-line.fact-qnty) 
-                no-error.
-              
-              if error-status:error then 
-              do:
-                v-str-txt = "Товар - " + string (tt2-doc-line.artic) + ": " +  return-value.
-                run pcall-log-file in p-log-handle (input v-str-txt) .
-                is-unit-error  = true.
-                new_trn-doc.ps = new_trn-doc.ps + {&new-line} + v-str-txt.
-                delete tt2-doc-line.
-              end.
-              
-            end.
-              
-
-            
           end.
+        end.
+      end .    
+/*        define variable vsdObj as class ibs.th.str.mercury.vsdsub no-undo.         */
+/*        define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.   */
+/*        define variable vsdsts as class ibs.th.str.mercury.vsdstatustype no-undo.  */
+/*        define variable keyrecObj as class ibs.th.gbl.keyrec no-undo.              */
+/*        define variable keypart as character no-undo.                              */
+/*        if temp_doc-line.vsd-uuid <> '' and temp_doc-line.vsd-uuid <> ?            */
+/*        then do:                                                                   */
+/*          vsdstr = new ibs.th.gbl.storage.vsdtostorage ().                         */
+/*          keyrecObj = new ibs.th.gbl.keyrec ().                                    */
+/*          keyrecObj:GenKeyRec({&table_parts}, buffer parts:handle, output keypart).*/
+/*          vsdSts = new ibs.th.str.mercury.vsdstatustype ().                        */
+/*          vsdObj = new ibs.th.str.mercury.vsdsub ().                               */
+/*          vsdObj:VSDType = vsdSts:VSDIn.                                           */
+/*          vsdObj:PartKey = keypart.                                                */
+/*          vsdObj:GdsCode = temp_doc-line.gds-code.                                 */
+/*          vsdObj:ObjType = new_trn-doc.obj-type.                                   */
+/*          vsdObj:ObjCode = new_trn-doc.obj-code.                                   */
+/*          vsdObj:CliCode = new_trn-doc.cli-code.                                   */
+/*          vsdObj:CliType = new_trn-doc.cli-type.                                   */
+/*          vsdObj:UUID = temp_doc-line.vsd-uuid.                                    */
+/*          vsdstr:insertDB(vsdObj).                                                 */
+/*          delete object vsdObj no-error.                                           */
+/*          delete object vsdSts no-error.                                           */
+/*          delete object vsdstr no-error.                                           */
+/*          delete object keyrecObj no-error.                                        */
+/*        end.                                                                       */
+        
+      if is-tsd and v-ext-doc-type = {&TDEDT_Pri_Vnesh} then do:
+        run unitqnty1 (
+          input tt2-doc-line.unit-cli, 
+          input "",
+          input "",
+          input 0,
+          input "",
+          input tt2-doc-line.doc-qnty) 
+          no-error.
+
+        if error-status:error then 
+        do:
+          v-str-txt = "Товар - " + string (tt2-doc-line.artic) + ": " +  return-value.
+          run pcall-log-file in p-log-handle (input v-str-txt) .
+          is-unit-error  = true.
+          new_trn-doc.ps = new_trn-doc.ps + {&new-line} + v-str-txt.
+          delete tt2-doc-line.
+        end.
+        
+        if available tt2-doc-line then do:
+
+          run unitqnty1 (
+            input tt2-doc-line.unit-cli, 
+            input "",
+            input "",
+            input 0,
+            input "",
+            input tt2-doc-line.fact-qnty) 
+            no-error.
+          
+          if error-status:error then 
+          do:
+            v-str-txt = "Товар - " + string (tt2-doc-line.artic) + ": " +  return-value.
+            run pcall-log-file in p-log-handle (input v-str-txt) .
+            is-unit-error  = true.
+            new_trn-doc.ps = new_trn-doc.ps + {&new-line} + v-str-txt.
+            delete tt2-doc-line.
+          end.
+          
+        end.
+      end.
     end.
   end.
 
@@ -1191,9 +1279,11 @@ end.
               
           
       end.
+      
       when {&TDEDT_Ras_Vnesh}    
       or when {&TDEDT_Ras_Perem}
-      or when {&TDEDT_Vozvrat_Vnesh}    then do:
+      or when {&TDEDT_Vozvrat_Vnesh}
+      then do:
           
           if not is-egais
           then do:
@@ -1405,7 +1495,7 @@ end.
      p-ok-doc = p-ok-doc + 1.
      p-doc-code = new_trn-doc.doc-code.
     def var chg-qnty as decimal no-undo.
-    if can-find (first temp_doc-mark no-lock)
+    if can-find (first temp_doc-mark no-lock where temp_doc-mark.mark <> ? and trim(temp_doc-mark.mark) > "")
       then 
     do:
       for each ub.doc-line where ub.doc-line.doc-code = new_trn-doc.doc-code:

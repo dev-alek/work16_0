@@ -26,7 +26,7 @@ define input parameter p-pos-type as character no-undo .
 define input parameter p-encoding as character no-undo .
 define input parameter log-file-name as character no-undo .
 define input parameter p-spool-or-data as character no-undo .
-define input parameter p-waiting-name as character no-undo .
+define input parameter p-waiting-name as LONGCHAR no-undo .
 define input-output parameter p-view-log as logical no-undo init yes.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
