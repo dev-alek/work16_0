@@ -147,7 +147,7 @@ define temp-table tt-all no-undo
    field col02-num                   as character
    field col03-code-attr-post        as character
    field col04-code-attr             as character
-   field col05-sf-doc-date           as character
+   field col05-sf-doc-date           as date
    field col06-sf-doc-code           as character
    field col07-clients               as character
    field col08-VAT-PC                as decimal
@@ -165,7 +165,7 @@ define temp-table tt-all no-undo
    field col20-SumWithNDS-disp       as decimal
    field col21-SumWithoutNDS-disp    as decimal
    field col22-reason                as character
-   field col23-date-post             as character
+   field col23-date-post             as date
 /*   field col23-ov-sum                as decimal */
    field doc-type                    AS character
    field obj-type                    AS character
@@ -1709,13 +1709,15 @@ on error undo, return error
          tt-all.col08-VAT-PC         = -1
          tt-all.col01-doc-date       = p-doc-date
          tt-all.col03-code-attr-post = v-code-attr-post
-         tt-all.col23-date-post      = v-date-post
          tt-all.col22-reason         = v-reas-name
          tt-all.col04-code-attr      = v-code-attr
-         tt-all.col05-sf-doc-date    = v-sf-doc-date
          tt-all.col06-sf-doc-code    = v-sf-doc-code
          tt-all.col07-clients        = p-cli-name
       .
+       tt-all.col05-sf-doc-date    = date(v-sf-doc-date) no-error.
+         
+       tt-all.col23-date-post      = date(v-date-post) no-error.
+        
    end.
    RUN update-line (buffer tt-all , INPUT p-doc-type, INPUT p-qnty , INPUT p-price, INPUT p-doc-code).
 
@@ -1740,12 +1742,14 @@ on error undo, return error
             tt-all.col08-VAT-PC         = p-VAT-pc
             tt-all.col01-doc-date       = p-doc-date
             tt-all.col03-code-attr-post = v-code-attr-post
-            tt-all.col23-date-post      = v-date-post
             tt-all.col04-code-attr      = v-code-attr
-            tt-all.col05-sf-doc-date    = v-sf-doc-date
             tt-all.col06-sf-doc-code    = v-sf-doc-code
             tt-all.col07-clients        = /*"В том числе с НДС "*/ "":U
          .
+          tt-all.col05-sf-doc-date    = date(v-sf-doc-date ) no-error.
+            
+          tt-all.col23-date-post      = date(v-date-post) no-error.
+           
       end.
       RUN update-line ( BUFFER tt-all , INPUT p-doc-type, INPUT p-qnty , INPUT p-price, INPUT p-doc-code).
    end.
@@ -2146,7 +2150,7 @@ on error undo, return error
       run macr_excel_char_with_format in this-procedure (input string(tt-all.col03-code-attr-post), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col23 = yes then do: PUT stream OutStream  "|"  tt-all.col23-date-post                  format "X(10)"  .
+   if v-col23 = yes then do: PUT stream OutStream  "|"  tt-all.col23-date-post                  format "99/99/9999"  .
       assign num#col# = num#col# + 1 .
       run macr_excel_char_with_format in this-procedure (input string(tt-all.col23-date-post, "99/99/9999"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
@@ -2156,9 +2160,9 @@ on error undo, return error
       run macr_excel_char_with_format in this-procedure (input string(tt-all.col04-code-attr), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col05 = yes then do: PUT stream OutStream  "|"  string(tt-all.col05-sf-doc-date         )                     format "X(10)"  .
+   if v-col05 = yes then do: PUT stream OutStream  "|"  string(tt-all.col05-sf-doc-date  ,"99/99/9999"       )                     format "X(10)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_char_with_format in this-procedure (input string(tt-all.col05-sf-doc-date), input num#str#, input num#col# ) .
+      run macr_excel_char_with_format in this-procedure (input string(tt-all.col05-sf-doc-date,"99/99/9999"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
    if v-col06 = yes then do: PUT stream OutStream  "|"  string(tt-all.col06-sf-doc-code         )                     format "X(10)"  .
