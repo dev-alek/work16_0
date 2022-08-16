@@ -856,13 +856,13 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
           '<td text_wrap="true" style="text-align: center;">' + if buf_temp-fin-doc.fin-doc-type = {&income-cash} then string(buf_temp-fin-doc.sum-rubl, "->>>>>>>>9.99")  + '</td>' else "         -" + '</td>' skip
           '<td text_wrap="true" style="text-align: center;">' + if buf_temp-fin-doc.fin-doc-type = {&expense-cash} then string(buf_temp-fin-doc.sum-rubl, "->>>>>>>>9.99")  + '</td>' else "         -" + '</td>' skip
           '</tr>' skip
-          '<tr>' skip
+/*          '<tr>' skip   */ 
           .
       end.
 
       find first temp-fin-sum no-lock where temp-fin-sum.cashbook_id = temp-fin-doc.cashbook_id no-error .
       put stream OutStr-html unformatted   
-        '<tr>' skip         
+        '<tr>' skip          
         '<td colspan="3" style="text-align: right;">»того за день</td>' skip
         '<td></td>' skip
         '<td style="text-align: center;">' + if available (temp-fin-sum) then string(temp-fin-sum.sum-income, "->>>>>>>>9.99") + '</td>' else "" + '</td>' skip

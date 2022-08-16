@@ -1732,15 +1732,15 @@ procedure print-sug .
             put stream OutStr-html unformatted
               substitute (
               '  <tr>
-                    <td rowspan="2" text_wrap="true">&1</td>
-                    <td rowspan="2" style="text-align: right;">&2</td>
-                    <td rowspan="2" style="text-align: right;">&3</td>
-                    <td rowspan="2" text_wrap="true" style="text-align: right;">&4</td>
-                    <td text_wrap="true" rowspan="2">&5</td>
-                    <td colspan="2" rowspan="2" text_wrap="true" style="text-align: right;">&6</td>
-                    <td colspan="2" rowspan="2" text_wrap="true" style="text-align: right;">&7</td>
-                    <td rowspan="2" >&8</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&9</td>'
+                    <td text_wrap="true">&1</td>
+                    <td style="text-align: right;">&2</td>
+                    <td style="text-align: right;">&3</td>
+                    <td text_wrap="true" style="text-align: right;">&4</td>
+                    <td text_wrap="true">&5</td>
+                    <td colspan="2" text_wrap="true" style="text-align: right;">&6</td>
+                    <td colspan="2" text_wrap="true" style="text-align: right;">&7</td>
+                    <td >&8</td>
+                    <td text_wrap="true" style="text-align: right;">&9</td>'
               ,
               pol1,
               if main-line = no then "" else string(pol2,"->>>>>>>>>>>9.99"),
@@ -1752,17 +1752,21 @@ procedure print-sug .
               if pay-line = no then "" else pol11,
               if pay-line = no then "" else string(pol12,"->>>>>>>>>>>9.99")
               ).
-            
+         /* svv */   
             put stream OutStr-html unformatted
               substitute (
               '
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&1</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&2</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&3</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&4</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&6</td>
+                    <td text_wrap="true"  style="text-align: right;">&1</td>
+                    <td text_wrap="true"  style="text-align: right;">&2</td>
+                    <td text_wrap="true"  style="text-align: right;">&3</td>
+                    <td text_wrap="true"  style="text-align: right;">&4</td>
+                    <td text_wrap="true"  style="text-align: right;">&5</td>
+                    <td  text_wrap="true"  style="text-align: right;">&6</td>
                     </tr>
+               <tr>
+               <td></td>
+               </tr>
+                    
                '
               ,
               if pay-line = no then "" else string(pol13,"->>>>>>>>>>>9.99"),
@@ -1831,22 +1835,26 @@ procedure print-sug .
         pol14 = accum-sug-16
         pol18 = accum-sug-17
         pol19 = accum-sug-18.
-
+/* svv */
       put stream OutStr-html unformatted
         substitute (
-        '<tr></tr> 
+        '        
         <tr>
-                    <th text_wrap="true" rowspan="2" style="text-align: left; vertical-align: middle;">&1</th>
-                    <th rowspan="2"></th>
-                    <th rowspan="2" style="text-align: right; vertical-align: middle;">&2</th>
-                    <th rowspan="2" style="text-align: right; vertical-align: middle;">&3</th>
-                    <th rowspan="2"></th>
-                    <th colspan="2" rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
-                    <th colspan="2" rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
-                    <th rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&6</th>
-                    <th text_wrap="true" rowspan="2" style="vertical-align: middle;">&7</th>
-                    <th text_wrap="true" rowspan="2" style="text-align: right; vertical-align: middle;">&8</th>
-                    <th text_wrap="true" rowspan="2" style="text-align: right; vertical-align: middle;">&9</th>
+        </tr>
+        <tr>
+                    <th text_wrap="true"  style="text-align: left; vertical-align: middle;">&1</th>
+                    <th ></th>
+                    <th  style="text-align: right; vertical-align: middle;">&2</th>
+                    <th  style="text-align: right; vertical-align: middle;">&3</th>
+                    <th ></th>
+                    <th colspan="2"  text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
+                    <th colspan="2"  text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
+                    <th  text_wrap="true" style="text-align: right; vertical-align: middle;">&6</th>
+                    <th text_wrap="true"  style="vertical-align: middle;">&7</th>
+                    <th text_wrap="true"  style="text-align: right; vertical-align: middle;">&8</th>
+                    <th text_wrap="true"  style="text-align: right; vertical-align: middle;">&9</th>
+                                      
+                    
                     '
         ,
         pol1,
@@ -1862,11 +1870,12 @@ procedure print-sug .
       put stream OutStr-html unformatted
         substitute (
         '
-            <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
-            <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>       
-            <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
-            <th rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
-            </tr>'
+            <th  style="text-align: right; vertical-align: middle;"></th>
+            <th  style="text-align: right; vertical-align: middle;"></th>       
+            <th  style="text-align: right; vertical-align: middle;"></th>
+            <th  text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
+            </tr>
+            '
         ,
         string(pol15,"->>>>>>>>>>>9.99"),
         string(pol16,"->>>>>>>>>>>9.99"),
