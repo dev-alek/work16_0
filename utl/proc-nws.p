@@ -27,7 +27,9 @@ session:debug-alert = yes.
 { cmp/str-glbl.i }
 { utl/proc-async.i proc_def}
 { adm/auto-def.i}
+{ cmp/trg-def.i}
 { nws/nws-def.i  new }
+{ gbl/getcntxa.i }
 /*writelogvalue = "AsyncProc".*/
 run nws/nws-init.p no-error.
 if error-status :error then do:
@@ -49,7 +51,7 @@ else do:
    end.
    else
       run PutstatAsunc(substitute ("Отправка и получение новостей по БД &1", mdb)).
-   run nws/exch-nws.p (?,?,mDB).
+   run nws/exch-nws.p (this-procedure,?,?,mDB).
 end.
 
 { utl/proc-async.i proc_end}

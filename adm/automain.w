@@ -1253,7 +1253,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                   end.
                   else do:
                      run nws/exch-nws.p
-                           (input g#auto-user-id
+                           (input this-procedure
+                           ,input g#auto-user-id
                            ,input g#auto-user-password
                            ,input v-list-db
                            ) no-error.
