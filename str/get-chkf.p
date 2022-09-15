@@ -779,7 +779,10 @@ with frame a :
                 assign
                 v-obj-list = {&shop} + string(for-cash-desk.obj-code)
                 .
-                run xml-cd-write-header in this-procedure (
+ 
+              run cur-time in this-procedure(output v-today-date, output v-today-time).
+              if cash-desk.pos-type = {&cd-type-magia-XML} then do:
+                 run xml-cd-write-header in this-procedure (
                       input v-xml-file-name
                     , input v-xml-file-name-path
                     , input "spool":U
@@ -791,8 +794,7 @@ with frame a :
 
               output stream stmxmlout to value( v-xml-file-name-path + "xm1" ) convert target "1251" append.
 
-              run cur-time in this-procedure(output v-today-date, output v-today-time).
-              if cash-desk.pos-type = {&cd-type-magia-XML} then do:
+             
                 /*найдем последний чек по данной кассе*/
                 run get-last-check-date-time in this-procedure (
                                                                           input g#db-num
