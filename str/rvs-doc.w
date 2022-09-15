@@ -849,21 +849,27 @@ disp r-doc.obj-code
 /*     r-doc.state-brutto-tc-qnty*/
 /*     r-doc.brutto-tc-qnty*/
      with frame {&frame-name}.
-     
-find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid.
-if ub.user-account.psn-code <> 0 and ub.user-account.psn-code <> ?
-then do:
-  if pardoc-mode = {&add-def}
-  then do :
-    r-doc.agnt:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
-    r-doc.wrkr:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
-    r-doc.boss:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
-  end.
-  if pardoc-mode = {&update}
-  then do :
-    r-doc.agnt:screen-value in frame {&frame-name} = string (ub.user-account.psn-code).
-  end.
-end.
+
+for first ub.user-account-attr no-lock where ub.user-account-attr.user-id = v-cntxt-userid
+                                         and ub.user-account-attr.attr-code = "psn-code"
+                                         :
+  if ub.user-account-attr.attr-value <> ""
+  and ub.user-account-attr.attr-value <> ?
+  and ub.user-account-attr.attr-value <> "0"
+  and ub.user-account-attr.attr-value <> "?"
+  then do:
+    if pardoc-mode = {&add-def}
+    then do :
+      r-doc.agnt:screen-value in frame {&frame-name} = trim (ub.user-account-attr.attr-value).
+      r-doc.wrkr:screen-value in frame {&frame-name} = trim (ub.user-account-attr.attr-value).
+      r-doc.boss:screen-value in frame {&frame-name} = trim (ub.user-account-attr.attr-value).
+    end.
+    if pardoc-mode = {&update}
+    then do :
+      r-doc.agnt:screen-value in frame {&frame-name} = trim (ub.user-account-attr.attr-value).
+    end.
+  end. 
+end .    
 
 { str/psn-chk.i wrkr on r-doc v-ref-rec }
 { str/psn-chk.i agnt on r-doc v-ref-rec }
@@ -1997,6 +2003,8 @@ find r-doc where recid(r-doc) = parrvs-rec.
 end procedure.
 
 procedure proc_m-meas-4 :
+   
+   define variable VErrorFlag as logical no-undo.
 define buffer meas_pump-nozzle for ub.pump-nozzle.
   if available ub.rvs-line-pump then do:
     find first ub.rvs-line where ub.rvs-line.rvs-code = ub.rvs-line-pump.rvs-code and
@@ -2042,7 +2050,9 @@ define buffer meas_pump-nozzle for ub.pump-nozzle.
                         ).
           case varnum:
           when 3 then do:
-            undo, return error.
+/*            undo, return error.*/
+             rvs-line-rec = ?.
+             rvs-line-pump-rec =?.
           end.
           when 2 then do:
             assign
@@ -2059,12 +2069,17 @@ define buffer meas_pump-nozzle for ub.pump-nozzle.
               varcur-pump = yes.
         end.
         
-        
+        if varnum ne 3
+        then do: 
         run waitfram-show in this-procedure ( input "Делаем сверку по всем ТРК" ).
         tr:
         do transaction
-        on error undo tr, return no-apply
+        on error undo tr, retry tr
         :
+           if retry then do:
+               VErrorFlag = yes.
+               leave tr.
+            end.
           { str/anls-pmp.i
             parParentProc
             r-doc.obj-type
@@ -2077,12 +2092,11 @@ define buffer meas_pump-nozzle for ub.pump-nozzle.
             no-error
           }
           if error-status :error then do:
-            message "Ошибка при получении данных с приборов на ТРК (anls-pmp)." skip
+            message "Ошибка при получении данных с ТРК (anls-pmp)." skip
                     error-status :get-message( 1 )                              skip
                     return-value
             view-as alert-box error.
-            run waitfram-hide in this-procedure.
-            undo tr, return error.
+            undo tr, retry tr.
           end.
           if return-value <> "":U then do:
             message return-value view-as alert-box information.
@@ -2098,8 +2112,7 @@ define buffer meas_pump-nozzle for ub.pump-nozzle.
               error-status :get-message( 1 ) skip
               return-value
               view-as alert-box error.
-            run waitfram-hide in this-procedure.
-            undo tr, return error.
+            undo tr, retry tr.
           end.
           run waitfram-show in this-procedure ( input "Пересчитывем строку и шапку" ).
           { str/rvsclcln.i "recid( ub.rvs-line )" no-error }
@@ -2110,7 +2123,7 @@ define buffer meas_pump-nozzle for ub.pump-nozzle.
               return-value
               view-as alert-box error.
             run waitfram-hide in this-procedure.
-            undo tr, return error.
+            undo tr, retry tr.
           end.
 
           { str/rvsclchd.i "recid( r-doc )"
@@ -2120,7 +2133,8 @@ define buffer meas_pump-nozzle for ub.pump-nozzle.
                       return-value
               view-as alert-box error.
               run waitfram-hide in this-procedure.
-              undo tr, return error.
+              undo tr, retry tr.
+          end.
           end.
         end. /* transaction */
     end.
@@ -2128,6 +2142,9 @@ define buffer meas_pump-nozzle for ub.pump-nozzle.
           view-as alert-box information.
     run waitfram-hide in this-procedure.
     run ui-on in this-procedure.
+    if VErrorFlag
+    then 
+       return error.
   end.
 else message "Неверно выбрана строка" view-as alert-box error.
 end procedure.
@@ -2160,18 +2177,19 @@ procedure proc-chg-pump :
     end.
     when {&rvs-shift}
     then do:
-        find first ub.place no-lock where
-                   ub.place.obj-code = ub.rvs-line-pump.obj-code and
-                   ub.place.obj-type = ub.rvs-line-pump.obj-type and
-                   ub.place.pl-code  = ub.rvs-line-pump.pl-code
+        find first ub.pump-nozzle no-lock where
+                   ub.pump-nozzle.obj-code    = ub.rvs-line-pump.obj-code and
+                   ub.pump-nozzle.obj-type    = ub.rvs-line-pump.obj-type and
+                   ub.pump-nozzle.pump-code   = ub.rvs-line-pump.pump-code and
+                   ub.pump-nozzle.nozzle-code = ub.rvs-line-pump.nozzle-code
         no-error. 
-        if available ub.place then do :
-            if ub.place.is-meas then do :
+        if available ub.pump-nozzle then do :
+            if ub.pump-nozzle.is-meas then do :
               { gbl/chk-actg.i
                 v-cntxt-db-num
                 v-cntxt-userid
                 {&action-head-code-main}
-                'actn_rvs-shift_upd-revision':U
+                'actn_rvs-shift_upd-revision-trk':U
                 {&cntxt-object}
                 r-doc.host-code
                 r-doc.obj-type
@@ -2188,7 +2206,7 @@ procedure proc-chg-pump :
                 v-cntxt-db-num
                 v-cntxt-userid
                 {&action-head-code-main}
-                'actn_rvs-shift_upd-immeas':U
+                'actn_rvs-shift_upd-immeas-trk':U
                 {&cntxt-object}
                 r-doc.host-code
                 r-doc.obj-type
@@ -2204,18 +2222,19 @@ procedure proc-chg-pump :
     end.
     when {&rvs-control}
     then do:
-        find first ub.place no-lock where
-                   ub.place.obj-code = ub.rvs-line-pump.obj-code and
-                   ub.place.obj-type = ub.rvs-line-pump.obj-type and
-                   ub.place.pl-code  = ub.rvs-line-pump.pl-code
-        no-error.
-        if available ub.place then do :
-            if ub.place.is-meas then do :
+        find first ub.pump-nozzle no-lock where
+                   ub.pump-nozzle.obj-code    = ub.rvs-line-pump.obj-code and
+                   ub.pump-nozzle.obj-type    = ub.rvs-line-pump.obj-type and
+                   ub.pump-nozzle.pump-code   = ub.rvs-line-pump.pump-code and
+                   ub.pump-nozzle.nozzle-code = ub.rvs-line-pump.nozzle-code
+        no-error. 
+        if available ub.pump-nozzle then do :
+            if ub.pump-nozzle.is-meas then do :
               { gbl/chk-actg.i
                 v-cntxt-db-num
                 v-cntxt-userid
                 {&action-head-code-main}
-                'actn_rvs-control_upd-revision':U
+                'actn_rvs-control_upd-revision-trk':U
                 {&cntxt-object}
                 r-doc.host-code
                 r-doc.obj-type
@@ -2232,7 +2251,7 @@ procedure proc-chg-pump :
                 v-cntxt-db-num
                 v-cntxt-userid
                 {&action-head-code-main}
-                'actn_rvs-control_upd-immeas':U
+                'actn_rvs-control_upd-immeas-trk':U
                 {&cntxt-object}
                 r-doc.host-code
                 r-doc.obj-type
@@ -2287,7 +2306,7 @@ end procedure. /* proc-chg-pump */
 procedure proc_m-meas-3 :
 define buffer meas-place for ub.place.
 define buffer olddens_rvs-line-attr for ub.rvs-line-attr .
-
+define variable VErrorFlag as logical no-undo.
 if available ub.rvs-line then do:
    assign rvs-line-rec      = recid(ub.rvs-line)
           rvs-line-pump-rec = (if available ub.rvs-line-pump then recid(ub.rvs-line-pump) else ?).
@@ -2311,8 +2330,13 @@ if available ub.rvs-line then do:
    assign tt-meas.obj-type = ub.rvs-line.obj-type
           tt-meas.obj-code = ub.rvs-line.obj-code
           tt-meas.pl-code  = ub.rvs-line.pl-code.
+   run waitfram-show in this-procedure ( input ("Делаем сверку по резервуару " + meas-place.loc1) ).
    tr:
-   do transaction on error undo tr, return error :
+   do transaction on error undo tr, retry tr :
+      if retry then do:
+         VErrorFlag = yes.
+         leave tr.
+      end.
       find first sys-ctrl no-lock.
       run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
       run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
@@ -2345,7 +2369,7 @@ if available ub.rvs-line then do:
                         ).
           case varnum:
           when 3 then do:
-            undo tr, return no-apply.
+            undo tr, leave tr.
           end.
           when 2 then do:
             assign
@@ -2376,7 +2400,7 @@ if available ub.rvs-line then do:
          message "Ошибка при получении данных с приборов на резервуарах." skip
                  return-value
          view-as alert-box error.
-         return error.
+         undo tr, retry tr.
       end.
       find current ub.rvs-line exclusive-lock.
       { str/fill1plc.i
@@ -2392,7 +2416,7 @@ if available ub.rvs-line then do:
          message "Ошибка при заполнении данных с приборов на резервуарах." skip
                  return-value
          view-as alert-box error.
-         undo tr, return error.
+         undo tr, retry tr.
       end.
       find first rvs-line-attr exclusive-lock
            where rvs-line-attr.obj-code  = ub.rvs-line.obj-code
@@ -2487,8 +2511,7 @@ if available ub.rvs-line then do:
          message "Ошибка при пересчете линии." skip
                  return-value
          view-as alert-box error.
-         run waitfram-hide in this-procedure.
-         undo tr, return error.
+         undo tr,  retry tr.
       end.
       { str/rvsclchd.i "recid( r-doc )"
                    no                      no-error }
@@ -2496,12 +2519,14 @@ if available ub.rvs-line then do:
          message "Ошибка при пересчете документа." skip
                  return-value
          view-as alert-box error.
-         run waitfram-hide in this-procedure.
-         undo tr, return error.
+         undo tr,  retry tr.
       end.
-      run waitfram-hide in this-procedure.
    end. /* transaction */
+   run waitfram-hide in this-procedure.
    run ui-on in this-procedure.
+   if VErrorFlag 
+   then 
+      return error.
 end.
 else message "Неверно выбрана строка" view-as alert-box error.
 end procedure.
@@ -2699,7 +2724,7 @@ and is-gas(buf_goods.gds-code) then do:
    
 end.
 else
-if available buf_goods
+if not error-status :error 
 and is-sug(buf_goods.gds-code) then do:
    
     run str/rvs-lin-sug.w
@@ -2793,6 +2818,8 @@ procedure proc_m-meas-1:
   define buffer bf_place  for ub.place.
   define buffer bf_r-line for ub.rvs-line.
   
+  define variable VErrorFlag as logical no-undo.
+  
   assign rvs-line-rec      = (if available ub.rvs-line      then recid(ub.rvs-line)      else ?)
          rvs-line-pump-rec = (if available ub.rvs-line-pump then recid(ub.rvs-line-pump) else ?).
   run waitfram-show in this-procedure ( input "Просматриваем измеряемые резервуары" ).
@@ -2812,7 +2839,11 @@ procedure proc_m-meas-1:
   if can-find( first tt-meas ) then do:
    run waitfram-show in this-procedure ( input "Делаем сверку по всем резервуарам" ).
    tr:
-   do transaction on error undo tr, return error :
+   do transaction on error undo tr, retry tr :
+      if retry then do:
+         VErrorFlag = yes.
+         leave tr.
+      end.
       find first sys-ctrl no-lock.
       run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
       run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
@@ -2845,8 +2876,7 @@ procedure proc_m-meas-1:
                         ).
           case varnum:
           when 3 then do:
-            run waitfram-hide in this-procedure.
-            undo tr, return no-apply.
+            undo tr, leave tr.
           end.
           when 2 then do:
             assign
@@ -2877,8 +2907,7 @@ procedure proc_m-meas-1:
          message "Ошибка при получении данных с приборов на резервуарах." skip
                  return-value
          view-as alert-box error.
-         run waitfram-hide in this-procedure.
-         undo tr, return error.
+         undo tr, retry tr.
       end.
       { str/fall-plc.i
           r-doc.obj-type
@@ -2891,8 +2920,7 @@ procedure proc_m-meas-1:
          message "Ошибка при заполнении данных с приборов на резервуарах." skip
                  return-value
          view-as alert-box error.
-         run waitfram-hide in this-procedure.
-         undo tr, return error.
+         undo tr, retry tr.
       end.
       for  each bf_r-line where
                 bf_r-line.rvs-code = r-doc.rvs-code and
@@ -2975,17 +3003,21 @@ procedure proc_m-meas-1:
          message "Ошибка при пересчете документа." skip
                  return-value
          view-as alert-box error.
-         run waitfram-hide in this-procedure.
-         undo tr, return error.
+         undo tr, retry tr.
       end.
    end. /* transaction */
   end.
   else do: message "Нет ни одного измеряемого резервуара." view-as alert-box. end.
   run waitfram-hide in this-procedure.
   run ui-on in this-procedure .
+  if VErrorFlag
+  then
+     return error.
 end procedure.
 
 procedure proc_m-meas-2 :
+   
+   define variable VErrorFlag as logical no-undo.
   assign rvs-line-rec      = (if available ub.rvs-line      then recid(ub.rvs-line)      else ?)
          rvs-line-pump-rec = (if available ub.rvs-line-pump then recid(ub.rvs-line-pump) else ?).
   run waitfram-show in this-procedure ( input "Просматриваем измеряемые ТРК" ).
@@ -3005,7 +3037,11 @@ procedure proc_m-meas-2 :
   if can-find(first tt-pump-nozzle) then do:
    run waitfram-show in this-procedure ( input "Делаем сверку по всем ТРК" ).
    tr:
-   do transaction on error undo tr, return error :
+   do transaction on error undo tr, retry tr :
+      if retry then do:
+         VErrorFlag = yes.
+         leave tr.
+      end.
       if ptoldfilvalue = "yes":u then do:
         run gbl/d-askw.w ( input "Выбор источника данных с информацией по ТРК",
                       "Будем читать текущие данные с ТРК или возьмем данные из файла?",
@@ -3018,7 +3054,7 @@ procedure proc_m-meas-2 :
                       ).
         case varnum:
         when 3 then do:
-          undo, return error.
+          undo, leave tr.
         end.
         when 2 then do:
           assign
@@ -3048,8 +3084,7 @@ procedure proc_m-meas-2 :
         message "Ошибка при получении данных с приборов на ТРК и записи их в строки." skip
                 return-value
         view-as alert-box error.
-        run waitfram-hide in this-procedure.
-        undo tr, return error.
+        undo tr, retry tr.
       end.
       if return-value <> "":U then do:
         message return-value view-as alert-box information.
@@ -3062,8 +3097,7 @@ procedure proc_m-meas-2 :
          message "Ошибка при пересчете документа." skip
                  return-value
          view-as alert-box error.
-         run waitfram-hide in this-procedure.
-         undo tr, return error.
+         undo tr, retry tr.
       end.
    end. /* transaction */
   end.
@@ -3072,4 +3106,7 @@ procedure proc_m-meas-2 :
   end.
   run waitfram-hide in this-procedure.
   run ui-on in this-procedure.
+  if VErrorFlag
+  then 
+     return error.
 end procedure. /* proc_m-meas-2 */
