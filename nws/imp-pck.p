@@ -1634,3 +1634,21 @@ procedure proc-load-standart :
   return .
 
 end procedure. /* proc-load-standart */
+
+procedure skip-rec :
+
+  do
+  on error  undo, return error substitute( "&1 (skip-rec). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
+  on stop   undo, return error substitute( "&1 (skip-rec). stop", vss-workfile )
+  on endkey undo, return error substitute( "&1 (skip-rec). endkey", vss-workfile )
+  :
+  
+    define variable v-skip-str    as character extent 1000 no-undo .
+
+    import stream imp-stream v-skip-str.  
+  
+  end.
+  
+  return .
+   
+end procedure. /* skip-rec*/

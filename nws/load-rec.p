@@ -3303,3 +3303,104 @@ PROCEDURE proc-load-utd: /* 89 */
   end.                                                                                 
 END PROCEDURE. /* proc-load-utd 89 */
 
+define temp-table wt-chk-slip-head no-undo like ub.chk-slip-head. 
+PROCEDURE proc-load-chk-slip-head: /* 90 */
+  define input parameter p-imp-handle as handle  no-undo.
+  define input parameter p-pck-num    as integer no-undo.
+  define input parameter l-counter    as integer no-undo.
+  do                                                  
+  on error  undo, return error substitute( "$proc-load-chk-slip-head. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) 
+  on stop   undo, return error substitute( "$proc-load-chk-slip-head. stop" )   
+  on endkey undo, return error substitute( "$proc-load-chk-slip-head. endkey" ) 
+  :                                                   
+    define buffer tb-chk-slip-head for ub.chk-slip-head.            
+    define variable compare-log as logical no-undo.   
+    { nws/inc/imp/def-ins/chk-slip-head.i }
+    for each wt-chk-slip-head  
+    on error undo, return error substitute( "$proc-load-chk-slip-head(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  
+    :
+      delete wt-chk-slip-head . 
+    end. 
+    create wt-chk-slip-head.                    
+    run nws-impl in p-imp-handle         
+      ( input {&table_chk-slip-head}          
+       ,input (buffer wt-chk-slip-head:handle)  
+      ) no-error.                        
+    if error-status :error then do:      
+      return error return-value .        
+    end.                                 
+    find first tb-chk-slip-head                 
+      where tb-chk-slip-head.db-num = wt-chk-slip-head.db-num
+        and tb-chk-slip-head.ID = wt-chk-slip-head.ID
+        and tb-chk-slip-head.CheckID = wt-chk-slip-head.CheckID
+        and tb-chk-slip-head.RRN = wt-chk-slip-head.RRN
+      exclusive-lock no-error.
+    if l-counter <> 0 then do:                                                                                      
+      return error substitute( "&1 &2. Ошибка обработки записи &3", vss-workfile, vss-revision, {&table_chk-slip-head} ) 
+                   + {&new-line} + "Есть привязанные записи, а обработка идет для одной".                         
+    end.                                                                                                            
+    if not available tb-chk-slip-head then do:                                                                             
+      create tb-chk-slip-head.                                                                                             
+      assign compare-log = no.                                                                                      
+    end.                                                                                                            
+    else do:                                                                                                        
+      buffer-compare tb-chk-slip-head TO wt-chk-slip-head case-sensitive save result in compare-log no-error.                     
+    end.                                                                                                            
+    if not compare-log then do:                                                                                     
+      buffer-copy wt-chk-slip-head TO tb-chk-slip-head.                                                                           
+    end.                                                                                                            
+    delete wt-chk-slip-head.                                                                  
+  end.                                                                                 
+END PROCEDURE. /* proc-load-chk-slip-head 90 */
+
+define temp-table wt-chk-slip-string no-undo like ub.chk-slip-string. 
+PROCEDURE proc-load-chk-slip-string: /* 91 */
+  define input parameter p-imp-handle as handle  no-undo.
+  define input parameter p-pck-num    as integer no-undo.
+  define input parameter l-counter    as integer no-undo.
+  do                                                  
+  on error  undo, return error substitute( "$proc-load-chk-slip-string. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) 
+  on stop   undo, return error substitute( "$proc-load-chk-slip-string. stop" )   
+  on endkey undo, return error substitute( "$proc-load-chk-slip-string. endkey" ) 
+  :                                                   
+    define buffer tb-chk-slip-string for ub.chk-slip-string.            
+    define variable compare-log as logical no-undo.   
+    { nws/inc/imp/def-ins/chk-slip-string.i }
+    for each wt-chk-slip-string  
+    on error undo, return error substitute( "$proc-load-chk-slip-string(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  
+    :
+      delete wt-chk-slip-string . 
+    end. 
+    create wt-chk-slip-string.                    
+    run nws-impl in p-imp-handle         
+      ( input {&table_chk-slip-string}          
+       ,input (buffer wt-chk-slip-string:handle)  
+      ) no-error.                        
+    if error-status :error then do:      
+      return error return-value .        
+    end.                                 
+    find first tb-chk-slip-string                 
+      where tb-chk-slip-string.db-num = wt-chk-slip-string.db-num
+        and tb-chk-slip-string.ID = wt-chk-slip-string.ID
+        and tb-chk-slip-string.CheckID = wt-chk-slip-string.CheckID
+        and tb-chk-slip-string.RRN = wt-chk-slip-string.RRN
+        and tb-chk-slip-string.str-num = wt-chk-slip-string.str-num
+      exclusive-lock no-error.
+    if l-counter <> 0 then do:                                                                                      
+      return error substitute( "&1 &2. Ошибка обработки записи &3", vss-workfile, vss-revision, {&table_chk-slip-string} ) 
+                   + {&new-line} + "Есть привязанные записи, а обработка идет для одной".                         
+    end.                                                                                                            
+    if not available tb-chk-slip-string then do:                                                                             
+      create tb-chk-slip-string.                                                                                             
+      assign compare-log = no.                                                                                      
+    end.                                                                                                            
+    else do:                                                                                                        
+      buffer-compare tb-chk-slip-string TO wt-chk-slip-string case-sensitive save result in compare-log no-error.                     
+    end.                                                                                                            
+    if not compare-log then do:                                                                                     
+      buffer-copy wt-chk-slip-string TO tb-chk-slip-string.                                                                           
+    end.                                                                                                            
+    delete wt-chk-slip-string.                                                                  
+  end.                                                                                 
+END PROCEDURE. /* proc-load-chk-slip-string 91 */
+

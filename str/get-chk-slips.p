@@ -79,7 +79,7 @@ define variable ErrorMessage         as character no-undo.
 define variable mElement             as character no-undo.
 define variable mCount               as int64     no-undo.
 define variable m-err-msg            as character no-undo.
-define variable m-textCheq           as character no-undo.
+define variable m-textCheq           as longchar  no-undo.
 
 
 run adm/shattri.p (
@@ -166,6 +166,7 @@ procedure MainProc:
   define buffer cash-desk for cash-desk.
    
   define variable vMsg as character no-undo.
+   
   _cash-desk:
   FOR EACH cash-desk WHERE
            cash-desk.db-num   = g#db-num
@@ -206,7 +207,6 @@ procedure MainProc:
     if error-status:error then do:
        return error return-value.
     end.
-
     mWriteRespFile = m-response-file-name + "sckt".
     run ConectSocet (entry(1,entry(2, cash-desk.addr-path, {&delim-par}),":"),
                      entry(2,entry(2, cash-desk.addr-path, {&delim-par}),":"),
@@ -404,9 +404,17 @@ PROCEDURE Characters:
   DEFINE INPUT PARAMETER charData AS MEMPTR.
   DEFINE INPUT PARAMETER numChars AS INTEGER.
   
-  define variable vCurrContent as character no-undo.
-  vCurrContent = GET-STRING(charData, 1, GET-SIZE(charData)).
+  define variable vCurrContent as longchar no-undo.
+  define variable vLengthMemptr as int64 no-undo.
+  define variable vReadByte as int64 no-undo.
+  define variable vRead     as integer no-undo.
   
+  vLengthMemptr = numChars.
+  do while vLengthMemptr - vReadByte > 0 :
+     vRead = min(vLengthMemptr - vReadByte,30000).
+     vCurrContent = vCurrContent + GET-STRING(charData,vReadByte + 1,vRead).
+     vReadByte = vReadByte + vRead.
+  end. 
   if trim(vCurrContent) = "" then return.
 
   case mElement:
@@ -415,7 +423,7 @@ PROCEDURE Characters:
     when "SRRN" then
       tt-one-chk-slip-head.RRN = vCurrContent .
     when "SDate" then
-      tt-one-chk-slip-head.slip-dt = fConvetDateTime(vCurrContent) no-error.
+      tt-one-chk-slip-head.slip-dt = fConvetDateTime(string(vCurrContent)) no-error.
     when "SProc" then
       tt-one-chk-slip-head.proc-type = integer(vCurrContent) no-error.
     when "RSrc" then
@@ -428,11 +436,9 @@ PROCEDURE Characters:
       tt-one-chk-slip-head.cash-num = integer(vCurrContent) no-error.
     when "ErrorMessage" then
       ErrorMessage = vCurrContent.
-/*      codepage-convert(vCurrContent, "1251", "UTF-8") .*/
     when "STextCheq"
     then do :
-/*      vCurrContent = codepage-convert(vCurrContent, "1251", "UTF-8")  .*/
-      m-textCheq = m-textCheq + vCurrContent .
+      m-textCheq = vCurrContent .
     end .
   end case.
 

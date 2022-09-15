@@ -59,6 +59,7 @@ procedure partrsrv :
   define buffer buf_parts  for ub.parts .
   define buffer rsrv-parts for ub.parts .
   define buffer unrsrv-parts for ub.parts .
+  define buffer buf_parts-attr for ub.parts-attr .
   
   define buffer free_marking-lines for ub.marking-lines .
 
@@ -79,6 +80,10 @@ procedure partrsrv :
   define variable v-tth             as handle no-undo .
   define variable v-type            as character no-undo .
   define variable part-key-rec      as character no-undo .
+  
+  define variable v-part-code-int   as integer no-undo .
+  define variable v-old-part-code   as character no-undo .
+  define variable v-part-gds-code   as integer   no-undo .
   
   { gbl/objsrv.i }
   
@@ -474,6 +479,47 @@ procedure partrsrv :
             .
           end.
         end.
+        
+        if num-entries(buf_parts.part-code, "_") = 2
+        and buf_parts.qnty > 0
+        and buf_parts.out-code <> {&free-code}
+        and buf_parts.out-code <> {&output-code}
+        and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}
+        then do :
+          v-old-part-code = buf_parts.part-code .
+          v-part-code-int = 0 .
+          
+          buf_parts.part-code = entry(2, buf_parts.part-code, "_") no-error .
+          do while error-status:error :
+            v-part-code-int = v-part-code-int + 1 .
+            buf_parts.part-code = string(integer(entry(2, buf_parts.part-code, "_")) + v-part-code-int) no-error .
+          end .
+          
+          { gbl/gds-code.i
+            buf_parts.artic
+            buf_parts.prod-type
+            buf_parts.prod-code
+            v-part-gds-code
+          }
+          
+          find first buf_parts-attr exclusive-lock where buf_parts-attr.in-code   = buf_parts.in-code
+                                                     and buf_parts-attr.gds-code  = v-part-gds-code
+                                                     and buf_parts-attr.part-code = buf_parts.part-code
+                                                     no-error.
+          if not available buf_parts-attr then do:
+            find first ub.parts-attr no-lock where ub.parts-attr.in-code   = buf_parts.in-code
+                                               and ub.parts-attr.gds-code  = v-part-gds-code
+                                               and ub.parts-attr.part-code = v-old-part-code
+                                               no-error.
+            if available ub.parts-attr then do:
+              create buf_parts-attr.
+              buffer-copy ub.parts-attr to buf_parts-attr
+              assign
+                buf_parts-attr.part-code = buf_parts.part-code
+              .
+            end.
+          end.
+        end .
 
         if not v-izlcstpr or (v-izlcstpr and p-chg-qnty < 0)
         then

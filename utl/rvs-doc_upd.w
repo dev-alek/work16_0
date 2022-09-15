@@ -55,6 +55,7 @@ define variable vss-description as character no-undo initial "Обработка документ
 { str/rvsttdef.i file }
 { ref/gds-attr.i      }
 { str/is-gas.i        }
+{ str/is-sug.i        }
 { str/placelib.i      }
 
 define buffer r-doc          for ub.rvs-doc.
@@ -379,8 +380,8 @@ r-doc.system-cli-avrg-qnty    at row 6 col 85.5  colon-aligned label "Вес по ср.
 r-doc.boss                    at row 7 col 4.5   colon-aligned format "999999999"       view-as fill-in size 10 by 1
 boss-name                     at row 7 col 15    colon-aligned no-label                fgcolor 4
 r-boss                        at row 7 col 28    no-label
-r-doc.state-mh-qnty           at row 7 col 38    colon-aligned label "Оборот"           view-as text
-r-doc.state-am-qnty           at row 7 col 63    colon-aligned label "Сумма"            view-as text
+r-doc.state-mh-qnty           at row 7 col 38    colon-aligned label "Оборот"           view-as text format "->,>>>,>>>,>>>.<<<"
+r-doc.state-am-qnty           at row 7 col 63    colon-aligned label "Сумма"            view-as text format "->,>>>,>>>,>>>.<<<"
 r-doc.state-cf-qnty           at row 7 col 85.5  colon-aligned label "Наливы"           view-as text
 /*r-doc.state-measure-tc-qnty   at row 8 col  8                  label "Факт(tc)"         view-as text*/
 /*r-doc.measure-tc-qnty         at row 8 col 47                  label "Измер(tc)"        view-as text*/
@@ -1622,6 +1623,22 @@ else do:
     end.
     
     else do:
+      if available buf_goods
+      and is-sug(buf_goods.gds-code) then do:
+         
+          run str/rvs-lin-sug.w
+            (input  parparentproc
+            ,input  recid(ub.rvs-line)
+            ,input  {&update}
+            ,input  " # "     + r-doc.rvs-code +
+                    " товар " + buf_goods.artic     + " " +
+                                buf_goods.prod-type + " " +
+                                string(buf_goods.prod-code) +
+                    " складское место " + string(ub.rvs-line.pl-code)
+            ) no-error.
+         
+      end.
+      else do :
         run str/rvs-lin.w
         (input  parparentproc
         ,input  recid(ub.rvs-line)
@@ -1632,6 +1649,7 @@ else do:
                             string(buf_goods.prod-code) +
                 " складское место " + string(ub.rvs-line.pl-code)
         ) no-error.
+      end.  
     end.
     
 end.
@@ -1822,7 +1840,7 @@ procedure proc-chg-pump :
         v-cntxt-db-num
         v-cntxt-userid
         {&action-head-code-main}
-        'actn_rvs-shift_upd-revision':U
+        'actn_rvs-shift_upd-revision-trk':U
         {&cntxt-object}
         r-doc.host-code
         r-doc.obj-type
@@ -1840,7 +1858,7 @@ procedure proc-chg-pump :
         v-cntxt-db-num
         v-cntxt-userid
         {&action-head-code-main}
-        'actn_rvs-control_upd-revision':U
+        'actn_rvs-control_upd-revision-trk':U
         {&cntxt-object}
         r-doc.host-code
         r-doc.obj-type
@@ -2195,7 +2213,22 @@ if not error-status :error
       ) no-error.
    
 end.
-
+else
+if available buf_goods
+and is-sug(buf_goods.gds-code) then do:
+   
+    run str/rvs-lin-sug.w
+      (input  parparentproc
+      ,input  recid(ub.rvs-line)
+      ,input  {&lookup}
+      ,input  " # "     + r-doc.rvs-code +
+              " товар " + buf_goods.artic     + " " +
+                          buf_goods.prod-type + " " +
+                          string(buf_goods.prod-code) +
+              " складское место " + string(ub.rvs-line.pl-code)
+      ) no-error.
+   
+end.
 else do:
 
 run str/rvs-lin.w
