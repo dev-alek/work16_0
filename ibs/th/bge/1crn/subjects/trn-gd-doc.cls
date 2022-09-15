@@ -990,7 +990,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               or length(vGtin) = 13
               or length(vGtin) = 14
               then do :
-                vQnty = integer(abs(buf_parts.qnty)) .
+                vQnty = integer(abs(buf_parts.fact-qnty)) .
                 if not vAvailMarks
                 then do:
                   sw:start-element ("marks").

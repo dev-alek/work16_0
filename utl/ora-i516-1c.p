@@ -87,6 +87,7 @@ define variable v-specif as logical   no-undo .
 define buffer new_trn-doc  for ub.trn-doc  .
 define buffer new_doc-line for ub.doc-line .
 define buffer new_gds-dtl  for ub.gds-dtl .
+define buffer new_parts for ub.parts .
 
 define buffer t_trn-doc    for ub.trn-doc  .
 define buffer t_doc-line   for ub.doc-line .
@@ -882,10 +883,12 @@ assign
   
   define variable v-gds-attr-value as character no-undo .
   define variable v-gds-attr-type  as character no-undo .
+  define variable v-parts-qnty as decimal no-undo .
   def var jj as int no-undo.
   
   for each tt2-doc-line :
     jj = 0.
+    v-parts-qnty = 0 .
     find first buf_goods where buf_goods.artic = tt2-doc-line.artic
                            and buf_goods.prod-type = tt2-doc-line.prod-type
                            and buf_goods.prod-code = tt2-doc-line.prod-code
@@ -904,7 +907,7 @@ assign
     for each temp_doc-line no-lock where temp_doc-line.artic = tt2-doc-line.artic
               and temp_doc-line.prod-code = tt2-doc-line.prod-code
               and temp_doc-line.prod-type = tt2-doc-line.prod-type:
-      jj = jj + 1.
+      
       find first temp_doc-mark no-lock where temp_doc-mark.gds-code = buf_goods.gds-code
                                          and temp_doc-mark.gtin > ""
                                          no-error .
@@ -914,6 +917,7 @@ assign
                                  and temp_doc-mark.gtin > "" 
                                  and temp_doc-mark.gtin_qnt > 0
         :
+          jj = jj + 1.
           create tt-parts.
           buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
           assign
@@ -922,6 +926,8 @@ assign
             tt-parts.artic          = tt2-doc-line.artic
             tt-parts.in-code        = new_trn-doc.doc-code
             tt-parts.out-code       = new_trn-doc.doc-code
+            tt-parts.cli-base-rate  = 1 when not is-egais
+            tt-parts.cli-base-rate  = buf_goods.cli-base-rate when is-egais
   
             tt-parts.price-cli      = temp_doc-line.price-cli
             tt-parts.price-rubl     = (temp_doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / tt-parts.cli-base-rate
@@ -942,12 +948,10 @@ assign
             tt-parts.supp-code      = new_trn-doc.cli-code
             tt-parts.rsrv-free      = ?
             tt-parts.doc-type       = new_trn-doc.doc-type
-            tt-parts.cli-qnty       = temp_doc-line.cli-qnty
+            tt-parts.cli-qnty       = temp_doc-mark.gtin_qnt / tt-parts.cli-base-rate
             tt-parts.pl-code        = ?
             tt-parts.VAT-type       = temp_trn-doc.vat-type
             tt-parts.exch-code      = 0
-            tt-parts.cli-base-rate  = 1 when not is-egais
-            tt-parts.cli-base-rate  = buf_goods.cli-base-rate when is-egais
             tt-parts.SLT-pc         = 0
             tt-parts.host-code      = new_trn-doc.host-code
             tt-parts.is-supp        = yes
@@ -968,6 +972,9 @@ assign
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
           end.
+          
+          v-parts-qnty = v-parts-qnty + tt-parts.fact-qnty .
+          
           create ub.marking-lines.
           assign
             ub.marking-lines.obj-type = tt-parts.obj-type
@@ -982,6 +989,7 @@ assign
         end .
       end .
       else do :
+        jj = jj + 1.
         create tt-parts.
         buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
         assign
@@ -990,6 +998,8 @@ assign
           tt-parts.artic          = tt2-doc-line.artic
           tt-parts.in-code        = new_trn-doc.doc-code
           tt-parts.out-code       = new_trn-doc.doc-code
+          tt-parts.cli-base-rate  = 1 when not is-egais
+          tt-parts.cli-base-rate  = buf_goods.cli-base-rate when is-egais
 
           tt-parts.price-cli      = temp_doc-line.price-cli
           tt-parts.price-rubl     = (temp_doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / tt-parts.cli-base-rate
@@ -1014,8 +1024,6 @@ assign
           tt-parts.pl-code        = ?
           tt-parts.VAT-type       = temp_trn-doc.vat-type
           tt-parts.exch-code      = 0
-          tt-parts.cli-base-rate  = 1 when not is-egais
-          tt-parts.cli-base-rate  = buf_goods.cli-base-rate when is-egais
           tt-parts.SLT-pc         = 0
           tt-parts.host-code      = new_trn-doc.host-code
           tt-parts.is-supp        = yes
@@ -1039,6 +1047,9 @@ assign
         assign
           tt-parts.part-code      =  temp_doc-line.part-id when temp_doc-line.part-id <> ""
         .
+        
+        v-parts-qnty = v-parts-qnty + tt-parts.fact-qnty .
+        
         for each temp_doc-mark where temp_doc-mark.gds-code = buf_goods.gds-code and (temp_doc-mark.part-id = ? or temp_doc-mark.part-id = tt-parts.part-code) :
           create ub.marking-lines.
           assign
@@ -1150,6 +1161,66 @@ assign
         end.
       end.
     end.
+    
+    if v-parts-qnty < tt2-doc-line.fact-qnty
+    then do :
+      jj = jj + 1 .
+      create tt-parts.
+      buffer-copy tt2-doc-line except tt2-doc-line.status_ to tt-parts .
+      assign
+        tt-parts.prod-type      = tt2-doc-line.prod-type
+        tt-parts.prod-code      = tt2-doc-line.prod-code
+        tt-parts.artic          = tt2-doc-line.artic
+        tt-parts.in-code        = new_trn-doc.doc-code
+        tt-parts.out-code       = new_trn-doc.doc-code
+        tt-parts.cli-base-rate  = 1 when not is-egais
+        tt-parts.cli-base-rate  = buf_goods.cli-base-rate when is-egais
+
+        tt-parts.price-cli      = tt2-doc-line.price-cli
+        tt-parts.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / tt-parts.cli-base-rate
+                  
+        tt-parts.price-base     = tt-parts.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
+        tt-parts.qnty           = tt2-doc-line.fact-qnty - v-parts-qnty
+        tt-parts.obj-type       = new_trn-doc.obj-type
+        tt-parts.obj-code       = new_trn-doc.obj-code
+        tt-parts.fact-date      = new_trn-doc.fact-date
+        tt-parts.fact-num       = new_trn-doc.fact-num
+        tt-parts.VAT-pc         = tt2-doc-line.vat-pc
+        tt-parts.part-code      = string(jj)
+        tt-parts.PS             = ""
+        tt-parts.pay-code       = new_trn-doc.pay-code
+        tt-parts.status_        = no
+        tt-parts.fact-qnty      = tt2-doc-line.fact-qnty - v-parts-qnty
+        tt-parts.supp-type      = new_trn-doc.cli-type
+        tt-parts.supp-code      = new_trn-doc.cli-code
+        tt-parts.rsrv-free      = ?
+        tt-parts.doc-type       = new_trn-doc.doc-type
+        tt-parts.cli-qnty       = (tt2-doc-line.fact-qnty - v-parts-qnty) / tt-parts.cli-base-rate
+        tt-parts.pl-code        = ?
+        tt-parts.VAT-type       = temp_trn-doc.vat-type
+        tt-parts.exch-code      = 0
+        tt-parts.SLT-pc         = 0
+        tt-parts.host-code      = new_trn-doc.host-code
+        tt-parts.is-supp        = yes
+        tt-parts.SLT-type       = {&without-slt}
+        tt-parts.cst-code       = ""
+        tt-parts.last-date      = ?
+        tt-parts.road-tax-base  = 0
+        tt-parts.road-tax-rubl  = 0
+        tt-parts.transport-base = 0
+        tt-parts.transport-rubl = 0
+        tt-parts.other-base     = 0
+        tt-parts.other-rubl     = 0
+        tt-parts.purch-code     = new_trn-doc.purch-code
+        tt-parts.contract-code  = new_trn-doc.contract-code
+      no-error.
+      if error-status:error then do :
+          v-end-message = substitute(" Îøèáêà &1 &2 " , error-status :get-message(1)  , return-value) .
+          run pcall-log-file in p-log-handle ( input v-end-message ) .
+          undo, return error v-end-message.
+      end.
+    end .
+    
   end.
 
   if is-unit-error then do:
@@ -1238,6 +1309,31 @@ end.
               run pcall-log-file in p-log-handle ( input v-end-message ) .
               undo, return error v-end-message.
           end.
+          
+          for each new_doc-line no-lock where new_doc-line.doc-code = new_trn-doc.doc-code :
+            for each tt-parts where tt-parts.out-code = new_doc-line.doc-code
+                                and tt-parts.obj-type = new_doc-line.obj-type
+                                and tt-parts.obj-code = new_doc-line.obj-code
+                                and tt-parts.artic = new_doc-line.artic
+                                and tt-parts.prod-type = new_doc-line.prod-type
+                                and tt-parts.prod-code = new_doc-line.prod-code
+            :
+              find first new_parts exclusive-lock where new_parts.out-code = tt-parts.out-code
+                                                    and new_parts.obj-type = tt-parts.obj-type
+                                                    and new_parts.obj-code = tt-parts.obj-code
+                                                    and new_parts.artic = tt-parts.artic
+                                                    and new_parts.prod-type = tt-parts.prod-type
+                                                    and new_parts.prod-code = tt-parts.prod-code
+                                                    and new_parts.part-code = tt-parts.part-code
+                                                    no-error .
+              if available new_parts
+              then do :
+                assign
+                  new_parts.PS = tt-parts.PS
+                .
+              end .
+            end .                                      
+          end .
           
           if is-tsd then do:
             
@@ -1329,6 +1425,32 @@ end.
                   run pcall-log-file in p-log-handle ( input v-end-message ) .
                   undo, return error v-end-message.
               end.
+              
+              for each new_doc-line no-lock where new_doc-line.doc-code = new_trn-doc.doc-code :
+                for each tt-parts where tt-parts.out-code = new_doc-line.doc-code
+                                    and tt-parts.obj-type = new_doc-line.obj-type
+                                    and tt-parts.obj-code = new_doc-line.obj-code
+                                    and tt-parts.artic = new_doc-line.artic
+                                    and tt-parts.prod-type = new_doc-line.prod-type
+                                    and tt-parts.prod-code = new_doc-line.prod-code
+                :
+                  find first new_parts exclusive-lock where new_parts.out-code = tt-parts.out-code
+                                                        and new_parts.obj-type = tt-parts.obj-type
+                                                        and new_parts.obj-code = tt-parts.obj-code
+                                                        and new_parts.artic = tt-parts.artic
+                                                        and new_parts.prod-type = tt-parts.prod-type
+                                                        and new_parts.prod-code = tt-parts.prod-code
+                                                        and new_parts.part-code = tt-parts.part-code
+                                                        no-error .
+                  if available new_parts
+                  then do :
+                    assign
+                      new_parts.PS = tt-parts.PS
+                    .
+                  end .
+                end .                                      
+              end .
+              
             end.
             else do:
               for each tt2-doc-line :
