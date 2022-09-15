@@ -80,9 +80,10 @@ procedure SendReqSocet:
    mSocetBegTime = now.
    run writeLogSocet in this-procedure (substitute("Подключаемся к адресу &1 по порту &2",iHost,iPort )).
    assign
-      mWebResp    = ""
-      OerrMsg     = ""
-      mReturnXML  = iReturnXML eq "xml"
+      mWebResp         = ""
+      mWebResphead     = ""
+      OerrMsg          = ""
+      mReturnXML       = iReturnXML eq "xml"
       iProcGetResponse = "getResponse"  when iProcGetResponse eq ? or iProcGetResponse eq "" 
    .
    define variable vPostData as longchar                       no-undo.
@@ -152,6 +153,9 @@ procedure WaitRespSocet:
    mWaitFramTimeOut = iTimeOut.
    mWaitFramTextEnd = "".
    mWaitFramStop = no.
+   mWaitFramTimeOut = 300.
+   run writeLogSocet in this-procedure (substitute ("Таймаут увеличен до &1 при учтановке соодинения",mWaitFramTimeOut)).
+   
    run writeLogSocet in this-procedure (substitute("Ожидаем ответ TimeOut &1 сек.",iTimeOut )).
    
    subscribe   to "WaitFramStop" anywhere run-procedure "WaitRespTestStop".
@@ -266,6 +270,30 @@ procedure PostRequest:
    
 end procedure.
 
+function hex-to-int returns integer (
+  input p-hex-code  as character  ).
+
+  define variable v-int-code as integer   no-undo .
+  define variable v-ind      as integer   no-undo .
+  define variable v-digit    as integer   no-undo .
+  define variable v-letter   as character no-undo .
+
+  do v-ind = 1 to length(p-hex-code)
+  :
+    assign
+      v-letter = caps(substring(p-hex-code, v-ind, 1))
+    .
+    assign
+      v-digit = index('123456789ABCDEF':u, v-letter)
+    .
+    assign
+      v-int-code = v-int-code * 16 + v-digit
+    .
+  end.
+
+  return v-int-code .
+
+end function . /* hex-to-int */
 /*------------------------------------------------------------------------------
   Purpose: Процедура, которая вызывается когда приходит ответ от сервера
   Parameters:
@@ -275,9 +303,11 @@ procedure getResponse:
 
    define variable vFlagTag     as logical          no-undo init no.
    define variable vResponse    as memptr           no-undo.
-   define variable mHParser     as handle           no-undo.
-   define variable vCnt         as int64          no-undo.
-   
+   define variable vCnt         as int64            no-undo.
+   define variable vMessage     as longchar         no-undo.
+   define variable v-cont-length as int64 no-undo.
+   define variable vi           as integer no-undo.
+   define variable v-hd-line    as character no-undo.
    if mHSocket:connected() = false then 
    do:
       run writeLogSocet in this-procedure (substitute("Соединение было разорвано другой стороной getResponse")).
@@ -285,6 +315,10 @@ procedure getResponse:
       oErrMsg = "Not connected".
       return oErrMsg.
    end.
+   
+   mWaitFramTimeOut = 1000.
+   run writeLogSocet in this-procedure (substitute ("Таймаут увеличен до &1 при получении ответа",mWaitFramTimeOut)).
+   
    run writeLogSocet in this-procedure (substitute("Получаем ответ")).
    mWaitFramTextEnd = "Получаем ответ".
    mWaitProcEvent = no. /* Отключим proces event иначе бедет беда с получением данных*/
