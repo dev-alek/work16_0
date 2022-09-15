@@ -899,6 +899,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     define variable vGT as integer no-undo .
     define variable vGtin as character no-undo .
     define variable vQnty as integer no-undo .
+    define variable vDocQnty as integer no-undo .
     
     for first buf_doc-line no-lock where buf_doc-line.doc-code = DocCode
                                     and buf_doc-line.line-num = p-line-num,
@@ -991,6 +992,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               or length(vGtin) = 14
               then do :
                 vQnty = integer(abs(buf_parts.fact-qnty)) .
+                vDocQnty = integer(abs(buf_parts.qnty)) .
                 if not vAvailMarks
                 then do:
                   sw:start-element ("marks").
@@ -1000,6 +1002,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
 /*                write-data-element ("prt-id", buf_parts.part-code).                        */
 /*                write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .*/
                 write-data-element ("gtin", vGtin) .
+                if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+                then
+                  write-data-element ("gtin-qnt-ttn", string-mth(vDocQnty)) .
                 write-data-element ("gtin-qnt", string-mth(vQnty)) .
                 write-data-element ("upd-id", buf_parts.PS) .
                 sw:end-element ("mark").
