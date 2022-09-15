@@ -14841,6 +14841,18 @@ end procedure.
 &scop manual-edit-attr-esys-diadoc-lastload 0
 &scop batch-edit-attr-esys-diadoc-lastload 0
 
+&scop type-attr-esys-diadoc-ssl {&type-log}
+&scop format-attr-esys-diadoc-ssl "yes/no"
+&scop label-attr-esys-diadoc-ssl "Отключение проверки шифрования Диадок"
+&scop tooltip-attr-esys-diadoc-ssl "Отключение проверки шифрования Диадок"
+&scop user-can-edit-attr-esys-diadoc-ssl true
+&scop output-display-attr-esys-diadoc-ssl false
+&scop other-attr-esys-diadoc-ssl '':u
+&scop news-attr-esys-diadoc-ssl false
+&scop manual-edit-attr-esys-diadoc-ssl 0
+&scop batch-edit-attr-esys-diadoc-ssl 0
+
+
 /* сюда добавлять новые параметры атрибутов ВС */
 
 &scop attr-temp-code ~
@@ -14953,6 +14965,9 @@ procedure ext-system-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-esys-diadoc-lastload
       {&attr-temp-full-code}
+      &scop attr-code attr-esys-diadoc-ssl
+      {&attr-temp-full-code}
+
 
       /* сюда добавлять новые параметры атрибутов ВС */
       otherwise do:
@@ -15028,7 +15043,9 @@ procedure ext-system-attr-tooltip :
       {&attr-temp-code}
       &scop attr-code attr-esys-diadoc-lastload
       {&attr-temp-code}
-
+      &scop attr-code attr-esys-diadoc-ssl
+      {&attr-temp-code}
+      
 
       /* сюда добавлять новые параметры атрибутов ВС */
       otherwise do:
@@ -15301,7 +15318,9 @@ procedure ext-system-attr-news :
       {&attr-news-code}
       &scop attr-code attr-esys-diadoc-lastload
       {&attr-news-code}
-
+      &scop attr-code attr-esys-diadoc-ssl
+      {&attr-news-code}
+      
 
       /* сюда добавлять новые параметры атрибутов ВС */
       otherwise do:
