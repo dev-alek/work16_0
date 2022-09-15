@@ -21,7 +21,6 @@ define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер изменение {&main-tbl}". 
 
 { trg/trghistnws.i 
-  &nws  = yes
   &del  = yes
   &nobufhist = yes  
 }
