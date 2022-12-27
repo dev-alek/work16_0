@@ -4717,6 +4717,32 @@ procedure m-catalog-corr-exe :
 
 end procedure. /* m-catalog-oss-exe */
 
+procedure m-cash-emrc-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/send-all.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrcdel':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
+      , input yes /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка очистки справочника ЕМЦ")
+  ) no-error.
+
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/send-all.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U)
+      , input yes /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка справочника ЕМЦ")
+  ) no-error.
+
+end procedure. /* m-cash-emrc-exe */
+
+
 procedure m-catalog-petrol-exe :
 
  run str/diallog.w (

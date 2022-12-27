@@ -69,6 +69,7 @@ on stop undo, return error return-value
       end.
       for each buf_goods-attr no-lock where
                  buf_goods-attr.gds-code = p-gds-code:
+             if buf_goods-attr.attr-code = {&attr-gds-attr-lock} then next.
              create tt0-goods-attr.
              buffer-copy buf_goods-attr to tt0-goods-attr.
       end.
@@ -99,6 +100,7 @@ on stop undo, return error return-value
     when {&lookup} then do:
       for each buf_goods-attr no-lock where
               buf_goods-attr.gds-code = p-gds-code:
+          if buf_goods-attr.attr-code = {&attr-gds-attr-lock} then next.
           create tt0-goods-attr.
           buffer-copy buf_goods-attr to tt0-goods-attr.
       end.
