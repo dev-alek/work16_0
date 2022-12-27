@@ -339,7 +339,12 @@ PROCEDURE proc-save :
 
    do on error undo, return error
       on stop undo, return error:
-        
+      if mdata eq ?
+      then do:
+         message "Дата не сожет быть пустой"
+         view-as alert-box.
+         return error.
+      end.
       find first b3-code where
          b3-code.parent = p-parent
          and b3-code.code   = vDateIsoNew
@@ -358,7 +363,7 @@ PROCEDURE proc-save :
             message "Данное значение нельзя деактивировать"
             view-as alert-box.
             fStatus = {&bef-current-status-int} .
-            leave .
+            return error .
          end.
          find first b2-code where b2-code.parent = p-parent and
             b2-code.status_ = {&bef-current-status-int} and recid(b2-code) <> p-rid and b2-code.codevalue <> "0" no-error .
@@ -434,7 +439,7 @@ PROCEDURE proc-save :
                      b3-code.code      = vDateIsoToday
                      b3-code.misc1     = string(today,"99/99/9999")
                      b3-code.codevalue = "0"
-                     b3-code.status_   = fStatus 
+                     b3-code.status_   = fStatus
                      b3-code.nwsgbd    = yes
                   .
                end.

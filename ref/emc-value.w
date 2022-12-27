@@ -174,8 +174,8 @@ DEFINE BROWSE BROWSE-4
    QUERY BROWSE-4 NO-LOCK DISPLAY
 buf-code.code FORMAT "x(10)":U  
 buf-code.misc1 COLUMN-LABEL "Дата н.а." FORMAT "x(10)":U
-   buf-code.CodeValue FORMAT "x(20)":U WIDTH 52
-   getStatus (buf-code.misc1,buf-code.status_) COLUMN-LABEL "Статус" format "x(17)"
+   buf-code.CodeValue FORMAT "x(20)":U WIDTH 32
+   getStatus (buf-code.misc1,buf-code.status_) COLUMN-LABEL "Текущий статус" format "x(25)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 80.6 BY 10.52 ROW-HEIGHT-CHARS .67 FIT-LAST-COLUMN.
@@ -364,7 +364,7 @@ ON CHOOSE OF b-add IN FRAME f-okei3 /* Добавить */
 /*                                                                                                          */
 /*/* _UIB-CODE-BLOCK-END */                                                                                 */
 /*&ANALYZE-RESUME                                                                                           */
-/*                                                                                                          */
+
 
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel f-okei3
@@ -504,7 +504,7 @@ PROCEDURE enable_UI :
       WHEN can-do( bttns, "b-sel" )
       b-add
 /*      WHEN can-do( bttns, "b-add" ) and v-db-num = 0*/
-/*      b-del                                         */
+/*      b-del*/
       when can-do ( bttns, "b-del" ) and v-db-num = 0
       b-upd
       WHEN can-do( bttns, "b-upd" ) and v-db-num = 0
@@ -522,10 +522,17 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getStatus f-okei3 
 FUNCTION getStatus RETURNS CHARACTER
    ( imisc as char, istatus as int   ):
-   define buffer code for ub.code. 
+   define buffer code for ub.code.
+&SCOPE sts-old "Устаревший"
+&SCOPE sts-prev "Предыдущий"
+&SCOPE sts-current "Активный"
+&SCOPE sts-next "Ожидает активации"
+&SCOPE sts-del  "Деактивирован"
+&SCOPE sts-error  "Ошибка"
+  
    if istatus eq {&bef-deleted-status-int}
       then
-      return "Деактивирован".
+      return {&sts-del}.
    else 
    do:
       def var vdate    as date no-undo.
@@ -534,12 +541,16 @@ FUNCTION getStatus RETURNS CHARACTER
       vdate = date(imisc) no-error.
       if error-status:error
          then
-         return "Ошибка".
+         return {&sts-error}.
       else 
       do:
-         if vdate >= today
-            then
-            return "Активный".
+         if vdate > today
+         then
+            return {&sts-next}.
+         else if vdate = today
+         then
+            return {&sts-current}.
+         
          else 
          do:
             vdateiso = iso-date(vdate).
@@ -550,7 +561,7 @@ FUNCTION getStatus RETURNS CHARACTER
                no-lock no-error.
             if not avail code
                then
-               return "Активный".
+               return {&sts-current}.
             else 
             do:
                def var vdate2 as date no-undo.
@@ -558,7 +569,7 @@ FUNCTION getStatus RETURNS CHARACTER
                vdate2 = date(code.misc1) no-error.
                if vdate2 > today
                   then
-                  return "Активный". 
+                  return {&sts-current}. 
                DEF VAR vMonth   AS INT64.
                DEF VAR vYear    AS INT64.
                DEF VAR vDateNew AS DATE.
@@ -582,9 +593,9 @@ FUNCTION getStatus RETURNS CHARACTER
                if     vDate    < vDateNew  
                   and vDateNew > vdate2
                   then
-                  return "Не действует".
+                  return {&sts-old}.
                else
-                  return "Устарела".
+                  return {&sts-prev}.
             end.
          end.
       end.

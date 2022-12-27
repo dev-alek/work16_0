@@ -53,7 +53,7 @@ define variable vi as integer no-undo.
       define variable vcode as character no-undo.
       define variable vEMRCDate as character no-undo.
     /*  vEMRCDate =  trim(string( ( (date(Code.misc1) - date( "01/01/1970" ) )* 24 * 3600 + 1 ), ">>>>>>>>>9" )). */
-      vEMRCDate = Code.code + "00:00:00".
+      vEMRCDate = Code.code + " 00:00:00".
       vcode = entry(2,Code.parent,{&delim-par}).
       vi = vi + 1.
       iSAXWriter:start-element("EMRC_Value") .

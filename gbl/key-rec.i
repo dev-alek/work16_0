@@ -463,6 +463,8 @@ procedure gen-key-fv :
       or LC( entry( 1, v-inform, ",":U ) ) = "default":U
       or entry( 3, v-inform, ",":U ) <> "1":U
     then do:
+      delete object bh_tbl-name no-error.
+      
       return error substitute( "&1. Таблица &2 не имеет первичного ключа в БД", vss-include-info{&vssseq}, v-tbl-name ).
     end.
 
@@ -470,6 +472,7 @@ procedure gen-key-fv :
       v-idx-field-qnty = num-entries( v-inform ) - 4
     .
     if v-idx-field-qnty < 2 then do:
+      delete object bh_tbl-name no-error.
       return error substitute( "&1. Определенный первичный индекс (&2) не содержит списка полей для таблицы &3", vss-include-info{&vssseq}, v-inform, v-tbl-name ).
     end.
 

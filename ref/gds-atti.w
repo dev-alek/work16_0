@@ -407,126 +407,152 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
 DO:
-define buffer buf_temp-attr for temp-attr.
-define variable loc#log             as logical   no-undo .
-define variable attr-type           as character no-undo . /*тип атрибута*/
-define variable attr-format         as character no-undo . /* формат атрибута*/
-define variable attr-label          as character no-undo . /*лабел атрибута */
-define variable attr-user-can-edit  as logical   no-undo . /*пользователь может изменять в броусе*/
-define variable attr-output-display as logical   no-undo . /*виден в броусе*/
-define variable attr-other          as character no-undo . /*еще чего - нибудь*/
-define variable jj                  as integer   no-undo .
-define variable v-check             as character no-undo .
-define variable v-correct           as logical   no-undo .
-define variable v-error-code        as character no-undo .
+  define buffer buf_temp-attr for temp-attr.
+  define variable loc#log             as logical   no-undo .
+  define variable attr-type           as character no-undo . /*тип атрибута*/
+  define variable attr-format         as character no-undo . /* формат атрибута*/
+  define variable attr-label          as character no-undo . /*лабел атрибута */
+  define variable attr-user-can-edit  as logical   no-undo . /*пользователь может изменять в броусе*/
+  define variable attr-output-display as logical   no-undo . /*виден в броусе*/
+  define variable attr-other          as character no-undo . /*еще чего - нибудь*/
+  define variable jj                  as integer   no-undo .
+  define variable v-check             as character no-undo .
+  define variable v-correct           as logical   no-undo .
+  define variable v-error-code        as character no-undo .
   if not available temp-attr then return no-apply.
-/*  if temp-attr.code = {&attr-alcohol-prod}*/
-/*  and alco-val-log <> yes  then do:       */
-/*     message                              */
-/*     "Запрещена работа с атрибутом"       */
-/*     view-as alert-box error.             */
-/*     return no-apply.                     */
-/*  end.                                    */
-  if temp-attr.code = {&attr-mercur_FGIS} then do:
-  define variable ii             as integer no-undo .
-  define variable gdsMercsubsObj as class   gdsmercsubs.
-  define variable gdsmercstrObj  as class   gdsmercstr.
-  define variable gdsMercObj     as class     gdsmercsub.
-  define VARIABLE f-guid         as character no-undo .     
-  
-  gdsMercsubsObj = new gdsmercsubs ().
-  gdsmercstrObj = new gdsmercstr ().
-  
-  gdsMercsubsObj = gdsmercstrObj:getgdsmercs(p-gds-code).
-  
-  if VALID-OBJECT (gdsMercsubsObj:GdsMercsubsCurr) then
+  /*  if temp-attr.code = {&attr-alcohol-prod}*/
+  /*  and alco-val-log <> yes  then do:       */
+  /*     message                              */
+  /*     "Запрещена работа с атрибутом"       */
+  /*     view-as alert-box error.             */
+  /*     return no-apply.                     */
+  /*  end.                                    */
+  if temp-attr.code = {&attr-mercur_FGIS} then 
   do:
-    do ii = 1 to gdsMercsubsObj:GetItem (ii): 
-      gdsMercObj = gdsMercsubsObj:GdsMercsubsCurr. /* выдернула конкретны объект*/
-      assign
-        f-guid         = gdsMercObj:GUID_       
-        .
-    end.
-  end. 
-  if f-guid <> "" then do:
+    define variable ii             as integer   no-undo .
+    define variable gdsMercsubsObj as class     gdsmercsubs.
+    define variable gdsmercstrObj  as class     gdsmercstr.
+    define variable gdsMercObj     as class     gdsmercsub.
+    define VARIABLE f-guid         as character no-undo .     
+  
+    gdsMercsubsObj = new gdsmercsubs ().
+    gdsmercstrObj = new gdsmercstr ().
+  
+    gdsMercsubsObj = gdsmercstrObj:getgdsmercs(p-gds-code).
+  
+    if VALID-OBJECT (gdsMercsubsObj:GdsMercsubsCurr) then
+    do:
+      do ii = 1 to gdsMercsubsObj:GetItem (ii): 
+        gdsMercObj = gdsMercsubsObj:GdsMercsubsCurr. /* выдернула конкретны объект*/
+        assign
+          f-guid = gdsMercObj:GUID_       
+          .
+      end.
+    end. 
+    if f-guid <> "" then 
+    do:
       message
-      "Необходимо удалить синхронизацию товара с Меркурием" skip
-      view-as alert-box error .
+        "Необходимо удалить синхронизацию товара с Меркурием" skip
+        view-as alert-box error .
       return NO-APPLY .
-  end.         
+    end.         
   end.    
 
-  if temp-attr.code = {&attr-item-matter-mark} then do:
+  if temp-attr.code = {&attr-item-matter-mark} then 
+  do:
     message
-    "Атрибут нельзя удалить"
-    view-as alert-box error .
+      "Атрибут нельзя удалить"
+      view-as alert-box error .
     return no-apply.     
   end.   
   run gds-attr-name in this-procedure (
-                                         input  temp-attr.code      /* p-code           */
-                                        ,output attr-type           /* p-type           */
-                                        ,output attr-format         /* p-format         */
-                                        ,output attr-label          /* p-label          */
-                                        ,output attr-user-can-edit  /* p-user-can-edit  */
-                                        ,output attr-output-display /* p-output-display */
-                                        ,output attr-other          /* p-other          */
-                                        ) no-error .
-    if error-status :error then do:
-      return no-apply .
-    end.
-  if not attr-user-can-edit then do:
+    input  temp-attr.code      /* p-code           */
+    ,output attr-type           /* p-type           */
+    ,output attr-format         /* p-format         */
+    ,output attr-label          /* p-label          */
+    ,output attr-user-can-edit  /* p-user-can-edit  */
+    ,output attr-output-display /* p-output-display */
+    ,output attr-other          /* p-other          */
+    ) no-error .
+  if error-status :error then 
+  do:
+    return no-apply .
+  end.
+  if not attr-user-can-edit then 
+  do:
     message
-    "Атрибут нельзя удалить вручную"
-    view-as alert-box error .
+      "Атрибут нельзя удалить вручную"
+      view-as alert-box error .
     return no-apply.
   end.
-   do jj = 1 to num-entries(attr-other, {&slash-char}):
-    if entry(1, entry(jj, attr-other, {&slash-char}), "=":U) = "check":U then do:
+  do jj = 1 to num-entries(attr-other, {&slash-char}):
+    if entry(1, entry(jj, attr-other, {&slash-char}), "=":U) = "check":U then 
+    do:
       assign
-      v-check = string(entry(2, entry(jj, attr-other, {&slash-char}), "=":U))
-      .
+        v-check = string(entry(2, entry(jj, attr-other, {&slash-char}), "=":U))
+        .
     end.
   end.
-  if v-check <> "":U then do:
+  if v-check <> "":U then 
+  do:
     run value(v-check) (
-                       input p-gds-code
-                      ,input temp-attr.code
-                      ,input attr-value
-                      ,input {&deletion}
-                      ,output v-correct
-                      ,output v-error-code) no-error.
-    if error-status:error then do:
+      input p-gds-code
+      ,input temp-attr.code
+      ,input attr-value
+      ,input {&deletion}
+      ,output v-correct
+      ,output v-error-code) no-error.
+    if error-status:error then 
+    do:
       message
-      "Ошибка при проверке корректности удаления атрибута" skip
-      error-status:get-message(1) skip
-      return-value
-      view-as alert-box error .
+        "Ошибка при проверке корректности удаления атрибута" skip
+        error-status:get-message(1) skip
+        return-value
+        view-as alert-box error .
       undo, return no-apply .
     end.
-    if not v-correct then do:
+    if not v-correct then 
+    do:
       message
-      "Удаление атрибута некорректно" skip
-      return-value
-      view-as alert-box error .
+        "Удаление атрибута некорректно" skip
+        return-value
+        view-as alert-box error .
       undo, return no-apply .
     end.
   end.
   loc#log = no.
   message
-  "Вы уверены, что хотите удалить атрибут " temp-attr.attr-code skip
-  " для товара " goods-dsc-name
-  view-as alert-box QUESTIOn buttons YES-NO update loc#log.
+    "Вы уверены, что хотите удалить атрибут " temp-attr.attr-code skip
+    " для товара " goods-dsc-name
+    view-as alert-box QUESTIOn buttons YES-NO update loc#log.
   if NOT loc#log then return no-apply.
-  find first buf_temp-attr where buf_temp-attr.gds-code eq temp-attr.gds-code
-                             and buf_temp-attr.code     eq temp-attr.code
-                             and buf_temp-attr.grp no-error.
-  if available buf_temp-attr
-  then
-     buf_temp-attr.fdisable = no.
-  delete temp-attr.
+        if temp-attr.grp then 
+      do: 
+         define buffer bf_temp-attr for temp-attr .     
+         find first buf_temp-attr where buf_temp-attr.gds-code eq temp-attr.gds-code
+            and buf_temp-attr.code     eq temp-attr.code
+            and buf_temp-attr.grp no-error.
+         if available buf_temp-attr
+            then
+            buf_temp-attr.fdisable = no.
+         create bf_temp-attr.
+         buffer-copy buf_temp-attr except buf_temp-attr.grp buf_temp-attr.attr-value buf_temp-attr.value_ to bf_temp-attr .
+         bf_temp-attr.fdisable = true .
+         delete temp-attr.
+      end.
+      else 
+      do:
+         find first buf_temp-attr where buf_temp-attr.gds-code eq temp-attr.gds-code
+            and buf_temp-attr.code     eq temp-attr.code
+            and buf_temp-attr.grp no-error.
+         if available buf_temp-attr
+            then
+            buf_temp-attr.fdisable = no.
+         delete temp-attr.
+      end.
   updated = yes.
- {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
- apply "VALUE-CHANGED" to br-attr IN frame {&frame-name}.
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  apply "VALUE-CHANGED" to br-attr IN frame {&frame-name}.
   
 END.
 
