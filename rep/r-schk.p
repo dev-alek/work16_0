@@ -321,26 +321,15 @@ def var v-last-time  as int  no-undo.
 output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8' /*no-convert*/.
 
 put stream OutStr-html unformatted
-   "<!DOCTYPE HTML>" skip
-   ' <html>' skip
-   '  <head>' skip
-   '   <meta charset="utf-8">' skip
-   '    <style type="text/css">' skip
-                        
-   '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-   '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-   '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
-   '   </style>' skip
-   '  </head>' skip
+{ rep/htmlhead.i }
    .
-        
+      /*      v-period = "c №" + string(x-Shift-Start) + " " + string(x-Date-Start, "99.99.9999") + ' по №' + string(x-Shift-End) + " " + string(X-date-End, "99.99.9999") .*/
+      v-period = "с " + string(x-Date-Start, "99.99.9999") + ' по ' + string(X-date-End, "99.99.9999") .
+      run shapka .
 FOR EACH obj-list NO-LOCK:         
 
    if X-tog-shift then 
    do:
-      /*      v-period = "c №" + string(x-Shift-Start) + " " + string(x-Date-Start, "99.99.9999") + ' по №' + string(x-Shift-End) + " " + string(X-date-End, "99.99.9999") .*/
-      v-period = "с " + string(x-Date-Start, "99.99.9999") + ' по ' + string(X-date-End, "99.99.9999") .
-      run shapka .
       /*НАДО УБЕДИТЬСЯ ЧТО ВСЕ РАЗМАЗАНО!!*/
       run rep/rpychk0.p ( input "r-shftc2"
          ,input obj-list.obj-type
@@ -366,8 +355,6 @@ FOR EACH obj-list NO-LOCK:
    end.
    else 
    do:
-      v-period = "с " + string(x-Date-Start, "99.99.9999") + ' по ' + string(X-date-End, "99.99.9999") .
-      run shapka .
       /*НАДО УБЕДИТЬСЯ ЧТО ВСЕ РАЗМАЗАНО!!*/
       run rep/rpychk0.p ( input "r-date"
          ,input obj-list.obj-type
@@ -433,6 +420,7 @@ procedure shapka:
       '<tr><td colspan="5" style="font-size:11px; text-align: left;"></td>' skip
       '<td colspan="14"></td></tr>' skip
       '</thead>' skip
+      
       '<tbody>' skip /* Здесь начинается таблица отчета */
       '<tr>' skip /* Первые строки – шапка таблицы с тэгами tr */
       '<th style="text-align: center;">ПНПО</th>' skip
@@ -448,7 +436,7 @@ procedure shapka:
       '<th style="text-align: center;">Продукт</th>'skip
       '<th style="text-align: center;">ТРК</th>' skip
       '<th style="text-align: center;">Пистолет</th>' skip
-      '<th style="text-align: center;">Кол-во</th>' skip
+      '<th style="text-align: center;">Кол-во, л.</th>' skip
       '<th style="text-align: center;">Цена за ед.</th>' skip
       '<th style="text-align: center;">Сумма по чеку</th>' skip
       '<th style="text-align: center;">Сумма по типу оплаты</th>' skip
@@ -530,7 +518,7 @@ procedure proc-report:
             '<td style="text-align:center;">' + handmade + '</td>' skip
             '<td style="text-align:center;">' + string(chk-gds.chk-date) + '</td>' skip                               /* дата чека */
             '<td style="text-align:center;">' + time-chk-chr + '</td>' skip                                    /* время чека */
-            '<td>' + SUBSTRING(produkt,1,50) + '</td>' skip                        /* наим.товара */
+            '<td text_wrap="true">' + SUBSTRING(produkt,1,50) + '</td>' skip                        /* наим.товара */
             '<td  style="text-align:center;">' + string(chk-gds.pump) + '</td>' skip                                   /* ТРК */
             '<td  style="text-align:center;">' + string(chk-gds.nozzle-code) + '</td>' skip                             /* пистолет */
             '<td  style="text-align:right;">' + string(ABSOLUTE(chk-gds.doc-qnty),"->>>>>>>>9.99") + '</td>' skip 
@@ -538,7 +526,7 @@ procedure proc-report:
             '<td style="text-align:right;">' + string(ABSOLUTE(chk-gds.src-sum),"->>>>>>>>9.99") + '</td>' skip
             '<td  style="text-align:right;">' + string(ABSOLUTE(chk-gds-pay.tot-r-b),"->>>>>>>>9.99") + '</td>' skip
             '<td text_wrap="true">' + opl-chr + '</td>' skip                                         /*тип оплаты */
-            '<td>' + kassir-chr + '</td>' skip                                      /* кассир*/
+            '<td text_wrap="true">' + kassir-chr + '</td>' skip                                      /* кассир*/
             '</tr>' skip
             .
       end.

@@ -100,11 +100,11 @@ obj-code
 &Scoped-Define ENABLED-OBJECTS RECT-9 tog-weight f-line-of-page ~
 tog-1-out-pump-with-icnt TOG-1 tog-1-pump-one tog-1-whole-gds TOG-2 ~
 tog-2-cp-grp TOG-3 Classify SortType TOG-4 TOG-5 f-shift-days-to-report ~
-TOG-6 b-esys TOG-7 TOG-8 tog-9 tog-10 B-staff t-excel t-TEXT 
+TOG-6 b-esys TOG-7 TOG-8 TOG-81 TOG-82 tog-9 tog-10 B-staff t-excel t-TEXT 
 &Scoped-Define DISPLAYED-OBJECTS tog-weight f-line-of-page ~
 tog-1-out-pump-with-icnt TOG-1 tog-1-pump-one tog-1-whole-gds TOG-2 ~
 tog-2-cp-grp TOG-3 Classify SortType TOG-4 TOG-5 f-shift-days-to-report ~
-TOG-6 TOG-7 TOG-8 tog-9 tog-10 t-excel t-TEXT f-esys-id f-esys-name 
+TOG-6 TOG-7 TOG-8 TOG-81 TOG-82 tog-9 tog-10 t-excel t-TEXT f-esys-id f-esys-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -115,7 +115,6 @@ TOG-6 TOG-7 TOG-8 tog-9 tog-10 t-excel t-TEXT f-esys-id f-esys-name
 
 
 /* ***********************  Control Definitions  ********************** */
-
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-esys 
@@ -266,6 +265,18 @@ DEFINE VARIABLE TOG-8 AS LOGICAL INITIAL no
      SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Статистика реализации по ведомостям~""
      BGCOLOR 8 FGCOLOR 0  NO-UNDO.
 
+DEFINE VARIABLE TOG-81 AS LOGICAL INITIAL no 
+     LABEL "Часть 8 - Возвраты по сопутствующим товарам и топливу" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Статистика реализации по ведомостям~""
+     BGCOLOR 8 FGCOLOR 0  NO-UNDO.
+
+DEFINE VARIABLE TOG-82 AS LOGICAL INITIAL no 
+     LABEL "Отображать частичные возвраты" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60.75 BY .78 TOOLTIP "Лист отчета ~"Статистика реализации по ведомостям~""
+     BGCOLOR 8 FGCOLOR 0  NO-UNDO.
+
 DEFINE VARIABLE tog-9 AS LOGICAL INITIAL no 
      LABEL "Часть 9 - Сбросы, переливы и переводы транзакций" 
      VIEW-AS TOGGLE-BOX
@@ -291,27 +302,29 @@ DEFINE FRAME F-Main
      f-line-of-page AT ROW 1.26 COL 86 COLON-ALIGNED
      tog-1-out-pump-with-icnt AT ROW 2.52 COL 14 WIDGET-ID 4
      TOG-1 AT ROW 3.52 COL 14
-     tog-1-pump-one AT ROW 4.26 COL 24
-     tog-1-whole-gds AT ROW 5 COL 24
-     TOG-2 AT ROW 5.74 COL 14
-     tog-2-cp-grp AT ROW 6.52 COL 24
-     TOG-3 AT ROW 7.52 COL 14
-     Classify AT ROW 8.26 COL 40 NO-LABEL
-     SortType AT ROW 8.78 COL 24 NO-LABEL
+     tog-1-pump-one AT ROW 4.26 COL 20
+     tog-1-whole-gds AT ROW 4.26 COL 52
+     TOG-2 AT ROW 5 COL 14
+     tog-2-cp-grp AT ROW 5.8 COL 20
+     TOG-3 AT ROW 6.6 COL 14
+     Classify AT ROW 7.2 COL 20 NO-LABEL
+     SortType AT ROW 7.8 COL 24 NO-LABEL
      Tog-level AT ROW 9 COL 73.5
      var-level AT ROW 9 COL 84 COLON-ALIGNED NO-LABEL
-     TOG-4 AT ROW 11.52 COL 14
-     TOG-5 AT ROW 12.52 COL 14
-     TOG-5-1 AT ROW 12.52 COL 14 WIDGET-ID 22
+     TOG-4 AT ROW 10.5 COL 14
+     TOG-5 AT ROW 11.3 COL 14
+     TOG-5-1 AT ROW 11.3 COL 14 WIDGET-ID 22
      f-shift-days-to-report AT ROW 13.19 COL 68 COLON-ALIGNED WIDGET-ID 6
-     TOG-6 AT ROW 13.52 COL 14
-     b-esys AT ROW 14.41 COL 63 WIDGET-ID 16
-     TOG-7 AT ROW 14.52 COL 14
-     TOG-8 AT ROW 15.52 COL 14
-     tog-9 AT ROW 16.52 COL 14 WIDGET-ID 2
-     tog-10 AT ROW 17.52 COL 14
-     B-staff AT ROW 18.52 COL 1.5
-     t-excel AT ROW 18.59 COL 50.5 WIDGET-ID 20
+     TOG-6 AT ROW 12.1 COL 14
+     b-esys AT ROW 13.41 COL 63 WIDGET-ID 16
+     TOG-7 AT ROW 12.9 COL 14
+     TOG-8 AT ROW 13.6 COL 14
+     TOG-81 AT ROW 13.7 COL 14
+     TOG-82 AT ROW 14.5 COL 20
+     tog-9 AT ROW 15.3 COL 14 WIDGET-ID 2
+     tog-10 AT ROW 16.1 COL 14
+     B-staff AT ROW 17.4 COL 2
+     t-excel AT ROW 17.4 COL 50.5 WIDGET-ID 20
      t-TEXT AT ROW 18.59 COL 71 WIDGET-ID 8
      f-esys-id AT ROW 14.41 COL 48 COLON-ALIGNED WIDGET-ID 14
      f-esys-name AT ROW 16.52 COL 2 COLON-ALIGNED NO-LABEL WIDGET-ID 18
@@ -453,8 +466,15 @@ DO:
   if place-call = "'new-rep'" then do:
       DISABLE
          tog-6
-         tog-8
-     with frame {&frame-name} .
+      with frame {&frame-name} .
+
+      HIDE 
+            tog-8
+            in frame {&frame-name}.
+       ENABLE
+            tog-81
+            tog-82
+         with frame {&frame-name} .
 
      if is-wth = true then do:
          ENABLE
@@ -575,6 +595,31 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&Scoped-define SELF-NAME TOG-81
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL TOG-81 s-object
+ON VALUE-CHANGED OF TOG-81 IN FRAME F-Main 
+DO:
+  assign TOG-81.
+  if TOG-81 = true then do:
+    enable
+      TOG-82
+      with frame {&frame-name} .
+  end.
+  else do:
+    TOG-82 = false.
+    disable
+      TOG-82
+      with frame {&frame-name} .
+      
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
 
 
 &Scoped-define SELF-NAME Tog-level
@@ -812,6 +857,8 @@ CASE place-call:
        tog-6 :screen-value in frame {&frame-name} = 'no'
        tog-7 :screen-value in frame {&frame-name} = 'no'
        tog-8 :screen-value in frame {&frame-name} = 'no'
+       tog-81 :screen-value in frame {&frame-name} = 'no'
+       tog-82 :screen-value in frame {&frame-name} = 'no'
        tog-9 :screen-value in frame {&frame-name} = 'no'
        tog-10 :screen-value in frame {&frame-name} = 'no'
        f-line-of-page:screen-value in frame {&frame-name}  = string({&LS_PS_A4})
@@ -843,6 +890,7 @@ CASE place-call:
         tog-6
         tog-7
         tog-8
+        tog-82
         tog-9
         tog-10
         f-line-of-page
@@ -861,6 +909,7 @@ CASE place-call:
         tog-6
         tog-7
         tog-8
+        tog-82
         tog-9
         tog-10
         f-line-of-page
@@ -975,11 +1024,21 @@ CASE place-call:
           tog-10                    :screen-value in frame {&frame-name} = entry(17, v-uf-List_, {&delim-par})
         .
       end.
-      if num-entries(v-uf-List_, {&delim-par}) >= 18 then do:
+/*      if num-entries(v-uf-List_, {&delim-par}) >= 18 then do:
         assign
           tog-1-out-pump-with-icnt  :screen-value in frame {&frame-name} = entry(18, v-uf-List_, {&delim-par})
         .
+      end. */
+
+      if num-entries(v-uf-List_, {&delim-par}) >= 20 then do:
+        assign
+          tog-81  :screen-value in frame {&frame-name} = entry(19, v-uf-List_, {&delim-par})
+          tog-82  :screen-value in frame {&frame-name} = entry(20, v-uf-List_, {&delim-par})
+        .
       end.
+
+
+
       assign
         v-init = true
       .
@@ -996,6 +1055,8 @@ CASE place-call:
         tog-8     :screen-value in frame {&frame-name} = 'yes':u
         tog-9     :screen-value in frame {&frame-name} = 'yes':u
         tog-10    :screen-value in frame {&frame-name} = 'yes':u
+        tog-81    :screen-value in frame {&frame-name} = 'yes':u
+        tog-82    :screen-value in frame {&frame-name} = 'yes':u
       .
     end.
     if integer( f-line-of-page :screen-value in frame {&frame-name} ) = 0
@@ -1012,9 +1073,11 @@ CASE place-call:
 
     if is-wth = false then do:
       assign
-        tog-5 :screen-value in frame {&frame-name} = 'no':u
+        TOG-5 :screen-value in frame {&frame-name} = 'no':u
+        
       .
       hide tog-5 in frame {&frame-name}.
+      enable TOG-5-1 with frame {&frame-name}.
     end.
     if is-elved = false then do:
       assign
@@ -1031,9 +1094,13 @@ CASE place-call:
     apply "value-changed":u to tog-1 in frame {&frame-name}.
     apply "value-changed":u to tog-2 in frame {&frame-name}.
     apply "value-changed":u to tog-3 in frame {&frame-name}.
-
+    apply "value-changed":u to tog-81 in frame {&frame-name}.
   end. /*otherwise do:*/
 end case.
+
+/* disable   TOG-82  with frame {&frame-name} . */
+
+
 
 END PROCEDURE. /* local-initialize */
 
@@ -1562,7 +1629,8 @@ define variable v-xmlh as handle no-undo .
        ,INPUT TOG-5-1
        ,input tog-6
        ,input tog-7
-       ,input tog-8
+       ,input tog-81
+       ,input tog-82
        ,input tog-9
        ,input tog-10
        ,input tog-1-pump-one
@@ -1668,7 +1736,7 @@ case v-profile-id:
     ASSIGN FRAME {&FRAME-NAME}
       f-line-of-page tog-weight
       tog-level var-level Classify /* SortType */
-      tog-1 tog-2 tog-3 tog-4 tog-6 tog-7 tog-8 tog-9 tog-10
+      tog-1 tog-2 tog-3 tog-4 tog-6 tog-7 tog-8 tog-81 tog-82 tog-9 tog-10
       tog-1-whole-gds tog-1-pump-one tog-1-out-pump-with-icnt tog-2-cp-grp
       .
     if is-wth then do:
@@ -1726,7 +1794,9 @@ if not (place-call = {&table_schedule}
                 + string( f-line-of-page )           + {&delim-par}
                 + string( tog-9 )                    + {&delim-par}
                 + string( tog-10 )                   + {&delim-par}
-                + string( tog-1-out-pump-with-icnt )
+                + string( tog-1-out-pump-with-icnt )  + {&delim-par}
+                + string( tog-81 )                    + {&delim-par}
+                + string( tog-82 )                    
   .
   run uf-set in this-procedure
     ( input {&uf-e-shift}
