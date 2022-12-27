@@ -336,6 +336,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   
                   find first utd-marking-lines where recid(utd-marking-lines)   eq vrec
                   exclusive-lock no-error.
+                  if available marking
+                  then
+                     utd-marking-lines.gds-code = marking.gds-code.
+                  else
+                     utd-marking-lines.gds-code = v-gds-gd:gds-code.
                   if     vGdsCode eq 0
                      and utd-marking-lines.gds-code ne ?
                   then

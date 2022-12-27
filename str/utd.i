@@ -1344,10 +1344,11 @@ function addMark returns logical
       end.
       else do:
          create buf_utd-marking-line.
-         buffer-copy utd-marking-lines except doc-level mark sts to buf_utd-marking-line
+         buffer-copy utd-marking-lines except doc-level mark sts gds-code to buf_utd-marking-line
          assign
             buf_utd-marking-line.doc-level = utd-marking-lines.doc-level + 1
             buf_utd-marking-line.mark      = marking.mark
+            buf_utd-marking-line.gds-code  = marking.Gds-code
 /*            buf_utd-marking-line.sts       = marking.sts*/
          .
          
