@@ -1086,50 +1086,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
               ub.utd-marking-lines.gds-code  = buf_utd-marking-lines.gds-code
               ub.utd-marking-lines.LineNum   = buf_utd-marking-lines.LineNum
               ub.utd-marking-lines.doc-level = buf_utd-marking-lines.doc-level + 1
-             .
-            find first ub.marking where ub.marking.mark = v-mark-ident no-error.
-            if not available (ub.marking)
-              then create ub.marking .
-            assign
-              ub.marking.gds-code    = ub.utd-marking-lines.gds-code
-              ub.marking.mark        = v-mark-ident
-              ub.marking.mark-parent = buf_utd-marking-lines.mark
-              ub.marking.sts         = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB
-              ub.marking.gds-ext-id  = v-GTIN
-              ub.marking.obj-code    = TempTrnDoc.obj-code
-              ub.marking.obj-type    = TempTrnDoc.obj-type
-              .
-            ub.marking.unit-ext = getLevelMotpByDM(v-mark-ident) .
-            ub.marking.box-qnty = getQntyUTDByDM(v-mark-ident) .
-            ub.marking.unit = getLevelUTDByDM(v-mark-ident) .
-            ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
-            ub.utd-marking-lines.mark = ub.marking.mark.
-         end.
-        end.
-        else do:
-          def var v-GTIN as char no-undo.
-          def var v-mark-ident as char no-undo.
-          v-GTIN = getGtinByDM(TempMarkLine.MarkCode) .
-          v-mark-ident = GetCodeIdent(TempMarkLine.MarkCode).
-          if v-GTIN <> "" then 
-          do:
-            find first buf_utd-marking-lines where
-                  buf_utd-marking-lines.db-num = v-utd-db-num and buf_utd-marking-lines.doc-id = v-utd-doc-id 
-              and buf_utd-marking-lines.mark begins TempMarkLine.MarkParent no-error.
-            if not available (buf_utd-marking-lines)
-            then do:
-              LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + substitute ("Нарушена целостности либо изменен документ &1 на стороне TH", v-utd-doc-id).
-              undo, return false.
-            end.
-            buf_utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
-            ungrg(buf_utd-marking-lines.mark).
-            create ub.utd-marking-lines .
-            assign
-              ub.utd-marking-lines.db-num    = buf_utd-marking-lines.db-num
-              ub.utd-marking-lines.doc-id    = buf_utd-marking-lines.doc-id
-              ub.utd-marking-lines.gds-code  = buf_utd-marking-lines.gds-code
-              ub.utd-marking-lines.LineNum   = buf_utd-marking-lines.LineNum
-              ub.utd-marking-lines.doc-level = buf_utd-marking-lines.doc-level + 1
               ub.utd-marking-lines.mark      = v-mark-ident
              .
             if ismark(v-mark-ident)
@@ -1492,7 +1448,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
         find first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code.
         
-        internal-b-code = buf_bar-code.b-code.
+       internal-b-code = buf_bar-code.b-code.                
         { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
 
         pos = pos + 1.
@@ -1500,12 +1456,9 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         decDocQnty = buf_utd-l.Quantity.
         
 
-  { utl/gtin.i class }
-
         assign
           priceSale = string (dPriceSale)
           docQnty   = string (decDocQnty)
-          
         .
 
         assign
@@ -1517,9 +1470,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             input  buffer buf_utd-l:handle, 
             output vRecKey-line). 
         find first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-l.doc-id and buf_utd-err.db-num = buf_utd-l.db-num and buf_utd-err.reckey = vRecKey-line no-error .
-        vErrorLine = available buf_utd-err.
+        vErrorLine = available buf_utd-err.  
         for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd.db-num and buf_utd-m-l.doc-id = buf_utd.doc-id and buf_utd-m-l.LineNum = buf_utd-l.LineNum no-lock
           :
+          
           myflagsDocLine:unSetAllFlags().
           myflagsDocLine:isMarkOn            = logical(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"MarkUtdLine","no")).
           myflagsDocLine:isVarietalVolumeOn  = logical(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"ArticUtdLine","no")).
