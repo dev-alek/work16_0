@@ -994,7 +994,7 @@ define private temp-table tt-recid-TranFuel no-undo
           insw:write-data-element (  "line-num",         string(bf_chk-discnt.object-line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
           insw:write-data-element (  "discnt-type",      string(bf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
           insw:write-data-element (  "discntValueAbs",   left-trim(string(bf_chk-discnt.discnt-value-abs,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
-          insw:write-data-element (  "discntValuePcnt",  left-trim(string(bf_chk-discnt.discnt-value-pcnt, "->9.9<"))                 ) . /* % скидки (Число) */
+          insw:write-data-element (  "discntValuePcnt",  left-trim(string(bf_chk-discnt.discnt-value-pcnt, "->>>9.9<"))                 ) . /* % скидки (Число) */
           /* обязательность 0-1 */
           if bf_chk-discnt.promo-id > "" then 
           do:
@@ -1015,7 +1015,7 @@ define private temp-table tt-recid-TranFuel no-undo
         insw:write-data-element (  "line-num",         string(buf_chk-discnt.line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
         insw:write-data-element (  "discnt-type",      string(buf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
         insw:write-data-element (  "discntValueAbs",   left-trim(string(buf_chk-discnt.discnt-value-abs,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
-        insw:write-data-element (  "discntValuePcnt",  left-trim(string(buf_chk-discnt.discnt-value-pcnt, "->>9.9<"))                 ) . /* % скидки (Число) */
+        insw:write-data-element (  "discntValuePcnt",  left-trim(string(buf_chk-discnt.discnt-value-pcnt, "->>>>9.9<"))                 ) . /* % скидки (Число) */
         /* обязательность 0-1 */
         if buf_chk-discnt.promo-id > "" then 
         do:
