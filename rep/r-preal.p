@@ -188,8 +188,8 @@ put stream OutStr-html unformatted
  { rep/htmlhead.i }
 .
 put stream OutStr-html unformatted
-   '<body>' skip
-   '<table orientation="landscape" name = "ќтчет по пересменкам" fit_to_page="true">' skip  /* таблица, в которой содержитс€ весь отчет */
+   '<body orientation="landscape" name = "ќтчет по пересменкам" fit_to_page="true">' skip
+   '<table>' skip  /* таблица, в которой содержитс€ весь отчет */
    '<thead>' skip
                       
    '<tr class="set_columns">' skip
@@ -718,8 +718,8 @@ PROCEDURE itog_date:
     time-azs = time-azs + tt-tr.td_6.
     time-prev-azs = time-prev-azs  + tt-tr.td_7 .
   end.
-
-   if can-find (tt-tr where tt-tr.npp <> 0 and tt-tr.td_7 <> 0 and tt-tr.td_7 <> ?) or not t-shift then do:
+   find first tt-tr where tt-tr.npp <> 0 and tt-tr.td_7 <> 0 and tt-tr.td_7 <> ? no-error .
+   if available (tt-tr) or not t-shift then do:
    FOR EACH tt-tr no-lock:
       if tt-tr.npp = 0 then 
       do:	
@@ -735,7 +735,7 @@ PROCEDURE itog_date:
             '</tr>' skip
             . 
       end.
-      else if tt-tr.npp <> 0 then 
+      else if tt-tr.npp <> 0 and ((tt-tr.td_7 <> 0 and tt-tr.td_7 <> ?) or not t-shift) then 
          do:	
             put stream OutStr-html unformatted 
                '<tr 'if tt-tr.td_7 <> 0 and tt-tr.td_7 <> ? then 'bgcolor="#FF2400">' else 'bgcolor="#FFFFFF">' skip
@@ -757,7 +757,7 @@ END PROCEDURE.
 
 PROCEDURE itog_azs:
 
-   if time-prev-azs > 0 then time-pr-sv = time-prev-azs / kol-per-azs.  /* средн€€ длительность просто€ с превышением  */
+   if time-prev-azs > 0 then time-pr-sv = time-prev-azs / kol-prev-azs.  /* средн€€ длительность просто€ с превышением  */
    if kol-per-azs <> 0 then prm-1 = time-azs / kol-per-azs .            /* средн€€ длительность пересменка  */
    if kol-prev > 0 then prm-4 = kol-prev-azs / kol-prev * 100 .
 
@@ -802,7 +802,7 @@ END PROCEDURE.
 
 PROCEDURE itog_azs-all:
 
-   if time-prev-azs-all > 0 then time-pr-sv-all = time-prev-azs-all / kol-per-azs-all.  /* средн€€ длительность просто€ с превышением  */
+   if time-prev-azs-all > 0 then time-pr-sv-all = time-prev-azs-all / kol-prev-azs-all.  /* средн€€ длительность просто€ с превышением  */
    if kol-per-azs-all <> 0 then prm-1-all = time-azs-all / kol-per-azs-all .            /* средн€€ длительность пересменка  */
    if kol-prev-all > 0 then prm-4-all = kol-prev-azs-all / kol-prev-all * 100 .
 
