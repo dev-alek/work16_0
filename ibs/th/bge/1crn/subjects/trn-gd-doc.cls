@@ -1203,7 +1203,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
 
     vsdstr = new vsdtostorage ().
     vsdsts = new vsdstatustype ().
-    
+    block-doc-line:  
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
   
       find first buf_gds no-lock where
@@ -1219,39 +1219,44 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
       }
       
       if not v-mercury-prod 
-        then next.
+      then 
+         next block-doc-line.
       
-      if not tagPrts 
-      then do: 
-        sw:start-element ("prts").
-        tagPrts = true.
-      end.
       
-      for each buf_parts no-lock where buf_parts.out-code = buf_doc-line.doc-code
+      
+      for each buf_parts where buf_parts.out-code = buf_doc-line.doc-code
           and buf_parts.artic = buf_doc-line.artic
           and buf_parts.prod-type = buf_doc-line.prod-type
-          and buf_parts.prod-code = buf_doc-line.prod-code:
-        vsds = new vsdsubs ().
-        vsds = vsdstr:getVSDsubs(buffer buf_parts).
-        sw:start-element ("prt").      
-          write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
-          write-data-element ("prt-id", buf_parts.part-code).
+          and buf_parts.prod-code = buf_doc-line.prod-code
+      no-lock:
+          vsds = vsdstr:getVSDsubs(buffer buf_parts).
           if vsds:iCounter > 0
           then do:
+            block-vsd:
             do ii = 1 to vsds:GetItem(ii):
-              if vsds:VsdObjCurr:VSDType = vsdsts:VSDTrans or vsds:VsdObjCurr:VSDType = vsdsts:VSDIn 
+              if     vsds:VsdObjCurr:UUID ne "" 
+                 and vsds:VsdObjCurr:UUID ne ? 
+                 and (   vsds:VsdObjCurr:VSDType = vsdsts:VSDTrans 
+                      or vsds:VsdObjCurr:VSDType = vsdsts:VSDIn)
               then do:
-                write-data-element ("vad-guid", vsds:VsdObjCurr:UUID).
-                leave.
+                 if not tagPrts 
+                 then do: 
+                    sw:start-element ("prts").
+                    tagPrts = true.
+                 end.
+                 sw:start-element ("prt").      
+        
+                    write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
+                    write-data-element ("prt-id", buf_parts.part-code).
+                    write-data-element ("vad-guid", vsds:VsdObjCurr:UUID).
+                    write-data-element ("qnty", string-mth (buf_parts.fact-qnty)).
+                 sw:end-element ("prt").
+        
+                leave block-vsd.
               end.
             end.
           end.
-          else do:
-            write-data-element ("vad-guid", "").
-          end.
-          write-data-element ("qnty", string-mth (buf_parts.fact-qnty)).
-        sw:end-element ("prt").
-        
+                  
         delete object vsds no-error.        
       
       end.      
