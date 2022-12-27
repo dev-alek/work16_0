@@ -89,7 +89,8 @@ on error undo, return error return-value
           IF NOT AVAILABLE tt0-goods-attr THEN DO:              
                 run gds-attr-manual-edit in this-procedure (input buf_goods-attr.attr-code
                                                        , output v-num-section) no-error. 
-                IF  error-status:error
+                IF       error-status:error
+                    and  buf_goods-attr.attr-code ne {&attr-gds-attr-lock}
                 THEN DO:
                   assign
                   v-err-mess = substitute("Ошибка при удалении атрибута товара &1 &2 :&3&4 &5"
