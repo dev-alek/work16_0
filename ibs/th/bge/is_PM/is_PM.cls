@@ -2878,7 +2878,7 @@ class ibs.th.bge.is_PM.is_PM:
     /* START Расчет расхода на прочие нужды */
     for each tt-result :
       /* Формула 10 */
-      tt-result.wght-other = tt-result.wght-doc-end - tt-result.wght-doc-start - tt-result.delivery + tt-result.wght-sale .
+      tt-result.wght-other = tt-result.wght-doc-end - tt-result.wght-doc-start - tt-result.delivery + tt-result.wght-sale - tt-result.othermoves .
       if session:debug-alert 
       then do:
         put stream OutStr-html unformatted
