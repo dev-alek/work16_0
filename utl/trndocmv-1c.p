@@ -69,6 +69,8 @@ define variable vss-description as character no-undo initial "Создание документо
 { cmp/library.i  }
 { gbl/lineattr.i }
 { ref/gds-attr.i }
+{ gbl/getsect.i def }
+{ gbl/attr-lib.i }
 
 define variable v-today as date      no-undo.
 define variable v-host-code like ub.trn-doc.host no-undo .
@@ -81,6 +83,7 @@ define variable v-curr-r-b as character no-undo .
 define variable n_str       as integer   no-undo .
 
 define variable v-base-code         like ub.currency.curr-code no-undo .
+define variable v-root-node as integer no-undo.
 define variable v-doc-line-chg-qnty like ub.doc-line.doc-qnty  no-undo .
 define variable l-goods-twounit     as logical   no-undo .
 define variable var-ok-assort-pol   as logical   no-undo .
@@ -93,6 +96,7 @@ define variable v-gds-attr-value-old as character no-undo .
 define variable v-gds-attr-type      as character no-undo .
 define variable v-ext-doc-type as character no-undo .
 define variable v-end-message as character no-undo .
+define variable v-out-pay like ub.sysconf.out-pay .
 
 define variable v-country-code as integer   no-undo .
 
@@ -131,6 +135,8 @@ on error undo, return error return-value
     run pcall-log-file in parparentproc (input v-end-message) .
     undo, return error v-end-message .
   end.
+  
+  find first ub.shop no-lock where ub.shop.obj-code = ub.clients.obj-code no-error .
 
   find doc-obj no-lock
     where doc-obj.obj-type = TempTrnDoc.cli-type
@@ -146,11 +152,11 @@ on error undo, return error return-value
   
   run get-userid in parparentproc (output v-userid ) .
 
-  { gbl/curobjdt.i TempTrnDoc.cli-code TempTrnDoc.cli-type v-today }
+  { gbl/curobjdt.i TempTrnDoc.obj-type TempTrnDoc.obj-code v-today }
   
   { gbl/hostcode.i
-    TempTrnDoc.cli-code
-    TempTrnDoc.cli-type
+    TempTrnDoc.obj-type
+    TempTrnDoc.obj-code
     v-host-code
   }
   
@@ -161,6 +167,12 @@ on error undo, return error return-value
   }
   
   find first buf_sysconf where buf_sysconf.host-code = v-host-code no-lock no-error .
+  v-out-pay = buf_sysconf.out-pay .
+  
+  if available ub.shop
+  then do :
+    v-out-pay = ub.shop.out-pay .
+  end .
   
   { gbl/curr-r-b.i
     v-curr-r-b
@@ -192,17 +204,17 @@ on error undo, return error return-value
     false
     v-host-code
     true
-    TempTrnDoc.obj-type
+    TempTrnDoc.obj-code
     TempTrnDoc.obj-type
     false
-    buf_sysconf.out-pay
+    v-out-pay
     "''"
     no
     ?
     {&wayb}
     ?
     TempTrnDoc.ext-doc-type
-    ?
+    buf_sysconf.purch-code
     no-error
   }
   if error-status :error then do:
@@ -212,10 +224,44 @@ on error undo, return error return-value
     undo, return error v-end-message .
   end.
   find buf_trn-doc where buf_trn-doc.doc-code = TempTrnDoc.ext-doc-code.
+  
+  { gbl/getsect.i run buf_trn-doc.obj-type buf_trn-doc.obj-code {&attr-nakl_par} }
+
+  for each thbjattr_thbj-attr :
+    if thbjattr_thbj-attr.prop-code = 'type-vat' then v-value-integer = thbjattr_thbj-attr.property-value-integer.
+  end.
+  case v-value-integer:
+    when 1 or when ? then do:
+      assign
+        buf_trn-doc.vat-type = {&inc-vat}.
+    end.
+    when 2 then do:
+      assign
+        buf_trn-doc.vat-type = {&no-vat}.
+    end.
+    when 3 then do:
+      assign
+        buf_trn-doc.vat-type = {&without-vat}.
+    end.
+    otherwise do:
+        v-end-message =  substitute(" Не верно задан атрибут 'Тип заведения НДС' (type-vat). &1 &2 &3 &4 &5" , buf_trn-doc.obj-type , buf_trn-doc.obj-code , error-status :get-message(1) , return-value , v-value-integer ) .
+        run pcall-log-file in parparentproc (input v-end-message) .
+        undo, return error v-end-message.
+    end.
+  end case.
+  
+  run add-nn (buf_trn-doc.doc-code , TempTrnDoc.doc-id ) no-error .
+  if error-status:error then do :
+    v-end-message = substitute(" Ошибка записи атрибута документа &1 &2" , error-status :get-message(1)  , return-value) .
+    run pcall-log-file in parparentproc ( input v-end-message ) .
+    undo, return error v-end-message.
+  end.
+          
   assign
     buf_trn-doc.exch-date     = TempTrnDoc.doc-date       /* курсы на дату РН */
     buf_trn-doc.exch-rate     = 1      /* ! */
     buf_trn-doc.out-code      = TempTrnDoc.out-code       /* ! */
+    buf_trn-doc.contract-code = if TempTrnDoc.dog-code <> ? then integer (TempTrnDoc.dog-code) else 0
 /*    buf_trn-doc.ship-num      = ub.trn-doc.ship-num */
 /*    buf_trn-doc.ship-date     = ub.trn-doc.ship-date*/
 /*    buf_trn-doc.ord-num       = ub.trn-doc.ord-num  */
@@ -224,12 +270,27 @@ on error undo, return error return-value
     buf_trn-doc.fact-num      = 0
     buf_trn-doc.fact-date     = ?
     buf_trn-doc.print-rubl    = v-print-rubl
+    buf_trn-doc.SLT-type      = {&without-slt}
     buf_trn-doc.wrkr          = ?                         /* ! */
     buf_trn-doc.agnt          = ?           /* ! */
     buf_trn-doc.boss          = ?           /* ! */
 /*    buf_trn-doc.reason-code   = ub.trn-doc.reason-code*/
   .
-
+  
+  find first ub.shift-obj no-lock
+    where ub.shift-obj.obj-type = buf_trn-doc.obj-type
+    and ub.shift-obj.obj-code = buf_trn-doc.obj-code
+    and ub.shift-obj.status_  = {&sht-current}
+    no-error .
+  if available ub.shift-obj then 
+  do:
+    assign
+      buf_trn-doc.shift-num  = ub.shift-obj.shift-num
+      buf_trn-doc.shift-name = ub.shift-obj.shift-name
+      buf_trn-doc.shift-date = ub.shift-obj.shift-date
+    .
+  end.
+  
   assign
     n_str = 0
   .
@@ -281,6 +342,7 @@ on error undo, return error return-value
     .
     create buf_doc-line.
     assign
+      buf_doc-line.line-num       = n_str
       buf_doc-line.doc-code       = buf_trn-doc.doc-code
       buf_doc-line.obj-type       = buf_trn-doc.obj-type
       buf_doc-line.obj-code       = buf_trn-doc.obj-code
@@ -333,6 +395,9 @@ on error undo, return error return-value
     for each TempDocPart where TempDocPart.gds-code = TempDocLine.gds-code
     on error undo, return error
     :
+      
+      if TempDocPart.part-id = ? then TempDocPart.part-id = "" .
+      
       assign
         v-part-chg-qnty = 0
       .
@@ -377,6 +442,9 @@ on error undo, return error return-value
         buf_parts.out-code  = buf_trn-doc.doc-code
         buf_parts.obj-type  = buf_trn-doc.obj-type
         buf_parts.obj-code  = buf_trn-doc.obj-code
+        buf_parts.host-code = buf_trn-doc.host-code
+        buf_parts.supp-type  = buf_trn-doc.cli-type
+        buf_parts.supp-code  = buf_trn-doc.cli-code
         buf_parts.status_   = no
         buf_parts.rsrv-free = ?
         buf_parts.pl-code   = 0
@@ -389,7 +457,23 @@ on error undo, return error return-value
         buf_parts.price-rubl = TempDocPart.price-rubl
         buf_parts.price-base = TempDocPart.price-rubl
         buf_parts.price-cli  = TempDocPart.price-rubl
-        buf_parts.VAT-pc     = TempDocPart.vat-pc
+        buf_parts.VAT-pc     = buf_doc-line.vat-pc
+        
+        buf_parts.purch-code = buf_trn-doc.purch-code
+        
+        buf_parts.exch-code      = 0 
+        buf_parts.pay-code       = buf_trn-doc.pay-code
+        buf_parts.is-supp        = yes
+        buf_parts.VAT-type       = buf_trn-doc.vat-type
+        buf_parts.SLT-type       = {&without-slt}
+        buf_parts.cst-code       = ""
+        buf_parts.last-date      = ?
+        buf_parts.road-tax-base  = 0
+        buf_parts.road-tax-rubl  = 0
+        buf_parts.transport-base = 0
+        buf_parts.transport-rubl = 0
+        buf_parts.other-base     = 0
+        buf_parts.other-rubl     = 0
       .
       
       for each TempDocMark where TempDocMark.gds-code = TempDocLine.gds-code
@@ -438,6 +522,7 @@ on error undo, return error return-value
           end.
         end.
       end.
+    end.
 /*         
       /*определение атрибута товара на маркирование*/
       define buffer buf_marking for ub.marking .
@@ -510,84 +595,91 @@ on error undo, return error return-value
       end.
     end. /* for each parts ...  */
 */
-      /* вычисляем среднюю учетную цену */
-      define variable v-total-parts-qnty as decimal no-undo .
-      define variable v-total-price-base as decimal no-undo .
-      define variable v-total-price-rubl as decimal no-undo .
-  
+    /* вычисляем среднюю учетную цену */
+    define variable v-total-parts-qnty as decimal no-undo .
+    define variable v-total-price-base as decimal no-undo .
+    define variable v-total-price-rubl as decimal no-undo .
+
+    assign
+      v-total-parts-qnty = 0
+      v-total-price-base = 0
+      v-total-price-rubl = 0
+    .
+
+    for each ub.parts
+      where ub.parts.obj-type  = buf_doc-line.obj-type
+        and ub.parts.obj-code  = buf_doc-line.obj-code
+        and ub.parts.artic     = buf_doc-line.artic
+        and ub.parts.prod-type = buf_doc-line.prod-type
+        and ub.parts.prod-code = buf_doc-line.prod-code
+        and ub.parts.out-code  = buf_doc-line.doc-code
+    on error undo, return error
+    :
       assign
-        v-total-parts-qnty = 0
-        v-total-price-base = 0
-        v-total-price-rubl = 0
-      .
-  
-      for each ub.parts
-        where ub.parts.obj-type  = buf_doc-line.obj-type
-          and ub.parts.obj-code  = buf_doc-line.obj-code
-          and ub.parts.artic     = buf_doc-line.artic
-          and ub.parts.prod-type = buf_doc-line.prod-type
-          and ub.parts.prod-code = buf_doc-line.prod-code
-          and ub.parts.out-code  = buf_doc-line.doc-code
-      on error undo, return error
-      :
-        assign
-          v-total-parts-qnty = v-total-parts-qnty + parts.fact-qnty
-          v-total-price-base = v-total-price-base + parts.fact-qnty * parts.price-base
-          v-total-price-rubl = v-total-price-rubl + parts.fact-qnty * parts.price-rubl
-        .
-      end.
-  
-      if v-doc-line-chg-qnty <> v-total-parts-qnty then do:
-        v-end-message =  substitute("Ошибка в документе внутреннего перемещения &1 . Количество в партиях (&2) не совпадает с количеством (&3) в строке документа." ,
-                TempTrnDoc.out-code,
-                v-total-parts-qnty,
-                v-doc-line-chg-qnty ).
-        run pcall-log-file in parparentproc (input v-end-message) .
-      end.
-  
-      if v-total-parts-qnty <> 0 then do:
-        assign
-          buf_doc-line.price-rubl = v-total-price-rubl / v-total-parts-qnty
-          buf_doc-line.price-base = v-total-price-base / v-total-parts-qnty
-          buf_doc-line.price-cli  = v-total-price-base / v-total-parts-qnty
-        .
-      end.
-  
-      find first buf_gds-dtl
-        where buf_gds-dtl.doc-code    = buf_trn-doc.doc-code
-          and buf_gds-dtl.artic       = ub.goods.artic
-          and buf_gds-dtl.prod-type   = ub.goods.prod-type
-          and buf_gds-dtl.prod-code   = ub.goods.prod-code
-        no-error .
-      if not available buf_gds-dtl
-      then do:
-        create buf_gds-dtl.
-        assign
-          buf_gds-dtl.doc-code    = buf_trn-doc.doc-code
-          buf_gds-dtl.artic       = ub.goods.artic
-          buf_gds-dtl.prod-type   = ub.goods.prod-type
-          buf_gds-dtl.prod-code   = ub.goods.prod-code
-          buf_gds-dtl.prt-code    = ub.goods.prt-root
-          buf_gds-dtl.obj-type    = buf_trn-doc.obj-type
-          buf_gds-dtl.obj-code    = buf_trn-doc.obj-code
-        .
-  
-        assign
-          buf_gds-dtl.discnt-base = 0
-          buf_gds-dtl.discnt-rubl = 0
-          buf_gds-dtl.discnt-pc   = 0
-          buf_gds-dtl.discnt-type = ?
-        .
-      end.
-      assign
-        buf_gds-dtl.price-base     = TempDocLine.price-rubl
-        buf_gds-dtl.price-rubl     = TempDocLine.price-rubl
-  /*      buf_gds-dtl.new-price-sale = ub.gds-dtl.new-price-sale*/
-        buf_gds-dtl.ov             = yes
-        buf_gds-dtl.fact-qnty      = buf_doc-line.fact-qnty
-        buf_gds-dtl.doc-qnty       = buf_doc-line.doc-qnty
+        v-total-parts-qnty = v-total-parts-qnty + parts.fact-qnty
+        v-total-price-base = v-total-price-base + parts.fact-qnty * parts.price-base
+        v-total-price-rubl = v-total-price-rubl + parts.fact-qnty * parts.price-rubl
       .
     end.
+
+    if v-doc-line-chg-qnty <> v-total-parts-qnty then do:
+      v-end-message =  substitute("Ошибка в документе внутреннего перемещения &1 . Количество в партиях (&2) не совпадает с количеством (&3) в строке документа." ,
+              TempTrnDoc.out-code,
+              v-total-parts-qnty,
+              v-doc-line-chg-qnty ).
+      run pcall-log-file in parparentproc (input v-end-message) .
+    end.
+
+    if v-total-parts-qnty <> 0 then do:
+      assign
+        buf_doc-line.price-rubl = v-total-price-rubl / v-total-parts-qnty
+        buf_doc-line.price-base = v-total-price-base / v-total-parts-qnty
+        buf_doc-line.price-cli  = v-total-price-base / v-total-parts-qnty
+      .
+    end.
+    
+    { gbl/rootnode.i
+      buf_doc-line.artic
+      buf_doc-line.prod-type
+      buf_doc-line.prod-code
+      v-root-node
+    }
+
+    find first buf_gds-dtl
+      where buf_gds-dtl.doc-code    = buf_trn-doc.doc-code
+        and buf_gds-dtl.artic       = ub.goods.artic
+        and buf_gds-dtl.prod-type   = ub.goods.prod-type
+        and buf_gds-dtl.prod-code   = ub.goods.prod-code
+      no-error .
+    if not available buf_gds-dtl
+    then do:
+      create buf_gds-dtl.
+      assign
+        buf_gds-dtl.doc-code    = buf_trn-doc.doc-code
+        buf_gds-dtl.artic       = ub.goods.artic
+        buf_gds-dtl.prod-type   = ub.goods.prod-type
+        buf_gds-dtl.prod-code   = ub.goods.prod-code
+        buf_gds-dtl.prt-code    = v-root-node
+        buf_gds-dtl.obj-type    = buf_trn-doc.obj-type
+        buf_gds-dtl.obj-code    = buf_trn-doc.obj-code
+      .
+
+      assign
+        buf_gds-dtl.discnt-base = 0
+        buf_gds-dtl.discnt-rubl = 0
+        buf_gds-dtl.discnt-pc   = 0
+        buf_gds-dtl.discnt-type = ?
+      .
+    end.
+    assign
+      buf_gds-dtl.price-base     = TempDocLine.price-rubl
+      buf_gds-dtl.price-rubl     = TempDocLine.price-rubl
+/*      buf_gds-dtl.new-price-sale = ub.gds-dtl.new-price-sale*/
+      buf_gds-dtl.ov             = yes
+      buf_gds-dtl.fact-qnty      = buf_doc-line.fact-qnty
+      buf_gds-dtl.doc-qnty       = buf_doc-line.doc-qnty
+    .
+    
   end .
 
   if not can-find(first ub.doc-line
@@ -665,6 +757,21 @@ on error undo, return error return-value
         buf_gds-dtl.fact-qnty = 0 .*/
 end.
 
+procedure add-nn :
+define input  parameter p-doc-code as character no-undo .
+define input  parameter p-doc-out as character no-undo .
+  do
+  on error undo, return error return-value
+  :
+    { str/tdat-wrt.i
+      p-doc-code
+      {&trdcattr-nids}
+      p-doc-out
+      no-error
+    }
+   end.
+
+end procedure. /* add-nn */
 
 procedure get-country-code :
 

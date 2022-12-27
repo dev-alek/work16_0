@@ -1387,14 +1387,22 @@ class ibs.th.bge.1crn.import.parsesub:
           end .
         end.
         when "prt" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
-          case true : 
-            when trn-gd-doc-inSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/
-              if not valid-object(trn-prt-doc-inlistSubjectsObj) then trn-prt-doc-inlistSubjectsObj = new subjects ("prts") .        
-              trn-prt-doc-inlistSubjectsObj:Add(new trn-prt()). /* а вот здесь уже создаем объект сущнности*/
-              trn-prtSubjectObj = cast (trn-prt-doc-inlistSubjectsObj:SubjectObjCurr, trn-prt).
-              GetChildrenSub (hNoderef, (level + 1), trn-prtSubjectObj).
-              trn-gd-doc-inSubjectObj:SetProp (trn-prt-doc-inlistSubjectsObj).
-            end.
+          if trn-gdSubjectObj:IsInitSubForWrite
+          then do: /*идет запись transportSubjectObj*/
+            if not valid-object(trn-prt-doc-inlistSubjectsObj) then trn-prt-doc-inlistSubjectsObj = new subjects ("prts") .        
+            trn-prt-doc-inlistSubjectsObj:Add(new trn-prt()). /* а вот здесь уже создаем объект сущнности*/
+            trn-prtSubjectObj = cast (trn-prt-doc-inlistSubjectsObj:SubjectObjCurr, trn-prt).
+            GetChildrenSub (hNoderef, (level + 1), trn-prtSubjectObj).
+            trn-gdSubjectObj:SetProp (trn-prt-doc-inlistSubjectsObj).
+          end.
+          else
+          if trn-gd-doc-inSubjectObj:IsInitSubForWrite
+          then do: /*идет запись transportSubjectObj*/
+            if not valid-object(trn-prt-doc-inlistSubjectsObj) then trn-prt-doc-inlistSubjectsObj = new subjects ("prts") .        
+            trn-prt-doc-inlistSubjectsObj:Add(new trn-prt()). /* а вот здесь уже создаем объект сущнности*/
+            trn-prtSubjectObj = cast (trn-prt-doc-inlistSubjectsObj:SubjectObjCurr, trn-prt).
+            GetChildrenSub (hNoderef, (level + 1), trn-prtSubjectObj).
+            trn-gd-doc-inSubjectObj:SetProp (trn-prt-doc-inlistSubjectsObj).
           end.
         end.
         when "nb-carrier" then do: /* второй уровень с данными. обработка зависимой сущности clientsSubjectObj  */

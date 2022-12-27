@@ -44,6 +44,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
 		
     define variable v-doc-rec as recid     no-undo.
     define variable result    as logical   no-undo.
+    define variable v-valid-prt-trn as logical no-undo .
     define variable glog      as logical   no-undo.
     define variable mode      as character no-undo.
     define variable ii        as integer   no-undo.
@@ -66,7 +67,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     empty temp-table TempTrnDoc.
     empty temp-table TempDocLine.
     empty temp-table TempDocMark.
-    
+   
     create TempTrnDoc.
     assign
       TempTrnDoc.obj-type = buf_clients.obj-type
@@ -114,6 +115,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     
     objGds = objTrnDoc:GDS.
     objPrts = objTrnDoc:prts.
+    v-valid-prt-trn = no .
     
     do ii = 1 to objGds:Get(ii):
       objGd = cast (objGds:SubjectObjCurr, trn-gd).
@@ -122,6 +124,10 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
       if valid-object (objPrts)
       then do jj = 1 to objPrts:Get(jj):
         objPrt =  cast (objPrts:SubjectObjCurr, trn-prt).
+        if objPrt:gd-line-num > ""
+        then do :
+          v-valid-prt-trn = yes .
+        end .
         if objPrt:gd-line-num = objGd:line-num
         then do:
           create TempDocLine.
@@ -135,8 +141,9 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
             TempDocLine.vat-pc = (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100. 
         end.
       end.
-      else do :
-        objPrts = objGd:prts no-error .
+      if not v-valid-prt-trn
+      then do :
+        objPrts = objGd:prts .
         if valid-object (objPrts)
         then do jj = 1 to objPrts:Get(jj):
           objPrt =  cast (objPrts:SubjectObjCurr, trn-prt).
