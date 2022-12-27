@@ -1510,7 +1510,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       undo, return no-apply return-value .
    end.
    release buf_sys-ctrl.
-   run gbl/code-upd.p  no-error .
+   run gbl/code-upd.p(input  this-procedure)  no-error .
    if error-status :error
    then do:
       message

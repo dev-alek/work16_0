@@ -55,9 +55,29 @@ define buffer buf_prod-bc for ub.prod-bc .
 
 parparentproc = this-procedure:handle .
 
-find first buf_bar-code no-lock where buf_bar-code.b-code = p-b-code .
-find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code .
-
+find first buf_bar-code no-lock where buf_bar-code.b-code = p-b-code  no-error.
+if not available buf_bar-code 
+then do:
+   v-err-mess = substitute("Ошибка при сохранении GTIN &1 bar-code &5 &2&3&2&4"
+                        , p-gtin
+                        , {&new-line}
+                        , error-status:get-message(1)
+                        , return-value
+                        , p-b-code ).
+    undo, return error v-err-mess .
+end.
+find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
+if not available buf_goods 
+then do:
+   v-err-mess = substitute("Ошибка при сохранении GTIN &1 gds-code &5 &2&3&2&4"
+                        , p-gtin
+                        , {&new-line}
+                        , error-status:get-message(1)
+                        , return-value
+                        , buf_bar-code.gds-code ).
+    undo, return error v-err-mess .
+end.
+   
 v-b-str = p-gtin .
 run trg/prod-bc2.p (
                      input  parparentproc
