@@ -72,6 +72,11 @@ class ibs.th.bge.1crn.import.impCode inherits ibs.th.gbl.sys.objth implements ib
        Code.status_   = objImp:status_
        Code.misc1     = objImp:misc1
     .
+    define variable mImp2CdH as handle no-undo.
+    run str/imp2cdgeth.p(output mImp2CdH).
+    
+    run fill-code in mImp2CdH (Code.parent,
+                               code.code).    
     v-retfl = true .
     define variable i as integer no-undo .
     catch exAppErrors as class Progress.Lang.AppError :
