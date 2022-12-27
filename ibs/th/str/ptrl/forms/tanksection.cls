@@ -234,13 +234,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     if integer (ComboBoxShape) = 0
     then do:
       v-dop-volume = decimal(ENTRY(1, varauto-tank-par, {&delim-par}) ) no-error.
+      create tt-section .
+      tt-section.dif     = 0 .  
+      tt-section.volume1 = 0 .
       do ii = 2 to num-entries (varauto-tank-par,{&delim-par}):
           v-section = entry(ii, varauto-tank-par, {&delim-par}) .
           create tt-section .
-          assign
-              tt-section.dif     = integer(entry (1,v-section,{&delim-cmd})) no-error .  
-              tt-section.volume1 = decimal(entry (2,v-section,{&delim-cmd})) no-error . 
-              .
+          tt-section.dif     = integer(entry (1,v-section,{&delim-cmd})) no-error .  
+          tt-section.volume1 = decimal(entry (2,v-section,{&delim-cmd})) no-error . 
       end.
     end.
   
