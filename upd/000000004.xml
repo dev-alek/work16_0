@@ -1,28 +1,14 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <Root>
    <table-Code>
-   <record-Code>
+      <record-Code>
          <code>EMC</code>
          <CodeName>Справочник ЕМЦ</CodeName>
          <export_>yes</export_>
          <record-delete>no</record-delete>
          <status_>0</status_>
-      </record-Code>
+         <nwsgbd>yes</nwsgbd>
 
-
-        <record-Code>
-         <code>EMC</code>
-         <CodeName>Справочник ЕМЦ</CodeName>
-         <export_>yes</export_>
-         <record-delete>yes</record-delete>
-         <status_>0</status_>
-      </record-Code>
-        <record-Code>
-         <code>EMC</code>
-         <CodeName>Справочник ЕМЦ</CodeName>
-         <export_>yes</export_>
-         <record-delete>no</record-delete>
-         <status_>0</status_>
       </record-Code>
 
       <record-Code>
@@ -43,6 +29,8 @@
 			<parent>EMC001</parent>
 			<record-delete>no</record-delete>
 			<status_>0</status_>
+                        <nwsgbd>yes</nwsgbd>
+			
 	</record-Code>
    </table-Code>
 
