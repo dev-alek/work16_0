@@ -19,6 +19,8 @@ define variable vss-workfile{&vssseq}    as character no-undo init "$Workfile:$"
 define variable vss-archive{&vssseq}     as character no-undo init "$Archive:$":U .
 define variable vss-description{&vssseq} as character no-undo init "Работа С сокетом".
 {cmp\str-glbl.i}
+&scop CRLF chr(13) + chr(10)
+&scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 { gbl/waitfram.i }
 define variable mHSocket       as handle      no-undo.
 define variable mWebRespHead   as longchar    no-undo.
@@ -29,7 +31,9 @@ define variable mReturnXML     as logical     no-undo.
 define variable mSocetBegTime  as datetime-tz no-undo.
 define variable mSocetEndTime  as dec         no-undo.
 define variable mWriteRespFile as character   no-undo.
-
+if session:debug-alert
+then
+   mFileLogSocet = "socet.log".
 /*------------------------------------------------------------------------------
   Purpose: Процедура, которая формирует и отправляет POST отправляет запрос 
   Parameters: iHost            - ДНС имя хоста
@@ -325,35 +329,59 @@ procedure getResponse:
    run WaitFramRunPause (?).
    define variable vByte as int64 no-undo.
    define variable vNextMese as int64 no-undo init 100000.
+   define variable VFlag as logical no-undo init ? .
    mWaitFramStop = no.
    mWaitFramStopTimeOut = no.
    block-wait:
    do while mHSocket:get-bytes-available() > 0:
+      VFlag = no.
       define variable vNumByte as integer no-undo.
-      vNumByte = if mReturnXML and not vFlagTag then 1 else  mHSocket:get-bytes-available().
+      vNumByte = /* if mReturnXML and not vFlagTag then 1 else */  mHSocket:get-bytes-available().
       if vNumByte > 30000 then vNumByte = 30000.
       SET-SIZE(vResponse) = vNumByte + 1.
       SET-BYTE-ORDER(vResponse) = big-endian.
       
       mHSocket:read(vResponse,1,vNumByte).
-      vByte = vByte + vNumByte.
+      vMessage = vMessage + GET-STRING(vResponse,1).
       if  mReturnXML
       then do:
          /*Отсечение HTTP HEADER*/
-         if get-string(vResponse,1) =  "<" or vFlagTag 
-         then 
-            assign 
-               vFlagTag = true
-               mWebResp = mWebResp + GET-STRING(vResponse,1)
-            .
-         else
-            mWebResphead = mWebResphead + GET-STRING(vResponse,1).
+         vCnt = index(vMessage,{&carriage-return} + {&new-line} + {&carriage-return} + {&new-line}).
+         if vCnt > 0
+         then do:
+            mReturnXML = no.
+            mWebResphead = substring (vMessage,1,vCnt).
+            vMessage     = substring (vMessage,vCnt + 4).
+            mWebResphead = replace (mWebResphead,";",{&CRLF}).
+            do vi = 1 to num-entries(mWebResphead,{&CRLF}):
+               v-hd-line = trim(entry(vi,mWebResphead,{&CRLF})).
+/*                  v-querypar = right-trim (right-trim  (entry(n, v-header, "/"), "HTTP"), " ").*/
+               if  v-hd-line  begins "Content-Length"  then  do:
+                  
+                  v-cont-length = INT(trim(substring(v-hd-line,16,length(v-hd-line)))).
+               end.
+               else if v-hd-line  begins "Transfer-Encoding"
+               then do :
+                  define variable vChunked as logical no-undo.
+                  vchunked = index(v-hd-line,"chunked",19) > 0.
+               end.
+/*                  else if  v-hd-line  begins "content-type:"  then  do:             */
+/*                     v-cont-type = trim(substring(v-hd-line,14,length(v-hd-line))). */
+/*                  end.                                                              */
+/*                  else if  v-hd-line  begins "user-agent:"  then  do:               */
+/*                     v-user-agent = trim(substring(v-hd-line,13,length(v-hd-line))).*/
+/*                  end.                                                              */
+            end.
+         end. 
       end.
-      else do:
-         mWebResp = mWebResp + GET-STRING(vResponse,1).
-      end.
+      vByte = vByte + vNumByte.
+      SET-SIZE(vResponse) = 0.
+      if v-cont-length > 0 and length (vMessage) >= v-cont-length
+      then
+         leave block-wait.
       if not mHSocket:get-bytes-available() > 0
       then do:
+         VFlag = yes.
          run WaitFramRunPause (?).
          pause 1 no-message.      /* ответ приходит медленее чем мы читаем ответ */
       end.
@@ -363,32 +391,68 @@ procedure getResponse:
          mWaitFramTextEnd = substitute ("Получаем ответ прочитано &1 байт ",vByte) .
          run WaitFramRunPause (?). 
       end.
-      SET-SIZE(vResponse) = 0.
+       
       
       if mWaitFramStopTimeOut
       then do:
          mWebResp = "".
-         mHSocket:disconnect ().
+/*         mHSocket:disconnect ().*/
          leave block-wait.
       end.
    end.
+   if VFlag ne false
+   then
+      run writeLogSocet in this-procedure (substitute ("Завершена обработка &1",If VFlag eq  yes then " 0 байт за последнию секунду" else " пустой ответ(((")).
+   
+   
    mWaitFramStop = yes.
    run writeLogSocet         in this-procedure ("Получен ответ").
    run writeLogSocetOnlyText in this-procedure (mWebResphead).
-   run writeLogSocetOnlyText in this-procedure (mWebResp).
+   run writeLogSocetOnlyText in this-procedure (substitute("&1&2&1&2",{&carriage-return} , {&new-line} )).
+   run writeLogSocetOnlyText in this-procedure (vMessage).
    run writeLogSocetOnlyText in this-procedure (substitute("&1&2",{&carriage-return} , {&new-line} )).
+   mHSocket:disconnect() no-error.
    
-   if     vFlagTag
-      and R-INDEX(mWebResp,trim(">")) > 0
+   if v-cont-length > 0
    then
-      mWebResp = substring(mWebResp,1,r-index(mWebResp,trim(">"))).
+      mWebResp = substring (vMessage,1,v-cont-length).
+   else if vChunked
+   then do:
+      define variable vByteCopy as int64 no-undo init 1. 
+      Block-Copy:
+      do while length(vMessage) > 0:
+         vByteCopy = 1.
+         vCnt = index (vMessage,{&CRLF}) - 1.
+         vByteCopy = vByteCopy +  vCnt + 2.
+         v-cont-length = hex-to-int(string(substring (vMessage,1,vCnt))).
+         if v-cont-length eq 0
+         then
+            leave Block-copy.
+         mWebResp = mWebResp + substring (vMessage,vByteCopy,  v-cont-length).
+         vByteCopy = vByteCopy + v-cont-length + 2.
+         vMessage = substring  (vMessage,vByteCopy).
+      end.
+      run writeLogSocet         in this-procedure ("Заголовок").
+      run writeLogSocetOnlyText in this-procedure (mWebResphead).
+      run writeLogSocet         in this-procedure ("Тело ответа").
+      run writeLogSocetOnlyText in this-procedure (mWebResp).
+     run writeLogSocetOnlyText in this-procedure (substitute("&1&2",{&carriage-return} , {&new-line} )).
+   
+   end.
+   else
+      mWebResp = vMessage.
+   
+/*   if     vFlagTag                                                 */
+/*      and R-INDEX(mWebResp,trim(">")) > 0                          */
+/*   then                                                            */
+/*      mWebResp = substring(mWebResp,1,r-index(mWebResp,trim(">"))).*/
    mSocetEndTime = (now - mSocetBegTime) / 1000.
    if     mWriteRespFile ne ""
       and mWriteRespFile ne ?
    then
         run gbl/fileapnd.p
              ( mWriteRespFile
-             , mWebResp
+             , mWebResp + {&carriage-return} + {&new-line}
              ,input 10 /* время ожинания освобождения файла */
              ) no-error .
                           
@@ -426,3 +490,4 @@ procedure writeLogSocetOnlyText:
           ) no-error .
    end.
 end.
+
