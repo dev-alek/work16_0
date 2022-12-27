@@ -466,6 +466,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Тип маркировки */
 { cmp/cr-prep.i 1 attr-mark-type       mark-type     " " mark-type     }
 
+/* Тип ЕМРЦ */
+{ cmp/cr-prep.i 1 attr-emrc-type       emrc-type     " " emrc-type     }
+
 /* Признак предмета расчета */
 { cmp/cr-prep.i 1 attr-item-matter-mark     item-matter-mark     " " item-matter-mark     }
 
@@ -604,6 +607,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-ptrl-without-rvs}~
 ,{&bef-attr-office-type}~
 ,{&bef-attr-mark-type}~
+,{&bef-attr-emrc-type}~
 ,{&bef-attr-item-matter-mark}~
 ,{&bef-attr-group-np}~
 ,{&bef-attr-fuel-type}~

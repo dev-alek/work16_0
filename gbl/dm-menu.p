@@ -3585,6 +3585,21 @@ procedure m-okei-kkt-exe:
 
 end procedure. /* m-units-exe */
 
+procedure m-emrc-exe:
+
+  define variable rid#          as char     no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+run ref/emc.w(input  parparentproc
+      ,input  "b-add,b-del,b-upd"
+      ,output rid#).
+      
+  end.
+
+end procedure. /* m-emrc-exe */
+
 procedure m-tares-exe :
 
   define variable v-rid-list as character no-undo .

@@ -58,6 +58,7 @@ define variable vss-description as character no-undo init "Границы торговой наце
 { gbl/userobjs.i }
 { gbl/ggoattr.i  }
 { gbl/objsrv.i }
+{ ref/gds-attr.i }
 
 define variable v-host-name        like ub.clients.obj-name no-undo.
 define variable v-full-name        as character  no-undo .
@@ -87,18 +88,29 @@ define variable ix                 as integer    no-undo .
 
 /* Temp-Table and Buffer definitions                                    */
 define temp-table tt-level-dis-attr no-undo
-      field attr-code   like global-state-attr.attr-code
-      field attr-value  like global-state-attr.attr-value
-      index pi   attr-value descending
-      index pi1 is unique attr-value
-            attr-code .
+   field attr-code  like global-state-attr.attr-code
+   field attr-value like global-state-attr.attr-value
+   index pi            attr-value descending
+   index pi1 is unique attr-value
+   attr-code .
+
+DEFINE TEMP-TABLE tt-goods NO-UNDO LIKE goods
+   field emrc as character.
+
+define temp-table tt-emc-price no-undo 
+   field obj-code as integer 
+   field obj-type as character
+   field gds-name as character 
+   field gds-code as integer
+   field price    as decimal
+   .
 
 define temp-table temp_obj-list no-undo
-field host-code like ub.sysconf.host-code
-field obj-type as character
-field obj-code as integer
-index pi is primary unique obj-type obj-code
-.
+   field host-code like ub.sysconf.host-code
+   field obj-type  as character
+   field obj-code  as integer
+   index pi is primary unique obj-type obj-code
+   .
 define buffer buf_gds-grp-obj for ub.gds-grp-obj.
 
 /* _UIB-CODE-BLOCK-END */
@@ -148,14 +160,14 @@ define buffer buf_gds-grp-obj for ub.gds-grp-obj.
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help l-income-cli l-marg ~
 l-marg-pr-paraf l-rmethod l-increase-pc l-notcorr l-alc-min-price ~
 l-level-dis n-no-inc-auto-rep n-ban-sales-via-cd BR-temp_obj-list RS-option ~
-n-alchol n-mark fill-sum-grp r-sum-grp fi-increase-pc c-mark-type ~
+n-alchol n-mark fill-sum-grp r-sum-grp fi-increase-pc c-mark-type c-emrc-type ~
 fi-marg-min fi-marg-max S-round-method F-base fi-cli-type fi-cli-code r-cli ~
 fi-cli-name fi-notcorr fi-alc-min-price br-level-dis fi-marg-pr-paraf B-add ~
 B-chg B-del fi-grp-name n-increase-pc l-min l-max n-rmethod n-income-cli ~
 n-notcorr n-alc-min-price n-level-dis 
 &Scoped-Define DISPLAYED-OBJECTS n-no-inc-auto-rep n-ban-sales-via-cd ~
 RS-option n-alchol n-mark fill-sum-grp fi-increase-pc c-mark-type n-marg ~
-fi-marg-min fi-marg-max S-round-method F-base fi-cli-type fi-cli-code ~
+fi-marg-min fi-marg-max S-round-method F-base fi-cli-type fi-cli-code c-emrc-type~
 fi-cli-name fi-notcorr fi-alc-min-price n-marg-pr-paraf fi-marg-pr-paraf ~
 fi-grp-name n-increase-pc l-min l-max n-rmethod n-income-cli n-notcorr ~
 n-alc-min-price n-level-dis 
@@ -229,6 +241,12 @@ DEFINE VARIABLE c-mark-type AS CHARACTER FORMAT "X(256)":U
      LIST-ITEM-PAIRS "1","1"
      DROP-DOWN-LIST
      SIZE 22 BY 1 NO-UNDO.
+DEFINE VARIABLE c-emrc-type      AS CHARACTER FORMAT "X(256)":U 
+   LABEL "Тип ЕМЦ" 
+   VIEW-AS COMBO-BOX INNER-LINES 5
+   LIST-ITEM-PAIRS "1","1"
+   DROP-DOWN-LIST
+   SIZE 30 BY 1 NO-UNDO.
 
 DEFINE VARIABLE fi-notcorr AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS COMBO-BOX INNER-LINES 2
@@ -448,6 +466,7 @@ DEFINE FRAME Dialog-Frame
      r-sum-grp AT ROW 8 COL 101.13
      fi-increase-pc AT ROW 8.67 COL 31.88 RIGHT-ALIGNED NO-LABEL
      c-mark-type AT ROW 9.33 COL 79 COLON-ALIGNED WIDGET-ID 50
+     c-EMRC-type AT ROW 10.5 COL 79 COLON-ALIGNED WIDGET-ID 50
      n-marg AT ROW 10.29 COL 2.13 NO-LABEL
      fi-marg-min AT ROW 10.38 COL 32.13 RIGHT-ALIGNED NO-LABEL
      fi-marg-max AT ROW 11.38 COL 32.13 RIGHT-ALIGNED NO-LABEL
@@ -1412,7 +1431,8 @@ on error undo, return error
   define input parameter v-mark               as character                no-undo . 
   define input parameter v-sum-grp            as character                no-undo .
   define input parameter v-mark-type          as character                no-undo .  
-
+  define input parameter v-emrc-type          as character                no-undo .  
+  
   DEFINE VARIABLE v-node-code  like ub.gds-grp.node-code  no-undo .
   DEFINE VARIABLE v-upper-code like ub.gds-grp.upper-code no-undo .
   DEFINE VARIABLE v-delete     as logical                 no-undo .
@@ -1776,7 +1796,164 @@ end.
           undo, return error.
         end.
       end.  
-    end.
+
+/*Проверка на товары в группе с другим ЕМЦ*/
+               define buffer buf_goods-attr for ub.goods-attr .
+               define buffer buf_goods      for ub.goods .
+               define variable v-ask        as character no-undo .
+               define variable v-price-emc  as decimal   no-undo .
+               define variable v-value-emrc as character no-undo .
+               define variable v-type-emrc  as character no-undo .     
+               define variable v-del        as logical   no-undo .
+               define variable choice       as integer   no-undo .
+     
+      
+               empty temp-table tt-goods .
+               for each buf_goods no-lock where buf_goods.grp-code = p-node-code:
+                  run gds-attr-value (
+                     input   buf_goods.gds-code
+                     ,input   {&attr-emrc-type}
+                     ,output   v-value-emrc
+                     ,output   v-type-emrc
+                     ) no-error .
+                  if v-value-emrc <> v-emrc-type then 
+                  do:   
+                     create tt-goods .
+                     buffer-copy buf_goods to tt-goods .
+                     for first ub.Code where ub.Code.parent = "emc" and 
+                        ub.Code.Code = v-value-emrc no-lock:
+                        tt-goods.emrc = ub.Code.CodeName . 
+                     end.
+                  end.
+               end.
+               if can-find (first tt-goods) then 
+               do:
+                  run ref/emrc-mes.w (input parparentproc,
+                     input table tt-goods,
+                     output v-ask)  .
+               end.
+               case v-ask:
+                  when "cancel" then 
+                     do:
+                        leave .
+                     end.
+                  when "true" then 
+                     do:
+                        for each tt-goods:
+                           run gds-attr-delete IN THIS-PROCEDURE(
+                              input tt-goods.gds-code
+                              ,INPUT {&attr-emrc-type}
+                              ,output v-del ) .
+                        end.
+                     end.
+                  when "false" then 
+                     do:
+                     end.
+               end case .
+               find last ub.Code no-lock where ub.Code.parent = "emc" + {&delim-par} + v-emrc-type and  
+                  ub.Code.status_ = {&bef-current-status-int} and ub.Code.code <= iso-date(today) no-error .
+               if available (ub.Code) then 
+               do:
+                  run gbl/d-askw.w (
+                     input "Вопрос"
+                     ,input  "Проверить цены товара на соответствие ЕМЦ?"
+                     ,input "|"
+                     ,input "Да|Нет"
+                     ,input "Установить ЕМЦ и провести проверку по всем объектам|Установить ЕМЦ без проверки"
+                     ,input 1
+                     ,input 2
+                     ,output choice).
+                  if choice = 1 then 
+                  do:                     
+                     v-price-emc = decimal(ub.Code.CodeValue) .
+                     /* по всем магазинам */
+                     for each buf_clients no-lock where buf_clients.host-code = v-cntxt-host-code-obj and 
+                        buf_clients.obj-type = {&shop}: 
+                        for each buf_goods no-lock where buf_goods.grp-code = p-node-code,
+                           last ub.price-all no-lock where ub.price-all.gds-code = buf_goods.gds-code and 
+                           ub.price-all.obj-code = buf_clients.obj-code and
+                           ub.price-all.obj-type = buf_clients.obj-type and
+                           ub.price-all.main-indication = 0 and
+                           ub.price-all.type-price = 0:
+                           if ub.price-all.price-sale < v-price-emc then 
+                           do:
+                              create tt-emc-price .            
+                              assign
+                                 tt-emc-price.gds-name = buf_goods.gds-name
+                                 tt-emc-price.gds-code = buf_goods.gds-code
+                                 tt-emc-price.price    = ub.price-all.price-sale
+                                 tt-emc-price.obj-code = buf_clients.obj-code
+                                 tt-emc-price.obj-type = buf_clients.obj-type
+                                 .
+                           end.
+                        end.
+
+                     end.
+                     if can-find (first tt-emc-price) then 
+                     do:
+                        run print-list (input v-price-emc,
+                           input table tt-emc-price).
+
+                     end.    
+                     else 
+                     do:
+                        message "Несоответствий товаров по ЕМЦ - не найдено."
+                           view-as alert-box.
+                     end.    
+                  end.
+               end.
+               else 
+               do:
+                  if c-emrc-type <> "" then 
+                  do:
+                     find last ub.Code no-lock where ub.Code.parent = "emc" + {&delim-par} + v-emrc-type and  
+                        ub.Code.status_ = {&bef-current-status-int} and ub.Code.code > iso-date(today) no-error .
+                     if available (ub.Code) then 
+                     do:
+                        message "Для выбранного типа ЕМЦ установлено ограничение, которое станет активным только с " ub.Code.misc1
+                           view-as alert-box.
+                     end.
+                     else 
+                     do:
+                        message "Для выбранного типа ЕМЦ не установлено ни одного значения." skip
+                           "Для корректной работы добавьте актуальное значение ЕМЦ"
+                           view-as alert-box.
+                     end.
+                  end.
+               end.
+               
+               if v-emrc-type <> ""
+                  then 
+               do:      
+                  run ggoattr-write (
+                     input   p-node-code
+                     ,input   0
+                     ,input   ""
+                     ,input   0
+                     ,input   {&ggoattr-emrc-type}
+                     ,input   v-emrc-type
+                     ) no-error .
+                  if error-status :error then 
+                  do:
+                     undo, return error.
+                  end.
+               end.
+               else 
+               do: 
+                  run ggoattr-delete (
+                     input   p-node-code
+                     ,input   0
+                     ,input   ""
+                     ,input   0
+                     ,input   {&ggoattr-emrc-type}
+                     ,output  v-emrc-type
+                     ) no-error .
+                  if error-status :error then 
+                  do:
+                     undo, return error.
+                  end.
+               end.  
+            end.
     when {&company} then do:
       run grp-obj-write in this-procedure (
               input p-node-code
@@ -1993,7 +2170,6 @@ end.
           undo, return error.
         end.
       end.
-      
     end.
     when {&g___object} then do:
     run grp-obj-write in this-procedure (
@@ -2400,13 +2576,22 @@ end.
 
 v-list = trim(v-list, ",").
 c-mark-type:list-item-pairs in frame {&FRAME-NAME} = v-list.
+v-list = "".
+for each code where Code.parent eq "emc" no-lock:
+      v-list = v-list + "," + Code.CodeName + "," + Code.code.
+   end.
 
-if p-mode = {&add-def} OR p-mode = {&update} then do:
-    enable c-mark-type with frame {&FRAME-NAME}.
-end.
+   v-list = "," + v-list .
+   c-emrc-type:list-item-pairs in frame {&FRAME-NAME} = v-list.
+   if p-mode = {&add-def} OR p-mode = {&update} then 
+   do:
+      enable c-mark-type c-emrc-type with frame {&FRAME-NAME}.
+   end.
 
-display c-mark-type with frame {&FRAME-NAME}.
-
+   display c-mark-type c-emrc-type with frame {&FRAME-NAME}.
+   c-mark-type:visible in frame {&frame-name} = p-option eq "global". 
+   c-emrc-type:visible in frame {&frame-name} = p-option eq "global".
+  
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */

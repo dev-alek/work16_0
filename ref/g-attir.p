@@ -29,22 +29,23 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Запуск интерфейса редактирования глобальных атрибутов товара".
 { cmp/vssrevis.i }
-
 { cmp/str-glbl.i }
 define variable v-update-attr as logical no-undo .
 
-define temp-table tt0-goods-attr no-undo like ub.goods-attr.
+{ ref/g-attr-tt.i}
 define buffer buf_goods-attr for ub.goods-attr.
 define buffer locked_goods-attr for ub.goods-attr.
-
-do TRANSACTION
+define buffer goods          for ub.goods.
+      
+do transaction 
 on error undo, return error return-value
 on stop undo, return error return-value
 :
+
   for each tt0-goods-attr:
     delete tt0-goods-attr.
   end.
-  CASE p-mode:
+  case p-mode:
     when {&update} then do:
       do on error undo, return error :
         Find first locked_goods-attr exclusive-lock  where
@@ -66,13 +67,15 @@ on stop undo, return error return-value
             no-error .
         end.
       end.
-      FOR EACH buf_goods-attr no-lock  where
-              buf_goods-attr.gds-code = p-gds-code
-      on error undo, return error:
-        if buf_goods-attr.attr-code = {&attr-gds-attr-lock} then next.
-        CREATE tt0-goods-attr.
-        BUFFER-COPY buf_goods-attr TO tt0-goods-attr.
-      END.
+      for each buf_goods-attr no-lock where
+                 buf_goods-attr.gds-code = p-gds-code:
+             create tt0-goods-attr.
+             buffer-copy buf_goods-attr to tt0-goods-attr.
+      end.
+      find first goods where goods.gds-code eq p-gds-code no-lock no-error.
+      if available goods 
+      then
+         run addGdsGrpAttr (goods.gds-code, goods.grp-code).
       run ref/gds-atti.w (
                       input parparentproc
                     , input p-mode
@@ -94,12 +97,15 @@ on stop undo, return error return-value
       end.
     end. /*update*/
     when {&lookup} then do:
-      FOR EACH buf_goods-attr no-lock where
+      for each buf_goods-attr no-lock where
               buf_goods-attr.gds-code = p-gds-code:
-        if buf_goods-attr.attr-code = {&attr-gds-attr-lock} then next.
-          CREATE tt0-goods-attr.
-          BUFFER-COPY buf_goods-attr TO tt0-goods-attr.
-      END.
+          create tt0-goods-attr.
+          buffer-copy buf_goods-attr to tt0-goods-attr.
+      end.
+      find first goods where goods.gds-code eq p-gds-code no-lock no-error.
+      if available goods 
+      then
+         run addGdsGrpAttr (goods.gds-code, goods.grp-code).
       run ref/gds-atti.w (
                       input parparentproc
                     , input p-mode
@@ -120,5 +126,5 @@ on stop undo, return error return-value
         return error substitute("&1 &2", error-status:get-message(1) , return-value ).
       end.
     end. /*lookup*/
-  end CASE.
+  end case.
 end. /*doe*/

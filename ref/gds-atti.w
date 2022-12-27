@@ -15,13 +15,17 @@ DEFINE TEMP-TABLE temp-attr NO-UNDO LIKE ub.goods-attr
        field user-can-edit as log
        field code as char
        field value_ as char
+       field grp as logical
+       field fdisable as logical
        INDEX attrc is
        UNIQUE PRIMARY
        code
+       grp
        INDEX attrcl is UNIQUE
        attr-code
+       grp
        .
-DEFINE TEMP-TABLE tt0-goods-attr NO-UNDO LIKE ub.goods-attr.
+{ ref/g-attr-tt.i}
 
 
 
@@ -66,6 +70,9 @@ define variable vss-description as character no-undo init "Атрибуты товара".
 { ref/attr-pop.i proc }
 { gbl/objsrv.i }
    
+{ gbl/color.i }
+{ gbl/ggoattr.i  }
+
 define variable updated      as logical   no-undo .
 DEFINE VARIABLE added        as logical   no-undo .
 define variable add-option   as character no-undo .
@@ -107,8 +114,8 @@ define buffer buf_db for ub.db.
 &Scoped-define FIELDS-IN-QUERY-br-attr temp-attr.attr-code ~
 temp-attr.attr-value
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-attr
-&Scoped-define QUERY-STRING-br-attr FOR EACH temp-attr NO-LOCK
-&Scoped-define OPEN-QUERY-br-attr OPEN QUERY br-attr FOR EACH temp-attr NO-LOCK.
+&Scoped-define QUERY-STRING-br-attr FOR EACH temp-attr no-lock where temp-attr.fdisable ne yes
+&Scoped-define OPEN-QUERY-br-attr OPEN QUERY br-attr FOR EACH temp-attr no-lock where temp-attr.fdisable ne yes.
 &Scoped-define TABLES-IN-QUERY-br-attr temp-attr
 &Scoped-define FIRST-TABLE-IN-QUERY-br-attr temp-attr
 
@@ -339,6 +346,7 @@ DO:
     return no-apply.
   end.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  apply "VALUE-CHANGED" to br-attr IN frame {&frame-name}.
   find first buf_temp-attr no-lock where
              buf_temp-attr.code = add-option no-error.
   add-option = "":U.
@@ -352,6 +360,34 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-attr Dialog-Frame
+ON ROW-DISPLAY OF br-attr IN FRAME Dialog-Frame
+DO:
+   define buffer buf_temp-attr for temp-attr.
+   define variable vColor as integer no-undo.
+   if available (temp-attr) 
+   then do:
+      if temp-attr.grp eq no
+      then
+         find first buf_temp-attr where buf_temp-attr.gds-code  eq temp-attr.gds-code
+                                    and buf_temp-attr.attr-code eq temp-attr.attr-code
+                                    and buf_temp-attr.grp       ne temp-attr.grp
+         no-lock no-error.
+      
+      vColor = if temp-attr.grp
+               then GRAY_COLOR
+               else if available buf_temp-attr
+               then (if buf_temp-attr.attr-value eq temp-attr.attr-value
+                    then LIGHT_RED_COLOR
+                    else DARK_GREY_COLOR)
+               else BLACK_COLOR.
+      temp-attr.attr-value:fGCOLOR in browse br-attr = vColor.
+      temp-attr.attr-code:fGCOLOR in browse br-attr = vColor. 
+   end.
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg Dialog-Frame
@@ -371,6 +407,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del Dialog-Frame
 ON CHOOSE OF b-del IN FRAME Dialog-Frame /* Удалить */
 DO:
+define buffer buf_temp-attr for temp-attr.
 define variable loc#log             as logical   no-undo .
 define variable attr-type           as character no-undo . /*тип атрибута*/
 define variable attr-format         as character no-undo . /* формат атрибута*/
@@ -426,7 +463,7 @@ define variable v-error-code        as character no-undo .
     return no-apply.     
   end.   
   run gds-attr-name in this-procedure (
-                                        input  temp-attr.code           /* p-code           */
+                                         input  temp-attr.code      /* p-code           */
                                         ,output attr-type           /* p-type           */
                                         ,output attr-format         /* p-format         */
                                         ,output attr-label          /* p-label          */
@@ -480,9 +517,17 @@ define variable v-error-code        as character no-undo .
   " для товара " goods-dsc-name
   view-as alert-box QUESTIOn buttons YES-NO update loc#log.
   if NOT loc#log then return no-apply.
+  find first buf_temp-attr where buf_temp-attr.gds-code eq temp-attr.gds-code
+                             and buf_temp-attr.code     eq temp-attr.code
+                             and buf_temp-attr.grp no-error.
+  if available buf_temp-attr
+  then
+     buf_temp-attr.fdisable = no.
   delete temp-attr.
   updated = yes.
  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+ apply "VALUE-CHANGED" to br-attr IN frame {&frame-name}.
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -494,15 +539,9 @@ END.
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
    RUN proc-save IN THIS-PROCEDURE NO-ERROR.
-   IF ERROR-STATUS:ERROR THEN 
-   DO:
-      RETURN NO-APPLY.
-   END.
-   define variable v-ban-recipes as logical no-undo .
-   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
-   if v-ban-recipes then 
-   do: 
-   end.
+  IF ERROR-STATUS:ERROR THEN DO:
+     RETURN NO-APPLY.
+  END.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -536,6 +575,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-attr Dialog-Frame
+ON VALUE-CHANGED OF br-attr IN FRAME Dialog-Frame
+DO:
+   if p-mode ne {&lookup}
+   then do:
+      b-chg:visible = available temp-attr and not temp-attr.grp.
+      b-del:visible = available temp-attr and not temp-attr.grp.
+   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-attr Dialog-Frame
 ON RETURN OF br-attr IN FRAME Dialog-Frame
@@ -606,6 +657,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   { ref/attr-pop.i prepare }
   RUN MyEnable in this-procedure .
   Run init-proc in this-procedure .
+  apply "VALUE-CHANGED" to br-attr IN frame {&frame-name}.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI in this-procedure .
@@ -685,11 +737,11 @@ define var  attr-other as char no-undo .              /* еще чего - нибудь */
 define buffer buf_goods for ub.goods.
 define buffer buf_clients for ub.clients.
 define buffer buf_prods for ub.clients.
-for each  temp-attr share-lock:
+
+
   if p-mode = {&update}  then.
-  else
-  delete temp-attr.
-end.
+  else empty temp-table temp-attr.
+
 if p-mode <> {&add-def} then do:
   find first buf_goods where
            buf_goods.gds-code =  p-gds-code no-lock no-error .
@@ -722,7 +774,8 @@ end.
     if attr-output-display = true then DO:
       find first temp-attr where
                 temp-attr.code = tt0-goods-attr.attr-code
-            AND temp-attr.gds-code = tt0-goods-attr.gds-code no-error.
+            AND temp-attr.gds-code = tt0-goods-attr.gds-code
+            and temp-attr.grp      = tt0-goods-attr.grp no-error.
       if not available temp-attr then do:
         create temp-attr.
         assign
@@ -734,11 +787,17 @@ end.
         temp-attr.user-can-edit = attr-user-can-edit
         temp-attr.code = tt0-goods-attr.attr-code
         temp-attr.gds-code = tt0-goods-attr.gds-code
+        temp-attr.grp      = tt0-goods-attr.grp
+        temp-attr.fdisable = tt0-goods-attr.fdisable
+        
         .
+        
       end.
     End.
   End.   /* FOR EACH */
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  apply "VALUE-CHANGED" to br-attr IN frame {&frame-name}.
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -754,6 +813,7 @@ ASSIGN
 temp-attr.attr-code:resizable in browse br-attr = yes
 temp-attr.attr-value:resizable in browse br-attr = yes.
 .
+
 if p-mode <> {&lookup} then do:
   run attr-pop-create-items in this-procedure  (
                                                 input {&table_goods-attr}
@@ -822,7 +882,6 @@ ASSIGN b-add:MENU-MOUSE = 1.
 /*  end.                                                                 */
 /*end.                                                                   */
 
-
 {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 APPLY "ENTRY" to br-attr.
 END PROCEDURE.
@@ -857,6 +916,8 @@ DEFINE VARIABLE v-deleted as logical no-undo .
 define variable v-check as character no-undo .
 define variable v-error-code as character no-undo .
 define variable v-correct as logical no-undo .
+define variable v-attr-entry as character no-undo .
+define buffer buf_temp-attr for temp-attr.
 CASE p-add:
   when yes then do:
     if p-mode <> {&add-def} then do:
@@ -887,9 +948,10 @@ CASE p-add:
     assign
     added = yes.
     do jj = 1 to num-entries(attr-other, {&slash-char}):
-      if entry(1, entry(jj, attr-other, {&slash-char}), "=":U) = "init":U then do:
+      v-attr-entry = entry(jj, attr-other, {&slash-char}) .
+      if entry(1, v-attr-entry, "=":U) = "init":U then do:
         assign
-        v-init = string(entry(2, entry(jj, attr-other, {&slash-char}), "=":U))
+        v-init = string(entry(2, v-attr-entry, "=":U))
         .
       end.
     end. /*jj*/
@@ -959,26 +1021,27 @@ CASE p-add:
 END CASE.
 IF attr-user-can-edit Then DO:
   do jj = 1 to num-entries(attr-other, {&slash-char}):
-    if entry(1, entry(jj, attr-other, {&slash-char}), "=":U) = "spr":U
+    v-attr-entry = entry(jj, attr-other, {&slash-char}) .
+    if entry(1, v-attr-entry, "=":U) = "spr":U
     then do:
       assign
-      v-spr = string(entry(2, entry(jj, attr-other, {&slash-char}), "=":U))
+      v-spr = string(entry(2, v-attr-entry, "=":U))
       .
     end.
-    if  entry(1, entry(jj, attr-other, {&slash-char}), "=":U) = "spr-ext":U
+    if  entry(1, v-attr-entry, "=":U) = "spr-ext":U
     then do:
       assign
-      v-spr-ext = string(entry(2, entry(jj, attr-other, {&slash-char}), "=":U))
+      v-spr-ext = string(entry(2, v-attr-entry, "=":U))
       .
     end.
-    if entry(1, entry(jj, attr-other, {&slash-char}), "=":U) = "spr-param":U then do:
+    if entry(1, v-attr-entry, "=":U) = "spr-param":U then do:
       assign
-      v-spr-param = string(entry(2, entry(jj, attr-other, {&slash-char}), "=":U))
+      v-spr-param = string(entry(2, v-attr-entry, "=":U))
       .
     end.
-    if entry(1, entry(jj, attr-other, {&slash-char}), "=":U) = "check":U then do:
+    if entry(1, v-attr-entry, "=":U) = "check":U then do:
       assign
-      v-check = string(entry(2, entry(jj, attr-other, {&slash-char}), "=":U))
+      v-check = string(entry(2, v-attr-entry, "=":U))
       .
     end.
   end.
@@ -1102,6 +1165,15 @@ IF attr-user-can-edit Then DO:
       assign
       updated = yes
       .
+     if p-add 
+     then do:
+        find first buf_temp-attr where buf_temp-attr.gds-code eq p-gds-code
+                                   and buf_temp-attr.code     eq add-option
+                                   and buf_temp-attr.grp no-error.
+        if available buf_temp-attr
+        then
+           buf_temp-attr.fdisable = yes.
+     end.
      br-attr:refresh() in frame {&frame-name} no-error .
   END.
   assign
@@ -1152,22 +1224,22 @@ END.
 if v-run-name = "" then next.
 if v-spr-param = '':U then do:
   run value(v-run-name) (
-                                           input {&lookup}
-                                          ,input p-gds-code
-                                          ,input-output temp-attr.value_
-                                          ,output v-setted
-                                            )
-                                            no-error .
+                         input {&lookup}
+                        ,input p-gds-code
+                        ,input-output temp-attr.value_
+                        ,output v-setted
+                          )
+                        no-error .
 end.
 else do:
   run value(v-run-name) (
-                                           input {&lookup}
-                                          ,input p-gds-code
-                                          ,input v-spr-param
-                                          ,input-output temp-attr.value_
-                                          ,output v-setted
-                                            )
-                                            no-error .
+                         input {&lookup}
+                        ,input p-gds-code
+                        ,input v-spr-param
+                        ,input-output temp-attr.value_
+                        ,output v-setted
+                          )
+                        no-error .
 end.
 if error-status:error then do:
   message error-status:get-message(1)  skip
@@ -1176,7 +1248,6 @@ if error-status:error then do:
   undo, return error .
 end.
 return .
-
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1195,11 +1266,19 @@ define variable v-deleted as logical no-undo .
 define variable v-updated-str as character no-undo .
 define variable v-type as character no-undo .
 define variable v-issue-host-code like ub.sysconf.host-code no-undo .
+define variable v-emrc-type as character no-undo .
+define variable v-emrc-value as character no-undo .
+
+define buffer buf_goods for ub.goods .
+
 for each temp-attr NO-LOCK where
-         temp-attr.gds-code = p-gds-code:
+         temp-attr.gds-code = p-gds-code
+     and temp-attr.grp  ne yes       :
    find first tt0-goods-attr NO-LOCK WHERE
           tt0-goods-attr.gds-code = temp-attr.gds-code
-    AND   tt0-goods-attr.attr-code = temp-attr.code no-error.
+    AND   tt0-goods-attr.attr-code = temp-attr.code 
+    AND   tt0-goods-attr.grp       = temp-attr.grp
+    no-error.
   assign
   v-updated = no.
   if available  tt0-goods-attr then do:
@@ -1217,6 +1296,48 @@ for each temp-attr NO-LOCK where
     v-updated = yes.
   end.
   if v-updated then do:
+     if temp-attr.code = {&attr-emrc-type} then 
+     do:
+        for first buf_goods no-lock where buf_goods.gds-code = p-gds-code:
+           run ggoattr-value (
+              input   buf_goods.grp-code
+              ,input   0
+              ,input   ""
+              ,input   0
+              ,input   {&ggoattr-emrc-type}
+              ,output   v-emrc-value
+              ,output   v-emrc-type 
+              ) no-error .
+
+        end.
+        if v-emrc-value <> temp-attr.value_ then 
+        do:
+           message "Для товара и группы установлено отличное значение «тип ЕМЦ»" skip
+              "Наследовать «тип ЕМЦ» группы?" skip
+              view-as alert-box question buttons yes-no update choice as logical . 
+           case choice:
+              when true then
+                 temp-attr.value_ = v-emrc-value .
+           end case.
+        end.
+
+        find last ub.Code no-lock where ub.Code.parent = "emc" + {&delim-par} + temp-attr.value_ and  
+           ub.Code.status_ = {&bef-current-status-int} and ub.Code.code <= iso-date(today) no-error .
+        if available (ub.Code) then 
+        do:
+           for last ub.price-all no-lock where ub.price-all.gds-code = p-gds-code and 
+              /*         ub.price-all.obj-code = temp_obj-list.obj-code and*/
+              /*         ub.price-all.obj-type = temp_obj-list.obj-type and*/
+              ub.price-all.main-indication = 0 and
+              ub.price-all.type-price = 0:
+              if ub.price-all.price-sale < decimal(ub.Code.CodeValue) then 
+              do:
+                 message "Стоимость товара в базе ниже установленной ЕМЦ. Продажа товара по цене базы запрещена."
+                    view-as alert-box .   
+              end.
+           end.
+        end.
+     end.
     run tt0-gds-attr-write in this-procedure (
                                                input p-gds-code
                                               ,input temp-attr.code
@@ -1230,16 +1351,19 @@ for each temp-attr NO-LOCK where
       undo, return error  .
     end.
     updated = yes.
-    
   end.
   ASSIGN
   p-updated = v-updated OR p-updated.
 End.
 FOR EACH tt0-goods-attr where
-         tt0-goods-attr.gds-code = p-gds-code:
+         tt0-goods-attr.gds-code = p-gds-code
+     and tt0-goods-attr.grp ne yes:
   FIND FIRST temp-attr NO-LOCK WHERE
             temp-attr.gds-code = tt0-goods-attr.gds-code
-        AND temp-attr.code = tt0-goods-attr.attr-code NO-ERROR.
+        AND temp-attr.code = tt0-goods-attr.attr-code 
+        AND temp-attr.grp = tt0-goods-attr.grp 
+        
+        NO-ERROR.
     IF NOT AVAILABLE temp-attr THEN DO:
       DELETE tt0-goods-attr.
       assign
@@ -1266,7 +1390,6 @@ and p-update-instantly then do:
     undo, return error .
   end.
 end.
-
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1361,7 +1484,8 @@ PROCEDURE temp-gds-attr-write :
     end.
     find first buf_temp-attr exclusive-lock where
                buf_temp-attr.gds-code  = p-gds-code AND
-               buf_temp-attr.code      = p-code no-error no-wait .
+               buf_temp-attr.code      = p-code     and 
+               buf_temp-attr.grp ne yes no-error .
     if not available buf_temp-attr then do:
       create buf_temp-attr .
       assign
@@ -1424,7 +1548,9 @@ PROCEDURE tt0-gds-attr-write :
 
     find first buf_tt0-goods-attr exclusive-lock where
                buf_tt0-goods-attr.gds-code  = p-gds-code AND
-               buf_tt0-goods-attr.attr-code = p-code no-error .
+               buf_tt0-goods-attr.attr-code = p-code     and
+               buf_tt0-goods-attr.grp ne yes 
+               no-error .
     if not available buf_tt0-goods-attr then do:
       create buf_tt0-goods-attr .
       assign

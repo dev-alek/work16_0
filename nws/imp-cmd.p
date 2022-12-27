@@ -914,6 +914,67 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 delete ub.prod-bc.
               end.
             end.
+            when {&table_prod-bc-attr} then do:
+               find first ub.prod-bc-attr
+                where rowid( ub.prod-bc-attr ) = v-tbl-row
+                no-error.
+               if available ub.prod-bc-attr then do:
+                  find first ub.prod-bc where ub.prod-bc.b-code eq ub.prod-bc-attr.b-code
+                                          and ub.prod-bc.b-str  eq ub.prod-bc-attr.b-str
+                  no-lock no-error.
+                  find first ub.bar-code where ub.bar-code.b-code eq ub.prod-bc-attr.b-code
+                  no-lock no-error.
+                  if     avail prod-bc
+                     and avail bar-code
+                  then
+                     run fill-pbc-list in p-imp-handle (
+                                                        input recid(prod-bc)
+                                                      , input bar-code.gds-code
+                                                      , input prod-bc.b-code
+                                                      , input prod-bc.b-str
+                                                      , input prod-bc.bc-on
+                                                      , input (if    bar-code.stts = {&bef-hn-delete}
+                                                                  or prod-bc.bc-on = no
+                                                                  or bar-code.stts_ = {&bef-hn-switch-off}
+                                                               then yes
+                                                               else no)
+                                                                 ).
+                  
+                delete ub.prod-bc-attr.
+              end.
+            end.
+            when {&table_goods-attr} then do:
+               find first ub.goods-attr
+                  where rowid( ub.goods-attr ) = v-tbl-row
+               no-error.
+               if available ub.goods-attr then do:
+                  &scop proc-name gds-attr-name
+                 {&run_proc_attr-lib}
+                    ( input  goods-attr.attr-code
+                     ,output v-type
+                     ,output v-format
+                     ,output v-label
+                     ,output v-user-can-edit
+                     ,output v-output-display
+                     ,output v-other
+                   ) .
+                   _do:
+                   do jj = 1 to num-entries(v-other, {&slash-char}):
+                      assign
+                        v-dop1 = entry(1, entry(jj, v-other, {&slash-char}), '=':U)
+                      .
+                      if v-dop1 = "cd":U then do:
+                          run fill-g-list in p-imp-handle ( input goods-attr.gds-code
+                                                           ,input ""
+                                                           ,input 0
+                                                          ).
+
+                          LEAVE _do.
+                      end.
+                  end.
+                  delete ub.goods-attr.
+               end.
+            end.
             when {&table_fin-code-cor-acc} then do:
               find first ub.fin-code-cor-acc
                 where rowid( ub.fin-code-cor-acc ) = v-tbl-row
@@ -1220,7 +1281,18 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                  end.
               end.
             end.
-
+            when {&table_code} then 
+            do:
+               find first ub.code
+                      where rowid( ub.code ) = v-tbl-row
+                no-error.
+                if available ub.code then 
+                do:
+                   run fill-code in p-imp-handle (ub.code.parent,
+                                                  ub.code.code).
+                   delete ub.code.
+               end.
+            end.
             when {&table_db}
             or when {&table_db-attr}
             or when {&table_alc-sale-lic}
@@ -1319,7 +1391,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_c-point-io}
             or when {&table_price-all}
             or when {&table_prod-bc-db}
-            or when {&table_prod-bc-attr}
             or when {&table_schedule}
             or when {&table_schedule-attr}
             or when {&table_action-post}
@@ -1440,7 +1511,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_devisPC-attr}
             or when {&table_utd}
             or when {&table_marking-lines}
-            or when {&table_code}
             then do:
               run nws/del-rec.p
                 ( input v-key-rec

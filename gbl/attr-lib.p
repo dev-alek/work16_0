@@ -6205,6 +6205,19 @@ end procedure.
 &scop manual-edit-attr-mark-type 1
 &scop batch-edit-attr-mark-type  1
 
+&scop type-attr-emrc-type {&type-char}
+&scop format-attr-emrc-type  "X(50)"
+&scop label-attr-emrc-type   "Тип ЕМЦ"
+&scop tooltip-attr-emrc-type   "Тип ЕМЦ"
+&scop user-can-edit-attr-emrc-type  true
+&scop output-display-attr-emrc-type  true
+&scop other-attr-emrc-type  "cd/spr-ext=ref\emrc-type.w/spr-param=emrc-type/check=gds-attr_check-emrc-type"
+&scop news-attr-emrc-type true
+&scop copy-attr-emrc-type  true
+&scop manual-edit-attr-emrc-type 1
+&scop batch-edit-attr-emrc-type  1
+
+
 &scop type-attr-item-matter-mark {&type-int}
 &scop format-attr-item-matter-mark  ">9"
 &scop label-attr-item-matter-mark   "Признак предмета расчета"
@@ -6735,6 +6748,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-mark-type
       {&attr-temp-full-code}
+      &scop attr-code attr-emrc-type
+      {&attr-temp-full-code}
       &scop attr-code attr-item-matter-mark
       {&attr-temp-full-code}
       &scop attr-code attr-cash-book-id
@@ -6843,6 +6858,8 @@ do
       {&attr-temp-code}
       &scop attr-code attr-mark-type
       {&attr-temp-code}      
+      &scop attr-code attr-emrc-type
+      {&attr-temp-code}      
       &scop attr-code attr-item-matter-mark
       {&attr-temp-code}
       &scop attr-code attr-cash-book-id
@@ -6939,6 +6956,7 @@ do
   define output parameter p-value    as character no-undo .  /* значение атрибута */
   define output parameter p-type     as character no-undo .
 
+  define buffer goods          for ub.goods.
   define buffer buf-goods-attr for ub.goods-attr.
 
   define variable v-format         as character no-undo .
@@ -6968,11 +6986,27 @@ do
     p-value = buf-goods-attr.attr-value.
    end.
    else do:
-    assign
-    p-value = if p-type = {&type-log} then "no":U else "".
-   end.
+      find first goods where goods.gds-code eq p-gds-code no-lock no-error.
+      if available goods
+      then do:
+         /* вернет ошибку если не известный атрибут группы */
+         run ggoattr-value (input  goods.grp-code,
+                            input  0,
+                            input  "",
+                            input  0,
+                            input  p-code,
+                            output p-value,
+                            output p-type) no-error.
+         if error-status:error
+         then 
+            p-value = if p-type = {&type-log} then "no":U else "".
+     end.
+     else 
+        p-value = if p-type = {&type-log} then "no":U else "". 
+     end.   
 end.
 end procedure.
+
 
 procedure gds-attr-write :
 
@@ -7186,6 +7220,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-mark-type
       {&attr-news-code}
+      &scop attr-code attr-emrc-type
+      {&attr-news-code}
       &scop attr-code attr-item-matter-mark
       {&attr-news-code}
       &scop attr-code attr-cash-book-id
@@ -7287,6 +7323,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-office-type
       {&attr-copy-code}
       &scop attr-code attr-mark-type
+      {&attr-copy-code}
+      &scop attr-code attr-emrc-type
       {&attr-copy-code}
       &scop attr-code attr-item-matter-mark
       {&attr-copy-code}
@@ -7583,6 +7621,38 @@ end.
 assign
 p-correct = yes.
 end procedure.
+
+procedure gds-attr_check-emrc-type :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+define buffer buf_code for ub.code.
+do
+on error undo, return error return-value
+:
+  if   ( p-mode eq {&add-def} 
+     or p-mode eq {&update})
+     and p-value ne "" 
+     
+  then do:
+     find first buf_code  where buf_code.parent = "EMC"
+                            and buf_code.code   = p-value
+     no-lock no-error .
+     if not available buf_code then do:
+        return error substitute("Нет такой группы в спрочнике ЕМЦ.").
+     end.
+      
+  end.
+end.
+assign
+p-correct = yes.
+end procedure.
+
 
 procedure gds-attr_check-item-matter-mark :
 define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
@@ -7979,6 +8049,9 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-mark-type
       {&attr-manual-edit-code}
+      &scop attr-code attr-emrc-type
+      {&attr-manual-edit-code}
+      
       &scop attr-code attr-item-matter-mark
       {&attr-manual-edit-code}
       &scop attr-code attr-cash-book-id
@@ -8081,6 +8154,8 @@ do
       &scop attr-code attr-office-type
       {&attr-batch-edit-code}
       &scop attr-code attr-mark-type
+      {&attr-batch-edit-code}
+      &scop attr-code attr-emrc-type
       {&attr-batch-edit-code}
       &scop attr-code attr-item-matter-mark
       {&attr-batch-edit-code}
@@ -15970,6 +16045,18 @@ end procedure.
 &scop manual-edit-ggoattr-mark-type 0
 &scop batch-edit-ggoattr-mark-type 0
 
+/* По умолчанию тип маркировки */
+&scop type-ggoattr-emrc-type {&type-char}
+&scop format-ggoattr-emrc-type "X(256)"
+&scop label-ggoattr-emrc-type "Тип маркировки"
+&scop tooltip-ggoattr-emrc-type "Тип маркировки"
+&scop user-can-edit-ggoattr-emrc-type  false
+&scop output-display-ggoattr-emrc-type true
+&scop other-ggoattr-emrc-type '':u
+&scop news-ggoattr-emrc-type true
+&scop manual-edit-ggoattr-emrc-type 0
+&scop batch-edit-ggoattr-emrc-type 0
+
 /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
 
 &scop attr-temp-code ~
@@ -16046,6 +16133,8 @@ procedure ggoattr-code :
       {&attr-temp-full-code}
       &scop attr-code ggoattr-mark-type
       {&attr-temp-full-code}      
+      &scop attr-code ggoattr-emrc-type
+      {&attr-temp-full-code}      
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
         undo, return error substitute("неизвестный атрибут группы товаров на объекте &1", p-code) .
@@ -16083,6 +16172,8 @@ procedure ggoattr-tooltip :
       &scop attr-code ggoattr-sum-grps
       {&attr-temp-code}
       &scop attr-code ggoattr-mark-type
+      {&attr-temp-code}
+      &scop attr-code ggoattr-emrc-type
       {&attr-temp-code}
       /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
       otherwise do:
@@ -16392,6 +16483,8 @@ procedure ggoattr-news :
       {&attr-news-code}
       &scop attr-code ggoattr-mark-type
       {&attr-news-code}
+      &scop attr-code ggoattr-emrc-type
+      {&attr-news-code}
       /* сюда добавлять новые параметры атрибуты группы товаров на объекте */
       otherwise do:
         undo, return error substitute("неизвестный атрибут группы товаров на объекте &1", p-code) .
@@ -16520,6 +16613,8 @@ procedure assmatat-code :
       &scop attr-code ggoattr-sum-grps
       {&attr-temp-full-code}
       &scop attr-code ggoattr-mark-type
+      {&attr-temp-full-code}
+      &scop attr-code ggoattr-emrc-type
       {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
