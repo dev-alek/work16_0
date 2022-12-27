@@ -763,13 +763,17 @@ if ( varis-fin = "yes":u
           then do:
             message "Выбранный договор поставки закрыт или истёк срок его действия, оформить возврат невозможно. Обратитесь в офис для корректировки договора." view-as alert-box .
             run check-cli no-error.
-            if error-status :error then return error .
+            if error-status :error
+            then return error .
+            else return .
           end .
           if bf_contract.spec-check = 0
           then do :
             message "Для выбранного договора поставки не определена схема возврата, оформить возврат невозможно. Обратитесь в офис для корректировки договора." view-as alert-box .
             run check-cli no-error.
-            if error-status :error then return error .
+            if error-status :error
+            then return error .
+            else return .
           end .
         end .
         

@@ -354,7 +354,7 @@ do
             if v-kitchen-rest = yes
                then 
             do:
-               /*Проверка рецепта по макировке*/
+               /*Проверка рецепта по макировке
                if v-ban-altr or v-ban-recipes then 
                do:
                   /*проверка */
@@ -466,7 +466,8 @@ do
                         end.
                      end.
                   end.
-               end.                         
+               end.   
+               */                      
 
                run fbrrest-get-free-qnty in this-procedure (
                   input temp_fbr-objects.obj-type
@@ -562,6 +563,116 @@ do
             find first buf_recipe no-lock
                where buf_recipe.recipe-code = v-out-recipe-code
                .
+            if v-ban-altr or v-ban-recipes
+            then do:
+                /*проверка */
+               if buf_recipe.recipe-type = {&manufacturing} and v-ban-recipes then
+               do:
+                  for each ub.recipe-gds no-lock where ub.recipe-gds.recipe-code = buf_recipe.recipe-code:
+                     run gds-attr-value in this-procedure  ( input  ub.recipe-gds.gds-code
+                        , input  {&attr-mark-type}
+                        , output v-attr-value
+                        , output v-attr-type
+                        ) no-error .
+                     if v-attr-value <> "" and v-attr-value <> "not-type" then
+                     do:
+                        v-mess =  "Рецепт производства " + buf_recipe.recipe-code + " " + buf_recipe.recipe-name + " содержит маркированный товар." .
+                        run write-log in p-log-handle (
+                           input 5
+                           , input v-mess
+                           ).
+                        run writelog in this-procedure (
+                           input log-file-name
+                           , input 0
+                           , input v-mess
+                           ).
+                        undo create-by-recipe, next create-by-recipe.
+                     end.
+                  end.
+               end.
+               if buf_recipe.recipe-type = {&alternative} and v-ban-altr then
+               do:
+                  for first buf_goods no-lock where buf_goods.gds-code = buf_recipe.gds-code,
+                     first ub.gds-grp exclusive-lock where ub.gds-grp.node-code = buf_goods.grp-code:
+                     run ggoattr-value (
+                        input   ub.gds-grp.node-code
+                        ,input   buf_recipe.host-code
+                        ,input   buf_recipe.obj-type
+                        ,input   buf_recipe.obj-code
+                        ,input   {&ggoattr-ban-sales-via-cd}
+                        ,output   v-value
+                        ,output   v-type
+                        ) no-error .
+                     if error-status :error then
+                     do:
+                        undo, return error.
+                     end.
+                     if v-value <> "yes" and v-value <> "true" then
+                     do:
+                        run ggoattr-value (
+                           input   ub.gds-grp.node-code
+                           ,input   0
+                           ,input   ""
+                           ,input   0
+                           ,input   {&ggoattr-ban-sales-via-cd}
+                           ,output   v-value
+                           ,output   v-type
+                           ) no-error .
+                        if error-status :error then
+                        do:
+                           undo, return error.
+                        end.
+                        if v-value <> "yes" and v-value <> "true" then
+                        do:
+                           v-mess =  "Рецепт альтернатива " + buf_recipe.recipe-code + " " + buf_recipe.recipe-name + {&new-line} + "входит в группу, у которой не установлен атрибут: " + {&new-line} + "Запрет передачи на кассу." .
+                           run write-log in p-log-handle (
+                              input 5
+                              , input v-mess
+                              ).
+                           run writelog in this-procedure (
+                              input log-file-name
+                              , input 0
+                              , input v-mess
+                              ).
+                           undo create-by-recipe, next create-by-recipe.
+                        end.
+                     end.
+                  end.
+               end.
+               if buf_recipe.recipe-type = {&gathering} and v-ban-recipes then
+               do:
+                  for each ub.recipe-gds no-lock where ub.recipe-gds.recipe-code = buf_recipe.recipe-code:
+                     run gds-attr-value in this-procedure  ( input  ub.recipe-gds.gds-code
+                        , input  {&attr-mark-type}
+                        , output v-attr-value
+                        , output v-attr-type
+                        ) no-error .
+                     if v-attr-value <> "" and v-attr-value <> "not-type" then
+                     do:
+                        run gds-attr-value in this-procedure  ( input  buf_recipe.gds-code
+                           , input  {&attr-mark-type}
+                           , output v-attr-value-rec
+                           , output v-attr-type
+                           ) no-error .
+                        if v-attr-value-rec = "" or v-attr-value-rec = "not-type" then
+                        do:
+                           v-mess =   "Рецепт комплектации " + buf_recipe.recipe-code + " " + buf_recipe.recipe-name + " должен быть маркированным." .
+                           run write-log in p-log-handle (
+                              input 5
+                              , input v-mess
+                              ).
+                           run writelog in this-procedure (
+                              input log-file-name
+                              , input 0
+                              , input v-mess
+                              ).
+                           undo create-by-recipe, next create-by-recipe.
+                        end.
+                        else leave.
+                     end.
+                  end.
+               end.
+            end.
             run create-initial-temp-goods in this-procedure (
                input v-fbr-doc-code
                , input buf_goods.artic

@@ -387,7 +387,7 @@ define variable v-mode-name                 as character no-undo .
 &Scoped-define INTERNAL-TABLES parts
 
 /* Definitions for BROWSE br-parts                                      */
-&Scoped-define FIELDS-IN-QUERY-br-parts get-mark(buffer parts) @ mark get-parts-part-code(buffer parts, v-goods-alcohol-prod) @ parts-part-code get-parts-out-code(buffer parts) @ parts-out-code parts.qnty parts.fact-qnty parts.price-base parts.price-rubl parts.cli-qnty parts.cli-base-rate parts.transport-base parts.transport-rubl parts.road-tax-base parts.road-tax-rubl parts.other-base parts.other-rubl (parts.obj-type + " " + STRING (parts.obj-code)) @ parts-object parts.is-supp parts.cst-code parts.last-date parts.hold-date parts.pl-code get-b-code(buffer parts) @ parts-b-code get-purch-code(buffer parts) @ parts-purch-code get-contract-prn-code(recid(parts)) @ parts-contract-prn-code parts.part-code parts.in-code (get-in-code-date(recid(parts))) (get-price-sale(recid(parts))) (get-price-prod1(recid(parts))) @ vprice-prod1 (get-price-prod2(recid(parts))) @ vprice-prod2 if parts.whole-send-news = int({&FiB}) then "+" else "" /*parts.in-code parts.out-code parts.part-code */   
+&Scoped-define FIELDS-IN-QUERY-br-parts get-mark(buffer parts) @ mark get-parts-part-code(buffer parts, v-goods-alcohol-prod) @ parts-part-code get-parts-out-code(buffer parts) @ parts-out-code parts.qnty parts.fact-qnty parts.price-base parts.price-rubl parts.cli-qnty parts.cli-base-rate parts.transport-base parts.transport-rubl parts.road-tax-base parts.road-tax-rubl parts.other-base parts.other-rubl (parts.obj-type + " " + STRING (parts.obj-code)) @ parts-object parts.is-supp parts.cst-code parts.last-date parts.hold-date parts.pl-code get-b-code(buffer parts) @ parts-b-code get-purch-code(buffer parts) @ parts-purch-code get-contract-prn-code(recid(parts)) @ parts-contract-prn-code parts.part-code parts.in-code (get-in-code-date(recid(parts))) (get-price-sale(recid(parts))) (get-price-prod1(recid(parts))) @ vprice-prod1 (get-price-prod2(recid(parts))) @ vprice-prod2 if parts.defect = logical({&FiB}) then "+" else "" /*parts.in-code parts.out-code parts.part-code */   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-parts parts.qnty ~
 parts.fact-qnty   
 &Scoped-define ENABLED-TABLES-IN-QUERY-br-parts parts
@@ -844,7 +844,7 @@ DEFINE BROWSE br-parts
       (get-price-sale(recid(parts)))  column-label "Тек.прод.цена"  format ">>>>>>>>>9.99"
       (get-price-prod1(recid(parts)))  @  vprice-prod1 column-label "Цена Произв."  format ">>>>>>>>>9.99"
       (get-price-prod2(recid(parts)))  @  vprice-prod2 column-label "Цена Прзв_с_НДС"  format ">>>>>>>>>>>9.99"
-    if parts.whole-send-news  =  int({&FiB}) then "+"  else "" column-label "Ф" format "x(1)"
+    if parts.defect = logical({&FiB}) then "+"  else "" column-label "Ф" format "x(1)"
       /*parts.in-code   column-label "in-code"
       parts.out-code  column-label "out-code"
       parts.part-code  column-label "part-code"
@@ -2120,7 +2120,14 @@ DO:
   define buffer buf_trn-doc for ub.trn-doc .
   
   define variable ic      as integer   no-undo.
-
+  
+  if parts.defect = logical({&FiB}) then do:
+     parts-part-code:bgcolor in browse {&browse-name} = 12.
+  end.
+  else do:
+     parts-part-code:bgcolor in browse {&browse-name} = ? .
+  end.
+  
   find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code no-error .
   if available buf_trn-doc
   and buf_trn-doc.reason-code = 25 /* Корректировка поступления */
@@ -2135,13 +2142,6 @@ DO:
       end.
     end .
   end .
-  
-  if parts.whole-send-news = int({&FiB}) then do:
-     parts-part-code:bgcolor in browse {&browse-name} = 12.
-  end.
-  else do:
-     parts-part-code:bgcolor in browse {&browse-name} = ? .
-  end.
 
 END.
 

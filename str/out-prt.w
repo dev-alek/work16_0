@@ -57,6 +57,7 @@ define buffer in_doc-line for ub.doc-line.
 define buffer in_parts for ub.parts.
 define buffer out_parts for ub.parts.
 define buffer buf_gen-attr for ub.gen-attr .
+define buffer buf_gds-obj for ub.gds-obj .
 
 define buffer buf_marking for ub.marking .
 define buffer buf_marking-child for ub.marking .
@@ -1163,6 +1164,30 @@ DO:
           v-free-qnty = v-free-qnty - out_parts.fact-qnty .
         end .
         
+        find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = t-doc.obj-type
+                                         and buf_gds-obj.obj-code  = t-doc.obj-code
+                                         and buf_gds-obj.artic     = buf_goods.artic
+                                         and buf_gds-obj.prod-type = buf_goods.prod-type
+                                         and buf_gds-obj.prod-code = buf_goods.prod-code
+                                         no-error .
+        if error-status :error
+        then do:
+          message
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+          undo block_save, return no-apply.
+        end.
+        
+        if buf_gds-obj.free-qnty < v-new-qnty
+        then do :
+          message substitute ("Возвращаемое количество превышает текущий остаток, равный &1. Возврат не возможен.", buf_gds-obj.free-qnty) view-as alert-box .
+          display
+            ub.gds-dtl.doc-qnty
+          with frame {&FRAME-NAME}.
+          undo block_save, return no-apply.
+        end .
+        
         if v-new-qnty > v-free-qnty
         then do :
           if t-doc.reason-code = 25 /* Корректировка поступления */
@@ -1224,6 +1249,16 @@ DO:
             end .
           end .
         end .
+        
+        if buf_gds-obj.free-qnty < v-new-qnty
+        then do :
+          message substitute ("Возвращаемое количество превышает текущий остаток, равный &1. Возврат не возможен.", buf_gds-obj.free-qnty) view-as alert-box .
+          display
+            ub.gds-dtl.doc-qnty
+          with frame {&FRAME-NAME}.
+          undo block_save, return no-apply.
+        end .
+        
         
         node-type = {&g#term} .
         

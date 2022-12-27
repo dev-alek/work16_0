@@ -2547,6 +2547,8 @@ vartechproliv = no
         end.
 
         if bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+        and lookup( string(bf_trn-doc.reason-code), v-reasons-for-return) = 0
+        and not v-expense-return
         then do:
           { gbl/chk-actg.i
             v-curr-db-num

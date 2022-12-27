@@ -3910,7 +3910,7 @@ end.
               t-doc.reason-code = trn-reason.reason-code
             .
             display t-doc.reason-code rsn-name with frame {&FRAME-NAME}.
-            disable r-reas r-clients b-cur r-outs with frame {&frame-name}.
+            disable r-reas r-clients t-doc.cli-code b-cur r-outs with frame {&frame-name}.
           end .
           find first buf_contract-attr no-lock where buf_contract-attr.host-code = reas_contract.host-code
                                                  and buf_contract-attr.contract-code = reas_contract.contract-code
@@ -3990,7 +3990,7 @@ end.
         end .
         if pardoc-mode <> {&add-def}
         then do :
-          disable r-reas r-clients b-cur r-outs with frame {&frame-name}.
+          disable r-reas r-clients t-doc.cli-code b-cur r-outs with frame {&frame-name}.
         end .
       end .
       
@@ -8500,7 +8500,7 @@ if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} or
   then do :
     assign gds-dtl.doc-qnty:read-only  in browse {&browse-name} = yes.
     assign gds-dtl.fact-qnty:read-only  in browse {&browse-name} = yes.
-    disable r-reas r-clients b-cur r-outs with frame {&frame-name}.
+    disable r-reas r-clients t-doc.cli-code b-cur r-outs with frame {&frame-name}.
     if available bf_contract
     then do :
       find first buf_contract-attr no-lock where buf_contract-attr.host-code = bf_contract.host-code

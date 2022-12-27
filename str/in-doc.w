@@ -4545,7 +4545,8 @@ do while varlns-cnt <= num-entries (varnotes):
           next.
       end.
   end .
-   if  EDOParSec:IsEdo and EDOParSec:GetIsArticForType(varvalue) 
+   if  EDOParSec:IsEdo
+   and (EDOParSec:GetIsArticForType(varvalue) or EDOParSec:GetIsEdoForType(varvalue))
   then do :
       if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then 
       do:

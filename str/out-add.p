@@ -949,7 +949,7 @@ on error undo, return error return-value
                   return error return-value.
             end.
             if (return-value = "no-add-marks" and parvalue begins 'scan-marks')
-            or bf_gds-obj.free-qnty <= 0
+            or bf_gds-obj.free-qnty < 0
             then do :
               v-stop = yes .
             end .
@@ -1002,6 +1002,10 @@ on error undo, return error return-value
                   end .
                 end .
               end .
+            end .
+            if bf_gds-obj.free-qnty <= 0
+            then do :
+              v-stop = yes .
             end .
           end.
         end.
