@@ -97,6 +97,7 @@ define variable v-gds-attr-type      as character no-undo .
 define variable v-ext-doc-type as character no-undo .
 define variable v-end-message as character no-undo .
 define variable v-out-pay like ub.sysconf.out-pay .
+define variable vGtin as character no-undo .
 
 define variable v-country-code as integer   no-undo .
 
@@ -104,6 +105,7 @@ define buffer buf_trn-doc       for ub.trn-doc .
 define buffer buf_doc-line      for ub.doc-line .
 define buffer buf_gds-dtl       for ub.gds-dtl .
 define buffer buf_parts         for ub.parts .
+define buffer orig_parts        for ub.parts .
 define buffer buf_parts-attr    for ub.parts-attr .
 define buffer new_parts-attr    for ub.parts-attr .
 define buffer buf_doc-pl        for ub.doc-pl .
@@ -293,6 +295,12 @@ on error undo, return error return-value
       .
     end.
   end .
+    
+  for each TempDocMark where TempDocMark.in-doc-id > ""
+                         and TempDocMark.prt-id = ?
+                         :
+    TempDocMark.prt-id = "" .
+  end .
   
   assign
     n_str = 0
@@ -429,6 +437,27 @@ on error undo, return error return-value
       if v-part-chg-qnty = 0 then do:
         next. /* --->>>--- */
       end.
+      
+      if TempDocPart.price-rubl = ?
+      or TempDocPart.price-rubl = 0
+      then do :
+        for first orig_parts no-lock where orig_parts.in-code   = TempDocPart.in-doc-id
+                                       and orig_parts.part-code = TempDocPart.part-id
+                                       and orig_parts.obj-type  = buf_trn-doc.obj-type
+                                       and orig_parts.obj-code  = buf_trn-doc.obj-code
+                                       and orig_parts.artic     = buf_doc-line.artic
+                                       and orig_parts.prod-type = buf_doc-line.prod-type
+                                       and orig_parts.prod-code = buf_doc-line.prod-code
+        :
+          TempDocPart.price-rubl = orig_parts.price-rubl .
+        end .
+      end .
+      
+      if TempDocPart.price-rubl = ?
+      or TempDocPart.price-rubl = 0
+      then do :
+        TempDocPart.price-rubl = buf_doc-line.price-rubl .
+      end .
 
       create buf_parts .
       buffer-copy buf_doc-line to buf_parts
@@ -471,10 +500,43 @@ on error undo, return error return-value
         buf_parts.other-rubl     = 0
       .
       
+      if num-entries(buf_parts.part-code, "_") = 2
+      then do :
+        vGtin = entry(1, buf_parts.part-code, "_") .
+        if length(vGtin) = 8
+        or length(vGtin) = 12
+        or length(vGtin) = 13
+        or length(vGtin) = 14
+        then do :
+          find first TempDocMark where TempDocMark.gds-code = TempDocLine.gds-code
+                                   and (TempDocMark.prt-id = ? or TempDocMark.prt-id = buf_parts.part-code)
+                                   and (TempDocMark.in-doc-id = ? or TempDocMark.in-doc-id = buf_parts.in-code)
+                                   and TempDocMark.gtin = vGtin
+                                   and TempDocMark.gtin_qnt = abs(buf_parts.fact-qnty)
+                                   no-error .
+          if available TempDocMark
+          then do :
+            create ub.marking-lines.
+            assign
+              ub.marking-lines.obj-type = buf_parts.obj-type
+              ub.marking-lines.obj-code = buf_parts.obj-code
+              ub.marking-lines.in-code = buf_parts.in-code
+              ub.marking-lines.out-code = buf_parts.out-code
+              ub.marking-lines.part-code = buf_parts.part-code
+              ub.marking-lines.gds-code = TempDocLine.gds-code
+              ub.marking-lines.mark = "02" + vGtin + "37" + string(abs(buf_parts.fact-qnty))
+            .
+            ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
+          end .
+        end .
+      end .
+      
       for each TempDocMark where TempDocMark.gds-code = TempDocLine.gds-code
                              and (TempDocMark.prt-id = ? or TempDocMark.prt-id = buf_parts.part-code)
                              and (TempDocMark.in-doc-id = ? or TempDocMark.in-doc-id = buf_parts.in-code)
       :
+        if TempDocMark.gtin > "" and TempDocMark.gtin_qnt > 0 then next .
+        
         create ub.marking-lines.
         assign
           ub.marking-lines.obj-type = buf_parts.obj-type
@@ -490,6 +552,10 @@ on error undo, return error return-value
         assign
           buf_parts.PS =  TempDocMark.upd_id when TempDocMark.upd_id <> ""
         .
+        
+        if TempDocMark.prt-id = ? then TempDocMark.prt-id = buf_parts.part-code .
+        if TempDocMark.in-doc-id = ? then TempDocMark.in-doc-id = buf_parts.in-code .
+        
         find first ub.marking where ub.marking.mark = ub.marking-lines.mark no-error.
         if available (ub.marking)
         then do:
