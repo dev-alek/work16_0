@@ -10,13 +10,13 @@ $Date$
 $Workfile$
 $Archive$
 
-Сводный отчет по поставкам топлива
+Отчет по всем сухим чекам продажи и возврата с топливом
 
-Автор: Гридчина Полина Дмитриевна
+Автор: 
 Дата создания: 20/12/2014
 Author: Polina Gridchina
 Creation date: 20/12/2014
- 
+
 */
 /*          This .W file was created with the Progress UIB.             */
 /*----------------------------------------------------------------------*/
@@ -39,7 +39,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Сводный отчет по поставкам топлива".
+define variable vss-description as character no-undo init "Отчет по всем сухим чекам продажи и возврата с топливом".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/showinf.i }

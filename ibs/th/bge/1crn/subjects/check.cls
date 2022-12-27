@@ -808,7 +808,17 @@ define private temp-table tt-recid-TranFuel no-undo
           if buf_chk-gds.write-off-code >= 0 then
             insw:write-data-element (  "prolito",  string(buf_chk-gds.write-off-code)  ). /* Признак для сбросов: 0 – не пролито; 1 – пролито. (Число, enum) */
         end .
-        
+        /* Системный код */
+        insw:write-data-element (  "src-code",  string(buf_chk-gds.src-code)  ) . /* Системный код */
+        /* Тип возвратных операций */
+        find first chk-doc-attr where chk-doc-attr.doc-code = p-buf_chk-doc.doc-code
+          and chk-doc-attr.attr-code = 'CHFlag1' no-lock no-error.
+        IF AVAILABLE chk-doc-attr THEN 
+        DO:   
+          insw:write-data-element (  "CHFlag1",  string(chk-doc-attr.attr-value)  ) . /* Тип возвратных операций */  
+          if chk-doc-attr.attr-value = "0" then
+            insw:write-data-element (  "Dry-chk-th",  string(chk-doc-attr.attr-value)  ) . /* Сухой чек */      
+        end.    
         /* 23/V-2019  тэги для табачки - цена БД и датаматрикс */
         find first buf_chk-gds-attr no-lock
              where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
