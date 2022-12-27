@@ -137,7 +137,7 @@ FOR EACH db WHERE db.db-num > 0 NO-LOCK:
 
       END. /*  FOR EACH    db-info   WHERE */
     END.  /* IF num <> ?  THEN DO:  */
-    v-ind = v-ind + 1.
+    /* v-ind = v-ind + 1. */
 END.   /*  db    */
 
 run waitfram-hide in this-procedure .
