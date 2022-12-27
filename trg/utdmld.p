@@ -19,6 +19,8 @@ Creation date: 11/07/18
 &scoped-define main-tbl utd-marking-lines
 trigger procedure for delete of ub.{&main-tbl}.
 
+define buffer buf_marking for ub.marking.
+define buffer buf-{&main-tbl} for ub.{&main-tbl}.
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
