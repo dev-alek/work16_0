@@ -2,7 +2,8 @@ define temp-table UserDbAdm
 field db-num as integer 
 field db-adm as logical
 field db-usr as logical
-index pi db-num
+field db-block as logical
+index pi is unique db-num 
 index adm db-adm db-usr
 .
 { cmp/str-glbl.i }
@@ -175,16 +176,17 @@ end function.
 
 procedure getAccountSetting :
    define input  parameter i-user-id  as character no-undo.
-   define output parameter o-adm-Ubd  as logical no-undo.
+   define output parameter o-adm-Ubd  as logical no-undo init ?.
    define output parameter v-adm-GBD  as logical no-undo. 
    define output parameter o-superAdm as logical no-undo.
-   define input-output parameter table for UserDbAdm append.
+   define input-output parameter table for UserDbAdm .
    
    define variable v-adm-Ubd-int as integer no-undo.
    
    define buffer user-login for ub.user-login.
    define buffer db         for ub.db.
    define buffer user-account-attr for ub.user-account-attr.
+   /*Поиск пользователя на ГБД*/
    find first user-login where user-login.db-num  eq 0
                            and user-login.user-id eq i-user-id
 /*                                and user-login.user-administrator*/
@@ -199,6 +201,10 @@ procedure getAccountSetting :
    end.
    block-db:
    for each db where db.db-num ne 0 no-lock:
+      if G#db-num ne 0
+         and G#db-num ne db.db-num
+      then
+         next block-db.
       create UserDbAdm.
       UserDbAdm.db-num = ub.db.db-num.
       find first user-login where user-login.db-num  eq db.db-num
@@ -207,6 +213,12 @@ procedure getAccountSetting :
       if not available user-login
       then
          v-adm-Ubd-int = 2.
+      else if user-login.status_ eq {&bef-user-status-deleted}
+      then do:
+         v-adm-Ubd-int = 2.
+          UserDbAdm.db-block = yes.
+          UserDbAdm.db-usr   = yes.
+      end.
       else if user-login.user-administrator
       then do:
          UserDbAdm.db-adm = yes.
@@ -234,11 +246,18 @@ procedure getAccountSetting :
          end.
       end.
    end.
-   o-adm-Ubd = if v-adm-Ubd-int eq 1
-               then yes
-               else if v-adm-Ubd-int eq 3
-               then no
-               else ?.
+   if  v-adm-Ubd-int eq 1
+   then
+      o-adm-Ubd = true.
+   else if v-adm-Ubd-int eq 3
+   then
+      o-adm-Ubd = false.  
+   
+/*   o-adm-Ubd = if v-adm-Ubd-int eq 1     */
+/*               then yes                  */
+/*               else if v-adm-Ubd-int eq 3*/
+/*               then no                   */
+/*               else ?.                   */
  
    find first user-account-attr where user-account-attr.user-id  eq i-user-id
                                   and user-account-attr.attr-code  eq "superADm"
@@ -335,8 +354,9 @@ end procedure.
 
 function  CheckLastPWD returns character  (
    input  iDb-num    as integer  ,
-   input  iUserLogin as character,
-   input  IPWD       as character ) :
+   input  iUserId    as character,
+   input  IPWD       as character,
+   input  Iadm       as logical ) :
    
    define buffer user-login       for ub.user-login .
    define buffer user-login-attr  for ub.user-login-attr .
@@ -356,14 +376,12 @@ function  CheckLastPWD returns character  (
    define variable v-value-logical as logical no-undo .
     
    find first user-login where user-login.db-num    eq idb-num
-                           and user-login.user-login   eq iuserlogin
+                           and user-login.user-id   eq iUserId
    no-lock no-error.
-   if not available user-login
-   then
-      return "".
-   if ub.user-login.user-administrator 
+   if Iadm
    then
       VadmSuff = {&staff-options_Adm}.
+   
    
    run adm/shattri.p (
         input "get":U
@@ -409,7 +427,7 @@ function  CheckLastPWD returns character  (
       if check_alphanumeric(ipwd,"Digit,Char") ne "" /* тут будет переменная из thbjattr */
       then do:
          vError = vError + (if vError eq "" then "" else ", " ) 
-                + "В пароле должны содержаться латинские буквы и цифры".
+                + "В пароле должны содержаться буквы и цифры".
       end.
    end.
    define variable v-encode-value as character no-undo.
@@ -436,7 +454,7 @@ function  CheckLastPWD returns character  (
    if v-Lastpaswd ne 0
    then do:
       define variable vLastPwd as character no-undo. 
-      vLastPwd = GetAttrUserId(iDb-num, user-login.user-id, "LastPWD").
+      vLastPwd = GetAttrUserId(iDb-num, iUserId, "LastPWD").
       if vLastPwd ne ?
       then do:
          define variable Vi as integer no-undo.
@@ -452,6 +470,12 @@ function  CheckLastPWD returns character  (
    return vError.
 end function.
 
+procedure availOneAdm:
+   define input-output parameter table for UserDbAdm.
+   define output parameter oAdm as logical no-undo.
+   find first UserDbAdm where UserDbAdm.db-adm no-lock no-error.
+   oadm = available UserDbAdm.
+end.
 
 procedure update-user-login:
    define input  parameter i-db-num     as integer          no-undo.
@@ -465,7 +489,7 @@ procedure update-user-login:
    define input  parameter i-Manual     as logical no-undo.
    define input  parameter i-adm-gbd as logical no-undo.
    define input  parameter i-adm-ubd as logical no-undo.
-   define input-output parameter table for UserDbAdm append.
+   define input-output parameter table for UserDbAdm.
    
    define buffer buf_user-login        for user-login.
     
@@ -476,16 +500,25 @@ on error undo, return error
 :
         if     i-Manual 
            and G#db-num eq 0
-           and (   i-adm-gbd ne ?
+          /* and (   i-adm-gbd ne ?
                 or i-adm-ubd ne ?
                 or can-find(first UserDbAdm)
-               )
+               )*/
         then do:
            if     i-adm-gbd ne ?
            then do:
               do transaction
               on error undo, return error return-value
               :
+                  find first buf_user-login where buf_user-login.db-num             eq 0
+                                              and buf_user-login.user-login         eq i-user-login
+                                              and buf_user-login.status_            eq {&bef-user-status-normal}
+                                              and buf_user-login.user-id            ne i-user-id
+                  no-lock no-error.
+                  if available buf_user-login
+                  then
+                     undo, return error "Уже есть такой логин в ГБД".
+                  
                   find first buf_user-login where buf_user-login.db-num             = 0
                                               and buf_user-login.user-id            = i-user-id
                   exclusive-lock no-error.
@@ -515,14 +548,35 @@ on error undo, return error
                      return error return-value.
               end. 
            end.
+           else do transaction on error undo, return error return-value:
+               find first buf_user-login where buf_user-login.db-num             = 0
+                                           and buf_user-login.user-id            = i-user-id
+               exclusive-lock no-error.
+               if available buf_user-login
+               then
+                  delete buf_user-login.
+               
+           end.
            if     i-adm-ubd ne ?
            then do:
               do transaction
               on error undo, return error return-value
               :
+                  define variable vDbError as character no-undo.
+                  block-db:
                   for each db where db.db-num ne 0 
 /*                                and db.db-num ne i-db-num*/
                   no-lock:
+                     find first buf_user-login where buf_user-login.db-num             eq db.db-num
+                                                 and buf_user-login.user-login         eq i-user-login
+                                                 and buf_user-login.status_            eq {&bef-user-status-normal}
+                                                 and buf_user-login.user-id            ne i-user-id
+                     no-lock no-error.
+                     if available buf_user-login
+                     then do:
+                        vDbError = vDbError + "," + String(db.db-num) no-error.
+                        next block-db. 
+                     end.
                      find first buf_user-login where buf_user-login.db-num             = db.db-num
                                                  and buf_user-login.user-id            = i-user-id
                      exclusive-lock no-error.
@@ -552,15 +606,29 @@ on error undo, return error
                      then
                         return error return-value.
                  end.
+                 if vDbError ne ""
+                 then
+                    undo, return error substitute ("Уже есть такой логин в УБД &1",substring (vDbError,2,4000)).
               end. 
            end.
            else do:
               do transaction
               on error undo, return error return-value
               :
+                  block-UserDb:
                   for each UserDbAdm where UserDbAdm.db-num ne 0 
 /*                                       and UserDbAdm.db-num ne i-db-num*/
                   no-lock:
+                     find first buf_user-login where buf_user-login.db-num             eq UserDbAdm.db-num
+                                                 and buf_user-login.user-login         eq i-user-login
+                                                 and buf_user-login.status_            eq {&bef-user-status-normal}
+                                                 and buf_user-login.user-id            ne i-user-id
+                     no-lock no-error.
+                     if available buf_user-login and UserDbAdm.db-usr
+                     then do:
+                        vDbError = vDbError + "," + String(db.db-num) no-error.
+                        next block-UserDb. 
+                     end.
                      
                      find first buf_user-login where buf_user-login.db-num             = UserDbAdm.db-num
                                                  and buf_user-login.user-id            = i-user-id
@@ -573,11 +641,11 @@ on error undo, return error
                            assign
                                buf_user-login.db-num             = UserDbAdm.db-num
                                buf_user-login.user-id            = i-user-id
-                               buf_user-login.status_            = {&bef-user-status-normal}
+                               buf_user-login.status_            = if UserDbAdm.db-block then {&bef-user-status-deleted} else {&bef-user-status-normal}
                            .
                         end.
                         assign
-                            buf_user-login.status_            = {&bef-user-status-normal} when i-db-num ne G#db-num
+                            buf_user-login.status_            = if UserDbAdm.db-block then {&bef-user-status-deleted} else {&bef-user-status-normal} when i-db-num ne G#db-num or G#db-num = 0
                             buf_user-login.user-login         = i-user-login
                             buf_user-login.user-administrator = UserDbAdm.db-adm
                             buf_user-login.max-discnt         = i-max-discnt
@@ -609,6 +677,9 @@ on error undo, return error
                            
                     end.
                  end.
+                  if vDbError ne ""
+                  then
+                    undo, return error substitute ("Уже есть такой логин в УБД &1",substring (vDbError,2,4000)).
               end.
            end. 
         end.
@@ -948,6 +1019,7 @@ procedure procedure-user-login-change-password :
              
              run adm/chg-pswd.w ( input  this-procedure
                                 , input  p-db-num
+                                , input  buf_lock_user-login.user-id
                                 , input  buf_lock_user-login.user-login
                                 , input  substitute('&1 &2 &3':U, buf_init_user-account.last-name
                                                                 , buf_init_user-account.first-name
@@ -956,7 +1028,8 @@ procedure procedure-user-login-change-password :
                                 , input  iChange
                                 , input  yes
                                 , input  buf_lock_user-login.user-password-encoded
-                                , yes 
+                                , input  yes
+                                , input  buf_lock_user-login.user-administrator
                                 , output v-encoded-pass
                                 , output v-nextcon
                                 ) no-error .
@@ -1001,6 +1074,7 @@ procedure procedure-user-login-change-password :
                 buf_lock_user-login.user-password-encoded = v-encoded-pass
              .
              run SetAttrUserId(buf_lock_user-login.db-num, buf_lock_user-login.user-id, "ChangPwdNextConect", if vChange then v-nextcon else ?).
+             run SetAttrUserId(buf_lock_user-login.db-num, buf_lock_user-login.user-id, "ChangPwdUserId", string(g#userid)).
              release buf_lock_user-login .
              message
                 "Пароль успешно изменен"

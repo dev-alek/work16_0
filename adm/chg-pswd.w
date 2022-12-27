@@ -28,16 +28,18 @@ Creation date: 05/08/07
 /* Parameters Definitions ---                                           */
 define input  parameter parparentproc  as widget-handle no-undo .
 define input  parameter p-db-num       as integer   no-undo .
-define input  parameter p-user-login      as character no-undo .
+define input  parameter p-user-id      as character no-undo .
+define input  parameter p-user-login   as character no-undo .
 define input  parameter p-user-Name    as character no-undo .
 define input  parameter p-user-adm     as logical   no-undo .
 
 define input  parameter p-LastPassVis  as logical   no-undo .
 if p-user-adm eq yes
-then
+   then
    p-LastPassVis = no.
 define input  parameter p-old-password as character no-undo .
 define input  parameter p-login        as logical   no-undo .
+define input  parameter i-CheckAdm     as logical   no-undo .
 
 define output parameter p-password     as character no-undo initial ? .
 define output parameter ochgpdwnextcon as logical   no-undo .

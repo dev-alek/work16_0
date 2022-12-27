@@ -58,7 +58,7 @@ define input parameter p-in-psn-code                as integer          no-undo.
 define input parameter i-adm-gbd                    as logical          no-undo.
 define input parameter i-superAdm                   as logical          no-undo.
 define input parameter i-adm-Ubd                    as logical          no-undo.
-define input-output parameter table for UserDbAdm append.
+define input-output parameter table for UserDbAdm .
 define output parameter p-out-last-name             as character        no-undo.
 define output parameter p-out-first-name            as character        no-undo.
 define output parameter p-out-second-name           as character        no-undo.
@@ -515,9 +515,9 @@ DO:
                                           else ?
             
         .
-        if o-adm-gbd eq i-adm-gbd
-        then
-           o-adm-gbd = ?.
+/*        if o-adm-gbd eq i-adm-gbd*/
+/*        then                     */
+/*           o-adm-gbd = ?.        */
         if o-adm-ubd eq i-adm-ubd
            and not mchenglistubd
         then
@@ -536,8 +536,7 @@ DO:
         or p-out-internal-phone-number  <> p-in-internal-phone-number
         or p-out-PS                     <> p-in-PS
         or p-out-psn-code               <> p-in-psn-code
-        or (    o-adm-gbd ne ?
-            and o-adm-gbd               <> i-adm-gbd)
+        or (o-adm-gbd                   <> i-adm-gbd)
         or o-superAdm                   <> i-superAdm
         or (    o-adm-Ubd ne ?
             and o-adm-Ubd               <> i-adm-Ubd)
@@ -599,7 +598,16 @@ DO:
    then do:
       if UserDbAdm.db-usr
       then
-         UserDbAdm.db-adm = not UserDbAdm.db-adm.
+         if UserDbAdm.db-block
+         then do:
+            UserDbAdm.db-adm = yes.
+            UserDbAdm.db-block = no.
+          end.
+          else if UserDbAdm.db-adm
+          then 
+             UserDbAdm.db-adm = no.
+          else
+             UserDbAdm.db-block = yes.
       else
          UserDbAdm.db-usr = yes.
       vrowid = rowid(UserDbAdm).
@@ -623,6 +631,7 @@ DO:
       assign
          UserDbAdm.db-adm = no
          UserDbAdm.db-usr = no
+         UserDbAdm.db-block = no.
          vrowid = rowid(UserDbAdm)
       .
       BRUserUbd:refresh () no-error.
@@ -779,7 +788,7 @@ ON VALUE-CHANGED OF RAD-adm-Ubd IN FRAME Dialog-Frame
 DO:
    btnAdm:visible   = RAD-adm-Ubd:screen-value eq "2" and mSyperAdm.
    BtnDel:visible   = RAD-adm-Ubd:screen-value eq "2" and mSyperAdm.
-   BRUserUbd:visible = RAD-adm-Ubd:screen-value eq "2".
+   BRUserUbd:visible = RAD-adm-Ubd:screen-value eq "2" or g#db-num ne 0.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -823,6 +832,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     TOG-superAdm:sensitive = mSyperAdm.
     RAD-adm-gbd:sensitive = mSyperAdm.
     RAD-adm-Ubd:sensitive = mSyperAdm.
+    RAD-adm-gbd:visible = g#db-num eq 0.
+    RAD-adm-Ubd:visible = g#db-num eq 0.
+    
     if p-mode = {&lookup}
     then do:
         disable
@@ -1134,6 +1146,8 @@ FUNCTION GetAdm RETURNS CHARACTER
   
   RETURN if UserDbAdm.db-adm 
          then "Администратор"
+         else if UserDbAdm.db-block
+         then "Заблокирована"
          else if UserDbAdm.db-usr
          then "Пользователь"
          else "Отсутствует"

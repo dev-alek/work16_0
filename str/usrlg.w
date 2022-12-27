@@ -602,7 +602,8 @@ then
     OPEN QUERY br-head
       FOR EACH buf_head_c-user-log NO-LOCK
          where buf_head_c-user-log.corr-user-name = p-userid
-           and buf_head_c-user-log.corr-date     >= ( if fi-date-to = ? then 12/31/2000 else fi-date-to )
+           and buf_head_c-user-log.corr-date     >= ( if fi-date-to  = ? then 12/31/2000 else fi-date-to )
+           and buf_head_c-user-log.corr-date     <= ( if fi-date-for = ? then 12/31/3000 else fi-date-for )
 /*           and buf_head_c-user-log.head-table-key = buf_head_c-user-log.uniq-key-rec*/
            and (buf_head_c-user-log.head-table = v-c-table or buf_head_c-user-log.head-table = v-table)
       by buf_head_c-user-log.corr-date descending

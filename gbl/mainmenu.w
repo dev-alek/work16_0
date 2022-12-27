@@ -1560,7 +1560,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    end.
 
    run gbl/verinfo.p.
-   run utl/chgpsw.p no-error.
+   run utl/chgpsw.p (yes) no-error.
    if error-status:error
    then do:
       message return-value view-as alert-box.

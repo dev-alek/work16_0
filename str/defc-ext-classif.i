@@ -23,7 +23,9 @@ DEFINE {1} TEMP-TABLE ext-classif-list no-undo
    field Key#One as integer
    field Key#Two as integer
    field CharKey_One as character
-index pi IS PRIMARY unique db-num Key#Two Key#One
+/*   field classif-subject as character*/
+/*   field classif-name as character   */
+index pi IS PRIMARY unique db-num Key#Two Key#One CharKey_One
 .
 
 DEFINE {1} TEMP-TABLE c-ext-classif-list no-undo
@@ -32,6 +34,8 @@ DEFINE {1} TEMP-TABLE c-ext-classif-list no-undo
    field Key#Two as integer
    field CharKey_One as character
    field chip-num as integer
-index pi IS PRIMARY unique db-num Key#Two Key#One chip-num
+/*   field classif-subject as character*/
+/*   field classif-name as character   */
+index pi IS PRIMARY unique db-num Key#Two Key#One CharKey_One chip-num 
 .
 /* $Workfile$ e n d */
