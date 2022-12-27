@@ -22,7 +22,7 @@ define variable mError as logical no-undo.
 { gbl/getcntxt.i def }
 { cmp/trg-def.i }
 { utl/proc-async.i proc_def}
-{ str/edo.i }
+{ str/edo.i nosend}
 /*
 session:system-alert-boxes = yes.
 session:appl-alert-boxes = yes.

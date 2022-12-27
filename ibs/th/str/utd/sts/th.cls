@@ -52,6 +52,8 @@ class ibs.th.str.utd.sts.th inherits TypeMap:
   define public property  LK_RECEIPT_DeleteHand as class propmap no-undo get.  protected set.   
   define public property  LK_RECEIPT_ConfirmedHand as class propmap no-undo get.  protected set.   
 
+  define public property  RequireFilling as class propmap no-undo get.  protected set.   
+
   constructor public th ():
     super().
     NewStatus            = crProp(0, "NewStatus", "Новый").
@@ -85,6 +87,8 @@ class ibs.th.str.utd.sts.th inherits TypeMap:
     LK_RECEIPT_SentDelete = crProp(56, "LK_RECEIPT_SentDelete", "Удален после отправки в ГИС МТ").
     LK_RECEIPT_DeleteHand = crProp(57, "LK_RECEIPT_DeleteHand", "Удален в ГИС МТ вручную").
     LK_RECEIPT_ConfirmedHand = crProp(58, "LK_RECEIPT_ConfirmedHand", "Обработан в ГИС МТ вручную").
+    
+    RequireFilling        = crProp(60, "RequireFilling","Требует заполнения").
     
   end.
 

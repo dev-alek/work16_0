@@ -685,6 +685,11 @@ procedure  SendResponse :
                 {&CommentStartClass} run {utl\comment.i} */ SendAnsver in this-procedure (buf_utd.db-num,buf_utd.doc-id,"CorrectionRequest",GetErrForUtd(utd.db-num,utd.doc-id,"return"))no-error.
                 if error-status:error then return error return-value.
                 do trans :
+                   run bge/sendutd.p(
+                     parparentproc,
+                     mDiadocConnection:Certificate:Thumbprint,
+                     idb-num,
+                     idoc-id).
                    find first utd where utd.db-num eq idb-num
                                     and utd.doc-id eq idoc-id
                    exclusive-lock no-error.

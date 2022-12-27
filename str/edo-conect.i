@@ -1,4 +1,3 @@
-{str/utd-attr.i}
 /* Подключение по сертификату */
 {&CommentStartNoClass}
 method public component-handle ConectByCertif

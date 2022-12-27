@@ -49,7 +49,10 @@ define stream File-stream.
 { str/edo-conect.i }
 { str/edo-doc.i }
 { str/edo-auto.i }
+&if "{1}" ne "nosend"
+&then
 { str/edo-send.i }
+&endif
 { str/edo-load.i }
 { str/edo-newdoc.i }
 procedure MySeqForUtd:

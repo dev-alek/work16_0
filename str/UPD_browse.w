@@ -748,7 +748,7 @@ DEFINE BROWSE br-utd
    X_utd-lines.ProductCode COLUMN-LABEL "Наименование!УПД" FORMAT "x(40)":U width 25
    X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(40)":U width 25
    X_utd-lines.Quantity COLUMN-LABEL "Кол-во в ед.!изм TH по!УПД" FORMAT "->>,>>9.999":U
-   X_utd-lines.qnty-scan COLUMN-LABEL "Факт!кол-во" FORMAT "->>>9":U
+   X_utd-lines.qnty-scan COLUMN-LABEL "Факт!кол-во" FORMAT "->>>>>>>>>9":U
    gdsunit (X_utd-lines.gds-code) @ mgdsunit COLUMN-LABEL "Ед.изм!TH" FORMAT "x(6)":U
    
    if X_utd-lines.IsMarking
@@ -4573,7 +4573,7 @@ PROCEDURE init-temp :
       if p-mode = {&add-def} then 
       do:
 /*         if ii = 2 or ii = 6 or ii = 7 then*/
-         if ii = 2 or ii = 6 then
+         if TypeTH:CurrProp:KeyIntDB =  TypeTH:Introduce:KeyIntDB or TypeTH:CurrProp:KeyIntDB =  TypeTH:AKT:KeyIntDB then
          do:
             Type_ = Type_ + {&comma-char} + TypeTH:CurrProp:Label_ + {&comma-char} + string(TypeTH:CurrProp:KeyIntDB) .
          end.
@@ -4947,6 +4947,7 @@ PROCEDURE mark-temp :
       end.    
       X_utd-lines.gds-name = GdsName(X_utd-lines.gds-code) .
       X_utd-lines.taxRate_ = string(X_utd-lines.TaxRate) + " %" .
+      if X_utd-lines.TaxRate = -1 then X_utd-lines.taxRate_ = "Без НДС" .
       if X_utd-lines.sts_err then X_utd-lines.stts = "Ошибка по строке" .
    end.    
    for each X_utd-lines:
@@ -5471,9 +5472,22 @@ PROCEDURE save_mark :
       end.
       else 
       do:
-         find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num
+         find first buf_utd-marking-lines no-lock where 
+                buf_utd-marking-lines.mark   begins v-marking 
+            and buf_utd-marking-lines.db-num = p-db-num
             and buf_utd-marking-lines.doc-id <> p-doc-id no-error .
-         if available (buf_utd-marking-lines) then 
+         if available buf_utd-marking-lines
+         then
+            find first buf_marking where buf_marking.mark eq buf_utd-marking-lines.mark no-lock no-error.
+            
+         if available (buf_utd-marking-lines)
+            and available buf_marking 
+            and (    buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+                 or buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
+                 or buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+                 or buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB 
+                 or buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB)
+         then 
          do:
             F-text = "             Товар поставлен на АЗС ранее, верните его на склад" .
             display F-text with frame {&frame-name}.
