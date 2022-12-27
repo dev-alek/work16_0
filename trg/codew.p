@@ -29,6 +29,34 @@ define variable vss-description as character no-undo init "Тригер изменение {&ma
 }
 */
 define buffer buf_code for code.
+define variable mparent as character no-undo.
+define variable mcode   as character no-undo.
+if new-{&main-tbl}.parent  ne ""
+then do:
+   if num-entries (new-{&main-tbl}.parent,{&delim-par}) > 1
+   then do:
+      mcode = entry(num-entries (new-{&main-tbl}.parent,{&delim-par}),
+                    new-{&main-tbl}.parent,
+                    {&delim-par}).
+      mparent = substring (new-{&main-tbl}.parent,1 ,length (new-{&main-tbl}.parent) - length ({&delim-par} + mcode)).
+   end.
+   else
+      mcode = new-{&main-tbl}.parent.
+   find first buf_code where buf_code.parent eq mparent
+                         and buf_code.code   eq mcode
+   no-lock no-error.
+   if not available buf_code
+   then do:
+      create buf_code.
+      assign
+         buf_code.code     = mcode
+         buf_code.parent   = mparent
+         buf_code.CodeName = mcode
+      .
+   end. 
+end.
+
+
 if     new-{&main-tbl}.nwsgbd ne old-{&main-tbl}.nwsgbd
    and new-{&main-tbl}.nwsubd ne old-{&main-tbl}.nwsubd
    then 

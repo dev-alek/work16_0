@@ -461,13 +461,13 @@ PROCEDURE enable_UI :
     b-add2
     b-sel
     when can-do( bttns, "b-sel" )
- /*   b-add
+    b-add
     when can-do( bttns, "b-add" ) and v-db-num = 0  
     
     b-del
     when can-do ( bttns, "b-del" ) and v-db-num = 0
     b-upd
-    when can-do( bttns, "b-upd" ) and v-db-num = 0   */
+    when can-do( bttns, "b-upd" ) and v-db-num = 0   
     b-help
     with frame {&frame-name}.
 

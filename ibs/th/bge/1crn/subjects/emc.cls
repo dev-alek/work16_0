@@ -31,7 +31,13 @@ class ibs.th.bge.1crn.subjects.emc inherits ibs.th.bge.1crn.subjects.asubject:
   define property code_ as character no-undo 
     get. 
     private set.
+  define property old_code_ as character no-undo 
+    get. 
+    private set.
   define property parent_ as character no-undo 
+    get. 
+    private set.
+  define property old_parent_ as character no-undo 
     get. 
     private set.
   
@@ -66,6 +72,7 @@ class ibs.th.bge.1crn.subjects.emc inherits ibs.th.bge.1crn.subjects.asubject:
       when "emc-start-date" then do:
           assign code_ = {&attr-str}
                  misc1 = string({&attr-date},"99/99/9999")
+                 old_code_ = code_
           .
       end.
       when "del-l" then do:
@@ -73,6 +80,7 @@ class ibs.th.bge.1crn.subjects.emc inherits ibs.th.bge.1crn.subjects.asubject:
          if del-l > 0
          then
             status_ = {&bef-deleted-status-int}.
+        assign del-f = {&attr-integer}. /* Ѕудем удал€ть записи всегда таккак 1с мудаки перенос€т дату при деактивации на какуюто одну и туже дату */
       end.
       when "del-f" then do:
         assign del-f = {&attr-integer}.
@@ -85,7 +93,9 @@ class ibs.th.bge.1crn.subjects.emc inherits ibs.th.bge.1crn.subjects.asubject:
       end.
       when "emctype-code" then do:
         assign emctype-code = {&attr-integer}
-               parent_      = "emc" + {&delim-par} + string(emctype-code,"999").
+               parent_      = "emc" + {&delim-par} + string(emctype-code,"999")
+               old_parent_  = parent_
+         .
       end.
       
     end case.
@@ -94,27 +104,45 @@ class ibs.th.bge.1crn.subjects.emc inherits ibs.th.bge.1crn.subjects.asubject:
   method override protected void CheckData ():
 
     def var v-str as char no-undo.
-    
+    define buffer code for ub.Code.
     assign
       v-str = "emc-start-date" when code_ = ?
       v-str = v-str + ",emc-value" when CodeValue = ?
       v-str = v-str + ",emctype-code" when emctype-code = ?
-    .
+    . 
     v-str = trim (v-str, ",").
     if v-str > ''
     then 
       undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-    if emctype-code ne 1
-    then 
-      undo, throw new Progress.Lang.AppError( substitute("«агрузка emctype-code = &1 не предусмотрена",emctype-code)).
-    if del-f > 0 then
-      undo, throw new Progress.Lang.AppError("физичесткое удаление EMC не предусмотрено") .    
+    block-code:      
+    for each code where Code.parent    begins "emc" 
+                    and Code.CodeName  eq CodeName
+    no-lock:
+       assign
+          old_parent_ = Code.parent
+          old_code_   = Code.code
+       .
+       leave block-code.
+    end.
+    if    code_   ne old_code_
+       or parent_ ne old_parent_
+    then do:
+       find first code where Code.parent eq parent_
+                         and Code.code   eq code_
+       no-lock no-error.
+       if available code
+       then
+          undo, throw new Progress.Lang.AppError( substitute("”же есть запись emctype-code = &1 на дату &2",emctype-code, code_)).
     
+    end.
   end.
 
   method override protected void ClearSub():
     assign 
       code_         = ?
+      old_code_     = ?
+      parent_       = ?
+      old_parent_   = ?
       del-l         = ?
       del-f         = ?
       CodeName      = ?

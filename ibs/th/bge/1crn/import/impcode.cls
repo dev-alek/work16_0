@@ -48,8 +48,8 @@ class ibs.th.bge.1crn.import.impCode inherits ibs.th.gbl.sys.objth implements ib
     if v-del-f eq ?
     then
        v-del-f = false.
-    find first code where Code.parent eq objImp:parent_
-                      and code.code   eq objImp:code_
+    find first code where Code.parent eq objImp:old_parent_
+                      and code.code   eq objImp:old_code_
     exclusive-lock no-error.  
     if available code 
     then do:
@@ -74,9 +74,11 @@ class ibs.th.bge.1crn.import.impCode inherits ibs.th.gbl.sys.objth implements ib
     .
     define variable mImp2CdH as handle no-undo.
     run str/imp2cdgeth.p(output mImp2CdH).
+    run fill-code in mImp2CdH (objImp:old_parent_,
+                               objImp:old_code_).    
     
-    run fill-code in mImp2CdH (Code.parent,
-                               code.code).    
+    run fill-code in mImp2CdH (objImp:parent_,
+                               objImp:code_).    
     v-retfl = true .
     define variable i as integer no-undo .
     catch exAppErrors as class Progress.Lang.AppError :
