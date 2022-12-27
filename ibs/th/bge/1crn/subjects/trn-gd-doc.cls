@@ -1219,10 +1219,12 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     &scop tag-code shipper
     &scop attr-code trdcattr-shipper
     {&create-record-cust-obj-code}
+  if v-is-petrol-trn
+  then do :
     &scop tag-code othermoves
     &scop attr-code trdcattr-othermoves
     {&create-record-cust-logical}
-    
+  end .  
     
   end.
 
@@ -1276,9 +1278,12 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     {&create-record}
     &scop attr-code trdcattr-nosn
     {&create-record}
+  if v-is-petrol-trn
+  then do :
     &scop tag-code othermoves
     &scop attr-code trdcattr-othermoves
     {&create-record-cust-logical}
+  end .
 /*    &scop attr-code trdcattr-cargo-desc   */
 /*    {&create-record}                      */
 /*    &scop attr-code trdcattr-carry-type   */
