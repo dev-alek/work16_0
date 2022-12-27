@@ -385,13 +385,12 @@ ON CHOOSE OF b-block IN FRAME Dialog-Frame /* Блок в МП */
       define variable jj       as integer   no-undo .
       define variable list-pl  as character no-undo .
   
-
      
       { gbl/chk-actg.i
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
-    'actn_icnt-doc_fact':U
+    'actn_nozzle-sts_work':U
     {&cntxt-object}
     v-cntxt-host-code-obj
     v-cntxt-obj-type
@@ -682,7 +681,7 @@ ON CHOOSE OF b-unblock IN FRAME Dialog-Frame /* Разблок */
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
-    'actn_icnt-doc_fact':U
+    'actn_nozzle-sts_work':U
     {&cntxt-object}
     v-cntxt-host-code-obj
     v-cntxt-obj-type
