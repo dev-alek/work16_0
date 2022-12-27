@@ -4023,7 +4023,10 @@ end.
                 edo-return = no .
               end .
               display edo-return with frame {&frame-name}.
-              enable edo-return with frame {&frame-name}.
+              if pardoc-mode <> {&lookup}
+              then do :
+                enable edo-return with frame {&frame-name}.
+              end .
             end .
             else do :
               edo-return = no .
@@ -8608,7 +8611,10 @@ if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} or
           edo-return = no .
         end .
         display edo-return with frame {&frame-name}.
-        enable edo-return with frame {&frame-name}.
+        if pardoc-mode <> {&lookup}
+        then do :
+          enable edo-return with frame {&frame-name}.
+        end .
       end .
       else do :
         edo-return = no .
