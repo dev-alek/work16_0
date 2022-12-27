@@ -340,8 +340,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   then do:
     new-{&main-tbl}.ModifyDate = date (now).
     new-{&main-tbl}.ModifyTime = time.
-    if new-{&main-tbl}.sts <> old-utd.sts
-       and not g#esys
+    if     not g#esys
+       and new-{&main-tbl}.sts      ne old-utd.sts
+       and new-{&main-tbl}.EDocType ne objSrv:Env:Utd:EDocType:returns:KeyIntDB
     then do:
        { gbl/rum-runa.i
            ?

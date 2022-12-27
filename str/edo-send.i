@@ -688,8 +688,14 @@ procedure  SendResponse :
                 find first buf_utd where buf_utd.OrganizationExt eq utd.parentOrganizationExt
                                      and buf_utd.DocumentExt     eq utd.parentDocumentExt
                 no-lock no-error.
-                {&CommentStartClass} run {utl\comment.i} */ SendAnsver in this-procedure (buf_utd.db-num,buf_utd.doc-id,"CorrectionRequest",GetErrForUtd(utd.db-num,utd.doc-id,"return"))no-error.
-                if error-status:error then return error return-value.
+                if available buf_utd
+                then do:
+                   if getattrutd (idb-num,idoc-id,"TypeUTD") ne "дно"
+                   then do:
+                      {&CommentStartClass} run {utl\comment.i} */ SendAnsver in this-procedure (buf_utd.db-num,buf_utd.doc-id,"CorrectionRequest",GetErrForUtd(utd.db-num,utd.doc-id,"return"))no-error.
+                      if error-status:error then return error return-value.
+                   end.
+                end.
                 run bge/sendutd.p(
                      parparentproc,
                      mDiadocConnection:Certificate:Thumbprint,
