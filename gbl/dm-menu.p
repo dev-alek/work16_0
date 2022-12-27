@@ -4753,6 +4753,77 @@ procedure m-promo-d-exe :
   end.
 
 end procedure. /* m-cash-pay-exe */
+procedure m-catalog-block-nozzle :
+
+  define variable v-current-db-num as integer   no-undo .
+  define variable v-obj-db-num     as integer   no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    { gbl/curdbnum.i
+      v-current-db-num
+    }
+    { gbl/objdbnum.i
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      v-obj-db-num
+    }
+    if v-current-db-num = v-obj-db-num
+    then do:
+      /* todo - объект активный */
+      run str/blockplgdspm.w
+        (input parparentproc
+        ,input v-cntxt-obj-type
+        ,input v-cntxt-obj-code
+        ,input 'block'
+        ) .
+    end.
+    else do:
+      run str/blockplgdspm.w (input parparentproc,
+                      input v-cntxt-obj-type,
+                      input v-cntxt-obj-code,
+                      input '').
+    end.
+  end.
+
+end procedure. /* m-catalog-petrol-exe */
+
+procedure m-catalog-unblock-nozzle :
+
+  define variable v-current-db-num as integer   no-undo .
+  define variable v-obj-db-num     as integer   no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    { gbl/curdbnum.i
+      v-current-db-num
+    }
+    { gbl/objdbnum.i
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      v-obj-db-num
+    }
+    if v-current-db-num = v-obj-db-num
+    then do:
+      /* todo - объект активный */
+      run str/blockplgdspm.w
+        (input parparentproc
+        ,input v-cntxt-obj-type
+        ,input v-cntxt-obj-code
+        ,input 'un-block'
+        ) .
+    end.
+    else do:
+      run str/blockplgdspm.w (input parparentproc,
+                      input v-cntxt-obj-type,
+                      input v-cntxt-obj-code,
+                      input '').
+    end.
+  end.
+
+end procedure. /* m-catalog-petrol-exe */
 
 procedure m-bpa-u-exe :
 

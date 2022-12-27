@@ -3049,6 +3049,24 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+
+      v-prop-code = "{&bef-attr-petrol_timeout-block-nozzle}".
+&scop ptype integer
+&scop prop-value 5
+&scop prop-code entry(v-ii, v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+          {&create-thbj-attr}.
+      end.
+      
+      v-prop-code = "{&bef-attr-petrol_block-nozzle}".
+&scop ptype logical
+&scop prop-value yes
+&scop prop-code entry(v-ii, v-prop-code)
+
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+                  
     end.
 
 

@@ -1476,6 +1476,39 @@ on error undo, return error
 
 end procedure. /* proc-Parameter */
 
+procedure proc-FuelPump :
+   define buffer buf_temp-param     for temp-param.
+   define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle.
+   define buffer buf_pl-gds-pump    for ub.pl-gds-pump.
+   do
+      on error undo, return error
+      :
+      if v-key = "READ" then 
+      do:
+         for each buf_pl-pump-nozzle where               
+            buf_pl-pump-nozzle.obj-type = p-obj-type            
+            AND buf_pl-pump-nozzle.obj-code = p-obj-code        
+            and buf_pl-pump-nozzle.pump-code = integer(v-group) no-lock,
+            each buf_pl-gds-pump exclusive-lock where buf_pl-gds-pump.obj-code = buf_pl-pump-nozzle.obj-code and
+            buf_pl-gds-pump.obj-type = buf_pl-pump-nozzle.obj-type and
+            buf_pl-gds-pump.pump-code = buf_pl-pump-nozzle.pump-code and
+            buf_pl-gds-pump.pl-code = buf_pl-pump-nozzle.pl-code:
+            find first buf_temp-param where
+               buf_temp-param.record-name = "FuelPump":U
+               AND buf_temp-param.desk = m-head-cash-num
+               and buf_temp-param.key-name = "READ"
+               and buf_temp-param.field-name = "FPFNzl"
+               and buf_temp-param.group-name = v-group
+               and buf_pl-pump-nozzle.nozzle-code = integer(buf_temp-param.field-value) no-error .
+            if available (buf_temp-param) then buf_pl-gds-pump.status_ = {&blocked-status}.
+            else buf_pl-gds-pump.status_ = {&current-status}.
+
+  
+         end.  
+      END.
+   end.
+end procedure. /* proc-FuelPump */
+
 procedure proc-CAuthorization :
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_chk-doc for ub.chk-doc.
@@ -3516,6 +3549,9 @@ define buffer buf_cash-desk-attr for ub.cash-desk-attr .
         when "Param":U then do:
             run proc-Parameter in this-procedure no-error .
         end.
+        when "FuelPump":U then do:
+           run proc-FuelPump in this-procedure no-error .
+        end.
         when "Invent":U then do:
           if v-start-check = 1 then
           run proc-inv in this-procedure no-error .
@@ -3748,6 +3784,58 @@ define buffer buf_cash-desk-attr for ub.cash-desk-attr .
             end.
           end. /*if v-start-check*/
         end.
+        when "FuelPump":U then do:
+            assign
+            v-record-name = p-value
+            CRI = 0
+            CRAI = 0
+            .
+            assign
+            v-key-char = ?
+            v-group-loc = ? .
+            v-group-loc = cb-xmlparse-get-attr(
+                                          input this-procedure:handle
+                                         ,input p-value
+                                         ,input p-parameters
+                                         ,input "code":U
+                                         ,input yes) .
+            v-key-char = cb-xmlparse-get-attr(
+                                          input this-procedure:handle
+                                         ,input p-value
+                                         ,input p-parameters
+                                         ,input "ctrl":U
+                                         ,input no) .
+
+            if v-group-loc = ?
+            or v-key-char = ?
+            then do:
+              assign
+              v-start-check = v-start-check - 1
+              .
+              run write-log-and-file in p-log-handle (
+                    input 1
+                  , input log-file-name
+                  , input 1
+                  , input substitute( "!!!Тэг &1 - отсутствует необходимый атрибут &2"
+                                      , p-value
+                                      , (if v-group-loc = ? then "code" else "ctrl")
+                                      )
+                                                    ).
+              assign
+              v-cd-fatal-error = yes
+              v-cd-fatal-message = "нарушение протокола обмена"
+              p-view-log = yes
+              .
+              return "error".
+            end.
+            else do:
+              assign
+              v-group = v-group-loc
+              v-key = v-key-char
+              .
+            end.
+           
+        end.   
         when "Param":U
         then do:
             assign
