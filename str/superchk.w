@@ -6821,7 +6821,7 @@ run ref/gds-ref.p (
               ,input tt-chk-doc.obj-code
               ,input ?
              , output varrid-list ).
-
+ 
 if varrid-list <> "" then do:
   ii = 1.
       FIND FIRST loc_goods WHERE
@@ -6838,6 +6838,10 @@ if varrid-list <> "" then do:
       if error-status:error then undo, return error.
       RUN check-ch-bc-ck in this-procedure ( input gp-price-sale, input tt-chk-gds.price-base) no-error.
       if error-status:error then undo, return error.
+      if not available tt-gds-info
+      then do :
+        find first tt-gds-info where tt-gds-info.line-num = tt-chk-gds.line-num .
+      end .
       assign
       tt-chk-gds.doc-code = tt-chk-doc.doc-code
       tt-chk-gds.src-code = string(loc_bar-code.b-code)
@@ -6845,6 +6849,7 @@ if varrid-list <> "" then do:
       tt-chk-gds.src-code = string(loc_bar-code.b-code)
       tt-chk-gds.b-code = loc_bar-code.b-code
       tt-gds-info.artic = loc_goods.artic
+      tt-gds-info.gds-code = loc_goods.gds-code
       tt-gds-info.gds-name = loc_goods.gds-name
       tt-gds-info.prt-name = "-":U.
        .
