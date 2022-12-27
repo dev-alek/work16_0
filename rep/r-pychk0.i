@@ -713,7 +713,8 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
           and buf_temp-chk-gds.flag = no
           and buf_temp-chk-gds.line-num  > 0 :
         pychk_zero-n = pychk_zero-n + 1.
-        if  temp-chk-pay.tot-r-b = 0 and buf_temp-chk-gds.discnt = 0 and buf_temp-chk-gds.sum > 0 then next.  /*Если вдруг лег полностью нулевой платеж, то создавалась запись на все количество, с нормальной ценой, но нулевой суммой.  это неправильно отражалось в отчетах*/
+        if  temp-chk-pay.tot-r-b = 0 and buf_temp-chk-gds.discnt = 0 and abs(buf_temp-chk-gds.sum) > 0 then next.  
+/*Если вдруг лег полностью нулевой платеж, то создавалась запись на все количество, с нормальной ценой, но нулевой суммой.  это неправильно отражалось в отчетах*/
         case num-entries(buf_temp-chk-gds.line-type, {&delim-par}):
           when 1 then do:
             pychk_line-type-chr = buf_temp-chk-gds.line-type + {&delim-par} + {&delim-par} + string(temp-chk-pay.num-lines).
