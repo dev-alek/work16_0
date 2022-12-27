@@ -38,7 +38,7 @@ define variable ptrlprop-calc-free-vol as logical no-undo init false.
 define variable ptrlprop-trn-reas-sug as logical no-undo init true.
 define variable ptrlprop-rvd-own-nb as logical no-undo init false.
 define variable ptrlprop-qr-scan-time as integer no-undo init 5000 .
-define variable ptrlprop-block-nozzle as logical no-undo init true.
+define variable ptrlprop-block-nozzle as logical no-undo init false.
 define variable ptrlprop-timeout-block-nozzle as integer no-undo init 5 .
 
 procedure get-ptrl-prop :
