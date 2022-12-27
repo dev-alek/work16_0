@@ -76,9 +76,9 @@ define buffer buf_db for ub.db.
 assign
 
 i-obj-code = integer(entry(1, p-parameter, {&delim-par}))
-cash-num = entry(4, p-parameter, {&delim-par})
-cash-reful = integer(entry(3, p-parameter, {&delim-par}))
-reful = integer(entry(2, p-parameter, {&delim-par}))
+cash-num = entry(2, p-parameter, {&delim-par})
+/*cash-reful = integer(entry(3, p-parameter, {&delim-par}))*/
+/*reful = integer(entry(2, p-parameter, {&delim-par}))*/
 no-error
 .
 if error-status:error then do:

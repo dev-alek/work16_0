@@ -912,7 +912,7 @@ put-Log(return-value).
      os-delete value("schem-temp.json") .
      os-delete value("schem.json") .
      end.
-     if vflag then
+     if vflag and Chek_Shem() then
         put-log( string(now) + "   Топология загружена!" ).
      else
         put-log( string(now) + "   Топология не загружена!" ).
@@ -1095,7 +1095,7 @@ method public void load_schedule ():
      os-delete value("schem-temp.json") .
      os-delete value("schem.json") .
      end.
-     if vflag then
+     if vflag and Chek_Schedule() then
         put-log( string(now) + "   Расписания для автозаданий созданы!") .
      else
         put-log( string(now) + "   Расписания для автозаданий не созданы!") .
@@ -1168,7 +1168,8 @@ method public void load_auto_schedule (iAddr as character):
        put-Log(return-value).
       undo, return error return-value.
     end.     
-    buf_schedule-attr.attr-code = replace(string(buf_schedule-attr.attr-code),"|",{&delim-par}).  
+    buf_schedule-attr.attr-value = replace(string(buf_schedule-attr.attr-value),"|",{&delim-par}).  
+    buf_schedule-attr.attr-code = replace(string(buf_schedule-attr.attr-code),"|",{&delim-par}) no-error.  
     end.                                      
     end.                                            
    end.
@@ -1178,7 +1179,7 @@ method public void load_auto_schedule (iAddr as character):
      os-delete value("auto-schedule-temp.json") .
      os-delete value("schedule.json") .
      end.
-     if vflag then
+     if vflag and Chek_Schedule() then
         put-log( string(now) + "   Расписание и автозадания загружены!") .
      else
         put-log( string(now) + "   Расписание и автозадания не загружены!") .
@@ -1225,25 +1226,26 @@ method public void  load_fbrgds (iAddr as character,ifile-path as character ):
                                                  buf_fbr-gds-obj.obj-code = v-cntxt-obj-code and
                                                  buf_fbr-gds-obj.obj-type = v-cntxt-obj-type no-error .
          if not available (buf_fbr-gds-obj) then do:
-/*            create buf_fbr-gds-obj .                                                              */
-/*            assign                                                                                */
-/*            buf_fbr-gds-obj.gds-code = ub.goods.gds-code                                          */
-/*            buf_fbr-gds-obj.obj-code = v-cntxt-obj-code                                           */
-/*            buf_fbr-gds-obj.obj-type = v-cntxt-obj-type                                           */
-/*            .                                                                                     */
-/*            buffer-copy tt-fbr-gds-obj except tt-fbr-gds-obj.obj-code                             */
-/*                                             tt-fbr-gds-obj.obj-type                              */
-/*                                             tt-fbr-gds-obj.gds-code to buf_fbr-gds-obj no-error .*/
-/*                                       if error-status:error then                                 */
-/*                                       do:                                                        */
-/*                                          put-Log(return-value).                                  */
-/*                                          undo, return error return-value.                        */
-/*                                       end.                                                       */
+            if tt-fbr-gds-obj.is-menu then do:
         put-err-log(
           "Товар с кодом " + string(tt-gds-mapping.gds-code16) + " .Код в 15.0 " + string(tt-fbr-gds-obj.gds-code) + " " + 
-          "Не имеет атрибуты производства в 16 версии").
+          "Атрибут: Является блюдом меню, в 15 версии имеет значение: " + string(tt-fbr-gds-obj.is-menu) + " а в 16 " + "no").
            next .
-
+            end.  
+            create buf_fbr-gds-obj .
+            assign
+            buf_fbr-gds-obj.gds-code = ub.goods.gds-code
+            buf_fbr-gds-obj.obj-code = v-cntxt-obj-code
+            buf_fbr-gds-obj.obj-type = v-cntxt-obj-type
+            .
+            buffer-copy tt-fbr-gds-obj except tt-fbr-gds-obj.obj-code
+                                             tt-fbr-gds-obj.obj-type
+                                             tt-fbr-gds-obj.gds-code to buf_fbr-gds-obj no-error .
+                                       if error-status:error then
+                                       do:
+                                          put-Log(return-value).
+                                          undo, return error return-value.
+                                       end.
          end.  
          else do:
            if tt-fbr-gds-obj.is-menu <> buf_fbr-gds-obj.is-menu then do:
@@ -1281,7 +1283,7 @@ method public void  load_fbrgds (iAddr as character,ifile-path as character ):
      os-delete value("fbrgds-temp.json") .
      os-delete value("fbrgds.json") .
      end.
-     if vflag then
+     if vflag and Chek_fbrgds() then
         put-log( string(now) + "   Атрибуты автопроизводства загружены!") .
      else
         put-log( string(now) + "   Атрибуты автопроизводства не загружены!") .
@@ -1368,7 +1370,7 @@ method public character load_cashdesk(iAddr as character ) :
      os-delete value("cashdesk-temp.json") .
      os-delete value("cashdesk.json") .
      end.     
-     if vflag then do:
+     if vflag and chek_cash_desk() then do:
         if v-RfNumber <> 0 then v-string-cash = string(v-cash-rf) + {&delim-par} + string(v-RfNumber) + {&delim-par} + v-string-cash .
         find first ub.cash-desk-attr exclusive-lock where ub.cash-desk-attr.attr-code = "string-cash" and
                                                           ub.cash-desk-attr.cash-num = 0 and
@@ -1685,7 +1687,7 @@ method public void  load_price (iAddr as character,ifile-path as character ):
      os-delete value("price-temp.json") .
      os-delete value("price.json") .
      end.     
-     if vflag then
+     if vflag and chek_price() then
         put-log( string( now) + "   Цены загружены!") .
      else
         put-log( string( now) + "   Цены  не загружены!") .
@@ -1847,7 +1849,7 @@ method public void load_user(iAddr as character ) :
      os-delete value("user-temp.json") .
      os-delete value("user.json") .
      end.     
-     if vflag then
+     if vflag and chek_user() then
         put-log( string(now) + "   Пользователи загружены!") .
      else
         put-log( string(now) + "   Пользователи не загружены!") .
@@ -2032,7 +2034,7 @@ method public void load_pumpdoc (iaddr as character, ifile-path as character ) :
      os-delete value("pumpdoc-temp.json") .
      os-delete value("pumpdoc.json") .
      end.     
-     if vflag then
+     if vflag and chek_pumpdoc() then
         put-log( string( now) +  "   Инвентаризация счётчиков ТРК загружена!" ) .
      else
         put-log( string( now) +  "   Инвентаризация счётчиков ТРК не загружена!" ) .
@@ -2399,6 +2401,16 @@ define buffer buf_goods     for ub.goods .
         v-count-confirm = v-count-confirm + 1
       no-error .
     end .
+    else do:
+      assign
+        tt-stk-gd2.fact-qnty16     = tt-stk-gd2.fact-qnty16     + v-fact-qnty16
+        tt-stk-gd2.sum-rubl-cost16 = tt-stk-gd2.sum-rubl-cost16 + v-sum-rubl-cost16
+        tt-stk-gd2.vat-rubl16      = tt-stk-gd2.vat-rubl16      + v-vat-rubl16
+        tt-stk-gd2.sum-rubl-crsa16 = tt-stk-gd2.sum-rubl-crsa16 + v-sum-rubl-crsa16
+        v-count-confirm = v-count-confirm + 1
+        .
+    end.  
+    
     
   end . /* end_of for_each нетопливо */
 
@@ -2436,7 +2448,7 @@ define buffer buf_goods     for ub.goods .
     if (tt-stk-gd2.fact-qnty16     <> tt-stk-gd2.fact-qnty)
     or (v-sum-rubl-delta <> 0)
     or (v-vat-rubl-delta <> 0)
-    or (tt-stk-gd2.sum-rubl-crsa16 <> tt-stk-gd2.sum-rubl-crsa)
+    or (tt-stk-gd2.sum-rubl-crsa16 <> tt-stk-gd2.sum-rubl-crsa) 
     then do :
        if vFirst
        then do:
