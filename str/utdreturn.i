@@ -8,6 +8,7 @@ define temp-table tt-return
   field mark like marking.mark
 index docid db-num doc-id.
 define temp-table tt-prts
+  field rec-id-line as recid
   field rec-id as recid
   field doc-code as character 
 index docid doc-code rec-id.
@@ -60,6 +61,8 @@ function  crUtdReturn returns logical
 &endif
 (input idoc-code as character ):
    define buffer trn-doc               for ub.trn-doc.
+   define buffer doc-line              for ub.doc-line.
+   
    define buffer parts                 for ub.parts.
    define buffer buf_parts             for ub.parts.
    define buffer goods                 for ub.goods.
@@ -100,8 +103,14 @@ function  crUtdReturn returns logical
       and not available utd
    then do:
       
-      for each parts where parts.out-code eq trn-doc.doc-code
-      no-lock.
+      for each doc-line where doc-line.doc-code eq trn-doc.doc-code no-lock,
+         first parts where parts.out-code  = doc-line.doc-code
+                       and parts.obj-type  = doc-line.obj-type
+                       and parts.obj-code  = doc-line.obj-code
+                       and parts.artic     = doc-line.artic
+                       and parts.prod-type = doc-line.prod-type
+                       and parts.prod-code = doc-line.prod-code
+      no-lock:
          define variable v-rowid    as rowid no-undo.
          define variable v-tbl-name as character no-undo.
          find first gen-attr where gen-attr.table-name = {&table_parts}
@@ -123,6 +132,7 @@ function  crUtdReturn returns logical
          
          create tt-prts.
          assign
+            tt-prts.rec-id-line = recid(doc-line)
             tt-prts.rec-id   = recid(parts)
             tt-prts.doc-code = if available  buf_parts then buf_parts.in-code  else ""
          .
@@ -131,6 +141,7 @@ function  crUtdReturn returns logical
                                
       block-part:
       for each tt-prts,
+         first doc-line where recid(doc-line) eq tt-prts.rec-id-line no-lock,
          first parts where recid(parts) eq tt-prts.rec-id no-lock
       break by  tt-prts.doc-code:
          find first goods where goods.artic eq parts.artic
@@ -148,8 +159,10 @@ function  crUtdReturn returns logical
             do trans:
                if first-of(tt-prts.doc-code)
                then do:
-                  
-                  find first utd where utd.doc-code eq tt-prts.doc-code no-lock no-error.
+                  if    not available utd
+                     or trn-doc.reason-code ne 23
+                  then
+                     find first utd where utd.doc-code eq tt-prts.doc-code no-lock no-error.
                   if available utd
                   then do:
                         
@@ -160,7 +173,6 @@ function  crUtdReturn returns logical
                                              RevocationStatus 
                                              RecipientResponseStatus 
                                              ReceiptStatus 
-                                             OrganizationExt  
                                              ModifyTime 
                                              ModifyDate  
                                              LoadTime  
@@ -180,14 +192,16 @@ function  crUtdReturn returns logical
                         buf_utd.EDocType              = objSrv:Env:Utd:EDocType:returns:KeyIntDB
                         buf_utd.DocumentDate    = today
                         buf_utd.DocumentNumber  = "Возврат по " + utd.DocumentNumber + " за " + string(utd.DocumentDate,"99/99/9999")
-                           
+                        buf_utd.Direction       = "Inbound"
                         
                      .
                      validate buf_utd.
                      define variable mTypeUtd as character no-undo.
                      if   trn-doc.reason-code eq 23
-                     then
-                        mTypeUtd = "СЧФДОП". 
+                     then assign
+                       buf_utd.PackageId = ""
+                       mTypeUtd = "СЧФДОП"
+                     . 
                      else if trn-doc.reason-code eq 25
                      then
                         mTypeUtd = "ДОП".
@@ -227,6 +241,20 @@ function  crUtdReturn returns logical
                      buf_utd.cli-code        = trn-doc.cli-code
                   .
                   validate buf_utd.
+                  if   trn-doc.reason-code eq 23
+                  then assign
+                     buf_utd.PackageId = ""
+                     mTypeUtd = "СЧФДОП"
+                  . 
+                  else if trn-doc.reason-code eq 25
+                  then
+                     mTypeUtd = "ДОП".
+                  else
+                     mTypeUtd = "".
+                        
+                  if   mTypeUtd ne ""
+                  then
+                     setattrutd (buf_utd.db-num,buf_utd.doc-id,"TypeUTD",mTypeUtd).
                   /* поставим статус новы чтобы сначо создать все марки  по документу а потом отправить в новости */
                   buf_utd.sts             = ObjSrv:Env:Utd:Sts:th:newstatus:KeyIntDB. 
                   Buf_utd.sts-edi         = ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
@@ -238,6 +266,11 @@ function  crUtdReturn returns logical
                   .
                end.
                end.
+               find first gds-dtl where gds-dtl.doc-code  = doc-line.doc-code
+                                    and gds-dtl.artic     = doc-line.artic  
+                                    and gds-dtl.prod-code = doc-line.prod-code
+                                    and gds-dtl.prod-type = doc-line.prod-type 
+               no-lock no-error.
                create buf_utd-lines.
                assign
                   vi                      = vi + 1
@@ -247,12 +280,12 @@ function  crUtdReturn returns logical
                   buf_utd-lines.LineNum   = vi
                   buf_utd-lines.gds-code     = goods.gds-code
                   buf_utd-lines.ProductCode  = goods.gds-name
-                  buf_utd-lines.Quantity     = parts.fact-qnty
-                  buf_utd-lines.Price        = parts.price-cli
-                  buf_utd-lines.TaxRate      = parts.VAT-pc
-                  buf_utd-lines.Total        = parts.price-cli * parts.fact-qnty
-                  buf_utd-lines.UnitCode     = goods.unit-cli
-                  buf_utd-lines.Vat          = buf_utd-lines.Total * parts.VAT-pc / (100 + parts.VAT-pc)
+                  buf_utd-lines.Quantity     = if available gds-dtl then gds-dtl.fact-qnty  else doc-line.fact-qnty
+                  buf_utd-lines.Price        = if available gds-dtl then gds-dtl.price-rubl else doc-line.price-rubl
+                  buf_utd-lines.TaxRate      = doc-line.VAT-pc
+                  buf_utd-lines.Total        = buf_utd-lines.Price * buf_utd-lines.Quantity
+                  buf_utd-lines.UnitCode     = doc-line.unit-cli
+                  buf_utd-lines.Vat          = buf_utd-lines.Total * buf_utd-lines.TaxRate / (100 + buf_utd-lines.TaxRate)
                   buf_utd-lines.TotalWithVatExcluded = buf_utd-lines.Total  - buf_utd-lines.Vat
                .
                for each marking-lines where marking-lines.gds-code   = goods.gds-code

@@ -5,7 +5,7 @@ define temp-table tt-utd-mark no-undo like utd-marking-lines
 { utl/gtin.i {1}}
 { gbl/attr-lib.i {1}}
 { str/utd-typemark.i {1}}
-{ str/utd-attr.i {1}}
+
 &if "{1}" = "class"
 &then
 method public void CheckQnty
@@ -395,7 +395,10 @@ function CheckGds returns logical
       define variable VBarCode as character no-undo.
       VBarCode = getattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"BarCode").
       if VBarCode ne ?
-      then do: 
+      then do:
+         if num-entries(VBarCode," ") > 0
+         then
+            VBarCode = entry(num-entries(VBarCode," "),VBarCode," "). 
          vgdsbar = GetGdsCodeByGtin(VBarCode).
          if vgdsbar eq ? or vgdsbar eq 0
          then do:
@@ -1510,146 +1513,5 @@ function SetLockUTDMark returns logical
    
 end.
 
-{&CommentStartNoClass}
-method public recid addMarkforUtd
-{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-function addMarkforUtd returns recid 
-{utl\comment.i} */
-(iDb-num  as integer ,
- iDoc-id  as integer ,
- ilinenum as integer ,
- iMark as character  ,
- isite   as character,
- iUtdType as character    ):
-    define buffer     marking            for ub.marking.
-    define buffer     marking-attr       for ub.marking-attr.
-    define buffer utd-marking-lines      for ub.utd-marking-lines.
-    define buffer utd-marking-lines-attr for ub.utd-marking-lines-attr.
-    define variable vMRC  as decimal no-undo.
-    define variable vQnty as decimal no-undo.
-   if imark ne "-"
-   then do:
-      imark = repTegforDm(imark).
-      vQnty = getQntyUTDByCodId(imark) .
-      find first utd-marking-lines where utd-marking-lines.mark       = imark
-                                     and utd-marking-lines.db-num     = idb-num     
-                                     and utd-marking-lines.doc-id     = idoc-id 
-                                     and utd-marking-lines.Linenum    = iLinenum        
-      exclusive-lock no-error.
-      if not available utd-marking-lines
-      then do:
-         create utd-marking-lines.
-         assign
-            utd-marking-lines.mark      = imark
-            utd-marking-lines.db-num    = idb-num     
-            utd-marking-lines.doc-id    = idoc-id 
-            utd-marking-lines.Linenum   = iLinenum
-            utd-marking-lines.site      = isite when isite ne "1c" 
-            utd-marking-lines.doc-level = 1
-            utd-marking-lines.gds-code  = ?        
-         .
-         if isOAD (imark)
-         then do:
-            find first utd-marking-lines-attr where utd-marking-lines-attr.mark = imark
-                                     and utd-marking-lines-attr.db-num          = idb-num     
-                                     and utd-marking-lines-attr.doc-id          = idoc-id 
-                                     and utd-marking-lines-attr.Linenum         = iLinenum
-                                     and utd-marking-lines-attr.attr-code       = "box-qnty"        
-            exclusive-lock no-error.
-            if not available utd-marking-lines-attr
-            then do:     
-               create utd-marking-lines-attr.
-               assign
-                  utd-marking-lines-attr.mark      = imark
-                  utd-marking-lines-attr.db-num    = idb-num     
-                  utd-marking-lines-attr.doc-id    = idoc-id 
-                  utd-marking-lines-attr.Linenum   = iLinenum
-                  utd-marking-lines-attr.attr-code = "box-qnty"
-                .
-            end.
-            utd-marking-lines-attr.attr-value = string(vQnty).
-            release utd-marking-lines-attr.
-         end.
-      end.
-      else do:
-         if    (    isite eq "-"
-            and utd-marking-lines.site eq "+")
-         or (    isite eq "+"
-            and utd-marking-lines.site eq "-")
-         then 
-            delete utd-marking-lines.
-         else if isOAD (imark)
-         then do:
-            define variable vnewMark as character no-undo.
-            vnewMark = "02" + GetTegCod(imark,"02") + "37" + string(int(GetTegCod(imark,"37")) * 2).
-            utd-marking-lines.mark = vnewmark.
-            find first ub.utd-marking-lines-attr where 
-            utd-marking-lines-attr.mark      = imark
-            and utd-marking-lines-attr.db-num    = idb-num     
-            and utd-marking-lines-attr.doc-id    = idoc-id 
-            and utd-marking-lines-attr.Linenum   = iLinenum
-            and utd-marking-lines-attr.attr-code = "box-qnty"
-            exclusive-lock no-error.
-            if available utd-marking-lines-attr
-            then do:
-               utd-marking-lines-attr.mark = utd-marking-lines.mark.
-               utd-marking-lines-attr.attr-value = string(integer (ub.utd-marking-lines-attr.attr-value) * 2).
-            end.
-         end.
-      end.
-      define variable vrec as recid no-undo.
-      vrec = recid(utd-marking-lines).
-      
-      if isite ne "1c" 
-      then do:
-         if isMark (imark)
-         then do:                               
-            find first marking where marking.mark eq iMark exclusive-lock no-error.
-            if not available marking
-            then do:
-               create marking.
-               marking.mark = iMark.
-               marking.gds-code = ?.
-               marking.unit     = getLevelUTDByCodId(marking.mark) .
-            end.
-            marking.unit-ext   = getLevelMotpByCodId(marking.mark) .
-            marking.box-qnty   = vQnty. 
-            marking.unit       = getLevelUTDByCodId(marking.mark) .
-   /*         marking.unit-ext = utd-lines.UnitCode .*/
-            if       marking.sts = objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB
-               or (     iUtdType eq "UniversalTransferDocument"
-                     and marking.sts = objSrv:Env:marking:Sts:Mark:NotAvailable:KeyIntDB)
-            then
-               marking.sts = ?.                  
-            vMRC =  getMRCByDM (iMark).
-            if     vMRC ne 0 
-               and vMRC ne ?
-            then do:
-               find first marking-attr where marking-attr.mark      =  iMark
-                                         and marking-attr.attr-code = "MRC"
-               no-lock no-error.
-               if not available marking-attr
-               then do:
-                  create marking-attr.
-                  assign
-                     marking-attr.mark =  iMark
-                     marking-attr.attr-code = "MRC"
-                     marking-attr.attr-value = string(vMRC)
-                  .
-               end.
-               release marking-attr no-error.
-            end.
-         end.
-      end.
-      else do:
-         find first marking where marking.mark eq iMark no-lock no-error.
-         if available marking
-         then
-            utd-marking-lines.gds-code = marking.gds-code. 
-      end.
-   end.
-   release utd-marking-lines. 
-            
-   return vrec.
-end.
 
+   

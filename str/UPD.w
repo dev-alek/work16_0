@@ -1629,14 +1629,19 @@ ON CHOOSE OF b_anul IN FRAME d-utd /* јннул€ци€ */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_akt POPUP-MENU-b-print
 ON CHOOSE OF menu-item m_return /* –еквизиты возврата */
 DO:
+   define variable row_utd as rowid no-undo.
    if available (X_utd) 
-   then do:
+   then do with FRAME d-utd:
       define variable mMode as character  no-undo.
       mMode = if     X_utd.edoctype = EdocType:Returns:KeyIntDB
                  and X_utd.sts      = ObjSrv:Env:Utd:Sts:th:RequireFilling:KeyIntDB  
               then {&update}
               else {&lookup}.
-      run str/upd_org.w (parparentproc, mDiadocConnection, X_utd.db-num, X_utd.doc-id, mMode) .
+      run str/upd_org.w (parparentproc, mDiadocConnection, X_utd.db-num, X_utd.doc-id,{&update}) .
+      row_utd = rowid(x_utd).
+      run init-id (X_utd.doc-id, X_utd.db-num).  
+      br-utd:refresh () no-error.
+      reposition br-utd to rowid row_utd no-error .
                 
               
     end.  
@@ -2727,7 +2732,7 @@ PROCEDURE init-sort :
     then do:
        if not Vflaginout
        then
-          vinout = " buf_utd.Direction eq 'inbound'".
+          vinout = " (buf_utd.Direction eq 'inbound' or buf_utd.Direction eq '') ".
        else
           vinout = " buf_utd.Direction ne 'inbound'".
     
@@ -2737,7 +2742,7 @@ PROCEDURE init-sort :
     else do:
        if not Vflaginout
        then
-          vinout = substitute (" buf_utd.host-code = &1 and buf_utd.Direction eq 'inbound'",  v-cntxt-host-code-obj).
+          vinout = substitute (" buf_utd.host-code = &1 and (buf_utd.Direction eq 'inbound'  or buf_utd.Direction eq '') ",  v-cntxt-host-code-obj).
        else
           vinout = " buf_utd.Direction ne 'inbound'".
     

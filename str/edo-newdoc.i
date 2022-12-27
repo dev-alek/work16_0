@@ -35,13 +35,14 @@ define variable vSendTask as component-handle no-undo.
 /*       getdesc(vDocumentToSend).*/
 /*       vDocumentToSend:Comment = "Это УПД с заполнением контента средствами компоненты".*/
        vSendTask:CounteragentId = iContGuid  .
-       vSendTask:AddDocumentFromFile("UniversalTransferDocument", "СЧФДОП", "utd820_05_01_01", iFile).
+       vSendTask:AddDocumentFromFile("UniversalTransferDocument", iTypeUTD, "utd820_05_01_01", iFile).
        vSendTask:Send()no-error.
        if error-status:num-messages > 0 then do:
           PutErr("ERROR Ошибка отправки документа").
+          return error "ERROR Ошибка отправки документа".
        end.
        else do:
-          PutMes("Документ отправлен").
+          PutMes("Документ отправлен успешно.").
           message "Документ отправлен успешно."
           view-as alert-box.
        end.
