@@ -508,23 +508,23 @@ procedure proc-report:
 
          put stream OutStr-html unformatted 
             '<tr>' skip
-            '<td>' + v-host-name + '</td>' skip
-            '<td>' + obj-list.obj-name + '</td>' skip                            /*наименование объекта*/
-            '<td style="text-align:center;">' + string(chk-doc.pay-desk) + '</td>' skip                             /* касса */
-            '<td  style="text-align:center;">' + chk-doc.shift-name + '</td>' skip                           /* смена */
-            '<td style="text-align:center;">' + string(chk-doc.shift-date) + '</td>' skip                            /* дата смены */
-            '<td style="text-align:center;">' + t-chk-chr + '</td>' skip                                     /* тип чека */
-            '<td style="text-align:center;">' + string(chk-doc.chk-num) + ':' + string(chk-doc.z-number) + '</td>' skip          /* номер чека */
-            '<td style="text-align:center;">' + handmade + '</td>' skip
-            '<td style="text-align:center;">' + string(chk-gds.chk-date) + '</td>' skip                               /* дата чека */
-            '<td style="text-align:center;">' + time-chk-chr + '</td>' skip                                    /* время чека */
+            '<td text_wrap="true">' + v-host-name + '</td>' skip
+            '<td text_wrap="true">' + obj-list.obj-name + '</td>' skip                            /*наименование объекта*/
+            '<td text_wrap="true" style="text-align:center;">' + string(chk-doc.pay-desk) + '</td>' skip                             /* касса */
+            '<td text_wrap="true" style="text-align:center;">' + chk-doc.shift-name + '</td>' skip                           /* смена */
+            '<td text_wrap="true" style="text-align:center;">' + string(chk-doc.shift-date) + '</td>' skip                            /* дата смены */
+            '<td text_wrap="true" style="text-align:center;">' + t-chk-chr + '</td>' skip                                     /* тип чека */
+            '<td text_wrap="true" style="text-align:center;">' + string(chk-doc.chk-num) + ':' + string(chk-doc.z-number) + '</td>' skip          /* номер чека */
+            '<td text_wrap="true" style="text-align:center;">' + handmade + '</td>' skip
+            '<td text_wrap="true" style="text-align:center;">' + string(chk-gds.chk-date) + '</td>' skip                               /* дата чека */
+            '<td text_wrap="true" style="text-align:center;">' + time-chk-chr + '</td>' skip                                    /* время чека */
             '<td text_wrap="true">' + SUBSTRING(produkt,1,50) + '</td>' skip                        /* наим.товара */
-            '<td  style="text-align:center;">' + string(chk-gds.pump) + '</td>' skip                                   /* ТРК */
-            '<td  style="text-align:center;">' + string(chk-gds.nozzle-code) + '</td>' skip                             /* пистолет */
-            '<td  style="text-align:right;">' + string(ABSOLUTE(chk-gds.doc-qnty),"->>>>>>>>9.99") + '</td>' skip 
-            '<td style="text-align:center;">' + string(chk-gds.price-base,"->>>>>>>>9.99") + '</td>' skip
-            '<td style="text-align:right;">' + string(ABSOLUTE(chk-gds.src-sum),"->>>>>>>>9.99") + '</td>' skip
-            '<td  style="text-align:right;">' + string(ABSOLUTE(chk-gds-pay.tot-r-b),"->>>>>>>>9.99") + '</td>' skip
+            '<td text_wrap="true" style="text-align:center;">' + string(chk-gds.pump) + '</td>' skip                                   /* ТРК */
+            '<td text_wrap="true" style="text-align:center;">' + string(chk-gds.nozzle-code) + '</td>' skip                             /* пистолет */
+            '<td text_wrap="true" style="text-align:right;">' + string(ABSOLUTE(chk-gds.doc-qnty),"->>>>>>>>9.99") + '</td>' skip 
+            '<td text_wrap="true" style="text-align:center;">' + string(chk-gds.price-base,"->>>>>>>>9.99") + '</td>' skip
+            '<td text_wrap="true" style="text-align:right;">' + string(ABSOLUTE(chk-gds.src-sum),"->>>>>>>>9.99") + '</td>' skip
+            '<td text_wrap="true" style="text-align:right;">' + string(ABSOLUTE(chk-gds-pay.tot-r-b),"->>>>>>>>9.99") + '</td>' skip
             '<td text_wrap="true">' + opl-chr + '</td>' skip                                         /*тип оплаты */
             '<td text_wrap="true">' + kassir-chr + '</td>' skip                                      /* кассир*/
             '</tr>' skip

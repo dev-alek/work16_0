@@ -327,10 +327,10 @@ END.
 put stream OutStr-html unformatted 
 { rep/htmlhead.i }
 
-'<body>'.
+'<body orientation = "landscape" name = " Отчет по всем возвратным операциям  " fit_to_page="true">'.
 
 put stream OutStr-html unformatted
-   '<table orientation = "landscape" name = " Отчет по всем возвратным операциям  " fit_to_page="true">' skip  /* таблица, в которой содержится весь отчет */
+   '<table>' skip  /* таблица, в которой содержится весь отчет */
    '<thead>' skip  /* Шапка отчета */
    /* Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px */
    '<tr class="set_columns">' skip
@@ -766,26 +766,26 @@ procedure proc-report:
       
          put stream OutStr-html unformatted 
             '<tr>' skip
-            '<td>' v-host-name       '</td>' skip
-            '<td>' obj-list.obj-name '</td>' skip
-            '<td style="text-align:center;">' chk-doc.pay-desk   '</td>' skip  /*касса*/
-            '<td style="text-align:center;">' chk-doc.shift-name '</td>' skip  /*смена*/
-            '<td style="text-align:center;">' chk-doc.shift-date '</td>' skip  /*дата смены*/
-            '<td style="text-align:center;">' chk-doc.chk-num ': ' chk-doc.z-number '</td>' skip    /*номер чека возврата*/
-            '<td style="text-align:center;">' chk-gds.chk-date '</td>' skip    /*дата чека возврата*/
+            '<td text_wrap="true">' v-host-name       '</td>' skip
+            '<td text_wrap="true">' obj-list.obj-name '</td>' skip
+            '<td text_wrap="true" style="text-align:center;">' chk-doc.pay-desk   '</td>' skip  /*касса*/
+            '<td text_wrap="true" style="text-align:center;">' chk-doc.shift-name '</td>' skip  /*смена*/
+            '<td text_wrap="true" style="text-align:center;">' chk-doc.shift-date '</td>' skip  /*дата смены*/
+            '<td text_wrap="true" style="text-align:center;">' chk-doc.chk-num ': ' chk-doc.z-number '</td>' skip    /*номер чека возврата*/
+            '<td text_wrap="true" style="text-align:center;">' chk-gds.chk-date '</td>' skip    /*дата чека возврата*/
             /*'<td style="text-align:center;">' chk-gds.time-oper '</td>' skip  */  /* время чека */
-            '<td style="text-align:center;">' string(chk-doc.chk-time, "HH:MM") '</td>' skip   /* время чека */
-            '<td>' SUBSTRING(produkt,1,50)   '</td>' skip                              /*товар в чеке возврата*/
-            '<td>' kd-tv   '</td>' skip                                                /* код товара */        
-            '<td style="text-align:center;">' string(ABSOLUTE(chk-gds.doc-qnty),"->>>>>>>>9.99") '</td>' skip  /*количество*/
-            '<td style="text-align:center;">' string(ABSOLUTE(chk-gds.src-sum),"->>>>>>>>9.99")  '</td>' skip  /*Сумма в чеке */
+            '<td text_wrap="true" style="text-align:center;">' string(chk-doc.chk-time, "HH:MM") '</td>' skip   /* время чека */
+            '<td text_wrap="true">' SUBSTRING(produkt,1,50)   '</td>' skip                              /*товар в чеке возврата*/
+            '<td text_wrap="true">' kd-tv   '</td>' skip                                                /* код товара */        
+            '<td text_wrap="true" style="text-align:center;">' string(ABSOLUTE(chk-gds.doc-qnty),"->>>>>>>>9.99") '</td>' skip  /*количество*/
+            '<td text_wrap="true" style="text-align:center;">' string(ABSOLUTE(chk-gds.src-sum),"->>>>>>>>9.99")  '</td>' skip  /*Сумма в чеке */
             '<td text_wrap="true" style="text-align:center;">' + string(ABSOLUTE(chk-gds-pay.tot-r-b),"->>>>>>>>9.99") + '</td>' skip                  /*Сумма по типу оплаты*/
-            '<td>'                            opl-chr    '</td>' skip                  /*тип оплаты*/
-            '<td style="text-align:center;">' trnz-chr   '</td>' skip                  /*транзакция */
-            '<td style="text-align:center;">' vozvrtrn   '</td>' skip                  /*возврат по транзакции*/
-            '<td style="text-align:center;">' chk-doc.doc-num2   '</td>' skip                  /*номер прямого чека*/
-            '<td style="text-align:center;">' suhoi      '</td>' skip                  /* признак сухого */
-            '<td style="text-align:center;">' vCHMgrKey  '</td>' skip                  /* ключ оператора*/
+            '<td text_wrap="true">'                            opl-chr    '</td>' skip                  /*тип оплаты*/
+            '<td text_wrap="true" style="text-align:center;">' trnz-chr   '</td>' skip                  /*транзакция */
+            '<td text_wrap="true" style="text-align:center;">' vozvrtrn   '</td>' skip                  /*возврат по транзакции*/
+            '<td text_wrap="true" style="text-align:center;">' chk-doc.doc-num2   '</td>' skip                  /*номер прямого чека*/
+            '<td text_wrap="true" style="text-align:center;">' suhoi      '</td>' skip                  /* признак сухого */
+            '<td text_wrap="true" style="text-align:center;">' vCHMgrKey  '</td>' skip                  /* ключ оператора*/
             '<td text_wrap="true" >'                            kassir-chr '</td>' skip                  /* кассир*/
             '</tr>' skip .
       END.
