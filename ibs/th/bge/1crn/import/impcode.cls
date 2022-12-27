@@ -39,28 +39,31 @@ class ibs.th.bge.1crn.import.impCode inherits ibs.th.gbl.sys.objth implements ib
     define variable objImp    as class ibs.th.bge.1crn.subjects.{&impclass} no-undo.
     define variable v-retfl   as logical no-undo .
     define variable v-mode    as character no-undo. /* create/update */
-   
+    define variable v-del-f as logical no-undo.
     define buffer code for ub.code .
 
 
     objImp = cast (subjectObj, {&impclass}).
-   
+    v-del-f = objImp:del-f > 0.
+    if v-del-f eq ?
+    then
+       v-del-f = false.
     find first code where Code.parent eq objImp:parent_
                       and code.code   eq objImp:code_
     exclusive-lock no-error.  
     if available code 
     then do:
-       if objImp:del-f > 0
+       if v-del-f
        then
           delete Code.
        
     end.
     else do:
-       if not objImp:del-f > 0
+       if not v-del-f
        then
           create code.
     end.  
-    if not objImp:del-f > 0
+    if not v-del-f
     then assign
        code.code      = objImp:code_
        Code.parent    = objImp:parent_

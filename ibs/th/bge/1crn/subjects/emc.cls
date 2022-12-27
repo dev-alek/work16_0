@@ -85,7 +85,7 @@ class ibs.th.bge.1crn.subjects.emc inherits ibs.th.bge.1crn.subjects.asubject:
       end.
       when "emctype-code" then do:
         assign emctype-code = {&attr-integer}
-               parent_      = "emc" + {&delim-par} + string(emctype-code,"001").
+               parent_      = "emc" + {&delim-par} + string(emctype-code,"999").
       end.
       
     end case.

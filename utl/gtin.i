@@ -825,7 +825,7 @@ define output parameter vok as logical   no-undo init yes.
               vdate = date(code.misc1).
               vDateLast = code.misc1.
               vDate3 = MoveDate(today, - 3 ).   
-              vText =  substitute ("ТОВАР ИМЕЕТ ОГРАНИЧЕННЫЙ СРОК РЕАЛИЗАЦИИ. Если товар произведен до &1 или после &2, то его приемка и продажа запрещена.",
+              vText =  substitute ("ТОВАР ИМЕЕТ ОГРАНИЧЕННЫЙ СРОК РЕАЛИЗАЦИИ. Если товар произведен после &2, то его приемка и продажа запрещена.",
                                    string(vDate3  , "99/99/9999"),
                                    string(vDate   , "99/99/9999")
                                    ).
@@ -841,7 +841,7 @@ define output parameter vok as logical   no-undo init yes.
               define variable vGood as logical no-undo.
               define variable vDateSale as date no-undo.
               define buffer bcode for code.
-              for each code where Code.parent   eq vparent
+              for last code where Code.parent   eq vparent
                               and code.status_  eq {&bef-current-status-int}
                               and code.code     < vDateLast
                               and code.code     >= vDateFirst
@@ -855,15 +855,15 @@ define output parameter vok as logical   no-undo init yes.
                     then
                        vText = vtext + substitute ("&1Если товар произведен с &2 до &3, ТО ЕГО ПРИЕМКА И ПРОДАЖА ЗАПРЕЩЕНА",
                                                   {&new-line},
-                                                  string(max(date(code.misc1),vDate3),"99/99/9999"),
+                                                  string(    date( code.misc1)       ,"99/99/9999"),
                                                   string(    date(bcode.misc1)       ,"99/99/9999")
                                                   ).
                     else do:
                        vGood = yes.
                        vDateSale = MoveDate(date(bcode.misc1), 3) - 1.
-                       vText = vtext + substitute ("&1Если товар произведен с &2 до &3, то продажа разрешена до &4.~Осталось &5 дней.",
+                       vText = vtext + substitute ("&1Если товар произведен до &3, то продажа разрешена до &4.~Осталось &5 дней.",
                                                   {&new-line},
-                                                  string(max(date( code.misc1),vDate3) ,"99/99/9999"),
+                                                  string(    date( code.misc1)         ,"99/99/9999"),
                                                   string(    date(bcode.misc1)         ,"99/99/9999"),
                                                   string(         vDateSale            ,"99/99/9999"),
                                                   string(vDateSale - today)
