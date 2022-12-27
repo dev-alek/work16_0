@@ -440,6 +440,14 @@ end.
     RUN gds-attr-delete (v-nbc, {&attr-mark-type}, output v-attr-del).     
   end.
   
+  if p-GdsObj:emc-type <> ?
+  then do :
+    RUN gds-attr-write (v-nbc, "emc", p-GdsObj:emc-type).  
+  end.
+  else do :
+    RUN gds-attr-delete (v-nbc, "emc", output v-attr-del).     
+  end.
+  
   if p-GdsObj:oil-grp <> ?
   then do:
     RUN gds-attr-write (v-nbc, {&attr-group-np}, p-GdsObj:oil-grp).
