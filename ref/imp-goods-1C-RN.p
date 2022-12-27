@@ -56,6 +56,7 @@ define variable vss-description as character no-undo init "Загрузка товара из ER
 { gbl/objsrv.i } 
 define input parameter p-GdsObj         as class goods .
 
+  
 define buffer buf_goods for ub.goods.
 define buffer buf_goods-attr for ub.goods-attr .
       
@@ -390,7 +391,6 @@ end.
                                 , replace(return-value,{&delim-par}," ") ).
       undo, return error v-err-mess .
   end.
-  
   if v-nbc = 0 or v-nbc = ? then v-nbc = v-gds-code .
   if p-GdsObj:fuel-type eq "" or p-GdsObj:fuel-type eq ? or p-GdsObj:fuel-type eq "0"
   then v-fuel-type = ? .
@@ -440,9 +440,27 @@ end.
     RUN gds-attr-delete (v-nbc, {&attr-mark-type}, output v-attr-del).     
   end.
   
+  
   if p-GdsObj:emc-type <> ?
   then do :
-    RUN gds-attr-write (v-nbc, {&attr-emrc-type}, p-GdsObj:emc-type).  
+    define variable mEMRC as character no-undo.
+    define variable mOK as logical no-undo.
+    define variable merror-code as character no-undo.
+    mEMRC = trim(string(int64(p-GdsObj:emc-type),">>>>>>>>>>>>>>>>999")) no-error.
+    if error-status:error
+    then
+       mEMRC = p-GdsObj:emc-type.
+    run gds-attr_check-emrc-type(v-nbc,
+                              {&attr-emrc-type},
+                              mEMRC,
+                              {&update},
+                              output mOK,
+                              output merror-code).
+    if not mOK
+    then
+       undo, return error
+                (merror-code + " Товар " + p-GdsObj:code_) .
+    RUN gds-attr-write (v-nbc, {&attr-emrc-type}, mEMRC).  
   end.
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-emrc-type}, output v-attr-del).     
