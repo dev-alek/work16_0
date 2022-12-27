@@ -792,7 +792,7 @@ define private temp-table tt-recid-TranFuel no-undo
           insw:write-data-element (  "price-azs",  left-trim(string(v-price-azs, "->>>>>>>>9.99"))  ) . /* Розничная цена в соответствии с данными БД на АЗК/АЗС (Число 15,2) */
         end .
         for each buf_marking-chk no-lock where buf_marking-chk.doc-code =  buf_chk-gds.doc-code and buf_marking-chk.line-num = buf_chk-gds.line-num:
-          v-marking = GetCodeIdent(buf_marking-chk.mark).
+          v-marking = repSpecSimbforXlm(GetCodeIdent(buf_marking-chk.mark)).
           /*          for first buf_marking no-lock where buf_marking.mark begins v-marking :*/
           insw:write-data-element (  "dm",  v-marking ) . /* Datamatrix (строка) */
 /*          insw:write-data-element (  "dm",  addBracketForCode(v-marking) ) . /* Datamatrix (строка) */*/

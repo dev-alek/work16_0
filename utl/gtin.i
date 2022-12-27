@@ -86,10 +86,6 @@ function repSpecSimbforXlm return char
 {utl\comment.i} */ 
 (iDM as char ):
   
-    define variable vReplist_new as character no-undo init "&amp;,&gt;,&lt;,&apos;,&quot;".
-    define variable vReplist_old as character no-undo init "&,>,<,~',~"".
-    define variable vi as integer no-undo.
-    
     iDM = replace(iDM,chr(29),"").
     return iDM.
         
@@ -156,8 +152,8 @@ function getGdsCodeByGtin return int
 {utl\comment.i} */ 
 (iGtin as char):
    
-   define buffer prod-bc  for prod-bc.
-   define buffer bar-code for bar-code.
+   define buffer prod-bc  for ub.prod-bc.
+   define buffer bar-code for ub.bar-code.
    
    find first prod-bc where prod-bc.b-str eq iGtin  and prod-bc.bc-on no-lock no-error.
    find first bar-code where bar-code.b-code eq prod-bc.b-code no-lock no-error.
@@ -171,8 +167,8 @@ function getQntyCodeByGtin return decimal
 {utl\comment.i} */ 
 (iGtin as char):
    
-   define buffer prod-bc  for prod-bc.
-   define buffer bar-code for bar-code.
+   define buffer prod-bc  for ub.prod-bc.
+   define buffer bar-code for ub.bar-code.
    
    find first prod-bc where prod-bc.b-str eq iGtin no-lock no-error.
    find first bar-code where bar-code.b-code eq prod-bc.b-code no-lock no-error.
@@ -186,7 +182,7 @@ function getGdsCodeByDM return int
 {utl\comment.i} */ 
 (iDm as char):
    define variable vGtin as char no-undo.
-   define buffer prod-bc for prod-bc.
+   define buffer prod-bc for ub.prod-bc.
    vGtin  = getGtinByDM (IDM ).
    return getGdsCodeByGtin (vGtin).
     
@@ -198,7 +194,7 @@ method private logical ChekTypeMarkByGds
 function ChekTypeMarkByGds return logical 
 {utl\comment.i} */
 (iGds-code as integer ):
-   define buffer goods-attr for goods-attr.
+   define buffer goods-attr for ub.goods-attr.
    find first goods-attr where goods-attr.gds-code   = iGds-code 
                            and goods-attr.attr-code  = {&attr-mark-type}
    no-lock no-error.
@@ -272,7 +268,7 @@ function GetNextElement return character
      define variable vLength as integer no-undo.
      define variable vi as integer no-undo.
      define variable vj as integer no-undo.
-     if mtypemark eq "milk"
+     if mtypemark eq objsrv:Env:Marking:Types:milk:NameProp or mtypemark eq objsrv:Env:Marking:Types:milk-40:NameProp
      then do:
         entry (4,vlistleng) = "06".
      end.
