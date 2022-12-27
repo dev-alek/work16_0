@@ -98,7 +98,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
       when '8' then do:
         assign
           TempTrnDoc.ext-doc-type = {&TDEDT_Vozvrat_Perem} 
-          TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "-", "*") 
+          TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "=", "*") 
           TempTrnDoc.cli-type = "маг"
           TempTrnDoc.cli-code = integer (objTrnDoc:fuel-st-code)
           TempTrnDoc.out-code = objTrnDoc:doc-code

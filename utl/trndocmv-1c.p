@@ -277,19 +277,22 @@ on error undo, return error return-value
 /*    buf_trn-doc.reason-code   = ub.trn-doc.reason-code*/
   .
   
-  find first ub.shift-obj no-lock
-    where ub.shift-obj.obj-type = buf_trn-doc.obj-type
-    and ub.shift-obj.obj-code = buf_trn-doc.obj-code
-    and ub.shift-obj.status_  = {&sht-current}
-    no-error .
-  if available ub.shift-obj then 
-  do:
-    assign
-      buf_trn-doc.shift-num  = ub.shift-obj.shift-num
-      buf_trn-doc.shift-name = ub.shift-obj.shift-name
-      buf_trn-doc.shift-date = ub.shift-obj.shift-date
-    .
-  end.
+  if TempTrnDoc.ext-doc-type = {&TDEDT_Pri_Perem}
+  then do :
+    find first ub.shift-obj no-lock
+      where ub.shift-obj.obj-type = buf_trn-doc.obj-type
+      and ub.shift-obj.obj-code = buf_trn-doc.obj-code
+      and ub.shift-obj.status_  = {&sht-current}
+      no-error .
+    if available ub.shift-obj then 
+    do:
+      assign
+        buf_trn-doc.shift-num  = ub.shift-obj.shift-num
+        buf_trn-doc.shift-name = ub.shift-obj.shift-name
+        buf_trn-doc.shift-date = ub.shift-obj.shift-date
+      .
+    end.
+  end .
   
   assign
     n_str = 0
@@ -318,18 +321,10 @@ on error undo, return error return-value
       undo, return error v-end-message .
     end.
 
-    if TempTrnDoc.ext-doc-type = {&TDEDT_Pri_Perem}
-    and TempDocLine.fact-qnty  <> 0
+    if TempDocLine.fact-qnty  <> 0
     then do:
       assign
         v-doc-line-chg-qnty = TempDocLine.fact-qnty
-      .
-    end.
-
-    if TempTrnDoc.ext-doc-type = {&TDEDT_Vozvrat_Perem}
-    and TempDocLine.fact-qnty < TempDocLine.doc-qnty then do:
-      assign
-        v-doc-line-chg-qnty = TempDocLine.doc-qnty - TempDocLine.fact-qnty
       .
     end.
 
@@ -679,6 +674,13 @@ on error undo, return error return-value
       buf_gds-dtl.fact-qnty      = buf_doc-line.fact-qnty
       buf_gds-dtl.doc-qnty       = buf_doc-line.doc-qnty
     .
+    if TempTrnDoc.ext-doc-type = {&TDEDT_Vozvrat_Perem}
+    then do :
+      assign
+        buf_gds-dtl.price-base     = buf_doc-line.price-base
+        buf_gds-dtl.price-rubl     = buf_doc-line.price-rubl
+      .
+    end .
     
   end .
 
