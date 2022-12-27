@@ -1101,6 +1101,50 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             ub.utd-marking-lines.mark = ub.marking.mark.
          end.
         end.
+        else do:
+          def var v-GTIN as char no-undo.
+          def var v-mark-ident as char no-undo.
+          v-GTIN = getGtinByDM(TempMarkLine.MarkCode) .
+          v-mark-ident = GetCodeIdent(TempMarkLine.MarkCode).
+          if v-GTIN <> "" then 
+          do:
+            find first buf_utd-marking-lines where
+                  buf_utd-marking-lines.db-num = v-utd-db-num and buf_utd-marking-lines.doc-id = v-utd-doc-id 
+              and buf_utd-marking-lines.mark begins TempMarkLine.MarkParent no-error.
+            if not available (buf_utd-marking-lines)
+            then do:
+              LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + substitute ("Нарушена целостности либо изменен документ &1 на стороне TH", v-utd-doc-id).
+              undo, return false.
+            end.
+            buf_utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
+            ungrg(buf_utd-marking-lines.mark).
+            create ub.utd-marking-lines .
+            assign
+              ub.utd-marking-lines.db-num    = buf_utd-marking-lines.db-num
+              ub.utd-marking-lines.doc-id    = buf_utd-marking-lines.doc-id
+              ub.utd-marking-lines.gds-code  = buf_utd-marking-lines.gds-code
+              ub.utd-marking-lines.LineNum   = buf_utd-marking-lines.LineNum
+              ub.utd-marking-lines.doc-level = buf_utd-marking-lines.doc-level + 1
+             .
+            find first ub.marking where ub.marking.mark = v-mark-ident no-error.
+            if not available (ub.marking)
+              then create ub.marking .
+            assign
+              ub.marking.gds-code    = ub.utd-marking-lines.gds-code
+              ub.marking.mark        = v-mark-ident
+              ub.marking.mark-parent = buf_utd-marking-lines.mark
+              ub.marking.sts         = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB
+              ub.marking.gds-ext-id  = v-GTIN
+              ub.marking.obj-code    = TempTrnDoc.obj-code
+              ub.marking.obj-type    = TempTrnDoc.obj-type
+              .
+            ub.marking.unit-ext = getLevelMotpByDM(v-mark-ident) .
+            ub.marking.box-qnty = getQntyUTDByDM(v-mark-ident) .
+            ub.marking.unit = getLevelUTDByDM(v-mark-ident) .
+            ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
+            ub.utd-marking-lines.mark = ub.marking.mark.
+         end.
+        end.
       end.
 /*      for each TempMarkLine where TempMarkLine.Sts = "Ungrouped" :                                       */
 /*        find first ub.utd-marking-lines where ub.utd-marking-lines.mark = TempMarkLine.MarkCode no-error.*/
@@ -1405,6 +1449,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         decDocQnty = buf_utd-l.Quantity.
         decFactQnty = 0.
 
+  { utl/gtin.i class }
 
         assign
           priceSale = string (dPriceSale)

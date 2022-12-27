@@ -1549,7 +1549,7 @@ DO:
 
 
 
-    if available (tt-marking-lines) then
+    if can-find (first tt-marking-lines no-lock) then
     do:
       run str/mark_browse.w (input parparentproc,
         input-output table tt-marking-lines by-reference,
@@ -1558,10 +1558,14 @@ DO:
         input "0",
         input "" /*тип продукции*/
         )  .
-    end.
 
-    for each tt-marking-lines:
-      delete tt-marking-lines.
+      for each tt-marking-lines:
+        delete tt-marking-lines.
+      end.
+
+    end.
+    else do:
+      message "Марки не найдены." view-as alert-box information title "Информация".
     end.
   end.
   
