@@ -2282,6 +2282,11 @@ define variable v-recid as recid no-undo .
       return no-apply.
     end.
   end.
+  if t-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+  then do :
+    run local-cur in this-procedure (input 4) no-error.
+    if error-status :error then return .
+  end .
   run ui-on in this-procedure
     ( input "line"
     ).
@@ -2516,6 +2521,12 @@ DO:
      .
      return no-apply.
   end.
+  
+  if t-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+  then do :
+    run local-cur in this-procedure (input 4) no-error.
+    if error-status :error then return .
+  end .
 /* в ui-on давятся пустые ub.doc-line */
 
   run ui-on in this-procedure ( input "line" ) .
@@ -6808,6 +6819,12 @@ do while varlns-cnt <= num-entries (varnotes):
     end.
   end.
 end.
+
+if t-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+then do :
+  run local-cur in this-procedure (input 4) no-error.
+  if error-status :error then return .
+end .
 /* в ui-on давятся пустые ub.doc-line */
 run ui-on ("line").
 if prt-rec <> ? then do:
@@ -6879,75 +6896,78 @@ define variable v-vat-pc        like ub.doc-line.vat-pc    no-undo.
 /*define variable v-slt-pc        like ub.doc-line.slt-pc    no-undo.*/
 /*define variable v-have-slt-pc   as logical              no-undo.*/
 define variable v-host-code     like ub.sysconf.host-code  no-undo.
-
-   case t-doc.doc-type
-   :
-     when {&expense}
-     then do:
-        { gbl/chk-actg.i
-          v-cntxt-db-num
-          v-cntxt-userid
-          {&action-head-code-main}
-          'actn_expense_price':U
-          {&cntxt-object}
-          t-doc.host-code
-          t-doc.obj-type
-          t-doc.obj-code
-          0
-          0
-          0
-          true
-          varlog
-        }
-     end.
-     when {&return}
-     then do:
-        { gbl/chk-actg.i
-          v-cntxt-db-num
-          v-cntxt-userid
-          {&action-head-code-main}
-          'actn_return_price':U
-          {&cntxt-object}
-          t-doc.host-code
-          t-doc.obj-type
-          t-doc.obj-code
-          0
-          0
-          0
-          true
-          varlog
-        }
-
-     end.
-     when {&write-off}
-     then do:
-        { gbl/chk-actg.i
-          v-cntxt-db-num
-          v-cntxt-userid
-          {&action-head-code-main}
-          'actn_write-off_price':U
-          {&cntxt-object}
-          t-doc.host-code
-          t-doc.obj-type
-          t-doc.obj-code
-          0
-          0
-          0
-          true
-          varlog
-        }
-
-     end.
-     otherwise do:
-       message
-         vss-workfile vss-revision vss-description skip
-         "Неизвестный тип документа" t-doc.doc-type skip
-         "Документ" t-doc.doc-code skip
-         view-as alert-box error .
-       undo, return error return-value .
-     end.
-   end case .
-
+  
+   if parwith-tax <> 4
+   then do :
+     case t-doc.doc-type
+     :
+       when {&expense}
+       then do:
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_expense_price':U
+            {&cntxt-object}
+            t-doc.host-code
+            t-doc.obj-type
+            t-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+          }
+       end.
+       when {&return}
+       then do:
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_return_price':U
+            {&cntxt-object}
+            t-doc.host-code
+            t-doc.obj-type
+            t-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+          }
+  
+       end.
+       when {&write-off}
+       then do:
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_write-off_price':U
+            {&cntxt-object}
+            t-doc.host-code
+            t-doc.obj-type
+            t-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+          }
+  
+       end.
+       otherwise do:
+         message
+           vss-workfile vss-revision vss-description skip
+           "Неизвестный тип документа" t-doc.doc-type skip
+           "Документ" t-doc.doc-code skip
+           view-as alert-box error .
+         undo, return error return-value .
+       end.
+     end case .
+   end .
+   
    if varlog = no then return error.
    for each cur-doc-line no-lock where
             cur-doc-line.doc-code = t-doc.doc-code
@@ -6975,7 +6995,9 @@ define variable v-host-code     like ub.sysconf.host-code  no-undo.
 
    assign varpc       = 0.00
           varflag-ret = no.
-   if parwith-tax <> 3 then do:
+   if parwith-tax <> 3
+   and parwith-tax <> 4
+   then do:
      run str/pc-ov.w (input  parwith-tax,
                   output varpc,
                   output varflag-ret,
@@ -6984,6 +7006,17 @@ define variable v-host-code     like ub.sysconf.host-code  no-undo.
      if error-status :error or
         varflag-ret <> yes then return error.
    end.
+   if parwith-tax = 4
+   then do :
+     assign
+       varpc = 0
+       varflag-ret = yes
+       round-base = 0
+       round-method = "Отключено"
+     .
+     parwith-tax = 2 .
+   end .
+   
    run waitfram-show in this-procedure (input "Простановка учетных цен").
    tr:
    do transaction:

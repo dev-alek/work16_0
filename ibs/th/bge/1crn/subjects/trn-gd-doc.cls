@@ -144,6 +144,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
       isDel = true.
     end.
     
+    DocCode = buf_trn-doc.doc-code.
+    
     { str/tdat-val.i
       DocCode
       {&trdcattr-edo-return}
@@ -170,10 +172,13 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         v-is-return = true.
     end.
     
-    DocCode = buf_trn-doc.doc-code.
-    for first buf_utd no-lock where buf_utd.doc-code = DocCode:
-      edoc-id = string(buf_utd.DocumentExt) .
-    end.
+    edoc-id = "" .
+    if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+    then do :
+      for first buf_utd no-lock where buf_utd.doc-code = DocCode:
+        edoc-id = string(buf_utd.DocumentExt) .
+      end.
+    end .
     
     if v-is-return
     and buf_trn-doc.reason-code = 25
@@ -1025,6 +1030,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               sw:start-element ("mark").   
   /*            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).*/
 /*              if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:*/
+              if buf_parts.part-code > ""
+              then
               write-data-element ("prt-id", buf_parts.part-code).
               write-data-element ("in-doc-id", buf_parts.in-code).
 /*              end.*/
@@ -1054,6 +1061,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
                     vAvailMarks = yes.
                   end.
                   sw:start-element ("mark").
+                  if buf_parts.part-code > ""
+                  then
                   write-data-element ("prt-id", buf_parts.part-code).
                   write-data-element ("in-doc-id", buf_parts.in-code).
   /*                write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .*/
@@ -1096,6 +1105,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     /*            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).*/
   /*              if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:*/
                 write-data-element ("in-doc-id", buf_parts.in-code).
+                if buf_parts.part-code > ""
+                then
                 write-data-element ("prt-id", buf_parts.part-code).
   /*              end.*/
                 write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
@@ -1342,6 +1353,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           end .
           
           write-data-element ("in-doc-id", buf_parts.in-code).
+          
+          if buf_parts.part-code > ""
+          then
           write-data-element ("prt-id", buf_parts.part-code).
 /*          write-data-element ("qnty", string-mth (buf_parts.fact-qnty)).*/
 
