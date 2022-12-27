@@ -19,7 +19,7 @@ define variable conn-par            as character no-undo .
  .
  
   
-  {utl\crpwd.i}
+  {utlcomp\crpwd.i}
   
   block-login:
   for each pasSysadm where pasSysadm.Flogin eq "sysadm"

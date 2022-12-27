@@ -17,7 +17,7 @@
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.gbl.*.
-
+block-level on error undo, throw.
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -442,10 +442,10 @@ end.
   
   if p-GdsObj:emc-type <> ?
   then do :
-    RUN gds-attr-write (v-nbc, "emc", p-GdsObj:emc-type).  
+    RUN gds-attr-write (v-nbc, {&attr-emrc-type}, p-GdsObj:emc-type).  
   end.
   else do :
-    RUN gds-attr-delete (v-nbc, "emc", output v-attr-del).     
+    RUN gds-attr-delete (v-nbc, {&attr-emrc-type}, output v-attr-del).     
   end.
   
   if p-GdsObj:oil-grp <> ?
