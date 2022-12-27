@@ -535,8 +535,9 @@ FUNCTION getStatus RETURNS CHARACTER
       return {&sts-del}.
    else 
    do:
-      def var vdate    as date no-undo.
-      def var vdateiso as char no-undo.
+      def var vdate         as date no-undo.
+      def var vdateiso      as char no-undo.
+      def var vDateTodayIso as char no-undo.
      
       vdate = date(imisc) no-error.
       if error-status:error
@@ -553,23 +554,20 @@ FUNCTION getStatus RETURNS CHARACTER
          
          else 
          do:
-            vdateiso = iso-date(vdate).
-            find first code where code.parent eq b2-code.parent + {&delim-par} + b2-code.code
+            vdateiso      = iso-date(vdate).
+            vDateTodayIso = iso-date(today).
+            find code where code.parent eq b2-code.parent + {&delim-par} + b2-code.code
                and code.code > vdateiso
+               and code.code <= vDateTodayIso
                and code.status_ ne {&bef-deleted-status-int}
 
                no-lock no-error.
             if not avail code
-               then
-               return {&sts-current}.
+            then do:
+               return if ambig code then {&sts-old} else  {&sts-current}.
+            end.
             else 
             do:
-               def var vdate2 as date no-undo.
-     
-               vdate2 = date(code.misc1) no-error.
-               if vdate2 > today
-               then
-                  return {&sts-current}. 
                DEF VAR vMonth   AS INT64.
                DEF VAR vYear    AS INT64.
                DEF VAR vDateNew AS DATE.
@@ -590,8 +588,7 @@ FUNCTION getStatus RETURNS CHARACTER
                if VDay > 0
                   then
                   vDateNew + 1.
-               if     vDate    < vDateNew  
-                  and vDateNew > vdate2
+               if vDateNew > Date(code.misc1)
                   then
                   return {&sts-old}.
                else
