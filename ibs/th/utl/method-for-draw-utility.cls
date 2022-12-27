@@ -2244,7 +2244,7 @@ run gbl/inidebug.p.
                       os-delete value("rest-ptrl-temp.json") .
                       os-delete value("rest-ptrl.json") .
                     end.     
-                    vok = chek_rest() and vok.
+                    vok = chek_rest_ptrl() and vok.
                     put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
                     put-log("").
                     return vok.
