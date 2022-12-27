@@ -55,7 +55,7 @@ run db-attr-value in this-procedure
            ,output mTxt
            ,output m-type 
            ) no-error .
-mdbver = int(mtxt) no-error.
+mdbver_old = int(mtxt) no-error.
 if mdbver_old eq ?
 then
    mdbver_old = 0.
