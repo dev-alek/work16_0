@@ -293,7 +293,7 @@ procedure local-imp-pck :
         , input p-db-src
         , input p-pck-num
         , input {&attr-beg-imp-time}
-        , input string( v-time, "HH:MM:SS" )
+        , input string( v-time, ">>>>>>>>>9" )
         ) no-error.
       if error-status :error then do:
         run write-to-log( substitute( "&1. Ошибка записи атрибута времени начала разбора пакета &2 из БД &3"
