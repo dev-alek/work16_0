@@ -96,7 +96,13 @@ on end-key undo main-block, return error substitute('userlgnd end-key main-block
     buf_c-usr-hist.source-type = (if g#news then {&hn-source-db} else "":U)
     buf_c-usr-hist.source-ref  = (if g#news then string(g#news-source-db) else "":U)
   .
-
+  run trg/userlog.p (
+                      input {&nwsdochs_action_delete}
+                    , input {&table_c-user-login}
+                    , input ( buffer buf_c-user-login :handle )
+                    , input ?
+                    , input "" 
+                ) no-error.
   run nws/cmd-del.p
     ( input {&table_user-login}
       ,input (buffer ub.user-login:handle)

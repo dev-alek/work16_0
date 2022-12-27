@@ -22,13 +22,14 @@ define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
 
 define temp-table temp_userlog-bush no-undo
-    field ulb-key       as integer
-    field ulbType       as integer
-    field ulbParentKey  as integer
-    field ulbTableName  as character
-    field ulbParentDesc as character
-    field ulbDesc       as character
-    field selected      as logical
+  field ulb-key       as integer
+  field ulbType       as integer
+  field ulbParentKey  as integer
+  field ulbTableName  as character
+  field ulbTwoKey     as character
+  field ulbParentDesc as character
+  field ulbDesc       as character
+  field selected      as logical
 
     index pi is primary unique
         ulb-key
@@ -183,9 +184,6 @@ on error undo, return error
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-bush}, input "c-recipe-hist            ":U, input "c-recipe                    ":U, input "                                                ", input "рецепта производства                                              ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-bush}, input "c-recipe-hist            ":U, input "c-recipe-gds                ":U, input "                                                ", input "товара рецепта производства                                       ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-bush}, input "c-recipe-hist            ":U, input "c-recipe-develop            ":U, input "                                                ", input "актов проработки                                                  ":U, input v-err-msg, output v-err-msg ).
-
-    run userlog-hist-table-add in this-procedure ( input {&userlog-type-bush}, input "c-usr-hist               ":U, input "c-user-account              ":U, input "                                                ", input "пользователя системы                                              ":U, input v-err-msg, output v-err-msg ).
-    run userlog-hist-table-add in this-procedure ( input {&userlog-type-bush}, input "c-usr-hist               ":U, input "c-user-login                ":U, input "                                                ", input "логина пользователя системы                                       ":U, input v-err-msg, output v-err-msg ).
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-bush}, input "c-auto-tank              ":U, input "c-auto-tank                 ":U, input "                                                ", input "цистерны                                                          ":U, input v-err-msg, output v-err-msg ).
 
@@ -383,9 +381,14 @@ on error undo, return error
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "shift-obj              ":U, input "shift-obj                   ":U, input "смены                                           ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "shift-obj              ":U, input "shift-staff                 ":U, input "смены                                           ", input "персонала                                                         ":U, input v-err-msg, output v-err-msg ).
 
-    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-usr-hist                  ":U, input "времени входа                                   ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
-    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-login                ":U, input "логина пользователя системы                     ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
-
+    run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-usr-hist                  ":U,                                         input "времени входа                                   ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-twokey-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-login                ":U, input "user-password               ":U, input "пароля                                          ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-twokey-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-login                ":U, input "adm                         ":U, input "прав администратора                             ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-account              ":U,                                         input "пользователя системы                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-login                ":U,                                         input "логина пользователя системы                     ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-twokey-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "user-account                ":U, input "SuperAdm                    ":U, input "права супер администратора                      ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "user-account                ":U,                                         input "пользователя системы                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-pln              ":U, input "c-fbr-pln                   ":U, input "документа план-меню                             ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-pln              ":U, input "c-fbr-pln-line              ":U, input "документа план-меню                             ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
 
@@ -568,13 +571,31 @@ end procedure. /* userlog-get-table-name */
 
 /*==========================================================================*/
 procedure userlog-hist-table-add :
-define input parameter p-ulbType            as integer          no-undo.
-define input parameter p-ParentTableName    as character        no-undo.
-define input parameter p-TableName          as character        no-undo.
-define input parameter p-ParentDesc         as character        no-undo.
-define input parameter p-Desc               as character        no-undo.
-define input parameter p-in-err-msg         as character        no-undo.
-define output parameter p-out-err-msg       as character        no-undo.
+  define input  parameter i-ulbType            as integer          no-undo.
+  define input  parameter i-ParentTableName    as character        no-undo.
+  define input  parameter i-TableName          as character        no-undo.
+  define input  parameter i-ParentDesc         as character        no-undo.
+  define input  parameter i-Desc               as character        no-undo.
+  define input  parameter i-in-err-msg         as character        no-undo.
+  define output parameter o-out-err-msg       as character        no-undo.
+   run userlog-hist-table-twokey-add(input  i-ulbType,
+                                     input  i-ParentTableName,
+                                     input  i-TableName,
+                                     input  "",
+                                     input  i-ParentDesc,
+                                     input  i-Desc,
+                                     input  i-in-err-msg,
+                                     output o-out-err-msg).
+end.
+procedure userlog-hist-table-twokey-add :
+  define input parameter p-ulbType            as integer          no-undo.
+  define input parameter p-ParentTableName    as character        no-undo.
+  define input parameter p-TableName          as character        no-undo.
+  define input parameter i-Twokey             as character        no-undo.
+  define input parameter p-ParentDesc         as character        no-undo.
+  define input parameter p-Desc               as character        no-undo.
+  define input parameter p-in-err-msg         as character        no-undo.
+  define output parameter p-out-err-msg       as character        no-undo.
 
     define variable v-err-msg           as character    no-undo.
     define variable v-success           as logical      no-undo.
@@ -593,6 +614,7 @@ on error undo, return error
         p-out-err-msg       = p-in-err-msg
         p-ParentTableName   = trim( p-ParentTableName   )
         p-TableName         = trim( p-TableName         )
+        i-Twokey          = trim( i-Twokey            )
         p-Desc              = trim( p-Desc              )
         p-ParentDesc        = trim( p-ParentDesc        )
     .
@@ -619,6 +641,7 @@ on error undo, return error
                       input p-ulbType
                     , input 0
                     , input p-ParentTableName
+                    , input i-Twokey
                     , input p-ParentTableName
                     , input "":U
                 ) no-error.
@@ -664,6 +687,7 @@ on error undo, return error
                           input p-ulbType
                         , input 0
                         , input p-ParentTableName
+                        , input i-Twokey
                         , input p-ParentTableName
                         , input "":U
                     ) no-error.
@@ -716,6 +740,7 @@ on error undo, return error
                   input p-ulbType
                 , input v-parent-key
                 , input p-TableName
+                , input i-Twokey
                 , input p-ParentDesc
                 , input p-Desc
             ) no-error.
@@ -753,32 +778,34 @@ end procedure. /* userlog-hist-table-add */
 
 /*==========================================================================*/
 procedure userlog-create-userlog-bush :
-define input parameter p-ulbType            as integer          no-undo.
-define input parameter p-parent-key         as integer          no-undo.
-define input parameter p-TableName          as character        no-undo.
-define input parameter p-ParentDesc         as character        no-undo.
-define input parameter p-Desc               as character        no-undo.
+  define input parameter p-ulbType            as integer          no-undo.
+  define input parameter p-parent-key         as integer          no-undo.
+  define input parameter p-TableName          as character        no-undo.
+  define input parameter i-TwoKey          as character        no-undo.
+  define input parameter p-ParentDesc         as character        no-undo.
+  define input parameter p-Desc               as character        no-undo.
 
-    define buffer buf_temp_userlog-bush     for temp_userlog-bush.
-do
-for buf_temp_userlog-bush
-on error undo, return error
-:
+  define buffer buf_temp_userlog-bush for temp_userlog-bush.
+  do
+    for buf_temp_userlog-bush
+    on error undo, return error
+    :
     assign
-        v-userlog-{&vssseq}-ulb-key = v-userlog-{&vssseq}-ulb-key + 1
-    .
+      v-userlog-{&vssseq}-ulb-key = v-userlog-{&vssseq}-ulb-key + 1
+      .
     create buf_temp_userlog-bush.
     assign
-        buf_temp_userlog-bush.ulb-key       = v-userlog-{&vssseq}-ulb-key
-        buf_temp_userlog-bush.ulbType       = p-ulbType
-        buf_temp_userlog-bush.ulbParentKey  = p-parent-key
-        buf_temp_userlog-bush.ulbTableName  = p-TableName
-        buf_temp_userlog-bush.ulbParentDesc = p-ParentDesc
-        buf_temp_userlog-bush.ulbDesc       = p-Desc
-        buf_temp_userlog-bush.selected      = no
-    .
+      buf_temp_userlog-bush.ulb-key       = v-userlog-{&vssseq}-ulb-key
+      buf_temp_userlog-bush.ulbType       = p-ulbType
+      buf_temp_userlog-bush.ulbParentKey  = p-parent-key
+      buf_temp_userlog-bush.ulbTableName  = p-TableName
+      buf_temp_userlog-bush.ulbTwoKey     = i-TwoKey
+      buf_temp_userlog-bush.ulbParentDesc = p-ParentDesc
+      buf_temp_userlog-bush.ulbDesc       = p-Desc
+      buf_temp_userlog-bush.selected      = no
+      .
 
-end.
+  end.
 end procedure. /* userlog-create-userlog-bush */
 
 /* $Workfile$ e n d */

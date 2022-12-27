@@ -44,6 +44,7 @@ define input parameter p-e-mail                 as character        no-undo.
 define input parameter p-internal-phone-number  as character        no-undo.
 define input parameter p-PS                     as character        no-undo.
 define input parameter p-psn-code               as integer          no-undo.
+define input parameter i-superadm               as logical          no-undo.
 define output parameter p-user-id-out           as character        no-undo.
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -59,9 +60,10 @@ define variable vss-description as character no-undo init "Создание или редактир
 define variable v-next-user-id as character no-undo .
 
 define buffer buf_user-account for ub.user-account .
+define buffer buf_user-account-attr for ub.user-account-attr .
 
 do
-on error undo, return error
+on error undo, return error return-value
 :
     case p-mode
     :
@@ -85,20 +87,6 @@ on error undo, return error
             assign
                 buf_user-account.user-id               = v-next-user-id
                 buf_user-account.status_               = {&bef-user-status-normal}
-                buf_user-account.last-name             = p-last-name
-                buf_user-account.first-name            = p-first-name
-                buf_user-account.second-name           = p-second-name
-                buf_user-account.nik                   = p-nik
-                buf_user-account.phone-number          = p-phone-number
-                buf_user-account.mobile-phone-number   = p-mobile-phone-number
-                buf_user-account.company               = p-company
-                buf_user-account.department            = p-department
-                buf_user-account.position              = p-position
-                buf_user-account.room                  = p-room
-                buf_user-account.e-mail                = p-e-mail
-                buf_user-account.internal-phone-number = p-internal-phone-number
-                buf_user-account.PS                    = p-PS
-                buf_user-account.psn-code              = p-psn-code
             .
             assign
                 p-user-id-out   = v-next-user-id
@@ -118,22 +106,72 @@ on error undo, return error
                                                     , {&new-line}
                                                     , p-user-id-in  ).
             end.
-            assign
-                buf_user-account.last-name               = p-last-name
-                buf_user-account.first-name              = p-first-name
-                buf_user-account.second-name             = p-second-name
-                buf_user-account.nik                     = p-nik
-                buf_user-account.phone-number            = p-phone-number
-                buf_user-account.mobile-phone-number     = p-mobile-phone-number
-                buf_user-account.company                 = p-company
-                buf_user-account.department              = p-department
-                buf_user-account.position                = p-position
-                buf_user-account.room                    = p-room
-                buf_user-account.e-mail                  = p-e-mail
-                buf_user-account.internal-phone-number   = p-internal-phone-number
-                buf_user-account.PS                      = p-PS
-                buf_user-account.psn-code                = p-psn-code
-            .
         end.        /* when {&update} */
+        otherwise do:
+        undo, return error substitute( "Ошибка неизвестный режим &1"
+                                                    , p-mode  ).
+        end.
     end case.       /* case p-mode */
+    assign 
+       buf_user-account.last-name             = p-last-name
+       buf_user-account.first-name            = p-first-name
+       buf_user-account.second-name           = p-second-name
+       buf_user-account.nik                   = p-nik
+       buf_user-account.phone-number          = p-phone-number
+       buf_user-account.mobile-phone-number   = p-mobile-phone-number
+       buf_user-account.company               = p-company
+       buf_user-account.department            = p-department
+       buf_user-account.position              = p-position
+       buf_user-account.room                  = p-room
+       buf_user-account.e-mail                = p-e-mail
+       buf_user-account.internal-phone-number = p-internal-phone-number
+       buf_user-account.PS                    = p-PS
+    .
+    release buf_user-account.
+    find first buf_user-account-attr exclusive-lock
+         where buf_user-account-attr.user-id = p-user-id-out
+           and buf_user-account-attr.attr-code = "psn-code"
+    no-error.
+    if not available buf_user-account-attr
+    then do :
+       create buf_user-account-attr .
+       assign
+          buf_user-account-attr.user-id = p-user-id-out
+          buf_user-account-attr.attr-code = "psn-code"
+       .
+    end .
+    assign
+       buf_user-account-attr.attr-value = string(p-psn-code)
+    .
+    release buf_user-account-attr.
+    find first user-account-attr where user-account-attr.user-id    eq p-user-id-out
+                                   and user-account-attr.attr-code  eq "superadm"
+    no-lock no-error.
+    if i-superadm
+    then do:
+       if not available user-account-attr
+       then do:
+          create user-account-attr.
+          assign
+             user-account-attr.user-id    = p-user-id-out
+             user-account-attr.attr-code = "superadm"
+          .
+       end.
+       else find current user-account-attr exclusive-lock.
+       if not available user-account-attr
+       then
+          undo, return error substitute( "Ошибка изменения учетной записи попробуйте позже" ).
+        
+       user-account-attr.attr-value = "yes".
+       release buf_user-account-attr.
+    end.
+    else if     not i-superadm
+            and available user-account-attr
+    then do:
+       find current user-account-attr exclusive-lock no-error.
+       if available user-account-attr
+       then
+          delete user-account-attr.
+    end.
+        
 end.

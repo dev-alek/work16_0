@@ -1042,7 +1042,6 @@ end.
     p-label = ~{&label-~{&attr-code~}~} ~
     p-type = ~{&type-~{&attr-code~}~}  ~
     p-format = ~{&format-~{&attr-code~}~} ~
-    p-label = ~{&label-~{&attr-code~}~} ~
     p-user-can-edit  = ~{&user-can-edit-~{&attr-code~}~} ~
     p-output-display = ~{&output-display-~{&attr-code~}~} ~
     p-other = ~{&other-~{&attr-code~}~}  ~
@@ -4843,21 +4842,29 @@ character~
 &scop user-can-edit-attr-staff-options true
 &scop output-display-attr-staff-options false
 &scop other-attr-staff-options 'cd/spr-ext=adm\shattr40.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-staff-options 'logical,logical,integer':U
+&scop prop-type-list-attr-staff-options 'logical,logical,logical,integer,integer,integer,integer,integer,integer,integer,integer':U
 &scop prop-label-list-attr-staff-options '~
 Запрет на ввод произвольных данных при вводе персонала смены,~
 Обязательное сочетание цифровых и буквенных символов,~
-Минимальная длина пароля~
+Обязательное сочетание цифровых и буквенных символов (адм),~
+Минимальная длина пароля,~
+Минимальная длина пароля (адм),~
+Время жизни пароля,~
+Время жизни пароля (адм),~
+Время до блокировки пользователя после окончания действия пароля,~
+Время до блокировки пользователя после окончания действия пароля (адм),~
+Колличество старых паролей с которыми не должен совпадать новый пароль,~
+Колличество старых паролей с которыми не должен совпадать новый пароль (адм)~
 '
-&scop prop-list-attr-staff-options 'noanshftstaff,obyznumbukv,minparol':U
+&scop prop-list-attr-staff-options 'noanshftstaff,obyznumbukv,obyznumbukvadm,minparol,minparoladm,TimeAvail,TimeAvailadm,TimeBlock,TimeBlockAdm,LastPaswd,LastPaswdAdm':U
+&scop db-attr-staff-options  false
 &scop global-attr-staff-options true
-&scop host-attr-staff-options true
-&scop shop-attr-staff-options true
-&scop store-attr-staff-options true
-&scop db-attr-staff-options false
+&scop host-attr-staff-options false
+&scop shop-attr-staff-options false
+&scop store-attr-staff-options false
 &scop batch-edit-attr-staff-options 0
-&scop level-way-attr-staff-options "obj,host,global"
-&scop up-way-attr-staff-options "staff,staff,staff"
+&scop level-way-attr-staff-options ",,global"
+&scop up-way-attr-staff-options "staff,staff,staff,staff,staff,staff,staff,staff,staff,staff,staff"
 
 
 /* Настройки правил ИЖТ  */

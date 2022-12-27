@@ -307,7 +307,12 @@ on error undo, return error
          no-error.      
         return.
     end.
-    
+    define variable m-two-key as character no-undo.
+    if num-entries (p-tbl-name,{&delim-key}) > 1
+    then assign
+       m-two-key  = entry(2,p-tbl-name,{&delim-key})
+       p-tbl-name = entry(1,p-tbl-name,{&delim-key})
+    .
     case p-action :
         when {&nwsdochs_action_delete}      then v-action-type = "Удаление" .
         when {&nwsdochs_action_create}      then v-action-type = "Создание" .
@@ -393,11 +398,15 @@ on error undo, return error
           input p-tbl-name
     ).
     /* Обработка несвязанных таблиц истории */
+    block-userlog-type-simple:
     for each buf_temp_userlog-bush
        where buf_temp_userlog-bush.ulbType = {&userlog-type-simple}
          and buf_temp_userlog-bush.ulbTableName = p-tbl-name
     on error undo, return error
     :
+       if m-two-key ne buf_temp_userlog-bush.ulbTwoKey
+       then
+          next block-userlog-type-simple.
         if buf_temp_userlog-bush.ulbParentKey = 0
         then do:        /* История головной таблицы. В историю пишется unique-key-rec самой таблицы как родительский */
             assign
@@ -457,7 +466,10 @@ on error undo, return error
                     , input v-field-list
                     , input v-value-list
                     , output v-parent-buffer-handle
-                ).
+                ) no-error.
+                if error-status:error
+                then
+                   return error return-value.
                 run gen-key-rec in this-procedure (
                     input v-parent-name
                     , input v-parent-buffer-handle
@@ -510,12 +522,17 @@ on error undo, return error
     
     end.
     /* Обработка таблиц истории, связанных в кусты */
+    block-userlog-type-bush:
     for each buf_temp_userlog-bush
        where buf_temp_userlog-bush.ulbType      = {&userlog-type-bush}
          and buf_temp_userlog-bush.ulbTableName = p-tbl-name
          and buf_temp_userlog-bush.ulbParentKey <> 0
     on error undo, return error
     :
+       if m-two-key ne buf_temp_userlog-bush.ulbTwoKey
+       then
+          next block-userlog-type-bush.
+       
         run userlog-get-table-name in this-procedure (
               input buf_temp_userlog-bush.ulbParentKey
             , output v-parent-name

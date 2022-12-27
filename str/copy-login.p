@@ -15,6 +15,7 @@ Creation date: 10/13/09
 
 */
 define input parameter p-user-id        as character        no-undo .
+define input parameter p-user-login     as character        no-undo .
 define input parameter p-db-num         as integer          no-undo .
 define input parameter p-db-list        as character        no-undo .
 define output parameter p-ok            as logical          no-undo .
@@ -54,90 +55,93 @@ define buffer new_user-login-action-role for user-login-action-role .
 define buffer buf_user-account           for ub.user-account .
 define buffer buf_db                     for ub.db .
 
+define buffer buf_clients                for ub.clients .
+
 do
-  on error undo, return error return-value
-  :
+   on error undo, return error return-value
+   :
 
-  define variable v-new-name             as character no-undo.
-  define variable v-new-nick             as character no-undo.
-  define variable v-new-login            as character no-undo.
-  define variable v-success              as logical   no-undo.
-  define variable v-user-rowid           as rowid     no-undo.
+   define variable v-new-name             as character no-undo.
+   define variable v-new-nick             as character no-undo.
+   define variable v-new-login            as character no-undo.
+   define variable v-success              as logical   no-undo.
+   define variable v-user-rowid           as rowid     no-undo.
 
-  define variable v-next-user-id         as character no-undo .
-  define variable v-user-menu-group-code as integer   no-undo.
-  define variable v-user-login-role-code as integer   no-undo.
+   define variable v-next-user-id         as character no-undo .
+   define variable v-user-menu-group-code as integer   no-undo.
+   define variable v-user-login-role-code as integer   no-undo.
 
-  find first buf_user-login no-lock
-    where buf_user-login.user-id = p-user-id
-    and buf_user-login.db-num  = p-db-num
-    no-error
-    .
-  if not available buf_user-login
-    then 
-  do:
-    message
-      "Логин пользователя редактируется администратором."
-      skip (1)
-      skip substitute( "БД:           &1", p-db-num             )
-      skip (1)
-      skip 
-      "Повторите операцию через некоторое время."
-      view-as alert-box warning.
-    undo, return error .
-  end.
-  
-  if p-db-list = "Все" then 
-  do:
-    p-db-list = "" .
-    For each buf_db no-LOCK:
-      if buf_db.db-num <> 0 and buf_db.db-num <> p-db-num then 
+   find first buf_user-login no-lock
+      where buf_user-login.user-id = p-user-id
+      and buf_user-login.db-num  = p-db-num
+      no-error
+      .
+   if not available buf_user-login
+      then 
+   do:
+      message
+         "Логин пользователя редактируется администратором."
+         skip (1)
+         skip substitute( "БД:           &1", p-db-num             )
+         skip (1)
+         skip 
+         "Повторите операцию через некоторое время."
+         view-as alert-box warning.
+      undo, return error .
+   end.
+
+   if p-db-list = "Все" then 
+   do:
+      p-db-list = "" .
+      For each buf_db no-LOCK:
+         if buf_db.db-num <> 0 and buf_db.db-num <> p-db-num then 
+         do:
+            assign
+               p-db-list = substitute( "&1&2&3", p-db-list, {&comma-char}, buf_db.db-num )
+               .
+         end.  
+      end.
+      p-db-list = trim (p-db-list,{&comma-char}) .
+   end.          
+   _next :
+   do ii = 1 to num-entries (p-db-list, {&comma-char}):
+
+      /*Проверка есть ли такой логин в базе*/
+      find first new_user-login exclusive-lock where new_user-login.user-login = p-user-login
+         and new_user-login.db-num = integer (entry(ii,p-db-list,{&comma-char})) no-error .
+      if available (new_user-login) then 
       do:
-        assign
-          p-db-list = substitute( "&1&2&3", p-db-list, {&comma-char}, buf_db.db-num )
-          .
+         output to value (ibs.th.gbl.gbl-inipar:logDir + "login-error.log") append .
+         /*  for each buf_temp-rvs no-lock where buf_temp-rvs.rvs-error = yes:*/
+
+         put unformatted                "Логин =" + new_user-login.user-login + " уже есть в БД " + string (new_user-login.db-num) skip .
+
+
+         output close .    
+         next _next .
+      end.
+
+      /*Создание нового логина*/
+      find first new_user-login exclusive-lock where new_user-login.user-id = p-user-id
+         and new_user-login.db-num = integer (entry(ii,p-db-list,{&comma-char})) no-error .
+      if not available (new_user-login) then 
+      do:
+         create new_user-login.
+         buffer-copy buf_user-login
+            except db-num user-login user-administrator to new_user-login 
+            assign
+            new_user-login.db-num     = integer (entry(ii,p-db-list,{&comma-char})) 
+            new_user-login.user-login = p-user-login .
       end.  
-    end.
-    p-db-list = trim (p-db-list,{&comma-char}) .
-  end.          
-  _next :
-  do ii = 1 to num-entries (p-db-list, {&comma-char}):
-
-    /*Проверка есть ли такой логин в базе*/
-    find first new_user-login exclusive-lock where new_user-login.user-login = buf_user-login.user-login
-      and new_user-login.db-num = integer (entry(ii,p-db-list,{&comma-char})) no-error .
-    if available (new_user-login) then 
-    do:
-      output to value (ibs.th.gbl.gbl-inipar:logDir + "login-error.log") append .
-      /*  for each buf_temp-rvs no-lock where buf_temp-rvs.rvs-error = yes:*/
-
-      put unformatted                "Логин =" + new_user-login.user-login + " уже есть в БД " + string (new_user-login.db-num) skip .
-
-
-      output close .    
-      next _next .
-    end.
-        
-    /*Создание нового логина*/
-    find first new_user-login exclusive-lock where new_user-login.user-id = p-user-id
-      and new_user-login.db-num = integer (entry(ii,p-db-list,{&comma-char})) no-error .
-    if not available (new_user-login) then 
-    do:
-      create new_user-login.
-      buffer-copy buf_user-login
-        except db-num to new_user-login
-        .
-      new_user-login.db-num     = integer (entry(ii,p-db-list,{&comma-char})) .
-    end.  
     
-    /*Удаление фирм*/
-    FOR EACH buf_user-host
-      where buf_user-host.db-num  = integer (entry(ii,p-db-list,{&comma-char}))
-      and buf_user-host.user-id = p-user-id
-      exclusive-lock
-      :
-      delete buf_user-host .
-    end.
+      /*Удаление фирм*/
+      FOR EACH buf_user-host
+         where buf_user-host.db-num  = integer (entry(ii,p-db-list,{&comma-char}))
+         and buf_user-host.user-id = p-user-id
+         exclusive-lock
+         :
+         delete buf_user-host .
+      end.
     /*Создание фирм*/
     FOR EACH buf_user-host
       where buf_user-host.db-num  = p-db-num

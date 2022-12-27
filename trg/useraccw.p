@@ -42,7 +42,14 @@ on end-key undo main-block, return error substitute('useraccw end-key main-block
   define variable v-chip-num as integer   no-undo .
   define variable v-today    as date      no-undo .
   define variable v-time     as integer   no-undo .
-
+  if old-user-account.status_ ne user-account.status_
+  then do:
+     for each user-login where user-login.user-id = user-account.user-id
+     exclusive-lock:
+        user-login.status_ = user-account.status_.
+     end.
+      
+  end.
   run cur-time in this-procedure
     (output v-today
     ,output v-time
@@ -72,7 +79,21 @@ on end-key undo main-block, return error substitute('useraccw end-key main-block
     buf_c-usr-hist.source-type = (if g#news then {&hn-source-db} else "":U)
     buf_c-usr-hist.source-ref  = (if g#news then string(g#news-source-db) else "":U)
   .
-
+  run trg/userlog.p (
+                      input if new(ub.user-account) then {&nwsdochs_action_Create} else {&nwsdochs_action_update}
+                    , input {&table_c-user-account}  
+                    , input ( buffer  buf_c-user-account :handle )
+                    , input ?
+                    , input "" 
+                ) no-error.
+   if error-status :error
+   then do:
+       undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                         , {&new-line}
+                         , vss-workfile
+                         , return-value
+                         , error-status :get-message ( 1 ) ).
+   end.
   run str/callnews.p
     (input {&table_user-account}
     ,input (buffer ub.user-account :handle)

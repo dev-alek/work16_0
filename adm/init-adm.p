@@ -115,7 +115,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   end.
 
   /* _________________ инициализация пользователя PROGRESS 'usr-flt' ______________________*/
-/*
+ /*
   find first dictdb._user
     where dictdb._user._userid = 'usr-flt':u
     no-error .
@@ -143,26 +143,26 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       view-as alert-box error.
     return error .
   end.
-*/
-  if p-create-adm then do:
+   */
+  IF p-create-adm THEN DO:
    /* _________________ инициализация пользователя системы 'адм' ______________________*/
-   define variable v-encode-value as character no-undo .
+   DEFINE VARIABLE v-encode-value AS CHARACTER NO-UNDO .
    define variable v-user-id      as character no-undo .
 
    disable triggers for  load   of dictdb.user-login .
    disable triggers for  load   of dictdb.user-account .
 
 
-   find first dictdb.user-login
-        where dictdb.user-login.db-num     = p-db-num
-          and dictdb.user-login.user-login = {&admin}
-         exclusive-lock
-         no-error
+   FIND FIRST dictdb.user-login
+        WHERE dictdb.user-login.db-num     = p-db-num
+          AND dictdb.user-login.user-login = {&admin}
+         exclusive-LOCK
+         NO-ERROR
          no-wait.
-   if not available dictdb.user-login then do:
-      if locked dictdb.user-login then do:
+   IF NOT AVAILABLE dictdb.user-login then do:
+      IF LOCKED dictdb.user-login THEN DO:
 
-      end.
+      END.
       /* пробуем найти по аккаунту */
       find first dictdb.user-account
            where dictdb.user-account.last-name = "System Administrator":U
@@ -174,17 +174,17 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             no-error.
       /* пробуем найти логин для этой БД */
       if available dictdb.user-account then do:
-         find first dictdb.user-login
-              where dictdb.user-login.db-num  = p-db-num
-                and dictdb.user-login.user-id = dictdb.user-account.user-id
-              exclusive-lock
-              no-error .
+         FIND FIRST dictdb.user-login
+              WHERE dictdb.user-login.db-num  = p-db-num
+                AND dictdb.user-login.user-id = dictdb.user-account.user-id
+              EXCLUSIVE-LOCK
+              NO-ERROR .
          /* создаем */
-         if not available dictdb.user-login then do:
-            create dictdb.user-login.
-            assign
+         IF NOT AVAILABLE dictdb.user-login THEN DO:
+            CREATE dictdb.user-login.
+            ASSIGN
                dictdb.user-login.db-num  = p-db-num
-               dictdb.user-login.user-id = substitute ( '&1-':U ,  p-db-num )
+               dictdb.user-login.user-id = v-user-id
             .
          end.
       end. /* available dictdb.user-account */
@@ -201,7 +201,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                   :
                   if v-count < INTEGER(entry(2, dictdb.user-account.user-id, "-")) then do:
                      assign
-                     v-count = integer(entry(2, dictdb.user-account.user-id, "-"))
+                     v-count = INTEGER(entry(2, dictdb.user-account.user-id, "-"))
                      .
                   end.
             end.
@@ -220,15 +220,15 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                  , p-db-num
                                  , v-count
                                  ) .
-            create dictdb.user-account .
-            assign
+            CREATE dictdb.user-account .
+            ASSIGN
                dictdb.user-account.user-id      = v-user-id
                dictdb.user-account.last-name    = "System Administrator":U
                dictdb.user-account.nik          = "System Administrator":U
                dictdb.user-account.check-parent = false
             .
-            create dictdb.user-login.
-            assign
+            CREATE dictdb.user-login.
+            ASSIGN
                dictdb.user-login.db-num                = p-db-num
                dictdb.user-login.user-id               = v-user-id
             .
@@ -241,9 +241,9 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                exclusive-lock
                no-error.
          /* если потерян или физически удален, восстанавливаем */
-         if not available dictdb.user-account then do:
-            create dictdb.user-account .
-            assign
+         if NOT available dictdb.user-account then do:
+            CREATE dictdb.user-account .
+            ASSIGN
                dictdb.user-account.user-id      = dictdb.user-login.user-id
                dictdb.user-account.last-name    = "System Administrator":U
                dictdb.user-account.check-parent = false
@@ -254,22 +254,37 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
 
    /* даже если уже существует, принудительно прописываем */
-   run adm/pswd-enc.p ( input  encode( {&admin} )
-                        , output v-encode-value
+   run adm/pswd-enc.p ( INPUT  ENCODE( {&admin} )
+                        , OUTPUT v-encode-value
                         ) .
-   assign
-      v-encode-value = encode( v-encode-value )
+   ASSIGN
+      v-encode-value = ENCODE( v-encode-value )
    .
 
-   assign
+   ASSIGN
       dictdb.user-login.user-login              = {&admin}
       dictdb.user-login.user-password-encoded   = v-encode-value
-      dictdb.user-login.user-administrator      = true
+      dictdb.user-login.user-administrator      = TRUE
       dictdb.user-login.status_                 = {&bef-user-status-normal}
       dictdb.user-account.status_               = {&bef-user-status-normal}
    .
+   find first dictdb.user-account-attr where dictdb.user-account-attr.user-id    eq dictdb.user-account.user-id
+                                         and dictdb.user-account-attr.attr-code  eq "superadm"
+   exclusive-lock no-error.
+   if not available dictdb.user-account-attr
+   then do:
+      create dictdb.user-account-attr.
+      assign
+         dictdb.user-account-attr.user-id    = dictdb.user-account.user-id
+         dictdb.user-account-attr.attr-code = "superadm"
+      .
+   end.
+   dictdb.user-account-attr.attr-value = "yes".
+   release dictdb.user-account-attr.
+   
+    
    { trg/user.i dictdb }
- end.
+ END.
    if inst = true then do:
       message "Инициализация" {&admin} ", sysadm и odbc закончена успешно."
       view-as alert-box.

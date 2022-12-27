@@ -22,7 +22,10 @@ define input parameter p-action         as integer        no-undo.
 define input parameter p-tbl-name       as character        no-undo.
 define input parameter p-sourse-ref     as character        no-undo.
 define input parameter p-user-id        as character        no-undo .
-
+&if defined(obuffer)  
+&then 
+define output parameter o-c-usr-hist as rowid no-undo.
+&endif
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -74,4 +77,7 @@ define variable vss-description as character no-undo init "Процедура заполнения 
     buf_c-usr-hist.source-ref = p-sourse-ref
     buf_c-usr-hist.chip-num =  v-chip-num
   .
-  
+&if defined(obuffer)  
+&then 
+    o-c-usr-hist= rowid(buf_c-usr-hist).
+&endif

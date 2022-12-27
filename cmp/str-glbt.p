@@ -543,8 +543,10 @@ attr-petrol
 
 /* Настройки работы с пользователями и персоналом*/
 { cmp/cr-prep.i 1 attr-staff-options staff " " staff }
+{ cmp/cr-prep.i 1 staff-options_pers pers " " pers }
+{ cmp/cr-prep.i 1 staff-options_Adm Adm " " Adm }
 { cmp/cr-prepc.i 1 prop-list-attr-staff-options
-"noanshftstaff,obyznumbukv,minparol"
+"noanshftstaff,obyznumbukv,minparol,TimeAvail,TimeBlock,LastPaswd"
 attr-staff-options
 }
 

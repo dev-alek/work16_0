@@ -28,9 +28,14 @@ Creation date: 05/08/07
 /* Parameters Definitions ---                                           */
 define input  parameter parparentproc  as widget-handle no-undo .
 define input  parameter p-db-num       as integer   no-undo .
-define input  parameter p-user-id      as character no-undo .
+define input  parameter p-user-login      as character no-undo .
 define input  parameter p-user-Name    as character no-undo .
 define input  parameter p-user-adm     as logical   no-undo .
+
+define input  parameter p-LastPassVis  as logical   no-undo .
+if p-user-adm eq yes
+then
+   p-LastPassVis = no.
 define input  parameter p-old-password as character no-undo .
 define input  parameter p-login        as logical   no-undo .
 
@@ -47,7 +52,9 @@ define variable vss-description as character no-undo init "Диалог задания пароля
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { cmp/showinf.i  }
-{ utl/setpwd.i}
+/*{ utl/setpwd.i}*/
+{ cmp/trg-def.i }
+{ adm/userpro.i}
 
 define variable v-param-type as character no-undo .
 define variable v-value-character AS character no-undo .
@@ -56,14 +63,12 @@ define variable v-value-decimal as decimal no-undo .
 define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical as logical no-undo .
 define variable v-noanshftstaff as logical no-undo .
-define variable v-obyznumbukv as logical no-undo .
-define variable v-minparol as INTEGER no-undo .
-define variable v-tth as handle no-undo .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -92,56 +97,59 @@ chgpwdextcon fi-db fi-userid fi-username
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE fi-db AS CHARACTER FORMAT "X(256)":U
-     LABEL "БД"
-      VIEW-AS TEXT
-     SIZE 40.5 BY .67
+DEFINE VARIABLE fi-db AS CHARACTER FORMAT "X(256)":U 
+     LABEL "БД" 
+      VIEW-AS TEXT 
+     SIZE 40.6 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-new-password AS CHARACTER FORMAT "X(16)":U
-     LABEL "Новый пароль"
-     VIEW-AS FILL-IN
-     SIZE 13.5 BY 1 NO-UNDO.
+DEFINE VARIABLE fi-new-password AS CHARACTER FORMAT "X(16)":U 
+     LABEL "Новый пароль" 
+     VIEW-AS FILL-IN 
+     SIZE 20.6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fi-new-password-2 AS CHARACTER FORMAT "X(16)":U
-     LABEL "Подтверждение пароля"
-     VIEW-AS FILL-IN
-     SIZE 13.5 BY 1 NO-UNDO.
+DEFINE VARIABLE fi-new-password-2 AS CHARACTER FORMAT "X(16)":U 
+     LABEL "Подтверждение пароля" 
+     VIEW-AS FILL-IN 
+     SIZE 20.6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fi-old-password AS CHARACTER FORMAT "X(16)":U
-     LABEL "Старый пароль"
-     VIEW-AS FILL-IN
-     SIZE 13.5 BY 1 NO-UNDO.
+DEFINE VARIABLE fi-old-password AS CHARACTER FORMAT "X(16)":U 
+     LABEL "Старый пароль" 
+     VIEW-AS FILL-IN 
+     SIZE 20.6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fi-userid AS CHARACTER FORMAT "X(256)":U
-     LABEL "Идентификатор"
-      VIEW-AS TEXT
-     SIZE 40.5 BY .67
+DEFINE VARIABLE fi-userid AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Идентификатор" 
+      VIEW-AS TEXT 
+     SIZE 40.6 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-username AS CHARACTER FORMAT "X(256)":U
-     LABEL "Пользователь"
-      VIEW-AS TEXT
-     SIZE 40.5 BY .67
+DEFINE VARIABLE fi-username AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Пользователь" 
+      VIEW-AS TEXT 
+     SIZE 40.6 BY .67
      FGCOLOR 4  NO-UNDO.
-DEFINE VARIABLE chgpwdextcon AS logical init yes
-      LABEL "Сменить пароль при следующем входе в систему"
-      VIEW-AS TOGGLE-BOX.
+
+DEFINE VARIABLE chgpwdextcon AS LOGICAL INITIAL yes 
+     LABEL "Сменить пароль при следующем входе в систему" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 55.6 BY .81.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -149,14 +157,14 @@ DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      b-help AT ROW 1 COL 61
-     fi-old-password AT ROW 7.75 COL 22.5 COLON-ALIGNED WIDGET-ID 6 PASSWORD-FIELD 
-     fi-new-password AT ROW 9.25 COL 22.5 COLON-ALIGNED WIDGET-ID 8 PASSWORD-FIELD 
-     fi-new-password-2 AT ROW 10.5 COL 2.5 WIDGET-ID 10 PASSWORD-FIELD 
-     chgpwdextcon AT ROW 11.75 COL 3 WIDGET-ID 14
-     fi-db AT ROW 3.25 COL 22.5 COLON-ALIGNED WIDGET-ID 12
-     fi-userid AT ROW 4.75 COL 22.5 COLON-ALIGNED WIDGET-ID 2
-     fi-username AT ROW 6.25 COL 22.5 COLON-ALIGNED WIDGET-ID 4
-     SPACE(7.99) SKIP(6.49)
+     fi-old-password AT ROW 7.76 COL 22.6 COLON-ALIGNED WIDGET-ID 6 PASSWORD-FIELD 
+     fi-new-password AT ROW 9.24 COL 22.6 COLON-ALIGNED WIDGET-ID 8 PASSWORD-FIELD 
+     fi-new-password-2 AT ROW 10.52 COL 2.6 WIDGET-ID 10 PASSWORD-FIELD 
+     chgpwdextcon AT ROW 11.76 COL 3 WIDGET-ID 14
+     fi-db AT ROW 3.24 COL 22.6 COLON-ALIGNED WIDGET-ID 12
+     fi-userid AT ROW 4.76 COL 22.6 COLON-ALIGNED WIDGET-ID 2
+     fi-username AT ROW 6.24 COL 22.6 COLON-ALIGNED WIDGET-ID 4
+     SPACE(7.79) SKIP(6.50)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Изменение пароля"
@@ -179,7 +187,7 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -187,32 +195,14 @@ ASSIGN
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN fi-old-password IN FRAME Dialog-Frame
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        fi-old-password:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
+ 
 
-/* ***********  Function Definisions  *********** */
-function check_alphanumeric returns logical (input pass as character):
-    DEFINE VARIABLE int_pass AS INTEGER NO-UNDO.
-    DEFINE VARIABLE iChar AS integer NO-UNDO.
-    DEFINE VARIABLE cChar AS CHARACTER NO-UNDO.
-
-    assign int_pass = integer(pass) no-error. /*  */
-    if error-status :error then do:
-        DO iChar = 1 TO LENGTH(pass):
-            ASSIGN cChar = SUBSTRING(pass,iChar,1).
-            if index("1234567890", cChar) > 0 then do:
-                return True.
-            end.
-        end.
-    end.
-    
-    return false.
-    
-end function.
 
 
 /* ************************  Control Triggers  ************************ */
@@ -264,7 +254,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -283,11 +273,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   assign
    fi-db       = STRING(p-db-num)
-   fi-userid   = p-user-id
+   fi-userid   = p-user-login
    fi-username = p-user-name
   .
+  
 
-  if p-user-adm <> true
+  if p-LastPassVis ne no
   then do:
     assign
       fi-old-password :visible   = true
@@ -299,7 +290,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   run display-data in this-procedure .
 
-  if p-user-adm <> true
+  if p-LastPassVis eq no
   then do:
     apply 'entry':U to fi-old-password .
   end.
@@ -317,7 +308,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE change-password Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE change-password Dialog-Frame 
 PROCEDURE change-password :
 /* -----------------------------------------------------------
   Purpose:
@@ -331,7 +322,8 @@ PROCEDURE change-password :
   do
   on error undo, return error return-value
   :
-    if p-user-adm <> true
+     
+    if p-LastPassVis ne no
     then do:
       /* проверяем старое значение пароля */
       do with frame {&frame-name}
@@ -378,7 +370,11 @@ PROCEDURE change-password :
         fi-new-password-2
       .
     end.
-
+/*                      */
+/*    if p-user-adm eq ?*/
+/*    then              */
+/*                      */
+       
     if fi-new-password = '':U
     or fi-new-password = ?
     then do:
@@ -388,60 +384,17 @@ PROCEDURE change-password :
       apply 'entry':U to fi-new-password .
       undo, return error return-value .
     end.
-    
-    run adm/shattri.p (
-        input "get":U
-        ,input  '':U
-        ,input  0
-        ,input  {&attr-staff-options}
-        ,input  {&attr-staff-options_minparol} /*p-param-code*/
-        ,output v-value-character
-        ,output v-value-date
-        ,output v-value-decimal
-        ,output v-minparol
-        ,output v-value-logical
-        ,output v-param-type
-        ,INPUT-OUTPUT table-handle v-tth
-        )  .
-   
-    
-    if v-minparol <> 0 /* вместо false будет Проверка длины включена и задана */ then do:
-        if length(fi-new-password) < v-minparol /* тут будет переменная из thbjattr */
-        then do:
-          message
-            "Длина поля должна быть не менее "  v-minparol
-            view-as alert-box information .
-          apply 'entry':U to fi-new-password .
-          undo, return error return-value .
-        end.
+    define variable vText as character no-undo.
+    vText = CheckLastPWD(p-db-num,p-user-login,fi-new-password).
+    if vText ne ""
+    then do:
+       message
+          vText
+       view-as alert-box information .
+       apply 'entry':U to fi-new-password .
+       undo, return error return-value .
     end.
     
-    run adm/shattri.p (
-        input "get":U
-        ,input  '':U
-        ,input  0
-        ,input  {&attr-staff-options}
-        ,input  {&attr-staff-options_obyznumbukv} /*p-param-code*/
-        ,output v-value-character
-        ,output v-value-date
-        ,output v-value-decimal
-        ,output v-value-integer
-        ,output v-obyznumbukv
-        ,output v-param-type 
-        ,INPUT-OUTPUT table-handle v-tth
-        )  .
-    
-    if v-obyznumbukv = true /* вместо false будет Проверка численнобуквенная включена */ then do:
-        if not check_alphanumeric(fi-new-password) /* тут будет переменная из thbjattr */
-        then do:
-          message
-            "В пароле должны содержаться буквы и цифры"
-            view-as alert-box information .
-          apply 'entry':U to fi-new-password .
-          undo, return error return-value .
-        end.
-    end.
-
     if fi-new-password-2 = '':U
     or fi-new-password-2 = ?
     then do:
@@ -483,7 +436,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -494,7 +447,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-data Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-data Dialog-Frame 
 PROCEDURE display-data :
 /* -----------------------------------------------------------
   Purpose:
@@ -529,7 +482,7 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY fi-new-password fi-new-password-2 chgpwdextcon fi-db fi-userid 
@@ -538,10 +491,10 @@ PROCEDURE enable_UI :
   ENABLE b-exit b-quit b-help fi-new-password fi-new-password-2 chgpwdextcon 
          fi-db fi-userid fi-username 
       WITH FRAME Dialog-Frame.
-  chgpwdextcon:visible = not p-login.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

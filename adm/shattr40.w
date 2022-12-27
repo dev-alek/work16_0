@@ -59,6 +59,7 @@ define variable vss-description as character no-undo init "Редактирование атрибу
 { gbl/getcntxt.i def }
 { gbl/gbclcode.i }
 { gbl/cur-time.i }
+{ cmp/trg-def.i }
 
 define temp-table temp-thbj-attr no-undo like ub.thbj-attr.
 DEFINE VARIABLE v-db-num LIKE ub.db.db-num NO-UNDO.
@@ -85,8 +86,11 @@ v-tth = buffer thbjattr_thbj-attr:table-handle .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help t-noanshftstaff ~
-t-obyznumbukv t-minparol 
-&Scoped-Define DISPLAYED-OBJECTS t-noanshftstaff t-obyznumbukv t-minparol 
+t-obyznumbukv t-obyznumbukvAdm t-minparol t-minparolAdm t-TimeAvail ~
+t-TimeAvailAdm t-TimeBlock t-TimeBlockAdm t-LastPaswd t-LastPaswdAdm 
+&Scoped-Define DISPLAYED-OBJECTS t-noanshftstaff t-obyznumbukv ~
+t-obyznumbukvAdm t-minparol t-minparolAdm t-TimeAvail t-TimeAvailAdm ~
+t-TimeBlock t-TimeBlockAdm t-LastPaswd t-LastPaswdAdm 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -116,10 +120,41 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
+DEFINE VARIABLE t-LastPaswd AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
+     LABEL "Количество старых паролей с которыми не должен совпадать новый пароль" 
+     VIEW-AS FILL-IN 
+     SIZE 7.5 BY .79 NO-UNDO.
+
+DEFINE VARIABLE t-LastPaswdAdm AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 7.5 BY .79 NO-UNDO.
+
 DEFINE VARIABLE t-minparol AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
      LABEL "Минимальная длина пароля" 
      VIEW-AS FILL-IN 
-     SIZE 7.5 BY .78 NO-UNDO.
+     SIZE 7.5 BY .79 NO-UNDO.
+
+DEFINE VARIABLE t-minparolAdm AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 7.5 BY .79 NO-UNDO.
+
+DEFINE VARIABLE t-TimeAvail AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
+     LABEL "Время жизни пароля" 
+     VIEW-AS FILL-IN 
+     SIZE 7.5 BY .79 NO-UNDO.
+
+DEFINE VARIABLE t-TimeAvailAdm AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 7.5 BY .79 NO-UNDO.
+
+DEFINE VARIABLE t-TimeBlock AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
+     LABEL "Время до блокировки пользователя после окончания действия пароля" 
+     VIEW-AS FILL-IN 
+     SIZE 7.5 BY .79 NO-UNDO.
+
+DEFINE VARIABLE t-TimeBlockAdm AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
+     VIEW-AS FILL-IN 
+     SIZE 7.5 BY .79 NO-UNDO.
 
 DEFINE VARIABLE t-noanshftstaff AS LOGICAL INITIAL no 
      LABEL "Запрет на ввод произвольных данных при вводе персонала смены" 
@@ -131,6 +166,11 @@ DEFINE VARIABLE t-obyznumbukv AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 70 BY 1 NO-UNDO.
 
+DEFINE VARIABLE t-obyznumbukvAdm AS LOGICAL INITIAL no 
+     LABEL "Обязательное сочетание цифровых и буквенных символов (АДМ)" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 70 BY 1 NO-UNDO.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -138,10 +178,22 @@ DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 95
-     t-noanshftstaff AT ROW 2.15 COL 4
-     t-obyznumbukv AT ROW 3.07 COL 4
-     t-minparol AT ROW 4.15 COL 27.5 COLON-ALIGNED WIDGET-ID 4
-     SPACE(62.24) SKIP(3.32)
+     t-noanshftstaff AT ROW 2.17 COL 4
+     t-obyznumbukv AT ROW 3.08 COL 4
+     t-obyznumbukvAdm AT ROW 4.08 COL 4 WIDGET-ID 14
+     t-minparol AT ROW 6.5 COL 72.5 COLON-ALIGNED WIDGET-ID 4
+     t-minparolAdm AT ROW 6.5 COL 85.5 COLON-ALIGNED NO-LABEL WIDGET-ID 18
+     t-TimeAvail AT ROW 7.5 COL 72.5 COLON-ALIGNED WIDGET-ID 6
+     t-TimeAvailAdm AT ROW 7.5 COL 85.5 COLON-ALIGNED NO-LABEL WIDGET-ID 20
+     t-TimeBlock AT ROW 8.5 COL 72.5 COLON-ALIGNED WIDGET-ID 8
+     t-TimeBlockAdm AT ROW 8.5 COL 85.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
+     t-LastPaswd AT ROW 9.5 COL 72.5 COLON-ALIGNED WIDGET-ID 10
+     t-LastPaswdAdm AT ROW 9.5 COL 85.5 COLON-ALIGNED NO-LABEL WIDGET-ID 16
+     "Пользователь" VIEW-AS TEXT
+          SIZE 12 BY .67 AT ROW 5.5 COL 72 WIDGET-ID 12
+     "Администратор" VIEW-AS TEXT
+          SIZE 14 BY .67 AT ROW 5.5 COL 85 WIDGET-ID 24
+     SPACE(0.24) SKIP(4.40)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры работы с пользователями и персоналом"
@@ -211,7 +263,7 @@ END.
 ON VALUE-CHANGED OF t-noanshftstaff IN FRAME Dialog-Frame /* Запрет на ввод произвольных данных при вводе персонала смены */
 DO:
     ASSIGN
-  t-obyznumbukv.
+  t-noanshftstaff.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -221,6 +273,18 @@ END.
 &Scoped-define SELF-NAME t-obyznumbukv
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-obyznumbukv Dialog-Frame
 ON VALUE-CHANGED OF t-obyznumbukv IN FRAME Dialog-Frame /* Обязательное сочетание цифровых и буквенных символов */
+DO:
+    ASSIGN
+  t-obyznumbukv.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME t-obyznumbukvAdm
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-obyznumbukvAdm Dialog-Frame
+ON VALUE-CHANGED OF t-obyznumbukvAdm IN FRAME Dialog-Frame /* Обязательное сочетание цифровых и буквенных символов (АДМ) */
 DO:
     ASSIGN
   t-obyznumbukv.
@@ -413,9 +477,13 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-noanshftstaff t-obyznumbukv t-minparol 
+  DISPLAY t-noanshftstaff t-obyznumbukv t-obyznumbukvAdm t-minparol 
+          t-minparolAdm t-TimeAvail t-TimeAvailAdm t-TimeBlock t-TimeBlockAdm 
+          t-LastPaswd t-LastPaswdAdm 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit b-quit B-Help t-noanshftstaff t-obyznumbukv t-minparol 
+  ENABLE B-exit b-quit B-Help t-noanshftstaff t-obyznumbukv t-obyznumbukvAdm 
+         t-minparol t-minparolAdm t-TimeAvail t-TimeAvailAdm t-TimeBlock 
+         t-TimeBlockAdm t-LastPaswd t-LastPaswdAdm 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -463,27 +531,48 @@ and not available locked_thbj-attr then do:
   view-as alert-box error .
   undo, return error .
 end.
+&glob propVal IF v-entry = "~{&propCode~}" THEN DO: ~
+    assign ~
+    t-~{&propCode~} = thbjattr_thbj-attr.property-value-~{&propType~} ~
+    t-~{&propCode~}:private-data in frame ~{&frame-name~} = "recid=" + string(recid(thbjattr_thbj-attr)) ~
+    . ~
+  END.
 FOR EACH thbjattr_thbj-attr:
   ASSIGN
   v-entry = thbjattr_thbj-attr.prop-code.
-  IF v-entry = {&attr-staff-options_noanshftstaff} THEN DO:
-    ASSIGN
-    t-noanshftstaff = thbjattr_thbj-attr.property-value-logical
-    t-noanshftstaff:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
-    .
-  END.
-  IF v-entry = {&attr-staff-options_obyznumbukv} THEN DO:
-    ASSIGN
-    t-obyznumbukv = thbjattr_thbj-attr.property-value-logical
-    t-obyznumbukv:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
-    .
-  END.
-  IF v-entry = {&attr-staff-options_minparol} THEN DO:
-    ASSIGN
-    t-minparol = thbjattr_thbj-attr.property-value-integer
-    t-minparol:private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
-    .
-  END.
+  
+  &glob propType logical
+  
+  &glob propcode {&bef-attr-staff-options_noanshftstaff}
+  {&propVal}
+  
+  &glob propcode {&bef-attr-staff-options_obyznumbukv}
+  {&propVal}
+  &glob propcode {&bef-attr-staff-options_obyznumbukv}Adm
+  {&propVal}
+  
+  &glob propType integer
+  &glob propcode {&bef-attr-staff-options_minparol}
+  {&propVal}
+  &glob propcode {&bef-attr-staff-options_minparol}Adm
+  {&propVal}
+  
+  &glob propcode {&bef-attr-staff-options_TimeAvail}
+  {&propVal}
+  &glob propcode {&bef-attr-staff-options_TimeAvail}Adm
+  {&propVal}
+  
+  &glob propcode {&bef-attr-staff-options_TimeBlock}
+  {&propVal}
+  &glob propcode {&bef-attr-staff-options_TimeBlock}Adm
+  {&propVal}
+  
+  &glob propcode {&bef-attr-staff-options_LastPaswd}
+  {&propVal}
+  &glob propcode {&bef-attr-staff-options_LastPaswd}Adm
+  {&propVal}
+  
+  
   create temp-thbj-attr.
   buffer-copy thbjattr_thbj-attr to temp-thbj-attr.
 END.
@@ -499,16 +588,30 @@ FRAME {&FRAME-NAME}:TITLE = FRAME {&FRAME-NAME}:TITLE + (if p-obj-type = {&cmp} 
 v-tab-order = "t-noanshftstaff, t-obyznumbukv, t-minparol"
 .
     IF p-obj-type = '' and p-obj-code = 0 THEN DO:
-        DISPLAY
-        t-noanshftstaff t-obyznumbukv t-minparol
+       define variable VsuperAdm as logical no-undo.
+       find first user-account-attr where user-account-attr.user-id    eq g#userid
+                                   and user-account-attr.attr-code  eq "superadm"
+       no-lock no-error.
+       VsuperAdm = available user-account-attr and logical(user-account-attr.attr-value) eq yes no-error.
+        display 
+        t-noanshftstaff t-obyznumbukv t-minparol t-obyznumbukvAdm t-minparolADm t-TimeAvail t-TimeBlock t-LastPaswd t-TimeAvailAdm t-TimeBlockAdm t-LastPaswdAdm
         WITH FRAME {&frame-name}.
         ENABLE
         B-exit WHEN p-mode = {&UPDATE}
         b-quit
         B-Help
-        t-noanshftstaff WHEN p-mode = {&UPDATE}
-        t-obyznumbukv WHEN p-mode = {&UPDATE}
-        t-minparol WHEN p-mode = {&UPDATE}
+        t-noanshftstaff    WHEN p-mode = {&UPDATE}
+        t-obyznumbukv      WHEN p-mode = {&UPDATE}
+        t-minparol         WHEN p-mode = {&UPDATE}
+        t-TimeAvail        WHEN p-mode = {&UPDATE}
+        t-TimeBlock        WHEN p-mode = {&UPDATE} 
+        t-LastPaswd        WHEN p-mode = {&UPDATE}
+        t-obyznumbukvAdm   WHEN p-mode = {&UPDATE} and VsuperAdm
+        t-minparolAdm      WHEN p-mode = {&UPDATE} and VsuperAdm
+        t-TimeAvailAdm     WHEN p-mode = {&UPDATE} and VsuperAdm
+        t-TimeBlockAdm     WHEN p-mode = {&UPDATE} and VsuperAdm 
+        t-LastPaswdAdm     WHEN p-mode = {&UPDATE} and VsuperAdm
+        
         WITH FRAME {&frame-name}.
     END.
     ELSE DO:

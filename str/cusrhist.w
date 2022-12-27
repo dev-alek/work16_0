@@ -77,6 +77,7 @@ define variable vss-description AS CHAR NO-UNDO INIT "Список полной истории поль
 { cmp/mrk-strf.i }
 { gbl/usrfulnf.i }
 { gbl/fltopend.i defproc }
+{ gbl/color.i }
 define variable filter-point     as character no-undo init "cusrhist" .
 define variable filter-point0    as character no-undo init "cusrhist" .
 define variable filter-label     as character no-undo init "История пользователя" .
@@ -98,7 +99,6 @@ define variable dops             as character no-undo format "X(250)".
 define variable dopst            as character no-undo format "X(1)".
 
 define buffer X_curr_sysconf for ub.sysconf.
-
 { ref/tmpchgs.i "NEW SHARED"}
 
 /* _UIB-CODE-BLOCK-END */
@@ -130,8 +130,8 @@ define buffer X_curr_sysconf for ub.sysconf.
 
 
 /* Definitions for BROWSE br-usr-hist                                   */
-&Scoped-define FIELDS-IN-QUERY-br-usr-hist mark-string(recid(X_c-usr-hist), v-rid-list) X_c-usr-hist.corr-date string(X_c-usr-hist.corr-time, "HH:MM:SS":U) usrfulnf(X_c-usr-hist.corr-user-name) get-action(X_c-usr-hist.action) X_c-usr-hist.corr-user-db-num X_c-usr-hist.subject   
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-usr-hist X_c-usr-hist.corr-DATE   
+&Scoped-define FIELDS-IN-QUERY-br-usr-hist mark-string(recid(X_c-usr-hist), v-rid-list) X_c-usr-hist.corr-date string(X_c-usr-hist.corr-time, "HH:MM:SS":U) usrfulnf(X_c-usr-hist.corr-user-name) get-action(X_c-usr-hist.action) X_c-usr-hist.corr-user-db-num X_c-usr-hist.subject
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-usr-hist X_c-usr-hist.corr-DATE
 &Scoped-define ENABLED-TABLES-IN-QUERY-br-usr-hist X_c-usr-hist
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br-usr-hist X_c-usr-hist
 &Scoped-define SELF-NAME br-usr-hist
@@ -159,21 +159,21 @@ B-sch B-Help B-lookup br-usr-hist BR-changes mark-num
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
-    ( p-action as integer )  FORWARD.
+  ( p-action as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-place Dialog-Frame 
 FUNCTION get-place RETURNS CHARACTER
-    ( p-obj-type as character, p-obj-code as integer, p-pl-code as integer )  FORWARD.
+  ( p-obj-type as character, p-obj-code as integer, p-pl-code as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-subject Dialog-Frame 
 FUNCTION get-subject RETURNS CHARACTER
-    ( p-subject as character )  FORWARD.
+  ( p-subject as character )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -185,57 +185,57 @@ FUNCTION get-subject RETURNS CHARACTER
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON B-Help 
-     LABEL "Помо&щь" 
-     SIZE 3 BY 1
-     BGCOLOR 8 .
+  LABEL "Помо&щь" 
+  SIZE 3 BY 1
+  BGCOLOR 8 .
 
 DEFINE BUTTON B-lookup 
-     LABEL "&Просмотр" 
-     SIZE 10 BY 1.
+  LABEL "&Просмотр" 
+  SIZE 10 BY 1.
 
 DEFINE BUTTON B-mark 
-     LABEL "&*" 
-     SIZE 3 BY 1.
+  LABEL "&*" 
+  SIZE 3 BY 1.
 
 DEFINE BUTTON B-print 
-     LABEL "Пе&чать" 
-     SIZE 3 BY 1.
+  LABEL "Пе&чать" 
+  SIZE 3 BY 1.
 
 DEFINE BUTTON b-quit AUTO-END-KEY 
-     LABEL "&Выход" 
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  LABEL "&Выход" 
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 DEFINE BUTTON B-sch 
-     LABEL "&Фильтр" 
-     SIZE 3 BY 1.
+  LABEL "&Фильтр" 
+  SIZE 3 BY 1.
 
 DEFINE BUTTON b-sel AUTO-GO 
-     LABEL "Вы&бор" 
-     SIZE 10 BY 1
-     BGCOLOR 8 .
+  LABEL "Вы&бор" 
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 DEFINE VARIABLE mark-num AS CHARACTER FORMAT "X(256)":U 
-      VIEW-AS TEXT 
-     SIZE 6 BY 1
-     FGCOLOR 4  NO-UNDO.
+  VIEW-AS TEXT 
+  SIZE 6 BY 1
+  FGCOLOR 4 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BR-changes FOR 
-      temp-changes SCROLLING.
+  temp-changes SCROLLING.
 
-DEFINE QUERY br-usr-hist FOR 
-      X_c-usr-hist SCROLLING.
+DEFINE QUERY br-usr-hist FOR
+  X_c-usr-hist SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
 DEFINE BROWSE BR-changes
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-changes Dialog-Frame _FREEFORM
   QUERY BR-changes DISPLAY
-      temp-changes.l_name COLUMn-LABEL "Изменилось" format "X(40)"
-    temp-changes.v_old COLUMn-LABEL "Было" format "X(70)"
-    temp-changes.v_new COLUMn-LABEL "Стало" format "X(70)"
+  temp-changes.l_name COLUMn-LABEL "Изменилось" format "X(40)"
+  temp-changes.v_old COLUMn-LABEL "Было" format "X(70)"
+  temp-changes.v_new COLUMn-LABEL "Стало" format "X(70)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 8.29.
@@ -243,13 +243,13 @@ DEFINE BROWSE BR-changes
 DEFINE BROWSE br-usr-hist
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-usr-hist Dialog-Frame _FREEFORM
   QUERY br-usr-hist NO-LOCK DISPLAY
-      mark-string(recid(X_c-usr-hist), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
-    X_c-usr-hist.corr-date FORMAT "99/99/9999":U
-    string(X_c-usr-hist.corr-time, "HH:MM:SS":U) COLUMN-LABEL "Время изм." FORMAT "X(8)":U
-    usrfulnf(X_c-usr-hist.corr-user-name) FORMAT "X(18)":U
-    get-action(X_c-usr-hist.action) COLUMN-LABEL "Действие" FORMAT "X(10)":U
-    X_c-usr-hist.corr-user-db-num FORMAT ">>>>9":U
-    X_c-usr-hist.subject COLUMN-LABEL "Предмет изменений" FORMAT "X(25)":U
+  mark-string(recid(X_c-usr-hist), v-rid-list) COLUMN-LABEL "*" FORMAT "X(1)":U
+  X_c-usr-hist.corr-date FORMAT "99/99/9999":U
+  string(X_c-usr-hist.corr-time, "HH:MM:SS":U) COLUMN-LABEL "Время изм." FORMAT "X(8)":U
+  usrfulnf(X_c-usr-hist.corr-user-name) FORMAT "X(18)":U
+  get-action(X_c-usr-hist.action) COLUMN-LABEL "Действие" FORMAT "X(10)":U
+  X_c-usr-hist.corr-user-db-num FORMAT ">>>>9":U
+  X_c-usr-hist.subject COLUMN-LABEL "Предмет изменений" FORMAT "X(15)":U
   ENABLE
       X_c-usr-hist.corr-DATE
 /* _UIB-CODE-BLOCK-END */
@@ -260,21 +260,21 @@ DEFINE BROWSE br-usr-hist
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     b-quit AT ROW 1 COL 1
-     B-mark AT ROW 1 COL 11
-     b-sel AT ROW 1 COL 21
-     B-print AT ROW 1 COL 89
-     B-sch AT ROW 1 COL 92
-     B-Help AT ROW 1 COL 95
-     B-lookup AT ROW 1.04 COL 45
-     br-usr-hist AT ROW 2 COL 1
-     BR-changes AT ROW 13.75 COL 1
-     mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL
-     SPACE(78.74) SKIP(20.07)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Полная история по пользователю"
-         CANCEL-BUTTON b-quit.
+  b-quit AT ROW 1 COL 1
+  B-mark AT ROW 1 COL 11
+  b-sel AT ROW 1 COL 21
+  B-print AT ROW 1 COL 89
+  B-sch AT ROW 1 COL 92
+  B-Help AT ROW 1 COL 95
+  B-lookup AT ROW 1.04 COL 45
+  br-usr-hist AT ROW 2 COL 1
+  BR-changes AT ROW 13.75 COL 1
+  mark-num AT ROW 1 COL 12.5 COLON-ALIGNED NO-LABEL
+  SPACE(78.74) SKIP(20.07)
+  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+  SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+  TITLE "Полная история по пользователю"
+  CANCEL-BUTTON b-quit.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -305,11 +305,8 @@ DEFINE FRAME Dialog-Frame
 /* BROWSE-TAB br-usr-hist B-lookup Dialog-Frame */
 /* BROWSE-TAB BR-changes br-usr-hist Dialog-Frame */
 ASSIGN 
-       FRAME Dialog-Frame:SCROLLABLE       = FALSE
-       FRAME Dialog-Frame:HIDDEN           = TRUE.
-
-ASSIGN 
-       br-usr-hist:COLUMN-RESIZABLE IN FRAME Dialog-Frame       = TRUE.
+  FRAME Dialog-Frame:SCROLLABLE = FALSE
+  FRAME Dialog-Frame:HIDDEN     = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -333,10 +330,10 @@ OPEN QUERY {&SELF-NAME} FOR EACH X_c-usr-hist NO-LOCK INDEXED-REPOSITION.
      _END_FREEFORM
      _Options          = "NO-LOCK INDEXED-REPOSITION"
      _Query            is NOT OPENED
-*/  /* BROWSE br-usr-hist */
+*/  /* BROWSE br-plc-hist */
 &ANALYZE-RESUME
 
- 
+
 
 
 
@@ -345,9 +342,9 @@ OPEN QUERY {&SELF-NAME} FOR EACH X_c-usr-hist NO-LOCK INDEXED-REPOSITION.
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON GO OF FRAME Dialog-Frame /* Полная история по пользователю */
-DO:
-        p-rid-list = v-rid-list.
-    END.
+  DO:
+    p-rid-list = v-rid-list.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -355,9 +352,9 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Полная история по пользователю */
-DO:
-        APPLY "END-ERROR":U TO SELF.
-    END.
+  DO:
+    APPLY "END-ERROR":U TO SELF.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -366,26 +363,26 @@ DO:
 &Scoped-define SELF-NAME B-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-mark Dialog-Frame
 ON CHOOSE OF B-mark IN FRAME Dialog-Frame /* * */
-DO:
-        define variable loc#log as logical no-undo .
-        if available X_c-usr-hist then 
-        do:
-            { gbl/markstrn.i X_c-usr-hist v-rid-list }
-            loc#log = br-usr-hist:refresh() .
+  DO:
+    define variable loc#log as logical no-undo .
+    if available X_c-usr-hist then 
+    do:
+    { gbl/markstrn.i X_c-usr-hist v-rid-list }
+      loc#log = br-usr-hist:refresh() .
 
-            if last-event:function <> "MOUSE-SELECT-DBLCLICK" then 
-            do:
-                loc#log = br-usr-hist:select-next-row ().
-                apply "VALUE-CHANGED" to br-usr-hist in frame {&frame-name}.
-            end.
-            if num-entries( v-rid-list ) = 0
-                then
-                hide mark-num in frame {&frame-name}.
-            else
-                disp num-entries( v-rid-list ) @ mark-num with frame {&frame-name}.
-        end.
-        apply "entry" to br-usr-hist in frame {&frame-name}.
-    END.
+      if last-event:function <> "MOUSE-SELECT-DBLCLICK" then 
+      do:
+        loc#log = br-usr-hist:select-next-row ().
+        apply "VALUE-CHANGED" to br-usr-hist in frame {&frame-name}.
+      end.
+      if num-entries( v-rid-list ) = 0
+        then
+        hide mark-num in frame {&frame-name}.
+      else
+        disp num-entries( v-rid-list ) @ mark-num with frame {&frame-name}.
+    end.
+    apply "entry" to br-usr-hist in frame {&frame-name}.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -394,11 +391,11 @@ DO:
 &Scoped-define SELF-NAME B-sch
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-sch Dialog-Frame
 ON CHOOSE OF B-sch IN FRAME Dialog-Frame /* Фильтр */
-DO:
-        run proc-b-sch in this-procedure no-error.
-        if error-status:error then return no-apply.
+  DO:
+    run proc-b-sch in this-procedure no-error.
+    if error-status:error then return no-apply.
 
-    END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -407,14 +404,36 @@ DO:
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel Dialog-Frame
 ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор */
+  DO:
+    if ( available X_c-usr-hist ) then 
+    do:
+      if ( v-rid-list = "" ) or b-mark:sensitive = no
+        then
+        v-rid-list = string( recid( X_c-usr-hist ) ) .
+    end.
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME sch-obj-code
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL sch-obj-code Dialog-Frame
+ON ROW-DISPLAY OF BR-changes IN FRAME Dialog-Frame /* коду */
 DO:
-        if ( available X_c-usr-hist ) then 
-        do:
-            if ( v-rid-list = "" ) or b-mark:sensitive = no
-                then
-                v-rid-list = string( recid( X_c-usr-hist ) ) .
-        end.
-    END.
+   if temp-changes.fNotChange
+   then do:
+      temp-changes.l_name:fGCOLOR in browse BR-changes = GRAY_COLOR.
+      temp-changes.v_old:fGCOLOR in browse BR-changes  = GRAY_COLOR.
+      temp-changes.v_new:fGCOLOR in browse BR-changes  = GRAY_COLOR.
+   end.
+   else do:
+      temp-changes.l_name:fGCOLOR in browse BR-changes = BLACK_COLOR.
+      temp-changes.v_old:fGCOLOR in browse BR-changes = BLACK_COLOR.
+      temp-changes.v_new:fGCOLOR in browse BR-changes = BLACK_COLOR.
+   end.
+   
+          
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -424,12 +443,12 @@ DO:
 &Scoped-define SELF-NAME br-usr-hist
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-usr-hist Dialog-Frame
 ON MOUSE-SELECT-DBLCLICK OF br-usr-hist IN FRAME Dialog-Frame
-DO:
-        run proc-br-usr-hist in this-procedure no-error.
-        if error-status:error then return no-apply.
+  DO:
+    run proc-br-usr-hist in this-procedure no-error.
+    if error-status:error then return no-apply.
 
 
-    END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -437,11 +456,11 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-usr-hist Dialog-Frame
 ON RETURN OF br-usr-hist IN FRAME Dialog-Frame
-DO:
-        run proc-br-usr-hist in this-procedure no-error.
-        if error-status:error then return no-apply.
+  DO:
+    run proc-br-usr-hist in this-procedure no-error.
+    if error-status:error then return no-apply.
 
-    END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -449,12 +468,13 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-usr-hist Dialog-Frame
 ON VALUE-CHANGED OF br-usr-hist IN FRAME Dialog-Frame
-DO:
-        run proc-view-changes in this-procedure no-error.
-    END.
+  DO:
+    run proc-view-changes in this-procedure no-error.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 
 &Scoped-define BROWSE-NAME BR-changes
@@ -467,39 +487,36 @@ DO:
 
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
-    THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+  THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-    define variable v-date-start as date no-undo .
-    define variable v-date-end   as date no-undo .
+  ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  define variable v-date-start as date no-undo .
+  define variable v-date-end   as date no-undo .
   
-    v-date-end = today .
-    v-date-start = v-date-end - 30 .
+  v-date-end = today .
+  v-date-start = v-date-end - 30 .
 
-    for each X_c-usr-hist:
-        delete X_c-usr-hist .
-    end.
-    for each c-usr-hist where c-usr-hist.user-id = p-userid and c-usr-hist.corr-date > v-date-start 
-        and c-usr-hist.corr-date <= v-date-end
-        by c-usr-hist.corr-date descending
-        by c-usr-hist.corr-time descending
-        :
-        create X_c-usr-hist .
-        buffer-copy c-usr-hist to X_c-usr-hist .
-    end.
+  for each X_c-usr-hist:
+    delete X_c-usr-hist .
+  end.
+  for each c-usr-hist where c-usr-hist.user-id = p-userid and c-usr-hist.corr-date > v-date-start 
+    and (c-usr-hist.corr-date < v-date-end or c-usr-hist.corr-date = v-date-end) by c-usr-hist.corr-date desc:
+    create X_c-usr-hist .
+    buffer-copy c-usr-hist to X_c-usr-hist .
+  end.
         
-    {&OPEN-QUERY-br-usr-hist}
-    RUN MyEnable in this-procedure .
-    RUn OpenBR in this-procedure ( input yes, input no, input '':U).
-    HIDE mark-num in frame {&frame-name} .
-    if v-rid-list <> "":U then
-        REPOSITION br-usr-hist to recid integer(entry(1, v-rid-list)) No-ERROR.
+  {&OPEN-QUERY-br-usr-hist}
+  RUN MyEnable in this-procedure .
+  RUn OpenBR in this-procedure ( input yes, input no, input '':U).
+  HIDE mark-num in frame {&frame-name} .
+  if v-rid-list <> "":U then
+    REPOSITION br-usr-hist to recid integer(entry(1, v-rid-list)) No-ERROR.
 
-    WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
 
@@ -511,14 +528,14 @@ RUN disable_UI.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     DISABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide 
-               frames.  This procedure is usually called when
-               we are ready to "clean-up" after running.
-------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+    Purpose:     DISABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we clean-up the user-interface by deleting
+                 dynamic widgets we have created and/or hide 
+                 frames.  This procedure is usually called when
+                 we are ready to "clean-up" after running.
+  ------------------------------------------------------------------------------*/
   /* Hide all frames. */
   HIDE FRAME Dialog-Frame.
 END PROCEDURE.
@@ -528,21 +545,21 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-    /*------------------------------------------------------------------------------
-      Purpose:     ENABLE the User Interface
-      Parameters:  <none>
-      Notes:       Here we display/view/enable the widgets in the
-                   user-interface.  In addition, OPEN all queries
-                   associated with each FRAME and BROWSE.
-                   These statements here are based on the "Other 
-    ------------------------------------------------------------------------------*/
-    DISPLAY mark-num b-sel B-print B-sch B-Help B-lookup 
-        BR-changes 
-        WITH FRAME Dialog-Frame.
-    ENABLE b-quit B-mark  br-usr-hist 
-        WITH FRAME Dialog-Frame.
-    VIEW FRAME Dialog-Frame.
-    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  /*------------------------------------------------------------------------------
+    Purpose:     ENABLE the User Interface
+    Parameters:  <none>
+    Notes:       Here we display/view/enable the widgets in the
+                 user-interface.  In addition, OPEN all queries
+                 associated with each FRAME and BROWSE.
+                 These statements here are based on the "Other 
+  ------------------------------------------------------------------------------*/
+  DISPLAY mark-num b-sel B-print B-sch B-Help B-lookup 
+    BR-changes 
+    WITH FRAME Dialog-Frame.
+  ENABLE b-quit B-mark  br-usr-hist 
+    WITH FRAME Dialog-Frame.
+  VIEW FRAME Dialog-Frame.
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -550,38 +567,38 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable Dialog-Frame 
 PROCEDURE MyEnable :
-assign
-        br-usr-hist:num-locked-columns in frame {&frame-name}  = 1
-        X_c-usr-hist.corr-DATE:read-only in browse br-usr-hist = yes
-        br-changes:title                                       = "":U
-        temp-changes.l_name:resizable in browse br-changes     = true
-        temp-changes.v_old:resizable in browse br-changes      = true
-        temp-changes.v_new:resizable in browse br-changes      = true
-        temp-changes.l_name:width in browse br-changes         = 30
-        temp-changes.v_old:width in browse br-changes          = 40
-        temp-changes.v_new:width in browse br-changes          = 40
-        .
-    VIEW frame {&frame-name} .
-    DISPLAY
-        mark-num
-        B-mark 
-        when lookup("b-mark":U, bttns) > 0
-        b-sel 
-        when lookup("b-sel":U, bttns) > 0
-        B-lookup
-        B-sch
-        B-Print
-        B-Help
-        WITH FRAME {&frame-name} .
-    ENABLE
-        b-quit
+  assign
+    br-usr-hist:num-locked-columns in frame {&frame-name}  = 1
+    X_c-usr-hist.corr-DATE:read-only in browse br-usr-hist = yes
+    br-changes:title                                       = "":U
+    temp-changes.l_name:resizable in browse br-changes     = true
+    temp-changes.v_old:resizable in browse br-changes      = true
+    temp-changes.v_new:resizable in browse br-changes      = true
+    temp-changes.l_name:width in browse br-changes         = 30
+    temp-changes.v_old:width in browse br-changes          = 40
+    temp-changes.v_new:width in browse br-changes          = 40
+    .
+  VIEW frame {&frame-name} .
+  DISPLAY
+    mark-num
+    B-mark 
+    when lookup("b-mark":U, bttns) > 0
+    b-sel 
+    when lookup("b-sel":U, bttns) > 0
+    B-lookup
+    B-sch
+    B-Print
+    B-Help
+    WITH FRAME {&frame-name} .
+  ENABLE
+    b-quit
   
-        br-usr-hist
-        BR-changes mark-num
-        WITH FRAME {&frame-name} .
-    VIEW FRAME {&frame-name} .
-    hide b-lookup 
-        in frame {&frame-name} .
+    br-usr-hist
+    BR-changes mark-num
+    WITH FRAME {&frame-name} .
+  VIEW FRAME {&frame-name} .
+  hide b-lookup 
+    in frame {&frame-name} .
 
 END PROCEDURE.
 
@@ -590,31 +607,31 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr Dialog-Frame 
 PROCEDURE OpenBr :
-define input  parameter p-open-query     as logical   no-undo .
-    define input  parameter p-find-next      as logical   no-undo .
-    define input  parameter p-find-condition as character no-undo .
-    define variable l-query-was-opened as logical   no-undo .
-    define variable v-title            as character no-undo .
-    define variable title0             as character no-undo.
-    title0 = "История складского места" + {&space-char}.
-    run waitfram-show in this-procedure ( input "Ждите...").
+  define input  parameter p-open-query     as logical   no-undo .
+  define input  parameter p-find-next      as logical   no-undo .
+  define input  parameter p-find-condition as character no-undo .
+  define variable l-query-was-opened as logical   no-undo .
+  define variable v-title            as character no-undo .
+  define variable title0             as character no-undo.
+  title0 = "История складского места" + {&space-char}.
+  run waitfram-show in this-procedure ( input "Ждите...").
 
-    define variable sort-column-phrase as character no-undo .
+  define variable sort-column-phrase as character no-undo .
 
-    case sort-column-name :
-        when "" then 
-            do:
-                assign
-                    sort-column-phrase = ""
-                    .
-            end.
-        otherwise 
-        do:
-            assign
-                sort-column-phrase = "by " + sort-column-name
-                .
-        end.
-    end case.
+  case sort-column-name :
+    when "" then 
+      do:
+        assign
+          sort-column-phrase = ""
+          .
+      end.
+    otherwise 
+    do:
+      assign
+        sort-column-phrase = "by " + sort-column-name
+        .
+    end.
+  end case.
 
 
 &scop flt-open-open-query OPEN QUERY br-usr-hist FOR EACH X_c-usr-hist
@@ -651,28 +668,28 @@ define input  parameter p-open-query     as logical   no-undo .
 
 &scop flt-open-waitfram yes
 
-    define variable l-open-query as logical no-undo .
-    CASE p-mode :
-        WHEN {&all}        THEN 
-            DO:
-                assign
-                    filter-point = filter-point0 + p-mode
-                    filter-label = substitute("&1", filter-label0)
-                    .
-                { gbl/fltopend.i
+  define variable l-open-query as logical no-undo .
+  CASE p-mode :
+    WHEN {&all}        THEN 
+      DO:
+        assign
+          filter-point = filter-point0 + p-mode
+          filter-label = substitute("&1", filter-label0)
+          .
+  { gbl/fltopend.i
       &where-cond = " TRUE "
       &use-ind    = " use-index  ie02 "
       &by         = "  " }
-            END.
-    END CASE.
+      END.
+  END CASE.
 
-    if not p-open-query  and v-doc-rec <> ? then
-        REPOSITION br-usr-hist to recid v-doc-rec No-ERROR.
-    if not p-open-query and v-fltopend-rowid[1] <> ? then
-        query br-usr-hist:handle:reposition-to-rowid(v-fltopend-rowid) No-ERROR.
-    run waitfram-hide in this-procedure .
-    APPLY "VALUE-CHANGED" TO br-usr-hist in frame {&frame-name}.
-    APPLY "ENTRY" TO br-usr-hist.
+  if not p-open-query  and v-doc-rec <> ? then
+    REPOSITION br-usr-hist to recid v-doc-rec No-ERROR.
+  if not p-open-query and v-fltopend-rowid[1] <> ? then
+    query br-usr-hist:handle:reposition-to-rowid(v-fltopend-rowid) No-ERROR.
+  run waitfram-hide in this-procedure .
+  APPLY "VALUE-CHANGED" TO br-usr-hist in frame {&frame-name}.
+  APPLY "ENTRY" TO br-usr-hist.
 
 
 END PROCEDURE.
@@ -687,42 +704,44 @@ PROCEDURE proc-br-plc-hist :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-    { ref/brwsretr.i }
+{ ref/brwsretr.i }
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-view-changes Dialog-Frame 
 PROCEDURE proc-view-changes :
-/*------------------------------------------------------------------------------
-      Purpose:
-      Parameters:  <none>
-      Notes:
-    ------------------------------------------------------------------------------*/
-    define variable v-description as character no-undo .
-    for each temp-changes:
-        delete temp-changes.
-    END.
-    if not available X_c-usr-hist then 
-    do:
-        Open QUery br-changes for each temp-changes.
-        return.
-    end.
-
-    run str/cuserhistv.p (
-        input X_c-usr-hist.user-id
-        ,input X_c-usr-hist.chip-num
-        ,input X_c-usr-hist.corr-user-db-num
-        ,input X_c-usr-hist.subject
-        ,input X_c-usr-hist.action
-        ,input no /*p-silent*/
-        ,output v-description
-        ) no-error .
+  /*------------------------------------------------------------------------------
+    Purpose:
+    Parameters:  <none>
+    Notes:
+  ------------------------------------------------------------------------------*/
+  define variable v-description as character no-undo .
+  for each temp-changes:
+    delete temp-changes.
+  END.
+  if not available X_c-usr-hist then 
+  do:
     Open QUery br-changes for each temp-changes.
-    assign
-        br-changes:title in frame {&frame-name} = v-description
-        .
+    return.
+  end.
+
+  run str/cuserhistv.p (
+    input X_c-usr-hist.user-id
+    ,input X_c-usr-hist.chip-num
+    ,input X_c-usr-hist.corr-user-db-num
+    ,input X_c-usr-hist.subject
+    ,input X_c-usr-hist.action
+    ,input no /*p-silent*/
+    ,output v-description
+    ) no-error .
+  Open QUery br-changes for each temp-changes.
+  assign
+    br-changes:title in frame {&frame-name} = v-description
+    .
 
 
 END PROCEDURE.
@@ -734,17 +753,17 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-action Dialog-Frame 
 FUNCTION get-action RETURNS CHARACTER
-    ( p-action as integer ) :
+  ( p-action as integer ) :
 /*------------------------------------------------------------------------------
   Purpose:
     Notes:
 ------------------------------------------------------------------------------*/
   &scop hn-action-code trim(string(p-action))
-    define variable dops as character no-undo.
-    assign 
-        dops = {&hn-action-name} no-error.
+  define variable dops as character no-undo.
+  assign 
+    dops = {&hn-action-name} no-error.
 
-    RETURN dops.   /* Function return value. */
+  RETURN dops.   /* Function return value. */
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
@@ -752,22 +771,22 @@ END FUNCTION.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-place Dialog-Frame 
 FUNCTION get-place RETURNS CHARACTER
-    ( p-obj-type as character, p-obj-code as integer, p-pl-code as integer ) :
-    /*------------------------------------------------------------------------------
-      Purpose:
-        Notes:
-    ------------------------------------------------------------------------------*/
-    define buffer buf_place for ub.place.
-    find first buf_place no-lock where
-        buf_place.obj-type = p-obj-type
-        AND  buf_place.obj-code = p-obj-code
-        AND  buf_place.pl-code = p-pl-code no-error.
-    if not available buf_place then 
-    do:
-        return "!!! Неизвестное складское место!!!".
-    end.
+  ( p-obj-type as character, p-obj-code as integer, p-pl-code as integer ) :
+  /*------------------------------------------------------------------------------
+    Purpose:
+      Notes:
+  ------------------------------------------------------------------------------*/
+  define buffer buf_place for ub.place.
+  find first buf_place no-lock where
+    buf_place.obj-type = p-obj-type
+    AND  buf_place.obj-code = p-obj-code
+    AND  buf_place.pl-code = p-pl-code no-error.
+  if not available buf_place then 
+  do:
+    return "!!! Неизвестное складское место!!!".
+  end.
 
-    RETURN buf_place.pl-name.   /* Function return value. */
+  RETURN buf_place.pl-name.   /* Function return value. */
 
 END FUNCTION.
 
@@ -776,13 +795,13 @@ END FUNCTION.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-subject Dialog-Frame 
 FUNCTION get-subject RETURNS CHARACTER
-    ( p-subject as character ) :
+  ( p-subject as character ) :
 /*------------------------------------------------------------------------------
   Purpose:
     Notes:
 ------------------------------------------------------------------------------*/
 &scop hn-plc-hist-code p-subject
-    RETURN {&hn-plc-hist-name}.   /* Function return value. */
+  RETURN {&hn-plc-hist-name}.   /* Function return value. */
 
 END FUNCTION.
 

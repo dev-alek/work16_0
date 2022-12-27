@@ -498,20 +498,27 @@ PROCEDURE get-unique-key-proc :
     DEFINE INPUT  PARAMETER p-unique-key-rec    AS CHARACTER   NO-UNDO.
     DEFINE OUTPUT PARAMETER p-unique-key-string AS CHARACTER   NO-UNDO.
 
-    define variable v-field-list       as character no-undo.
-    define variable v-field-value-list as character no-undo.
-    do
-        on error undo, return error
-        :
-        run gen-key-fv in this-procedure (
-            input p-unique-key-rec
-            , output v-field-list
-            , output v-field-value-list
-            ).
-        assign
-            p-unique-key-string = replace( v-field-value-list, {&delim-key}, ",":U )
-            .
-    end.
+    define variable v-field-list        as character    no-undo.
+    define variable v-field-value-list  as character    no-undo.
+do
+on error undo, return error
+:
+    run gen-key-fv in this-procedure (
+          input p-unique-key-rec
+        , output v-field-list
+        , output v-field-value-list
+    ) no-error.
+    if error-status:error
+    then
+       assign
+          p-unique-key-rec = substring (p-unique-key-rec, index(p-unique-key-rec,{&delim-key}) + 1 )
+          p-unique-key-string = replace( p-unique-key-rec, {&delim-key}, ",":U )
+       .
+    else
+       assign
+           p-unique-key-string = replace( v-field-value-list, {&delim-key}, ",":U )
+       .
+end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -590,7 +597,19 @@ PROCEDURE local-open-query-head :
     do
         on error undo, return error
         :
-
+if v-c-table eq "c-usr-hist"
+then
+    OPEN QUERY br-head
+      FOR EACH buf_head_c-user-log NO-LOCK
+         where buf_head_c-user-log.corr-user-name = p-userid
+           and buf_head_c-user-log.corr-date     >= ( if fi-date-to = ? then 12/31/2000 else fi-date-to )
+/*           and buf_head_c-user-log.head-table-key = buf_head_c-user-log.uniq-key-rec*/
+           and (buf_head_c-user-log.head-table = v-c-table or buf_head_c-user-log.head-table = v-table)
+      by buf_head_c-user-log.corr-date descending
+      by buf_head_c-user-log.corr-time descending
+    INDEXED-REPOSITION.
+ 
+else
         if v-table <> "" or v-c-table <> "" then 
         do:
             OPEN QUERY br-head

@@ -74,6 +74,8 @@ define variable vss-description as character no-undo init "Список пользователей 
 { cmp/showinf.i  }
 { gbl/usr-flt.i  }
 { gbl/prn-lib.i }
+{ cmp/trg-def.i }
+{ adm/userpro.i &CheckWorkUser = yes}
 &scoped-define current-position-rowid  "users-rowid":U
 &scoped-define current-position-focus  "users-focus":U
 &scoped-define current-position-db     "users-db":U
@@ -91,7 +93,8 @@ define variable v-users-set-rowid       as logical      no-undo.
 define variable v-users-current-rowid   as rowid        no-undo.
 define variable v-users-current-focus   as integer              no-undo.
 define variable v-only-lookup           as logical      no-undo.
-
+define variable v-rowid-login           as rowid        no-undo. 
+define variable mSuperAdm               as logical no-undo.
 define buffer buf_init_user-account      for user-account.
 define buffer buf_init_user-login        for user-login.
 
@@ -101,7 +104,6 @@ define stream OutStr-html.
 define variable p-report-id               as integer              no-undo .
 define variable v-report-name-html        as CHARACTER            no-undo .
 define variable v-report-name-html-list   as CHARACTER            no-undo .
-
 
   define temp-table tt-user-login no-undo
     field users-id   like ub.user-login.user-id
@@ -163,7 +165,7 @@ temp_filter-fields
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit cb-db b-filter fi-filter-comment ~
-tb-filter b-print b-help rs-scope b-add b-chg b-dup b-del b-userhist ~
+tb-filter b-hist b-print b-help rs-scope b-add b-chg b-dup b-del b-userhist ~
 b-hist-user b-add-2 b-chg-2 b-del-2 bt-password br-user br-login bt-object ~
 bt-firm bt-role bt-menu ed-login-object ed-user-info 
 &Scoped-Define DISPLAYED-OBJECTS cb-db fi-filter-comment tb-filter rs-scope ~
@@ -185,20 +187,6 @@ FUNCTION get-person-name RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-user-login Dialog-Frame 
-FUNCTION get-user-login RETURNS CHARACTER
-  ( p-user-id as character )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-work-status Dialog-Frame 
-FUNCTION get-work-status RETURNS CHARACTER
-  ( p-user-id as character )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -208,7 +196,10 @@ FUNCTION get-work-status RETURNS CHARACTER
 DEFINE MENU POPUP-MENU-b-print 
        MENU-ITEM m_b-print-prava LABEL "Список прав пользователей"
        MENU-ITEM m_b-print-user LABEL "Пользователь"  
-       MENU-ITEM m_b-print-list LABEL "Список пользователей".
+       MENU-ITEM m_b-print-list LABEL "Список пользователей"
+       MENU-ITEM last-pwd LABEL "Отчет о смене паролей "
+       MENU-ITEM adm-bd LABEL "Пользователи с правами администраторов БД"
+.
 
 
 /* Definitions of the field level widgets                               */
@@ -258,8 +249,12 @@ DEFINE BUTTON b-help
      SIZE 3 BY 1
      BGCOLOR 8 .
 
+DEFINE BUTTON b-hist 
+     LABEL "Ис&тория" 
+     SIZE 3 BY 1.
+
 DEFINE BUTTON b-hist-user 
-     LABEL "История" 
+     LABEL "Ис&тория" 
      SIZE 3 BY 1.
 
 DEFINE BUTTON b-print 
@@ -500,11 +495,20 @@ DO:
     define variable v-PS                        as character    no-undo.
     define variable v-accepted                  as logical      no-undo.
     define variable v-created                   as logical      no-undo.
-    define variable v-psn-code                  as integer    no-undo.
+    define variable v-psn-code                  as integer      no-undo.
+    define variable v-adm-Ubd                   as logical      no-undo.
+    define variable v-adm-gbd                   as logical      no-undo.
+    define variable v-superAdm                  as logical      no-undo.
+    define variable v-TabUserAdm                as handle       no-undo.
 
     define buffer buf_user-account      for user-account.
     define buffer buf_user-login        for user-login.
-
+    run getAccountSetting (input  ?,
+                              output v-adm-Ubd,
+                              output v-adm-gbd,
+                              output v-superAdm,
+                              input-output table-handle v-TabUserAdm).
+         
     run str/user.w (
           input parparentproc
         , input this-procedure
@@ -524,6 +528,10 @@ DO:
         , input "":U
         , input "":U
         , input ?
+        , input ? 
+        , input no
+        , input ?
+        , input-output table-handle v-TabUserAdm
         , output v-last-name
         , output v-first-name
         , output v-second-name
@@ -538,6 +546,9 @@ DO:
         , output v-internal-phone-number
         , output v-PS
         , output v-psn-code
+        , output v-adm-gbd
+        , output v-superAdm    
+        , output v-adm-Ubd 
         , output v-accepted
     ) no-error.
     if error-status :error
@@ -573,6 +584,7 @@ DO:
             , input v-internal-phone-number
             , input v-PS
             , input v-psn-code
+            , input v-superAdm
             , output v-user-id
         ) no-error.
         if error-status :error
@@ -589,18 +601,27 @@ DO:
             undo, return no-apply.
         end.
         define variable v-yesno    as logical      no-undo.
-        message
-                 "Создать логин для нового пользователя?"
-/*            skip "в текущей базе данных?"*/
-        view-as alert-box question
-        buttons yes-no
-        title "Создание логина"
-        update v-yesno .
+        if mSuperadm
+        then
+           v-yesno = yes.
+        else do:
+           message
+                    "Создать логин для нового пользователя?"
+   /*            skip "в текущей базе данных?"*/
+           view-as alert-box question
+           buttons yes-no
+           title "Создание логина"
+           update v-yesno .
+        end.
         if v-yesno = yes
         then do:
             run procedure-user-login-create in this-procedure (
-                  input v-cntxt-db-num
+                  input "{&add-def}" /*  {&add-def} 11  */
+                , input if mSuperadm then ? else v-cntxt-db-num
                 , input v-user-id
+                , input v-adm-gbd
+                , input v-adm-Ubd
+                , input v-TabUserAdm 
                 , output v-created
             ) no-error.
             if error-status :error
@@ -668,8 +689,12 @@ DO:
     if available buf_init_user-account
     then do:
         run procedure-user-login-create in this-procedure (
-              input v-cntxt-db-num
+              input "add"
+            , input v-cntxt-db-num
             , input buf_init_user-account.user-id
+            , input ?
+            , input ?
+            , input ?
             , output v-created
         ) no-error.
         if error-status :error
@@ -715,12 +740,25 @@ DO:
     define variable v-e-mail                    as character    no-undo.
     define variable v-internal-phone-number     as character    no-undo.
     define variable v-PS                        as character    no-undo.
+    define variable v-adm-Ubd                   as logical      no-undo init ?.
+/*    define variable v-adm-Ubd-int               as integer      no-undo.*/
+    define variable v-adm-gbd                   as logical      no-undo init ?.
+    define variable v-superAdm                  as logical      no-undo.
+    define variable v-TabUserAdm                as handle       no-undo.
     define variable v-accepted                  as logical      no-undo.
     define variable v-psn-code                  as integer    no-undo.
+    
+    define buffer buf_user-account-attr for ub.user-account-attr .
 
     if available buf_init_user-account
     then do:
-        run str/user.w (
+       run getAccountSetting (input  buf_init_user-account.user-id,
+                              output v-adm-Ubd,
+                              output v-adm-gbd,
+                              output v-superAdm,
+                              input-output table-handle v-TabUserAdm).
+
+       run str/user.w (
               input parparentproc
             , input this-procedure
             , input {&update}
@@ -739,6 +777,10 @@ DO:
             , input buf_init_user-account.internal-phone-number
             , input buf_init_user-account.PS
             , INPUT buf_init_user-account.psn-code
+            , input v-adm-gbd
+            , input v-superAdm 
+            , input v-adm-Ubd
+            , input-output table-handle v-TabUserAdm
             , output v-last-name
             , output v-first-name
             , output v-second-name
@@ -753,6 +795,9 @@ DO:
             , output v-internal-phone-number
             , output v-PS
             , output v-psn-code
+            , output v-adm-gbd
+            , output v-superAdm    
+            , output v-adm-Ubd 
             , output v-accepted
         ) no-error.
         if error-status :error
@@ -788,6 +833,7 @@ DO:
                 , input v-internal-phone-number
                 , input v-PS
                 , input v-psn-code
+                , input v-superAdm
                 , output v-user-id
             ) no-error.
             if error-status :error
@@ -800,6 +846,29 @@ DO:
                     skip trim( error-status :get-message( 1 ) )
                          trim( error-status :get-message( 2 ) )
                          trim( error-status :get-message( 3 ) )
+                view-as alert-box error.
+                undo, return no-apply.
+            end.
+            define variable v-created as logical no-undo.
+            run procedure-user-login-create in this-procedure (
+                  input {&update}
+                , input v-cntxt-db-num
+                , input buf_init_user-account.user-id
+                , input v-adm-gbd
+                , input v-adm-Ubd
+                , input v-TabUserAdm 
+                , output v-created
+            ) no-error.
+            if error-status :error
+            then do:
+                message
+                        vss-workfile vss-revision vss-description
+                    skip(1)
+                    skip "Ошибка создания логина пользователя."
+                    skip return-value
+                    skip trim( error-status :get-message( 1 ) )
+                        trim( error-status :get-message( 2 ) )
+                        trim( error-status :get-message( 3 ) )
                 view-as alert-box error.
                 undo, return no-apply.
             end.
@@ -1058,7 +1127,9 @@ DO:
         view-as alert-box error.
         undo, return no-apply.
     end.
+    
     if v-accepted = yes
+    
     then do:
         if fi-filter-comment = "":U
         then do:
@@ -1191,8 +1262,22 @@ DO:
     define variable v-void-char     as character    no-undo.
     define variable v-void-int      as integer    no-undo.
     define variable v-void-log      as logical      no-undo.
+    define variable v-adm-Ubd                   as integer      no-undo.
+    define variable v-adm-gbd                   as logical      no-undo.
+    define variable v-superAdm                  as logical      no-undo.
+    define variable v-TabUserAdm                as handle       no-undo.
+    
+    
+    define buffer buf_user-account-attr for ub.user-account-attr .
+    
     if available buf_init_user-account
     then do:
+        run getAccountSetting (input  buf_init_user-account.user-id,
+                              output v-adm-Ubd,
+                              output v-adm-gbd,
+                              output v-superAdm,
+                              input-output table-handle v-TabUserAdm).
+         
         run str/user.w (
               input parparentproc
             , input this-procedure
@@ -1212,6 +1297,10 @@ DO:
             , input buf_init_user-account.internal-phone-number
             , input buf_init_user-account.PS
             , input buf_init_user-account.psn-code
+            , input v-adm-gbd
+            , input v-superAdm 
+            , input v-adm-Ubd
+            , input-output table-handle v-TabUserAdm
             , output v-void-char
             , output v-void-char
             , output v-void-char
@@ -1226,6 +1315,9 @@ DO:
             , output v-void-char
             , output v-void-char
             , output v-void-int
+            , output v-void-log
+            , output v-void-log
+            , output v-void-log
             , output v-void-log
         ).
     end.
@@ -1401,6 +1493,7 @@ DO:
         run procedure-user-login-change-password in this-procedure (
               input buf_init_user-login.db-num
             , input buf_init_user-login.user-id
+            , input yes
         ) no-error .
         if error-status :error
         then do:
@@ -1486,7 +1579,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-list Dialog-Frame
 ON CHOOSE OF MENU-ITEM m_b-print-list /* Список пользователей */
 DO:
-  
+  if available (buf_init_user-login) then v-rowid-login = rowid (buf_init_user-login) .
         run get-report-num in parParentProc (
             output p-report-id
         ).
@@ -1503,12 +1596,70 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME last-pwd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL last-pwd Dialog-Frame
+ON CHOOSE OF MENU-ITEM last-pwd /* Отчет о смене пароля */
+DO:
+   if available (buf_init_user-login) 
+   then 
+      v-rowid-login = rowid (buf_init_user-login) .
+   run get-report-num in parParentProc (
+            output p-report-id
+        ).
+
+   v-report-name-html-list = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
+    
+   run rep\last-pwd.p(v-report-name-html-list).
+
+   run prn-lib-reportviewer in this-procedure (
+             input parParentProc
+            ,input v-report-name-html-list
+            ,input "" 
+            ) no-error.
+   if error-status:error 
+   then 
+      message return-value view-as alert-box.
+   
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME adm-bd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL adm-bd Dialog-Frame
+ON CHOOSE OF MENU-ITEM adm-bd /* Отчет о админах БД */
+DO:
+  if available (buf_init_user-login) then v-rowid-login = rowid (buf_init_user-login) .
+        run get-report-num in parParentProc (
+            output p-report-id
+        ).
+
+  v-report-name-html-list = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
+    
+  run rep\adm_bd.p(v-report-name-html-list).
+
+  run prn-lib-reportviewer in this-procedure (
+            input parParentProc
+            ,input v-report-name-html-list
+            ,input "" 
+            ) no-error.
+  if error-status:error 
+  then
+     message return-value view-as alert-box.
+
+END.
+
+
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME m_b-print-prava
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-print-prava Dialog-Frame
 ON CHOOSE OF MENU-ITEM m_b-print-prava /* Список прав пользователей */
 DO:
-  
+  if available (buf_init_user-login) then v-rowid-login = rowid (buf_init_user-login) .
         run get-report-num in parParentProc (
             output p-report-id
         ).
@@ -1752,46 +1903,6 @@ END PROCEDURE. /* assign-field-filter-mark */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE can-edit-login Dialog-Frame 
-PROCEDURE can-edit-login :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-  define input  parameter p-db-num   as integer   no-undo .
-  define output parameter p-can-edit as logical   no-undo .
-
-  define buffer buf_db for ub.db .
-
-  do
-  on error undo, return error return-value
-  :
-    find first buf_db no-lock
-         where buf_db.db-num = p-db-num
-    no-error.
-    if not available buf_db
-    then do:
-      message
-        vss-workfile vss-revision vss-description
-        skip "Внутренняя ошибка"
-        skip "Неизвестный номер БД" p-db-num
-        skip view-as alert-box error .
-      undo, return error return-value .
-    end.
-
-    assign
-      p-can-edit = ( p-db-num = v-cntxt-db-num
-                    or
-                    buf_db.db-key = '':U
-                    or v-cntxt-db-num = 0
-                   )
-    .
-  end.
-END PROCEDURE. /* can-edit-login */
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
@@ -1973,15 +2084,14 @@ on error undo, return error
                 undo, return error .
             end.
             create new_user-login.
+            buffer-copy buf_user-login
+                except user-id db-num user-login  user-administrator 
+                    to new_user-login
             assign
                     new_user-login.user-login       = v-new-login
                     new_user-login.user-id          = v-next-user-id
                     new_user-login.db-num           = p-db-num
             .
-            buffer-copy buf_user-login
-                except user-id db-num user-login
-                    to new_user-login
-                    .
             FOR EACH  buf_user-obj no-lock
                 where buf_user-obj.db-num  = buf_user-login.db-num
                     and buf_user-obj.user-id = buf_user-login.user-id
@@ -2080,7 +2190,7 @@ PROCEDURE enable_UI :
   DISPLAY cb-db fi-filter-comment tb-filter rs-scope ed-login-object 
           ed-user-info 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit cb-db b-filter fi-filter-comment tb-filter b-print b-help 
+  ENABLE b-exit cb-db b-filter fi-filter-comment tb-filter b-hist b-print b-help 
          rs-scope b-add b-chg b-dup b-del b-userhist b-hist-user b-add-2 
          b-chg-2 b-del-2 bt-password br-user br-login bt-object bt-firm bt-role 
          bt-menu ed-login-object ed-user-info 
@@ -2399,9 +2509,6 @@ PROCEDURE init-fields :
     define buffer buf_user-account          for user-account.
     define buffer buf_temp_filter-fields    for temp_filter-fields.
 do
-for buf_db
-  , buf_user-account
-  , buf_temp_filter-fields
 with frame {&frame-name}
 on error undo, return error
 :
@@ -2460,6 +2567,14 @@ on error undo, return error
           input v-users-name-filter
         , input v-users-login-filter
     ).
+    find first user-account-attr where user-account-attr.user-id    eq g#userid
+                                   and user-account-attr.attr-code  eq "superadm"
+    no-lock no-error.
+    if     available user-account-attr
+       and logical(user-account-attr.attr-value) eq yes
+    then
+       mSuperAdm = yes.  
+    
 end.
 END PROCEDURE. /* init-fields */
 
@@ -2473,6 +2588,7 @@ PROCEDURE manage-fields :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
+define buffer user-login for user-login.
 do
 with frame {&frame-name}
 on error undo, return error
@@ -2487,6 +2603,19 @@ on error undo, return error
     */
     {&OPEN-QUERY-br-login}
     run manage-fields-login in this-procedure .
+    define variable vflag as logical no-undo.
+    if    buf_init_user-account.user-id eq g#userid
+       or mSuperAdm
+    then
+       vflag = yes.
+    else do:
+       find first user-login where user-login.user-id eq buf_init_user-account.user-id
+                               and user-login.user-administrator no-lock no-error.
+       vflag = not available user-login. 
+    end.
+    b-chg:sensitive = vflag.
+    b-dup:sensitive = true.
+    b-del:sensitive = vflag.                        
     assign
         ed-user-info = "":U
     .
@@ -2760,18 +2889,21 @@ on error undo, return error
         end.
         if buf_init_user-login.db-num = v-cntxt-db-num or v-cntxt-db-num = 0
         then do:
-            enable
-                b-chg-2
-                b-del-2
-                bt-password
-                bt-object
-                bt-firm
-                bt-role
-                bt-menu
-            .
+           define variable vflag as logical no-undo. 
+           vflag = mSuperAdm or  not buf_init_user-login.user-administrator or buf_init_user-login.user-id eq g#userid. 
+                
+                b-chg-2:sensitive = vflag.                
+                b-del-2:sensitive = vflag.
+                bt-password:sensitive = vflag.
+                bt-object:sensitive = vflag.
+                bt-firm:sensitive = vflag.
+                bt-role:sensitive = vflag.
+                bt-menu:sensitive = vflag.
+                b-copy:sensitive = vflag.
         end.
         else do:
             disable
+                b-copy
                 b-chg-2
                 b-del-2
                 bt-password
@@ -2792,6 +2924,7 @@ on error undo, return error
             b-add-2
         .
         disable
+            b-copy
             b-chg-2
             b-del-2
             bt-password
@@ -2823,7 +2956,6 @@ on error undo, return error
             b-chg
             b-del
             b-add-2
-            b-copy
             b-chg-2
             b-del-2
             bt-password
@@ -3630,93 +3762,7 @@ END PROCEDURE.  /* procedure-get-person-name */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-user-login Dialog-Frame 
-PROCEDURE procedure-get-user-login :
-/* -----------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
--------------------------------------------------------------*/
-define input  parameter p-user-id    as character no-undo .
-define output parameter p-user-login as character no-undo .
 
-    define buffer buf_user-login for ub.user-login .
-do
-for buf_user-login
-on error undo, return error return-value
-:
-    assign
-        p-user-login = "":U
-    .
-
-    for each buf_user-login no-lock
-       where buf_user-login.user-id = p-user-id
-    by buf_user-login.db-num
-    :
-        assign
-            p-user-login = substitute( "&1&2&3"
-                                , p-user-login
-                                , ( if p-user-login = "":U then "":U else ",":U )
-                                , buf_user-login.db-num )
-        .
-    end.
-end.
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-get-work-status Dialog-Frame 
-PROCEDURE procedure-get-work-status :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-define input  parameter p-user-id     as character no-undo .
-define output parameter p-work-status as character no-undo .
-
-    define buffer buf_user-login for ub.user-login .
-do
-for buf_user-login
-on error undo, return error return-value
-:
-    if p-user-id = v-cntxt-userid
-    then do:
-        assign
-            p-work-status = "*":U
-        .
-    end.
-    else do:
-        find first buf_user-login exclusive-lock
-             where buf_user-login.db-num    = v-cntxt-db-num
-               and buf_user-login.user-id   = p-user-id
-        no-error no-wait .
-        if not available buf_user-login
-        then do:
-            if locked buf_user-login
-            then do:
-            assign
-                p-work-status = "+":U
-            .
-            end.
-            else do:
-            assign
-                p-work-status = "":U
-            .
-            end.
-        end.
-        else do:
-            assign
-                p-work-status = "":U
-            .
-        end.
-    end.
-end.
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-action-role Dialog-Frame 
 PROCEDURE procedure-user-login-action-role :
@@ -3767,126 +3813,6 @@ END PROCEDURE. /* procedure-user-login-action-role */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-change-password Dialog-Frame 
-PROCEDURE procedure-user-login-change-password :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-define input parameter p-db-num         as integer          no-undo.
-define input parameter p-user-id        as character        no-undo.
-
-define variable v-can-edit     as logical   no-undo .
-define variable v-encoded-pass as character no-undo .
-DEFINE VARIABLE v-nextcon         AS logical   NO-UNDO .
-
-define buffer buf_lock_user-login for user-login.
-define buffer user-login-attr for ub.user-login-attr .
-do
-for buf_lock_user-login
-on error   undo, return error return-value
-on end-key undo, return error return-value
-:
-      do
-      transaction
-      on error undo, return error return-value
-      :
-
-         if get-work-status( p-user-id ) = '+':u
-         then do:
-             message
-                 "Нельзя редактировать пароль работающего пользователя" skip
-             view-as alert-box error .
-             undo, return error return-value .
-         end.
-         find first buf_lock_user-login exclusive-lock
-              where buf_lock_user-login.db-num  = p-db-num      /* НЕ current, а только текущая !!! */
-                and buf_lock_user-login.user-id = p-user-id
-         no-error.
-         if not available buf_lock_user-login then do:
-            message
-            "Нельзя редактировать пароль пока не заведен логин для пользователя" skip
-            view-as alert-box error .
-            undo, return error return-value .
-         end.
-      end.
-      run can-edit-login in this-procedure
-        (input  p-db-num
-        ,output v-can-edit
-        ) .
-      if v-can-edit <> true
-      then do:
-        message
-          "Нельзя редактировать логин пользователя для базы" p-db-num skip
-          view-as alert-box error .
-        undo, return error return-value .
-      end.
-
-      run adm/chg-pswd.w ( input  parparentproc
-                         , input  p-db-num
-                         , input  p-user-id
-                         , input  substitute('&1 &2 &3':U, buf_init_user-account.last-name
-                                                         , buf_init_user-account.first-name
-                                                         , buf_init_user-account.second-name
-                                )
-                         , input  yes
-                         , input  buf_lock_user-login.user-password-encoded
-                         , no
-                         , output v-encoded-pass
-                         , output v-nextcon
-                         ) no-error .
-      if error-status :error
-      then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при вызове процедуры" 'adm/chg-pswd.w':U skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-        undo, return error return-value .
-      end.
-      if v-encoded-pass <> ? then
-      do transaction
-      on error undo, return error return-value
-      :
-         find current buf_lock_user-login
-               exclusive-lock
-            .
-         assign
-            buf_lock_user-login.user-password-encoded = v-encoded-pass
-         .
-         if v-nextcon ne ?
-        then do:
-            find first user-login-attr where user-login-attr.db-num    = buf_lock_user-login.db-num
-                                         and user-login-attr.user-id   = buf_lock_user-login.user-id
-                                         and user-login-attr.attr-code = "ChangPwdNextConect"
-                 exclusive-lock no-error.
-            if not available user-login-attr
-            then do:
-                create user-login-attr.
-                assign
-                    user-login-attr.db-num    = buf_lock_user-login.db-num
-                    user-login-attr.user-id   = buf_lock_user-login.user-id
-                    user-login-attr.attr-code = "ChangPwdNextConect"
-                 .
-            end.
-            user-login-attr.attr-value = string(v-nextcon ).
-        end.
-         release user-login-attr. 
-         release buf_lock_user-login .
-
-         message
-            "Пароль успешно изменен"
-            view-as alert-box information
-         .
-
-      end.
-end.
-END PROCEDURE. /* procedure-user-login-change-password */
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-copy Dialog-Frame 
 PROCEDURE procedure-user-login-copy :
@@ -3998,6 +3924,7 @@ on error undo, return error return-value
 /*копируем логин в выбранные базы*/            
            run str/copy-login.p (
               input buf_user-login.user-id
+            , input v-user-login  
             , input p-db-num
             , input v-list-db
             , output v-success
@@ -4028,9 +3955,15 @@ PROCEDURE procedure-user-login-create :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-define input parameter p-db-num     as integer          no-undo.
-define input parameter p-user-id    as character        no-undo.
-define output parameter p-created   as logical          no-undo.
+define input  parameter iMode       as character no-undo.
+define input  parameter p-db-num     as integer          no-undo.
+define input  parameter p-user-id    as character        no-undo.
+
+define input  parameter i-adm-gbd    as logical no-undo.
+define input  parameter i-adm-ubd    as logical no-undo.
+define input  parameter i-TabUserAdm as handle no-undo.
+define output parameter p-created    as logical          no-undo.
+
 
     define variable v-update-data           as logical      no-undo .
     define variable v-user-login            as character    no-undo .
@@ -4038,242 +3971,161 @@ define output parameter p-created   as logical          no-undo.
     define variable v-max-discnt            as decimal      no-undo .
     define variable v-quest-print           as logical      no-undo .
     define variable v-encoded-pass          as character    no-undo .
-    DEFINE VARIABLE v-nextcon         AS logical   NO-UNDO .
+    define variable v-nextcon               as logical      no-undo init ? .
 
-    define buffer buf_user-login        for user-login.
     define buffer buf_user-account      for user-account.
-    define buffer user-login-attr for ub.user-login-attr .
-do
-for buf_user-login
-  , buf_user-account
-on error undo, return error
-:
-
-    run str/usrloged.w (
-          input parparentproc
-        , input {&update}
-        , input-output p-db-num
-        , input p-user-id
-        , input "":U
-        , input false
-        , input 0
-        , input true
-        , output p-created
-        , output v-user-login
-        , output v-user-administrator
-        , output v-max-discnt
-        , output v-quest-print
-    ) .
+    define buffer buf_user-login        for user-login  .
+    
+    if imode eq {&update}
+    then do:
+       find first buf_user-login where  buf_user-login.user-id            = p-user-id
+                                   and  buf_user-login.db-num             = p-db-num
+       no-lock no-error.
+       if available buf_user-login
+       then do:
+          assign
+             v-user-login         = buf_user-login.user-login
+             v-user-administrator = buf_user-login.user-administrator
+             v-max-discnt         = buf_user-login.max-discnt
+             v-quest-print        = buf_user-login.quest-print
+             v-encoded-pass       = buf_user-login.user-password-encoded
+          .
+          find first user-login-attr where user-login-attr.db-num    = buf_user-login.db-num
+                                       and user-login-attr.user-id   = buf_user-login.user-id
+                                       and user-login-attr.attr-code = "ChangPwdNextConect"
+          no-lock no-error.
+          v-nextcon = if available user-login-attr then logical(user-login-attr.attr-value) else ? no-error.             
+          p-created            = i-adm-gbd ne ? or i-adm-ubd ne ? or i-TabUserAdm ne ?.
+       
+       end.
+       else do:
+          find first buf_user-login where  buf_user-login.user-id            = p-user-id
+          no-lock no-error.
+          if available buf_user-login
+          then do:
+             assign
+                v-user-login         = buf_user-login.user-login
+                v-max-discnt         = buf_user-login.max-discnt
+                v-quest-print        = buf_user-login.quest-print
+                v-encoded-pass       = buf_user-login.user-password-encoded
+             .
+             find first user-login-attr where user-login-attr.db-num    = buf_user-login.db-num
+                                          and user-login-attr.user-id   = buf_user-login.user-id
+                                          and user-login-attr.attr-code = "ChangPwdNextConect"
+             no-lock no-error.
+             v-nextcon = if available user-login-attr then logical(user-login-attr.attr-value) else ? no-error.             
+          
+             p-created            = i-adm-gbd ne ? or i-adm-ubd ne ? or i-TabUserAdm ne ?.
+         end.
+         else do:
+            p-db-num = ?.
+            run str/usrloged.w (
+                   input parparentproc
+                 , input {&update}
+                 , input-output p-db-num
+                 , input p-user-id
+                 , input "":U
+                 , input false
+                 , input 0
+                 , input true
+                 , output p-created
+                 , output v-user-login
+                 , output v-user-administrator
+                 , output v-max-discnt
+                 , output v-quest-print
+             ) .
+             imode = "{&add-def}". /* Подменим мод так как пользователь редактировался, а логинов нет */
+          end.
+       end.
+    end.
+    else
+       run str/usrloged.w (
+             input parparentproc
+           , input {&update}
+           , input-output p-db-num
+           , input p-user-id
+           , input "":U
+           , input false
+           , input 0
+           , input true
+           , output p-created
+           , output v-user-login
+           , output v-user-administrator
+           , output v-max-discnt
+           , output v-quest-print
+       ) .
     if p-created = yes
     then do:        /* сохранение данных в базу отдельной транзакцией */
-        set-correct-password:
-        do while yes
-        :
-            find first buf_user-account no-lock
-                where buf_user-account.user-id = p-user-id
-            .
-            run adm/chg-pswd.w (
-                input parparentproc
-                , input p-db-num
-                , input p-user-id
-                , input substitute('&1 &2 &3':U,  buf_user-account.last-name
-                                                , buf_user-account.first-name
-                                                , buf_user-account.second-name
-                        )
-                , input yes
-                , input ""
-                , no
-                , output v-encoded-pass
-                , output v-nextcon
-            ) no-error .
-            if error-status :error
-            then do:
+       if imode ne {&update}
+       then do:
+          set-correct-password:
+          do while yes
+          :
+             find first buf_user-account no-lock
+                  where buf_user-account.user-id = p-user-id
+             .
+             run adm/chg-pswd.w (
+                   input parparentproc
+                   , input p-db-num
+                   , input p-user-id
+                   , input substitute('&1 &2 &3':U,  buf_user-account.last-name
+                                                   , buf_user-account.first-name
+                                                   , buf_user-account.second-name
+                           )
+                   , input yes
+                   , input yes
+                   , input ""
+                   , no
+                   , output v-encoded-pass
+                   , output v-nextcon
+             ) no-error .
+             if error-status :error
+             then do:
                 message
-                        vss-workfile vss-revision vss-description
-                    skip(1)
-                    skip "Ошибка при назначении пароля"
-                    skip return-value
-                    skip trim( error-status :get-message( 1 ) )
-                        trim( error-status :get-message( 2 ) )
-                        trim( error-status :get-message( 3 ) )
+                   vss-workfile vss-revision vss-description
+                       skip(1)
+                       skip "Ошибка при назначении пароля"
+                       skip return-value
+                       skip trim( error-status :get-message( 1 ) )
+                           trim( error-status :get-message( 2 ) )
+                           trim( error-status :get-message( 3 ) )
                 view-as alert-box error.
                 undo, return error.
-            end.
-            if v-encoded-pass = "":U
-            or v-encoded-pass = ?
-            then do:
+             end.
+             if    v-encoded-pass = "":U
+                or v-encoded-pass = ?
+             then do:
                 message
-                    "Пароль пользователя не может быть пустым."
-                    skip "Введите пароль."
+                       "Пароль пользователя не может быть пустым."
+                       skip "Введите пароль."
                 view-as alert-box warning
-                title "Ввод пароля".
-            end.
-            else do:
+                    title "Ввод пароля".
+             end.
+             else do:
                 leave set-correct-password.
-            end.
-        end.
-        do transaction
-        on error undo, return error return-value
-        :
-            create buf_user-login .
-            assign
-                buf_user-login.db-num             = p-db-num
-                buf_user-login.user-id            = p-user-id
-                buf_user-login.user-login         = v-user-login
-                buf_user-login.user-administrator = v-user-administrator
-                buf_user-login.max-discnt         = v-max-discnt
-                buf_user-login.quest-print        = v-quest-print
-                buf_user-login.status_            = {&bef-user-status-normal}
-                buf_user-login.user-password-encoded = v-encoded-pass
-            .
-            if v-nextcon ne ?
-            then do:
-                find first user-login-attr where user-login-attr.db-num    = buf_user-login.db-num
-                                             and user-login-attr.user-id   = buf_user-login.user-id
-                                             and user-login-attr.attr-code = "ChangPwdNextConect"
-                     exclusive-lock no-error.
-                if not available user-login-attr
-                then do:
-                    create user-login-attr.
-                    assign
-                        user-login-attr.db-num    = buf_user-login.db-num
-                        user-login-attr.user-id   = buf_user-login.user-id
-                        user-login-attr.attr-code = "ChangPwdNextConect"
-                     .
-                end.
-                user-login-attr.attr-value = string(v-nextcon ).
-            end.
-        end.
+             end.
+          end.
+       end.
+       run update-user-login(p-db-num
+                            ,p-user-id
+                            ,v-user-login
+                            ,v-max-discnt
+                            ,v-quest-print
+                            ,v-encoded-pass
+                            ,v-nextcon
+                            ,v-user-administrator
+                            ,mSuperAdm
+                            ,i-adm-gbd
+                            ,i-adm-ubd
+                            ,input-output table-handle i-TabUserAdm).
+       
     end.
-end.
 END PROCEDURE. /* procedure-user-login-create */
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-delete Dialog-Frame 
-PROCEDURE procedure-user-login-delete :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
-define input parameter p-db-num     as integer          no-undo.
-define input parameter p-user-id    as character        no-undo.
-define output parameter p-deleted   as logical          no-undo.
-
-  define variable v-can-edit as logical   no-undo .
-
-    define buffer buf_user-login    for user-login .
-    define buffer buf_user-account  for user-account.
-
-do
-for buf_user-login
-  , buf_user-account
-on error undo, return error return-value
-:
-    assign
-        p-deleted = no
-    .
-    if available buf_init_user-account
-    then do:
-      do transaction
-      on error undo, return error return-value
-      :
-        run can-edit-login in this-procedure (
-              input  p-db-num
-            , output v-can-edit
-        ).
-        if v-can-edit <> true
-        then do:
-          message
-            "Нельзя удалять логин пользователя для базы" p-db-num
-          view-as alert-box error .
-          undo, return error return-value .
-        end.
-        find first buf_user-login exclusive-lock
-             where buf_user-login.db-num  = p-db-num
-               and buf_user-login.user-id = p-user-id
-        no-error no-wait.
-        if not available buf_user-login
-        then do:
-          if locked( buf_user-login )
-          then do:
-            find first buf_user-login no-lock
-                 where buf_user-login.db-num  = p-db-num
-                   and buf_user-login.user-id = p-user-id
-            .
-            message
-              "Удаление логина невозможно" skip
-              "Пользователь в данный момент работает в системе" skip
-              "БД" p-db-num skip
-              "Идентификатор" p-user-id skip
-              "Псевдоним"                    buf_init_user-account.nik skip
-              "Имя пользователя"             buf_init_user-account.last-name buf_init_user-account.first-name buf_init_user-account.second-name skip
-              "Компьютер"                    buf_user-login.last-login-computer-name skip
-              "Пользователь компьютера"      buf_user-login.last-login-computer-user skip
-              "TCP имя компьютера"           buf_user-login.last-login-computer-tcp-name skip
-              "IP адрес компьютера"          buf_user-login.last-login-computer-ip-addr skip
-              "Идентификатор процесса"       buf_user-login.last-login-process-id skip
-              "Номер подключения к БД"       buf_user-login.last-login-connection-id skip
-              "Дата и время входа в систему" sys-time_mjd-to-loc-str-func( buf_user-login.last-login-mjd ) skip
-              view-as alert-box error .
-          end.
-          else do:
-            message
-              "У пользователя нет логина" skip
-              "БД" p-db-num skip
-              "Идентификатор" p-user-id skip
-              "Удаление невозможно" skip
-              view-as alert-box error .
-          end.
-          undo, return error return-value .
-        end.
-        if  buf_user-login.user-id = v-cntxt-userid
-        and buf_user-login.db-num  = v-cntxt-db-num
-        then do:
-          message
-            "Нельзя удалять текущий логин" skip
-            "БД"  buf_user-login.db-num skip
-            "Идентификатор" buf_user-login.user-id skip
-            view-as alert-box error .
-          undo, return error return-value .
-        end.
-        define variable v-ok as logical   no-undo .
-        find first buf_user-account no-lock
-             where buf_user-account.user-id = buf_user-login.user-id
-        .
-        message
-          "Удаление логина пользователя"
-          skip "Идентификатор" buf_user-account.user-id
-          skip "Псевдоним"    buf_user-account.nik
-          skip "Пользователь" buf_user-account.last-name buf_user-account.first-name buf_user-account.second-name
-          skip "Логин для базы данных" buf_user-login.db-num
-          skip "Логин" buf_user-login.user-login
-          skip (1)
-          "После удаления пользователь не сможет работать в базе данных" buf_user-login.db-num skip
-          skip (1)
-          "Продолжить?"
-        view-as alert-box question
-        buttons yes-no
-        update v-ok .
-        if v-ok = yes
-        then do:
-            run str/usrlog03.p (
-                  input buf_user-login.db-num
-                , input buf_user-login.user-id
-            ).
-            assign
-                p-deleted = yes
-            .
-        end.
-      end.
-    end.
-  end.
-END PROCEDURE. /* procedure-user-login-delete */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE procedure-user-login-edit Dialog-Frame 
 PROCEDURE procedure-user-login-edit :
@@ -4305,9 +4157,7 @@ on error undo, return error return-value
         view-as alert-box error .
         undo, return error return-value .
     end.
-    do transaction
-    on error undo, return error return-value
-    :       /* блокируем логин пользователя */
+    do :       /* блокируем логин пользователя */
         find first buf_user-login exclusive-lock
              where buf_user-login.db-num  = p-db-num
                and buf_user-login.user-id = p-user-id
@@ -4625,7 +4475,6 @@ END PROCEDURE. /* save-position */
 &ANALYZE-RESUME
 
 /* ************************  Function Implementations ***************** */
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-person-name Dialog-Frame 
 FUNCTION get-person-name RETURNS CHARACTER
   ( p-psn-code as integer ) :
@@ -4643,48 +4492,6 @@ FUNCTION get-person-name RETURNS CHARACTER
   return v-person-name .
 
 END FUNCTION. /* get-person-name */
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-user-login Dialog-Frame 
-FUNCTION get-user-login RETURNS CHARACTER
-  ( p-user-id as character ) :
-/*------------------------------------------------------------------------------
-  Purpose:
-    Notes:
-------------------------------------------------------------------------------*/
-
-  define variable v-user-login as character no-undo .
-
-  run procedure-get-user-login in this-procedure (
-      input p-user-id
-    , output v-user-login
-  ) .
-  return v-user-login .
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-work-status Dialog-Frame 
-FUNCTION get-work-status RETURNS CHARACTER
-  ( p-user-id as character ) :
-/*------------------------------------------------------------------------------
-  Purpose:
-    Notes:
-------------------------------------------------------------------------------*/
-    define variable v-work-status as character no-undo .
-
-    run procedure-get-work-status in this-procedure (
-        input p-user-id
-      , output v-work-status
-    ) .
-
-    return v-work-status .
-
-END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
