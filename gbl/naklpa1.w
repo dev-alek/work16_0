@@ -3053,11 +3053,11 @@ PROCEDURE proc-init-attr-PN :
       v-list-attr-PN      = {&trdcattr-nids} + "," + {&trdcattr-dids} + "," + {&trdcattr-nsf} + "," + {&trdcattr-dsf} + "," + {&trdcattr-expense_own} + "," + {&trdcattr-ndog} + ","
       + {&trdcattr-ddog} + "," + {&trdcattr-ndov} + "," + {&trdcattr-ddov} + "," + {&trdcattr-print-num} + "," + {&trdcattr-idCountryContr} + "," + {&trdcattr-car-time} +
       "," + {&trdcattr-t_pass-fname} + "," + {&trdcattr-t_pass-position} + "," + {&trdcattr-t_accept-fname} + "," + {&trdcattr-t_accept-position} + "," +
-      {&trdcattr-ndovwho} + "," + {&trdcattr-nosn} + "," + {&trdcattr-shipper}
+      {&trdcattr-ndovwho} + "," + {&trdcattr-nosn} + "," + {&trdcattr-shipper} + "," + {&trdcattr-othermoves}
       v-list-attr-PN-full = {&label-trdcattr-nids} + {&delim-flf} + {&label-trdcattr-dids} + {&delim-flf} + {&label-trdcattr-nsf} + {&delim-flf} + {&label-trdcattr-dsf} + {&delim-flf} + {&label-trdcattr-expense_own} + {&delim-flf} + {&label-trdcattr-ndog} + {&delim-flf}
       + {&label-trdcattr-ddog} + {&delim-flf} + {&label-trdcattr-ndov} + {&delim-flf} + {&label-trdcattr-ddov} + {&delim-flf} + {&label-trdcattr-print-num} + {&delim-flf} + {&label-trdcattr-idCountryContr} + {&delim-flf} + {&label-trdcattr-car-time} +
       {&delim-flf} + {&label-trdcattr-t_pass-fname} + {&delim-flf} + {&label-trdcattr-t_pass-position} + {&delim-flf} + {&label-trdcattr-t_accept-fname} + {&delim-flf} + {&label-trdcattr-t_accept-position} + {&delim-flf} +
-      {&label-trdcattr-ndovwho} + {&delim-flf} + {&label-trdcattr-nosn} + {&delim-flf} + {&label-trdcattr-shipper}.
+      {&label-trdcattr-ndovwho} + {&delim-flf} + {&label-trdcattr-nosn} + {&delim-flf} + {&label-trdcattr-shipper} + {&delim-flf} + {&label-trdcattr-othermoves}.
 
    assign
       v-list-attr-mandatory-gds-in-wayb = v-list-attr-PN

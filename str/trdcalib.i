@@ -1352,6 +1352,19 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-techpass true
 &glob sort-trdcattr-techpass 100
 
+/* Прочие перемещения НП */
+&glob fillin_width-trdcattr-othermoves 3
+&glob fillin_height-trdcattr-othermoves 1
+&glob type-trdcattr-othermoves {&type-log}
+&glob format-trdcattr-othermoves "yes/no"
+&glob label-trdcattr-othermoves "Прочие перемещения НП"
+&glob tooltip-trdcattr-othermoves "Признак топливной накладной с прочими перемещениями (для ИС Президентский Мониторинг)"
+&glob user-can-edit-trdcattr-othermoves true
+&glob output-display-trdcattr-othermoves true
+&glob other-trdcattr-othermoves '':u
+&glob news-trdcattr-othermoves true
+&glob sort-trdcattr-othermoves 100
+
 /* Признак накладной сформированной автоматически */
 &glob fillin_width-trdcattr-is-auto-trn 3
 &glob fillin_height-trdcattr-is-auto-trn 1

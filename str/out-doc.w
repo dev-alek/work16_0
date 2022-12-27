@@ -5200,6 +5200,8 @@ for each tt-upd-attr : delete tt-upd-attr . end.
 {&create-record}
 &scop attr-code trdcattr-zakaz-date
 {&create-record}
+&scop attr-code trdcattr-othermoves
+{&create-record}
 
 end.
 
@@ -5315,6 +5317,8 @@ for each tt-upd-attr : delete tt-upd-attr . end.
 &scop attr-code trdcattr-ord_dl
 {&create-record}
 &scop attr-code trdcattr-zakaz-date
+{&create-record}
+&scop attr-code trdcattr-othermoves
 {&create-record}
 
 if v-is-pharm = "yes":U then do:
@@ -5663,6 +5667,8 @@ define variable varexist                  as logical   no-undo.
 &scop attr-code trdcattr-delivery-time
 {&create-record}
 &scop attr-code trdcattr-zakaz-date
+{&create-record}
+&scop attr-code trdcattr-othermoves
 {&create-record}
 
 if v-is-pharm = "yes":U then do:

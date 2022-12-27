@@ -4257,6 +4257,9 @@ end.
 {&create-record}
 &scop attr-code trdcattr-shipper
 {&create-record}
+&scop attr-code trdcattr-othermoves
+{&create-record}
+
 if v-is-pharm = "yes":U then do:
   &scop attr-code trdcattr-ser_on_pack
   {&create-record}
@@ -5144,10 +5147,13 @@ define variable varexist                  as logical   no-undo.
 {&create-record}
 &scop attr-code trdcattr-shipper
 {&create-record}
+&scop attr-code trdcattr-othermoves
+{&create-record}
 if v-is-pharm = "yes":U then do:
   &scop attr-code trdcattr-ser_on_pack
   {&create-record}
 end.
+
 
 end.
 

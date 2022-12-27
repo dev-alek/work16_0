@@ -16,6 +16,7 @@ class ibs.th.bge.is_PM.is_PM:
   
   { cmp/str-glbl.i class }
   { str/lib-trn.i class }
+  { str/trdcalib.i class }
   
   define temp-table tt-result no-undo
     field gds-code            as integer
@@ -35,6 +36,7 @@ class ibs.th.bge.is_PM.is_PM:
     field loss-own-needs      as decimal
     field Delivery-ned-izl    as decimal
     field wght-other          as decimal
+    field othermoves          as decimal
   index pi as primary gds-code
   .
   
@@ -170,6 +172,8 @@ class ibs.th.bge.is_PM.is_PM:
   define variable vHour           as integer   no-undo .
   define variable cMoscowTime     as character no-undo .
   define variable vMoscowHour     as integer   no-undo .
+  define variable vIsOtherMoves   as character no-undo .
+  define variable vType           as character no-undo .
   
   define stream OutStr-html .
   
@@ -203,6 +207,8 @@ class ibs.th.bge.is_PM.is_PM:
     then run str/lib-trn3.p persistent no-error .
     if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
     then run str/lib-trn.p persistent no-error .
+    if not valid-handle (ibs.th.gbl.gbl-hndllib:g#trdcalib)
+    then run str/trdcalib.p persistent no-error .
   end constructor .
   
   constructor public is_PM
@@ -236,6 +242,8 @@ class ibs.th.bge.is_PM.is_PM:
     then run str/lib-trn3.p persistent no-error .
     if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
     then run str/lib-trn.p persistent no-error .
+    if not valid-handle (ibs.th.gbl.gbl-hndllib:g#trdcalib)
+    then run str/trdcalib.p persistent no-error .
   end constructor .
   
   method public void exec_1c () :
@@ -882,6 +890,15 @@ class ibs.th.bge.is_PM.is_PM:
                                     and buf_trn-doc.fact-time >= (if time-end = 86399 then 0 else time-end)
                                     and buf_trn-doc.fact-time <= new_rvs-doc.fact-time
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next income-doc-line_ .
+                
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -915,6 +932,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and buf_trn-doc.fact-time >= (if time-end = 86399 then 0 else time-end)
                                     and buf_trn-doc.fact-time <= new_rvs-doc.fact-time
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next expense-doc-line_ .
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -1081,6 +1106,14 @@ class ibs.th.bge.is_PM.is_PM:
                                       and ((buf_trn-doc.fact-date < date-end) or
                                            (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                       :
+            { str/tdat-val.i
+                buf_trn-doc.doc-code
+                {&trdcattr-othermoves}
+                vIsOtherMoves
+                vType                 }
+            if vIsOtherMoves > ""
+            and logical(vIsOtherMoves)
+            then next income-doc-line_ .
             if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
             then
             for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -1115,6 +1148,14 @@ class ibs.th.bge.is_PM.is_PM:
                                       and ((buf_trn-doc.fact-date < date-end) or
                                            (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                       :
+            { str/tdat-val.i
+                buf_trn-doc.doc-code
+                {&trdcattr-othermoves}
+                vIsOtherMoves
+                vType                 }
+            if vIsOtherMoves > ""
+            and logical(vIsOtherMoves)
+            then next expense-doc-line_ .
             for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                  and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                  and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -1292,6 +1333,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next income-doc-line_ .
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -1326,6 +1375,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next expense-doc-line_ .
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -1498,6 +1555,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next income-doc-line_ .
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -1531,6 +1596,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next expense-doc-line_ .
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -1757,6 +1830,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next income-doc-line_ .
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -1792,6 +1873,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next expense-doc-line_ .
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -1982,6 +2071,14 @@ class ibs.th.bge.is_PM.is_PM:
                                       and ((buf_trn-doc.fact-date < date-start) or
                                            (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
                                       :
+            { str/tdat-val.i
+                buf_trn-doc.doc-code
+                {&trdcattr-othermoves}
+                vIsOtherMoves
+                vType                 }
+            if vIsOtherMoves > ""
+            and logical(vIsOtherMoves)
+            then next income-doc-line_ .
             if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
             then
             for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -2015,6 +2112,14 @@ class ibs.th.bge.is_PM.is_PM:
                                       and ((buf_trn-doc.fact-date < date-start) or
                                            (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
                                       :
+            { str/tdat-val.i
+                buf_trn-doc.doc-code
+                {&trdcattr-othermoves}
+                vIsOtherMoves
+                vType                 }
+            if vIsOtherMoves > ""
+            and logical(vIsOtherMoves)
+            then next expense-doc-line_ .
             for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                  and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                  and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2267,6 +2372,14 @@ class ibs.th.bge.is_PM.is_PM:
                                   and ((buf_trn-doc.fact-date < date-end) or
                                        (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                   :
+        { str/tdat-val.i
+            buf_trn-doc.doc-code
+            {&trdcattr-othermoves}
+            vIsOtherMoves
+            vType                 }
+        if vIsOtherMoves > ""
+        and logical(vIsOtherMoves)
+        then next income-doc-line_ .
         for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                              and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                              and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2359,6 +2472,79 @@ class ibs.th.bge.is_PM.is_PM:
     end .
     /* END Расчет поступлений */
     
+    /* START Расчет прочих перемещений */
+    for each tt-result,
+    first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
+    :
+      income-doc-line_ :
+      for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                      and buf_doc-line.obj-code  = obj-code
+                                      and buf_doc-line.artic     = buf_goods.artic
+                                      and buf_doc-line.prod-type = buf_goods.prod-type
+                                      and buf_doc-line.prod-code = buf_goods.prod-code
+                                      and buf_doc-line.status_   = {&fact}
+                                      ,
+      first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                  and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Inv})
+                                  and ((buf_trn-doc.fact-date > date-start) or
+                                       (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time >= time-start))
+                                  and ((buf_trn-doc.fact-date < date-end) or
+                                       (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                  :
+        { str/tdat-val.i
+            buf_trn-doc.doc-code
+            {&trdcattr-othermoves}
+            vIsOtherMoves
+            vType                 }
+        if vIsOtherMoves > ""
+        and logical(vIsOtherMoves)
+        then do :
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-result.gds-code
+                                        :
+            tt-result.othermoves = tt-result.othermoves + buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end .
+      end .
+      
+      expense-doc-line_ :
+      for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type
+                                      and buf_doc-line.obj-code  = obj-code
+                                      and buf_doc-line.artic     = buf_goods.artic
+                                      and buf_doc-line.prod-type = buf_goods.prod-type
+                                      and buf_doc-line.prod-code = buf_goods.prod-code
+                                      and buf_doc-line.status_   = {&fact}
+                                      ,
+      first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
+                                  and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
+                                  and ((buf_trn-doc.fact-date > date-start) or
+                                       (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time >= time-start))
+                                  and ((buf_trn-doc.fact-date < date-end) or
+                                       (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                  :
+        { str/tdat-val.i
+            buf_trn-doc.doc-code
+            {&trdcattr-othermoves}
+            vIsOtherMoves
+            vType                 }
+        if vIsOtherMoves > ""
+        and logical(vIsOtherMoves)
+        then do :
+          for each buf_doc-pl no-lock where buf_doc-pl.obj-type = obj-type
+                                        and buf_doc-pl.obj-code = obj-code
+                                        and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                        and buf_doc-pl.gds-code = tt-result.gds-code
+                                        :
+            tt-result.othermoves = tt-result.othermoves - buf_doc-pl.cli-fact-qnty .                              
+          end .
+        end .
+      end .
+      
+    end .
+    /* END Расчет прочих перемещений */
+    
     /* START Расчет излишек/недостач */
     for each tt-result,
     first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
@@ -2378,6 +2564,14 @@ class ibs.th.bge.is_PM.is_PM:
                                   and ((buf_trn-doc.fact-date < date-end) or
                                        (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                   :
+        { str/tdat-val.i
+            buf_trn-doc.doc-code
+            {&trdcattr-othermoves}
+            vIsOtherMoves
+            vType                 }
+        if vIsOtherMoves > ""
+        and logical(vIsOtherMoves)
+        then next income-doc-line_ .
         for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                              and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                              and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2583,6 +2777,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next income-doc-line_ .
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then                            
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -2616,6 +2818,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                     :
+          { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&trdcattr-othermoves}
+              vIsOtherMoves
+              vType                 }
+          if vIsOtherMoves > ""
+          and logical(vIsOtherMoves)
+          then next expense-doc-line_ .
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2802,6 +3012,7 @@ class ibs.th.bge.is_PM.is_PM:
             sw:write-data-element ("loss-own-needs",      string-mth(tt-result.loss-own-needs)).
             sw:write-data-element ("Delivery-ned-izl",    string-mth(tt-result.Delivery-ned-izl)).
             sw:write-data-element ("wght-other",          string-mth(tt-result.wght-other)).
+/*            sw:write-data-element ("othermoves",          string-mth(tt-result.othermoves)).*/
           sw:end-element ("gd") .
         end .          
         sw:end-element ("gds") .
@@ -2877,6 +3088,7 @@ class ibs.th.bge.is_PM.is_PM:
           '<td style="width: 70px; border: none;"></td>' skip
           '<td style="width: 70px; border: none;"></td>' skip
           '<td style="width: 70px; border: none;"></td>' skip
+          '<td style="width: 70px; border: none;"></td>' skip
         '</tr>' skip
     .
                         
@@ -2884,11 +3096,11 @@ class ibs.th.bge.is_PM.is_PM:
     v-msk-dt = now - (timezone-diff * 60 * 1000) .
     put stream OutStr-html unformatted
         '<tr>' skip
-          '<td colspan="20" style="text-align: center; font-weight:bold;">Ежедневный отчет по движению топлива за сутки на АЗС/АЗК </td>' skip
+          '<td colspan="24" style="text-align: center; font-weight:bold;">Ежедневный отчет по движению топлива за сутки на АЗС/АЗК </td>' skip
         '</tr>' skip   
         '<tr>' skip
-          '<td colspan="10" style="text-align: left; font-weight:bold;">' + string(v-msk-dt, "99.99.9999 HH:MM:SS") + '</td>' skip
-          '<td colspan="10" style="text-align: left; font-weight:bold;">' + string(v-now, "99.99.9999 HH:MM:SS") + '</td>' skip
+          '<td colspan="12" style="text-align: left; font-weight:bold;">' + string(v-msk-dt, "99.99.9999 HH:MM:SS") + '</td>' skip
+          '<td colspan="12" style="text-align: left; font-weight:bold;">' + string(v-now, "99.99.9999 HH:MM:SS") + '</td>' skip
         '</tr>' skip 
       '</thead>' skip
     .  
@@ -2915,10 +3127,11 @@ class ibs.th.bge.is_PM.is_PM:
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Поступления от сторонних поставщиков, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Нефтепродукты в пути, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">АЗС/АЗК, кг</th>' skip
-      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Мелкий опт</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Мелкий опт, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Потери и потребление на собственные нужды, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Недостачи и излишки при приеме, кг</th>' skip
       '         <th style="text-align: center; font-weight:bold; background-color: silver;">Расход на прочие нужды, кг</th>' skip
+      '         <th style="text-align: center; font-weight:bold; background-color: silver;">Прочие перемещения на АЗС, кг</th>' skip
       '       </tr>' skip
     . /* Точка для закрытия Put */
     
@@ -2952,6 +3165,7 @@ class ibs.th.bge.is_PM.is_PM:
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.loss-own-needs,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.loss-own-needs,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.Delivery-ned-izl,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.Delivery-ned-izl,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
         '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.wght-other,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.wght-other,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
+        '         <th num="0.00" val="' + fnc-convert-dot-to-colon(tt-result.othermoves,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-result.othermoves,"->>>>>>>>>>>>>9.99",2) + '</th>' skip
         '       </tr>' skip
       . /* Точка для закрытия Put */
     end .

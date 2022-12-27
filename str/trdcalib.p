@@ -492,6 +492,8 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-techpass
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-othermoves
+      {&attr-temp-full-code}
       &scop attr-code trdcattr-is-auto-trn
       {&attr-temp-full-code}
       &scop attr-code trdcattr-is-lgas

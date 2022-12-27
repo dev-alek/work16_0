@@ -1459,6 +1459,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Признак накладной технологического пролива */
 { cmp/cr-prep.i 1 trdcattr-techpass "techpass" " " "techpass" }
 
+/* Признак топливной накладной с прочими перемещениями (ИС ПМ) */
+{ cmp/cr-prep.i 1 trdcattr-othermoves "othermoves" " " "othermoves" }
+
 /* Признак накладной сформированной автоматически */
 { cmp/cr-prep.i 1 trdcattr-is-auto-trn "is-auto-trn" " " "is-auto-trn" }
 
@@ -1560,6 +1563,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-is-fuel}~
 ,{&bef-trdcattr-is-lgas}~
 ,{&bef-trdcattr-is-lgas-corr}~
+,{&bef-trdcattr-othermoves}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).
 

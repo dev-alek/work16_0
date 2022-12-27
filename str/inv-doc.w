@@ -1150,7 +1150,7 @@ define variable wrkr-name as character format "x(256)":U
       view-as text
      size 9 by 1 no-undo.
 
-define variable rsn-name as character no-undo format "x(256)":U view-as fill-in size 60.5 by .88 fgcolor 4.
+define variable rsn-name as character no-undo format "x(256)":U view-as fill-in size 51.5 by .88 fgcolor 4.
 
 define variable loc-art  as character format "x(16)" view-as fill-in size 20 by 1 fgcolor 12 no-undo.
 define variable loc-name as character view-as fill-in size 20 by 1 fgcolor 12 no-undo.
@@ -1224,7 +1224,11 @@ define variable fi-raschet-header as character format "x(20)":U initial "РАСЧЁТ 
      size 20.9 by 0.60
      bgcolor cyan_color fgcolor white_color .
 
-
+define variable t-othermoves as logical
+     LABEL "Прочие перемещения НП" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 30 BY .77 NO-UNDO.
+        
 define frame {&FRAME-NAME}
   b-exit                       at row 1   col 1
   b-prev                       at row 1   col 10
@@ -1315,6 +1319,7 @@ define frame {&FRAME-NAME}
   r-reas                       at row 11  col 14
   b-marks                      at row 2   col 55 
   rsn-name                     at row 11  col 18                 no-label
+  t-othermoves                 at row 11  col 68  colon-aligned
   {&BROWSE-NAME}               at row 12  col 1.5
   dif-only                     at row 4   col 68   colon-aligned no-label
   a-n-c                        at row 10.2  col 80                 no-label
@@ -1758,6 +1763,16 @@ v-sum3 = 0 .
   'Не распределено  : ' v-sum2 - v-sum1  skip
   view-as alert-box information .
 end.
+
+ON value-changed OF t-othermoves IN FRAME {&FRAME-NAME} DO:
+  assign t-othermoves .
+  { str/tdat-wrt.i
+      t-doc.doc-code
+      {&trdcattr-othermoves}
+      string(t-othermoves)
+      no-error
+  }
+END.
 
 ON value-changed OF dif-only IN FRAME {&FRAME-NAME} DO:
   assign dif-only = input frame {&FRAME-NAME} dif-only
@@ -2274,7 +2289,7 @@ define variable p-type  as character no-undo.
   assign
   menu-item m-chk-doc-add:sensitive in menu m-chk-doc = (pardoc-mode <> {&lookup}).
   enable
-    b-exit b-history b-arch b-sum-doc b-sum-goods b-help {&BROWSE-NAME} b-lkp a-n-c b-notes b-unscn b-cnt b-marks
+    b-exit b-history b-arch b-sum-doc b-sum-goods b-help {&BROWSE-NAME} b-lkp a-n-c b-notes b-unscn b-cnt b-marks t-othermoves
     b-chk-doc when is-cdinv = "yes" and t-doc.obj-type = {&shop}
     with frame {&FRAME-NAME}.
 
@@ -2444,6 +2459,16 @@ define variable p-type  as character no-undo.
   assign
     rsn-name = ( if available bf_trn-reason then bf_trn-reason.reason-name else "":U )
   .
+  
+  t-othermoves = no .
+  { str/tdat-val.i t-doc.doc-code
+                   {&trdcattr-othermoves}
+                   p-value
+                   p-type              }
+  if p-value > ""
+  then
+    t-othermoves = logical(p-value)
+  .                
 
   display t-doc.tot-doc t-doc.tot-rubl t-doc.fact-base
           t-doc.fact-rubl t-doc.fact-qnty dif-only varinvclcwtol varinvclcasol
@@ -2455,6 +2480,7 @@ define variable p-type  as character no-undo.
           t-doc.reason-code rsn-name
           t-doc.doc-date
           t-doc.fact-date
+          t-othermoves
   with frame {&FRAME-NAME}.
 
   { str/psn-chk.i wrkr on t-doc ref-rec}
