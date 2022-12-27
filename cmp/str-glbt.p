@@ -630,7 +630,6 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-cashpays}~
 ,{&bef-attr-wthdoc}~
 ,{&bef-attr-wthdoc_obj}~
-,{&bef-attr-mercur}~
 ,{&bef-attr-wthrep}~
 ,{&bef-attr-rum}~
 ,{&bef-attr-rum_obj}~
