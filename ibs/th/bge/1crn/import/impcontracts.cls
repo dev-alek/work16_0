@@ -184,7 +184,10 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
       ub.contract.contract-date     = if objContracts:date_ = "0001-01-01" then today else date(date-1C(objContracts:date_))
       ub.contract.contract-date-beg = if objContracts:date-srt = "0001-01-01" then ? else date(date-1C(objContracts:date-srt))
       ub.contract.contract-date-end = if objContracts:date-end = "0001-01-01" then ? else date(date-1C(objContracts:date-end))
-      .
+      
+      ub.contract.spec-check = if objContracts:return-code = ? then 0 else objContracts:return-code
+    .
+    
     find first ub.contract-attr exclusive-lock where ub.contract-attr.host-code = ub.contract.host-code and 
       ub.contract-attr.contract-code = ub.contract.contract-code and
       ub.contract-attr.attr-code = "contract-edi"  no-error .
@@ -197,7 +200,21 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
         ub.contract-attr.attr-code     = "contract-edi"
         .
     end.
-    ub.contract-attr.attr-value = string(if objContracts:edi_ = 1 then "yes" else "no") .  
+    ub.contract-attr.attr-value = string(if objContracts:edi_ = 1 then "yes" else "no") . 
+     
+    find first ub.contract-attr exclusive-lock where ub.contract-attr.host-code = ub.contract.host-code and 
+      ub.contract-attr.contract-code = ub.contract.contract-code and
+      ub.contract-attr.attr-code = "contract-diadoc"  no-error .
+    if not available (ub.contract-attr) then 
+    do:
+      create ub.contract-attr .
+      assign
+        ub.contract-attr.host-code     = ub.contract.host-code
+        ub.contract-attr.contract-code = ub.contract.contract-code
+        ub.contract-attr.attr-code     = "contract-diadoc"
+        .
+    end.
+    ub.contract-attr.attr-value = string(if objContracts:edi_ = 2 then "yes" else "no") . 
   end method.
   method private character date-1C (inValue as character):
     

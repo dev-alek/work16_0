@@ -103,6 +103,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   define variable v-is-lgas-trn       as logical   no-undo.
   define variable v-is-lgas-corr-trn  as logical   no-undo.
   define variable edoc-id             as character no-undo .
+  define variable v-is-edo-return     as logical   no-undo.
+  define variable v-is-return         as logical   no-undo.
   
   
 /*def var Marking as class mark no-undo .*/
@@ -185,6 +187,32 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         v-is-lgas-corr-trn = true.
     end.
     
+    { str/tdat-val.i
+      DocCode
+      {&trdcattr-edo-return}
+      v-value
+      v-type
+      no-error
+    }
+    if v-value = "yes" then 
+    do:
+      assign
+        v-is-edo-return = true.
+    end.
+    
+    { str/tdat-val.i
+      DocCode
+      {&trdcattr-is-return}
+      v-value
+      v-type
+      no-error
+    }
+    if v-value = "yes" then 
+    do:
+      assign
+        v-is-return = true.
+    end.
+    
     
     if valid-handle (BufTableHndlOld) and BufTableHndlOld:buffer-field("ext-doc-type"):buffer-value = {&TDEDT_Pri_Perem}
       then buf_trn-doc.ext-doc-type = BufTableHndlOld:buffer-field("ext-doc-type"):buffer-value.
@@ -193,7 +221,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
       buf_trn-doc.creid
       v-user-name }
     
-    if buf_trn-doc.reason-code = 23 and buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} /*особый случай дл€ расхода внешнего, если код основание 23 то это идет в 1— как возврат поставщику*/
+    if (buf_trn-doc.reason-code = 23 and buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh})
+    or v-is-return /*особый случай дл€ расхода внешнего, если код основание 23 то это идет в 1— как возврат поставщику*/
     then do:
       v-doc-type-ERPRN = "2".
       if v-is-petrol-trn
@@ -841,6 +870,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   end.
 
   method private void StartDocTrn ():
+      
       InitSecTag =  "trn-gd-docs".
       
       sw:start-element ("trn-gd-doc") .
@@ -850,6 +880,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         write-data-element ("doc-date", if buf_trn-doc.doc-date = ? then "" else iso-date (datetime (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))).
         write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (datetime (buf_trn-doc.fact-date, buf_trn-doc.fact-time * 1000))).
         write-data-element ("doc-type", v-doc-type-ERPRN).
+        if v-is-edo-return
+        then do :
+          write-data-element ("edi-return", "1").
+        end. 
         write-data-element ("doc-rsn-code", (if buf_trn-doc.reason-code = ? then "0" else string-mth (buf_trn-doc.reason-code))).
         write-data-element ("edoc-id", edoc-id).
         write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
