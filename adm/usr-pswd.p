@@ -79,9 +79,9 @@ ON ERROR UNDO, RETURN ERROR RETURN-VALUE
                      , INPUT  v-cntxt-db-num
                      , INPUT  v-cntxt-userid
                      , INPUT  ""             /* p-name */
-                     , INPUT  no
-/*                     v-user-adm*/
-                     , input yes
+/*                     , INPUT  no */
+                    , v-user-adm     
+/*                     , input yes */
                      , INPUT  lock_user-login.user-password-encoded
                      , yes
                      , OUTPUT v-password
