@@ -563,7 +563,8 @@ if varstatus = {&fact}
 and (bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
   or bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
   or bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} 
-  or v-expense-return )
+/*  or v-expense-return*/
+    )
 then do:
   { gbl/conf-rd.i
     "'mercuri':u"
