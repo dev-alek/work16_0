@@ -1510,17 +1510,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       undo, return no-apply return-value .
    end.
    release buf_sys-ctrl.
-   run gbl/code-upd.p  no-error .
-   if error-status :error
-   then do:
-      message
-         vss-workfile vss-revision vss-description skip
-         "Ошибка при обновлении справочников" skip
-         error-status :get-message(1) skip
-         return-value skip
-         view-as alert-box error .
-      undo, return no-apply return-value .
-   end.
+   
 
   run get-last-context in this-procedure
     (output v-cntxt-db-num
@@ -1558,13 +1548,23 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          ,output v-cntxt-error-message   /* p-cntxt-error-message   */
          ) .
    end.
-
+   run gbl/code-upd.p(input  this-procedure)  no-error .
+   if error-status :error
+   then do:
+      message
+         vss-workfile vss-revision vss-description skip
+         "Ошибка при обновлении справочников" skip
+         error-status :get-message(1) skip
+         return-value skip
+         view-as alert-box error .
+      undo, return no-apply return-value .
+   end.
    run gbl/verinfo.p.
-   run utl/chgpsw.p no-error.
+   run utl/chgpsw.p (yes) no-error.
    if error-status:error
    then do:
       message return-value view-as alert-box.
-         undo, return no-apply return-value .
+      return error return-value .
    end.
   /* проверяем значения контекста */
 

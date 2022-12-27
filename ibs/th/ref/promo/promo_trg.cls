@@ -33,6 +33,21 @@ class ibs.th.ref.promo.promo_trg :
   { gbl/getcntxt.i def }
   { cmp/library.i class}
   { bge/ds-promo.i} 
+
+define temp-table gds-list no-undo like ub.goods
+  field qnty   as decimal
+  field to-del as logical
+  field order-num as integer
+  field to-sel as logical
+  field promo-code as character
+  field ActionId  as int64
+  field db-num as integer
+  index art  is primary unique artic prod-type prod-code
+  index code is         unique gds-code
+  index oi order-num
+  index isel to-sel
+  .
+    
   //{gbl/userobjs.i}
   define temp-table tt-query
       field NameQuery as character 
@@ -304,6 +319,16 @@ do : /* перечень акций, равный отображаемому сейчас на экране */
       v-wdaysubs = v-PromoActionSub:ScheduleWeek .
       
       if valid-object (v-wdaysubs) then do :
+        if v-wdaysubs:GetItem(vI) = 1 and v-wdaysubs:promoSchedwObjCurr:wdaylist = "0" then do:
+        /* 09/VIII-2018 Расписания может не быть. В этом случае акция действует постоянно.
+                        И одновременно мы считаем, что акция, дейтсвующая постоянно - это акция без расписания.
+        */
+        v-wdaylist = "1,2,3,4,5,6,7" .
+        do vj = 1 to 7 :
+           v-timelist[vj] ="00:00 - 23:59" .
+        end .          
+        end.
+        else do:
         do vi = 1 to v-wdaysubs:GetItem(vI):
           v-sub = v-wdaysubs:promoSchedwObjCurr .
           // v-sub:wdaylist содержит или один день, или перечень дней через запятую
@@ -322,14 +347,6 @@ do : /* перечень акций, равный отображаемому сейчас на экране */
            v-timelist[vj] = substring(v-timelist[vj], 8) .
         end .
       end . // end_of_wdaysubs
-      else do :
-        /* 09/VIII-2018 Расписания может не быть. В этом случае акция действует постоянно.
-                        И одновременно мы считаем, что акция, дейтсвующая постоянно - это акция без расписания.
-        */
-        v-wdaylist = "1,2,3,4,5,6,7" .
-        do vj = 1 to 7 :
-           v-timelist[vj] ="00:00 - 23:59" .
-        end .
       end .
       
       put stream OutStr-html unformatted
@@ -373,7 +390,7 @@ do : /* низ таблицы и html-файла */
   output stream OutStr-html close.     
 end . /* end_of низ таблицы и html-файла */
 
-  ibs.th.gbl.gbl-inipar:prn-lib-reportviewer-report-name(v-file-name-rep-htm) .
+  ibs.th.gbl.gbl-inipar:prn-lib-reportviewer(v-file-name-rep-htm,"") .
   end method .
   
 /* 1.2 запустить браузер с перечнем акций */
@@ -442,6 +459,14 @@ end . /* end_of низ таблицы и html-файла */
                                                  "  and tt-PromoCardsBin.mode ne {&h-delete}"
                                              )). 
                     end.
+                    when "PromoBarCode" 
+                    then do:
+                        hQuery:set-buffers(buffer tt-PromoBc:HANDLE). 
+                        hQuery:query-prepare("FOR EACH tt-PromoBC " + if not available tt-promoaction-one then "" else (
+                                                 "where tt-PromoBC.idaction eq " + string(tt-promoaction-one.id)  +
+                                                 "  and tt-PromoBC.mode ne {&h-delete}"
+                                             )). 
+                    end.                    
                     when "PromoGoodsCrit" 
                     then do:
                         hQuery:set-buffers(buffer tt-PromoGoodsCrite:HANDLE). 
@@ -1092,6 +1117,7 @@ end . /* end_of низ таблицы и html-файла */
      CreateTableForGoodsCrits(p-mode, p-sub:GoodsCrits).
      CreateTableForGoodsAppl (p-mode, p-sub:GoodsAppl ).
      CreateTableForCardsBin  (p-mode, p-sub:CardsBin ).
+     CreateTableForBarCode   (p-mode, p-sub:GoodsAppl ).
      CreateTableForPromoSet  (p-mode, p-sub:PromoSet ).
      CreateTableForCrite     (p-mode, p-sub:Criterion ).
      CreateTableForGift      (p-mode, p-sub:Gifts     ).
@@ -1276,6 +1302,45 @@ end . /* end_of низ таблицы и html-файла */
      end.
      if {&promoTrackingChanges} p-mode = {&update} then temp-table tt-PromoCardsbin:tracking-changes = true .
   end method. // end_of_CreateTableForCardsbin
+
+   method public void CreateTableForBarCode
+  ( input  p-mode as character
+  , input  p-subs  as class promogoodssubs
+  ) :
+    define variable vI as int no-undo.
+    define variable p-sub as class promogoodssub no-undo.
+   
+    if {&promoTrackingChanges} p-mode = {&add-def} then temp-table tt-PromoBc:tracking-changes = true . 
+    do vi = 1 to p-subs:GetItem(vI):  
+        p-sub = p-subs:promoGoodsObjCurr.
+        
+        create tt-PromoBC.
+        assign
+           tt-PromoBC.id             = p-sub:ID
+           tt-PromoBC.idAction       = p-sub:idAction
+           tt-PromoBC.gds-code       = p-sub:GdsCode
+           tt-PromoBC.type           = p-sub:type
+           tt-PromoBC.sub            = p-subs:SubjectObjCurr
+           tt-PromoBC.mode           = p-sub:Mode
+           tt-PromoBC.db-num         = p-sub:db-num
+           tt-PromoBC.idSet          = p-sub:idSet
+           tt-PromoBC.price          = p-sub:price
+           tt-PromoBC.qnty           = p-sub:qnty
+           tt-PromoBC.NameSet        = p-sub:NameSet
+           tt-PromoBc.gdsName        = p-sub:GdsName
+           tt-PromoBc.bc-code        = p-sub:promo-code
+         .
+         
+         if p-mode = {&add-def} 
+         then do:
+         tt-PromoBC.mode = {&h-create}.
+         tt-PromoBC.idAction = tt-PromoAction-one.id.
+         end.
+          
+     end.
+     if {&promoTrackingChanges} p-mode = {&update} then temp-table tt-PromoBC:tracking-changes = true .
+  end method. // end_of_CreateTableForBarCode
+
   
   method public void CreateTableForPromoSetGoods
   ( input  p-mode as character
@@ -1638,6 +1703,7 @@ end . /* end_of низ таблицы и html-файла */
          updateObjForObject    (p-sub:Objects).
          updateObjForSET       (p-sub:PromoSet ).
          updateObjForCards     (p-sub:CardsBin ).
+         updateObjForBC        (p-sub:BarCode ).
          // ... а вот p-sub:ScheduleWeek могло и не быть. Особенно, если в акции отсутствовало расписание.
          if v-sched-sub:schedType = 0 then UpdateObjForSchedw0 (p-sub:ScheduleWeek).
                                       else UpdateObjForSchedw1 (p-sub:ScheduleWeek).
@@ -1838,6 +1904,34 @@ end . /* end_of низ таблицы и html-файла */
         
      end.    
   end method. // end_of_updateObjForCards
+  
+  method public void updateObjForBC
+    ( input  p-subs  as class promogoodssubs
+     ) :
+      
+    define variable v-sub as class PromoGoodsSub no-undo.
+    for each tt-PromoBC:
+        if not valid-object(tt-PromoBC.sub)
+        then do:
+           v-sub = new PromoGoodsSub(). 
+           tt-PromoBC.sub = cast(v-sub,Progress.Lang.Object).
+           p-subs:AddItem(tt-PromoBC.sub).
+           v-sub:refreshChildObj().
+        end.
+        else
+           v-sub = cast(tt-PromoBC.sub,promogoodssub).
+               
+        assign
+           v-sub:ID       = tt-PromoBC.id              
+           v-sub:idAction = tt-PromoBC.idAction        
+           v-sub:Mode     = tt-PromoBC.mode 
+           v-sub:NameSet  = tt-PromoBC.nameset          
+        .
+        
+     end.    
+  end method. // end_of_updateObjForCards
+
+  
   method public void updateObjForSetGoods
     ( input  p-subs  as class promogoodssubs,
       input  pIdset  as int64
@@ -2216,6 +2310,14 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
           else 
              tt-PromoSet.mode = {&h-delete}.
        end.  
+       when "PromoBarCode"
+       then do:
+          if  tt-PromoBC.mode eq {&h-create}
+          then 
+             delete tt-PromoBC.
+          else 
+             tt-PromoBC.mode = {&h-delete}.
+       end.         
        when "PromoSetGoods"
        then do:
           if  tt-PromoSetGoods.mode eq {&h-create}
@@ -2265,7 +2367,28 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
         
                     
     end case.
-  end.                                      
+  end.         
+method public void printgds(input iName as character ):
+    case iName:
+       when "PromoBarCode" or when "PromoBarCodeFix" 
+       then do:
+
+      empty temp-table gds-list .
+               find first ub.goods no-lock where
+                  ub.goods.gds-code = tt-PromoBc.gds-code no-error .
+               create gds-list.
+               buffer-copy goods to gds-list.
+               assign
+                  gds-list.promo-code = tt-PromoBc.bc-code
+                  gds-list.ActionId   = tt-PromoBc.idAction
+                  gds-list.db-num     = tt-PromoBc.db-num
+                  .
+        run ibs/th/rep/tick-lst.p (input parparentproc, input v-cntxt-obj-type, input v-cntxt-obj-code, input table gds-list).
+
+         
+       end. 
+    end case.
+  end.     
   method public void addgds(input iname  as char):
     define variable rid-list as character no-undo.
     define variable vI as integer no-undo.
@@ -2385,6 +2508,23 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
                        tt-PromoSetGoods.mode     = {&h-create}
                        tt-PromoSetGoods.gds-code = ub.goods.gds-code
                        tt-PromoSetGoods.gdsName = ub.goods.gds-name
+                    . 
+                 end.   
+             end. 
+             when "PromoBarCode"
+             then do:
+               find first tt-PromoBc where  tt-PromoBc.gds-code = ub.goods.gds-code no-error.
+                if not available tt-PromoBc
+                then do:
+                    create tt-PromoBc.
+                    assign
+                       tt-PromoBc.idAction = tt-promoaction-one.id
+                       tt-PromoBc.id       = m-local-sec
+                       tt-PromoBc.Idset    = tt-PromoSet.id
+                       m-local-sec               = m-local-sec - 1
+                       tt-PromoBc.mode     = {&h-create}
+                       tt-PromoBc.gds-code = ub.goods.gds-code
+                       tt-PromoBc.gdsName  = ub.goods.gds-name
                     . 
                  end.   
              end. 

@@ -60,6 +60,7 @@ define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo initial "Обработка РН (заведение, редактирование)":U .
 { gbl/objsrv.i }
+define variable EDOParSec       as class     ibs.th.gbl.env.prmtrs.edo .
 def    var      Marking     as class     mark no-undo .
 { cmp/vssrevis.i "substitute('&1|&2':u,parext-doc-type,paris-hold)" }
 { cmp/str-glbl.i  }
@@ -178,6 +179,8 @@ define buffer old-line   for ub.doc-line.
 define buffer d-l-b      for ub.doc-line.
 define buffer l-doc-line for ub.doc-line. /* для поиска  */
 define buffer gds-dtl    for ub.gds-dtl  .
+define buffer reas_contract for ub.contract .
+define buffer buf_contract-attr for ub.contract-attr .
 
 { cmp/titlmode.i }
 
@@ -220,6 +223,7 @@ define variable parext-doc-mode as character no-undo.
 define variable prev-pardoc-mode as character no-undo.
 define variable varvalue as character no-undo.
 define variable vartype  as character no-undo.
+define variable is-contract-edo as logical no-undo init no .
 
 define variable v-is-ptrl   as character no-undo.
 define variable v-data-type as character no-undo.
@@ -248,6 +252,9 @@ define variable ii as integer no-undo.
 define variable ch-vsd as character no-undo .
 define variable trn-type as integer no-undo init 0.
 define variable Tree                 as class     tree         no-undo .
+define variable v-is-return          as logical   no-undo init no .
+define variable varpart-rec          as   recid                      no-undo.
+
 define new shared temp-table tt-doc-pl no-undo
 field pl-code as integer format "99999999999"
 field pl-code2 as integer format "99999999999"
@@ -308,6 +315,7 @@ FUNCTION get-vsdsts RETURNS CHARACTER
 (buffer local-gds-dtl for ub.gds-dtl ):
   
   if parext-doc-type <> {&TDEDT_Pri_Perem}
+  and not v-is-return
     then return "".
   
   def var v-mercury-prod as logical no-undo.
@@ -813,6 +821,12 @@ DEFINE RECTANGLE rect-tot
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
      SIZE 47 BY 5.
 
+DEFINE VARIABLE edo-return    AS LOGICAL INITIAL no 
+  LABEL "Возврат по ЭДО" 
+  VIEW-AS TOGGLE-BOX
+  SIZE 17 BY .67
+  FGCOLOR 4 NO-UNDO.
+  
 DEFINE VARIABLE is-cons AS LOGICAL INITIAL no
      LABEL "консигнация"
      VIEW-AS TOGGLE-BOX
@@ -1016,6 +1030,7 @@ DEFINE FRAME d-out-doc
      varcontract-prn-code AT ROW 11.5 COL 12 COLON-ALIGNED WIDGET-ID 4
      b-contr-lkp AT ROW 11.5 COL 29 WIDGET-ID 2
      r-reas AT ROW 12.75 COL 17.5
+     edo-return at row 12.75 col 70
      a-n-c AT ROW 13.75 COL 2 NO-LABEL
      loc-art AT ROW 13.75 COL 12 COLON-ALIGNED NO-LABEL
      loc-code AT ROW 13.75 COL 12.13 COLON-ALIGNED NO-LABEL
@@ -1810,23 +1825,31 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
           ub.marking-lines.obj-type = t-doc.obj-type
           and ub.marking-lines.obj-code = t-doc.obj-code
           and ub.marking-lines.out-code = t-doc.doc-code:
-
-          find first ub.marking no-lock where ub.marking.mark = ub.marking-lines.mark and ub.marking.sts <> ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB no-error.
-          if available (ub.marking)
-            then 
-          do:
+          if v-is-return
+          then do :
             create tt-marking-lines.
             buffer-copy ub.marking-lines to tt-marking-lines.
-            tt-marking-lines.sts = ub.marking.sts.
-            tt-marking-lines.stts = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts).
-            tt-marking-lines.sts-utd = ub.marking-lines.sts.
-            tt-marking-lines.stts-utd = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking-lines.sts).
-            tt-marking-lines.box-qnty = ub.marking.box-qnty .
-            tt-marking-lines.unit = ub.marking.unit .
-            tt-marking-lines.unit-ext = ub.marking.unit-ext .
-            tt-marking-lines.doc-level = ub.marking-lines.doc-level.
-            tt-marking-lines.mark-parent = ub.marking.mark-parent.
-          end.
+            tt-marking-lines.box-qnty = 1 .
+            tt-marking-lines.unit = "шт" .
+          end .
+          else do :
+            find first ub.marking no-lock where ub.marking.mark = ub.marking-lines.mark and ub.marking.sts <> ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB no-error.
+            if available (ub.marking)
+              then 
+            do:
+              create tt-marking-lines.
+              buffer-copy ub.marking-lines to tt-marking-lines.
+              tt-marking-lines.sts = ub.marking.sts.
+              tt-marking-lines.stts = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts).
+              tt-marking-lines.sts-utd = ub.marking-lines.sts.
+              tt-marking-lines.stts-utd = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking-lines.sts).
+              tt-marking-lines.box-qnty = ub.marking.box-qnty .
+              tt-marking-lines.unit = ub.marking.unit .
+              tt-marking-lines.unit-ext = ub.marking.unit-ext .
+              tt-marking-lines.doc-level = ub.marking-lines.doc-level.
+              tt-marking-lines.mark-parent = ub.marking.mark-parent.
+            end.
+          end .
 
         end.
       end.
@@ -2142,6 +2165,9 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg d-out-doc
 ON CHOOSE OF b-chg IN FRAME d-out-doc /* Изменить */
 DO:
+define buffer bin_parts for ub.parts .
+define buffer bout_parts for ub.parts .
+define buffer buf_gen-attr for ub.gen-attr .
 define variable v-recid as recid no-undo .
   if not available ub.gds-dtl then do:
     message "Неправильный выбор строки.".
@@ -2168,8 +2194,67 @@ define variable v-recid as recid no-undo .
       and ub.doc-line.prod-type = ub.gds-dtl.prod-type
       and ub.doc-line.prod-code = ub.gds-dtl.prod-code
     .
-  if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
-  and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+  if v-is-return
+  then do :
+    for first bout_parts no-lock where bout_parts.obj-type  = doc-line.obj-type
+                                   and bout_parts.obj-code  = doc-line.obj-code
+                                   and bout_parts.artic     = doc-line.artic
+                                   and bout_parts.prod-type = doc-line.prod-type
+                                   and bout_parts.prod-code = doc-line.prod-code
+                                   and bout_parts.out-code  = doc-line.doc-code
+    :
+      find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&table_parts}
+                                        and buf_gen-attr.p-key      = {key/parts.i bout_parts } 
+                                        and buf_gen-attr.attr-code  = "in-part-key"
+                                        no-error .
+      if available buf_gen-attr
+      then do :
+        find first bin_parts no-lock where bin_parts.obj-type  = entry(2, buf_gen-attr.attr-value, {&delim-key})
+                                       and bin_parts.obj-code  = integer(entry(3, buf_gen-attr.attr-value, {&delim-key}))
+                                       and bin_parts.artic     = entry(4, buf_gen-attr.attr-value, {&delim-key})
+                                       and bin_parts.prod-type = entry(5, buf_gen-attr.attr-value, {&delim-key})
+                                       and bin_parts.prod-code = integer(entry(6, buf_gen-attr.attr-value, {&delim-key}))
+                                       and bin_parts.in-code   = entry(7, buf_gen-attr.attr-value, {&delim-key})
+                                       and bin_parts.out-code  = entry(8, buf_gen-attr.attr-value, {&delim-key})
+                                       and bin_parts.part-code = entry(9, buf_gen-attr.attr-value, {&delim-key})
+                                       no-error .
+      end .                                  
+    end .  
+    if available bin_parts
+    then do :
+      run str/out-add.p
+        ( input parparentproc
+        ,input recid(t-doc)
+        ,input recid(doc-line)
+        ,input recid(gds-dtl)
+        ,input recid (goods)
+        ,input varline-mode + {&delim-par} + "return=" + string(recid(bin_parts))
+        ,input ?
+        ) no-error.
+      if error-status :error then 
+      do:
+        return no-apply.
+      end.
+    end .
+    else do :
+      run str/out-add.p
+       ( input parparentproc
+        ,input recid(t-doc)
+        ,input recid(doc-line)
+        ,input recid(gds-dtl)
+        ,input recid (goods)
+        ,input varline-mode + {&delim-par} + "return"
+        ,input ?
+        ) no-error.
+      if error-status :error then 
+      do:
+        return no-apply.
+      end.
+    end .
+  end .
+  else
+  if (lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh})
   then do :
     run str/out-add.p
       ( input parparentproc
@@ -2198,6 +2283,11 @@ define variable v-recid as recid no-undo .
       return no-apply.
     end.
   end.
+  if t-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+  then do :
+    run local-cur in this-procedure (input 4) no-error.
+    if error-status :error then return .
+  end .
   run ui-on in this-procedure
     ( input "line"
     ).
@@ -2432,6 +2522,12 @@ DO:
      .
      return no-apply.
   end.
+  
+  if t-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+  then do :
+    run local-cur in this-procedure (input 4) no-error.
+    if error-status :error then return .
+  end .
 /* в ui-on давятся пустые ub.doc-line */
 
   run ui-on in this-procedure ( input "line" ) .
@@ -2576,6 +2672,7 @@ END.
 ON row-display OF br-dtl IN FRAME d-out-doc
 DO:
   run proc-row-display in this-procedure.
+  run rowdisp .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2677,18 +2774,7 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define BROWSE-NAME br-dtl
-&Scoped-define SELF-NAME br-dtl
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-dtl d-out-doc
-ON row-display OF br-dtl IN FRAME d-out-doc
-DO:
 
-  run rowdisp .
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-dtl d-out-doc
 ON VALUE-CHANGED OF br-dtl IN FRAME d-out-doc
@@ -2804,6 +2890,30 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME edo-return
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL edo-return d-out-doc
+ON VALUE-CHANGED OF edo-return IN FRAME d-out-doc /* возврат по ЭДО */
+  DO:
+    define variable vLog as logical no-undo .
+    if edo-return:screen-value = "no"
+    then do :
+      message "По договору с поставщиком осуществляется ЭДО, уверены в возврате без ЭДО?" view-as alert-box question buttons yes-no update vLog .
+      if not vLog
+      then do :
+        edo-return:screen-value = "yes" .
+        return no-apply .
+      end .
+    end .
+    assign edo-return .
+    { str/tdat-wrt.i
+      t-doc.doc-code
+      {&trdcattr-edo-return}
+      string(edo-return)
+    }
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME is-cons
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL is-cons d-out-doc
@@ -3099,8 +3209,15 @@ then do :
     and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
     then do :
       /*Возврат*/
-      run local-m-outs-1-ret no-error.
-      if error-status :error then undo, return no-apply.
+      if v-is-return
+      then do :
+        run local-outs-ret-doc no-error.
+        if error-status :error then undo, return no-apply.
+      end .
+      else do :
+        run local-m-outs-1-ret no-error.
+        if error-status :error then undo, return no-apply.
+      end .
     end.
     else do :
       run local-m-outs-1 no-error.
@@ -3711,6 +3828,18 @@ end.
 if error-status :error or is-doc-hold = ? then do: assign is-doc-hold = no. end.
 if v-is-tsd = "no" then do: menu-item m-outs-2 :sensitive in menu m-outs = no. end.
 prev-pardoc-mode = pardoc-mode.
+{ str/tdat-val.i
+  t-doc.doc-code
+  {&trdcattr-is-return}
+  varvalue
+  vartype
+  no-error
+}
+if varvalue = "yes" then do:
+  v-is-return = yes .
+end.
+EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+
 run ui-on in this-procedure ( input "enable" ) no-error.
 if error-status :error then do:
   assign
@@ -3726,11 +3855,192 @@ else
 do:
   menu-item m_no-marks:sensitive in menu m-marks = no .
 end.
+      if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} then 
+      do:
+        menu-item m_add-marks:sensitive in menu m-marks = no.
+        menu-item m_del-marks:sensitive in menu m-marks = no.
+      end .  
+      
       if pardoc-mode = {&lookup} or t-doc.status_  <> {&wayb} and t-doc.status_ <> {&inquiry} then 
       do:
         menu-item m_add-marks:sensitive in menu m-marks = no.
         menu-item m_del-marks:sensitive in menu m-marks = no.
       end.
+      
+      if pardoc-mode = {&add-def} 
+      and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+      then do :
+        message "Выполнить возврат поставщику?" view-as alert-box question buttons yes-no update varlog .
+        if varlog
+        then do :
+          { str/tdat-wrt.i                                    
+           t-doc.doc-code
+           {&trdcattr-is-return}
+           "yes" 
+          no-error}
+        end .
+      end .
+      
+      { str/tdat-val.i
+        t-doc.doc-code
+        {&trdcattr-is-return}
+        varvalue
+        vartype
+        no-error
+      }
+      if varvalue = "yes" then do:
+        v-is-return = yes .
+        menu-item m_add-marks:sensitive in menu m-marks = no.
+        menu-item m_del-marks:sensitive in menu m-marks = no.
+        disable b-bc with frame {&frame-name} .
+        gds-dtl.doc-qnty:read-only in browse br-dtl = yes .
+        gds-dtl.fact-qnty:read-only in browse br-dtl = yes .
+      end.
+      
+      if v-is-return
+      and pardoc-mode = {&add-def}
+      then do :
+        apply "choose" to r-clients in frame {&frame-name} .
+        
+        if t-doc.cli-code = ?
+        then do :
+          run proc-exit no-error .
+          assign
+            parnext-prev = no.
+          return error.
+        end .
+        
+        find first reas_contract where reas_contract.host-code     = t-doc.host-code  and
+                                       reas_contract.contract-code = t-doc.contract-code no-lock no-error.
+        if available reas_contract
+        then do :                               
+          find first trn-reason no-lock where trn-reason.reason-code = reas_contract.spec-check no-error.
+          if available trn-reason then 
+          do trans:
+            assign  
+              rsn-name          = trn-reason.reason-name
+              t-doc.reason-code = trn-reason.reason-code
+            .
+            display t-doc.reason-code rsn-name with frame {&FRAME-NAME}.
+            disable r-reas r-clients t-doc.cli-code b-cur r-outs with frame {&frame-name}.
+          end .
+          find first buf_contract-attr no-lock where buf_contract-attr.host-code = reas_contract.host-code
+                                                 and buf_contract-attr.contract-code = reas_contract.contract-code
+                                                 and buf_contract-attr.attr-code = "contract-edi"
+                                                 no-error .
+          if available buf_contract-attr
+          and logical(buf_contract-attr.attr-value) = true
+          then do :
+            is-contract-edo = yes .
+          end .
+          else do :
+            find first buf_contract-attr no-lock where buf_contract-attr.host-code = reas_contract.host-code
+                                                   and buf_contract-attr.contract-code = reas_contract.contract-code
+                                                   and buf_contract-attr.attr-code = "contract-diadoc"
+                                                   no-error .
+            if available buf_contract-attr
+            and logical(buf_contract-attr.attr-value) = true
+            then do :
+              is-contract-edo = yes .
+            end .
+          end . 
+          
+          if is-contract-edo
+          and EDOParSec:IsEdo
+          then do :
+            edo-return = yes .
+            { str/tdat-wrt.i
+              t-doc.doc-code
+              {&trdcattr-edo-return}
+              "yes"
+              no-error     }
+            if error-status :error then 
+            do:
+              message error-status :error error-status :get-message( 1 ) '"' + {&trdcattr-edo-return} + '"'
+                view-as alert-box error.
+            end.
+          end .
+          else do :
+            edo-return = no .
+            { str/tdat-wrt.i
+              t-doc.doc-code
+              {&trdcattr-edo-return}
+              "no"
+              no-error     }
+            if error-status :error then 
+            do:
+              message error-status :error error-status :get-message( 1 ) '"' + {&trdcattr-edo-return} + '"'
+                view-as alert-box error.
+            end.
+          end .
+        end .
+      end .
+      
+      if v-is-return
+      then do :
+        if t-doc.contract-code > 0
+        then do :
+          find first reas_contract where reas_contract.host-code     = t-doc.host-code  and
+                                         reas_contract.contract-code = t-doc.contract-code no-lock no-error.
+          if available reas_contract
+          then do :
+            find first buf_contract-attr no-lock where buf_contract-attr.host-code = reas_contract.host-code
+                                                   and buf_contract-attr.contract-code = reas_contract.contract-code
+                                                   and buf_contract-attr.attr-code = "contract-edi"
+                                                   no-error .
+            if available buf_contract-attr
+            and logical(buf_contract-attr.attr-value) = true
+            then do :
+              is-contract-edo = yes .
+            end .
+            else do :
+              find first buf_contract-attr no-lock where buf_contract-attr.host-code = reas_contract.host-code
+                                                     and buf_contract-attr.contract-code = reas_contract.contract-code
+                                                     and buf_contract-attr.attr-code = "contract-diadoc"
+                                                     no-error .
+              if available buf_contract-attr
+              and logical(buf_contract-attr.attr-value) = true
+              then do :
+                is-contract-edo = yes .
+              end .
+            end . 
+            
+            if is-contract-edo
+            and EDOParSec:IsEdo
+            then do :
+              { str/tdat-val.i
+                t-doc.doc-code
+                {&trdcattr-edo-return}
+                varvalue
+                vartype
+                no-error
+              }
+              if varvalue = "yes"
+              then do:
+                edo-return = yes .
+              end.
+              else do :
+                edo-return = no .
+              end .
+              display edo-return with frame {&frame-name}.
+              if pardoc-mode <> {&lookup}
+              then do :
+                enable edo-return with frame {&frame-name}.
+              end .
+            end .
+            else do :
+              edo-return = no .
+              display edo-return with frame {&frame-name}.
+              disable edo-return with frame {&frame-name}.
+            end .
+          end .
+        end .
+        if pardoc-mode <> {&add-def}
+        then do :
+          disable r-reas r-clients t-doc.cli-code b-cur r-outs with frame {&frame-name}.
+        end .
+      end .
+      
 if pardoc-mode = {&add-def} then do:
   wait-for go of frame {&frame-name} focus t-doc.cli-code.
 end.
@@ -5200,6 +5510,8 @@ for each tt-upd-attr : delete tt-upd-attr . end.
 {&create-record}
 &scop attr-code trdcattr-zakaz-date
 {&create-record}
+&scop attr-code trdcattr-othermoves
+{&create-record}
 
 end.
 
@@ -5315,6 +5627,8 @@ for each tt-upd-attr : delete tt-upd-attr . end.
 &scop attr-code trdcattr-ord_dl
 {&create-record}
 &scop attr-code trdcattr-zakaz-date
+{&create-record}
+&scop attr-code trdcattr-othermoves
 {&create-record}
 
 if v-is-pharm = "yes":U then do:
@@ -5664,6 +5978,8 @@ define variable varexist                  as logical   no-undo.
 {&create-record}
 &scop attr-code trdcattr-zakaz-date
 {&create-record}
+&scop attr-code trdcattr-othermoves
+{&create-record}
 
 if v-is-pharm = "yes":U then do:
   &scop attr-code trdcattr-ser_on_pack
@@ -5861,6 +6177,11 @@ define buffer buf_assortment-matrix for ub.assortment-matrix  .
 define buffer bf_contract-specif for ub.contract-specif.
 define buffer bf-hv_doc-line     for ub.doc-line.
 define buffer bf_goods           for ub.goods.
+define buffer bf_parts           for ub.parts .
+define buffer bf_doc-line        for ub.doc-line.
+define buffer bf_gds-dtl         for ub.gds-dtl .
+define buffer bf_marking-lines   for ub.marking-lines .
+define buffer bf_gds-obj            for ub.gds-obj .
 define variable varlog   as logical   no-undo.
 define variable varnotes as character no-undo.
 define buffer bbb_goods for ub.goods  .
@@ -5876,8 +6197,6 @@ define variable v-rid       as   integer                    no-undo.
 define variable v-rid-list  as   char                       no-undo.
 define variable i           as   integer                    no-undo.
 
-define variable EDOParSec       as class     ibs.th.gbl.env.prmtrs.edo .
-
 do on error undo, return error return-value :
 run check-rate no-error.
 if error-status :error then do:
@@ -5891,7 +6210,8 @@ end.
 if t-doc.reason-code <> ?
 and t-doc.reason-code > 0
 then do :
-  if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+  if (lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    or v-is-return)
   and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
   then do :
     /*Возврат*/
@@ -6033,14 +6353,75 @@ end.
     end.
     
     when 5 then do: /* из документа прихода (для оформления возврата через расход) */
-      if t-doc.out-code = ?
-      or t-doc.out-code = ""
-      or not can-find(ub.trn-doc no-lock where ub.trn-doc.doc-code = t-doc.out-code)
-      then do :
-        message "Сначала выберите корректный источник (ПН)" view-as alert-box .
-        return.
-      end.
-      run ref/nakl-gds-ch.w (input t-doc.out-code, output varnotes) .
+      if v-is-return
+	  then do :
+	    run gbl/d-askw.w
+	      (input "Добавление товаров"
+	      ,input "Выберите один из пунктов для добавления в накладную" + {&new-line}
+	      ,input "|"
+	      ,input "По документам|По справочнику|Отказ"
+	      ,input "Добавление товаров из конкретной ПН|"
+	      + "Добавление товаров из справочника|"
+	      + "Отказ от выполнения операции"
+	      ,input 1 /* значение возвращаемое при нажатии enter */
+	      ,input 3 /* значение возвращаемое при нажатии escape */
+	      ,output v-choice
+	      ).
+	    if v-choice = 3 then 
+	    do:
+	      run UI-on in this-procedure ( input "line" ).
+	      return.
+	    end.
+	    if v-choice = 1
+	    then do :
+	      define variable ret-doc-code as character no-undo .
+	      run local-outs-ret-doc (output ret-doc-code) no-error .
+	      if error-status :error then undo, return .
+	      if ret-doc-code > ""
+	      and can-find(ub.trn-doc no-lock where ub.trn-doc.doc-code = ret-doc-code)
+	      then do :
+	        run ref/nakl-gds-ch.w (input ret-doc-code, input edo-return, output varnotes) .
+	      end .
+	    end .
+	    if v-choice = 2
+	    then do :
+	      find first buf_assortment-matrix no-lock where
+	        buf_assortment-matrix.obj-code = v-cntxt-obj-code and
+	        buf_assortment-matrix.obj-type = v-cntxt-obj-type and
+	        buf_assortment-matrix.asmt-status = integer ({&current-status-int}) no-error .
+	      if available buf_assortment-matrix then 
+	      do:
+	        v-type-mode-spr = {&g___object} .
+	      end.
+	      else 
+	      do:
+	        v-type-mode-spr = {&all} .
+	      end.
+	      run str/chs-gds.w ( input parparentproc
+	        , input v-cntxt-obj-type
+	        , input v-cntxt-obj-code
+	        , input parlist-mode
+	        , input t-doc.status_
+	        , input "Строка ПН № " + t-doc.doc-code + " " + t-doc.status_ + " " + string (t-doc.flag_, "+/-")
+	        , input v-type-mode-spr  /*режим вызова справочника товаров*/
+	        , input t-doc.cli-type
+	        , input t-doc.cli-code
+	        , input t-doc.host-code
+	        , input t-doc.ext-doc-type
+	        , input-output varschartic
+	        , output varnotes) no-error.
+	    end .
+	  end .
+	  else do :
+	    if t-doc.out-code = ?
+	    or t-doc.out-code = ""
+	    or not can-find(ub.trn-doc no-lock where ub.trn-doc.doc-code = t-doc.out-code)
+	    then do :
+	      message "Сначала выберите корректный источник (ПН)" view-as alert-box .
+	      return.
+	    end.
+	    run ref/nakl-gds-ch.w (input t-doc.out-code, input ?, output varnotes) .
+	  end .
     end.
   end case.
 
@@ -6055,6 +6436,7 @@ assign
  else do:
    assign prt-rec = ?.
  end.
+add-goods_ :
 do while varlns-cnt <= num-entries (varnotes):
   assign
     gds-rec = integer (entry (varlns-cnt, varnotes))
@@ -6077,7 +6459,6 @@ do while varlns-cnt <= num-entries (varnotes):
      if var_is-petrol = true then return error "Топливо нельзя продавать через ЗАПРОС ! " .
   end.
   
-  EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
   find first bf_goods where recid(bf_goods) = gds-rec no-lock.
   RUN gds-attr-value (
           INPUT bf_goods.gds-code,
@@ -6085,18 +6466,369 @@ do while varlns-cnt <= num-entries (varnotes):
           OUTPUT varvalue,
           OUTPUT vartype
           ).
+  
+  if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
+  then do :
+    if EDOParSec:GetIsEDOForType(varvalue)
+    or EDOParSec:GetIsArticForType(varvalue)
+    or EDOParSec:GetIsMarkingForType(varvalue)
+    then do :
+      message "Товар " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " подлежит обязательной маркировке. Для возврата используйте документ Расход внешний"
+      view-as alert-box .
+      assign 
+        varlns-cnt = varlns-cnt + 1.
+      next.
+    end .
+  end .
+  
+  
   if varvalue > ""
   and EDOParSec:GetIsMarkingForType(varvalue)
-  then 
-  do :
-          message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
+  and not v-is-return
+  then do :
+    message "Товар:" bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code " " bf_goods.gds-name " " skip
             "нельзя добавлять в ручном режиме, так как он подлежит маркировке и должен добавляться помарочно."
-            view-as alert-box error.
+    view-as alert-box error.
     assign 
       varlns-cnt = varlns-cnt + 1.
     next.
   end .
   
+  if v-is-return
+  then do :
+    find first bf_gds-obj no-lock where bf_gds-obj.obj-type  = t-doc.obj-type
+                                    and bf_gds-obj.obj-code  = t-doc.obj-code
+                                    and bf_gds-obj.artic     = bf_goods.artic
+                                    and bf_gds-obj.prod-type = bf_goods.prod-type
+                                    and bf_gds-obj.prod-code = bf_goods.prod-code
+                                    no-error .
+    if not available bf_gds-obj 
+    then do:
+      message "Критическая ошибка!" skip
+              "Не найдена запись товара на объекте (gds-obj) " bf_goods.artic " " bf_goods.gds-name
+      view-as alert-box error .
+      assign 
+        varlns-cnt = varlns-cnt + 1.
+      next.
+    end.
+    if bf_gds-obj.free-qnty <= 0
+    then do :
+      message "Невозможно выполнить возврат товара " bf_goods.artic " " bf_goods.gds-name ", т.к. текущие свободные остатки равны 0."
+      view-as alert-box .        
+      assign 
+        varlns-cnt = varlns-cnt + 1.
+      next.
+    end .
+    if can-find(first bf_doc-line no-lock where bf_doc-line.doc-code = t-doc.doc-code
+                                            and bf_doc-line.artic = bf_goods.artic
+                                            and bf_doc-line.prod-code = bf_goods.prod-code
+                                            and bf_doc-line.prod-type = bf_goods.prod-type)
+    then do :
+      message "Товар " bf_goods.artic " " bf_goods.gds-name
+              " уже добавлен. Запрещено выбирать более одной партии в рамках одной накладной."
+      view-as alert-box .        
+      assign 
+        varlns-cnt = varlns-cnt + 1.
+      next.
+    end .
+    if v-choice = 1
+    then do :
+      run str/parts-l.w
+      (  input parparentproc
+       ,  input t-doc.obj-type            /* v-obj-type   */
+       ,  input t-doc.obj-code            /* v-obj-code   */
+       ,  input bf_goods.gds-code            /* p-gds-code   */
+       ,  input ret-doc-code            /* p-doc-code   */
+       ,  input {&lookup}              /* p-edit-mode  */
+       ,  input {&parts-l_parts-document} /* p-r-parts    */
+       ,  input {&parts-l_object-current} /* p-one-all    */
+       ,  input {&parts-l_call-document} + {&delim-par} + "return"  /* p-call-point */
+       , output varpart-rec                   /* part-recid   */
+      ) .
+    end .
+    if v-choice = 2
+    then do :
+      run str/parts-l-ret.w
+      (input ParParentProc
+      ,input t-doc.obj-type            /* v-obj-type   */
+      ,input t-doc.obj-code            /* v-obj-code   */
+      ,input bf_goods.gds-code          /* p-gds-code   */
+      ,input t-doc.doc-code            /* p-doc-code   */
+      ,input {&lookup} /* p-edit-mode  */
+      ,input {&parts-l_parts-document} /* p-r-parts    */
+      ,input {&parts-l_object-current} /* p-one-all    */
+      ,input {&parts-l_call-document}  /* p-call-point */
+      ,output varpart-rec              /* part-recid   */
+      ) no-error .
+    end .
+    find first bf_parts no-lock where recid(bf_parts) = varpart-rec no-error .
+    if not available bf_parts
+    then do :
+      assign 
+        varlns-cnt = varlns-cnt + 1.
+      next.
+    end . 
+    
+    if t-doc.reason-code = 25
+    then do :
+      if t-doc.out-code = ?
+      or t-doc.out-code = ""
+      then do :
+        t-doc.out-code = bf_parts.in-code .
+        display t-doc.out-code with frame {&frame-name}.
+      end .
+      else do :
+        if t-doc.out-code <> bf_parts.in-code
+        then do :
+          message 'Для схемы возврата "Корректировка поступления" нельзя выбрать партии из разных ПН' view-as alert-box .
+          assign 
+            varlns-cnt = varlns-cnt + 1.
+          next.
+        end .
+      end .
+    end .
+          
+          
+    if EDOParSec:GetIsEDOForType(varvalue)
+    or EDOParSec:GetIsArticForType(varvalue)
+    or EDOParSec:GetIsMarkingForType(varvalue)
+    then do :
+      find first bf_marking-lines no-lock where bf_marking-lines.gds-code  = bf_goods.gds-code
+                                            and bf_marking-lines.obj-type  = bf_parts.obj-type
+                                            and bf_marking-lines.obj-code  = bf_parts.obj-code
+                                            and bf_marking-lines.in-code   = bf_parts.in-code
+                                            and bf_marking-lines.out-code  = bf_parts.out-code
+                                            and bf_marking-lines.part-code = bf_parts.part-code
+                                            no-error .
+      if available bf_marking-lines
+      or (num-entries(bf_parts.part-code, "_") = 2 and length(entry(1, bf_parts.part-code, "_")) = 14)
+      then do :
+        message "Товар подлежит обязательной маркировке и прослеживаемости, для возврата поставщику необходимо просканировать КМ" view-as alert-box .
+        
+        v-add = yes .
+        do while v-add :
+          run str/chs-alcmarks.w (
+            input parparentproc,
+            input t-doc.doc-code,
+            input {&add-def},
+            input string(recid(bf_parts)),
+            output mark) no-error.
+          if error-status :error or mark = "" or mark = ? then 
+          do: 
+            next add-goods_ . 
+          end.
+          find first bf_doc-line exclusive-lock where bf_doc-line.doc-code = t-doc.doc-code
+                                                  and bf_doc-line.artic = bf_goods.artic
+                                                  and bf_doc-line.prod-code = bf_goods.prod-code
+                                                  and bf_doc-line.prod-type = bf_goods.prod-type
+                                                  no-error .
+          if not available (bf_doc-line)
+          then do:
+            run str/out-add.p (parparentproc,
+                recid(t-doc),
+                ?,
+                ?,
+                gds-rec,
+                {&add-def} + {&delim-par} + "return=" + string(recid(bf_parts)),
+                'scan-marks' + {&delim-key} + mark) no-error.
+            if error-status :error then 
+            do:
+              next .
+            end.
+            if return-value = "stop-add-marks"
+            then do :
+              v-add = no .
+            end .
+          end .
+          else do :
+            find first bf_gds-dtl exclusive-lock where bf_gds-dtl.doc-code = bf_doc-line.doc-code
+                                                   and bf_gds-dtl.artic = bf_doc-line.artic
+                                                   and bf_gds-dtl.prod-type = bf_doc-line.prod-type
+                                                   and bf_gds-dtl.prod-code = bf_doc-line.prod-code
+                                                   no-error.
+            run str/out-add.p
+              ( input parparentproc
+              ,input recid(t-doc)
+              ,input recid(bf_doc-line)
+              ,input (if available bf_gds-dtl then recid(bf_gds-dtl) else ?)
+              ,input gds-rec
+              ,input {&update} + {&delim-par} + "return=" + string(recid(bf_parts))
+              ,input 'scan-marks' + {&delim-key} + mark)
+            no-error.
+            if error-status :error then 
+            do:
+              next .
+            end.
+            if return-value = "stop-add-marks"
+            then do :
+              v-add = no .
+            end .
+          end .
+        end .
+      end .
+      else do :
+        if EDOParSec:GetIsTransitionalForType(varvalue)
+        then do :
+          message "Возвращаем маркированные упаковки товара?" view-as alert-box question buttons yes-no update varlog .
+          if varlog
+          then do :
+            v-add = yes .
+            do while v-add :
+              run str/chs-alcmarks.w (
+                input parparentproc,
+                input t-doc.doc-code,
+                input {&add-def},
+                input string(recid(bf_parts)),
+                output mark) no-error.
+              if error-status :error or mark = "" or mark = ? then 
+              do: 
+                next add-goods_ . 
+              end.
+              find first bf_doc-line exclusive-lock where bf_doc-line.doc-code = t-doc.doc-code
+                                                      and bf_doc-line.artic = bf_goods.artic
+                                                      and bf_doc-line.prod-code = bf_goods.prod-code
+                                                      and bf_doc-line.prod-type = bf_goods.prod-type
+                                                      no-error .
+              if not available (bf_doc-line)
+              then do:
+                run str/out-add.p (parparentproc,
+                    recid(t-doc),
+                    ?,
+                    ?,
+                    gds-rec,
+                    {&add-def} + {&delim-par} + "return=" + string(recid(bf_parts)),
+                    'scan-marks' + {&delim-key} + mark) no-error.
+                if error-status :error then 
+                do:
+                  next .
+                end.
+                if return-value = "stop-add-marks"
+                then do :
+                  v-add = no .
+                end .
+              end .
+              else do :
+                find first bf_gds-dtl exclusive-lock where bf_gds-dtl.doc-code = bf_doc-line.doc-code
+                                                       and bf_gds-dtl.artic = bf_doc-line.artic
+                                                       and bf_gds-dtl.prod-type = bf_doc-line.prod-type
+                                                       and bf_gds-dtl.prod-code = bf_doc-line.prod-code
+                                                       no-error.
+                run str/out-add.p
+                  ( input parparentproc
+                  ,input recid(t-doc)
+                  ,input recid(bf_doc-line)
+                  ,input (if available bf_gds-dtl then recid(bf_gds-dtl) else ?)
+                  ,input gds-rec
+                  ,input {&update} + {&delim-par} + "return=" + string(recid(bf_parts))
+                  ,input 'scan-marks' + {&delim-key} + mark)
+                no-error.
+                if error-status :error then 
+                do:
+                  next .
+                end.
+                if return-value = "stop-add-marks"
+                then do :
+                  v-add = no .
+                end .
+              end .
+            end .
+          end .
+          else do :
+            run str/out-add.p (parparentproc,
+                recid(t-doc),
+                ?,
+                ?,
+                gds-rec,
+                {&add-def} + {&delim-par} + "return=" + string(recid(bf_parts)),
+                "Transitional") no-error.
+            if error-status :error then 
+            do:
+              next add-goods_ .
+            end.
+          end .
+        end .
+        else do :
+          message "Товар подлежит обязательной маркировке и прослеживаемости, для возврата поставщику необходимо просканировать КМ" view-as alert-box .
+          
+          v-add = yes .
+          do while v-add :
+            run str/chs-alcmarks.w (
+              input parparentproc,
+              input t-doc.doc-code,
+              input {&add-def},
+              input string(recid(bf_parts)),
+              output mark) no-error.
+            if error-status :error or mark = "" or mark = ? then 
+            do: 
+              next add-goods_ . 
+            end.
+            find first bf_doc-line exclusive-lock where bf_doc-line.doc-code = t-doc.doc-code
+                                                    and bf_doc-line.artic = bf_goods.artic
+                                                    and bf_doc-line.prod-code = bf_goods.prod-code
+                                                    and bf_doc-line.prod-type = bf_goods.prod-type
+                                                    no-error .
+            if not available (bf_doc-line)
+            then do:
+              run str/out-add.p (parparentproc,
+                  recid(t-doc),
+                  ?,
+                  ?,
+                  gds-rec,
+                  {&add-def} + {&delim-par} + "return=" + string(recid(bf_parts)),
+                  'scan-marks' + {&delim-key} + mark) no-error.
+              if error-status :error then 
+              do:
+                next .
+              end.
+              if return-value = "stop-add-marks"
+              then do :
+                v-add = no .
+              end .
+            end .
+            else do :
+              find first bf_gds-dtl exclusive-lock where bf_gds-dtl.doc-code = bf_doc-line.doc-code
+                                                     and bf_gds-dtl.artic = bf_doc-line.artic
+                                                     and bf_gds-dtl.prod-type = bf_doc-line.prod-type
+                                                     and bf_gds-dtl.prod-code = bf_doc-line.prod-code
+                                                     no-error.
+              run str/out-add.p
+                ( input parparentproc
+                ,input recid(t-doc)
+                ,input recid(bf_doc-line)
+                ,input (if available bf_gds-dtl then recid(bf_gds-dtl) else ?)
+                ,input gds-rec
+                ,input {&update} + {&delim-par} + "return=" + string(recid(bf_parts))
+                ,input 'scan-marks' + {&delim-key} + mark)
+              no-error.
+              if error-status :error then 
+              do:
+                next .
+              end.
+              if return-value = "stop-add-marks"
+              then do :
+                v-add = no .
+              end .
+            end .
+          end .
+        end .
+      end .
+    end .
+    else do :
+      run str/out-add.p (parparentproc,
+          recid(t-doc),
+          ?,
+          ?,
+          gds-rec,
+          {&add-def} + {&delim-par} + "return=" + string(recid(bf_parts)),
+          v-param) no-error.
+      if error-status :error then 
+      do:
+        next add-goods_ .
+      end.
+    end .
+    
+  end .
+  else
   if v-choice = 5
   then do :
     run str/out-add.p (parparentproc,
@@ -6123,6 +6855,12 @@ do while varlns-cnt <= num-entries (varnotes):
     end.
   end.
 end.
+
+if t-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+then do :
+  run local-cur in this-procedure (input 4) no-error.
+  if error-status :error then return .
+end .
 /* в ui-on давятся пустые ub.doc-line */
 run ui-on ("line").
 if prt-rec <> ? then do:
@@ -6194,75 +6932,78 @@ define variable v-vat-pc        like ub.doc-line.vat-pc    no-undo.
 /*define variable v-slt-pc        like ub.doc-line.slt-pc    no-undo.*/
 /*define variable v-have-slt-pc   as logical              no-undo.*/
 define variable v-host-code     like ub.sysconf.host-code  no-undo.
-
-   case t-doc.doc-type
-   :
-     when {&expense}
-     then do:
-        { gbl/chk-actg.i
-          v-cntxt-db-num
-          v-cntxt-userid
-          {&action-head-code-main}
-          'actn_expense_price':U
-          {&cntxt-object}
-          t-doc.host-code
-          t-doc.obj-type
-          t-doc.obj-code
-          0
-          0
-          0
-          true
-          varlog
-        }
-     end.
-     when {&return}
-     then do:
-        { gbl/chk-actg.i
-          v-cntxt-db-num
-          v-cntxt-userid
-          {&action-head-code-main}
-          'actn_return_price':U
-          {&cntxt-object}
-          t-doc.host-code
-          t-doc.obj-type
-          t-doc.obj-code
-          0
-          0
-          0
-          true
-          varlog
-        }
-
-     end.
-     when {&write-off}
-     then do:
-        { gbl/chk-actg.i
-          v-cntxt-db-num
-          v-cntxt-userid
-          {&action-head-code-main}
-          'actn_write-off_price':U
-          {&cntxt-object}
-          t-doc.host-code
-          t-doc.obj-type
-          t-doc.obj-code
-          0
-          0
-          0
-          true
-          varlog
-        }
-
-     end.
-     otherwise do:
-       message
-         vss-workfile vss-revision vss-description skip
-         "Неизвестный тип документа" t-doc.doc-type skip
-         "Документ" t-doc.doc-code skip
-         view-as alert-box error .
-       undo, return error return-value .
-     end.
-   end case .
-
+  
+   if parwith-tax <> 4
+   then do :
+     case t-doc.doc-type
+     :
+       when {&expense}
+       then do:
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_expense_price':U
+            {&cntxt-object}
+            t-doc.host-code
+            t-doc.obj-type
+            t-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+          }
+       end.
+       when {&return}
+       then do:
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_return_price':U
+            {&cntxt-object}
+            t-doc.host-code
+            t-doc.obj-type
+            t-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+          }
+  
+       end.
+       when {&write-off}
+       then do:
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_write-off_price':U
+            {&cntxt-object}
+            t-doc.host-code
+            t-doc.obj-type
+            t-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+          }
+  
+       end.
+       otherwise do:
+         message
+           vss-workfile vss-revision vss-description skip
+           "Неизвестный тип документа" t-doc.doc-type skip
+           "Документ" t-doc.doc-code skip
+           view-as alert-box error .
+         undo, return error return-value .
+       end.
+     end case .
+   end .
+   
    if varlog = no then return error.
    for each cur-doc-line no-lock where
             cur-doc-line.doc-code = t-doc.doc-code
@@ -6290,7 +7031,9 @@ define variable v-host-code     like ub.sysconf.host-code  no-undo.
 
    assign varpc       = 0.00
           varflag-ret = no.
-   if parwith-tax <> 3 then do:
+   if parwith-tax <> 3
+   and parwith-tax <> 4
+   then do:
      run str/pc-ov.w (input  parwith-tax,
                   output varpc,
                   output varflag-ret,
@@ -6299,6 +7042,17 @@ define variable v-host-code     like ub.sysconf.host-code  no-undo.
      if error-status :error or
         varflag-ret <> yes then return error.
    end.
+   if parwith-tax = 4
+   then do :
+     assign
+       varpc = 0
+       varflag-ret = yes
+       round-base = 0
+       round-method = "Отключено"
+     .
+     parwith-tax = 2 .
+   end .
+   
    run waitfram-show in this-procedure (input "Простановка учетных цен").
    tr:
    do transaction:
@@ -6580,6 +7334,38 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-m-outs-1-ret d-out-doc 
+PROCEDURE local-outs-ret-doc :
+  /*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+  define output parameter ret-doc-code   as character no-undo .
+  define variable v-at-value     as character no-undo .
+  define variable v-at-type      as character no-undo .
+  
+  run str/choose-docs-for-return.w
+    ( input t-doc.reason-code ,
+      input edo-return,
+      input t-doc.doc-code ,
+      output ret-doc-code).
+
+  find first t-d-b where t-d-b.doc-code = ret-doc-code no-lock no-error.
+  if not available t-d-b then 
+  do:
+    ret-doc-code = "" .
+    return error.
+  end.
+  
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-m-outs-1-ret d-out-doc
 PROCEDURE local-m-outs-1-ret :
 /*------------------------------------------------------------------------------
@@ -6793,8 +7579,9 @@ do
         work-mode = "update-parts":U
       .
     end.
-    if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
-    and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+    if (lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
+    and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh})
+    or v-is-return
     then do :
       run str/out-add.p
         ( input parparentproc
@@ -7078,8 +7865,32 @@ PROCEDURE select-reason :
   run str/trn-reas.w ( input ParParentProc, input {&choose}, input-output j-rsn-code ).
   find first ub.trn-reason no-lock where ub.trn-reason.reason-code = j-rsn-code no-error.
   if available ub.trn-reason then do:
-    assign  rsn-name          = ub.trn-reason.reason-name
-            t-doc.reason-code = ub.trn-reason.reason-code.
+    if   t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} 
+       and ( 
+            (    lookup( string(     t-doc.reason-code), v-reasons-for-return) gt 0
+             and lookup( string(ub.trn-reason.reason-code), v-reasons-for-return) eq 0)
+       or   (    lookup( string(     t-doc.reason-code), v-reasons-for-return) eq 0
+             and lookup( string(ub.trn-reason.reason-code), v-reasons-for-return) gt 0)
+           )
+    then do:
+      if not v-is-return
+      then do :
+        message "Данное основание используется для возврата поставщику. Выберите другое основание из списка." view-as alert-box .
+        return no-apply.
+      end .
+      assign  
+        rsn-name          = ub.trn-reason.reason-name
+        t-doc.reason-code = ub.trn-reason.reason-code
+      .
+      run check-cli in this-procedure no-error.
+      if error-status :error then return no-apply.
+    end.
+    else do:
+      assign  
+        rsn-name          = ub.trn-reason.reason-name
+        t-doc.reason-code = ub.trn-reason.reason-code
+      .
+    end.
     display t-doc.reason-code rsn-name with frame {&FRAME-NAME}.
   end.
   if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
@@ -7753,6 +8564,70 @@ if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} or
    then do:
      hide varcontract-prn-code b-contr-lkp in frame {&frame-name} .
    end.
+   
+  if v-is-return
+  then do :
+    assign gds-dtl.doc-qnty:read-only  in browse {&browse-name} = yes.
+    assign gds-dtl.fact-qnty:read-only  in browse {&browse-name} = yes.
+    disable r-reas r-clients t-doc.cli-code b-cur r-outs with frame {&frame-name}.
+    if available bf_contract
+    then do :
+      find first buf_contract-attr no-lock where buf_contract-attr.host-code = bf_contract.host-code
+                                             and buf_contract-attr.contract-code = bf_contract.contract-code
+                                             and buf_contract-attr.attr-code = "contract-edi"
+                                             no-error .
+      if available buf_contract-attr
+      and logical(buf_contract-attr.attr-value) = true
+      then do :
+        is-contract-edo = yes .
+      end .
+      else do :
+        find first buf_contract-attr no-lock where buf_contract-attr.host-code = bf_contract.host-code
+                                               and buf_contract-attr.contract-code = bf_contract.contract-code
+                                               and buf_contract-attr.attr-code = "contract-diadoc"
+                                               no-error .
+        if available buf_contract-attr
+        and logical(buf_contract-attr.attr-value) = true
+        then do :
+          is-contract-edo = yes .
+        end .
+      end .  
+      
+      if is-contract-edo
+      and EDOParSec:IsEdo
+      then do :
+        { str/tdat-val.i
+          t-doc.doc-code
+          {&trdcattr-edo-return}
+          varvalue
+          vartype
+          no-error
+        }
+        if varvalue = "yes"
+        then do:
+          edo-return = yes .
+        end.
+        else do :
+          edo-return = no .
+        end .
+        display edo-return with frame {&frame-name}.
+        if pardoc-mode <> {&lookup}
+        then do :
+          enable edo-return with frame {&frame-name}.
+        end .
+      end .
+      else do :
+        edo-return = no .
+        display edo-return with frame {&frame-name}.
+        disable edo-return with frame {&frame-name}.
+      end .
+    end .
+    if not can-find(first doc-line no-lock where doc-line.doc-code = t-doc.doc-code)
+    then do :
+      t-doc.out-code = ? .
+      display ? @ t-doc.out-code with frame {&frame-name}.
+    end .
+  end .
 /*Расход внутриобъектный*/
 if t-doc.ext-doc-type = {&TDEDT_Ras_Object} then do :
     if pardoc-mode <> {&lookup} then

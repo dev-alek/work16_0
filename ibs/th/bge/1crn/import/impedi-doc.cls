@@ -25,9 +25,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   
   { cmp/str-glbl.i class } /* &add-def, &update, &deletion, &shop, &attr-cash-book-id, &attr-oper-serv-id */
   /* { gbl/attr-lib.i class } gds-attr-write() заинлайнена */
+  {str/edo-mark.i class}     
+  
   {str\utd-err.i  class}
   {str\utd-attr.i class}
-  {str\utd.i class}     
+  {str\utd.i class}
   define private temp-table tt-mark no-undo 
      field mark as character case-sensitive 
   .
@@ -334,6 +336,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   
                   find first utd-marking-lines where recid(utd-marking-lines)   eq vrec
                   exclusive-lock no-error.
+                  if available marking
+                  then
+                     utd-marking-lines.gds-code = marking.gds-code.
+                  else
+                     utd-marking-lines.gds-code = v-gds-gd:gds-code.
                   if     vGdsCode eq 0
                      and utd-marking-lines.gds-code ne ?
                   then

@@ -1414,7 +1414,10 @@ on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-valu
           assign list-db-for-send = "0".
         end.
         else do:
-          if ub.user-login.db-num <> 0 and not g#news then do:
+          if     ub.user-login.db-num <> 0 
+             and ub.user-login.db-num <> g#news-source-db 
+             and ub.user-login.db-num <> g#db-num
+          then do:
           assign list-db-for-send = string (ub.user-login.db-num).
           end.
         end.

@@ -23,6 +23,7 @@ class ibs.th.bge.1crn.subjects.promotion_gds-gd inherits ibs.th.bge.1crn.subject
    
   define property gd-code  as character  no-undo get. private set. // 1-1 Объект акции  Код товара
   define property gd-price as decimal    no-undo get. private set. // 0-1 Цена товара Используется в акциях с фиксированной ценой
+  define property promotion-code as character no-undo get. private set. // 0-1 Акционный код
   
   define override property InitTag as character no-undo init "gd"
     get.
@@ -32,9 +33,11 @@ class ibs.th.bge.1crn.subjects.promotion_gds-gd inherits ibs.th.bge.1crn.subject
   &scoped-define attr-dec      if inValue >= "" then decimal (inValue) else 0.0
   &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
   method override protected void SetPropProtected (inTag as char, inValue as char):
+
     case inTag:
       when "gd-code"  then gd-code  = {&attr-str} .
       when "gd-price" then gd-price = {&attr-dec} .
+      when "promotion-code" then promotion-code = {&attr-str} .
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
@@ -63,6 +66,7 @@ class ibs.th.bge.1crn.subjects.promotion_gds-gd inherits ibs.th.bge.1crn.subject
     assign
       gd-code  = ?
       gd-price = ?
+      promotion-code = ?
     .
   end method .   
 

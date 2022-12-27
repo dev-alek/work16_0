@@ -88,12 +88,59 @@ function CheckLoad returns logical
             if vContent ne ?
             then do:
                getdesc(vContent).
+              /* getdesc(vContent:Table).
+               getdesc(vContent:TransferInfo).
+               getdesc(vContent:FactorInfo).
+               getdesc(vContent:MainAssignMonetaryClaim).
+               getdesc(vContent:Sellers).
+               getdesc(vContent:Sellers:Seller).
+               getdesc(vContent:Sellers:Seller:getitem(0)).
+               define variable org as component-handle no-undo.
+               org = vContent:Sellers:Seller:getitem(0).
+               getdesc(org:OrganizationDetails).
+               getdesc(org:OrganizationReference).
+               
+               getdesc(vContent:Buyers).
+               getdesc(vContent:Buyers:Buyer).
+               getdesc(vContent:Buyers:Buyer:getitem(0)).
+               org = vContent:Buyers:Buyer:getitem(0).
+               getdesc(org:OrganizationDetails).
+               getdesc(org:OrganizationReference).
+               
+               
+               getdesc(vContent:Shippers).
+               getdesc(vContent:Shippers:Shipper).
+               getdesc(vContent:Shippers:Shipper:getitem(0)).
+               getdesc(vContent:Shippers:Shipper:getitem(0):items).
+               
+               getdesc(vContent:Consignees).
+               getdesc(vContent:Consignees:Consignee).
+               getdesc(vContent:Consignees:Consignee:getitem(0)).
+               org = vContent:Consignees:Consignee:getitem(0).
+               getdesc(org:OrganizationDetails).
+               getdesc(org:OrganizationReference).
+               getdesc(vContent:Signers).
+               getdesc(vContent:PaymentDocuments).
+               getdesc(vContent:SellerInfoCircumPublicProc).
+               getdesc(vContent:DocumentShipments).
+               getdesc(vContent:DocumentShipments:DocumentShipment).
+               
+               getdesc(vContent:AdditionalInfoId).
+               getdesc(vContent:AdditionalInfoId:AdditionalInfo).
+               define variable vii as integer no-undo.
+               define variable vunits as component-handle no-undo.
+               vunits = vContent:AdditionalInfoId:AdditionalInfo.
+               do vii = 1 to vunits:count:
+                  getdesc(vunits:getitem(vii - 1)).
+               end.
+               */
+                  
                define variable vFnsParticipantId as character no-undo.
                define variable vinn as character no-undo.
                define variable vkpp as character no-undo.
                define variable vorgname as character no-undo.
                define variable vAddrOrg as character no-undo.
-               
+               define variable vAdditionalInfo as character no-undo.
                
                
                if iDocument:version  eq "utd820_05_01_01"
@@ -105,7 +152,8 @@ function CheckLoad returns logical
                   getdesc(vContent:Sellers:Seller).
                   getdesc(vContent:Sellers:Seller:GetItem(0)).
                   getdesc(vContent:Sellers:Seller:GetItem(0):OrganizationDetails).
-                  getOrganizationInfo(vContent:Sellers:Seller:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAddrOrg).
+                  
+                  getOrganizationInfo(vContent:Sellers:Seller:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAdditionalInfo, output vAddrOrg).
                   /*vFnsParticipantId =  vContent:Sellers:Seller:GetItem(0):OrganizationDetails:FnsParticipantId no-error.
                   vKpp              =  vContent:Sellers:Seller:GetItem(0):OrganizationDetails:kpp no-error.*/
                end.
@@ -138,7 +186,7 @@ function CheckLoad returns logical
                   getdesc(vContent:Buyers).
                   getdesc(vContent:Buyers:Buyer).
                   getdesc(vContent:Buyers:Buyer:GetItem(0)).
-                  getOrganizationInfo(vContent:Buyers:Buyer:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAddrOrg).
+                  getOrganizationInfo(vContent:Buyers:Buyer:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAdditionalInfo,output vAddrOrg).
                   
                end.   
                else do:
@@ -147,8 +195,10 @@ function CheckLoad returns logical
                   getdesc(vConsignees:Consignee).
                   if vConsignees:Consignee:count > 0
                   then do:
+                     
                      getdesc(vConsignees:Consignee:GetItem(0)).
-                     getOrganizationInfo(vConsignees:Consignee:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAddrOrg).
+                     
+                     getOrganizationInfo(vConsignees:Consignee:GetItem(0),output vinn,output vkpp,vFnsParticipantId, output vorgname, output vAdditionalInfo, output vAddrOrg).
                   end.
                   release object vConsignees.
                   vFnsParticipantId = vContent:RecipientFnsParticipantId.
@@ -182,7 +232,7 @@ function CheckLoad returns logical
          end.
       end.
       else
-         return no.
+         return yes.
       if ohost-code eq ? or ohost-code eq 0
       then do: 
          PutMes(substitute("ѕо &1 не удалось определить фирму по получателю  &2." ,iDocument:DocumentNumber, vFnsParticipantId) ).
@@ -209,7 +259,7 @@ function CheckLoad returns logical
       if vContent ne ?
       then do:
                     /* mSellerCol = mSellers:Seller. */
-         getOrganizationInfo(vContent:Seller,output vchar,output vchar,vFns, output vchar, output vchar).
+         getOrganizationInfo(vContent:Seller,output vchar,output vchar,vFns, output vchar,  output vchar, output vchar).
             
          find first ext-classif where ext-classif.classif-name  eq {&extclass_code_id_diadok_client}
                                   and ext-classif.charkey_three eq vFns
@@ -321,6 +371,7 @@ procedure  UpdateUTDInformOne :
    define variable vTransferBase                as component-handle no-undo.
    define variable vorgname as character no-undo.
    define variable vAddrOrg as character no-undo.
+   define variable vAdditionalInfo as character no-undo.
    define variable volddb-num as integer no-undo.
    define variable volddoc-id as integer no-undo.
                   
@@ -436,7 +487,7 @@ procedure  UpdateUTDInformOne :
          utd.RevocationStatus = iDocument:RevocationStatus.
          utd.RecipientResponseStatus          = iDocument:RecipientResponseStatus.
          utd.TypeId           = iDocument:type.
-         utd.CounteragentId   = iDocument:Counteragent:id.
+         utd.CounteragentId   = iDocument:Counteragent:guid.
          utd.CustomDocumentId = iDocument:CustomDocumentId.
      /*    utd.obj-type         = "".
          utd.obj-code         = 0.
@@ -517,6 +568,18 @@ procedure  UpdateUTDInformOne :
                   getdesc(vContent:AdditionalInfoId).
                   getdesc(vContent:AdditionalInfoId:AdditionalInfo).
                   getdesc(vContent:AdditionalInfoId:AdditionalInfo:getitem(0)). */
+                  define variable vInfoCount as integer no-undo.
+                  define variable vInfos as component-handle no-undo.
+                  define variable vInfo as component-handle no-undo.
+               
+                  vInfos = vContent:AdditionalInfoId:AdditionalInfo.
+                  do vInfoCount = 1 to vInfos:count:
+                     vInfo = vInfos:getitem(vInfoCount - 1).
+                     getdesc(vInfo).
+                     setattrutd (utd.db-num,utd.doc-id,vInfo:id,vInfo:value).
+                     
+                  end.
+               
                   getdesc(vContent:TransferInfo).
                   getdesc(vContent:TransferInfo:TransferBases).
                   vTransferBasecol = vContent:TransferInfo:TransferBases:TransferBase.
@@ -536,7 +599,7 @@ procedure  UpdateUTDInformOne :
                   getdesc(vSellers:Seller:GetItem(0)).
                   if vSellers:Seller:count > 0
                   then
-                     getOrganizationInfo(vSellers:Seller:GetItem(0),output utd.cli-inn,output utd.cli-kpp,utd.cli-FnsParticipantId, output vorgname, output vAddrOrg).
+                     getOrganizationInfo(vSellers:Seller:GetItem(0),output utd.cli-inn,output utd.cli-kpp,utd.cli-FnsParticipantId, output vorgname, output vAdditionalInfo, output vAddrOrg).
                   release object vSellers.
                   if iDocument:version  ne "utd820_05_01_01"
                   then
@@ -544,7 +607,7 @@ procedure  UpdateUTDInformOne :
                   utd.cli-info = vorgname + " " + vAddrOrg.
                   if iDocument:version  eq "utd820_05_01_01"
                   then do:
-                     getOrganizationInfo(vContent:Buyers:Buyer:GetItem(0),output utd.obj-inn,output utd.obj-kpp,utd.obj-FnsParticipantId, output vorgname, output vAddrOrg).
+                     getOrganizationInfo(vContent:Buyers:Buyer:GetItem(0),output utd.obj-inn,output utd.obj-kpp,utd.obj-FnsParticipantId, output vorgname, output vAdditionalInfo, output vAddrOrg).
                   end.
                   else do:
                      vConsignees = vContent:Consignees.
@@ -552,8 +615,10 @@ procedure  UpdateUTDInformOne :
                        /* mBuyerCol = mBuyers:Buyer. */
             /*         getdesc(vBuyers:Buyer:getitem(0)).*/
                      if vConsignees:Consignee:count > 0
-                     then
-                        getOrganizationInfo(vConsignees:Consignee:GetItem(0),output utd.obj-inn,output utd.obj-kpp,utd.obj-FnsParticipantId, output vorgname, output vAddrOrg).
+                     then do:
+                        getOrganizationInfo(vConsignees:Consignee:GetItem(0),output utd.obj-inn,output utd.obj-kpp,utd.obj-FnsParticipantId, output vorgname, output vAdditionalInfo, output vAddrOrg).
+                        setattrutd (utd.db-num,utd.doc-id,"Consignee_»нфƒл€”част",vAdditionalInfo).
+                     end.
                      utd.obj-FnsParticipantId = vContent:RecipientFnsParticipantId.
                      release object vConsignees.
                   end.
@@ -668,7 +733,9 @@ procedure  UpdateUTDInformOne :
                         vunit = vunits:GETITEM(vii - 1).
                         getdesc(vunit).
                         if     vunit:Id eq "штрихкод"
+                            or vunit:Id eq "ean"
                         then do:
+                           setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,vunit:Id,vunit:value).
                            setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"BarCode",vunit:value).
                                   
                            find first utd-marking-lines where       utd-marking-lines.db-num     = utd-lines.db-num     
@@ -718,7 +785,7 @@ procedure  UpdateUTDInformOne :
                   getdesc(vContent:EventContent:CorrectionBase).
                   
                     /* mSellerCol = mSellers:Seller. */
-                  getOrganizationInfo(vContent:Seller,output utd.cli-inn,output utd.cli-kpp,utd.cli-FnsParticipantId, output vorgname, output vAddrOrg).
+                  getOrganizationInfo(vContent:Seller,output utd.cli-inn,output utd.cli-kpp,utd.cli-FnsParticipantId, output vorgname, output vAdditionalInfo, output vAddrOrg).
                   utd.cli-info = vorgname + " " + vAddrOrg.
                   
                   do:
@@ -823,7 +890,9 @@ procedure  UpdateUTDInformOne :
                                vunit = vunits:GETITEM(vii - 1).
                                getdesc(vunit).
                                if     vunit:Id eq "штрихкод"
+                                   or vunit:Id eq "ean"
                                then do:
+                                  setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,vunit:Id,vunit:value).
                                   setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"BarCode",vunit:value).
                                   find first utd-marking-lines where       utd-marking-lines.db-num     = utd-lines.db-num     
                                                                  and utd-marking-lines.doc-id     = utd-lines.doc-id 
@@ -949,7 +1018,9 @@ procedure  UpdateUTDInformOne :
                             vunit = vunits:GETITEM(vii - 1).
                             getdesc(vunit).
                             if     vunit:Id eq "штрихкод"
+                                or vunit:Id eq "ean"
                             then do:
+                               setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,vunit:Id,vunit:value).
                                setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"BarCode",vunit:value).
                                find first utd-marking-lines where       utd-marking-lines.db-num     = utd-lines.db-num     
                                                               and utd-marking-lines.doc-id     = utd-lines.doc-id 

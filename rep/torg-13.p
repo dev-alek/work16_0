@@ -94,6 +94,7 @@ define buffer buf_units    for units.
 
 define stream Out-stream .
 
+define shared variable PrintParts   as logical              no-undo.
 define shared variable PrintScale   as logical              no-undo.
 define shared variable costprice    as logical              no-undo.
 define shared variable sort-name    as logical              no-undo.
@@ -910,22 +911,22 @@ else do :
     ).
 end .
 if t-doc.ext-doc-type = {&TDEDT_Pri_Perem}
-   then do:
-      assign
-         v-otpposition = p-torgconf-t_pass-position /*атрибут сдал должность*/
-         v-otpname     = p-torgconf-t_pass-fname
-         v-polposition = p-torgconf-post
-         v-polname     = p-torgconf-wrkr-name
-      .
-   end.
-   else do:
-      assign
-         v-otpposition = p-torgconf-post /*Должность кладовщика */
-         v-otpname     = p-torgconf-wrkr-name
-         v-polposition = p-torgconf-accept-position
-         v-polname     = p-torgconf-accept-fname
-      .
-   end.
+then do:
+  assign
+     v-otpposition = p-torgconf-t_pass-position /*атрибут сдал должность*/
+     v-otpname     = p-torgconf-t_pass-fname
+     v-polposition = p-torgconf-post
+     v-polname     = p-torgconf-wrkr-name
+  .
+end.
+else do:
+  assign
+     v-otpposition = p-torgconf-post /*Должность кладовщика */
+     v-otpname     = p-torgconf-wrkr-name
+     v-polposition = p-torgconf-accept-position
+     v-polname     = p-torgconf-accept-fname
+  .
+end.
 
 run torg13xl-write-cell-data in this-procedure (
       input {&torg13xl-f_pass_fname}
@@ -1030,6 +1031,15 @@ procedure print-doc-line :
 do
 on error undo, return error
 :
+assign 
+PricendS = 0
+PricewithNDS = 0
+PriceNoNDS = 0
+SumNDS = 0
+SumNoNDS = 0
+SumwithNDS = 0 
+tqnty = 0 
+.
     if p-print-gold = yes
     then do:
         /*---START--------- Определили, золото это или нет и вычислили кол-во мест ---------------------*/
@@ -1213,6 +1223,228 @@ on error undo, return error
                 sum-prt-SumNDS      = 0
                 sum-prt-SumwithNDS  = 0
             .
+            if t-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+            or t-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+            or t-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem}
+            then do: 
+              for each gds-dtl no-lock
+                 where gds-dtl.prod-type = doc-line.prod-type
+                   and gds-dtl.prod-code = doc-line.prod-code
+                   and gds-dtl.artic = doc-line.artic
+                   and gds-dtl.doc-code = doc-line.doc-code
+/*                   and gds-dtl.line-num = doc-line.line-num*/
+              :
+                  find first gds-prt no-lock
+                       where gds-prt.node-code = gds-dtl.prt-code
+                  .
+  
+                  assign
+                      prt-tqnty =  gds-dtl.fact-qnty
+                      prt-SumNoNDS = PriceNoNDS * prt-tqnty
+                      prt-SumNDS = PricendS * prt-tqnty
+                      prt-SumwithNDS = PricewithNDS * prt-tqnty
+                  .
+                  assign
+                      sum-prt-tqnty       = sum-prt-tqnty      +  prt-tqnty
+                      sum-prt-SumNoNDS    = sum-prt-SumNoNDS   +  prt-SumNoNDS
+                      sum-prt-SumNDS      = sum-prt-SumNDS     +  prt-SumNDS
+                      sum-prt-SumwithNDS  = sum-prt-SumwithNDS +  prt-SumwithNDS
+                  .
+                  if PrintScale = yes
+                  then do:
+                      find first bar-code no-lock
+                              where bar-code.gds-code  = goods.gds-code
+                              and bar-code.unit-cli  = goods.unit-base
+                              and bar-code.node-code = gds-dtl.prt-code
+                              and bar-code.part-code = ""
+                              and bar-code.in-code   = ""
+                      .
+                      assign
+                          PrtName = goods.gds-name + "//" + gds-prt.f-name
+                      .
+                      if p-print-gold = yes
+                      then do:
+                          if costprice = yes
+                          then do:
+                              display stream Out-stream
+                                      PrtName @     temp_gds-name.gds-name
+                                      string( bar-code.b-code ) @ tb-code
+                                      goods.unit-base
+                                      prt-tqnty @ tqnty
+                                      PriceNoNDS
+                                      PricendS
+                                      PricewithNDS
+                                      prt-SumNoNDS @ SumNoNDS
+                                      prt-SumNDS @ SumNDS
+                                      prt-SumwithNDS @ SumwithNDS
+                                      sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                                      sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                                      with frame f-doc-cost-gold .
+                              down stream Out-stream 1 with frame f-doc-cost-gold .
+                              { rep/torg-13.i prt- cost -gold }
+                              run torg13xl-write-line-data in this-procedure (
+                                    input PrtName                     /* p-Name           as character */
+                                  , input string( goods.gds-code )    /* p-gdscode        as character */
+                                  , input goods.unit-base             /* p-EI             as character */
+                                  , input "":U                        /* p-OKEI           as character */
+                                  , input "":U                        /* p-AmountInPl     as character */
+                                  , input "":U                        /* p-PlaceAmount    as character */
+                                  , input string( prt-tqnty )         /* p-qnty           as character */
+                                  , input if no-vat then string(PriceNoNDS)
+                                                    else string(PriceWithNDS)   /* p-price       as character */
+                                  , input if no-vat then string(prt-SumNoNDS)
+                                                    else string(prt-SumwithNDS) /* p-sum         as character */
+                              ).
+                          end.        /* costprice = yes */
+                          else do:
+                              display stream Out-stream
+                                      PrtName @     temp_gds-name.gds-name
+                                      string( bar-code.b-code ) @ tb-code
+                                      goods.unit-base
+                                      prt-tqnty @ tqnty
+                                      PriceNoNDS
+                                      PricendS
+                                      PricewithNDS
+                                      prt-SumNoNDS @ SumNoNDS
+                                      prt-SumNDS @ SumNDS
+                                      prt-SumwithNDS @ SumwithNDS
+                                      sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                                      sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                                      with frame f-doc-doc-gold .
+                              down stream Out-stream 1 with frame f-doc-doc-gold .
+                              { rep/torg-13.i prt- doc -gold }
+                              run torg13xl-write-line-data in this-procedure (
+                                    input PrtName                     /* p-Name           as character */
+                                  , input string( goods.gds-code )    /* p-gdscode        as character */
+                                  , input goods.unit-base             /* p-EI             as character */
+                                  , input "":U                        /* p-OKEI           as character */
+                                  , input "":U                        /* p-AmountInPl     as character */
+                                  , input "":U                        /* p-PlaceAmount    as character */
+                                  , input string( prt-tqnty )         /* p-qnty           as character */
+                                  , input string( PricewithNDS )      /* p-price          as character */
+                                  , input string( prt-SumwithNDS )    /* p-sum            as character */
+                              ).
+                          end.
+                      end.        /* p-print-gold = yes */
+                      else do:
+                          if costprice = yes
+                          then do:
+                              display stream Out-stream
+                                      PrtName @     temp_gds-name.gds-name
+                                      string( bar-code.b-code ) @ tb-code
+                                      goods.unit-base
+                                      prt-tqnty @ tqnty
+                                      PriceNoNDS
+                                      PricendS
+                                      PricewithNDS
+                                      prt-SumNoNDS @ SumNoNDS
+                                      prt-SumNDS @ SumNDS
+                                      prt-SumwithNDS @ SumwithNDS
+                                      sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                                      sym11 sym12 sym13 sym14 sym15 sym16 sym17
+                                      with frame f-doc-cost .
+                              down stream Out-stream 1 with frame f-doc-cost .
+                              { rep/torg-13.i prt- cost }
+                              run torg13xl-write-line-data in this-procedure (
+                                    input PrtName                     /* p-Name           as character */
+                                  , input string( goods.gds-code )    /* p-gdscode        as character */
+                                  , input goods.unit-base             /* p-EI             as character */
+                                  , input "":U                        /* p-OKEI           as character */
+                                  , input "":U                        /* p-AmountInPl     as character */
+                                  , input "":U                        /* p-PlaceAmount    as character */
+                                  , input string( prt-tqnty )         /* p-qnty as character */
+                                  , input if no-vat then string(PriceNoNDS)
+                                                    else string(PriceWithNDS)   /* p-price       as character */
+                                  , input if no-vat then string(prt-SumNoNDS)
+                                                    else string(prt-SumwithNDS) /* p-sum         as character */
+                              ).
+                          end.        /* costprice = yes */
+                          else do:
+                              display stream Out-stream
+                                      PrtName @     temp_gds-name.gds-name
+                                      string( bar-code.b-code ) @ tb-code
+                                      goods.unit-base
+                                      prt-tqnty @ tqnty
+                                      PriceNoNDS
+                                      PricendS
+                                      PricewithNDS
+                                      prt-SumNoNDS @ SumNoNDS
+                                      prt-SumNDS @ SumNDS
+                                      prt-SumwithNDS @ SumwithNDS
+                                      sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                                      sym11 sym12 sym13 sym14 sym15 sym16 sym17
+                                      with frame f-doc-doc .
+                              down stream Out-stream 1 with frame f-doc-doc .
+                              { rep/torg-13.i prt- doc }
+                      run torg13xl-write-line-data in this-procedure (
+                            input PrtName                     /* p-Name           as character */
+                          , input string( goods.gds-code )    /* p-gdscode        as character */
+                          , input goods.unit-base             /* p-EI             as character */
+                          , input "":U                        /* p-OKEI           as character */
+                          , input "":U                        /* p-AmountInPl     as character */
+                          , input "":U                        /* p-PlaceAmount    as character */
+                          , input string( prt-tqnty )         /* p-qnty           as character */
+                          , input string( PricewithNDS )      /* p-price          as character */
+                          , input string( prt-SumwithNDS )    /* p-sum            as character */
+                      ).
+                          end.
+                      end. /* p-print-gold = no */
+                  end.       /* PrintScale = yes */
+                  if PrintParts then do:
+                    for each parts no-lock
+                       where parts.prod-type = doc-line.prod-type
+                         and parts.prod-code = doc-line.prod-code
+                         and parts.artic = doc-line.artic
+                         and parts.out-code = doc-line.doc-code
+      /*                   and gds-dtl.line-num = doc-line.line-num*/
+                    :
+        
+                        assign
+                            prt-tqnty =  parts.fact-qnty
+                            prt-SumNoNDS = PriceNoNDS * prt-tqnty
+                            prt-SumNDS = PricendS * prt-tqnty
+                            prt-SumwithNDS = PricewithNDS * prt-tqnty
+                        .
+                        assign
+                            sum-prt-tqnty       = sum-prt-tqnty      +  prt-tqnty
+                            sum-prt-SumNoNDS    = sum-prt-SumNoNDS   +  prt-SumNoNDS
+                            sum-prt-SumNDS      = sum-prt-SumNDS     +  prt-SumNDS
+                            sum-prt-SumwithNDS  = sum-prt-SumwithNDS +  prt-SumwithNDS
+                        .
+                              display stream Out-stream
+                                      PrtName @     temp_gds-name.gds-name
+                                      string( bar-code.b-code ) @ tb-code
+                                      goods.unit-base
+                                      prt-tqnty @ tqnty
+                                      PriceNoNDS
+                                      PricendS
+                                      PricewithNDS
+                                      prt-SumNoNDS @ SumNoNDS
+                                      prt-SumNDS @ SumNDS
+                                      prt-SumwithNDS @ SumwithNDS
+                                      sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                                      sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                                      with frame f-doc-cost-gold .
+                              down stream Out-stream 1 with frame f-doc-cost-gold .
+                              { rep/torg-13.i prt- cost -gold }
+                              run torg13xl-write-line-data in this-procedure (
+                                    input PrtName                     /* p-Name           as character */
+                                  , input string( goods.gds-code )    /* p-gdscode        as character */
+                                  , input goods.unit-base             /* p-EI             as character */
+                                  , input "":U                        /* p-OKEI           as character */
+                                  , input "":U                        /* p-AmountInPl     as character */
+                                  , input "":U                        /* p-PlaceAmount    as character */
+                                  , input string( prt-tqnty )         /* p-qnty           as character */
+                                  , input if no-vat then string(PriceNoNDS)
+                                                    else string(PriceWithNDS)   /* p-price       as character */
+                                  , input if no-vat then string(prt-SumNoNDS)
+                                                    else string(prt-SumwithNDS) /* p-sum         as character */
+                              ).   
+                    end .                            
+                  end.
+              end.        /*for each gds-dtl ...*/
+            end.
+            else do:
             for each gds-dtl no-lock
                where gds-dtl.prod-type = doc-line.prod-type
                  and gds-dtl.prod-code = doc-line.prod-code
@@ -1375,8 +1607,9 @@ on error undo, return error
                         end.
                     end. /* p-print-gold = no */
                 end.       /* PrintScale = yes */
-            end.        /*for each gds-dtl ...*/
-
+            end.        /*for each gds-dtl ...*/               
+            end.
+            
             assign
                 tqnty       = sum-prt-tqnty
                 SumNoNDS    = sum-prt-SumNoNDS
@@ -1537,162 +1770,556 @@ on error undo, return error
                 end.
     end.
     else do:    /* пустая шкала */
-            find first bar-code no-lock
-                 where bar-code.gds-code = goods.gds-code
-                   and bar-code.unit-cli = goods.unit-base
-                   and bar-code.node-code = rootnode_code
-                   and bar-code.part-code = ""
-                   and bar-code.in-code = ""
-            .
-            find first gds-dtl no-lock
+            
+            if t-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+            or t-doc.ext-doc-type = {&TDEDT_Ras_Perem}
+            or t-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem}
+            then do: 
+              find first bar-code no-lock
+                   where bar-code.gds-code = goods.gds-code
+                     and bar-code.unit-cli = goods.unit-base
+                     and bar-code.node-code = rootnode_code
+                     and bar-code.part-code = ""
+                     and bar-code.in-code = ""
+              .
+              find first gds-dtl no-lock
                  where gds-dtl.doc-code = doc-line.doc-code
                    and gds-dtl.prod-type = doc-line.prod-type
                    and gds-dtl.prod-code = doc-line.prod-code
                    and gds-dtl.artic = doc-line.artic
                    and gds-dtl.prt-code = rootnode_code
-            .
-            assign
-                tqnty = gds-dtl.fact-qnty
-                unit-str = goods.unit-base
-                SumNoNDS = PriceNoNDS * tqnty
-                SumNDS = PricendS * tqnty
-                SumwithNDS = PricewithNDS * tqnty
-            .
-            if p-print-gold = yes
-            then do:
-                if costprice = yes
-                then do:
+              .
+              assign
+                  tqnty = gds-dtl.fact-qnty
+                  unit-str = goods.unit-base
+                  SumNoNDS = PriceNoNDS * tqnty
+                  SumNDS = PricendS * tqnty
+                  SumwithNDS = PricewithNDS * tqnty
+              .
+              if PrintScale = yes
+              then do:
+                  find first bar-code no-lock
+                          where bar-code.gds-code  = goods.gds-code
+                          and bar-code.unit-cli  = goods.unit-base
+                          and bar-code.node-code = gds-dtl.prt-code
+                          and bar-code.part-code = ""
+                          and bar-code.in-code   = ""
+                  .
+                  assign
+                      PrtName = goods.gds-name + "//" + gds-prt.f-name
+                  .
+                  if p-print-gold = yes
+                  then do:
+                      if costprice = yes
+                      then do:
+                          display stream Out-stream
+                                  PrtName @     temp_gds-name.gds-name
+                                  string( bar-code.b-code ) @ tb-code
+                                  goods.unit-base
+                                  prt-tqnty @ tqnty
+                                  PriceNoNDS
+                                  PricendS
+                                  PricewithNDS
+                                  prt-SumNoNDS @ SumNoNDS
+                                  prt-SumNDS @ SumNDS
+                                  prt-SumwithNDS @ SumwithNDS
+                                  sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                                  sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                                  with frame f-doc-cost-gold .
+                          down stream Out-stream 1 with frame f-doc-cost-gold .
+                          { rep/torg-13.i prt- cost -gold }
+                          run torg13xl-write-line-data in this-procedure (
+                                input PrtName                     /* p-Name           as character */
+                              , input string( goods.gds-code )    /* p-gdscode        as character */
+                              , input goods.unit-base             /* p-EI             as character */
+                              , input "":U                        /* p-OKEI           as character */
+                              , input "":U                        /* p-AmountInPl     as character */
+                              , input "":U                        /* p-PlaceAmount    as character */
+                              , input string( prt-tqnty )         /* p-qnty           as character */
+                              , input if no-vat then string(PriceNoNDS)
+                                                else string(PriceWithNDS)   /* p-price       as character */
+                              , input if no-vat then string(prt-SumNoNDS)
+                                                else string(prt-SumwithNDS) /* p-sum         as character */
+                          ).
+                      end.        /* costprice = yes */
+                      else do:
+                          display stream Out-stream
+                                  PrtName @     temp_gds-name.gds-name
+                                  string( bar-code.b-code ) @ tb-code
+                                  goods.unit-base
+                                  prt-tqnty @ tqnty
+                                  PriceNoNDS
+                                  PricendS
+                                  PricewithNDS
+                                  prt-SumNoNDS @ SumNoNDS
+                                  prt-SumNDS @ SumNDS
+                                  prt-SumwithNDS @ SumwithNDS
+                                  sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                                  sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                                  with frame f-doc-doc-gold .
+                          down stream Out-stream 1 with frame f-doc-doc-gold .
+                          { rep/torg-13.i prt- doc -gold }
+                          run torg13xl-write-line-data in this-procedure (
+                                input PrtName                     /* p-Name           as character */
+                              , input string( goods.gds-code )    /* p-gdscode        as character */
+                              , input goods.unit-base             /* p-EI             as character */
+                              , input "":U                        /* p-OKEI           as character */
+                              , input "":U                        /* p-AmountInPl     as character */
+                              , input "":U                        /* p-PlaceAmount    as character */
+                              , input string( prt-tqnty )         /* p-qnty           as character */
+                              , input string( PricewithNDS )      /* p-price          as character */
+                              , input string( prt-SumwithNDS )    /* p-sum            as character */
+                          ).
+                      end.
+                  end.        /* p-print-gold = yes */
+                  else do:
+                      if costprice = yes
+                      then do:
+                          display stream Out-stream
+                                  PrtName @     temp_gds-name.gds-name
+                                  string( bar-code.b-code ) @ tb-code
+                                  goods.unit-base
+                                  prt-tqnty @ tqnty
+                                  PriceNoNDS
+                                  PricendS
+                                  PricewithNDS
+                                  prt-SumNoNDS @ SumNoNDS
+                                  prt-SumNDS @ SumNDS
+                                  prt-SumwithNDS @ SumwithNDS
+                                  sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                                  sym11 sym12 sym13 sym14 sym15 sym16 sym17
+                                  with frame f-doc-cost .
+                          down stream Out-stream 1 with frame f-doc-cost .
+                          { rep/torg-13.i prt- cost }
+                          run torg13xl-write-line-data in this-procedure (
+                                input PrtName                     /* p-Name           as character */
+                              , input string( goods.gds-code )    /* p-gdscode        as character */
+                              , input goods.unit-base             /* p-EI             as character */
+                              , input "":U                        /* p-OKEI           as character */
+                              , input "":U                        /* p-AmountInPl     as character */
+                              , input "":U                        /* p-PlaceAmount    as character */
+                              , input string( prt-tqnty )         /* p-qnty as character */
+                              , input if no-vat then string(PriceNoNDS)
+                                                else string(PriceWithNDS)   /* p-price       as character */
+                              , input if no-vat then string(prt-SumNoNDS)
+                                                else string(prt-SumwithNDS) /* p-sum         as character */
+                          ).
+                      end.        /* costprice = yes */
+                      else do:
+                          display stream Out-stream
+                                  PrtName @     temp_gds-name.gds-name
+                                  string( bar-code.b-code ) @ tb-code
+                                  goods.unit-base
+                                  prt-tqnty @ tqnty
+                                  PriceNoNDS
+                                  PricendS
+                                  PricewithNDS
+                                  prt-SumNoNDS @ SumNoNDS
+                                  prt-SumNDS @ SumNDS
+                                  prt-SumwithNDS @ SumwithNDS
+                                  sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                                  sym11 sym12 sym13 sym14 sym15 sym16 sym17
+                                  with frame f-doc-doc .
+                          down stream Out-stream 1 with frame f-doc-doc .
+                          { rep/torg-13.i prt- doc }
+                  run torg13xl-write-line-data in this-procedure (
+                        input PrtName                     /* p-Name           as character */
+                      , input string( goods.gds-code )    /* p-gdscode        as character */
+                      , input goods.unit-base             /* p-EI             as character */
+                      , input "":U                        /* p-OKEI           as character */
+                      , input "":U                        /* p-AmountInPl     as character */
+                      , input "":U                        /* p-PlaceAmount    as character */
+                      , input string( prt-tqnty )         /* p-qnty           as character */
+                      , input string( PricewithNDS )      /* p-price          as character */
+                      , input string( prt-SumwithNDS )    /* p-sum            as character */
+                  ).
+                      end.
+                  end. /* p-print-gold = no */
+              end.       /* PrintScale = yes */
+              if PrintParts then do:
+                for each parts no-lock
+                   where parts.prod-type = doc-line.prod-type
+                     and parts.prod-code = doc-line.prod-code
+                     and parts.artic = doc-line.artic
+                     and parts.out-code = doc-line.doc-code
+                     break by parts.price-rubl
+  /*                   and gds-dtl.line-num = doc-line.line-num*/
+                :
+                  if first-of(parts.price-rubl)
+                  then do :
+                    prt-tqnty = 0 .
+                    PriceNoNDS = (parts.price-rubl / (1 + (parts.vat-pc / 100))) .
+                    PricendS = (parts.price-rubl * parts.vat-pc / (100 + parts.vat-pc)) .
+                    PricewithNDS = parts.price-rubl .
+                  end .
+                  
+    
+                  assign
+                      prt-tqnty = prt-tqnty + parts.fact-qnty
+                      prt-SumNoNDS = PriceNoNDS * prt-tqnty
+                      prt-SumNDS = PricendS * prt-tqnty
+                      prt-SumwithNDS = PricewithNDS * prt-tqnty
+                  .
+                  assign
+                      sum-prt-tqnty       = sum-prt-tqnty      +  prt-tqnty
+                      sum-prt-SumNoNDS    = sum-prt-SumNoNDS   +  prt-SumNoNDS
+                      sum-prt-SumNDS      = sum-prt-SumNDS     +  prt-SumNDS
+                      sum-prt-SumwithNDS  = sum-prt-SumwithNDS +  prt-SumwithNDS
+                  .
+                    
+                  if last-of(parts.price-rubl)
+                  then do :  
                     display stream Out-stream
-                        goods.artic
-                        temp_gds-name.gds-name
-                        goods.sort
-                        string( bar-code.b-code ) @ tb-code
-                        unit-str @ goods.unit-base
-                        tqnty
-                        qnty-pl when v-not-gold = no
-                        PriceNoNDS
-                        PricendS
-                        PricewithNDS
-                        SumNoNDS
-                        SumNDS
-                        SumwithNDS
-                        sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
-                        sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
-                        with frame f-doc-cost-gold .
+                            temp_gds-name.gds-name
+                            goods.artic
+                            string( bar-code.b-code ) @ tb-code
+                            goods.unit-base
+                            prt-tqnty @ tqnty
+                            PriceNoNDS
+                            PricendS
+                            PricewithNDS
+                            prt-SumNoNDS @ SumNoNDS
+                            prt-SumNDS @ SumNDS
+                            prt-SumwithNDS @ SumwithNDS
+                            sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                            sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                            with frame f-doc-cost-gold .
                     down stream Out-stream 1 with frame f-doc-cost-gold .
-                    { rep/torg-13.i " " cost -gold }
+                    { rep/torg-13.i prt- cost -gold }
                     run torg13xl-write-line-data in this-procedure (
-                        input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
-                      , input string( goods.gds-code )    /* p-gdscode        as character */
-                      , input goods.unit-base             /* p-EI             as character */
-                      , input "":U                        /* p-OKEI           as character */
-                      , input "":U                        /* p-AmountInPl     as character */
-                      , input "":U                        /* p-PlaceAmount    as character */
-                      , input string( tqnty )             /* p-qnty           as character */
-                      , input if no-vat then string( PriceNoNDS )
-                                        else string( PriceWithNDS ) /* p-price        as character */
-                      , input if no-vat then string(SumNoNDS)
-                                        else string(SumwithNDS)     /* p-sum          as character */
-                    ).
-                end.       /* costprice = yes */
-                else do:
-                    display stream Out-stream
-                        goods.artic
-                        temp_gds-name.gds-name
-                        goods.sort
-                        string( bar-code.b-code ) @ tb-code
-                        unit-str @ goods.unit-base
-                        tqnty
-                        qnty-pl when v-not-gold = no
-                        PriceNoNDS
-                        PricendS
-                        PricewithNDS
-                        SumNoNDS
-                        SumNDS
-                        SumwithNDS
-                        sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
-                        sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
-                        with frame f-doc-doc-gold .
-                    down stream Out-stream 1 with frame f-doc-doc-gold .
-                    { rep/torg-13.i " " doc -gold }
-                    run torg13xl-write-line-data in this-procedure (
-                        input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
-                      , input string( goods.gds-code )    /* p-gdscode        as character */
-                      , input goods.unit-base             /* p-EI             as character */
-                      , input "":U                        /* p-OKEI           as character */
-                      , input "":U                        /* p-AmountInPl     as character */
-                      , input "":U                        /* p-PlaceAmount    as character */
-                      , input string( tqnty )             /* p-qnty           as character */
-                      , input string( PriceWithNDS )      /* p-price        as character */
-                      , input string(SumwithNDS)          /* p-sum          as character */
-                    ).
-                end.       /* costprice = no */
-            end.        /* p-print-gold = yes */
-            else do:
-                if costprice = yes
+                          input goods.artic + " ":U + goods.gds-name         /* p-Name           as character */
+                        , input string( goods.gds-code )    /* p-gdscode        as character */
+                        , input goods.unit-base             /* p-EI             as character */
+                        , input "":U                        /* p-OKEI           as character */
+                        , input "":U                        /* p-AmountInPl     as character */
+                        , input "":U                        /* p-PlaceAmount    as character */
+                        , input string( prt-tqnty )         /* p-qnty           as character */
+                        , input if no-vat then string(PriceNoNDS)
+                                          else string(PriceWithNDS)   /* p-price       as character */
+                        , input if no-vat then string(prt-SumNoNDS)
+                                          else string(prt-SumwithNDS) /* p-sum         as character */
+                    ).  
+                  end .         
+                end .                            
+              end.
+              else do :
+                find first bar-code no-lock
+                     where bar-code.gds-code = goods.gds-code
+                       and bar-code.unit-cli = goods.unit-base
+                       and bar-code.node-code = rootnode_code
+                       and bar-code.part-code = ""
+                       and bar-code.in-code = ""
+                .
+                find first gds-dtl no-lock
+                   where gds-dtl.doc-code = doc-line.doc-code
+                     and gds-dtl.prod-type = doc-line.prod-type
+                     and gds-dtl.prod-code = doc-line.prod-code
+                     and gds-dtl.artic = doc-line.artic
+                     and gds-dtl.prt-code = rootnode_code
+                .
+                assign
+                    tqnty = gds-dtl.fact-qnty
+                    unit-str = goods.unit-base
+                    SumNoNDS = PriceNoNDS * tqnty
+                    SumNDS = PricendS * tqnty
+                    SumwithNDS = PricewithNDS * tqnty
+                .
+                if p-print-gold = yes
                 then do:
-                    display stream Out-stream
-                        goods.artic
-                        temp_gds-name.gds-name
-                        string( bar-code.b-code ) @ tb-code
-                        unit-str @ goods.unit-base
-                        tqnty
-                        PriceNoNDS
-                        PricendS
-                        PricewithNDS
-                        SumNoNDS
-                        SumNDS
-                        SumwithNDS
-                        sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
-                        sym11 sym12 sym13 sym14 sym15 sym16 sym17
-                        with frame f-doc-cost .
-                    down stream Out-stream 1 with frame f-doc-cost .
-                    { rep/torg-13.i " " cost }
-                    run torg13xl-write-line-data in this-procedure (
-                        input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
-                      , input string( goods.gds-code )    /* p-gdscode        as character */
-                      , input goods.unit-base             /* p-EI             as character */
-                      , input "":U                        /* p-OKEI           as character */
-                      , input "":U                        /* p-AmountInPl     as character */
-                      , input "":U                        /* p-PlaceAmount    as character */
-                      , input string( tqnty )             /* p-qnty           as character */
-                      , input if no-vat then string( PriceNoNDS )
-                                        else string( PriceWithNDS ) /* p-price        as character */
-                      , input if no-vat then string(SumNoNDS)
-                                        else string(SumwithNDS)     /* p-sum          as character */
-                    ).
-                end.       /* costprice = yes */
+                    if costprice = yes
+                    then do:
+                        display stream Out-stream
+                            goods.artic
+                            temp_gds-name.gds-name
+                            goods.sort
+                            string( bar-code.b-code ) @ tb-code
+                            unit-str @ goods.unit-base
+                            tqnty
+                            qnty-pl when v-not-gold = no
+                            PriceNoNDS
+                            PricendS
+                            PricewithNDS
+                            SumNoNDS
+                            SumNDS
+                            SumwithNDS
+                            sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                            sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                            with frame f-doc-cost-gold .
+                        down stream Out-stream 1 with frame f-doc-cost-gold .
+                        { rep/torg-13.i " " cost -gold }
+                        run torg13xl-write-line-data in this-procedure (
+                            input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
+                          , input string( goods.gds-code )    /* p-gdscode        as character */
+                          , input goods.unit-base             /* p-EI             as character */
+                          , input "":U                        /* p-OKEI           as character */
+                          , input "":U                        /* p-AmountInPl     as character */
+                          , input "":U                        /* p-PlaceAmount    as character */
+                          , input string( tqnty )             /* p-qnty           as character */
+                          , input if no-vat then string( PriceNoNDS )
+                                            else string( PriceWithNDS ) /* p-price        as character */
+                          , input if no-vat then string(SumNoNDS)
+                                            else string(SumwithNDS)     /* p-sum          as character */
+                        ).
+                    end.       /* costprice = yes */
+                    else do:
+                        display stream Out-stream
+                            goods.artic
+                            temp_gds-name.gds-name
+                            goods.sort
+                            string( bar-code.b-code ) @ tb-code
+                            unit-str @ goods.unit-base
+                            tqnty
+                            qnty-pl when v-not-gold = no
+                            PriceNoNDS
+                            PricendS
+                            PricewithNDS
+                            SumNoNDS
+                            SumNDS
+                            SumwithNDS
+                            sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                            sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                            with frame f-doc-doc-gold .
+                        down stream Out-stream 1 with frame f-doc-doc-gold .
+                        { rep/torg-13.i " " doc -gold }
+                        run torg13xl-write-line-data in this-procedure (
+                            input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
+                          , input string( goods.gds-code )    /* p-gdscode        as character */
+                          , input goods.unit-base             /* p-EI             as character */
+                          , input "":U                        /* p-OKEI           as character */
+                          , input "":U                        /* p-AmountInPl     as character */
+                          , input "":U                        /* p-PlaceAmount    as character */
+                          , input string( tqnty )             /* p-qnty           as character */
+                          , input string( PriceWithNDS )      /* p-price        as character */
+                          , input string(SumwithNDS)          /* p-sum          as character */
+                        ).
+                    end.       /* costprice = no */
+                end.        /* p-print-gold = yes */
                 else do:
-                    display stream Out-stream
-                        goods.artic
-                        temp_gds-name.gds-name
-                        string( bar-code.b-code ) @ tb-code
-                        unit-str @ goods.unit-base
-                        tqnty
-                        PriceNoNDS
-                        PricendS
-                        PricewithNDS
-                        SumNoNDS
-                        SumNDS
-                        SumwithNDS
-                        sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
-                        sym11 sym12 sym13 sym14 sym15 sym16 sym17
-                        with frame f-doc-doc .
-                    down stream Out-stream 1 with frame f-doc-doc .
-                    { rep/torg-13.i " " doc }
-            run torg13xl-write-line-data in this-procedure (
-                  input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
-                , input string( goods.gds-code )    /* p-gdscode        as character */
-                , input goods.unit-base             /* p-EI             as character */
-                , input "":U                        /* p-OKEI           as character */
-                , input "":U                        /* p-AmountInPl     as character */
-                , input "":U                        /* p-PlaceAmount    as character */
-                , input string( tqnty )             /* p-qnty           as character */
-                      , input string( PriceWithNDS )      /* p-price        as character */
-                , input string( SumwithNDS )        /* p-sum            as character */
-            ).
-                end.       /* costprice = no */
-            end.        /* p-print-gold = no */
+                    if costprice = yes
+                    then do:
+                        display stream Out-stream
+                            goods.artic
+                            temp_gds-name.gds-name
+                            string( bar-code.b-code ) @ tb-code
+                            unit-str @ goods.unit-base
+                            tqnty
+                            PriceNoNDS
+                            PricendS
+                            PricewithNDS
+                            SumNoNDS
+                            SumNDS
+                            SumwithNDS
+                            sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                            sym11 sym12 sym13 sym14 sym15 sym16 sym17
+                            with frame f-doc-cost .
+                        down stream Out-stream 1 with frame f-doc-cost .
+                        { rep/torg-13.i " " cost }
+                        run torg13xl-write-line-data in this-procedure (
+                            input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
+                          , input string( goods.gds-code )    /* p-gdscode        as character */
+                          , input goods.unit-base             /* p-EI             as character */
+                          , input "":U                        /* p-OKEI           as character */
+                          , input "":U                        /* p-AmountInPl     as character */
+                          , input "":U                        /* p-PlaceAmount    as character */
+                          , input string( tqnty )             /* p-qnty           as character */
+                          , input if no-vat then string( PriceNoNDS )
+                                            else string( PriceWithNDS ) /* p-price        as character */
+                          , input if no-vat then string(SumNoNDS)
+                                            else string(SumwithNDS)     /* p-sum          as character */
+                        ).
+                    end.       /* costprice = yes */
+                    else do:
+                        display stream Out-stream
+                            goods.artic
+                            temp_gds-name.gds-name
+                            string( bar-code.b-code ) @ tb-code
+                            unit-str @ goods.unit-base
+                            tqnty
+                            PriceNoNDS
+                            PricendS
+                            PricewithNDS
+                            SumNoNDS
+                            SumNDS
+                            SumwithNDS
+                            sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                            sym11 sym12 sym13 sym14 sym15 sym16 sym17
+                            with frame f-doc-doc .
+                        down stream Out-stream 1 with frame f-doc-doc .
+                        { rep/torg-13.i " " doc }
+                run torg13xl-write-line-data in this-procedure (
+                      input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
+                    , input string( goods.gds-code )    /* p-gdscode        as character */
+                    , input goods.unit-base             /* p-EI             as character */
+                    , input "":U                        /* p-OKEI           as character */
+                    , input "":U                        /* p-AmountInPl     as character */
+                    , input "":U                        /* p-PlaceAmount    as character */
+                    , input string( tqnty )             /* p-qnty           as character */
+                          , input string( PriceWithNDS )      /* p-price        as character */
+                    , input string( SumwithNDS )        /* p-sum            as character */
+                ).
+                    end.       /* costprice = no */
+                end.        /* p-print-gold = no */
+              end .
+            end.
+            else do:
+            
+              find first bar-code no-lock
+                   where bar-code.gds-code = goods.gds-code
+                     and bar-code.unit-cli = goods.unit-base
+                     and bar-code.node-code = rootnode_code
+                     and bar-code.part-code = ""
+                     and bar-code.in-code = ""
+              .
+              find first gds-dtl no-lock
+                 where gds-dtl.doc-code = doc-line.doc-code
+                   and gds-dtl.prod-type = doc-line.prod-type
+                   and gds-dtl.prod-code = doc-line.prod-code
+                   and gds-dtl.artic = doc-line.artic
+                   and gds-dtl.prt-code = rootnode_code
+              .
+              assign
+                  tqnty = gds-dtl.fact-qnty
+                  unit-str = goods.unit-base
+                  SumNoNDS = PriceNoNDS * tqnty
+                  SumNDS = PricendS * tqnty
+                  SumwithNDS = PricewithNDS * tqnty
+              .
+              if p-print-gold = yes
+              then do:
+                  if costprice = yes
+                  then do:
+                      display stream Out-stream
+                          goods.artic
+                          temp_gds-name.gds-name
+                          goods.sort
+                          string( bar-code.b-code ) @ tb-code
+                          unit-str @ goods.unit-base
+                          tqnty
+                          qnty-pl when v-not-gold = no
+                          PriceNoNDS
+                          PricendS
+                          PricewithNDS
+                          SumNoNDS
+                          SumNDS
+                          SumwithNDS
+                          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                          sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                          with frame f-doc-cost-gold .
+                      down stream Out-stream 1 with frame f-doc-cost-gold .
+                      { rep/torg-13.i " " cost -gold }
+                      run torg13xl-write-line-data in this-procedure (
+                          input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
+                        , input string( goods.gds-code )    /* p-gdscode        as character */
+                        , input goods.unit-base             /* p-EI             as character */
+                        , input "":U                        /* p-OKEI           as character */
+                        , input "":U                        /* p-AmountInPl     as character */
+                        , input "":U                        /* p-PlaceAmount    as character */
+                        , input string( tqnty )             /* p-qnty           as character */
+                        , input if no-vat then string( PriceNoNDS )
+                                          else string( PriceWithNDS ) /* p-price        as character */
+                        , input if no-vat then string(SumNoNDS)
+                                          else string(SumwithNDS)     /* p-sum          as character */
+                      ).
+                  end.       /* costprice = yes */
+                  else do:
+                      display stream Out-stream
+                          goods.artic
+                          temp_gds-name.gds-name
+                          goods.sort
+                          string( bar-code.b-code ) @ tb-code
+                          unit-str @ goods.unit-base
+                          tqnty
+                          qnty-pl when v-not-gold = no
+                          PriceNoNDS
+                          PricendS
+                          PricewithNDS
+                          SumNoNDS
+                          SumNDS
+                          SumwithNDS
+                          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                          sym11 sym12 sym13 sym14 sym15 sym16 sym17 sym18
+                          with frame f-doc-doc-gold .
+                      down stream Out-stream 1 with frame f-doc-doc-gold .
+                      { rep/torg-13.i " " doc -gold }
+                      run torg13xl-write-line-data in this-procedure (
+                          input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
+                        , input string( goods.gds-code )    /* p-gdscode        as character */
+                        , input goods.unit-base             /* p-EI             as character */
+                        , input "":U                        /* p-OKEI           as character */
+                        , input "":U                        /* p-AmountInPl     as character */
+                        , input "":U                        /* p-PlaceAmount    as character */
+                        , input string( tqnty )             /* p-qnty           as character */
+                        , input string( PriceWithNDS )      /* p-price        as character */
+                        , input string(SumwithNDS)          /* p-sum          as character */
+                      ).
+                  end.       /* costprice = no */
+              end.        /* p-print-gold = yes */
+              else do:
+                  if costprice = yes
+                  then do:
+                      display stream Out-stream
+                          goods.artic
+                          temp_gds-name.gds-name
+                          string( bar-code.b-code ) @ tb-code
+                          unit-str @ goods.unit-base
+                          tqnty
+                          PriceNoNDS
+                          PricendS
+                          PricewithNDS
+                          SumNoNDS
+                          SumNDS
+                          SumwithNDS
+                          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                          sym11 sym12 sym13 sym14 sym15 sym16 sym17
+                          with frame f-doc-cost .
+                      down stream Out-stream 1 with frame f-doc-cost .
+                      { rep/torg-13.i " " cost }
+                      run torg13xl-write-line-data in this-procedure (
+                          input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
+                        , input string( goods.gds-code )    /* p-gdscode        as character */
+                        , input goods.unit-base             /* p-EI             as character */
+                        , input "":U                        /* p-OKEI           as character */
+                        , input "":U                        /* p-AmountInPl     as character */
+                        , input "":U                        /* p-PlaceAmount    as character */
+                        , input string( tqnty )             /* p-qnty           as character */
+                        , input if no-vat then string( PriceNoNDS )
+                                          else string( PriceWithNDS ) /* p-price        as character */
+                        , input if no-vat then string(SumNoNDS)
+                                          else string(SumwithNDS)     /* p-sum          as character */
+                      ).
+                  end.       /* costprice = yes */
+                  else do:
+                      display stream Out-stream
+                          goods.artic
+                          temp_gds-name.gds-name
+                          string( bar-code.b-code ) @ tb-code
+                          unit-str @ goods.unit-base
+                          tqnty
+                          PriceNoNDS
+                          PricendS
+                          PricewithNDS
+                          SumNoNDS
+                          SumNDS
+                          SumwithNDS
+                          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8 sym9 sym10
+                          sym11 sym12 sym13 sym14 sym15 sym16 sym17
+                          with frame f-doc-doc .
+                      down stream Out-stream 1 with frame f-doc-doc .
+                      { rep/torg-13.i " " doc }
+              run torg13xl-write-line-data in this-procedure (
+                    input goods.artic + " ":U + goods.gds-name      /* p-Name           as character */
+                  , input string( goods.gds-code )    /* p-gdscode        as character */
+                  , input goods.unit-base             /* p-EI             as character */
+                  , input "":U                        /* p-OKEI           as character */
+                  , input "":U                        /* p-AmountInPl     as character */
+                  , input "":U                        /* p-PlaceAmount    as character */
+                  , input string( tqnty )             /* p-qnty           as character */
+                        , input string( PriceWithNDS )      /* p-price        as character */
+                  , input string( SumwithNDS )        /* p-sum            as character */
+              ).
+                  end.       /* costprice = no */
+              end.        /* p-print-gold = no */
+            end .
             assign
                 v-line-counter = v-line-counter + 1
             .
@@ -1838,6 +2465,7 @@ define output parameter p-cli-qnty         like doc-line.cli-qnty  no-undo.
          and buf_gold_parts.prod-type    = buf_gold_doc-line.prod-type
          and buf_gold_parts.prod-code    = buf_gold_doc-line.prod-code
          and buf_gold_parts.out-code     = buf_gold_doc-line.doc-code
+         
     :
         if buf_gold_parts.fact-qnty <> 0
         then do:

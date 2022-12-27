@@ -24,10 +24,10 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 define temp-table tt-promoaction no-undo
   like ub.PromoAction
   
-  field status_lbl       as character
-  field sub as class Progress.Lang.Object serialize-hidden
-  FIELD mode AS char
-  field Chang as logical
+  field status_lbl as character
+  field sub        as class     Progress.Lang.Object serialize-hidden
+  FIELD mode       AS char
+  field Chang      as logical
   .
 
 /* для редактирования акций */
@@ -37,9 +37,9 @@ define temp-table tt-promoaction-one no-undo
   before-table tt-promoaction-one-before
   
   //field TypeDiscontlbl   as character
-  field TypeDiscontsolo   as logical 
-  field TypeDiscontCombo  as logical
-  field TypeDiscontVisa   as logical 
+  field TypeDiscontsolo  as logical 
+  field TypeDiscontCombo as logical
+  field TypeDiscontVisa  as logical 
   field methodCalclbl    as character
   field typecondlbl      as character
   field scheduleName     as character
@@ -50,12 +50,20 @@ define temp-table tt-promoaction-one no-undo
   field CritgoodsFl      as logical
   .
 
+define temp-table tt-PromoBc no-undo
+  like ub.PromoGoods
+  field sub     as class Progress.Lang.Object
+  field bc-code    as character
+  field mode       as character
+  FIELD gdsName AS char 
+  .    
+  
 define temp-table tt-PromoGoodsAppl no-undo
   like ub.PromoGoods
   
   FIELD gdsName AS char 
-  field sub as class Progress.Lang.Object //serialize-hidden
-  FIELD mode AS char
+  field sub     as class Progress.Lang.Object //serialize-hidden
+  FIELD mode    AS char
   .
 define temp-table tt-PromoGoodsCrite no-undo
   like tt-PromoGoodsAppl
@@ -84,7 +92,7 @@ define temp-table tt-PromoCardsBin no-undo
 define temp-table tt-PromoCriterion no-undo
   like ub.PromoCriterion
   field span as character  
-  field sub as Progress.Lang.Object serialize-hidden
+  field sub  as Progress.Lang.Object serialize-hidden
   FIELD mode AS char
   .
 
@@ -92,10 +100,11 @@ define temp-table tt-PromoGift no-undo
   like ub.PromoGift
    
   FIELD gdsName AS char
-  field sub as class Progress.Lang.Object serialize-hidden
-  FIELD mode AS char
+  field sub     as class Progress.Lang.Object serialize-hidden
+  FIELD mode    AS char
   .
-  
+
+ 
 define temp-table tt-PromoObject no-undo
   like ub.PromoObject
    
@@ -104,13 +113,13 @@ define temp-table tt-PromoObject no-undo
   FIELD FirmName AS char
   FIELD objDbNum AS integer
   
-  field sub as class Progress.Lang.Object serialize-hidden
-  FIELD mode AS char
+  field sub      as class   Progress.Lang.Object serialize-hidden
+  FIELD mode     AS char
   .
 
 define temp-table tt-CashPay no-undo
   like ub.Cash-Pay
-.
+  .
 
 define temp-table tt-promo-schedule-week no-undo
   like ub.promo-schedule-week
@@ -125,9 +134,9 @@ define temp-table tt-promo-schedule-week no-undo
   field isday_sat as logical
   field isday_sun as logical
   
-  field sub  as class Progress.Lang.Object serialize-hidden
-  field mode as character
-.
+  field sub       as class     Progress.Lang.Object serialize-hidden
+  field mode      as character
+  .
 
 define temp-table tt-promo-schedule-week2 no-undo
   like ub.promo-schedule-week
@@ -137,15 +146,15 @@ define temp-table tt-promo-schedule-week2 no-undo
 //field wdaylabel as character
   field wdaynum   as integer
   
-  field sub  as class Progress.Lang.Object serialize-hidden
-  field mode as character
-.
+  field sub       as class     Progress.Lang.Object serialize-hidden
+  field mode      as character
+  .
 
 define temp-table tt-promo-schedule-week3 no-undo
   like tt-promo-schedule-week
-.
+  .
 define buffer tt-PromoCriterion-two for tt-PromoCriterion .
-define buffer tt-PromoGift-two for tt-PromoGift .
+define buffer tt-PromoGift-two      for tt-PromoGift .
 
 define dataset ds-promoaction-one
   for tt-promoaction-one
@@ -157,7 +166,8 @@ define dataset ds-promoaction-one
   , tt-PromoSet
   , tt-PromoSetGoods
   , tt-PromoObject
-  ,tt-PromoCardsBin
+  , tt-PromoCardsBin
+  , tt-PromoBc
 //  , tt-promo-schedule
   , tt-promo-schedule-week
   , tt-promo-schedule-week2
@@ -168,14 +178,14 @@ define dataset ds-promoaction-one
   //data-relation relGift       for tt-promoaction-one, tt-PromoGift          relation-fields (id, idaction) nested
 //  data-relation relPromo      for tt-promoaction-one, tt-promo-schedule     relation-fields (id, idaction)
 //  data-relation relPromoWeek  for tt-promo-schedule, tt-promo-schedule-week relation-fields (id, promosched-id)
-.
+  .
 
 define variable hBuf-tt-PromoGoodsAppl-two as handle no-undo .
 define dataset ds-PromoCriterion
   for tt-PromoCriterion-two
   , tt-PromoGift-two
   data-relation relGoodsAppl  for tt-PromoCriterion-two, tt-PromoGift-two  relation-fields (id, idcrit)
-.
+  .
 define variable hDset-ds-promoaction-two as handle no-undo .
 define variable hQtop-ds-promoaction-two as handle no-undo .
 define variable hQrel-ds-promoaction-two as handle no-undo .

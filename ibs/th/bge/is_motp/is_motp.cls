@@ -512,7 +512,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
     define variable cmd    as character no-undo .
     define variable cmdlog as character no-undo .
-    define variable vCmdToken as character no-undo.
+    define variable vFileToken as character no-undo.
     define variable tmpcmdfile  as character no-undo .
     define variable vBase64Doc as longchar no-undo .
     define variable vSignature as character no-undo .
@@ -582,9 +582,10 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     vDataLong = vDataLong + quoter("signature") + ":" + quoter(vSignature) . 
     vDataLong = vDataLong + "~}" . 
     
-    vfilereq = "{&prefixfile}reqLK_RECEIPT_db" + string(pDB-num)+ "_" + string(pDoc-id) + ".json".
-    vFileResult    = "{&prefixfile}respLK_RECEIPT_db" + string(pDB-num)+ "_" + string(pDoc-id) + ".json".
-    vFileResultErr = "{&prefixfile}respLK_RECEIPT_db" + string(pDB-num)+ "_" + string(pDoc-id) + ".err".
+    vfilereq = "{&prefixfile}reqLK_RECEIPT_db" + string(pDB-num) + "_" + string(pDoc-id) + ".json".
+    vFileResult    = "{&prefixfile}respLK_RECEIPT_db" + string(pDB-num) + "_" + string(pDoc-id) + ".json".
+    vFileResultErr = "{&prefixfile}respLK_RECEIPT_db" + string(pDB-num) + "_" + string(pDoc-id) + ".err".
+    vFileToken = "{&prefixfile}token_db" + string(pDB-num) + ".txt".
     
     copy-lob vDataLong to file (vfilereq) no-convert .   
     
@@ -593,11 +594,15 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     then
       os-append value(vfilereq) value(mFileLK_RECEIPT) .
     
-    cmd = substitute ('&1 &8 -d @&5 --stderr &7 -H "Content-Type: application/json" -H "Authorization: Bearer &4" &6 &3/lk/documents/create?pg=&9 >&2',
+    output stream sLog to value(vFileToken) .
+      put stream sLog unformatted "Authorization: Bearer " pToken .
+    output stream sLog close .
+    
+    cmd = substitute ('&1 &8 -d @&5 --stderr &7 -H "Content-Type: application/json" -H @&4 &6 &3/lk/documents/create?pg=&9 >&2',
                       search ("exe/curl.exe"),
                       vFileResult,
                       server_,
-                      pToken,
+                      searchfile (vFileToken),
                       searchfile (vfilereq),
                       CmdParamProxy,
                       vFileResultErr,
@@ -616,11 +621,11 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
      
     putLK_RECEIPT ( "command: " ).
     putLK_RECEIPT ( cmdLOG   ).
-    tmpcmdfile = "{&prefixfile}tmp_cmd_db" + string(DB-num) + ".bat".
-    output stream sLog to value(tmpcmdfile) .
-    put stream sLog unformatted cmd skip .
-    output stream sLog close .
-    os-command silent value(tmpcmdfile) .
+/*    tmpcmdfile = "{&prefixfile}tmp_cmd_db" + string(DB-num) + ".bat".*/
+/*    output stream sLog to value(tmpcmdfile) .                        */
+/*    put stream sLog unformatted cmd skip .                           */
+/*    output stream sLog close .                                       */
+    os-command silent value(cmd) .
     
     if searchFile(vfileresult) = ?
     then do :
@@ -1018,6 +1023,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable vLine       as character no-undo .
     define variable vFileResult as character no-undo.
     define variable vFileResultErr as character no-undo.
+    define variable vFileToken  as character no-undo.
     define variable VFile       as character no-undo.
     define variable vStr        as character no-undo.
     define variable tmpcmdfile  as character no-undo .
@@ -1034,11 +1040,17 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
     vFileResult    = "{&prefixfile}updateToken_db" + string(DB-num) + ".test".
     vFileResultErr = "{&prefixfile}updateToken_db" + string(DB-num) + ".err".
-    cmd = substitute ('&1 &7 -X POST -L -i --stderr &6 -H "Content-Type: application/json;charset=UTF-8" -H "Authorization: Bearer &4" &5 &3 >&2',
+    vFileToken = "{&prefixfile}token_db" + string(DB-num) + ".txt".
+    
+    output stream sLog to value(vFileToken) .
+      put stream sLog unformatted "Authorization: Bearer " pToken .
+    output stream sLog close .
+    
+    cmd = substitute ('&1 &7 -X POST -L -i --stderr &6 -H "Content-Type: application/json;charset=UTF-8" -H @&4 &5 &3 >&2',
                       search ("exe/curl.exe"),
                       vFileResult,
                       vPath,
-                      pToken,
+                      searchfile(vFileToken),
                       CmdParamProxy,
                       vFileResultErr,
                       addCurlKeys).
@@ -1052,12 +1064,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
                       addCurlKeys).
     
     putauth (" command   " + cmdlog ) .
-    tmpcmdfile = "tmp_cmd2_db" + string(DB-num) + ".bat".
-    output stream sLog to value(tmpcmdfile) .
-    put stream sLog unformatted cmd skip .
-    output stream sLog close .
+/*    tmpcmdfile = "tmp_cmd2_db" + string(DB-num) + ".bat".*/
+/*    output stream sLog to value(tmpcmdfile) .            */
+/*    put stream sLog unformatted cmd skip .               */
+/*    output stream sLog close .                           */
     
-    os-command silent value(tmpcmdfile) .
+    os-command silent value(cmd) .
     vfile =  SearchFile(vFileResult).
     if vfile eq ?
     then do:
@@ -1214,6 +1226,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable tmpcmdfile  as character no-undo .
     define variable vFileResult as character no-undo.
     define variable vFileResultErr as character no-undo.
+    define variable vFileToken  as character no-undo.
     
     StatusErr = true.
     tmpfile = "tmpmotp_db" + string(DB-num) + ".json" .
@@ -1228,11 +1241,17 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
     vFileResult    = "{&prefixfile}AuthTest_db" + string(DB-num) + ".test".
     vFileResultErr = "{&prefixfile}AuthTest_db" + string(DB-num) + ".err".
-    cmd = substitute ('&1 &8 -i -d @&5 --stderr &7 -H "Content-Type: application/json" -H "Authorization: Bearer &4" &6 &3/cises/my >&2',
+    vFileToken = "{&prefixfile}token_db" + string(DB-num) + ".txt".
+    
+    output stream sLog to value(vFileToken) .
+      put stream sLog unformatted "Authorization: Bearer " pToken .
+    output stream sLog close .
+    
+    cmd = substitute ('&1 &8 -i -d @&5 --stderr &7 -H "Content-Type: application/json" -H @&4 &6 &3/cises/my >&2',
                       search ("exe/curl.exe"),
                       vFileResult,
                       server_,
-                      pToken,
+                      searchfile (vFileToken),
                       searchfile (tmpfile),
                       CmdParamProxy,
                       vFileResultErr,
@@ -1249,12 +1268,11 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
      
     putauthTest ( "command: " ).
     putauthTest ( cmdLOG   ).
-    tmpcmdfile = "{&prefixfile}tmp_cmd_db" + string(DB-num) + ".bat".
-    output stream sLog to value(tmpcmdfile) .
-    put stream sLog unformatted cmd skip .
-    output stream sLog close .
-    os-command silent value(tmpcmdfile) .
-/*    os-command silent value(cmd). токен большой и не влезает в os-command*/
+/*    tmpcmdfile = "{&prefixfile}tmp_cmd_db" + string(DB-num) + ".bat".*/
+/*    output stream sLog to value(tmpcmdfile) .                        */
+/*    put stream sLog unformatted cmd skip .                           */
+/*    output stream sLog close .                                       */
+    os-command silent value(cmd) .
     define variable vfile as character no-undo.
     vfile =  SearchFile(vFileResult).
     if vfile eq ?
@@ -1380,6 +1398,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable vlongJson as longchar no-undo case-sensitive .
     define variable v-num-marks as integer no-undo .
     define variable vMark as character no-undo .
+    define variable vFileToken  as character no-undo.
     
     define variable v-value-character     as character     no-undo .
     define variable v-value-decimal       as decimal       no-undo .
@@ -1488,7 +1507,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
             if available buf_marking-parent then next marks_ .                                        
           end .
         end .
-        vMark = GetCodeIdent(buf_utd-marking-lines.mark) .
+        vMark = buf_utd-marking-lines.mark .
         vMark = replace(vMark, '\', '\\') .
         vMark = replace(vMark, '/', '\/') .
         vMark = replace(vMark, '"', '\"') .
@@ -1514,10 +1533,17 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     if isDebug
     then
       os-append value(vfilereq) value(mFilecisesInfo) .
+      
+    vFileToken     = "{&prefixfile}token_db" + string(DB-num) + ".txt".
+    
+    output stream sLog to value(vFileToken) .
+      put stream sLog unformatted "Authorization: Bearer " pToken .
+    output stream sLog close .
+    
     define variable vCmdToken as character no-undo.
     if pToken > ""
     then
-       vCmdToken = substitute (' -H "Authorization: Bearer &1"',pToken).
+       vCmdToken = substitute (' -H @&1', searchfile (vFileToken)).
     define variable vfileresult as character no-undo.
     define variable vfileresulterr as character no-undo.
     vfileresult    = "{&prefixfile}cisesInfoResp_db" + string(DB-num) + ".json".
@@ -1556,12 +1582,12 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     putcisesInfo (" command:" ).
     putcisesInfo ( cmdlog ) .
     
-    define variable vfile-tmp-cmd as character no-undo.
-    vfile-tmp-cmd = "{&prefixfile}tmp-cmd_db" + string(DB-num) + ".bat".
-    output stream sLog to value(vfile-tmp-cmd) .
-    put stream sLog unformatted cmd skip .
-    output stream sLog close .
-    os-command silent value (vfile-tmp-cmd) .
+/*    define variable vfile-tmp-cmd as character no-undo.                 */
+/*    vfile-tmp-cmd = "{&prefixfile}tmp-cmd_db" + string(DB-num) + ".bat".*/
+/*    output stream sLog to value(vfile-tmp-cmd) .                        */
+/*    put stream sLog unformatted cmd skip .                              */
+/*    output stream sLog close .                                          */
+    os-command silent value (cmd) .
     
 /*    os-command silent value(cmd). так нельзя делать такак токен большой и не влизает в команду*/
 /*    input from value (search("cisesInfoResp_.json")) .*/
@@ -2608,6 +2634,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     define variable v-out-file-name-err as character no-undo .
     define variable v-doc-code      as character no-undo .
     define variable vlongJson       as longchar no-undo case-sensitive .
+    define variable vFileToken  as character no-undo.
     
     Doc-Id = pDoc-id .
     db-num = pDB-num .
@@ -2633,22 +2660,28 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     
     v-out-file-name     = substitute("{&prefixfile}docinfo_&1.json", buf_utd.doc-id) .
     v-out-file-name-err = substitute("{&prefixfile}docinfo_&1.err", buf_utd.doc-id) .
-    cmd = substitute ('&1 &8 -H "Authorization: Bearer &5" &6 --stderr &7 &3/documents/&4/info >&2',
+    vFileToken = "{&prefixfile}token_db" + string(DB-num) + ".txt".
+    
+    output stream sLog to value(vFileToken) .
+      put stream sLog unformatted "Authorization: Bearer " pToken .
+    output stream sLog close .
+    
+    cmd = substitute ('&1 &8 -H @&5 &6 --stderr &7 &3/documents/&4/info >&2',
                       search ("exe/curl.exe"),
                       v-out-file-name,
                       server_,
                       v-doc-code,
-                      pToken,
+                      searchfile(vFileToken),
                       CmdParamProxy,
                       v-out-file-name-err,
                       addCurlKeys).
     
-    define variable vfile-tmp-cmd as character no-undo.
-    vfile-tmp-cmd = "{&prefixfile}tmp-cmd_db" + string(DB-num) + ".bat".
-    output stream sLog to value(vfile-tmp-cmd) .
-    put stream sLog unformatted cmd skip .
-    output stream sLog close .
-    os-command silent value (vfile-tmp-cmd) .
+/*    define variable vfile-tmp-cmd as character no-undo.                 */
+/*    vfile-tmp-cmd = "{&prefixfile}tmp-cmd_db" + string(DB-num) + ".bat".*/
+/*    output stream sLog to value(vfile-tmp-cmd) .                        */
+/*    put stream sLog unformatted cmd skip .                              */
+/*    output stream sLog close .                                          */
+    os-command silent value (cmd) .
     
     define variable vfile as character no-undo.
     vfile =  SearchFile(v-out-file-name).
@@ -2892,6 +2925,7 @@ class ibs.th.bge.is_motp.is_motp inherits objth:
     put stream LK_RECEIPT unformatted now " " itext skip .
     output stream LK_RECEIPT close .
   end.
+   
   { str/utd-err.i class }
   { str/utd-attr.i class }
   { utl/gtin.i class }

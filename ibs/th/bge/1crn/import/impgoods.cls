@@ -48,7 +48,7 @@ class ibs.th.bge.1crn.import.impgoods implements ibs.th.bge.1crn.import.iimpsubj
       /* чтобы перехватить throw надо отдельно проверить return-value */
       if error-status:error
       then do :
-          Msg = return-value .
+          Msg = return-value + " " + error-status:get-message (1) .
           return false.
       end.                          
           

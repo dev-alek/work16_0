@@ -47,7 +47,7 @@ then do:
             else do:
                if mname ne ""
                then
-               run gbl/set-gbl.p
+               run gbl/set-gbl-async.p
                   (input  true
                   ,input  mName
                   ,input  mpassword

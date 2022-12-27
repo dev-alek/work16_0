@@ -16,12 +16,17 @@ BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl: 
   { cmp/str-glbl.i class }     
+  define private variable bccodeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
     define private variable bindGoods as Progress.Data.BindingSource no-undo.
     DEFINE PRIVATE VARIABLE button3 AS System.Windows.Forms.Button NO-UNDO.
     DEFINE PRIVATE VARIABLE button2 AS System.Windows.Forms.Button NO-UNDO.
     DEFINE PRIVATE VARIABLE button1 AS System.Windows.Forms.Button NO-UNDO.
+  define private variable button4 as System.Windows.Forms.Button no-undo.
+  define private variable button6 as System.Windows.Forms.Button no-undo.
+  define private variable button5 as System.Windows.Forms.Button no-undo.
     DEFINE PRIVATE VARIABLE components AS System.ComponentModel.IContainer NO-UNDO.
     DEFINE PRIVATE VARIABLE dataGridView1 AS System.Windows.Forms.DataGridView NO-UNDO.
+  define private variable gdscodeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
     define private variable gdsName as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
     define private variable gdsNameDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
     define private variable qntyDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
@@ -34,13 +39,19 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     define variable PromoSet as logical no-undo.
     define variable PromoSetGoods as logical no-undo.
     define variable Promovisa as logical no-undo.
+    define variable PromoBarCode as logical no-undo .
+    define variable PromoBarCodeFix as logical no-undo .
+
     define property pCrit as logical no-undo
     private get.
+
     set(input iCrit as logical):
        mCrit = iCrit.
        this-object:PromoSet = no.
        this-object:PromoSetGoods = no.
        this-object:Promovisa = no.
+       this-object:PromoBarCode = no.
+       this-object:PromoBarCodeFix = no.
     end.
     define property pPromoSet as logical no-undo
     private get.
@@ -49,6 +60,8 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        PromoSet = iPromoSet.
        this-object:PromoSetGoods = no.
        this-object:Promovisa = no.
+       this-object:PromoBarCode = no.
+       this-object:PromoBarCodeFix = no.
     end.
     define property pPromoSetGoods as logical no-undo
     private get.
@@ -57,6 +70,8 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        this-object:PromoSet = no.
        PromoSetGoods = iPromoSetGoods.
        this-object:Promovisa = no.
+       this-object:PromoBarCode = no.
+       this-object:PromoBarCodeFix = no.
     end.
     define property pPromovisa as logical no-undo
     private get.
@@ -65,8 +80,29 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        this-object:PromoSet = no.
        this-object:PromoSetGoods = no.
        Promovisa = iPromovisa.
+       this-object:PromoBarCodeFix = no.
+       this-object:PromoBarCode = no.
     end.
-     
+    define property pPromoBarCode as logical no-undo
+    private get.
+    set(input iPromobarcode as logical):
+       this-object:mCrit = no.
+       this-object:PromoSet = no.
+       this-object:PromoSetGoods = no.
+       this-object:Promovisa = no.
+       this-object:PromoBarCodeFix = no.
+       PromoBarCode = iPromobarcode.
+    end.     
+    define property pPromoBarCodeFix as logical no-undo
+    private get.
+    set(input iPromobarcodeFix as logical):
+       this-object:mCrit = no.
+       this-object:PromoSet = no.
+       this-object:PromoSetGoods = no.
+       this-object:Promovisa = no.
+       this-object:PromoBarCode = no.
+       PromoBarCodeFix = iPromobarcodeFix.
+    end.     
     define private variable mBind  as character no-undo.
     
     {ibs/th/ref/promo/promo_trg_heder.i }  
@@ -95,6 +131,28 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
 		m-promo-trg:delgds(mBind).
 		bindGoods:handle:query-open.
     bindGoods:RefreshAll().
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void button5_Click( input sender as System.Object, input e as System.EventArgs ):
+    m-promo-trg:printgds(mBind).
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void dataGridView1_CellContentClick( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
+		
 		return.
 
 	end method.
@@ -148,19 +206,32 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
             mBind  = "PromoCardsBin"
             vLable = "Карты Visa"
         .
+        else if PromoBarCode
+        then assign
+            mBind  = "PromoBarCode"
+            vLable = "Штрих коды"        
+        .
+        else if PromoBarCodeFix
+        then assign
+            mBind  = "PromoBarCode"
+            vLable = "Штрих коды"        
+        .        
         else assign
             mBind  = "PromoGoodsAppl"
             vLable = "Товары"
         .
+        
         SetBind(no).
         label1:text = vLable.
-        
         if PromoSet 
         then assign
             THIS-OBJECT:dataGridView1:Columns[0]:Visible = no
             THIS-OBJECT:dataGridView1:Columns[1]:Visible = no
             THIS-OBJECT:dataGridView1:Columns[2]:Visible = yes
             THIS-OBJECT:dataGridView1:Columns[3]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[4]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[5]:Visible = no
+     
             /* this-object:button1:Visible = no
             this-object:button2:Visible = no */
            // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
@@ -171,11 +242,45 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
             THIS-OBJECT:dataGridView1:Columns[2]:Visible = yes
             THIS-OBJECT:dataGridView1:Columns[2]:HeaderText = "Бины карт"
             THIS-OBJECT:dataGridView1:Columns[3]:Visible = no
-            
+            THIS-OBJECT:dataGridView1:Columns[4]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[5]:Visible = no
+                        
             
            // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
         .
-        
+        else if PromoBarCode then
+        assign
+            THIS-OBJECT:dataGridView1:Columns[0]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[1]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[2]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[3]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[4]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[5]:Visible = yes
+            
+            this-object:button3:Visible = no
+            this-object:button4:Visible = no
+            
+            this-object:button5:Visible = yes
+            this-object:button6:Visible = yes
+            
+           // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
+        .        
+        else if PromoBarCodeFix then
+        assign
+            THIS-OBJECT:dataGridView1:Columns[0]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[1]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[2]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[3]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[4]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[5]:Visible = yes
+            
+            this-object:button3:Visible = no
+            this-object:button4:Visible = no
+            this-object:button5:Visible = yes
+            this-object:button6:Visible = yes
+            
+           // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
+        . 
     end.
     method Public VOID SetBind(input iflag as logical ):
         bindGoods:handle = m-promo-trg:getQuery(mBind,iflag).
@@ -203,6 +308,8 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
             button1:enabled = not iModeview 
             button2:enabled = not iModeview
             button3:enabled = not iModeview
+
+            button6:enabled = not iModeview
             THIS-OBJECT:dataGridView1:Columns[2]:ReadOnly = iModeview
             THIS-OBJECT:dataGridView1:Columns[3]:ReadOnly = iModeview
             THIS-OBJECT:dataGridView1:Columns[4]:ReadOnly = iModeview
@@ -237,17 +344,22 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     tableDesc1 = new Progress.Data.TableDesc("tt-PromoGoods").
     this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
     this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
-    this-object:gdsName = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:gdscodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:gdsNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:nameSetDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:qntyDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:priceDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:qntyDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
+    this-object:bccodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:bindGoods = new Progress.Data.BindingSource(this-object:components).
     this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
+    this-object:button5 = new System.Windows.Forms.Button().
+    this-object:button6 = new System.Windows.Forms.Button().
     this-object:button3 = new System.Windows.Forms.Button().
     this-object:button2 = new System.Windows.Forms.Button().
     this-object:button1 = new System.Windows.Forms.Button().
+    this-object:button4 = new System.Windows.Forms.Button().
     this-object:label1 = new System.Windows.Forms.Label().
+    this-object:gdsName = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:tableLayoutPanel1:SuspendLayout().
     cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
     cast(this-object:bindGoods, System.ComponentModel.ISupportInitialize):BeginInit().
@@ -281,12 +393,13 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     this-object:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
     this-object:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 5 no-undo.
-    arrayvar0[1] = this-object:gdsName.
+    define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 6 no-undo.
+    arrayvar0[1] = this-object:gdscodeDataGridViewTextBoxColumn.
     arrayvar0[2] = this-object:gdsNameDataGridViewTextBoxColumn.
     arrayvar0[3] = this-object:nameSetDataGridViewTextBoxColumn.
-    arrayvar0[4] = this-object:qntyDataGridViewTextBoxColumn.
-    arrayvar0[5] = this-object:priceDataGridViewTextBoxColumn.
+    arrayvar0[4] = this-object:priceDataGridViewTextBoxColumn.
+    arrayvar0[5] = this-object:qntyDataGridViewTextBoxColumn.
+    arrayvar0[6] = this-object:bccodeDataGridViewTextBoxColumn.
     this-object:dataGridView1:Columns:AddRange(arrayvar0).
     this-object:dataGridView1:DataSource = this-object:bindGoods.
     this-object:dataGridView1:Dock = System.Windows.Forms.DockStyle:Fill.
@@ -295,23 +408,21 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     this-object:dataGridView1:RowHeadersVisible = false.
     this-object:dataGridView1:Size = new System.Drawing.Size(494, 344).
     this-object:dataGridView1:TabIndex = 8.
+    this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
     this-object:dataGridView1:CellMouseClick:Subscribe(this-object:dataGridView1_CellMouseClick).
     this-object:dataGridView1:RowsAdded:Subscribe(this-object:dataGridView1_RowsAdded).
     /*  */
-    /* gdsName */
+    /* gdscodeDataGridViewTextBoxColumn */
     /*  */
-    this-object:gdsName:DataPropertyName = "gds-code".
-    this-object:gdsName:FillWeight = Progress.Util.CastUtil:ToSingle(55.8375626).
-    this-object:gdsName:HeaderText = "Код товара".
-    this-object:gdsName:Name = "gdsName".
-    this-object:gdsName:ReadOnly = true.
+    this-object:gdscodeDataGridViewTextBoxColumn:DataPropertyName = "gds-code".
+    this-object:gdscodeDataGridViewTextBoxColumn:HeaderText = "Код товара".
+    this-object:gdscodeDataGridViewTextBoxColumn:Name = "gdscodeDataGridViewTextBoxColumn".
     /*  */
     /* gdsNameDataGridViewTextBoxColumn */
     /*  */
     this-object:gdsNameDataGridViewTextBoxColumn:DataPropertyName = "gdsName".
     this-object:gdsNameDataGridViewTextBoxColumn:HeaderText = "Номенклатура".
     this-object:gdsNameDataGridViewTextBoxColumn:Name = "gdsNameDataGridViewTextBoxColumn".
-    this-object:gdsNameDataGridViewTextBoxColumn:ReadOnly = true.
     /*  */
     /* nameSetDataGridViewTextBoxColumn */
     /*  */
@@ -320,6 +431,13 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     this-object:nameSetDataGridViewTextBoxColumn:Name = "nameSetDataGridViewTextBoxColumn".
     this-object:nameSetDataGridViewTextBoxColumn:Visible = false.
     /*  */
+    /* priceDataGridViewTextBoxColumn */
+    /*  */
+    this-object:priceDataGridViewTextBoxColumn:DataPropertyName = "price".
+    this-object:priceDataGridViewTextBoxColumn:HeaderText = "Цена".
+    this-object:priceDataGridViewTextBoxColumn:Name = "priceDataGridViewTextBoxColumn".
+    this-object:priceDataGridViewTextBoxColumn:Visible = false.
+    /*  */
     /* qntyDataGridViewTextBoxColumn */
     /*  */
     this-object:qntyDataGridViewTextBoxColumn:DataPropertyName = "qnty".
@@ -327,12 +445,12 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     this-object:qntyDataGridViewTextBoxColumn:Name = "qntyDataGridViewTextBoxColumn".
     this-object:qntyDataGridViewTextBoxColumn:Visible = false.
     /*  */
-    /* priceDataGridViewTextBoxColumn */
+    /* bccodeDataGridViewTextBoxColumn */
     /*  */
-    this-object:priceDataGridViewTextBoxColumn:DataPropertyName = "price".
-    this-object:priceDataGridViewTextBoxColumn:HeaderText = "Цена".
-    this-object:priceDataGridViewTextBoxColumn:Name = "priceDataGridViewTextBoxColumn".
-    this-object:priceDataGridViewTextBoxColumn:Visible = false.
+    this-object:bccodeDataGridViewTextBoxColumn:DataPropertyName = "bc-code".
+    this-object:bccodeDataGridViewTextBoxColumn:HeaderText = "ШК".
+    this-object:bccodeDataGridViewTextBoxColumn:Name = "bccodeDataGridViewTextBoxColumn".
+    this-object:bccodeDataGridViewTextBoxColumn:Visible = false.
     /*  */
     /* bindGoods */
     /*  */
@@ -345,25 +463,31 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     arrayvar1 = new "Progress.Data.TableDesc[]"(0).
     tableDesc1:ChildTables = arrayvar1.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 5 no-undo.
+    define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 6 no-undo.
     arrayvar2[1] = new Progress.Data.ColumnPropDesc("gdsName", "Номенклатура", Progress.Data.DataType:CHARACTER).
     arrayvar2[2] = new Progress.Data.ColumnPropDesc("gds-code", "gds-code", Progress.Data.DataType:INTEGER).
     arrayvar2[3] = new Progress.Data.ColumnPropDesc("NameSet", "Наименование промо набора", Progress.Data.DataType:CHARACTER).
     arrayvar2[4] = new Progress.Data.ColumnPropDesc("price", "Цена", Progress.Data.DataType:DECIMAL).
     arrayvar2[5] = new Progress.Data.ColumnPropDesc("qnty", "Количество", Progress.Data.DataType:DECIMAL).
+    arrayvar2[6] = new Progress.Data.ColumnPropDesc("bc-code", "ШК", Progress.Data.DataType:CHARACTER).
     tableDesc1:Columns = arrayvar2.
     this-object:bindGoods:TableSchema = tableDesc1.
     /*  */
     /* tableLayoutPanel2 */
     /*  */
-    this-object:tableLayoutPanel2:ColumnCount = 4.
+    this-object:tableLayoutPanel2:ColumnCount = 6.
     this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(80))).
     this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(80))).
     this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(120))).
     this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(80))).
+    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(80))).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:button5, 4, 0).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:button6, 5, 0).
     this-object:tableLayoutPanel2:Controls:Add(this-object:button3, 2, 0).
     this-object:tableLayoutPanel2:Controls:Add(this-object:button2, 1, 0).
     this-object:tableLayoutPanel2:Controls:Add(this-object:button1, 0, 0).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:button4, 3, 0).
     this-object:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
     this-object:tableLayoutPanel2:Location = new System.Drawing.Point(3, 25).
     this-object:tableLayoutPanel2:Margin = new System.Windows.Forms.Padding(3, 0, 0, 0).
@@ -372,6 +496,33 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     this-object:tableLayoutPanel2:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
     this-object:tableLayoutPanel2:Size = new System.Drawing.Size(497, 25).
     this-object:tableLayoutPanel2:TabIndex = 0.
+    /*  */
+    /* button5 */
+    /*  */
+    this-object:button5:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:button5:Location = new System.Drawing.Point(337, 0).
+    this-object:button5:Margin = new System.Windows.Forms.Padding(0).
+    this-object:button5:Name = "button5".
+    this-object:button5:Size = new System.Drawing.Size(80, 25).
+    this-object:button5:TabIndex = 5.
+    this-object:button5:Text = "Печать ШК".
+    this-object:button5:UseCompatibleTextRendering = true.
+    this-object:button5:UseVisualStyleBackColor = true.
+    this-object:button5:Visible = false.
+    this-object:button5:Click:Subscribe(this-object:button5_Click).
+    /*  */
+    /* button6 */
+    /*  */
+    this-object:button6:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:button6:Location = new System.Drawing.Point(417, 0).
+    this-object:button6:Margin = new System.Windows.Forms.Padding(0).
+    this-object:button6:Name = "button6".
+    this-object:button6:Size = new System.Drawing.Size(80, 25).
+    this-object:button6:TabIndex = 4.
+    this-object:button6:Text = "Удалить ШК".
+    this-object:button6:UseCompatibleTextRendering = true.
+    this-object:button6:UseVisualStyleBackColor = true.
+    this-object:button6:Visible = false.
     /*  */
     /* button3 */
     /*  */
@@ -412,6 +563,19 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     this-object:button1:UseVisualStyleBackColor = true.
     this-object:button1:Click:Subscribe(this-object:button1_Click).
     /*  */
+    /* button4 */
+    /*  */
+    this-object:button4:Dock = System.Windows.Forms.DockStyle:Fill.
+    this-object:button4:Location = new System.Drawing.Point(280, 0).
+    this-object:button4:Margin = new System.Windows.Forms.Padding(0).
+    this-object:button4:Name = "button4".
+    this-object:button4:Size = new System.Drawing.Size(57, 25).
+    this-object:button4:TabIndex = 3.
+    this-object:button4:Text = "button4".
+    this-object:button4:UseCompatibleTextRendering = true.
+    this-object:button4:UseVisualStyleBackColor = true.
+    this-object:button4:Visible = false.
+    /*  */
     /* label1 */
     /*  */
     this-object:label1:Dock = System.Windows.Forms.DockStyle:Fill.
@@ -422,6 +586,15 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     this-object:label1:TabIndex = 4.
     this-object:label1:Text = "Товар".
     this-object:label1:UseCompatibleTextRendering = true.
+    /*  */
+    /* gdsName */
+    /*  */
+    this-object:gdsName:DataPropertyName = "gds-code".
+    this-object:gdsName:FillWeight = Progress.Util.CastUtil:ToSingle(55.8375626).
+    this-object:gdsName:HeaderText = "Код товара".
+    this-object:gdsName:Name = "gdsName".
+    this-object:gdsName:ReadOnly = true.
+    this-object:gdsName:Width = 176.
     /*  */
     /* uc_Goods */
     /*  */

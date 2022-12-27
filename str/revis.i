@@ -436,7 +436,8 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
     IF hNoderef:NAME = "ErrMsg"
     then do :
       v-asi-error-message = hText:node-value no-error .
-      if v-asi-error-code > 0
+      if     v-asi-error-code > 0
+         and v-asi-error-code ne 2
       then do :
         assign
           tt-place.t1             = ?
@@ -487,7 +488,8 @@ REPEAT i = 1 TO hParent:NUM-CHILDREN:
       .
     end.
     
-    if v-asi-error-code = 0
+    if    v-asi-error-code = 0
+       or v-asi-error-code = 2
     then do :
       IF hNoderef:NAME = "LevelTotal" then assign tt-place.level-total = decimal(hText:node-value) / 10 no-error .
       IF hNoderef:NAME = "LevelWater" then assign tt-place.level-water = decimal(hText:node-value) / 10 no-error .

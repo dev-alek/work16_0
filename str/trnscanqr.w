@@ -1030,6 +1030,9 @@ procedure parse2DCodeToXML :
   v-crc = substring (v-json-str, v-ix + 8, 8).
   v-json-str = substring (v-json-str, 9, v-ix - 9).
   
+  v-json-str = replace(v-json-str, '\', '\\') .
+  v-json-str = replace(v-json-str, '/', '\/') .
+  
   output to "qr2d.json" convert target 'UTF-8'.
   put unformatted v-json-str.
   output close.

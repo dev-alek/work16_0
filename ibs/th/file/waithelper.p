@@ -16,7 +16,7 @@ procedure WaitFramStop:
          mhelper:mStop = yes.
          mWaitFramStop = yes.
          mhelper:SendStop(iSched).
-         mWaitFramInterval = 1.
+         mWaitFramInterval = ipInterval.
          define variable vWaitFramStartProc          as datetime-tz no-undo.
          vWaitFramStartProc = now.
          block-waitshow:
@@ -114,7 +114,9 @@ define output parameter oOk as logical no-undo.
        return.
    end .
    */
-mWaitFramView = yes.   
+mWaitFramView = not mhelper:InAsyncProc.
+
+mWaitProcEvent = no.   
 mWaitFramTextBeg = itext.
 mWaitFramStartProc = now.
 output to value(mhelper:MyWorkDir + "Stop.txt").

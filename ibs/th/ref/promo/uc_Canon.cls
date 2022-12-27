@@ -27,6 +27,17 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
 
     {ibs/th/ref/promo/promo_trg_heder.i &NotSetBind = yes}
     
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void label3_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
     method Public VOID SetBind( ):
         bindPromocrit:Handle = m-promo-trg:getQuery("PromoCriterionOne").
         setDisable(m-promo-trg:modeview).
@@ -72,6 +83,13 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
                 label3:visible      = no
             .
         end. 
+        if iEvent eq "NotOneLable" then do:
+          label1:Visible = false .
+          label2:Visible = false .
+          label3:Visible = false .
+          textBox1:Visible = false .
+          textBox2:Visible = false .
+        end.
         if iEvent eq "swapCritAndDiscont"
         then do:
             this-object:tableLayoutPanel3:Controls:Remove(this-object:textBox1).
@@ -159,6 +177,7 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
     this-object:textBox2:Name = "textBox2".
     this-object:textBox2:Size = new System.Drawing.Size(144, 20).
     this-object:textBox2:TabIndex = 3.
+    this-object:textBox2:TextChanged:Subscribe(this-object:textBox2_TextChanged).
     /*  */
     /* bindPromoCrit */
     /*  */
@@ -207,6 +226,7 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
     this-object:label3:Text = "%".
     this-object:label3:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
     this-object:label3:UseCompatibleTextRendering = true.
+    this-object:label3:Click:Subscribe(this-object:label3_Click).
     /*  */
     /* uc_Canon */
     /*  */
@@ -222,6 +242,17 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
       undo, throw e.
     end catch.
     END METHOD.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void textBox2_TextChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
 
     DESTRUCTOR PUBLIC uc_Canon ( ):
         bindPromocrit:Assign().

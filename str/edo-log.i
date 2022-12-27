@@ -44,6 +44,9 @@ function PutErr returns character
          idext = idext + {&new-line} + vtext[vi] no-error.
       end.
       idext = idext +  {&new-line} +  " ]" no-error.
+      if not  idext begins "Error"
+      then
+         idext = "Error " + idext.
       PutMes(idext).
    end.
 

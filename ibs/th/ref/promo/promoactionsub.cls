@@ -23,21 +23,21 @@ USING ibs.th.ref.promo.*.
  
 class ibs.th.ref.promo.PromoActionSub implements ithsub: 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
-define variable vss-description as character no-undo initial "Объект акция.". 
+  define variable vss-revision    as character no-undo initial "$Revision$":U .
+  define variable vss-author      as character no-undo initial "$Author$":U .
+  define variable vss-date        as character no-undo initial "$Date$":U .
+  define variable vss-workfile    as character no-undo initial "$Workfile$":U .
+  define variable vss-archive     as character no-undo initial "$Archive$":U .
+  define variable vss-description as character no-undo initial "Объект акция.". 
   
   { cmp/str-glbl.i class}
    
-    define variable vpromotype as class promotype no-undo.
-    define property Msg as character no-undo
+  define variable vpromotype as class promotype no-undo.
+  define property Msg as character no-undo
     get. 
     set.
     
-    define property StatusErr as logical no-undo
+  define property StatusErr as logical no-undo
     get:
       def var err as log no-undo.
       err = StatusErr.
@@ -50,17 +50,18 @@ define variable vss-description as character no-undo initial "Объект акция.".
     get.
     set (ID-arg as int64):
       ID = ID-arg.
-/*      if ID <> ID            */
-/*      then do:               */
-/*        setFlagChange (true).*/
-/*      end.                   */
+    /*      if ID <> ID            */
+    /*      then do:               */
+    /*        setFlagChange (true).*/
+    /*      end.                   */
     end.
     
-    define property db-num as integer no-undo init ?
+  define property db-num as integer no-undo init ?
     get.
     set(arg as integer):
       if arg <> db-num
-      then do:
+        then 
+      do:
         db-num = arg.
         setFlagChange (true).
       end.
@@ -69,11 +70,12 @@ define variable vss-description as character no-undo initial "Объект акция.".
      
   define property beg-date as Date no-undo
     get():
-       return if beg-date eq ? then today else beg-date.
+      return if beg-date eq ? then today else beg-date.
     end.   
     SET (arg as Date):
       if arg <> beg-date
-      then do:
+        then 
+      do:
         beg-date = arg.
         setFlagChange (true).
       end.
@@ -81,11 +83,12 @@ define variable vss-description as character no-undo initial "Объект акция.".
   
   define property end-date as Date no-undo
     get():
-       return if end-date eq ? then today else end-date.
+      return if end-date eq ? then today else end-date.
     end.
     set(arg as Date):
       if arg <> end-date
-      then do:
+        then 
+      do:
         end-date = arg.
         setFlagChange (true).
       end.
@@ -95,7 +98,8 @@ define variable vss-description as character no-undo initial "Объект акция.".
     get.
     set(arg as char):
       if arg <> NameAction
-      then do:
+        then 
+      do:
         NameAction = arg.
         setFlagChange (true).
       end.
@@ -127,145 +131,157 @@ define variable vss-description as character no-undo initial "Объект акция.".
     &ObjType      = vpromotype 
     }  
   
-    define property priority as int no-undo
+  define property priority as int no-undo
     get.
     SET (arg as int):
       if arg <> priority
-      then do:
+        then 
+      do:
         priority = arg.
         setFlagChange (true).
       end.
     END.
     
-    define property comment as char no-undo
+  define property comment as char no-undo
     get.
     SET (arg as char):
       if arg <> comment
-      then do:
+        then 
+      do:
         comment = arg.
         setFlagChange (true).
       end.
     END.  
     
-    define property description as char no-undo
+  define property description as char no-undo
     get.
     set (arg as char):
       if arg <> description
-      then do:
+        then 
+      do:
         description = arg.
         setFlagChange (true).
       end.
     end. 
     
-    define property paymenttype as char no-undo
+  define property paymenttype as char no-undo
     get.
     set (arg as char):
       if arg <> paymenttype
-      then do:
+        then 
+      do:
         paymenttype = arg.
         setFlagChange (true).
       end.
     end.
     
-    define property ext-code as char no-undo
+  define property ext-code as char no-undo
     get.
     set (arg as char):
       if arg <> ext-code
-      then do:
+        then 
+      do:
         ext-code = arg.
         setFlagChange (true).
       end.
     end.  
     
-     define property changeDate as date no-undo
+  define property changeDate as date no-undo
     get.
     set (arg as date):
       if arg <> changeDate
-      then do:
+        then 
+      do:
         changeDate = arg.
         setFlagChange (true).
       end.
     end. 
       
-    define property Mode as char no-undo init {&h-update}
+  define property Mode as char no-undo init {&h-update}
     get.
-    set.
+  set.
     
-    {ibs/th/ref/promo/propertyclass.i
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = GoodsCrits
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
      &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:criterion,db-num) }
      
-    define property CritgoodsFl as logical no-undo init ?
+  define property CritgoodsFl as logical no-undo init ?
     get():
       return if CritgoodsFl eq ?
-             then if valid-object (this-object:GoodsCrits)
-                  then GoodsCrits:iCounter ne 0
-                  else no
-             else no.    
+        then if valid-object (this-object:GoodsCrits)
+        then GoodsCrits:iCounter ne 0
+        else no
+        else no.    
     end.  
     set.
     
-    {ibs/th/ref/promo/propertyclass.i
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = GoodsAppl
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
      &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:appl,db-num) }
       
-     {ibs/th/ref/promo/propertyclass.i
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = PromoSet
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
      &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:promoSet,db-num) }
      
-     {ibs/th/ref/promo/propertyclass.i
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = CardsBin
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
      &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:bin,db-num) }
-   
-    {ibs/th/ref/promo/propertyclass.i
+
+  {ibs/th/ref/promo/propertyclass.i
+     &Obj       = BarCode
+     &ObjClass  = promogoodssubs
+     &StorClass = promoGoodsStorage
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:barcode,db-num) }
+        
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = Criterion
      &ObjClass  = promoCriterionsubs
      &StorClass = promoCriterionStorage
      &storColec = getpromoCriterionSubs(id,db-num) }
     
-    {ibs/th/ref/promo/propertyclass.i
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = Gifts
      &ObjClass  = promoGiftsubs
      &StorClass = promoGiftStorage
      &storColec = getpromoGiftSubs(id,0,db-num) }
      
-     {ibs/th/ref/promo/propertyclass.i
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = Objects
      &ObjClass  = promoObjectSubs
      &StorClass = promoObjectStorage
      &storColec = getpromoObjectSubs(id,db-num) }
       
-    {ibs/th/ref/promo/propertyclass.i
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = Schedule
      &ObjClass  = promoSchedsub
      &StorClass = promoSchedStorage
      &storColec = getpromoSchedSub(promosched-id) }
 
-    {ibs/th/ref/promo/propertyclass.i
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = ScheduleWeek
      &ObjClass  = promoSchedwsubs
      &StorClass = promoSchedwStorage
      &storColec = getpromoSchedwSubs(promosched-id) }
      
-    define property Changed as logical no-undo
+  define property Changed as logical no-undo
     get.
     set.
     
-      /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+Purpose:
+Notes:
+------------------------------------------------------------------------------*/
     
   constructor public promoactionsub (  ):
-      vpromotype = new promotype().
+    vpromotype = new promotype().
   end constructor.
 
   /*------------------------------------------------------------------------------
@@ -299,39 +315,38 @@ define variable vss-description as character no-undo initial "Объект акция.".
     set.
     
   method public void Clean():
-     if valid-object(THIS-OBJECT:Criterion)    then delete object THIS-OBJECT:Criterion    no-error.
-     if valid-object(THIS-OBJECT:Gifts)        then delete object THIS-OBJECT:Gifts        no-error.
-     if valid-object(THIS-OBJECT:GoodsAppl)    then delete object THIS-OBJECT:GoodsAppl    no-error.
-     if valid-object(THIS-OBJECT:GoodsCrits)   then delete object THIS-OBJECT:GoodsCrits   no-error.
-     if valid-object(this-object:Objects   )   then delete object this-object:Objects      no-error.
-     if valid-object(THIS-OBJECT:Schedule)     then delete object THIS-OBJECT:Schedule     no-error.
-     if valid-object(THIS-OBJECT:ScheduleWeek) then delete object THIS-OBJECT:ScheduleWeek no-error.
-     if valid-object(THIS-OBJECT:CardsBin)      then delete object THIS-OBJECT:CardsBin     no-error.
-     
+    if valid-object(THIS-OBJECT:Criterion)    then delete object THIS-OBJECT:Criterion    no-error.
+    if valid-object(THIS-OBJECT:Gifts)        then delete object THIS-OBJECT:Gifts        no-error.
+    if valid-object(THIS-OBJECT:GoodsAppl)    then delete object THIS-OBJECT:GoodsAppl    no-error.
+    if valid-object(THIS-OBJECT:GoodsCrits)   then delete object THIS-OBJECT:GoodsCrits   no-error.
+    if valid-object(this-object:Objects)      then delete object this-object:Objects      no-error.
+    if valid-object(THIS-OBJECT:Schedule)     then delete object THIS-OBJECT:Schedule     no-error.
+    if valid-object(THIS-OBJECT:ScheduleWeek) then delete object THIS-OBJECT:ScheduleWeek no-error.
+    if valid-object(THIS-OBJECT:CardsBin)     then delete object THIS-OBJECT:CardsBin     no-error.    
      
   end.
   method public void refreshChildObj():
-     Clean(). 
-     this-object:refreshObj = yes.
-     /* блок от start до end в версии OpenEdge Release 11.7.1 as of Wed Jun 14 19:02:16 EDT 2017
-        выполняет чтение всех свойств экземпляра класса при КАЖДОМ обращении к ЛЮБОМУ свойству класса.
-     */ 
+    Clean(). 
+    this-object:refreshObj = yes.
+    /* блок от start до end в версии OpenEdge Release 11.7.1 as of Wed Jun 14 19:02:16 EDT 2017
+       выполняет чтение всех свойств экземпляра класса при КАЖДОМ обращении к ЛЮБОМУ свойству класса.
+    */ 
      // --- start ---
-     THIS-OBJECT:Criterion no-error.
-     THIS-OBJECT:Gifts no-error.
-     THIS-OBJECT:GoodsAppl no-error.
-     THIS-OBJECT:CardsBin no-error.
-     THIS-OBJECT:Promoset no-error.
-     THIS-OBJECT:GoodsCrits no-error.
-     this-object:Objects no-error.
-     THIS-OBJECT:Schedule no-error.
-     THIS-OBJECT:ScheduleWeek no-error.
+    THIS-OBJECT:Criterion no-error.
+    THIS-OBJECT:Gifts no-error.
+    THIS-OBJECT:GoodsAppl no-error.
+    THIS-OBJECT:CardsBin no-error.
+    THIS-OBJECT:Promoset no-error.
+    THIS-OBJECT:GoodsCrits no-error.
+    this-object:Objects no-error.
+    THIS-OBJECT:Schedule no-error.
+    THIS-OBJECT:ScheduleWeek no-error.
      // --- end ---
-     this-object:refreshObj = no.
+    this-object:refreshObj = no.
   end method.
   destructor public promoactionsub ( ):
-     Clean().
-     delete object vpromotype no-error.
+    Clean().
+    delete object vpromotype no-error.
   end destructor.
 
 end class.

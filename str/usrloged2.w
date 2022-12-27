@@ -216,6 +216,7 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON GO OF FRAME Dialog-Frame /* Логин пользователя */
 DO:
+  p-list-db = sel-dbs . 
   run update-record in this-procedure
     no-error .
   if error-status :error
@@ -279,7 +280,7 @@ DO:
   assign
   sel-dbs
   .
-  p-list-db = sel-dbs .  
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */

@@ -98,7 +98,7 @@ on end-key undo main-block, return error substitute('actnrld end-key main-block,
     
   end.
 
-  if not g#news and ub.action-role.db-num <> 0 then do:
+  if not g#news then do:
       run nws/cmd-del.p
         ( input {&table_action-role}
           ,input (buffer ub.action-role:handle)

@@ -490,6 +490,30 @@ if can-find (first  pdf-list ) then do:
                       ,input "N"
                       ) no-error.
 end.
+if sendEMRC then do:
+for each buf_clients no-lock
+      where buf_clients.obj-type = {&shop}
+        and buf_clients.db-num   = p-db-num,
+      first buf_cash-desk no-lock where
+           buf_cash-desk.db-num = p-db-num
+       AND buf_cash-desk.obj-code = buf_clients.obj-code
+       AND buf_cash-desk.cash-on = yes
+  on error undo, return error
+  :
+   run str/send-all.p (
+                       input parparentproc
+                      ,input this-procedure:handle
+                      ,input p-log-handle
+                      ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrcdel':U + {&delim-par} + 'Передача справочника ЕМЦ':U
+                      ) no-error.
+   run str/send-all.p (
+                       input parparentproc
+                      ,input this-procedure:handle
+                      ,input p-log-handle
+                      ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U
+                      ) no-error.
+   end.
+end.
 
 procedure sendnall_get-pdf : /*callback*/
 define input-output parameter p-ii as integer no-undo .

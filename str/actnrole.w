@@ -879,7 +879,7 @@ ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбрать */
     DO:
         define variable v-ind         as integer no-undo .
         define variable v-num-entries as integer no-undo .
-
+        if not avail action-role then return no-apply.
         if p-rid-list = "" then 
         do:
             p-rid-list = string (recid (action-role)).

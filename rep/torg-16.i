@@ -47,7 +47,7 @@ initial "@(#)$Workfile$ $Revision$".
         with width {&DOS_CW} down stream-io.
     def frame {2}f-doc
             sym1 column-label ":!:!:!:!:" format "X(1)"
-            goods.gds-name column-label "Наименование товара! ! ! ! " format "X(72)" /* "X(30)" */ space(0)
+            goods.gds-name column-label "Наименование товара! ! ! ! " format "X(100)" /* "X(30)" */ space(0)
             sym4 column-label ":!:!:!:!:" format "X(1)" space(0)
             tb-code column-label "Код товара! ! ! ! " format "X(13)" space(0)
             sym5 column-label ":!:!:!:!:" format "X(1)" space(0)

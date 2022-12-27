@@ -200,6 +200,9 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable oks-SubjectObj          as class Oks                    no-undo. 
   define variable impOKSEventHndlrObj     as class impOks                 no-undo.
   
+  define variable emc-SubjectObj          as class Emc                    no-undo. 
+  define variable impCodeEventHndlrObj    as class impCode                 no-undo.
+  
   define variable OsnovCurrSubj                         as class osnovcorr               no-undo .
   define variable impOsnocCorr                          as class imposnovcorr            no-undo .
   
@@ -213,6 +216,9 @@ class ibs.th.bge.1crn.import.parsesub:
   
   define variable Rvd-ReasonSubj                        as class rvd-reason              no-undo .
   define variable impRvd-Reason                         as class imprvd-reason           no-undo .
+  
+  define variable Doc-ReasonSubj                        as class doc-reason              no-undo .
+  define variable impDoc-Reason                         as class impdoc-reason           no-undo .
   
   define variable good             as logical   no-undo.
   define variable nameChildrenCurr as character no-undo.
@@ -553,6 +559,22 @@ class ibs.th.bge.1crn.import.parsesub:
               ReceivedSubjectPublish(v-iSubject, v-iImpSub).
            end.
         end.
+        when "emc":U 
+        then do:
+           &glob subname emc
+           if not valid-object({&subname}-SubjectObj)       
+           then 
+              {&subname}-SubjectObj       = new {&subname}(). 
+           if not valid-object(impCodeEventHndlrObj) 
+           then do :
+              impCodeEventHndlrObj = new impCode ().
+           end .
+           v-iSubject = {&subname}-SubjectObj .
+           v-iImpSub  = impCodeEventHndlrObj .
+                // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
         when "ok":U 
         then do:
            &glob subname oks
@@ -625,12 +647,23 @@ class ibs.th.bge.1crn.import.parsesub:
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
         when "rvd-reason":U then do:
-          if not valid-object(Rvd-ReasonSubj)       then Rvd-ReasonSubj       = new rvd-reason(). // <promotion>
+          if not valid-object(Rvd-ReasonSubj)       then Rvd-ReasonSubj       = new rvd-reason(). // <rvd-reason>
           if not valid-object(impRvd-Reason) then do :
             impRvd-Reason = new imprvd-reason ().
           end .
           v-iSubject = Rvd-ReasonSubj .
           v-iImpSub  = impRvd-Reason .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "doc-reason":U then do:
+          if not valid-object(Doc-ReasonSubj)       then Doc-ReasonSubj       = new doc-reason(). // <doc-reason>
+          if not valid-object(impDoc-Reason) then do :
+            impDoc-Reason = new impdoc-reason ().
+          end .
+          v-iSubject = Doc-ReasonSubj .
+          v-iImpSub  = impDoc-Reason .
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
@@ -1354,14 +1387,22 @@ class ibs.th.bge.1crn.import.parsesub:
           end .
         end.
         when "prt" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
-          case true : 
-            when trn-gd-doc-inSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/
-              if not valid-object(trn-prt-doc-inlistSubjectsObj) then trn-prt-doc-inlistSubjectsObj = new subjects ("prts") .        
-              trn-prt-doc-inlistSubjectsObj:Add(new trn-prt()). /* а вот здесь уже создаем объект сущнности*/
-              trn-prtSubjectObj = cast (trn-prt-doc-inlistSubjectsObj:SubjectObjCurr, trn-prt).
-              GetChildrenSub (hNoderef, (level + 1), trn-prtSubjectObj).
-              trn-gd-doc-inSubjectObj:SetProp (trn-prt-doc-inlistSubjectsObj).
-            end.
+          if trn-gdSubjectObj:IsInitSubForWrite
+          then do: /*идет запись transportSubjectObj*/
+            if not valid-object(trn-prt-doc-inlistSubjectsObj) then trn-prt-doc-inlistSubjectsObj = new subjects ("prts") .        
+            trn-prt-doc-inlistSubjectsObj:Add(new trn-prt()). /* а вот здесь уже создаем объект сущнности*/
+            trn-prtSubjectObj = cast (trn-prt-doc-inlistSubjectsObj:SubjectObjCurr, trn-prt).
+            GetChildrenSub (hNoderef, (level + 1), trn-prtSubjectObj).
+            trn-gdSubjectObj:SetProp (trn-prt-doc-inlistSubjectsObj).
+          end.
+          else
+          if trn-gd-doc-inSubjectObj:IsInitSubForWrite
+          then do: /*идет запись transportSubjectObj*/
+            if not valid-object(trn-prt-doc-inlistSubjectsObj) then trn-prt-doc-inlistSubjectsObj = new subjects ("prts") .        
+            trn-prt-doc-inlistSubjectsObj:Add(new trn-prt()). /* а вот здесь уже создаем объект сущнности*/
+            trn-prtSubjectObj = cast (trn-prt-doc-inlistSubjectsObj:SubjectObjCurr, trn-prt).
+            GetChildrenSub (hNoderef, (level + 1), trn-prtSubjectObj).
+            trn-gd-doc-inSubjectObj:SetProp (trn-prt-doc-inlistSubjectsObj).
           end.
         end.
         when "nb-carrier" then do: /* второй уровень с данными. обработка зависимой сущности clientsSubjectObj  */

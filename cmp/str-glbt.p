@@ -537,14 +537,16 @@ attr-fbrattr
 { cmp/cr-prep.i 1 attr-petrol petrol " " petrol }
 
 { cmp/cr-prepc.i 1 prop-list-attr-petrol
-"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info,otkl-fact-volue,otkl-temp,otkl-density,otkl-water,CriticalDifInLgas,calc-free-vol,trn-reas-sug,rvd-own-nb,sec-fields,qr-scan-time,trnscanqr"
+"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info,otkl-fact-volue,otkl-temp,otkl-density,otkl-water,CriticalDifInLgas,calc-free-vol,trn-reas-sug,rvd-own-nb,sec-fields,qr-scan-time,trnscanqr,block-nozzle,timeout-block-nozzle"
 attr-petrol
 }
 
 /* Настройки работы с пользователями и персоналом*/
 { cmp/cr-prep.i 1 attr-staff-options staff " " staff }
+{ cmp/cr-prep.i 1 staff-options_pers pers " " pers }
+{ cmp/cr-prep.i 1 staff-options_Adm Adm " " Adm }
 { cmp/cr-prepc.i 1 prop-list-attr-staff-options
-"noanshftstaff,obyznumbukv,minparol"
+"noanshftstaff,obyznumbukv,minparol,TimeAvail,TimeBlock,LastPaswd"
 attr-staff-options
 }
 
@@ -628,7 +630,6 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-cashpays}~
 ,{&bef-attr-wthdoc}~
 ,{&bef-attr-wthdoc_obj}~
-,{&bef-attr-mercur}~
 ,{&bef-attr-wthrep}~
 ,{&bef-attr-rum}~
 ,{&bef-attr-rum_obj}~

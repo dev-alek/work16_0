@@ -96,6 +96,25 @@ case p-caller:
       { rep/r-pychk0.i }
     end.
   end.
+  when "r-date" then do:
+    _chk-doc:
+    FOR EACH ub.chk-doc No-LOCK WHERE
+            ub.chk-doc.obj-type = p-obj-type
+        AND ub.chk-doc.obj-code = p-obj-code
+        AND ub.chk-doc.chk-date >= p-shift-date-start
+        AND ub.chk-doc.chk-date <= p-shift-date-end
+        and ub.chk-doc.out-code <> ?,
+      EACH ub.chk-pay NO-LOCK WHERE
+              ub.chk-pay.doc-code = ub.chk-doc.doc-code
+      BREAK
+      BY ub.CHK-pay.doc-code
+      BY ub.CHK-pay.line-num:
+ 
+      if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then next _chk-doc.
+
+      { rep/r-pychk0.i }
+    end.
+  end.  
   when "r-ptrsp2" then do:
     _chk-doc:
     for each ub.chk-doc no-lock where

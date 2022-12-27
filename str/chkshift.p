@@ -67,6 +67,7 @@ on error undo, return error
   /*для каждого чека находимм cas-shft - использовать смены на кассе или нет*/
 
   if bf_chk-doc.out-code <> ? then return error.
+  if bf_chk-doc.chk-type = 13 or bf_chk-doc.chk-type = 40 then return error . 
   assign
   cas-shft = no.
   { gbl/cas-shft.i bf_chk-doc.obj-type bf_chk-doc.obj-code cas-shft }

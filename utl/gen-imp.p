@@ -210,6 +210,8 @@ do while v-ind-tbl < v-num-tbls
     '~{ cmp/vssrevis.i ~}                                                                               ' SKIP
     '~{ cmp/trg-def.i  ~}                                                                               ' SKIP
     '~{ nws/nws-def.i  ~}                                                                               ' SKIP
+    '~{ gbl/key-rec.i  ~}                                                                               ' SKIP
+    '~{ gbl/attr-lib.i  ~}                                                                              ' SKIP
     '~{ ' {&imp-pck1} ' ~}                                                                              ' SKIP(1)
   .
   OUTPUT STREAM ImpPckStream close.
@@ -222,6 +224,8 @@ do while v-ind-tbl < v-num-tbls
     v-ind-tbl-curr  = 0
     v-ind-tbl-ignor = 0
   .
+
+bl-tn:
   do while v-compile = true
            and v-ind-tbl < v-num-tbls
   :
@@ -234,9 +238,14 @@ do while v-ind-tbl < v-num-tbls
       tn @ fl
       substitute( "&1 из &2", v-ind-tbl, v-num-tbls ) @ v-str
       with frame ddd .
-
     find {&db-name_schema}._file no-lock
-      where {&db-name_schema}._file._file-name = tn .
+      where {&db-name_schema}._file._file-name = tn  no-error.
+      if not available  {&db-name_schema}._file
+      then do:
+         message "Базе нет таблицы " tn
+         view-as alert-box.
+         next bl-tn.
+      end. 
     assign
       inc-file-name     = "nws/inc/imp/" + {&db-name_schema}._File._Dump-name + ".i"
       inc-avail     = ( if search( inc-file-name ) <> ? then TRUE else FALSE )

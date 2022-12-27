@@ -65,6 +65,10 @@ define variable vss-description as character no-undo init "Обновление БД.".
   define private property silent as logical no-undo
     get.
     set.
+  
+  define private property changPath as logical no-undo
+    get.
+    set.
     
   define private property ModeUpd as character  no-undo
     get.
@@ -82,6 +86,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
           UpdAllDB    = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
           UpdPart     = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
           silent      = lookup("updblank",iarg) ne 0.
+          changPath   = lookup("iscomp",iarg) ne 0.
        end.
     end.
     
@@ -136,8 +141,20 @@ define variable vss-description as character no-undo init "Обновление БД.".
                                 ,vpas 
                                 ).
   end.
+  define property isRcode as logical init ? no-undo
+  get:
+      if isRcode eq ?
+      then do:
+         def var loadDFProcFile as char no-undo.
+         loadDFProcFile = search ("ibs/th/adm/upd/loaddf.r").
+         isRcode = loadDFProcFile ne ?.
+      end.
+      return isRcode.
+  end.
+  set.
+      
+  
     
-  define variable isRcode as logical init false no-undo.
   define variable obsrvdbObj as class observupd no-undo.
   define variable analisdfObj as class analisdf no-undo.
   define private variable m-prowin32FileName  as character no-undo.
@@ -145,7 +162,12 @@ define variable vss-description as character no-undo init "Обновление БД.".
   define private variable m-Batch             as logical   no-undo.
   define variable mDfUpdaLL as character no-undo.
   define stream sReadfile.
+  
   constructor public updschm ():
+     this-object (yes).
+  end constructor.
+  
+  constructor public updschm (IQS as logical):
      putStat ("Установка контекста для проверки обновления ... ").
      
      obsrvdbObj = new observupd ().
@@ -160,7 +182,12 @@ define variable vss-description as character no-undo init "Обновление БД.".
      if not isNeedUpd
      then
         run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
-     
+         
+     if IQS and not isRcode and isNeedUpd
+     then
+        message "Необходимо обновить базу с версии " CurrDBShm  " до " TargetDBShm " до запуска процесса. Остновить выполнение?" view-as alert-box question 
+             buttons yes-no title "[ ВНИМАНИЕ! ]" update isNeedUpd.
+          
      delete object obsrvdbObj.
      putStat  ("Установка контекста для проверки обновления завершена").
      
@@ -254,9 +281,9 @@ define variable vss-description as character no-undo init "Обновление БД.".
     .
     delete object obsrvdbObj.
     loadDFProcFile = search ("ibs/th/adm/upd/loaddf.r").
-    if loadDFProcFile <> ?
-    then isRcode = true.
-    else loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
+    if loadDFProcFile eq ?
+    then 
+       loadDFProcFile = search ("ibs/th/adm/upd/loaddf.p").
            
     
     
@@ -576,13 +603,14 @@ define variable vss-description as character no-undo init "Обновление БД.".
     vAsyncHelper:MyBachMode = no.
     vAsyncHelper:WritelogInter = 5.
     vAsyncHelper:mProcPublish = PublisHandle.
+    vAsyncHelper:ChangProPath = changPath.
     vAsyncHelper:AsyncProc("utl/proc-anyproc", substitute("&1&3&2":U 
                                               , iProc 
                                               ,if iParam eq "" then "" else iParam , 
                                                if iParam eq "" then "" else {&delim-par} ),1).
     vAsyncHelper:myTimeOut = 60.
     
-    run ibs\th\file\waithelper.p (vAsyncHelper,?, 1,substitute ("Обновление БД с &1 версии до &2 версии",CurrDBShm,NewCurrDBShm)).
+    run ibs\th\file\waithelper.p (vAsyncHelper,?, 1, substitute ("Обновление БД с &1 версии до &2 версии",CurrDBShm,NewCurrDBShm)).
     define variable vLogFile as character no-undo.
     vLogFile = searchfile(vAsyncHelper:getLog(?)).
     if vLogFile ne ?
@@ -640,7 +668,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
        message itext
        view-as alert-box.
     end.
-    publish "WriteLogAsunc" from PublisHandle (itext ).
+    publish "WriteLogAsunc" from PublisHandle (itext,yes ).
     
    end.
    method public void putstat (input itext as char):

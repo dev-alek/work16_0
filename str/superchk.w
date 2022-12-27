@@ -3883,8 +3883,10 @@ IF CAN-FIND(FIRST ub.chk-pay NO-LOCK WHERE ub.chk-pay.doc-code = tt-chk-doc.doc-
    VIEW-AS ALERT-BOX ERROR.
    RETURN ERROR.
 END.
-run proc-save-doc No-ERROR.
-if error-status:error then return error.
+if par-mode = {&add-def} then do:
+  run proc-save-doc No-ERROR.
+  if error-status:error then return error.
+end .
 varrid-list = "" .
 lnp = 0.
 run find-bank-curs in this-procedure(
@@ -6109,8 +6111,8 @@ then do:
     return.
 end.
 if not par-mode = {&add-def} then return.
-run proc-save-doc No-ERROR.
-if error-status:error then return error.
+/*run proc-save-doc No-ERROR.             */
+/*if error-status:error then return error.*/
 if discnt-option = "":U then do:
   run gbl/pop-up.p ( input self:handle, input no) no-error.
 end.
@@ -6273,8 +6275,8 @@ then do:
     return.
 end.
 if not par-mode = {&add-def} then return.
-run proc-save-doc No-ERROR.
-if error-status:error then return error.
+/*run proc-save-doc No-ERROR.             */
+/*if error-status:error then return error.*/
 if discnt-option = "":U then do:
   run gbl/pop-up.p ( input self:handle, input no) no-error.
 end.
@@ -6439,8 +6441,8 @@ then do:
     return.
 end.
 if not par-mode = {&add-def} then return.
-run proc-save-doc No-ERROR.
-if error-status:error then return error.
+/*run proc-save-doc No-ERROR.             */
+/*if error-status:error then return error.*/
 varrid-list = "" .
 run ref/gds-ref.p (
                  input parparentproc
@@ -6636,8 +6638,11 @@ define buffer loc_tt-chk-pay for tt-chk-pay.
 define buffer loc_cash-pay for ub.cash-pay.
 define buffer loc_currency for ub.currency.
 
+if par-mode = {&add-def} then do:
 run proc-save-doc in this-procedure No-ERROR.
 if error-status:error then return error.
+end .
+
 varrid-list = "" .
 run ref/cashpays.w (
               input parparentproc
@@ -6804,8 +6809,17 @@ define buffer loc_chk-gds for ub.chk-gds.
 define buffer loc_bar-code for ub.bar-code.
 define buffer loc_goods for ub.goods.
 if not (par-mode = {&update} or par-mode = {&add-def}) then return.
-run proc-save-doc in this-procedure No-ERROR.
-if error-status:error then return error.
+
+if par-mode = {&add-def} then do:
+  run proc-save-doc in this-procedure No-ERROR.
+  if error-status:error then return error.
+end.
+
+if not available tt-gds-info
+then do :
+  find first tt-gds-info where tt-gds-info.line-num = tt-chk-gds.line-num .
+end .
+
 varrid-list = "" .
 run ref/gds-ref.p (
                 input parparentproc
@@ -6821,7 +6835,7 @@ run ref/gds-ref.p (
               ,input tt-chk-doc.obj-code
               ,input ?
              , output varrid-list ).
-
+ 
 if varrid-list <> "" then do:
   ii = 1.
       FIND FIRST loc_goods WHERE
@@ -6845,6 +6859,7 @@ if varrid-list <> "" then do:
       tt-chk-gds.src-code = string(loc_bar-code.b-code)
       tt-chk-gds.b-code = loc_bar-code.b-code
       tt-gds-info.artic = loc_goods.artic
+      tt-gds-info.gds-code = loc_goods.gds-code
       tt-gds-info.gds-name = loc_goods.gds-name
       tt-gds-info.prt-name = "-":U.
        .
@@ -6881,8 +6896,12 @@ DEFINE VARIABLE varline-rid as recid  no-undo.
 define buffer loc_cash-pay for ub.cash-pay.
 define buffer loc_currency for ub.currency.
 if not (par-mode = {&update} or par-mode = {&add-def}) then return.
-run proc-save-doc in this-procedure No-ERROR.
-if error-status:error then return error.
+
+if par-mode = {&add-def} then do:
+  run proc-save-doc in this-procedure No-ERROR.
+  if error-status:error then return error.
+end .
+
 varrid-list = "" .
 if p-reference then do:
     run ref/cashpays.w (

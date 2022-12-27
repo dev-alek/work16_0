@@ -99,60 +99,61 @@ procedure putc-16 :
   define buffer buf_dis-cp-rule   for ub.dis-cp-rule.
   define buffer buf_cash-pay-attr for ub.cash-pay-attr.
 
-  define variable v-mode         as character no-undo . /* create/update */
-  define variable objImp         as class     {&impclass}                           no-undo.
-  define variable v-retfl        as logical   no-undo .
+  define variable v-mode             as character no-undo . /* create/update */
+  define variable objImp             as class     {&impclass}                           no-undo.
+  define variable v-retfl            as logical   no-undo .
       
-  define variable v-i-num        as integer   no-undo .
-  define variable v-i-counter    as integer   no-undo .
-  define variable v-j-num        as integer   no-undo .
-  define variable v-j-counter    as integer   no-undo .
-  define variable v-stub         as integer   no-undo .
-  define variable vTypePay       as character no-undo.
-  define variable vIp            as integer no-undo.
+  define variable v-i-num            as integer   no-undo .
+  define variable v-i-counter        as integer   no-undo .
+  define variable v-j-num            as integer   no-undo .
+  define variable v-j-counter        as integer   no-undo .
+  define variable v-stub             as integer   no-undo .
+  define variable vTypePay           as character no-undo.
+  define variable vIp                as integer   no-undo.
   
 
-  define variable v-promo-action as class     ibs.th.ref.promo.promoactionsub       no-undo .
+  define variable v-promo-action     as class     ibs.th.ref.promo.promoactionsub       no-undo .
     
-  define variable v-storage      as class     ibs.th.gbl.storage.promoactionstorage no-undo .
-  define variable v-subs         as class     promoActionSubs                       no-undo .
-  define variable v-sub          as class     promoactionsub                        no-undo .
-  define variable v-subsCrit     as class     ibs.th.ref.promo.promoGoodsSubs       no-undo .
-  define variable v-subCrit      as class     ibs.th.ref.promo.promoGoodsSub        no-undo .
-  define variable m-storage      as class     promoactionstorage                    no-undo .
+  define variable v-storage          as class     ibs.th.gbl.storage.promoactionstorage no-undo .
+  define variable v-subs             as class     promoActionSubs                       no-undo .
+  define variable v-sub              as class     promoactionsub                        no-undo .
+  define variable v-subsCrit         as class     ibs.th.ref.promo.promoGoodsSubs       no-undo .
+  define variable v-subCrit          as class     ibs.th.ref.promo.promoGoodsSub        no-undo .
+  define variable m-storage          as class     promoactionstorage                    no-undo .
 
-  define variable v-subShed           as class     PromoSchedSub                         no-undo .
-  define variable v-subShedWs         as class     promoSchedwSubs                       no-undo .
-  define variable v-subShedW          as class     PromoSchedwSub                        no-undo .
-  define variable v-subGood           as class     PromoGoodsSub                         no-undo .
-  define variable v-subGdCrs          as class     promoGoodsSubs                        no-undo . 
-  define variable v-subCardBins       as class     promoGoodsSubs                        no-undo . 
-  define variable v-subCardBin        as class     promoGoodsSub                         no-undo .
-  define variable v-subGdCr           as class     PromoGoodsSub                         no-undo .
-  define variable v-subGoods          as class     promoGoodsSubs                        no-undo .      
-  define variable v-subGDCrites       as class     promoCriterionSubs                    no-undo .
-  define variable v-subGDCrite        as class     promoCriterionSub                     no-undo .
-  define variable v-subGifts          as class     promoGiftSubs                         no-undo .
-  define variable v-subGift           as class     promoGiftSub                          no-undo .
-  define variable v-subCrGifts        as class     promoGiftSubs                         no-undo .
-  define variable v-subCrGift         as class     promoGiftSub                          no-undo .
-  define variable v-subPromoSets      as class     promoGoodssubs                        no-undo .
-  define variable v-subPromoSet       as class     promoGoodssub                         no-undo .
-  define variable v-subPromoSetGoods  as class     promoGoodssubs                        no-undo .
-  define variable v-subPromoSetGood   as class     promoGoodssub                         no-undo .
+  define variable v-subShed          as class     PromoSchedSub                         no-undo .
+  define variable v-subShedWs        as class     promoSchedwSubs                       no-undo .
+  define variable v-subShedW         as class     PromoSchedwSub                        no-undo .
+  define variable v-subGood          as class     PromoGoodsSub                         no-undo .
+  define variable v-subGdCrs         as class     promoGoodsSubs                        no-undo . 
+  define variable v-subCardBins      as class     promoGoodsSubs                        no-undo . 
+  define variable v-subCardBin       as class     promoGoodsSub                         no-undo .
+  define variable v-subGdCr          as class     PromoGoodsSub                         no-undo .
+  define variable v-subGoods         as class     promoGoodsSubs                        no-undo .      
+  define variable v-subGDCrites      as class     promoCriterionSubs                    no-undo .
+  define variable v-subGDCrite       as class     promoCriterionSub                     no-undo .
+  define variable v-subGifts         as class     promoGiftSubs                         no-undo .
+  define variable v-subGift          as class     promoGiftSub                          no-undo .
+  define variable v-subCrGifts       as class     promoGiftSubs                         no-undo .
+  define variable v-subCrGift        as class     promoGiftSub                          no-undo .
+  define variable v-subPromoSets     as class     promoGoodssubs                        no-undo .
+  define variable v-subPromoSet      as class     promoGoodssub                         no-undo .
+  define variable v-subPromoSetGoods as class     promoGoodssubs                        no-undo .
+  define variable v-subPromoSetGood  as class     promoGoodssub                         no-undo .
    
-  define variable v-length        as integer   no-undo .
-  define variable v-lengthSh      as integer   no-undo .
-  define variable v-lengthGD      as integer   no-undo .
-  define variable v-lengthGif     as integer   no-undo .
-  define variable v-i             as integer   no-undo .
-  define variable v-j             as integer   no-undo .
-  define variable v-size          as integer   no-undo .
-  define variable v-sizeGif       as integer   no-undo .
-  define variable vPricePromoSets as decimal   no-undo.
-  define variable v-mess          as character no-undo . 
-  define variable vgift as logical no-undo.
-  define variable vSetGoods as logical no-undo.   
+  define variable v-length           as integer   no-undo .
+  define variable v-lengthSh         as integer   no-undo .
+  define variable v-lengthGD         as integer   no-undo .
+  define variable v-lengthGif        as integer   no-undo .
+  define variable v-i                as integer   no-undo .
+  define variable v-j                as integer   no-undo .
+  define variable v-size             as integer   no-undo .
+  define variable v-sizeGif          as integer   no-undo .
+  define variable vPricePromoSets    as decimal   no-undo.
+  define variable v-mess             as character no-undo . 
+  define variable vgift              as logical   no-undo.
+  define variable vSetGoods          as logical   no-undo.  
+  define variable producer-int       as integer   no-undo . 
   define buffer buf_PromoAction for ub.PromoAction .
   define buffer buf_PromoSched  for ub.promo-schedule .
   do
@@ -160,44 +161,87 @@ procedure putc-16 :
     :
     if selective = 0 then 
     do:
-      _non-selective:
-      FOR EACH ub.PromoAction 
-        EXCLUSIVE-LOCK where (ub.PromoAction.end-date > TODAY and ub.PromoAction.Status_ = 2) or (ub.PromoAction.Status_ = 1) 
-        :
-&scop metka _non-selective
+      if action = "D" then 
+      do:        
+        FOR EACH ub.PromoAction 
+          EXCLUSIVE-LOCK where ub.PromoAction.Status_ <> 3
+          :
 
-        v-promo-action = new PromoActionSub().
+          v-promo-action = new PromoActionSub().
 
-        v-promo-action:ID = ub.PromoAction.id .
+          v-promo-action:ID = ub.PromoAction.id .
 
-        m-storage = new ibs.th.gbl.storage.promoactionstorage () . // создать экземпляр, который работает с БД
-
-        m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
-        v-promo-action:refreshChildObj() . // возвращает
-        { str/putc-16.i }
-
-      END. /* FOR EACh */
-    end.
-    else 
-    do:
-      _selective:
-      DO ii = 1 to pSubs:iCounter:
-        pSubs:GetItem(ii).
-        v-promo-action = pSubs:promoActionObjCurr .
-        FIND FIRST ub.PromoAction No-LOCK WHERE
-          ub.PromoAction.id = v-promo-action:ID No-ERROR.
-        IF avail ub.PromoAction then
-        do:
-&scop metka _selective
           m-storage = new ibs.th.gbl.storage.promoactionstorage () . // создать экземпляр, который работает с БД
 
           m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
           v-promo-action:refreshChildObj() . // возвращает
-
+          if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
           { str/putc-16.i }
+        END. /* FOR EACh */
+      end.
+      else 
+      do:
+        FOR EACH ub.PromoAction 
+          EXCLUSIVE-LOCK where ub.PromoAction.Status_ = 1
+          :
+          v-promo-action = new PromoActionSub().
+
+          v-promo-action:ID = ub.PromoAction.id .
+
+          m-storage = new ibs.th.gbl.storage.promoactionstorage () . // создать экземпляр, который работает с БД
+
+          m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
+          v-promo-action:refreshChildObj() . // возвращает
+          if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
+        { str/putc-16.i }
+          if ub.PromoAction.typecond = 4 and action = "U":U then 
+          do:
+            {str/putc-17.i} 
+          end.
+
+        END. /* FOR EACh */        
+      end.
+    end.
+    else 
+    do:
+      DO ii = 1 to pSubs:iCounter:
+        pSubs:GetItem(ii).
+        v-promo-action = pSubs:promoActionObjCurr .
+        if action = "D" then 
+        do:
+          FIND FIRST ub.PromoAction No-LOCK WHERE
+            ub.PromoAction.id = v-promo-action:ID and ub.PromoAction.Status_ <> 3 No-ERROR.
+          IF avail ub.PromoAction then
+          do:
+            m-storage = new ibs.th.gbl.storage.promoactionstorage () . // создать экземпляр, который работает с БД
+
+            m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
+            v-promo-action:refreshChildObj() . // возвращает
+            if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
+          { str/putc-16.i }
+          end.
 
         end.
 
+        else 
+        do:
+          FIND FIRST ub.PromoAction No-LOCK WHERE
+            ub.PromoAction.id = v-promo-action:ID and ub.PromoAction.Status_ = 1 No-ERROR.
+          IF avail ub.PromoAction then
+          do:
+            m-storage = new ibs.th.gbl.storage.promoactionstorage () . // создать экземпляр, который работает с БД
+
+            m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
+            v-promo-action:refreshChildObj() . // возвращает
+            if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
+          { str/putc-16.i }
+            if ub.PromoAction.typecond = 4 and action = "U":U then 
+            do:
+          {str/putc-17.i} 
+            end.
+
+          end.  
+        end.
       END.
     end.
 
@@ -220,8 +264,8 @@ assign
   .
 
 { gbl/hostcode.i {&shop} i-obj-code v-host-code }
-if action = "D" and not g#esys and not g#news 
-then 
+if action = "D" and not g#esys and not g#news and selective <> 1
+   then 
 do:
   message
     "Вы действительно хотите удалить с кассы записи промоакций?"

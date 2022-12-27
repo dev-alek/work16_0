@@ -46,6 +46,7 @@ procedure send-to-cash:
     or can-find(first ext-classif-list no-lock)
     or can-find(first c-ext-classif-list no-lock)
     or can-find(first PromoAction-list no-lock)
+    or sendEMRC
     then do:
       run str/diallog.w (
                          &if "{&imp2cd_parparentproc}" <> '' &then
@@ -63,7 +64,13 @@ procedure send-to-cash:
   end.
 end procedure.
 
-
+procedure fill-code :
+   define input parameter i-parent as character no-undo .
+   define input parameter i-code   as character no-undo .
+   if i-parent begins "EMC"
+   then
+      sendEMRC = yes.
+end procedure.
 procedure fill-gds-list :
 define parameter buffer buf_goods for ub.goods.
 
@@ -198,15 +205,13 @@ define input parameter p-del     as logical no-undo.
 do
 on error undo, return error
 :
-  find first PromoAction-list where PromoAction-list.db-num  = p-db-num
-                                and PromoAction-list.id      = p-id
-  no-lock no-error.
-  if not available PromoAction-list
-  then do: 
+  if not can-find( PromoAction-list where PromoAction-list.id = p-id
+                                      and PromoAction-list.db-num  = p-db-num )
+  then do:
     create PromoAction-list.
     assign
+       PromoAction-list.id = p-id
        PromoAction-list.db-num  = p-db-num
-       PromoAction-list.id      = p-id
     .
   end.
   PromoAction-list.del_ = p-del.

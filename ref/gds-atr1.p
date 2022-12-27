@@ -21,7 +21,7 @@ Creation date: 10/04/05
 
 define input parameter p-mode            as character no-undo .
 define input parameter p-gds-code        like ub.goods-attr.gds-code no-undo .
-define temp-table tt0-goods-attr no-undo like ub.goods-attr.
+{ ref/g-attr-tt.i}
 DEFINE INPUT PARAMETER TABLE FOR tt0-goods-attr.
 
 
@@ -55,7 +55,7 @@ on error undo, return error return-value
                                  , p-gds-code).
   end.
   /*обновим goods-attr */
-  FOR EACH tt0-goods-attr:
+  FOR EACH tt0-goods-attr where tt0-goods-attr.grp ne yes:
     if p-mode <> {&add-def} then do:
       find FIRST buf_goods-attr WHERE buf_goods-attr.gds-code = p-gds-code
       AND buf_goods-attr.attr-code = tt0-goods-attr.attr-code no-error.
@@ -81,17 +81,17 @@ on error undo, return error return-value
   END. /*FOR EACH tt0-goods-attr:*/
   if p-mode <> {&add-def} then do:
     FOR EACH buf_goods-attr where buf_goods-attr.gds-code = p-gds-code:
-    v-num-section = ?.
+        v-num-section = ?.
         FIND FIRST tt0-goods-attr NO-LOCK WHERE
             tt0-goods-attr.gds-code = p-gds-code
-        AND tt0-goods-attr.attr-code = buf_goods-attr.attr-code NO-ERROR.
-          IF NOT AVAILABLE tt0-goods-attr THEN DO:
-              run gds-attr-manual-edit in this-procedure (input buf_goods-attr.attr-code,
-                                                       output v-num-section) no-error.
-                                                    
-             /*  IF  error-status:error
+        AND tt0-goods-attr.attr-code = buf_goods-attr.attr-code 
+        and tt0-goods-attr.grp ne yes NO-ERROR.
+          IF NOT AVAILABLE tt0-goods-attr THEN DO:              
+                run gds-attr-manual-edit in this-procedure (input buf_goods-attr.attr-code
+                                                       , output v-num-section) no-error. 
+                IF       error-status:error
+                    and  buf_goods-attr.attr-code ne {&attr-gds-attr-lock}
                 THEN DO:
-                  
                   assign
                   v-err-mess = substitute("Ошибка при удалении атрибута товара &1 &2 :&3&4 &5"
                                           , p-gds-code
@@ -101,13 +101,10 @@ on error undo, return error return-value
                                           ,return-value
                                           ).
                   undo _main, return error v-err-mess.
-                END. /* gds-attr-manual-edit */
-                */
-                                              
-                                                      
+                END. /* gds-attr-manual-edit */                                                   
            if v-num-section > 0 then do:         /* Если атрибут есть, но он заполняется не через обычный интерфейс, то не надо запись удалять из базы */                                      
                   ASSIGN
-                  v-deleted = NO.
+                  v-deleted = NO.                
                   RUN gds-attr-delete IN THIS-PROCEDURE (
                                                         input buf_goods-attr.gds-code
                                                         ,INPUT buf_goods-attr.attr-code

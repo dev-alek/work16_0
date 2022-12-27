@@ -24,6 +24,17 @@ Output:
 
 */
 /* ***************************  Definitions  ************************** */
+/**/
+/* Parameters Definitions ---                                           */
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "Пользователь системы".
+
+{ cmp\trg-def.i }
+{ adm\userpro.i }
 
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc                as widget-handle    no-undo .
@@ -44,6 +55,10 @@ define input parameter p-in-e-mail                  as character        no-undo.
 define input parameter p-in-internal-phone-number   as character        no-undo.
 define input parameter p-in-PS                      as character        no-undo.
 define input parameter p-in-psn-code                as integer          no-undo.
+define input parameter i-adm-gbd                    as logical          no-undo.
+define input parameter i-superAdm                   as logical          no-undo.
+define input parameter i-adm-Ubd                    as logical          no-undo.
+define input-output parameter table for UserDbAdm .
 define output parameter p-out-last-name             as character        no-undo.
 define output parameter p-out-first-name            as character        no-undo.
 define output parameter p-out-second-name           as character        no-undo.
@@ -58,16 +73,12 @@ define output parameter p-out-e-mail                as character        no-undo.
 define output parameter p-out-internal-phone-number as character        no-undo.
 define output parameter p-out-PS                    as character        no-undo.
 define output parameter p-out-psn-code              as integer          no-undo.
+define output parameter O-adm-gbd                    as logical          no-undo.
+define output parameter o-superAdm                   as logical          no-undo.
+define output parameter O-adm-Ubd                    as logical          no-undo.
 define output parameter p-accepted                  as logical          no-undo.
 
 /* Local Variable Definitions ---                                       */
-
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Пользователь системы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
@@ -75,9 +86,14 @@ define variable vss-description as character no-undo init "Пользователь системы"
 { gbl/getcntxt.i def }
 { cmp/showinf.i }
 
+
+/*DEFINE BUFFER bufUserDbAdm FOR UserDbAdm.*/
+
+
 define variable v-user-exit-enabled     as logical      no-undo.
 define variable v-user-nik-autofill     as logical      no-undo.
-
+define variable mSyperAdm               as logical      no-undo.
+define variable mchenglistubd           as logical no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -91,23 +107,51 @@ define variable v-user-nik-autofill     as logical      no-undo.
 
 /* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
+&Scoped-define BROWSE-NAME BRUserUbd
+
+/* Internal Tables (found by Frame, Query & Browse Queries)             */
+&Scoped-define INTERNAL-TABLES UserDbAdm
+
+/* Definitions for BROWSE BRUserUbd                                      */
+&Scoped-define FIELDS-IN-QUERY-BRUserUbd UserDbAdm.db-num getadm() 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BRUserUbd 
+&Scoped-define QUERY-STRING-BRUserUbd FOR EACH UserDbAdm NO-LOCK INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-BRUserUbd OPEN QUERY BRUserUbd FOR EACH UserDbAdm NO-LOCK INDEXED-REPOSITION.
+&Scoped-define TABLES-IN-QUERY-BRUserUbd UserDbAdm
+&Scoped-define FIRST-TABLE-IN-QUERY-BRUserUbd UserDbAdm
+
+
+/* Definitions for DIALOG-BOX Dialog-Frame                              */
+&Scoped-define OPEN-BROWSERS-IN-QUERY-Dialog-Frame ~
+    ~{&OPEN-QUERY-BRUserUbd}
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-close b-help fi-last-name ~
 fi-first-name fi-second-name fi-nik fi-phone-number fi-mobile-phone-number ~
 fi-company fi-department fi-position fi-room fi-e-mail ~
-fi-internal-phone-number fi-psn-code b-psn v-psn-name ed-PS 
+fi-internal-phone-number ed-PS ~
+b-psn fi-psn-code v-psn-name ~
+RAD-adm-gbd TOG-superAdm  RAD-adm-Ubd BRUserUbd btnAdm BtnDel
 &Scoped-Define DISPLAYED-OBJECTS fi-last-name fi-first-name fi-second-name ~
 fi-PS-label-2 fi-nik fi-phone-number fi-mobile-phone-number fi-company ~
 fi-department fi-position fi-room fi-e-mail fi-internal-phone-number ~
-fi-psn-code v-psn-name fi-PS-label ed-PS fi-user-id 
-
+fi-PS-label ed-PS fi-user-id fi-psn-code v-psn-name ~
+RAD-adm-gbd TOG-superAdm RAD-adm-Ubd 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
+
+/* ************************  Function Prototypes ********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD GetAdm Dialog-Frame 
+FUNCTION GetAdm RETURNS CHARACTER
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 
 /* ***********************  Control Definitions  ********************** */
@@ -136,6 +180,14 @@ DEFINE BUTTON b-psn
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "Button 1" 
      SIZE 3 BY 1.
+
+DEFINE BUTTON btnAdm 
+     LABEL "Админ/Пользователь" 
+     SIZE 20 BY 1.
+
+DEFINE BUTTON BtnDel 
+     LABEL "Удалить" 
+     SIZE 10 BY 1.
 
 DEFINE VARIABLE ed-PS AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
@@ -225,6 +277,44 @@ DEFINE VARIABLE v-psn-name AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 17 BY 1 NO-UNDO.
 
+DEFINE VARIABLE RAD-adm-gbd AS INTEGER INITIAL 2 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "Администратор ГБД", 1,
+"Пользователь ГБД", 3,
+"Отсутствует ", 2
+
+     SIZE 28.5 BY 3 NO-UNDO.
+
+DEFINE VARIABLE RAD-adm-Ubd AS INTEGER INITIAL 2 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "Администратор всех Убд", 1,
+"Пользователь всех УБД", 3,
+"Выборочно ", 2
+     SIZE 40.5 BY 3 NO-UNDO.
+
+DEFINE VARIABLE TOG-superAdm AS LOGICAL INITIAL no 
+     LABEL "Супер Администратор" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 22.5 BY .83 NO-UNDO.
+
+/* Query definitions                                                    */
+&ANALYZE-SUSPEND
+DEFINE QUERY BRUserUbd FOR 
+      UserDbAdm SCROLLING.
+&ANALYZE-RESUME
+
+/* Browse definitions                                                   */
+DEFINE BROWSE BRUserUbd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BRUserUbd Dialog-Frame _STRUCTURED
+  QUERY BRUserUbd NO-LOCK DISPLAY
+      UserDbAdm.db-num COLUMN-LABEL "УБД"
+      getadm() COLUMN-LABEL "Роль" format "x(15)"
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 35.5 BY 7.75 FIT-LAST-COLUMN.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -232,14 +322,18 @@ DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1 COL 1
      b-close AT ROW 1 COL 11
      b-help AT ROW 1 COL 36.5
-     fi-last-name AT ROW 3.5 COL 5.62 WIDGET-ID 2
-     fi-first-name AT ROW 4.75 COL 9.62 WIDGET-ID 4
+     fi-last-name AT ROW 3.5 COL 5.63 WIDGET-ID 2
+     RAD-adm-gbd AT ROW 3.5 COL 50 NO-LABEL WIDGET-ID 36
+     fi-first-name AT ROW 4.75 COL 9.63 WIDGET-ID 4
      fi-second-name AT ROW 6 COL 4.5 WIDGET-ID 6
+     TOG-superAdm AT ROW 6.5 COL 50 WIDGET-ID 38
      fi-PS-label-2 AT ROW 7.25 COL 3 NO-LABEL WIDGET-ID 34
      fi-nik AT ROW 7.25 COL 14.5 NO-LABEL WIDGET-ID 32
+     RAD-adm-Ubd AT ROW 7.25 COL 50 NO-LABEL WIDGET-ID 42
      fi-phone-number AT ROW 8.5 COL 5.5 WIDGET-ID 8
      fi-mobile-phone-number AT ROW 9.75 COL 1.5 WIDGET-ID 10
-     fi-company AT ROW 11 COL 1.62 WIDGET-ID 12
+     fi-company AT ROW 11 COL 1.63 WIDGET-ID 12
+     BRUserUbd AT ROW 11 COL 51 WIDGET-ID 200
      fi-department AT ROW 12.25 COL 7.5 WIDGET-ID 14
      fi-position AT ROW 13.5 COL 3.5 WIDGET-ID 28
      fi-room AT ROW 14.75 COL 5.5 WIDGET-ID 16
@@ -250,8 +344,11 @@ DEFINE FRAME Dialog-Frame
      v-psn-name AT ROW 18.5 COL 28 COLON-ALIGNED NO-LABEL WIDGET-ID 40
      fi-PS-label AT ROW 19.75 COL 1.5 NO-LABEL WIDGET-ID 26
      ed-PS AT ROW 19.75 COL 14.5 NO-LABEL WIDGET-ID 24
+     btnAdm AT ROW 19 COL 51 WIDGET-ID 46
+     BtnDel AT ROW 19 COL 71.5 WIDGET-ID 48
+     
      fi-user-id AT ROW 2.5 COL 10.5 WIDGET-ID 30
-     SPACE(18.37) SKIP(19.07)
+     SPACE(61.00) SKIP(19.07)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Пользователь системы"
@@ -264,6 +361,9 @@ DEFINE FRAME Dialog-Frame
 /* Settings for THIS-PROCEDURE
    Type: Dialog-Box
    Allow: Basic,Browse,DB-Fields,Query
+   Temp-Tables and Buffers:
+      TABLE: UserDbAdm B "?" ? Temp-Table UserDbAdm
+   END-TABLES.
  */
 &ANALYZE-RESUME _END-PROCEDURE-SETTINGS
 
@@ -274,6 +374,7 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
+/* BROWSE-TAB BRUserUbd fi-company Dialog-Frame */
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
@@ -309,9 +410,25 @@ ASSIGN
 /* SETTINGS FOR FILL-IN fi-user-id IN FRAME Dialog-Frame
    NO-ENABLE ALIGN-L                                                    */
 ASSIGN 
-       v-psn-name:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+       v-psn-name:READ-ONLY IN FRAME Dialog-Frame          = TRUE
+       TOG-superAdm:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
+&ANALYZE-RESUME
+
+
+/* Setting information for Queries and Browse Widgets fields            */
+
+&ANALYZE-SUSPEND _QUERY-BLOCK BROWSE BRUserUbd
+/* Query rebuild information for BROWSE BRUserUbd
+     _TblList          = "UserDbAdm"
+     _Options          = "NO-LOCK INDEXED-REPOSITION"
+     _FldNameList[1]   > Temp-Tables.UserDbAdm.db-num
+"UserDbAdm.db-num" "УБД" ? "" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[2]   > "_<CALC>"
+"getadm()" "Роль" ? ? ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _Query            is OPENED
+*/  /* BROWSE BRUserUbd */
 &ANALYZE-RESUME
 
  
@@ -366,6 +483,9 @@ DO:
             fi-internal-phone-number
             fi-psn-code
             ed-PS
+            rad-adm-gbd
+            TOG-superAdm
+            RAD-adm-Ubd
         .
         assign
             p-out-last-name             = fi-last-name
@@ -382,7 +502,26 @@ DO:
             p-out-internal-phone-number = fi-internal-phone-number
             p-out-PS                    = ed-PS
             p-out-psn-code              = fi-psn-code
+            o-adm-gbd                   = if rad-adm-gbd eq 1
+                                          then yes
+                                          else if rad-adm-gbd eq 3
+                                          then no
+                                          else ?
+            o-superAdm                  = TOG-superAdm
+            o-adm-Ubd                   = if RAD-adm-Ubd eq 1
+                                          then yes
+                                          else if RAD-adm-Ubd eq 3
+                                          then no
+                                          else ?
+            
         .
+/*        if o-adm-gbd eq i-adm-gbd*/
+/*        then                     */
+/*           o-adm-gbd = ?.        */
+        if o-adm-ubd eq i-adm-ubd
+           and not mchenglistubd
+        then
+           o-adm-ubd = ?.
         if p-out-last-name              <> p-in-last-name
         or p-out-first-name             <> p-in-first-name
         or p-out-second-name            <> p-in-second-name
@@ -397,6 +536,11 @@ DO:
         or p-out-internal-phone-number  <> p-in-internal-phone-number
         or p-out-PS                     <> p-in-PS
         or p-out-psn-code               <> p-in-psn-code
+        or (o-adm-gbd                   <> i-adm-gbd)
+        or o-superAdm                   <> i-superAdm
+        or (    o-adm-Ubd ne ?
+            and o-adm-Ubd               <> i-adm-Ubd)
+        or mchenglistubd    
         then do:
             assign
                 p-accepted = yes
@@ -445,6 +589,60 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME btnAdm
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btnAdm Dialog-Frame
+ON CHOOSE OF btnAdm IN FRAME Dialog-Frame /* Админ */
+DO:
+   define variable vrowid as rowid no-undo.
+   if available UserDbAdm
+   then do:
+      if UserDbAdm.db-usr
+      then
+         if UserDbAdm.db-block
+         then do:
+            UserDbAdm.db-adm = yes.
+            UserDbAdm.db-block = no.
+          end.
+          else if UserDbAdm.db-adm
+          then 
+             UserDbAdm.db-adm = no.
+          else
+             UserDbAdm.db-block = yes.
+      else
+         UserDbAdm.db-usr = yes.
+      vrowid = rowid(UserDbAdm).
+      BRUserUbd:refresh () no-error.
+      reposition BRUserUbd to rowid vrowid no-error .
+      mchenglistubd = yes.
+   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME BtnDel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BtnDel Dialog-Frame
+ON CHOOSE OF BtnDel IN FRAME Dialog-Frame /* Удалить */
+DO:
+   define variable vrowid as rowid no-undo.
+   if available UserDbAdm
+   then do:
+      assign
+         UserDbAdm.db-adm = no
+         UserDbAdm.db-usr = no
+         UserDbAdm.db-block = no.
+         vrowid = rowid(UserDbAdm)
+      .
+      BRUserUbd:refresh () no-error.
+      reposition BRUserUbd to rowid vrowid no-error .
+      mchenglistubd = yes.
+   end.
+   
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-psn
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-psn Dialog-Frame
@@ -571,10 +769,33 @@ DO:
 
 END.
 
+&Scoped-define SELF-NAME RAD-adm-gbd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RAD-adm-gbd Dialog-Frame
+ON VALUE-CHANGED OF RAD-adm-gbd IN FRAME Dialog-Frame
+DO:
+   tog-superadm:visible = rad-adm-gbd:screen-value eq "1".
+   if not tog-superadm:visible
+   then
+      tog-superadm:screen-value = "no".
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME RAD-adm-Ubd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RAD-adm-Ubd Dialog-Frame
+ON VALUE-CHANGED OF RAD-adm-Ubd IN FRAME Dialog-Frame
+DO:
+   btnAdm:visible   = RAD-adm-Ubd:screen-value eq "2" and mSyperAdm.
+   BtnDel:visible   = RAD-adm-Ubd:screen-value eq "2" and mSyperAdm.
+   BRUserUbd:visible = RAD-adm-Ubd:screen-value eq "2" or g#db-num ne 0.
+END.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
+&Scoped-define BROWSE-NAME BRUserUbd
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -598,6 +819,22 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     { gbl/getcntxt.i get }
     run init-fields in this-procedure .
     RUN enable_UI.
+    
+    find first user-account-attr where user-account-attr.user-id    eq g#userid
+                                   and user-account-attr.attr-code  eq "superadm"
+    no-lock no-error.
+    if     available user-account-attr
+       and logical(user-account-attr.attr-value) eq yes
+    then
+       mSyperAdm = yes.  
+    apply "VALUE-CHANGED" to rad-adm-gbd.
+    apply "VALUE-CHANGED" to rad-adm-ubd.
+    TOG-superAdm:sensitive = mSyperAdm.
+    RAD-adm-gbd:sensitive = mSyperAdm.
+    RAD-adm-Ubd:sensitive = mSyperAdm.
+    RAD-adm-gbd:visible = g#db-num eq 0.
+    RAD-adm-Ubd:visible = g#db-num eq 0.
+    
     if p-mode = {&lookup}
     then do:
         disable
@@ -611,6 +848,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     else do:
         apply "entry":U to fi-last-name.
     end.
+    
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
@@ -695,13 +933,17 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY fi-last-name fi-first-name fi-second-name fi-PS-label-2 fi-nik 
           fi-phone-number fi-mobile-phone-number fi-company fi-department 
-          fi-position fi-room fi-e-mail fi-internal-phone-number fi-psn-code 
-          v-psn-name fi-PS-label ed-PS fi-user-id 
+          fi-position fi-room fi-e-mail fi-internal-phone-number 
+          fi-PS-label ed-PS fi-user-id 
+          fi-psn-code v-psn-name 
+          RAD-adm-gbd TOG-superAdm RAD-adm-Ubd
       WITH FRAME Dialog-Frame.
   ENABLE b-exit b-close b-help fi-last-name fi-first-name fi-second-name fi-nik 
          fi-phone-number fi-mobile-phone-number fi-company fi-department 
-         fi-position fi-room fi-e-mail fi-internal-phone-number fi-psn-code 
-         b-psn v-psn-name ed-PS 
+         fi-position fi-room fi-e-mail fi-internal-phone-number ed-PS
+         fi-psn-code b-psn v-psn-name 
+         btnAdm BtnDel 
+         RAD-adm-gbd TOG-superAdm  RAD-adm-Ubd BRUserUbd 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -785,6 +1027,18 @@ on error undo, return error
         ed-PS                       = p-in-PS
         fi-psn-code                 = p-in-psn-code
         v-psn-name                  = IF AVAILABLE buf_clients THEN buf_clients.obj-name ELSE "Не найден"
+        rad-adm-gbd                 = if i-adm-gbd eq yes
+                                      then 1
+                                      else if i-adm-gbd eq no
+                                      then 3
+                                      else 2
+        tog-superAdm                = i-superAdm
+        rad-adm-Ubd                 = if i-adm-Ubd eq yes
+                                      then 1
+                                      else if i-adm-Ubd eq no
+                                      then 3
+                                      else 2
+            
     .
     run get-nik-autofill in this-procedure (
           input fi-last-name
@@ -879,4 +1133,29 @@ END PROCEDURE. /* person-user */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+/* ************************  Function Implementations ***************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION GetAdm Dialog-Frame 
+FUNCTION GetAdm RETURNS CHARACTER
+  ( /* parameter-definitions */ ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+  
+  RETURN if UserDbAdm.db-adm 
+         then "Администратор"
+         else if UserDbAdm.db-block
+         then "Заблокирована"
+         else if UserDbAdm.db-usr
+         then "Пользователь"
+         else "Отсутствует"
+           .   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 

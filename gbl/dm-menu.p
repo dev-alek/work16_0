@@ -3585,6 +3585,21 @@ procedure m-okei-kkt-exe:
 
 end procedure. /* m-units-exe */
 
+procedure m-emrc-exe:
+
+  define variable rid#          as char     no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+run ref/emc.w(input  parparentproc
+      ,input  "b-add,b-del,b-upd"
+      ,output rid#).
+      
+  end.
+
+end procedure. /* m-emrc-exe */
+
 procedure m-tares-exe :
 
   define variable v-rid-list as character no-undo .
@@ -4637,20 +4652,6 @@ procedure m-cash-rate-exe :
 
 END PROCEDURE.
 
-procedure promosend :
-define input parameter p-pos-type as character no-undo .
-define input parameter p-action as character no-undo .
- run str/diallog.w (
-        input parparentproc
-      , input this-procedure
-      , input "str/promosend.p":U
-      , input (p-pos-type + {&delim-par} + v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + p-action)
-      , input no /*p-auto-go*/
-      , input "":U
-      , input substitute("Отсылка промоакций на кассы &1", p-pos-type, {&cd-type-IBm-XML})
-  ) no-error.
-end procedure. /* run-2cashpay */
-
 procedure bpasend :
 define input parameter p-pos-type as character no-undo .
 define input parameter p-action as character no-undo .
@@ -4716,6 +4717,32 @@ procedure m-catalog-corr-exe :
 
 end procedure. /* m-catalog-oss-exe */
 
+procedure m-cash-emrc-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/send-all.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrcdel':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
+      , input yes /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка очистки справочника ЕМЦ")
+  ) no-error.
+
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/send-all.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U)
+      , input yes /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка справочника ЕМЦ")
+  ) no-error.
+
+end procedure. /* m-cash-emrc-exe */
+
+
 procedure m-catalog-petrol-exe :
 
  run str/diallog.w (
@@ -4753,6 +4780,77 @@ procedure m-promo-d-exe :
   end.
 
 end procedure. /* m-cash-pay-exe */
+procedure m-catalog-block-nozzle :
+
+  define variable v-current-db-num as integer   no-undo .
+  define variable v-obj-db-num     as integer   no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    { gbl/curdbnum.i
+      v-current-db-num
+    }
+    { gbl/objdbnum.i
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      v-obj-db-num
+    }
+    if v-current-db-num = v-obj-db-num
+    then do:
+      /* todo - объект активный */
+      run str/blockplgdspm.w
+        (input parparentproc
+        ,input v-cntxt-obj-type
+        ,input v-cntxt-obj-code
+        ,input 'block'
+        ) .
+    end.
+    else do:
+      run str/blockplgdspm.w (input parparentproc,
+                      input v-cntxt-obj-type,
+                      input v-cntxt-obj-code,
+                      input '').
+    end.
+  end.
+
+end procedure. /* m-catalog-petrol-exe */
+
+procedure m-catalog-unblock-nozzle :
+
+  define variable v-current-db-num as integer   no-undo .
+  define variable v-obj-db-num     as integer   no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    { gbl/curdbnum.i
+      v-current-db-num
+    }
+    { gbl/objdbnum.i
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      v-obj-db-num
+    }
+    if v-current-db-num = v-obj-db-num
+    then do:
+      /* todo - объект активный */
+      run str/blockplgdspm.w
+        (input parparentproc
+        ,input v-cntxt-obj-type
+        ,input v-cntxt-obj-code
+        ,input 'un-block'
+        ) .
+    end.
+    else do:
+      run str/blockplgdspm.w (input parparentproc,
+                      input v-cntxt-obj-type,
+                      input v-cntxt-obj-code,
+                      input '').
+    end.
+  end.
+
+end procedure. /* m-catalog-petrol-exe */
 
 procedure m-bpa-u-exe :
 
@@ -4780,6 +4878,26 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
+      define variable v-row as rowid no-undo .
+      define buffer buf_PromoAction for ub.PromoAction .
+      define variable v-PromoName as character no-undo .
+    if v-cntxt-db-num = 0 then 
+    do:
+      for each buf_PromoAction exclusive-lock where buf_PromoAction.Status_ = 1 and
+        (buf_PromoAction.end-date < today or (buf_PromoAction.changeDate < today and
+        buf_PromoAction.changeDate <> 01/01/1970)):
+        buf_PromoAction.Status_ = 2 .
+        v-PromoName = v-PromoName + {&new-line} + buf_PromoAction.nameAction .
+      end.
+
+      if v-PromoName <> "" then 
+      do:
+        message "Статус был изменен на Заблокирован для акций:" skip
+          skip
+          v-PromoName
+          view-as alert-box.
+      end.
+    end.
     run ref/promo.p ( input parparentproc, input false, output v-rid-list) no-error.
   end.
 
@@ -8374,6 +8492,25 @@ end procedure. /* m-dc-list-exe */
 procedure m-chk-list-all-exe :
 run proc-chk-docs in this-procedure (input 'b-del', input {&g___object}).
 end procedure. /* m-chk-list-all */
+
+procedure m-chk-list-per-exe :
+DEFINE VARIABLE p-list as character no-undo .
+
+run str/tab-peresm.w (
+                    input parparentproc
+                    ,input 'b-restore'
+                    ,input if v-cntxt-db-num <> 0 then {&g___object} else {&all}
+                    ,input ?
+                    ,input v-cntxt-obj-type
+                    ,input v-cntxt-obj-code
+                    ,input '':U
+                    ,input '':U
+                    ,input ?
+                    ,input ?
+                    ,output p-list) no-error.
+end procedure. /* m-chk-list-all */
+
+
 
 procedure m-chk-list-exe :
 
@@ -13932,4 +14069,23 @@ PROCEDURE image-procedure-pr-fin :
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
+
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE promosend W-Win
+procedure promosend :
+define input parameter p-pos-type as character no-undo .
+define input parameter p-action as character no-undo .
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/promosend.p":U
+      , input (p-pos-type + {&delim-par} + v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + p-action + {&delim-par} + "")
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка промоакций на кассы &1", p-pos-type, {&cd-type-IBm-XML})
+  ) no-error.
+end procedure. /* promosend */
+/* _UIB-CODE-BLOCK-END */
+
 &ANALYZE-RESUME

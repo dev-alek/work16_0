@@ -43,6 +43,9 @@ run rep/ticket.p (
               ,input-output b-count
               ,input v-part-code
               ,input v-doc-code
+              ,input v-promo-code
+              ,input v-ActionId
+              ,input v-db-num
               ) no-error .
 
 

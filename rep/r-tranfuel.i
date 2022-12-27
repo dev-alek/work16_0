@@ -217,10 +217,18 @@ procedure CreateOneRec:
             tt-pay.pay-card      = v-pay-card
             .
       end.
-
+      find first clients where
+                    clients.obj-type = chk-doc.obj-type
+                and clients.obj-code = chk-doc.obj-code
+      no-lock no-error.
+      if not available clients 
+      then
+         return error "Нет объекта " + chk-doc.obj-type + string(chk-doc.obj-code) + " по чеку " + chk-doc.doc-code.
+         
       /* Попробуем найти первую из связанных в цепочке транзакций и возьмем из неё время начала */
       find first b-tran-fuel where
-                 b-tran-fuel.uuid      = tran-fuel.uuid
+                 b-tran-fuel.db-num    = clients.db-num
+             and b-tran-fuel.uuid      = tran-fuel.uuid
              and b-tran-fuel.uuid-cheq = ""
       no-lock no-error.
       if avail b-tran-fuel and b-tran-fuel.date-beg < tran-fuel.date-beg then

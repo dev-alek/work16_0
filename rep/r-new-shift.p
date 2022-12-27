@@ -47,7 +47,8 @@ define input parameter tog-5                    as   logical               no-un
 define input parameter tog-5-1                  as   logical               no-undo .
 define input parameter tog-6                    as   logical               no-undo .
 define input parameter tog-7                    as   logical               no-undo .
-define input parameter tog-8                    as   logical               no-undo .
+define input parameter tog-81                   as   logical               no-undo .
+define input parameter tog-82                   as   logical               no-undo .
 define input parameter tog-9                    as   logical               no-undo .
 define input parameter tog-10                   as   logical               no-undo .
 define input parameter tog-1-pump-one           as   logical               no-undo .
@@ -127,6 +128,7 @@ define new shared variable v-rep-shift-open-date     like ub.shift-obj.open-date
 define new shared variable v-rep-shift-open-time     like ub.shift-obj.open-time no-undo. /*время открытия смены*/
 define new shared variable v-rep-shift-close-date    like ub.shift-obj.close-date no-undo. /*дата закрытия смены*/
 define new shared variable v-rep-shift-close-time    like ub.shift-obj.close-time no-undo. /*время закрытия смены*/
+define new shared variable v-rep-shift-close         like ub.shift-obj.close-time no-undo. /*время закрытия смены*/
 define            variable v-count                   as integer   initial 0 no-undo .
 define            variable v-ii                      as integer   no-undo .
 define            variable v-str2                    as character no-undo .
@@ -180,65 +182,69 @@ run adm/shattri.p (
 
 if error-status:error then 
 do:
-    delete object v-tth.
-    message
-        "Не найден или незаполнен параметр - Формат печати сменного отчета"
-        view-as alert-box error .
-    return .
+   delete object v-tth.
+   message
+      "Не найден или незаполнен параметр - Формат печати сменного отчета"
+      view-as alert-box error .
+   return .
 end.
 
 /*создание листа помеченных листов для печати*/
 
 if tog-1 = true then 
 do:
-    tog-list = "tog-1".
+   tog-list = "tog-1".
 end.
 if tog-2 = true then 
 do:
-    tog-list = tog-list + ',' + "tog-2".
+   tog-list = tog-list + ',' + "tog-2".
 end.
 if tog-3 = true then 
 do:
-    tog-list = tog-list + ',' + "tog-3".
+   tog-list = tog-list + ',' + "tog-3".
 end.
 if tog-4 = true then 
 do:
-    tog-list = tog-list + ',' + "tog-4".
+   tog-list = tog-list + ',' + "tog-4".
 end.  
 if tog-5 = true then 
 do:
-    tog-list = tog-list + ',' + "tog-5".
+   tog-list = tog-list + ',' + "tog-5".
 end.  
 if tog-5-1 = true then 
 do:
-    tog-list = tog-list + ',' + "tog-5-1".
+   tog-list = tog-list + ',' + "tog-5-1".
 end.  
 if tog-7 = true then 
 do:
-    tog-list = tog-list + ',' + "tog-7".
+   tog-list = tog-list + ',' + "tog-7".
+end.
+if tog-81 = true then 
+do:
+   tog-list = tog-list + ',' + "tog-81".
 end.
 if tog-9 = true then 
 do:
-    tog-list = tog-list + ',' + "tog-9".
+   tog-list = tog-list + ',' + "tog-9".
 end.
 if tog-10 = true then 
 do:
-    tog-list = tog-list + ',' + "tog-10".
+   tog-list = tog-list + ',' + "tog-10".
 end.  
 
 if tog-list <> "" then 
 do:
-    tog-last = entry(num-entries(tog-list),tog-list).
+   tog-last = entry(num-entries(tog-list),tog-list).
 end.
 
 if p-batch > 0 then 
 do:
-    run get-userid in parparentproc ( output v-cntxt-userid).
-    run get-db-num in parparentproc ( output v-cntxt-db-num).
+   run get-userid in parparentproc ( output v-cntxt-userid).
+   run get-db-num in parparentproc ( output v-cntxt-db-num).
 end.
 else 
 do:
-    { gbl/getcntxt.i get }
+   { gbl/getcntxt.i get }
 end.
 
 &scop display-message ~
@@ -255,14 +261,14 @@ end.
 
 
 FIND FIRST ub.clients No-LOCK
-    WHERE ub.clients.obj-type = p-obj-type
-    AND ub.clients.obj-code = p-obj-code
-    No-ERROR.
+   WHERE ub.clients.obj-type = p-obj-type
+   AND ub.clients.obj-code = p-obj-code
+   No-ERROR.
 assign
-    rep-shift-store-name = if available ub.clients
+   rep-shift-store-name = if available ub.clients
              then ub.clients.obj-name
              else (p-obj-type + string(p-obj-code))
-    .
+   .
 { gbl/hostname.i p-obj-type p-obj-code v-host-code v-host-name}
 { gbl/getsect.i run p-obj-type p-obj-code {&attr-report-obj} }
 for each thbjattr_thbj-attr :
@@ -271,142 +277,142 @@ for each thbjattr_thbj-attr :
 end.
 if v-param_shft-qty = "" then v-param_shft-qty = "system" .
 define temp-table temp-shift-obj no-undo like ub.shift-obj
-    FIELD num as integer
-    INDEX ii IS UNIQUE num
-    .
+   FIELD num as integer
+   INDEX ii IS UNIQUE num
+   .
 
 RUN fmtcli-get-client IN THIS-PROCEDURE ( INPUT  p-obj-type
-    , INPUT  p-obj-code
-    ) .
+   , INPUT  p-obj-code
+   ) .
 assign
-    v-obj-address = ( if v-fmtcli-index <> '':U then ( v-fmtcli-index ) else '':U )
+   v-obj-address = ( if v-fmtcli-index <> '':U then ( v-fmtcli-index ) else '':U )
                             + ( if v-fmtcli-full-addres <> '':U then ( v-fmtcli-full-addres ) else '':U )
-    v-obj-phone   = ( if v-fmtcli-phone <> '':U then v-fmtcli-phone else '':U )
-    .
+   v-obj-phone   = ( if v-fmtcli-phone <> '':U then v-fmtcli-phone else '':U )
+   .
 
 for each ub.shift-obj  no-lock
-    where ub.shift-obj.obj-code   =  p-obj-code
-    and ub.shift-obj.obj-type   =  p-obj-type
-    and ub.shift-obj.shift-date >= X-date-Start
-    and ub.shift-obj.shift-date <= X-date-End
-    :
-    if ub.shift-obj.shift-date = X-date-Start and ub.shift-obj.shift-num < X-Shift-Start then next .
-    if ub.shift-obj.shift-date = X-date-End   and ub.shift-obj.shift-num > X-Shift-End then next .
+   where ub.shift-obj.obj-code   =  p-obj-code
+   and ub.shift-obj.obj-type   =  p-obj-type
+   and ub.shift-obj.shift-date >= X-date-Start
+   and ub.shift-obj.shift-date <= X-date-End
+   :
+   if ub.shift-obj.shift-date = X-date-Start and ub.shift-obj.shift-num < X-Shift-Start then next .
+   if ub.shift-obj.shift-date = X-date-End   and ub.shift-obj.shift-num > X-Shift-End then next .
 
-    if ub.shift-obj.status_ <> {&sht-closed} then 
-    do:
+   if ub.shift-obj.status_ <> {&sht-closed} then 
+   do:
       &scop my-message  substitute("На объекте &1 смена &2 с датой начала &3&4"  + ~
                                  "еще не закрыта!&4Сменный отчет сделать нельзя!"  ~
                                 , rep-shift-store-name ~
                                 ,ub.shift-obj.shift-num ~
                                 ,string(ub.shift-obj.shift-date,"99/99/9999") ~
                                 , ~{&new-line~})
-        {&display-message}.
-        if v-write-xml-error then 
-        do:
-            run cb_write-report-error in p-parent-handle ( input p-rebh
+      {&display-message}.
+      if v-write-xml-error then 
+      do:
+         run cb_write-report-error in p-parent-handle ( input p-rebh
                 ,input p-report-id
                 ,input ?
                 ,input {&severity-high}
                 ,input {&my-message}).
-        end.
-        RETURN.
-    end.
-    create temp-shift-obj .
-    assign 
-        v-count = v-count + 1 .
-    assign 
-        temp-shift-obj.num = v-count .
-    buffer-copy ub.shift-obj to temp-shift-obj .
-    if p-batch > 0
+      end.
+      RETURN.
+   end.
+   create temp-shift-obj .
+   assign 
+      v-count = v-count + 1 .
+   assign 
+      temp-shift-obj.num = v-count .
+   buffer-copy ub.shift-obj to temp-shift-obj .
+   if p-batch > 0
 
-        then 
-    do:
-        find first buf_shift where
-            buf_shift.obj-type = p-obj-type
-            and buf_shift.obj-code = p-obj-code
-            and buf_shift.shift-date = x-date-end
-            and buf_shift.shift-num = x-shift-end no-error.
-        if not available buf_shift then 
-        do:
-            create buf_shift.
-            assign
-                buf_shift.obj-type    = p-obj-type
-                buf_shift.obj-code    = p-obj-code
-                buf_shift.shift-date  = ub.shift-obj.shift-date
-                buf_shift.shift-num   = ub.shift-obj.shift-num
-                buf_shift.db-num      = ub.clients.db-num
-                buf_shift.obj-name    = ub.clients.obj-name
-                buf_shift.obj-address = v-obj-address
-                buf_shift.obj-phone   = v-obj-phone
-                buf_shift.db-num      = ub.clients.db-num
-                buf_shift.shift-name  = ub.shift-obj.shift-name
-                buf_shift.base-code   = p-base-code
-                buf_shift.curr-abbr   = p-curr-abbr
-                .
-            release buf_shift.
-        end.
+      then 
+   do:
+      find first buf_shift where
+         buf_shift.obj-type = p-obj-type
+         and buf_shift.obj-code = p-obj-code
+         and buf_shift.shift-date = x-date-end
+         and buf_shift.shift-num = x-shift-end no-error.
+      if not available buf_shift then 
+      do:
+         create buf_shift.
+         assign
+            buf_shift.obj-type    = p-obj-type
+            buf_shift.obj-code    = p-obj-code
+            buf_shift.shift-date  = ub.shift-obj.shift-date
+            buf_shift.shift-num   = ub.shift-obj.shift-num
+            buf_shift.db-num      = ub.clients.db-num
+            buf_shift.obj-name    = ub.clients.obj-name
+            buf_shift.obj-address = v-obj-address
+            buf_shift.obj-phone   = v-obj-phone
+            buf_shift.db-num      = ub.clients.db-num
+            buf_shift.shift-name  = ub.shift-obj.shift-name
+            buf_shift.base-code   = p-base-code
+            buf_shift.curr-abbr   = p-curr-abbr
+            .
+         release buf_shift.
+      end.
       &scop my-message substitute("&1&2 cмена &3 П.&4", p-obj-type, p-obj-code, string(x-date-end, "99/99/9999"), x-shift-end)
-        {&display-message}.
-    end.
-    /* персонал */
-    FOR EACH ub.shift-staff No-LOCK WHERE
-        ub.shift-staff.obj-type   = p-obj-type AND
-        ub.shift-staff.obj-code   = p-obj-code AND
-        ub.shift-staff.shift-date = ub.shift-obj.shift-date AND
-        ub.shift-staff.shift-num  = ub.shift-obj.shift-num AND
-        ub.shift-staff.next-shift = no AND
-        ub.shift-staff.staff-role = no and
-        ub.shift-staff.psn-num    >= 0 :
-        if lookup( {&space-char} + ub.shift-staff.name, rep-shift-for-opers ) = 0 then 
-        do:
-            assign
-                rep-shift-for-opers = rep-shift-for-opers + (if rep-shift-for-opers > '' then {&comma-char} else "")  + ub.shift-staff.name
-                .
-        end.
-    end.
+      {&display-message}.
+   end.
+   /* персонал */
+   FOR EACH ub.shift-staff No-LOCK WHERE
+      ub.shift-staff.obj-type   = p-obj-type AND
+      ub.shift-staff.obj-code   = p-obj-code AND
+      ub.shift-staff.shift-date = ub.shift-obj.shift-date AND
+      ub.shift-staff.shift-num  = ub.shift-obj.shift-num AND
+      ub.shift-staff.next-shift = no AND
+      ub.shift-staff.staff-role = no and
+      ub.shift-staff.psn-num    >= 0 :
+      if lookup( {&space-char} + ub.shift-staff.name, rep-shift-for-opers ) = 0 then 
+      do:
+         assign
+            rep-shift-for-opers = rep-shift-for-opers + (if rep-shift-for-opers > '' then {&comma-char} else "")  + ub.shift-staff.name
+            .
+      end.
+   end.
 
-    if rep-shift-for-opers > '' then
-        assign
-            rep-shift-for-opers1 = entry (1, rep-shift-for-opers, {&comma-char})
-            rep-shift-rol-oper   = "Оператор"
+   if rep-shift-for-opers > '' then
+      assign
+         rep-shift-for-opers1 = entry (1, rep-shift-for-opers, {&comma-char})
+         rep-shift-rol-oper   = "Оператор"
               no-error.
 
 
-    if num-entries (rep-shift-for-opers, {&comma-char}) >= 2 then
-        assign
-            rep-shift-for-opers2 = entry (2, rep-shift-for-opers, {&comma-char})
-            rep-shift-rol-oper2  = "Оператор"
+   if num-entries (rep-shift-for-opers, {&comma-char}) >= 2 then
+      assign
+         rep-shift-for-opers2 = entry (2, rep-shift-for-opers, {&comma-char})
+         rep-shift-rol-oper2  = "Оператор"
               no-error.
 
 
-    FOR EACH ub.shift-staff No-LOCK WHERE
-        ub.shift-staff.obj-type = p-obj-type AND
-        ub.shift-staff.obj-code = p-obj-code AND
-        ub.shift-staff.shift-date = temp-shift-obj.shift-date AND
-        ub.shift-staff.shift-num  = temp-shift-obj.shift-num AND
-        ub.shift-staff.next-shift = no AND
-        ub.shift-staff.staff-role = yes and
-        ub.shift-staff.psn-num    >= 0 :
-        if lookup( {&space-char} + ub.shift-staff.name, rep-shift-for-mng ) = 0 then 
-        do:
-            assign
-                rep-shift-for-mng = rep-shift-for-mng + (if rep-shift-for-mng > '' then {&comma-char} else "")  + ub.shift-staff.name
-                .
-        end.
-    end.
+   FOR EACH ub.shift-staff No-LOCK WHERE
+      ub.shift-staff.obj-type = p-obj-type AND
+      ub.shift-staff.obj-code = p-obj-code AND
+      ub.shift-staff.shift-date = temp-shift-obj.shift-date AND
+      ub.shift-staff.shift-num  = temp-shift-obj.shift-num AND
+      ub.shift-staff.next-shift = no AND
+      ub.shift-staff.staff-role = yes and
+      ub.shift-staff.psn-num    >= 0 :
+      if lookup( {&space-char} + ub.shift-staff.name, rep-shift-for-mng ) = 0 then 
+      do:
+         assign
+            rep-shift-for-mng = rep-shift-for-mng + (if rep-shift-for-mng > '' then {&comma-char} else "")  + ub.shift-staff.name
+            .
+      end.
+   end.
 
-    if rep-shift-for-mng > '' then
-        assign
-            rep-shift-for-mng1 = entry (1, rep-shift-for-mng, {&comma-char})
-            rep-shift-rol-mng  = "Старший оператор"
+   if rep-shift-for-mng > '' then
+      assign
+         rep-shift-for-mng1 = entry (1, rep-shift-for-mng, {&comma-char})
+         rep-shift-rol-mng  = "Старший оператор"
               no-error.
 
 
-    if num-entries (rep-shift-for-mng, {&comma-char}) >= 2 then
-        assign
-            rep-shift-for-mng2 = entry (2, rep-shift-for-mng, {&comma-char})
-            rep-shift-rol-mng2 = "Старший оператор"
+   if num-entries (rep-shift-for-mng, {&comma-char}) >= 2 then
+      assign
+         rep-shift-for-mng2 = entry (2, rep-shift-for-mng, {&comma-char})
+         rep-shift-rol-mng2 = "Старший оператор"
               no-error.
 
 /*    end.*/
@@ -423,62 +429,65 @@ DO:
                                 , X-shift-start ~
                                 ,string(X-date-start,"99/99/9999") ~
                                 , ~{&new-line~} )
-    {&display-message}.
-    if v-write-xml-error then 
-    do:
-        run cb_write-report-error in p-parent-handle ( input p-rebh
-            ,input p-report-id
-            ,input ?
-            ,input {&severity-high}
-            ,input {&my-message}).
-    end.
-    RETURN.
+   {&display-message}.
+   if v-write-xml-error then 
+   do:
+      run cb_write-report-error in p-parent-handle ( input p-rebh
+         ,input p-report-id
+         ,input ?
+         ,input {&severity-high}
+         ,input {&my-message}).
+   end.
+   RETURN.
 End.
 assign
-    x-date-Start          = temp-shift-obj.shift-date
-    X-Shift-Start         = temp-shift-obj.shift-num
-    v-rep-shift-open-date = temp-shift-obj.open-date
-    v-rep-shift-open-time = temp-shift-obj.open-time
-    .
+   x-date-Start          = temp-shift-obj.shift-date
+   X-Shift-Start         = temp-shift-obj.shift-num
+   v-rep-shift-open-date = temp-shift-obj.open-date
+   v-rep-shift-open-time = temp-shift-obj.open-time
+   .
   
 /* корректируем последнюю смену  */
 find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
 if available temp-shift-obj then 
 do:
-    assign
-        x-date-End             = temp-shift-obj.shift-date
-        X-Shift-End            = temp-shift-obj.shift-num
-        v-rep-shift-close-date = temp-shift-obj.close-date
-        v-rep-shift-close-time = temp-shift-obj.close-time
-        .
+   assign
+      x-date-End             = temp-shift-obj.shift-date
+      X-Shift-End            = temp-shift-obj.shift-num
+      v-rep-shift-close-date = temp-shift-obj.close-date
+      v-rep-shift-close-time = temp-shift-obj.open-time
+      v-rep-shift-close      = temp-shift-obj.close-time
+      .
 end.
-  
-  
+
+if x-shift-start = x-shift-end and x-date-start = x-date-end then x-tog-shift = true . 
+else x-tog-shift = false .
+
 /* ищем следующюю смену и ее персонал */
 FIND first next-shift-obj NO-LOCK
-    WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type
-    and next-shift-obj.obj-code   = temp-shift-obj.obj-code
-    and next-shift-obj.shift-date = temp-shift-obj.shift-date
-    and next-shift-obj.shift-num  = temp-shift-obj.shift-num
-    no-error .
+   WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type
+   and next-shift-obj.obj-code   = temp-shift-obj.obj-code
+   and next-shift-obj.shift-date = temp-shift-obj.shift-date
+   and next-shift-obj.shift-num  = temp-shift-obj.shift-num
+   no-error .
 FIND NEXT  next-shift-obj SHARE-LOCK WHERE next-shift-obj.obj-type = p-obj-type AND next-shift-obj.obj-code = p-obj-code use-index pi NO-ERROR.
 FIND FIRST ub.shift-staff No-LOCK WHERE
-    ub.shift-staff.obj-type   = p-obj-type AND
-    ub.shift-staff.obj-code   = p-obj-code AND
-    ub.shift-staff.shift-date = (if available next-shift-obj then next-shift-obj.shift-date else temp-shift-obj.shift-date) AND
-    ub.shift-staff.shift-num  = (if available next-shift-obj then next-shift-obj.shift-num  else temp-shift-obj.shift-num) AND
-    ub.shift-staff.next-shift = (if available next-shift-obj then no else yes) AND
-    ub.shift-staff.staff-role = yes and
-    ub.shift-staff.psn-num    >= 0 No-ERROR.
+   ub.shift-staff.obj-type   = p-obj-type AND
+   ub.shift-staff.obj-code   = p-obj-code AND
+   ub.shift-staff.shift-date = (if available next-shift-obj then next-shift-obj.shift-date else temp-shift-obj.shift-date) AND
+   ub.shift-staff.shift-num  = (if available next-shift-obj then next-shift-obj.shift-num  else temp-shift-obj.shift-num) AND
+   ub.shift-staff.next-shift = (if available next-shift-obj then no else yes) AND
+   ub.shift-staff.staff-role = yes and
+   ub.shift-staff.psn-num    >= 0 No-ERROR.
 assign 
-    rep-shift-for-mng-next = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+   rep-shift-for-mng-next = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
 rep-shift-rol-mng-next = "Старший оператор"  
-    .
+   .
 /*создание */
 
 run get-report-num in parParentProc (
-    output p-report-id
-    ).
+   output p-report-id
+   ).
 v-report-name-html = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
 
 if v-param-code = 3 then v-param = yes. 
@@ -586,84 +595,84 @@ do:
 end.
 
 /*если нужна хоть какая разброска платежей по чекам то сделаем*/                                                                                                                                                    
-if tog-2 or tog-3 or tog-4 or tog-8 then 
+if tog-2 or tog-3 or tog-4 /*or tog-8 */ then 
 do:                                                                                                                                                                        
-    assign                                                                                                                                                                                                            
-        sheets = if tog-2 then 1000 else 0                                                                                                                                                                                
-        sheets = sheets + if tog-3 then 100 else 0                                                                                                                                                                        
-        sheets = sheets + if tog-4 then 10 else 0                                                                                                                                                                         
-        .
+   assign                                                                                                                                                                                                            
+      sheets = if tog-2 then 1000 else 0                                                                                                                                                                                
+      sheets = sheets + if tog-3 then 100 else 0                                                                                                                                                                        
+      sheets = sheets + if tog-4 then 10 else 0                                                                                                                                                                         
+      .
                                                                                                                                                                                                               
-    if tog-3 then 
-    do:                                                                                                                                                                                                 
-        /*группы хотелось бы знать заранее*/                                                                                                                                                                                
-        run rep/r-shftgr.p                                                                                                                                                                                              
-            ( input p-obj-type                                                                                                                                                                                            
-            ,input p-obj-code                                                                                                                                                                                            
-            ,input X-date-Start                                                                                                                                                                                          
-            ,input X-Shift-Start                                                                                                                                                                                         
-            ,input xClassify                                                                                                                                                                                             
-            ,input xSortType                                                                                                                                                                                             
-            ,input xtog-level                                                                                                                                                                                            
-            ,input xvar-level                                                                                                                                                                                            
-            ) no-error.                                                                                                                                                                                                   
+   if tog-3 then 
+   do:                                                                                                                                                                                                 
+      /*группы хотелось бы знать заранее*/                                                                                                                                                                                
+      run rep/r-shftgr.p                                                                                                                                                                                              
+         ( input p-obj-type                                                                                                                                                                                            
+         ,input p-obj-code                                                                                                                                                                                            
+         ,input X-date-Start                                                                                                                                                                                          
+         ,input X-Shift-Start                                                                                                                                                                                         
+         ,input xClassify                                                                                                                                                                                             
+         ,input xSortType                                                                                                                                                                                             
+         ,input xtog-level                                                                                                                                                                                            
+         ,input xvar-level                                                                                                                                                                                            
+         ) no-error.                                                                                                                                                                                                   
                                                                                                                                                                                                                     
-    end.                                                                                                                                                                                                              
+   end.                                                                                                                                                                                                              
   
                                                                                                                                                                                                    
-    run rep/r-shftc2.p (                                                                                                                                                                                              
-        INPUT p-obj-type                                                                                                                                                                                  
-        ,INPUT p-obj-code                                                                                                                                                                                  
-        ,INPUT X-date-start                                                                                                                                                                                
-        ,INPUT X-Shift-Start                                                                                                                                                                               
-        ,INPUT X-date-end                                                                                                                                                                                  
-        ,INPUT X-Shift-end                                                                                                                                                                                 
-        ,INPUT SHEETS                                                                                                                                                                                      
-        ,INPUT tog-2                                                                                                                                                                                       
-        ,INPUT tog-3                                                                                                                                                                                       
-        ,INPUT tog-4                                                                                                                                                                                       
-        ,INPUT tog-8                                                                                                                                                                                       
-        ,INPUT (Xclassify = "totals":U)                                                                                                                                                                    
-        ,INPUT (x-selectgood = {&g-grp})                                                                                                                                                                   
-        ,INPUT p-batch
-        ,INPUT v-param)                                                                                                                                                                                    
-        no-error.             
-    if error-status:error then                                                    
-    do:                                                                           
-        message error-status:error error-status:get-message(1)  view-as alert-box.
-    /*после этого появляются записи в таблицах treal-2 treal-3 treal-4 */         
-    end.                                                                         
-    FIND LAST  previous-shift-obj SHARE-LOCK WHERE                                                                                                                                                                    
-        previous-shift-obj.obj-type = p-obj-type AND                                                                                                                                                          
-        previous-shift-obj.obj-code = p-obj-code AND                                                                                                                                                          
-        ((previous-shift-obj.shift-date = X-date-start AND                                                                                                                                                    
-        previous-shift-obj.shift-num < X-shift-start) OR                                                                                                                                                      
-        previous-shift-obj.shift-date < X-date-start)                                                                                                                                                         
-        use-index pi NO-ERROR.                                                                                                                                                                                
-    if available previous-shift-obj then 
-    do:                                                                                                                                                                          
-        assign                                                                                                                                                                                                          
-            v-previous-shift-date = previous-shift-obj.shift-date                                                                                                                                                           
-            v-current-shift-date  = X-date-start                                                                                                                                                                             
-            .                                                                                                                                                                                                               
-        run rep/chk-ahz.p (                                                                                                                                                                                             
-            input        p-obj-type                                                                                                                                                                           
-            ,input        p-obj-code                                                                                                                                                                          
-            ,input        yes            /* p-verify-detail     */                                                                                                                                            
-            ,input        yes            /* p-verify-arh        */                                                                                                                                            
-            ,input        no             /* p-verify-ahsp       */                                                                                                                                            
-            ,input        no             /* p-verify-aht        */                                                                                                                                            
-            ,input        (p-batch = integer({&repcalc-type-operator}))            /* p-check-act         */                                                                                                  
-            ,input        v-cntxt-db-num /* p-check-act-db-num  */                                                                                                                                            
-            ,input        v-cntxt-userid /* p-check-act-user-id */                                                                                                                                            
-            ,input-output v-previous-shift-date                                                                                                                                                               
-            ,input-output v-current-shift-date                                                                                                                                                                
-            ,output       v-archive-ok                                                                                                                                                                        
-            ,output       v-comment                                                                                                                                                                           
-            ,output       v-can-print                                                                                                                                                                         
-            ) no-error .                                                                                                                                                                                        
-        if error-status:error then 
-        do:                                                                                                                                                                                  
+   run rep/r-shftc2.p (                                                                                                                                                                                              
+      INPUT p-obj-type                                                                                                                                                                                  
+      ,INPUT p-obj-code                                                                                                                                                                                  
+      ,INPUT X-date-start                                                                                                                                                                                
+      ,INPUT X-Shift-Start                                                                                                                                                                               
+      ,INPUT X-date-end                                                                                                                                                                                  
+      ,INPUT X-Shift-end                                                                                                                                                                                 
+      ,INPUT SHEETS                                                                                                                                                                                      
+      ,INPUT tog-2                                                                                                                                                                                       
+      ,INPUT tog-3                                                                                                                                                                                       
+      ,INPUT tog-4                                                                                                                                                                                       
+      ,INPUT tog-81                                                                                                                                                                                       
+      ,INPUT (Xclassify = "totals":U)                                                                                                                                                                    
+      ,INPUT (x-selectgood = {&g-grp})                                                                                                                                                                   
+      ,INPUT p-batch
+      ,INPUT v-param)                                                                                                                                                                                    
+      no-error.             
+   if error-status:error then                                                    
+   do:                                                                           
+      message error-status:error error-status:get-message(1)  view-as alert-box.
+   /*после этого появляются записи в таблицах treal-2 treal-3 treal-4 */         
+   end.                                                                         
+   FIND LAST  previous-shift-obj SHARE-LOCK WHERE                                                                                                                                                                    
+      previous-shift-obj.obj-type = p-obj-type AND                                                                                                                                                          
+      previous-shift-obj.obj-code = p-obj-code AND                                                                                                                                                          
+      ((previous-shift-obj.shift-date = X-date-start AND                                                                                                                                                    
+      previous-shift-obj.shift-num < X-shift-start) OR                                                                                                                                                      
+      previous-shift-obj.shift-date < X-date-start)                                                                                                                                                         
+      use-index pi NO-ERROR.                                                                                                                                                                                
+   if available previous-shift-obj then 
+   do:                                                                                                                                                                          
+      assign                                                                                                                                                                                                          
+         v-previous-shift-date = previous-shift-obj.shift-date                                                                                                                                                           
+         v-current-shift-date  = X-date-start                                                                                                                                                                             
+         .                                                                                                                                                                                                               
+      run rep/chk-ahz.p (                                                                                                                                                                                             
+         input        p-obj-type                                                                                                                                                                           
+         ,input        p-obj-code                                                                                                                                                                          
+         ,input        yes            /* p-verify-detail     */                                                                                                                                            
+         ,input        yes            /* p-verify-arh        */                                                                                                                                            
+         ,input        no             /* p-verify-ahsp       */                                                                                                                                            
+         ,input        no             /* p-verify-aht        */                                                                                                                                            
+         ,input        (p-batch = integer({&repcalc-type-operator}))            /* p-check-act         */                                                                                                  
+         ,input        v-cntxt-db-num /* p-check-act-db-num  */                                                                                                                                            
+         ,input        v-cntxt-userid /* p-check-act-user-id */                                                                                                                                            
+         ,input-output v-previous-shift-date                                                                                                                                                               
+         ,input-output v-current-shift-date                                                                                                                                                                
+         ,output       v-archive-ok                                                                                                                                                                        
+         ,output       v-comment                                                                                                                                                                           
+         ,output       v-can-print                                                                                                                                                                         
+         ) no-error .                                                                                                                                                                                        
+      if error-status:error then 
+      do:                                                                                                                                                                                  
       &scop my-message substitute("&1 &2 &3&4Ошибка при вызове программы chk-ahz.p&4&5&4&6"  ~
                                   ,vss-workfile  ~
                                   ,vss-revision  ~
@@ -671,20 +680,20 @@ do:
                                   ,~{&new-line~} ~
                                   ,error-status :get-message(1)  ~
                                   ,return-value )
-            {&display-message}.                                                                                                                                                                                      
-            if v-write-xml-error then 
-            do:                                                                                                                                                                                 
-                run cb_write-report-error in p-parent-handle ( input p-rebh                                                                                                                                                 
-                    ,input p-report-id                                                                                                                                            
-                    ,input ?                                                                                                                                                      
-                    ,input {&severity-high}                                                                                                                                       
-                    ,input {&my-message}).                                                                                                                                        
-            end.                                                                                                                                                                                                          
-            return error .                                                                                                                                                                                                
-        end. /*if error-status:error then do:*/                                                                                                                                                                         
-        if X-date-start < v-previous-shift-date                                                                                                                                                                         
-            or X-date-start > v-current-shift-date  then 
-        do:                                                                                                                                                                
+         {&display-message}.                                                                                                                                                                                      
+         if v-write-xml-error then 
+         do:                                                                                                                                                                                 
+            run cb_write-report-error in p-parent-handle ( input p-rebh                                                                                                                                                 
+               ,input p-report-id                                                                                                                                            
+               ,input ?                                                                                                                                                      
+               ,input {&severity-high}                                                                                                                                       
+               ,input {&my-message}).                                                                                                                                        
+         end.                                                                                                                                                                                                          
+         return error .                                                                                                                                                                                                
+      end. /*if error-status:error then do:*/                                                                                                                                                                         
+      if X-date-start < v-previous-shift-date                                                                                                                                                                         
+         or X-date-start > v-current-shift-date  then 
+      do:                                                                                                                                                                
       &scop my-message substitute("Объект &1&2 Печать 2, 3 и 4 листа сменного отчета за выбранную дату невозможна&3"  + ~
                                   "Отсутствуют подробные складские архивы&3"  + ~
                                   "Возможные даты отчета: &4-&5&3&6&3" ~
@@ -694,53 +703,53 @@ do:
                                   ,string(v-previous-shift-date, '99/99/9999':u) ~
                                   ,string(v-current-shift-date, '99/99/9999':u)  ~
                                   ,v-comment)
-            {&display-message}.                                                                                                                                                                                       
-            if v-write-xml-error then 
-            do:                                                                                                                                                                                 
-                run cb_write-report-error in p-parent-handle ( input p-rebh                                                                                                                                                 
-                    ,input p-report-id                                                                                                                                            
-                    ,input ?                                                                                                                                                      
-                    ,input {&severity-high}                                                                                                                                       
-                    ,input {&my-message}).                                                                                                                                        
-            end.                                                                                                                                                                                                          
-            assign                                                                                                                                                                                                        
-                v-run-2-3-4 = no                                                                                                                                                                                              
-                .                                                                                                                                                                                                             
-        end. /*if X-date-start < v-previous-shift-date*/                                                                                                                                                                
-    end. /* if available previous-shift-obj */                                                                                                                                                                        
+         {&display-message}.                                                                                                                                                                                       
+         if v-write-xml-error then 
+         do:                                                                                                                                                                                 
+            run cb_write-report-error in p-parent-handle ( input p-rebh                                                                                                                                                 
+               ,input p-report-id                                                                                                                                            
+               ,input ?                                                                                                                                                      
+               ,input {&severity-high}                                                                                                                                       
+               ,input {&my-message}).                                                                                                                                        
+         end.                                                                                                                                                                                                          
+         assign                                                                                                                                                                                                        
+            v-run-2-3-4 = no                                                                                                                                                                                              
+            .                                                                                                                                                                                                             
+      end. /*if X-date-start < v-previous-shift-date*/                                                                                                                                                                
+   end. /* if available previous-shift-obj */                                                                                                                                                                        
 end. /* if tog-2 = yes or tog-3 = yes or tog-4 = yes */                                                                                                                                                             
 
 if tog-2 = true then 
 do:
 
-    /*Вызов процедуры напечатывания шапки для часть2*/
+   /*Вызов процедуры напечатывания шапки для часть2*/
 
-    run first-line-tog2-html in this-procedure (
-        input v-report-name-html
-        ).  
-    if v-param-code = 3 then 
-    do: 
-        run rep/r-new-shift2_3.p                                                                                                                                                                                                
-            ( input parparentproc                                                                                                                                                                                           
-            ,input p-parent-handle                                                                                                                                                                                         
-            ,input p-log-handle                                                                                                                                                                                            
-            ,input p-cont-handle                                                                                                                                                                                           
-            ,input p-rebh                                                                                                                                                                                                  
-            ,input v-report-name-html                                                                                                                                                                                             
-            ,input p-xsd-file                                                                                                                                                                                              
-            ,input p-log-file-name                                                                                                                                                                                         
-            ,input p-batch                                                                                                                                                                                                 
-            ,input p-codex-id                                                                                                                                                                                              
-            ,input p-ruleset-id                                                                                                                                                                                            
-            ,input p-obj-type                                                                                                                                                                                              
-            ,input p-obj-code                                                                                                                                                                                              
-            ,input p-z-number-list                                                                                                                                                                                         
-            ,input v-previous-shift-date                                                                                                                                                                                   
-            ,input tog-2-cp-grp
+   run first-line-tog2-html in this-procedure (
+      input v-report-name-html
+      ).  
+   if v-param-code = 3 then 
+   do: 
+      run rep/r-new-shift2_3.p                                                                                                                                                                                                
+         ( input parparentproc                                                                                                                                                                                           
+         ,input p-parent-handle                                                                                                                                                                                         
+         ,input p-log-handle                                                                                                                                                                                            
+         ,input p-cont-handle                                                                                                                                                                                           
+         ,input p-rebh                                                                                                                                                                                                  
+         ,input v-report-name-html                                                                                                                                                                                             
+         ,input p-xsd-file                                                                                                                                                                                              
+         ,input p-log-file-name                                                                                                                                                                                         
+         ,input p-batch                                                                                                                                                                                                 
+         ,input p-codex-id                                                                                                                                                                                              
+         ,input p-ruleset-id                                                                                                                                                                                            
+         ,input p-obj-type                                                                                                                                                                                              
+         ,input p-obj-code                                                                                                                                                                                              
+         ,input p-z-number-list                                                                                                                                                                                         
+         ,input v-previous-shift-date                                                                                                                                                                                   
+         ,input tog-2-cp-grp
                                                                                                                                                                                       
-            ) no-error.                                                                                                                                                                                                     
-        if error-status:error then 
-        do:                                                                                                                                                                                    
+         ) no-error.                                                                                                                                                                                                     
+      if error-status:error then 
+      do:                                                                                                                                                                                    
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -748,32 +757,32 @@ do:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-            {&display-message}.                                                                                                                                                                                          
-        end.  
-    end. 
-    else 
-    do: 
-        run rep/r-new-shift2.p                                                                                                                                                                                                
-            ( input parparentproc                                                                                                                                                                                           
-            ,input p-parent-handle                                                                                                                                                                                         
-            ,input p-log-handle                                                                                                                                                                                            
-            ,input p-cont-handle                                                                                                                                                                                           
-            ,input p-rebh                                                                                                                                                                                                  
-            ,input v-report-name-html                                                                                                                                                                                             
-            ,input p-xsd-file                                                                                                                                                                                              
-            ,input p-log-file-name                                                                                                                                                                                         
-            ,input p-batch                                                                                                                                                                                                 
-            ,input p-codex-id                                                                                                                                                                                              
-            ,input p-ruleset-id                                                                                                                                                                                            
-            ,input p-obj-type                                                                                                                                                                                              
-            ,input p-obj-code                                                                                                                                                                                              
-            ,input p-z-number-list                                                                                                                                                                                         
-            ,input v-previous-shift-date                                                                                                                                                                                   
-            ,input tog-2-cp-grp
+         {&display-message}.                                                                                                                                                                                          
+      end.  
+   end. 
+   else 
+   do: 
+      run rep/r-new-shift2.p                                                                                                                                                                                                
+         ( input parparentproc                                                                                                                                                                                           
+         ,input p-parent-handle                                                                                                                                                                                         
+         ,input p-log-handle                                                                                                                                                                                            
+         ,input p-cont-handle                                                                                                                                                                                           
+         ,input p-rebh                                                                                                                                                                                                  
+         ,input v-report-name-html                                                                                                                                                                                             
+         ,input p-xsd-file                                                                                                                                                                                              
+         ,input p-log-file-name                                                                                                                                                                                         
+         ,input p-batch                                                                                                                                                                                                 
+         ,input p-codex-id                                                                                                                                                                                              
+         ,input p-ruleset-id                                                                                                                                                                                            
+         ,input p-obj-type                                                                                                                                                                                              
+         ,input p-obj-code                                                                                                                                                                                              
+         ,input p-z-number-list                                                                                                                                                                                         
+         ,input v-previous-shift-date                                                                                                                                                                                   
+         ,input tog-2-cp-grp
                                                                                                                                                                                       
-            ) no-error.                                                                                                                                                                                                     
-        if error-status:error then 
-        do:                                                                                                                                                                                    
+         ) no-error.                                                                                                                                                                                                     
+      if error-status:error then 
+      do:                                                                                                                                                                                    
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -781,25 +790,25 @@ do:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-            {&display-message}.                                                                                                                                                                                          
-        end.  
-    end. 
-    if tog-last <> "tog-2" then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
+         {&display-message}.                                                                                                                                                                                          
+      end.  
+   end. 
+   if tog-last <> "tog-2" then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
         </table>
         '                                                                                      
-            , chr(123), chr(125)                                                                                                 
-            ).                                                                                                    
-        output stream OutStr-html close.
-    end.
-    else
-        run last-line-tog-html in this-procedure (
-            input v-report-name-html
-            ).
+         , chr(123), chr(125)                                                                                                 
+         ).                                                                                                    
+      output stream OutStr-html close.
+   end.
+   else
+      run last-line-tog-html in this-procedure (
+         input v-report-name-html
+         ).
 end.                                                                                                                                                                                                           
                   
 
@@ -807,36 +816,36 @@ end.
 if tog-3 = yes and v-run-2-3-4 = yes then 
 do:
 
-    /*Вызов процедуры напечатывания шапки для часть3*/
-    run first-line-tog3-html in this-procedure (
-        input v-report-name-html
-        ).  
-    if v-param-code = 3 then 
-    do:
-        run rep/r-new-shift3_3.p (
-            input parparentproc
-            ,input p-parent-handle
-            ,input p-log-handle
-            ,input p-cont-handle
-            ,input p-rebh
-            ,input v-report-name-html
-            ,input p-xsd-file
-            ,input p-log-file-name
-            ,input p-batch
-            ,input p-codex-id
-            ,input p-ruleset-id
-            ,input p-obj-type
-            ,input p-obj-code
-            ,input p-z-number-list
-            ,input xClassify
-            ,input xSortType
-            ,input xtog-level
-            ,input xvar-level
-            ,input v-previous-shift-date
-            ,input v-param
-            ) no-error.
-        if error-status:error then 
-        do:
+   /*Вызов процедуры напечатывания шапки для часть3*/
+   run first-line-tog3-html in this-procedure (
+      input v-report-name-html
+      ).  
+   if v-param-code = 3 then 
+   do:
+      run rep/r-new-shift3_3.p (
+         input parparentproc
+         ,input p-parent-handle
+         ,input p-log-handle
+         ,input p-cont-handle
+         ,input p-rebh
+         ,input v-report-name-html
+         ,input p-xsd-file
+         ,input p-log-file-name
+         ,input p-batch
+         ,input p-codex-id
+         ,input p-ruleset-id
+         ,input p-obj-type
+         ,input p-obj-code
+         ,input p-z-number-list
+         ,input xClassify
+         ,input xSortType
+         ,input xtog-level
+         ,input xvar-level
+         ,input v-previous-shift-date
+         ,input v-param
+         ) no-error.
+      if error-status:error then 
+      do:
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -844,34 +853,34 @@ do:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-            {&display-message}.
-        end.
-    end.
-    else 
-    do:    
-        run rep/r-new-shift3.p (
-            input parparentproc
-            ,input p-parent-handle
-            ,input p-log-handle
-            ,input p-cont-handle
-            ,input p-rebh
-            ,input v-report-name-html
-            ,input p-xsd-file
-            ,input p-log-file-name
-            ,input p-batch
-            ,input p-codex-id
-            ,input p-ruleset-id
-            ,input p-obj-type
-            ,input p-obj-code
-            ,input p-z-number-list
-            ,input xClassify
-            ,input xSortType
-            ,input xtog-level
-            ,input xvar-level
-            ,input v-previous-shift-date
-            ) no-error.
-        if error-status:error then 
-        do:
+         {&display-message}.
+      end.
+   end.
+   else 
+   do:    
+      run rep/r-new-shift3.p (
+         input parparentproc
+         ,input p-parent-handle
+         ,input p-log-handle
+         ,input p-cont-handle
+         ,input p-rebh
+         ,input v-report-name-html
+         ,input p-xsd-file
+         ,input p-log-file-name
+         ,input p-batch
+         ,input p-codex-id
+         ,input p-ruleset-id
+         ,input p-obj-type
+         ,input p-obj-code
+         ,input p-z-number-list
+         ,input xClassify
+         ,input xSortType
+         ,input xtog-level
+         ,input xvar-level
+         ,input v-previous-shift-date
+         ) no-error.
+      if error-status:error then 
+      do:
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -879,54 +888,54 @@ do:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-            {&display-message}.
-        end.
-    end.
-    if tog-last <> "tog-3" then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
+         {&display-message}.
+      end.
+   end.
+   if tog-last <> "tog-3" then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
         </table>
         '                                                                                      
-            , chr(123), chr(125)                                                                                                 
-            ).                                                                                                    
-        output stream OutStr-html close.
-    end.
-    else
-        run last-line-tog-html in this-procedure (
-            input v-report-name-html
-            ).
+         , chr(123), chr(125)                                                                                                 
+         ).                                                                                                    
+      output stream OutStr-html close.
+   end.
+   else
+      run last-line-tog-html in this-procedure (
+         input v-report-name-html
+         ).
 end.
                                                                                                                                                                                             
 if tog-4 = true then 
 do:
 
-    run first-line-tog4-html in this-procedure (
-        input v-report-name-html
-        ).
-    if v-param-code = 3 then 
-    do:
-        run rep/r-new-shift4_3.p (
-            input parparentproc
-            ,input p-parent-handle
-            ,input p-log-handle
-            ,input p-cont-handle
-            ,input p-rebh
-            ,input v-report-name-html
-            ,input p-xsd-file
-            ,input p-log-file-name
-            ,input p-batch
-            ,input p-codex-id
-            ,input p-ruleset-id
-            ,input p-obj-type
-            ,input p-obj-code
-            ,input p-z-number-list
-            ,input v-previous-shift-date 
-            ,input v-param) no-error.
-        if error-status:error then 
-        do:
+   run first-line-tog4-html in this-procedure (
+      input v-report-name-html
+      ).
+   if v-param-code = 3 then 
+   do:
+      run rep/r-new-shift4_3.p (
+         input parparentproc
+         ,input p-parent-handle
+         ,input p-log-handle
+         ,input p-cont-handle
+         ,input p-rebh
+         ,input v-report-name-html
+         ,input p-xsd-file
+         ,input p-log-file-name
+         ,input p-batch
+         ,input p-codex-id
+         ,input p-ruleset-id
+         ,input p-obj-type
+         ,input p-obj-code
+         ,input p-z-number-list
+         ,input v-previous-shift-date 
+         ,input v-param) no-error.
+      if error-status:error then 
+      do:
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -934,31 +943,31 @@ do:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-            {&display-message}.
-        end.
+         {&display-message}.
+      end.
             
-    end.
-    else 
-    do:                  
-        run rep/r-new-shift4.p (
-            input parparentproc
-            ,input p-parent-handle
-            ,input p-log-handle
-            ,input p-cont-handle
-            ,input p-rebh
-            ,input v-report-name-html
-            ,input p-xsd-file
-            ,input p-log-file-name
-            ,input p-batch
-            ,input p-codex-id
-            ,input p-ruleset-id
-            ,input p-obj-type
-            ,input p-obj-code
-            ,input p-z-number-list
-            ,input v-previous-shift-date 
-            ,input v-param) no-error.
-        if error-status:error then 
-        do:
+   end.
+   else 
+   do:                  
+      run rep/r-new-shift4.p (
+         input parparentproc
+         ,input p-parent-handle
+         ,input p-log-handle
+         ,input p-cont-handle
+         ,input p-rebh
+         ,input v-report-name-html
+         ,input p-xsd-file
+         ,input p-log-file-name
+         ,input p-batch
+         ,input p-codex-id
+         ,input p-ruleset-id
+         ,input p-obj-type
+         ,input p-obj-code
+         ,input p-z-number-list
+         ,input v-previous-shift-date 
+         ,input v-param) no-error.
+      if error-status:error then 
+      do:
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -966,51 +975,51 @@ do:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-            {&display-message}.
-        end.
-    end.
-    if tog-last <> "tog-4" then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
+         {&display-message}.
+      end.
+   end.
+   if tog-last <> "tog-4" then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
         </table>
         '                                                                                      
-            , chr(123), chr(125)                                                                                                 
-            ).                                                                                                    
-        output stream OutStr-html close.
-    end.
-    else
-        run last-line-tog-html in this-procedure (
-            input v-report-name-html
-            ).
+         , chr(123), chr(125)                                                                                                 
+         ).                                                                                                    
+      output stream OutStr-html close.
+   end.
+   else
+      run last-line-tog-html in this-procedure (
+         input v-report-name-html
+         ).
 end. 
 
 if tog-5 = yes then 
 do:
 
-    run first-line-tog5-html in this-procedure (
-        input v-report-name-html
-        ).
+   run first-line-tog5-html in this-procedure (
+      input v-report-name-html
+      ).
 
-    run rep/r-new-shift5.p (
-        input parparentproc
-        ,input p-parent-handle
-        ,input p-log-handle
-        ,input p-cont-handle
-        ,input p-rebh
-        ,input v-report-name-html
-        ,input p-xsd-file
-        ,input p-log-file-name
-        ,input p-batch
-        ,input p-codex-id
-        ,input p-ruleset-id
-        ,input p-obj-type
-        ,input p-obj-code
-        ) no-error.
-    if error-status:error then 
-    do:
+   run rep/r-new-shift5.p (
+      input parparentproc
+      ,input p-parent-handle
+      ,input p-log-handle
+      ,input p-cont-handle
+      ,input p-rebh
+      ,input v-report-name-html
+      ,input p-xsd-file
+      ,input p-log-file-name
+      ,input p-batch
+      ,input p-codex-id
+      ,input p-ruleset-id
+      ,input p-obj-type
+      ,input p-obj-code
+      ) no-error.
+   if error-status:error then 
+   do:
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -1018,49 +1027,49 @@ do:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-        {&display-message}.
-    end.
-    if tog-last <> "tog-5" then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute (
-            '
+      {&display-message}.
+   end.
+   if tog-last <> "tog-5" then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute (
+         '
         </table>
         '
-            , chr(123), chr(125)
-            ).
-        output stream OutStr-html close.
-    end.
-    else
-        run last-line-tog-html in this-procedure (
-            input v-report-name-html
-            ).
+         , chr(123), chr(125)
+         ).
+      output stream OutStr-html close.
+   end.
+   else
+      run last-line-tog-html in this-procedure (
+         input v-report-name-html
+         ).
 End.
 
 if tog-5-1 = yes then 
 do:
                  
-    run first-line-tog5-1-html in this-procedure (
-        input v-report-name-html
-        ).
-    run rep/r-new-shift5-1.p (
-        input parparentproc
-        ,input p-parent-handle
-        ,input p-log-handle
-        ,input p-cont-handle
-        ,input p-rebh
-        ,input p-rdbh
-        ,input v-report-name-html
-        ,input p-log-file-name
-        ,input p-batch
-        ,input p-codex-id
-        ,input p-ruleset-id
-        ,input p-obj-type
-        ,input p-obj-code
-        ) no-error.
-    if error-status:error then 
-    do:
+   run first-line-tog5-1-html in this-procedure (
+      input v-report-name-html
+      ).
+   run rep/r-new-shift5-1.p (
+      input parparentproc
+      ,input p-parent-handle
+      ,input p-log-handle
+      ,input p-cont-handle
+      ,input p-rebh
+      ,input p-rdbh
+      ,input v-report-name-html
+      ,input p-log-file-name
+      ,input p-batch
+      ,input p-codex-id
+      ,input p-ruleset-id
+      ,input p-obj-type
+      ,input p-obj-code
+      ) no-error.
+   if error-status:error then 
+   do:
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -1068,24 +1077,24 @@ do:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-        {&display-message}.
-    end.
-    if tog-last <> "tog-5-1" then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
+      {&display-message}.
+   end.
+   if tog-last <> "tog-5-1" then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
         </table>
         '                                                                                      
-            , chr(123), chr(125)                                                                                                 
-            ).                                                                                                    
-        output stream OutStr-html close.
-    end.
-    else
-        run last-line-tog-html5-1 in this-procedure (
-            input v-report-name-html
-            ).
+         , chr(123), chr(125)                                                                                                 
+         ).                                                                                                    
+      output stream OutStr-html close.
+   end.
+   else
+      run last-line-tog-html5-1 in this-procedure (
+         input v-report-name-html
+         ).
 End.
 
 /*if tog-6 = yes then DO:                                                                                                                                                                                             */
@@ -1122,28 +1131,28 @@ End.
 if tog-7 = yes then 
 DO:
  
-    run first-line-tog7-html in this-procedure (
-        input v-report-name-html
-        ).
+   run first-line-tog7-html in this-procedure (
+      input v-report-name-html
+      ).
                   
-    run rep/r-new-shift7.p
-        ( input parparentproc
-        ,input p-parent-handle
-        ,input p-log-handle
-        ,input p-cont-handle
-        ,input p-rebh
-        ,input v-report-name-html
-        ,input p-xsd-file
-        ,input p-log-file-name
-        ,input p-batch
-        ,input p-codex-id
-        ,input p-ruleset-id
-        ,input p-obj-type
-        ,input p-obj-code
-        ,input v-previous-shift-date
-        ) no-error.
-    if error-status:error then 
-    do:
+   run rep/r-new-shift7.p
+      ( input parparentproc
+      ,input p-parent-handle
+      ,input p-log-handle
+      ,input p-cont-handle
+      ,input p-rebh
+      ,input v-report-name-html
+      ,input p-xsd-file
+      ,input p-log-file-name
+      ,input p-batch
+      ,input p-codex-id
+      ,input p-ruleset-id
+      ,input p-obj-type
+      ,input p-obj-code
+      ,input v-previous-shift-date
+      ) no-error.
+   if error-status:error then 
+   do:
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -1151,87 +1160,104 @@ DO:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-        {&display-message}.
-    end.
-    if tog-last <> "tog-7" then 
-    do:
-              output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-         put stream OutStr-html unformatted
-            substitute (
-            '
+      {&display-message}.
+   end.
+   if tog-last <> "tog-7" then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute (
+         '
             </table>
             '
-                , chr(123), chr(125)
-           ).
-          output stream OutStr-html close.
-    end.
-    else
-        run last-line-tog-html in this-procedure (
-            input v-report-name-html
-            ).
+         , chr(123), chr(125)
+         ).
+      output stream OutStr-html close.
+   end.
+   else
+      run last-line-tog-html in this-procedure (
+         input v-report-name-html
+         ).
 End.
 
-/*if tog-8 = yes then DO:                                                    */
-/*                                                                           */
-/*  run first-line-tog8-html in this-procedure (                             */
-/*                  input v-report-name-html                                 */
-/*                  ).                                                       */
-/*                                                                           */
-/*  run rep/r-new-shift8.p (                                                 */
-/*                     input parparentproc                                   */
-/*                    ,input p-parent-handle                                 */
-/*                    ,input p-log-handle                                    */
-/*                    ,input p-cont-handle                                   */
-/*                    ,input p-rebh                                          */
-/*                    ,input v-report-name-html                              */
-/*                    ,input p-xsd-file                                      */
-/*                    ,input p-log-file-name                                 */
-/*                    ,input p-batch                                         */
-/*                    ,input p-codex-id                                      */
-/*                    ,input p-ruleset-id                                    */
-/*                    ,input p-z-number-list                                 */
-/*                    ,input v-previous-shift-date ) no-error.               */
-/*  if error-status:error then do:                                           */
-/*    &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~*/
-/*                          ,vss-workfile ~                                  */
-/*                          ,vss-revision ~                                  */
-/*                          ,vss-description ~                               */
-/*                          ,~{&new-line~} ~                                 */
-/*                          , error-status:get-message(1) ~                  */
-/*                          , return-value )                                 */
-/*    {&display-message}.                                                    */
-/*  end.                                                                     */
-/*End.                                                                       */
+
+if tog-81 then 
+DO:
+   run first-line-tog8-html in this-procedure (
+      input v-report-name-html
+      ).
+                  
+   run rep/r-new-shift8.p
+      (
+      input parparentproc
+      ,INPUT p-obj-type
+      ,INPUT p-obj-code
+      ,INPUT tog-82
+      ,v-report-name-html 
+      ,v-report-result
+      ) no-error .
+        
+   if tog-last <> "tog-81" then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute (
+         '
+<tbody><thead>
+<tr><td colspan="7">«Частичный возврат» - это: </td></tr>
+<tr><td colspan="7">«Частичный возврат» - возврат, который был проведен на недолитое топливо по транзакции на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Остальные возвраты» - это:</td></tr>
+<tr><td colspan="7">«Полный по номеру чека» - полный возврат, который был проведен по номеру чека на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Частичный по номеру чека» - частичный возврат, который был проведен по номеру чека на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Полный по транзакции» - полный возврат, который был проведен по транзакции на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Сухой чек, созданный в ППО Trade House» - сухой возврат, который был проведен на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Сухой чек, проведенный на АРМ Кассира» - сухой возврат, который был проведен на АРМ Кассира</td></tr>
+</thead>
+</tbody>
+</table>'
+         , chr(123), chr(125)
+         ).
+      output stream OutStr-html close.
+   end.
+   else
+
+      run last-line-tog-html81 in this-procedure (
+         input v-report-name-html
+         ).
+   v-report-result = YES.
+        
+END.
+
 
 if tog-9 then 
 DO:
  
-    run first-line-tog9-html in this-procedure (
-        input v-report-name-html
-        ).
+   run first-line-tog9-html in this-procedure (
+      input v-report-name-html
+      ).
 
-    run rep/r-new-shift9.p   (
-        input parparentproc
-        ,input p-parent-handle
-        ,input p-log-handle
-        ,input p-cont-handle
-        ,input p-rebh
-        ,input v-report-name-html
-        ,input p-xsd-file
-        ,input p-log-file-name
-        ,input p-batch
-        ,input p-codex-id
-        ,input p-ruleset-id
-        ,INPUT p-obj-type
-        ,INPUT p-obj-code
-        ,INPUT x-date-Start
-        ,INPUT x-Shift-Start
-        ,INPUT x-date-End
-        ,INPUT x-Shift-End
-        ,input tog-1-out-pump-with-icnt
-        ) no-error .
-    if error-status:error then 
-    do:
+   run rep/r-new-shift9.p   (
+      input parparentproc
+      ,input p-parent-handle
+      ,input p-log-handle
+      ,input p-cont-handle
+      ,input p-rebh
+      ,input v-report-name-html
+      ,input p-xsd-file
+      ,input p-log-file-name
+      ,input p-batch
+      ,input p-codex-id
+      ,input p-ruleset-id
+      ,INPUT p-obj-type
+      ,INPUT p-obj-code
+      ,INPUT x-date-Start
+      ,INPUT x-Shift-Start
+      ,INPUT x-date-End
+      ,INPUT x-Shift-End
+      ,input tog-1-out-pump-with-icnt
+      ) no-error .
+   if error-status:error then 
+   do:
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -1239,24 +1265,24 @@ DO:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-        {&display-message}.
-    end.
-    if tog-last <> "tog-9" then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
-        </table>
+      {&display-message}.
+   end.
+   if tog-last <> "tog-9" then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
+               </table>
         '                                                                                      
-            , chr(123), chr(125)                                                                                                 
-            ).                                                                                                    
-        output stream OutStr-html close.
-    end.
-    else
-        run last-line-tog-html in this-procedure (
-            input v-report-name-html
-            ).
+         , chr(123), chr(125)                                                                                                 
+         ).                                                                                                    
+      output stream OutStr-html close.
+   end.
+   else
+      run last-line-tog-html in this-procedure (
+         input v-report-name-html
+         ).
 End. /* tog-9 */
 
 
@@ -1264,31 +1290,31 @@ End. /* tog-9 */
 if tog-10 then 
 DO:
  
-    run first-line-tog10-html in this-procedure (
-        input v-report-name-html
-        ).
+   run first-line-tog10-html in this-procedure (
+      input v-report-name-html
+      ).
 
-    run rep/r-new-shift10.p   (
-        input parparentproc
-        ,input p-parent-handle
-        ,input p-log-handle
-        ,input p-cont-handle
-        ,input p-rebh
-        ,input v-report-name-html
-        ,input p-xsd-file
-        ,input p-log-file-name
-        ,input p-batch
-        ,input p-codex-id
-        ,input p-ruleset-id
-        ,INPUT p-obj-type
-        ,INPUT p-obj-code
-        ,INPUT x-date-Start
-        ,INPUT x-Shift-Start
-        ,INPUT x-date-End
-        ,INPUT x-Shift-End
-        ) no-error .
-    if error-status:error then 
-    do:
+   run rep/r-new-shift10.p   (
+      input parparentproc
+      ,input p-parent-handle
+      ,input p-log-handle
+      ,input p-cont-handle
+      ,input p-rebh
+      ,input v-report-name-html
+      ,input p-xsd-file
+      ,input p-log-file-name
+      ,input p-batch
+      ,input p-codex-id
+      ,input p-ruleset-id
+      ,INPUT p-obj-type
+      ,INPUT p-obj-code
+      ,INPUT x-date-Start
+      ,INPUT x-Shift-Start
+      ,INPUT x-date-End
+      ,INPUT x-Shift-End
+      ) no-error .
+   if error-status:error then 
+   do:
     &scop my-message substitute("!!!Ошибка при расчете&4&1 &2 &3&4&5&4&6" ~
                           ,vss-workfile ~
                           ,vss-revision ~
@@ -1296,11 +1322,11 @@ DO:
                           ,~{&new-line~} ~
                           , error-status:get-message(1) ~
                           , return-value )
-        {&display-message}.
-    end.
-    run last-line-tog-html in this-procedure (
-        input v-report-name-html
-        ).
+      {&display-message}.
+   end.
+   run last-line-tog-html in this-procedure (
+      input v-report-name-html
+      ).
 End. /* tog-10 */
 
 if p-batch = integer({&repcalc-type-operator}) then 
@@ -1309,6 +1335,7 @@ do:
 /*   define variable v-value-integer   as character no-undo .*/
    define variable rep-excel         as logical   no-undo .
    define variable excel-string      as character no-undo .
+   define variable v-excel           as character no-undo .
     
    run adm/shattri.p (
       input "get":U
@@ -1324,13 +1351,44 @@ do:
       ,output v-param-type
       ,INPUT-OUTPUT table-handle v-tth
       ) /*no-error*/ .
-   if rep-excel then excel-string = "TRUE" .
+   if rep-excel then excel-string = "TRUE" . /* защита для отчетов в excel*/
    else excel-string = "FALSE" .
+   
+   GET-KEY-VALUE section "REP-SETS" key "rep_excel" value v-excel .
+
+   if v-excel eq ? 
+      then 
+      v-excel = "".
+
+   case v-excel:
+      when 'TRUE' then 
+         v-excel = 'TRUE' .
+      when 'YES'  then 
+         v-excel = 'TRUE' .
+      otherwise 
+      v-excel = 'FALSE' .
+   end case .   
+   
+   
+   /*      GET-KEY-VALUE section "REP-SETS" key "Password" value v-password .*/
+   /*      if v-password = ? then v-password = "FALSE" .                     */
+   /*      else                                                              */
+   /*      do:                                                               */
+   /*         case v-password:                                               */
+   /*            when 'TRUE' then                                            */
+   /*               v-password = 'TRUE' .                                    */
+   /*            when 'YES'  then                                            */
+   /*               v-password = 'TRUE' .                                    */
+   /*            otherwise                                                   */
+   /*            v-password = 'FALSE' .                                      */
+   /*         end case .                                                     */
+   /*      end.                                                              */
+
 
    run prn-lib-reportviewer in this-procedure (
       input parparentproc
       ,input v-report-name-html
-      ,input "PASSWORD:" + excel-string + {&delim-par} + "EXCEL:TRUE" 
+      ,input "PASSWORD:" + excel-string + {&delim-par} + "EXCEL:" + v-excel 
       ) .
    if error-status:error then
    do:
@@ -1341,13 +1399,13 @@ end.
 
 procedure first-line-tog1-html :
 
-    define input parameter v-report-name-html     as character no-undo .
-    if v-param-code = 3 then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   define input parameter v-report-name-html     as character no-undo .
+   if v-param-code = 3 then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -1363,7 +1421,7 @@ procedure first-line-tog1-html :
                    tbody td, th ~{
                        border: 1px solid black;
                        border-collapse: collapse;
-                 height: 14px;
+                 
                    ~}
           
               </style>
@@ -1407,42 +1465,49 @@ procedure first-line-tog1-html :
                     </tr>
                     <tr>
                       <td colspan="22" style="font-size:16px;font-weight:bold; text-align: center;">Часть №1 Движение нефтепродуктов по количеству</td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"> Смены  с &3  по &4 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"> Закрыта &5 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"> Старший смены: &6 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"> Операторы: &7 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"></td>
-                    </tr>
-                    </thead>'
-            ,
-            v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1
-            ).
-        output stream OutStr-html close.   
-    end.
-    else 
-    do:
-        if v-param-code = 2 then 
-        do:  
-            output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-            put stream OutStr-html unformatted
-                substitute(
-                '<!doctype html>
+                    </tr>' 
+         ,
+         v-host-name,
+         rep-shift-store-name
+         ).
+            
+      if x-tog-shift then 
+      do:
+         put stream OutStr-html unformatted
+            '<tr><td colspan="22">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+            .
+      end.
+      else 
+      do:
+         put stream OutStr-html unformatted
+            '<tr><td colspan="22">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+            .
+      end.      
+      put stream OutStr-html unformatted
+         '<tr>' skip
+         '<td colspan="22"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+         '</tr>' skip
+         '<tr>' skip
+         '<td colspan="22"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+         '</tr>' skip
+         '<tr>' skip
+         '<td colspan="22"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+         '</tr>' skip
+         '<tr>' skip
+         '<td colspan="22"></td>' skip
+         '</tr>' skip
+         '</thead>' skip
+         .
+      output stream OutStr-html close.   
+   end.
+   else 
+   do:
+      if v-param-code = 2 then 
+      do:  
+         output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+         put stream OutStr-html unformatted
+            substitute(
+            '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -1507,23 +1572,23 @@ procedure first-line-tog1-html :
                       <td colspan="20" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="20"> Смена  с &4  по &5 </td>
+                      <td colspan="20"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="20"> </td>
                     </tr>'
-                ,
-                v-host-name,
-                string(ub.clients.obj-name),
-                string(v-rep-shift-close-date,"99.99.9999"),
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-                ).
+            ,
+            v-host-name,
+            string(ub.clients.obj-name),
+            string(v-rep-shift-close-date,"99.99.9999"),
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            ).
 
          
-            put stream OutStr-html unformatted
-                substitute (
-                '<tr> 
+         put stream OutStr-html unformatted
+            substitute (
+            '<tr> 
             <td colspan="3" style="height:30px;"> Состав смены:</td>
             <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
@@ -1567,25 +1632,25 @@ procedure first-line-tog1-html :
             <td colspan="20" style="height:30px;"></td>
           </tr>
           </thead>'
-                ,
-                rep-shift-rol-mng,
-                rep-shift-for-mng1,
-                rep-shift-rol-mng2,
-                rep-shift-for-mng2,
-                rep-shift-rol-oper,
-                rep-shift-for-opers1,
-                rep-shift-rol-oper2,
-                rep-shift-for-opers2
+            ,
+            rep-shift-rol-mng,
+            rep-shift-for-mng1,
+            rep-shift-rol-mng2,
+            rep-shift-for-mng2,
+            rep-shift-rol-oper,
+            rep-shift-for-opers1,
+            rep-shift-rol-oper2,
+            rep-shift-for-opers2
 
-                ).
-            output stream OutStr-html close.
-        end.  
-        else 
-        do:
-            output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-            put stream OutStr-html unformatted
-                substitute(
-                '<!doctype html>
+            ).
+         output stream OutStr-html close.
+      end.  
+      else 
+      do:
+         output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+         put stream OutStr-html unformatted
+            substitute(
+            '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -1662,33 +1727,33 @@ procedure first-line-tog1-html :
                       <td colspan="21"></td>
                     </tr>
                     </thead>'
-                ,
-                v-host-name,
-                rep-shift-store-name,
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-                string(v-rep-shift-close-date,"99.99.9999"),
-                rep-shift-for-mng1,
-                rep-shift-for-opers1
-                ).
-            output stream OutStr-html close.        
-        end.
-    end.
-    assign 
-        v-report-result = yes. 
+            ,
+            v-host-name,
+            rep-shift-store-name,
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
+            string(v-rep-shift-close-date,"99.99.9999"),
+            rep-shift-for-mng1,
+            rep-shift-for-opers1
+            ).
+         output stream OutStr-html close.        
+      end.
+   end.
+   assign 
+      v-report-result = yes. 
   
 End procedure. /*procedure first-line-tog1-html*/
 
 procedure first-line-tog2-html :
   
-    define input parameter v-report-name-html     as character no-undo .
+   define input parameter v-report-name-html     as character no-undo .
 
-    if v-param-code = 1 and v-report-result = no then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   if v-param-code = 1 and v-report-result = no then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -1727,6 +1792,7 @@ procedure first-line-tog2-html :
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:80px"></td>
+                                             
                       </tr>
                     <tr>
                       <td colspan="16" >&2</td>
@@ -1737,32 +1803,40 @@ procedure first-line-tog2-html :
                     <tr>
                       <td colspan="16" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
                     </tr>
-                    <tr>
-                      <td colspan="16"> Смены  с &3  по &4 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="16"> Закрыта &5 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="16"> Старший смены: &6 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="16"> Операторы: &7 </td>
-                    </tr>
-                    <tr>
-                    <td colspan="16" style="height:30px;"></td>
-                    </tr>                    
-                    </thead>'
-            ,
+                    </tr>' 
+                    ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1
+            rep-shift-store-name
             ).
-        output stream OutStr-html close.                                               
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="16">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="16">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="16"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="16"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="16"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="16"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.                                                
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -1828,23 +1902,23 @@ procedure first-line-tog2-html :
                       <td colspan="18" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="18"> Смена  с &4  по &5 </td>
+                      <td colspan="18"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="18"> </td>
                     </tr>'
-            ,
-            rep-shift-store-name,
-            string(ub.clients.obj-name),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-            ).
+         ,
+         rep-shift-store-name,
+         string(ub.clients.obj-name),
+         string(v-rep-shift-close-date,"99.99.9999"),
+         string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+         string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+         ).
 
          
-        put stream OutStr-html unformatted
-            substitute (
-            '<tr> 
+      put stream OutStr-html unformatted
+         substitute (
+         '<tr> 
             <td colspan="3" style="height:30px;"> Состав смены:</td>
             <td colspan="3" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
@@ -1888,15 +1962,15 @@ procedure first-line-tog2-html :
             <td colspan="18" style="height:30px;"></td>
           </tr>
           </thead>'
-            ,
-            rep-shift-rol-mng,
-            rep-shift-for-mng1,
-            rep-shift-rol-mng2,
-            rep-shift-for-mng2,
-            rep-shift-rol-oper,
-            rep-shift-for-opers1,
-            rep-shift-rol-oper2,
-            rep-shift-for-opers2
+         ,
+         rep-shift-rol-mng,
+         rep-shift-for-mng1,
+         rep-shift-rol-mng2,
+         rep-shift-for-mng2,
+         rep-shift-rol-oper,
+         rep-shift-for-opers1,
+         rep-shift-rol-oper2,
+         rep-shift-for-opers2
 
             ).
         output stream OutStr-html close.    
@@ -1907,10 +1981,10 @@ procedure first-line-tog2-html :
         if v-report-result = no then 
         do:
         
-            output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-            put stream OutStr-html unformatted
-                substitute(
-                '<!doctype html>
+         output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+         put stream OutStr-html unformatted
+            substitute(
+            '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -1976,23 +2050,23 @@ procedure first-line-tog2-html :
                     <td colspan="17" style="height:30px;"></td>
                     </tr>                    
                     </thead>'
-                ,
-                v-host-name,
-                rep-shift-store-name,
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-                string(v-rep-shift-close-date,"99.99.9999"),
-                rep-shift-for-mng1,
-                rep-shift-for-opers1
-                ).
-            output stream OutStr-html close.
-        end. 
-        else 
-        do:
-            output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-            put stream OutStr-html unformatted
-                substitute(
-                '       <table orientation="landscape" name="лист2" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+            ,
+            v-host-name,
+            rep-shift-store-name,
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
+            string(v-rep-shift-close-date,"99.99.9999"),
+            rep-shift-for-mng1,
+            rep-shift-for-opers1
+            ).
+         output stream OutStr-html close.
+      end. 
+      else 
+      do:
+         output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+         put stream OutStr-html unformatted
+            substitute(
+            '       <table orientation="landscape" name="лист2" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -2028,18 +2102,18 @@ procedure first-line-tog2-html :
                       <td colspan="17" style="height:30px;"></td>
                     </tr>
                     </thead>'
-                ,chr(123), chr(125)
-                ).
-            output stream OutStr-html close.
-        end.
+            ,chr(123), chr(125)
+            ).
+         output stream OutStr-html close.
+      end.
                                                      
-    end.
-    if v-report-result = yes and v-param-code <> 3 then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '       <table orientation="landscape" name="лист2" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+   end.
+   if v-report-result = yes and v-param-code <> 3 then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '       <table orientation="landscape" name="лист2" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -2086,14 +2160,14 @@ End procedure. /*procedure first-line-tog2-html*/
 
 procedure first-line-tog3-html :
   
-    define input parameter v-report-name-html     as character no-undo .
+   define input parameter v-report-name-html     as character no-undo .
 
-    if v-param-code = 1 and v-report-result = no then 
-    do: 
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   if v-param-code = 1 and v-report-result = no then 
+   do: 
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -2142,32 +2216,40 @@ procedure first-line-tog3-html :
                       <tr>
                         <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">Часть №3 Движение ТНП по количеству и суммам</td>
                       </tr>
-                      <tr>
-                        <td colspan="13"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13" style="height:30px;"></td>
-                      </tr>      
-                      </thead>'
-            ,
-            v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
-            ).
-        output stream OutStr-html close.  
+                    </tr>' 
+         ,
+         v-host-name,
+         rep-shift-store-name
+         ).
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="13">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="13">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="13"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="13"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="13"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="13"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.  
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -2229,23 +2311,23 @@ procedure first-line-tog3-html :
                       <td colspan="13" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="13"> Смена  с &4  по &5 </td>
+                      <td colspan="13"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="13"> </td>
                     </tr>'
-            ,
-            rep-shift-store-name,
-            string(ub.clients.obj-name),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-            ).
+         ,
+         rep-shift-store-name,
+         string(ub.clients.obj-name),
+         string(v-rep-shift-close-date,"99.99.9999"),
+         string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+         string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+         ).
 
          
-        put stream OutStr-html unformatted
-            substitute (
-            '<tr> 
+      put stream OutStr-html unformatted
+         substitute (
+         '<tr> 
             <td colspan="4" style="height:30px;"> Состав смены:</td>
             <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
@@ -2272,22 +2354,22 @@ procedure first-line-tog3-html :
             <td colspan="13" style="height:30px;"></td>
           </tr>      
           </thead>'
-            ,
-            rep-shift-rol-mng,
-            rep-shift-for-mng1,
-            rep-shift-rol-oper,
-            rep-shift-for-opers1
-            ).
-        output stream OutStr-html close.          
-    end.
-    if v-param-code = 3 then 
-    do: 
-        if v-report-result = no then 
-        do:
-            output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-            put stream OutStr-html unformatted
-                substitute(
-                '<!doctype html>
+         ,
+         rep-shift-rol-mng,
+         rep-shift-for-mng1,
+         rep-shift-rol-oper,
+         rep-shift-for-opers1
+         ).
+      output stream OutStr-html close.          
+   end.
+   if v-param-code = 3 then 
+   do: 
+      if v-report-result = no then 
+      do:
+         output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+         put stream OutStr-html unformatted
+            substitute(
+            '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -2354,23 +2436,23 @@ procedure first-line-tog3-html :
                         <td colspan="15" style="height:30px;"></td>
                       </tr>      
                       </thead>'
-                ,
-                v-host-name,
-                rep-shift-store-name,
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-                string(v-rep-shift-close-date,"99.99.9999"),
-                rep-shift-for-mng1,
-                rep-shift-for-opers1                    
-                ).
-            output stream OutStr-html close.  
-        end.
-        else 
-        do:
-            output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-            put stream OutStr-html unformatted
-                substitute(
-                '<table orientation="landscape" name="лист3" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+            ,
+            v-host-name,
+            rep-shift-store-name,
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
+            string(v-rep-shift-close-date,"99.99.9999"),
+            rep-shift-for-mng1,
+            rep-shift-for-opers1                    
+            ).
+         output stream OutStr-html close.  
+      end.
+      else 
+      do:
+         output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+         put stream OutStr-html unformatted
+            substitute(
+            '<table orientation="landscape" name="лист3" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -2403,18 +2485,18 @@ procedure first-line-tog3-html :
                         <td colspan="15" style="height:30px;"></td>
                       </tr>       
                       </thead>'
-                ,chr(123), chr(125)             
-                ).        
-            output stream OutStr-html close.
-        end.
+            ,chr(123), chr(125)             
+            ).        
+         output stream OutStr-html close.
+      end.
     
-    end.
-    if v-report-result = yes and v-param-code <> 3 then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<table orientation="landscape" name="лист3" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+   end.
+   if v-report-result = yes and v-param-code <> 3 then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<table orientation="landscape" name="лист3" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -2448,26 +2530,26 @@ procedure first-line-tog3-html :
                         <td colspan="16" style="height:30px;"></td>
                       </tr>       
                       </thead>'
-            ,chr(123), chr(125)             
-            ).        
-        output stream OutStr-html close.
-    end.
+         ,chr(123), chr(125)             
+         ).        
+      output stream OutStr-html close.
+   end.
       
-    assign 
-        v-report-result = yes. 
+   assign 
+      v-report-result = yes. 
  
 End procedure.
 
 procedure first-line-tog4-html :
   
-    define input parameter v-report-name-html     as character no-undo .
+   define input parameter v-report-name-html     as character no-undo .
 
-    if v-param-code <> 2 and v-report-result = no then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   if v-param-code <> 2 and v-report-result = no then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -2508,33 +2590,40 @@ procedure first-line-tog4-html :
                       </tr>
                       <tr>
                         <td colspan="6" style="font-size:16px;font-weight:bold; text-align: center;">Часть №4 Реализация услуг</td>
-                      </tr>
-                      <tr>
-                        <td colspan="6"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="6"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="6"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="6"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="6" style="height:30px;"></td>
-                      </tr>       
-                      </thead>'
-            ,
-            v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
-            ).
-        output stream OutStr-html close.  
+                    </tr>' 
+         ,
+         v-host-name,
+         rep-shift-store-name
+         ).
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="6">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="6">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="6"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="6"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="6"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="6"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.   
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -2591,23 +2680,23 @@ procedure first-line-tog4-html :
                       <td colspan="6" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="6"> Смена  с &4  по &5 </td>
+                      <td colspan="6"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="6"> </td>
                     </tr>'
-                ,
-                rep-shift-store-name,
-                string(ub.clients.obj-name),
-                string(v-rep-shift-close-date,"99.99.9999"),
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-                ).
+            ,
+            rep-shift-store-name,
+            string(ub.clients.obj-name),
+            string(v-rep-shift-close-date,"99.99.9999"),
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            ).
 
          
-            put stream OutStr-html unformatted
-                substitute (
-                '<tr> 
+         put stream OutStr-html unformatted
+            substitute (
+            '<tr> 
             <td style="height:30px;"> Состав смены:</td>
             <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
@@ -2634,21 +2723,21 @@ procedure first-line-tog4-html :
             <td colspan="6" style="height:30px;"></td>
           </tr>       
           </thead>'
-                ,
-                rep-shift-rol-mng,
-                rep-shift-for-mng1,
-                rep-shift-rol-oper,
-                rep-shift-for-opers1
-                ).
-            output stream OutStr-html close.          
-        end.
-    end.
-    if v-report-result = yes then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '        <table orientation="landscape" name="лист4" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+            ,
+            rep-shift-rol-mng,
+            rep-shift-for-mng1,
+            rep-shift-rol-oper,
+            rep-shift-for-opers1
+            ).
+         output stream OutStr-html close.          
+      end.
+   end.
+   if v-report-result = yes then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '        <table orientation="landscape" name="лист4" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -2672,26 +2761,26 @@ procedure first-line-tog4-html :
                         <td colspan="6" style="height:30px;"></td>
                       </tr>       
                       </thead>'
-            ,chr(123), chr(125)                   
-            ).
-        output stream OutStr-html close.  
-    end.
+         ,chr(123), chr(125)                   
+         ).
+      output stream OutStr-html close.  
+   end.
  
-    assign 
-        v-report-result = yes. 
+   assign 
+      v-report-result = yes. 
   
 End procedure. /*procedure first-line-tog4-html*/
 
 procedure first-line-tog5-html :
   
-    define input parameter v-report-name-html     as character no-undo .
+   define input parameter v-report-name-html     as character no-undo .
 
-    if v-param-code <> 2 and v-report-result = no then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   if v-param-code <> 2 and v-report-result = no then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -2735,32 +2824,40 @@ procedure first-line-tog5-html :
                       <tr>
                         <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение материальных ценностей</td>
                       </tr>
-                      <tr>
-                        <td colspan="7"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                       <td colspan="7" style="height:30px;"></td>
-                      </tr>       
-                      </thead>'
-            ,
-            v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
-            ).
-        output stream OutStr-html close.  
+                    </tr>' 
+         ,
+         v-host-name,
+         rep-shift-store-name
+         ).
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="7">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="7">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="7"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.  
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -2817,23 +2914,23 @@ procedure first-line-tog5-html :
                       <td colspan="7" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="7"> Смена  с &4  по &5 </td>
+                      <td colspan="7"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="7"> </td>
                     </tr>'
-            ,
-            rep-shift-store-name,
-            string(ub.clients.obj-name),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-            ).
+         ,
+         rep-shift-store-name,
+         string(ub.clients.obj-name),
+         string(v-rep-shift-close-date,"99.99.9999"),
+         string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+         string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+         ).
 
          
-        put stream OutStr-html unformatted
-            substitute (
-            '<tr> 
+      put stream OutStr-html unformatted
+         substitute (
+         '<tr> 
             <td colspan="2" style="height:30px;"> Состав смены:</td>
             <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
@@ -2860,20 +2957,20 @@ procedure first-line-tog5-html :
             <td colspan="7" style="height:30px;"></td>
           </tr>       
           </thead>'
-            ,
-            rep-shift-rol-mng,
-            rep-shift-for-mng1,
-            rep-shift-rol-oper,
-            rep-shift-for-opers1
-            ).
-        output stream OutStr-html close.          
-    end.
-    if v-report-result = yes then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '       <table orientation="landscape" name="лист5" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+         ,
+         rep-shift-rol-mng,
+         rep-shift-for-mng1,
+         rep-shift-rol-oper,
+         rep-shift-for-opers1
+         ).
+      output stream OutStr-html close.          
+   end.
+   if v-report-result = yes then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '       <table orientation="landscape" name="лист5" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -2898,25 +2995,25 @@ procedure first-line-tog5-html :
                         <td colspan="7" style="height:30px;"></td>
                       </tr>       
                       </thead>'
-            ,       chr(123), chr(125)                  
-            ).
-        output stream OutStr-html close.  
-    end.
+         ,       chr(123), chr(125)                  
+         ).
+      output stream OutStr-html close.  
+   end.
 
-    assign 
-        v-report-result = yes. 
+   assign 
+      v-report-result = yes. 
 End procedure.
 
 procedure first-line-tog5-1-html :
   
-    define input parameter v-report-name-html     as character no-undo .
+   define input parameter v-report-name-html     as character no-undo .
 
-    if v-param-code <> 2 and v-report-result = no then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   if v-param-code <> 2 and v-report-result = no then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -2963,31 +3060,43 @@ procedure first-line-tog5-1-html :
                         <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение денежных средств</td>
                       </tr>
                       <tr>
-                        <td colspan="7"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
                        <td colspan="7" style="height:30px;"></td>
                       </tr>       
                       </thead>'
-            ,
-            v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
-            ).
-        output stream OutStr-html close.  
+         ,
+         v-host-name,
+         rep-shift-store-name
+         ).
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<thead><tr><td colspan="7">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="7">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr></thead>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<thead>' skip
+          '<tr>' skip
+          '<td colspan="7"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.   
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -3049,18 +3158,18 @@ procedure first-line-tog5-1-html :
                     <tr>
                       <td colspan="7"> </td>
                     </tr>'
-            ,
-            rep-shift-store-name,
-            string(ub.clients.obj-name),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-            ).
+         ,
+         rep-shift-store-name,
+         string(ub.clients.obj-name),
+         string(v-rep-shift-close-date,"99.99.9999"),
+         string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+         string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+         ).
 
          
-        put stream OutStr-html unformatted
-            substitute (
-            '<tr> 
+      put stream OutStr-html unformatted
+         substitute (
+         '<tr> 
             <td colspan="2" style="height:30px;"> Состав смены:</td>
             <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
@@ -3087,20 +3196,20 @@ procedure first-line-tog5-1-html :
             <td colspan="7" style="height:30px;"></td>
           </tr>       
           </thead>'
-            ,
-            rep-shift-rol-mng,
-            rep-shift-for-mng1,
-            rep-shift-rol-oper,
-            rep-shift-for-opers1
-            ).
-        output stream OutStr-html close.          
-    end.
-    if v-report-result = yes then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '       <table orientation="landscape" name="лист5" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+         ,
+         rep-shift-rol-mng,
+         rep-shift-for-mng1,
+         rep-shift-rol-oper,
+         rep-shift-for-opers1
+         ).
+      output stream OutStr-html close.          
+   end.
+   if v-report-result = yes then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '       <table orientation="landscape" name="лист5" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -3125,26 +3234,26 @@ procedure first-line-tog5-1-html :
                         <td colspan="7" style="height:30px;"></td>
                       </tr>       
                       </thead>'
-            ,       chr(123), chr(125)                  
-            ).
-        output stream OutStr-html close.  
-    end.
+         ,       chr(123), chr(125)                  
+         ).
+      output stream OutStr-html close.  
+   end.
 
-    assign 
-        v-report-result = yes. 
+   assign 
+      v-report-result = yes. 
 End procedure.
 
 
 procedure first-line-tog7-html :
   
-    define input parameter v-report-name-html     as character no-undo .
+   define input parameter v-report-name-html     as character no-undo .
   
-    if v-param-code <> 2 and v-report-result = no then 
-    do:  
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   if v-param-code <> 2 and v-report-result = no then 
+   do:  
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -3185,33 +3294,40 @@ procedure first-line-tog7-html :
                       </tr>
                       <tr>
                         <td colspan="5" style="font-size:16px;font-weight:bold; text-align: center;">Часть №7 Погрешности объемомеров ТРК</td>
-                      </tr>
-                      <tr>
-                        <td colspan="5"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="5"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="5"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="5"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="5" style="height:30px;"></td>
-                      </tr>       
-                      </thead>'
-            ,
-            v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
-            ).
-        output stream OutStr-html close. 
+                    </tr>' 
+         ,
+         v-host-name,
+         rep-shift-store-name
+         ).
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="5">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="5">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="5"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="5"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="5"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="5"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.  
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -3266,22 +3382,22 @@ procedure first-line-tog7-html :
                       <td colspan="5" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="5"> Смена  с &4  по &5 </td>
+                      <td colspan="5"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="5"> </td>
                     </tr>'
-            ,
-            rep-shift-store-name,
-            string(ub.clients.obj-name),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-            ).
+         ,
+         rep-shift-store-name,
+         string(ub.clients.obj-name),
+         string(v-rep-shift-close-date,"99.99.9999"),
+         string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+         string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+         ).
 
-        put stream OutStr-html unformatted
-            substitute (
-            '<tr> 
+      put stream OutStr-html unformatted
+         substitute (
+         '<tr> 
             <td colspan="2" style="height:30px;"> Состав смены:</td>
             <td style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
@@ -3308,20 +3424,20 @@ procedure first-line-tog7-html :
             <td colspan="5" style="height:30px;"></td>
           </tr>       
           </thead>'
-            ,
-            rep-shift-rol-mng,
-            rep-shift-for-mng1,
-            rep-shift-rol-oper,
-            rep-shift-for-opers1
-            ).
-        output stream OutStr-html close.          
-    end.
-    if v-report-result = yes then 
-    do:    
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '       <table orientation="landscape" name="лист7" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+         ,
+         rep-shift-rol-mng,
+         rep-shift-for-mng1,
+         rep-shift-rol-oper,
+         rep-shift-for-opers1
+         ).
+      output stream OutStr-html close.          
+   end.
+   if v-report-result = yes then 
+   do:    
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '       <table orientation="landscape" name="лист7" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -3344,26 +3460,25 @@ procedure first-line-tog7-html :
                         <td colspan="5" style="height:30px;"></td>
                       </tr>       
                       </thead>'
-            , chr(123), chr(125)
+         , chr(123), chr(125)
                 
-            ).
-        output stream OutStr-html close. 
-    end.    
-    assign 
-        v-report-result = yes. 
+         ).
+      output stream OutStr-html close. 
+   end.    
+   assign 
+      v-report-result = yes. 
   
 End procedure.
 
 procedure first-line-tog8-html :
   
-    define input parameter v-report-name-html     as character no-undo .
-
-    if v-report-result = no then 
-    do:   
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   define input parameter v-report-name-html     as character no-undo .
+   if v-report-result = no then 
+   do:  
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -3371,73 +3486,134 @@ procedure first-line-tog8-html :
               <style>
                    table ~{
                        border-collapse: collapse;
-                       table-layout: fixed; 
+                       table-layout: fixed;
                    ~}
                    tbody td, th ~{
                        border: 1px solid black;
                        border-collapse: collapse;
-                       height: 14px;
                    ~}
+          
               </style>
               </head>
                 <body>
-                  <table orientation="landscape" name="Сменный отчет" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+                  <table orientation="landscape" name="лист8" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
-                      <tr class="set_columns">
-                        <td style="width:150px"></td>
-                        <td style="width:100px"></td>
-                        <td style="width:100px"></td>
+      <tr class="set_columns">
+      <td style="width:250px"></td>
+      <td style="width:150px"></td>
+      <td style="width:50px"></td>
+      <td style="width:100px"></td>
+      <td style="width:150px"></td>
+      <td style="width:50px"></td>
+      <td style="width:100px"></td>
+      <td style="width:100px"></td>
+      <td style="width:100px"></td>
+      <td style="width:100px"></td>
+      <td style="width:100px"></td>
+      </tr>
+                       <tr>  
+                        <td colspan="11" >&1</td>
                       </tr>
-                    <tr>
-                      <td colspan="5" style="height:30px;"></td>
-                    </tr>
-                    <tr >  
-                      <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&1</td>
-                      <td></td>
-                    </tr>
-                    <tr>
-                      <td colspan="2" style="font-size:10px; text-align: center;">наименование организации</td>
-                      <td></td>
-                    </tr>
-                    <tr>
-                      <td colspan="3" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ &2</td>
-                    </tr>
-                    <tr>
-                      <td colspan="3" style="text-align: center;"> от &3 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="3"> Смена  с &4  по &5 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="5"> </td>
-                    </tr>
-                    '
-            ,
-            rep-shift-store-name,
-            string(ub.clients.obj-name),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-            ).
-        output stream OutStr-html close. 
-    end.    
-    assign 
-        v-report-result = yes. 
+                      <tr>
+                        <td colspan="11" >&2</td>
+                      </tr>
+                      <tr>
+                        <td colspan="11" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                      </tr>
+                      <tr>
+                        <td colspan="11" style="font-size:16px;font-weight:bold; text-align: center;">Часть №8. Возвраты по сопутствующим товарам и топливу</td>
+                    </tr>' 
+         ,
+         v-host-name,
+         rep-shift-store-name
+         ).
+            
+      if x-tog-shift then 
+      do:
+         put stream OutStr-html unformatted
+            '<tr><td colspan="11">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+            .
+      end.
+      else 
+      do:
+         put stream OutStr-html unformatted
+            '<tr><td colspan="11">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+            .
+      end.      
+      put stream OutStr-html unformatted
+         '<tr>' skip
+         '<td colspan="11"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+         '</tr>' skip
+         '<tr>' skip
+         '<td colspan="11"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+         '</tr>' skip
+         '<tr>' skip
+         '<td colspan="11"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+         '</tr>' skip
+         '<tr>' skip
+         '<td colspan="11"></td>' skip
+         '</tr>' skip
+         '</thead>' skip
+         .
+      output stream OutStr-html close.  
+   end.
+   else 
+   do:    
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '       <table orientation="landscape" name="лист8" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+                    <thead>  <!-- Шапка отчета -->
+                    <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
+      <tr class="set_columns">
+      <td style="width:250px"></td>
+      <td style="width:150px"></td>
+      <td style="width:50px"></td>
+      <td style="width:100px"></td>
+      <td style="width:150px"></td>
+      <td style="width:50px"></td>
+      <td style="width:100px"></td>
+      <td style="width:100px"></td>
+      <td style="width:100px"></td>
+      <td style="width:100px"></td>
+      <td style="width:100px"></td>
+      </tr>
+                      <tr>
+                        <td colspan="10" style="height:30px;"></td>
+                      </tr>                          
+                      <tr>
+                        <td colspan="10" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
+                      </tr>
+                      <tr>
+                        <td colspan="10" style="font-size:16px;font-weight:bold; text-align: center;">Часть №8. Возвраты по сопутствующим товарам и топливу</td>
+                      </tr>
+                      <tr>
+                        <td colspan="10" style="height:30px;"></td>
+                      </tr>       
+                      </thead>'
+         , chr(123), chr(125)
+                
+         ).
+      output stream OutStr-html close. 
+   end.    
+   assign 
+      v-report-result = yes. 
   
 End procedure.
 
 
+
 procedure first-line-tog9-html :
   
-    define input parameter v-report-name-html     as character no-undo .
+   define input parameter v-report-name-html     as character no-undo .
   
-    if v-param-code <> 2 and v-report-result = no then 
-    do: 
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   if v-param-code <> 2 and v-report-result = no then 
+   do: 
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -3486,37 +3662,47 @@ procedure first-line-tog9-html :
                       </tr>
                       <tr>
                         <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">Часть №9 Сбросы, переливы и переводы транзакций</td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Операторы: &7 </td>
-                      </tr>
-                      </thead>'
-            ,
-            v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
-            ).
-        output stream OutStr-html close. 
-    end.
-    if v-param-code = 2 and v-report-result = no then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+                      </tr>' 
+         ,
+         v-host-name,
+         rep-shift-store-name
+         ).
+            
+      if x-tog-shift then 
+      do:
+         put stream OutStr-html unformatted
+            '<tr><td colspan="13">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+            .
+      end.
+      else 
+      do:
+         put stream OutStr-html unformatted
+            '<tr><td colspan="13">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+            .
+      end.      
+      put stream OutStr-html unformatted
+         '<tr>' skip
+         '<td colspan="13"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+         '</tr>' skip
+         '<tr>' skip
+         '<td colspan="13"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+         '</tr>' skip
+         '<tr>' skip
+         '<td colspan="13"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+         '</tr>' skip
+         '<tr>' skip
+         '<td colspan="13"></td>' skip
+         '</tr>' skip
+         '</thead>' skip
+         .
+      output stream OutStr-html close.  
+   end.
+   if v-param-code = 2 and v-report-result = no then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -3572,23 +3758,23 @@ procedure first-line-tog9-html :
                       <td colspan="13" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="13"> Смена  с &4  по &5 </td>
+                      <td colspan="13"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="13"> </td>
                     </tr>'
-            ,
-            rep-shift-store-name,
-            string(ub.clients.obj-name),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-            ).
+         ,
+         rep-shift-store-name,
+         string(ub.clients.obj-name),
+         string(v-rep-shift-close-date,"99.99.9999"),
+         string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+         string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+         ).
 
          
-        put stream OutStr-html unformatted
-            substitute (
-            '<tr> 
+      put stream OutStr-html unformatted
+         substitute (
+         '<tr> 
             <td colspan="4" style="height:30px;"> Состав смены:</td>
             <td colspan="4" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
@@ -3615,20 +3801,20 @@ procedure first-line-tog9-html :
             <td colspan="13" style="height:30px;"></td>
           </tr>       
           </thead>'
-            ,
-            rep-shift-rol-mng,
-            rep-shift-for-mng1,
-            rep-shift-rol-oper,
-            rep-shift-for-opers1
-            ).
-        output stream OutStr-html close.          
-    end.
-    if v-report-result = yes then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '       <table orientation="landscape" name="лист9" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+         ,
+         rep-shift-rol-mng,
+         rep-shift-for-mng1,
+         rep-shift-rol-oper,
+         rep-shift-for-opers1
+         ).
+      output stream OutStr-html close.          
+   end.
+   if v-report-result = yes then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '       <table orientation="landscape" name="лист9" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -3659,25 +3845,25 @@ procedure first-line-tog9-html :
                         <td colspan="13" style="height:30px;"></td>
                       </tr>       
                       </thead>'
-            ,   chr(123), chr(125)                  
-            ).
-        output stream OutStr-html close. 
-    end. 
+         ,   chr(123), chr(125)                  
+         ).
+      output stream OutStr-html close. 
+   end. 
 
-    assign 
-        v-report-result = yes. 
+   assign 
+      v-report-result = yes. 
 End procedure.
   
 procedure first-line-tog10-html :
   
-    define input parameter v-report-name-html     as character no-undo .
+   define input parameter v-report-name-html     as character no-undo .
 
-    if v-report-result = no then 
-    do:   
-        output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '<!doctype html>
+   if v-report-result = no then 
+   do:   
+      output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '<!doctype html>
             <html>
               <head>
               <meta charset="UTF-8">
@@ -3721,33 +3907,40 @@ procedure first-line-tog10-html :
                       </tr>
                       <tr>
                         <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">Часть №10 Топливо по типам платежей</td>
-                      </tr>
-                      <tr>
-                        <td colspan="8"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="8"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="8"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="8"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="8" style="height:30px;"></td>
-                      </tr>       
-                      </thead>'
-            ,
-            v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
-            ).
-        output stream OutStr-html close. 
+                    </tr>' 
+         ,
+         v-host-name,
+         rep-shift-store-name
+         ).
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="8">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="8">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="8"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="8"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="8"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="8"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.  
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -3805,23 +3998,23 @@ procedure first-line-tog10-html :
                       <td colspan="8" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="8"> Смена  с &4  по &5 </td>
+                      <td colspan="8"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="8"> </td>
                     </tr>'
-            ,
-            rep-shift-store-name,
-            string(ub.clients.obj-name),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
-            ).
+         ,
+         rep-shift-store-name,
+         string(ub.clients.obj-name),
+         string(v-rep-shift-close-date,"99.99.9999"),
+         string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+         string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+         ).
 
          
-        put stream OutStr-html unformatted
-            substitute (
-            '<tr> 
+      put stream OutStr-html unformatted
+         substitute (
+         '<tr> 
             <td colspan="3" style="height:30px;"> Состав смены:</td>
             <td colspan="2" style="border-bottom: 1px solid black; text-align: center;">&1</td>
             <td></td>
@@ -3848,20 +4041,20 @@ procedure first-line-tog10-html :
             <td colspan="8" style="height:30px;"></td>
           </tr>       
           </thead>'
-            ,
-            rep-shift-rol-mng,
-            rep-shift-for-mng1,
-            rep-shift-rol-oper,
-            rep-shift-for-opers1
-            ).
-        output stream OutStr-html close.          
-    end.
-    if v-report-result = yes then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted
-            substitute(
-            '       <table orientation="landscape" name="лист10" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
+         ,
+         rep-shift-rol-mng,
+         rep-shift-for-mng1,
+         rep-shift-rol-oper,
+         rep-shift-for-opers1
+         ).
+      output stream OutStr-html close.          
+   end.
+   if v-report-result = yes then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted
+         substitute(
+         '       <table orientation="landscape" name="лист10" fit_to_page="true">  <!-- таблица, в которой содержится весь отчет -->
                     <thead>  <!-- Шапка отчета -->
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
@@ -3887,12 +4080,12 @@ procedure first-line-tog10-html :
                       <td colspan="8" style="height:30px;"></td>
                       </tr>       
                       </thead>'
-            ,       chr(123), chr(125)             
-            ).
-        output stream OutStr-html close. 
-    end.  
-    assign 
-        v-report-result = yes. 
+         ,       chr(123), chr(125)             
+         ).
+      output stream OutStr-html close. 
+   end.  
+   assign 
+      v-report-result = yes. 
 End procedure.
 
 
@@ -3900,46 +4093,46 @@ End procedure.
 /*процедуры печати подвалов*/
   
 procedure last-line-tog-html :
-    define input parameter v-report-name-html     as character no-undo .
+   define input parameter v-report-name-html     as character no-undo .
 
-    find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
-    if available temp-shift-obj then 
-    do:
-        assign
-            x-date-End             = temp-shift-obj.shift-date
-            X-Shift-End            = temp-shift-obj.shift-num
-            v-rep-shift-close-date = temp-shift-obj.close-date
-            v-rep-shift-close-time = temp-shift-obj.close-time
-            .
-    end.
+   find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
+   if available temp-shift-obj then 
+   do:
+      assign
+         x-date-End             = temp-shift-obj.shift-date
+         X-Shift-End            = temp-shift-obj.shift-num
+         v-rep-shift-close-date = temp-shift-obj.close-date
+         v-rep-shift-close-time = temp-shift-obj.close-time
+         .
+   end.
   
   
-    /*  /* ищем следующюю смену и ее персонал */                                                                                                       */
-    /*  FIND first next-shift-obj NO-LOCK                                                                                                              */
-    /*    WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type                                                                                    */
-    /*      and next-shift-obj.obj-code   = temp-shift-obj.obj-code                                                                                    */
-    /*      and next-shift-obj.shift-date = temp-shift-obj.shift-date                                                                                  */
-    /*      and next-shift-obj.shift-num  = temp-shift-obj.shift-num                                                                                   */
-    /*  no-error .                                                                                                                                     */
-    /*  FIND NEXT  next-shift-obj SHARE-LOCK WHERE next-shift-obj.obj-type = p-obj-type AND next-shift-obj.obj-code = p-obj-code use-index pi NO-ERROR.*/
-    FIND FIRST ub.shift-staff No-LOCK WHERE
-        ub.shift-staff.obj-type   = p-obj-type AND
-        ub.shift-staff.obj-code   = p-obj-code AND
-        ub.shift-staff.shift-date = x-date-End AND
-        ub.shift-staff.shift-num  = X-Shift-End AND
-        ub.shift-staff.staff-role = yes and
-        ub.shift-staff.psn-num    >= 0 No-ERROR.
-    assign 
-        rep-shift-for-mng-end = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
-    rep-shift-rol-mng-end = "Старший оператор"  
-        .
+   /*  /* ищем следующюю смену и ее персонал */                                                                                                       */
+   /*  FIND first next-shift-obj NO-LOCK                                                                                                              */
+   /*    WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type                                                                                    */
+   /*      and next-shift-obj.obj-code   = temp-shift-obj.obj-code                                                                                    */
+   /*      and next-shift-obj.shift-date = temp-shift-obj.shift-date                                                                                  */
+   /*      and next-shift-obj.shift-num  = temp-shift-obj.shift-num                                                                                   */
+   /*  no-error .                                                                                                                                     */
+   /*  FIND NEXT  next-shift-obj SHARE-LOCK WHERE next-shift-obj.obj-type = p-obj-type AND next-shift-obj.obj-code = p-obj-code use-index pi NO-ERROR.*/
+   FIND FIRST ub.shift-staff No-LOCK WHERE
+      ub.shift-staff.obj-type   = p-obj-type AND
+      ub.shift-staff.obj-code   = p-obj-code AND
+      ub.shift-staff.shift-date = x-date-End AND
+      ub.shift-staff.shift-num  = X-Shift-End AND
+      ub.shift-staff.staff-role = yes and
+      ub.shift-staff.psn-num    >= 0 No-ERROR.
+   assign 
+      rep-shift-for-mng-end = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+   rep-shift-rol-mng-end = "Старший оператор"  
+      .
 
-    if v-param-code = 1 then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
+   if v-param-code = 1 then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
               <tfoot>
                   <tr> <!--Подвал-->
                     <td colspan="8" style="height:30px;"></td>
@@ -3953,26 +4146,26 @@ procedure last-line-tog-html :
             </tfoot>
         </table>
         '                                                                                      
-            ,
+         ,
         
-            rep-shift-for-mng-next                                                                                            
-            ).                                                                                                    
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
+         rep-shift-for-mng-next                                                                                            
+         ).                                                                                                    
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
         </body>
         </html>
         '                                                                                      
-            , chr(123), chr(125)                                                                                                 
-            ).                                                                                                    
-        output stream OutStr-html close.
-    end.
-    else 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.  
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
+         , chr(123), chr(125)                                                                                                 
+         ).                                                                                                    
+      output stream OutStr-html close.
+   end.
+   else 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.  
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
               <tfoot>
                   <tr> <!--Подвал-->
                     <td colspan="8"></td>
@@ -4035,58 +4228,61 @@ procedure last-line-tog-html :
             </tfoot>
         </table>
         '                                                                                      
-            ,
-            rep-shift-rol-mng-end,  
-            rep-shift-for-mng-end, 
-            rep-shift-rol-mng-next,  
-            rep-shift-for-mng-next                                                                                            
-            ).                                                                                                    
-        output stream OutStr-html close.
+         ,
+         rep-shift-rol-mng-end,  
+         rep-shift-for-mng-end, 
+         rep-shift-rol-mng-next,  
+         rep-shift-for-mng-next                                                                                            
+         ).                                                                                                    
+      output stream OutStr-html close.
  
 
-    end.      
+   end.      
 End procedure.
-procedure last-line-tog-html5-1 :
-    define input parameter v-report-name-html     as character no-undo .
 
-    find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
-    if available temp-shift-obj then 
-    do:
-        assign
-            x-date-End             = temp-shift-obj.shift-date
-            X-Shift-End            = temp-shift-obj.shift-num
-            v-rep-shift-close-date = temp-shift-obj.close-date
-            v-rep-shift-close-time = temp-shift-obj.close-time
-            .
-    end.
+
+procedure last-line-tog-html81 :
+   define input parameter v-report-name-html     as character no-undo .
+
+   find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
+   if available temp-shift-obj then 
+   do:
+      assign
+         x-date-End             = temp-shift-obj.shift-date
+         X-Shift-End            = temp-shift-obj.shift-num
+         v-rep-shift-close-date = temp-shift-obj.close-date
+         v-rep-shift-close-time = temp-shift-obj.close-time
+         .
+   end.
   
   
-    /*  /* ищем следующюю смену и ее персонал */                                                                                                       */
-    /*  FIND first next-shift-obj NO-LOCK                                                                                                              */
-    /*    WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type                                                                                    */
-    /*      and next-shift-obj.obj-code   = temp-shift-obj.obj-code                                                                                    */
-    /*      and next-shift-obj.shift-date = temp-shift-obj.shift-date                                                                                  */
-    /*      and next-shift-obj.shift-num  = temp-shift-obj.shift-num                                                                                   */
-    /*  no-error .                                                                                                                                     */
-    /*  FIND NEXT  next-shift-obj SHARE-LOCK WHERE next-shift-obj.obj-type = p-obj-type AND next-shift-obj.obj-code = p-obj-code use-index pi NO-ERROR.*/
-    FIND FIRST ub.shift-staff No-LOCK WHERE
-        ub.shift-staff.obj-type   = p-obj-type AND
-        ub.shift-staff.obj-code   = p-obj-code AND
-        ub.shift-staff.shift-date = x-date-End AND
-        ub.shift-staff.shift-num  = X-Shift-End AND
-        ub.shift-staff.staff-role = yes and
-        ub.shift-staff.psn-num    >= 0 No-ERROR.
-    assign 
-        rep-shift-for-mng-end = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
-    rep-shift-rol-mng-end = "Старший оператор"  
-        .
-    if v-param-code = 1 then 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
-              
+   /*  /* ищем следующюю смену и ее персонал */                                                                                                       */
+   /*  FIND first next-shift-obj NO-LOCK                                                                                                              */
+   /*    WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type                                                                                    */
+   /*      and next-shift-obj.obj-code   = temp-shift-obj.obj-code                                                                                    */
+   /*      and next-shift-obj.shift-date = temp-shift-obj.shift-date                                                                                  */
+   /*      and next-shift-obj.shift-num  = temp-shift-obj.shift-num                                                                                   */
+   /*  no-error .                                                                                                                                     */
+   /*  FIND NEXT  next-shift-obj SHARE-LOCK WHERE next-shift-obj.obj-type = p-obj-type AND next-shift-obj.obj-code = p-obj-code use-index pi NO-ERROR.*/
+   FIND FIRST ub.shift-staff No-LOCK WHERE
+      ub.shift-staff.obj-type   = p-obj-type AND
+      ub.shift-staff.obj-code   = p-obj-code AND
+      ub.shift-staff.shift-date = x-date-End AND
+      ub.shift-staff.shift-num  = X-Shift-End AND
+      ub.shift-staff.staff-role = yes and
+      ub.shift-staff.psn-num    >= 0 No-ERROR.
+   assign 
+      rep-shift-for-mng-end = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+   rep-shift-rol-mng-end = "Старший оператор"  
+      .
+
+   if v-param-code = 1 then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
+              <tfoot>
                   <tr> <!--Подвал-->
                     <td colspan="8" style="height:30px;"></td>
                   </tr>
@@ -4097,28 +4293,192 @@ procedure last-line-tog-html5-1 :
                     <td colspan="8"> СМЕНУ ПРИНЯЛ: </td>
                   </tr>
             </tfoot>
+            
         </table>
         '                                                                                      
-            ,
+         ,
         
-            rep-shift-for-mng-next                                                                                            
-            ).                                                                                                    
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
+         rep-shift-for-mng-next                                                                                            
+         ).                                                                                                    
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
         </body>
         </html>
         '                                                                                      
-            , chr(123), chr(125)                                                                                                 
-            ).                                                                                                    
-        output stream OutStr-html close.
-    end.
-    else 
-    do:
-        output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.  
-        put stream OutStr-html unformatted                                                                     
-            substitute (
-            '
+         , chr(123), chr(125)                                                                                                 
+         ).                                                                                                    
+      output stream OutStr-html close.
+   end.
+   else 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.  
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
+              <tfoot>
+                  <tr> <!--Подвал-->
+                    <td colspan="8"></td>
+                  </tr>
+                    <tr> 
+                    <td colspan="2" style="height:30px;"> Отчет составил и смену сдал:</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&1</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&2</td>
+                  </tr>
+                  <tr> 
+                    <td colspan="2"></td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">должность</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">подпись</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                  </tr>
+                    <tr> 
+                    <td colspan="2" style="height:30px;"> Смену принял:</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&3</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;">&4</td>
+                  </tr>
+                  <tr> 
+                    <td colspan="2"></td>
+                    <td></td>
+                    <td style="font-size:10px;  text-align: center;">должность</td>
+                    <td></td>
+                    <td style="font-size:10px;  text-align: center;">подпись</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                  </tr>
+                    <tr>
+                    <td colspan="2" style="height:30px;"> Отчет проверил:</td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                    <td></td>
+                    <td style="border-bottom: 1px solid black; text-align: center;"></td>
+                  </tr>
+                  <tr> 
+                    <td colspan="2"></td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">должность</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">подпись</td>
+                    <td></td>
+                    <td style="font-size:10px; text-align: center;">расшифровка подписи</td>
+                  </tr>
+        <tr><td colspan="7">«Частичный возврат» - это: </td></tr>
+<tr><td colspan="7">«Частичный возврат» - возврат, который был проведен на недолитое топливо по транзакции на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Остальные возвраты» - это:</td></tr>
+<tr><td colspan="7">«Полный по номеру чека» - полный возврат, который был проведен по номеру чека на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Частичный по номеру чека» - частичный возврат, который был проведен по номеру чека на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Полный по транзакции» - полный возврат, который был проведен по транзакции на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Сухой чек, созданный в ППО Trade House» - сухой возврат, который был проведен на АРМ Кассира</td></tr>
+<tr><td colspan="7">«Сухой чек, проведенный на АРМ Кассира» - сухой возврат, который был проведен на АРМ Кассира</td></tr>
+
+        
+            </tfoot>
+            
+            
+        </table>
+        '                                                                                      
+         ,
+         rep-shift-rol-mng-end,  
+         rep-shift-for-mng-end, 
+         rep-shift-rol-mng-next,  
+         rep-shift-for-mng-next                                                                                            
+         ).                                                                                                    
+      output stream OutStr-html close.
+ 
+
+   end.      
+End procedure.
+
+
+
+
+
+
+procedure last-line-tog-html5-1 :
+   define input parameter v-report-name-html     as character no-undo .
+
+   find first temp-shift-obj  where temp-shift-obj.num = v-count no-error .
+   if available temp-shift-obj then 
+   do:
+      assign
+         x-date-End             = temp-shift-obj.shift-date
+         X-Shift-End            = temp-shift-obj.shift-num
+         v-rep-shift-close-date = temp-shift-obj.close-date
+         v-rep-shift-close-time = temp-shift-obj.close-time
+         .
+   end.
+  
+  
+   /*  /* ищем следующюю смену и ее персонал */                                                                                                       */
+   /*  FIND first next-shift-obj NO-LOCK                                                                                                              */
+   /*    WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type                                                                                    */
+   /*      and next-shift-obj.obj-code   = temp-shift-obj.obj-code                                                                                    */
+   /*      and next-shift-obj.shift-date = temp-shift-obj.shift-date                                                                                  */
+   /*      and next-shift-obj.shift-num  = temp-shift-obj.shift-num                                                                                   */
+   /*  no-error .                                                                                                                                     */
+   /*  FIND NEXT  next-shift-obj SHARE-LOCK WHERE next-shift-obj.obj-type = p-obj-type AND next-shift-obj.obj-code = p-obj-code use-index pi NO-ERROR.*/
+   FIND FIRST ub.shift-staff No-LOCK WHERE
+      ub.shift-staff.obj-type   = p-obj-type AND
+      ub.shift-staff.obj-code   = p-obj-code AND
+      ub.shift-staff.shift-date = x-date-End AND
+      ub.shift-staff.shift-num  = X-Shift-End AND
+      ub.shift-staff.staff-role = yes and
+      ub.shift-staff.psn-num    >= 0 No-ERROR.
+   assign 
+      rep-shift-for-mng-end = if available ub.shift-staff then string(ub.shift-staff.name, "X(30)") else "".
+   rep-shift-rol-mng-end = "Старший оператор"  
+      .
+   if v-param-code = 1 then 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
+              
+                  <tr> <!--Подвал-->
+                    <td colspan="7" style="height:30px;"></td>
+                  </tr>
+                    <tr> 
+                    <td colspan="7" style="height:30px;"> СМЕНУ СДАЛ:  &1  __________________</td>
+                  </tr>
+                  <tr> 
+                    <td colspan="7"> СМЕНУ ПРИНЯЛ: </td>
+                  </tr>
+            </tfoot>
+        </table>
+        '                                                                                      
+         ,
+        
+         rep-shift-for-mng-next                                                                                            
+         ).                                                                                                    
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
+        </body>
+        </html>
+        '                                                                                      
+         , chr(123), chr(125)                                                                                                 
+         ).                                                                                                    
+      output stream OutStr-html close.
+   end.
+   else 
+   do:
+      output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.  
+      put stream OutStr-html unformatted                                                                     
+         substitute (
+         '
               
                   <tr> <!--Подвал-->
                     <td colspan="9"></td>
@@ -4181,14 +4541,14 @@ procedure last-line-tog-html5-1 :
             </tfoot>
         </table>
         '                                                                                      
-            ,
-            rep-shift-rol-mng-end,  
-            rep-shift-for-mng-end, 
-            rep-shift-rol-mng-next,  
-            rep-shift-for-mng-next                                                                                            
-            ).                                                                                                    
-        output stream OutStr-html close.
+         ,
+         rep-shift-rol-mng-end,  
+         rep-shift-for-mng-end, 
+         rep-shift-rol-mng-next,  
+         rep-shift-for-mng-next                                                                                            
+         ).                                                                                                    
+      output stream OutStr-html close.
  
 
-    end.      
+   end.      
 End procedure.

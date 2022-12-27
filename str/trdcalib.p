@@ -492,6 +492,8 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-techpass
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-othermoves
+      {&attr-temp-full-code}
       &scop attr-code trdcattr-is-auto-trn
       {&attr-temp-full-code}
       &scop attr-code trdcattr-is-lgas
@@ -499,6 +501,10 @@ procedure trdcalib_tdat-cod :
       &scop attr-code trdcattr-is-lgas-corr
       {&attr-temp-full-code}
       &scop attr-code trdcattr-trn-lgas-corr
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-is-return
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-edo-return
       {&attr-temp-full-code}
       &scop attr-code trdcattr-date-start
       {&attr-temp-full-code}

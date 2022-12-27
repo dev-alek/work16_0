@@ -22,5 +22,6 @@ enum ibs.th.ref.promo.enum-promo-goods-type:
     PromoSet      = 3  /* промо-набор */
     PromoSetGoods = 4  /* товары прома-набора */
     Bin           = 5  /* Бины катр */
+    BarCode       = 6  /* ШК*/
   .
 end enum .

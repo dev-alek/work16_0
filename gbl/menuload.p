@@ -334,6 +334,16 @@ define variable vss-description as character no-undo init "Информация об объекте
 }
 { gbl/menuload.i
   {&bef-menuload_adm_function}
+  "'Восстановление статуса БД'"
+  "'utl/fix-db-stts.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
   "'Включение выключенных доп. БК'"
   "'utl/bc-on.p'"
 }

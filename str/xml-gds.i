@@ -33,6 +33,7 @@ define buffer buf_bar-code_cl for ub.bar-code .
 define buffer buf_ext-classif for ub.ext-classif .
 define variable v-IBCType as integer no-undo .
 define variable v-mark  as logical no-undo initial no.
+define variable v-attr-emrc as character no-undo.
 define variable v-cli-base  as character initial "".
 define variable v-i-cli     as integer no-undo .
 define variable v-i-cli-qnty     as dec no-undo .
@@ -117,7 +118,7 @@ if vaction = "U":U then do:
   define variable vVal as character no-undo .
   define variable vType as character no-undo .
   
-    find FIRST buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "image-list" no-error.
+   find FIRST buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "image-list" no-error.
 	if available buf_goods-attr then do:
      vVal = entry(1,buf_goods-attr.attr-value).    
 	end.
@@ -266,7 +267,7 @@ end.
   if available buf_goods-attr then do:   
       run bgelib-tag-put in this-procedure ( input 4, input "ISCookStumped", input 1, input 1 ).
   end.  
-
+  
       run bgelib-tag-close in this-procedure ( input 3, input "ItemStatus").
   end. /*не инфокиоск*/
 
@@ -289,8 +290,8 @@ end.
         else do:
           case buf_cash-dis-rule.value-type:
             when integer({&discnt-v-pcnt}) then do:
-        assign
-        temp-disc-dec = - buf_cash-dis-rule.discnt-value
+              assign
+              temp-disc-dec = - buf_cash-dis-rule.discnt-value
               .
             end.
             when integer({&discnt-v-pdf-pcnt}) then do:
@@ -465,8 +466,13 @@ if pos-type <> {&cd-type-infokiosk} then do:
     end.
     &endif
 end.
+run gds-attr-value in this-procedure (
+                                 input cash-gds.gds-code
+                                ,input {&attr-emrc-type}
+                                ,output v-attr-emrc
+                                ,output v-attr-type) no-error.
+run bgelib-tag-put in this-procedure ( input 3, input "Item_EMRC"  , input v-attr-emrc , input 1 ).
 vGdsTabak = no.
-
 find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
               and buf_goods-attr.attr-code  = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" no-error . 
     if available (buf_goods-attr) 
@@ -558,9 +564,13 @@ run bgelib-tag-close in this-procedure ( input 2, input "Item").
       run bgelib-tag-put in this-procedure ( input 3, input "IBCPrice"                                         ~
                                           , input string( cash-gds.price-sale ), input 1 ).                   ~
       run bgelib-tag-put in this-procedure ( input 3, input "IBCType"                                         ~
-                                          , input string( v-IBCType ), input 1 ).                   ~
+                                          , input string( v-IBCType ), input 1 ).                             ~
+      run bgelib-tag-put in this-procedure ( input 3, input "IBC_EMRC"                                        ~
+                                          , input  v-attr-emrc, input 1 ).                                    ~
+      run bgelib-tag-put in this-procedure ( input 3, input "IBCUnitFactor"                                   ~
+                                          , input  string(cash-gds.cli-base-rate), input 1 ).                 ~
     end.                                                                                                      ~
-    run bgelib-tag-close in this-procedure ( input 2, input "ItemBarCode")
+    run bgelib-tag-close in this-procedure ( input 2, input "ItemBarCode")                                                        
 
 
 &scop output-code                                 (if buf_cash-gds.b-str <> "":U and buf_cash-gds.b-str <> "*" ~
@@ -682,7 +692,18 @@ for each buf_cash-gds no-lock where
                                                          else cash-gds.price-sale )
                                                 , input 1 ).                   
            run bgelib-tag-put in this-procedure ( input 3, input "IBCType"                                         
-                                               , input string( v-IBCType ), input 1 ).                   
+                                               , input string( v-IBCType ), input 1 ).
+           run bgelib-tag-put in this-procedure ( input 3, input "IBC_EMRC"                                         
+                                          , input  v-attr-emrc, input 1 ).                             
+           run bgelib-tag-put in this-procedure ( input 3, input "IBCUnitFactor"                                         
+                                          , input  string(if v-i-cli eq 1 and cash-gds.cli-base-rate ne 1
+                                                          then 1
+                                                          else if v-i-cli eq 2 and cash-gds.cli-base-rate eq 1
+                                                          then v-i-cli-qnty
+                                                          else cash-gds.cli-base-rate), input 1 ).                             
+                                
+                                   
+                                                          
          end.
          run bgelib-tag-close in this-procedure ( input 2, input "ItemBarCode") .
        end.
@@ -716,7 +737,12 @@ for each buf_cash-gds no-lock where
                                              , input string( cash-gds.price-sale )
                                              , input 1 ).                   
         run bgelib-tag-put in this-procedure ( input 3, input "IBCType"                                         
-                                            , input string( v-IBCType ), input 1 ).                   
+                                            , input string( v-IBCType ), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 3, input "IBC_EMRC"                                         
+                                          , input  v-attr-emrc, input 1 ).                             
+        run bgelib-tag-put in this-procedure ( input 3, input "IBCUnitFactor"                                         
+                                          , input  string(cash-gds.cli-base-rate), input 1 ).                             
+                                                                  
       end.
       run bgelib-tag-close in this-procedure ( input 2, input "ItemBarCode") .
     end.

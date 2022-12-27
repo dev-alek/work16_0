@@ -394,6 +394,7 @@ define variable v-num            as   integer       initial 1         no-undo.
 define variable varis-perm       as   logical       initial no        no-undo.
 define buffer bf-f_contract-specif    for ub.contract-specif.
 define variable v-master as character no-undo.
+define variable trn-is-return          as logical   no-undo init no .
 
 
 { gbl/objsrv.i }
@@ -644,6 +645,17 @@ if ( varis-fin = "yes":u
       end.
     end.
     else do:
+        { str/tdat-val.i
+           t-doc.doc-code
+           {&trdcattr-is-return}
+           varvalue
+           vartype
+           no-error
+        }
+        if varvalue = "yes"
+        then do :
+          trn-is-return = yes .
+        end .
         run check-contract-code in this-procedure (input  substitute("&1,&2=&3", "choose":u, "doc-type", t-doc.ext-doc-type),
                                                   input  t-doc.host-code,
                                                   input  input frame {&frame-name} t-doc.cli-type,
@@ -651,11 +663,16 @@ if ( varis-fin = "yes":u
                                                   input  ?,
                                                   input  parparentproc,
                                                   input  t-doc.doc-date,
-                                                  input if paris-hold = yes then "all" else (if ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or mode-erprn or (t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and logical(varcontract))) then {&income} else {&expense}) ,
+                                                  input if paris-hold = yes then "all" else (if ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or mode-erprn or (t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and (logical(varcontract) or trn-is-return))) then {&income} else {&expense}) ,
                                                   output varcontract-code) no-error.
       if error-status :error    or
          varcontract-code = ?  or
          varcontract-code = 0  then do:
+        if trn-is-return
+        then do :
+          apply "entry" to t-doc.cli-code in frame {&frame-name}.
+          return error.
+        end .
         if varcontract <> "yes":u or trn-type = {&is-fuel} then do:
           message "Вы не выбрали договор. Вы хотите оформить "
             func-get-name-from-ext-type ( t-doc.ext-doc-type , false ) " без договора?"
@@ -721,6 +738,46 @@ if ( varis-fin = "yes":u
             return error.
           end .
         end .
+        
+        if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
+        then do :
+          EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+          find first buf_contract-attr no-lock where buf_contract-attr.host-code = bf_contract.host-code
+                                                 and buf_contract-attr.contract-code = bf_contract.contract-code
+                                                 and buf_contract-attr.attr-code = "contract-edi"
+                                                 no-error .
+          if EDOParSec:IsEdo
+          and available buf_contract-attr
+          and logical(buf_contract-attr.attr-value) = true 
+          then do :
+            message "По договору осуществляется ЭДО. Для возврата используйте документ Расход внешний." view-as alert-box .
+            return error.
+          end .
+        end .
+        
+        if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+        and trn-is-return
+        then do :
+          if (bf_contract.status_ = {&objdt-closed}
+          or (bf_contract.contract-date-end <> ? and bf_contract.contract-date-end < t-doc.doc-date))
+          then do:
+            message "Выбранный договор поставки закрыт или истёк срок его действия, оформить возврат невозможно. Обратитесь в офис для корректировки договора." view-as alert-box .
+            run check-cli no-error.
+            if error-status :error
+            then return error .
+            else return .
+          end .
+          if bf_contract.spec-check = 0
+          then do :
+            message "Для выбранного договора поставки не определена схема возврата, оформить возврат невозможно. Обратитесь в офис для корректировки договора." view-as alert-box .
+            run check-cli no-error.
+            if error-status :error
+            then return error .
+            else return .
+          end .
+        end .
+        
+        
         
         assign
           t-doc.contract-code = varcontract-code

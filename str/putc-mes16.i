@@ -39,7 +39,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 run bgelib-tag-open in this-procedure ( input 2, input "Command":U,"ctrl='ADD'").
 run bgelib-tag-put in this-procedure ( input 3, input "CommType":U, input "message", input 1 ).
-run bgelib-tag-put in this-procedure ( input 3, input "CommValue":U, input string(ub.PromoAttr.attr-value), input 1 ).                                  
+run bgelib-tag-put in this-procedure ( input 3, input "CommValue":U, input "Внимание!!! Перезагрузите кассу, для обновления промоакций!", input 1 ).                                  
 run bgelib-tag-close in this-procedure ( input 2, input "Command":U).
 
       /*закрываем поток*/

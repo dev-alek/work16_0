@@ -787,17 +787,19 @@ procedure parseheader:
     v-querypar = entry (n, p-header, "?").
     n = 3.
   end.
+  
+  p-header = replace (p-header,";",{&CRLF}).
   DO i = 1 TO NUM-ENTRIES(p-header,{&CRLF}):
       v-hd-line = trim(ENTRY(i,p-header,{&CRLF})).
       v-querypar = right-trim (right-trim  (entry(n, v-header, "/"), "HTTP"), " ").
       IF  v-hd-line  BEGINS "Content-Length"  THEN  do:
-          v-cont-length = INT(trim(entry(1,SUBSTRING(v-hd-line,16,LENGTH(v-hd-line)),';'))).
+          v-cont-length = INT(trim(SUBSTRING(v-hd-line,16,LENGTH(v-hd-line)))).
       END.
       IF  v-hd-line  BEGINS "content-type:"  THEN  do:
-          v-cont-type = trim(entry(1,SUBSTRING(v-hd-line,14,LENGTH(v-hd-line)),';')).
+          v-cont-type = trim(SUBSTRING(v-hd-line,14,LENGTH(v-hd-line))).
       END.
       IF  v-hd-line  BEGINS "user-agent:"  THEN  do:
-          v-user-agent = trim(entry(1,SUBSTRING(v-hd-line,13,LENGTH(v-hd-line)),';')).
+          v-user-agent = trim(SUBSTRING(v-hd-line,13,LENGTH(v-hd-line))).
       END.
   END.
     

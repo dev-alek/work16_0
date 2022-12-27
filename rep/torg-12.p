@@ -3709,12 +3709,14 @@ on error undo, return error
                      v-osnov         = buf_contract.contract-name
                   .
                   END.
-                  IF v-osnov-num = "":U
+                  /* IF v-osnov-num = "":U*/ 
+                  IF v-osnov-num = ?
                   THEN DO:
                      ASSIGN
                         v-osnov-num = v-osnov-num-1
                      .
                   END.
+
                   IF v-osnov-num  <> v-osnov-num-1
                   THEN DO:
                      ASSIGN

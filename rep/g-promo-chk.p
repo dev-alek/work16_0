@@ -39,7 +39,7 @@ define NEW SHARED variable cas-shft as logical no-undo init no.
 
 run rep/d-report.w
     ( input parParentProc                   /* 0               */
-    , input 'rep/r-promo-chkr.p'                   /* 1 RUN           */
+    , input 'rep/e-work_promo.w'                   /* 1 RUN           */
     , input "Оперативный отчет по реализации промо-акций":U                        /* 2 Title         */
     , input 4   /* 3 dates         */
     , input ""                              /* 4 goods         */
@@ -47,5 +47,5 @@ run rep/d-report.w
     , input ""                              /* 6 Price         */
     , input ""                              /* 7 currency      */
     , input "{&shop},{&send-check}"         /* 8 object type   */
-    , input yes                              /* 9 одна закладка */
+    , input no                              /* 9 одна закладка */
     ).

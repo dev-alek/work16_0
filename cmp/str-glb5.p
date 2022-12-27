@@ -1985,6 +1985,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define esys-dm-n
 { cmp/cr-prep.i 1 ggoattr-mark-grp           mark-grp           mark-grp           mark-grp           mark-grp           }
 { cmp/cr-prep.i 1 ggoattr-sum-grps           sum-grps           sum-grps           sum-grps           sum-grps           } 
 { cmp/cr-prep.i 1 ggoattr-mark-type          gg-mark-type       gg-mark-type       gg-mark-type       gg-mark-type       }
+{ cmp/cr-prep.i 1 ggoattr-emrc-type          emrc-type          emrc-type          emrc-type          emrc-type       }
 
 /* Атрибуты свойств товаров gds-obj-prop на объекте */
 

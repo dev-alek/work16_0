@@ -53,12 +53,14 @@ define variable vss-description as character no-undo init "Список печатных форм 
 { rep/menu-doc.i def }
 { gbl/getcntxt.i def }
 { gbl/getsect.i  def }
+
 define new shared variable print-graft as logical no-undo .
 define new shared variable no-vat      as logical no-undo .
 define new shared variable sort-gr     as logical no-undo .
 define new shared variable sort-name   as logical no-undo .
 define new shared variable CostPrice   as logical no-undo .
 define new shared variable PrintScale  as logical no-undo .
+define new shared variable PrintParts  as logical no-undo .
 
 define variable in-docprvalue       as character    no-undo.
 
@@ -84,7 +86,7 @@ define variable g#log           as logical      no-undo.
 &Scoped-define INTERNAL-TABLES Tmp#List
 
 /* Definitions for BROWSE br-table                                      */
-&Scoped-define FIELDS-IN-QUERY-br-table Tmp#List.last-use Tmp#List.blank-name Tmp#List.type-price Tmp#List.type-scale Tmp#List.type-val Tmp#List.sort-name Tmp#List.sort-gr Tmp#List.print-graft Tmp#List.no-vat
+&Scoped-define FIELDS-IN-QUERY-br-table Tmp#List.last-use Tmp#List.blank-name Tmp#List.type-parts Tmp#List.type-price Tmp#List.type-scale Tmp#List.type-val Tmp#List.sort-name Tmp#List.sort-gr Tmp#List.print-graft Tmp#List.no-vat
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-table
 &Scoped-define SELF-NAME br-table
 &Scoped-define OPEN-QUERY-br-table /* OPEN QUERY {&SELF-NAME} FOR EACH Tmp#List no-lock . */ run local-open-query in this-procedure .
@@ -163,8 +165,9 @@ DEFINE QUERY br-table FOR
 DEFINE BROWSE br-table
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-table Dialog-Frame _FREEFORM
   QUERY br-table NO-LOCK DISPLAY
-      Tmp#List.last-use COLUMN-LABEL "*" FORMAT "*/"
+    Tmp#List.last-use COLUMN-LABEL "*" FORMAT "*/"
     Tmp#List.blank-name COLUMN-LABEL "Название печатной формы":C53 FORMAT "X(128)"
+    Tmp#List.type-parts     column-label "ц.пар"    format "X(5)"
     Tmp#List.type-price     column-label "ц.док"    format "X(5)"
     Tmp#List.type-scale     column-label "шкала"    format "X(5)"
     Tmp#List.type-val       column-label "в ..."    format "X(5)"
@@ -421,11 +424,31 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &Scoped-define BROWSE-NAME br-table
 &Scoped-define SELF-NAME br-table
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
 ON 1 OF br-table IN FRAME Dialog-Frame
+DO:
+    if available tmp#list
+    then do:
+        if tmp#list.type-parts = "  +":U
+        or tmp#list.type-parts = "  -":U
+        then do:
+            assign
+                tmp#list.type-parts = ( if tmp#list.type-parts = "  +":U then "  -":U else "  +":U )
+            .
+        end.
+        {&browse-name} :refresh().
+    end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define BROWSE-NAME br-table
+&Scoped-define SELF-NAME br-table
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
+ON 2 OF br-table IN FRAME Dialog-Frame
 DO:
     if available tmp#list
     then do:
@@ -445,7 +468,7 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
-ON 2 OF br-table IN FRAME Dialog-Frame
+ON 3 OF br-table IN FRAME Dialog-Frame
 DO:
     if available tmp#list
     then do:
@@ -465,7 +488,7 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
-ON 3 OF br-table IN FRAME Dialog-Frame
+ON 4 OF br-table IN FRAME Dialog-Frame
 DO:
     if available tmp#list
     then do:
@@ -485,7 +508,7 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
-ON 4 OF br-table IN FRAME Dialog-Frame
+ON 5 OF br-table IN FRAME Dialog-Frame
 DO:
     if available tmp#list
     then do:
@@ -505,7 +528,7 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
-ON 5 OF br-table IN FRAME Dialog-Frame
+ON 6 OF br-table IN FRAME Dialog-Frame
 DO:
     if available tmp#list
     then do:
@@ -525,7 +548,7 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
-ON 6 OF br-table IN FRAME Dialog-Frame
+ON 7 OF br-table IN FRAME Dialog-Frame
 DO:
     if available tmp#list
     then do:
@@ -545,7 +568,7 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
-ON 7 OF br-table IN FRAME Dialog-Frame
+ON 8 OF br-table IN FRAME Dialog-Frame
 DO:
     if available tmp#list
     then do:
@@ -637,6 +660,12 @@ DO:
             Tmp#List.no-vat :bgcolor in browse {&browse-name} = GREY_COLOR
         .
     end.
+    if tmp#list.type-parts-enabled = no
+    then do:
+        assign
+            Tmp#List.type-parts :bgcolor in browse {&browse-name} = GREY_COLOR
+        .
+    end.    
     if lookup("other", tmp#list.filtr) > 0  then do:
         assign
             Tmp#List.last-use          :bgcolor in browse {&browse-name} = yellow_COLOR
@@ -1172,6 +1201,11 @@ on error undo, return error
         then do:
             run get-saved-logical in this-procedure (
                   input buf_usr-flt.list_
+                , input "type-parts":U
+                , output Tmp#List.type-parts
+            ).              
+            run get-saved-logical in this-procedure (
+                  input buf_usr-flt.list_
                 , input "type-price":U
                 , output Tmp#List.type-price
             ).
@@ -1205,6 +1239,7 @@ on error undo, return error
                 , input "no-vat":U
                 , output Tmp#List.no-vat
             ).
+         
             assign
                 v-temp-char = "":U
             .
@@ -1222,6 +1257,7 @@ on error undo, return error
         end.
         else do:
             assign
+                Tmp#List.type-parts   = "  -":U
                 Tmp#List.type-price   = "  -":U
                 Tmp#List.type-val     = "  -":U
                 Tmp#List.sort-gr      = "  -":U
@@ -1229,6 +1265,12 @@ on error undo, return error
                 Tmp#List.print-graft  = "  -":U
                 Tmp#List.type-scale   = "  -":U
                 Tmp#List.no-vat       = "  -":U
+            .
+        end.
+        if Tmp#List.type-parts-enabled = no
+        then do:
+            assign
+                Tmp#List.type-parts   = " ":U
             .
         end.
         if Tmp#List.type-price-enabled = no
@@ -1452,6 +1494,7 @@ on error undo, return error
                     v-internal = string( buf_trn-doc.Internal )
                     v-flag     = string( buf_trn-doc.flag_    )
                 .
+
                 assign
                     print-graft = ( trim( buf_tmp#list.print-graft ) = "+":U )
                     no-vat      = ( trim( buf_tmp#list.no-vat      ) = "+":U )
@@ -1460,11 +1503,12 @@ on error undo, return error
                     CostPrice   = ( trim( buf_tmp#list.type-price  ) <> "+":U )
                     PrintScale  = ( trim( buf_tmp#list.type-scale  ) = "+":U )
                     PrintRubl   = ( trim( buf_tmp#list.type-val    ) = "+":U )
+                    PrintParts  = ( trim( buf_tmp#list.type-parts  ) = "+":U )
                 .
                 run trg/userlog.p (
                       input "printdoc":U
                     , input substitute("&1&2&3&2&4&2&5",buf_tmp#list.blank-name,{&delim-key},temp_form-list.doc-code, buf_tmp#list.proc-param,
-                    string(print-graft) + ',' + string(no-vat) + ',' + string(print-graft) + ',' + string(sort-gr) + ',' + string(sort-name) + ',' + string(CostPrice) + ',' + string(PrintScale)  + ',' + string(PrintRubl))
+                      string(PrintParts) + ',' + string(print-graft) + ',' + string(no-vat) + ',' + string(print-graft) + ',' + string(sort-gr) + ',' + string(sort-name) + ',' + string(CostPrice) + ',' + string(PrintScale)  + ',' + string(PrintRubl))
                     , input ?
                     , input ?
                     , input ""
@@ -1473,6 +1517,7 @@ on error undo, return error
                 then do:
                     message return-value + error-status:get-message(1) view-as alert-box title "Ошибка записи истории действий пользователя".
                 end.
+
                 case num-entries( buf_tmp#list.proc-param )
                 :
                     when 0
@@ -1543,6 +1588,35 @@ on error undo, return error
                             , input entry( 4, buf_tmp#list.proc-param )
                             , input entry( 5, buf_tmp#list.proc-param )
                             , input entry( 6, buf_tmp#list.proc-param )
+                        ).
+                    end.
+                    when 7
+                    then do:
+                        run value ( buf_tmp#list.proc-name )  (
+                              input p-mainmenu-handle
+                            , input recid( buf_trn-doc )
+                            , input entry( 1, buf_tmp#list.proc-param )
+                            , input entry( 2, buf_tmp#list.proc-param )
+                            , input entry( 3, buf_tmp#list.proc-param )
+                            , input entry( 4, buf_tmp#list.proc-param )
+                            , input entry( 5, buf_tmp#list.proc-param )
+                            , input entry( 6, buf_tmp#list.proc-param )
+                            , input entry( 7, buf_tmp#list.proc-param )
+                        ).
+                    end.
+                    when 8
+                    then do:
+                        run value ( buf_tmp#list.proc-name )  (
+                              input p-mainmenu-handle
+                            , input recid( buf_trn-doc )
+                            , input entry( 1, buf_tmp#list.proc-param )
+                            , input entry( 2, buf_tmp#list.proc-param )
+                            , input entry( 3, buf_tmp#list.proc-param )
+                            , input entry( 4, buf_tmp#list.proc-param )
+                            , input entry( 5, buf_tmp#list.proc-param )
+                            , input entry( 6, buf_tmp#list.proc-param )
+                            , input entry( 7, buf_tmp#list.proc-param )
+                            , input entry( 8, buf_tmp#list.proc-param )
                         ).
                     end.
                 end case.
@@ -1745,9 +1819,11 @@ on error undo, return error
                                             , v-call-point )
             .
         end.
+
         assign
-            buf_usr-flt.list_ = substitute( "selection,&1,type-price,&2,type-scale,&3,type-val,&4,sort-name,&5,sort-gr,&6,print-graft,&7":U
+            buf_usr-flt.list_ = substitute( "selection,&1,type-parts,&2,type-price,&3,type-scale,&4,type-val,&5,sort-name,&6,sort-gr,&7,print-graft,&8":U
                                     , ( if buf_tmp#list.last-use = yes then "+":U else "-":U )
+                                    , ( if index( buf_tmp#list.type-parts , "+":U ) <> 0 then "+":U else "-":U )
                                     , ( if index( buf_tmp#list.type-price , "+":U ) <> 0 then "+":U else "-":U )
                                     , ( if index( buf_tmp#list.type-scale , "+":U ) <> 0 then "+":U else "-":U )
                                     , ( if index( buf_tmp#list.type-val   , "+":U ) <> 0 then "+":U else "-":U )

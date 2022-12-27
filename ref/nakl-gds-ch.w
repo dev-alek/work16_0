@@ -47,6 +47,7 @@ Creation date: 01/16/07
 
 /* Parameters Definitions ---                                           */
 define input  parameter p-doc-code    as character                        no-undo .
+define input  parameter p-is-edo      as logical                          no-undo .
 define output parameter p-rid-list    as character                        no-undo .
 
 /* Local Variable Definitions ---                                       */
@@ -64,8 +65,13 @@ define variable vss-description as character no-undo init "".
 { rep/r-sym.i       }
 { cmp/r-pril.i new  }
 { gbl/prn-lib.i     }
+{ ref/gds-attr.i    }
 
 define variable v-gds-list as character no-undo.
+define variable objSrv          as class     ibs.th.gbl.sys.objsrv no-undo.
+define variable EDOParSec       as class     ibs.th.gbl.env.prmtrs.edo no-undo .
+define variable varvalue        as character no-undo .
+define variable vartype         as character no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -322,17 +328,17 @@ DO:
     p-rid-list = "" .
     do ii = 1 to num-entries (v-gds-list) :
       find first tt-gds no-lock where recid(tt-gds) = integer(entry(ii, v-gds-list)) .
-      find first ub.goods no-lock where ub.goods.gds-code = tt-gds.gds-code .
-      p-rid-list = p-rid-list + string(recid(ub.goods)) + "," .
+      find first buf_goods no-lock where buf_goods.gds-code = tt-gds.gds-code .
+      p-rid-list = p-rid-list + string(recid(buf_goods)) + "," .
     end.
     p-rid-list = trim(p-rid-list, ",") .
   end.
   else do :
     if available tt-gds
     then do:
-      find first ub.goods no-lock where ub.goods.gds-code = tt-gds.gds-code .
+      find first buf_goods no-lock where buf_goods.gds-code = tt-gds.gds-code .
       assign
-        p-rid-list = string(recid(ub.goods))
+        p-rid-list = string(recid(buf_goods))
       .
     end.
     else return no-apply .
@@ -375,6 +381,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code .
   run fill-tt .   
   RUN my-enable in this-procedure .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -389,16 +396,62 @@ RUN my-disable.
 
 procedure fill-tt :
   empty temp-table tt-gds .
-  for each ub.doc-line no-lock where ub.doc-line.doc-code = p-doc-code,
-  first ub.goods no-lock where ub.goods.artic     = ub.doc-line.artic
-                           and ub.goods.prod-type = ub.doc-line.prod-type
-                           and ub.goods.prod-code = ub.doc-line.prod-code :
-    create tt-gds .
-    buffer-copy ub.goods to tt-gds
-    assign
-      tt-gds.qnty = ub.doc-line.fact-qnty
-      tt-gds.price-rubl = ub.doc-line.price-rubl
-    .
+  if p-is-edo = ?
+  then do :
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = p-doc-code,
+    first buf_goods no-lock where buf_goods.artic     = buf_doc-line.artic
+                             and buf_goods.prod-type = buf_doc-line.prod-type
+                             and buf_goods.prod-code = buf_doc-line.prod-code :
+      create tt-gds .
+      buffer-copy buf_goods to tt-gds
+      assign
+        tt-gds.qnty = buf_doc-line.fact-qnty
+        tt-gds.price-rubl = buf_doc-line.price-rubl
+      .
+    end .
+  end .
+  else do :
+    run gbl/getobjsrvhndl.p (input-output ObjSrv).
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code).
+    
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = p-doc-code
+                                   and buf_doc-line.fact-qnty > 0 ,
+    first buf_goods no-lock where buf_goods.artic     = buf_doc-line.artic
+                             and buf_goods.prod-type = buf_doc-line.prod-type
+                             and buf_goods.prod-code = buf_doc-line.prod-code :
+      if p-is-edo
+      then do :
+        create tt-gds .
+        buffer-copy buf_goods to tt-gds
+        assign
+          tt-gds.qnty = buf_doc-line.fact-qnty
+          tt-gds.price-rubl = buf_doc-line.price-rubl
+        .
+      end .
+      if not p-is-edo
+      then do :
+        RUN gds-attr-value (
+          INPUT buf_goods.gds-code,
+          INPUT {&attr-mark-type},
+          OUTPUT varvalue,
+          OUTPUT vartype
+          ).
+        if EDOParSec:GetIsEDOForType(varvalue)
+        or EDOParSec:GetIsArticForType(varvalue)
+        or EDOParSec:GetIsMarkingForType(varvalue)
+        then do :
+          
+        end .
+        else do :
+          create tt-gds .
+          buffer-copy buf_goods to tt-gds
+          assign
+            tt-gds.qnty = buf_doc-line.fact-qnty
+            tt-gds.price-rubl = buf_doc-line.price-rubl
+          .
+        end .
+      end .
+    end .  
   end .
 end procedure .
 

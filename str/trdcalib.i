@@ -1352,6 +1352,19 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-techpass true
 &glob sort-trdcattr-techpass 100
 
+/* Прочие перемещения НП */
+&glob fillin_width-trdcattr-othermoves 3
+&glob fillin_height-trdcattr-othermoves 1
+&glob type-trdcattr-othermoves {&type-log}
+&glob format-trdcattr-othermoves "yes/no"
+&glob label-trdcattr-othermoves "Прочие перемещения НП"
+&glob tooltip-trdcattr-othermoves "Признак топливной накладной с прочими перемещениями (для ИС Президентский Мониторинг)"
+&glob user-can-edit-trdcattr-othermoves true
+&glob output-display-trdcattr-othermoves true
+&glob other-trdcattr-othermoves '':u
+&glob news-trdcattr-othermoves true
+&glob sort-trdcattr-othermoves 100
+
 /* Признак накладной сформированной автоматически */
 &glob fillin_width-trdcattr-is-auto-trn 3
 &glob fillin_height-trdcattr-is-auto-trn 1
@@ -1404,6 +1417,31 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-trn-lgas-corr true
 &glob sort-trdcattr-trn-lgas-corr 100
 
+/* Расход внешний как Возврат поставщику */
+&glob fillin_width-trdcattr-is-return 3
+&glob fillin_height-trdcattr-is-return 1
+&glob type-trdcattr-is-return {&type-log}
+&glob format-trdcattr-is-return "yes/no"
+&glob label-trdcattr-is-return "Расход внешний как Возврат поставщику"
+&glob tooltip-trdcattr-is-return "Расход внешний используется для Возврата поставщику"
+&glob user-can-edit-trdcattr-is-return false
+&glob output-display-trdcattr-is-return true
+&glob other-trdcattr-is-return '':u
+&glob news-trdcattr-is-return true
+&glob sort-trdcattr-is-return 100
+
+/* Расход внешний как Возврат поставщику через ЭДО */
+&glob fillin_width-trdcattr-edo-return 3
+&glob fillin_height-trdcattr-edo-return 1
+&glob type-trdcattr-edo-return {&type-log}
+&glob format-trdcattr-edo-return "yes/no"
+&glob label-trdcattr-edo-return "Расход внешний как Возврат поставщику через ЭДО"
+&glob tooltip-trdcattr-edo-return "Расход внешний используется для Возврата поставщику через ЭДО"
+&glob user-can-edit-trdcattr-edo-return false
+&glob output-display-trdcattr-edo-return true
+&glob other-trdcattr-edo-return '':u
+&glob news-trdcattr-edo-return true
+&glob sort-trdcattr-edo-return 100
 
 /* Дата начала слива */
 &glob fillin_width-trdcattr-date-start 11

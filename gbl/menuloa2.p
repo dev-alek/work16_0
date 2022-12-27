@@ -1888,7 +1888,7 @@ define variable vss-description as character no-undo init "".
   "no"
   "'15.0'"
   "'1'"
-  "'IBS'"
+  "''"
   "yes"
 }
 

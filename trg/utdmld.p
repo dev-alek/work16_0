@@ -19,6 +19,8 @@ Creation date: 11/07/18
 &scoped-define main-tbl utd-marking-lines
 trigger procedure for delete of ub.{&main-tbl}.
 
+define buffer buf_marking for ub.marking.
+define buffer buf-{&main-tbl} for ub.{&main-tbl}.
 define variable vss-revision    as character no-undo initial "$Revision$":U .
 define variable vss-author      as character no-undo initial "$Author$":U .
 define variable vss-date        as character no-undo initial "$Date$":U .
@@ -42,4 +44,15 @@ for each {&main-tbl}-attr where {&main-tbl}-attr.db-num eq  {&main-tbl}.db-num
                             and {&main-tbl}-attr.mark eq  {&main-tbl}.mark
 exclusive-lock:
    delete {&main-tbl}-attr.
+end.
+
+for each buf_marking no-lock where buf_marking.mark-parent = {&main-tbl}.mark :
+    find first buf-{&main-tbl} where buf-{&main-tbl}.db-num eq  {&main-tbl}.db-num
+                            and buf-{&main-tbl}.doc-id eq  {&main-tbl}.doc-id
+                            and buf-{&main-tbl}.linenum eq  {&main-tbl}.linenum
+                            and buf-{&main-tbl}.mark eq buf_marking.mark
+    exclusive-lock no-error.
+    if avail buf-{&main-tbl}
+    then
+       delete buf-{&main-tbl}. 
 end.

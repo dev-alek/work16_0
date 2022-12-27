@@ -103,6 +103,7 @@ define variable varvalue as character no-undo .
 define variable vartype as character no-undo .
 define variable v-ext-mode as character no-undo .
 define variable v-sum-parts-qnty as decimal no-undo .
+define variable v-is-return as logical init no .
 
 { gbl/objsrv.i }
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
@@ -1777,7 +1778,9 @@ if available (buf_goods) then do:
                                              buf_marking-lines.part-code = parts.part-code and
                                              buf_marking-lines.obj-code = parts.obj-code and
                                              buf_marking-lines.obj-type = parts.obj-type:
-      for each buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark :
+      find first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark no-error .
+      if available buf_marking
+      then do :
         create tt-marking-lines .
         assign
           tt-marking-lines.stts        = StatusTHName(buf_marking.sts)
@@ -1795,32 +1798,49 @@ if available (buf_goods) then do:
           tt-marking-lines.obj-code    = parts.obj-code
           tt-marking-lines.obj-type    = parts.obj-type
           tt-marking-lines.prt-code    = parts.prt-code
-          .
-          if buf_marking.sts = 10
-          then do:
-            if buf_marking.mark-parent <> ""
+        .
+        if buf_marking.sts = 10
+        then do:
+          if buf_marking.mark-parent <> ""
+          then do :
+            find first buf_marking-lines-parent no-lock where buf_marking-lines-parent.mark = buf_marking.mark-parent
+                                                          and buf_marking-lines-parent.gds-code = buf_marking-lines.gds-code
+                                                          and buf_marking-lines-parent.obj-type = buf_marking-lines.obj-type
+                                                          and buf_marking-lines-parent.obj-code = buf_marking-lines.obj-code
+                                                          and buf_marking-lines-parent.in-code  = buf_marking-lines.in-code
+                                                          and buf_marking-lines-parent.out-code = buf_marking-lines.out-code
+                                                          and buf_marking-lines-parent.part-code = buf_marking-lines.part-code
+                                                          and buf_marking-lines-parent.prt-code = buf_marking-lines.prt-code 
+                                                          and buf_marking-lines-parent.doc-level > 0
+                                                          no-error .
+            if available buf_marking-lines-parent
             then do :
-              find first buf_marking-lines-parent no-lock where buf_marking-lines-parent.mark = buf_marking.mark-parent
-                                                            and buf_marking-lines-parent.gds-code = buf_marking-lines.gds-code
-                                                            and buf_marking-lines-parent.obj-type = buf_marking-lines.obj-type
-                                                            and buf_marking-lines-parent.obj-code = buf_marking-lines.obj-code
-                                                            and buf_marking-lines-parent.in-code  = buf_marking-lines.in-code
-                                                            and buf_marking-lines-parent.out-code = buf_marking-lines.out-code
-                                                            and buf_marking-lines-parent.part-code = buf_marking-lines.part-code
-                                                            and buf_marking-lines-parent.prt-code = buf_marking-lines.prt-code 
-                                                            and buf_marking-lines-parent.doc-level > 0
-                                                            no-error .
-              if available buf_marking-lines-parent
-              then do :
-                tt-marking-lines.doc-level = 2 .
-              end .
-              else do :
-                tt-marking-lines.doc-level = 1 .
-              end .
+              tt-marking-lines.doc-level = 2 .
             end .
-            else tt-marking-lines.doc-level = 1 .  
-          end.
+            else do :
+              tt-marking-lines.doc-level = 1 .
+            end .
+          end .
+          else tt-marking-lines.doc-level = 1 .  
+        end.
       end.
+      else do :
+        create tt-marking-lines .
+        assign
+          tt-marking-lines.gds-name    = buf_goods.gds-name
+          tt-marking-lines.mark        = buf_marking-lines.mark
+          tt-marking-lines.gds-code    = buf_marking-lines.gds-code
+          tt-marking-lines.doc-level   = buf_marking-lines.doc-level
+          tt-marking-lines.box-qnty    = 1
+          tt-marking-lines.in-code     = parts.in-code
+          tt-marking-lines.out-code    = parts.out-code
+          tt-marking-lines.obj-code    = parts.obj-code
+          tt-marking-lines.obj-type    = parts.obj-type
+          tt-marking-lines.sts         = 13
+          tt-marking-lines.prt-code    = parts.prt-code
+        .
+        tt-marking-lines.stts        = StatusTHName(tt-marking-lines.sts) .
+      end .
     end.
 end.
       run str/mark_browse.w (input parparentproc,
@@ -2409,6 +2429,15 @@ then do :
   v-ext-mode = p-edit-mode .
   p-edit-mode = {&lookup} .
 end .
+
+if num-entries(p-call-point, {&delim-par}) = 2
+then do :
+  if entry(2, p-call-point, {&delim-par}) = "return"
+  then do :
+    v-is-return = yes .
+  end .
+  p-call-point = entry(1, p-call-point, {&delim-par}) .
+end .
 /* Название режима работы, отображаемое в заголовке */
 assign
   v-mode-name = (if p-edit-mode = 'update-alc-attr':u
@@ -2502,14 +2531,24 @@ define variable v-alcohol-prod as logical.
 
     define variable v-mercury-value as character no-undo .
     define variable v-mercury-type  as character no-undo .
-    define variable v-mercury-prod as logical init false.
+    define variable v-mercury-prod  as logical no-undo init false.
+    define variable v-expense-return as logical no-undo init false .
     define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_doc-attr for ub.doc-attr .
     
     find first buf_trn-doc no-lock
       where buf_trn-doc.doc-code = p-doc-code no-error
       .
+    for first buf_doc-attr no-lock where buf_doc-attr.doc-code = buf_trn-doc.doc-code
+                                     and buf_doc-attr.attr-code = {&trdcattr-is-return}
+    :
+      if logical(buf_doc-attr.attr-value) then v-expense-return = yes .
+    end .
     v-vozvr-perem-no-fact = false.
-    if p-doc-code = ? or p-doc-code = "" or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or  buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}  or  buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem})
+    if p-doc-code = ?
+    or p-doc-code = ""
+    or v-expense-return
+    or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or  buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}  or  buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem})
     then do:
       { gbl/conf-rd.i
         "'mercuri':u"
@@ -3378,6 +3417,17 @@ PROCEDURE display-parts-info :
         fi-income-qnty-fact
         get-price-doc (recid(parts)) @ FI_price-doc
         with frame {&frame-name}.
+        
+      if v-expense-return
+      then do :
+        if parts.out-code = {&free-code}
+        then do :
+          disable b-vsd with frame {&frame-name}.
+        end .
+        else do :
+          enable b-vsd with frame {&frame-name}.
+        end .
+      end .
     end.
 
   end. /* do with frame */
@@ -3998,8 +4048,9 @@ PROCEDURE main-block-procedure :
       br-parts
       b-in b-contract
       b-doc
-      b-sch rs-parts
-      b-sel when p-call-point = {&choose}
+      b-sch
+      rs-parts when not v-is-return
+      b-sel when (p-call-point = {&choose} or v-is-return)
       ed-notes
       rs-one-all
       b-alc-attr when v-alcohol-prod = yes
@@ -5488,44 +5539,89 @@ PROCEDURE ui-on-03 :
           then do:
             if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
             then do:
-              assign
-                frame {&frame-name}:title
-                  = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-                  + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-                  + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
-              .
+              if buf_trn-doc.contract-code <> ? and buf_trn-doc.contract-code <> 0
+              then do :
+                assign
+                  frame {&frame-name}:title
+                    = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
+                    + "   Партии по док-ту № : " + buf_trn-doc.doc-code
+                    + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
+                .
 
-              /* Парожденные партии свободной зоны на нашу фирму это производство - его не показываем */
+                /* Парожденные партии свободной зоны на нашу фирму это производство - его не показываем */
 
-              { gbl/fltopend.i
-                &where-cond="parts.artic = buf_goods.artic ~
-                  and parts.prod-type = buf_goods.prod-type ~
-                  and parts.prod-code = buf_goods.prod-code ~
-                  and parts.obj-type = v-obj-type ~
-                  and parts.obj-code = v-obj-code ~
-                  and (parts.out-code = {&free-code} or parts.out-code = buf_trn-doc.doc-code) ~
-                  and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or ~
-                       (parts.is-supp = no and not ( parts.supp-type = {&cmp} and parts.supp-code = buf_trn-doc.host-code))) ~
-                  and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                  "
-          &dyn_where-cond = " ~
-              substitute ( ~
-              ' parts.artic = &1&2&1  ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and ( parts.out-code = &1&3&1 or parts.out-code = &1&9&1 ) ~
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ', ~{&double-quote~} , buf_goods.artic , ~{&free-code~} , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code , buf_trn-doc.doc-code ) + ~
-              substitute ( ' ~
-                  and parts.prod-type = &1&5&1 ~
-                  and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or ~
-                         (parts.is-supp = no and not ( parts.supp-type = &1&6&1  and parts.supp-code = &4 ))) ~
-                       ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code , buf_trn-doc.host-code , buf_goods.prod-type , ~{&cmp~} ) ~
-              "
-                &use-ind=" "
-                &by=" "
-              }
+                { gbl/fltopend.i
+                  &where-cond="parts.artic = buf_goods.artic ~
+                    and parts.prod-type = buf_goods.prod-type ~
+                    and parts.prod-code = buf_goods.prod-code ~
+                    and parts.obj-type = v-obj-type ~
+                    and parts.obj-code = v-obj-code ~
+                    and (parts.out-code = {&free-code} or parts.out-code = buf_trn-doc.doc-code) ~
+                    and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or ~
+                        (parts.is-supp = no and not ( parts.supp-type = {&cmp} and parts.supp-code = buf_trn-doc.host-code))) ~
+                    and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
+                    and parts.contract-code = buf_trn-doc.contract-code ~
+                    "
+            &dyn_where-cond = " ~
+                substitute ( ~
+                ' parts.artic = &1&2&1  ~
+                and parts.prod-code = &4 ~
+                and parts.obj-type  = &1&7&1 ~
+                and parts.obj-code  = &8 ~
+                and ( parts.out-code = &1&3&1 or parts.out-code = &1&9&1 ) ~
+                and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
+              ', ~{&double-quote~} , buf_goods.artic , ~{&free-code~} , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code , buf_trn-doc.doc-code ) + ~
+                substitute ( ' ~
+                    and parts.prod-type = &1&5&1 ~
+                    and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or ~
+                          (parts.is-supp = no and not ( parts.supp-type = &1&6&1  and parts.supp-code = &4 ))) ~
+                    and parts.contract-code = &7 ~
+                        ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code , buf_trn-doc.host-code , buf_goods.prod-type , ~{&cmp~} , buf_trn-doc.contract-code ) ~
+                "
+                  &use-ind=" "
+                  &by=" "
+                }
+              end.
+              else do :
+                assign
+                  frame {&frame-name}:title
+                    = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
+                    + "   Партии по док-ту № : " + buf_trn-doc.doc-code
+                    + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
+                .
+
+                /* Парожденные партии свободной зоны на нашу фирму это производство - его не показываем */
+
+                { gbl/fltopend.i
+                  &where-cond="parts.artic = buf_goods.artic ~
+                    and parts.prod-type = buf_goods.prod-type ~
+                    and parts.prod-code = buf_goods.prod-code ~
+                    and parts.obj-type = v-obj-type ~
+                    and parts.obj-code = v-obj-code ~
+                    and (parts.out-code = {&free-code} or parts.out-code = buf_trn-doc.doc-code) ~
+                    and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or ~
+                        (parts.is-supp = no and not ( parts.supp-type = {&cmp} and parts.supp-code = buf_trn-doc.host-code))) ~
+                    and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
+                    "
+            &dyn_where-cond = " ~
+                substitute ( ~
+                ' parts.artic = &1&2&1  ~
+                and parts.prod-code = &4 ~
+                and parts.obj-type  = &1&7&1 ~
+                and parts.obj-code  = &8 ~
+                and ( parts.out-code = &1&3&1 or parts.out-code = &1&9&1 ) ~
+                and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
+              ', ~{&double-quote~} , buf_goods.artic , ~{&free-code~} , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code , buf_trn-doc.doc-code ) + ~
+                substitute ( ' ~
+                    and parts.prod-type = &1&5&1 ~
+                    and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or ~
+                          (parts.is-supp = no and not ( parts.supp-type = &1&6&1  and parts.supp-code = &4 ))) ~
+                        ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code , buf_trn-doc.host-code , buf_goods.prod-type , ~{&cmp~} ) ~
+                "
+                  &use-ind=" "
+                  &by=" "
+                }
+              end.
             end.
             else do:
               assign
@@ -5563,40 +5659,81 @@ PROCEDURE ui-on-03 :
           else do: /* buf_trn-doc.status_ = {&permitted} */
             if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
             then do:
-              assign
-                frame {&frame-name}:title
-                  = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-                  + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-                  + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
-              .
-              { gbl/fltopend.i
-                &where-cond="parts.artic = buf_goods.artic ~
-                  and parts.prod-type = buf_goods.prod-type ~
-                  and parts.prod-code = buf_goods.prod-code ~
-                  and parts.obj-type = v-obj-type ~
-                  and parts.obj-code = v-obj-code ~
-                  and parts.out-code = buf_trn-doc.doc-code ~
-                  and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or parts.is-supp = no) ~
-                  and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                  "
-          &dyn_where-cond = " ~
-              substitute ( ~
-              ' parts.artic = &1&2&1  ~
-              and parts.prod-type = &1&3&1 ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and  parts.out-code = &1&9&1 ~
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code ) + ~
-              substitute ( ' ~
-                  and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or parts.is-supp = no ) ~
-                       ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code  ) ~
-              "
+              if buf_trn-doc.contract-code <> ? and buf_trn-doc.contract-code <> 0
+              then do :
+                assign
+                  frame {&frame-name}:title
+                    = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
+                    + "   Партии по док-ту № : " + buf_trn-doc.doc-code
+                    + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
+                .
+                { gbl/fltopend.i
+                  &where-cond="parts.artic = buf_goods.artic ~
+                    and parts.prod-type = buf_goods.prod-type ~
+                    and parts.prod-code = buf_goods.prod-code ~
+                    and parts.obj-type = v-obj-type ~
+                    and parts.obj-code = v-obj-code ~
+                    and parts.out-code = buf_trn-doc.doc-code ~
+                    and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or parts.is-supp = no) ~
+                    and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
+                    and parts.contract-code = buf_trn-doc.contract-code ~
+                    "
+            &dyn_where-cond = " ~
+                substitute ( ~
+                ' parts.artic = &1&2&1  ~
+                and parts.prod-type = &1&3&1 ~
+                and parts.prod-code = &4 ~
+                and parts.obj-type  = &1&7&1 ~
+                and parts.obj-code  = &8 ~
+                and  parts.out-code = &1&9&1 ~
+                and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
+              ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code ) + ~
+                substitute ( ' ~
+                    and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or parts.is-supp = no ) ~
+                    and parts.contract-code = &4 ~
+                        ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code , buf_trn-doc.contract-code ) ~
+                "
 
-                &use-ind=" "
-                &by=" "
-              }
+                  &use-ind=" "
+                  &by=" "
+                }
+              end.
+              else do :
+                assign
+                  frame {&frame-name}:title
+                    = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
+                    + "   Партии по док-ту № : " + buf_trn-doc.doc-code
+                    + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
+                .
+                { gbl/fltopend.i
+                  &where-cond="parts.artic = buf_goods.artic ~
+                    and parts.prod-type = buf_goods.prod-type ~
+                    and parts.prod-code = buf_goods.prod-code ~
+                    and parts.obj-type = v-obj-type ~
+                    and parts.obj-code = v-obj-code ~
+                    and parts.out-code = buf_trn-doc.doc-code ~
+                    and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or parts.is-supp = no) ~
+                    and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
+                    "
+            &dyn_where-cond = " ~
+                substitute ( ~
+                ' parts.artic = &1&2&1  ~
+                and parts.prod-type = &1&3&1 ~
+                and parts.prod-code = &4 ~
+                and parts.obj-type  = &1&7&1 ~
+                and parts.obj-code  = &8 ~
+                and  parts.out-code = &1&9&1 ~
+                and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
+              ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code ) + ~
+                substitute ( ' ~
+                    and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or parts.is-supp = no ) ~
+                        ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code  ) ~
+                "
+
+                  &use-ind=" "
+                  &by=" "
+                }
+              end.
             end.
             else do:
               assign

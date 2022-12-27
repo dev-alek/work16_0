@@ -416,6 +416,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dc-cm-typ
 { cmp/cr-prep.i 1 cd-type-no-cd          -                   Накладная      -               Waybill       }
 { cmp/cr-prep.i 1 cd-type-bo             bo                  Бэкофис        bo              BackOffice    }
 { cmp/cr-prep.i 1 cd-type-Autotank       Autotank            Autotank       Autotank        Autotank  }
+{ cmp/cr-prep.i 1 cd-type-csm            смена               смена          смена           смена         }
 
 &glob cd-type-codes '{&bef-cd-type-IBM}~
 ,{&bef-cd-type-IBM-XML}~
@@ -917,6 +918,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fbr-type 
 { cmp/cr-prep.i 1 hn-rename         9                Смена_кода 9  Code_rename }
 { cmp/cr-prep.i 1 hn-art-rename     51               Смена_артик 51 Artic_rename }
 { cmp/cr-prep.i 1 hn-switch-off     79               Выключ.    79 Switch_off }
+{ cmp/cr-prep.i 1 hn-multi          88               Мульти   88  Multi }
 { cmp/cr-prep.i 1 hn-delete         99               Удаление   99 Delete }
 
 

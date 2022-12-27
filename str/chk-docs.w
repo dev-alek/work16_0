@@ -485,6 +485,14 @@ DO:
     run gbl/pop-up.p ( input b-del:handle, input no) no-error.
  end.
  if del-type = "" then return no-apply.
+   if c-doc.chk-type = 13 or c-doc.chk-type = 40 then 
+   do:
+      message
+         "Удаление чеков открытия/закрытия смены невозможно."
+         view-as alert-box INFORMATION .
+      return no-apply.         
+   end. 
+ 
 run proc-b-del in this-procedure ( input del-type) no-error.
 if error-status:error then do:
     del-type = '':U.
@@ -2908,6 +2916,12 @@ define variable v-host-code as integer no-undo .
         "Изменение невозможно."
         view-as alert-box INFORMATION .
         return error.
+      end.
+      if c-doc.chk-type = 13 or c-doc.chk-type = 40 then do:
+        message
+        "Изменение чеков открытия/закрытия смены невозможно."
+        view-as alert-box INFORMATION .
+        return error.         
       end.
       assign
       v-doc-rec = recid(c-doc).

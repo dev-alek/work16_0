@@ -14,15 +14,31 @@ Author: Mikhail Pervakov
 Creation date: 04/05/06
 
 */
+&if "{1}" = "get" &then
+getAttrLib ().
+&endif
+
 &if defined (include_attr-lib) = 0 &then
 &glob include_attr-lib yes
 &if "{1}" = "class" &then
+
+method private void getAttrLib ():
+   define variable g#attr-lib  as handle no-undo .
+   run gbl/getgattrlib.p (output g#attr-lib).
+end.
+
 &else
 define new global shared variable g#attr-lib  as handle no-undo .
 define variable v-attr-lib-variable as handle no-undo .
 &endif
 
 &if "{1}" = "class" &then
+&glob check_attr-lib if (valid-handle(ibs.th.gbl.gbl-hndllib:g#attr-lib) <> true) then do: ~
+    message ~
+      "Не загружена библиотека attr-lib" ~
+      view-as alert-box error . ~
+    stop . ~
+end.
 
 &glob run_proc_attr-lib {&check_attr-lib} ~
 run ~{&proc-name~} in ibs.th.gbl.gbl-hndllib:g#attr-lib

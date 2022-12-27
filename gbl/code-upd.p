@@ -11,6 +11,7 @@ Author:  Ruban Dmitriy Andreevich
 Creation date: 8 окт. 2019 г.
 
 */ 
+define input  parameter parparentproc as handle no-undo.
 define variable vss-revision    as character no-undo init "$Revision:$":U .
 define variable vss-author      as character no-undo init "$Author:$":U .
 define variable vss-date        as character no-undo init "$Date:$":U .
@@ -21,25 +22,23 @@ define variable vss-description as character no-undo init "".
 { cmp/str-glbl.i }
 { gbl/db-attr.i  }
 { cmp/trg-def.i }
+{ ibs/th/bge/xmlimpexp.i }
+{ gbl/getcntxt.i def    }
+{ gbl/getcntxt.i get    }
 
-define buffer buf_sys-ctrl for ub.sys-ctrl.
 define buffer buf_db for ub.db.
-find first buf_sys-ctrl no-lock no-error.
-if available buf_sys-ctrl
-then do:
-   find first buf_db no-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
-   define variable updschmObj      as class ibs.th.adm.upd.updschm no-undo.
-   updschmObj = new ibs.th.adm.upd.updschm ().
-   if     buf_db.reserve1-char begins "updto:"
-       or updschmObj:CurrDBShm ne int(buf_db.reserve1-char)
-   then do trans:
-      find first buf_db exclusive-lock where buf_db.db-num = buf_sys-ctrl.db-num no-error.
-      buf_db.reserve1-char = string(updschmObj:CurrDBShm). 
-   end.
-   delete object updschmObj no-error.
+find first buf_db no-lock where buf_db.db-num = v-cntxt-db-num no-error.
+define variable updschmObj      as class ibs.th.adm.upd.updschm no-undo.
+updschmObj = new ibs.th.adm.upd.updschm (no).
+if     buf_db.reserve1-char begins "updto:"
+    or updschmObj:CurrDBShm ne int(buf_db.reserve1-char)
+then do trans:
+   find first buf_db exclusive-lock where buf_db.db-num = v-cntxt-db-num no-error.
+   buf_db.reserve1-char = string(updschmObj:CurrDBShm).   
 end.
+delete object updschmObj no-error.
 
-define variable mfile    as character no-undo.
+define variable mfile as character no-undo.
 define variable mfilemd5 as character no-undo.
 define variable v-md5-signature  as character no-undo.
 define variable vimport as class ibs.th.bge.xmlimpexp no-undo.
@@ -55,12 +54,13 @@ run db-attr-value in this-procedure
            ,output mTxt
            ,output m-type 
            ) no-error .
-mdbver = int(mtxt) no-error.
+mdbver_old = int(mtxt) no-error.
 if mdbver_old eq ?
 then
    mdbver_old = 0.
- find first code  where  ub.Code.parent = "" and ub.Code.code = "okei-kkt" no-error.
-
+subscribe "RunProcXmlImp" anywhere run-procedure "RunProcAny". 
+subscribe "NotSendNwsForTable" anywhere run-procedure "DisableNws". 
+subscribe "DisableNwsTable" anywhere run-procedure "SetNwsTable".
 vimport= new ibs.th.bge.xmlimpexp().
 block-upd:
 do mdbver = mdbver_old + 1 to 999999999:
@@ -83,10 +83,10 @@ do mdbver = mdbver_old + 1 to 999999999:
       if error-status:error
       then
          return error return-value.
-      vimport:updatetablefordb() no-error.
+      vimport:updatetablefordb(this-procedure) no-error.
       if error-status:error
       then
-         return error return-value + " " + error-status:get-message(1).
+         return error return-value.
       vimport:xmldom-clear().
    end.
    else
@@ -100,7 +100,7 @@ then
    run db-attr-write in this-procedure ( input ibs.th.gbl.gbl-var:g#db-num
                                        , input {&attr-ver-met}
                                        , input string (mdbver)
-                                       ) no-error .   
+                                       )  .   
 mfile    = search("upd/code.xml").
 mfilemd5 = search("upd/code.md5").
   /*проверим md5*/
@@ -121,7 +121,7 @@ then do:
    if error-status:error
    then
       return error return-value.
-   vimport:updatetablefordb() no-error.
+   vimport:updatetablefordb(this-procedure) no-error.
    if error-status:error
    then
       return error return-value  + " " + error-status:get-message(1).
@@ -136,4 +136,8 @@ finally:
    if valid-object(vimport)
    then
       delete object vimport.
+unsubscribe "NotSendNwsForTable". 
+unsubscribe "DisableNwsTable".
+unsubscribe "RunProcXmlImp".
+
 end finally.

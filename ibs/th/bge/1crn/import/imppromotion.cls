@@ -204,7 +204,7 @@ define variable v-txt-typedisc      as character extent 2 no-undo initial ["врем
 */
 define variable v-txt-method-calc   as character extent 7 no-undo initial ["Скидка процентом", "Абсолютная (скидка суммой от цены)", "Скидка количеством", "Скидка процентом за количество", "Фиксированная цена", "Выдача сообщения", "Подарок"] .
 define variable v-txt-dscnt-type    as character extent 7 no-undo initial ["процентная", "абсолютная", "натуральная", "процентная за количество", "фиксированная цена", "Выдача сообщения,подарок"] .
-define variable v-txt-thresholdtype as character extent 3 no-undo initial ["Количество по строке", "Сумма по строке", "Итог чека"] .
+define variable v-txt-thresholdtype as character extent 4 no-undo initial ["Количество по строке", "Сумма по строке", "Итог чека", "Скидка по ШК"] .
 // "Количество по строке,Сумма по строке[,Сумма в документе]"
 define variable v-txt-error         as character no-undo .
 
@@ -212,7 +212,39 @@ define variable v-txt-error         as character no-undo .
     case v-promo-action:TypeDiscontenum :
       when enum-type-discount:ensolo then do:
         case v-promo-action:methodCalc:
-          when 1 or when 6 or when 7 then do: // 1 – процентная, 6 – Выдача сообщения, 7 – подарок
+          when 1 then do: // 1 – процентная
+            if not can-do("1,2,3,4", string(objImp:threshold-type)) then
+              v-txt-error = substitute(
+              "Для типа скидки [&1] и значения [&2] вид условия должен быть [&3], [&4], [&5] или [&6]",
+              v-txt-typedisc[v-promo-action:TypeDiscontenum:GetValue()],
+              v-txt-method-calc[v-promo-action:methodCalc],
+              v-txt-thresholdtype[1],
+              v-txt-thresholdtype[2],
+              v-txt-thresholdtype[3],
+              v-txt-thresholdtype[4] 
+            ) .
+          end .
+          when 2 then do: // 2 – абсолютная
+            if not can-do("1,2,4", string(objImp:threshold-type)) then
+              v-txt-error = substitute(
+              "Для типа скидки [&1] и значения [&2] вид условия должен быть [&3], [&4] или [&5]",
+              v-txt-typedisc[v-promo-action:TypeDiscontenum:GetValue()],
+              v-txt-method-calc[v-promo-action:methodCalc],
+              v-txt-thresholdtype[1],
+              v-txt-thresholdtype[2],
+              v-txt-thresholdtype[4]
+            ) .
+          end .  
+          when 5 then do: // 5 – фиксированная
+            if not can-do("4", string(objImp:threshold-type)) then
+              v-txt-error = substitute(
+              "Для типа скидки [&1] и значения [&2] вид условия должен быть [&3]",
+              v-txt-typedisc[v-promo-action:TypeDiscontenum:GetValue()],
+              v-txt-method-calc[v-promo-action:methodCalc],
+              v-txt-thresholdtype[4]
+            ) .
+          end .           
+          when 6 or when 7 then do: // 1 – процентная, 6 – Выдача сообщения, 7 – подарок
             if not can-do("1,2,3", string(objImp:threshold-type)) then
               v-txt-error = substitute(
               "Для типа скидки [&1] и значения [&2] вид условия должен быть [&3], [&4] или [&5]",
@@ -222,17 +254,7 @@ define variable v-txt-error         as character no-undo .
               v-txt-thresholdtype[2],
               v-txt-thresholdtype[3]
             ) .
-          end .
-          when 2 then do: // 2 – абсолютная
-            if not can-do("1,2", string(objImp:threshold-type)) then
-              v-txt-error = substitute(
-              "Для типа скидки [&1] и значения [&2] вид условия должен быть [&3] или [&4]",
-              v-txt-typedisc[v-promo-action:TypeDiscontenum:GetValue()],
-              v-txt-method-calc[v-promo-action:methodCalc],
-              v-txt-thresholdtype[1],
-              v-txt-thresholdtype[2]
-            ) .
-          end .  
+          end .          
           otherwise do:
             if objImp:threshold-type > 0 then
               v-txt-error = substitute(
@@ -475,8 +497,10 @@ if valid-object(v-objlist4) then do: // gds - объекты акции
       assign
         v-promo-good:GdsCode = v-gds-code
         v-promo-good:price   = v-gds-gd:gd-price
+        v-promo-good:promotion-code = v-gds-gd:promotion-code
         v-promo-good:Mode    = {&h-create}
       .
+
       v-promo-goods:AddItem (v-promo-good) .
     end . // end_of_objImp:gds[]
 end. // end_of_gds
@@ -641,7 +665,8 @@ end. // end_of_gifts
     mDelCd =
               (v-promo-action:changeDate <> ? 
            and v-promo-action:changeDate <= today)
-            or  v-promo-action:end-date  < today.
+            or  v-promo-action:end-date  < today
+            or  v-promo-action:status_enum = enum-promo-status:encompleted.
     if v-message then 
     do:
        create ub.PromoAttr .
@@ -654,10 +679,13 @@ end. // end_of_gifts
     end.
     define variable mImp2CdH as handle no-undo.
     run str/imp2cdgeth.p(output mImp2CdH).
-    run fill-PromoAction in mImp2CdH (v-promo-action:db-num,
-                                      v-promo-action:ID,             
-    mDelCd).    
     
+    if v-promo-action:status_enum = enum-promo-status:encompleted or (v-promo-action:status_enum = enum-promo-status:enactive and v-promo-action:changeDate <> ?) then 
+    do:
+      run fill-PromoAction in mImp2CdH (v-promo-action:db-num,
+        v-promo-action:ID,             
+        mDelCd).    
+    end.   
     v-retfl = true .
     catch exAppErrors as class Progress.Lang.AppError :
       Msg = exAppErrors:ReturnValue .

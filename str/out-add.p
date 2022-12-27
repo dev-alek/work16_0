@@ -52,14 +52,18 @@ define variable vss-description as character no-undo initial "ƒобавление строк в
 { gbl/getcntxt.i get }
 { str/getctxtp.i def }
 { str/getctxtp.i get }
-{ gbl/getsect.i def }
+{ gbl/getsect.i  def }
+{ ref/gds-attr.i    }
+{ utl/gtin.i }
 
 define buffer t-doc      for ub.trn-doc .
 define buffer p-doc-line for ub.doc-line .
 define buffer p-goods    for ub.goods .
+define buffer bf_gds-obj for ub.gds-obj .
 define buffer bf-parts   for ub.parts .
 define buffer bf_doc-pl  for ub.doc-pl .
 define buffer bf_parts   for ub.parts.
+define buffer bf_marking-lines for ub.marking-lines .
 
 define variable part-list                                 as   character initial ""       no-undo. /* список бар-кодов партий дл€ прив€зки места       */
 define variable add-sens                                  as   logical                    no-undo. /* активна ли кнопка добавить в документе : yes / no - вызов из документа*/
@@ -92,7 +96,7 @@ define variable varagsum-base-factnew                     like ub.gds-dtl.price-
 define variable varagsum-rubl-factnew                     like ub.gds-dtl.price-rubl      no-undo.
 define variable varagsum-doc-qntynew                      like ub.gds-dtl.doc-qnty        no-undo.
 define variable varagsum-fact-qntynew                     like ub.gds-dtl.fact-qnty       no-undo.
-define variable varagcountnew                             as integer                      no-undo.
+define variable varagcountnew                             as   integer                    no-undo.
 define variable varagsum-base-docold                      like ub.gds-dtl.price-base      no-undo.
 define variable varagsum-rubl-docold                      like ub.gds-dtl.price-rubl      no-undo.
 define variable varagsum-base-factold                     like ub.gds-dtl.price-base      no-undo.
@@ -204,10 +208,10 @@ define variable flag-update                               as   logical initial n
 define variable chg-qnty                                  like ub.gds-dtl.doc-qnty        no-undo initial ?.
 define variable no-end-all-operation                      as   logical   initial yes      no-undo.
 define variable varrep                                    as   logical   initial no       no-undo.
-define variable unrv-qnty                                 like ub.gds-dtl.doc-qnty           no-undo.
+define variable unrv-qnty                                 like ub.gds-dtl.doc-qnty        no-undo.
 define variable vartwo-value                              as   logical                    no-undo. /*товар с двум€ единицами измерени€*/
-define variable v-vat-pc                                  like ub.doc-line.vat-pc            no-undo.
-define variable v-slt-pc                                  like ub.doc-line.slt-pc            no-undo.
+define variable v-vat-pc                                  like ub.doc-line.vat-pc         no-undo.
+define variable v-slt-pc                                  like ub.doc-line.slt-pc         no-undo.
 define variable v-host-code                               like sysconf.host-code          no-undo.
 define variable v-tax-date                                as   date                       no-undo.
 define variable is-petrol                                 as   logical                    no-undo.
@@ -227,6 +231,16 @@ define variable varcli-fact-qnty-doc-pl                   as   decimal          
 define variable v-round-vat-sum                           as   logical                    no-undo.
 define variable v-sum-vat                                 as   decimal                    no-undo.
 define variable v-node-type                               as   character                  no-undo.
+define variable varvalue        as character no-undo .
+define variable vartype         as character no-undo .
+define variable v-message       as character no-undo .
+define variable mark            as character no-undo .
+define variable v-stop          as logical   no-undo init no .
+
+{ gbl/objsrv.i }
+define variable EDOParSec       as class     ibs.th.gbl.env.prmtrs.edo .
+
+
 { str/sclspref.i }
 
 define temp-table old-gds-dtl no-undo like ub.gds-dtl.
@@ -249,7 +263,11 @@ on error undo, return error return-value
   
   if num-entries(work-mode, {&delim-par}) = 2
   then do :
-    if entry(2, work-mode, {&delim-par}) = "return" then v-is-return = true .
+    if entry(2, work-mode, {&delim-par}) begins "return"
+    then do :
+      v-is-return = true .
+      varpart-rec = integer(trim(entry(2, work-mode, {&delim-par}), "return=")) no-error .
+    end .
     work-mode = entry(1, work-mode, {&delim-par}) .
   end.
 
@@ -722,9 +740,9 @@ on error undo, return error return-value
             end.
 
             run str/prt-doc.w
-              (input  ParParentProc /* ParParentProc */
+              (input  ParParentProc     /* ParParentProc */
               ,input  t-doc.doc-code    /* p-doc-code    */
-              ,input  p-goods.gds-code    /* p-gds-code    */
+              ,input  p-goods.gds-code  /* p-gds-code    */
               ,input  v-node-code       /* p-node-code   */
               ,input  v-prt-doc-mode    /* p-mode        */
               ,input  v-update-doc      /* p-update-doc  */
@@ -735,9 +753,9 @@ on error undo, return error return-value
               (input ParParentProc
               ,input t-doc.obj-type            /* v-obj-type   */
               ,input t-doc.obj-code            /* v-obj-code   */
-              ,input p-goods.gds-code            /* p-gds-code   */
+              ,input p-goods.gds-code          /* p-gds-code   */
               ,input t-doc.doc-code            /* p-doc-code   */
-              ,input (if work-mode = {&lookup} or  work-mode = "lookup-parts"  then {&lookup} else {&update}) /* p-edit-mode  */
+              ,input (if v-is-return then "vsd" else if work-mode = {&lookup} or  work-mode = "lookup-parts" then {&lookup} else {&update}) /* p-edit-mode  */
               ,input {&parts-l_parts-document} /* p-r-parts    */
               ,input {&parts-l_object-current} /* p-one-all    */
               ,input {&parts-l_call-document}  /* p-call-point */
@@ -745,6 +763,7 @@ on error undo, return error return-value
               ) no-error .
           end.
           if work-mode = "lookup-parts":u
+          or v-is-return
           then do:
             assign
               work-mode = {&lookup}
@@ -906,21 +925,91 @@ on error undo, return error return-value
           else do:
             /* движение товара мб только без признаков */
             if parvalue begins 'scan-marks' then v-node-type = parvalue. else v-node-type = {&g#root}.
+            if parvalue = "Transitional" then v-node-type = parvalue.
+            find first bf_gds-obj no-lock where bf_gds-obj.obj-type  = t-doc.obj-type
+                                            and bf_gds-obj.obj-code  = t-doc.obj-code
+                                            and bf_gds-obj.artic     = p-goods.artic
+                                            and bf_gds-obj.prod-type = p-goods.prod-type
+                                            and bf_gds-obj.prod-code = p-goods.prod-code
+                                            no-error .
+            if error-status :error
+            then do:
+                  return error return-value.
+            end.
             run str/out-prt.w (
               ParParentProc ,
               pardoc-rec    ,
               parline-rec   ,
               pargds-rec       ,
-              (if work-mode <> {&lookup} then {&inv-def} else {&lookup}) + (if v-is-return then ({&delim-par} + "return") else "") ,
+              (if work-mode <> {&lookup} then {&inv-def} else {&lookup}) + (if v-is-return then ({&delim-par} + "return=" + string(varpart-rec)) else "") ,
               recid(ub.gds-prt),
               v-node-type) no-error.
             if error-status :error
             then do:
                   return error return-value.
             end.
+            if (return-value = "no-add-marks" and parvalue begins 'scan-marks')
+            or bf_gds-obj.free-qnty < 0
+            then do :
+              v-stop = yes .
+            end .
+            if v-is-return
+            and parvalue begins 'scan-marks'
+            and not v-stop
+            then do :
+              EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t-doc.obj-type, t-doc.obj-code).
+              RUN gds-attr-value (
+              INPUT p-goods.gds-code,
+              INPUT {&attr-mark-type},
+              OUTPUT varvalue,
+              OUTPUT vartype
+              ).
+              if EDOParSec:GetIsEDOForType(varvalue)
+              or EDOParSec:GetIsArticForType(varvalue)
+              or EDOParSec:GetIsMarkingForType(varvalue)
+              then do :
+                find last bf_parts no-lock where bf_parts.obj-type  = t-doc.obj-type
+                                             and bf_parts.obj-code  = t-doc.obj-code
+                                             and bf_parts.artic     = p-goods.artic
+                                             and bf_parts.prod-type = p-goods.prod-type
+                                             and bf_parts.prod-code = p-goods.prod-code
+                                             and bf_parts.out-code  = t-doc.doc-code
+                                             no-error .
+                if available bf_parts
+                then do :                            
+                  find first bf_marking-lines no-lock where bf_marking-lines.obj-type = bf_parts.obj-type
+                                                        and bf_marking-lines.obj-code = bf_parts.obj-code
+                                                        and bf_marking-lines.gds-code = p-goods.gds-code
+                                                        and bf_marking-lines.in-code  = bf_parts.in-code
+                                                        and bf_marking-lines.out-code = bf_parts.out-code
+                                                        and bf_marking-lines.part-code = bf_parts.part-code
+                                                        and bf_marking-lines.mark = entry(2,parvalue,{&delim-key})
+                                                        no-error .
+                  if not available bf_marking-lines
+                  then do :
+                    create bf_marking-lines .
+                    assign
+                      bf_marking-lines.obj-type = t-doc.obj-type            
+                      bf_marking-lines.obj-code = t-doc.obj-code  
+                      bf_marking-lines.gds-code = p-goods.gds-code    
+                      bf_marking-lines.in-code  = bf_parts.in-code     
+                      bf_marking-lines.out-code = t-doc.doc-code   
+                      bf_marking-lines.part-code = bf_parts.part-code    
+                      bf_marking-lines.prt-code = bf_parts.prt-code
+                      bf_marking-lines.doc-level = 1
+                      bf_marking-lines.mark = entry(2,parvalue,{&delim-key})
+                    .
+                  end .
+                end .
+              end .
+            end .
+            if bf_gds-obj.free-qnty <= 0
+            then do :
+              v-stop = yes .
+            end .
           end.
         end.
-        if parvalue begins 'scan-marks' then. else do:
+        if parvalue begins 'scan-marks' or parvalue = "Transitional" then. else do:
         if parvalue <> ? then do:
            if num-entries(parvalue) = 1 then
                 run str/florline.p (
@@ -1156,7 +1245,7 @@ on error undo, return error return-value
             assign v-sum-vat = round(((ub.gds-dtl.price-rubl - ub.gds-dtl.price-rubl * p-doc-line.slt-pc / (100 + p-doc-line.slt-pc) ) * p-doc-line.vat-pc / (100 + p-doc-line.vat-pc) ) * p-doc-line.cli-qnty, 2 ) .
             if v-sum-vat <> 0 and v-sum-vat <> ?
             then  
-            assign p-doc-line.vat-pc = (v-sum-vat / ( p-doc-line.cli-qnty * ub.gds-dtl.price-rubl
+              assign p-doc-line.vat-pc = (v-sum-vat / ( p-doc-line.cli-qnty * ub.gds-dtl.price-rubl
                     * ( 1 - (p-doc-line.slt-pc / (100 + p-doc-line.slt-pc)))
                     - v-sum-vat )) * 100.
           end.
@@ -1697,4 +1786,9 @@ on error undo, return error return-value
   then do:
     delete p-doc-line.
   end.
+  
+  if v-stop
+  then do :
+    return "stop-add-marks" .
+  end .
 end.

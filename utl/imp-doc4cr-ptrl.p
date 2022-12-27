@@ -140,6 +140,7 @@ define temp-table temp-line no-undo
   field cli-qnty      as decimal
   field new-cli-type  as character
   field new-cli-code  as integer
+  field pl-code       as integer
   index pi is primary
   supp-type
   supp-code
@@ -179,7 +180,9 @@ define temp-table tt-gds no-undo
 
 define temp-table tt-trn-doc   no-undo like ub.trn-doc .
 define temp-table tt2-doc-line no-undo like lib-trn_ret-line .
-define temp-table tt-doc-line  no-undo like ub.doc-line .
+define temp-table tt-doc-line  no-undo like ub.doc-line
+  field pl-code as integer
+.
 define temp-table tt-gds-dtl   no-undo like ub.gds-dtl .
 define temp-table tt-parts     no-undo like ub.parts.
 define temp-table tt-doc-line-attr no-undo like ub.doc-line-attr .
@@ -774,6 +777,7 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
 /* 21/V-2018 - с разной ценой ложитс€ в разные накладные;
                с разными номерами партий ложитс€ в одну накладную.
    by temp_parts.part-code*/
+   by temp_parts.pl-code
   :
     dsLineCount = dsLineCount + 1 .  
     do : /* 16/IV-2018 перенос создани€ партий из create-nakl() */
@@ -845,7 +849,9 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
     v-qnty-fact = v-qnty-fact + temp_parts.fact-qnty1  .
     v-qnty-cli  = v-qnty-cli  + temp_parts.cli-qnty1  . // - не заполн€етс€
 
-    if last-of ( temp_parts.price-rubl ) then do:
+    if last-of ( temp_parts.price-rubl )
+    or last-of ( temp_parts.pl-code )
+    then do:
       /* 28/IV-2018 - добавить вместе с объединением партий с разной ценой в одну накладную
       if temp_parts.price-rubl <= 0  or temp_parts.price-rubl = ? then do:
         &scop my-message substitute("÷ена &2   = &1 ѕропускаю " , temp_parts.price-rubl  , temp_parts.artic )
@@ -870,6 +876,7 @@ do on error undo, return error substitute("ошибка &1 &2", error-status:get-messa
       temp-line.prod-code     = temp_parts.prod-code
       temp-line.artic         = temp_parts.artic
       temp-line.price-rubl    = temp_parts.price-rubl
+      temp-line.pl-code       = temp_parts.pl-code
 // 21/V-2018 temp-line.part-code     = temp_parts.part-code
 //  field num           as integer
       temp-line.fact-qnty     = v-qnty-fact
@@ -1205,7 +1212,8 @@ do on error undo, return error return-value :
         buf2_temp_parts.prod-type      = new_line.prod-type   and
         buf2_temp_parts.prod-code      = new_line.prod-code   and
 /*        buf2_temp_parts.part-code      = new_line.part-code   and*/
-        buf2_temp_parts.price-rubl     = new_line.price-rubl
+        buf2_temp_parts.price-rubl     = new_line.price-rubl and
+        buf2_temp_parts.pl-code        = new_line.pl-code
   :
     /*
     if can-find (first temp-2exists where
@@ -1282,6 +1290,8 @@ do on error undo, return error return-value :
       tt-doc-line.cli-qnty       = 0
       tt-doc-line.doc-qnty       = 0
       tt-doc-line.fact-qnty      = 0
+      
+      tt-doc-line.pl-code        = buf2_temp_parts.pl-code
       .
       create temp-2exists.
       assign
@@ -1356,21 +1366,22 @@ end .
   
   /* 16/IV-2018 создание партий перенесено до линий документов;
                 здесь созданные партии прив€зываютс€ к лини€м */
-  for each tt2-doc-line :
+  for each tt-doc-line :
     // pi линий:  doc-code artic prod-type prod-code
     // pi партий: obj-type obj-code artic prod-type prod-code in-code out-code part-code prt-code
     for each tt-parts
-       where tt-parts.obj-type  = tt2-doc-line.obj-type
-         and tt-parts.obj-code  = tt2-doc-line.obj-code
-         and tt-parts.artic     = tt2-doc-line.artic
-         and tt-parts.prod-type = tt2-doc-line.prod-type
-         and tt-parts.prod-code = tt2-doc-line.prod-code
+       where tt-parts.obj-type  = tt-doc-line.obj-type
+         and tt-parts.obj-code  = tt-doc-line.obj-code
+         and tt-parts.artic     = tt-doc-line.artic
+         and tt-parts.prod-type = tt-doc-line.prod-type
+         and tt-parts.prod-code = tt-doc-line.prod-code
          and tt-parts.supp-type     = new_trn-doc.cli-type
          and tt-parts.supp-code     = new_trn-doc.cli-code
          and tt-parts.contract-code = new_trn-doc.contract-code
          and tt-parts.vat-type      = new_trn-doc.vat-type
-         and tt-parts.vat-pc        = tt2-doc-line.vat-pc
-         and tt-parts.price-rubl    = tt2-doc-line.price-rubl
+         and tt-parts.vat-pc        = tt-doc-line.vat-pc
+         and tt-parts.price-rubl    = tt-doc-line.price-rubl
+         and tt-parts.pl-code       = tt-doc-line.pl-code
     :
 /*
 @NOTE  ÷икл tt-parts, при наличии в tt-parts одной удовлетвор€ющей записи, выполн€ет два шага дл€ каждой tt2-doc-line.
@@ -1378,7 +1389,7 @@ end .
        ¬еро€тнее всего здесь обновл€етс€ индексное поле tt-parts.out-code, что сбивает с толку for-each.
 message "parts -> doc-line" skip string(rowid(tt-parts)) string(rowid(tt2-doc-line)) view-as alert-box.
 */      
-      tt-parts.out-code = tt2-doc-line.doc-code no-error .
+      tt-parts.out-code = tt-doc-line.doc-code no-error .
     end . // end_of for_each tt-parts
   end. /*  for each tt2-doc-line :*/
 if local-trace-on then do:

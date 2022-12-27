@@ -397,16 +397,18 @@ PROCEDURE display-data :
         fi-max-discnt         = p-max-discnt
         t-quest-print         = p-quest-print
       .
-/*      if p-db-num <> 0 then do:*/
+      if p-db-num ne ? then do:
         fi-db-num = p-db-num .
-/*      end.  */
+      end.  
       display
-        fi-db-num
+        fi-db-num    when p-db-num ne ? 
         fi-user-id
         fi-user-login
         fi-max-discnt
         t-quest-print
         with frame {&frame-name} .
+        b-choice-bd:visible = p-db-num ne ?.
+        fi-db-num:visible   = p-db-num ne ?.
     end.
 
   end.
@@ -442,6 +444,7 @@ PROCEDURE enable-fields :
           t-user-administrator :sensitive = false
           fi-max-discnt        :sensitive = false
           t-quest-print        :sensitive = false
+          t-user-administrator :HIDDEN    = false
         .
       end.
 
@@ -490,9 +493,10 @@ PROCEDURE update-record :
   :
     do with frame {&frame-name}
     :
+
       assign
         fi-user-login
-/*        t-user-administrator*/
+        t-user-administrator
         fi-max-discnt
         t-quest-print
       .
@@ -507,7 +511,8 @@ PROCEDURE update-record :
         undo, return error return-value .
       end.
 
-      if fi-db-num = ?
+      if     p-db-num  ne ?
+         and fi-db-num eq ?
       then do:
         message
           "Необходимо ввести номер базы данных" skip
@@ -531,6 +536,7 @@ PROCEDURE update-record :
         undo, return error return-value .
       end.
 
+      /*
       find first buf_user-login no-lock
         where buf_user-login.db-num = fi-db-num
           and buf_user-login.user-id = p-user-id
@@ -546,6 +552,7 @@ PROCEDURE update-record :
         apply 'entry':U to fi-user-login .
         undo, return error return-value .
       end.
+      */
 
       assign
         v-update-data               = true

@@ -166,11 +166,14 @@ procedure waitfram-show :
     B-viewProcInfo:sensitive in frame waitfram = no. /*session:debug-alert.*/
     B-WaitFramStop:visible   in frame waitfram = mWaitFramView .
     B-WaitFramStop:sensitive in frame waitfram = mWaitFramView .
-    display
-      v-waitfram-action01 skip
-      v-waitfram-action02 skip
-      v-waitfram-action03 skip
-      with frame waitfram .
+    if     mWaitFramView
+       or  mWaitProcEvent 
+    then
+       display
+          v-waitfram-action01 skip
+          v-waitfram-action02 skip
+          v-waitfram-action03 skip
+       with frame waitfram .
 &if "{1}" = "" &then
     
        if     mWaitFramView 

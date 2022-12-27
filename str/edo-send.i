@@ -679,16 +679,36 @@ procedure  SendResponse :
              vreturn = yes.
              if itestMod
              then do:
+                define variable vsend as logical no-undo.
+                vsend = logical(getattrutdex (idb-num,idoc-id,"returnSend","no")).
+                if vsend
+                then
+                   return error "Документ был отправлен рание. Повторная отправка возможна через сервис.".
+                 
                 find first buf_utd where buf_utd.OrganizationExt eq utd.parentOrganizationExt
                                      and buf_utd.DocumentExt     eq utd.parentDocumentExt
                 no-lock no-error.
-                {&CommentStartClass} run {utl\comment.i} */ SendAnsver in this-procedure (buf_utd.db-num,buf_utd.doc-id,"CorrectionRequest",GetErrForUtd(utd.db-num,utd.doc-id,"return"))no-error.
+                if available buf_utd
+                then do:
+                   if getattrutd (idb-num,idoc-id,"TypeUTD") ne "счфДОП"
+                   then do:
+                      {&CommentStartClass} run {utl\comment.i} */ SendAnsver in this-procedure (buf_utd.db-num,buf_utd.doc-id,"CorrectionRequest",GetErrForUtd(utd.db-num,utd.doc-id,"return"))no-error.
+                      if error-status:error then return error return-value.
+                   end.
+                end.
+                run bge/sendutd.p(
+                     parparentproc,
+                     mDiadocConnection:Certificate:Thumbprint,
+                     idb-num,
+                     idoc-id) no-error.
                 if error-status:error then return error return-value.
                 do trans :
+                    
                    find first utd where utd.db-num eq idb-num
                                     and utd.doc-id eq idoc-id
                    exclusive-lock no-error.
                    utd.sts-edi = ObjSrv:Env:Utd:Sts:edi:WithRecipientSignature:KeyIntDB.
+                   setattrutd (idb-num,idoc-id,"returnSend","yes").
                 end.
              end.
           end.

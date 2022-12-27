@@ -61,6 +61,9 @@ by {1}.gds-name
     rootnode_code = ub.gds-prt.node-code
     list-qnty = {1}.qnty
     v-part-code   = "":U
+    v-promo-code  = {1}.promo-code
+    v-ActionId    = {1}.ActionId
+    v-db-num      = {1}.db-num
   .
 
   if v-cntxp-doc-prt AND TickOnS AND can-find(first ub.gds-prt where ub.gds-prt.upper-code = rootnode_code) then do:

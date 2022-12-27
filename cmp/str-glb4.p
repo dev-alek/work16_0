@@ -466,6 +466,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Тип маркировки */
 { cmp/cr-prep.i 1 attr-mark-type       mark-type     " " mark-type     }
 
+/* Тип ЕМРЦ */
+{ cmp/cr-prep.i 1 attr-emrc-type       emrc-type     " " emrc-type     }
+
 /* Признак предмета расчета */
 { cmp/cr-prep.i 1 attr-item-matter-mark     item-matter-mark     " " item-matter-mark     }
 
@@ -604,6 +607,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-ptrl-without-rvs}~
 ,{&bef-attr-office-type}~
 ,{&bef-attr-mark-type}~
+,{&bef-attr-emrc-type}~
 ,{&bef-attr-item-matter-mark}~
 ,{&bef-attr-group-np}~
 ,{&bef-attr-fuel-type}~
@@ -1447,6 +1451,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Документ источник для ТПН */
 { cmp/cr-prep.i 1 trdcattr-trn-is-gds "trn-is-gds" " " "trn-is-gds" }
 
+/* Расход внешний как Возврат поставщику */
+{ cmp/cr-prep.i 1 trdcattr-is-return "is-return" " " "is-return" }
+
+/* Расход внешний как Возврат поставщику через ЭДО */
+{ cmp/cr-prep.i 1 trdcattr-edo-return "edo-return" " " "edo-return" }
+
 /* Документ источник для корр. СУГ */
 { cmp/cr-prep.i 1 trdcattr-trn-lgas-corr "trn-lgas-corr" " " "trn-lgas-corr" }
 
@@ -1458,6 +1468,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 
 /* Признак накладной технологического пролива */
 { cmp/cr-prep.i 1 trdcattr-techpass "techpass" " " "techpass" }
+
+/* Признак топливной накладной с прочими перемещениями (ИС ПМ) */
+{ cmp/cr-prep.i 1 trdcattr-othermoves "othermoves" " " "othermoves" }
 
 /* Признак накладной сформированной автоматически */
 { cmp/cr-prep.i 1 trdcattr-is-auto-trn "is-auto-trn" " " "is-auto-trn" }
@@ -1560,6 +1573,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-is-fuel}~
 ,{&bef-trdcattr-is-lgas}~
 ,{&bef-trdcattr-is-lgas-corr}~
+,{&bef-trdcattr-othermoves}~
+,{&bef-trdcattr-is-return}~
+,{&bef-trdcattr-edo-return}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).
 

@@ -124,7 +124,7 @@ define variable v-qr-code             as integer   no-undo .
 define variable v-hist-name           as character no-undo .
 define variable v-hist-code           as character no-undo .
 define variable v-bank-kredit         as logical   no-undo .
-define variable par-type       as character no-undo .
+define variable par-type              as character no-undo .
 define stream Out-Stream.
 define stream OutStr-html.
 
@@ -136,37 +136,35 @@ define buffer buf_fin-bank     for ub.fin-bank .
 do
   on error undo, return error return-value
   :
-    find first ub.fin-doc no-lock where ub.fin-doc.fin-doc-code = p-fin-doc-code and ub.fin-doc.host-code = p-host-code no-error .
-    v-shift-date = ub.fin-doc.shift-date .
+  find first ub.fin-doc no-lock where ub.fin-doc.fin-doc-code = p-fin-doc-code and ub.fin-doc.host-code = p-host-code no-error .
+  v-shift-date = ub.fin-doc.shift-date .
 
-   for first ub.fin-doc-attr no-lock where ub.fin-doc-attr.attr-code = "pre-vedom"
-      and ub.fin-doc-attr.fin-doc-code = p-fin-doc-code and ub.fin-doc-attr.host-code = p-host-code:
+  for first ub.fin-doc-attr no-lock where ub.fin-doc-attr.attr-code = "pre-vedom"
+    and ub.fin-doc-attr.fin-doc-code = p-fin-doc-code and ub.fin-doc-attr.host-code = p-host-code:
+    assign
+      v-num-bag      = entry(1,ub.fin-doc-attr.attr-value,";") 
+      v-deposit-bank = entry (2,ub.fin-doc-attr.attr-value,";")  
+      v-recip-bank   = entry (3,ub.fin-doc-attr.attr-value,";") 
+      .
+
+    for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(v-recip-bank) and ub.fin-bank.host-code = ub.fin-doc-attr.host-code:
+      find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and 
+        ub.fin-bank-attr.attr-code = "collect-qrcode" no-error .
+      if available (ub.fin-bank-attr) then v-qr-code = integer(ub.fin-bank-attr.attr-value) .
+      find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and 
+        ub.fin-bank-attr.attr-code = "collect-debt" no-error .
+      if available (ub.fin-bank-attr) then v-debt-schet = ub.fin-bank-attr.attr-value . 
+      find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and 
+        ub.fin-bank-attr.attr-code = "collect-credit" no-error .
+      if available (ub.fin-bank-attr) then v-credit-schet = ub.fin-bank-attr.attr-value .
+    end.  
+
+     
+    for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(v-deposit-bank) and ub.fin-bank.host-code = ub.fin-doc-attr.host-code:
       assign
-         v-num-bag      = entry(1,ub.fin-doc-attr.attr-value,";") 
-         v-deposit-bank = entry (2,ub.fin-doc-attr.attr-value,";")  
-         v-recip-bank   = entry (3,ub.fin-doc-attr.attr-value,";") 
-         .
-
-      for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(v-recip-bank) and ub.fin-bank.host-code = ub.fin-doc-attr.host-code:
-         find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and 
-            ub.fin-bank-attr.attr-code = "collect-qrcode" no-error .
-         if available (ub.fin-bank-attr) then v-qr-code = integer(ub.fin-bank-attr.attr-value) .
-            find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and 
-               ub.fin-bank-attr.attr-code = "collect-debt" no-error .
-            if available (ub.fin-bank-attr) then v-debt-schet = ub.fin-bank-attr.attr-value . 
-            find first ub.fin-bank-attr no-lock where ub.fin-bank-attr.code-bank = ub.fin-bank.code-bank and ub.fin-bank-attr.host-code = ub.fin-bank.host-code and 
-               ub.fin-bank-attr.attr-code = "collect-credit" no-error .
-            if available (ub.fin-bank-attr) then v-credit-schet = ub.fin-bank-attr.attr-value .
-         end.  
-            for each ub.fin-schet no-lock where ub.fin-schet.code-bank = ub.fin-bank.code-bank and ub.fin-schet.status_ = {&current-status}:
-               if v-schet1 = "" then v-schet1 = ub.fin-schet.r-schet .
-               else v-schet2 = ub.fin-schet.r-schet .
-            end.   
-      for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(v-deposit-bank) and ub.fin-bank.host-code = ub.fin-doc-attr.host-code:
-         assign
-            v-deposit-bank_name = ub.fin-bank.bank-name 
-            v-deposit-bank_bik  = ub.fin-bank.bik .
-      end.
+        v-deposit-bank_name = ub.fin-bank.bank-name 
+        v-deposit-bank_bik  = ub.fin-bank.bik .
+    end.
     for each buf_fin-doc no-lock where buf_fin-doc.host-code = ub.fin-doc.host-code and buf_fin-doc.shift-date = ub.fin-doc.shift-date and buf_fin-doc.shift-name = ub.fin-doc.shift-name
       and buf_fin-doc.obj-code = ub.fin-doc.obj-code and buf_fin-doc.obj-type = ub.fin-doc.obj-type,
       first buf_fin-doc-attr no-lock where buf_fin-doc-attr.attr-code = "pre-vedom" and buf_fin-doc-attr.host-code = buf_fin-doc.host-code and entry(1,buf_fin-doc-attr.attr-value,";") = v-num-bag and
@@ -177,6 +175,14 @@ do
         v-decimal =  buf_fin-doc.sum-doc .
         v-sum-cashUB = v-sum-cashUB + v-decimal .
         v-pin = if v-pin = " " then entry(4,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(4,buf_fin-doc-attr.attr-value,";") .
+        /* Счет смотрим в настройках по кассовой книге */
+        for first ub.CashBook no-lock where ub.CashBook.id = buf_fin-doc.CashBookId:
+          for each ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = ub.CashBook.id and
+            ub.CashBookRule.Code = "BankRecip-acct" and ub.CashBookRule.Status_ = 0:
+            v-schet2 = ub.CashBookRule.RuleValue .                                                                     
+          /*         else v-schet2 = ub.CashBookRule.RuleValue .*/
+          end.
+        end.        
       end.  
       else 
       do:
@@ -184,6 +190,14 @@ do
         v-decimal =  buf_fin-doc.sum-doc .
         v-sum-cashGB = v-sum-cashGB + v-decimal .
         v-pin = if v-pin = " " then entry(4,buf_fin-doc-attr.attr-value,";") else v-pin + "/" + entry(4,buf_fin-doc-attr.attr-value,";") .
+        /* Счет смотрим в настройках по кассовой книге */
+        for first ub.CashBook no-lock where ub.CashBook.id = buf_fin-doc.CashBookId:
+          for each ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = ub.CashBook.id and
+            ub.CashBookRule.Code = "BankRecip-acct" and ub.CashBookRule.Status_ = 0:
+            v-schet1 = ub.CashBookRule.RuleValue .                                                                     
+          /*         else v-schet2 = ub.CashBookRule.RuleValue .*/
+          end.
+        end.         
       end.  
       
       v-fin-doc-list = v-fin-doc-list + ";" + string(buf_fin-doc-attr.fin-doc-code) .
@@ -197,13 +211,6 @@ do
     if v-ok-cashGB then v-source = "Поступления от продажи товаров" .
     if v-ok-cashUB then v-source1 = "Прочие поступления" .
     v-source = v-source + ", " + v-source1 .
-    /*    FIND last ub.shift-staff No-LOCK WHERE                 */
-    /*      ub.shift-staff.obj-type   = ub.fin-doc.obj-type AND  */
-    /*      ub.shift-staff.obj-code   = ub.fin-doc.obj-code AND  */
-    /*      ub.shift-staff.shift-date = ub.fin-doc.shift-date AND*/
-    /*      ub.shift-staff.shift-num  = ub.fin-doc.shift-num AND */
-    /*      ub.shift-staff.staff-role = yes and                  */
-    /*      ub.shift-staff.psn-num    >= 0 No-ERROR.             */
     
     find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error .
     assign 
@@ -215,27 +222,31 @@ do
   v-bank-code = trim (v-bank-code,";") .
   v-fin-doc-list = trim(v-fin-doc-list,";") .
   v-source = trim(v-source,", ") .
-  do ii = 0 to num-entries (v-bank-code,";"):
-    for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(entry (ii,v-bank-code,";")) and ub.fin-bank.host-code = p-host-code,
-      each ub.fin-schet no-lock where ub.fin-schet.code-bank = ub.fin-bank.code-bank and ub.fin-schet.status_ = {&current-status}
-      :
-      if v-recip-bank_name1 <> "" then 
-      do:
-        v-recip-bank_name2 = ub.fin-bank.bank-name . 
-      end. 
-      else v-recip-bank_name1 = ub.fin-bank.bank-name .
-      if v-recip-bank_bik1 <> "" then 
-      do: 
-        v-recip-bank_bik2 = ub.fin-bank.bik . 
-      end. 
-      else v-recip-bank_bik1 = ub.fin-bank.bik .
-    end.  
+      
+  do ii = 1 to num-entries (v-bank-code,";"):
+    for first ub.fin-bank no-lock where ub.fin-bank.code-bank = integer(entry (ii,v-bank-code,";")) and ub.fin-bank.host-code = p-host-code:
+      do jj = 1 to num-entries (v-schet,","):
+        for first ub.fin-schet no-lock where ub.fin-schet.code-bank = ub.fin-bank.code-bank and ub.fin-schet.status_ = {&current-status} and
+          ub.fin-schet.r-schet = entry (jj,v-schet,","):
+          if v-recip-bank_name1 <> "" then 
+          do:
+            v-recip-bank_name2 = ub.fin-bank.bank-name . 
+          end. 
+          else v-recip-bank_name1 = ub.fin-bank.bank-name .
+          if v-recip-bank_bik1 <> "" then 
+          do: 
+            v-recip-bank_bik2 = ub.fin-bank.bik . 
+          end. 
+          else v-recip-bank_bik1 = ub.fin-bank.bik .
+        end.  
+      end.
+    end.
   end.  
   
   v-total-rubl = Sum-in-Words-Without-Dec(v-total-sum) .
   v-total-kop = string((v-total-sum - truncate(v-total-sum, 0)) * 100, "99":U) .
 
-  do ii = 0 to num-entries(v-fin-doc-list,";"):
+  do ii = 1 to num-entries(v-fin-doc-list,";"):
     empty temp-table tt-banknots .
     empty temp-table tt-coins .
     for first buf_fin-doc-attr no-lock where buf_fin-doc-attr.fin-doc-code = integer(entry(ii,v-fin-doc-list,";")) and buf_fin-doc-attr.host-code = p-host-code
@@ -758,7 +769,7 @@ do
       '<tr>' skip
       '<td colspan="74" style="text-align: left; border-bottom: 1px solid black;">' + v-recip-bank_name1 + '</td>' skip
       '<td colspan="10" style="border-bottom: 1px solid black; text-align: left;">' + v-recip-bank_bik1 + '</td>' skip
-      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schetUB + '</td>' skip
+      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schet1 + '</td>' skip
       '<td colspan="16" style="text-align: center; border: 1px solid black;">' + v-simvol + '</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">' + string(v-sum) + '</td>' skip
       '</tr>' skip .
@@ -780,7 +791,7 @@ do
       '<tr style="height: 20px;">' skip
       '<td colspan="74" style="text-align: left; border-bottom: 1px solid black;">' + v-recip-bank_name2 + '</td>' skip
       '<td colspan="10" style="border-bottom: 1px solid black; text-align: left;">' + v-recip-bank_bik2 + '</td>' skip
-      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schetUB + '</td>' skip
+      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schet2 + '</td>' skip
       '<td colspan="16" style="text-align: center; border: 1px solid black;">' + v-simvol + '</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">' + string(v-sum) + '</td>' skip
       '</tr>' skip .

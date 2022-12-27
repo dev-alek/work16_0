@@ -54,6 +54,10 @@ define buffer g-d-b   for ub.gds-dtl.
 define buffer out-dtl for ub.gds-dtl. /* признак внутренней –Ќ */
 define buffer bf_prod-bc for ub.prod-bc.
 define buffer in_doc-line for ub.doc-line.
+define buffer in_parts for ub.parts.
+define buffer out_parts for ub.parts.
+define buffer buf_gen-attr for ub.gen-attr .
+define buffer buf_gds-obj for ub.gds-obj .
 
 define buffer buf_marking for ub.marking .
 define buffer buf_marking-child for ub.marking .
@@ -158,6 +162,10 @@ define variable pr-nakltype                as character initial ?         no-und
 define variable pr-genmrg                  as character initial ?         no-undo.
 
 define variable v-is-return                as logical   no-undo initial no  .
+define variable in-part-rec                as integer   no-undo .
+define variable v-new-qnty                 as decimal   no-undo .
+define variable v-free-qnty                as decimal   no-undo .
+define variable v-no-add-marks             as logical   no-undo initial no .
 
 { gbl/objsrv.i }
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
@@ -821,7 +829,10 @@ DO:
       view-as alert-box error.
       return no-apply.
     end.
-    if t-doc.doc-type = {&expense} and buf_goods.qnty-cart <> 0 then do:
+    if t-doc.doc-type = {&expense}
+    and buf_goods.qnty-cart <> 0
+    and not v-is-return
+    then do:
       if (input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty / buf_goods.qnty-cart) - round (input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty / buf_goods.qnty-cart, 0) <> 0 then do:
         if available ub.prt-obj then do:
           assign
@@ -1125,6 +1136,134 @@ DO:
         undo block_save, return no-apply.
       end.
     end.
+    
+    if v-is-return
+    then do :
+      if v-work-with-qnty = "doc":U then do:
+        v-new-qnty = input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty - ub.gds-dtl.doc-qnty .
+      end .
+      else do :
+        v-new-qnty = input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty - ub.gds-dtl.fact-qnty .
+      end .
+      find first in_parts no-lock where recid(in_parts) = in-part-rec no-error .
+      if available in_parts
+      then do :
+        v-free-qnty = in_parts.fact-qnty .
+        for each buf_gen-attr no-lock where buf_gen-attr.table-name = {&table_parts}
+                                        and buf_gen-attr.attr-code  = "in-part-key"
+                                        and buf_gen-attr.attr-value = {key/parts.i in_parts },
+        first out_parts no-lock where out_parts.obj-type  = entry(2, buf_gen-attr.p-key, {&delim-key})
+                                  and out_parts.obj-code  = integer(entry(3, buf_gen-attr.p-key, {&delim-key}))
+                                  and out_parts.artic     = entry(4, buf_gen-attr.p-key, {&delim-key})
+                                  and out_parts.prod-type = entry(5, buf_gen-attr.p-key, {&delim-key})
+                                  and out_parts.prod-code = integer(entry(6, buf_gen-attr.p-key, {&delim-key}))
+                                  and out_parts.in-code   = entry(7, buf_gen-attr.p-key, {&delim-key})
+                                  and out_parts.out-code  = entry(8, buf_gen-attr.p-key, {&delim-key})
+                                  and out_parts.part-code = entry(9, buf_gen-attr.p-key, {&delim-key})
+        :
+          v-free-qnty = v-free-qnty - out_parts.fact-qnty .
+        end .
+        
+        find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = t-doc.obj-type
+                                         and buf_gds-obj.obj-code  = t-doc.obj-code
+                                         and buf_gds-obj.artic     = buf_goods.artic
+                                         and buf_gds-obj.prod-type = buf_goods.prod-type
+                                         and buf_gds-obj.prod-code = buf_goods.prod-code
+                                         no-error .
+        if error-status :error
+        then do:
+          message
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+          undo block_save, return no-apply.
+        end.
+        
+        if buf_gds-obj.free-qnty < v-new-qnty
+        then do :
+          message substitute ("¬озвращаемое количество превышает текущий остаток, равный &1. ¬озврат не возможен.", buf_gds-obj.free-qnty) view-as alert-box .
+          display
+            ub.gds-dtl.doc-qnty
+          with frame {&FRAME-NAME}.
+          undo block_save, return no-apply.
+        end .
+        
+        if v-new-qnty > v-free-qnty
+        then do :
+          if t-doc.reason-code = 25 /*  орректировка поступлени€ */
+          then do :
+            v-no-add-marks = yes .
+            message "¬веденное количество превышает максимально допустимое к возврату по выбранной партии.  оличество установлено максимально возможным" view-as alert-box .
+            if node-type begins "scan-marks"
+            then do :
+              if v-work-with-qnty = "doc":U
+              then do:
+                display
+                  ub.gds-dtl.doc-qnty
+                with frame {&FRAME-NAME}.
+              end .
+              else do :
+                display
+                  ub.gds-dtl.fact-qnty
+                with frame {&FRAME-NAME}.
+              end .
+            end .
+            else do :
+              if v-work-with-qnty = "doc":U
+              then do:
+                display
+                  ub.gds-dtl.doc-qnty + v-free-qnty @ ub.gds-dtl.doc-qnty
+                with frame {&FRAME-NAME}.
+              end .
+              else do :
+                display
+                  ub.gds-dtl.fact-qnty + v-free-qnty @ ub.gds-dtl.fact-qnty
+                with frame {&FRAME-NAME}.
+              end .
+            end .
+          end .
+          if t-doc.reason-code = 23 /* ќбратна€ продажа */
+          then do :
+            if node-type begins "scan-marks"
+            and v-free-qnty < 0
+            then do : end .
+            else do :
+              message "¬веденное количество превышает максимально допустимое к возврату по выбранной партии, продолжить оформление возврата указанного количества?"
+              view-as alert-box question buttons yes-no update g#log .
+              if not g#log
+              then do :
+                v-no-add-marks = yes .
+                if node-type begins "scan-marks"
+                then do :
+                  display
+                    ub.gds-dtl.doc-qnty
+                  with frame {&FRAME-NAME}.
+                end .
+                else do :
+                  display
+                    ub.gds-dtl.doc-qnty
+                  with frame {&FRAME-NAME}.
+                  undo block_save, return no-apply.
+                end .
+              end .
+            end .
+          end .
+        end .
+        
+        if buf_gds-obj.free-qnty < v-new-qnty
+        then do :
+          message substitute ("¬озвращаемое количество превышает текущий остаток, равный &1. ¬озврат не возможен.", buf_gds-obj.free-qnty) view-as alert-box .
+          display
+            ub.gds-dtl.doc-qnty
+          with frame {&FRAME-NAME}.
+          undo block_save, return no-apply.
+        end .
+        
+        
+        node-type = {&g#term} .
+        
+      end .
+    end .
 
     run rsrv-out in this-procedure
       no-error .
@@ -1135,6 +1274,33 @@ DO:
         view-as alert-box error .
       undo block_save, return no-apply.
     end.
+    
+    if v-is-return
+    and available in_parts
+    then do :
+      for each out_parts no-lock where out_parts.obj-type  = in_parts.obj-type
+                                   and out_parts.obj-code  = in_parts.obj-code
+                                   and out_parts.artic     = in_parts.artic
+                                   and out_parts.prod-type = in_parts.prod-type
+                                   and out_parts.prod-code = in_parts.prod-code
+                                   and out_parts.out-code  = t-doc.doc-code
+      :
+        find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&table_parts}
+                                          and buf_gen-attr.p-key      = {key/parts.i out_parts } 
+                                          and buf_gen-attr.attr-code  = "in-part-key"
+                                          no-error .
+        if not available buf_gen-attr
+        then do :
+          create buf_gen-attr .
+          assign
+            buf_gen-attr.table-name = {&table_parts}          
+            buf_gen-attr.p-key      = {key/parts.i out_parts }
+            buf_gen-attr.attr-code  = "in-part-key"          
+            buf_gen-attr.attr-value = {key/parts.i in_parts }
+          .
+        end .                                  
+      end .
+    end .
 
 /*    assign*/
 /*      prt-rec  = recid( ub.gds-dtl )*/
@@ -2151,7 +2317,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   if num-entries(prt-mode, {&delim-par}) = 2
   then do :
-    if entry(2, prt-mode, {&delim-par}) = "return" then v-is-return = true .
+    if entry(2, prt-mode, {&delim-par}) begins "return"
+    then do :
+      v-is-return = true .
+      in-part-rec = integer(trim(entry(2, prt-mode, {&delim-par}), "return=")) no-error .
+    end .
     prt-mode = entry(1, prt-mode, {&delim-par}) .
   end .
 
@@ -2472,17 +2642,17 @@ end.
     find ub.gds-prt no-lock where recid( ub.gds-prt ) = cur-rec.
   end.
   
-  if v-is-return and t-doc.out-code > ""
+  if v-is-return and in-part-rec > 0
   then do :
-    find first in_doc-line no-lock where in_doc-line.doc-code   = t-doc.out-code
-                                     and in_doc-line.artic      = ub.gds-dtl.artic
-                                     and in_doc-line.prod-type  = ub.gds-dtl.prod-type
-                                     and in_doc-line.prod-code  = ub.gds-dtl.prod-code .
-    assign
-      ub.gds-dtl.price-base = in_doc-line.price-base
-      ub.gds-dtl.price-rubl = in_doc-line.price-rubl
-      ub.gds-dtl.ov         = yes
-    .                                 
+    find first in_parts no-lock where recid(in_parts) = in-part-rec no-error .
+    if available in_parts
+    then do :
+      assign
+        ub.gds-dtl.price-base = in_parts.price-base
+        ub.gds-dtl.price-rubl = in_parts.price-rubl
+        ub.gds-dtl.ov         = yes
+      . 
+    end .                                
   end.
 
   assign
@@ -2775,6 +2945,23 @@ end.
         ub.gds-dtl.doc-qnty
       with frame {&FRAME-NAME} . 
     end .
+    
+    if v-is-return
+    and (EDOParSec:GetIsArticForType(varvalue)
+     or EDOParSec:GetIsEDOForType(varvalue)
+     or EDOParSec:GetIsMarkingForType(varvalue))
+    then do :
+      disable
+        ub.gds-dtl.fact-qnty
+        ub.gds-dtl.doc-qnty
+      with frame {&FRAME-NAME} . 
+      if node-type = "Transitional"
+      then do :
+        enable
+          ub.gds-dtl.doc-qnty
+        with frame {&FRAME-NAME} . 
+      end .
+    end .
   
     if v-work-with-qnty = "doc":U then do:
       if t-doc.doc-type = {&expense} and input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty = 0 then do:
@@ -2789,6 +2976,12 @@ end.
           display
             1 @ ub.gds-dtl.doc-qnty
           with frame {&FRAME-NAME}.
+          if v-is-return
+          then do :
+            display
+              0 @ ub.gds-dtl.doc-qnty
+            with frame {&FRAME-NAME}.
+          end .
         end.
       end.
 
@@ -2835,6 +3028,12 @@ end.
               display
                 1 @ ub.gds-dtl.doc-qnty
               with frame {&FRAME-NAME}.
+              if v-is-return
+              then do :
+                display
+                  0 @ ub.gds-dtl.doc-qnty
+                with frame {&FRAME-NAME}.
+              end .
             end.
           end.
         end.
@@ -2842,40 +3041,58 @@ end.
         if node-type begins "scan-marks" then do:
           
           find first buf_marking no-lock where buf_marking.mark begins entry(2,node-type,{&delim-key}) no-error .
-          if not available buf_marking
+          if v-is-return
           then do :
-            undo, return error return-value .
-          end .
-          if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
-          then do :
-            message "ћарка " buf_marking.mark " не в свободной зоне!" view-as alert-box .
-            undo, return error .
-          end . 
-          case buf_marking.unit-ext : 
-            when "LEVEL2"
-            then do : 
-              ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 500).
-            end .
-            when "LEVEL1"
+            if available buf_marking
             then do :
-              assign v-pack-qnty = 0 .
-              for each buf_marking-child no-lock where buf_marking-child.mark-parent = buf_marking.mark,
-              first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking-child.mark-parent
-                                                and buf_marking-lines.out-code = ub.gds-dtl.doc-code :
-                assign v-pack-qnty = v-pack-qnty + 1 .                                  
+              if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+              and EDOParSec:GetIsMarkingForType(varvalue)
+              then do :
+                message "ћарка " buf_marking.mark " не в свободной зоне!" view-as alert-box .
+                undo, return error .
               end .
-              ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 10 - v-pack-qnty).
+              ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
             end .
-            otherwise do :
-              find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark-parent
-                                                     and buf_marking-lines.out-code = ub.gds-dtl.doc-code
-                                                     no-error .
-              if not available buf_marking-lines
-              then do :                                       
-                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
+            else do :
+              ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
+            end .
+          end .
+          else do :
+            if not available buf_marking
+            then do :
+              undo, return error return-value .
+            end .
+            if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+            then do :
+              message "ћарка " buf_marking.mark " не в свободной зоне!" view-as alert-box .
+              undo, return error .
+            end . 
+            case buf_marking.unit-ext : 
+              when "LEVEL2"
+              then do : 
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 500).
               end .
-            end .
-          end case .
+              when "LEVEL1"
+              then do :
+                assign v-pack-qnty = 0 .
+                for each buf_marking-child no-lock where buf_marking-child.mark-parent = buf_marking.mark,
+                first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking-child.mark-parent
+                                                  and buf_marking-lines.out-code = ub.gds-dtl.doc-code :
+                  assign v-pack-qnty = v-pack-qnty + 1 .                                  
+                end .
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 10 - v-pack-qnty).
+              end .
+              otherwise do :
+                find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark-parent
+                                                       and buf_marking-lines.out-code = ub.gds-dtl.doc-code
+                                                       no-error .
+                if not available buf_marking-lines
+                then do :                                       
+                  ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
+                end .
+              end .
+            end case .
+          end .
           
           apply "LEAVE":U to ub.gds-dtl.doc-qnty in frame {&FRAME-NAME}.
           apply "CHOOSE":U to b-exit in frame {&FRAME-NAME}.
@@ -2904,6 +3121,10 @@ end.
 END. /* MAIN-BLOCK */
 RUN disable_UI IN THIS-PROCEDURE.
 
+if v-no-add-marks
+then do :
+  return "no-add-marks" .
+end .
 if v-undo-all = true then do:
   undo, return error.
 end.

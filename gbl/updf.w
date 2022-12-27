@@ -1604,7 +1604,7 @@ DO on error undo,return error:
                 if NOT return-value = "error":U
                 then do:
                     assign
-                    str_val = string(3600 * vhour + 60 * vmin)
+                    str_val = string(3600 * vhour + 60 * vmin + 59)
                     str_val_rus = string(vhour, "99") + ":":U + string(vmin, "99")
                     .
                 end.

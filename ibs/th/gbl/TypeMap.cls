@@ -88,11 +88,11 @@ class Ibs.Th.Gbl.TypeMap inherits objth:
       else return ?.
   end method.
   
-  method class propmap GetProp(inKey as int):
+  method public class propmap GetProp(inKey as int):
     return GetProp(string (inKey)).
   end method. 
 
-  method protected class propmap GetProp(inKeyStr as char):
+  method public class propmap GetProp(inKeyStr as char):
     def var prop as class propmap no-undo.
     if valid-object (mapType:GetItemKeyStr(inKeyStr))
     then return cast(mapType:SubjectObjCurr, propmap). 

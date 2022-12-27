@@ -53,7 +53,7 @@ define variable v-asi-error-message as character no-undo .
 
 v-log-file-name = substitute('&1rvs.log', ibs.th.gbl.gbl-inipar:logDir) .
 
-if p-loclist = '0':U then p-loclist = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22" .
+if p-loclist = '0':U then p-loclist = "all" .
 
 find first sys-ctrl no-lock.
 run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).

@@ -59,6 +59,24 @@ class ibs.th.bge.xmlimpexp final:
       updatetableforxml(hQuery).
       delete object hQuery. 
    end.
+   method public void repspecTableforXml (ilog as logical):
+      define buffer buf_XML-entity for temp_testXML-entity.
+      if ilog
+      then
+      for each buf_XML-entity:
+         buf_XML-entity.xmeEntName= replace (buf_XML-entity.xmeEntName,"#","CHRgriidCHR").
+      end.
+      else
+         for each buf_XML-entity:
+            buf_XML-entity.xmeEntName= replace (buf_XML-entity.xmeEntName,"CHRgriidCHR","#").
+         end.
+      
+   end.
+
+&glob RunProc          "After-Imp-Run"   
+&glob RunProcProcedure "After-Imp-Run-Procedure"   
+&glob RunProcParam     "After-Imp-Run-Param"   
+
 &glob prefix-table "table-"
 &glob record-table "record-"
    method public void updatetableforxml(ihquery as handle):
@@ -70,6 +88,8 @@ class ibs.th.bge.xmlimpexp final:
       define buffer buf_XML-node   for temp_testXML-node.
       define buffer buf_XML-entity for temp_testXML-entity.
       define buffer buf_XML-field for temp_testXML-entity.
+      define buffer buf_XML-atribut for temp_testXML-atribut.
+   
       vNodeName = "File-info".
       find first buf_XML-node
           where buf_XML-node.xmhNodName = vNodeName
@@ -96,6 +116,17 @@ class ibs.th.bge.xmlimpexp final:
             buf_XML-entity.xmeEntName   = vNodeName
             buf_XML-entity.xmeEntValue  = "000"
          .
+         assign
+            v-xmldom-key = v-xmldom-key + 1
+            vNodeName = "DateActive"
+         .
+         create buf_XML-entity.
+         assign
+            buf_XML-entity.xme-key      = v-xmldom-key
+            buf_XML-entity.xmh-key      = buf_XML-node.xmh-key
+            buf_XML-entity.xmeEntName   = vNodeName
+            buf_XML-entity.xmeEntValue  = "01.01.2100"
+         .
       end.
       ihquery:get-first().
       vBuffer = ihquery:get-buffer-handle ().
@@ -116,6 +147,13 @@ class ibs.th.bge.xmlimpexp final:
                buf_XML-node.xmh-key    = v-xmldom-key
                buf_XML-node.xmhNodName = vNodeName
             .
+            create buf_XML-atribut.
+            assign
+               buf_XML-atribut.xme-key      = v-xmldom-key
+               buf_XML-atribut.xmeAtrName   = "NwsNotSend"
+               buf_XML-atribut.xmeAtrValue  = "TableList"
+            .
+
          end.
          vNodeName = {&record-table} + VTAbleName.
       end.
@@ -131,13 +169,11 @@ class ibs.th.bge.xmlimpexp final:
             buf_XML-entity.xmeEntName   = vNodeName
             buf_XML-entity.xmeEntValue  = ""
          .
-         v-xmldom-key = v-xmldom-key + 1.
-         create buf_XML-field.
+         create buf_XML-atribut.
             assign
-            buf_XML-field.xme-key      = v-xmldom-key
-            buf_XML-field.xmh-key      = buf_XML-entity.xme-key
-            buf_XML-field.xmeEntName   = "record-delete"
-            buf_XML-field.xmeEntValue  = "no"
+            buf_XML-atribut.xme-key      = v-xmldom-key
+            buf_XML-atribut.xmeAtrName   = "record-delete"
+            buf_XML-atribut.xmeAtrValue  = "no"
          .
          block-field:
          do vItem = 1 to vBuffer:num-fields:
@@ -157,6 +193,8 @@ class ibs.th.bge.xmlimpexp final:
          ihquery:get-next().
       end.
       ihquery:query-close().
+      repspecTableforXml(yes).
+      
       /*delete object ihquery.*/
    end.
    define variable mfirst as logical no-undo init yes.
@@ -171,11 +209,25 @@ class ibs.th.bge.xmlimpexp final:
       output close.
     
    end.
-
+   
+   method public char GetAtrXml(ikey as int64, iAttrCode as character ):
+      define buffer buf_XML-atribut for temp_testXML-atribut.
+      find first buf_XML-atribut where buf_XML-atribut.xme-key    eq ikey
+                                   and buf_XML-atribut.xmeAtrName eq iattrCode
+      no-lock no-error.
+      return if available buf_XML-atribut then buf_XML-atribut.xmeAtrValue else ?.  
+      
+   end.
+   
    method public void updatetablefordb():
-      define buffer buf_XML-node   for temp_testXML-node.
-      define buffer buf_XML-entity for temp_testXML-entity.
-      define buffer buf_XML-field for temp_testXML-entity.
+      updatetablefordb (?).
+   end.
+
+   method public void updatetablefordb(ipublicHahdel as handle):
+      define buffer buf_XML-node    for temp_testXML-node.
+      define buffer buf_XML-entity  for temp_testXML-entity.
+      define buffer buf_XML-field   for temp_testXML-entity.
+      define buffer buf_XML-atribut for temp_testXML-atribut.
    
       define variable VTablename as character no-undo.
       define variable Vkey-rec   as character no-undo. 
@@ -189,10 +241,12 @@ class ibs.th.bge.xmlimpexp final:
       define variable vtexterr as character no-undo.
       
       define variable vi as integer no-undo.
-   
+      repspecTableforXml(no).
       for each buf_XML-node where buf_xml-node.xmhNodName begins {&prefix-table}
       no-lock:
          VTablename  = substring(buf_xml-node.xmhNodName,length({&prefix-table}) + 1).
+         define variable mglobnwsdis as character no-undo.
+         mglobnwsdis = GetAtrXml (buf_xml-node.xmh-key,"NwsNotSend").
          create temp-table VTemp_table-h.
          VTemp_table-h:create-like( substitute('ub.&1',VTablename )) no-error.
          if error-status:error then do:
@@ -209,6 +263,16 @@ class ibs.th.bge.xmlimpexp final:
          for each buf_XML-entity where buf_XML-entity.xmh-key      = buf_XML-node.xmh-key
                                    and buf_XML-entity.xmeEntName   = {&record-table} + VTablename
          no-lock:
+            define variable mlocalnwsdis as character no-undo.
+            if ipublicHahdel ne ?
+            then do:
+               mlocalnwsdis = GetAtrXml (buf_XML-entity.xme-key,"NwsNotSend").
+               if mlocalnwsdis ne ?
+               then
+                  publish "DisableNwsTable" from ipublicHahdel (mlocalnwsdis).
+               else   
+                  publish "DisableNwsTable" from ipublicHahdel (mglobnwsdis).
+            end.
             VTemp_buffer-h:buffer-create() no-error.
             if error-status:error then do:
                vtexterr = substitute( "&1. Ошибка при создании записи в temp-table &2 &3&4&5", VTablename , vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ).
@@ -276,14 +340,27 @@ class ibs.th.bge.xmlimpexp final:
                
             end.
             define variable  Vrecord-delete as logical no-undo.
-            find first buf_XML-field where buf_XML-field.xmh-key      = buf_XML-entity.xme-key
-                                       and buf_XML-field.xmeEntName   = "record-delete"
-            no-lock no-error.
             
-            assign
-               vrecord-delete = no
-               vrecord-delete = logical(buf_XML-field.xmeEntValue)
-            no-error.
+            find first buf_XML-atribut where buf_XML-atribut.xme-key      = buf_XML-entity.xme-key
+                                         and buf_XML-atribut.xmeAtrName   = "record-delete"
+            no-lock no-error.
+            if avail buf_XML-atribut
+            then do:
+               assign
+                  vrecord-delete = no
+                  vrecord-delete = logical(buf_XML-field.xmeEntValue)
+               no-error.
+            end.
+            else do:
+               find first buf_XML-field where buf_XML-field.xmh-key      = buf_XML-entity.xme-key
+                                          and buf_XML-field.xmeEntName   = "record-delete"
+               no-lock no-error.
+            
+               assign
+                  vrecord-delete = no
+                  vrecord-delete = logical(buf_XML-field.xmeEntValue)
+               no-error.
+            end.
             do trans:
 
                Vbuffer-h:find-by-rowid( v-tbl-row, exclusive-lock ) no-error.
@@ -328,9 +405,51 @@ class ibs.th.bge.xmlimpexp final:
             end.
             VTemp_buffer-h:buffer-delete() no-error.
          end.
-         
+         if ipublicHahdel ne ?
+         then
+            publish "DisableNwsTable" from ipublicHahdel (?).
          delete object VTemp_table-h.
          delete object Vbuffer-h.
       end.
+      for each buf_XML-node where buf_xml-node.xmhNodName eq {&RunProc}
+      no-lock:
+         define variable vproc  as character no-undo.
+         define variable vparam as character no-undo.
+         define variable vOk as logical no-undo.
+         vproc = GetAtrXml (buf_XML-node.xmh-key,{&RunProcProcedure}).
+         if vproc ne ""
+         then do:
+            vparam = "".
+            for each buf_XML-entity where buf_XML-entity.xmh-key      = buf_XML-node.xmh-key
+/*                                      and buf_XML-entity.xmeEntName   = {&RunProcParametr} */
+            no-lock:
+               vparam = vparam + {&delim-par} +  buf_XML-entity.xmeEntName + {&delim-par} + buf_XML-entity.xmeEntValue.
+            end.
+            vparam = trim( vparam, {&delim-par}).
+            if ipublicHahdel ne ?
+            then do:
+               publish "RunProcXmlImp" from ipublicHahdel (vproc, vparam, output vok).
+               if vOk ne true
+               then do:
+                  vtexterr = substitute( "&1. Ошибка при Выполнение &2 спараметром &6.&3&4&3&5"
+                             ,vss-workfile
+                             ,vproc
+                             ,{&new-line}
+                             ,return-value
+                             ,error-status :get-message ( error-status :num-messages )
+                             ,vparam
+                           ).
+                 put-log(vtexterr).
+                 undo, return  error vtexterr.
+
+                  
+               end.
+            end.
+         end.
+      end.   
    end.
+&glob RunProc          "After-Imp-Run"   
+&glob RunProcProcedure "After-Imp-Run-Procedure"   
+&glob RunProcParam     "After-Imp-Run-Param"   
+   
 end class.

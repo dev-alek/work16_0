@@ -25,4 +25,6 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер удаления {&main-tbl}". 
-{ trg/trghistnws.i }
+{ trg/trghistnws.i 
+&nobufhist  = yes
+}

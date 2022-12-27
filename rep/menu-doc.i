@@ -35,6 +35,8 @@ initial "@(#)$Workfile$ $Revision$".
         field view_                     as integer  init 1
         field sys-key                   as character
         field sys-key-black             as character
+        field type-parts                as character
+        field type-parts-enabled        as logical
         field type-price                as character
         field type-price-enabled        as logical
         field type-scale                as character
@@ -198,6 +200,7 @@ initial "@(#)$Workfile$ $Revision$".
                                 , output tmp#list.sort-gr-enabled
                                 , output tmp#list.print-graft-enabled
                                 , output tmp#list.no-vat-enabled
+                                , output tmp#list.type-parts-enabled                                
                             ).
                         end.
                     end.
@@ -330,6 +333,7 @@ initial "@(#)$Workfile$ $Revision$".
     /*==========================================================================*/
     procedure menu-doc-set-visible-options :
     define input parameter p-print-options          as character        no-undo.
+    define output parameter p-type-parts-enabled    as logical          no-undo.
     define output parameter p-type-price-enabled    as logical          no-undo.
     define output parameter p-type-scale-enabled    as logical          no-undo.
     define output parameter p-type-val-enabled      as logical          no-undo.
@@ -337,18 +341,19 @@ initial "@(#)$Workfile$ $Revision$".
     define output parameter p-sort-gr-enabled       as logical          no-undo.
     define output parameter p-print-graft-enabled   as logical          no-undo.
     define output parameter p-no-vat-enabled        as logical          no-undo.
-
+      
     do
     on error undo, return error
     :
         assign
-            p-type-price-enabled    = ( if substring( p-print-options, 1, 1 ) = "+" then yes else no )
-            p-type-scale-enabled    = ( if substring( p-print-options, 2, 1 ) = "+" then yes else no )
-            p-type-val-enabled      = ( if substring( p-print-options, 3, 1 ) = "+" then yes else no )
-            p-sort-name-enabled     = ( if substring( p-print-options, 4, 1 ) = "+" then yes else no )
-            p-sort-gr-enabled       = ( if substring( p-print-options, 5, 1 ) = "+" then yes else no )
-            p-print-graft-enabled   = ( if substring( p-print-options, 6, 1 ) = "+" then yes else no )
-            p-no-vat-enabled        = ( if substring( p-print-options, 7, 1 ) = "+" then yes else no )
+            p-type-parts-enabled    = ( if substring( p-print-options, 1, 1 ) = "+" then yes else no )
+            p-type-price-enabled    = ( if substring( p-print-options, 2, 1 ) = "+" then yes else no )
+            p-type-scale-enabled    = ( if substring( p-print-options, 3, 1 ) = "+" then yes else no )
+            p-type-val-enabled      = ( if substring( p-print-options, 4, 1 ) = "+" then yes else no )
+            p-sort-name-enabled     = ( if substring( p-print-options, 5, 1 ) = "+" then yes else no )
+            p-sort-gr-enabled       = ( if substring( p-print-options, 6, 1 ) = "+" then yes else no )
+            p-print-graft-enabled   = ( if substring( p-print-options, 7, 1 ) = "+" then yes else no )
+            p-no-vat-enabled        = ( if substring( p-print-options, 8, 1 ) = "+" then yes else no )
         .
     end.
     end procedure. /* menu-doc-set-visible-options */
@@ -367,13 +372,15 @@ initial "@(#)$Workfile$ $Revision$".
              where buf_tmp#list.id = p-tmp-list-id
         .
         assign
-            p-options-string =  ( if trim( buf_tmp#list.type-price  ) = "+":U then "+":U else "-":U )
+            p-options-string =  ( if trim( buf_tmp#list.type-parts  ) = "+":U then "+":U else "-":U )  
+                              + ( if trim( buf_tmp#list.type-price  ) = "+":U then "+":U else "-":U )
                               + ( if trim( buf_tmp#list.type-scale  ) = "+":U then "+":U else "-":U )
                               + ( if trim( buf_tmp#list.type-val    ) = "+":U then "+":U else "-":U )
                               + ( if trim( buf_tmp#list.sort-name   ) = "+":U then "+":U else "-":U )
                               + ( if trim( buf_tmp#list.sort-gr     ) = "+":U then "+":U else "-":U )
                               + ( if trim( buf_tmp#list.print-graft ) = "+":U then "+":U else "-":U )
                               + ( if trim( buf_tmp#list.no-vat      ) = "+":U then "+":U else "-":U )
+
         .
     end.
     end procedure. /* menu-doc-create-options-string */
@@ -392,13 +399,14 @@ initial "@(#)$Workfile$ $Revision$".
              where buf_tmp#list.id = p-tmp-list-id
         .
         assign
-            buf_tmp#list.type-price  = ( if buf_tmp#list.type-price-enabled     = yes then substitute( "  &1", substring( p-options-string, 1, 1 ) ) else " ":U )
-            buf_tmp#list.type-scale  = ( if buf_tmp#list.type-scale-enabled     = yes then substitute( "  &1", substring( p-options-string, 2, 1 ) ) else " ":U )
-            buf_tmp#list.type-val    = ( if buf_tmp#list.type-val-enabled       = yes then substitute( "  &1", substring( p-options-string, 3, 1 ) ) else " ":U )
-            buf_tmp#list.sort-name   = ( if buf_tmp#list.sort-name-enabled      = yes then substitute( "  &1", substring( p-options-string, 4, 1 ) ) else " ":U )
-            buf_tmp#list.sort-gr     = ( if buf_tmp#list.sort-gr-enabled        = yes then substitute( "  &1", substring( p-options-string, 5, 1 ) ) else " ":U )
-            buf_tmp#list.print-graft = ( if buf_tmp#list.print-graft-enabled    = yes then substitute( "  &1", substring( p-options-string, 6, 1 ) ) else " ":U )
-            buf_tmp#list.no-vat      = ( if buf_tmp#list.no-vat-enabled         = yes then substitute( "  &1", substring( p-options-string, 7, 1 ) ) else " ":U )
+            buf_tmp#list.type-parts  = ( if buf_tmp#list.type-parts-enabled     = yes then substitute( "  &1", substring( p-options-string, 1, 1 ) ) else " ":U )
+            buf_tmp#list.type-price  = ( if buf_tmp#list.type-price-enabled     = yes then substitute( "  &1", substring( p-options-string, 2, 1 ) ) else " ":U )
+            buf_tmp#list.type-scale  = ( if buf_tmp#list.type-scale-enabled     = yes then substitute( "  &1", substring( p-options-string, 3, 1 ) ) else " ":U )
+            buf_tmp#list.type-val    = ( if buf_tmp#list.type-val-enabled       = yes then substitute( "  &1", substring( p-options-string, 4, 1 ) ) else " ":U )
+            buf_tmp#list.sort-name   = ( if buf_tmp#list.sort-name-enabled      = yes then substitute( "  &1", substring( p-options-string, 5, 1 ) ) else " ":U )
+            buf_tmp#list.sort-gr     = ( if buf_tmp#list.sort-gr-enabled        = yes then substitute( "  &1", substring( p-options-string, 6, 1 ) ) else " ":U )
+            buf_tmp#list.print-graft = ( if buf_tmp#list.print-graft-enabled    = yes then substitute( "  &1", substring( p-options-string, 7, 1 ) ) else " ":U )
+            buf_tmp#list.no-vat      = ( if buf_tmp#list.no-vat-enabled         = yes then substitute( "  &1", substring( p-options-string, 8, 1 ) ) else " ":U )
         .
     end.
     end procedure. /* menu-doc-create-options-string */
@@ -417,13 +425,15 @@ initial "@(#)$Workfile$ $Revision$".
              where buf_tmp#list.id = p-tmp-list-id
         .
         assign
-            p-options-enabled-string =  ( if buf_tmp#list.type-price-enabled  = yes then "+":U else "-":U )
+            p-options-enabled-string =  ( if buf_tmp#list.type-parts-enabled  = yes then "+":U else "-":U )  
+                                      + ( if buf_tmp#list.type-price-enabled  = yes then "+":U else "-":U )
                                       + ( if buf_tmp#list.type-scale-enabled  = yes then "+":U else "-":U )
                                       + ( if buf_tmp#list.type-val-enabled    = yes then "+":U else "-":U )
                                       + ( if buf_tmp#list.sort-name-enabled   = yes then "+":U else "-":U )
                                       + ( if buf_tmp#list.sort-gr-enabled     = yes then "+":U else "-":U )
                                       + ( if buf_tmp#list.print-graft-enabled = yes then "+":U else "-":U )
                                       + ( if buf_tmp#list.no-vat-enabled      = yes then "+":U else "-":U )
+                                      + ( if buf_tmp#list.type-parts-enabled  = yes then "+":U else "-":U )
         .
     end.
     end procedure. /* menu-doc-create-options-string */

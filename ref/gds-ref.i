@@ -177,7 +177,7 @@ define variable g#log as logical no-undo .
 define variable gds-rec as recid no-undo .
 define variable line-rec as recid no-undo .
 define variable flt-rec as recid no-undo .
-
+define variable old-value-emrc as character no-undo .
 
 define variable ref-list as character no-undo.
 /*режим копирования товара*/
@@ -3478,6 +3478,7 @@ PROCEDURE proc-b-grp:
   define variable loc_g-grp as character no-undo .
   define variable lns-cnt as integer no-undo .
   define variable v-ok as logical no-undo .
+  define variable v-old-code as integer no-undo .
 
   define buffer buf_gds-grp for ub.gds-grp.
 
@@ -3507,6 +3508,7 @@ PROCEDURE proc-b-grp:
   assign
     g#log = yes
   .
+  v-old-code = loc-goo-doc.grp-code .
   message
     "Выберите группу, в которую нужно переместить товар(ы)."
   view-as alert-box question buttons OK-Cancel update g#log.
@@ -3587,6 +3589,119 @@ PROCEDURE proc-b-grp:
                              'Прервать', 'Удаление товаров с касс') .
         end.   
 
+     /*Проверка на атрибут ЕМЦ*/
+     define variable v-value-emrc as character no-undo .
+     define variable v-type-emrc  as character no-undo .
+     old-value-emrc = "" .   
+  
+     /*Получение атрибута для старой группы*/
+     for first ub.gds-grp-obj-attr no-lock
+        where ub.gds-grp-obj-attr.node-code   = v-old-code
+        and ub.gds-grp-obj-attr.host-code   = 0
+        and ub.gds-grp-obj-attr.obj-type    = ""
+        and ub.gds-grp-obj-attr.obj-code    = 0
+        and ub.gds-grp-obj-attr.attr-code   = {&ggoattr-emrc-type}:
+        old-value-emrc = ub.gds-grp-obj-attr.attr-value .
+     end.
+     /*Получение атрибута для новой группы*/
+     for first ub.gds-grp exclusive-lock where ub.gds-grp.node-code = loc-goo-doc.grp-code:
+        for first ub.gds-grp-obj-attr no-lock
+           where ub.gds-grp-obj-attr.node-code   = loc-goo-doc.grp-code
+           and ub.gds-grp-obj-attr.host-code   = 0
+           and ub.gds-grp-obj-attr.obj-type    = ""
+           and ub.gds-grp-obj-attr.obj-code    = 0
+           and ub.gds-grp-obj-attr.attr-code   = {&ggoattr-emrc-type}:
+           v-value-emrc = ub.gds-grp-obj-attr.attr-value .
+        end.
+
+        define variable v-attr-emrc as character no-undo .
+        define variable v-attr-type as character no-undo .
+        define variable v-del       as logical   no-undo .
+        define buffer buf_goods-attr for ub.goods-attr .
+        define variable v-emrc-name as character no-undo .
+        
+        /*Значение атрибута товара*/
+        for first buf_goods-attr no-lock where buf_goods-attr.attr-code = {&attr-emrc-type} and
+           buf_goods-attr.gds-code = loc-goo-doc.gds-code:
+           v-attr-emrc = buf_goods-attr.attr-value .
+        end.   
+        if v-value-emrc <> old-value-emrc and v-attr-emrc = "" then 
+        do:
+           find first ub.code no-lock where ub.Code.parent = "EMC" and ub.Code.code = v-value-emrc no-error .
+           if not available (ub.Code) then v-emrc-name = "Нет" .
+           else v-emrc-name = ub.Code.CodeName .       
+           message "При переносе в группу " + string(ub.gds-grp.node-name) + " для товара " + string(loc-goo-doc.gds-name) skip 
+              "будет наследоваться значение новой группы тип ЕМЦ - " + v-emrc-name + ". " skip
+              "При утвердительном ответе товар переносится в новую группу, значение тип ЕМЦ - " + v-emrc-name 
+              view-as alert-box question buttons yes-no-cancel update choice as logical .
+           CASE choice:
+              WHEN TRUE THEN /* Yes */ 
+                 DO:
+                 END.
+              WHEN FALSE THEN /* No */ 
+                 DO:
+                    run gds-attr-write IN THIS-PROCEDURE(
+                       input loc-goo-doc.gds-code
+                       ,INPUT {&attr-emrc-type}
+                       ,INPUT old-value-emrc ) .
+                 END.
+              OTHERWISE 
+              DO: /* Cancel */ 
+                 loc-goo-doc.grp-code = v-old-code .
+              end.
+           END CASE.
+        end.   
+        if v-value-emrc <> v-attr-emrc and v-attr-emrc <> "" then do:
+           define variable ichoice as integer no-undo .
+           
+           find first ub.code no-lock where ub.Code.parent = "EMC" and ub.Code.code = v-attr-emrc no-error .
+           if not available (ub.Code) then v-emrc-name = "Нет" .
+           else v-emrc-name = ub.Code.CodeName .            
+                  run gbl/d-askw.w (
+                     input "Сообщение"
+                     ,input  "На товар установлен атрибут «тип ЕМЦ» - " + v-emrc-name + ". При переносе товара значение может быть изменено."
+                     ,input "|"
+                     ,input "Наследовать|Оставить|Отмена"
+                     ,input "Наследовать атрибут от новой группы|Оставить текущее значение атрибута|Отмена"
+                     ,input 1
+                     ,input 3
+                     ,output ichoice).               
+/*           message "На товар установлен атрибут «тип ЕМЦ»-" + string(v-attr-emrc) + ". При переносе товара значение может быть изменено." skip*/
+/*           skip                                                                                                                               */
+/*           "Вариант действий:" skip                                                                                                           */
+/*           "ДА - Наследовать атрибут от новой группы;" skip                                                                                   */
+/*           "НЕТ - Оставить текущее значение атрибута;" skip                                                                                   */
+/*           "ОТМЕНА - Отменить перенос товара в другую группу." skip                                                                           */
+/*           view-as alert-box question buttons yes-no-cancel update lChoice as logical .                                                       */
+           CASE iChoice:
+              WHEN 1 THEN /* Yes */ 
+                 DO:
+              if v-value-emrc = "" then do:
+              run gds-attr-delete IN THIS-PROCEDURE(
+                 input loc-goo-doc.gds-code
+                 ,INPUT {&attr-emrc-type}
+                 ,output v-del ) .                 
+              end.
+              else do:
+              run gds-attr-write IN THIS-PROCEDURE(
+                 input loc-goo-doc.gds-code
+                 ,INPUT {&attr-emrc-type}
+                 ,INPUT v-value-emrc ) NO-ERROR.
+              end.
+                 END.
+              WHEN 2 THEN /* No */ 
+                 DO:
+              run gds-attr-write IN THIS-PROCEDURE(
+                 input loc-goo-doc.gds-code
+                 ,INPUT {&attr-emrc-type}
+                 ,INPUT v-attr-emrc ) .
+                 END.
+              OTHERWISE DO: /* Cancel */ 
+              loc-goo-doc.grp-code = v-old-code .
+              end.
+           END CASE.
+        end. 
+     end.     
   END .
   { gbl/working.i }
   assign

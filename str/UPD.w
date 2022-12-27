@@ -55,7 +55,15 @@ define variable vss-description as character no-undo init "Список УПД".
 { cmp/r-pril.i new }
 { gbl/userobjs.i }
 { gbl/cur-time.i }
+define variable v-obj-active            as logical     no-undo .
 { gbl/getcntxt.i def }
+{ gbl/getcntxt.i get }
+    { gbl/objat.i
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      "'active=request'"
+      v-obj-active
+}
 { gbl/prn-lib.i }
 { gbl/waitfram.i }
 { cmp/mrk-strf.i }
@@ -76,7 +84,7 @@ define variable v-rid-list              as character   no-undo .
 define variable v-db-list               as character   no-undo .
 define variable v-sertif                as character   no-undo .
 define variable v-sertif_num            as character   no-undo .
-
+define variable Vflaginout as logical no-undo.
 define variable vToken                  as character   no-undo .
 define variable row_utd                 as rowid       no-undo .
 define variable recid_utd               as integer     no-undo .
@@ -85,7 +93,6 @@ define variable v-time                  as integer     no-undo .
 define variable time_old_start          as datetime-tz no-undo.
 define variable v-Token-error           as logical     no-undo initial false.
 define variable time_motp               as datetime-tz no-undo.
-define variable v-obj-active            as logical     no-undo .
 define variable vtime                   as int64       no-undo.
 define variable mflagExit               as logical     no-undo.
 define variable v-flag                  as logical     no-undo .
@@ -225,7 +232,9 @@ DEFINE MENU POPUP-MENU-b-servis
     MENU-ITEM m_nakl         LABEL "Формирование накладной"
     MENU-ITEM m_recheck      LABEL "Повторно проверить"
     MENU-ITEM m_recEDI       LABEL "Получение данных ЭДО"
-    MENU-ITEM m_checknakl    LABEL "Связать с ПН".
+    MENU-ITEM m_checknakl    LABEL "Связать с ПН"
+    MENU-ITEM m_return       LABEL "Реквизиты возврата".
+    MENU-ITEM m_return_send  LABEL "Отправит возврат повторно".
 
 
 /* Definitions of the field level widgets                               */
@@ -243,6 +252,10 @@ DEFINE BUTTON b-del
      
 DEFINE BUTTON b-pack 
     LABEL "Пакет":L 
+    SIZE 10 BY 1.
+
+DEFINE BUTTON b-inout 
+    LABEL "Исходящие":L 
     SIZE 10 BY 1.
 
 DEFINE BUTTON b-exit AUTO-GO 
@@ -427,19 +440,19 @@ DEFINE BROWSE br-utd
     QUERY br-utd NO-LOCK DISPLAY
     mark-string( input recid(X_utd), input v-rid-list) column-label "*" format "X(1)":U
     X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(60)":U width 15
-    X_utd.EDoTypeName COLUMN-LABEL "Тип" FORMAT "X(30)":U width 10
+    X_utd.EDoTypeName COLUMN-LABEL "Тип" FORMAT "X(30)":U width 9
     X_utd.DocumentDate COLUMN-LABEL "Дата док-та" FORMAT "99/99/9999":U
-    X_utd.obj-name COLUMN-LABEL "Объект" FORMAT "X(30)":U width 7
+    X_utd.obj-name COLUMN-LABEL "Объект" FORMAT "X(30)":U width 6
     X_utd.cli-code COLUMN-LABEL "Код! пост-ка" FORMAT ">>>>9999999":U
     X_utd.cli-name COLUMN-LABEL "Название!поставщика" FORMAT "X(30)":U width 19
-    X_utd.total COLUMN-LABEL "Сумма" FORMAT "->>>>>>>>>>99.99":U width 9
+    X_utd.total COLUMN-LABEL "Сумма" FORMAT "->>>>>>>>>>99.99":U width 13
     X_utd.vat COLUMN-LABEL "Сумма! НДС" FORMAT "->>>>>>>>>>99.99":U width 9
-    X_utd.stts COLUMN-LABEL "Статус ТН" FORMAT "X(40)":U width 16
-    X_utd.stts-edi COLUMN-LABEL "Статус EDI" FORMAT "X(40)":U width 16
+    X_utd.stts COLUMN-LABEL "Статус ТН" FORMAT "X(40)":U width 14
+    X_utd.stts-edi COLUMN-LABEL "Статус EDI" FORMAT "X(40)":U width 14
     (if X_utd.AmendmentRequested then "+":U else "") format "X(1)":U LABEL "И"
     X_utd.ModifyTime_ column-label "Время!послед.!измен." format "X(7)":U
-    X_utd.doc-code COLUMN-LABEL "Номер!документа ТН" FORMAT "x(15)":U width 15
-    X_utd.orig-code COLUMN-LABEL "Номер!ориг.документа" FORMAT "x(15)":U WIDTH 15
+    X_utd.doc-code COLUMN-LABEL "Номер!документа ТН" FORMAT "x(15)":U
+    X_utd.orig-code COLUMN-LABEL "Номер!ориг.документа" FORMAT "x(15)":U WIDTH 50
     X_utd.LoadDate COLUMN-LABEL "Дата загр" FORMAT "99/99/9999":U
     X_utd.DocumentExt COLUMN-LABEL "ID документа" FORMAT "x(80)":U WIDTH 50
     substitute ("&1_&2",X_utd.db-num, X_utd.doc-id) @ mdoc-id COLUMN-LABEL "Внутр.!номер" FORMAT "x(12)":U
@@ -458,6 +471,7 @@ DEFINE FRAME d-utd
     b-add AT ROW 1 COL 31.5 WIDGET-ID 266
     b-del AT ROW 1 COL 41.5 WIDGET-ID 280
     b-pack AT ROW 1 COL 51.5 WIDGET-ID 284
+    b-inout AT ROW 1 COL 71.5 WIDGET-ID 484
     B-refresh AT ROW 1 COL 106 WIDGET-ID 286
     b-servis AT ROW 1 COL 116 WIDGET-ID 288
     b-print AT ROW 1 COL 126.13 WIDGET-ID 62
@@ -1202,6 +1216,7 @@ ON CHOOSE OF B-write-cancel IN FRAME d-utd /* Отказать в подписи */
                     run SendResponse( X_utd.db-num, X_utd.doc-id, no, no) no-error.        
                     if  error-status:error then 
                     do: 
+                        
                         return return-value .
                     end.
                 end.  
@@ -1217,6 +1232,8 @@ ON CHOOSE OF B-write-cancel IN FRAME d-utd /* Отказать в подписи */
                     run SendResponse( X_utd.db-num, X_utd.doc-id, no, no) no-error.        
                     if  error-status:error then 
                     do: 
+                        message return-value
+                        view-as alert-box.
                         return return-value .
                     end.
                     run init-id (X_utd.doc-id, X_utd.db-num).  
@@ -1284,6 +1301,8 @@ ON CHOOSE OF B-write-sertif IN FRAME d-utd /* Подписать */
                        run SendResponse( X_utd.db-num, X_utd.doc-id, yes, no) no-error.        
                        if  error-status:error then 
                        do: 
+                          message return-value
+                        view-as alert-box.
                            return return-value .
                        end.
                        run init-id (X_utd.doc-id, X_utd.db-num).  
@@ -1378,7 +1397,7 @@ ON CHOOSE OF bt-not-sel-all IN FRAME d-utd /* + */
                 num-entries( v-rid-list ) @ mark-num
                 with frame {&frame-name}.
         end.
-        v-rid-list = "" .
+/*        v-rid-list = "" .*/
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1477,9 +1496,44 @@ ON CHOOSE OF bt-sel-obj IN FRAME d-utd /* ... */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-inout
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-inout d-utd
+ON CHOOSE OF b-inout IN FRAME d-utd /* Аннуляция */
+DO:
+   Vflaginout = not Vflaginout.
+   b-inout:label = if Vflaginout then "Входящие" else "Исходящие" .
+   run init-sort .
+   {&OPEN-QUERY-br-utd}
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME menu-item m_return_send
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL  menu-item m_return_send
+ON CHOOSE OF menu-item m_return_send /* Возрат */
+DO:
+   define variable vsend as logical no-undo.
+   vsend = not logical(getattrutdex (X_utd.db-num,X_utd.doc-id,"returnSend","no")).
+   if not vsend
+   then
+      message "Документ был отправлен рание, отправить повторно?"
+      view-as alert-box question buttons yes-no update vsend.
+   if vsend
+   then 
+      run bge/sendutd.p(parparentproc,
+                        v-sertif,
+                        X_utd.db-num,
+                        X_utd.doc-id).
+            
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+            
 &Scoped-define SELF-NAME b-pack
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-pack d-utd
-ON CHOOSE OF b-pack IN FRAME d-utd /* Аннуляция */
+ON CHOOSE OF b-pack IN FRAME d-utd /* пакет */
     DO:
    
         define variable v-rid-list as character no-undo.
@@ -1580,6 +1634,31 @@ ON CHOOSE OF b_anul IN FRAME d-utd /* Аннуляция */
         end.
         v-rid-list = "" .
     END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_akt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_akt POPUP-MENU-b-print
+ON CHOOSE OF menu-item m_return /* Реквизиты возврата */
+DO:
+   define variable row_utd as rowid no-undo.
+   if available (X_utd) 
+   then do with FRAME d-utd:
+      define variable mMode as character  no-undo.
+      mMode = if     X_utd.edoctype = EdocType:Returns:KeyIntDB
+                 and X_utd.sts      = ObjSrv:Env:Utd:Sts:th:RequireFilling:KeyIntDB  
+              then {&update}
+              else {&lookup}.
+      run str/upd_org.w (parparentproc, mDiadocConnection, X_utd.db-num, X_utd.doc-id,{&update}) .
+      row_utd = rowid(x_utd).
+      run init-id (X_utd.doc-id, X_utd.db-num).  
+      br-utd:refresh () no-error.
+      reposition br-utd to rowid row_utd no-error .
+                
+              
+    end.  
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -2171,17 +2250,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   &line-num= 9
 }
 
-    { gbl/getcntxt.i get }
+    
     { gbl/ed_date.i f-date-from }
     { gbl/ed_date.i f-date-to }
 
-
-    { gbl/objat.i
-      v-cntxt-obj-type
-      v-cntxt-obj-code
-      "'active=request'"
-      v-obj-active
-}
+    
 
     { gbl/chk-actg.i
   v-cntxt-db-num
@@ -2357,9 +2430,11 @@ PROCEDURE enable_BUTTON :
             B-write-cancel
             B-write-sertif
             with frame {&frame-name} .
+        menu-item m_return_send:sensitive in menu POPUP-MENU-b-servis = varlog and X_utd.EDocType eq ObjSrv:Env:Utd:EDocType:returns:KeyIntDB .
     end. 
     else 
     do:
+       menu-item m_return_send:sensitive in menu POPUP-MENU-b-servis = no.
         if AVAILABLE (X_utd) and (X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:AutoRejected:KeyIntDB or X_utd.sts-edi = ObjSrv:Env:Utd:Sts:EDI:SignatureNotAccepted:KeyIntDB) then 
         do:
             enable
@@ -2443,6 +2518,7 @@ PROCEDURE enable_UI :
     if p-mode = "" then 
     do:
         ENABLE
+            b-inout
             br-utd
             b-pack
             b-exit
@@ -2468,6 +2544,7 @@ PROCEDURE enable_UI :
             B-LK_RECEIPT
             WITH FRAME {&frame-name}.
         display
+            b-inout
             B-write-Token
             b_anul
             B-write-cancel
@@ -2490,6 +2567,7 @@ PROCEDURE enable_UI :
     if p-mode = {&select} then 
     do:
         ENABLE
+            b-inout
             b-mark
             bt-not-sel-all
             b-sel
@@ -2508,6 +2586,7 @@ PROCEDURE enable_UI :
             f-DocumentNumber
             WITH FRAME {&frame-name}.
         display     F-date-from
+            b-inout
             F-date-to
             with frame {&frame-name} .
         disable
@@ -2659,14 +2738,29 @@ PROCEDURE init-sort :
     define variable vqry   as character no-undo.
     create query mQuery.
     mQuery:set-buffers(buffer buf_utd:HANDLE).
-  
+    define variable vinout as character no-undo.
+    
     if       i-Pack ne "" 
         and i-pack ne ?
-        then
-     vqry = substitute("FOR EACH buf_utd where buf_utd.PackageId eq '&1' no-lock" ,  i-pack).
-     
-    else
-        vqry = substitute("FOR EACH buf_utd where buf_utd.host-code = &1 and buf_utd.DocumentDate >= &2 and buf_utd.DocumentDate <= &3 no-lock" ,  v-cntxt-host-code-obj,f-date-to,f-date-from).
+    then do:
+       if not Vflaginout
+       then
+          vinout = " (buf_utd.Direction eq 'inbound' or buf_utd.Direction eq '') ".
+       else
+          vinout = " buf_utd.Direction ne 'inbound'".
+    
+        vqry = substitute("FOR EACH buf_utd where buf_utd.PackageId eq '&1' and &2 no-lock" ,  i-pack,vinout).
+    
+    end. 
+    else do:
+       if not Vflaginout
+       then
+          vinout = substitute (" buf_utd.host-code = &1 and (buf_utd.Direction eq 'inbound'  or buf_utd.Direction eq '') ",  v-cntxt-host-code-obj).
+       else
+          vinout = " buf_utd.Direction ne 'inbound' and buf_utd.Direction ne '' " .
+    
+        vqry = substitute("FOR EACH buf_utd where &1 and buf_utd.DocumentDate >= &2 and buf_utd.DocumentDate <= &3 no-lock" , vinout,f-date-to,f-date-from).
+    end.
     mQuery:query-prepare(vqry).
     mQuery:query-open ().
     mQuery:get-first ().

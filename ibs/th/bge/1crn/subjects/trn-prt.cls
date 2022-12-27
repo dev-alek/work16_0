@@ -21,16 +21,39 @@ using Progress.Lang.*.
 class ibs.th.bge.1crn.subjects.trn-prt inherits ibs.th.bge.1crn.subjects.asubject: 
 
   define property gd-line-num as character no-undo
+    get.
+    private set.
+    
+  define property prt-id as character no-undo 
     get. 
     private set.
-  define property prt-id as character no-undo 
+  define property in-doc-id as character no-undo 
+    get. 
+    private set.
+  define property edoc-id as character no-undo 
     get. 
     private set.
   define property vad-guid as character no-undo 
     get. 
     private set.
-  define property qnty as decimal no-undo 
+  define property qnty-ttn as decimal no-undo 
     get. 
+    private set.
+  define property qnty-fact as decimal no-undo 
+    get. 
+    private set.
+  define property sum as decimal no-undo 
+    get. 
+    private set.
+  define property sum-nds as decimal no-undo 
+    get. 
+    private set.
+  define property nds-code as decimal no-undo 
+    get. 
+    private set.
+    
+  define property qnty as decimal no-undo
+    get.
     private set.
     
   define override property InitTag as character no-undo init "prt"
@@ -41,12 +64,35 @@ class ibs.th.bge.1crn.subjects.trn-prt inherits ibs.th.bge.1crn.subjects.asubjec
       when "gd-line-num" then do:
         assign gd-line-num = inValue.
       end.
+      
       when "prt-id" then do:
         assign prt-id = inValue.
+      end.
+      when "in-doc-id" then do:
+        assign in-doc-id = inValue.
+      end.
+      when "edoc-id" then do:
+        assign edoc-id = inValue.
       end.
       when "vad-guid" then do:
         assign vad-guid = inValue.
       end.
+      when "qnty-ttn" then do:
+        assign qnty-ttn = decimal (inValue) .
+      end.
+      when "qnty-fact" then do:
+        assign qnty-fact = decimal (inValue).
+      end.
+      when "sum" then do:
+        assign sum = decimal (inValue).
+      end.
+      when "sum-nds" then do:
+        assign sum-nds = decimal (inValue).
+      end.
+      when "nds-code" then do:
+        assign nds-code = decimal (inValue).
+      end.
+      
       when "qnty" then do:
         assign qnty = decimal (inValue) .
       end.
@@ -58,9 +104,11 @@ class ibs.th.bge.1crn.subjects.trn-prt inherits ibs.th.bge.1crn.subjects.asubjec
     def var v-str as char no-undo.
     
     assign
-      v-str = "gd-line-num" when gd-line-num = ?
-      v-str = v-str + ",prt-id" when prt-id = ?
-      v-str = v-str + ",qnty" when qnty = ?
+/*      v-str = "gd-line-num" when gd-line-num = ?*/
+/*      v-str = v-str + ",prt-id" when prt-id = ?*/
+      v-str = v-str + ",qnty-ttn" when qnty-fact = ?
+      v-str = v-str + ",sum" when sum = ?
+/*      v-str = v-str + ",qnty" when qnty = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''
@@ -72,9 +120,16 @@ class ibs.th.bge.1crn.subjects.trn-prt inherits ibs.th.bge.1crn.subjects.asubjec
   method override protected void ClearSub():
     assign 
       gd-line-num  = ?
-      prt-id   = ?
-      qnty = ?
+      prt-id    = ?
+      in-doc-id = ?
+      edoc-id   = ?
+      qnty      = ?
       vad-guid  = ?
+      qnty-ttn  = ?
+      qnty-fact = ?
+      sum       = ?
+      sum-nds   = ? 
+      nds-code  = ?
     .
   end.
 

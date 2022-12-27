@@ -38,6 +38,8 @@ define variable ptrlprop-calc-free-vol as logical no-undo init false.
 define variable ptrlprop-trn-reas-sug as logical no-undo init true.
 define variable ptrlprop-rvd-own-nb as logical no-undo init false.
 define variable ptrlprop-qr-scan-time as integer no-undo init 5000 .
+define variable ptrlprop-block-nozzle as logical no-undo init false.
+define variable ptrlprop-timeout-block-nozzle as integer no-undo init 5 .
 
 procedure get-ptrl-prop :
   define input  parameter p-obj-type as character no-undo .
@@ -166,6 +168,20 @@ procedure get-ptrl-prop :
             .
           end.
         end.
+        when {&attr-petrol_block-nozzle} then do:
+          if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-logical} then do:
+            assign
+              ptrlprop-block-nozzle = thbjattr_thbj-attr.property-value-logical
+            .
+          end.
+        end.
+        when {&attr-petrol_timeout-block-nozzle} then do:
+          if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-integer} then do:
+            assign
+              ptrlprop-timeout-block-nozzle = thbjattr_thbj-attr.property-value-integer
+            .
+          end.
+        end.        
         when {&attr-petrol_Delta-mass-horiz} then do:
           if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-character} then do:
             assign

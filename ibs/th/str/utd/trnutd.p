@@ -63,6 +63,7 @@ define variable vss-description as character no-undo init "Импорт накладных из в
 { str/trdcalib.i }
 { ref/gds-attr.i }
 { utl/gtin.i }
+{ str/utd-attr.i}
 
 { gbl/objsrv.i }
 
@@ -890,13 +891,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         if not is-egais
         then do:
           assign
-            tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + (temp_doc-line.cli-qnty * (if avail buf_bar-code then buf_bar-code.cli-base-rate else buf_goods.cli-base-rate) ) 
-            tt2-doc-line.price-cli      = (tt2-doc-line.price-cli * tt2-doc-line.doc-qnty
-                                        + (temp_doc-line.price-cli * temp_doc-line.doc-qnty) / (if avail buf_bar-code then buf_bar-code.cli-base-rate else buf_goods.cli-base-rate) ) 
-                                        / (tt2-doc-line.doc-qnty + temp_doc-line.doc-qnty)
+            tt2-doc-line.price-cli      = (tt2-doc-line.price-cli * tt2-doc-line.cli-qnty + temp_doc-line.price-cli * temp_doc-line.cli-qnty) 
+                                        / (tt2-doc-line.cli-qnty + temp_doc-line.cli-qnty)
+            tt2-doc-line.cli-qnty       = tt2-doc-line.cli-qnty + temp_doc-line.cli-qnty
             tt2-doc-line.doc-qnty       = tt2-doc-line.doc-qnty + temp_doc-line.doc-qnty
             tt2-doc-line.fact-qnty      = tt2-doc-line.fact-qnty + temp_doc-line.fact-qnty
-            tt2-doc-line.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale)
+            tt2-doc-line.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / (if avail buf_bar-code then buf_bar-code.cli-base-rate else buf_goods.cli-base-rate)
             tt2-doc-line.price-base     = tt2-doc-line.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
   /*            tt2-doc-line.price-cli      = temp_doc-line.price-cli
               tt2-doc-line.price-rubl     = tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale
@@ -1002,8 +1002,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             tt-parts.in-code        = new_trn-doc.doc-code
             tt-parts.out-code       = new_trn-doc.doc-code
             tt-parts.cli-base-rate  = tt2-doc-line.cli-base-rate
-            tt-parts.price-rubl     = (tt2-doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / tt-parts.cli-base-rate
-            tt-parts.price-cli      = tt-parts.price-rubl          
+            tt-parts.price-cli      = temp_doc-line.price-cli
+            tt-parts.price-rubl     = (temp_doc-line.price-cli  * new_trn-doc.exch-rate / new_trn-doc.exch-scale) / tt-parts.cli-base-rate
             tt-parts.price-base     = tt-parts.price-rubl / new_trn-doc.base-rate * new_trn-doc.base-scale
             tt-parts.qnty           = vGtinDocQnty
             tt-parts.obj-type       = new_trn-doc.obj-type
@@ -1068,13 +1068,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             and ub.utd-marking-lines.gds-code = temp_doc-line.gds-code
             and ub.utd-marking-lines.LineNum = temp_doc-line.line-num
             :
-
-/*              find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.*/
-/*              if not available (ub.marking)                                                                                                                               */
-/*              then next fe1_.                                                                                                                                             */
               
               if getGtinByDM(ub.utd-marking-lines.mark) <> vGtin
               then next fe1_ .
+              
+              if logical (getAttrUtdLinesEx(ub.utd-marking-lines.db-num,ub.utd-marking-lines.doc-id,ub.utd-marking-lines.LineNum,"MarkUtdLine","no"))
+              then do :
+                find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB no-error.
+                if not available (ub.marking)
+                then next fe1_.
+              end .
               
               create ub.marking-lines.
               assign
@@ -1156,7 +1159,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           new_trn-doc.contract-code = ub.utd.contract-code.
           new_trn-doc.host-code = ub.utd.host-code.
           
-          
           run gds-attr-value (
               input temp_doc-line.gds-code,
               input {&attr-mark-type},
@@ -1165,6 +1167,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               ).
 
           if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)
+          or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsEDOForType(v-marking-type)
           then do:
             fe1_:
             for each ub.utd-marking-lines where 
@@ -1271,12 +1274,14 @@ end.
                        tt-parts.prod-type = buf_goods.prod-type  and
                        tt-parts.prod-code = buf_goods.prod-code
                        no-error .
+            define variable v-price-doc as decimal .
+            v-price-doc = tt-parts.price-cli / tt-parts.cli-base-rate .
    
             { str/ckcntspc.i
                tt-parts.host-code
                tt-parts.contract-code
                buf_goods.gds-code
-               tt-parts.price-cli
+               v-price-doc
                tt-parts.VAT-type
                tt-parts.VAT-pc
                no-error
@@ -1358,6 +1363,9 @@ end.
                 new_parts.qnty = tt-parts.qnty
                 new_parts.cli-qnty = tt-parts.cli-qnty
                 new_parts.PS = tt-parts.PS
+                new_parts.price-cli = tt-parts.price-cli
+                new_parts.price-rubl = tt-parts.price-rubl
+                new_parts.price-base = tt-parts.price-base
               .
             end .
             else

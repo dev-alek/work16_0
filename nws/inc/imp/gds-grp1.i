@@ -42,9 +42,10 @@ define variable v-obj-code as integer no-undo .
     end.
     if not compare-log then do:
       buffer-copy wt-gds-grp-obj-attr TO tb-gds-grp-obj-attr.
-      if tb-gds-grp-obj-attr.attr-code = {&ggoattr-ban-sales-via-cd} and
-         tb-gds-grp-obj-attr.attr-value = "yes" then
-      do:
+      if   (    tb-gds-grp-obj-attr.attr-code  = {&ggoattr-ban-sales-via-cd} 
+            and tb-gds-grp-obj-attr.attr-value = "yes")
+         or tb-gds-grp-obj-attr.attr-code = {&ggoattr-emrc-type} 
+      then do:
          for each ub.goods no-lock where ub.goods.grp-code = tb-gds-grp-obj-attr.node-code:
              run fill-g-list in  p-imp-handle  ( input ub.goods.gds-code, input tb-gds-grp-obj-attr.obj-type, input tb-gds-grp-obj-attr.obj-code).
          end.

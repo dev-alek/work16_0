@@ -1,10 +1,10 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -59,6 +59,8 @@ define new shared variable sort-gr     as logical no-undo .
 define new shared variable sort-name   as logical no-undo .
 define new shared variable CostPrice   as logical no-undo .
 define new shared variable PrintScale  as logical no-undo .
+define new shared variable PrintParts  as logical no-undo .
+
 define variable v-par-value         as character    no-undo.
 define variable v-par-type          as character    no-undo.
 define variable in-docprvalue       as character    no-undo.
@@ -71,7 +73,7 @@ define variable g#log           as logical      no-undo.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -86,8 +88,8 @@ define variable g#log           as logical      no-undo.
 &Scoped-define INTERNAL-TABLES Tmp#List
 
 /* Definitions for BROWSE br-table                                      */
-&Scoped-define FIELDS-IN-QUERY-br-table Tmp#List.last-use Tmp#List.blank-name Tmp#List.type-val
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-table
+&Scoped-define FIELDS-IN-QUERY-br-table Tmp#List.last-use Tmp#List.blank-name Tmp#List.type-val   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-table   
 &Scoped-define SELF-NAME br-table
 &Scoped-define OPEN-QUERY-br-table /* OPEN QUERY {&SELF-NAME} FOR EACH Tmp#List no-lock . */ run local-open-query in this-procedure .
 &Scoped-define TABLES-IN-QUERY-br-table Tmp#List
@@ -100,8 +102,8 @@ define variable g#log           as logical      no-undo.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-chg b-print-doc b-help i-print ~
-br-table fi-default-printer
-&Scoped-Define DISPLAYED-OBJECTS fi-default-printer
+br-table fi-default-printer 
+&Scoped-Define DISPLAYED-OBJECTS fi-default-printer 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -116,48 +118,48 @@ br-table fi-default-printer
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
-     SIZE 10 BY 1.08.
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
+     SIZE 10 BY 1.1.
 
-DEFINE BUTTON b-deselect
-     LABEL "&Снять *"
-     SIZE 10 BY 1.08.
+DEFINE BUTTON b-deselect 
+     LABEL "&Снять *" 
+     SIZE 10 BY 1.1.
 
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Выход"
-     SIZE 10 BY 1.08
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Выход" 
+     SIZE 10 BY 1.1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "Помощ&ь"
-     SIZE 3.5 BY 1
+DEFINE BUTTON b-help 
+     LABEL "Помощ&ь" 
+     SIZE 3.6 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-print-doc
-     LABEL ".   Пе&чать":L
-     SIZE 11.75 BY 1.08
+DEFINE BUTTON b-print-doc 
+     LABEL ".   Пе&чать":L 
+     SIZE 11.8 BY 1.1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-sel
-     LABEL "*"
-     SIZE 3 BY 1.08.
+DEFINE BUTTON b-sel 
+     LABEL "*" 
+     SIZE 3 BY 1.1.
 
-DEFINE BUTTON i-print
+DEFINE BUTTON i-print 
      IMAGE-UP FILE "cmp/b-print.bmp":U
      IMAGE-DOWN FILE "cmp/b-print.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/b-print.bmp":U
-     LABEL ""
-     SIZE 4 BY .96.
+     LABEL "" 
+     SIZE 4 BY .95.
 
-DEFINE VARIABLE fi-default-printer AS CHARACTER FORMAT "X(256)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-default-printer AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
      SIZE 97 BY .67
      FGCOLOR 4  NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY br-table FOR
+DEFINE QUERY br-table FOR 
       Tmp#List SCROLLING.
 &ANALYZE-RESUME
 
@@ -170,24 +172,24 @@ DEFINE BROWSE br-table
     Tmp#List.type-val       column-label "в ..."    format "X(5)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 97.88 BY 20.25 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 97.8 BY 20.24 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     b-exit AT ROW 1 COL 1.63
-     b-sel AT ROW 1 COL 11.63
-     b-deselect AT ROW 1 COL 14.63
-     b-chg AT ROW 1 COL 24.75
-     b-print-doc AT ROW 1 COL 34.75
+     b-exit AT ROW 1 COL 1.6
+     b-sel AT ROW 1 COL 11.6
+     b-deselect AT ROW 1 COL 14.6
+     b-chg AT ROW 1 COL 24.8
+     b-print-doc AT ROW 1 COL 34.8
      b-help AT ROW 1 COL 96
-     i-print AT ROW 1.04 COL 35 WIDGET-ID 2 NO-TAB-STOP
-     br-table AT ROW 2.25 COL 1.63
-     fi-default-printer AT ROW 22.75 COL 1.5 NO-LABEL
-     SPACE(1.37) SKIP(0.20)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     i-print AT ROW 1.05 COL 35 WIDGET-ID 2 NO-TAB-STOP 
+     br-table AT ROW 2.24 COL 1.6
+     fi-default-printer AT ROW 22.76 COL 1.6 NO-LABEL
+     SPACE(1.27) SKIP(0.19)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Список печатных форм".
 
 
@@ -208,7 +210,7 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-table i-print Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
@@ -218,7 +220,7 @@ ASSIGN
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN fi-default-printer IN FRAME Dialog-Frame
    ALIGN-L                                                              */
-ASSIGN
+ASSIGN 
        fi-default-printer:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -238,7 +240,7 @@ run local-open-query in this-procedure .
 */  /* BROWSE br-table */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -413,6 +415,8 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define BROWSE-NAME br-table
+&Scoped-define SELF-NAME br-table
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
 ON 1 OF br-table IN FRAME Dialog-Frame
 DO:
@@ -431,6 +435,7 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-table Dialog-Frame
 ON MOUSE-SELECT-DBLCLICK OF br-table IN FRAME Dialog-Frame
@@ -527,7 +532,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -583,7 +588,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE create-menu-items1 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE create-menu-items1 Dialog-Frame 
 PROCEDURE create-menu-items1 :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -652,12 +657,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY fi-default-printer
+  DISPLAY fi-default-printer 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-chg b-print-doc b-help i-print br-table fi-default-printer
+  ENABLE b-exit b-chg b-print-doc b-help i-print br-table fi-default-printer 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -666,7 +671,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-call-point Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-call-point Dialog-Frame 
 PROCEDURE get-call-point :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -713,7 +718,7 @@ END PROCEDURE. /* get-call-point */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-handle-all-docs Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-handle-all-docs Dialog-Frame 
 PROCEDURE get-handle-all-docs :
 /* -----------------------------------------------------------
   Purpose: Возвращает хендл alldocs
@@ -727,7 +732,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-saved-character Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-saved-character Dialog-Frame 
 PROCEDURE get-saved-character :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -770,7 +775,7 @@ END PROCEDURE. /* get-saved-character */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-saved-logical Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-saved-logical Dialog-Frame 
 PROCEDURE get-saved-logical :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -819,7 +824,7 @@ END PROCEDURE. /* get-saved-logical */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame 
 PROCEDURE init-fields :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -950,7 +955,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-open-query Dialog-Frame 
 PROCEDURE local-open-query :
 /*------------------------------------------------------------------------------
   Purpose:     Override standard ADM method
@@ -966,7 +971,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE print-docs Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE print-docs Dialog-Frame 
 PROCEDURE print-docs :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1181,7 +1186,7 @@ END PROCEDURE. /* print-docs */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-browse Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-browse Dialog-Frame 
 PROCEDURE reposition-browse :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1217,7 +1222,7 @@ END PROCEDURE. /* reposition-browse */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-to-recid Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-to-recid Dialog-Frame 
 PROCEDURE reposition-to-recid :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1243,7 +1248,7 @@ END PROCEDURE. /* reposition-to-recid */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-form-parameters Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-form-parameters Dialog-Frame 
 PROCEDURE save-form-parameters :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1300,7 +1305,7 @@ END PROCEDURE. /* save-form-parameters */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-or-deselect-item Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-or-deselect-item Dialog-Frame 
 PROCEDURE select-or-deselect-item :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1334,7 +1339,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE test-temp-tables Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE test-temp-tables Dialog-Frame 
 PROCEDURE test-temp-tables :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1383,7 +1388,7 @@ END PROCEDURE. /* test-temp-tables */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-disable-all Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-disable-all Dialog-Frame 
 PROCEDURE ui-disable-all :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1406,7 +1411,7 @@ END PROCEDURE. /* ui-disable-all */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-enable Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-enable Dialog-Frame 
 PROCEDURE ui-enable :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1429,3 +1434,4 @@ END PROCEDURE. /* ui-enable */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

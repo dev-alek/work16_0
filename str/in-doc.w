@@ -277,6 +277,7 @@ define new shared variable CostPrice    as logical no-undo.
 define new shared variable sort-name    as logical no-undo.
 define new shared variable sort-gr      as logical no-undo.
 define new shared variable print-graft  as logical no-undo.
+define new shared variable PrintParts   as logical no-undo .
 
 function get-name returns character
 (buffer buf_doc-line for ub.doc-line,
@@ -4257,6 +4258,9 @@ end.
 {&create-record}
 &scop attr-code trdcattr-shipper
 {&create-record}
+&scop attr-code trdcattr-othermoves
+{&create-record}
+
 if v-is-pharm = "yes":U then do:
   &scop attr-code trdcattr-ser_on_pack
   {&create-record}
@@ -4541,7 +4545,8 @@ do while varlns-cnt <= num-entries (varnotes):
           next.
       end.
   end .
-   if EDOParSec:GetIsArticForType(varvalue) 
+   if  EDOParSec:IsEdo
+   and (EDOParSec:GetIsArticForType(varvalue) or EDOParSec:GetIsEdoForType(varvalue))
   then do :
       if  t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then 
       do:
@@ -5144,10 +5149,13 @@ define variable varexist                  as logical   no-undo.
 {&create-record}
 &scop attr-code trdcattr-shipper
 {&create-record}
+&scop attr-code trdcattr-othermoves
+{&create-record}
 if v-is-pharm = "yes":U then do:
   &scop attr-code trdcattr-ser_on_pack
   {&create-record}
 end.
+
 
 end.
 

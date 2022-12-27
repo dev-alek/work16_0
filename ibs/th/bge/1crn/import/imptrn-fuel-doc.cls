@@ -97,7 +97,7 @@ class ibs.th.bge.1crn.import.imptrn-fuel-doc implements ibs.th.bge.1crn.import.i
       .
     end.
     
-    adapObj:SetTempTable(table TempTrnDoc, table TempDocLine, table TempDocMark, "").
+    adapObj:SetTempTable(table TempTrnDoc, table TempDocLine, table TempDocPart, table TempDocMark, "").
     adapObj:WriteDB(output glog).
     
     

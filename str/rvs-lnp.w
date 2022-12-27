@@ -593,84 +593,84 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   create tt-rvs-line-pump.
   buffer-copy ub.rvs-line-pump to tt-rvs-line-pump.
-
+  release ub.rvs-line-pump.
   find first bf_rvs-doc where bf_rvs-doc.rvs-code = tt-rvs-line-pump.rvs-code.
   RUN enable_UI.
   if p-mode <> {&update} then do:
      disable {&list-2} with frame {&frame-name}.
   end.
-  else do:
-      case bf_rvs-doc.rvs-type
-      :
-        when {&rvs-before-doc}
-        or when {&rvs-after-doc}
-        then do:
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-on-doc_upd-revision':U
-            {&cntxt-object}
-            bf_rvs-doc.host-code
-            bf_rvs-doc.obj-type
-            bf_rvs-doc.obj-code
-            0
-            0
-            0
-            false
-            g-log
-          }
-        end.
-        when {&rvs-shift}
-        then do:
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-shift_upd-revision':U
-            {&cntxt-object}
-            bf_rvs-doc.host-code
-            bf_rvs-doc.obj-type
-            bf_rvs-doc.obj-code
-            0
-            0
-            0
-            false
-            g-log
-          }
-        end.
-        when {&rvs-control}
-        then do:
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-control_upd-revision':U
-            {&cntxt-object}
-            bf_rvs-doc.host-code
-            bf_rvs-doc.obj-type
-            bf_rvs-doc.obj-code
-            0
-            0
-            0
-            false
-            g-log
-          }
-        end.
-        otherwise do:
-          message
-            vss-workfile vss-revision vss-description skip
-            "Неизвестный тип сверки" skip
-            "Тип документа" bf_rvs-doc.rvs-type skip
-            "Код документа" bf_rvs-doc.rvs-code skip
-            view-as alert-box error .
-          undo, return error return-value .
-        end.
-      end case .
-     if not g-log then do:
-        disable {&list-2} with frame {&frame-name}.
-     end.
-  end.
+/*  else do:                                                */
+/*      case bf_rvs-doc.rvs-type                            */
+/*      :                                                   */
+/*        when {&rvs-before-doc}                            */
+/*        or when {&rvs-after-doc}                          */
+/*        then do:                                          */
+/*          { gbl/chk-actg.i                                */
+/*            v-cntxt-db-num                                */
+/*            v-cntxt-userid                                */
+/*            {&action-head-code-main}                      */
+/*            'actn_rvs-on-doc_upd-revision':U              */
+/*            {&cntxt-object}                               */
+/*            bf_rvs-doc.host-code                          */
+/*            bf_rvs-doc.obj-type                           */
+/*            bf_rvs-doc.obj-code                           */
+/*            0                                             */
+/*            0                                             */
+/*            0                                             */
+/*            false                                         */
+/*            g-log                                         */
+/*          }                                               */
+/*        end.                                              */
+/*        when {&rvs-shift}                                 */
+/*        then do:                                          */
+/*          { gbl/chk-actg.i                                */
+/*            v-cntxt-db-num                                */
+/*            v-cntxt-userid                                */
+/*            {&action-head-code-main}                      */
+/*            'actn_rvs-shift_upd-revision':U               */
+/*            {&cntxt-object}                               */
+/*            bf_rvs-doc.host-code                          */
+/*            bf_rvs-doc.obj-type                           */
+/*            bf_rvs-doc.obj-code                           */
+/*            0                                             */
+/*            0                                             */
+/*            0                                             */
+/*            false                                         */
+/*            g-log                                         */
+/*          }                                               */
+/*        end.                                              */
+/*        when {&rvs-control}                               */
+/*        then do:                                          */
+/*          { gbl/chk-actg.i                                */
+/*            v-cntxt-db-num                                */
+/*            v-cntxt-userid                                */
+/*            {&action-head-code-main}                      */
+/*            'actn_rvs-control_upd-revision':U             */
+/*            {&cntxt-object}                               */
+/*            bf_rvs-doc.host-code                          */
+/*            bf_rvs-doc.obj-type                           */
+/*            bf_rvs-doc.obj-code                           */
+/*            0                                             */
+/*            0                                             */
+/*            0                                             */
+/*            false                                         */
+/*            g-log                                         */
+/*          }                                               */
+/*        end.                                              */
+/*        otherwise do:                                     */
+/*          message                                         */
+/*            vss-workfile vss-revision vss-description skip*/
+/*            "Неизвестный тип сверки" skip                 */
+/*            "Тип документа" bf_rvs-doc.rvs-type skip      */
+/*            "Код документа" bf_rvs-doc.rvs-code skip      */
+/*            view-as alert-box error .                     */
+/*          undo, return error return-value .               */
+/*        end.                                              */
+/*      end case .                                          */
+/*     if not g-log then do:                                */
+/*        disable {&list-2} with frame {&frame-name}.       */
+/*     end.                                                 */
+/*  end.                                                    */
   if p-mode <> {&update} then
     disable b-save with frame {&frame-name}.
    /*Ищем предыдущую инвентаризацию*/

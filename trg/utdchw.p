@@ -35,6 +35,7 @@ if g#db-num = 0 then return.
 { trg/trghistnws.i 
   &nws = yes 
   &nobufhist  = yes
+  &notSendDel = yes
   &fieldmainheadtab  = "db-num doc-id" 
 }
 

@@ -6,7 +6,12 @@
 { cmp/trg-def.i  } 
 { cmp/str-glbl.i } /* &db-name_schema, &hn-delete */
 { gbl/cur-time.i } /* cur-time() */
-{gbl/key-rec.i}
+{ gbl/key-rec.i }
+{ utlcomp/pikey.i }
+&if defined(nobufhist) eq 0
+&then
+define buffer buf_c-{&main-tbl}  for ub.c-{&main-tbl} .
+&endif
 
 define variable v-date      as date      no-undo .
 define variable v-time      as integer   no-undo .
@@ -17,16 +22,6 @@ define variable vuniq-key-rec as character no-undo.
 define variable v-rowid as rowid no-undo.
 define variable v-tbl-name as character no-undo.
 &endif
-
-&if defined(hist) ne 0
-&then
-   &if defined(defbuf-c) eq 0
-   &then
-   &glob defbuf-c = yes
-      define buffer buf_c-{&main-tbl}  for ub.c-{&main-tbl} .
-   &endif
-&endif
-
 &if defined (histheadtbl) ne 0 and defined (buf_head) eq 0
 &then
 &glob buf_head
@@ -50,6 +45,18 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
     /* пишем историю */
     if vFlagSeq
     then do:
+       &if defined ({&main-tbl}_primary_key) ne 0
+       &then
+       &glob modlock exclusive-lock
+       &glob addwhere and buf_c-{&main-tbl}.corr-user-db-num   = g#db-num and buf_c-{&main-tbl}.chip-num = v-Seq
+       if new(new-{&main-tbl}) 
+       then do:
+       {gbl/findtbfortb.i buf_c-{&main-tbl} new-{&main-tbl} {&{&main-tbl}_primary_key} }
+       end.
+       else do:
+       {gbl/findtbfortb.i buf_c-{&main-tbl} old-{&main-tbl} {&{&main-tbl}_primary_key} }
+       end.
+       &else
        run gen-key-rec in this-procedure ( input "{&main-tbl}"
                                           ,input if new(new-{&main-tbl}) 
                                                  then (buffer new-{&main-tbl}:handle)
@@ -68,6 +75,7 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
       then
          find first buf_c-{&main-tbl} where rowid(buf_c-{&main-tbl})           = v-rowid
          exclusive-lock no-error.
+       &endif
     end.
     
     /* в историю копируется запись до изменений; при создании в историю копирются начальные пустые значения */
@@ -83,7 +91,7 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
          buf_c-{&main-tbl}.corr-date          = v-date
          buf_c-{&main-tbl}.corr-time          = v-time
          buf_c-{&main-tbl}.corr-user-db-num   = g#db-num
-         buf_c-{&main-tbl}.corr-user-name     = g#userid
+         buf_c-{&main-tbl}.corr-user-name     = (if g#news then {&nts-user} + " " else "") + g#userid
          buf_c-{&main-tbl}.action             = {&bef-hn-create}
          buf_c-{&main-tbl}.is-del             = false
       .
@@ -104,7 +112,7 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
             buf_c-{&main-tbl}.corr-date          = v-date
             buf_c-{&main-tbl}.corr-time          = v-time
             buf_c-{&main-tbl}.corr-user-db-num   = g#db-num
-            buf_c-{&main-tbl}.corr-user-name     = g#userid
+            buf_c-{&main-tbl}.corr-user-name     = (if g#news then {&nts-user} + " " else "") + g#userid
             buf_c-{&main-tbl}.action             = {&bef-hn-update} when buf_c-{&main-tbl}.action ne {&bef-hn-create}
             buf_c-{&main-tbl}.is-del             = false
          .
@@ -113,7 +121,7 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
   &else
   
     run cur-time in this-procedure (output v-date, output v-time).
-    publish "getNextseq" ("{&seqnamehist}", "{&db-name_schema}", output v-Seq ).
+    publish "getNextseq" ("{&main-tbl}","{&seqnamehist}", "{&db-name_schema}", output v-Seq ).
     if v-Seq = ?
     then
        v-Seq  = next-value ({&seqnamehist}, {&db-name_schema}).
@@ -123,6 +131,13 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
     /* пишем историю */
     if vFlagseq
     then do:
+       &if defined ({&main-tbl}_primary_key) ne 0
+       &then
+       &glob addwhere and buf_c-{&main-tbl}.corr-user-db-num   = g#db-num and buf_c-{&main-tbl}.chip-num = v-Seq 
+       &glob modlock exclusive-lock
+       {gbl/findtbfortb.i buf_c-{&main-tbl} {&main-tbl} {&{&main-tbl}_primary_key} }
+       &else
+       
        run gen-key-rec in this-procedure ( input "{&main-tbl}"
                                           ,input(buffer {&main-tbl}:handle)
                                                 
@@ -140,26 +155,55 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
       then
          find first buf_c-{&main-tbl} where rowid(buf_c-{&main-tbl})           = v-rowid
          exclusive-lock no-error.
+      &endif
     end.   
     if not available buf_c-{&main-tbl}
-    then
+    then do:
        create buf_c-{&main-tbl}.
-    buffer-copy ub.{&main-tbl} to buf_c-{&main-tbl}
-    assign
-      buf_c-{&main-tbl}.chip-num           = v-Seq
-      buf_c-{&main-tbl}.corr-date          = v-date
-      buf_c-{&main-tbl}.corr-time          = v-time
-      buf_c-{&main-tbl}.corr-user-db-num   = g#db-num
-      buf_c-{&main-tbl}.corr-user-name     = g#userid
-      buf_c-{&main-tbl}.action             = {&bef-hn-delete}
-      buf_c-{&main-tbl}.is-del             = true
-    .
+       buffer-copy ub.{&main-tbl} to buf_c-{&main-tbl}
+       assign
+         buf_c-{&main-tbl}.chip-num           = v-Seq
+         buf_c-{&main-tbl}.corr-date          = v-date
+         buf_c-{&main-tbl}.corr-time          = v-time
+         buf_c-{&main-tbl}.corr-user-db-num   = g#db-num
+         buf_c-{&main-tbl}.corr-user-name     = (if g#news then {&nts-user} + " " else "") + g#userid
+         buf_c-{&main-tbl}.action             = {&bef-hn-delete}
+         buf_c-{&main-tbl}.is-del             = true
+       .
+    end.
+    else
+       buf_c-{&main-tbl}.action             = {&bef-hn-delete}.
   &endif
  
   &if defined (histheadtbl) ne 0
   &then
       if vFlagSeq
       then do:
+         &if defined (fieldmainheadtab) ne 0
+         &then
+         &glob addwhere and buf_{&histheadtbl}.corr-user-db-num   = g#db-num and buf_{&histheadtbl}.chip-num = v-Seq
+         &glob modlock exclusive-lock 
+         &if defined(del) eq 0
+         &then
+  
+         if new(new-{&main-tbl}) 
+         then do:
+         {gbl/findtbfortb.i buf_{&histheadtbl} new-{&main-tbl} {&fieldmainheadtab} }
+         end.
+         else do:
+         {gbl/findtbfortb.i buf_{&histheadtbl} old-{&main-tbl} {&fieldmainheadtab} }
+         end.
+         &else
+         {gbl/findtbfortb.i buf_{&histheadtbl} {&main-tbl} {&fieldmainheadtab} }
+         &endif
+         &else
+         if vuniq-key-rec eq ""
+            or vuniq-key-rec eq ?
+         then do:
+            run gen-key-rec in this-procedure ( input "c-{&main-tbl}"
+                                               ,input (buffer buf_c-{&main-tbl}:handle)
+                                               ,output vuniq-key-rec).
+         end.       
          define variable vhn{&histheadtbl} as handle no-undo.
          run gen-hn-keyr-tab(input "{&histheadtbl}"
                             ,input substring("{&histheadtbl}",1,length("{&histheadtbl}") - 5)
@@ -175,6 +219,7 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
             find first buf_{&histheadtbl}  where rowid(buf_{&histheadtbl})           eq vhn{&histheadtbl}:rowid
             exclusive-lock no-error.
          delete object vhn{&histheadtbl} no-error.
+         &endif
       end.
       if not available  buf_{&histheadtbl} 
       then do:
@@ -197,11 +242,14 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
                                          )
          .
       end.
-      else
+      else do:
          if     buf_{&histheadtbl}.subject ne "*"
-            and buf_{&histheadtbl}.subject ne "{&main-tbl}"
          then
             buf_{&histheadtbl}.subject = "*".
+         if buf_{&histheadtbl}.action  ne {&bef-hn-multi}
+         then
+            buf_{&histheadtbl}.action             = {&bef-hn-multi} .
+      end.
   &endif
 &endif
 
@@ -211,6 +259,38 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
   if not ibs.th.gbl.gbl-var:g#news then do :
   &if defined(del) eq 0
   &then
+     &if defined(notSendDel) eq 0
+     &then
+
+       define variable mCompare as logical no-undo.
+       if     available old-{&main-tbl}
+          and not new(new-{&main-tbl}) 
+       then do:
+          buffer-compare new-{&main-tbl}
+                using {&{&main-tbl}_primary_key}
+                to old-{&main-tbl}
+                case-sensitive
+                save result in mCompare .
+          if not mCompare
+          then do:
+             run nws/cmd-del.p
+                 ( input {&table_{&main-tbl}}
+                  ,input (buffer old-{&main-tbl}:handle)
+                  ,input "":U
+                 ) no-error .
+             if error-status :error then do:
+                message
+                   vss-workfile vss-revision vss-description skip
+                   "Невозможно маршрутизировать удаление {&main-tbl} для отправки в новости" skip
+                   error-status :get-message(1) skip
+                   return-value skip
+                   view-as alert-box error .
+                undo , return error return-value .
+             end.
+          end.    
+       end.
+     &endif
+     
      run str/callnews.p
       (input {&table_{&main-tbl}}
       ,input (buffer {&db-name_schema}.new-{&main-tbl}:handle)

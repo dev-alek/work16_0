@@ -155,7 +155,7 @@ define variable v-log as logical no-undo. /* ТН-2356. 2014г. Арн. */
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-OK RECT-8 RECT-9 b-exit b-spec B-transport ~
 b-hist B-Help contract-prn-code contract-date contract-city contract-name T-edi ~
-BUTTON-curr contract-date-beg contract-date-end curr-code COMBO-type-contr ~
+BUTTON-curr contract-date-beg contract-date-end curr-code COMBO-type-contr t-diadoc ~
 b-bank-own b-bank-cli cli-code cli-type BUTTON-cli b-bank-posr posr-code ~
 posr-type BUTTON-posr b-bank-agnt agnt-code agnt-type BUTTON-agnt mngr-code ~
 BUTTON-mngr COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 ~
@@ -166,7 +166,7 @@ b-cel-nazn b-cor-acc-2 contract-code own-code
 contract-city contract-name contract-date-beg contract-date-end curr-code ~
 COMBO-type-contr cli-code cli-type posr-code posr-type agnt-code agnt-type ~
 mngr-code COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 ~
-COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo ~
+COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo T-edi t-diadoc ~
 str-uslov-oplat fin-VAT-pc RADIO-SET-1 b-nal cor-acc an-uchet cel-nazn ~
 cor-acc-2 contract-code curr-name own-code own-name cli-name posr-name ~
 agnt-name mngr-name 
@@ -332,6 +332,15 @@ DEFINE VARIABLE COMBO-usl-opl-2 AS CHARACTER FORMAT "X(256)":U
      LIST-ITEMS "Item 1" 
      DROP-DOWN-LIST
      SIZE 40.25 BY 1 TOOLTIP "Условие генерации счетов-фактур" NO-UNDO.
+     
+DEFINE VARIABLE COMBO-return-type AS integer 
+     LABEL "Схема возврата" 
+     VIEW-AS COMBO-BOX INNER-LINES 3
+     LIST-ITEM-PAIRS "", 0,
+                "Обратная продажа", 23,
+                "Корректировка поступления", 25 
+     DROP-DOWN-LIST
+     SIZE 26.25 BY 0.9 TOOLTIP "Схема возврата поставщику" NO-UNDO.
 
 DEFINE VARIABLE agnt-code AS INTEGER FORMAT ">>>>>>>>>>>9" INITIAL 0 
      VIEW-AS FILL-IN 
@@ -520,6 +529,12 @@ DEFINE VARIABLE T-edi AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 21.5 BY .83 NO-UNDO.
 
+DEFINE VARIABLE T-diadoc AS LOGICAL INITIAL no 
+     LABEL "Поставки через Диадок" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 24.5 BY .83 NO-UNDO.
+
+
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY Dialog-Frame FOR 
@@ -539,6 +554,8 @@ DEFINE FRAME Dialog-Frame
      b-hist AT ROW 1 COL 78
      B-Help AT ROW 1 COL 88
      T-edi AT ROW 1.13 COL 70 WIDGET-ID 12
+     T-diadoc AT ROW 1.7 COL 70 WIDGET-ID 14
+     
      contract-prn-code AT ROW 2.5 COL 2.5 COLON-ALIGNED
      contract-date AT ROW 2.5 COL 39.75 COLON-ALIGNED
      contract-city AT ROW 2.5 COL 58.5 COLON-ALIGNED
@@ -548,6 +565,7 @@ DEFINE FRAME Dialog-Frame
      contract-date-end AT ROW 4.58 COL 27.63 COLON-ALIGNED
      curr-code AT ROW 4.58 COL 83 COLON-ALIGNED
      COMBO-type-contr AT ROW 5.58 COL 12 COLON-ALIGNED
+     COMBO-return-type AT ROW 5.51 COL 70 COLON-ALIGNED
      b-bank-own AT ROW 6.5 COL 85.13
      b-bank-cli AT ROW 7.5 COL 85.13
      cli-code AT ROW 7.63 COL 12 COLON-ALIGNED NO-LABEL
@@ -1072,7 +1090,8 @@ DO:
     assign
       contract-date COMBO-type-contr COMBO-usl-opl srok-opl contract-name contract-prn-code contract-city own-name
       contract-date-beg  contract-date-end  curr-code cli-type cli-code posr-type posr-code  agnt-type
-      agnt-code mngr-code str-uslov-oplat COMBO-auto-pay RADIO-SET-1 COMBO-usl-opl-2 COMBO-auto-pay-2 srok-opl-2 T-edi
+      agnt-code mngr-code str-uslov-oplat COMBO-auto-pay RADIO-SET-1 COMBO-usl-opl-2 COMBO-auto-pay-2 srok-opl-2 T-edi t-diadoc
+      COMBO-return-type
     .
     run create-proc in this-procedure no-error .
     if error-status:error then return no-apply.
@@ -1562,6 +1581,17 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME T-diadoc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-diadoc Dialog-Frame
+ON VALUE-CHANGED OF T-diadoc IN FRAME Dialog-Frame /* Поставки через диадок */
+DO:
+  
+  assign t-diadoc .
+        
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &UNDEFINE SELF-NAME
 
@@ -1676,6 +1706,16 @@ PROCEDURE create-proc :
       message "Срок отсрочки не может быть 0 !" view-as alert-box ERROR.
       return error.
   end.
+  
+  if COMBO-return-type > 0
+  then do :
+    find first trn-reason no-lock where trn-reason.reason-code = COMBO-return-type no-error .
+    if not available trn-reason
+    then do :
+      message "Указанная схема возврата в системе отсутствует. Для выбора данной схемы в договоре необходимо в справочник оснований добавить основание с кодом " string(COMBO-return-type) view-as alert-box ERROR.
+      return error .
+    end .
+  end .
 
   if ref-mode = {&add-def} then do:
     if p-doc-type <>  {&income} and  p-doc-type <> {&expense} then do:
@@ -1930,6 +1970,7 @@ PROCEDURE create-proc :
     b_contract.posr-point-code       = v-posr-point-code
     b_contract.posr-point-db-num     = v-posr-point-db-num
 
+    b_contract.spec-check      = COMBO-return-type
     b_contract.fin-VAT-pc      = fin-VAT-pc
     b_contract.own-bank-name  = ""
     b_contract.own-bik        = ""
@@ -2046,6 +2087,19 @@ PROCEDURE create-proc :
     .
   end.  
   
+  find first buf_contract-attr exclusive-lock where buf_contract-attr.contract-code = b_contract.contract-code
+  and buf_contract-attr.host-code = b_contract.host-code and buf_contract-attr.attr-code = "contract-diadoc" no-error .
+  if available (buf_contract-attr) then buf_contract-attr.attr-value = string(T-diadoc) .
+  else do:
+    create buf_contract-attr .
+    assign
+    buf_contract-attr.host-code = b_contract.host-code
+    buf_contract-attr.contract-code = b_contract.contract-code
+    buf_contract-attr.attr-code = "contract-diadoc"
+    buf_contract-attr.attr-value = string (T-diadoc)
+    .
+  end.
+  
   /* Если производится модификация мастер договора - модифицируем все подчиненные договора  */
   IF ref-mode = {&update} AND Is-MS-Contract-Int (BUFFER b_Contract) = 1
      THEN DO:
@@ -2107,7 +2161,7 @@ PROCEDURE enable_UI :
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY T-edi contract-prn-code contract-date contract-city contract-name 
+  DISPLAY T-edi t-diadoc contract-prn-code contract-date contract-city contract-name 
           contract-date-beg contract-date-end curr-code COMBO-type-contr 
           cli-code cli-type posr-code posr-type agnt-code agnt-type mngr-code 
           COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 
@@ -2116,7 +2170,7 @@ PROCEDURE enable_UI :
           cor-acc-2 contract-code curr-name own-code own-name cli-name posr-name 
           agnt-name mngr-name 
       WITH FRAME Dialog-Frame.
-  ENABLE b-OK b-exit b-spec B-transport b-hist B-Help RECT-8 RECT-9 T-edi 
+  ENABLE b-OK b-exit b-spec B-transport b-hist B-Help RECT-8 RECT-9 T-edi  t-diadoc
          contract-prn-code contract-date contract-city contract-name 
          BUTTON-curr contract-date-beg contract-date-end curr-code 
          COMBO-type-contr b-bank-own b-bank-cli cli-code cli-type BUTTON-cli 
@@ -2257,6 +2311,14 @@ define variable v-is-add as character no-undo .
     COMBO-usl-opl:list-items = '{&bef-contr-pay-nodef},{&bef-contr-buyer-ord},{&bef-contr-buyer-ord-prc},{&bef-contr-buyer-in},{&bef-contr-buyer-in-delay}':U .
     COMBO-usl-opl-2:list-items   = {&contr-chf-nodef} + ","  + {&contr-chf-out} + ","  + {&contr-chf-fo} + ","  + {&contr-chf-pay} .
   end.
+  
+  if p-doc-type = {&income}
+  then do :
+    enable COMBO-return-type WITH FRAME Dialog-Frame.
+  end .
+  else do :
+    hide COMBO-return-type in FRAME Dialog-Frame.
+  end .
 
   case ref-mode :
     when {&add-def} then do:
@@ -2367,6 +2429,8 @@ define variable v-is-add as character no-undo .
       find first b_contract no-lock where recid(b_contract) = ri .
       COMBO-type-contr:screen-value = b_contract.contract-type .
       COMBO-usl-opl:screen-value =  b_contract.usl-opl .
+      COMBO-return-type = b_contract.spec-check .
+      display COMBO-return-type WITH FRAME Dialog-Frame.
 
       if b_contract.gen-factur > 100 then assign COMBO-auto-pay-2:screen-value = "факт" .
       else                                assign COMBO-auto-pay-2:screen-value = "новый" .
@@ -2534,12 +2598,19 @@ assign
         T-edi = logical (buf_contract-attr.attr-value) .
       end.
       display t-edi with frame {&frame-name} .
+      
+      for first buf_contract-attr no-lock where buf_contract-attr.host-code = b_contract.host-code and
+      buf_contract-attr.contract-code = b_contract.contract-code and buf_contract-attr.attr-code = "contract-diadoc":
+        T-diadoc = logical (buf_contract-attr.attr-value) .
+      end.
+      display t-diadoc with frame {&frame-name} .
+      
       if ref-mode = {&lookup} then do:
 
         disable contract-prn-code contract-date contract-city contract-name contract-date-beg contract-date-end  fin-VAT-pc b-nal
           agnt-code agnt-type BUTTON-agnt BUTTON-mngr posr-code posr-type BUTTON-posr  mngr-code  b-cor-acc b-cor-acc-2 b-an-uchet
           b-cel-nazn COMBO-usl-opl COMBO-usl-opl-2 str-uslov-oplat COMBO-auto-pay COMBO-auto-pay-2 RADIO-SET-1 kredit-sum contract-code kredit-limit
-          srok-opl T-edi
+          srok-opl T-edi COMBO-return-type
 
         with frame {&frame-name}.
         b-OK:label in frame {&frame-name} = "&Выход" .

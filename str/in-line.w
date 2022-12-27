@@ -301,6 +301,9 @@ define variable l-repeat-asi                as logical                       no-
 define variable v-is-lgas                   as logical                       no-undo.
 define variable v-is-lgas-corr              as logical                       no-undo.
 define variable v-lgas-gds                  as logical                       no-undo.
+define variable v-tth             as handle    no-undo.
+define variable v-Param-Type      as character no-undo.
+define variable list-pl           as character no-undo.
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -2510,6 +2513,80 @@ on choose of menu-item m-rvs-bf-1 in menu m-rvs-bf
             do:
                 return no-apply .
             end.
+		 end.
+run adm/shattri.p (
+   input "get":U
+   ,input  v-cntxt-obj-type
+   ,input  v-cntxt-obj-code
+   ,input  {&attr-petrol}
+   ,input  {&attr-petrol_block-nozzle} /*p-param-code*/
+   ,output v-value-character
+   ,output v-value-date
+   ,output v-value-decimal
+   ,output v-value-integer
+   ,output v-value-logical
+   ,output v-param-type
+   ,INPUT-OUTPUT table-handle v-tth
+   ) no-error .
+if v-value-logical then 
+do:
+   list-pl = "" .
+   for each tt-doc-pl,
+      each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
+      ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
+      ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
+      ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
+      each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
+      ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
+      ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
+      ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
+      if list-pl = "" then 
+      do:
+         list-pl = 
+            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+            string(ub.pl-pump-nozzle.pump-code)
+            .
+      end.
+      else 
+      do:
+         list-pl = list-pl + ";" +
+            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+            string(ub.pl-pump-nozzle.pump-code)
+            .         
+      end.            
+   end.
+
+   run str/diallog.w ( input parparentproc
+      ,input this-procedure
+      ,input 'str/get-block-nozzle.p':U
+      ,input (v-cntxt-obj-type + {&delim-par} +
+      string(v-cntxt-obj-code) + {&delim-par} +
+      string(0) + {&delim-par} +  /*p-remote */
+      string(0) + {&delim-par} + /*p-shft-close*/
+      {&delim-par} +
+      {&delim-par} +
+      {&delim-par} +
+      substitute("&1,&2"
+      ,"block"
+      ,list-pl))
+      ,input yes
+      ,input ''
+      ,input 'Блокировка пистолетов') .
+   if not error-status:error then 
+   do:
+      if return-value begins "Для кассы" then 
+      do:
+         message return-value
+            view-as alert-box question buttons yes-no update v-ok as logical  .
+         if v-ok then run block-nozzle .
+         else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
+               view-as alert-box.
+      end.
+      else 
+      do:
+         message "Блокировка пистолетов прошла успешно"
+            view-as alert-box.
+      end.   
         end.
         else 
         do:
@@ -2550,6 +2627,8 @@ on choose of menu-item m-rvs-bf-1 in menu m-rvs-bf
     apply "ENTRY":U to b-quit in frame {&frame-name} .
   end.
 end.
+end.
+
 
 on choose of menu-item m-rvs-af-1 in menu m-rvs-af
 do:
@@ -2566,6 +2645,90 @@ do:
   if error-status :error then do:
     return no-apply .
   end.
+run adm/shattri.p (
+   input "get":U
+   ,input  v-cntxt-obj-type
+   ,input  v-cntxt-obj-code
+   ,input  {&attr-petrol}
+   ,input  {&attr-petrol_block-nozzle} /*p-param-code*/
+   ,output v-value-character
+   ,output v-value-date
+   ,output v-value-decimal
+   ,output v-value-integer
+   ,output v-value-logical
+   ,output v-param-type
+   ,INPUT-OUTPUT table-handle v-tth
+   ) no-error .
+
+if v-value-logical then 
+do:
+   list-pl = "" .
+   for each tt-doc-pl,
+      each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
+      ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
+      ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
+      ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
+      each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
+      ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
+      ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
+      ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
+      if list-pl = "" then 
+      do:
+         list-pl = 
+            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+            string(ub.pl-pump-nozzle.pump-code)
+            .
+      end.
+      else 
+      do:
+         list-pl = list-pl + ";" +
+            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+            string(ub.pl-pump-nozzle.pump-code)
+            .         
+      end.            
+   end.
+
+
+   run str/diallog.w ( input parparentproc
+      ,input this-procedure
+      ,input 'str/get-block-nozzle.p':U
+      ,input (v-cntxt-obj-type + {&delim-par} +
+      string(v-cntxt-obj-code) + {&delim-par} +
+      string(0) + {&delim-par} +  /*p-remote */
+      string(0) + {&delim-par} + /*p-shft-close*/
+      {&delim-par} +
+      {&delim-par} +
+      {&delim-par} +
+      substitute("&1,&2"
+      ,"unblock"
+      ,list-pl))
+      ,input yes
+      ,input ''
+      ,input 'Разблокировка выбранных пистолетов') .
+   if not error-status:error then 
+   do:
+      if return-value begins "Для кассы" then 
+      do:
+         message return-value
+            view-as alert-box question buttons yes-no update v-ok as logical  .
+         if v-ok then run unblock-nozzle .
+         else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+               view-as alert-box.
+               
+      end.
+      else 
+      do:
+         message "Разблокировка пистолетов прошла успешно"
+            view-as alert-box.
+      end.   
+
+   end.
+   else 
+   do:
+      return no-apply .   
+   end.
+      
+end.
 
   run display-measure in this-procedure
     no-error .
@@ -2592,7 +2755,31 @@ do:
   if error-status :error then do:
     return no-apply .
   end.
-
+   list-pl = "" .
+   for each tt-doc-pl,
+      each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
+      ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
+      ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
+      ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
+      each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
+      ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
+      ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
+      ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
+      if list-pl = "" then 
+      do:
+         list-pl = 
+            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+            string(ub.pl-pump-nozzle.pump-code)
+            .
+      end.
+      else 
+      do:
+         list-pl = list-pl + ";" +
+            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+            string(ub.pl-pump-nozzle.pump-code)
+            .         
+      end.            
+   end.
 end.
 
 on choose of menu-item m-rvs-af-2 in menu m-rvs-af
@@ -2626,7 +2813,90 @@ do:
   if error-status :error then do:
     return no-apply .
   end.
+  
+   run adm/shattri.p (
+      input "get":U
+      ,input  v-cntxt-obj-type
+      ,input  v-cntxt-obj-code
+      ,input  {&attr-petrol}
+      ,input  {&attr-petrol_block-nozzle} /*p-param-code*/
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-param-type
+      ,INPUT-OUTPUT table-handle v-tth
+      ) no-error .
 
+   if v-value-logical then 
+   do:
+  
+      list-pl = "" .
+      for each tt-doc-pl,
+         each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
+         ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
+         ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
+         ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
+         each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
+         ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
+         ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
+         ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
+         if list-pl = "" then 
+         do:
+            list-pl = 
+               string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+               string(ub.pl-pump-nozzle.pump-code)
+               .
+         end.
+         else 
+         do:
+            list-pl = list-pl + ";" +
+               string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+               string(ub.pl-pump-nozzle.pump-code)
+               .         
+         end.            
+      end.
+
+      run str/diallog.w ( input parparentproc
+         ,input this-procedure
+         ,input 'str/get-block-nozzle.p':U
+         ,input (v-cntxt-obj-type + {&delim-par} +
+         string(v-cntxt-obj-code) + {&delim-par} +
+         string(0) + {&delim-par} +  /*p-remote */
+         string(0) + {&delim-par} + /*p-shft-close*/
+         {&delim-par} +
+         {&delim-par} +
+         {&delim-par} +
+         substitute("&1,&2"
+         ,"block"
+         ,list-pl))
+         ,input yes
+         ,input ''
+         ,input 'Блокировка пистолетов') .
+      if not error-status:error then 
+      do:
+         if return-value begins "Для кассы" then 
+         do:
+            message return-value
+               view-as alert-box question buttons yes-no update v-ok as logical  .
+            if v-ok then run block-nozzle .
+            else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
+                  view-as alert-box.
+               
+         end.
+         else 
+         do:
+            message "Блокировка пистолетов прошла успешно"
+               view-as alert-box.
+         end.   
+
+      end.
+      else 
+      do:
+         return no-apply .   
+      end.
+   end.
   run display-measure in this-procedure
     no-error .
 
@@ -2647,7 +2917,90 @@ do:
   if error-status :error then do:
     return no-apply .
   end.
+  
+   run adm/shattri.p (
+      input "get":U
+      ,input  v-cntxt-obj-type
+      ,input  v-cntxt-obj-code
+      ,input  {&attr-petrol}
+      ,input  {&attr-petrol_block-nozzle} /*p-param-code*/
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-param-type
+      ,INPUT-OUTPUT table-handle v-tth
+      ) no-error .
 
+   if v-value-logical then 
+   do:
+  
+      list-pl = "" .
+      for each tt-doc-pl,
+         each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
+         ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
+         ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
+         ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
+         each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
+         ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
+         ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
+         ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
+         if list-pl = "" then 
+         do:
+            list-pl = 
+               string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+               string(ub.pl-pump-nozzle.pump-code)
+               .
+         end.
+         else 
+         do:
+            list-pl = list-pl + ";" +
+               string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+               string(ub.pl-pump-nozzle.pump-code)
+               .         
+         end.            
+      end.
+
+      run str/diallog.w ( input parparentproc
+         ,input this-procedure
+         ,input 'str/get-block-nozzle.p':U
+         ,input (v-cntxt-obj-type + {&delim-par} +
+         string(v-cntxt-obj-code) + {&delim-par} +
+         string(0) + {&delim-par} +  /*p-remote */
+         string(0) + {&delim-par} + /*p-shft-close*/
+         {&delim-par} +
+         {&delim-par} +
+         {&delim-par} +
+         substitute("&1,&2"
+         ,"unblock"
+         ,list-pl))
+         ,input yes
+         ,input ''
+         ,input 'Разблокировка выбранных пистолетов') .
+      if not error-status:error then 
+      do:
+         if return-value begins "Для кассы" then 
+         do:
+            message return-value
+               view-as alert-box question buttons yes-no update v-ok as logical  .
+            if v-ok then run unblock-nozzle .
+            else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+                  view-as alert-box.
+               
+         end.
+         else 
+         do:
+            message "Разблокировка пистолетов прошла успешно"
+               view-as alert-box.
+         end.   
+
+      end.
+      else 
+      do:
+         return no-apply .   
+      end.
+   end.
   run display-measure in this-procedure
     no-error .
 
@@ -4587,6 +4940,98 @@ procedure check-price:
   end.
 end procedure.
 
+procedure block-nozzle:
+         run str/diallog.w ( input parparentproc
+         ,input this-procedure
+         ,input 'str/get-block-nozzle.p':U
+         ,input (v-cntxt-obj-type + {&delim-par} +
+         string(v-cntxt-obj-code) + {&delim-par} +
+         string(0) + {&delim-par} +  /*p-remote */
+         string(0) + {&delim-par} + /*p-shft-close*/
+         {&delim-par} +
+         {&delim-par} +
+         {&delim-par} +
+         substitute("&1,&2"
+         ,"block"
+         ,list-pl))
+         ,input yes
+         ,input ''
+         ,input 'Блокировка пистолетов') .
+      if not error-status:error then 
+      do:
+         if return-value begins "Для кассы" then 
+         do:
+            message return-value
+               view-as alert-box question buttons yes-no update v-ok as logical  .
+            if v-ok then run block-nozzle .
+            else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
+                  view-as alert-box.
+               
+         end.
+         else 
+         do:
+            message "Блокировка пистолетов прошла успешно"
+               view-as alert-box.
+         end.   
+
+      end.
+      else 
+      do:
+         message return-value
+            view-as alert-box question buttons yes-no update v-ok .
+         if v-ok then run block-nozzle .
+         else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+               view-as alert-box.
+   
+      end.
+end procedure .
+
+procedure unblock-nozzle:
+         run str/diallog.w ( input parparentproc
+         ,input this-procedure
+         ,input 'str/get-block-nozzle.p':U
+         ,input (v-cntxt-obj-type + {&delim-par} +
+         string(v-cntxt-obj-code) + {&delim-par} +
+         string(0) + {&delim-par} +  /*p-remote */
+         string(0) + {&delim-par} + /*p-shft-close*/
+         {&delim-par} +
+         {&delim-par} +
+         {&delim-par} +
+         substitute("&1,&2"
+         ,"unblock"
+         ,list-pl))
+         ,input yes
+         ,input ''
+         ,input 'Разблокировка пистолетов') .
+      if not error-status:error then 
+      do:
+         if return-value begins "Для кассы" then 
+         do:
+            message return-value
+               view-as alert-box question buttons yes-no update v-ok as logical  .
+            if v-ok then run unblock-nozzle .
+            else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+                  view-as alert-box.
+               
+         end.
+         else 
+         do:
+            message "Разблокировка пистолетов прошла успешно"
+               view-as alert-box.
+         end.   
+
+      end.
+      else 
+      do:
+         message return-value
+            view-as alert-box question buttons yes-no update v-ok .
+         if v-ok then run unblock-nozzle .
+         else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+               view-as alert-box.
+   
+      end.
+end procedure .
+   
 procedure delete-doc-line:
 do transaction
    on error   undo , return error

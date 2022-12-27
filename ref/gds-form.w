@@ -99,7 +99,7 @@ define buffer locked_gds-obj-prop-attr for ub.gds-obj-prop-attr.
 define temp-table tt0-gds-add-charges no-undo like ub.gds-add-charges.
 define buffer locked_gds-add-charges for ub.gds-add-charges.
 
-DEFINE TEMP-TABLE tt0-goods-attr NO-UNDO LIKE ub.goods-attr.
+{ ref/g-attr-tt.i}
 define buffer locked_goods-attr for ub.goods-attr.
 define buffer locked_goods for ub.goods.
 define variable v-cli-alc-producer as character no-undo .
@@ -290,8 +290,8 @@ define variable v-create-user-db-num  as integer no-undo .
 /*флаг изменения в атрибутах товара или еще где-то внутри*/
 define variable updated as logical no-undo.
 define buffer buf_fbr-gds-grp for ub.fbr-gds-grp.
-define variable v-err-mess as character no-undo .
 define variable v-deleted as logical no-undo .
+define variable v-err-mess as character no-undo .
 /*Если это таможенный объект следует считать с диска справочник кодов ТНВЭД*/
 { gbl/conf-rd.i
  "'is-custm'"
@@ -1324,11 +1324,13 @@ DO:
 define variable prod-bc-added as logical init yes.
 assign
 v-next-prev = ?.
+
+ 
 if can-do( {&update_add-def}, mode ) then  do:    /* Вых */
   assign
   one-good = yes
   saved-name2 = saved-name.
-      if temp-goods.alc-prod = yes then 
+if temp-goods.alc-prod = yes then 
 do:
   if temp-goods.alc-choose-prod = 0 then do:
         message "Введите вид алког. продукции в Доп. инфо" VIEW-AS ALERT-BOX .
@@ -1352,6 +1354,7 @@ do:
   end.
 end. 
   RUN check-add in this-procedure ( input 2)  no-error.
+
   if error-status:error then
       return no-apply.
   if NOT f-name = "" then dO:
@@ -1373,7 +1376,9 @@ if mode = {&add-def} then DO:
       "Ошибка добавления в Ассортиментную матрицу - add-matr.p"
       view-as alert-box error
     .
+
 end.
+                
 run perproc-delete-from-parent( this-procedure , "").
 end.
 
@@ -2564,7 +2569,6 @@ then do:
                        (if v-found-copy-add-prop then " или наследуются Дополнительные расходы" else "":U) + {&new-line}
                      ).
   v-mess = left-trim(v-mess, {&new-line}).
-
   run gbl/d-toggle.w (
                        input "Сохранение изменений"
                       ,input v-mess
@@ -2633,6 +2637,7 @@ _main:
 do transaction
 on error undo, return error return-value
 :
+
 if logical(entry(1, choice-str, "|":U)) then do:
   run ref/goods01.p (
                 input parparentproc
@@ -2709,6 +2714,7 @@ if logical(entry(1, choice-str, "|":U)) then do:
                 ,input-output gds-rec
                 ,output nbc
                 ) no-error .
+
   if error-status:error then do:
     assign
     gds-rec = if v-prev-rec <> ? and gds-rec = ?
@@ -2764,8 +2770,9 @@ if logical(entry(1, choice-str, "|":U)) then do:
       END.
       when "artic|unq-artc":U then do:
         if NOT f-name = "" then do:
-          g#log = NO.
+          g#log = NO.  
           return error "next".
+          
         end.
         undo _main, return error.
       end.
@@ -2791,8 +2798,10 @@ if logical(entry(1, choice-str, "|":U)) then do:
     END CASE.
   end.
 end.
+
 if mode = {&add-def} then do:
-  find first goods share-lock where recid(goods) = gds-rec .
+ 
+find first goods share-lock where recid(goods) = gds-rec .
   if not AVAILABLE goods then return no-apply.
   else do:
      if not v-loc-update-attr-gbl then 
@@ -2866,6 +2875,7 @@ if mode = {&add-def} then do:
         .  
       end. /*if temp-goods.alc-prod = yes then */   
    end. /*else do:*/
+
    define variable v-value      as character no-undo .
    define variable v-type       as character no-undo .
    define buffer buf-grp for ub.gds-grp.
@@ -3176,7 +3186,6 @@ if v-loc-update-s-coeff then do:
     error .
   end.
 end.
-
 if v-loc-update-gds-prop then do:
     find first ttf-gds-obj-prop no-error .
     if available ttf-gds-obj-prop then do:
@@ -3276,7 +3285,7 @@ if mode = {&add-def} then do:
   assign
   copymode = no
   saved-name = goods.gds-name
-  Infmes = "Товар " + string(goods.artic) + " сохранен  - "  + string(goods.gds-code, "999999999")
+  Infmes = "Товар " + string(goods.artic) + " сохранен  - "  + string(goods.gds-code, "99999999999")
   impc-saved = impc-saved + 1
   nbc = 0
   .
@@ -4561,9 +4570,9 @@ PROCEDURE proc-b-add-inf:
                         , input-output temp-goods.normal-waste
                         , input-output temp-goods.cond-keep-code
                         , input-output temp-goods.proof
-						, INPUT-OUTPUT temp-goods.alc-prod
-						, INPUT-OUTPUT temp-goods.alc-mark
-                      	, INPUT-OUTPUT temp-goods.alc-choose-prod
+            , INPUT-OUTPUT temp-goods.alc-prod
+            , INPUT-OUTPUT temp-goods.alc-mark
+                        , INPUT-OUTPUT temp-goods.alc-choose-prod
                         ) .
         run get-fields in this-procedure .
       end.
@@ -4591,6 +4600,7 @@ PROCEDURE proc-b-add-inf:
           undo, return error .
         end.
       end.
+      run addGdsGrpAttr (if mode = {&add-def} then 0 else goods.gds-code, if avail gds-grp then gds-grp.node-code else -1 ).
       run ref/gds-atti.w (
                       input parparentproc
                      ,input mode
@@ -5291,6 +5301,7 @@ define variable v-stat as character no-undo init ?.
 define variable v-list as character no-undo init ?.
 define variable v-cond as character no-undo init ?.
 define variable v-grp  as character no-undo .
+define variable v-old-code as integer no-undo .
 
 define buffer buf_units for ub.units.
 
@@ -5370,6 +5381,113 @@ if lookup (mode, {&update_add-def}) > 0 then do:
         
         if v-value-mark = "no" then temp-goods.alc-mark = no . else temp-goods.alc-mark = yes . 
         end.
+
+     /*Проверка на атрибут ЕМЦ*/
+     define variable v-value-emrc as character no-undo .
+     define variable v-type-emrc  as character no-undo .
+     define variable old-value-emrc as character no-undo .
+     old-value-emrc = "" .
+
+     /*Получение атрибута для старой группы*/
+     for first ub.gds-grp-obj-attr no-lock
+        where ub.gds-grp-obj-attr.node-code   = v-old-code
+        and ub.gds-grp-obj-attr.host-code   = 0
+        and ub.gds-grp-obj-attr.obj-type    = ""
+        and ub.gds-grp-obj-attr.obj-code    = 0
+        and ub.gds-grp-obj-attr.attr-code   = {&ggoattr-emrc-type}:
+        old-value-emrc = ub.gds-grp-obj-attr.attr-value .
+     end.
+     /*Получение атрибута для новой группы*/
+
+        for first ub.gds-grp-obj-attr no-lock
+           where ub.gds-grp-obj-attr.node-code   = ub.gds-grp.node-code
+           and ub.gds-grp-obj-attr.host-code   = 0
+           and ub.gds-grp-obj-attr.obj-type    = ""
+           and ub.gds-grp-obj-attr.obj-code    = 0
+           and ub.gds-grp-obj-attr.attr-code   = {&ggoattr-emrc-type}:
+           v-value-emrc = ub.gds-grp-obj-attr.attr-value .
+        end.
+
+        define variable v-attr-emrc as character no-undo .
+        define variable v-attr-type as character no-undo .
+        define variable v-emrc-name as character no-undo .
+        define variable v-del       as logical   no-undo .
+        define buffer buf_goods-attr for ub.goods-attr .
+        /*Значение атрибута товара*/
+        for first buf_goods-attr no-lock where buf_goods-attr.attr-code = {&attr-emrc-type} and
+           buf_goods-attr.gds-code = temp-goods.gds-code:
+           v-attr-emrc = buf_goods-attr.attr-value .
+        end.
+        if v-value-emrc <> old-value-emrc and v-attr-emrc = "" then
+        do:
+           message "При переносе в группу " + string(ub.gds-grp.node-name) + " для товара " + string(temp-goods.gds-name) skip
+              "будет наследоваться значение новой группы тип ЕМЦ-" + if v-value-emrc <> "" then v-value-emrc else "000" + ". " skip
+              "При утвердительном ответе товар переносится в новую группу, значение тип ЕМЦ-" + string (if v-value-emrc <> "" then v-value-emrc else "000")
+              view-as alert-box question buttons yes-no-cancel update choice as logical .
+           CASE choice:
+              WHEN TRUE THEN /* Yes */
+                 DO:
+                 END.
+              WHEN FALSE THEN /* No */
+                 DO:
+                    run gds-attr-write IN THIS-PROCEDURE(
+                       input temp-goods.gds-code
+                       ,INPUT {&attr-emrc-type}
+                       ,INPUT old-value-emrc ) .
+                 END.
+              OTHERWISE
+              DO: /* Cancel */
+                 return error.
+              end.
+           END CASE.
+        end.
+   define variable lChoice as integer no-undo .
+   if v-value-emrc <> v-attr-emrc and v-attr-emrc <> "" then 
+   do:
+      find first ub.code no-lock where ub.Code.parent = "EMC" and ub.Code.code = v-attr-emrc no-error .
+      if not available (ub.Code) then v-emrc-name = "Нет" .
+      else v-emrc-name = ub.Code.CodeName .   
+      run gbl/d-askw.w (
+         input "Сообщение"
+         ,input  "На товар установлен атрибут «тип ЕМЦ» - " + v-emrc-name + ". При переносе товара значение может быть изменено."
+         ,input "|"
+         ,input "Наследовать|Оставить|Отмена"
+         ,input "Наследовать атрибут от новой группы|Оставить текущее значение атрибута|Отмена"
+         ,input 1
+         ,input 3
+         ,output lChoice).          
+      CASE lChoice:
+         WHEN 1 THEN /* Yes */
+            DO:
+               if v-value-emrc = "" then 
+               do:
+                  run gds-attr-delete IN THIS-PROCEDURE(
+                     input temp-goods.gds-code
+                     ,INPUT {&attr-emrc-type}
+                     ,output v-del ) .
+               end.
+               else 
+               do:
+                  run gds-attr-write IN THIS-PROCEDURE(
+                     input temp-goods.gds-code
+                     ,INPUT {&attr-emrc-type}
+                     ,INPUT v-value-emrc ) NO-ERROR.
+               end.
+            END.
+         WHEN 2 THEN /* No */
+            DO:
+               run gds-attr-write IN THIS-PROCEDURE(
+                  input temp-goods.gds-code
+                  ,INPUT {&attr-emrc-type}
+                  ,INPUT v-attr-emrc ) .
+            END.
+         OTHERWISE 
+         DO: /* Cancel */
+            return error.
+         end.
+      END CASE.
+   end.
+
   run chkgrp in this-procedure (buffer gds-grp) no-error .
   if error-status:error then return error.
   grp-full = "".

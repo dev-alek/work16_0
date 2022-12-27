@@ -190,7 +190,7 @@ define private temp-table tt-recid-TranFuel no-undo
       /* and buf_inkas.fact-date  = buf_shift-obj.shift-date - не всегда, и не факт; не проверялось */
     :
     /* 17/I-2018 Operator – надо выводить ФИО пользователя */
-    { gbl/usrfulnm.i
+	{ gbl/usrfulnm.i
       buf_inkas.user-name
       v-user-name }
       
@@ -212,13 +212,35 @@ define private temp-table tt-recid-TranFuel no-undo
        where over_buf_chk-doc.out-code = buf_inkas.inkas-code:
       /* 19/XII-2017 выгружаем только те типы, которые указаны в протоколе */
       v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
-      if not error-status:error then
+	  if not error-status:error then
         CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
           v-host-code, v-obj-type, v-obj-code) .
     end . /* end_of for_each buf_chk-doc */
-    
+
+    FOR EACH chk-doc-attr where attr-code = 'CHFlag1S' and attr-value = 'no'.
+	    find first chk-doc where chk-doc-attr.doc-code = chk-doc.doc-code.
+		if available chk-doc then do:
+		
+		  for each over_buf_chk-doc no-lock where over_buf_chk-doc.doc-code = chk-doc.doc-code:
+		    v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
+             if not error-status:error then
+             CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
+             v-host-code, v-obj-type, v-obj-code) .
+			 /* message chk-doc-attr.attr-code VIEW-AS ALERT-BOX. */
+			 delete chk-doc-attr.
+			 
+		  end.
+	    end.
+	
+	
+	END.
+	
+	
 
     end. /* end_of for_each_inkas */
+	
+	
+	
     insw:end-element ({&tag-checks}) .
     insw:end-element ({&tag-shift}) .
 
@@ -471,7 +493,7 @@ define private temp-table tt-recid-TranFuel no-undo
     if p-buf_chk-doc.shift-date = ? then insw:write-empty-element ( "shift-date":U ) . /* Дата смены (Дата) */
     else insw:write-data-element (  "shift-date":U,  iso-date(p-buf_chk-doc.shift-date)  ). 
 
-    insw:write-data-element (  "shift-num":U,       string(p-buf_chk-doc.shift-num)   ). /* Номер смены (Число) */
+    insw:write-data-element (  "shift-num":U,       string(if p-buf_chk-doc.shift-num = 0 then p-buf_chk-doc.shift-name else string(p-buf_chk-doc.shift-num))   ). /* Номер смены (Число) */
     insw:write-data-element (  "chk-num":U,         string(p-buf_chk-doc.chk-num)     ). /* Номер чека на кассе (Число) */
     insw:write-data-element (  "cb-num":U,          string(p-buf_chk-doc.pay-desk)    ). /* Номер кассы (Число) */
     insw:write-data-element (  "chk-id":U,                 p-buf_chk-doc.doc-code     ). /* Номер чека в GC (Строка) */
@@ -533,7 +555,12 @@ define private temp-table tt-recid-TranFuel no-undo
     insw:write-data-element (  "tot-doc", left-trim(string(p-buf_chk-doc.tot-doc, "->>>>>>>>9.9<"))  ). /* Сумма брутто по чеку в валюте продаж. Сумма по текущей розничной цене (Число) */
 
     /* обязательность 0-1 */
-    
+        find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
+                                  and buf_chk-doc-attr.attr-code eq "CHMgrKey"
+             no-lock no-error.
+    if avail buf_chk-doc-attr
+    then
+       insw:write-data-element( "CHMgrKey",  buf_chk-doc-attr.attr-value).
     /* 28/XI-2017 term-num будет строкой, поэтому пустой можно, и необязательный. */
     find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
                                   and buf_chk-doc-attr.attr-code eq "CHNumberKKT"
@@ -781,7 +808,17 @@ define private temp-table tt-recid-TranFuel no-undo
           if buf_chk-gds.write-off-code >= 0 then
             insw:write-data-element (  "prolito",  string(buf_chk-gds.write-off-code)  ). /* Признак для сбросов: 0 – не пролито; 1 – пролито. (Число, enum) */
         end .
-        
+        /* Системный код */
+        insw:write-data-element (  "src-code",  string(buf_chk-gds.src-code)  ) . /* Системный код */
+        /* Тип возвратных операций */
+        find first chk-doc-attr where chk-doc-attr.doc-code = p-buf_chk-doc.doc-code
+          and chk-doc-attr.attr-code = 'CHFlag1' no-lock no-error.
+        IF AVAILABLE chk-doc-attr THEN 
+        DO:   
+          insw:write-data-element (  "CHFlag1",  string(chk-doc-attr.attr-value)  ) . /* Тип возвратных операций */  
+          if chk-doc-attr.attr-value = "0" then
+            insw:write-data-element (  "Dry-chk-th",  string(chk-doc-attr.attr-value)  ) . /* Сухой чек */      
+        end.    
         /* 23/V-2019  тэги для табачки - цена БД и датаматрикс */
         find first buf_chk-gds-attr no-lock
              where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
@@ -792,7 +829,7 @@ define private temp-table tt-recid-TranFuel no-undo
           insw:write-data-element (  "price-azs",  left-trim(string(v-price-azs, "->>>>>>>>9.99"))  ) . /* Розничная цена в соответствии с данными БД на АЗК/АЗС (Число 15,2) */
         end .
         for each buf_marking-chk no-lock where buf_marking-chk.doc-code =  buf_chk-gds.doc-code and buf_marking-chk.line-num = buf_chk-gds.line-num:
-          v-marking = GetCodeIdent(buf_marking-chk.mark).
+          v-marking = repSpecSimbforXlm(GetCodeIdent(buf_marking-chk.mark)).
           /*          for first buf_marking no-lock where buf_marking.mark begins v-marking :*/
           insw:write-data-element (  "dm",  v-marking ) . /* Datamatrix (строка) */
 /*          insw:write-data-element (  "dm",  addBracketForCode(v-marking) ) . /* Datamatrix (строка) */*/
@@ -994,7 +1031,7 @@ define private temp-table tt-recid-TranFuel no-undo
           insw:write-data-element (  "line-num",         string(bf_chk-discnt.object-line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
           insw:write-data-element (  "discnt-type",      string(bf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
           insw:write-data-element (  "discntValueAbs",   left-trim(string(bf_chk-discnt.discnt-value-abs,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
-          insw:write-data-element (  "discntValuePcnt",  left-trim(string(bf_chk-discnt.discnt-value-pcnt, "->9.9<"))                 ) . /* % скидки (Число) */
+          insw:write-data-element (  "discntValuePcnt",  left-trim(string(bf_chk-discnt.discnt-value-pcnt, "->>>9.9<"))                 ) . /* % скидки (Число) */
           /* обязательность 0-1 */
           if bf_chk-discnt.promo-id > "" then 
           do:
@@ -1015,7 +1052,7 @@ define private temp-table tt-recid-TranFuel no-undo
         insw:write-data-element (  "line-num",         string(buf_chk-discnt.line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
         insw:write-data-element (  "discnt-type",      string(buf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
         insw:write-data-element (  "discntValueAbs",   left-trim(string(buf_chk-discnt.discnt-value-abs,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
-        insw:write-data-element (  "discntValuePcnt",  left-trim(string(buf_chk-discnt.discnt-value-pcnt, "->>9.9<"))                 ) . /* % скидки (Число) */
+        insw:write-data-element (  "discntValuePcnt",  left-trim(string(buf_chk-discnt.discnt-value-pcnt, "->>>>9.9<"))                 ) . /* % скидки (Число) */
         /* обязательность 0-1 */
         if buf_chk-discnt.promo-id > "" then 
         do:

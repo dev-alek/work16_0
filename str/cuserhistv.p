@@ -42,7 +42,7 @@ define variable ii              as integer   no-undo.
 define variable v-mess          as character no-undo .
 
 define buffer buf_c-usr-hist for ub.c-usr-hist.
-
+&Glob VisibleKeyField yes
 { ref/tmpchgs.i "SHARED" " " "with-action" }
 
 
@@ -55,7 +55,10 @@ if not available buf_c-usr-hist then
 do:
   return error .
 end.
-CASE p-subject:
+if p-subject begins {&table_user-account-attr} + "."
+then
+   run user-obj-proc in this-procedure(output p-description) no-error  .
+else CASE p-subject:
   when {&table_user-login} then 
     do:
       run user-login-proc in this-procedure(output p-description) no-error  .
@@ -99,7 +102,7 @@ procedure user-login-proc :
       run err-mess in this-procedure ( input-output v-mess).
       return error v-mess.
     end.
-&scop fields-name-list  "user-login,user-password-encoded,user-administrator,max-discnt,last-login-mjd,status_,user-password-set-mjd,cntxt-menu-code,cntxt-menu-group-id,last-login-computer-name,last-login-computer-userid,last-login-process-id,login-error-count,show-goods-fields,action-check-parent,quest-print"
+&scop fields-name-list  "db-num,user-login,user-password-encoded,user-administrator,max-discnt,last-login-mjd,status_,user-password-set-mjd,cntxt-menu-code,cntxt-menu-group-id,last-login-computer-name,last-login-computer-userid,last-login-process-id,login-error-count,show-goods-fields,action-check-parent,quest-print"
 
     define variable v-label-param as character no-undo .
 
@@ -119,6 +122,7 @@ procedure user-login-proc :
       + "login-error-count" + {&delim-par} + "Попыток доступа" + {&delim-par} + "" + {&delim-flf}
       + "show-goods-fields" + {&delim-par} + "Список полей" + {&delim-par} + "" + {&delim-flf}
       + "action-check-parent" + {&delim-par} + "Проверять права в соответствии с родительским ид" + {&delim-par} + "" + {&delim-flf}
+      + "db-num" + {&delim-par} + "БД" + {&delim-par} + "" + {&delim-flf}
       + "quest-print" + {&delim-par} + "Задавать вопрос: куда выводить документ?" + {&delim-par} + "".
     run proc-full-temp-changes in this-procedure (
       input buf_c-usr-hist.action = integer({&hn-create})
@@ -203,14 +207,30 @@ procedure user-obj-proc :
       run err-mess in this-procedure ( input-output v-mess).
       return error v-mess.
     end.
-
+    define variable vobj as character no-undo.
+    define variable vDB as character no-undo.
+    assign
+       vobj = entry(1,curr_c-usr-hist.source-ref,{&delim-par})
+       vDB  = entry(2,curr_c-usr-hist.source-ref,{&delim-par})
+    no-error.
     create  temp-changes.
     assign
       temp-changes.l_name       = curr_c-usr-hist.subject
       temp-changes.uniq-key-rec = STRING (curr_c-usr-hist.chip-num)
       .
-    if curr_c-usr-hist.action = integer({&hn-create}) then temp-changes.v_new = curr_c-usr-hist.source-ref . 
-    else temp-changes.v_old = curr_c-usr-hist.source-ref .
+    if curr_c-usr-hist.action = integer({&hn-create}) then temp-changes.v_new = vobj . 
+    else temp-changes.v_old = vobj .
+    if vDB ne ""
+    then do:
+       create  temp-changes.
+       assign
+         temp-changes.f_name       = "db-num"
+         temp-changes.l_name       = "БД"
+         temp-changes.uniq-key-rec = STRING (curr_c-usr-hist.chip-num)
+         .
+       if curr_c-usr-hist.action = integer({&hn-create}) then temp-changes.v_new = vDB . 
+       else temp-changes.v_old = vDB .
+    end.
 
   end.
 

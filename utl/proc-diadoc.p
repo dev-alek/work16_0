@@ -22,7 +22,7 @@ define variable mError as logical no-undo.
 { gbl/getcntxt.i def }
 { cmp/trg-def.i }
 { utl/proc-async.i proc_def}
-{ str/edo.i }
+{ str/edo.i nosend}
 /*
 session:system-alert-boxes = yes.
 session:appl-alert-boxes = yes.
@@ -77,7 +77,7 @@ else do:
       then do:
          run PutstatAsunc ( substitute("error Не удалось подключиться к серверу Диадок в БД &1 ВС &2" ,
                                   mdb-num-local, mext-sys)) .
-         
+         mError= yes.
       end.
       else do:
          run getNewUpd.

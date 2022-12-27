@@ -147,13 +147,13 @@ function crcode returns character
    end.
 
    vtypelist = "Inbound|"
-/*             + "Outbound|"*/
+             + "Outbound|"
 /*             + "Internal|"*/
              + "Proxy". 
    
    vtypename = "входящий документ|"
-            /* + "исходящий документ|"
-             + "внутренний документ|"*/
+             + "исходящий документ|"
+            /* + "внутренний документ|"*/
              + "документ, переданный через промежуточного получателя|".
    do vi = 1 to num-entries(vtypelist,"|"):
       create tt-Class.
@@ -257,6 +257,7 @@ function getOrganizationInfo returns character
                                                 output oKpp as character,
                                                 output oFnsParticipantId as character,
                                                 output oOrgName as character,
+                                                output oAdditionalInfo as character,
                                                 output OarddrRus as character  
                                                  ):
     
@@ -273,6 +274,7 @@ function getOrganizationInfo returns character
       oinn = vContAgentOrganizationDetails:Inn.
       oKpp = vContAgentOrganizationDetails:Kpp.
       oFnsParticipantId = vContAgentOrganizationDetails:FnsParticipantId.
+      oAdditionalInfo = vContAgentOrganizationDetails:OrganizationAdditionalInfo.
       
       getdesc(vContAgentOrganizationDetails).
       oOrgName = vContAgentOrganizationDetails:OrgName. 

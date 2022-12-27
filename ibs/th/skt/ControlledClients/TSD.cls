@@ -23,7 +23,13 @@ using ibs.th.gbl.sys.objth.
 using ibs.th.str.utd.handlers.introduce.
 
 class ibs.th.skt.ControlledClients.TSD inherits objth: 
-
+   define variable vss-revision    as character no-undo init "$Revision:$":U .
+   define variable vss-author      as character no-undo init "$Author:$":U .
+   define variable vss-date        as character no-undo init "$Date:$":U .
+   define variable vss-workfile    as character no-undo init "$Workfile:$":U .
+   define variable vss-archive     as character no-undo init "$Archive:$":U .
+   define variable vss-description as character no-undo init "ТСД".
+   
   &scop delimiteFld chr(30)
   &scop delimiterLine chr(31)
   
@@ -620,7 +626,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           priceSale = if available buf_price-all and buf_price-all.price-sale > -1 and buf_price-all.price-sale < 1 then replace (priceSale, ".", "0" + CurrDecSeparatorTH) else replace (priceSale, ".", CurrDecSeparatorTH)
           cliBaseRate = if buf_bar-code.cli-base-rate > -1 and buf_bar-code.cli-base-rate < 1 then replace (cliBaseRate, ".", "0" + CurrDecSeparatorTH) else replace (cliBaseRate, ".", CurrDecSeparatorTH)
           .
-      
         create TempBCode.
               
         assign
@@ -1054,7 +1059,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
           find first ub.marking where ub.marking.mark = TempMarkLine.MarkCode no-error.
 /*          ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.*/
-          if TempMarkLine.Sts = "CheckScan"
+          if available  ub.marking and TempMarkLine.Sts = "CheckScan"
             then ungrg(ub.marking.mark-parent).
         end.
         else do:
@@ -1081,26 +1086,41 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
               ub.utd-marking-lines.gds-code  = buf_utd-marking-lines.gds-code
               ub.utd-marking-lines.LineNum   = buf_utd-marking-lines.LineNum
               ub.utd-marking-lines.doc-level = buf_utd-marking-lines.doc-level + 1
+              ub.utd-marking-lines.mark      = v-mark-ident
              .
-            find first ub.marking where ub.marking.mark = v-mark-ident no-error.
-            if not available (ub.marking)
-              then create ub.marking .
-            assign
-              ub.marking.gds-code    = ub.utd-marking-lines.gds-code
-              ub.marking.mark        = v-mark-ident
-              ub.marking.mark-parent = buf_utd-marking-lines.mark
-              ub.marking.sts         = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB
-              ub.marking.gds-ext-id  = v-GTIN
-              ub.marking.obj-code    = TempTrnDoc.obj-code
-              ub.marking.obj-type    = TempTrnDoc.obj-type
-              .
-            ub.marking.unit-ext = getLevelMotpByDM(v-mark-ident) .
-            ub.marking.box-qnty = getQntyUTDByDM(v-mark-ident) .
-            ub.marking.unit = getLevelUTDByDM(v-mark-ident) .
+            if ismark(v-mark-ident)
+            then do:
+               find first ub.marking where ub.marking.mark = v-mark-ident no-error.
+               if not available (ub.marking) 
+                 then create ub.marking .
+               assign
+                 ub.marking.gds-code    = ub.utd-marking-lines.gds-code
+                 ub.marking.mark        = v-mark-ident
+                 ub.marking.mark-parent = buf_utd-marking-lines.mark
+                 ub.marking.sts         = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB
+                 ub.marking.gds-ext-id  = v-GTIN
+                 ub.marking.obj-code    = TempTrnDoc.obj-code
+                 ub.marking.obj-type    = TempTrnDoc.obj-type
+                 .
+               ub.marking.unit-ext = getLevelMotpByDM(v-mark-ident) .
+               ub.marking.box-qnty = getQntyUTDByDM(v-mark-ident) .
+               ub.marking.unit = getLevelUTDByDM(v-mark-ident) .
+            end.
             ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
-            ub.utd-marking-lines.mark = ub.marking.mark.
+            if available ub.marking
+            THEN
+               ub.utd-marking-lines.mark = ub.marking.mark.
          end.
         end.
+      end.
+      for each TempDocLine:
+         find first ub.utd-lines no-lock where ub.utd-lines.doc-id = v-utd-doc-id 
+                                           and ub.utd-lines.db-num = v-utd-db-num 
+                                           and ub.utd-lines.LineNum eq TempDocLine.line-num no-error.
+         if available ( ub.utd-lines)
+         then
+            SetAttrUtdlines(ub.utd-lines.db-num,ub.utd-lines.doc-id,ub.utd-lines.linenum,"QuantityBarCode",string(TempDocLine.fact-qnty)).
+        
       end.
 /*      for each TempMarkLine where TempMarkLine.Sts = "Ungrouped" :                                       */
 /*        find first ub.utd-marking-lines where ub.utd-marking-lines.mark = TempMarkLine.MarkCode no-error.*/
@@ -1152,6 +1172,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       
       if error-status:error
         then next.
+        
       for each TempMarkLine where TempMarkLine.Sts = "CrTsd" :
 
         find first ub.utd-marking-lines no-lock where ub.utd-marking-lines.mark = TempMarkLine.MarkCode and ub.utd-marking-lines.doc-id = v-utd-doc-id and ub.utd-marking-lines.db-num = v-utd-db-num no-error.
@@ -1352,7 +1373,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define variable docType    as character no-undo.
     define variable dPriceSale as decimal   no-undo.
     define variable decDocQnty as decimal no-undo.
-    define variable decFactQnty as decimal no-undo.
     define variable jj as integer no-undo.
     define variable jjm as integer no-undo.
     define variable iim as integer no-undo.
@@ -1365,6 +1385,9 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     def    var      bc-pfx          as character no-undo .
     def    var      v-par-type      as character no-undo .
     def    var      v-doc-num       as character no-undo .
+    def var v-sts as character no-undo.
+    def var vRecKey-line as character no-undo.
+          
     run gbl/conf-rd.p ("bc-pfx", "", "", 0, "", "", "", yes, output bc-pfx, output v-par-type) no-error.
     run gbl/conf-rd.p ("bc-frmt", "", "", 0, "", "", "", yes, output bc-frmt, output v-par-type) no-error.
     myflagsDoc = new flagsdoc ().
@@ -1372,11 +1395,39 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     l_utd:
     for each buf_utd where buf_utd.obj-type = ObjType and buf_utd.obj-code = ObjCode and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB
       and buf_utd.EDocType = ObjSrv:Env:Utd:EDocType:UTD:KeyIntDB:
+      v-doc-num = buf_utd.DocumentNumber + "(" + string(buf_utd.db-num) + "_" + string(buf_utd.doc-id) + ")".
+/*      if buf_utd.doc-id eq 220*/
+/*      then                    */
+/*         run gbl\inidebug.p.  */
+      for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
+         block-mark:
+         for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd-l.db-num 
+                             and buf_utd-m-l.doc-id    = buf_utd-l.doc-id
+                             and buf_utd-m-l.LineNum   = buf_utd-l.LineNum 
+         no-lock:
+            if not ismark(buf_utd-m-l.mark)
+            then do:
+               leave block-mark. 
+            end.
+         end.
+         if available buf_utd-m-l
+         then do:
+            ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
+                  input  buffer buf_utd-l:handle, 
+                  output vRecKey-line). 
+            find first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-l.doc-id and buf_utd-err.db-num = buf_utd-l.db-num and buf_utd-err.reckey = vRecKey-line no-error .
+            if not available buf_utd-err
+            then do:
+               LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Документ содержит не маркированный товар УТД &1.", v-doc-num).
+               next l_utd.
+            end.
+         end.
+      end.  
+      
       myflagsDoc:unSetAllFlags().
       myflagsDoc:isDocMarkOn = true.
      
-      v-doc-num = buf_utd.DocumentNumber + "(" + string(buf_utd.db-num) + "_" + string(buf_utd.doc-id) + ")".
-
+      
       if buf_utd.cli-code = ? or buf_utd.obj-code = ? or buf_utd.cli-type = ? or buf_utd.obj-type = ?
       then do:
         LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Не указан контрагент/объект TH в документе УТД &1.", v-doc-num).
@@ -1397,31 +1448,34 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
         find first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code.
         
-        internal-b-code = buf_bar-code.b-code.
+       internal-b-code = buf_bar-code.b-code.                
         { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
 
         pos = pos + 1.
         dPriceSale = buf_utd-l.Total / buf_utd-l.Quantity. 
         decDocQnty = buf_utd-l.Quantity.
-        decFactQnty = 0.
-
+        
 
         assign
           priceSale = string (dPriceSale)
           docQnty   = string (decDocQnty)
-          factQnty  = string (decFactQnty)
         .
 
         assign
           priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
           docQnty  = if decDocQnty > -1 and decDocQnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
-          factQnty  = if available buf_gds-obj and buf_gds-obj.fact-qnty > -1 and buf_gds-obj.fact-qnty < 1 then replace (factQnty, ".", "0" + CurrDecSeparatorTH) else replace (factQnty, ".", CurrDecSeparatorTH)
         .
-        
+        define variable vErrorLine as logical no-undo.
+        ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
+            input  buffer buf_utd-l:handle, 
+            output vRecKey-line). 
+        find first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-l.doc-id and buf_utd-err.db-num = buf_utd-l.db-num and buf_utd-err.reckey = vRecKey-line no-error .
+        vErrorLine = available buf_utd-err.  
         for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd.db-num and buf_utd-m-l.doc-id = buf_utd.doc-id and buf_utd-m-l.LineNum = buf_utd-l.LineNum no-lock
           :
+          
           myflagsDocLine:unSetAllFlags().
-          myflagsDocLine:isMarkOn            = logical(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"MarkUtdLine","yes")).
+          myflagsDocLine:isMarkOn            = logical(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"MarkUtdLine","no")).
           myflagsDocLine:isVarietalVolumeOn  = logical(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"ArticUtdLine","no")).
           myflagsDocLine:isNotEditManualQnty = not (myflagsDocLine:isMarkOn).
           define variable vMark as logical no-undo.
@@ -1429,54 +1483,27 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           if vMark 
           then do:
              find first buf_m no-lock where buf_m.mark = buf_utd-m-l.mark no-error.
-             if available (buf_m) and not buf_m.unit-ext = "LEVEL1" and not buf_m.unit-ext = "UNIT"
-             then do:
-                next.
-             end.
-             if available (buf_m)
-             then do:
-                if     buf_m.unit-ext = "LEVEL1" 
-                   and (buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
-                     or buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
-                then do: 
-                    decFactQnty = decFactQnty + buf_m.box-qnty.
-                end. 
-      
-                if     buf_m.unit-ext = "UNIT" 
-                   and (buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
-                   or buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
-                then do:
-                   if not can-find 
-                      (first buf_m-par where buf_m-par.mark = buf_m.mark-parent 
-                      and buf_m-par.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
-                      and 
-                       not can-find 
-                         (first buf_utd-m-l-par where buf_utd-m-l-par.mark = buf_m.mark-parent 
-                         and buf_utd-m-l-par.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
-                   then decFactQnty = decFactQnty + buf_m.box-qnty.
-                end.
-             end.
+             
+             
           end.
-          def var v-sts as character no-undo.
-          def var vRecKey-line as character no-undo.
-          ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
-            input  buffer buf_utd-l:handle, 
-            output vRecKey-line).   
-          find first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-l.doc-id and buf_utd-err.db-num = buf_utd-l.db-num and buf_utd-err.reckey = vRecKey-line no-error .
-          if available (buf_utd-err) then 
+          if vErrorLine then 
           do:
             v-sts = "NotCorrect".
           end.
           else do:
              if not vMark
              then
-                v-sts = "Check".
+                v-sts = "UTD".
              else if not buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB   
              then do:
-                   if available buf_m and buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
+                  if available buf_m and buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
+                      or buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
                   then v-sts = "Check".
                   else v-sts = "NotCorrect".
               end.
+              else if available buf_m and buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+              then
+                 v-sts = "NotCorrect".
               else do:
                 if available buf_m and buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
                   then v-sts = "GrayZone".
@@ -1499,7 +1526,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           + v-doc-num + "_" + string (buf_goods.gds-code) + "_" + string(pos) + {&delimiteFld} + v-sts + {&delimiteFld} + (if available buf_m then buf_m.mark-parent else "") + {&delimiteFld} + string(vqnty) + {&delimiterLine}.
           tsdstreamclose().
         end.
-        factQnty  = string (decFactQnty).
+        factQnty  = replace (GetAttrUtdlinesEx(buf_utd-l.db-num,buf_utd-l.doc-id,buf_utd-l.linenum,"QuantityBarCode","0"), ".", "0" + CurrDecSeparatorTH).
         tsdstreamopenapp("MT_lines.txt"). 
           jjm = jjm + 1.
           put stream tsdstream unformatted string (jjm) + {&delimiteFld} + v-doc-num + {&delimiteFld} + string (pos) + {&delimiteFld} + string (buf_goods.gds-code) + {&delimiteFld} 
@@ -1658,6 +1685,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     def var v-attr-value   as character no-undo.
     def var v-attr-type    as character no-undo. 
     def var v-is-introduce as logical   no-undo.
+    define variable decFactQnty as decimal no-undo.
     define buffer buf_utd-marking-lines for ub.utd-marking-lines.
     invd_:
     for each buf_trn-doc where buf_trn-doc.ext-doc-type = {&TDEDT_Inv} and buf_trn-doc.status_ = {&wayb} and not buf_trn-doc.flag:
