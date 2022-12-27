@@ -200,6 +200,9 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable oks-SubjectObj          as class Oks                    no-undo. 
   define variable impOKSEventHndlrObj     as class impOks                 no-undo.
   
+  define variable emc-SubjectObj          as class Emc                    no-undo. 
+  define variable impCodeEventHndlrObj    as class impCode                 no-undo.
+  
   define variable OsnovCurrSubj                         as class osnovcorr               no-undo .
   define variable impOsnocCorr                          as class imposnovcorr            no-undo .
   
@@ -555,6 +558,22 @@ class ibs.th.bge.1crn.import.parsesub:
               GetChildrenSub (hNoderef, (level + 1), v-iSubject).
               ReceivedSubjectPublish(v-iSubject, v-iImpSub).
            end.
+        end.
+        when "emc":U 
+        then do:
+           &glob subname emc
+           if not valid-object({&subname}-SubjectObj)       
+           then 
+              {&subname}-SubjectObj       = new {&subname}(). 
+           if not valid-object(impCodeEventHndlrObj) 
+           then do :
+              impCodeEventHndlrObj = new impCode ().
+           end .
+           v-iSubject = {&subname}-SubjectObj .
+           v-iImpSub  = impCodeEventHndlrObj .
+                // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
         when "ok":U 
         then do:
