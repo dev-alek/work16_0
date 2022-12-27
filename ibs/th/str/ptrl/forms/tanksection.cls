@@ -3386,7 +3386,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   
   method private char format_temper (arg as decimal):
     def var str as char no-undo.
-    str = trim (string (round(arg, 1), "->>9.9")).
+    str = trim (string (round(arg, 1), "->>9.<")).
     return str.
   end.
   
