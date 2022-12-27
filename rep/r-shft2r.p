@@ -48,6 +48,7 @@ DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INITIAL "—бор данных дл€ см
 { ref/gds-attr.i }
 { str/trdcalib.i }
 { str/is-sug.i }
+{ str/is-gas.i }
 
 DEFINE VARIABLE loc-ii              AS INTEGER   NO-UNDO INITIAL 1.
 DEFINE VARIABLE for-supp-name       AS CHARACTER NO-UNDO.
@@ -393,6 +394,12 @@ FOR EACH  ub.trn-doc  NO-LOCK
         loc-ii                 = loc-ii + 1.
       if is-sug(t-2.gds-code) then tincome-2.qnty1       = ub.doc-line.fact-qnty * tincome-2.density .
       else tincome-2.qnty1       = v-InfoSectionsTotal:InfoSectionCurr:DocQnty .
+      if is-gas(t-2.gds-code)
+      then
+      assign
+        tincome-2.qnty1 = ub.doc-line.fact-qnty
+        tincome-2.qnty2 = ub.doc-line.doc-qnty
+      .
       v-qnty1               = v-qnty1 + tincome-2.qnty1 .
       v-qnty2               = v-qnty2 + tincome-2.qnty2 .
       v-qnty3               = v-qnty3 + tincome-2.qnty3
