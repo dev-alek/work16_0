@@ -301,7 +301,7 @@ end.
             p-GdsObj:prod-code
         ) no-error.
         if error-status:error then do:
-            v-err-mess = substitute("Ошибка при смене производителя у товара  &1. &2&3&2"
+            v-err-mess = substitute("Ошибка при смене производителя у товара  &1. &2&4 &3&2"
                                 , p-GdsObj:code_
                                 , {&new-line}
                                 , error-status:get-message(1)
