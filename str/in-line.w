@@ -4954,7 +4954,7 @@ procedure block-nozzle:
          substitute("&1,&2"
          ,"block"
          ,list-pl))
-         ,input no
+         ,input yes
          ,input ''
          ,input 'Блокировка пистолетов') .
       if not error-status:error then 
@@ -5000,7 +5000,7 @@ procedure unblock-nozzle:
          substitute("&1,&2"
          ,"unblock"
          ,list-pl))
-         ,input no
+         ,input yes
          ,input ''
          ,input 'Разблокировка пистолетов') .
       if not error-status:error then 

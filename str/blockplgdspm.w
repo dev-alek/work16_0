@@ -450,7 +450,7 @@ ON CHOOSE OF b-block IN FRAME Dialog-Frame /* Блок в МП */
                substitute("&1,&2"
                ,"block"
                ,pl-list))
-               ,input no
+               ,input yes
                ,input ''
                ,input 'Блокировка выбранных пистолетов') .
             if not error-status:error then 
@@ -575,7 +575,7 @@ ON CHOOSE OF b-repeate-block IN FRAME Dialog-Frame /* b-repeate-block */
          substitute("&1,&2"
          ,"block"
          ,pl-list))
-         ,input no
+         ,input yes
          ,input ''
          ,input 'Блокировка выбранных пистолетов') .
       if not error-status:error then 
@@ -635,7 +635,7 @@ ON CHOOSE OF b-repeate-unblock IN FRAME Dialog-Frame /* b-repeate-unblock */
          substitute("&1,&2"
          ,"unblock"
          ,pl-list))
-         ,input no
+         ,input yes
          ,input ''
          ,input 'Разблокировка пистолетов') .
       if not error-status:error then 
@@ -700,8 +700,8 @@ ON CHOOSE OF b-unblock IN FRAME Dialog-Frame /* Разблок */
          /*         run local-stts in this-procedure*/
          /*            ( input {&blocked-status}    */
          /*            ).                           */
-         message "Разблокировать пистолеты в" skip
-            "АСУ 'Заправщик'" 
+         message "Разблокировать все пистолеты в" skip
+            "АСУ 'Заправщик'?" 
             view-as alert-box question buttons yes-no update quest-ok.
          if quest-ok then 
          do:
@@ -736,7 +736,7 @@ ON CHOOSE OF b-unblock IN FRAME Dialog-Frame /* Разблок */
                substitute("&1,&2"
                ,"unblock"
                ,pl-list))
-               ,input no
+               ,input yes
                ,input ''
                ,input 'Разблокировка пистолетов') .
             if not error-status:error then 

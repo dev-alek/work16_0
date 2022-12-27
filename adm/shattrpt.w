@@ -181,9 +181,8 @@ DEFINE VARIABLE dop-info AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 28.5 BY 4.5 NO-UNDO.
 
-DEFINE VARIABLE sec-fields AS CHARACTER 
-     VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 1 BY 1 NO-UNDO.
+DEFINE VARIABLE sec-fields AS character VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 1 BY 1 no-undo .
 
 DEFINE VARIABLE f-invclipt LIKE clients.obj-code
      VIEW-AS FILL-IN 
@@ -220,11 +219,6 @@ DEFINE VARIABLE otkl-temp AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0
 
 DEFINE VARIABLE otkl-water AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
      LABEL "Воды" 
-     VIEW-AS FILL-IN 
-     SIZE 9 BY 1 NO-UNDO.
-
-DEFINE VARIABLE qr-scan-time AS INTEGER FORMAT ">>>>>9":U INITIAL 5000 
-     LABEL "Время на сканирование QR-кода (мс)" 
      VIEW-AS FILL-IN 
      SIZE 9 BY 1 NO-UNDO.
 
@@ -332,15 +326,30 @@ DEFINE VARIABLE t-avtinvpm AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 82.5 BY .83 TOOLTIP "если включено, то контроль и создание происходит при закрытии сверки" NO-UNDO.
 
-DEFINE VARIABLE t-block-nozzle AS LOGICAL INITIAL yes 
-     LABEL "" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 2.5 BY .83 NO-UNDO.
-
 DEFINE VARIABLE t-calc-free-vol AS LOGICAL INITIAL no 
      LABEL "Контроль свободного объема в резервуаре при приеме" 
      VIEW-AS TOGGLE-BOX
      SIZE 60.5 BY .79 NO-UNDO.
+
+DEFINE VARIABLE t-block-nozzle AS LOGICAL INITIAL yes 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 2.5 BY .83 NO-UNDO.
+     
+DEFINE VARIABLE t-trn-reas-sug AS LOGICAL INITIAL no 
+     LABEL "Обязательный выбор этапа для приема газовоза" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60.5 BY .79 NO-UNDO.
+     
+DEFINE VARIABLE t-trnscanqr AS LOGICAL INITIAL no 
+     LABEL "Автозаполнение НП" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 30 BY .83 NO-UNDO.        
+     
+DEFINE VARIABLE t-rvd-own-nb AS LOGICAL INITIAL no 
+     LABEL "Разрешить ручное заполнение документа приёма НП при поставках с собственных НБ" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 83 BY .83 NO-UNDO.
 
 DEFINE VARIABLE t-invclipt AS LOGICAL INITIAL no 
      LABEL "Контрагент для списания ЕУ при инвентаризации топлива по сверке:" 
@@ -357,26 +366,15 @@ DEFINE VARIABLE t-olddens AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 81.5 BY .83 NO-UNDO.
 
-DEFINE VARIABLE t-rvd-own-nb AS LOGICAL INITIAL no 
-     LABEL "Разрешить ручное заполнение документа приёма НП при поставках с собственных НБ" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 83 BY .83 NO-UNDO.
-
 DEFINE VARIABLE t-rvsnmter AS LOGICAL INITIAL no 
      LABEL "Расхождение в инвентаризации по сверке делать без учета погрешности измерения" 
      VIEW-AS TOGGLE-BOX
      SIZE 82.5 BY .83 NO-UNDO.
 
-DEFINE VARIABLE t-trn-reas-sug AS LOGICAL INITIAL no 
-     LABEL "Обязательный выбор этапа для приема газовоза" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 60.5 BY .79 NO-UNDO.
-
-DEFINE VARIABLE t-trnscanqr AS LOGICAL INITIAL no 
-     LABEL "Автозаполнение НП" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 30 BY .83 NO-UNDO.
-
+DEFINE VARIABLE qr-scan-time AS integer FORMAT ">>>>>9":U INITIAL 5000 
+     LABEL "Время на сканирование QR-кода (мс)" 
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 1 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 

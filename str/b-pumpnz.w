@@ -331,48 +331,42 @@ DO:
 }
   if NOT glog then return no-apply.
   { str/ptrlv.i "cadd" "pumpnz" "{&browse-name}" }
-  if available ub.pump-nozzle then do:
-    pl-list = "". 
-	assign
-     varis-meas = ub.pump-nozzle.is-meas
-     varef-nid = ub.pump-nozzle.ef-nid
-     .
-     display
-     varis-meas
-     varef-nid when is-ef
-     with frame {&frame-name}.
-          find first ub.pump-nozzle-attr exclusive-lock where ub.pump-nozzle-attr.attr-code = "is-activ" and
-                                                         ub.pump-nozzle-attr.nozzle-code = ub.pump-nozzle.nozzle-code and
-                                                         ub.pump-nozzle-attr.obj-code = ub.pump-nozzle.obj-code and
-                                                         ub.pump-nozzle-attr.obj-type = ub.pump-nozzle.obj-type and
-                                                         ub.pump-nozzle-attr.pump-code = ub.pump-nozzle.pump-code and
-                                                         ub.pump-nozzle-attr.attr-value <> "" no-error .
-    if available (ub.pump-nozzle-attr) then varis-activ = logical (ub.pump-nozzle-attr.attr-value) .
-    if not varis-activ then v-active  = "ACTIVE" . else v-active = "NOACTIVE" .
-
-                  pl-list = 
-                     string(ub.pump-nozzle.nozzle-code) + ":" +
-                     string(ub.pump-nozzle.pump-code)
-                     .
-               
-  run str/diallog.w ( input parparentproc
-                     ,input this-procedure
-                     ,input 'str/get-block-nozzle.p':U
-                     ,input (v-cntxt-obj-type + {&delim-par} +
-                             string(v-cntxt-obj-code) + {&delim-par} +
-                             string(0) + {&delim-par} +  /*p-remote */
-                             string(0) + {&delim-par} + /*p-shft-close*/
-                             {&delim-par} +
-                             {&delim-par} +
-                             {&delim-par} +
-                             substitute("&1,&2"
-                                        ,v-active
-                                        ,pl-list))
-                     ,input no
-                     ,input ''
-                     ,input 'Блокировка/разблокировка пистолетов') .
-    display varis-activ with frame {&frame-name} .
- end.
+/*  if available pump-nozzle then do:                                                                                      */
+/*     pl-list = "".                                                                                                       */
+/*     assign varis-meas = pump-nozzle.is-meas.                                                                            */
+/*     display varis-meas with frame {&frame-name}.                                                                        */
+/*          find first ub.pump-nozzle-attr exclusive-lock where ub.pump-nozzle-attr.attr-code = "is-activ" and             */
+/*                                                         ub.pump-nozzle-attr.nozzle-code = ub.pump-nozzle.nozzle-code and*/
+/*                                                         ub.pump-nozzle-attr.obj-code = ub.pump-nozzle.obj-code and      */
+/*                                                         ub.pump-nozzle-attr.obj-type = ub.pump-nozzle.obj-type and      */
+/*                                                         ub.pump-nozzle-attr.pump-code = ub.pump-nozzle.pump-code and    */
+/*                                                         ub.pump-nozzle-attr.attr-value <> "" no-error .                 */
+/*    if available (ub.pump-nozzle-attr) then varis-activ = logical (ub.pump-nozzle-attr.attr-value) .                     */
+/*    if not varis-activ then v-active  = "ACTIVE" . else v-active = "NOACTIVE" .                                          */
+/*                                                                                                                         */
+/*                  pl-list =                                                                                              */
+/*                     string(ub.pump-nozzle.nozzle-code) + ":" +                                                          */
+/*                     string(ub.pump-nozzle.pump-code)                                                                    */
+/*                     .                                                                                                   */
+/*                                                                                                                         */
+/*  run str/diallog.w ( input parparentproc                                                                                */
+/*                     ,input this-procedure                                                                               */
+/*                     ,input 'str/get-block-nozzle.p':U                                                                   */
+/*                     ,input (v-cntxt-obj-type + {&delim-par} +                                                           */
+/*                             string(v-cntxt-obj-code) + {&delim-par} +                                                   */
+/*                             string(0) + {&delim-par} +  /*p-remote */                                                   */
+/*                             string(0) + {&delim-par} + /*p-shft-close*/                                                 */
+/*                             {&delim-par} +                                                                              */
+/*                             {&delim-par} +                                                                              */
+/*                             {&delim-par} +                                                                              */
+/*                             substitute("&1,&2"                                                                          */
+/*                                        ,v-active                                                                        */
+/*                                        ,pl-list))                                                                       */
+/*                     ,input yes                                                                                          */
+/*                     ,input ''                                                                                           */
+/*                     ,input 'Блокировка/разблокировка пистолетов') .                                                     */
+/*    display varis-activ with frame {&frame-name} .*/
+/* end.                                             */
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -486,6 +480,7 @@ ON VALUE-CHANGED OF br_table IN FRAME F-Main
 DO:
   /* This ADM trigger code must be preserved in order to notify other
      objects when the browser's current row changes. */
+/*     define variable varis-activ as logical no-undo .*/
   {src/adm/template/brschnge.i}
 varis-activ = true .
   if available ub.pump-nozzle then do:
@@ -595,10 +590,11 @@ END.
 &Scoped-define SELF-NAME varis-activ
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL varis-activ B-table-Win
 ON VALUE-CHANGED OF varis-activ IN FRAME F-Main /* Измеряется */
-DO:
-   define buffer bf_pumpnz      for ub.pump-nozzle.
-   define buffer bf_pumpnz-attr for ub.pump-nozzle-attr.
-   varis-activ = true .
+   DO:
+      define buffer bf_pumpnz      for ub.pump-nozzle.
+      define buffer bf_pumpnz-attr for ub.pump-nozzle-attr.
+      define variable rec_pump as recid no-undo .
+
   { gbl/chk-actg.i
   v-db-num
   v-userid
@@ -614,125 +610,128 @@ DO:
   true
   glog
 }
-   if NOT glog then 
-   do:
-      find first bf_pumpnz-attr exclusive-lock where bf_pumpnz-attr.attr-code = "is-activ" and
-         bf_pumpnz-attr.nozzle-code = ub.pump-nozzle.nozzle-code and
-         bf_pumpnz-attr.obj-code = ub.pump-nozzle.obj-code and
-         bf_pumpnz-attr.obj-type = ub.pump-nozzle.obj-type and
-         bf_pumpnz-attr.pump-code = ub.pump-nozzle.pump-code and
-         ub.pump-nozzle-attr.attr-value <> "" no-error .
-      if available (bf_pumpnz-attr) then varis-activ = logical(bf_pumpnz-attr.attr-value) .
-
-      display varis-activ with frame {&frame-name}.
-      return no-apply.  
-   end.
-   if available ub.pump-nozzle then 
-   do:
-      find first bf_pumpnz-attr exclusive-lock where bf_pumpnz-attr.attr-code = "is-activ" and
-         bf_pumpnz-attr.nozzle-code = ub.pump-nozzle.nozzle-code and
-         bf_pumpnz-attr.obj-code = ub.pump-nozzle.obj-code and
-         bf_pumpnz-attr.obj-type = ub.pump-nozzle.obj-type and
-         bf_pumpnz-attr.pump-code = ub.pump-nozzle.pump-code and 
-         ub.pump-nozzle-attr.attr-value <> "" no-error .
-      if available (bf_pumpnz-attr) then varis-activ = logical (bf_pumpnz-attr.attr-value) .
-
-      if varis-activ <> input frame {&frame-name} varis-activ then 
+      if NOT glog then 
       do:
-         assign 
-            varmes-log = yes.
-         message "Вы хотите изменить атрибут?"
-            view-as alert-box question buttons yes-no update varmes-log.
-         if varmes-log then 
+         find first bf_pumpnz-attr exclusive-lock where bf_pumpnz-attr.attr-code = "is-activ" and
+            bf_pumpnz-attr.nozzle-code = ub.pump-nozzle.nozzle-code and
+            bf_pumpnz-attr.obj-code = ub.pump-nozzle.obj-code and
+            bf_pumpnz-attr.obj-type = ub.pump-nozzle.obj-type and
+            bf_pumpnz-attr.pump-code = ub.pump-nozzle.pump-code and
+            bf_pumpnz-attr.attr-value <> "" no-error .
+         if available (bf_pumpnz-attr) then varis-activ = logical(bf_pumpnz-attr.attr-value) .
+
+         display varis-activ with frame {&frame-name}.
+         return no-apply.  
+      end.
+      if available ub.pump-nozzle then 
+      do:
+         find first bf_pumpnz-attr exclusive-lock where bf_pumpnz-attr.attr-code = "is-activ" and
+            bf_pumpnz-attr.nozzle-code = ub.pump-nozzle.nozzle-code and
+            bf_pumpnz-attr.obj-code = ub.pump-nozzle.obj-code and
+            bf_pumpnz-attr.obj-type = ub.pump-nozzle.obj-type and
+            bf_pumpnz-attr.pump-code = ub.pump-nozzle.pump-code and 
+            bf_pumpnz-attr.attr-value <> "" no-error .
+         if available (bf_pumpnz-attr) then varis-activ = logical (bf_pumpnz-attr.attr-value) .
+         else varis-activ = true .
+         if varis-activ <> logical(varis-activ:screen-value) then 
          do:
-
-            find first bf_pumpnz where recid(bf_pumpnz) = recid(pump-nozzle) exclusive.
-            find first bf_pumpnz-attr exclusive-lock where bf_pumpnz-attr.attr-code = "is-activ" and
-               bf_pumpnz-attr.nozzle-code = ub.pump-nozzle.nozzle-code and
-               bf_pumpnz-attr.obj-code = ub.pump-nozzle.obj-code and
-               bf_pumpnz-attr.obj-type = ub.pump-nozzle.obj-type and
-               bf_pumpnz-attr.pump-code = ub.pump-nozzle.pump-code no-error .
-            if not available (bf_pumpnz-attr) then 
+            assign 
+               varmes-log = yes.
+            message "Вы хотите изменить атрибут?"
+               view-as alert-box question buttons yes-no update varmes-log.
+            if varmes-log then 
             do:
-               create bf_pumpnz-attr .
-               assign
-                  bf_pumpnz-attr.attr-code   = "is-activ"
-                  bf_pumpnz-attr.nozzle-code = ub.pump-nozzle.nozzle-code
-                  bf_pumpnz-attr.obj-code    = ub.pump-nozzle.obj-code
-                  bf_pumpnz-attr.obj-type    = ub.pump-nozzle.obj-type
-                  bf_pumpnz-attr.pump-code   = ub.pump-nozzle.pump-code
-                  .     
-            end.         
-
-                     pl-list = 
-                        string(ub.pump-nozzle.nozzle-code) + ":" +
-                        string(ub.pump-nozzle.pump-code)
-                        .
-      
-            if  logical(varis-activ:screen-value) = true then 
-            do:      
-                                    
-               run str/diallog.w ( input parparentproc
-                  ,input this-procedure
-                  ,input 'str/get-block-nozzle.p':U
-                  ,input (v-cntxt-obj-type + {&delim-par} +
-                  string(v-cntxt-obj-code) + {&delim-par} +
-                  string(0) + {&delim-par} +  /*p-remote */
-                  string(0) + {&delim-par} + /*p-shft-close*/
-                  {&delim-par} +
-                  {&delim-par} +
-                  {&delim-par} +
-                  substitute("&1,&2"
-                  ,"NOACTIVE"
-                  ,pl-list))
-                  ,input no
-                  ,input ''
-                  ,input 'Разблокировка пистолетов') no-error .
-               if error-status:error then 
+               rec_pump = recid(pump-nozzle) .
+               find first bf_pumpnz where recid(bf_pumpnz) = recid(pump-nozzle) exclusive.
+               find first bf_pumpnz-attr exclusive-lock where bf_pumpnz-attr.attr-code = "is-activ" and
+                  bf_pumpnz-attr.nozzle-code = ub.pump-nozzle.nozzle-code and
+                  bf_pumpnz-attr.obj-code = ub.pump-nozzle.obj-code and
+                  bf_pumpnz-attr.obj-type = ub.pump-nozzle.obj-type and
+                  bf_pumpnz-attr.pump-code = ub.pump-nozzle.pump-code no-error .
+               if not available (bf_pumpnz-attr) then 
                do:
-                  message "При разблокировке пистолета произошла ошибка"
-                     view-as alert-box.
-                  return no-apply .
-               end.                           
-                     
-            end.
+                  create bf_pumpnz-attr .
+                  assign
+                     bf_pumpnz-attr.attr-code   = "is-activ"
+                     bf_pumpnz-attr.nozzle-code = ub.pump-nozzle.nozzle-code
+                     bf_pumpnz-attr.obj-code    = ub.pump-nozzle.obj-code
+                     bf_pumpnz-attr.obj-type    = ub.pump-nozzle.obj-type
+                     bf_pumpnz-attr.pump-code   = ub.pump-nozzle.pump-code
+                     .     
+               end.         
+               pl-list = 
+                  string(ub.pump-nozzle.nozzle-code) + ":" +
+                  string(ub.pump-nozzle.pump-code)
+                  .
+               if  logical(varis-activ:screen-value) = true then 
+               do:      
+                  run str/diallog.w ( input parparentproc
+                     ,input this-procedure
+                     ,input 'str/get-block-nozzle.p':U
+                     ,input (v-cntxt-obj-type + {&delim-par} +
+                     string(v-cntxt-obj-code) + {&delim-par} +
+                     string(0) + {&delim-par} +  /*p-remote */
+                     string(0) + {&delim-par} + /*p-shft-close*/
+                     {&delim-par} +
+                     {&delim-par} +
+                     {&delim-par} +
+                     substitute("&1,&2"
+                     ,"NOACTIVE"
+                     ,pl-list))
+                     ,input yes
+                     ,input ''
+                     ,input 'Разблокировка пистолетов') no-error .
+                  if error-status:error then 
+                  do:
+                     assign 
+                        bf_pumpnz-attr.attr-value = string(varis-activ).
+                     message "При разблокировке пистолета произошла ошибка"
+                        view-as alert-box.
+                     return no-apply .
+                  end.                           
+               end.
+               else 
+               do:
+                  run str/diallog.w ( input parparentproc
+                     ,input this-procedure
+                     ,input 'str/get-block-nozzle.p':U
+                     ,input (v-cntxt-obj-type + {&delim-par} +
+                     string(v-cntxt-obj-code) + {&delim-par} +
+                     string(0) + {&delim-par} +  /*p-remote */
+                     string(0) + {&delim-par} + /*p-shft-close*/
+                     {&delim-par} +
+                     {&delim-par} +
+                     {&delim-par} +
+                     substitute("&1,&2"
+                     ,"ACTIVE"
+                     ,pl-list))
+                     ,input yes
+                     ,input ''
+                     ,input 'Блокировка пистолетов') no-error .
+                  if error-status:error then 
+                  do:
+                     assign 
+                        bf_pumpnz-attr.attr-value = string(varis-activ).
+                     message "При блокировке пистолета произошла ошибка"
+                        view-as alert-box.
+                     return no-apply .
+                  end.   
+               end.
+               assign frame {&frame-name} varis-activ.
+               assign 
+                  bf_pumpnz-attr.attr-value = string(varis-activ).
+
+               {&OPEN-BROWSERS-IN-QUERY-br-table}
+               reposition br_table to recid rec_pump .
+/*               display varis-activ with frame {&frame-name} .*/
+            end.   
             else 
             do:
-               run str/diallog.w ( input parparentproc
-                  ,input this-procedure
-                  ,input 'str/get-block-nozzle.p':U
-                  ,input (v-cntxt-obj-type + {&delim-par} +
-                  string(v-cntxt-obj-code) + {&delim-par} +
-                  string(0) + {&delim-par} +  /*p-remote */
-                  string(0) + {&delim-par} + /*p-shft-close*/
-                  {&delim-par} +
-                  {&delim-par} +
-                  {&delim-par} +
-                  substitute("&1,&2"
-                  ,"ACTIVE"
-                  ,pl-list))
-                  ,input no
-                  ,input ''
-                  ,input 'Блокировка пистолетов') no-error .
-               if error-status:error then 
-               do:
-                  message "При блокировке пистолета произошла ошибка"
-                     view-as alert-box.
-                  return no-apply .
-               end.   
-            end.
-            assign frame {&frame-name} varis-activ.
-            assign 
-            bf_pumpnz-attr.attr-value = string(varis-activ).
-
-            {&OPEN-BROWSERS-IN-QUERY-br-table}
-         end.   
-         else do:
-            display varis-activ with frame {&frame-name} .
-         end.   
+               display varis-activ with frame {&frame-name} .
+            end.   
+         end.
       end.
-   end.
-END.
+   END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

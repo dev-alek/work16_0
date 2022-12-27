@@ -36,7 +36,13 @@ define temp-table tt_nozzle no-undo
    field nozzle-code as integer
    index pi as UNIQUE pump-code nozzle-code.
 
-  
+define temp-table tt_answer no-undo
+   field FuelPump      as integer
+   field FPFNzl        as integer
+   field FPFActive     as integer
+   field FPFBlockStaff as integer
+   field ctrl          as character
+   .    
 { str/get-chk.i  NEW }
 { str/get-chkf.i }
 { bge/bgelib.i }
@@ -72,6 +78,9 @@ define variable mCount               as int64     no-undo.
 define variable m-err-msg            as character no-undo.
 define variable v-host-code          like ub.sysconf.host-code no-undo .
 define variable p-other              as character no-undo .
+define variable p-ok                 as logical   no-undo .
+define variable v-FuelPump           as integer   no-undo .
+define variable v-ctrl               as character no-undo .
 
 define buffer buf_cash-desk   for cash-desk.
 define buffer bf_cash-desk    for cash-desk.
@@ -174,14 +183,15 @@ run adm/shattri.p (
    ,INPUT-OUTPUT table-handle v-tth
    ) no-error .
 
-if v-value-integer > 0 then do:
-mWaitFramTimeOut = v-value-integer.
+if v-value-integer > 0 then 
+do:
+   mWaitFramTimeOut = v-value-integer.
 
-mWaitFramView = yes.
-mWaitFramTextBeg = "Timeout ожидания.".
-subscribe   to "WaitFramStop" anywhere.
-             run WaitFramWaitFor(1).
-             unsubscribe   to "WaitFramStop".
+   mWaitFramView = yes.
+   mWaitFramTextBeg = "Timeout ожидания.".
+   subscribe   to "WaitFramStop" anywhere.
+   run WaitFramWaitFor(1).
+   unsubscribe   to "WaitFramStop".
 end.      
    
 _cash-desk:
@@ -422,49 +432,59 @@ FOR EACH buf_cash-desk WHERE
       ) no-error .
    v-string = "" .
 
-   if error-status:error then 
-   do:
+   empty temp-table tt_answer .
+   case p-comand:
+      when "block" then 
+         do:
+            run SaxReader no-error.
+            for each tt_answer where tt_answer.ctrl = "READ" and (tt_answer.FPFBlockStaff = 1 or tt_answer.FPFBlockStaff = 3):
+               for each buf_pl-pump-nozzle where               
+                  buf_pl-pump-nozzle.obj-type = p-obj-type            
+                  AND buf_pl-pump-nozzle.obj-code = p-obj-code        
+                  and buf_pl-pump-nozzle.pump-code = tt_answer.FuelPump
+                  and buf_pl-pump-nozzle.nozzle-code = tt_answer.FPFNzl no-lock,
+                  each buf_pl-gds-pump exclusive-lock where buf_pl-gds-pump.obj-code = buf_pl-pump-nozzle.obj-code and
+                  buf_pl-gds-pump.obj-type = buf_pl-pump-nozzle.obj-type and
+                  buf_pl-gds-pump.pump-code = buf_pl-pump-nozzle.pump-code and
+                  buf_pl-gds-pump.pl-code = buf_pl-pump-nozzle.pl-code
+                  :
+                  buf_pl-gds-pump.status_ = {&blocked-status} .
+               end.
+            end.
+            for each tt_place,
+               each tt_nozzle where tt_nozzle.pump-code = tt_place.pump-code:
+               for each buf_pl-pump-nozzle where               
+                  buf_pl-pump-nozzle.obj-type = p-obj-type            
+                  AND buf_pl-pump-nozzle.obj-code = p-obj-code        
+                  and buf_pl-pump-nozzle.pump-code = tt_nozzle.pump-code
+                  and buf_pl-pump-nozzle.nozzle-code = tt_nozzle.nozzle-code no-lock,
+                  each buf_pl-gds-pump exclusive-lock where buf_pl-gds-pump.obj-code = buf_pl-pump-nozzle.obj-code and
+                  buf_pl-gds-pump.obj-type = buf_pl-pump-nozzle.obj-type and
+                  buf_pl-gds-pump.pump-code = buf_pl-pump-nozzle.pump-code and
+                  buf_pl-gds-pump.pl-code = buf_pl-pump-nozzle.pl-code
+                  :
+                  if buf_pl-gds-pump.status_ <> {&blocked-status} then 
+                  do:
+                     v-string = v-string + {&new-line} + "ТРК № " + string(tt_nozzle.pump-code) + " Пистолет № " + string (tt_nozzle.nozzle-code) .
+                  end.
+               end.
+            end.
+            if v-string <> "" then 
+            do:
+               return "Для кассы: " + string (buf_cash-desk.cash-num) + {&new-line} +
+                  v-string + "," + {&new-line} +
+                  "для которых не прошла блокировка" + {&new-line} + {&new-line} +
+                  "ПОВТОРИТЬ?" .
+            end.
+         end.
+      when "unblock" then 
+         do:
+            run SaxReader no-error.
 
-      case p-comand:
-         when "block" then 
-            do:
-               for each tt_place,
-                  each tt_nozzle where tt_nozzle.pump-code = tt_place.pump-code:
-                  v-string = v-string + {&new-line} + "ТРК № " + string(tt_nozzle.pump-code) + " Пистолет № " + string (tt_nozzle.nozzle-code) .
-               end.
-               if v-string <> "" then 
+            for each tt_place,
+               each tt_nozzle where tt_nozzle.pump-code = tt_place.pump-code:
+               if not can-find (tt_answer where (tt_answer.FPFBlockStaff = 1 or tt_answer.FPFBlockStaff = 3) and tt_answer.ctrl = "READ") then 
                do:
-                  return "Для кассы: " + string (buf_cash-desk.cash-num) + {&new-line} +
-                     v-string + "," + {&new-line} +
-                     "для которых не прошла блокировка" + {&new-line} + {&new-line} +
-                     "ПОВТОРИТЬ?" .
-               end.
-            end.
-         when "unblock" then 
-            do:
-               for each tt_place,
-                  each tt_nozzle where tt_nozzle.pump-code = tt_place.pump-code:
-                  v-string = v-string + {&new-line} + "ТРК № " + string(tt_nozzle.pump-code) + " Пистолет № " + string (tt_nozzle.nozzle-code) .
-               end.
-               if v-string <> "" then 
-               do:
-                  return "Для кассы: " + string (buf_cash-desk.cash-num) + {&new-line} +
-                     v-string + "," + {&new-line} +
-                     "для которых не прошла разблокировка" + {&new-line} + {&new-line} +
-                     "ПОВТОРИТЬ?" .
-               end. 
-            end.          
-      end case .
-   
-   end.
-   else 
-   do:
-         
-      case p-comand:
-         when "block" then 
-            do:
-               for each tt_place,
-                  each tt_nozzle where tt_nozzle.pump-code = tt_place.pump-code:
                   for each buf_pl-pump-nozzle where               
                      buf_pl-pump-nozzle.obj-type = p-obj-type            
                      AND buf_pl-pump-nozzle.obj-code = p-obj-code        
@@ -475,59 +495,142 @@ FOR EACH buf_cash-desk WHERE
                      buf_pl-gds-pump.pump-code = buf_pl-pump-nozzle.pump-code and
                      buf_pl-gds-pump.pl-code = buf_pl-pump-nozzle.pl-code
                      :
-                     if buf_pl-gds-pump.status_ <> {&blocked-status} then 
-                     do:
-                        v-string = v-string + {&new-line} + "ТРК № " + string(tt_nozzle.pump-code) + " Пистолет № " + string (tt_nozzle.nozzle-code) .
-                     end.
+                     buf_pl-gds-pump.status_ = {&current-status} .
                   end.
                end.
-               if v-string <> "" then 
-               do:
-                  return "Для кассы: " + string (buf_cash-desk.cash-num) + {&new-line} +
-                     v-string + "," + {&new-line} +
-                     "для которых не прошла блокировка" + {&new-line} + {&new-line} +
-                     "ПОВТОРИТЬ?" .
-               end.
-            end.
-         when "unblock" then 
-            do:
-               for each tt_place,
-                  each tt_nozzle where tt_nozzle.pump-code = tt_place.pump-code:
-                  for each buf_pl-pump-nozzle where               
-                     buf_pl-pump-nozzle.obj-type = p-obj-type            
-                     AND buf_pl-pump-nozzle.obj-code = p-obj-code        
-                     and buf_pl-pump-nozzle.pump-code = tt_nozzle.pump-code
-                     and buf_pl-pump-nozzle.nozzle-code = tt_nozzle.nozzle-code no-lock,
-                     each buf_pl-gds-pump exclusive-lock where buf_pl-gds-pump.obj-code = buf_pl-pump-nozzle.obj-code and
-                     buf_pl-gds-pump.obj-type = buf_pl-pump-nozzle.obj-type and
-                     buf_pl-gds-pump.pump-code = buf_pl-pump-nozzle.pump-code and
-                     buf_pl-gds-pump.pl-code = buf_pl-pump-nozzle.pl-code
-                     :
-                     if buf_pl-gds-pump.status_ <> {&current-status} then 
-                     do:
-                        v-string = v-string + {&new-line} + "ТРК № " + string(tt_nozzle.pump-code) + " Пистолет № " + string (tt_nozzle.nozzle-code) .
-                     end.
-                  end.
-               end.
-               if v-string <> "" then 
-               do:
-                  return "Для кассы: " + string (buf_cash-desk.cash-num) + {&new-line} +
-                     v-string + "," + {&new-line} +
-                     "для которых не прошла разблокировка" + {&new-line} + {&new-line} +
-                     "ПОВТОРИТЬ?".
-               end. 
                else 
                do:
-                  return "Разблокировка пистолетов прошла успешно" .
+                  v-string = v-string + {&new-line} + "ТРК № " + string(tt_nozzle.pump-code) + " Пистолет № " + string (tt_nozzle.nozzle-code) .
                end.
-            end.          
-      end case .
-   end.  
-/*      run write-log-and-file in p-log-handle (                      */
-/*      input 1                                                       */
-/*      , input p-log-file-name                                       */
-/*      , input 1                                                     */
-/*      , input "Блокирование\разблокирование пистолетов, завершено").*/
-/*/*   p-ok = true.*/                                                 */
+            end.
+
+            if v-string <> "" then 
+            do:
+               return "Для кассы: " + string (buf_cash-desk.cash-num) + {&new-line} +
+                  v-string + "," + {&new-line} +
+                  "для которых не прошла разблокировка" + {&new-line} + {&new-line} +
+                  "ПОВТОРИТЬ?".
+            end. 
+            else 
+            do:
+               return "Разблокировка пистолетов прошла успешно" .
+            end.
+         end.          
+   end case .
+end.  
+
+
+procedure SaxReader:
+   define variable hParser as handle no-undo.
+  
+   create sax-reader hParser.
+   hParser:set-input-source("longchar", mWebResp).
+   hParser:sax-parse () no-error.
+   if error-status:error then 
+   do:
+      if error-status:num-messages > 0 then
+         /* unable to begin the parse */
+         return error error-status:get-message(1).
+      else
+         /* error detected in a callback */
+         return error return-value.
+   end.
+   delete object hParser.
 end.
 
+PROCEDURE StartDocument:
+
+END PROCEDURE.
+
+/* Invoked when the XML parser detects the beginning of an element. */
+PROCEDURE StartElement:
+   DEFINE INPUT PARAMETER namespaceURI AS CHARACTER.
+   DEFINE INPUT PARAMETER localName AS CHARACTER.
+   DEFINE INPUT PARAMETER qname AS CHARACTER.
+   DEFINE INPUT PARAMETER attributes AS HANDLE.
+   mElement = qname.
+   if mElement = "FuelPump" then 
+   do:
+      assign
+         v-FuelPump = integer(attributes:GET-VALUE-BY-QNAME("code"))
+         v-ctrl     = attributes:GET-VALUE-BY-QNAME("ctrl")
+         .
+   end.    
+   if mElement = "FPFuel" then 
+   do:
+      create tt_answer .
+      tt_answer.ctrl = v-ctrl .
+      tt_answer.FuelPump = v-FuelPump .
+   end.
+
+END PROCEDURE.
+
+PROCEDURE Characters:
+   DEFINE INPUT PARAMETER charData AS MEMPTR.
+   DEFINE INPUT PARAMETER numChars AS INTEGER.
+   
+   define variable vCurrContent as character no-undo.
+   vCurrContent = GET-STRING(charData, 1, GET-SIZE(charData)).
+   
+   if trim(vCurrContent) = "" then return.
+
+   case mElement:
+      when "FPFNzl" then
+         tt_answer.FPFNzl      = integer(vCurrContent) no-error.
+      when "FPFActive" then
+         tt_answer.FPFActive      = integer(vCurrContent) no-error.
+      when "FPFBlockStaff" then
+         tt_answer.FPFBlockStaff      = integer(vCurrContent) no-error.
+                  
+   end case.
+
+END PROCEDURE.
+
+PROCEDURE EndElement:
+   DEFINE INPUT PARAMETER name_ AS CHARACTER.
+   DEFINE INPUT PARAMETER localName AS CHARACTER.
+   DEFINE INPUT PARAMETER qName AS CHARACTER.
+   
+   define buffer prod-bc for prod-bc.
+   define buffer chk-gds for chk-gds.
+   define buffer goods   for goods.
+
+   define variable v-gds-code as integer no-undo.
+
+   if qName = "FuelPump" then 
+   do:
+
+   end.
+   if qName = "FPFuel" then 
+   do:
+
+   end.
+END PROCEDURE.
+
+/* Invoked when the XML parser detects the end of an XML document. */
+PROCEDURE EndDocument:
+   p-ok = true.
+
+END PROCEDURE.
+
+/*/* Invoked to report a warning. */                                                        */
+/*PROCEDURE Warning:                                                                        */
+/*   DEFINE INPUT PARAMETER ErrMessage AS CHARACTER NO-UNDO.                                */
+/*   MESSAGE "The following WARNING was generated:~n" + ErrMessage                          */
+/*      VIEW-AS ALERT-BOX INFO BUTTONS OK.                                                  */
+/*END PROCEDURE.                                                                            */
+/*                                                                                          */
+/*/* Invoked to report an error encountered by the parser while parsing the XML document. */*/
+/*PROCEDURE Error:                                                                          */
+/*   DEFINE INPUT PARAMETER ErrMessage AS CHARACTER NO-UNDO.                                */
+/*   p-ok = false.                                                                          */
+/*   MESSAGE "The following NONFATAL ERROR was generated:~n" + ErrMessage                   */
+/*      VIEW-AS ALERT-BOX INFO BUTTONS OK.                                                  */
+/*END PROCEDURE.                                                                            */
+/*                                                                                          */
+/*/* Invoked to report a fatal error. */                                                    */
+/*PROCEDURE FatalError:                                                                     */
+/*   DEFINE INPUT PARAMETER ErrMessage AS CHARACTER NO-UNDO.                                */
+/*   p-ok = false.                                                                          */
+/*   RETURN ERROR "The following FATAL ERROR was generated:~n" + ErrMessage.                */
+/*END PROCEDURE.                                                                            */

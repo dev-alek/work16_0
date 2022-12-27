@@ -1500,8 +1500,8 @@ procedure proc-FuelPump :
                and buf_temp-param.field-name = "FPFNzl"
                and buf_temp-param.group-name = v-group
                and buf_pl-pump-nozzle.nozzle-code = integer(buf_temp-param.field-value) no-error .
-            if available (buf_temp-param) then buf_pl-gds-pump.status_ = {&blocked-status}.
-            else buf_pl-gds-pump.status_ = {&current-status}.
+/*            if available (buf_temp-param) then buf_pl-gds-pump.status_ = {&blocked-status}.*/
+/*            else buf_pl-gds-pump.status_ = {&current-status}.                              */
 
   
          end.  
