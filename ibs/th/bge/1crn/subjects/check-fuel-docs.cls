@@ -334,7 +334,7 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
     then v-doc-input-type = 'ôê'.
 
     /*    sw:start-element ("check-fuel-docs") .*/
-
+    define variable v-out-code as character no-undo .
     sw:start-element ("check-fuel-doc") .
     sw:write-data-element ("doc-code", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)) no-error .
     sw:write-data-element ("doc-num", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)) no-error .
@@ -342,6 +342,15 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
     sw:write-data-element ("doc-date-f", if tt-rvs-doc.fact-date = ? then "" else iso-date(datetime(tt-rvs-doc.fact-date, (tt-rvs-doc.sys-time-int * 1000 )))).
     sw:write-data-element ("del-f", if tt-rvs-doc.del-f = ? then "" else string(tt-rvs-doc.del-f)) no-error .
     sw:write-data-element ("doc-type", string(v-type)) no-error .
+    if v-type = "4" then do:
+      if tt-rvs-doc.out-code = ? then do:
+        v-out-code = entry(2,tt-rvs-doc.PS,"¹") .
+        v-out-code = replace (v-out-code,".","") .
+        v-out-code = trim(v-out-code," ").
+      sw:write-data-element ("parent-doc", v-out-code) no-error .
+      end.
+      else sw:write-data-element ("parent-doc", tt-rvs-doc.out-code) no-error .
+    end.
     sw:write-data-element ("inp-type", v-doc-input-type).
     sw:write-data-element ("shift-date", if tt-rvs-doc.shift-date = ? then "" else iso-date(tt-rvs-doc.shift-date)) no-error .
     sw:write-data-element ("shift-num", if tt-rvs-doc.shift-num = ? then "" else string(tt-rvs-doc.shift-num)) no-error .

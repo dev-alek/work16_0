@@ -10,7 +10,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Отчет по анализу длительности пересменка (Простой реализации до первого чека)
+Отчет по анализу длительности пересменки (Простой реализации до первого чека)
 
 Автор: 
 Дата создания: 20/12/2014
@@ -39,7 +39,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Отчет по анализу длительности пересменка (Простой реализации до первого чека)".
+define variable vss-description as character no-undo init "Отчет по анализу длительности пересменки (Простой реализации до первого чека)".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/showinf.i }
@@ -66,8 +66,8 @@ define variable parparentproc as widget-handle no-undo .
 &Scoped-define FRAME-NAME F-Main
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS type-pos porog-zn 
-&Scoped-Define DISPLAYED-OBJECTS type-pos porog-zn 
+&Scoped-Define ENABLED-OBJECTS T-shift porog-zn type-pos 
+&Scoped-Define DISPLAYED-OBJECTS T-shift porog-zn type-pos 
 
 /* Custom List Definitions                                              */
 /* ADM-CREATE-FIELDS,ADM-ASSIGN-FIELDS,List-3,List-4,List-5,List-6      */
@@ -102,25 +102,36 @@ RUN set-attribute-list (
 
 
 /* Definitions of the field level widgets                               */
-DEFINE VARIABLE type-pos AS CHARACTER FORMAT "X(20)":U 
+DEFINE VARIABLE type-pos AS CHARACTER FORMAT "X(20)":U INITIAL "Все" 
      LABEL "Тип кассы " 
      VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEMS "Все","IBM-XML","Autotank" 
+     LIST-ITEM-PAIRS "Все","Все",
+                     "ППО UniFO-L","IBM-XML",
+                     "АСУ Заправщик","Autotank"
      DROP-DOWN-LIST
-     SIZE 15 BY 1
+     SIZE 14 BY 1
      BGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE porog-zn AS INTEGER FORMAT "->,>>>,>>9" INITIAL 0 
+DEFINE VARIABLE porog-zn AS INTEGER FORMAT ">>9" INITIAL 10 
      LABEL "Ввод порогового значения простоя реализации, мин." 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1
      BGCOLOR 15  NO-UNDO.
 
+DEFINE VARIABLE T-shift AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 2.75 BY .83 NO-UNDO.
+
+
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
-     type-pos AT ROW 1.95 COL 55 COLON-ALIGNED
-     porog-zn AT ROW 3.14 COL 55 COLON-ALIGNED WIDGET-ID 2
+     T-shift AT ROW 1.75 COL 59.75 WIDGET-ID 4
+     porog-zn AT ROW 2.88 COL 57.88 COLON-ALIGNED WIDGET-ID 2
+     type-pos AT ROW 4.04 COL 57.88 COLON-ALIGNED
+     "Cкрывать смены, не превышающие порог простоя реализации:" VIEW-AS TEXT
+          SIZE 57 BY .67 AT ROW 1.75 COL 2.25 WIDGET-ID 6
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1 SCROLLABLE 
@@ -143,8 +154,8 @@ DEFINE FRAME F-Main
 &ANALYZE-SUSPEND _CREATE-WINDOW
 /* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW V-table-Win ASSIGN
-         HEIGHT             = 39.86
-         WIDTH              = 320.
+         HEIGHT             = 39.88
+         WIDTH              = 240.
 /* END WINDOW DEFINITION */
                                                                         */
 &ANALYZE-RESUME
@@ -260,7 +271,7 @@ PROCEDURE local-initialize :
 
   /* Dispatch standard ADM method.                             */
   run dispatch in this-procedure ( input 'initialize':u ) .
-
+  display type-pos with frame F-Main.
 
 
 END PROCEDURE.
@@ -292,6 +303,7 @@ PROCEDURE my-report :
     , input obj-list.obj-code
     , input porog-zn
     , input type-pos
+    , input T-shift
     ).
 END PROCEDURE.
 
@@ -311,6 +323,7 @@ define variable reportheader as char no-undo.
   assign frame {&frame-name}
     porog-zn
     type-pos
+    T-shift
     .
 
 END PROCEDURE.

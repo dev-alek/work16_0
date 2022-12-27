@@ -493,7 +493,7 @@ define private temp-table tt-recid-TranFuel no-undo
     if p-buf_chk-doc.shift-date = ? then insw:write-empty-element ( "shift-date":U ) . /* Дата смены (Дата) */
     else insw:write-data-element (  "shift-date":U,  iso-date(p-buf_chk-doc.shift-date)  ). 
 
-    insw:write-data-element (  "shift-num":U,       string(p-buf_chk-doc.shift-num)   ). /* Номер смены (Число) */
+    insw:write-data-element (  "shift-num":U,       string(if p-buf_chk-doc.shift-num = 0 then p-buf_chk-doc.shift-name else string(p-buf_chk-doc.shift-num))   ). /* Номер смены (Число) */
     insw:write-data-element (  "chk-num":U,         string(p-buf_chk-doc.chk-num)     ). /* Номер чека на кассе (Число) */
     insw:write-data-element (  "cb-num":U,          string(p-buf_chk-doc.pay-desk)    ). /* Номер кассы (Число) */
     insw:write-data-element (  "chk-id":U,                 p-buf_chk-doc.doc-code     ). /* Номер чека в GC (Строка) */

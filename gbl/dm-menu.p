@@ -8467,6 +8467,25 @@ procedure m-chk-list-all-exe :
 run proc-chk-docs in this-procedure (input 'b-del', input {&g___object}).
 end procedure. /* m-chk-list-all */
 
+procedure m-chk-list-per-exe :
+DEFINE VARIABLE p-list as character no-undo .
+
+run str/tab-peresm.w (
+                    input parparentproc
+                    ,input 'b-restore'
+                    ,input if v-cntxt-db-num <> 0 then {&g___object} else {&all}
+                    ,input ?
+                    ,input v-cntxt-obj-type
+                    ,input v-cntxt-obj-code
+                    ,input '':U
+                    ,input '':U
+                    ,input ?
+                    ,input ?
+                    ,output p-list) no-error.
+end procedure. /* m-chk-list-all */
+
+
+
 procedure m-chk-list-exe :
 
   define variable v-host-code as integer no-undo .

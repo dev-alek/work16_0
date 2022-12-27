@@ -102,10 +102,11 @@ RUN set-attribute-list (
 
 
 /* Definitions of the field level widgets                               */
-DEFINE VARIABLE type-pos AS CHARACTER FORMAT "X(256)":U 
+DEFINE VARIABLE type-pos AS CHARACTER FORMAT "X(25)":U INIT "Все"
      LABEL "Тип кассы" 
      VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEMS "Все","IBM-XML","Autotank" 
+     /*LIST-ITEMS "Все","ППО UniFO-L","АСУ Заправщик" "IBM-XML","Autotank" */
+     LIST-ITEM-PAIRS "Все","Все","ППО UniFO-L","IBM-XML","АСУ Заправщик","Autotank" /* "IBM-XML","Autotank" */
      DROP-DOWN-LIST
      SIZE 39 BY 1 NO-UNDO.
 
@@ -253,7 +254,7 @@ PROCEDURE local-initialize :
 
   /* Dispatch standard ADM method.                             */
   run dispatch in this-procedure ( input 'initialize':u ) .
-
+  display type-pos with frame F-Main.
 
 
 END PROCEDURE.

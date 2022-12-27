@@ -32,7 +32,7 @@ define variable vss-description as character no-undo initial "запуск Сводный отч
 { cmp/r-page0.i  new }
 { cmp/vssrevis.i     }
 
-&scop ttl " Отчет по анализу длительности пересменка (Простой реализации до первого чека) "
+&scop ttl " Отчет по анализу длительности пересменки (Простой реализации до первого чека) "
 custom-par = "all,{&Arc-OT-yes},{&Arc-Supp-yes},{&Arc-stk-yes},{&Excel-yes}" + {&comma-char} + "TOG-Shift-2 = yes" + {&comma-char} + custom-par.
 run rep/d-report.w (
                 input parparentproc ,
@@ -40,7 +40,8 @@ run rep/d-report.w (
                 {&ttl},
                 input 4,
                 "", /* выбор товара */
-                input "{&o-firm},{&o-currency},{&o-choice}",  /* выбор объекта */
+/*                input "{&o-firm},{&o-currency},{&o-choice}",  /* выбор объекта */*/
+                input "*",  /* выбор объекта */
                 input "",
                 input "",
                 input custom-par,

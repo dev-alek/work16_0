@@ -39,7 +39,8 @@ run rep/d-report.w (
                 {&ttl},
                 input 4,
                 "", /* выбор товара */
-                input "{&o-firm},{&o-currency},{&o-choice}",  /* выбор объекта */
+/*                input "{&o-firm},{&o-currency},{&o-choice}",   выбор объекта */
+                input "*",  /* выбор объекта */
                 input "",
                 input "",
                 input custom-par,
