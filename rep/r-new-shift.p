@@ -127,6 +127,7 @@ define new shared variable v-rep-shift-open-date     like ub.shift-obj.open-date
 define new shared variable v-rep-shift-open-time     like ub.shift-obj.open-time no-undo. /*время открытия смены*/
 define new shared variable v-rep-shift-close-date    like ub.shift-obj.close-date no-undo. /*дата закрытия смены*/
 define new shared variable v-rep-shift-close-time    like ub.shift-obj.close-time no-undo. /*время закрытия смены*/
+define new shared variable v-rep-shift-close         like ub.shift-obj.close-time no-undo. /*время закрытия смены*/
 define            variable v-count                   as integer   initial 0 no-undo .
 define            variable v-ii                      as integer   no-undo .
 define            variable v-str2                    as character no-undo .
@@ -160,7 +161,7 @@ define variable v-sort-list     as character no-undo .
 define variable v-param-type    as character no-undo .
 /*define variable v-value-date    as date      no-undo .*/
 /*define variable v-value-decimal as decimal   no-undo .*/
-/*define variable v-value-logical AS LOGICAL   no-undo .*/
+
 define variable v-tth           as handle    no-undo .
 
 run adm/shattri.p (
@@ -449,11 +450,13 @@ do:
         x-date-End             = temp-shift-obj.shift-date
         X-Shift-End            = temp-shift-obj.shift-num
         v-rep-shift-close-date = temp-shift-obj.close-date
-        v-rep-shift-close-time = temp-shift-obj.close-time
+        v-rep-shift-close-time = temp-shift-obj.open-time
+        v-rep-shift-close = temp-shift-obj.close-time
         .
 end.
-  
-  
+
+  if x-shift-start = x-shift-end and x-date-start = x-date-end then x-tog-shift = true . else x-tog-shift = false .
+
 /* ищем следующюю смену и ее персонал */
 FIND first next-shift-obj NO-LOCK
     WHERE next-shift-obj.obj-type   = temp-shift-obj.obj-type
@@ -1407,33 +1410,40 @@ procedure first-line-tog1-html :
                     </tr>
                     <tr>
                       <td colspan="22" style="font-size:16px;font-weight:bold; text-align: center;">Часть №1 Движение нефтепродуктов по количеству</td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"> Смены  с &3  по &4 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"> Закрыта &5 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"> Старший смены: &6 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"> Операторы: &7 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="22"></td>
-                    </tr>
-                    </thead>'
-            ,
+                    </tr>' 
+                    ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1
+            rep-shift-store-name
             ).
-        output stream OutStr-html close.   
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="22">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="22">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="22"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="22"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="22"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="22"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.   
     end.
     else 
     do:
@@ -1507,7 +1517,7 @@ procedure first-line-tog1-html :
                       <td colspan="20" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="20"> Смена  с &4  по &5 </td>
+                      <td colspan="20"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="20"> </td>
@@ -1516,8 +1526,8 @@ procedure first-line-tog1-html :
                 v-host-name,
                 string(ub.clients.obj-name),
                 string(v-rep-shift-close-date,"99.99.9999"),
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+                string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+                string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
                 ).
 
          
@@ -1665,8 +1675,8 @@ procedure first-line-tog1-html :
                 ,
                 v-host-name,
                 rep-shift-store-name,
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
+                string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+                string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
                 string(v-rep-shift-close-date,"99.99.9999"),
                 rep-shift-for-mng1,
                 rep-shift-for-opers1
@@ -1727,6 +1737,7 @@ procedure first-line-tog2-html :
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:80px"></td>
+                                             
                       </tr>
                     <tr>
                       <td colspan="16" >&2</td>
@@ -1737,32 +1748,40 @@ procedure first-line-tog2-html :
                     <tr>
                       <td colspan="16" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
                     </tr>
-                    <tr>
-                      <td colspan="16"> Смены  с &3  по &4 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="16"> Закрыта &5 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="16"> Старший смены: &6 </td>
-                    </tr>
-                    <tr>
-                      <td colspan="16"> Операторы: &7 </td>
-                    </tr>
-                    <tr>
-                    <td colspan="16" style="height:30px;"></td>
-                    </tr>                    
-                    </thead>'
-            ,
+                    </tr>' 
+                    ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1
+            rep-shift-store-name
             ).
-        output stream OutStr-html close.                                               
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="16">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="16">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="16"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="16"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="16"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="16"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.                                                
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -1828,7 +1847,7 @@ procedure first-line-tog2-html :
                       <td colspan="18" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="18"> Смена  с &4  по &5 </td>
+                      <td colspan="18"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="18"> </td>
@@ -1837,8 +1856,8 @@ procedure first-line-tog2-html :
             rep-shift-store-name,
             string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
             ).
 
          
@@ -1979,8 +1998,8 @@ procedure first-line-tog2-html :
                 ,
                 v-host-name,
                 rep-shift-store-name,
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
+                string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+                string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
                 string(v-rep-shift-close-date,"99.99.9999"),
                 rep-shift-for-mng1,
                 rep-shift-for-opers1
@@ -2142,32 +2161,40 @@ procedure first-line-tog3-html :
                       <tr>
                         <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">Часть №3 Движение ТНП по количеству и суммам</td>
                       </tr>
-                      <tr>
-                        <td colspan="13"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13" style="height:30px;"></td>
-                      </tr>      
-                      </thead>'
-            ,
+                    </tr>' 
+                    ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
+            rep-shift-store-name
             ).
-        output stream OutStr-html close.  
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="13">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="13">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="13"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="13"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="13"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="13"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.  
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -2229,7 +2256,7 @@ procedure first-line-tog3-html :
                       <td colspan="13" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="13"> Смена  с &4  по &5 </td>
+                      <td colspan="13"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="13"> </td>
@@ -2238,8 +2265,8 @@ procedure first-line-tog3-html :
             rep-shift-store-name,
             string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
             ).
 
          
@@ -2357,8 +2384,8 @@ procedure first-line-tog3-html :
                 ,
                 v-host-name,
                 rep-shift-store-name,
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
+                string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+                string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
                 string(v-rep-shift-close-date,"99.99.9999"),
                 rep-shift-for-mng1,
                 rep-shift-for-opers1                    
@@ -2508,33 +2535,40 @@ procedure first-line-tog4-html :
                       </tr>
                       <tr>
                         <td colspan="6" style="font-size:16px;font-weight:bold; text-align: center;">Часть №4 Реализация услуг</td>
-                      </tr>
-                      <tr>
-                        <td colspan="6"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="6"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="6"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="6"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="6" style="height:30px;"></td>
-                      </tr>       
-                      </thead>'
-            ,
+                    </tr>' 
+                    ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
+            rep-shift-store-name
             ).
-        output stream OutStr-html close.  
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="6">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="6">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="6"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="6"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="6"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="6"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.   
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -2591,7 +2625,7 @@ procedure first-line-tog4-html :
                       <td colspan="6" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="6"> Смена  с &4  по &5 </td>
+                      <td colspan="6"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="6"> </td>
@@ -2600,8 +2634,8 @@ procedure first-line-tog4-html :
                 rep-shift-store-name,
                 string(ub.clients.obj-name),
                 string(v-rep-shift-close-date,"99.99.9999"),
-                String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-                String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+                string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+                string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
                 ).
 
          
@@ -2735,32 +2769,40 @@ procedure first-line-tog5-html :
                       <tr>
                         <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение материальных ценностей</td>
                       </tr>
-                      <tr>
-                        <td colspan="7"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                       <td colspan="7" style="height:30px;"></td>
-                      </tr>       
-                      </thead>'
-            ,
+                    </tr>' 
+                    ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
+            rep-shift-store-name
             ).
-        output stream OutStr-html close.  
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="7">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="7">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="7"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.  
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -2817,7 +2859,7 @@ procedure first-line-tog5-html :
                       <td colspan="7" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="7"> Смена  с &4  по &5 </td>
+                      <td colspan="7"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="7"> </td>
@@ -2826,8 +2868,8 @@ procedure first-line-tog5-html :
             rep-shift-store-name,
             string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
             ).
 
          
@@ -2963,31 +3005,43 @@ procedure first-line-tog5-1-html :
                         <td colspan="7" style="font-size:16px;font-weight:bold; text-align: center;">Часть №5 Движение денежных средств</td>
                       </tr>
                       <tr>
-                        <td colspan="7"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="7"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
                        <td colspan="7" style="height:30px;"></td>
                       </tr>       
                       </thead>'
             ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
+            rep-shift-store-name
             ).
-        output stream OutStr-html close.  
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<thead><tr><td colspan="7">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="7">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr></thead>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<thead>' skip
+          '<tr>' skip
+          '<td colspan="7"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="7"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.   
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -3053,8 +3107,8 @@ procedure first-line-tog5-1-html :
             rep-shift-store-name,
             string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
             ).
 
          
@@ -3185,33 +3239,40 @@ procedure first-line-tog7-html :
                       </tr>
                       <tr>
                         <td colspan="5" style="font-size:16px;font-weight:bold; text-align: center;">Часть №7 Погрешности объемомеров ТРК</td>
-                      </tr>
-                      <tr>
-                        <td colspan="5"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="5"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="5"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="5"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="5" style="height:30px;"></td>
-                      </tr>       
-                      </thead>'
-            ,
+                    </tr>' 
+                    ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
+            rep-shift-store-name
             ).
-        output stream OutStr-html close. 
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="5">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="5">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="5"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="5"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="5"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="5"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.  
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -3266,7 +3327,7 @@ procedure first-line-tog7-html :
                       <td colspan="5" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="5"> Смена  с &4  по &5 </td>
+                      <td colspan="5"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="5"> </td>
@@ -3275,8 +3336,8 @@ procedure first-line-tog7-html :
             rep-shift-store-name,
             string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
             ).
 
         put stream OutStr-html unformatted
@@ -3407,7 +3468,7 @@ procedure first-line-tog8-html :
                       <td colspan="3" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="3"> Смена  с &4  по &5 </td>
+                      <td colspan="3"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="5"> </td>
@@ -3417,8 +3478,8 @@ procedure first-line-tog8-html :
             rep-shift-store-name,
             string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
             ).
         output stream OutStr-html close. 
     end.    
@@ -3486,30 +3547,40 @@ procedure first-line-tog9-html :
                       </tr>
                       <tr>
                         <td colspan="13" style="font-size:16px;font-weight:bold; text-align: center;">Часть №9 Сбросы, переливы и переводы транзакций</td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="13"> Операторы: &7 </td>
-                      </tr>
-                      </thead>'
-            ,
+                      </tr>' 
+                    ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
+            rep-shift-store-name
             ).
-        output stream OutStr-html close. 
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="13">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="13">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="13"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="13"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="13"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="13"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.  
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -3572,7 +3643,7 @@ procedure first-line-tog9-html :
                       <td colspan="13" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="13"> Смена  с &4  по &5 </td>
+                      <td colspan="13"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="13"> </td>
@@ -3581,8 +3652,8 @@ procedure first-line-tog9-html :
             rep-shift-store-name,
             string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
             ).
 
          
@@ -3721,33 +3792,40 @@ procedure first-line-tog10-html :
                       </tr>
                       <tr>
                         <td colspan="8" style="font-size:16px;font-weight:bold; text-align: center;">Часть №10 Топливо по типам платежей</td>
-                      </tr>
-                      <tr>
-                        <td colspan="8"> Смены  с &3  по &4 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="8"> Закрыта &5 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="8"> Старший смены: &6 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="8"> Операторы: &7 </td>
-                      </tr>
-                      <tr>
-                        <td colspan="8" style="height:30px;"></td>
-                      </tr>       
-                      </thead>'
-            ,
+                    </tr>' 
+                    ,
             v-host-name,
-            rep-shift-store-name,
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm"),
-            string(v-rep-shift-close-date,"99.99.9999"),
-            rep-shift-for-mng1,
-            rep-shift-for-opers1                    
+            rep-shift-store-name
             ).
-        output stream OutStr-html close. 
+            
+       if x-tog-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="8">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="8">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.      
+       put stream OutStr-html unformatted
+          '<tr>' skip
+          '<td colspan="8"> Закрыта ' + string(v-rep-shift-close-date,"99.99.9999") + " " + string(v-rep-shift-close,"hh:mm") + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="8"> Старший смены: ' + rep-shift-for-mng1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="8"> Операторы: ' + rep-shift-for-opers1 + '</td>' skip
+          '</tr>' skip
+          '<tr>' skip
+          '<td colspan="8"></td>' skip
+          '</tr>' skip
+          '</thead>' skip
+          .
+       output stream OutStr-html close.  
     end.
     if v-param-code = 2 and v-report-result = no then 
     do:
@@ -3805,7 +3883,7 @@ procedure first-line-tog10-html :
                       <td colspan="8" style="text-align: center;"> от &3 </td>
                     </tr>
                     <tr>
-                      <td colspan="8"> Смена  с &4  по &5 </td>
+                      <td colspan="8"> Смены  с &4  по &5 </td>
                     </tr>
                     <tr>
                       <td colspan="8"> </td>
@@ -3814,8 +3892,8 @@ procedure first-line-tog10-html :
             rep-shift-store-name,
             string(ub.clients.obj-name),
             string(v-rep-shift-close-date,"99.99.9999"),
-            String( v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
-            String( v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
+            string(X-Shift-Start) + ' от ' + String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm"),
+            string(X-Shift-End) + ' от ' + String(v-rep-shift-close-date , "99.99.9999") + ' ' + String ( v-rep-shift-close-time,"hh:mm")
             ).
 
          
