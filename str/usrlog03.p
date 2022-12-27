@@ -28,7 +28,7 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Удалить логин пользователя (user-login)".
 { cmp/vssrevis.i }
-
+{ cmp/str-glbl.i}
 define buffer buf_user-login for ub.user-login .
 
 do transaction
@@ -50,6 +50,6 @@ on error undo, return error return-value
   end.
 
   /* todo проверка того, что можно удалять логин в текущей БД */
-
-  delete buf_user-login .
+  buf_user-login.status_ = {&bef-user-status-deleted}.
+  /* delete buf_user-login . */
 end.

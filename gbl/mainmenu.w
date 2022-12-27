@@ -1564,7 +1564,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    if error-status:error
    then do:
       message return-value view-as alert-box.
-         undo, return no-apply return-value .
+      return error return-value .
    end.
   /* проверяем значения контекста */
 

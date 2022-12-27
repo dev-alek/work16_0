@@ -331,8 +331,10 @@ procedure mylogin:
 end.
 
 function put-log returns character (input itext as character ):
-    output to value(logDir + "setpwd.txt") append.
-    put unformatted now " " itext skip.
-    output close.
+    run gbl/fileapnd.p
+          ( logDir + "setpwd.txt"
+          ,input substitute ("&1 &2", now, itext)
+          ,input 10 /* время ожинания освобождения файла */
+          ) no-error .
     
 end.

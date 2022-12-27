@@ -4184,8 +4184,8 @@ define output parameter p-created    as logical          no-undo.
                             ,v-quest-print
                             ,v-encoded-pass
                             ,v-nextcon
-                            ,v-user-administrator
-                            ,mSuperAdm
+                            ,v-user-administrator 
+                            ,mSuperAdm and imode ne "add" /* когда добавление одного логина не может быть ручного ввода */
                             ,i-adm-gbd
                             ,i-adm-ubd
                             ,input-output table-handle i-TabUserAdm) no-error.
@@ -4323,7 +4323,7 @@ on error undo, return error return-value
             .
         end.
     end.
-end.
+
 END PROCEDURE. /* procedure-user-login-edit */
 
 /* _UIB-CODE-BLOCK-END */

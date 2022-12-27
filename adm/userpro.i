@@ -975,12 +975,12 @@ procedure procedure-user-login-change-password :
       
       if     v-TimeAvail ne 0 
          and v-DateChg + v-TimeAvail < today
-      then do trans:
-         message "Ваша учетная запись заблокирована."
-         view-as alert-box.
-         find current buf_lock_user-login exclusive-lock.
-         buf_lock_user-login.status_ = {&uls-disabled}.
-         undo, return error "Ваша учетная запись заблокирована." .
+      then do: 
+         do trans:
+            find current buf_lock_user-login exclusive-lock.
+            buf_lock_user-login.status_ = {&uls-disabled}.
+         end.
+         return error "Ваша учетная запись заблокирована." .
       end.
       
       run adm/shattri.p (
