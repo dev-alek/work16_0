@@ -361,13 +361,14 @@ DEFINE BROWSE br-user
 
 DEFINE FRAME Dialog-Frame
      b-exit AT ROW 1 COL 1.5
-     cb-db AT ROW 1 COL 14.5 COLON-ALIGNED WIDGET-ID 40
-     b-filter AT ROW 1 COL 56.5 WIDGET-ID 26
-     fi-filter-comment AT ROW 1 COL 65 COLON-ALIGNED NO-LABEL WIDGET-ID 20 NO-TAB-STOP 
-     tb-filter AT ROW 1 COL 92 WIDGET-ID 60
-     b-print AT ROW 1 COL 93.5 WIDGET-ID 62
-     b-help AT ROW 1 COL 96.5
-     rs-scope AT ROW 1.25 COL 37.5 NO-LABEL WIDGET-ID 42
+     cb-db AT ROW 1 COL 13.88 COLON-ALIGNED WIDGET-ID 40
+     b-filter AT ROW 1 COL 54.63 WIDGET-ID 26
+     fi-filter-comment AT ROW 1 COL 63.13 COLON-ALIGNED NO-LABEL WIDGET-ID 20 NO-TAB-STOP 
+     tb-filter AT ROW 1 COL 96.38 WIDGET-ID 60
+     b-hist AT ROW 1 COL 98.88 WIDGET-ID 64
+     b-print AT ROW 1 COL 101.75 WIDGET-ID 62
+     b-help AT ROW 1 COL 104.75
+     rs-scope AT ROW 1.25 COL 36.5 NO-LABEL WIDGET-ID 42
      b-add AT ROW 2.25 COL 1.5 WIDGET-ID 2
      b-chg AT ROW 2.25 COL 11.5 WIDGET-ID 4
      b-dup AT ROW 2.25 COL 21.5 WIDGET-ID 58
@@ -1208,6 +1209,22 @@ DO:
         {&OPEN-QUERY-br-login}
         run manage-fields-login in this-procedure .
     end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist Dialog-Frame
+ON CHOOSE OF b-hist IN FRAME Dialog-Frame /* История */
+DO:
+  if available buf_init_user-account
+    then do:
+run str\usrlg.w (
+                input parparentproc,
+                input buf_init_user-account.user-id) no-error.
+    end.  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3543,9 +3560,8 @@ on error undo, return error
                   ,tt-user-login.nik
                   ,string(tt-user-login.db-num)
                   ,tt-user-login.user-login
-                  ,string(sys-time_mjd-to-loc-str-func(tt-user-login.last-login-mjd))
+                  ,if tt-user-login.last-login-mjd <> 0 then string(sys-time_mjd-to-loc-str-func(tt-user-login.last-login-mjd)) else ""
                   ).
-     
           end.
 
          output stream OutStr-html close.   
