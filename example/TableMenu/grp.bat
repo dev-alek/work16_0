@@ -1,0 +1,1 @@
+c:\work16_0\exe\curl.exe -H "Content-Type: text/xml" -d @c:\work15_0\example\TableMenu\grp.txt localhost:8080 >grp_res.txt

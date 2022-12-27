@@ -43,9 +43,13 @@ class ibs.th.skt.ControlledClients.TableMenu:
   define variable logWrite      as class   LogWrite no-undo.
   define variable mbuffer-out   as memptr  no-undo.
   define variable v-cont-length as integer no-undo.
-
+  { cmp/str-glbl.i class}
+  { gbl/attr-lib.i CLASS}
+  { gbl/objsrv.i def}
   constructor public TableMenu (  ):
-    
+    define variable vTmpStr as character no-undo.
+    { gbl/attr-lib.i get}
+    { gbl/objsrv.i get} 
     logWrite = new LogWrite().
     
   end constructor.
@@ -73,7 +77,7 @@ class ibs.th.skt.ControlledClients.TableMenu:
     v-parsed = trim(substring(cont, (index(cont, 'grp=') + 4), (index(cont, '/') - (index(cont, 'grp=') + 4))), '"').
     v-obj-code = integer(entry(1, v-parsed, ';')).
     v-sea-code = integer(entry(2, v-parsed, ';')).
-
+    logWrite:LogStr = "".
     for each ub.gds-season where ub.gds-season.sea-code = v-sea-code no-lock:
       find first ub.goods where ub.goods.gds-code = ub.gds-season.gds-code no-lock no-error.
       if ub.goods.stts <> 0 then next.
@@ -82,9 +86,31 @@ class ibs.th.skt.ControlledClients.TableMenu:
         and ub.gds-obj.gds-code = ub.goods.gds-code no-lock no-error.
       if not available(ub.gds-obj) then 
       do:
-        logWrite:LogStr = 'Ошибка: Товар ' + ub.goods.gds-name + ' Код: ' + string(ub.goods.gds-code) + 
-          '. Убедитесь, что на товар назначена цена.'.
+        logWrite:LogStr = logWrite:LogStr + substitute ('&3Ошибка: Товар "&1" Код: "&2". Убедитесь, что на товар назначена цена.', ub.goods.gds-name, ub.goods.gds-code,{&new-line}).
         next.
+      end.
+      
+      define variable v-value as character no-undo.
+      define variable v-type  as character no-undo.
+      &scop proc-name gds-attr-value
+       {&run_proc_attr-lib}
+         (input  ub.goods.gds-code
+         ,input  {&attr-mark-type}
+         ,output v-value
+         ,output v-type
+         ) no-error .
+       if error-status :error
+       then do:
+         undo, return error return-value .
+       end.
+      define variable MarkType as ibs.th.str.marking.Types no-undo.
+      MarkType = ObjSrv:Env:Marking:Types.
+      define variable objType  as ibs.th.gbl.propmap no-undo.
+      objType = MarkType:GetProp(v-value).
+      if objType ne MarkType:Unknow
+      then do:
+         logWrite:LogStr = logWrite:LogStr + substitute ('&4Товар "&1" Код: "&2" установлен тип маркировки "&3". Товар пропущен.',  ub.goods.gds-name, string(ub.goods.gds-code), objType:Label_,{&new-line}).
+         next.
       end.
       find first ub.bar-code where ub.bar-code.gds-code = ub.goods.gds-code
         and ub.bar-code.unit-cli = ub.goods.unit-base 
