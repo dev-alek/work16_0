@@ -190,7 +190,7 @@ define private temp-table tt-recid-TranFuel no-undo
       /* and buf_inkas.fact-date  = buf_shift-obj.shift-date - не всегда, и не факт; не проверялось */
     :
     /* 17/I-2018 Operator – надо выводить ФИО пользователя */
-    { gbl/usrfulnm.i
+	{ gbl/usrfulnm.i
       buf_inkas.user-name
       v-user-name }
       
@@ -212,13 +212,35 @@ define private temp-table tt-recid-TranFuel no-undo
        where over_buf_chk-doc.out-code = buf_inkas.inkas-code:
       /* 19/XII-2017 выгружаем только те типы, которые указаны в протоколе */
       v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
-      if not error-status:error then
+	  if not error-status:error then
         CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
           v-host-code, v-obj-type, v-obj-code) .
     end . /* end_of for_each buf_chk-doc */
-    
+
+    FOR EACH chk-doc-attr where attr-code = 'CHFlag1S' and attr-value = 'no'.
+	    find first chk-doc where chk-doc-attr.doc-code = chk-doc.doc-code.
+		if available chk-doc then do:
+		
+		  for each over_buf_chk-doc no-lock where over_buf_chk-doc.doc-code = chk-doc.doc-code:
+		    v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
+             if not error-status:error then
+             CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
+             v-host-code, v-obj-type, v-obj-code) .
+			 /* message chk-doc-attr.attr-code VIEW-AS ALERT-BOX. */
+			 delete chk-doc-attr.
+			 
+		  end.
+	    end.
+	
+	
+	END.
+	
+	
 
     end. /* end_of for_each_inkas */
+	
+	
+	
     insw:end-element ({&tag-checks}) .
     insw:end-element ({&tag-shift}) .
 
@@ -533,7 +555,12 @@ define private temp-table tt-recid-TranFuel no-undo
     insw:write-data-element (  "tot-doc", left-trim(string(p-buf_chk-doc.tot-doc, "->>>>>>>>9.9<"))  ). /* Сумма брутто по чеку в валюте продаж. Сумма по текущей розничной цене (Число) */
 
     /* обязательность 0-1 */
-    
+        find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
+                                  and buf_chk-doc-attr.attr-code eq "CHMgrKey"
+             no-lock no-error.
+    if avail buf_chk-doc-attr
+    then
+       insw:write-data-element( "CHMgrKey",  buf_chk-doc-attr.attr-value).
     /* 28/XI-2017 term-num будет строкой, поэтому пустой можно, и необязательный. */
     find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
                                   and buf_chk-doc-attr.attr-code eq "CHNumberKKT"

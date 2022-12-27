@@ -602,6 +602,7 @@ END PROCEDURE.
 
 
 procedure proc-00 :
+
 define variable is-shift-date as logical no-undo .
 define variable prev-code2 like ub.chk-doc.doc-code no-undo .
 define variable netto-sum2_ as decimal no-undo .
@@ -611,7 +612,9 @@ define variable v-old as character no-undo .
 define variable v-step as integer   no-undo .
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_chk-doc for ub.chk-doc.
+define variable vCHFlag1           as character no-undo.
 define variable vCHNumberKKT       as character no-undo.
+define variable vCHMgrKey          as character no-undo.
 define variable vCHNumberFN        as character no-undo.
 define variable vCHFiscalDocSign   as character no-undo . /* Фискальный признак документа. Тег 1077. Строка из 6 символов. */
 define variable vCHFiscalDocNumber as integer no-undo .   /* Номер фискального документа. Тег 1040. Целое число, порядковый номер ФД с момента регистрации (перерегистрации) ККТ. */
@@ -678,8 +681,10 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     cstValue = 0
     spool-date_ = ?
     spool-time_ = ?
-
-    no-error
+    vCHMgrKey = ""
+    vCHNumberKKT = ""
+    vCHFlag1    = ""
+	no-error
     .
     _buf_temp:
     for each buf_temp-temp no-lock where
@@ -830,6 +835,12 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         when "CHFiscalDocNumber":U then do :
           vCHFiscalDocNumber = integer(buf_temp-temp.field-value) no-error .
         end .
+        when "CHMgrKey":U then do :
+          vCHMgrKey = buf_temp-temp.field-value no-error .
+        end .
+        when "CHFlag1":U then do:
+          vCHFlag1 = buf_temp-temp.field-value no-error .
+        end.
         /*    todo
         when "CHSEnd":U then do:
         end.
@@ -999,6 +1010,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
     /*закрыть смену на кассе*/
     run proc-13 in this-procedure no-error .
   end.
+   
   if get-chkc_context.is-wth and can-do("2,3,4,5,7":U ,  gbl-type) then do:
     /*инициируем переменные для приема чеков-МЦ*/
     assign
@@ -1071,6 +1083,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       ub.chk-doc.out-2-code = ?
       no-error
       .
+	  
       if error-status:error then do:
         assign
         ub.chk-doc.correct = no
@@ -1092,7 +1105,25 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.attr-code  = "CheckId"
            chk-doc-attr.attr-value = v-id
         .
+      end.
+      if vCHMgrKey ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHMgrKey"
+           chk-doc-attr.attr-value = vCHMgrKey
+        .
       end.      
+      if vCHFlag1 ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHFlag1"
+           chk-doc-attr.attr-value = vCHFlag1
+        .
+      end.  
       if vCHNumberFN ne ""
       then do:
         create chk-doc-attr.
@@ -1279,6 +1310,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       ub.chk-doc.z-number = z-num_
       ub.chk-doc.doc-num = doc-num_
       ub.chk-doc.chk-type = v-chk-type[1]
+	  ub.chk-doc.out-code = if ub.chk-doc.chk-type eq 13 or ub.chk-doc.chk-type eq 40 then {&cd-type-csm} else ub.chk-doc.out-code
       ub.chk-doc.prev-chk-type = int(prev-gbl-type)
       v-is-petrol-check = lookup(string(chk-doc.chk-type) , {&petrol-receipt-codes}) > 0
       ub.chk-doc.correct = yes
@@ -1287,6 +1319,19 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       if error-status:error then do:
         ub.chk-doc.correct = no.
       end.
+	  
+	  if ub.chk-doc.chk-type eq 13 or ub.chk-doc.chk-type eq 40 
+	  then do:
+	    create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHFlag1S"
+           chk-doc-attr.attr-value = 'no'
+        .
+      end. 
+ 
+	  
+	  
       if vCHNumberKKT ne ""
       then do:
         create chk-doc-attr.
@@ -1302,6 +1347,15 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.doc-code   = chk-doc.doc-code
            chk-doc-attr.attr-code  = "CheckId"
            chk-doc-attr.attr-value = v-id
+        .
+      end.
+      if vCHMgrKey ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHMgrKey"
+           chk-doc-attr.attr-value = vCHMgrKey
         .
       end.
       if vCHNumberFN ne ""
@@ -1329,6 +1383,16 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
            chk-doc-attr.attr-value = string(vCHFiscalDocNumber)
         .
       end.
+      if vCHFlag1 ne ""
+      then do:
+        create chk-doc-attr.
+        assign
+           chk-doc-attr.doc-code   = chk-doc.doc-code
+           chk-doc-attr.attr-code  = "CHFlag1"
+           chk-doc-attr.attr-value = vCHFlag1
+        .
+      end. 
+	 
       if ub.chk-doc.chk-type = integer({&income-corr}) or ub.chk-doc.chk-type = integer({&expense-corr})
       then do :
         assign

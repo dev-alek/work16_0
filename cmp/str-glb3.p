@@ -416,6 +416,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define dc-cm-typ
 { cmp/cr-prep.i 1 cd-type-no-cd          -                   Накладная      -               Waybill       }
 { cmp/cr-prep.i 1 cd-type-bo             bo                  Бэкофис        bo              BackOffice    }
 { cmp/cr-prep.i 1 cd-type-Autotank       Autotank            Autotank       Autotank        Autotank  }
+{ cmp/cr-prep.i 1 cd-type-csm            смена               смена          смена           смена         }
 
 &glob cd-type-codes '{&bef-cd-type-IBM}~
 ,{&bef-cd-type-IBM-XML}~
