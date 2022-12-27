@@ -3012,7 +3012,7 @@ class ibs.th.bge.is_PM.is_PM:
             sw:write-data-element ("loss-own-needs",      string-mth(tt-result.loss-own-needs)).
             sw:write-data-element ("Delivery-ned-izl",    string-mth(tt-result.Delivery-ned-izl)).
             sw:write-data-element ("wght-other",          string-mth(tt-result.wght-other)).
-/*            sw:write-data-element ("othermoves",          string-mth(tt-result.othermoves)).*/
+            sw:write-data-element ("othermoves",          string-mth(tt-result.othermoves)).
           sw:end-element ("gd") .
         end .          
         sw:end-element ("gds") .

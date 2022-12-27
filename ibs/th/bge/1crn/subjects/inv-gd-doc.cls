@@ -26,6 +26,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
+  { gbl/attr-lib.i class}
   { str/trdcalib.i class }
   { cmp/library.i  class }
   { gbl/thbj-def.i       }
@@ -466,6 +467,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   end.
 
   method private void StartDocInvFuel ():
+      define buffer buf_doc-attr for ub.doc-attr .
       InitSecTag =  "inv-fuel-docs".
       sw:start-element ("inv-fuel-doc") .
         write-data-element ("doc-code", buf_trn-doc.doc-code).
@@ -478,6 +480,18 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         if can-find(first bf_rvs-doc no-lock where
              bf_rvs-doc.rvs-code = buf_trn-doc.out-code) 
           then write-data-element ("check-fuel-doc", buf_trn-doc.out-code).
+        find first buf_doc-attr no-lock where buf_doc-attr.doc-code = buf_trn-doc.doc-code
+                                          and buf_doc-attr.attr-code = {&trdcattr-othermoves}
+                                          no-error .
+        if available buf_doc-attr
+        and logical(buf_doc-attr.attr-value)  
+        then do :
+          write-data-element ("othermoves", "1") .
+        end . 
+        else do :
+          write-data-element ("othermoves", "0") .
+        end .                      
+                                  
   end.
 
   method private void EndDocInvFuel ():

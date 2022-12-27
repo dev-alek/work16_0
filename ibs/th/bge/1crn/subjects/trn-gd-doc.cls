@@ -37,6 +37,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     
   &scop create-record-date find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
   if available (buf_doc-attr) then write-data-element (buf_doc-attr.attr-code, iso-date (date (buf_doc-attr.attr-value))). 
+  
+  &scop create-record-cust-logical find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
+  write-data-element ('~{&tag-code~}', (if available (buf_doc-attr) and buf_doc-attr.attr-value > "" and logical(buf_doc-attr.attr-value) then "1" else "0" )). 
 
   &scop create-record-cust find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
   if available (buf_doc-attr) then write-data-element ('~{&tag-code~}', (buf_doc-attr.attr-value)).
@@ -1116,6 +1119,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     &scop tag-code shipper
     &scop attr-code trdcattr-shipper
     {&create-record-cust-obj-code}
+    &scop tag-code othermoves
+    &scop attr-code trdcattr-othermoves
+    {&create-record-cust-logical}
     
     
   end.
@@ -1170,6 +1176,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     {&create-record}
     &scop attr-code trdcattr-nosn
     {&create-record}
+    &scop tag-code othermoves
+    &scop attr-code trdcattr-othermoves
+    {&create-record-cust-logical}
 /*    &scop attr-code trdcattr-cargo-desc   */
 /*    {&create-record}                      */
 /*    &scop attr-code trdcattr-carry-type   */
