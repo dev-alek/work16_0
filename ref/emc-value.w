@@ -172,7 +172,7 @@ DEFINE QUERY BROWSE-4 FOR
 DEFINE BROWSE BROWSE-4
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-4 f-okei3 _STRUCTURED
    QUERY BROWSE-4 NO-LOCK DISPLAY
-buf-code.code FORMAT "x(10)":U  
+/*buf-code.code FORMAT "x(10)":U*/
 buf-code.misc1 COLUMN-LABEL "Дата н.а." FORMAT "x(10)":U
    buf-code.CodeValue FORMAT "x(20)":U WIDTH 32
    getStatus (buf-code.misc1,buf-code.status_) COLUMN-LABEL "Текущий статус" format "x(25)"
@@ -525,7 +525,7 @@ FUNCTION getStatus RETURNS CHARACTER
    define buffer code for ub.code.
 &SCOPE sts-old "Устаревший"
 &SCOPE sts-prev "Предыдущий"
-&SCOPE sts-current "Активный"
+&SCOPE sts-current "Текущий"
 &SCOPE sts-next "Ожидает активации"
 &SCOPE sts-del  "Деактивирован"
 &SCOPE sts-error  "Ошибка"
@@ -568,7 +568,7 @@ FUNCTION getStatus RETURNS CHARACTER
      
                vdate2 = date(code.misc1) no-error.
                if vdate2 > today
-                  then
+               then
                   return {&sts-current}. 
                DEF VAR vMonth   AS INT64.
                DEF VAR vYear    AS INT64.

@@ -359,12 +359,21 @@ PROCEDURE proc-save :
       end.
       if fStatus <> {&bef-current-status-int} then 
       do:
-         if mDATA <= today then do:
-            message "Данное значение нельзя деактивировать"
-            view-as alert-box.
-            fStatus = {&bef-current-status-int} .
-            return error .
-         end.
+/*         if mDATA <= today then do:                           */
+/*            find first b3-code where                          */
+/*                       b3-code.parent = p-parent              */
+/*                   and b3-code.code   > vDateIsoNew           */
+/*                   and b3-code.code   <= iso-date(today)      */
+/*            no-lock no-error.                                 */
+/*            if not avail b3-code                              */
+/*            then do:                                          */
+/*               message "Данное значение нельзя деактивировать"*/
+/*               view-as alert-box.                             */
+/*               fStatus = {&bef-current-status-int} .          */
+/*               return error .                                 */
+/*            end.                                              */
+/*         end.                                                 */
+      
          find first b2-code where b2-code.parent = p-parent and
             b2-code.status_ = {&bef-current-status-int} and recid(b2-code) <> p-rid and b2-code.codevalue <> "0" no-error .
          if not available (b2-code) then 
@@ -384,6 +393,7 @@ PROCEDURE proc-save :
                      ub.goods-attr.attr-value = string(entry(2,p-parent,{&delim-par})):
                         delete ub.goods-attr .
                      end.
+                     fStatus = {&bef-deleted-status-int} .
                   end.
                   otherwise do:
                      fStatus = {&bef-current-status-int} .
