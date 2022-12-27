@@ -3310,7 +3310,7 @@ on error undo, return error
                    tbody td, th ~{
                        border: 1px solid black;
                        border-collapse: collapse;
-                 height: 14px;
+                 
                    ~}
           
               </style>

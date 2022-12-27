@@ -973,7 +973,8 @@ procedure procedure-user-login-change-password :
            ,input-output table-handle v-tth
            )  .
       
-      if     v-TimeAvail ne 0 
+      if     not iChange 
+         and v-TimeAvail ne 0 
          and v-DateChg + v-TimeAvail < today
       then do: 
          do trans:

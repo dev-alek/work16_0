@@ -25,6 +25,7 @@ mAsyncHelper = new ibs.th.file.AsyncHelperth().
 mAsyncHelper:mProcPublish = this-procedure.    /* хандел для публикации событий */
 mAsyncHelper:conpar = "".                      /* уберем подключение */
 mAsyncHelper:MyBachMode = session:batch-mode.  /* установка батч режима */
+mAsyncHelper:DbConnect = no.
 if session:system-alert-boxes
 then
    mAsyncHelper:SaveFile = yes.                   /* Резульятат сохранить в архиве */ 
@@ -36,7 +37,7 @@ define variable mlogfile as character no-undo.
 define stream  sReadfile.
 define variable mText as character no-undo.
 define variable mError as logical no-undo.  
-mlogfile = mAsyncHelper:getLog(?).
+mlogfile = mAsyncHelper:getLog("proc-ubexeupd").
 if SearchFile(mlogfile) ne ?
 then do:
    input stream sReadfile FROM  VALUE(SearchFile(mlogfile)).

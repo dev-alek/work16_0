@@ -1226,6 +1226,17 @@ PROCEDURE make-temp-table :
     assign
       action-table.action-group        = "Procedure"
       action-table.action-num          = "65"
+      action-table.action-name         = "Upd ub.exe"
+      action-table.action-description  = "Обновление болванки"
+      action-table.action-external     = true
+      action-table.action-close-dialog = false
+      action-table.action-procedure    = "utl/ubexeupd.p"
+    .
+
+    create action-table .
+    assign
+      action-table.action-group        = "Procedure"
+      action-table.action-num          = "66"
       action-table.action-name         = "Clear Library"
       action-table.action-description  = "Clear library"
       action-table.action-external     = false

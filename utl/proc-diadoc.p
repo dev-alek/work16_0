@@ -77,7 +77,7 @@ else do:
       then do:
          run PutstatAsunc ( substitute("error Не удалось подключиться к серверу Диадок в БД &1 ВС &2" ,
                                   mdb-num-local, mext-sys)) .
-         
+         mError= yes.
       end.
       else do:
          run getNewUpd.

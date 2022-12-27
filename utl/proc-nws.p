@@ -17,7 +17,6 @@ define variable vss-date        as character no-undo init "$Date:$":U .
 define variable vss-workfile    as character no-undo init "$Workfile:$":U .
 define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "".
-define variable mError as logical no-undo.
 { cmp/vssrevis.i }
 /*
 session:system-alert-boxes = yes.

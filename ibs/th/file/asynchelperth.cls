@@ -43,7 +43,7 @@ define public variable WaitFile     as character  no-undo.
 define public variable mProcPublish as handle     no-undo.
 define public variable DbConnect    as logical    no-undo init yes.
 define public variable PrintAll     as logical    no-undo.
-
+define public variable ChangProPath     as logical    no-undo.
 
    define public property MyParamStart as character  no-undo
    get.
@@ -69,6 +69,11 @@ get:
    end.
 end.
     set .
+
+define public property InAsyncProc as logical  no-undo 
+get:
+   return myProcInfo().
+end.
    
 define public variable MyBachMode as logical no-undo init yes.
 /*method private void GetOSErrorText (input iSourseDir as char,input iTargetDir as char,input cleadir as logical ):
@@ -287,7 +292,8 @@ get.
             
          end.
          else do:
-            message "Процедура " iProc "уже запущена в паралельном режиме."
+            message "Процедура " iProc "уже запущена в паралельном режиме." skip
+                    MyWorkDir + itask + ".txt"
             view-as alert-box.
             return error.
          end.
@@ -420,20 +426,6 @@ get.
            output stream sWriteFile to value(vFile).
            output stream sWriteFile close.
         end.
-            
-        vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/procrec.txt".
-        if FileExists(vFile)
-        then do:
-           input STREAM sReadfile FROM  VALUE(vFile). 
-           repeat:
-              import stream sReadfile unformatted vCount.
-              if vCount ne ""
-              then do:
-                 oCount = oCount +  int(vCount) no-error.
-              end.
-           end.
-           input STREAM sReadfile close.
-        end.
         
         PubFileLog (ttrun.task, ttrun.num, no).
           
@@ -446,6 +438,42 @@ get.
            define variable vi as integer no-undo.
            define variable vfileWait as character no-undo.
            
+           vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/procrec.txt".
+           if FileExists(vFile)
+           then do:
+              input STREAM sReadfile FROM  VALUE(vFile). 
+              block-conut-end:
+              repeat:
+                 import stream sReadfile unformatted vCount.
+                 if vCount ne ""
+                 then do:
+                    oCount = oCount +  int(vCount) no-error.
+                    if not error-status:error
+                    then
+                       leave block-conut-end.
+                 end.
+              end.
+              input STREAM sReadfile close.
+           end.
+           else do:
+              vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/procrec.txt".
+              if FileExists(vFile)
+              then do:
+                 input STREAM sReadfile FROM  VALUE(vFile).
+                 block-conut: 
+                 repeat:
+                    import stream sReadfile unformatted vCount.
+                    if vCount ne ""
+                    then do:
+                       oCount = oCount +  int(vCount) no-error.
+                       if not error-status:error
+                       then
+                          leave block-conut.
+                    end.
+                 end.
+                 input STREAM sReadfile close.
+              end.
+           end.
            do vi = 1 to num-entries(WaitFile):
               vfileWait = MyWorkDir + ttrun.task + string(ttrun.num) + "/" + entry(vi,waitFile).
               vFlfileWait = WaitForfile(vfileWait).
@@ -826,11 +854,16 @@ end.
       else 
          mProcFile = search (iProc + ".p").
       
+      mAsuncProc = "utl\proc-async".
+      if ChangProPath
+      then
+         mAsuncProc = mAsuncProc + "-propath".
       if isRcode
       then
-         mAsuncProc = search("utl\proc-async.r").
+         mAsuncProc = mAsuncProc + ".r".
       else
-         mAsuncProc = search("utl\proc-async.p").
+         mAsuncProc = mAsuncProc + ".p".
+      mAsuncProc = search(mAsuncProc).
       if MyParamStart ne ""
       then 
          mIniFile = MyParamStart.
@@ -914,6 +947,9 @@ end.
                SavePARAM("ParamProc_" + string(vi),entry(vi,ttrun.fParam, {&delim-par} )).
             end.
             SavefilePARAM(MyWorkDir + vTask + v-path-tls-dir-delim + "param.txt").
+            output stream sWriteFile to value(MyWorkDir + vTask + v-path-tls-dir-delim + "propath.txt").
+            put stream sWriteFile unformatted propath skip.
+            output stream sWriteFile close.
               output stream sWriteFile to value(MyWorkDir + vTask + v-path-tls-dir-delim +  "meslogasync.log").
                    
               put stream sWriteFile unformatted "error Ошибка запуска сессии." skip.
@@ -1374,6 +1410,10 @@ end.
       output stream sWriteFile close.
       mWriteLogTime = now.
    end method.
+   
+   method public logical myProcInfo():
+      return FileExists("procinfo.txt") ne ?.
+   end.
         
    define stream sLogMes. 
    method public logical BegRec():
@@ -1392,8 +1432,12 @@ end.
       then
          ErrorProc = yes.
       if IFlagtime
-      then
+      then do:
          put stream sLogMes unformatted substitute ("&1 &2",cur-time-string-sec(), Itext) skip .
+         if Itext begins "error"
+         then
+            put stream sLogMes unformatted "ERROR Произошла ошибка во время выполнения." skip.
+      end.
       else
          put stream sLogMes unformatted Itext skip .
       mWriteLogMes = yes.

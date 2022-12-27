@@ -75,6 +75,7 @@ else do:
                           ,error-status :get-message(1)
                            ).
          run PutStatAsunc ("Error " + vtext).
+         mError = yes.
       end.
       disconnect ub no-error .
       if not mError 

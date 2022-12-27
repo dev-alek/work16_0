@@ -281,6 +281,89 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME t-TimeAvail
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-TimeAvail Dialog-Frame
+ON leave OF t-TimeAvail IN FRAME Dialog-Frame /* ¬рем€ жизни парол€ */
+DO:
+   if integer(t-TimeAvail:screen-value in frame {&frame-name}) > 60 then do:
+      message "¬рем€ жизни парол€ не должно превышать 60 дней"
+      view-as alert-box.
+      return no-apply .
+   end.
+/*   if integer(t-TimeAvail:screen-value in frame {&frame-name}) < 1 then do:*/
+/*      message "¬рем€ жизни парол€ должно превышать 1 день"                 */
+/*      view-as alert-box.                                                   */
+/*      return no-apply .                                                    */
+/*   end.                                                                    */
+    ASSIGN
+  t-TimeAvail.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME t-TimeBlock
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-TimeBlock Dialog-Frame
+ON leave OF t-TimeBlock IN FRAME Dialog-Frame /* ¬рем€ до блокировки пользовател€ после окончани€ действи€ парол€ */
+DO:
+   if integer(t-TimeBlock:screen-value in frame {&frame-name}) > 120 then do:
+      message "¬рем€ до блокировки пользовател€ после окончани€ действи€ парол€ не должно превышать 120 дней"
+      view-as alert-box.
+      return no-apply .
+   end.
+   if integer(t-TimeBlock:screen-value in frame {&frame-name}) < 30 and integer(t-TimeBlock:screen-value in frame {&frame-name}) <> 0 then do:
+      message "¬рем€ до блокировки пользовател€ после окончани€ действи€ парол€ должно быть больше 30 дней"
+      view-as alert-box.
+      return no-apply .
+   end.   
+    ASSIGN
+  t-TimeBlock.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME t-TimeBlockAdm
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-TimeBlockAdm Dialog-Frame
+ON leave OF t-TimeBlockAdm IN FRAME Dialog-Frame /* ¬рем€ до блокировки пользовател€ после окончани€ действи€ парол€ */
+DO:
+   if integer(t-TimeBlockAdm:screen-value in frame {&frame-name}) > 120 then do:
+      message "¬рем€ до блокировки пользовател€ после окончани€ действи€ парол€ не должно превышать 120 дней"
+      view-as alert-box.
+      return no-apply .
+   end.
+   if integer(t-TimeBlockAdm:screen-value in frame {&frame-name}) < 30 and integer(t-TimeBlockAdm:screen-value in frame {&frame-name}) <> 0 then do:
+      message "¬рем€ до блокировки пользовател€ после окончани€ действи€ парол€ должно быть больше 30 дней"
+      view-as alert-box.
+      return no-apply .
+   end.   
+    ASSIGN
+  t-TimeBlockAdm.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME t-TimeAvailAdm
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-TimeAvailAdm Dialog-Frame
+ON leave OF t-TimeAvailAdm IN FRAME Dialog-Frame /* ¬рем€ жизни парол€ (јƒћ) */
+DO:
+   if integer(t-TimeAvailAdm:screen-value in frame {&frame-name}) > 60 then do:
+      message "¬рем€ жизни парол€ не должно превышать 60 дней"
+      view-as alert-box.
+      return no-apply .
+   end.
+/*   if integer(t-TimeAvailAdm:screen-value in frame {&frame-name}) < 1 then do:*/
+/*      message "¬рем€ жизни парол€ должно превышать 1 день"                    */
+/*      view-as alert-box.                                                      */
+/*      return no-apply .                                                       */
+/*   end.                                                                       */
+    ASSIGN
+  t-TimeAvailAdm.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME t-obyznumbukvAdm
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-obyznumbukvAdm Dialog-Frame
@@ -585,7 +668,7 @@ END PROCEDURE.
 PROCEDURE MyEnable :
 ASSIGN
 FRAME {&FRAME-NAME}:TITLE = FRAME {&FRAME-NAME}:TITLE + (if p-obj-type = {&cmp} then " фирма" else " маг") + STRING(p-obj-code)
-v-tab-order = "t-noanshftstaff, t-obyznumbukv, t-minparol"
+/*v-tab-order = "t-noanshftstaff, t-obyznumbukv, t-minparol"*/
 .
     IF p-obj-type = '' and p-obj-code = 0 THEN DO:
        define variable VsuperAdm as logical no-undo.
@@ -656,7 +739,8 @@ DEFINE VARIABLE v-t-shft AS integer NO-UNDO.
 IF p-mode = {&LOOKUP} THEN RETURN ERROR.
 ASSIGN
 FRAME {&FRAME-NAME}
-t-noanshftstaff t-obyznumbukv t-minparol
+t-noanshftstaff t-obyznumbukv t-minparol t-LastPaswd t-LastPaswdAdm t-minparolAdm
+t-obyznumbukvAdm t-TimeAvail t-TimeAvailAdm t-TimeBlock t-TimeBlockAdm
 .
 
 assign
