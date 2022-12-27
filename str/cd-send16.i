@@ -24,6 +24,7 @@ define variable glog as logical no-undo .
 FOR EACH ub.cash-desk NO-LOCK WHERE
          ub.cash-desk.db-num = g#db-num
      AND ub.cash-desk.obj-code = i-obj-code
+     and ub.cash-desk.pos-type = {&cd-type-IBM-XML}
      AND ub.cash-desk.cash-on
 BREAK
 By ub.cash-desk.pos-type :
