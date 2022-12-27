@@ -2368,6 +2368,8 @@ ON CHOOSE OF b_write-cancel IN FRAME d-utd /* Отказать в подписи */
                run SendResponse( buf_utd.db-num, buf_utd.doc-id, no, no) no-error.    
                if  error-status:error then 
                do: 
+                  message return-value
+                        view-as alert-box.
                   return return-value .
                end.
             end.

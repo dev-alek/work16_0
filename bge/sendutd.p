@@ -51,7 +51,10 @@ else do:
                     buf_utd.CounteragentId,
                     mTypeUtd,
                     idb-num, 
-                    idoc-id).
+                    idoc-id) no-error.
+   if error-status:error
+   then 
+      return.
    
    
    

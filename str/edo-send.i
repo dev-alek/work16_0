@@ -690,7 +690,7 @@ procedure  SendResponse :
                 no-lock no-error.
                 if available buf_utd
                 then do:
-                   if getattrutd (idb-num,idoc-id,"TypeUTD") ne "ÄÎÏ"
+                   if getattrutd (idb-num,idoc-id,"TypeUTD") ne "ñ÷ôÄÎÏ"
                    then do:
                       {&CommentStartClass} run {utl\comment.i} */ SendAnsver in this-procedure (buf_utd.db-num,buf_utd.doc-id,"CorrectionRequest",GetErrForUtd(utd.db-num,utd.doc-id,"return"))no-error.
                       if error-status:error then return error return-value.

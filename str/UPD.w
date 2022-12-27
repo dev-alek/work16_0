@@ -1216,6 +1216,7 @@ ON CHOOSE OF B-write-cancel IN FRAME d-utd /* Отказать в подписи */
                     run SendResponse( X_utd.db-num, X_utd.doc-id, no, no) no-error.        
                     if  error-status:error then 
                     do: 
+                        
                         return return-value .
                     end.
                 end.  
@@ -1231,6 +1232,8 @@ ON CHOOSE OF B-write-cancel IN FRAME d-utd /* Отказать в подписи */
                     run SendResponse( X_utd.db-num, X_utd.doc-id, no, no) no-error.        
                     if  error-status:error then 
                     do: 
+                        message return-value
+                        view-as alert-box.
                         return return-value .
                     end.
                     run init-id (X_utd.doc-id, X_utd.db-num).  
@@ -1298,6 +1301,8 @@ ON CHOOSE OF B-write-sertif IN FRAME d-utd /* Подписать */
                        run SendResponse( X_utd.db-num, X_utd.doc-id, yes, no) no-error.        
                        if  error-status:error then 
                        do: 
+                          message return-value
+                        view-as alert-box.
                            return return-value .
                        end.
                        run init-id (X_utd.doc-id, X_utd.db-num).  

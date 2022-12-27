@@ -247,7 +247,7 @@ function CheckGds returns logical
                   
                   if marking.box-qnty = ? then marking.box-qnty = getQntyUTDByDM(marking.mark).
                   if marking.gds-ext-id = "" then marking.gds-ext-id = getGtinByDM(marking.mark).
-                  if marking.gds-code = ? then marking.gds-code = GetGdsCodeByGtin(marking.gds-ext-id).
+                  if marking.gds-code = ? or marking.gds-code ne vnewGdsCode then marking.gds-code = vnewGdsCode.
                         
                   if    marking.gds-ext-id eq ""
                      or marking.gds-ext-id eq ?
