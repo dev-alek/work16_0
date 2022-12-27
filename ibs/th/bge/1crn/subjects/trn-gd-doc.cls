@@ -144,10 +144,45 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
       isDel = true.
     end.
     
+    { str/tdat-val.i
+      DocCode
+      {&trdcattr-edo-return}
+      v-value
+      v-type
+      no-error
+    }
+    if v-value = "yes" then 
+    do:
+      assign
+        v-is-edo-return = true.
+    end.
+    
+    { str/tdat-val.i
+      DocCode
+      {&trdcattr-is-return}
+      v-value
+      v-type
+      no-error
+    }
+    if v-value = "yes" then 
+    do:
+      assign
+        v-is-return = true.
+    end.
+    
     DocCode = buf_trn-doc.doc-code.
     for first buf_utd no-lock where buf_utd.doc-code = DocCode:
       edoc-id = string(buf_utd.DocumentExt) .
     end.
+    
+    if v-is-return
+    and buf_trn-doc.reason-code = 25
+    then do :
+      for first buf_utd no-lock where buf_utd.doc-code = buf_trn-doc.out-code:
+        edoc-id = string(buf_utd.DocumentExt) .
+      end.
+    end .
+    
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
       { str/is-petrl.i
           buf_doc-line.artic
@@ -185,32 +220,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     do:
       assign
         v-is-lgas-corr-trn = true.
-    end.
-    
-    { str/tdat-val.i
-      DocCode
-      {&trdcattr-edo-return}
-      v-value
-      v-type
-      no-error
-    }
-    if v-value = "yes" then 
-    do:
-      assign
-        v-is-edo-return = true.
-    end.
-    
-    { str/tdat-val.i
-      DocCode
-      {&trdcattr-is-return}
-      v-value
-      v-type
-      no-error
-    }
-    if v-value = "yes" then 
-    do:
-      assign
-        v-is-return = true.
     end.
     
     
@@ -278,7 +287,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           if v-is-petrol-trn
             then EndDocTrnFuel().
             else do:
-              writeprts ().
               EndDocTrn().
             end.
         end.
@@ -415,8 +423,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
             and buf_gds-dtl.prod-code = buf_gds-dtl.prod-code
             and buf_gds-dtl.prod-type = buf_gds-dtl.prod-type.
           write-data-element ("sum", string-mth (round (buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty, 2))).
-          write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
           write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
+          write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
           write-data-element ("sum-s", string-mth ( round (buf_doc-line.price-rubl * buf_doc-line.fact-qnty / (1 + (buf_doc-line.VAT-pc / 100)), 2))).
         end.
         else do:
@@ -425,19 +433,19 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           sum_ = round (buf_doc-line.price-rubl * buf_doc-line.fact-qnty, 2).
           sum-nds = round ((buf_doc-line.price-rubl * buf_doc-line.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2).
           write-data-element ("sum", string-mth (sum_)).
-          write-data-element ("sum-nds", string-mth (sum-nds)).
           write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
+          write-data-element ("sum-nds", string-mth (sum-nds)).
           write-data-element ("sum-s", string-mth (sum_ - sum-nds)).
         end.
         
+        writeprts(buf_doc-line.line-num).
         Marks(buf_doc-line.line-num) .
+        
       sw:end-element ("gd").
       
     end.
 
     sw:end-element ("gds").
-    
-    writeprts ().
     
   end.
 
@@ -802,10 +810,12 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         write-data-element ("qnty-ttn", string-mth (buf_gds-dtl.doc-qnty)).
         write-data-element ("qnty-fact", string-mth (buf_gds-dtl.fact-qnty)).
         write-data-element ("sum", string-mth (round (buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty, 2))).
-        write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
         write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
+        write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
         write-data-element ("sum-s", string-mth (round (buf_doc-line.price-rubl * buf_gds-dtl.fact-qnty / (1 + (buf_doc-line.VAT-pc / 100)), 2))).
-      Marks(buf_doc-line.line-num) .
+      
+        writeprts(buf_doc-line.line-num).
+        Marks(buf_doc-line.line-num) .
       sw:end-element ("gd").
       
     end.
@@ -987,7 +997,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
                                      and buf_parts.artic     = buf_doc-line.artic
                                      and buf_parts.prod-type = buf_doc-line.prod-type
                                      and buf_parts.prod-code = buf_doc-line.prod-code:
-          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old) 
+          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old)
+          or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsEDOForType(v-gds-attr-value-old) 
           then do:
             for each buf_marking-lines no-lock where buf_marking-lines.doc-level = 1 and
               buf_marking-lines.gds-code = buf_goods.gds-code and
@@ -998,9 +1009,14 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               buf_marking-lines.part-code = buf_parts.part-code and
               buf_marking-lines.prt-code = buf_parts.prt-code  :
   
-                if buf_marking-lines.mark begins {&tech-mark-prefix} 
-                and buf_trn-doc.ext-doc-type <> {&TDEDT_Ras_Perem} and buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} 
-                then next .
+              if buf_marking-lines.mark begins {&tech-mark-prefix} 
+              and buf_trn-doc.ext-doc-type <> {&TDEDT_Ras_Perem} and buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} 
+              then next .
+              
+              if buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+              and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+              then next .
+              
               if not vAvailMarks
               then do:
                  sw:start-element ("marks").
@@ -1008,44 +1024,83 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               end.
               sw:start-element ("mark").   
   /*            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).*/
-              if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:
+/*              if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:*/
               write-data-element ("prt-id", buf_parts.part-code).
-              end.
+              write-data-element ("in-doc-id", buf_parts.in-code).
+/*              end.*/
               write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
               sw:end-element ("mark").
             end.
           end.
           else
           if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsArticForType(v-gds-attr-value-old)
-          and num-entries(buf_parts.part-code, "_") = 2
           then do :
             if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}
             or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
             then do:
-              vGtin = entry(1, buf_parts.part-code, "_") .
-              if length(vGtin) = 8
-              or length(vGtin) = 12
-              or length(vGtin) = 13
-              or length(vGtin) = 14
+              if num-entries(buf_parts.part-code, "_") = 2
               then do :
-                vQnty = integer(abs(buf_parts.fact-qnty)) .
-                vDocQnty = integer(abs(buf_parts.qnty)) .
+                vGtin = entry(1, buf_parts.part-code, "_") .
+                if length(vGtin) = 8
+                or length(vGtin) = 12
+                or length(vGtin) = 13
+                or length(vGtin) = 14
+                then do :
+                  vQnty = integer(abs(buf_parts.fact-qnty)) .
+                  vDocQnty = integer(abs(buf_parts.qnty)) .
+                  if not vAvailMarks
+                  then do:
+                    sw:start-element ("marks").
+                    vAvailMarks = yes.
+                  end.
+                  sw:start-element ("mark").
+                  write-data-element ("prt-id", buf_parts.part-code).
+                  write-data-element ("in-doc-id", buf_parts.in-code).
+  /*                write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .*/
+                  write-data-element ("gtin", vGtin) .
+                  if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+                  then
+                    write-data-element ("gtin-qnt-ttn", string-mth(vDocQnty)) .
+                  write-data-element ("gtin-qnt", string-mth(vQnty)) .
+                  write-data-element ("upd-id", buf_parts.PS) .
+                  sw:end-element ("mark").
+                end .
+              end .
+            end .
+            
+            if v-is-return
+            then do :
+              for each buf_marking-lines no-lock where buf_marking-lines.doc-level = 1 and
+                buf_marking-lines.gds-code = buf_goods.gds-code and
+                buf_marking-lines.in-code = buf_parts.in-code and
+                buf_marking-lines.obj-code = buf_parts.obj-code and
+                buf_marking-lines.obj-type = buf_parts.obj-type and
+                buf_marking-lines.out-code = buf_parts.out-code and
+                buf_marking-lines.part-code = buf_parts.part-code and
+                buf_marking-lines.prt-code = buf_parts.prt-code  :
+    
+                if buf_marking-lines.mark begins {&tech-mark-prefix} 
+                and buf_trn-doc.ext-doc-type <> {&TDEDT_Ras_Perem} and buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} 
+                then next .
+                
+                if buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+                then next .
+                
                 if not vAvailMarks
                 then do:
-                  sw:start-element ("marks").
-                  vAvailMarks = yes.
+                   sw:start-element ("marks").
+                   vAvailMarks = yes.
                 end.
-                sw:start-element ("mark").
-/*                write-data-element ("prt-id", buf_parts.part-code).                        */
-/*                write-data-element ("mark-code", "02" + vGtin + "37" + string-mth(vQnty)) .*/
-                write-data-element ("gtin", vGtin) .
-                if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
-                then
-                  write-data-element ("gtin-qnt-ttn", string-mth(vDocQnty)) .
-                write-data-element ("gtin-qnt", string-mth(vQnty)) .
-                write-data-element ("upd-id", buf_parts.PS) .
+                sw:start-element ("mark").   
+    /*            write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).*/
+  /*              if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:*/
+                write-data-element ("in-doc-id", buf_parts.in-code).
+                write-data-element ("prt-id", buf_parts.part-code).
+  /*              end.*/
+                write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
                 sw:end-element ("mark").
-              end .
+              end.
             end .
           end .
         end.
@@ -1233,7 +1288,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     
   end.
   
-  method private void writeprts ():
+  method private void writeprts (p-line-num as integer):
 
     def var vsds as class vsdsubs no-undo.
     def var vsdstr as class vsdtostorage no-undo.
@@ -1242,12 +1297,12 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     define variable v-mercury-value as character no-undo .
     define variable v-mercury-type  as character no-undo .
     define variable v-mercury-prod as logical init false.
-    define variable tagPrts as logical init false.
 
     vsdstr = new vsdtostorage ().
     vsdsts = new vsdstatustype ().
     block-doc-line:  
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
+    for first buf_doc-line no-lock where buf_doc-line.doc-code = DocCode
+                                     and buf_doc-line.line-num = p-line-num:
   
       find first buf_gds no-lock where
             buf_gds.artic = buf_doc-line.artic 
@@ -1261,56 +1316,72 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         no-error
       }
       
-      if not v-mercury-prod 
-      then 
-         next block-doc-line.
-      
-      
+      sw:start-element ("prts").
       
       for each buf_parts where buf_parts.out-code = buf_doc-line.doc-code
           and buf_parts.artic = buf_doc-line.artic
           and buf_parts.prod-type = buf_doc-line.prod-type
           and buf_parts.prod-code = buf_doc-line.prod-code
       no-lock:
-          vsds = vsdstr:getVSDsubs(buffer buf_parts).
-          if vsds:iCounter > 0
-          then do:
-            block-vsd:
-            do ii = 1 to vsds:GetItem(ii):
-              if     vsds:VsdObjCurr:UUID ne "" 
-                 and vsds:VsdObjCurr:UUID ne ? 
-                 and (   vsds:VsdObjCurr:VSDType = vsdsts:VSDTrans 
-                      or vsds:VsdObjCurr:VSDType = vsdsts:VSDIn)
-              then do:
-                 if not tagPrts 
-                 then do: 
-                    sw:start-element ("prts").
-                    tagPrts = true.
-                 end.
-                 sw:start-element ("prt").      
         
-                    write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).
-                    write-data-element ("prt-id", buf_parts.part-code).
-                    write-data-element ("vad-guid", vsds:VsdObjCurr:UUID).
-                    write-data-element ("qnty", string-mth (buf_parts.fact-qnty)).
-                 sw:end-element ("prt").
-        
-                leave block-vsd.
+        sw:start-element ("prt").      
+/*          write-data-element ("gd-line-num", string-mth (buf_doc-line.line-num)).*/
+          
+          if v-is-edo-return
+          then do :
+            if buf_parts.ps > ""
+            and length(buf_parts.ps) = 36
+            then do :
+              write-data-element ("edoc-id", buf_parts.ps).
+            end .
+            else do :
+              for first buf_utd no-lock where buf_utd.doc-code = buf_parts.in-code :
+                write-data-element ("edoc-id", buf_utd.DocumentExt).
+              end.
+            end .
+          end .
+          
+          write-data-element ("in-doc-id", buf_parts.in-code).
+          write-data-element ("prt-id", buf_parts.part-code).
+/*          write-data-element ("qnty", string-mth (buf_parts.fact-qnty)).*/
+
+          if v-mercury-prod
+          then do :
+            vsds = vsdstr:getVSDsubs(buffer buf_parts).
+            if vsds:iCounter > 0
+            then do:
+              block-vsd:
+              do ii = 1 to vsds:GetItem(ii):
+                if     vsds:VsdObjCurr:UUID ne "" 
+                   and vsds:VsdObjCurr:UUID ne ? 
+                   and (   vsds:VsdObjCurr:VSDType = vsdsts:VSDTrans 
+                        or vsds:VsdObjCurr:VSDType = vsdsts:VSDIn)
+                then do:
+                  write-data-element ("vad-guid", vsds:VsdObjCurr:UUID). 
+                  leave block-vsd.
+                end.
               end.
             end.
-          end.
+            delete object vsds no-error.  
+          end .
+          
+          write-data-element ("qnty-ttn", string-mth (buf_parts.qnty)).
+          write-data-element ("qnty-fact", string-mth (buf_parts.fact-qnty)).
+          write-data-element ("sum", string-mth (round (buf_parts.price-rubl * buf_parts.fact-qnty, 2))).
+          write-data-element ("nds-code", string-mth ( round (buf_parts.VAT-pc , 0))).
+          write-data-element ("sum-nds", string-mth ( round ((buf_parts.price-rubl * buf_parts.fact-qnty * buf_parts.VAT-pc) / (100 + buf_parts.VAT-pc) , 2))).
+          write-data-element ("sum-s", string-mth (round (buf_parts.price-rubl * buf_parts.fact-qnty / (1 + (buf_parts.VAT-pc / 100)), 2))).
+        
+        sw:end-element ("prt").
                   
-        delete object vsds no-error.        
+      end. 
       
-      end.      
+      sw:end-element ("prts").
+           
     end.
-    
-    if tagPrts
-      then sw:end-element ("prts").
     
     delete object vsdsts no-error.
     delete object vsdstr no-error.    
-    
     
   end.
 

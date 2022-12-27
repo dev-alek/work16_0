@@ -23,6 +23,9 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
   define property prt-id as character no-undo 
     get. 
     private set.
+  define property in-doc-id as character no-undo 
+    get. 
+    private set.
   define property mark-code as character no-undo 
     get. 
     private set.
@@ -43,6 +46,9 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
     case inTag:
       when "prt-id" then do:
         assign prt-id = inValue.
+      end.
+      when "in-doc-id" then do:
+        assign in-doc-id = inValue.
       end.
       when "mark-code" then do:
         assign mark-code = inValue.
@@ -81,6 +87,7 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
       gtin = ?
       gtin_qnt = ?
       upd_id = ?
+      in-doc-id = ?
     .
   end.
 

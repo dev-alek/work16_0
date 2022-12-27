@@ -76,25 +76,32 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
       TempTrnDoc.dog-code = objTrnDoc:dog-code
       TempTrnDoc.source-doc = objTrnDoc:source-doc
     .
-    
-    if trim (objTrnDoc:doc-type, '0') = '1' 
-      then assign 
-        TempTrnDoc.ext-doc-code = objTrnDoc:doc-code
-        TempTrnDoc.cli-type = "орг"
-        TempTrnDoc.cli-code = integer (objTrnDoc:contr-code)
-        .
-      else assign
-        TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "-", "=") 
-        TempTrnDoc.cli-type = "маг"
-        TempTrnDoc.cli-code = integer (objTrnDoc:fuel-st-code)
-        .
 
     case trim (objTrnDoc:doc-type, '0'):
-      when '4' or when '1' then do:
-        TempTrnDoc.ext-doc-type = {&TDEDT_Pri_Vnesh} .
+      when '1' then do:
+        assign
+          TempTrnDoc.ext-doc-code = objTrnDoc:doc-code
+          TempTrnDoc.cli-type = "орг"
+          TempTrnDoc.cli-code = integer (objTrnDoc:contr-code)
+        .
+      end.
+      when '4' then do:
+        assign
+          TempTrnDoc.ext-doc-type = {&TDEDT_Pri_Perem} 
+          TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "-", "=") 
+          TempTrnDoc.cli-type = "маг"
+          TempTrnDoc.cli-code = integer (objTrnDoc:fuel-st-code)
+          TempTrnDoc.out-code = objTrnDoc:doc-code
+        .
       end.
       when '8' then do:
-        TempTrnDoc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} .
+        assign
+          TempTrnDoc.ext-doc-type = {&TDEDT_Vozvrat_Perem} 
+          TempTrnDoc.ext-doc-code = replace (objTrnDoc:doc-code, "-", "*") 
+          TempTrnDoc.cli-type = "маг"
+          TempTrnDoc.cli-code = integer (objTrnDoc:fuel-st-code)
+          TempTrnDoc.out-code = objTrnDoc:doc-code
+        .
       end.
       when '2' then do:
         TempTrnDoc.ext-doc-type = {&TDEDT_Ras_Vnesh} .
@@ -128,6 +135,25 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
             TempDocLine.vat-pc = (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100. 
         end.
       end.
+      else do :
+        objPrts = objGd:prts no-error .
+        if valid-object (objPrts)
+        then do jj = 1 to objPrts:Get(jj):
+          objPrt =  cast (objPrts:SubjectObjCurr, trn-prt).
+          create TempDocPart .
+          assign
+            TempDocPart.gds-code = objGd:gd-code
+            TempDocPart.doc-qnty = objPrt:qnty-ttn
+            TempDocPart.fact-qnty = objPrt:qnty-fact
+            TempDocPart.price-rubl = objPrt:sum / objPrt:qnty-fact
+            TempDocPart.vat-pc = (objPrt:sum-nds / (objPrt:sum - objPrt:sum-nds)) * 100
+            TempDocPart.part-id = objPrt:prt-id
+            TempDocPart.in-doc-id = objPrt:in-doc-id
+            TempDocPart.edoc-id = objPrt:edoc-id
+            TempDocPart.vsd-uuid = objPrt:vad-guid
+          .
+        end .
+      end .
       if available (TempDocLine)
       then do:
         release TempDocLine.
@@ -138,9 +164,11 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
         assign
           TempDocLine.gds-code = objGd:gd-code
           TempDocLine.fact-qnty = objGd:qnty-fact
-          TempDocLine.doc-qnty = objGd:qnty-fact
+          TempDocLine.doc-qnty = objGd:qnty-ttn
           TempDocLine.price-rubl = objGd:sum / objGd:qnty-fact
-          TempDocLine.vat-pc = (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100.
+          TempDocLine.vat-pc = (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100
+          TempDocLine.koef = objGd:koef
+          TempDocLine.unit-code = objGd:unit-code
         .
         release TempDocLine.
       end.
@@ -152,6 +180,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
         assign
           TempDocMark.mark = replace (replace (objMark:mark-code, "(", "" ), ")", "")
           TempDocMark.prt-id = objMark:prt-id
+          TempDocMark.in-doc-id = objMark:in-doc-id
           TempDocMark.gtin = objMark:gtin
           TempDocMark.gtin_qnt = objMark:gtin_qnt
           TempDocMark.upd_id = objMark:upd_id
@@ -161,11 +190,11 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
       
     end.
     
-    adapObj:SetTempTable(table TempTrnDoc, table TempDocLine, table TempDocMark, "").
+    adapObj:SetTempTable(table TempTrnDoc, table TempDocLine, table TempDocPart, table TempDocMark, "").
     adapObj:WriteDB(output glog).
     
     
-    if error-status:error then 
+    if error-status:error then
     do:
       Msg = return-value.
       result = false.

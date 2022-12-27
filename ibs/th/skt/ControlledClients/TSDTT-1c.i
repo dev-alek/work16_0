@@ -30,7 +30,9 @@ Creation date: 01/30/15
     field doc-id        as character
     field dog-code      as character
     field source-doc    as character
-    index pi line-num ext-doc-code .
+    field out-code      as character
+    index pi line-num ext-doc-code
+  .
 
   define temp-table TempDocLine no-undo
     field line-num     as integer
@@ -42,6 +44,8 @@ Creation date: 01/30/15
     field vat-pc       as decimal
     field fact-dnsty   as decimal
     field cli-qnty     as decimal
+    field koef         as decimal
+    field unit-code    as character
     field b-code       as character
     field is-tsd-qnty  as logical init no
     field vsd-uuid     as character
@@ -51,14 +55,32 @@ Creation date: 01/30/15
     index pi
     line-num
     gds-code
-    .
+  .
+
+  define temp-table TempDocPart no-undo
+    field gds-code     as integer
+    field doc-qnty     as decimal
+    field fact-qnty    as decimal
+    field price-rubl   as decimal
+    field vat-pc       as decimal
+    field fact-dnsty   as decimal
+    field vsd-uuid     as character
+    field part-id      as character
+    field in-doc-id    as character
+    field edoc-id      as character
+    index pi
+    in-doc-id
+    part-id
+    gds-code
+  .
 
   define temp-table TempDocMark no-undo
     field gtin as character
     field gtin_qnt as integer
     field upd_id as character
     field prt-id as character
+    field in-doc-id as character
     field mark as character
     field gds-code as integer
-    index pi mark.
-    
+    index pi mark
+  .

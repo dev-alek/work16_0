@@ -277,6 +277,7 @@ define new shared variable CostPrice    as logical no-undo.
 define new shared variable sort-name    as logical no-undo.
 define new shared variable sort-gr      as logical no-undo.
 define new shared variable print-graft  as logical no-undo.
+define new shared variable PrintParts   as logical no-undo .
 
 function get-name returns character
 (buffer buf_doc-line for ub.doc-line,

@@ -994,7 +994,8 @@ on error undo, return error return-value
                       bf_marking-lines.gds-code = p-goods.gds-code    
                       bf_marking-lines.in-code  = bf_parts.in-code     
                       bf_marking-lines.out-code = t-doc.doc-code   
-                      bf_marking-lines.part-code = bf_parts.part-code         
+                      bf_marking-lines.part-code = bf_parts.part-code    
+                      bf_marking-lines.prt-code = bf_parts.prt-code
                       bf_marking-lines.doc-level = 1
                       bf_marking-lines.mark = entry(2,parvalue,{&delim-key})
                     .

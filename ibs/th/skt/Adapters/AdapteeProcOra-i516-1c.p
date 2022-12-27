@@ -46,6 +46,7 @@ define shared variable g#auto-user-id as character no-undo .
 
 define input  parameter table for  TempTrnDoc.
 define input  parameter table for  TempDocLine.
+define input  parameter table for  TempDocPart.
 define input  parameter table for  TempDocMark.
 define input  parameter userId_ as character no-undo.
 
@@ -177,17 +178,34 @@ do:
       then return error return-value.
   end.
   else do:
-    run utl/ora-i516-1c.p (
-      input this-procedure ,
-      input this-procedure ,
-      input table temp_trn-doc ,
-      input table temp_doc-line ,
-      input table temp_doc-mark ,
-      output v-doc-code,
-      output num-rec-ok
-      ) no-error .
-    if error-status:error 
-      then return error return-value.
+    find first TempTrnDoc .
+    if TempTrnDoc.ext-doc-type = {&TDEDT_Pri_Perem}
+    or TempTrnDoc.ext-doc-type = {&TDEDT_Vozvrat_Perem}
+    then do :
+      run utl/trndocmv-1c.p (
+        input this-procedure ,
+        input table TempTrnDoc ,
+        input table TempDocLine ,
+        input table TempDocPart ,
+        input table TempDocMark
+        ) no-error .
+      if error-status:error 
+        then return error return-value.
+      return .
+    end .
+    else do :
+      run utl/ora-i516-1c.p (
+        input this-procedure ,
+        input this-procedure ,
+        input table temp_trn-doc ,
+        input table temp_doc-line ,
+        input table temp_doc-mark ,
+        output v-doc-code,
+        output num-rec-ok
+        ) no-error .
+      if error-status:error 
+        then return error return-value.
+    end .
   end.
   find first ub.trn-doc no-lock where ub.trn-doc.doc-code  = v-doc-code no-error.
   case ub.trn-doc.ext-doc-type:

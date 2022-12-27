@@ -29,6 +29,9 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
   define property unit-code as character no-undo 
     get. 
     private set.
+  define property koef as decimal no-undo 
+    get. 
+    private set.
   define property qnty-ttn as decimal no-undo 
     get. 
     private set.
@@ -44,6 +47,9 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
   define property nds-code as decimal no-undo 
     get. 
     private set.  
+  define property prts as subjects no-undo 
+    get. 
+    private set. 
   define property marks as subjects no-undo 
     get. 
     private set.  
@@ -52,7 +58,7 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
     get. 
 
   constructor public trn-gd ():
-    InitListTag = "marks".
+    InitListTag = "prts,marks".
   end constructor.
     
   method override protected void SetPropProtected(input SubsObj as subjects):
@@ -61,6 +67,10 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
       when "marks" then
         do:
           marks = SubsObj.            
+        end.
+      when "prts" then
+        do:
+          prts = SubsObj.            
         end.
     end case.
 
@@ -76,6 +86,9 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
       end.
       when "unit-code" then do:
         assign unit-code = inValue.
+      end.
+      when "koef" then do:
+        assign koef = decimal (inValue) .
       end.
       when "qnty-ttn" then do:
         assign qnty-ttn = decimal (inValue) .
@@ -118,11 +131,15 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
       line-num  = ?
       gd-code   = ?
       unit-code = ?
+      koef      = ?
       qnty-ttn  = ?
       qnty-fact = ?
       sum       = ?
       sum-nds   = ? 
+      nds-code  = ?
     .
+    delete object prts no-error.
+    delete object marks no-error.
   end.
 
   

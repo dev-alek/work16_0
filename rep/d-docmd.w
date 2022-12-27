@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -51,7 +51,7 @@ define variable vss-description as character no-undo init "Параметры печати форм
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -63,10 +63,10 @@ define variable vss-description as character no-undo init "Параметры печати форм
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-help b-cancel ed-form-name ~
-tg-type-price tg-type-scale tg-type-val tg-sort-name tg-sort-gr ~
-tg-print-graft tg-no-vat
-&Scoped-Define DISPLAYED-OBJECTS ed-form-name tg-type-price tg-type-scale ~
-tg-type-val tg-sort-name tg-sort-gr tg-print-graft tg-no-vat
+tg-type-parts tg-type-price tg-type-scale tg-type-val tg-sort-name ~
+tg-sort-gr tg-print-graft tg-no-vat 
+&Scoped-Define DISPLAYED-OBJECTS ed-form-name tg-type-parts tg-type-price ~
+tg-type-scale tg-type-val tg-sort-name tg-sort-gr tg-print-graft tg-no-vat 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -81,58 +81,63 @@ tg-type-val tg-sort-name tg-sort-gr tg-print-graft tg-no-vat
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-cancel AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-cancel AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "В&вод"
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "В&вод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE ed-form-name AS CHARACTER
+DEFINE VARIABLE ed-form-name AS CHARACTER 
      VIEW-AS EDITOR NO-BOX
      SIZE 43 BY 2.75
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE tg-no-vat AS LOGICAL INITIAL no
-     LABEL "Печать учетных цен без НДС"
+DEFINE VARIABLE tg-no-vat AS LOGICAL INITIAL no 
+     LABEL "Печать учетных цен без НДС" 
      VIEW-AS TOGGLE-BOX
      SIZE 41 BY .83 NO-UNDO.
 
-DEFINE VARIABLE tg-print-graft AS LOGICAL INITIAL no
-     LABEL "Сортировка по артикулу"
+DEFINE VARIABLE tg-print-graft AS LOGICAL INITIAL no 
+     LABEL "Сортировка по артикулу" 
      VIEW-AS TOGGLE-BOX
      SIZE 41 BY .83 NO-UNDO.
 
-DEFINE VARIABLE tg-sort-gr AS LOGICAL INITIAL no
-     LABEL "Сортировка по группе"
+DEFINE VARIABLE tg-sort-gr AS LOGICAL INITIAL no 
+     LABEL "Сортировка по группе" 
      VIEW-AS TOGGLE-BOX
      SIZE 41 BY .83 NO-UNDO.
 
-DEFINE VARIABLE tg-sort-name AS LOGICAL INITIAL no
-     LABEL "Сортировка по имени"
+DEFINE VARIABLE tg-sort-name AS LOGICAL INITIAL no 
+     LABEL "Сортировка по имени" 
      VIEW-AS TOGGLE-BOX
      SIZE 41 BY .83 NO-UNDO.
 
-DEFINE VARIABLE tg-type-price AS LOGICAL INITIAL no
-     LABEL "Печать в ценах документа"
+DEFINE VARIABLE tg-type-parts AS LOGICAL INITIAL no 
+     LABEL "Печать по партиям" 
      VIEW-AS TOGGLE-BOX
      SIZE 41 BY .83 NO-UNDO.
 
-DEFINE VARIABLE tg-type-scale AS LOGICAL INITIAL no
-     LABEL "Печать по шкалам"
+DEFINE VARIABLE tg-type-price AS LOGICAL INITIAL no 
+     LABEL "Печать в ценах документа" 
      VIEW-AS TOGGLE-BOX
      SIZE 41 BY .83 NO-UNDO.
 
-DEFINE VARIABLE tg-type-val AS LOGICAL INITIAL no
-     LABEL "Печать в {&abbr_rublyah}"
+DEFINE VARIABLE tg-type-scale AS LOGICAL INITIAL no 
+     LABEL "Печать по шкалам" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 41 BY .83 NO-UNDO.
+
+DEFINE VARIABLE tg-type-val AS LOGICAL INITIAL no 
+     LABEL "Печать в " 
      VIEW-AS TOGGLE-BOX
      SIZE 41 BY .83 NO-UNDO.
 
@@ -144,16 +149,17 @@ DEFINE FRAME Dialog-Frame
      b-help AT ROW 1 COL 24.5
      b-cancel AT ROW 1 COL 34.5
      ed-form-name AT ROW 2.25 COL 1.5 NO-LABEL
-     tg-type-price AT ROW 5.75 COL 3
-     tg-type-scale AT ROW 6.75 COL 3
-     tg-type-val AT ROW 7.75 COL 3
-     tg-sort-name AT ROW 8.75 COL 3
-     tg-sort-gr AT ROW 9.75 COL 3
-     tg-print-graft AT ROW 10.75 COL 3
-     tg-no-vat AT ROW 11.75 COL 3
-     SPACE(0.87) SKIP(0.37)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     tg-type-parts AT ROW 5.17 COL 3 WIDGET-ID 2
+     tg-type-price AT ROW 6.08 COL 3
+     tg-type-scale AT ROW 7.08 COL 3
+     tg-type-val AT ROW 8.08 COL 3
+     tg-sort-name AT ROW 9.08 COL 3
+     tg-sort-gr AT ROW 10.08 COL 3
+     tg-print-graft AT ROW 11.08 COL 3
+     tg-no-vat AT ROW 12.08 COL 3
+     SPACE(0.87) SKIP(0.04)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры печати формы"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-cancel.
 
@@ -173,18 +179,18 @@ DEFINE FRAME Dialog-Frame
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
-                                                                        */
-ASSIGN
+   FRAME-NAME                                                           */
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-ASSIGN
+ASSIGN 
        ed-form-name:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -213,9 +219,11 @@ DO:
         tg-sort-gr
         tg-print-graft
         tg-no-vat
+        tg-type-parts
     .
     assign
-        p-parameters-string-new =   ( if tg-type-price    = yes then "+":U else "-":U )
+        p-parameters-string-new =   ( if tg-type-parts    = yes then "+":U else "-":U ) 
+                                  + ( if tg-type-price    = yes then "+":U else "-":U )
                                   + ( if tg-type-scale    = yes then "+":U else "-":U )
                                   + ( if tg-type-val      = yes then "+":U else "-":U )
                                   + ( if tg-sort-name     = yes then "+":U else "-":U )
@@ -243,7 +251,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 { gbl/hot-key.i b-exit }
@@ -275,7 +283,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable-fields Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable-fields Dialog-Frame 
 PROCEDURE disable-fields :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -289,40 +297,46 @@ on error undo, return error
     if substring( p-parameters-enabled-string, 1, 1 ) <> "+":U
     then do:
         disable
-            tg-type-price
+            tg-type-parts
         .
     end.
     if substring( p-parameters-enabled-string, 2, 1 ) <> "+":U
     then do:
         disable
-            tg-type-scale
+            tg-type-price
         .
     end.
     if substring( p-parameters-enabled-string, 3, 1 ) <> "+":U
     then do:
         disable
-            tg-type-val
+            tg-type-scale
         .
     end.
     if substring( p-parameters-enabled-string, 4, 1 ) <> "+":U
     then do:
         disable
-            tg-sort-name
+            tg-type-val
         .
     end.
     if substring( p-parameters-enabled-string, 5, 1 ) <> "+":U
     then do:
         disable
-            tg-sort-gr
+            tg-sort-name
         .
     end.
     if substring( p-parameters-enabled-string, 6, 1 ) <> "+":U
     then do:
         disable
-            tg-print-graft
+            tg-sort-gr
         .
     end.
     if substring( p-parameters-enabled-string, 7, 1 ) <> "+":U
+    then do:
+        disable
+            tg-print-graft
+        .
+    end.
+    if substring( p-parameters-enabled-string, 8, 1 ) <> "+":U
     then do:
         disable
             tg-no-vat
@@ -340,7 +354,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -359,14 +373,15 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY ed-form-name tg-type-price tg-type-scale tg-type-val tg-sort-name
-          tg-sort-gr tg-print-graft tg-no-vat
+  DISPLAY ed-form-name tg-type-parts tg-type-price tg-type-scale tg-type-val 
+          tg-sort-name tg-sort-gr tg-print-graft tg-no-vat 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-help b-cancel ed-form-name tg-type-price tg-type-scale
-         tg-type-val tg-sort-name tg-sort-gr tg-print-graft tg-no-vat
+  ENABLE b-exit b-help b-cancel ed-form-name tg-type-parts tg-type-price 
+         tg-type-scale tg-type-val tg-sort-name tg-sort-gr tg-print-graft 
+         tg-no-vat 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -375,7 +390,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-fields Dialog-Frame 
 PROCEDURE init-fields :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -391,6 +406,7 @@ on error undo, return error
     .
     run menu-doc-set-visible-options in this-procedure (
           input p-parameters-string-old
+        , output tg-type-parts  
         , output tg-type-price
         , output tg-type-scale
         , output tg-type-val
@@ -407,3 +423,4 @@ END PROCEDURE. /* init-fields */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
