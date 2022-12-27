@@ -223,6 +223,7 @@ define variable parext-doc-mode as character no-undo.
 define variable prev-pardoc-mode as character no-undo.
 define variable varvalue as character no-undo.
 define variable vartype  as character no-undo.
+define variable is-contract-edo as logical no-undo init no .
 
 define variable v-is-ptrl   as character no-undo.
 define variable v-data-type as character no-undo.
@@ -3928,7 +3929,23 @@ end.
                                                  and buf_contract-attr.attr-code = "contract-edi"
                                                  no-error .
           if available buf_contract-attr
-          and logical(buf_contract-attr.attr-value) = true 
+          and logical(buf_contract-attr.attr-value) = true
+          then do :
+            is-contract-edo = yes .
+          end .
+          else do :
+            find first buf_contract-attr no-lock where buf_contract-attr.host-code = reas_contract.host-code
+                                                   and buf_contract-attr.contract-code = reas_contract.contract-code
+                                                   and buf_contract-attr.attr-code = "contract-diadoc"
+                                                   no-error .
+            if available buf_contract-attr
+            and logical(buf_contract-attr.attr-value) = true
+            then do :
+              is-contract-edo = yes .
+            end .
+          end . 
+          
+          if is-contract-edo
           and EDOParSec:IsEdo
           then do :
             edo-return = yes .
@@ -3972,7 +3989,23 @@ end.
                                                    and buf_contract-attr.attr-code = "contract-edi"
                                                    no-error .
             if available buf_contract-attr
-            and logical(buf_contract-attr.attr-value) = true 
+            and logical(buf_contract-attr.attr-value) = true
+            then do :
+              is-contract-edo = yes .
+            end .
+            else do :
+              find first buf_contract-attr no-lock where buf_contract-attr.host-code = reas_contract.host-code
+                                                     and buf_contract-attr.contract-code = reas_contract.contract-code
+                                                     and buf_contract-attr.attr-code = "contract-diadoc"
+                                                     no-error .
+              if available buf_contract-attr
+              and logical(buf_contract-attr.attr-value) = true
+              then do :
+                is-contract-edo = yes .
+              end .
+            end . 
+            
+            if is-contract-edo
             and EDOParSec:IsEdo
             then do :
               { str/tdat-val.i
@@ -8542,6 +8575,22 @@ if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} or
                                              no-error .
       if available buf_contract-attr
       and logical(buf_contract-attr.attr-value) = true
+      then do :
+        is-contract-edo = yes .
+      end .
+      else do :
+        find first buf_contract-attr no-lock where buf_contract-attr.host-code = bf_contract.host-code
+                                               and buf_contract-attr.contract-code = bf_contract.contract-code
+                                               and buf_contract-attr.attr-code = "contract-diadoc"
+                                               no-error .
+        if available buf_contract-attr
+        and logical(buf_contract-attr.attr-value) = true
+        then do :
+          is-contract-edo = yes .
+        end .
+      end .  
+      
+      if is-contract-edo
       and EDOParSec:IsEdo
       then do :
         { str/tdat-val.i
