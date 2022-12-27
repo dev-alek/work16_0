@@ -230,6 +230,24 @@ define variable var-is-auto-trn  as logical no-undo .
 define variable v-return-qnty    as decimal no-undo .
 define variable varvalue                    as   character              no-undo.
 define variable vartype                     as   character              no-undo.
+define variable stfactplvalue as character no-undo.
+define variable stfactpltype as character no-undo.
+
+define variable varupd-fact-qnty       as logical      no-undo initial yes .
+define variable varrevision            as logical      no-undo initial no  .
+define variable varpercrev             as decimal      no-undo initial ?   .
+define variable varauto-tank           as logical      no-undo initial no  .
+define variable varpercauto            as decimal      no-undo initial ?   .
+define variable varinv                 as logical      no-undo initial no  .
+define variable varpercinv             as decimal      no-undo initial ?   .
+define variable varinv-set             as logical      no-undo initial no  .
+
+define variable v-mercury-value as character no-undo .
+define variable v-mercury-type  as character no-undo .
+define variable v-mercury-prod as logical init false.
+define variable keypart as character init false.
+define variable v-close as logical.
+define variable v-expense-return as logical no-undo init false .
 
 {str/tt-nomark.i}
 
@@ -495,8 +513,6 @@ if varhold-doc = true then do:
   end. /*for each*/
 end.
 
-define variable stfactplvalue as character no-undo.
-define variable stfactpltype as character no-undo.
 { gbl/conf-rd.i
   "'stfactpl'"
   "''"
@@ -510,14 +526,6 @@ define variable stfactpltype as character no-undo.
   stfactpltype
   no-error
 }
-define variable varupd-fact-qnty       as logical      no-undo initial yes .
-define variable varrevision            as logical      no-undo initial no  .
-define variable varpercrev             as decimal      no-undo initial ?   .
-define variable varauto-tank           as logical      no-undo initial no  .
-define variable varpercauto            as decimal      no-undo initial ?   .
-define variable varinv                 as logical      no-undo initial no  .
-define variable varpercinv             as decimal      no-undo initial ?   .
-define variable varinv-set             as logical      no-undo initial no  .
 
 if stfactplvalue <> ""  then 
 do:
@@ -545,13 +553,17 @@ do:
   end.
 end.
 
-define variable v-mercury-value as character no-undo .
-define variable v-mercury-type  as character no-undo .
-define variable v-mercury-prod as logical init false.
-define variable keypart as character init false.
-define variable v-close as logical.
+for first buf_doc-attr no-lock where buf_doc-attr.doc-code = bf_trn-doc.doc-code
+                                 and buf_doc-attr.attr-code = {&trdcattr-is-return}
+:
+  if logical(buf_doc-attr.attr-value) then v-expense-return = yes .
+end .
 
-if varstatus = {&fact} and (bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} )
+if varstatus = {&fact}
+and (bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+  or bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+  or bf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} 
+  or v-expense-return )
 then do:
   { gbl/conf-rd.i
     "'mercuri':u"
@@ -1028,6 +1040,7 @@ run waitfram-show in this-procedure ( input substitute( "Переход документа в ста
     
     if lookup( string(bf_trn-doc.reason-code), v-reasons-for-return) > 0
     and bf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+    and not v-expense-return
     then do : 
       /*Возврат через расход*/
       find first in_trn-doc no-lock where in_trn-doc.doc-code = bf_trn-doc.out-code no-error .
@@ -2487,24 +2500,28 @@ vartechproliv = no
                   var-host-code = bf_trn-doc.host-code 
 /*                  var-host-code = ( if varhold-doc then bf_trn-doc.cli-code  else bf_trn-doc.host-code )*/
                 .
-                { str/ckcntspc.i
-                  var-host-code
-                  bf_trn-doc.contract-code
-                  bf_goods.gds-code
-                  varprice-check
-                  varvat-type
-                  bf_doc-line.VAT-pc
-                  no-error
-                }
-                if error-status :error
-                then do:
-                  assign
-                    varerr = yes.
-                  output stream str-err to value( replace( bf_trn-doc.doc-code, "*", "$" ) + ".err" ) append.
-                  put    stream str-err unformatted return-value skip.
-                  output stream str-err close.
-                  next bf_doc-line_cycle.
-                end.
+
+                if not v-expense-return
+                then do :
+                  { str/ckcntspc.i
+                    var-host-code
+                    bf_trn-doc.contract-code
+                    bf_goods.gds-code
+                    varprice-check
+                    varvat-type
+                    bf_doc-line.VAT-pc
+                    no-error
+                  }
+                  if error-status :error
+                  then do:
+                    assign
+                      varerr = yes.
+                    output stream str-err to value( replace( bf_trn-doc.doc-code, "*", "$" ) + ".err" ) append.
+                    put    stream str-err unformatted return-value skip.
+                    output stream str-err close.
+                    next bf_doc-line_cycle.
+                  end.
+                end .
               end.
             end.
             if varerr = yes

@@ -1447,6 +1447,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Документ источник для ТПН */
 { cmp/cr-prep.i 1 trdcattr-trn-is-gds "trn-is-gds" " " "trn-is-gds" }
 
+/* Расход внешний как Возврат поставщику */
+{ cmp/cr-prep.i 1 trdcattr-is-return "is-return" " " "is-return" }
+
+/* Расход внешний как Возврат поставщику через ЭДО */
+{ cmp/cr-prep.i 1 trdcattr-edo-return "edo-return" " " "edo-return" }
+
 /* Документ источник для корр. СУГ */
 { cmp/cr-prep.i 1 trdcattr-trn-lgas-corr "trn-lgas-corr" " " "trn-lgas-corr" }
 
@@ -1564,6 +1570,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-is-lgas}~
 ,{&bef-trdcattr-is-lgas-corr}~
 ,{&bef-trdcattr-othermoves}~
+,{&bef-trdcattr-is-return}~
+,{&bef-trdcattr-edo-return}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).
 

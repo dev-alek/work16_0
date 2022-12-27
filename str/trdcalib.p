@@ -502,6 +502,10 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-trn-lgas-corr
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-is-return
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-edo-return
+      {&attr-temp-full-code}
       &scop attr-code trdcattr-date-start
       {&attr-temp-full-code}
       &scop attr-code trdcattr-date-end

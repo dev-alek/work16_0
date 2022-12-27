@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -85,7 +85,7 @@ define variable mark                    as character                no-undo colu
 define variable parts-part-code         as character                no-undo column-label "Партия"           format "x(40)" .
 define variable parts-out-code          as character                no-undo column-label "Статус"           format "x(18)" .
 define variable parts-object            as character                no-undo column-label "Объект"           format "x(10)" .
-define variable parts-b-code            as integer                  no-undo column-label "Бар-код"          format "9999999999" .
+define variable parts-b-code            like ub.bar-code.b-code     no-undo column-label "Бар-код"           .
 define variable parts-purch-code        as character                no-undo column-label "Тип приобретения" format "x(20)" .
 define variable parts-contract-prn-code as character                no-undo column-label "Договор"          format "x(16)" .
 define variable in-code-date as character no-undo .
@@ -103,9 +103,11 @@ define variable varvalue as character no-undo .
 define variable vartype as character no-undo .
 define variable v-ext-mode as character no-undo .
 define variable v-sum-parts-qnty as decimal no-undo .
-define variable v-is-return as logical init no .
+define variable bcol    as handle    extent no-undo.
+define variable hBrowse as handle    no-undo.
+define variable ic as integer no-undo .
 
-{ gbl/objsrv.i }
+define variable ObjSrv as class ibs.th.gbl.sys.objsrv no-undo.
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 define new shared buffer  parts for ub.parts  .
@@ -284,7 +286,6 @@ find first buf_parts-attr no-lock
            else return date("") .
 END FUNCTION.
 
-
 /* требуется редактирование партий */
 define variable v-edit-parts as logical   no-undo init false .
 /* можно создавать и удалять партии */
@@ -340,7 +341,38 @@ define variable v-mode-name                 as character no-undo .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
+/*------------------------------------------------------------------------
+
+  File: 
+
+  Description: 
+
+  Input Parameters:
+      <none>
+
+  Output Parameters:
+      <none>
+
+  Author: 
+
+  Created: 20/02/20 -  1:14 pm
+
+------------------------------------------------------------------------*/
+/*          This .W file was created with the Progress AppBuilder.       */
+/*----------------------------------------------------------------------*/
+
+/* ***************************  Definitions  ************************** */
+
+/* Parameters Definitions ---                                           */
+
+/* Local Variable Definitions ---                                       */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -355,9 +387,9 @@ define variable v-mode-name                 as character no-undo .
 &Scoped-define INTERNAL-TABLES parts
 
 /* Definitions for BROWSE br-parts                                      */
-&Scoped-define FIELDS-IN-QUERY-br-parts get-mark(buffer parts) @ mark get-parts-part-code(buffer parts, v-goods-alcohol-prod) @ parts-part-code get-parts-out-code(buffer parts) @ parts-out-code parts.qnty parts.fact-qnty parts.price-base parts.price-rubl parts.cli-qnty parts.cli-base-rate parts.transport-base parts.transport-rubl parts.road-tax-base parts.road-tax-rubl parts.other-base parts.other-rubl (parts.obj-type + " " + STRING (parts.obj-code)) @ parts-object parts.is-supp parts.cst-code parts.last-date parts.hold-date parts.pl-code get-b-code(buffer parts) @ parts-b-code get-purch-code(buffer parts) @ parts-purch-code get-contract-prn-code(recid(parts)) @ parts-contract-prn-code parts.part-code parts.in-code (get-in-code-date(recid(parts))) (get-price-sale(recid(parts)))  (get-price-prod1(recid(parts))) (get-price-prod2(recid(parts))) parts.in-code parts.out-code parts.part-code
+&Scoped-define FIELDS-IN-QUERY-br-parts get-mark(buffer parts) @ mark get-parts-part-code(buffer parts, v-goods-alcohol-prod) @ parts-part-code get-parts-out-code(buffer parts) @ parts-out-code parts.qnty parts.fact-qnty parts.price-base parts.price-rubl parts.cli-qnty parts.cli-base-rate parts.transport-base parts.transport-rubl parts.road-tax-base parts.road-tax-rubl parts.other-base parts.other-rubl (parts.obj-type + " " + STRING (parts.obj-code)) @ parts-object parts.is-supp parts.cst-code parts.last-date parts.hold-date parts.pl-code get-b-code(buffer parts) @ parts-b-code get-purch-code(buffer parts) @ parts-purch-code get-contract-prn-code(recid(parts)) @ parts-contract-prn-code parts.part-code parts.in-code (get-in-code-date(recid(parts))) (get-price-sale(recid(parts))) (get-price-prod1(recid(parts))) @ vprice-prod1 (get-price-prod2(recid(parts))) @ vprice-prod2 if parts.whole-send-news = int({&FiB}) then "+" else "" /*parts.in-code parts.out-code parts.part-code */   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br-parts parts.qnty ~
-parts.fact-qnty
+parts.fact-qnty   
 &Scoped-define ENABLED-TABLES-IN-QUERY-br-parts parts
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br-parts parts
 &Scoped-define SELF-NAME br-parts
@@ -372,16 +404,16 @@ parts.fact-qnty
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit b-mark b-sel b-lkp b-add b-chg ~
-b-del b-sch b-print b-help RECT-4 RECT-7 b-doc b-b-alt b-pl rs-parts ~
+b-del b-vsd b-sch b-print b-help RECT-4 RECT-7 b-doc b-b-alt b-pl rs-parts ~
 rs-one-all R-find s-code br-parts b-income-in-code b-in b-contract ~
-FI_price-doc
+FI_price-doc 
 &Scoped-Define DISPLAYED-OBJECTS rs-parts rs-one-all R-find s-code ~
 FI_doc-line_doc-qnty fi-label-filter-status FI_doc-line_fact-qnty ~
 FI_unit-base fi-label-filter-object fi-free-qnty fi-free-rsrv-qnty ~
 FI_orig-purch-code fi-income-qnty fi-income-qnty-fact fi-out-qnty ~
 fi-out-rsrv-qnty FI_last-date FI_price-doc FI_parts_cli-qnty ~
 FI_parts_cli-base-rate FI_parts_SLT-type FI_parts_SLT-pc FI_country-name ~
-FI_purch-code FI_contract-prn-code
+FI_purch-code FI_contract-prn-code 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -392,28 +424,28 @@ FI_purch-code FI_contract-prn-code
 
 /* ************************  Function Prototypes ********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-contract-prn-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-contract-prn-code Dialog-Frame 
 FUNCTION get-contract-prn-code RETURNS CHARACTER
   ( input p-recid as recid  )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-country-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-country-name Dialog-Frame 
 FUNCTION get-country-name RETURNS CHARACTER
   ( BUFFER buf_parts FOR parts )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-mark Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-mark Dialog-Frame 
 FUNCTION get-mark RETURNS CHARACTER
   ( BUFFER buf_parts FOR parts )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-purch-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-purch-code Dialog-Frame 
 FUNCTION get-purch-code RETURNS CHARACTER
   ( BUFFER buf_parts FOR parts )  FORWARD.
 
@@ -426,72 +458,68 @@ FUNCTION get-purch-code RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-alc-attr
-     LABEL "АлкАт&р"
+DEFINE BUTTON b-alc-attr 
+     LABEL "АлкАт&р" 
      SIZE 10 BY 1 TOOLTIP "Атрибуты алкогольной продукции".
 
-DEFINE BUTTON b-vsd
-     LABEL "ВС&Д"
-     SIZE 10 BY 1 TOOLTIP "Ветеренарная справка".
-
-DEFINE BUTTON b-b-alt
-     LABEL "&Коды"
+DEFINE BUTTON b-b-alt 
+     LABEL "&Коды" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-contract
+DEFINE BUTTON b-contract 
      IMAGE-UP FILE "cmp/btn-fnd.bmp":U
      IMAGE-DOWN FILE "cmp/btn-fnd.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/btn-fnd.bmp":U NO-CONVERT-3D-COLORS
-     LABEL "b-contract"
+     LABEL "b-contract" 
      SIZE 3 BY 1 TOOLTIP "Посмотреть До&говор".
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить"
+DEFINE BUTTON b-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-doc
-     LABEL "Д&окумент"
+DEFINE BUTTON b-doc 
+     LABEL "Д&окумент" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-in
+DEFINE BUTTON b-in 
      IMAGE-UP FILE "cmp/btn-fnd.bmp":U
      IMAGE-DOWN FILE "cmp/btn-fnd.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/btn-fnd.bmp":U NO-CONVERT-3D-COLORS
-     LABEL "П&Н"
+     LABEL "П&Н" 
      SIZE 3 BY 1 TOOLTIP "Документ, создавший партию или изменивший её параметры".
 
-DEFINE BUTTON b-income-in-code
+DEFINE BUTTON b-income-in-code 
      IMAGE-UP FILE "cmp/btn-fnd.bmp":U
      IMAGE-DOWN FILE "cmp/btn-fnd.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/btn-fnd.bmp":U NO-CONVERT-3D-COLORS
-     LABEL "Вне&ш.ПН"
+     LABEL "Вне&ш.ПН" 
      SIZE 3 BY 1 TOOLTIP "Внешний приходный документ, создавший партию".
 
-DEFINE BUTTON b-lkp
-     LABEL "&Просмотр"
+DEFINE BUTTON b-lkp 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-mark
-     LABEL "&*"
+DEFINE BUTTON b-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
 DEFINE BUTTON b-marking 
@@ -499,255 +527,268 @@ DEFINE BUTTON b-marking
      SIZE 10 BY 1 TOOLTIP "Марки".
 
 DEFINE BUTTON b-pl 
-     LABEL "&Место"
+     LABEL "&Место" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-print
-     LABEL "Пе&чать"
+DEFINE BUTTON b-print 
+     LABEL "Пе&чать" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON b-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор "
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор " 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE ed-notes AS CHARACTER
+DEFINE BUTTON b-vsd 
+     LABEL "ВС&Д" 
+     SIZE 10 BY 1 TOOLTIP "Ветеренарная справка".
+
+DEFINE VARIABLE ed-notes AS CHARACTER 
      VIEW-AS EDITOR
      SIZE 25.5 BY 1.75
      BGCOLOR 8 FGCOLOR 4 FONT 2 NO-UNDO.
 
-DEFINE VARIABLE fi-b-code AS INTEGER FORMAT ">>>>>>>>>>>>9":U INITIAL 0
-     LABEL "Бар-код"
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-b-code AS INTEGER FORMAT ">>>>>>>>>>>>9":U INITIAL 0 
+     LABEL "Бар-код" 
+      VIEW-AS TEXT 
      SIZE 14 BY .79 TOOLTIP "Бар-код"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-free-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Свободно"
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-free-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Свободно" 
+      VIEW-AS TEXT 
      SIZE 17 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-free-rsrv-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Резерв Свободно"
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-free-rsrv-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Резерв Свободно" 
+      VIEW-AS TEXT 
      SIZE 17 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-income-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Приход док"
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-income-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Приход док" 
+      VIEW-AS TEXT 
      SIZE 17 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-income-qnty-fact AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Приход факт"
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-income-qnty-fact AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Приход факт" 
+      VIEW-AS TEXT 
      SIZE 17 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-label-filter-object AS CHARACTER FORMAT "X(256)":U INITIAL "Объекты:"
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-label-filter-object AS CHARACTER FORMAT "X(256)":U INITIAL "" 
+      VIEW-AS TEXT 
      SIZE 8 BY .88 NO-UNDO.
 
-DEFINE VARIABLE fi-label-filter-status AS CHARACTER FORMAT "X(256)":U INITIAL "Статус:"
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-label-filter-status AS CHARACTER FORMAT "X(256)":U INITIAL "" 
+      VIEW-AS TEXT 
      SIZE 7 BY .67 NO-UNDO.
+     
+DEFINE VARIABLE F-date-to AS DATE FORMAT "99/99/9999":U 
+     VIEW-AS FILL-IN 
+     SIZE 10.8 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fi-out-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Расход"
-      VIEW-AS TEXT
+DEFINE VARIABLE F-date-from AS DATE FORMAT "99/99/9999":U 
+     LABEL "Период " 
+     VIEW-AS FILL-IN 
+     SIZE 10.8 BY 1 NO-UNDO.     
+
+DEFINE VARIABLE fi-out-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Расход" 
+      VIEW-AS TEXT 
      SIZE 17 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE fi-out-rsrv-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0
-     LABEL "Резерв Расход"
-      VIEW-AS TEXT
+DEFINE VARIABLE fi-out-rsrv-qnty AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL 0 
+     LABEL "Резерв Расход" 
+      VIEW-AS TEXT 
      SIZE 17 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE FI_contract-prn-code AS CHARACTER FORMAT "X(256)":U
-     LABEL "Договор"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_contract-prn-code AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Договор" 
+      VIEW-AS TEXT 
      SIZE 36.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE FI_country-name AS CHARACTER FORMAT "X(256)":U
-     LABEL "Страна"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_country-name AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Страна" 
+      VIEW-AS TEXT 
      SIZE 21.13 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE FI_currency_curr-abbr AS CHARACTER FORMAT "X(3)"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_currency_curr-abbr AS CHARACTER FORMAT "X(3)" 
+      VIEW-AS TEXT 
      SIZE 10 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_doc-line_doc-qnty AS DECIMAL FORMAT "->>,>>9.99" INITIAL ?
-     LABEL "По док-ту"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_doc-line_doc-qnty AS DECIMAL FORMAT "->>,>>9.99" INITIAL ? 
+     LABEL "По док-ту" 
+      VIEW-AS TEXT 
      SIZE 13 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_doc-line_fact-qnty AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0
-     LABEL "Факт"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_doc-line_fact-qnty AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0 
+     LABEL "Факт" 
+      VIEW-AS TEXT 
      SIZE 13 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_last-date AS CHARACTER FORMAT "X(10)":U
-     LABEL "Годен до"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_last-date AS CHARACTER FORMAT "X(10)":U 
+     LABEL "Годен до" 
+      VIEW-AS TEXT 
      SIZE 11.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE FI_obj-code AS INTEGER FORMAT ">>>>>>>>9" INITIAL 0
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_obj-code AS INTEGER FORMAT ">>>>>>>>9" INITIAL 0 
+      VIEW-AS TEXT 
      SIZE 11.5 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_obj-name AS CHARACTER FORMAT "X(40)"
-     LABEL "Пост-к"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_obj-name AS CHARACTER FORMAT "X(40)" 
+     LABEL "Пост-к" 
+      VIEW-AS TEXT 
      SIZE 29.5 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_obj-type AS CHARACTER FORMAT "X(3)"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_obj-type AS CHARACTER FORMAT "X(3)" 
+      VIEW-AS TEXT 
      SIZE 6 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_orig-purch-code AS CHARACTER FORMAT "X(256)":U
-     LABEL "Тип приобретения"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_orig-purch-code AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Тип приобретения" 
+      VIEW-AS TEXT 
      SIZE 25 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE FI_parts_cli-base-rate AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0
-     LABEL "Коэфф. пост."
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_cli-base-rate AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0 
+     LABEL "Коэфф. пост." 
+      VIEW-AS TEXT 
      SIZE 17 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_cli-qnty AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0
-     LABEL "Кол. пост."
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_cli-qnty AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0 
+     LABEL "Кол. пост." 
+      VIEW-AS TEXT 
      SIZE 17 BY .67 TOOLTIP "Документарное"
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_fact-date AS DATE FORMAT "99/99/9999"
-     LABEL "Дата"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_fact-date AS DATE FORMAT "99/99/9999" 
+     LABEL "Дата" 
+      VIEW-AS TEXT 
      SIZE 12 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_in-code AS CHARACTER FORMAT "X(14)"
-     LABEL "ПН"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_in-code AS CHARACTER FORMAT "X(14)" 
+     LABEL "ПН" 
+      VIEW-AS TEXT 
      SIZE 14 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_orig-fact-date AS DATE FORMAT "99/99/9999"
-     LABEL "Дата"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_orig-fact-date AS DATE FORMAT "99/99/9999" 
+     LABEL "Дата" 
+      VIEW-AS TEXT 
      SIZE 12 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_orig-in-code AS CHARACTER FORMAT "X(14)"
-     LABEL "Внеш.ПН"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_orig-in-code AS CHARACTER FORMAT "X(14)" 
+     LABEL "Внеш.ПН" 
+      VIEW-AS TEXT 
      SIZE 14 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_price-cli AS DECIMAL FORMAT "->>,>>>,>>9.99" INITIAL 0
-     LABEL "Цена пост."
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_price-cli AS DECIMAL FORMAT "->>,>>>,>>9.99" INITIAL 0 
+     LABEL "Цена пост." 
+      VIEW-AS TEXT 
      SIZE 22.75 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_SLT-pc AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0
-     LABEL "%"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_SLT-pc AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0 
+     LABEL "%" 
+      VIEW-AS TEXT 
      SIZE 6 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_SLT-type AS CHARACTER FORMAT "X(8)"
-     LABEL "НП"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_SLT-type AS CHARACTER FORMAT "X(8)" 
+     LABEL "НП" 
+      VIEW-AS TEXT 
      SIZE 9 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_VAT-pc AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0
-     LABEL "%"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_VAT-pc AS DECIMAL FORMAT "->>,>>9.99" INITIAL 0 
+     LABEL "%" 
+      VIEW-AS TEXT 
      SIZE 7 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_parts_VAT-type AS CHARACTER FORMAT "X(8)"
-     LABEL "НДС"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_parts_VAT-type AS CHARACTER FORMAT "X(8)" 
+     LABEL "НДС" 
+      VIEW-AS TEXT 
      SIZE 9 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_pay-name AS CHARACTER FORMAT "X(40)"
-     LABEL "Оплата"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_pay-name AS CHARACTER FORMAT "X(40)" 
+     LABEL "Оплата" 
+      VIEW-AS TEXT 
      SIZE 28 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_price-doc AS CHARACTER FORMAT "X(256)":U
-     LABEL "Продажная цена"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_price-doc AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Продажная цена" 
+      VIEW-AS TEXT 
      SIZE 25.5 BY .67 TOOLTIP "Текущая продажная цена баркода и № переоценки"
      FGCOLOR 1  NO-UNDO.
 
-DEFINE VARIABLE FI_purch-code AS CHARACTER FORMAT "X(256)":U
-     LABEL "Тип приобретения"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_purch-code AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Тип приобретения" 
+      VIEW-AS TEXT 
      SIZE 22.5 BY .67
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE FI_unit-base AS CHARACTER FORMAT "X(3)"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_unit-base AS CHARACTER FORMAT "X(3)" 
+      VIEW-AS TEXT 
      SIZE 4 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE FI_unit_cli-abbr AS CHARACTER FORMAT "X(3)"
-      VIEW-AS TEXT
+DEFINE VARIABLE FI_unit_cli-abbr AS CHARACTER FORMAT "X(3)" 
+      VIEW-AS TEXT 
      SIZE 4.5 BY .67
      FGCOLOR 4 .
 
-DEFINE VARIABLE s-code AS CHARACTER FORMAT "X(256)":U
-     VIEW-AS FILL-IN
+DEFINE VARIABLE s-code AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
      SIZE 11.5 BY .88 TOOLTIP "Поиск по" NO-UNDO.
 
-DEFINE VARIABLE R-find AS INTEGER INITIAL 1
+DEFINE VARIABLE R-find AS INTEGER INITIAL 1 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "№ партии", 1,
 "Бар-код", 2
      SIZE 20.38 BY .88 TOOLTIP "Поиск" NO-UNDO.
 
-DEFINE VARIABLE rs-one-all AS CHARACTER
+DEFINE VARIABLE rs-one-all AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Текущий объект", "текущий",
 "Все объекты", "все"
      SIZE 29.5 BY .88 TOOLTIP "Выбор объекта"
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE rs-parts AS CHARACTER
+DEFINE VARIABLE rs-parts AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", "все",
 "Факт остатки", "остатки",
 "Свободно", "свободно",
@@ -756,16 +797,16 @@ DEFINE VARIABLE rs-parts AS CHARACTER
      FGCOLOR 4  NO-UNDO.
 
 DEFINE RECTANGLE RECT-4
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 37.25 BY 5.13.
 
 DEFINE RECTANGLE RECT-7
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 58.13 BY 2.17.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE new shared QUERY br-parts FOR
+DEFINE QUERY br-parts FOR 
       parts SCROLLING.
 &ANALYZE-RESUME
 
@@ -793,7 +834,7 @@ DEFINE BROWSE br-parts
       parts.cst-code FORMAT "X(31)"
       parts.last-date format '99/99/9999':u column-label "Годен до"
       parts.hold-date format '99/99/9999':u column-label "Дата МФ"
-      parts.pl-code column-label "Место" FORMAT "99999999999":U
+      parts.pl-code column-label "Место"
       get-b-code(buffer parts) @ parts-b-code
       get-purch-code(buffer parts) @ parts-purch-code
       get-contract-prn-code(recid(parts)) @ parts-contract-prn-code column-label "Договор" format "x(20)"
@@ -803,7 +844,7 @@ DEFINE BROWSE br-parts
       (get-price-sale(recid(parts)))  column-label "Тек.прод.цена"  format ">>>>>>>>>9.99"
       (get-price-prod1(recid(parts)))  @  vprice-prod1 column-label "Цена Произв."  format ">>>>>>>>>9.99"
       (get-price-prod2(recid(parts)))  @  vprice-prod2 column-label "Цена Прзв_с_НДС"  format ">>>>>>>>>>>9.99"
-    if parts.defect  =  logical({&FiB}) then "+"  else "" column-label "Ф" format "x(1)"
+    if parts.whole-send-news  =  int({&FiB}) then "+"  else "" column-label "Ф" format "x(1)"
       /*parts.in-code   column-label "in-code"
       parts.out-code  column-label "out-code"
       parts.part-code  column-label "part-code"
@@ -835,7 +876,7 @@ DEFINE FRAME Dialog-Frame
      b-doc AT ROW 2 COL 24
      b-b-alt AT ROW 2 COL 34
      b-pl AT ROW 2 COL 44
-     b-alc-attr AT ROW 2 COL 54
+     b-alc-attr AT ROW 2 COL 64
      b-marking AT ROW 2 COL 54 
      rs-parts AT ROW 3.13 COL 10 NO-LABEL
      rs-one-all AT ROW 3.92 COL 10 NO-LABEL
@@ -849,6 +890,8 @@ DEFINE FRAME Dialog-Frame
      b-contract AT ROW 22.54 COL 91.38
      FI_doc-line_doc-qnty AT ROW 2.21 COL 79.5 COLON-ALIGNED
      fi-label-filter-status AT ROW 3.04 COL 2.63 NO-LABEL
+     f-date-from at row 3.5 col 5
+     f-date-to at row 3.5 col 26 no-label
      FI_doc-line_fact-qnty AT ROW 3.13 COL 79.5 COLON-ALIGNED
      FI_unit-base AT ROW 3.17 COL 91.63 COLON-ALIGNED NO-LABEL
      fi-label-filter-object AT ROW 3.92 COL 1.63 NO-LABEL
@@ -885,8 +928,8 @@ DEFINE FRAME Dialog-Frame
      RECT-4 AT ROW 13.63 COL 60
      RECT-7 AT ROW 13.58 COL 1.5
      SPACE(38.36) SKIP(7.87)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Партии"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-quit.
 
@@ -908,7 +951,7 @@ DEFINE FRAME Dialog-Frame
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-parts s-code Dialog-Frame */
-ASSIGN
+ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE.
 
 /* SETTINGS FOR BUTTON b-alc-attr IN FRAME Dialog-Frame
@@ -924,7 +967,7 @@ ASSIGN
 ASSIGN 
        b-vsd:HIDDEN IN FRAME Dialog-Frame           = TRUE.
 
-ASSIGN
+ASSIGN 
        br-parts:NUM-LOCKED-COLUMNS IN FRAME Dialog-Frame     = 3.
 
 /* SETTINGS FOR EDITOR ed-notes IN FRAME Dialog-Frame
@@ -1013,7 +1056,7 @@ run reopen-query in this-procedure .
 */  /* BROWSE br-parts */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -1088,6 +1131,57 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME F-date-from
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date-from Dialog-Frame
+ON leave OF F-date-from IN FRAME Dialog-Frame
+DO:
+  define variable is-changed as logical no-undo .
+  is-changed = no .
+  if string(F-date-from, "99/99/9999") <> F-date-from:screen-value then 
+  do:
+      is-changed = yes .
+      assign F-date-from .
+  end.
+  if F-date-from > F-date-to then 
+  do:
+      message "Дата начала не может быть больше конечной даты"
+          view-as alert-box.
+      return no-apply .       
+  end.
+  if is-changed
+  then do :
+    run reopen-query .
+  end .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date-to Dialog-Frame
+ON leave OF F-date-to IN FRAME Dialog-Frame
+DO:
+  define variable is-changed as logical no-undo .
+  is-changed = no .
+  if string(F-date-to, "99/99/9999") <> F-date-to:screen-value then 
+  do:
+      is-changed = yes .
+      assign F-date-to .
+  end.
+  if F-date-from > F-date-to then 
+  do:
+      message "Дата начала не может быть больше конечной даты"
+          view-as alert-box.
+      return no-apply .       
+  end.
+  if is-changed
+  then do :
+    run reopen-query .
+  end .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-alc-attr
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-alc-attr Dialog-Frame
@@ -1132,7 +1226,7 @@ if p-edit-mode = 'update-alc-attr' then do:
   end.
 
   /* Проверяем принадлежность партии к документу */
-  if p-doc-code <> parts.out-code then do:
+  if p-doc-code <> parts.out-code  then do:
     message
       "Редактирование атрибутов возможно только для партий, " +
       "относящихся к данному документу"
@@ -1140,6 +1234,10 @@ if p-edit-mode = 'update-alc-attr' then do:
     return no-apply .
   end.
 end.
+ 
+
+    
+        
   { gbl/gds-code.i
     parts.artic
     parts.prod-type
@@ -1147,6 +1245,8 @@ end.
     v-gds-code
     no-error
   }
+
+
 
   do
   on error undo, return no-apply
@@ -1183,8 +1283,9 @@ end.
     
     run str/in-alc.w
       (input        parparentproc
-      ,input       v-mode-alc
+      ,input       p-mode
       ,input p-gds-code
+      ,input p-doc-code
       ,buffer ub.parts
       ,input-output v-alc-mark-db-num
       ,input-output v-alc-mark-code
@@ -1247,81 +1348,6 @@ end.
       apply "entry":u to br-parts.
     end.
   end.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME b-vsd
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-vsd Dialog-Frame
-ON CHOOSE OF b-vsd IN FRAME Dialog-Frame /* АлкАтр */
-  DO:
-    { gbl/stdbtn.i }
-    define variable ii as integer no-undo.
-    define variable isSave as logical no-undo.
-    define variable keyrecObj as class keyrec no-undo.
-    define variable keypart as character no-undo.
-    if not available parts then 
-    do: 
-      message 
-        "Нет партий по товару"
-        view-as alert-box.
-      return no-apply.
-    end.
-    vsdStorageObj = new vsdtostorage ().
-    vsdSts = new vsdstatustype ().
-    keyrecObj = new keyrec ().
-    keyrecObj:GenKeyRec({&table_parts}, buffer parts:handle, output keypart).
-    vsdsubsObj = vsdStorageObj:getVSDsubs(input "part-key", input keypart).
-    
-    if vsdsubsObj:iCounter = 0
-    then do:
-      if p-edit-mode = {&lookup}
-      and not (v-vozvr-perem-no-fact and p-doc-code = ub.parts.out-code)
-      and not (v-ext-mode = "vsd_corr-parts" or v-ext-mode = "vsd")
-      then do:
-        message "К партии отсутсвуют ВСД" view-as alert-box.
-        return.
-      end.
-      vsdsubObj = new vsdsub ().
-      vsdsubsObj:AddItem(vsdsubObj).
-      vsdsubObj = vsdsubsObj:VsdObjCurr.
-      vsdsubObj:VSDType = vsdSts:VSDIn.
-      vsdsubObj:PartKey = keypart.
-      vsdsubObj:GdsCode = p-gds-code.
-      vsdsubObj:ObjType = v-obj-type.
-      vsdsubObj:ObjCode = v-obj-code.
-      find first buf_trn no-lock where buf_trn.doc-code = p-doc-code.
-      if available (buf_trn)
-      then do:
-        vsdsubObj:CliCode = buf_trn.cli-code.
-        vsdsubObj:CliType = buf_trn.cli-type.
-      end.
-    end.
-    run str/vsd.w (input parparentproc, input {&update}, input vsdsubsObj, output isSave).
-    if isSave then do:
-      do ii = 1 to vsdsubsObj:GetItem(ii):
-        vsdsubObj = vsdsubsObj:VsdObjCurr.
-        if vsdsubObj:Changed
-        then do: 
-          case true:
-            when vsdsubObj:ID > 0 then do:
-              vsdStorageObj:updateDB(vsdsubObj).
-            end.
-            otherwise do:
-              vsdStorageObj:insertDB(vsdsubObj).
-            end.
-          end.
-        end.
-      end.
-    end.
-    delete object keyrecObj no-error.
-    delete object vsdsubsObj no-error.
-    find current parts no-lock.
-    br-parts:refresh() in frame {&frame-name}.
-    run display-parts-info in this-procedure .
-    apply "entry":u to br-parts.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1768,19 +1794,13 @@ define buffer buf_goods for ub.goods .
 define buffer buf_marking-lines for ub.marking-lines .
 define buffer buf_marking-lines-parent for ub.marking-lines .
 define buffer buf_marking for ub.marking .
- 
+
 find first buf_goods no-lock where buf_goods.artic = parts.artic and buf_goods.prod-code = parts.prod-code and buf_goods.prod-type = parts.prod-type no-error .
 if available (buf_goods) then do:
-    for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_goods.gds-code and 
-                                             buf_marking-lines.in-code = parts.in-code and 
-                                             buf_marking-lines.out-code = parts.out-code and
-                                             buf_marking-lines.prt-code = parts.prt-code and 
-                                             buf_marking-lines.part-code = parts.part-code and
-                                             buf_marking-lines.obj-code = parts.obj-code and
-                                             buf_marking-lines.obj-type = parts.obj-type:
-      find first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark no-error .
-      if available buf_marking
-      then do :
+  empty temp-table tt-marking-lines .
+    for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_goods.gds-code and buf_marking-lines.in-code = parts.in-code and buf_marking-lines.out-code = parts.out-code
+      and buf_marking-lines.part-code = parts.part-code and buf_marking-lines.obj-code = parts.obj-code and buf_marking-lines.obj-type = parts.obj-type:
+      for each buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark :
         create tt-marking-lines .
         assign
           tt-marking-lines.stts        = StatusTHName(buf_marking.sts)
@@ -1797,50 +1817,31 @@ if available (buf_goods) then do:
           tt-marking-lines.out-code    = parts.out-code
           tt-marking-lines.obj-code    = parts.obj-code
           tt-marking-lines.obj-type    = parts.obj-type
-          tt-marking-lines.prt-code    = parts.prt-code
-        .
-        if buf_marking.sts = 10
-        then do:
-          if buf_marking.mark-parent <> ""
-          then do :
-            find first buf_marking-lines-parent no-lock where buf_marking-lines-parent.mark = buf_marking.mark-parent
-                                                          and buf_marking-lines-parent.gds-code = buf_marking-lines.gds-code
-                                                          and buf_marking-lines-parent.obj-type = buf_marking-lines.obj-type
-                                                          and buf_marking-lines-parent.obj-code = buf_marking-lines.obj-code
-                                                          and buf_marking-lines-parent.in-code  = buf_marking-lines.in-code
-                                                          and buf_marking-lines-parent.out-code = buf_marking-lines.out-code
-                                                          and buf_marking-lines-parent.part-code = buf_marking-lines.part-code
-                                                          and buf_marking-lines-parent.prt-code = buf_marking-lines.prt-code 
-                                                          and buf_marking-lines-parent.doc-level > 0
-                                                          no-error .
-            if available buf_marking-lines-parent
+          .
+          if buf_marking.sts = 10
+          then do:
+            if buf_marking.mark-parent <> ""
             then do :
-              tt-marking-lines.doc-level = 2 .
+              find first buf_marking-lines-parent no-lock where buf_marking-lines-parent.mark = buf_marking.mark-parent
+                                                            and buf_marking-lines-parent.gds-code = buf_marking-lines.gds-code
+                                                            and buf_marking-lines-parent.obj-type = buf_marking-lines.obj-type
+                                                            and buf_marking-lines-parent.obj-code = buf_marking-lines.obj-code
+                                                            and buf_marking-lines-parent.in-code  = buf_marking-lines.in-code
+                                                            and buf_marking-lines-parent.out-code = buf_marking-lines.out-code
+                                                            and buf_marking-lines-parent.part-code = buf_marking-lines.part-code
+                                                            and buf_marking-lines-parent.doc-level > 0
+                                                            no-error .
+              if available buf_marking-lines-parent
+              then do :
+                tt-marking-lines.doc-level = 2 .
+              end .
+              else do :
+                tt-marking-lines.doc-level = 1 .
+              end .
             end .
-            else do :
-              tt-marking-lines.doc-level = 1 .
-            end .
-          end .
-          else tt-marking-lines.doc-level = 1 .  
-        end.
+            else tt-marking-lines.doc-level = 1 .  
+          end.
       end.
-      else do :
-        create tt-marking-lines .
-        assign
-          tt-marking-lines.gds-name    = buf_goods.gds-name
-          tt-marking-lines.mark        = buf_marking-lines.mark
-          tt-marking-lines.gds-code    = buf_marking-lines.gds-code
-          tt-marking-lines.doc-level   = buf_marking-lines.doc-level
-          tt-marking-lines.box-qnty    = 1
-          tt-marking-lines.in-code     = parts.in-code
-          tt-marking-lines.out-code    = parts.out-code
-          tt-marking-lines.obj-code    = parts.obj-code
-          tt-marking-lines.obj-type    = parts.obj-type
-          tt-marking-lines.sts         = 13
-          tt-marking-lines.prt-code    = parts.prt-code
-        .
-        tt-marking-lines.stts        = StatusTHName(tt-marking-lines.sts) .
-      end .
     end.
 end.
       run str/mark_browse.w (input parparentproc,
@@ -1850,7 +1851,7 @@ end.
         input 0,
         input ""
         ) no-error .
-        empty temp-table tt-marking-lines .
+        
         
 END.
 
@@ -1984,9 +1985,21 @@ END.
 ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор  */
 DO:
   { gbl/stdbtn.i }
+  define buffer buf_utd for ub.utd .
+  define buffer buf_trn-doc for ub.trn-doc .
 
   if available parts
   then do:
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code no-error .
+    if available buf_trn-doc
+    and buf_trn-doc.reason-code = 25 /* Корректировка поступления */
+    then do :
+      if not can-find(first buf_utd no-lock where buf_utd.doc-code = parts.in-code)
+      then do :
+        message 'Для схемы возврата "Корректировка поступления" выбрать можно только партии, принятые по УПД!' view-as alert-box .
+        return no-apply .
+      end .
+    end .
     assign
       part-recid = recid( parts )
     .
@@ -1995,7 +2008,83 @@ DO:
     assign
       part-recid = ?
     .
+    return no-apply .
   end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-vsd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-vsd Dialog-Frame
+ON CHOOSE OF b-vsd IN FRAME Dialog-Frame /* ВСД */
+DO:
+    { gbl/stdbtn.i }
+    define variable ii as integer no-undo.
+    define variable isSave as logical no-undo.
+    define variable keyrecObj as class keyrec no-undo.
+    define variable keypart as character no-undo.
+    if not available parts then 
+    do: 
+      message 
+        "Нет партий по товару"
+        view-as alert-box.
+      return no-apply.
+    end.
+    vsdStorageObj = new vsdtostorage ().
+    vsdSts = new vsdstatustype ().
+    keyrecObj = new keyrec ().
+    keyrecObj:GenKeyRec({&table_parts}, buffer parts:handle, output keypart).
+    vsdsubsObj = vsdStorageObj:getVSDsubs(input "part-key", input keypart).
+    
+    if vsdsubsObj:iCounter = 0
+    then do:
+      if p-edit-mode = {&lookup}
+      and not (v-vozvr-perem-no-fact and p-doc-code = ub.parts.out-code)
+      and not (v-ext-mode = "vsd_corr-parts" or v-ext-mode = "vsd")
+      then do:
+        message "К партии отсутсвуют ВСД" view-as alert-box.
+        return.
+      end.
+      vsdsubObj = new vsdsub ().
+      vsdsubsObj:AddItem(vsdsubObj).
+      vsdsubObj = vsdsubsObj:VsdObjCurr.
+      vsdsubObj:VSDType = vsdSts:VSDIn.
+      vsdsubObj:PartKey = keypart.
+      vsdsubObj:GdsCode = p-gds-code.
+      vsdsubObj:ObjType = v-obj-type.
+      vsdsubObj:ObjCode = v-obj-code.
+      find first buf_trn no-lock where buf_trn.doc-code = p-doc-code.
+      if available (buf_trn)
+      then do:
+        vsdsubObj:CliCode = buf_trn.cli-code.
+        vsdsubObj:CliType = buf_trn.cli-type.
+      end.
+    end.
+    run str/vsd.w (input parparentproc, input {&update}, input vsdsubsObj, output isSave).
+    if isSave then do:
+      do ii = 1 to vsdsubsObj:GetItem(ii):
+        vsdsubObj = vsdsubsObj:VsdObjCurr.
+        if vsdsubObj:Changed
+        then do: 
+          case true:
+            when vsdsubObj:ID > 0 then do:
+              vsdStorageObj:updateDB(vsdsubObj).
+            end.
+            otherwise do:
+              vsdStorageObj:insertDB(vsdsubObj).
+            end.
+          end.
+        end.
+      end.
+    end.
+    delete object keyrecObj no-error.
+    delete object vsdsubsObj no-error.
+    find current parts no-lock.
+    br-parts:refresh() in frame {&frame-name}.
+    run display-parts-info in this-procedure .
+    apply "entry":u to br-parts.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2027,7 +2116,27 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-parts Dialog-Frame
 ON ROW-DISPLAY OF br-parts IN FRAME Dialog-Frame
 DO:
-  if parts.defect = logical({&FiB}) then do:
+  define buffer buf_utd for ub.utd .
+  define buffer buf_trn-doc for ub.trn-doc .
+  
+  define variable ic      as integer   no-undo.
+
+  find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code no-error .
+  if available buf_trn-doc
+  and buf_trn-doc.reason-code = 25 /* Корректировка поступления */
+  then do :
+    if not can-find(first buf_utd no-lock where buf_utd.doc-code = parts.in-code)
+    then do :
+      do ic = 1 to extent (bcol) : 
+        if valid-handle (bcol[ic])
+        then
+          bcol[ic]:bgcolor = 7
+        .
+      end.
+    end .
+  end .
+  
+  if parts.whole-send-news = int({&FiB}) then do:
      parts-part-code:bgcolor in browse {&browse-name} = 12.
   end.
   else do:
@@ -2249,7 +2358,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
 /* ***************************  Main Block  *************************** */
@@ -2329,7 +2438,6 @@ define variable v-attr-type as character no-undo .
         v-pharm = lookup(v-attr-value, "true,yes") > 0
       .
     end.
-
 
 assign
   parts.qnty      :read-only in browse {&BROWSE-NAME} = true
@@ -2429,15 +2537,6 @@ then do :
   v-ext-mode = p-edit-mode .
   p-edit-mode = {&lookup} .
 end .
-
-if num-entries(p-call-point, {&delim-par}) = 2
-then do :
-  if entry(2, p-call-point, {&delim-par}) = "return"
-  then do :
-    v-is-return = yes .
-  end .
-  p-call-point = entry(1, p-call-point, {&delim-par}) .
-end .
 /* Название режима работы, отображаемое в заголовке */
 assign
   v-mode-name = (if p-edit-mode = 'update-alc-attr':u
@@ -2487,7 +2586,7 @@ if not error-status:error and v-marking-value <> "" then
                     
     define variable v-alcohol-value as character no-undo .
     define variable v-alcohol-type  as character no-undo .
-define variable v-alcohol-prod as logical.
+    define variable v-alcohol-prod as logical.
     { gbl/conf-rd.i
       "'alcohol':u"
       "0"
@@ -2528,27 +2627,17 @@ define variable v-alcohol-prod as logical.
         v-alcohol-prod = false
       .
     end.
-
+          
     define variable v-mercury-value as character no-undo .
     define variable v-mercury-type  as character no-undo .
-    define variable v-mercury-prod  as logical no-undo init false.
-    define variable v-expense-return as logical no-undo init false .
+    define variable v-mercury-prod as logical init false.
     define buffer buf_trn-doc for ub.trn-doc .
-    define buffer buf_doc-attr for ub.doc-attr .
     
     find first buf_trn-doc no-lock
       where buf_trn-doc.doc-code = p-doc-code no-error
       .
-    for first buf_doc-attr no-lock where buf_doc-attr.doc-code = buf_trn-doc.doc-code
-                                     and buf_doc-attr.attr-code = {&trdcattr-is-return}
-    :
-      if logical(buf_doc-attr.attr-value) then v-expense-return = yes .
-    end .
     v-vozvr-perem-no-fact = false.
-    if p-doc-code = ?
-    or p-doc-code = ""
-    or v-expense-return
-    or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or  buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}  or  buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem})
+    if p-doc-code = ? or p-doc-code = "" or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or  buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}  or  buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem})
     then do:
       { gbl/conf-rd.i
         "'mercuri':u"
@@ -2593,9 +2682,6 @@ define variable v-alcohol-prod as logical.
           v-mercury-prod = false
         .
       end.
-    
-
-    
     end.
 
 
@@ -2673,7 +2759,7 @@ else do:
     v-edit-parts = false
   .
 end.
-
+    
 if v-edit-parts = true
 then do:
   /* режим редактирования - открываем транзакцию */
@@ -2719,7 +2805,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-input-parameters Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-input-parameters Dialog-Frame 
 PROCEDURE check-input-parameters :
 /* -----------------------------------------------------------
   Purpose:
@@ -2912,7 +2998,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE contract-code-to-str Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE contract-code-to-str Dialog-Frame 
 PROCEDURE contract-code-to-str :
 /* -----------------------------------------------------------
   Purpose:
@@ -2967,7 +3053,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE create-bar-code-parts Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE create-bar-code-parts Dialog-Frame 
 PROCEDURE create-bar-code-parts :
 /* -----------------------------------------------------------
   Purpose:
@@ -3011,7 +3097,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE data-changed Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE data-changed Dialog-Frame 
 PROCEDURE data-changed :
 /* -----------------------------------------------------------
   Purpose:
@@ -3028,7 +3114,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE delete-parts Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE delete-parts Dialog-Frame 
 PROCEDURE delete-parts :
 /* -----------------------------------------------------------
   Purpose:
@@ -3057,7 +3143,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -3068,7 +3154,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-doc-line-info Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-doc-line-info Dialog-Frame 
 PROCEDURE display-doc-line-info :
 /* -----------------------------------------------------------
   Purpose:
@@ -3119,7 +3205,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-parts-info Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-parts-info Dialog-Frame 
 PROCEDURE display-parts-info :
 /* -----------------------------------------------------------
   Purpose:
@@ -3417,17 +3503,6 @@ PROCEDURE display-parts-info :
         fi-income-qnty-fact
         get-price-doc (recid(parts)) @ FI_price-doc
         with frame {&frame-name}.
-        
-      if v-expense-return
-      then do :
-        if parts.out-code = {&free-code}
-        then do :
-          disable b-vsd with frame {&frame-name}.
-        end .
-        else do :
-          enable b-vsd with frame {&frame-name}.
-        end .
-      end .
     end.
 
   end. /* do with frame */
@@ -3445,20 +3520,20 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY rs-parts rs-one-all R-find s-code FI_doc-line_doc-qnty
-          fi-label-filter-status FI_doc-line_fact-qnty FI_unit-base
-          fi-label-filter-object fi-free-qnty fi-free-rsrv-qnty
-          FI_orig-purch-code fi-income-qnty fi-income-qnty-fact fi-out-qnty
-          fi-out-rsrv-qnty FI_last-date FI_price-doc FI_parts_cli-qnty
-          FI_parts_cli-base-rate FI_parts_SLT-type FI_parts_SLT-pc
-          FI_country-name FI_purch-code FI_contract-prn-code
+  DISPLAY rs-parts rs-one-all R-find s-code FI_doc-line_doc-qnty 
+          fi-label-filter-status FI_doc-line_fact-qnty FI_unit-base 
+          fi-label-filter-object fi-free-qnty fi-free-rsrv-qnty 
+          FI_orig-purch-code fi-income-qnty fi-income-qnty-fact fi-out-qnty 
+          fi-out-rsrv-qnty FI_last-date FI_price-doc FI_parts_cli-qnty 
+          FI_parts_cli-base-rate FI_parts_SLT-type FI_parts_SLT-pc 
+          FI_country-name FI_purch-code FI_contract-prn-code 
       WITH FRAME Dialog-Frame.
-  ENABLE b-exit b-quit b-mark b-sel b-lkp b-add b-chg b-del b-sch b-print
-         b-help RECT-4 RECT-7 b-doc b-b-alt b-pl rs-parts rs-one-all R-find
-         s-code br-parts b-income-in-code b-in b-contract FI_price-doc
+  ENABLE b-exit b-quit b-mark b-sel b-lkp b-add b-chg b-del b-vsd b-sch b-print 
+         b-help RECT-4 RECT-7 b-doc b-b-alt b-pl rs-parts rs-one-all R-find 
+         s-code br-parts b-income-in-code b-in b-contract FI_price-doc 
       WITH FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
@@ -3466,7 +3541,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-attr-chg-qnty Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-attr-chg-qnty Dialog-Frame 
 PROCEDURE get-attr-chg-qnty :
 /* -----------------------------------------------------------
   Purpose:
@@ -3488,7 +3563,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-sort-column-phrase Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-sort-column-phrase Dialog-Frame 
 PROCEDURE get-sort-column-phrase :
 /* -----------------------------------------------------------
   Purpose:
@@ -3535,7 +3610,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-flt Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-flt Dialog-Frame 
 PROCEDURE init-flt :
 /* -----------------------------------------------------------
   Purpose:
@@ -3595,7 +3670,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE is-button-enabled Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE is-button-enabled Dialog-Frame 
 PROCEDURE is-button-enabled :
 /* -----------------------------------------------------------
   Purpose:
@@ -3632,7 +3707,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE main-block-procedure Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE main-block-procedure Dialog-Frame 
 PROCEDURE main-block-procedure :
 /* -----------------------------------------------------------
   Purpose:
@@ -3643,6 +3718,9 @@ PROCEDURE main-block-procedure :
   on error   undo , return error
   on end-key undo , return error
   :
+    f-date-to = today .
+    f-date-from = today - 92 .
+    
 
     define variable v-road-tax-name as character no-undo .
     run tax-name in this-procedure
@@ -4048,15 +4126,18 @@ PROCEDURE main-block-procedure :
       br-parts
       b-in b-contract
       b-doc
-      b-sch
-      rs-parts when not v-is-return
-      b-sel when (p-call-point = {&choose} or v-is-return)
+      b-sch rs-parts
+      b-sel when p-call-point = {&choose}
       ed-notes
       rs-one-all
       b-alc-attr when v-alcohol-prod = yes
-      b-vsd when v-mercury-prod = yes
       b-marking when v-marking = yes
+      b-vsd when v-mercury-prod = yes
       WITH FRAME {&frame-name}.
+
+
+
+ 
 
     assign
       v-prt-rec = ?
@@ -4064,6 +4145,13 @@ PROCEDURE main-block-procedure :
     run reopen-query .
 
     VIEW FRAME Dialog-Frame.
+    
+    hbrowse = browse br-parts:handle.
+    extent (bcol) = hbrowse:num-columns.
+    bcol[1] = hbrowse:first-column.
+    do ic = 1 to extent (bcol).  
+      bcol[ic] = hbrowse:get-browse-column (ic).
+    end.
 
 
     WAIT-FOR GO OF FRAME {&FRAME-NAME} focus br-parts .
@@ -4074,7 +4162,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE parts-show-income-in-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE parts-show-income-in-code Dialog-Frame 
 PROCEDURE parts-show-income-in-code :
 /* -----------------------------------------------------------
   Purpose:
@@ -4171,7 +4259,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-get-country-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-get-country-name Dialog-Frame 
 PROCEDURE proc-get-country-name :
 /* -----------------------------------------------------------
   Purpose:
@@ -4218,7 +4306,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE purch-code-to-str Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE purch-code-to-str Dialog-Frame 
 PROCEDURE purch-code-to-str :
 /* -----------------------------------------------------------
   Purpose:
@@ -4238,7 +4326,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reopen-query Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reopen-query Dialog-Frame 
 PROCEDURE reopen-query :
 /* -----------------------------------------------------------
   Purpose:
@@ -4258,7 +4346,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-parts Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-parts Dialog-Frame 
 PROCEDURE reposition-parts :
 /* -----------------------------------------------------------
   Purpose:
@@ -4316,7 +4404,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-query Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE reposition-query Dialog-Frame 
 PROCEDURE reposition-query :
 /* -----------------------------------------------------------
   Purpose:
@@ -4342,7 +4430,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-changes Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE save-changes Dialog-Frame 
 PROCEDURE save-changes :
 /* -----------------------------------------------------------
   Purpose:
@@ -4744,7 +4832,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-contract-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-contract-code Dialog-Frame 
 PROCEDURE show-contract-code :
 /* -----------------------------------------------------------
   Purpose:
@@ -4806,7 +4894,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-in-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-in-code Dialog-Frame 
 PROCEDURE show-in-code :
 /* -----------------------------------------------------------
   Purpose:
@@ -4832,7 +4920,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-income-in-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-income-in-code Dialog-Frame 
 PROCEDURE show-income-in-code :
 /* -----------------------------------------------------------
   Purpose:
@@ -4852,7 +4940,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on Dialog-Frame 
 PROCEDURE UI-on :
 /* -----------------------------------------------------------
   Purpose:
@@ -5023,7 +5111,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-on-01 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-on-01 Dialog-Frame 
 PROCEDURE ui-on-01 :
 /* -----------------------------------------------------------
   Purpose:
@@ -5172,7 +5260,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-on-02 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-on-02 Dialog-Frame 
 PROCEDURE ui-on-02 :
 /* -----------------------------------------------------------
   Purpose:
@@ -5309,7 +5397,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-on-03 Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ui-on-03 Dialog-Frame 
 PROCEDURE ui-on-03 :
 /* -----------------------------------------------------------
   Purpose:
@@ -5324,526 +5412,88 @@ PROCEDURE ui-on-03 :
   define input-output parameter v-query-was-opened as logical no-undo .
   define parameter buffer buf_goods for ub.goods .
   define parameter buffer buf_trn-doc for ub.trn-doc .
-
+  
+  define buffer buf_clients for ub.clients .
+  define variable v-doc-type as character .
+  v-doc-type = "при" .
+  
+  enable
+    b-sel
+    f-date-to
+    f-date-from
+  with frame {&frame-name}.
+  display
+    f-date-to
+    f-date-from
+  with frame {&frame-name}.
+  hide 
+    fi-label-filter-status
+    fi-label-filter-object
+    rs-one-all
+    rs-parts
+  in frame {&frame-name}.
+  
   do
   on error undo, return error return-value
   :
     if available buf_trn-doc
     then do:
-      case buf_trn-doc.doc-type :
-        when {&income}
-        then do:
-          assign
-            frame {&frame-name}:title
-              = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-              + "   Партии по ПН № : " + buf_trn-doc.doc-code + "   -  " + v-mode-name
-          .
-          if buf_trn-doc.status_ <> {&inquiry}
-          then do:
-            if v-edit-parts = true
-            then do:
-              enable
-                b-add when v-add-parts = true
-                b-del when v-add-parts = true
-                b-chg
-                b-b-alt
-                b-pl
-                b-mark
-                with frame {&frame-name}.
-            end.
-          end.
+      find first buf_clients no-lock where buf_clients.obj-type = buf_trn-doc.cli-type
+                                       and buf_clients.obj-code = buf_trn-doc.cli-code
+                                       .
+      assign
+        frame {&frame-name}:title
+          = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
+          + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
+      .
+      { gbl/fltopend.i
+        &where-cond="parts.artic = buf_goods.artic ~
+          and parts.prod-type = buf_goods.prod-type ~
+          and parts.prod-code = buf_goods.prod-code ~
+          and parts.obj-type = v-obj-type ~
+          and parts.obj-code = v-obj-code ~
+          and parts.in-code  = parts.out-code ~
+          and parts.doc-type = v-doc-type ~
+          and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or parts.is-supp = no) ~
+          and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
+          and parts.contract-code = buf_trn-doc.contract-code ~
+          and parts.fact-date >= f-date-from and parts.fact-date <= f-date-to ~
+          "
+  &dyn_where-cond = " ~
+      substitute ( ~
+      ' parts.artic = &1&2&1  ~
+      and parts.prod-type = &1&3&1 ~
+      and parts.prod-code = &4 ~
+      and parts.obj-type  = &1&7&1 ~
+      and parts.obj-code  = &8 ~
+      and parts.in-code   = parts.out-code ~
+      and parts.doc-type  = &1&9&1
+      and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
+    ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code, v-doc-type ) + ~
+      substitute ( ' ~
+          and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or parts.is-supp = no ) ~
+          and parts.contract-code = &4 ~
+          and parts.fact-date >= &5 and parts.fact-date <= &6
+              ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code , buf_trn-doc.contract-code, f-date-from , f-date-to ) ~
+      "
 
-          { gbl/fltopend.i
-            &where-cond ="parts.artic = buf_goods.artic ~
-              and parts.prod-type = buf_goods.prod-type ~
-              and parts.prod-code = buf_goods.prod-code ~
-              and parts.obj-type = v-obj-type ~
-              and parts.obj-code = v-obj-code ~
-              and parts.out-code = buf_trn-doc.doc-code ~
-              and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-              "
-          &dyn_where-cond = " ~
-              substitute ( ~
-              ' parts.artic = &1&2&1  ~
-              and parts.prod-type = &1&3&1 ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and parts.out-code =  &1&9&1
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code ) ~
-              "
-
-            &use-ind=" "
-            &by=" "
-          }
-        end.
-
-        when {&inventory}
-        then do:
-          assign
-            frame {&frame-name}:title
-              = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-              + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-              + "  и  СВОБОДНО/РАСХОД" + "   -  " + v-mode-name
-          .
-          if v-edit-parts = true
-          then do:
-            enable
-              b-add when v-add-parts = true
-              b-del when v-add-parts = true
-              b-chg
-              b-b-alt
-              b-pl
-              b-mark
-              with frame {&frame-name}.
-          end.
-          if buf_trn-doc.ext-doc-type = {&TDEDT_Inv}      or
-             buf_trn-doc.ext-doc-type = {&TDEDT_Peresort}
-          then do:
-            /* для документа инвентаризации показываем */
-            /* свободную зону, расходную зону */
-            /* и зарезервированные партии */
-            { gbl/fltopend.i
-              &where-cond="parts.artic = buf_goods.artic ~
-                and parts.prod-type = buf_goods.prod-type ~
-                and parts.prod-code = buf_goods.prod-code ~
-                and parts.obj-type = v-obj-type ~
-                and parts.obj-code = v-obj-code ~
-                and ( parts.out-code = {&free-code} ~
-                      or parts.out-code = {&output-code} ~
-                      or parts.out-code = buf_trn-doc.doc-code ~
-                    ) ~
-                and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                "
-          &dyn_where-cond = " ~
-              substitute ( ~
-              ' parts.artic = &1&2&1  ~
-              and parts.prod-type = &1&3&1 ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code  ) + ~
-              substitute ( ' ~
-                and ( parts.out-code = &1&2&1 ~
-                      or parts.out-code = &1&3&1 ~
-                      or parts.out-code = &1&4&1 ) ~
-             ', ~{&double-quote~} , ~{&free-code~} , ~{&output-code~} , buf_trn-doc.doc-code ) ~
-               "
-
-              &use-ind="use-index pi"
-              &by=" "
-            }
-          end.
-          else do:
-            /* для документов преобразования партий показываем */
-            /* только свободную зону и зарезервированные партии */
-            if buf_trn-doc.ext-doc-type = {&TDEDT_Corr_Acc_Price}
-            then do:
-              /* показываем только партии свободной зоны от контрагента */
-              /* и все партии документа */
-              /* с кодом договора равным коду договора документа */
-              { gbl/fltopend.i
-                &where-cond="parts.artic = buf_goods.artic ~
-                  and parts.prod-type = buf_goods.prod-type ~
-                  and parts.prod-code = buf_goods.prod-code ~
-                  and parts.obj-type = v-obj-type ~
-                  and parts.obj-code = v-obj-code ~
-                  and ( ( parts.out-code = {&free-code} ~
-                          and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) ) ~
-                        )
-                        or parts.out-code = buf_trn-doc.doc-code ~
-                      ) ~
-                  and parts.contract-code = buf_trn-doc.contract-code ~
-                  and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                  "
-          &dyn_where-cond = " ~
-              substitute ( ~
-              ' parts.artic = &1&2&1  ~
-              and parts.prod-type = &1&3&1 ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and parts.contract-code =  &9 ~
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ' , ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.contract-code  ) + ~
-              substitute ( ' ~
-                  and ( ( parts.out-code = &1&5&1 ~
-                          and ( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) ~
-                        ) ~
-                        or parts.out-code = &1&4&1 ~
-                      ) ~
-              ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code , buf_trn-doc.doc-code , ~{&free-code~} ) "
-
-                &use-ind="use-index pi"
-                &by=" "
-              }
-            end.
-            else do:
-              /* для всех остальных документов показываем партии */
-              /* без ограничения по поставщику */
-              { gbl/fltopend.i
-                &where-cond="parts.artic = buf_goods.artic ~
-                  and parts.prod-type = buf_goods.prod-type ~
-                  and parts.prod-code = buf_goods.prod-code ~
-                  and parts.obj-type = v-obj-type ~
-                  and parts.obj-code = v-obj-code ~
-                  and ( parts.out-code = {&free-code} ~
-                        or parts.out-code = buf_trn-doc.doc-code ~
-                      ) ~
-                  and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                  "
-          &dyn_where-cond = " ~
-              substitute ( ' ~
-                  parts.prod-type = &1&3&1 ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and  ( parts.out-code = &1&2&1  ~
-                    or parts.out-code = &1&9&1 ~
-                  ) ~
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ', ~{&double-quote~} ,  ~{&free-code~}  , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code   )  + ~
-              substitute ( ~
-              ' and parts.artic = &1&2&1 ', ~{&double-quote~} , buf_goods.artic ) ~
-              "
-
-                &use-ind="use-index pi"
-                &by=" "
-              }
-            end.
-          end.
-        end. /* when {&inventory} */
-
-        when {&expense} or
-        when {&write-off}
-        then do:
-          if v-edit-parts = true
-          then do:
-            enable
-              b-add when v-add-parts = true
-              b-del when v-add-parts = true
-              b-chg
-              b-b-alt
-              b-pl
-              b-mark
-              with frame {&frame-name}.
-          end.
-          define buffer buf_clients for ub.clients .
-          find buf_clients no-lock
-            where buf_clients.obj-type = buf_trn-doc.cli-type
-              and buf_clients.obj-code = buf_trn-doc.cli-code
-              .
-          if buf_trn-doc.status_ <> {&permitted}
-          then do:
-            if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
-            then do:
-              if buf_trn-doc.contract-code <> ? and buf_trn-doc.contract-code <> 0
-              then do :
-                assign
-                  frame {&frame-name}:title
-                    = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-                    + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-                    + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
-                .
-
-                /* Парожденные партии свободной зоны на нашу фирму это производство - его не показываем */
-
-                { gbl/fltopend.i
-                  &where-cond="parts.artic = buf_goods.artic ~
-                    and parts.prod-type = buf_goods.prod-type ~
-                    and parts.prod-code = buf_goods.prod-code ~
-                    and parts.obj-type = v-obj-type ~
-                    and parts.obj-code = v-obj-code ~
-                    and (parts.out-code = {&free-code} or parts.out-code = buf_trn-doc.doc-code) ~
-                    and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or ~
-                        (parts.is-supp = no and not ( parts.supp-type = {&cmp} and parts.supp-code = buf_trn-doc.host-code))) ~
-                    and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                    and parts.contract-code = buf_trn-doc.contract-code ~
-                    "
-            &dyn_where-cond = " ~
-                substitute ( ~
-                ' parts.artic = &1&2&1  ~
-                and parts.prod-code = &4 ~
-                and parts.obj-type  = &1&7&1 ~
-                and parts.obj-code  = &8 ~
-                and ( parts.out-code = &1&3&1 or parts.out-code = &1&9&1 ) ~
-                and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-              ', ~{&double-quote~} , buf_goods.artic , ~{&free-code~} , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code , buf_trn-doc.doc-code ) + ~
-                substitute ( ' ~
-                    and parts.prod-type = &1&5&1 ~
-                    and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or ~
-                          (parts.is-supp = no and not ( parts.supp-type = &1&6&1  and parts.supp-code = &4 ))) ~
-                    and parts.contract-code = &7 ~
-                        ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code , buf_trn-doc.host-code , buf_goods.prod-type , ~{&cmp~} , buf_trn-doc.contract-code ) ~
-                "
-                  &use-ind=" "
-                  &by=" "
+        &use-ind=" "
+        &by=" "
                 }
-              end.
-              else do :
-                assign
-                  frame {&frame-name}:title
-                    = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-                    + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-                    + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
-                .
-
-                /* Парожденные партии свободной зоны на нашу фирму это производство - его не показываем */
-
-                { gbl/fltopend.i
-                  &where-cond="parts.artic = buf_goods.artic ~
-                    and parts.prod-type = buf_goods.prod-type ~
-                    and parts.prod-code = buf_goods.prod-code ~
-                    and parts.obj-type = v-obj-type ~
-                    and parts.obj-code = v-obj-code ~
-                    and (parts.out-code = {&free-code} or parts.out-code = buf_trn-doc.doc-code) ~
-                    and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or ~
-                        (parts.is-supp = no and not ( parts.supp-type = {&cmp} and parts.supp-code = buf_trn-doc.host-code))) ~
-                    and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                    "
-            &dyn_where-cond = " ~
-                substitute ( ~
-                ' parts.artic = &1&2&1  ~
-                and parts.prod-code = &4 ~
-                and parts.obj-type  = &1&7&1 ~
-                and parts.obj-code  = &8 ~
-                and ( parts.out-code = &1&3&1 or parts.out-code = &1&9&1 ) ~
-                and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-              ', ~{&double-quote~} , buf_goods.artic , ~{&free-code~} , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code , buf_trn-doc.doc-code ) + ~
-                substitute ( ' ~
-                    and parts.prod-type = &1&5&1 ~
-                    and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or ~
-                          (parts.is-supp = no and not ( parts.supp-type = &1&6&1  and parts.supp-code = &4 ))) ~
-                        ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code , buf_trn-doc.host-code , buf_goods.prod-type , ~{&cmp~} ) ~
-                "
-                  &use-ind=" "
-                  &by=" "
-                }
-              end.
-            end.
-            else do:
-              assign
-                frame {&frame-name}:title = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-                                          + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-                                          + "  и  СВОБОДНО" + "   -  " + v-mode-name
-              .
-              { gbl/fltopend.i
-                &where-cond="parts.artic = buf_goods.artic ~
-                  and parts.prod-type = buf_goods.prod-type ~
-                  and parts.prod-code = buf_goods.prod-code ~
-                  and parts.obj-type = v-obj-type ~
-                  and parts.obj-code = v-obj-code ~
-                  and (parts.out-code = {&free-code} or parts.out-code = buf_trn-doc.doc-code) ~
-                  and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                  "
-          &dyn_where-cond = " ~
-              substitute ( ~
-              '  parts.prod-type = &1&3&1 ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and ( parts.out-code = &1&2&1 or parts.out-code = &1&9&1 ) ~
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ', ~{&double-quote~} , ~{&free-code~}  , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code ) + ~
-              substitute ( ~
-              ' and parts.artic = &1&2&1 ', ~{&double-quote~} , buf_goods.artic ) ~
-              "
-
-                &use-ind=" "
-                &by=" "
-              }
-            end.
-          end. /* buf_trn-doc.status_ <> {&permitted} */
-          else do: /* buf_trn-doc.status_ = {&permitted} */
-            if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP}
-            then do:
-              if buf_trn-doc.contract-code <> ? and buf_trn-doc.contract-code <> 0
-              then do :
-                assign
-                  frame {&frame-name}:title
-                    = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-                    + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-                    + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
-                .
-                { gbl/fltopend.i
-                  &where-cond="parts.artic = buf_goods.artic ~
-                    and parts.prod-type = buf_goods.prod-type ~
-                    and parts.prod-code = buf_goods.prod-code ~
-                    and parts.obj-type = v-obj-type ~
-                    and parts.obj-code = v-obj-code ~
-                    and parts.out-code = buf_trn-doc.doc-code ~
-                    and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or parts.is-supp = no) ~
-                    and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                    and parts.contract-code = buf_trn-doc.contract-code ~
-                    "
-            &dyn_where-cond = " ~
-                substitute ( ~
-                ' parts.artic = &1&2&1  ~
-                and parts.prod-type = &1&3&1 ~
-                and parts.prod-code = &4 ~
-                and parts.obj-type  = &1&7&1 ~
-                and parts.obj-code  = &8 ~
-                and  parts.out-code = &1&9&1 ~
-                and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-              ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code ) + ~
-                substitute ( ' ~
-                    and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or parts.is-supp = no ) ~
-                    and parts.contract-code = &4 ~
-                        ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code , buf_trn-doc.contract-code ) ~
-                "
-
-                  &use-ind=" "
-                  &by=" "
-                }
-              end.
-              else do :
-                assign
-                  frame {&frame-name}:title
-                    = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-                    + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-                    + "  и  Поставщик : " + buf_clients.obj-name + "   -  " + v-mode-name
-                .
-                { gbl/fltopend.i
-                  &where-cond="parts.artic = buf_goods.artic ~
-                    and parts.prod-type = buf_goods.prod-type ~
-                    and parts.prod-code = buf_goods.prod-code ~
-                    and parts.obj-type = v-obj-type ~
-                    and parts.obj-code = v-obj-code ~
-                    and parts.out-code = buf_trn-doc.doc-code ~
-                    and (( parts.supp-type = buf_trn-doc.cli-type and parts.supp-code = buf_trn-doc.cli-code) or parts.is-supp = no) ~
-                    and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                    "
-            &dyn_where-cond = " ~
-                substitute ( ~
-                ' parts.artic = &1&2&1  ~
-                and parts.prod-type = &1&3&1 ~
-                and parts.prod-code = &4 ~
-                and parts.obj-type  = &1&7&1 ~
-                and parts.obj-code  = &8 ~
-                and  parts.out-code = &1&9&1 ~
-                and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-              ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code ) + ~
-                substitute ( ' ~
-                    and (( parts.supp-type = &1&2&1 and parts.supp-code = &3 ) or parts.is-supp = no ) ~
-                        ', ~{&double-quote~} , buf_trn-doc.cli-type , buf_trn-doc.cli-code  ) ~
-                "
-
-                  &use-ind=" "
-                  &by=" "
-                }
-              end.
-            end.
-            else do:
-              assign
-                frame {&frame-name}:title
-                  = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-                  + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-              .
-              { gbl/fltopend.i
-                &where-cond="parts.artic = buf_goods.artic ~
-                  and parts.prod-type = buf_goods.prod-type ~
-                  and parts.prod-code = buf_goods.prod-code ~
-                  and parts.obj-type = v-obj-type ~
-                  and parts.obj-code = v-obj-code ~
-                  and parts.out-code = buf_trn-doc.doc-code ~
-                  and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                  "
-          &dyn_where-cond = " ~
-              substitute ( ~
-              ' parts.artic = &1&2&1  ~
-              and parts.prod-type = &1&3&1 ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and  parts.out-code = &1&9&1 ~
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code )  ~
-              "
-
-                &use-ind=" "
-                &by=" "
-              }
-            end.
-          end. /* buf_trn-doc.status_ = {&permitted} */
-        end. /* when {&expense} or when {&write-off} */
-
-        when {&return}
-        then do:
-          assign
-            frame {&frame-name}:title
-              = "Артикул : " + buf_goods.artic + "   " + buf_goods.gds-name
-              + "   Партии по док-ту № : " + buf_trn-doc.doc-code
-              + "  и  РАСХОД" + "   -  " + v-mode-name
-          .
-          if v-edit-parts = true
-          then do:
-            enable
-              b-add when v-add-parts = true
-              b-del when v-add-parts = true
-              b-chg
-              b-b-alt
-              b-pl
-              b-mark
-              with frame {&frame-name}.
-          end.
-          if buf_trn-doc.status_ <> {&permitted}
-          then do:
-            { gbl/fltopend.i
-              &where-cond="parts.artic = buf_goods.artic ~
-                and parts.prod-type = buf_goods.prod-type ~
-                and parts.prod-code = buf_goods.prod-code ~
-                and parts.obj-type = v-obj-type ~
-                and parts.obj-code = v-obj-code ~
-                and (parts.out-code = {&output-code} or parts.out-code = buf_trn-doc.doc-code) ~
-                and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                "
-          &dyn_where-cond = " ~
-              substitute ( ~
-              ' parts.artic = &1&2&1 ', ~{&double-quote~} , buf_goods.artic  ) +  ~
-              substitute ( ~
-              ' and parts.prod-type = &1&3&1 ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and (parts.out-code =  &1&2&1 or  parts.out-code = &1&9&1 ) ~
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ', ~{&double-quote~} , ~{&output-code~} , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code )  ~
-              "
-
-              &use-ind=" "
-              &by=" "
-            }
-          end.
-          else do:
-            { gbl/fltopend.i
-              &where-cond="parts.artic = buf_goods.artic ~
-                and parts.prod-type = buf_goods.prod-type ~
-                and parts.prod-code = buf_goods.prod-code ~
-                and parts.obj-type = v-obj-type ~
-                and parts.obj-code = v-obj-code ~
-                and parts.out-code = buf_trn-doc.doc-code ~
-                and (v-reserv-pl-code <> true or (v-reserv-pl-code = true and parts.pl-code = v-pl-code ) ) ~
-                "
-          &dyn_where-cond = " ~
-              substitute ( ~
-              ' parts.artic = &1&2&1  ~
-              and parts.prod-type = &1&3&1 ~
-              and parts.prod-code = &4 ~
-              and parts.obj-type  = &1&7&1 ~
-              and parts.obj-code  = &8 ~
-              and parts.out-code = &1&9&1  ~
-              and ( &5 <> true or ( &5 = true and parts.pl-code = &6 ) ) ~
-             ', ~{&double-quote~} , buf_goods.artic , buf_goods.prod-type , buf_goods.prod-code , v-reserv-pl-code , v-pl-code , v-obj-type , v-obj-code ,buf_trn-doc.doc-code )  ~
-              "
-
-              &use-ind=" "
-              &by=" "
-            }
-          end.
-        end. /* when {&return} */
-      end case. /* case buf_trn-doc.doc-type */
+      run gbl/getobjsrvhndl.p (input-output ObjSrv).
+      EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code).
+      
+      RUN gds-attr-value (
+                          INPUT buf_goods.gds-code,
+                          INPUT {&attr-mark-type},
+                          OUTPUT varvalue,
+                          OUTPUT vartype
+                          ).
+      if varvalue > ""
+      and EDOParSec:GetIsMarkingForType(varvalue)
+      then do :
+        disable b-chg with frame {&frame-name} .
+      end .
     end. /* if available buf_trn-doc */
     else do:
       message
@@ -6144,7 +5794,7 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-contract-prn-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-contract-prn-code Dialog-Frame 
 FUNCTION get-contract-prn-code RETURNS CHARACTER
   ( input p-recid as recid  ) :
   define buffer buf_parts for ub.parts  .
@@ -6165,7 +5815,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-country-name Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-country-name Dialog-Frame 
 FUNCTION get-country-name RETURNS CHARACTER
   ( BUFFER buf_parts FOR parts ) :
 
@@ -6183,7 +5833,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-mark Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-mark Dialog-Frame 
 FUNCTION get-mark RETURNS CHARACTER
   ( BUFFER buf_parts FOR parts ) :
 /*------------------------------------------------------------------------------
@@ -6203,7 +5853,7 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-purch-code Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-purch-code Dialog-Frame 
 FUNCTION get-purch-code RETURNS CHARACTER
   ( BUFFER buf_parts FOR parts ) :
 /*------------------------------------------------------------------------------
@@ -6222,3 +5872,4 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

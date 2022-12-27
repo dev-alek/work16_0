@@ -93,6 +93,10 @@ do:
   define variable vOrder as integer no-undo .
   define variable vIsMarkLine as logical no-undo .
   define variable vMaxDocLevel as integer no-undo .
+  
+  define variable vunit     as int no-undo.
+  define variable vunitCode as character no-undo.
+   
   { gbl/objsrv.i  }
   
 /*  logWrite = new LogWrite().*/
@@ -158,7 +162,7 @@ do:
     .
   define variable Tree           as class     tree no-undo .
   Tree = ObjSrv:Lib:MarkingTree .
-   
+  
   fe_:
   for each buf_utd-lines where buf_utd-lines.db-num = buf_utd.db-num
                            and buf_utd-lines.doc-id = buf_utd.doc-id
@@ -171,16 +175,34 @@ do:
     def var v-q-doc as decimal no-undo.
     def var v-q-doc-base  as decimal no-undo.
     v-q = 0.
-/*    if buf_utd.EDocType = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB*/
-/*    then                                                       */
+    
+    if buf_utd-lines.TaxRate = -1
+    then
+      temp_trn-doc.vat-type = {&without-vat}
+    .
 
     &scop proc-name gds-attr-value
     {&run_proc_attr-lib}
-     ( buf_utd-lines.gds-code,
-       {&attr-mark-type},
-       output v-par-val,
-       output v-par-type
-     ).
+    ( buf_utd-lines.gds-code,
+     {&attr-mark-type},
+     output v-par-val,
+     output v-par-type
+    ).
+     
+    assign
+      vunitCode = buf_utd-lines.UnitCode when buf_utd-lines.UnitCode ne ? and buf_utd-lines.UnitCode ne ""
+      vunit = ?
+      vunit = integer (getattrutdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.LineNum,"unit")) 
+    no-error.
+    if vunit ne 0 and vunit ne ?
+    then do:
+        /* только если одназначное соответствие */
+      find units where units.OKEI eq vunit no-lock no-error.
+      if available units
+      then
+        vunitCode = units.unit-name.
+      
+    end.
 
     if logical (getAttrUtdLinesEx(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.LineNum,"MarkUtdLine","no"))
     then do :
@@ -215,10 +237,10 @@ do:
     end .
     else do :
       vIsMarkLine = no .
-      
+               
       find first buf_bar-code where 
                  buf_bar-code.gds-code = buf_utd-lines.gds-code
-             and buf_bar-code.unit-cli = buf_utd-lines.UnitCode
+             and buf_bar-code.unit-cli = vUnitCode
       no-lock no-error.
       v-q = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"QuantityBarCode")).
       if v-q = ? then v-q = 0.
@@ -244,7 +266,7 @@ do:
       temp_doc-line.fact-qnty  = v-q
       temp_doc-line.doc-qnty   = v-q-doc-base
       temp_doc-line.cli-qnty   = v-q-doc
-      temp_doc-line.unit-cli   = buf_utd-lines.UnitCode 
+      temp_doc-line.unit-cli   = vUnitCode 
       temp_doc-line.price-cli  = buf_utd-lines.Total / (if vMarkUtd then buf_utd-lines.Quantity else temp_doc-line.cli-qnty)
       temp_doc-line.price-rubl = buf_utd-lines.Total / (if vMarkUtd then buf_utd-lines.Quantity else temp_doc-line.cli-qnty)
       temp_doc-line.doc-code   = temp_trn-doc.doc-code
@@ -278,6 +300,7 @@ do:
       : 
         if vIsMarkLine
         and buf_utd-marking-lines.doc-level < vMaxDocLevel
+        and Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB) > 1
         then do :
           next utd-marking-lines_ .
         end .

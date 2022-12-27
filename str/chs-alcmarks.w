@@ -42,17 +42,19 @@ define output parameter p-mark                as character            no-undo .
 { cmp/library.i  }
 { cmp/showinf.i  }
 { str/marks.i    }
-{bge/egais-mark.i}
+{ bge/egais-mark.i }
 { str/lib-trn.i  }
 { str/lib-calc.i }
 { str/libbcrcn.i }
+{ str/trdcalib.i }
 { cmp/croslist.i }
 { gbl/lineattr.i }
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { str/temp_upd.i }
-{utl/gtin.i}
+{ utl/gtin.i }
 { rep/gn-extp.i }
+{ ref/gds-attr.i    }
 define temp-table tt-mark no-undo
   field alcmark as character.
 
@@ -62,6 +64,13 @@ define temp-table tt-mark no-undo
 
 define variable extGdsObj       as class     extgds.
 define variable iLang           as integer   no-undo.
+define variable p-value-logical as logical no-undo.
+define variable p-value-character  as character no-undo.
+define variable p-value-date       as date no-undo.
+define variable p-value-decimal    as decimal no-undo.
+define variable p-value-integer    as integer no-undo.
+define variable p-param-type       as character no-undo.
+define variable v-tth as handle no-undo .
 
 define variable v-alc-code      as character no-undo .
 define variable v-proc-name-err as character no-undo initial 'impmark.txt'. /* Имя лога */
@@ -74,10 +83,26 @@ define buffer t_doc        for ub.trn-doc .
 define buffer bf_trn-doc   for ub.trn-doc .
 define buffer buf_gen-attr for ub.gen-attr .
 define buffer bf_parts     for ub.parts .
+define buffer out_parts    for ub.parts .
+define buffer bf_gen-attr  for ub.gen-attr .
+define buffer bf_marking-lines for ub.marking-lines .
+define buffer buf_marking-lines for ub.marking-lines .
+define buffer buf_goods    for ub.goods .
+define buffer bf_gds-obj  for ub.gds-obj .
+define buffer bf_prod-bc  for ub.prod-bc .
+define buffer bf_bar-code for ub.bar-code .
 
 define variable v-scan-str       as character no-undo.
 define VARIABLE v-manual         as logical   no-undo .
 DEFINE VARIABLE v-timedelay as integer no-undo .
+define variable v-is-return as logical no-undo init no .
+define variable v-gds-code as integer no-undo .
+define variable v-free-qnty as decimal no-undo .
+define variable v-free-part-qnty as decimal no-undo .
+define variable v-scan-qnty as integer no-undo .
+
+define variable varvalue as character no-undo.
+define variable vartype  as character no-undo.
 
 define stream str-err .
 define stream in-stream.
@@ -124,13 +149,13 @@ DEFINE BUTTON b-imp
 
 DEFINE VARIABLE F-text AS CHARACTER FORMAT "X(256)":U 
   VIEW-AS FILL-IN 
-  SIZE 70 BY 1.25
+  SIZE 80 BY 1.25
   FGCOLOR 12 NO-UNDO.
 
 DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(256)":U 
   LABEL "Марка" 
   VIEW-AS FILL-IN 
-  SIZE 76 BY 1 
+  SIZE 80 BY 1 
   BGCOLOR 15 NO-UNDO.
 
 
@@ -140,7 +165,7 @@ DEFINE FRAME Dialog-Frame
   b-exit AT ROW 1 COL 1
   b-imp AT ROW 1 COL 32.5 WIDGET-ID 2
   v-mark AT ROW 2.71 COL 7.5 COLON-ALIGNED
-  F-text AT ROW 4.25 COL 7.5 NO-LABEL WIDGET-ID 224
+  F-text AT ROW 4.25 COL 5.5 NO-LABEL WIDGET-ID 224
   SPACE(0.37) SKIP(0.66)
   WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
   SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -246,6 +271,22 @@ ON choose OF b-imp IN FRAME Dialog-Frame /* Импорт */
 ON ENTRY OF v-mark IN FRAME Dialog-Frame /* Марка */
   DO:
     run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+    run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+    IF p-value-logical = yes THEN  iLang = 68748313.
+
     run ActivateKeyboardLayout (input iLang, input 0).
     
   END.
@@ -334,13 +375,99 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  find first t_doc no-lock where t_doc.doc-code = p-doc-code no-error .
+  
+  { str/tdat-val.i
+    t_doc.doc-code
+    {&trdcattr-is-return}
+    varvalue
+    vartype
+    no-error
+  }
+  if varvalue = "yes" then do:
+    v-is-return = yes .
+    find first bf_parts no-lock where recid(bf_parts) = integer(p-message) no-error .
+    p-message = "" .
+    if available bf_parts
+    then do :
+      find first buf_goods no-lock where buf_goods.artic     = bf_parts.artic
+                                     and buf_goods.prod-type = bf_parts.prod-type
+                                     and buf_goods.prod-code = bf_parts.prod-code
+                                     .
+      frame Dialog-Frame:title = "Сканирование марок по товару " + string(buf_goods.gds-code) + " " + buf_goods.gds-name .
+      
+      v-free-part-qnty = bf_parts.fact-qnty .
+      for each bf_gen-attr no-lock where bf_gen-attr.table-name = {&table_parts}
+                                     and bf_gen-attr.attr-code  = "in-part-key"
+                                     and bf_gen-attr.attr-value = {key/parts.i bf_parts },
+      first out_parts no-lock where out_parts.obj-type  = entry(2, bf_gen-attr.p-key, {&delim-key})
+                                and out_parts.obj-code  = integer(entry(3, bf_gen-attr.p-key, {&delim-key}))
+                                and out_parts.artic     = entry(4, bf_gen-attr.p-key, {&delim-key})
+                                and out_parts.prod-type = entry(5, bf_gen-attr.p-key, {&delim-key})
+                                and out_parts.prod-code = integer(entry(6, bf_gen-attr.p-key, {&delim-key}))
+                                and out_parts.in-code   = entry(7, bf_gen-attr.p-key, {&delim-key})
+                                and out_parts.out-code  = entry(8, bf_gen-attr.p-key, {&delim-key})
+                                and out_parts.part-code = entry(9, bf_gen-attr.p-key, {&delim-key})
+      :
+        v-free-part-qnty = v-free-part-qnty - out_parts.fact-qnty .
+      end .
+      if v-free-part-qnty < 0 then v-free-part-qnty = 0 .
+      
+      v-scan-qnty = 0 .
+      for each buf_marking-lines no-lock where buf_marking-lines.obj-type = bf_parts.obj-type
+                                           and buf_marking-lines.obj-code = bf_parts.obj-code
+                                           and buf_marking-lines.gds-code = buf_goods.gds-code
+                                           and buf_marking-lines.out-code = t_doc.doc-code
+                                           and buf_marking-lines.doc-level = 1
+      :
+        v-scan-qnty = v-scan-qnty + 1 .
+      end .
+      
+      v-free-qnty = 0 .
+      find first bf_gds-obj no-lock where bf_gds-obj.obj-type  = t_doc.obj-type
+                                      and bf_gds-obj.obj-code  = t_doc.obj-code
+                                      and bf_gds-obj.artic     = buf_goods.artic
+                                      and bf_gds-obj.prod-type = buf_goods.prod-type
+                                      and bf_gds-obj.prod-code = buf_goods.prod-code
+                                      no-error .
+      if available bf_gds-obj
+      then do :
+        v-free-qnty = bf_gds-obj.free-qnty .
+      end .
+                                     
+      p-message = "Доступно по партии: " + string(v-free-part-qnty) +
+             "     Книжный остаток: " + string(v-free-qnty) +
+             "     Просканировано: " + string(v-scan-qnty) .
+    end .
+  end.
+  
   F-text = p-message .  
   Tree = ObjSrv:Lib:MarkingTree .     
   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
+  run adm/shattri.p (
+               input "get":U
+               ,input  v-cntxt-obj-type /*p-obj-type*/
+               ,input  v-cntxt-obj-code /*p-obj-code*/
+               ,input  {&attr-marking}
+               ,input  {&attr-marking_rus-key} /*p-param-code*/
+               ,output p-value-character
+               ,output p-value-date
+               ,output p-value-decimal
+               ,output p-value-integer
+               ,output p-value-logical
+               ,output p-param-type
+               ,input-output table-handle v-tth
+               ) no-error . 
+  IF p-value-logical = yes THEN  iLang = 68748313.
+
   run ActivateKeyboardLayout (input iLang, input 0).     
   RUN enable_UI.
   apply "entry" to v-mark in FRAME {&FRAME-NAME}.
-  find first t_doc no-lock where t_doc.doc-code = p-doc-code no-error .
+  
+  if v-is-return
+  then do :
+    hide b-imp in frame {&FRAME-NAME}.
+  end .
   
   find first trn-doc exclusive-lock where trn-doc.doc-code = p-doc-code no-error .  
     if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsManual
@@ -539,6 +666,7 @@ PROCEDURE save_update :
   define variable v-error      as logical   no-undo init no.
   define variable l-error      as logical   no-undo init no.
   define variable v-error-lang as logical   no-undo init no.
+  define variable v-ok         as logical   no-undo .
           
   define variable ii           as integer   no-undo .
   define variable v-parts      as character no-undo .
@@ -550,6 +678,8 @@ PROCEDURE save_update :
   define variable v-slt-pc     like ub.doc-line.slt-pc no-undo.
   define variable ungroup      as logical   no-undo . 
   define variable chg-qnty     as integer   no-undo .
+  define variable v-level      as integer   no-undo .
+  
   define buffer buf_doc-line for ub.doc-line .
   define buffer buf_parts    for ub.parts .
   define buffer out_parts    for ub.parts .
@@ -557,6 +687,7 @@ PROCEDURE save_update :
   define buffer buf_gds-prt  for ub.gds-prt .
   define buffer cpl_gds-dtl  for ub.gds-dtl .
   define variable v-GTIN as character no-undo .
+  define variable v-cis-gds-code as integer no-undo .
   define buffer buf_marking-lines for ub.marking-lines.
    
    if v-mark:screen-value in frame {&frame-name} = ""
@@ -564,7 +695,7 @@ PROCEDURE save_update :
       v-mark:screen-value in frame {&frame-name} = v-scan-str.
       v-scan-str = "". 
     end.
-        
+
   assign 
     v-mark = v-mark:screen-value in frame {&frame-name} .
     
@@ -573,12 +704,288 @@ PROCEDURE save_update :
     define variable vcodident as character no-undo.
     vcodident = GetCodeIdent(v-mark).
     find first marking where marking.mark begins vcodident
+      and vcodident > ""
       no-lock no-error  .
-    if     available marking then 
-    do:
-
-
+    if available marking
+    or v-is-return
+    then do:
+      if available marking
+      and v-is-return
+      and marking.unit-ext <> "UNIT"
+      and marking.unit-ext <> ?
+      and marking.unit-ext <> ""
+      then do :
+        run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
+        assign 
+          v-mark              = ""
+          v-mark:screen-value = ""
+          v-scan-str          = ""
+          p-mark              = ""
+        .
+        return .
+      end .
+      
       p-mark = vcodident .
+      
+      if v-is-return
+      and (vcodident = ? or vcodident = "")
+      then do :
+        p-mark = v-mark .
+      end .
+      
+      v-GTIN = getGtinByDM(p-mark) .
+      v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .
+      
+      RUN gds-attr-value (
+      INPUT v-cis-gds-code,
+      INPUT {&attr-mark-type},
+      OUTPUT varvalue,
+      OUTPUT vartype
+      ).
+      
+      if varvalue = "tabak"
+      then do :
+        v-level = ? .
+        v-level = getlevelByCodId(p-mark) no-error .
+        if v-level <> ?
+        and v-level <> 1
+        then do :
+          if available marking
+          and marking.unit-ext = "UNIT" 
+          then do : end .
+          else do :
+            run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
+            assign 
+              v-mark              = ""
+              v-mark:screen-value = ""
+              v-scan-str          = ""
+              p-mark              = ""
+            .
+            return .
+          end .
+        end .
+      end .
+      else do :
+        v-GTIN = getGtinByDM(p-mark) .
+        find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN
+                                        and bf_prod-bc.bc-on
+                                        no-error.
+        if not available bf_prod-bc
+        then do :
+          run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").
+          assign 
+            v-mark              = ""
+            v-mark:screen-value = ""
+            v-scan-str          = ""
+            p-mark              = ""
+          .
+          return .
+        end .        
+        find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .
+        if not available bf_bar-code
+        then do :
+          run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").
+          assign 
+            v-mark              = ""
+            v-mark:screen-value = ""
+            v-scan-str          = ""
+            p-mark              = ""
+          .
+          return .
+        end .
+        if bf_bar-code.cli-base-rate <> 1
+        then do :                       
+          run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
+          assign 
+            v-mark              = ""
+            v-mark:screen-value = ""
+            v-scan-str          = ""
+            p-mark              = ""
+          .
+          return .
+        end .
+      end .
+      
+      if can-find(bf_marking-lines no-lock where bf_marking-lines.mark = p-mark
+                                             and bf_marking-lines.out-code = t_doc.doc-code)
+      and v-is-return
+      then do :
+        run dispmessage ("КМ добавлен в документ ранее").
+        assign 
+          v-mark              = ""
+          v-mark:screen-value = ""
+          v-scan-str          = ""
+          p-mark              = ""
+        .
+        return .
+      end . 
+      
+      if available bf_parts
+      then do :
+        find first buf_goods no-lock where buf_goods.artic = bf_parts.artic
+                                       and buf_goods.prod-type = bf_parts.prod-type
+                                       and buf_goods.prod-code = bf_parts.prod-code
+                                       .
+        if available marking
+        then do :
+          if marking.gds-code <> buf_goods.gds-code
+          and marking.gds-code > 0
+          then do :
+            run dispmessage ("Просканированный КМ относится к другому товару").
+            assign 
+              v-mark              = ""
+              v-mark:screen-value = ""
+              v-scan-str          = ""
+              p-mark              = ""
+            .
+            return .
+          end .
+          find first buf_marking-lines no-lock where buf_marking-lines.gds-code  = buf_goods.gds-code
+                                                 and buf_marking-lines.obj-type  = bf_parts.obj-type
+                                                 and buf_marking-lines.obj-code  = bf_parts.obj-code
+                                                 and buf_marking-lines.in-code   = bf_parts.in-code
+                                                 and buf_marking-lines.out-code  = bf_parts.out-code
+                                                 and buf_marking-lines.part-code = bf_parts.part-code
+                                                 and buf_marking-lines.mark      = marking.mark
+                                                 no-error .
+          if not available buf_marking-lines
+          then do :
+            if t_doc.reason-code = 25 /* Корректировка поступления */
+            then do :
+/*              message "Просканированный КМ отсутствует в выбранной партии" view-as alert-box .*/
+              run dispmessage ("Просканированный КМ отсутствует в выбранной партии").
+              assign 
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return .
+            end .
+            if t_doc.reason-code = 23 /* Обратная продажа */
+            then do :
+              message "КМ отсутствует в выбранной партии, продолжить оформление возврата упаковки?" view-as alert-box question buttons yes-no update v-ok .
+              if not v-ok
+              then do :
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                  p-mark              = ""
+                .
+                return .
+              end .
+              else do :
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                .
+              end .
+            end .
+          end .
+        end .
+        else do :
+          v-GTIN = getGtinByDM(p-mark) .
+          v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .
+          if v-cis-gds-code = ?
+          then do :
+            run dispmessage ("GTIN " + v-GTIN + " не привязан ни к какому товару!").
+            assign 
+              v-mark              = ""
+              v-mark:screen-value = ""
+              v-scan-str          = ""
+              p-mark              = ""
+            .
+            return .
+          end .
+          if v-cis-gds-code <> buf_goods.gds-code
+          then do :
+            run dispmessage ("GTIN " + v-GTIN + " привязан к другому товару!").
+            assign 
+              v-mark              = ""
+              v-mark:screen-value = ""
+              v-scan-str          = ""
+              p-mark              = ""
+            .
+            return .
+          end .
+          if num-entries(bf_parts.part-code, "_") = 2
+          then do :
+            if v-GTIN <> entry(1, bf_parts.part-code, "_")
+            then do :
+              if t_doc.reason-code = 25 /* Корректировка поступления */
+              then do :
+                run dispmessage ("Возврат упаковки с GTIN " + v-GTIN + " по выбранной партии не возможен").
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                  p-mark              = ""
+                .
+                return .
+              end .
+              if t_doc.reason-code = 23 /* Обратная продажа */
+              then do :
+                message ("Упаковка с GTIN " + v-GTIN + " отсутствует в выбранной партии, продолжить оформление возврата упаковки?") view-as alert-box question buttons yes-no update v-ok .
+                if not v-ok
+                then do :
+                  assign 
+                    v-mark              = ""
+                    v-mark:screen-value = ""
+                    v-scan-str          = ""
+                    p-mark              = ""
+                  .
+                  return .
+                end .
+                else do :
+                  assign 
+                    v-mark              = ""
+                    v-mark:screen-value = ""
+                    v-scan-str          = ""
+                  .
+                end .
+              end .
+            end .
+          end .
+          else do :
+            if t_doc.reason-code = 25 /* Корректировка поступления */
+            then do :
+              run dispmessage ("Возврат упаковки с GTIN " + v-GTIN + " по выбранной партии не возможен").
+              assign 
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return .
+            end .
+            if t_doc.reason-code = 23 /* Обратная продажа */
+            then do :
+              message ("Упаковка с GTIN " + v-GTIN + " отсутствует в выбранной партии, продолжить оформление возврата упаковки?") view-as alert-box question buttons yes-no update v-ok .
+              if not v-ok
+              then do :
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                  p-mark              = ""
+                .
+                return .
+              end .
+              else do :
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                .
+              end .
+            end .
+          end .
+        end .
+      end .
+        
+                                            
       apply "CHOOSE" to b-exit in frame {&frame-name}.
 
     end.  
