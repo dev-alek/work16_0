@@ -198,15 +198,13 @@ define input parameter p-del     as logical no-undo.
 do
 on error undo, return error
 :
-  find first PromoAction-list where PromoAction-list.db-num  = p-db-num
-                                and PromoAction-list.id      = p-id
-  no-lock no-error.
-  if not available PromoAction-list
-  then do: 
+  if not can-find( PromoAction-list where PromoAction-list.id = p-id
+                                      and PromoAction-list.db-num  = p-db-num )
+  then do:
     create PromoAction-list.
     assign
+       PromoAction-list.id = p-id
        PromoAction-list.db-num  = p-db-num
-       PromoAction-list.id      = p-id
     .
   end.
   PromoAction-list.del_ = p-del.

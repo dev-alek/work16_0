@@ -158,6 +158,9 @@ class ibs.th.gbl.storage.promoactionstorage:
       if valid-object (ipromoactionsubObj:GoodsAppl)
       then 
           vStoragegoodsOBj:updateDBAll(ipromoactionsubObj:GoodsAppl,buf_promoaction.ID,buf_promoaction.Db-num).
+/*      if    valid-object (ipromoactionsubObj:BarCode)                                                        */
+/*      then                                                                                                   */
+/*          vStoragegoodsOBj:updateDBAll(ipromoactionsubObj:BarCode,buf_promoaction.ID,buf_promoaction.Db-num).*/
       if valid-object (ipromoactionsubObj:PromoSet)
       then 
           vStoragegoodsOBj:updateDBAll(ipromoactionsubObj:PromoSet,buf_promoaction.ID,buf_promoaction.Db-num).
@@ -405,9 +408,12 @@ class ibs.th.gbl.storage.promoactionstorage:
              else if inpromoactionSubObj:typecond = 2 // "Сумма по строке" 
              then 
                 this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no, yes).
-             if inpromoactionSubObj:typecond = 3 // "Итог чека" 
+             else if inpromoactionSubObj:typecond = 3 // "Итог чека" 
              then  
                 this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, no, yes).
+             else if inpromoactionSubObj:typecond = 4 // "Штрих код" 
+             then  
+                this-object:CleanChildObj(inpromoactionSubObj, no, yes, no, no, no, yes).               
           end.
           else
              this-object:CleanChildObj(inpromoactionSubObj, yes, yes, no, yes, no, yes).
@@ -415,12 +421,14 @@ class ibs.th.gbl.storage.promoactionstorage:
           end .
           when 2 then do: // абсолютная
                this-object:CleanChildObj(inpromoactionSubObj, no, not inpromoactionSubObj:CritgoodsFl, yes, no, no, yes).
+               if inpromoactionSubObj:typecond = 4
+               then this-object:CleanChildObj(inpromoactionSubObj, no, no, no, no, no, yes).
           end.     
           when 3 then do: // Скидка количеством
              this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, yes, yes).
           end .
           when 4 then do: //Скидка процентом за количество
-             this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, no, yes, yes).
+             this-object:CleanChildObj(inpromoactionSubObj, no, no, no, no, no, yes).
           end .
           when 5 then do: // Фиксированная цена
              if inpromoactionSubObj:TypeDiscontEnum eq ibs.th.ref.promo.enum-type-discount:ensolo 
@@ -428,6 +436,8 @@ class ibs.th.gbl.storage.promoactionstorage:
                 this-object:CleanChildObj(inpromoactionSubObj, no, yes, yes, yes, no, yes).
              else 
                 this-object:CleanChildObj(inpromoactionSubObj, yes, yes, no, no, yes, yes).
+             if inpromoactionSubObj:typecond = 4
+               then this-object:CleanChildObj(inpromoactionSubObj, no, no, no, no, no, yes).
           end .
           when 6 then do:
              if    inpromoactionSubObj:typecond = 1 // "Количество по строке"  
@@ -448,8 +458,7 @@ class ibs.th.gbl.storage.promoactionstorage:
              else if inpromoactionSubObj:typecond = 3 // "Итог чека"  
              then
                 this-object:CleanChildObj(inpromoactionSubObj, yes, yes, yes, no, no, yes).
-          end.
-                 
+          end.                                    
        end case.
     end.
   end.  
@@ -459,7 +468,7 @@ class ibs.th.gbl.storage.promoactionstorage:
   input iCleanPromoSet  as logical,
   input iCleanCriterion  as logical,
   input iCleanCriterionNotOne  as logical, 
-  input iCleanPromoCardsBin as logical 
+  input iCleanPromoCardsBin as logical
   /*,
   input iCleanGiftNotMess  as logical */
   
@@ -498,7 +507,7 @@ class ibs.th.gbl.storage.promoactionstorage:
         else
            vGood:Mode = {&h-delete}.     
       end.
-    end.   
+    end.    
     if iCleanPromoSet 
     then do: 
       vGoods = inpromoactionSubObj:PromoSet.

@@ -38,8 +38,7 @@ class ibs.th.bge.1crn.subjects.asubjects implements isubjects abstract:
   
   
   method public void Add (subObj as Progress.Lang.Object):
- 
-    assign 
+     assign 
       iCounter = iCounter + 1.
     create ttListObj.
     assign
@@ -51,7 +50,6 @@ class ibs.th.bge.1crn.subjects.asubjects implements isubjects abstract:
   end. 
 
   method public void Delete (iNum as int):
-    
     find first ttListObj where ttListObj.iNum = iNum.
     SubjectObjCurr = ttListObj.SubObj.
     delete object SubjectObjCurr no-error.

@@ -41,7 +41,12 @@ define variable vss-description as character no-undo init "Тригер удаления {&mai
    exclusive-lock:
        delete ub.PromoGift.
    end.     
-   
+ 
+    for each  ub.PromoAttr where ub.PromoAttr.tablename eq  "PromoAction" and ub.PromoAction.id = int64(entry(1,ub.PromoAttr.p-key,{&delim-key}))
+   exclusive-lock:
+       delete ub.PromoAttr.
+   end.  
+     
    for each  ub.PromoGoods where ub.PromoGoods.idAction eq  ub.PromoAction.id
    exclusive-lock:
        delete ub.PromoGoods.

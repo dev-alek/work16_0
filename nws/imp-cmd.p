@@ -1163,7 +1163,23 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                 delete ub.config .
               end. /*if avail*/
             end. /* when {&table_config} then do:*/
-            
+             when {&table_PromoAttr} then 
+                do:
+                   find first ub.PromoAttr
+                      where rowid( ub.PromoAttr ) = v-tbl-row
+                      no-error.
+                   if available ub.PromoAttr then 
+                   do:
+                         run fill-PromoAttr in p-imp-handle (
+                            input ub.PromoAttr.attr-value
+                            , input ub.PromoAttr.p-key
+                            , input ub.PromoAttr.attr-code
+                            , input ub.PromoAttr.tablename
+                            ).
+                  
+                      delete ub.PromoAttr.
+                   end.
+                end.
             when {&table_clients-attr} then do:
               find first ub.clients-attr
                 where rowid( ub.clients-attr ) = v-tbl-row

@@ -44,7 +44,7 @@ end.
 }
 {ibs/th/ref/promo/promotype.i
     &NameType = typecond
-    &ListType = "Количество по строке,Сумма по строке,Сумма в документе"
+    &ListType = "Количество по строке,Сумма по строке,Сумма в документе,Скидка по ШК"
 } 
 
 {ibs/th/ref/promo/promotype.i
@@ -103,8 +103,11 @@ method public void CangeTypeDiscontAndMethodCalc (input iTypeDiscont as int,inpu
             TypeCondList = TypeCondListAll.
         else if  iMethodCalc eq 2
         then
-            TypeCondList = "Количество по строке,Сумма по строке". 
-        else
+            TypeCondList = "Количество по строке,Сумма по строке,Скидка по ШК". 
+        else if  iMethodCalc eq 5
+        then
+            TypeCondList = ",Скидка по ШК". 
+        else        
             TypeCondList = "".     
     end.
     else if iTypeDiscont = 3

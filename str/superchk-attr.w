@@ -241,6 +241,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         end.
   
     for each chk-discnt-attr where chk-discnt-attr.doc-code = p-code no-lock:
+    if chk-discnt-attr.attr-code = "promo-id" and chk-discnt-attr.line-num = 0 then next .
                 create tt-chk-attr.
                 assign
                 tt-chk-attr.attr-value = chk-discnt-attr.attr-value

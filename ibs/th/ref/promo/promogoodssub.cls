@@ -22,12 +22,12 @@ using ibs.th.ref.promo.promoGoodsSubs.
 
  
 class ibs.th.ref.promo.PromoGoodsSub implements ithsub: 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
-define variable vss-description as character no-undo initial "Объект товар акции.". 
+  define variable vss-revision    as character no-undo initial "$Revision$":U .
+  define variable vss-author      as character no-undo initial "$Author$":U .
+  define variable vss-date        as character no-undo initial "$Date$":U .
+  define variable vss-workfile    as character no-undo initial "$Workfile$":U .
+  define variable vss-archive     as character no-undo initial "$Archive$":U .
+  define variable vss-description as character no-undo initial "Объект товар акции.". 
   
   { cmp/str-glbl.i class}
   
@@ -35,11 +35,11 @@ define variable vss-description as character no-undo initial "Объект товар акции
     get.
     set.
     
-    define property Mode as char no-undo init {&h-update}
+  define property Mode as char no-undo init {&h-update}
     get.
-    set.
+  set.
     
-    define property StatusErr as logical no-undo
+  define property StatusErr as logical no-undo
     get:
       def var err as log no-undo.
       err = StatusErr.
@@ -52,67 +52,85 @@ define variable vss-description as character no-undo initial "Объект товар акции
     get.
     set (ID-arg as int64):
       ID = ID-arg.
-/*      if ID <> ID            */
-/*      then do:               */
-/*        setFlagChange (true).*/
-/*      end.                   */
+    /*      if ID <> ID            */
+    /*      then do:               */
+    /*        setFlagChange (true).*/
+    /*      end.                   */
     end.
     
-    define property db-num as integer init ?  no-undo
+  define property db-num as integer init ?  no-undo
     get.
     set(arg as int):
       if arg <> db-num
-      then do:
+        then 
+      do:
         db-num = arg.
         setFlagChange (true).
       end.
     end.
     
-    define property idSet as int64 no-undo
+  define property idSet as int64 no-undo
     get.
     set(arg as int64):
       if arg <> idSet
-      then do:
+        then 
+      do:
         idSet = arg.
         setFlagChange (true).
-        end.
+      end.
     end.
     
-    define property qnty as decimal  no-undo
+  define property qnty as decimal  no-undo
     get.
     set(arg as decimal ):
       if arg <> qnty
-      then do:
+        then 
+      do:
         qnty = arg.
         setFlagChange (true).
       end.
     end.
     
-    define property NameSet as character  no-undo
+  define property NameSet as character  no-undo
     get.
     set(arg as character  ):
       if arg <> NameSet
-      then do:
+        then 
+      do:
         NameSet = arg.
         setFlagChange (true).
       end.
     end.
     
-    define property price as decimal  init ?  no-undo
+  define property price as decimal  init ?  no-undo
     get.
     set(arg as decimal ):
       if arg <> price
-      then do:
+        then 
+      do:
         price = arg.
         setFlagChange (true).
       end.  
     end.
     
+  define buffer buf_PromoAttr for ub.PromoAttr .
+  define property promotion-code as character  init ""  no-undo
+    get.
+    set(arg as character ):
+      if arg <> promotion-code
+        then 
+      do:
+        promotion-code = arg.
+        setFlagChange (true).
+      end.  
+    end.
+
   define property type as int no-undo
     get.
     SET (arg as int):
       if arg <> type
-      then do:
+        then 
+      do:
         type = arg.
         setFlagChange (true).
       end.
@@ -122,7 +140,8 @@ define variable vss-description as character no-undo initial "Объект товар акции
     get.
     set(arg as int64):
       if arg <> idAction
-      then do:
+        then 
+      do:
         idAction = arg.
         setFlagChange (true).
       end.
@@ -132,43 +151,69 @@ define variable vss-description as character no-undo initial "Объект товар акции
     get.
     set(arg as integer):
       if arg <> GdsCode
-      then do:
+        then 
+      do:
         GdsCode = arg.
         release bf_gds.
         setFlagChange (true).
       end.
     END.
     
-    define property GdsName as character no-undo
+  define property GdsName as character no-undo
     get:
       if available (bf_gds)
-      then do:
+        then 
+      do:
         return bf_gds.gds-name.
       end.
-      else do:
+      else 
+      do:
         find first bf_gds no-lock 
           where bf_gds.gds-code = GdsCode no-error.
         if available (bf_gds)
-        then do:
+          then 
+        do:
           return bf_gds.gds-name.
         end.
         else return "".
       end.
     end.
-     
-    {ibs/th/ref/promo/propertyclass.i
+
+  define property promo-code as character no-undo
+    get:
+      if available (buf_PromoAttr)
+        then 
+      do:
+        return buf_PromoAttr.attr-value.
+      end.
+      else 
+      do:
+        find first buf_PromoAttr no-lock where buf_promoAttr.attr-code = "bc-code" and
+          buf_promoAttr.tablename = "PromoGoods" and
+          idAction = int64(entry(1,buf_PromoAttr.p-key,{&delim-key})) and 
+          db-num = integer(entry(2,buf_PromoAttr.p-key,{&delim-key})) and
+          GdsCode = integer(entry(3,buf_PromoAttr.p-key,{&delim-key})) no-error .
+        if available (buf_PromoAttr) then 
+        do:
+          return buf_PromoAttr.attr-value .
+        end.
+        else return "".
+      end.    
+
+    end.     
+  {ibs/th/ref/promo/propertyclass.i
      &Obj       = promoSetGoods
      &ObjClass  = promoGoodssubs
      &StorClass = promoGoodsStorage
      &storColec = getpromoGoodssubs(idAction,id,ibs.th.ref.promo.enum-promo-goods-type:promoSetGoods,db-num) } 
     
-    define property Changed as logical no-undo
+  define property Changed as logical no-undo
     get.
     set.
-    /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
     
   constructor public promogoodssub (  ):
   end constructor.
@@ -207,13 +252,13 @@ define variable vss-description as character no-undo initial "Объект товар акции
     if valid-object(THIS-OBJECT:PromoSetGoods) then delete object THIS-OBJECT:PromoSetGoods no-error.
   end.
   method public void refreshChildObj():
-     Clean(). 
-     this-object:refreshObj = yes.
-     THIS-OBJECT:PromoSetGoods no-error.
-     this-object:refreshObj = no.
+    Clean(). 
+    this-object:refreshObj = yes.
+    THIS-OBJECT:PromoSetGoods no-error.
+    this-object:refreshObj = no.
   end.
   destructor public promogoodssub ( ):
-     Clean().
+    Clean().
   end destructor.
 
 end class.

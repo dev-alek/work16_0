@@ -53,6 +53,9 @@ define {3} temp-table {1} no-undo like ub.goods
   field to-del as logical
   field order-num as integer
   field to-sel as logical
+  field promo-code as character
+  field ActionId  as int64
+  field db-num as integer
   index art  is primary unique artic prod-type prod-code
   index code is         unique gds-code
   index oi order-num

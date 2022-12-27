@@ -205,6 +205,21 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
         .
         INIT_Panel(yes,no,no,yes,no,yes).
     end method.
+    METHOD PUBLIC VOID INIT_BarCode(input metod_calc as integer):
+      if metod_calc = 5 then 
+      do:
+        assign
+          uc_Goods1:pPromoBarCodeFix = yes.
+        .
+      end.
+      else 
+      do:
+        assign
+          uc_Goods1:pPromoBarCode = yes.
+        .       
+      end. 
+      INIT_Panel(yes,no,no,no,no,yes).
+    end method.    
     METHOD PUBLIC VOID INIT_Promoset():
         assign
             uc_Goods1:pPromoSet      = yes

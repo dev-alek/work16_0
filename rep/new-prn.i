@@ -134,5 +134,7 @@ define variable Rubl_Coeff as decimal init 0 no-undo.
 
 define variable v-doc-code as character initial "":U no-undo .
 define variable v-part-code as character initial "":U no-undo .
-
+define variable v-promo-code as character no-undo .
+define variable v-ActionId as int64 no-undo .
+define variable v-db-num as integer no-undo .
 /* $Workfile$ e n d */

@@ -1,6 +1,7 @@
 define private variable m-promo-trg as class ibs.th.ref.promo.promo_trg no-undo.
     
 method Public VOID SetPromoTrg(input v-promo-trg as class ibs.th.ref.promo.promo_trg  ):
+
     m-promo-trg = v-promo-trg.
     &if defined (SetPromoTrg_bef) ne 0 
     &then
@@ -89,7 +90,6 @@ method Public VOID PublicEvent (input iEvent as character, input iEventParam as 
     &then
        if valid-object ({&child_9}) then {&child_9} :PublicEvent     (iEvent, iEventParam).
     &endif
-    
     &if defined (NotLocalEvent) eq 0
     &then
         LocalEvent(iEvent, iEventParam).

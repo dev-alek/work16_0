@@ -66,19 +66,10 @@ define buffer for-cash-desk for ub.cash-desk.
       &cdt-ibm-xml=yes
       &cdt-maria=no
       }
-      find first ub.PromoAttr no-lock where ub.PromoAttr.attr-code = "promo-message" and 
-   ub.PromoAttr.tablename  = "PromoAction" no-error .
-if available (ub.PromoAttr) then 
-do:
-   { str/putc-mes16.i } 
-for each ub.PromoAttr  where ub.PromoAttr.attr-code = "promo-message" 
-                         and ub.PromoAttr.tablename  = "PromoAction"
-exclusive-lock:
 
-delete ub.PromoAttr .
-end.                                         
-end.
-  END . /*for each for-cash-desk*/
+   { str/putc-mes16.i }
+
+END . /*for each for-cash-desk*/
 END PROCEDURE.
 
 /* $Workfile$ e n d */

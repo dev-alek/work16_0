@@ -42,6 +42,10 @@ define input parameter how-pcnt-kat     as character no-undo . /*обычная катег с
 define input-output parameter b-count as integer no-undo .
 define input parameter p-part-code      as character no-undo .
 define input parameter p-doc-code       as character no-undo .
+define input parameter p-promo-code     as character no-undo .
+define input parameter p-ActionId       as int64     no-undo .
+define input parameter p-db-num as integer no-undo .
+
 /*
 message
 'bar-code'         buf-par_bar-code.b-code skip skip
@@ -136,6 +140,7 @@ define buffer buf_trn-doc for ub.trn-doc .
 define shared Stream OutStream.
 
 define variable v-sys-key      as character no-undo . /* для чтения параметра конфигурации */
+define variable par-type     as character no-undo . /* тип параметра конфигурации */
 
 define variable v-rb-is-base as logical no-undo .
 
@@ -825,8 +830,48 @@ if p-doc-code <> "":U then do:
   end.
 end.
 
-
-
+/*Промоакции*/
+define variable v-promo-name      as character no-undo .
+define variable v-type-sale-promo as character no-undo . /*тип скидки*/
+define variable v-sale-promo      as character   no-undo . /*размер скидки*/
+define variable v-promo-price     as decimal   no-undo . /*цена со скидкой*/
+if p-ActionId <> 0 and p-ActionId <> ? then 
+do:
+   find first ub.PromoAction no-lock where ub.PromoAction.id = p-ActionId and
+      ub.PromoAction.db-num = p-db-num no-error .
+   if available (ub.PromoAction) then 
+   do:
+      v-promo-name = ub.PromoAction.nameAction .
+      find first ub.PromoGoods no-lock where ub.PromoGoods.db-num = ub.PromoAction.db-num and
+         ub.PromoGoods.type = ub.PromoAction.methodCalc and
+         ub.PromoGoods.idAction = ub.PromoAction.id and
+         ub.PromoGoods.gds-code = buf-par_goods.gds-code 
+         no-error .
+      case ub.PromoAction.methodCalc:
+         /*абсолютная скидка*/
+         when 8 then 
+            do:
+               v-type-sale-promo = "руб." .
+               if available (ub.PromoGoods) then 
+               do:
+                  v-sale-promo = string(ub.PromoGoods.price) + v-type-sale-promo .
+                  v-promo-price = price - ub.PromoGoods.price .
+               end.
+            end.
+         /*процентная скидка*/
+         when 9 then 
+            do:
+               v-type-sale-promo = "%" .
+               if available (ub.PromoGoods) then 
+               do:
+                  v-sale-promo = string(ub.PromoGoods.price) + v-type-sale-promo .
+                  v-promo-price = price - price * (ub.PromoGoods.price / 100) .
+               end.
+            end.
+         
+      end case.
+   end.
+end.
 
 PUT STREAM OutStream UNFORMATTED
 /*N */ /*NF*/
@@ -835,90 +880,95 @@ PUT STREAM OutStream UNFORMATTED
                or
                (qntytype = "документ" and action = "document"))
                 then integer(round(gds-qnty / buf-par_bar-code.cli-base-rate, 0))
-          else gds-qnty) "|"
-/*2 */ /*0 */  replace( OurHost.obj-name, "|":U, "/":U )  "|":U
-/*3 */ /*1 */  replace( OurObj.obj-name, "|":U, "/":U ) "|":U
-/*4 */ /*2 */  replace( buf-par_goods.artic, "|":U, "/":U ) "|":U
-/*5 */ /*3 */  replace( buf-par_goods.gds-name, "|":U, "/":U ) "|":U
-/*6 */ /*4 */  replace( buf-par_goods.engl-name, "|":U, "/":U ) "|":U
-/*7 */ /*5 */  (if available ub.scales-gds then "" else bar_code ) "|":U
-/*8 */ /*6 */  replace( gds-prt_node-name, "|":U, "/":U ) "|":U
-/*9 */ /*7 */  replace( country_name, "|":U, "/":U ) "|":U
-/*10*/ /*8 */  replace( prod_name, "|":U, "/":U ) "|":U
-/*11*/ /*9 */  str-price "|":U
-/*12*/ /*10*/  "Цена за " replace( buf-par_goods.unit-base, "|":U, "/":U ) ":" "|":U
-/*13*/ /*11*/  string( v-ticket-today,"99/99/9999" ) "|":U
-/*14*/ /*12*/  (if available ub.scales-gds then string(ub.scales-gds.PLU-code) else "" ) "|":U
-/*15*/ /*13*/  (if available ub.scales-gds then string("(" + string(ub.scales-gds.scales-num) + ")") else "" ) "|":U
-/*16*/ /*14*/  "Цена за " replace( trim(buf-par_bar-code.unit-cli), "|":U, "/":U ) " (" buf-par_bar-code.cli-base-rate " " replace( buf-par_goods.unit-base, "|":U, "/":U ) "):" "|":U
-/*17*/ /*15*/  str-price-alt "|":U
-/*18*/ /*16*/  replace( buf-par_goods.destin, "|":U, "/":U ) "|":U /*назначение */
-/*19*/ /*17*/  replace( buf-par_goods.attrib, "|":U, "/":U ) "|":U /* хар-ки */
-/*20*/ /*18*/  replace( buf-par_goods.user-rule, "|":U, "/":U ) "|":U /* правила эксплуат */
-/*21*/ /*19*/  replace( buf-par_goods.sert, "|":U, "/":U ) "|":U /* сертификат */
-/*22*/ /*20*/  replace( replace(buf-par_goods.struct, {&new-line}, {&space-char}), "|":U, "/":U ) "|":U /* структура */
-/*23*/ /*21*/  buf-par_goods.deadline "|":U /*срок хранения */
-/*24*/ /*22*/  replace( buf-par_goods.sort, "|":U, "/":U )  "|":U /* сорт */
-/*25*/ /*23*/  (if available ub.scales-gds then varattr-value else bar_code )  "|":U
-/*26*/ /*24*/  ListProdBc "|":U
-/*27*/ /*25*/  replace( buf-par_goods.grp-name, "|":U, "/":U ) "|":U
-/*28*/ /*26*/  replace( gds-grp.node-name, "|":U, "/":U ) "|":U
-/*29*/ /*27*/  replace( buf-par_goods.PS, "|":U, "/":U ) "|":U
-/*30*/ /*28*/  replace( gds-prt_f-name, "|":U, "/":U ) "|":U
-/*31*/ /*29*/  str-price-rb "|":U
-/*32*/ /*30*/  str-price-alt-rb "|":U
-/*33*/ /*31*/  (if buf-par_bar-code.cli-base-rate = 1 then buf-par_goods.qnty-cart else buf-par_bar-code.cli-base-rate) " " buf-par_goods.unit-base "|":U
-/*34*/ /*32*/  buf-par_bar-code.b-code "|":U
-/*35*/ /*33*/  replace( buf-par_goods.prod-type, "|":U, "/":U ) "|":U
-/*36*/ /*34*/  buf-par_goods.prod-code "|":U
-/*37*/ /*35*/  replace( buf-par_goods.unit-cli, "|":U, "/":U )  "|":U
-/*38*/ /*36*/  buf-par_goods.cli-base-rate "|":U
-/*39*/ /*37*/  replace( TickPS, "|":U, "/":U ) "|":U
-/*40*/ /*38*/  buf-par_goods.increase-pc "|":U
-/*41*/ /*39*/  buf-par_goods.wt-cart "|":U
-/*42*/ /*40*/  buf-par_goods.ms-cart "|":U
-/*43*/ /*41*/  buf-par_goods.gds-type "|":U
-/*44*/ /*42*/  v-ticket-vat-pc "|":U
-/*45*/ /*43*/  replace( buf-par_goods.okdp, "|":U, "/":U ) "|":U
-/*46*/ /*44*/  buf-par_goods.negative-rest "|":U
-/*47*/ /*45*/  replace( buf-par_goods.cost-calc, "|":U, "/":U ) "|":U
-/*48*/ /*46*/  v-ticket-slt-pc "|":U
-/*49*/ /*47*/  replace( buf-par_goods.unit-cst, "|":U, "/":U ) "|":U
-/*50*/ /*48*/  buf-par_goods.cst-base-rate "|":U
-/*51*/ /*49*/  replace( buf-par_goods.TNVED, "|":U, "/":U ) format "x(10)" "|":U
-/*52*/ /*50*/  buf-par_goods.min-stock "|":U
-/*53*/ /*51*/  replace( buf-par_goods.nationality, "|":U, "/":U ) "|":U
-/*54*/ /*52*/  replace( buf-par_goods.label-name, "|":U, "/":U ) "|":U
-/*55*/ /*53*/  str-price-old "|":U
-/*56*/ /*54*/  str-price-alt-old "|":U
-/*57*/ /*55*/  str-price-rb-old "|":U
-/*58*/ /*56*/  str-price-alt-rb-old "|":U
-/*59*/ /*57*/  v-mrtr-code "|":U
-/*60*/ /*58*/  v-bc-check-price "|":U
-/*61*/ /*59*/  entry( 1, ListProdBc, ",":U ) "|":U
-/*62*/ /*60*/  replace( v-rt-bar_code, "|":U, "/":U ) "|":U
-/*63*/ /*61*/  replace( buf-rt_bar-code.unit-cli, "|":U, "/":U ) "|":U
-/*64*/ /*62*/  replace( v-first-pbc-rt, "|":U, "/":U ) "|":U
-/*65*/ /*63*/  str-price-rt "|":U
-/*66*/ /*64*/  str-price-novat-rt "|":U
-/*67*/ /*65*/  replace( v-rt-alt-bar_code, "|":U, "/":U ) "|":U
-/*68*/ /*66*/  replace( v-rt-alt_unit-cli, "|":U, "/":U ) "|":U
-/*69*/ /*67*/  replace( v-first-pbc-alt-rt, "|":U, "/":U ) "|":U
-/*70*/ /*68*/  str-price-alt-rt "|":U
-/*71*/ /*69*/  str-price-alt-novat-rt "|":U
-/*72*/ /*70*/  replace( string( v-last-doc-date, "99/99/9999") , "|":U, "/":U ) "|":U
-/*73*/ /*71*/  str-price-alt-one "|":U
-/*74*/ /*72*/  trim( string( price-cd, ">>>>>>>>>>>>9.99" ) ) "|":U
-/*75*/ /*73*/  trim( string( v-calories, ">>>>>>>>>>>>9.<<" ) ) "|":U
-/*76*/ /*74*/  trim( string( v-protein, ">>>>>>>>>>>>9.<<" ) ) "|":U
-/*77*/ /*75*/  trim( string( v-carbohydrate, ">>>>>>>>>>>>9.<<" ) ) "|":U
-/*78*/ /*76*/  trim( string( v-fat, ">>>>>>>>>>>>9.<<" ) ) "|":U
-/*79*/ /*77*/  trim( p-part-code ) "|":U
-/*80*/ /*78*/  trim( p-doc-code ) "|":U
-/*81*/ /*79*/  trim( v-doc-date ) "|":U
-/*82*/ /*80*/  trim( v-short-doc-code ) "|":U
-/*83*/ /*81*/  trim( v-ser_on_pack ) "|":U
-/*84*/ /*82*/  v-last-pri-doc
+                else gds-qnty) "|"
+   /*2 */ /*0 */  replace( OurHost.obj-name, "|":U, "/":U )  "|":U
+   /*3 */ /*1 */  replace( OurObj.obj-name, "|":U, "/":U ) "|":U
+   /*4 */ /*2 */  replace( buf-par_goods.artic, "|":U, "/":U ) "|":U
+   /*5 */ /*3 */  replace( buf-par_goods.gds-name, "|":U, "/":U ) "|":U
+   /*6 */ /*4 */  replace( buf-par_goods.engl-name, "|":U, "/":U ) "|":U
+   /*7 */ /*5 */  (if available ub.scales-gds then "" else bar_code ) "|":U
+   /*8 */ /*6 */  replace( gds-prt_node-name, "|":U, "/":U ) "|":U
+   /*9 */ /*7 */  replace( country_name, "|":U, "/":U ) "|":U
+   /*10*/ /*8 */  replace( prod_name, "|":U, "/":U ) "|":U
+   /*11*/ /*9 */  str-price "|":U
+   /*12*/ /*10*/  "Цена за " replace( buf-par_goods.unit-base, "|":U, "/":U ) ":" "|":U
+   /*13*/ /*11*/  string( v-ticket-today,"99/99/9999" ) "|":U
+   /*14*/ /*12*/  (if available ub.scales-gds then string(ub.scales-gds.PLU-code) else "" ) "|":U
+   /*15*/ /*13*/  (if available ub.scales-gds then string("(" + string(ub.scales-gds.scales-num) + ")") else "" ) "|":U
+   /*16*/ /*14*/  "Цена за " replace( trim(buf-par_bar-code.unit-cli), "|":U, "/":U ) " (" buf-par_bar-code.cli-base-rate " " replace( buf-par_goods.unit-base, "|":U, "/":U ) "):" "|":U
+   /*17*/ /*15*/  str-price-alt "|":U
+   /*18*/ /*16*/  replace( buf-par_goods.destin, "|":U, "/":U ) "|":U /*назначение */
+   /*19*/ /*17*/  replace( buf-par_goods.attrib, "|":U, "/":U ) "|":U /* хар-ки */
+   /*20*/ /*18*/  replace( buf-par_goods.user-rule, "|":U, "/":U ) "|":U /* правила эксплуат */
+   /*21*/ /*19*/  replace( buf-par_goods.sert, "|":U, "/":U ) "|":U /* сертификат */
+   /*22*/ /*20*/  replace( replace(buf-par_goods.struct, {&new-line}, {&space-char}), "|":U, "/":U ) "|":U /* структура */
+   /*23*/ /*21*/  buf-par_goods.deadline "|":U /*срок хранения */
+   /*24*/ /*22*/  replace( buf-par_goods.sort, "|":U, "/":U )  "|":U /* сорт */
+   /*25*/ /*23*/  (if available ub.scales-gds then varattr-value else bar_code )  "|":U
+   /*26*/ /*24*/  ListProdBc "|":U
+   /*27*/ /*25*/  replace( buf-par_goods.grp-name, "|":U, "/":U ) "|":U
+   /*28*/ /*26*/  replace( gds-grp.node-name, "|":U, "/":U ) "|":U
+   /*29*/ /*27*/  replace( buf-par_goods.PS, "|":U, "/":U ) "|":U
+   /*30*/ /*28*/  replace( gds-prt_f-name, "|":U, "/":U ) "|":U
+   /*31*/ /*29*/  str-price-rb "|":U
+   /*32*/ /*30*/  str-price-alt-rb "|":U
+   /*33*/ /*31*/  (if buf-par_bar-code.cli-base-rate = 1 then buf-par_goods.qnty-cart else buf-par_bar-code.cli-base-rate) " " buf-par_goods.unit-base "|":U
+   /*34*/ /*32*/  buf-par_bar-code.b-code "|":U
+   /*35*/ /*33*/  replace( buf-par_goods.prod-type, "|":U, "/":U ) "|":U
+   /*36*/ /*34*/  buf-par_goods.prod-code "|":U
+   /*37*/ /*35*/  replace( buf-par_goods.unit-cli, "|":U, "/":U )  "|":U
+   /*38*/ /*36*/  buf-par_goods.cli-base-rate "|":U
+   /*39*/ /*37*/  replace( TickPS, "|":U, "/":U ) "|":U
+   /*40*/ /*38*/  buf-par_goods.increase-pc "|":U
+   /*41*/ /*39*/  buf-par_goods.wt-cart "|":U
+   /*42*/ /*40*/  buf-par_goods.ms-cart "|":U
+   /*43*/ /*41*/  buf-par_goods.gds-type "|":U
+   /*44*/ /*42*/  v-ticket-vat-pc "|":U
+   /*45*/ /*43*/  replace( buf-par_goods.okdp, "|":U, "/":U ) "|":U
+   /*46*/ /*44*/  buf-par_goods.negative-rest "|":U
+   /*47*/ /*45*/  replace( buf-par_goods.cost-calc, "|":U, "/":U ) "|":U
+   /*48*/ /*46*/  v-ticket-slt-pc "|":U
+   /*49*/ /*47*/  replace( buf-par_goods.unit-cst, "|":U, "/":U ) "|":U
+   /*50*/ /*48*/  buf-par_goods.cst-base-rate "|":U
+   /*51*/ /*49*/  replace( buf-par_goods.TNVED, "|":U, "/":U ) format "x(10)" "|":U
+   /*52*/ /*50*/  buf-par_goods.min-stock "|":U
+   /*53*/ /*51*/  replace( buf-par_goods.nationality, "|":U, "/":U ) "|":U
+   /*54*/ /*52*/  replace( buf-par_goods.label-name, "|":U, "/":U ) "|":U
+   /*55*/ /*53*/  str-price-old "|":U
+   /*56*/ /*54*/  str-price-alt-old "|":U
+   /*57*/ /*55*/  str-price-rb-old "|":U
+   /*58*/ /*56*/  str-price-alt-rb-old "|":U
+   /*59*/ /*57*/  v-mrtr-code "|":U
+   /*60*/ /*58*/  v-bc-check-price "|":U
+   /*61*/ /*59*/  entry( 1, ListProdBc, ",":U ) "|":U
+   /*62*/ /*60*/  replace( v-rt-bar_code, "|":U, "/":U ) "|":U
+   /*63*/ /*61*/  replace( buf-rt_bar-code.unit-cli, "|":U, "/":U ) "|":U
+   /*64*/ /*62*/  replace( v-first-pbc-rt, "|":U, "/":U ) "|":U
+   /*65*/ /*63*/  str-price-rt "|":U
+   /*66*/ /*64*/  str-price-novat-rt "|":U
+   /*67*/ /*65*/  replace( v-rt-alt-bar_code, "|":U, "/":U ) "|":U
+   /*68*/ /*66*/  replace( v-rt-alt_unit-cli, "|":U, "/":U ) "|":U
+   /*69*/ /*67*/  replace( v-first-pbc-alt-rt, "|":U, "/":U ) "|":U
+   /*70*/ /*68*/  str-price-alt-rt "|":U
+   /*71*/ /*69*/  str-price-alt-novat-rt "|":U
+   /*72*/ /*70*/  replace( string( v-last-doc-date, "99/99/9999") , "|":U, "/":U ) "|":U
+   /*73*/ /*71*/  str-price-alt-one "|":U
+   /*74*/ /*72*/  trim( string( price-cd, ">>>>>>>>>>>>9.99" ) ) "|":U
+   /*75*/ /*73*/  trim( string( v-calories, ">>>>>>>>>>>>9.<<" ) ) "|":U
+   /*76*/ /*74*/  trim( string( v-protein, ">>>>>>>>>>>>9.<<" ) ) "|":U
+   /*77*/ /*75*/  trim( string( v-carbohydrate, ">>>>>>>>>>>>9.<<" ) ) "|":U
+   /*78*/ /*76*/  trim( string( v-fat, ">>>>>>>>>>>>9.<<" ) ) "|":U
+   /*79*/ /*77*/  trim( p-part-code ) "|":U
+   /*80*/ /*78*/  trim( p-doc-code ) "|":U
+   /*81*/ /*79*/  trim( v-doc-date ) "|":U
+   /*82*/ /*80*/  trim( v-short-doc-code ) "|":U
+   /*83*/ /*81*/  trim( v-ser_on_pack ) "|":U
+   /*84*/ /*82*/  v-last-pri-doc "|":U
+   /*85*/ /*83*/  p-promo-code "|":U
+   /*86*/ /*84*/  v-promo-name "|":U
+   /*87*/ /*85*/  v-type-sale-promo "|":U
+   /*88*/ /*86*/  v-sale-promo "|":U
+   /*89*/ /*87*/  v-promo-price
             SKIP.
 
 assign b-count = b-count + 1.

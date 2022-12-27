@@ -4637,20 +4637,6 @@ procedure m-cash-rate-exe :
 
 END PROCEDURE.
 
-procedure promosend :
-define input parameter p-pos-type as character no-undo .
-define input parameter p-action as character no-undo .
- run str/diallog.w (
-        input parparentproc
-      , input this-procedure
-      , input "str/promosend.p":U
-      , input (p-pos-type + {&delim-par} + v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + p-action)
-      , input no /*p-auto-go*/
-      , input "":U
-      , input substitute("Отсылка промоакций на кассы &1", p-pos-type, {&cd-type-IBm-XML})
-  ) no-error.
-end procedure. /* run-2cashpay */
-
 procedure bpasend :
 define input parameter p-pos-type as character no-undo .
 define input parameter p-action as character no-undo .
@@ -4851,6 +4837,26 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
+      define variable v-row as rowid no-undo .
+      define buffer buf_PromoAction for ub.PromoAction .
+      define variable v-PromoName as character no-undo .
+    if v-cntxt-db-num = 0 then 
+    do:
+      for each buf_PromoAction exclusive-lock where buf_PromoAction.Status_ = 1 and
+        (buf_PromoAction.end-date < today or (buf_PromoAction.changeDate < today and
+        buf_PromoAction.changeDate <> 01/01/1970)):
+        buf_PromoAction.Status_ = 2 .
+        v-PromoName = v-PromoName + {&new-line} + buf_PromoAction.nameAction .
+      end.
+
+      if v-PromoName <> "" then 
+      do:
+        message "Статус был изменен на Заблокирован для акций:" skip
+          skip
+          v-PromoName
+          view-as alert-box.
+      end.
+    end.
     run ref/promo.p ( input parparentproc, input false, output v-rid-list) no-error.
   end.
 
@@ -14003,4 +14009,23 @@ PROCEDURE image-procedure-pr-fin :
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
+
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE promosend W-Win
+procedure promosend :
+define input parameter p-pos-type as character no-undo .
+define input parameter p-action as character no-undo .
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/promosend.p":U
+      , input (p-pos-type + {&delim-par} + v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + p-action + {&delim-par} + "")
+      , input no /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка промоакций на кассы &1", p-pos-type, {&cd-type-IBm-XML})
+  ) no-error.
+end procedure. /* promosend */
+/* _UIB-CODE-BLOCK-END */
+
 &ANALYZE-RESUME

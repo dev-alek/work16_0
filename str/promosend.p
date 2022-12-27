@@ -38,14 +38,15 @@ define variable vss-description as character no-undo init "Толкач пересылки пром
 { cmp/trg-def.i  }
 { gbl/getcntxt.i def }
 
-define variable p-pos-type as character no-undo .
-define variable p-obj-type like ub.clients.obj-type no-undo .
-define variable p-obj-code like ub.clients.obj-code no-undo .
-define variable action as char no-undo .
+define variable p-pos-type    as character no-undo .
+define variable p-obj-type    like ub.clients.obj-type no-undo .
+define variable p-obj-code    like ub.clients.obj-code no-undo .
+define variable action        as char      no-undo .
+define variable recid-list    as character no-undo .
 
-define var choice as integer no-undo.
-define var rid-list as char no-undo.
-define variable glog as logical no-undo .
+define var      choice        as integer   no-undo.
+define var      rid-list      as char      no-undo.
+define variable glog          as logical   no-undo .
 define variable log-file-name as character no-undo init "send-cd.txt":U .
 define variable v-view-log as logical no-undo .
 define variable v-host-code like ub.sysconf.host-code no-undo .
@@ -53,10 +54,11 @@ define variable v-host-code like ub.sysconf.host-code no-undo .
 define variable vSubs as class ibs.th.ref.promo.promoactionsubs no-undo .
 
 assign
-p-pos-type = entry(1, p-parameter, {&delim-par})
-p-obj-type = entry(2, p-parameter, {&delim-par})
-p-obj-code = integer(entry(3, p-parameter, {&delim-par}))
-action     = entry(4, p-parameter, {&delim-par})
+   p-pos-type = entry(1, p-parameter, {&delim-par})
+   p-obj-type = entry(2, p-parameter, {&delim-par})
+   p-obj-code = integer(entry(3, p-parameter, {&delim-par}))
+   action     = entry(4, p-parameter, {&delim-par})
+   recid-list = entry(5, p-parameter, {&delim-par})
 no-error .
 if error-status:error then do:
   run write-log-and-file in p-log-handle (
@@ -135,6 +137,7 @@ CASE p-pos-type:
 /*    if NOT glog then return .*/
   end. /*ibm*/
 END CASE.
+if recid-list = "" then do:
 run gbl/d-askw.w (input "Выбор промоакций для пересылки",
             input ( (if action = "U"
                       then "Переслать на кассу"
@@ -148,17 +151,32 @@ run gbl/d-askw.w (input "Выбор промоакций для пересылки",
             input 3,
             output choice).
 CASE choice:
-  when 1 then do:
-  end.
-  when 2 then do:
-/*Интерфейс с промоакциями*/
+   when 1 then 
+      do:
+      end.
+   when 2 then 
+      do:
+         /*Интерфейс с промоакциями*/
     run ref/promo.p (input parparentproc,yes,output vSubs) no-error.
     if not valid-object (vSubs) then return.
-  end.
-  when 3 then do:
-    return.
-  end.
+      end.
+   when 3 then 
+      do:
+         return.
+      end.
 END CASE.
+end.
+else do:
+define variable v-promo-stor as class ibs.th.gbl.storage.promoactionstorage no-undo .
+
+def var ii as integer no-undo .
+v-promo-stor = new ibs.th.gbl.storage.promoactionstorage().
+do ii = 0 to num-entries(recid-list,{&comma-char}):
+for each ub.PromoAction no-lock where recid(ub.PromoAction) = integer(entry(ii,recid-list,{&comma-char})):
+   v-promo-stor:getpromoactionsubs(input-output vSubs,ub.PromoAction.db-num,ub.PromoAction.id).
+end.  
+end.
+end.
 CASE p-pos-type:
   when  {&cd-type-IBm-XML}
   then do:
@@ -168,7 +186,7 @@ CASE p-pos-type:
                    ,input p-log-handle
                    ,input p-obj-code
                    ,input action
-                   ,input (if not valid-object (vSubs)
+                   ,input (if not valid-object (vSubs) and recid-list = ""
                            then 0
                            else 1)
                   , input vSubs

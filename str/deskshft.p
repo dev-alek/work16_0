@@ -58,6 +58,29 @@ define buffer buf_cash-desk for ub.cash-desk.
 define buffer buf_marking for ub.marking .
 def var Marking as class mark no-undo .
 { gbl/objsrv.i }
+      
+/* Поиск активных промоакций с датой меньше текущей */
+define buffer buf_PromoAction for ub.PromoAction .
+define variable rid-list as character no-undo .
+disable triggers for load of buf_PromoAction .
+for each buf_PromoAction exclusive-lock where buf_PromoAction.Status_ = 1 and 
+(buf_PromoAction.end-date < today or (buf_PromoAction.changeDate < today and
+ buf_PromoAction.changeDate <> 01/01/1970)):
+   buf_PromoAction.Status_ = 2 .
+   rid-list = rid-list + {&comma-char} + string(recid(buf_PromoAction)) .
+end. 
+/* удаление промоакции с кассы */
+if rid-list <> "" then do:
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/promosend.p":U
+      , input ({&cd-type-IBm-XML} + {&delim-par} + p-obj-type + {&delim-par} + string(p-obj-code) + {&delim-par} + 'D':U + {&delim-par} + rid-list )
+      , input yes /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка промоакций на кассы &1", {&cd-type-IBm-XML})
+  ) no-error.
+  end.
 /*докачать все чеки*/
 /*если это не маркетер*/
 do

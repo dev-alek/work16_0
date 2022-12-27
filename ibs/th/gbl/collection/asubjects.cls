@@ -62,7 +62,6 @@ class ibs.th.gbl.collection.asubjects implements isubjects:
   
   
   method public void AddItem (subObj as Progress.Lang.Object):
- 
     assign 
       iCounter = iCounter + 1.
     create ttListObj.
@@ -75,7 +74,6 @@ class ibs.th.gbl.collection.asubjects implements isubjects:
   end. 
 
   method public void DeleteItem (iNum as int):
-    
     find first ttListObj where ttListObj.iNum = iNum.
     delete ttListObj.
     iNum = 0.
