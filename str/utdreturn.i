@@ -104,7 +104,7 @@ function  crUtdReturn returns logical
    then do:
       
       for each doc-line where doc-line.doc-code eq trn-doc.doc-code no-lock,
-         first parts where parts.out-code  = doc-line.doc-code
+         each parts where parts.out-code  = doc-line.doc-code
                        and parts.obj-type  = doc-line.obj-type
                        and parts.obj-code  = doc-line.obj-code
                        and parts.artic     = doc-line.artic
@@ -138,25 +138,26 @@ function  crUtdReturn returns logical
          .
          release  buf_parts.
       end.
-                               
-      block-part:
-      for each tt-prts,
-         first doc-line where recid(doc-line) eq tt-prts.rec-id-line no-lock,
-         first parts where recid(parts) eq tt-prts.rec-id no-lock
-      break by  tt-prts.doc-code:
-         find first goods where goods.artic eq parts.artic
-                            and goods.prod-type eq parts.prod-type
-                            and goods.prod-code eq parts.prod-code
-         no-lock no-error.
-         if not available goods
-         then do:
-            message "Не найден товар по поcтавщику " parts.prod-type  parts.prod-code " с аркиклом "  parts.artic
-               view-as alert-box.
-            next block-part. 
-         end.
-         else do:
-            subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
-            do trans:
+      subscribe "getNextseq" anywhere run-procedure "MySeqForUtd".
+      do trans:
+            
+         block-part:
+         for each tt-prts,
+            first doc-line where recid(doc-line) eq tt-prts.rec-id-line no-lock,
+            first parts where recid(parts) eq tt-prts.rec-id no-lock
+         break by  tt-prts.doc-code by tt-prts.rec-id-line:
+            find first goods where goods.artic eq parts.artic
+                               and goods.prod-type eq parts.prod-type
+                               and goods.prod-code eq parts.prod-code
+            no-lock no-error.
+            if not available goods
+            then do:
+               message "Не найден товар по поcтавщику " parts.prod-type  parts.prod-code " с аркиклом "  parts.artic
+                  view-as alert-box.
+               next block-part. 
+            end.
+            else do:
+               
                if first-of(tt-prts.doc-code)
                then do:
                   if    not available utd
@@ -225,69 +226,78 @@ function  crUtdReturn returns logical
                      
                   end.
                   else do:
-                  MySeqUtd = ?.
-                  vFlag = yes. 
-                  create buf_utd.
+                     MySeqUtd = ?.
+                     vFlag = yes. 
+                     create buf_utd.
+                     assign
+                        buf_utd.contract-code   = parts.contract-code
+                        buf_utd.doc-code        = trn-doc.doc-code
+                        buf_utd.DocumentDate    = today
+                        buf_utd.DocumentNumber  = "Возврат по накладной " + parts.in-code
+                        buf_utd.EDocType        = objSrv:Env:Utd:EDocType:returns:KeyIntDB
+                        buf_utd.host-code       = parts.host-code
+                        buf_utd.obj-type        = parts.obj-type
+                        buf_utd.obj-code        = parts.obj-code
+                        buf_utd.cli-type        = trn-doc.cli-type
+                        buf_utd.cli-code        = trn-doc.cli-code
+                     .
+                     validate buf_utd.
+                     if   trn-doc.reason-code eq 23
+                     then assign
+                        buf_utd.PackageId = ""
+                        mTypeUtd = "СЧФДОП"
+                     . 
+                     else if trn-doc.reason-code eq 25
+                     then
+                        mTypeUtd = "ДОП".
+                     else
+                        mTypeUtd = "".
+                           
+                     if   mTypeUtd ne ""
+                     then
+                        setattrutd (buf_utd.db-num,buf_utd.doc-id,"TypeUTD",mTypeUtd).
+                     /* поставим статус новы чтобы сначо создать все марки  по документу а потом отправить в новости */
+                     buf_utd.sts             = ObjSrv:Env:Utd:Sts:th:newstatus:KeyIntDB. 
+                     Buf_utd.sts-edi         = ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
+                  
+                     assign 
+                        vdb-num = Buf_utd.db-num
+                        vdoc-id = Buf_utd.doc-id
+                        vi      = 0
+                     .
+                  end.
+               end.
+               if first-of(tt-prts.rec-id-line)
+               then do:
+                  find first gds-dtl where gds-dtl.doc-code  = doc-line.doc-code
+                                       and gds-dtl.artic     = doc-line.artic  
+                                       and gds-dtl.prod-code = doc-line.prod-code
+                                       and gds-dtl.prod-type = doc-line.prod-type 
+                  no-lock no-error.
+                  create buf_utd-lines.
                   assign
-                     buf_utd.contract-code   = parts.contract-code
-                     buf_utd.doc-code        = trn-doc.doc-code
-                     buf_utd.DocumentDate    = today
-                     buf_utd.DocumentNumber  = "Возврат по накладной " + parts.in-code
-                     buf_utd.EDocType        = objSrv:Env:Utd:EDocType:returns:KeyIntDB
-                     buf_utd.host-code       = parts.host-code
-                     buf_utd.obj-type        = parts.obj-type
-                     buf_utd.obj-code        = parts.obj-code
-                     buf_utd.cli-type        = trn-doc.cli-type
-                     buf_utd.cli-code        = trn-doc.cli-code
-                  .
-                  validate buf_utd.
-                  if   trn-doc.reason-code eq 23
-                  then assign
-                     buf_utd.PackageId = ""
-                     mTypeUtd = "СЧФДОП"
-                  . 
-                  else if trn-doc.reason-code eq 25
-                  then
-                     mTypeUtd = "ДОП".
-                  else
-                     mTypeUtd = "".
-                        
-                  if   mTypeUtd ne ""
-                  then
-                     setattrutd (buf_utd.db-num,buf_utd.doc-id,"TypeUTD",mTypeUtd).
-                  /* поставим статус новы чтобы сначо создать все марки  по документу а потом отправить в новости */
-                  buf_utd.sts             = ObjSrv:Env:Utd:Sts:th:newstatus:KeyIntDB. 
-                  Buf_utd.sts-edi         = ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
-               
-                  assign 
-                     vdb-num = Buf_utd.db-num
-                     vdoc-id = Buf_utd.doc-id
-                     vi      = 0
+                     vi                      = vi + 1
+                     buf_utd-lines.Article   = parts.artic
+                     buf_utd-lines.db-num    = buf_utd.db-num
+                     buf_utd-lines.doc-id    = buf_utd.doc-id
+                     buf_utd-lines.LineNum   = vi
+                     buf_utd-lines.gds-code     = goods.gds-code
+                     buf_utd-lines.ProductCode  = goods.gds-name
+                     buf_utd-lines.Quantity     = if available gds-dtl then gds-dtl.fact-qnty  else doc-line.fact-qnty
+                     buf_utd-lines.TaxRate      = doc-line.VAT-pc
+                     buf_utd-lines.Total        = (if available gds-dtl then gds-dtl.price-rubl else doc-line.price-rubl) * buf_utd-lines.Quantity
+                     buf_utd-lines.UnitCode     = goods.unit-base
+                     buf_utd-lines.Vat          = buf_utd-lines.Total * buf_utd-lines.TaxRate / (100 + buf_utd-lines.TaxRate)
+                     buf_utd-lines.TotalWithVatExcluded = buf_utd-lines.Total  - buf_utd-lines.Vat
+                     buf_utd-lines.Price                = buf_utd-lines.TotalWithVatExcluded / buf_utd-lines.Quantity
                   .
                end.
+               else do:
+                  find first buf_utd-lines where buf_utd-lines.db-num    = buf_utd.db-num
+                                             and buf_utd-lines.doc-id    = buf_utd.doc-id
+                                             and buf_utd-lines.LineNum   = vi
+                  no-lock.
                end.
-               find first gds-dtl where gds-dtl.doc-code  = doc-line.doc-code
-                                    and gds-dtl.artic     = doc-line.artic  
-                                    and gds-dtl.prod-code = doc-line.prod-code
-                                    and gds-dtl.prod-type = doc-line.prod-type 
-               no-lock no-error.
-               create buf_utd-lines.
-               assign
-                  vi                      = vi + 1
-                  buf_utd-lines.Article   = parts.artic
-                  buf_utd-lines.db-num    = buf_utd.db-num
-                  buf_utd-lines.doc-id    = buf_utd.doc-id
-                  buf_utd-lines.LineNum   = vi
-                  buf_utd-lines.gds-code     = goods.gds-code
-                  buf_utd-lines.ProductCode  = goods.gds-name
-                  buf_utd-lines.Quantity     = if available gds-dtl then gds-dtl.fact-qnty  else doc-line.fact-qnty
-                  buf_utd-lines.Price        = if available gds-dtl then gds-dtl.price-rubl else doc-line.price-rubl
-                  buf_utd-lines.TaxRate      = doc-line.VAT-pc
-                  buf_utd-lines.Total        = buf_utd-lines.Price * buf_utd-lines.Quantity
-                  buf_utd-lines.UnitCode     = doc-line.unit-cli
-                  buf_utd-lines.Vat          = buf_utd-lines.Total * buf_utd-lines.TaxRate / (100 + buf_utd-lines.TaxRate)
-                  buf_utd-lines.TotalWithVatExcluded = buf_utd-lines.Total  - buf_utd-lines.Vat
-               .
                for each marking-lines where marking-lines.gds-code   = goods.gds-code
                                         and marking-lines.obj-type   = parts.obj-type
                                         and marking-lines.obj-code   = parts.obj-code
@@ -313,7 +323,10 @@ function  crUtdReturn returns logical
                      AddUtdErr(buf_utd.db-num,buf_utd.doc-id,buffer buf_utd-marking-lines:handle,"return","Mark",marking-lines.mark + {&delim-par} + buf_utd-lines.ProductCode).
                   release buf_utd-marking-lines.
                end.
-               release buf_utd-lines.
+               if last-of(tt-prts.rec-id-line)
+               then do:
+                  release buf_utd-lines.
+               end.
                if last-of(tt-prts.doc-code)
                then do:
                   buf_utd.Total = 0.
@@ -327,10 +340,11 @@ function  crUtdReturn returns logical
                   release buf_utd.
                end.
             end.
-            unsubscribe "getNextseq".
+            
          end.
          
       end.
+      unsubscribe "getNextseq".
       /* изменим статус на правильный для отправки в новости */
       for each buf_utd where buf_utd.doc-code eq trn-doc.doc-code
                          and buf_utd.EDocType eq objSrv:Env:Utd:EDocType:returns:KeyIntDB

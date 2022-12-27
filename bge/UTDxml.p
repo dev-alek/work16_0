@@ -39,7 +39,7 @@ define input  parameter iORGGuid as character no-undo.
 define input  parameter iContGuid as character no-undo.
 define input  parameter iTypeUTD as character no-undo. /* "СЧФДОП", "Доп" */
 define input parameter i-db-num as integer no-undo.
-define input parameter p-doc-id as integer no-undo.
+define input parameter i-doc-id as integer no-undo.
 function  getdesc returns logical
 (input iObj as component-handle) in source-procedure.
 {cmp/str-glbl.i}
@@ -47,6 +47,12 @@ function  getdesc returns logical
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { utl/gtin.i }
+define variable mPublishHand as handle no-undo.
+define variable mDiadocApi as component-handle no-undo.
+define stream File-stream.
+define variable mdebug as logical no-undo.
+mdebug = session:debug-alert.
+{ str/edo-log.i }
 
 /* Input таблица с объектами */
 
@@ -87,8 +93,8 @@ define variable vCounteragentOrg as component-handle no-undo.
 /* ************************  Function Implementations ***************** */
 
 
-logname = session:temp-directory + "UPD_" + string(p-doc-id) + "_log.txt".
-filename_ = "UPD_" + string(p-doc-id) + ".xml" .
+logname = session:temp-directory + "UPD_" + string(i-doc-id) + "_log.txt".
+filename_ = "UPD_" + string (i-db-num) + "_" + string (i-doc-id) + ".xml".
 
 /* Для лога */
 /*&scop display-message run write-log-and-file in p_log-handle ~*/
@@ -99,13 +105,12 @@ filename_ = "UPD_" + string(p-doc-id) + ".xml" .
 /*&scop my-message substitute("Начало выгрузки УПД в XML")*/
 /*{&display-message}.                                     */
 
-find first buf_utd no-lock where buf_utd.db-num eq i-db-num and buf_utd.doc-id = p-doc-id no-error .
+find first buf_utd no-lock where buf_utd.db-num eq i-db-num and buf_utd.doc-id = i-doc-id no-error .
 if not available (buf_utd) then return error .
 vOrganization = iDiadocConnection:GetOrganizationById(iORGGuid) no-error.
 if vOrganization eq ?
 then do:
-   message "нет доступа к организации"
-   view-as alert-box.
+   PutErr(substitute ("Нет доступа к организации &1",iORGGuid) ).
    return.
 end.
 vCounteragent = vOrganization:GetCounteragentById(iContGuid).
@@ -293,9 +298,12 @@ do:
          
          hSAXWriter:start-element("ИнфПолФХЖ1":U) no-error.
          do:
-            hSAXWriter:write-empty-element("ТекстИнф":U) no-error.
-            hSAXWriter:insert-attribute("Идентиф":U, "id_pack_th") no-error.
-            hSAXWriter:insert-attribute("Значен":U, buf_utd.PackageId) no-error.
+            if buf_utd.PackageId ne ""
+            then do:
+               hSAXWriter:write-empty-element("ТекстИнф":U) no-error.
+               hSAXWriter:insert-attribute("Идентиф":U, "id_pack_th") no-error.
+               hSAXWriter:insert-attribute("Значен":U, buf_utd.PackageId) no-error.
+            end.
       
             hSAXWriter:write-empty-element("ТекстИнф":U) no-error.
             hSAXWriter:insert-attribute("Идентиф":U, "id_doc_th") no-error.
@@ -354,10 +362,10 @@ do:
               hSAXWriter:insert-attribute ("ДефОКЕИ_Тов":U,  "-") no-error.
             hSAXWriter:insert-attribute ("КолТов":U, string (buf_utd-lines.Quantity)) no-error.
             hSAXWriter:insert-attribute ("ЦенаТов":U, trim(string(buf_utd-lines.Price,">>>>>>>>>>>>9.99"))) no-error.
-            hSAXWriter:insert-attribute ("СтТовБезНДС":U, trim(string(buf_utd-lines.Total,">>>>>>>>>>>>9.99"))) no-error.
-            hSAXWriter:insert-attribute ("НалСт":U, string(buf_utd-lines.TaxRate) + "%") no-error.
-            hSAXWriter:insert-attribute ("СтТовУчНал":U, trim(string(buf_utd-lines.TotalWithVatExcluded,">>>>>>>>>>>>9.99"))) no-error.
-            do:
+            hSAXWriter:insert-attribute ("СтТовБезНДС":U, trim(string(buf_utd-lines.TotalWithVatExcluded,">>>>>>>>>>>>9.99"))) no-error.
+            hSAXWriter:insert-attribute ("НалСт":U, TRIM(string(buf_utd-lines.TaxRate, ">9")) + "%") no-error.
+             hSAXWriter:insert-attribute ("СтТовУчНал":U, trim(string(buf_utd-lines.Total,">>>>>>>>>>>>9.99"))) no-error.
+           do:
                hSAXWriter:start-element("Акциз":U) no-error.
                do:
                   hSAXWriter:start-element("БезАкциз") no-error. /*не знаю откуда брать*/
@@ -493,7 +501,7 @@ do:
             hSAXWriter:start-element("СумНалВсего":U) no-error.
             do:
                hSAXWriter:start-element("СумНал":U) no-error.
-               hSAXWriter:write-characters(string (buf_utd.Vat)) no-error.
+               hSAXWriter:write-characters(trim(string (buf_utd.Vat,">>>>>>>>>>>>9.99"))) no-error.
                hSAXWriter:end-element("СумНал":U) no-error.
             end.
             hSAXWriter:end-element("СумНалВсего":U) no-error.

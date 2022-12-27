@@ -42,10 +42,23 @@ define input parameter i-doc-id as integer no-undo .
 define input parameter i-mode as character no-undo .
 
 /* Local Variable Definitions ---                                       */
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "Форма данных для возврата".
+{ cmp/vssrevis.i }
+{ cmp/showinf.i }
 { str/utd-attr.i }
 { cmp/str-glbl.i }
-{ gbl/waitfram.i }
-
+{ gbl/objsrv.i }
+define variable mPublishHand as handle no-undo.
+define variable mDiadocApi as component-handle no-undo.
+define stream File-stream.
+define variable mdebug as logical no-undo.
+mdebug= session:debug-alert.
+{ str/edo-log.i }
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -65,14 +78,14 @@ define input parameter i-mode as character no-undo .
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
 &Scoped-define QUERY-STRING-Dialog-Frame FOR EACH utd SHARE-LOCK
-&Scoped-define OPEN-QUERY-Dialog-Frame OPEN QUERY Dialog-Frame FOR EACH utd SHARE-LOCK.
+&Scoped-define OPEN-QUERY-Dialog-Frame OPEN QUERY Dialog-Frame FOR EACH utd where utd.db-num eq i-db-num and utd.doc-id eq i-doc-id  SHARE-LOCK.
 &Scoped-define TABLES-IN-QUERY-Dialog-Frame utd
 &Scoped-define FIRST-TABLE-IN-QUERY-Dialog-Frame utd
 
 
 /* Definitions for FRAME FRAME-ORG                                      */
 &Scoped-define QUERY-STRING-FRAME-ORG FOR EACH utd SHARE-LOCK
-&Scoped-define OPEN-QUERY-FRAME-ORG OPEN QUERY FRAME-ORG FOR EACH utd SHARE-LOCK.
+&Scoped-define OPEN-QUERY-FRAME-ORG OPEN QUERY FRAME-ORG FOR EACH utd where utd.db-num eq i-db-num and utd.doc-id eq i-doc-id SHARE-LOCK.
 &Scoped-define TABLES-IN-QUERY-FRAME-ORG utd
 &Scoped-define FIRST-TABLE-IN-QUERY-FRAME-ORG utd
 
@@ -107,14 +120,14 @@ DEFINE BUTTON Btn_OK AUTO-GO
      SIZE 15 BY 1.14
      BGCOLOR 8 .
 
-DEFINE BUTTON btn_guid_cont 
+DEFINE BUTTON Btn_guid_cont 
      IMAGE-UP FILE "cmp/btn-fnd.bmp":U
      IMAGE-DOWN FILE "cmp/btn-fnd.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/btn-fnd.bmp":U
      LABEL "" 
      SIZE 5 BY 1.
 
-DEFINE BUTTON Btd_guid_org 
+DEFINE BUTTON Btn_guid_org 
      IMAGE-UP FILE "cmp/btn-fnd.bmp":U
      IMAGE-DOWN FILE "cmp/btn-fnd.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/btn-fnd.bmp":U
@@ -136,7 +149,7 @@ DEFINE FRAME Dialog-Frame
      Btn_OK AT ROW 1.24 COL 3
      Btn_Cancel AT ROW 1.24 COL 19
      btn_GetOrgFNs AT ROW 1.24 COL 35 WIDGET-ID 2
-     SPACE(80.79) SKIP(12.71)
+     SPACE(85.79) SKIP(12.71)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Данные организаций"
@@ -144,34 +157,34 @@ DEFINE FRAME Dialog-Frame
 
 DEFINE FRAME FRAME-ORG
      utd.OrganizationExt AT ROW 2.19 COL 32 COLON-ALIGNED WIDGET-ID 2
-          LABEL "GUID" FORMAT "x(80)"
+          LABEL "GUID" FORMAT "x(255)"
           VIEW-AS FILL-IN 
-          SIZE 84 BY 1
-     Btd_guid_org AT ROW 2.19 COL 119 WIDGET-ID 6
+          SIZE 90 BY 1
+     Btn_guid_org AT ROW 2.19 COL 125 WIDGET-ID 6
      utd.obj-FnsParticipantId AT ROW 3.86 COL 32 COLON-ALIGNED WIDGET-ID 4
-          LABEL "Ид. орг.-уч. документооборота" FORMAT "x(40)"
+          LABEL "Ид. орг.-уч. документооборота" FORMAT "x(255)"
           VIEW-AS FILL-IN 
-          SIZE 83 BY 1
+          SIZE 90 BY 1
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 3 ROW 3.62
-         SIZE 126 BY 5.71
+         SIZE 130 BY 5.71
          TITLE "Наша организация" WIDGET-ID 200.
 
 DEFINE FRAME FRAME-Conrt
      utd.CounteragentId AT ROW 1.24 COL 32 COLON-ALIGNED WIDGET-ID 2
-          LABEL "GUID" FORMAT "x(80)"
+          LABEL "GUID" FORMAT "x(255)"
           VIEW-AS FILL-IN 
-          SIZE 84 BY 1
-     btn_guid_cont AT ROW 1.24 COL 118 WIDGET-ID 6
+          SIZE 90 BY 1
+     btn_guid_cont AT ROW 1.24 COL 125 WIDGET-ID 6
      utd.cli-FnsParticipantId AT ROW 2.91 COL 32 COLON-ALIGNED WIDGET-ID 4
-          LABEL "Ид. орг.-уч. документооборота" FORMAT "x(40)"
+          LABEL "Ид. орг.-уч. документооборота" FORMAT "x(255)"
           VIEW-AS FILL-IN 
-          SIZE 84 BY 1
+          SIZE 90 BY 1
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 3 ROW 9.81
-         SIZE 126 BY 4.52
+         SIZE 130 BY 4.52
          TITLE "Контрагент" WIDGET-ID 300.
 
 
@@ -266,9 +279,9 @@ END.
 
 
 &Scoped-define FRAME-NAME FRAME-ORG
-&Scoped-define SELF-NAME Btd_guid_org
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btd_guid_org Dialog-Frame
-ON CHOOSE OF Btd_guid_org IN FRAME FRAME-ORG
+&Scoped-define SELF-NAME Btn_guid_org
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_guid_org Dialog-Frame
+ON CHOOSE OF Btn_guid_org IN FRAME FRAME-ORG
 DO:
   run getguidorg no-error.
   if error-status:error
@@ -326,6 +339,18 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
 ON CHOOSE OF Btn_OK IN FRAME Dialog-Frame /* Ввод */
 DO:
+   do with FRAME FRAME-ORG:
+   assign
+   utd.OrganizationExt
+   utd.obj-FnsParticipantId    
+   .
+   end. 
+   do with FRAME FRAME-Conrt:
+   assign   
+   utd.cli-FnsParticipantId 
+   utd.CounteragentId 
+   .
+   end.
   run save_proc.
 END.
 
@@ -429,7 +454,7 @@ PROCEDURE enable_UI :
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  ENABLE Btn_Cancel 
+  ENABLE Btn_Cancel
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -439,13 +464,9 @@ PROCEDURE enable_UI :
   IF AVAILABLE utd THEN 
     DISPLAY utd.OrganizationExt utd.obj-FnsParticipantId 
       WITH FRAME FRAME-ORG.
-  ENABLE Btd_guid_org 
-      WITH FRAME FRAME-ORG.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-ORG}
   IF AVAILABLE utd THEN 
     DISPLAY utd.CounteragentId utd.cli-FnsParticipantId 
-      WITH FRAME FRAME-Conrt.
-  ENABLE btn_guid_cont 
       WITH FRAME FRAME-Conrt.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-Conrt}
 END PROCEDURE.
@@ -494,50 +515,26 @@ PROCEDURE getGuidOrg :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-  define variable vCliType as character no-undo.
-  define variable vCliCode as integer   no-undo.
+/*  define variable vCliType as character no-undo.*/
+/*  define variable vCliCode as integer   no-undo.*/
   define variable vFNS     as character no-undo.
-  define buffer buf_utd for ub.utd.
+  define variable vguid as character no-undo.
+    
   do
   on error undo, return error return-value
   :
-    
-    
-    run getGuid ( output vCliType,
-                  output vCliCode,
-                  output vFNS) no-error.
-    if vCliType ne {&cmp}
-    then do:
-       for first clients where clients.obj-type eq vCliType
-                    /*  and (clients.db-num eq sys-ctrl.db-num or sys-ctrl.db-num eq 0) */ no-lock:
-          find first ub.sysconf where ub.sysconf.host-code = clients.obj-code no-lock no-error.
-          if not available  ub.sysconf
-          then do:
-             define variable l-ok  as logical no-undo .
-
-
-             message "Клиент не наша фирма и не наш объект. Продолжить ? " skip
-                 view-as alert-box question
-                 buttons yes-no
-                 update l-ok .
-
-             if not l-ok then return.
-          end.
-       end.
-    end.
-    run waitfram-show ("Ждите поиск может занять значительное время...") .
-    block-utd:
-    for each buf_utd where buf_utd.obj-FnsParticipantId eq vFNS
-                       and buf_utd.OrganizationExt      ne ""
-    no-lock:
-       leave block-utd.
-    end.
-    if available buf_utd then
+    run str/upd_org_brow.w (iDiadocConnection:GetOrganizationList(),
+                            output vguid,
+                            output vFNS).
+    if vguid ne "" then
     do:
-       utd.OrganizationExt:screen-value in frame FRAME-ORG = buf_utd.OrganizationExt.
-       apply "value-changed" to utd.OrganizationExt in frame frame-org .
+       utd.OrganizationExt:screen-value in frame FRAME-ORG = vguid.
+       utd.obj-FnsParticipantId:screen-value in frame FRAME-ORG = vfns.
+       Btn_OK:sensitive in FRAME Dialog-Frame = no.
     end.
-    run waitfram-hide.
+    else do:
+       Btn_OK:sensitive in FRAME Dialog-Frame = no.
+    end.
     
   end.
 END PROCEDURE.
@@ -552,58 +549,45 @@ PROCEDURE getGuidContr :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-  define variable vCliType as character no-undo.
-  define variable vCliCode as integer   no-undo.
   define variable vFNS     as character no-undo.
-  define buffer buf_utd for ub.utd.
   do
   on error undo, return error return-value
   :
     
-    
-    run getGuid ( output vCliType,
-                  output vCliCode,
-                  output vFNS) no-error.
-    if vCliType ne {&cmp}
+    define variable vGuid as character no-undo.
+    define variable vOrganization as component-handle no-undo.
+    vOrganization = iDiadocConnection:GetOrganizationById(utd.OrganizationExt:screen-value in frame frame-org) no-error.
+    if vOrganization eq ?
     then do:
-       for first clients where clients.obj-type eq vCliType
-                    /*  and (clients.db-num eq sys-ctrl.db-num or sys-ctrl.db-num eq 0) */ no-lock:
-          find first ub.sysconf where ub.sysconf.host-code = clients.obj-code no-lock no-error.
-          if not available  ub.sysconf
-          then do:
-             define variable l-ok  as logical no-undo .
-
-
-             message "Клиент наша фирма. Продолжить ? " skip
-                 view-as alert-box question
-                 buttons yes-no
-                 update l-ok .
-
-             if not l-ok then return.
-          end.
-       end.
+       
+       puterr( "ERROR Для выбора контр агента нужно правильно заполнить свою организацию.").
+       return.
+    end.
+    
+    define variable vOrganizationContr as component-handle no-undo.
+    vOrganizationContr = vOrganization:GetCounteragentListByStatus("IsMyCounteragent") no-error.
+    if vOrganizationContr eq ?
+    then do:
+       release object vOrganization.
+       puterr( "ERROR Не удается получить список котр агентов ").
+       return.
+    end.
+    run str/upd_org_brow.w (vOrganizationContr,
+                            output vguid,
+                            output vfns).
+    release object vOrganizationContr no-error.
+    release object vOrganization no-error.
+       
+    if vGuid ne "" then
+    do:
+       utd.CounteragentId:screen-value in frame frame-conrt = vguid.
+       utd.cli-FnsParticipantId:screen-value in frame frame-conrt = vfns.
+       Btn_OK:sensitive in FRAME Dialog-Frame = yes.
     end.
     else do:
-       message "Клиент наша объект. Продолжить ? " skip
-                 view-as alert-box question
-                 buttons yes-no
-                 update l-ok .
-
-             if not l-ok then return.
+       Btn_OK:sensitive in FRAME Dialog-Frame = no.
     end.
-    run waitfram-show ("Ждите поиск может занять значительное время...") .
-    block-utd:
-    for each buf_utd where buf_utd.cli-FnsParticipantId eq vFNS
-                       and buf_utd.CounteragentId      ne ""
-    no-lock:
-       leave block-utd.
-    end.
-    if available buf_utd then
-    do:
-       utd.OrganizationExt:screen-value in frame FRAME-ORG = buf_utd.OrganizationExt.
-       apply "value-changed" to utd.OrganizationExt in frame frame-org .
-    end.
-    run waitfram-hide.
+/*    run waitfram-hide.*/
     
   end.
 END PROCEDURE.
@@ -611,45 +595,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE getGuid Dialog-Frame 
-PROCEDURE getGuid :
-/*------------------------------------------------------------------------------
-  Purpose:     
-  Parameters:  <none>
-  Notes:       
-------------------------------------------------------------------------------*/
-  define output parameter oCliType as character no-undo.
-  define output parameter oCliCode as integer no-undo.
-  define output parameter oFNS     as character no-undo.
-  define variable v-rid-list as character no-undo .
-  define buffer ext-classif for ub.ext-classif .
-  do
-  on error undo, return error
-  :
-    run cus/diadok-cli.w ( input parparentproc
-                        ,input 'b-sel':U)
-                        ,input {&all}
-                        ,input '':U
-                        ,input-output v-rid-list) no-error.
-    if     v-rid-list ne ""
-       and v-rid-list ne ?
-    then do:                   
-       find first ext-classif where recid(ext-classif ) eq int64(entry(1,v-rid-list))
-       no-lock no-error.
-       if not available ext-classif
-       then do:
-          return error "Не найден клиент.".
-          
-       end.
-       oCliType  = ext-classif.CharKey_One.
-       oCliCode  = ext-classif.KEY#_one.
-       oFNS      = ext-classif.charkey_three.
-     end.
-  end.
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Init_proc Dialog-Frame 
 PROCEDURE Init_proc :
@@ -665,24 +610,35 @@ PROCEDURE Init_proc :
       btn_GetOrgFNs       :sensitive in frame Dialog-Frame  = yes.
       utd.CounterAgentId  :sensitive in FRAME FRAME-Conrt   = yes.
       utd.OrganizationExt :sensitive in FRAME FRAME-ORG     = yes.
+      Btn_guid_cont       :visible   in frame FRAME-Conrt   = yes.
+      Btn_guid_org        :visible   in frame FRAME-ORG     = yes.
+      Btn_guid_cont       :sensitive in frame FRAME-Conrt   = yes.
+      Btn_guid_org        :sensitive in frame FRAME-ORG     = yes.
+      
      
    end.
-   else
+   else do:
       btn_GetOrgFNs       :visible   in frame Dialog-Frame  = no.
-         
-   
+      Btn_guid_cont       :visible   in frame FRAME-Conrt   = no.
+      Btn_guid_org        :visible   in frame FRAME-ORG     = no.
+   end.    
+/*   btn_ok :sensitive in frame Dialog-Frame     = yes.             */
+/*   utd.CounterAgentId  :sensitive in FRAME FRAME-Conrt   = yes.   */
+/*      utd.OrganizationExt :sensitive in FRAME FRAME-ORG     = yes.*/
+      
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE seve_proc Dialog-Frame 
-PROCEDURE seve_proc :
+PROCEDURE save_proc :
 /*------------------------------------------------------------------------------
   Purpose:     
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

@@ -679,6 +679,12 @@ procedure  SendResponse :
              vreturn = yes.
              if itestMod
              then do:
+                define variable vsend as logical no-undo.
+                vsend = logical(getattrutdex (idb-num,idoc-id,"returnSend","no")).
+                if vsend
+                then
+                   return error "Документ был отправлен рание. Повторная отправка возможна через сервис.".
+                 
                 find first buf_utd where buf_utd.OrganizationExt eq utd.parentOrganizationExt
                                      and buf_utd.DocumentExt     eq utd.parentDocumentExt
                 no-lock no-error.
@@ -696,6 +702,7 @@ procedure  SendResponse :
                                     and utd.doc-id eq idoc-id
                    exclusive-lock no-error.
                    utd.sts-edi = ObjSrv:Env:Utd:Sts:edi:WithRecipientSignature:KeyIntDB.
+                   setattrutd (idb-num,idoc-id,"returnSend","yes").
                 end.
              end.
           end.

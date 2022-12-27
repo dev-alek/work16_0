@@ -1507,11 +1507,19 @@ END.
 &Scoped-define SELF-NAME menu-item m_return_send
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL  menu-item m_return_send
 ON CHOOSE OF menu-item m_return_send /* Возрат */
-DO: 
-   run bge/sendutd.p(parparentproc,
-                     v-sertif,
-                     X_utd.db-num,
-                     X_utd.doc-id).
+DO:
+   define variable vsend as logical no-undo.
+   vsend = not logical(getattrutdex (X_utd.db-num,X_utd.doc-id,"returnSend","no")).
+   if not vsend
+   then
+      message "Документ был отправлен рание, отправить повторно?"
+      view-as alert-box question buttons yes-no update vsend.
+   if vsend
+   then 
+      run bge/sendutd.p(parparentproc,
+                        v-sertif,
+                        X_utd.db-num,
+                        X_utd.doc-id).
             
 END.
 
@@ -2744,7 +2752,7 @@ PROCEDURE init-sort :
        then
           vinout = substitute (" buf_utd.host-code = &1 and (buf_utd.Direction eq 'inbound'  or buf_utd.Direction eq '') ",  v-cntxt-host-code-obj).
        else
-          vinout = " buf_utd.Direction ne 'inbound'".
+          vinout = " buf_utd.Direction ne 'inbound' and buf_utd.Direction ne '' " .
     
         vqry = substitute("FOR EACH buf_utd where &1 and buf_utd.DocumentDate >= &2 and buf_utd.DocumentDate <= &3 no-lock" , vinout,f-date-to,f-date-from).
     end.

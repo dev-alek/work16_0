@@ -70,10 +70,11 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   vOldSts = new-{&main-tbl}.sts-edi.
   
    
-  if     (    g#db-num = new-{&main-tbl}.db-num
+  if   (  (    g#db-num = new-{&main-tbl}.db-num
           and g#news )
          or (    g#db-num ne new-{&main-tbl}.db-num
-             and not g#news )
+             and not g#news ))
+     and  new-{&main-tbl}.EDocType ne objSrv:Env:Utd:EDocType:returns:KeyIntDB
   then
      assign
         new-{&main-tbl}.OrganizationExt = old-{&main-tbl}.OrganizationExt
@@ -121,117 +122,137 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
          find first buf_utd where buf_utd.OrganizationExt eq new-{&main-tbl}.parentOrganizationExt
                               and buf_utd.DocumentExt     eq new-{&main-tbl}.parentDocumentExt
                    no-lock no-error.
-         if buf_utd.sts-edi = utdEDISts:RecipientSignatureRequestReject:KeyIntDB
+         if     avail buf_utd
+            and buf_utd.sts-edi               = utdEDISts:RecipientSignatureRequestReject:KeyIntDB
+            and new-{&main-tbl}.parentDocumentExt     ne ""
+            and new-{&main-tbl}.parentOrganizationExt ne ""
          then           
             new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientSignature:KeyIntDB.
          else
             new-{&main-tbl}.sts-edi eq  utdEDISts:RecipientResponseStatusNotAccep:KeyIntDB.
-      end.
-      else if     (new-{&main-tbl}.sts-edi ne  utdEDISts:AutoRejected:KeyIntDB
-               and new-{&main-tbl}.sts-edi < utdEDISts:StatFinesh)
-         or new-{&main-tbl}.sts-edi eq ?
-      then do:
-         if new-{&main-tbl}.sts ne  utdTHSts:RejectionUtd:KeyIntDB
-         then do:   /* пользователь отказался от документа и эти статусы мы не трогаем до полного подписания документа */
-            new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.RevocationStatus).
-            if new-{&main-tbl}.sts-edi eq ?
-            then
-               new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.ReceiptStatus).
+         if new-{&main-tbl}.sts             = ObjSrv:Env:Utd:Sts:th:NewStatus:KeyIntDB
+         then do: /* оставим без изменений */
          end.
-         if     new-{&main-tbl}.sts-edi < utdEDISts:StatFinesh
-             or new-{&main-tbl}.sts-edi eq ?
+         else if    new-{&main-tbl}.CounteragentId  eq ?
+            or new-{&main-tbl}.CounteragentId  eq ""
+            or new-{&main-tbl}.OrganizationExt eq ?
+            or new-{&main-tbl}.OrganizationExt eq ""
+         then
+            new-{&main-tbl}.sts             = ObjSrv:Env:Utd:Sts:th:RequireFilling:KeyIntDB.
+         else if new-{&main-tbl}.sts             = ObjSrv:Env:Utd:Sts:th:RequireFilling:KeyIntDB
+         then
+            new-{&main-tbl}.sts             = ObjSrv:Env:Utd:Sts:th:SignatureRequired:KeyIntDB.
+          
+      end.
+      else if new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:utd:KeyIntDB
+              or new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:ucd:KeyIntDB
+      then do:
+         if     (new-{&main-tbl}.sts-edi ne  utdEDISts:AutoRejected:KeyIntDB
+                  and new-{&main-tbl}.sts-edi < utdEDISts:StatFinesh)
+            or new-{&main-tbl}.sts-edi eq ?
          then do:
-            if   new-{&main-tbl}.sts-edi eq  utdEDISts:SignatureAdjustment:KeyIntDB
-            then
-               new-{&main-tbl}.sts-edi = new-{&main-tbl}.sts-edi.
-            else if     new-{&main-tbl}.sts eq  utdTHSts:CorrectionRequested:KeyIntDB
-                    and not new-{&main-tbl}.AmendmentRequested
-            then
-               new-{&main-tbl}.sts-edi = utdEDISts:SignatureAdjustment:KeyIntDB.
-            if new-{&main-tbl}.sts-edi eq ?
-            then
-               new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.RecipientResponseStatus).
-            if      new-{&main-tbl}.sts-edi eq utdEDISts:WaitingForRecipientSignature:KeyIntDB
+            if new-{&main-tbl}.sts ne  utdTHSts:RejectionUtd:KeyIntDB
+            then do:   /* пользователь отказался от документа и эти статусы мы не трогаем до полного подписания документа */
+               new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.RevocationStatus).
+               if new-{&main-tbl}.sts-edi eq ?
+               then
+                  new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.ReceiptStatus).
+            end.
+            if     new-{&main-tbl}.sts-edi < utdEDISts:StatFinesh
+                or new-{&main-tbl}.sts-edi eq ?
             then do:
-               if new-{&main-tbl}.sts eq  utdTHSts:RejectionUtd:KeyIntDB
+               if   new-{&main-tbl}.sts-edi eq  utdEDISts:SignatureAdjustment:KeyIntDB
+               then
+                  new-{&main-tbl}.sts-edi = new-{&main-tbl}.sts-edi.
+               else if     new-{&main-tbl}.sts eq  utdTHSts:CorrectionRequested:KeyIntDB
+                       and not new-{&main-tbl}.AmendmentRequested
+               then
+                  new-{&main-tbl}.sts-edi = utdEDISts:SignatureAdjustment:KeyIntDB.
+               if new-{&main-tbl}.sts-edi eq ?
+               then
+                  new-{&main-tbl}.sts-edi =    utdEDISts:GetKeyIntDB(new-{&main-tbl}.RecipientResponseStatus).
+               if      new-{&main-tbl}.sts-edi eq utdEDISts:WaitingForRecipientSignature:KeyIntDB
                then do:
-                  if vOldSts ne ?
+                  if new-{&main-tbl}.sts eq  utdTHSts:RejectionUtd:KeyIntDB
+                  then do:
+                     if vOldSts ne ?
+                     then
+                        new-{&main-tbl}.sts-edi = vOldSts.
+                     else
+                        new-{&main-tbl}.sts-edi = old-{&main-tbl}.sts-edi.
+                  end.
+                  else /*if new-{&main-tbl}.sts eq  utdTHSts:LoadError:KeyIntDB
                   then
-                     new-{&main-tbl}.sts-edi = vOldSts.
-                  else
-                     new-{&main-tbl}.sts-edi = old-{&main-tbl}.sts-edi.
+                     new-{&main-tbl}.sts-edi = utdEDISts:SignatureAdjustment:KeyIntDB. 
+                  else*/  if new-{&main-tbl}.sts ne  utdTHSts:SignatureRequired:KeyIntDB
+                  then
+                     new-{&main-tbl}.sts-edi = utdEDISts:Verification:KeyIntDB.
                end.
-               else /*if new-{&main-tbl}.sts eq  utdTHSts:LoadError:KeyIntDB
-               then
-                  new-{&main-tbl}.sts-edi = utdEDISts:SignatureAdjustment:KeyIntDB. 
-               else*/  if new-{&main-tbl}.sts ne  utdTHSts:SignatureRequired:KeyIntDB
-               then
-                  new-{&main-tbl}.sts-edi = utdEDISts:Verification:KeyIntDB.
+            end.
+            if     (   old-{&main-tbl}.sts-edi eq  utdEDISts:sendAutoRejected:KeyIntDB
+                    or old-{&main-tbl}.sts-edi eq  utdEDISts:AutoRejected:KeyIntDB
+                    )
+               and new-{&main-tbl}.sts-edi eq  utdEDISts:RecipientSignatureRequestReject:KeyIntDB
+            then do:
+               new-{&main-tbl}.sts-edi = utdEDISts:SignatureAutoRejected:KeyIntDB.
+              
             end.
          end.
-         if     (   old-{&main-tbl}.sts-edi eq  utdEDISts:sendAutoRejected:KeyIntDB
-                 or old-{&main-tbl}.sts-edi eq  utdEDISts:AutoRejected:KeyIntDB
-                 )
-            and new-{&main-tbl}.sts-edi eq  utdEDISts:RecipientSignatureRequestReject:KeyIntDB
-         then do:
-            new-{&main-tbl}.sts-edi = utdEDISts:SignatureAutoRejected:KeyIntDB.
-           
-         end.
-      end.
-      if      new-{&main-tbl}.sts-edi eq utdEDISts:SignatureAutoRejected:KeyIntDB
-         and new-{&main-tbl}.sts      eq utdTHSts:RejectionUtd:KeyIntDB
-      then 
-         new-{&main-tbl}.sts = utdTHSts:Rejection:KeyIntDB.
-      else if      new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientSignature:KeyIntDB
-               or new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientPartiallySignature:KeyIntDB
-      then do:
-         if can-find(first utd-attr no-lock where utd-attr.doc-id = new-{&main-tbl}.doc-id 
-                                                    and utd-attr.db-num = new-{&main-tbl}.db-num 
-                                                    and utd-attr.attr-code = "sendcode"
-                                                    and utd-attr.attr-value = "3")
-         then do:
+         if      new-{&main-tbl}.sts-edi eq utdEDISts:SignatureAutoRejected:KeyIntDB
+            and new-{&main-tbl}.sts      eq utdTHSts:RejectionUtd:KeyIntDB
+         then 
             new-{&main-tbl}.sts = utdTHSts:Rejection:KeyIntDB.
-            UnLockUTDMark(new-{&main-tbl}.db-num ,new-{&main-tbl}.doc-id, yes ).
+         else if      new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientSignature:KeyIntDB
+                  or new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientPartiallySignature:KeyIntDB
+         then do:
+            if can-find(first utd-attr no-lock where utd-attr.doc-id = new-{&main-tbl}.doc-id 
+                                                       and utd-attr.db-num = new-{&main-tbl}.db-num 
+                                                       and utd-attr.attr-code = "sendcode"
+                                                       and utd-attr.attr-value = "3")
+            then do:
+               new-{&main-tbl}.sts = utdTHSts:Rejection:KeyIntDB.
+               UnLockUTDMark(new-{&main-tbl}.db-num ,new-{&main-tbl}.doc-id, yes ).
+            end.
+            else if new-{&main-tbl}.sts     = utdTHSts:SignatureRequired:KeyIntDB
+            then
+               new-{&main-tbl}.sts = utdTHSts:AwaitingConfirmation:KeyIntDB.
          end.
-         else if new-{&main-tbl}.sts     = utdTHSts:SignatureRequired:KeyIntDB
-         then
-            new-{&main-tbl}.sts = utdTHSts:AwaitingConfirmation:KeyIntDB.
-      end.
-      
-      if     vOldSts  >= utdEDISts:StatChangLoanOnlyBeg
-         and vOldSts  <= utdEDISts:StatChangLoanOnlyEnd
-         and new-{&main-tbl}.sts-edi <= utdEDISts:StatFinesh
-      then 
-         new-{&main-tbl}.sts-edi = vOldSts.
          
-      if  (    (
-               new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientSignature:KeyIntDB
-          or   new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientPartiallySignature:KeyIntDB
-          or   new-{&main-tbl}.sts-edi = utdEDISts:Changed:KeyIntDB
-               )
-               and new-{&main-tbl}.sts = utdTHSts:Rejectionutd:KeyIntDB
-           )
-          or new-{&main-tbl}.sts-edi = utdEDISts:RecipientSignatureRequestReject:KeyIntDB
-      then
-         new-{&main-tbl}.sts = utdTHSts:Rejection:KeyIntDB.
-      else if      new-{&main-tbl}.sts-edi = utdEDISts:RevocationAccepted:KeyIntDB
-      then
-         new-{&main-tbl}.sts = utdTHSts:Canceled:KeyIntDB.
-      if      new-{&main-tbl}.sts-edi = utdEDISts:AutoRejected:KeyIntDB
-      then
-         new-{&main-tbl}.sts = utdTHSts:RejectionUtd:KeyIntDB.
-        
-      if     
-            (    new-{&main-tbl}.sts-edi eq utdEDISts:WithRecipientSignature:KeyIntDB
-             or new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientPartiallySignature:KeyIntDB)
-         and (       old-{&main-tbl}.sts     eq utdTHSts:DeliveryCodeMismatch:KeyIntDB
-                or
-                (     old-{&main-tbl}.sts eq utdTHSts:CorrectionRequested:KeyIntDB
-                 and integer (getattrUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id,"ststhbeforeCorrection")) eq utdTHSts:DeliveryCodeMismatch:KeyIntDB
-                 )
-             )
-      then 
-         new-{&main-tbl}.sts     = utdTHSts:AwaitingConfirmation:KeyIntDB.
+         if     vOldSts  >= utdEDISts:StatChangLoanOnlyBeg
+            and vOldSts  <= utdEDISts:StatChangLoanOnlyEnd
+            and new-{&main-tbl}.sts-edi <= utdEDISts:StatFinesh
+         then 
+            new-{&main-tbl}.sts-edi = vOldSts.
+            
+         if  (    (
+                  new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientSignature:KeyIntDB
+             or   new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientPartiallySignature:KeyIntDB
+             or   new-{&main-tbl}.sts-edi = utdEDISts:Changed:KeyIntDB
+                  )
+                  and new-{&main-tbl}.sts = utdTHSts:Rejectionutd:KeyIntDB
+              )
+             or new-{&main-tbl}.sts-edi = utdEDISts:RecipientSignatureRequestReject:KeyIntDB
+         then
+            new-{&main-tbl}.sts = utdTHSts:Rejection:KeyIntDB.
+         else if      new-{&main-tbl}.sts-edi = utdEDISts:RevocationAccepted:KeyIntDB
+         then
+            new-{&main-tbl}.sts = utdTHSts:Canceled:KeyIntDB.
+         if      new-{&main-tbl}.sts-edi = utdEDISts:AutoRejected:KeyIntDB
+         then
+            new-{&main-tbl}.sts = utdTHSts:RejectionUtd:KeyIntDB.
+           
+         if     
+               (    new-{&main-tbl}.sts-edi eq utdEDISts:WithRecipientSignature:KeyIntDB
+                or new-{&main-tbl}.sts-edi = utdEDISts:WithRecipientPartiallySignature:KeyIntDB)
+            and (       old-{&main-tbl}.sts     eq utdTHSts:DeliveryCodeMismatch:KeyIntDB
+                   or
+                   (     old-{&main-tbl}.sts eq utdTHSts:CorrectionRequested:KeyIntDB
+                    and integer (getattrUtd(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id,"ststhbeforeCorrection")) eq utdTHSts:DeliveryCodeMismatch:KeyIntDB
+                    )
+                )
+         then 
+            new-{&main-tbl}.sts     = utdTHSts:AwaitingConfirmation:KeyIntDB.
+      end.
    end.
    if     new-{&main-tbl}.EDocType eq objSrv:Env:Utd:EDocType:ucd:KeyIntDB
       and new-{&main-tbl}.sts-edi  eq utdEDISts:WithRecipientSignature:KeyIntDB
@@ -262,7 +283,26 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
    if new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB
    then
       SetLockUTDMark(new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id).
-   
+
+   if     new-{&main-tbl}.Direction  eq 'Outbound'
+      and new-{&main-tbl}.sts-edi    eq utdEDISts:WithRecipientSignature:KeyIntDB
+   then do:
+      define variable vIdDoc as character no-undo.
+      vIdDoc = getattrutdex (new-{&main-tbl}.db-num,new-{&main-tbl}.doc-id,"id_doc_th","").
+      if num-entries(vIdDoc,"_") eq 2
+      then do:
+         for each buf_Utd where buf_utd.db-num   eq int(entry(1,vIdDoc,"_"))
+                            and buf_utd.doc-id   eq int(entry(2,vIdDoc,"_"))
+                            and buf_utd.EDocType eq objSrv:Env:Utd:EDocType:returns:KeyIntDB
+         exclusive-lock:
+            buf_utd.sts = utdTHSts:Confirmed:KeyIntDB.
+            validate buf_utd no-error.
+            
+         end.
+      end.
+      new-{&main-tbl}.sts = utdTHSts:Confirmed:KeyIntDB.
+          
+   end.
    changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RevocationStatus , new-{&main-tbl}.RevocationStatus).
    changSts(new-{&main-tbl}.db-num, new-{&main-tbl}.doc-id, old-utd.RecipientResponseStatus , new-{&main-tbl}.RecipientResponseStatus).
    
@@ -360,7 +400,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         undo main-block,  return error return-value . 
       end.
     end.
-    if not g#db-num = 0 and 
+    if g#db-num ne 0 and 
       (new-{&main-tbl}.sts <> old-utd.sts
       and (
             new-{&main-tbl}.sts ne utdTHSts:NewStatus:KeyIntDB

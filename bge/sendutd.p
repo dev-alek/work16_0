@@ -37,9 +37,11 @@ ConectByCertif(iThump).
 define variable vfile as character no-undo.
 define buffer buf_utd for utd.
 if mDiadocConnection eq ?
-then
+then do:
    message "Нет подключения к Диадоку." 
    view-as alert-box.
+   return error  "Нет подключения к Диадоку.".
+end. 
 else do:
    find first buf_utd no-lock where buf_utd.db-num eq idb-num and buf_utd.doc-id = idoc-id no-error .
  
@@ -47,17 +49,23 @@ else do:
                     mDiadocConnection,
                     buf_utd.OrganizationExt,
                     buf_utd.CounteragentId,
-                    "СЧФДОП",
+                    mTypeUtd,
                     idb-num, 
                     idoc-id).
    
    
    
-   vfile = searchfile("UPD_" + string (idoc-id) + ".xml").
+   vfile = searchfile("UPD_" + string (idb-num) + "_" + string (idoc-id) + ".xml").
    CRnewDocum(buf_utd.OrganizationExt,
               buf_utd.CounteragentId,
-              "СЧФДОП",
-              vfile).
+              mTypeUtd,
+              vfile)no-error.
+   if error-status:error
+   then do:
+      release object mDiadocApi no-error.
+      release object mDiadocConnection no-error.
+      return error  return-value. 
+   end.
 end.              
 release object mDiadocApi no-error.
 release object mDiadocConnection no-error.

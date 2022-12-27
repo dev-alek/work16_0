@@ -43,3 +43,14 @@ for each {&main-tbl}-attr where {&main-tbl}-attr.db-num eq  {&main-tbl}.db-num
 exclusive-lock:
    delete {&main-tbl}-attr.
 end.
+
+for each buf_marking no-lock where buf_marking.mark-parent = {&main-tbl}.mark :
+    find first buf-{&main-tbl} where buf-{&main-tbl}.db-num eq  {&main-tbl}.db-num
+                            and buf-{&main-tbl}.doc-id eq  {&main-tbl}.doc-id
+                            and buf-{&main-tbl}.linenum eq  {&main-tbl}.linenum
+                            and buf-{&main-tbl}.mark eq buf_marking.mark
+    exclusive-lock no-error.
+    if avail buf-{&main-tbl}
+    then
+       delete buf-{&main-tbl}. 
+end.

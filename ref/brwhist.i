@@ -99,6 +99,8 @@ define variable vss-description AS CHAR NO-UNDO INIT "Список полной истории":U.
 /* define buffer X_cli-grp for ub.cli-grp. */
 define variable filter-point as character no-undo init "cobjhist" .
 define variable filter-point0 as character no-undo init "cobjhist" .
+filter-point = program-name(1).
+filter-point0 = filter-point.
 define variable filter-label as character no-undo init "Список полной истории" .
 define variable filter-label0 as character no-undo init "Список полной истории" .
 
@@ -1361,14 +1363,18 @@ run fltfield-add in this-procedure('corr-user-db-num', 'БД корр.', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('corr-user-name', 'Изменил', 'usr',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
-run fltfield-add in this-procedure('subject', 'Предмет изменения', 'obj-hist-subject',
-input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('action', 'Действие', 'hist-action',
+input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+&if defined (objhead) ne 0 &then
+run fltfield-add in this-procedure('subject', 'Предмет изменения', 'obj-hist-subject',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('source-type', 'Источник измен-я', 'hist-source-type',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
 run fltfield-add in this-procedure('source-ref', 'Код источника измен-я', '',
 input-output fld, input-output lab, input-output spr, input-output dim)  no-error.
+
+&endif
+
 
 
 

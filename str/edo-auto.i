@@ -164,6 +164,9 @@ procedure getNewUpd :
    then
        for each utd where utd.sts-edi < ObjSrv:Env:Utd:Sts:edi:StatFinesh  
                       and utd.host-code eq int(vobj)
+                      and (   utd.EDocType eq objSrv:Env:Utd:EDocType:UTD:KeyIntDB
+                           or utd.EDocType eq objSrv:Env:Utd:EDocType:UCD:KeyIntDB
+                           )
        no-lock break by utd.OrganizationExt:
           if chekStop() then return "Остановка пользователем".
           /* Не обновляем документы, полученные ранее 2 месяцев от даты последнего загруженного документа */

@@ -27,6 +27,14 @@ function AddUtdErrForTab returns logical
  iCodeErr        as character,
  iCheckObj       as character ):
    define buffer utd-err for utd-err.
+   define buffer utd for utd.
+   find first utd where utd.db-num     eq idb-num
+                    and utd.doc-id     eq idoc-id
+                    and utd.Direction  eq 'Outbound'
+   no-lock no-error.
+   if available utd
+   then 
+      return no.
    define variable vRecKey as character no-undo.
    &if "{1}" = "class"
       &then

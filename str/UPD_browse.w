@@ -760,7 +760,7 @@ DEFINE BROWSE br-utd
    X_utd-lines.stts COLUMN-LABEL "Статус" FORMAT "x(20)":U WIDTH 18.13
    X_utd-lines.Price COLUMN-LABEL "Цена!(без НДC)" FORMAT "->>>>>>>>>>99.99":U width 10
    X_utd-lines.Total COLUMN-LABEL "Сумма!(с НДС)" FORMAT "->>>>>>>>>>>>>>99.99":U width 10
-   X_utd-lines.TaxRate_ COLUMN-LABEL "Ставка!НДС" FORMAT "X(5)":U
+   X_utd-lines.TaxRate_ COLUMN-LABEL "Ставка!НДС" FORMAT "X(7)":U
 /*   X_utd-lines.fact-qnty COLUMN-LABEL "Остаток" FORMAT "->>>>>>>>>>>>>>9.99":U width 10*/
 /*   X_utd-lines.qnty-mark COLUMN-LABEL "Кол-во!марок" FORMAT "->>>9":U*/
    X_utd-lines.UnitCliQnty COLUMN-LABEL "Кол-во в!ед.изм постав-ка" FORMAT "->>>>>9":U
@@ -1307,64 +1307,42 @@ ON choose OF b-save IN FRAME d-utd /* Ввод  */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON ROW-DISPLAY OF br-utd IN FRAME d-utd
    DO:
-      if X_utd-lines.stts eq "Проверен" then
-            do:
-               if type_mark = 1 then 
-               do:
-                  X_utd-lines.LineNum:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.gds-code:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.ProductCode:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.Gds-Name:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.UnitCode:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.UnitCliQnty:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.Quantity:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.price:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.total:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.TaxRate_:fgCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.qnty-scan:fGCOLOR in browse br-utd = CYAN_COLOR.
-/*                  X_utd-lines.fact-qnty:fGCOLOR in browse br-utd = CYAN_COLOR.*/
-                  much:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  mgdsunit:fGCOLOR in browse br-utd = CYAN_COLOR.
-                  X_utd-lines.stts:fGCOLOR in browse br-utd = CYAN_COLOR.
-               end.
-            end.
-         else if X_utd-lines.stts begins  "Ошибка" then 
-            do:
-               X_utd-lines.LineNum:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.gds-code:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.ProductCode:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.Gds-Name:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.UnitCode:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.UnitCliQnty:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.Quantity:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.price:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.total:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.TaxRate_:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.qnty-scan:fGCOLOR in browse br-utd = red_COLOR.
-/*               X_utd-lines.fact-qnty:fGCOLOR in browse br-utd = red_COLOR.*/
-               much:fGCOLOR in browse br-utd = red_COLOR.
-               X_utd-lines.stts:fGCOLOR in browse br-utd = red_COLOR.
-               mgdsunit:fGCOLOR in browse br-utd = red_COLOR.
-            end.
-         if X_utd-lines.DelivCodeMis then 
-            do:
-               X_utd-lines.LineNum:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.gds-code:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.ProductCode:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.Gds-Name:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.UnitCode:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.UnitCliQnty:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.Quantity:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.price:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.total:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.TaxRate_:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.qnty-scan:fGCOLOR in browse br-utd = 13.
-/*               X_utd-lines.fact-qnty:fGCOLOR in browse br-utd = red_COLOR.*/
-               much:fGCOLOR in browse br-utd = 13.
-               X_utd-lines.stts:fGCOLOR in browse br-utd = 13.
-               mgdsunit:fGCOLOR in browse br-utd = 13.
-            end.
-            
+      define variable vColor as integer no-undo.
+      if     buf_utd.Direction   ne 'inbound'
+          or buf_utd.EDocType    eq objSrv:Env:Utd:EDocType:returns:KeyIntDB 
+      then 
+         .
+      else if X_utd-lines.stts eq "Проверен" then
+      do:
+         if type_mark = 1 then 
+         do:
+            vColor = CYAN_COLOR.
+         end.
+      end.
+      else if X_utd-lines.stts begins  "Ошибка" then 
+      do:
+         vColor = red_COLOR.
+      end.
+      if X_utd-lines.DelivCodeMis then 
+      do:
+         vColor = LIGHT_RED_COLOR.
+      end.
+      X_utd-lines.LineNum     :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.gds-code    :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.ProductCode :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.Gds-Name    :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.UnitCode    :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.UnitCliQnty :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.Quantity    :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.price       :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.total       :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.TaxRate_    :fgCOLOR in browse br-utd = vColor.
+      X_utd-lines.qnty-scan   :fGCOLOR in browse br-utd = vColor.
+/*                  X_utd-lines.fact-qnty:fGCOLOR in browse br-utd = vColor.*/
+      much                    :fGCOLOR in browse br-utd = vColor.
+      mgdsunit                :fGCOLOR in browse br-utd = vColor.
+      X_utd-lines.stts        :fGCOLOR in browse br-utd = vColor.
+         
    END .
 
 /* _UIB-CODE-BLOCK-END */
@@ -2533,19 +2511,6 @@ ON VALUE-CHANGED OF c-type IN FRAME d-utd /* Тип */
       if available (buf_utd) then buf_utd.EDocType = c-type .
       F-text = "                            Просканируйте марку/штрих-код" . 
       display f-text with frame {&frame-name} .
-      if c-type <> objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then 
-      do:
-/*         if not upd_mark                                                       */
-/*         then browse br-utd-nomark:GET-BROWSE-COLUMN(10):VISIBLE = no no-error.*/
-/*         else                                                                  */
-         browse br-utd:GET-BROWSE-COLUMN(10):VISIBLE = no no-error. 
-      end.
-      else 
-      do:
-/*         if not upd_mark then browse br-utd-nomark:GET-BROWSE-COLUMN(10):VISIBLE = yes no-error.*/
-/*         else                                                                                   */
-         browse br-utd:GET-BROWSE-COLUMN(10):VISIBLE = yes no-error. 
-      end.
       run enable_UI .
    END.
 
@@ -3901,7 +3866,12 @@ PROCEDURE enable_UI :
       f-wrkr-name
       f-agnt-name
       f-boss-name
-      with frame {&frame-name} .  
+      with frame {&frame-name} . 
+   if  p-type eq objSrv:Env:Utd:EDocType:returns:KeyIntDB
+   then do: 
+      X_utd-lines.stts         :visible IN BROWSE br-utd = false.
+      X_utd-lines.UnitCliQnty  :visible IN BROWSE br-utd = false.
+   end.   
    case p-mode:
       when {&update} then 
          do:
@@ -4364,7 +4334,7 @@ PROCEDURE enable_UI :
 /*         end.                                                               */
 /*         else                                                               */
          do:   
-            browse br-utd:GET-BROWSE-COLUMN(6):VISIBLE = no no-error.
+            X_utd-lines.qnty-scan:visible IN BROWSE br-utd = false.
          end.
       end.
       hide
@@ -4433,18 +4403,18 @@ PROCEDURE enable_UI :
             with frame {&frame-name} .  
       end.  
    end.  
-   if c-type <> objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then 
-   do:
-/*      if not upd_mark then browse br-utd-nomark:GET-BROWSE-COLUMN(10):VISIBLE = no no-error.*/
-/*      else                                                                                  */
-      browse br-utd:GET-BROWSE-COLUMN(10):VISIBLE = no no-error. 
-   end.
-   if c-type = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then 
-   do:
-/*      if not upd_mark then browse br-utd-nomark:GET-BROWSE-COLUMN(11):VISIBLE = no no-error.*/
-/*      else                                                                                  */
-      browse br-utd:GET-BROWSE-COLUMN(11):VISIBLE = no no-error. 
-   end.
+/*   if c-type <> objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then                                 */
+/*   do:                                                                                          */
+/*/*      if not upd_mark then browse br-utd-nomark:GET-BROWSE-COLUMN(10):VISIBLE = no no-error.*/*/
+/*/*      else                                                                                  */*/
+/*      browse br-utd:GET-BROWSE-COLUMN(10):VISIBLE = no no-error.                                */
+/*   end.                                                                                         */
+/*   if c-type = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then                                  */
+/*   do:                                                                                          */
+/*/*      if not upd_mark then browse br-utd-nomark:GET-BROWSE-COLUMN(11):VISIBLE = no no-error.*/*/
+/*/*      else                                                                                  */*/
+/*      browse br-utd:GET-BROWSE-COLUMN(11):VISIBLE = no no-error.                                */
+/*   end.                                                                                         */
    
    /* Для вывода из оборота изменим браузер со строками */
    if p-type = objSrv:Env:Utd:EDocType:LK_RECEIPT:KeyIntDB
@@ -5165,6 +5135,17 @@ PROCEDURE save_mark :
    /*УПД проверка марок*/
    if p-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
    do:
+      define variable vFlag as logical no-undo.
+      run checkEMRC(v-mark, output vFlag).
+      if not vFlag
+      then do:
+         F-text = "МРЦ на упаковке меньше ЕМЦ. Приемка товара запрещена." .
+         display F-text with frame {&frame-name}.
+         v-mark:screen-value = "" .
+         v-mark = "" .
+         return no-apply.
+      end.
+         
       /*Проверка марки*/
       /*           f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .                                                                      */
       /*      if F-text = "" then do:                                                                                                                          */
