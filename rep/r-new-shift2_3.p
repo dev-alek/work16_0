@@ -1581,16 +1581,16 @@ procedure print-sug .
         do:
           put stream OutStr-html unformatted
             substitute (
-            '  <tr><tr></tr> 
-                              <td rowspan="2" text_wrap="true">&1</td>
-                              <td rowspan="2" style="text-align: right;">&2</td>
-                              <td rowspan="2" style="text-align: right;">&3</td>
-                              <td rowspan="2" text_wrap="true" style="text-align: right;">&4</td>
-                              <td text_wrap="true" rowspan="2">&5</td>
-                              <td colspan="2" rowspan="2" text_wrap="true" style="text-align: right;">&6</td>
-                              <td colspan="2" rowspan="2" text_wrap="true" style="text-align: right;">&7</td>
-                              <td rowspan="2" >&8</td>
-                              <td text_wrap="true" rowspan="2" style="text-align: right;">&9</td>'
+            '  <tr> 
+                              <td  text_wrap="true">&1</td>
+                              <td  style="text-align: right;">&2</td>
+                              <td  style="text-align: right;">&3</td>
+                              <td  text_wrap="true" style="text-align: right;">&4</td>
+                              <td text_wrap="true" >&5</td>
+                              <td colspan="2"  text_wrap="true" style="text-align: right;">&6</td>
+                              <td colspan="2"  text_wrap="true" style="text-align: right;">&7</td>
+                              <td  >&8</td>
+                              <td text_wrap="true"  style="text-align: right;">&9</td>'
             ,
             pol1,
             if main-line = no then "" else string(pol2,"->>>>>>>>>>>9.99"),
@@ -1606,12 +1606,12 @@ procedure print-sug .
           put stream OutStr-html unformatted
             substitute (
             '
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&1</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&2</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&3</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&4</td>
-                    <td text_wrap="true" rowspan="2" style="text-align: right;">&5</td>
-                    <td rowspan="2" text_wrap="true" style="text-align: right;">&6</td>
+                    <td text_wrap="true"  style="text-align: right;">&1</td>
+                    <td text_wrap="true"  style="text-align: right;">&2</td>
+                    <td text_wrap="true"  style="text-align: right;">&3</td>
+                    <td text_wrap="true"  style="text-align: right;">&4</td>
+                    <td text_wrap="true"  style="text-align: right;">&5</td>
+                    <td  text_wrap="true" style="text-align: right;">&6</td>
                     </tr>
                '
             ,
@@ -1761,11 +1761,9 @@ procedure print-sug .
                     <td text_wrap="true"  style="text-align: right;">&3</td>
                     <td text_wrap="true"  style="text-align: right;">&4</td>
                     <td text_wrap="true"  style="text-align: right;">&5</td>
-                    <td  text_wrap="true"  style="text-align: right;">&6</td>
+                    <td text_wrap="true"  style="text-align: right;">&6</td>
                     </tr>
-               <tr>
-               <td></td>
-               </tr>
+               
                     
                '
               ,
@@ -1839,8 +1837,7 @@ procedure print-sug .
       put stream OutStr-html unformatted
         substitute (
         '        
-        <tr>
-        </tr>
+        
         <tr>
                     <th text_wrap="true"  style="text-align: left; vertical-align: middle;">&1</th>
                     <th ></th>
