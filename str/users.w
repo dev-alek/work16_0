@@ -2968,7 +2968,9 @@ on error undo, return error
                 bt-firm:sensitive = vflag.
                 bt-role:sensitive = vflag.
                 bt-menu:sensitive = vflag.
-                b-copy:sensitive = vflag.
+                if v-cntxt-db-num = 0
+                then
+                   b-copy:sensitive = vflag.
         end.
         else do:
             disable
