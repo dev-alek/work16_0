@@ -753,6 +753,19 @@ if ( varis-fin = "yes":u
             message "По договору осуществляется ЭДО. Для возврата используйте документ Расход внешний." view-as alert-box .
             return error.
           end .
+          else do :
+            find first buf_contract-attr no-lock where buf_contract-attr.host-code = bf_contract.host-code
+                                                   and buf_contract-attr.contract-code = bf_contract.contract-code
+                                                   and buf_contract-attr.attr-code = "contract-diadoc"
+                                                   no-error .
+            if EDOParSec:IsEdo
+            and available buf_contract-attr
+            and logical(buf_contract-attr.attr-value) = true 
+            then do :
+              message "По договору осуществляется ЭДО. Для возврата используйте документ Расход внешний." view-as alert-box .
+              return error.
+            end .
+          end .
         end .
         
         if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
