@@ -344,9 +344,11 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
     sw:write-data-element ("doc-type", string(v-type)) no-error .
     if v-type = "4" then do:
       if tt-rvs-doc.out-code = ? then do:
+        if num-entries(tt-rvs-doc.PS,"¹") > 1 then do:
         v-out-code = entry(2,tt-rvs-doc.PS,"¹") .
         v-out-code = replace (v-out-code,".","") .
         v-out-code = trim(v-out-code," ").
+      end.  
       sw:write-data-element ("parent-doc", v-out-code) no-error .
       end.
       else sw:write-data-element ("parent-doc", tt-rvs-doc.out-code) no-error .

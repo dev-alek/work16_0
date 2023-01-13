@@ -4353,7 +4353,7 @@ THEN DO:
         else do :
           ASSIGN
             v-mm:H                      = bf_rvs-line.level-total * 10 
-            v-mm:H_water                = bf_rvs-line.level-water * 10 
+            v-mm:H_water                = bf_rvs-line.level-water * 10 when bf_rvs-line.level-water <> ?
             v-mm:CalibrationTable       = CalibTable
             v-mm:Tv                     = if temp-izm-vol <> ? then temp-izm-vol else bf_rvs-line.state-temperature
             v-mm:Tr                     = bf_rvs-line.state-temperature

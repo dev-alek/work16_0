@@ -1958,7 +1958,7 @@ define buffer bf_place for ub.place .
     OR NOT VALID-HANDLE(v-mm)
     THEN DO:
       message
-      "Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ "
+      "Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ "
       view-as alert-box error.
       enable
         tt-rvs-line.state-density
@@ -1971,7 +1971,7 @@ define buffer bf_place for ub.place .
     ELSE DO :
       ASSIGN
         v-mm:H                      = tt-rvs-line.state-level-total * 10
-        v-mm:H_water                = tt-rvs-line.state-level-water * 10
+        v-mm:H_water                = tt-rvs-line.state-level-water * 10 when tt-rvs-line.state-level-water <> ?
         v-mm:CalibrationTable       = CalibTable
         v-mm:Tr                     = tt-rvs-line.state-temperature
         v-mm:Tv                     = if tt-rvs-line.temp-izm-vol <> ? then tt-rvs-line.temp-izm-vol else tt-rvs-line.state-temperature 
