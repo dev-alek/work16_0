@@ -744,7 +744,7 @@ DEFINE BROWSE br-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-utd d-utd _STRUCTURED
    QUERY br-utd NO-LOCK DISPLAY
    X_utd-lines.LineNum COLUMN-LABEL "№ п/п" FORMAT ">>>9":U
-   X_utd-lines.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U
+   X_utd-lines.gds-code COLUMN-LABEL "Код товара" FORMAT ">>>>999999":U
    X_utd-lines.ProductCode COLUMN-LABEL "Наименование!УПД" FORMAT "x(40)":U width 25
    X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(40)":U width 25
    X_utd-lines.Quantity COLUMN-LABEL "Кол-во в ед.!изм TH по!УПД" FORMAT "->>,>>9.999":U

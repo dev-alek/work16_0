@@ -32,6 +32,7 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Сканирование акцизных марок".
 { gbl/objsrv.i }
+
 define input  parameter parparentproc         as  handle              no-undo .
 define input  parameter p-doc-code            as  character           no-undo .
 define input  parameter p-mode                as character            no-undo .
@@ -221,7 +222,10 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
   DO:
     if p-mode = {&add-def} then 
     do:
-      run save_update .
+      run save_update  no-error.
+      if error-status:error
+      then
+         return no-apply.
     end.
     else 
     do:
@@ -241,6 +245,9 @@ ON return OF b-exit IN FRAME Dialog-Frame /* Выход */
     if p-mode = {&add-def} then 
     do:
       run save_update .
+      if error-status:error
+      then
+         return no-apply.
     end.
     else 
     do:
@@ -698,9 +705,20 @@ PROCEDURE save_update :
 
   assign 
     v-mark = v-mark:screen-value in frame {&frame-name} .
-    
+  
   if v-mark <> "" then 
   do:
+     if length(v-mark) < 29
+     then do:
+        run dispmessage ("Данная последовательность не является маркой. Введите марку.").
+        assign 
+           v-mark              = ""
+           v-mark:screen-value = ""
+           v-scan-str          = ""
+           p-mark              = ""
+        .
+        return error .
+     end.
     define variable vcodident as character no-undo.
     vcodident = GetCodeIdent(v-mark).
     find first marking where marking.mark begins vcodident
@@ -722,7 +740,7 @@ PROCEDURE save_update :
           v-scan-str          = ""
           p-mark              = ""
         .
-        return .
+        return.
       end .
       
       p-mark = vcodident .
@@ -761,7 +779,7 @@ PROCEDURE save_update :
               v-scan-str          = ""
               p-mark              = ""
             .
-            return .
+            return error.
           end .
         end .
       end .
