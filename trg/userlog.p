@@ -321,7 +321,6 @@ on error undo, return error
         when {&nwsdochs_action_delete_err}  then v-action-type = "Удаление ОШ." .
     end case.
 
-    
     if not p-table-handle :available
     then do:
         undo, return error substitute( "&1. Ошибка задания входных параметров. Переданый буфер таблицы &2 не доступен", vss-description, p-tbl-name ).
@@ -426,10 +425,24 @@ on error undo, return error
                 .
             end.        /* if v-parent-name = p-tbl-name  */
             else do:
+               if p-tbl-name = "user-obj" or
+                  p-tbl-name = "user-host" or
+                  p-tbl-name = "user-login-action-role" or
+                  p-tbl-name = "user-login-action-item" or
+                  p-tbl-name = "user-menu-group"
+                  then do:
+                  v-field-list = "user-id" .
+/*                run schemlib-get-index-fields in this-procedure (*/
+/*                    input p-tbl-name                             */
+/*                    , output v-field-list                        */
+/*                ) no-error.                                      */
+               end.
+               else do:
                 run schemlib-get-index-fields in this-procedure (
                     input v-parent-name
                     , output v-field-list
                 ) no-error.
+                end.
                 if error-status :error
                 or v-field-list = "":U
                 then do:
@@ -486,6 +499,7 @@ on error undo, return error
                 end.
             end.        /* NOT ( if v-parent-name = p-tbl-name  ) */
         end.        /* NOT ( if buf_temp_userlog-bush.ulbParentKey = 0 ) */
+
         create buf_c-user-log.
         assign
             buf_c-user-log.corr-user-db-num = v-corr-user-db-num
