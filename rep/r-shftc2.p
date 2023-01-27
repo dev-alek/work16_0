@@ -86,6 +86,7 @@ define buffer ras-doc         for ub.trn-doc.
 define buffer buf_chk-discnt  for ub.chk-discnt.
 define buffer buf_chk-discnt2 for ub.chk-discnt .
 define buffer buf_chk-gds     for ub.chk-gds.
+define buffer buf_doc-line    for ub.doc-line .
 
 DEFINE BUFFER b-treal-2       for treal-2.
 DEFINE BUFFER bf-treal-2      for treal-2.
@@ -101,7 +102,7 @@ define buffer cli-treal-8     for treal-8.
 define TEMP-TABLE treal-2_1 LIKE treal-2 .
 define TEMP-TABLE treal-3_1 LIKE treal-3 .
 define TEMP-TABLE treal-4_1 LIKE treal-4 .
-
+define buffer ret-doc         for ub.trn-doc.
 /* функция взятия плотности: "По средней"=0; вариант "По чекам"=1 читается снаружи, напрямую из chk-gds-pay */
 function calcDensity returns decimal private
 (input p-str-chk-type as character // string(ub.chk-doc.chk-type)
@@ -113,7 +114,7 @@ function calcDensity returns decimal private
 
 ) :
 define variable v-density as decimal no-undo .
-define buffer ret-doc         for ub.trn-doc.
+
 define buffer buf_doc-line    for ub.doc-line.
 
   v-density = 0 .
@@ -184,7 +185,6 @@ run adm/shattri.p (
 v-cdens = v-value-integer .
 delete object v-tth.
 
-
 if pclassify then 
 do:
     FIND FIRST t-3 where t-3.grp-code = 0 No-ERROR.
@@ -240,7 +240,7 @@ FOR EACH ub.chk-doc No-LOCK WHERE
       .
         end.
     end.
-    
+
   _chk-doc:
   for each buf_chk-gds-pay where
           buf_chk-gds-pay.doc-code = ub.chk-doc.doc-code
@@ -289,7 +289,38 @@ FOR EACH ub.chk-doc No-LOCK WHERE
 
                         find first buf_goods    no-lock where buf_goods.gds-code  =
                             buf_bar-code.gds-code no-error.
-                        if v-cdens = 1 then v-density = buf_chk-gds-pay.density . // по чекам
+                        if v-cdens = 1 then do:
+                        v-density = 0.       
+                        if lookup(string(ub.chk-doc.chk-type), {&sale-in-receipt-codes}) > 0 then 
+                        do: /* если чек возврата,то ищем хитро его документ */
+                            ret-doc:
+                            for each ret-doc fields( ret-doc.doc-code ret-doc.out-code ) no-lock where ret-doc.out-code = ub.chk-doc.out-code,
+                                first buf_doc-line no-lock where 
+                                buf_doc-line.doc-code = ret-doc.doc-code AND
+                                buf_doc-line.artic     = buf_goods.artic AND
+                                buf_doc-line.prod-type = buf_goods.prod-type AND
+                                buf_doc-line.prod-code = buf_goods.prod-code :
+                      
+               v-density =  buf_doc-line.fact-density
+                            .
+                   
+                                leave ret-doc.           
+                            end.   
+                        end. 
+                        else 
+                        do:
+                            find first buf_doc-line no-lock where
+                                buf_doc-line.doc-code  = v-doc-code
+                                and buf_doc-line.artic     = buf_goods.artic
+                                and buf_doc-line.prod-type = buf_goods.prod-type
+                                and buf_doc-line.prod-code = buf_goods.prod-code  no-error.
+                            assign
+                                v-density = ( if available buf_doc-line
+                                then buf_doc-line.fact-density
+                                else 0 ).
+                        end.        
+                          end.               
+/*                        v-density = buf_chk-gds-pay.density . // по чекам*/
                                        else v-density = calcDensity // по средней
                                                         (input string(ub.chk-doc.chk-type)
                                                         ,input v-doc-code
@@ -340,11 +371,13 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                                                 then 0
                                                 else buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate))
                             /*netto всегда в б.в.*/
+                            
                             treal-2.qnty1    = treal-2.qnty1 + buf_chk-gds-pay.eff-doc-qnty
-                            treal-2.qnty2    = treal-2.qnty2 + buf_chk-gds-pay.eff-doc-qnty * v-density
+                            treal-2.qnty2    = treal-2.qnty2 + (buf_chk-gds-pay.eff-doc-qnty * v-density)
                             treal-2.chk-qnty = treal-2.chk-qnty + 1 
                             treal-2.brutto   = treal-2.brutto + buf_chk-gds-pay.tot-r-b.
-            
+/*message v-density treal-2.qnty1 treal-2.qnty2 (treal-2.qnty2 / treal-2.qnty1) v-doc-code*/
+/*view-as alert-box.                                                                      */
                         if pdiscnt then
                         do:
                            
@@ -399,7 +432,7 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                                     /*                            treal-2.netto = buf_chk-gds.src-sum * (buf_chk-gds-pay.eff-doc-qnty /  buf_chk-gds.doc-qnty)*/
                                     /*netto всегда в б.в.*/
                                     b-treal-2.qnty1        = b-treal-2.qnty1 + buf_chk-gds-pay.eff-doc-qnty
-                                    b-treal-2.qnty2        = b-treal-2.qnty2 + buf_chk-gds-pay.eff-doc-qnty * v-density
+                                    b-treal-2.qnty2        = b-treal-2.qnty2 + (buf_chk-gds-pay.eff-doc-qnty * v-density)
                                     b-treal-2.chk-qnty     = b-treal-2.chk-qnty + 1 
                                     b-treal-2.brutto       = b-treal-2.brutto + buf_chk-discnt.object-sum 
                                     b-treal-2.discount-sum = b-treal-2.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty)
