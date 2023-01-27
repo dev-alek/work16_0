@@ -752,7 +752,7 @@ do
       '<td colspan="16" style="text-align: center; border: 1px solid black;">символ</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">сумма</td>' skip
       '</tr>' skip .
-          
+
     if v-ok-cashGB then 
     do: 
       v-sum = string(v-sum-cashGB) .
@@ -769,7 +769,7 @@ do
       '<tr>' skip
       '<td colspan="74" style="text-align: left; border-bottom: 1px solid black;">' + v-recip-bank_name1 + '</td>' skip
       '<td colspan="10" style="border-bottom: 1px solid black; text-align: left;">' + v-recip-bank_bik1 + '</td>' skip
-      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schet1 + '</td>' skip
+      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schetUB + '</td>' skip
       '<td colspan="16" style="text-align: center; border: 1px solid black;">' + v-simvol + '</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">' + string(v-sum) + '</td>' skip
       '</tr>' skip .
@@ -791,7 +791,7 @@ do
       '<tr style="height: 20px;">' skip
       '<td colspan="74" style="text-align: left; border-bottom: 1px solid black;">' + v-recip-bank_name2 + '</td>' skip
       '<td colspan="10" style="border-bottom: 1px solid black; text-align: left;">' + v-recip-bank_bik2 + '</td>' skip
-      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schet2 + '</td>' skip
+      '<td colspan="37" style="text-align: left; border-bottom: 1px solid black;">' + v-schetUB + '</td>' skip
       '<td colspan="16" style="text-align: center; border: 1px solid black;">' + v-simvol + '</td>' skip
       '<td colspan="21" style="text-align: center; border: 1px solid black;">' + string(v-sum) + '</td>' skip
       '</tr>' skip .

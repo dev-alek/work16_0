@@ -31,22 +31,24 @@ define temp-table temp_userlog-bush no-undo
   field ulbDesc       as character
   field selected      as logical
 
-    index pi is primary unique
-        ulb-key
+  index pi is primary unique
+  ulb-key
 
-    index utbl
-        ulbType
-        ulbParentKey
-        ulbTableName
+  index utbl
+  ulbType
+  ulbParentKey
+  ulbTableName
 
-    index tbl
-        ulbType
-        ulbTableName
-    index sel
-        selected
-.
+  index tbl
+  ulbType
+  ulbTableName
+  ulbTwoKey
+  
+  index sel
+  selected
+  .
 
-define variable v-userlog-{&vssseq}-ulb-key    as integer    no-undo.
+define variable v-userlog-{&vssseq}-ulb-key as integer no-undo.
 
 &global-define userlog-type-bush 0
 &global-define userlog-type-simple 1
@@ -54,24 +56,24 @@ define variable v-userlog-{&vssseq}-ulb-key    as integer    no-undo.
 
 /*==========================================================================*/
 procedure userlog-hist-table-init :
-define input parameter p-table-name     as character        no-undo.
+  define input parameter p-table-name     as character        no-undo.
 
-    define buffer buf_temp_userlog-bush         for temp_userlog-bush.
-    define buffer buf_parent_temp_userlog-bush  for temp_userlog-bush.
-do
-for buf_temp_userlog-bush
-  , buf_parent_temp_userlog-bush
-on error undo, return error
-:
+  define buffer buf_temp_userlog-bush        for temp_userlog-bush.
+  define buffer buf_parent_temp_userlog-bush for temp_userlog-bush.
+  do
+    for buf_temp_userlog-bush
+    , buf_parent_temp_userlog-bush
+    on error undo, return error
+    :
     run userlog-hist-table-init-all in this-procedure .
     for each buf_temp_userlog-bush
-       where buf_temp_userlog-bush.ulbTableName = p-table-name
-    :
-        assign
-            buf_temp_userlog-bush.selected = yes
+      where buf_temp_userlog-bush.ulbTableName = p-table-name
+      :
+      assign
+        buf_temp_userlog-bush.selected = yes
         .
-        find first buf_parent_temp_userlog-bush
-             where buf_parent_temp_userlog-bush.ulb-key = buf_temp_userlog-bush.ulbParentKey
+      find first buf_parent_temp_userlog-bush
+        where buf_parent_temp_userlog-bush.ulb-key = buf_temp_userlog-bush.ulbParentKey
         no-error.
         if available buf_parent_temp_userlog-bush
         then do:
@@ -91,15 +93,15 @@ end procedure. /* userlog-hist-table-init */
 /*==========================================================================*/
 procedure userlog-hist-table-init-all :
 
-    define variable v-success    as logical      no-undo.
-    define variable v-err-msg    as character    no-undo.
-do
-on error undo, return error
-:
+  define variable v-success as logical   no-undo.
+  define variable v-err-msg as character no-undo.
+  do
+    on error undo, return error
+    :
     assign
-        v-err-msg = "":U
-    .
-/* Таблицы истории, связанные в кусты ================================================================================================================================================*/
+      v-err-msg = "":U
+      .
+    /* Таблицы истории, связанные в кусты ================================================================================================================================================*/
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-bush}, input "c-gds-hist               ":U, input "c-gds-obj-attr              ":U, input "                                                ", input "атрибута товара на объекте                                        ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-bush}, input "c-gds-hist               ":U, input "c-gds-host-attr             ":U, input "                                                ", input "атрибута товара на фирме                                          ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-bush}, input "c-gds-hist               ":U, input "c-goods-attr                ":U, input "                                                ", input "атрибута товара                                                   ":U, input v-err-msg, output v-err-msg ).
@@ -232,7 +234,7 @@ on error undo, return error
 
 
 
-/* Несвязанные таблицы истории  ==========================================================================================================================================================*/                                                                                                                                        .
+    /* Несвязанные таблицы истории  ==========================================================================================================================================================*/                                                                                                                                        .
 
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-add-doc              ":U, input "c-add-doc                   ":U, input "документа дополнительных расходов               ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-add-doc              ":U, input "c-add-line                  ":U, input "документа дополнительных расходов               ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
@@ -385,9 +387,15 @@ on error undo, return error
     run userlog-hist-table-twokey-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-login                ":U, input "user-password               ":U, input "пароля                                          ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-twokey-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-login                ":U, input "adm                         ":U, input "прав администратора                             ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-account              ":U,                                         input "пользователя системы                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+
     run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "c-user-login                ":U,                                         input "логина пользователя системы                     ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-twokey-add in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "user-account                ":U, input "SuperAdm                    ":U, input "права супер администратора                      ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "user-account                ":U,                                         input "пользователя системы                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "user-obj                    ":U,                                         input "объекта пользователя                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "user-host                   ":U,                                         input "фирмы пользователя                              ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "user-login-action-item      ":U,                                         input "права пользователя системы                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "user-login-action-role      ":U,                                         input "группа прав пользователя системы                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add        in this-procedure ( input {&userlog-type-simple}, input "c-usr-hist             ":U, input "user-menu-group             ":U,                                         input "меню пользователя системы                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-pln              ":U, input "c-fbr-pln                   ":U, input "документа план-меню                             ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-fbr-pln              ":U, input "c-fbr-pln-line              ":U, input "документа план-меню                             ", input "строки                                                            ":U, input v-err-msg, output v-err-msg ).
@@ -519,53 +527,59 @@ on error undo, return error
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-wth-ser              ":U, input "c-wth-ser                   ":U, input "маски (серии) матценностей                      ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "c-wth-ser              ":U, input "c-wth-ser-attr              ":U, input "маски (серии) матценностей                      ", input "атрибутов                                                         ":U, input v-err-msg, output v-err-msg ).
     
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "rvs-doc                ":U, input "rvs-doc                     ":U, input "документа сверки                                ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "rvs-doc                ":U, input "rvs-line                    ":U, input "документа сверки                                ", input " строки                                                               ":U, input v-err-msg, output v-err-msg ).
+    
+    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "thbj-attr              ":U, input "thbj-attr                   ":U, input "параметра объекта TH                            ", input "                                                                ":U, input v-err-msg, output v-err-msg ).
+    
     run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "staff                  ":U, input "staff                       ":U, input "данные персонала                                ", input "данные персонала                                                  ":U, input v-err-msg, output v-err-msg ).
     
-    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "rvs-doc                ":U, input "rvs-doc                     ":U, input "документа сверки                                ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
-    run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "rvs-doc                ":U, input "rvs-line                    ":U, input "документа сверки                                ", input " строки                                                           ":U, input v-err-msg, output v-err-msg ).
-	run userlog-hist-table-add in this-procedure ( input {&userlog-type-simple}, input "thbj-attr              ":U, input "thbj-attr                   ":U, input "параметра объекта TH                            ", input "                                                                  ":U, input v-err-msg, output v-err-msg ).
 
     if v-err-msg <> "":U
-    then do:
-        message
-                 vss-workfile vss-revision vss-description
-            skip(1)
-            skip "Ошибка вычисления дерева таблиц истории пользователя."
-            skip(1)
-            skip v-err-msg
+      then 
+    do:
+      message
+        vss-workfile vss-revision vss-description
+        skip(1)
+        skip 
+        "Ошибка вычисления дерева таблиц истории пользователя."
+        skip(1)
+        skip v-err-msg
         view-as alert-box error.
-        undo, return error.
+      undo, return error.
     end.
-end.
+  end.
 end procedure. /* userlog-hist-table-init-all */
 
 /*==========================================================================
     Имя таблицы по коду.
 */
 procedure userlog-get-table-name :
-define input parameter p-ulb-key        as integer          no-undo.
-define output parameter p-table-name    as character        no-undo.
+  define input parameter p-ulb-key        as integer          no-undo.
+  define output parameter p-table-name    as character        no-undo.
 
-    define buffer buf_temp_userlog-bush     for temp_userlog-bush.
-do
-for buf_temp_userlog-bush
-on error undo, return error
-:
+  define buffer buf_temp_userlog-bush for temp_userlog-bush.
+  do
+    for buf_temp_userlog-bush
+    on error undo, return error
+    :
     find first buf_temp_userlog-bush
-         where buf_temp_userlog-bush.ulb-key = p-ulb-key
-    no-error.
+      where buf_temp_userlog-bush.ulb-key = p-ulb-key
+      no-error.
     if available buf_temp_userlog-bush
-    then do:
-        assign
-            p-table-name = buf_temp_userlog-bush.ulbTableName
+      then 
+    do:
+      assign
+        p-table-name = buf_temp_userlog-bush.ulbTableName
         .
     end.
-    else do:
-        assign
-            p-table-name = "":U
+    else 
+    do:
+      assign
+        p-table-name = "":U
         .
     end.
-end.
+  end.
 end procedure. /* userlog-get-table-name */
 
 
@@ -597,172 +611,193 @@ procedure userlog-hist-table-twokey-add :
   define input parameter p-in-err-msg         as character        no-undo.
   define output parameter p-out-err-msg       as character        no-undo.
 
-    define variable v-err-msg           as character    no-undo.
-    define variable v-success           as logical      no-undo.
-    define variable v-found             as logical      no-undo.
-    define variable v-parent-key        as integer      no-undo.
+  define variable v-err-msg    as character no-undo.
+  define variable v-success    as logical   no-undo.
+  define variable v-found      as logical   no-undo.
+  define variable v-parent-key as integer   no-undo.
 
-    define buffer buf_temp_userlog-bush         for temp_userlog-bush.
-    define buffer buf_parent-temp_userlog-bush  for temp_userlog-bush.
-do
-for buf_temp_userlog-bush
-  , buf_parent-temp_userlog-bush
-on error undo, return error
-:
+  define buffer buf_temp_userlog-bush        for temp_userlog-bush.
+  define buffer buf_parent-temp_userlog-bush for temp_userlog-bush.
+  do
+    for buf_temp_userlog-bush
+    , buf_parent-temp_userlog-bush
+    on error undo, return error
+    :
     assign
-        v-success           = no
-        p-out-err-msg       = p-in-err-msg
-        p-ParentTableName   = trim( p-ParentTableName   )
-        p-TableName         = trim( p-TableName         )
-        i-Twokey          = trim( i-Twokey            )
-        p-Desc              = trim( p-Desc              )
-        p-ParentDesc        = trim( p-ParentDesc        )
-    .
+      v-success         = no
+      p-out-err-msg     = p-in-err-msg
+      p-ParentTableName = trim( p-ParentTableName   )
+      p-TableName       = trim( p-TableName         )
+      i-Twokey          = trim( i-Twokey            )
+      p-Desc            = trim( p-Desc              )
+      p-ParentDesc      = trim( p-ParentDesc        )
+      .
     if p-ulbType <> {&userlog-type-simple}
-    and p-ulbType <> {&userlog-type-bush}
-    then do:
-        assign
-            v-success = no
-            v-err-msg = "Неизвестный тип истории пользователя."
+      and p-ulbType <> {&userlog-type-bush}
+      then 
+    do:
+      assign
+        v-success = no
+        v-err-msg = "Неизвестный тип истории пользователя."
         .
     end.        /* if p-ulbType <> {&userlog-type-simple} */
-    else do:
-        if p-ParentTableName = "":U
+    else 
+    do:
+      if p-ParentTableName = "":U
         or p-ParentTableName = p-TableName
-        then do:        /* Головная таблица куста */
-            assign
-                v-success       = yes
-                v-err-msg       = "":U
-                v-parent-key    = 0
-            .
-            if p-ulbType = {&userlog-type-bush}
-            then do:
-                run userlog-create-userlog-bush in this-procedure (
-                      input p-ulbType
-                    , input 0
-                    , input p-ParentTableName
-                    , input i-Twokey
-                    , input p-ParentTableName
-                    , input "":U
-                ) no-error.
-                if error-status :error
-                then do:
-                    assign
-                        v-success = no
-                        v-err-msg = substitute( "Ошибка создания корневой записи. &1 &2", return-value, trim( error-status :get-message( 1 ) ) )
-                    .
-                end.
-                else do:
-                    find first buf_parent-temp_userlog-bush
-                         where buf_parent-temp_userlog-bush.ulbParentKey = 0
-                           and buf_parent-temp_userlog-bush.ulbTableName = p-ParentTableName
-                    no-error.
-                    if not available buf_parent-temp_userlog-bush
-                    then do:
-                        assign
-                            v-success = no
-                            v-err-msg = "Не удалось создать корневую запись."
-                        .
-                    end.
-                    else do:
-                        assign
-                            v-success       = yes
-                            v-err-msg       = "":U
-                            v-parent-key    = buf_parent-temp_userlog-bush.ulb-key
-                        .
-                    end.
-                end.
-            end.
-        end.        /* if p-ParentTableName = "":U */
-        else do:
-            find first buf_parent-temp_userlog-bush
-                 where buf_parent-temp_userlog-bush.ulbParentKey = 0
-                   and buf_parent-temp_userlog-bush.ulbTableName = p-ParentTableName
-            no-error.
-            if not available buf_parent-temp_userlog-bush
-            then do:
-                if p-ulbType = {&userlog-type-bush}
-                then do:        /* Головная таблица куста работает только как связка. В комментарий пишется имя таблицы. */
-                    run userlog-create-userlog-bush in this-procedure (
-                          input p-ulbType
-                        , input 0
-                        , input p-ParentTableName
-                        , input i-Twokey
-                        , input p-ParentTableName
-                        , input "":U
-                    ) no-error.
-                    if error-status :error
-                    then do:
-                        assign
-                            v-success = no
-                            v-err-msg = substitute( "Ошибка создания записи. &1 &2", return-value, trim( error-status :get-message( 1 ) ) )
-                        .
-                    end.
-                    else do:
-                        find first buf_parent-temp_userlog-bush
-                             where buf_parent-temp_userlog-bush.ulbParentKey = 0
-                               and buf_parent-temp_userlog-bush.ulbTableName = p-ParentTableName
-                        no-error.
-                        if not available buf_parent-temp_userlog-bush
-                        then do:
-                            assign
-                                v-success = no
-                                v-err-msg = "Не удалось создать корневую запись."
-                            .
-                        end.
-                        else do:
-                            assign
-                                v-success       = yes
-                                v-err-msg       = "":U
-                                v-parent-key    = buf_parent-temp_userlog-bush.ulb-key
-                            .
-                        end.
-                    end.
-                end.
-                else do:
-                    assign
-                        v-success = no
-                        v-err-msg = "Неверно указан корневой узел."
-                    .
-                end.
-            end.        /* not available buf_parent-temp_userlog-bush */
-            else do:
-                assign
-                    v-success       = yes
-                    v-err-msg       = "":U
-                    v-parent-key    = buf_parent-temp_userlog-bush.ulb-key
-                .
-            end.        /* available buf_parent-temp_userlog-bush */
-        end.        /* if p-ParentTableName <> "":U */
-        if v-success       = yes
-        then do:
-            run userlog-create-userlog-bush in this-procedure (
-                  input p-ulbType
-                , input v-parent-key
-                , input p-TableName
-                , input i-Twokey
-                , input p-ParentDesc
-                , input p-Desc
+        then 
+      do:        /* Головная таблица куста */
+        assign
+          v-success    = yes
+          v-err-msg    = "":U
+          v-parent-key = 0
+          .
+        if p-ulbType = {&userlog-type-bush}
+          then 
+        do:
+          run userlog-create-userlog-bush in this-procedure (
+            input p-ulbType
+            , input 0
+            , input p-ParentTableName
+            , input i-Twokey
+            , input p-ParentTableName
+            , input "":U
             ) no-error.
-            if error-status :error
-            then do:
-                assign
-                    v-success = no
-                    v-err-msg = substitute( "Ошибка создания записи. &1 &2", return-value, trim( error-status :get-message( 1 ) ) )
+          if error-status :error
+            then 
+          do:
+            assign
+              v-success = no
+              v-err-msg = substitute( "Ошибка создания корневой записи. &1 &2", return-value, trim( error-status :get-message( 1 ) ) )
+              .
+          end.
+          else 
+          do:
+            find first buf_parent-temp_userlog-bush
+              where buf_parent-temp_userlog-bush.ulbParentKey = 0
+              and buf_parent-temp_userlog-bush.ulbTableName = p-ParentTableName
+              no-error.
+            if not available buf_parent-temp_userlog-bush
+              then 
+            do:
+              assign
+                v-success = no
+                v-err-msg = "Не удалось создать корневую запись."
                 .
             end.
-            else do:
-                assign
-                    v-success       = yes
-                    v-err-msg       = "":U
+            else 
+            do:
+              assign
+                v-success    = yes
+                v-err-msg    = "":U
+                v-parent-key = buf_parent-temp_userlog-bush.ulb-key
                 .
             end.
+          end.
         end.
+      end.        /* if p-ParentTableName = "":U */
+      else 
+      do:
+        find first buf_parent-temp_userlog-bush
+          where buf_parent-temp_userlog-bush.ulbParentKey = 0
+          and buf_parent-temp_userlog-bush.ulbTableName = p-ParentTableName
+          no-error.
+        if not available buf_parent-temp_userlog-bush
+          then 
+        do:
+          if p-ulbType = {&userlog-type-bush}
+            then 
+          do:        /* Головная таблица куста работает только как связка. В комментарий пишется имя таблицы. */
+            run userlog-create-userlog-bush in this-procedure (
+              input p-ulbType
+              , input 0
+              , input p-ParentTableName
+              , input i-Twokey
+              , input p-ParentTableName
+              , input "":U
+              ) no-error.
+            if error-status :error
+              then 
+            do:
+              assign
+                v-success = no
+                v-err-msg = substitute( "Ошибка создания записи. &1 &2", return-value, trim( error-status :get-message( 1 ) ) )
+                .
+            end.
+            else 
+            do:
+              find first buf_parent-temp_userlog-bush
+                where buf_parent-temp_userlog-bush.ulbParentKey = 0
+                and buf_parent-temp_userlog-bush.ulbTableName = p-ParentTableName
+                no-error.
+              if not available buf_parent-temp_userlog-bush
+                then 
+              do:
+                assign
+                  v-success = no
+                  v-err-msg = "Не удалось создать корневую запись."
+                  .
+              end.
+              else 
+              do:
+                assign
+                  v-success    = yes
+                  v-err-msg    = "":U
+                  v-parent-key = buf_parent-temp_userlog-bush.ulb-key
+                  .
+              end.
+            end.
+          end.
+          else 
+          do:
+            assign
+              v-success = no
+              v-err-msg = "Неверно указан корневой узел."
+              .
+          end.
+        end.        /* not available buf_parent-temp_userlog-bush */
+        else 
+        do:
+          assign
+            v-success    = yes
+            v-err-msg    = "":U
+            v-parent-key = buf_parent-temp_userlog-bush.ulb-key
+            .
+        end.        /* available buf_parent-temp_userlog-bush */
+      end.        /* if p-ParentTableName <> "":U */
+      if v-success       = yes
+        then 
+      do:
+        run userlog-create-userlog-bush in this-procedure (
+          input p-ulbType
+          , input v-parent-key
+          , input p-TableName
+          , input i-Twokey
+          , input p-ParentDesc
+          , input p-Desc
+          ) no-error.
+        if error-status :error
+          then 
+        do:
+          assign
+            v-success = no
+            v-err-msg = substitute( "Ошибка создания записи. &1 &2", return-value, trim( error-status :get-message( 1 ) ) )
+            .
+        end.
+        else 
+        do:
+          assign
+            v-success = yes
+            v-err-msg = "":U
+            .
+        end.
+      end.
     end.        /* if p-ulbType = {&userlog-type-simple} */
     if v-success = no
-    then do:
-        assign
-            p-out-err-msg = substitute( "&1&2 &3. Тип: '&4'. Таблица: '&5'. Родитель: '&6'.":U
+      then 
+    do:
+      assign
+        p-out-err-msg = substitute( "&1&2 &3. Тип: '&4'. Таблица: '&5'. Родитель: '&6'.":U
                                         , p-out-err-msg
                                         , ( if p-out-err-msg = "":U then "":U else {&new-line} )
                                         , v-err-msg
@@ -772,7 +807,7 @@ on error undo, return error
                                         )
         .
     end.
-end.
+  end.
 end procedure. /* userlog-hist-table-add */
 
 

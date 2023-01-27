@@ -529,7 +529,6 @@ FUNCTION getStatus RETURNS CHARACTER
 &SCOPE sts-next "Ожидает активации"
 &SCOPE sts-del  "Деактивирован"
 &SCOPE sts-error  "Ошибка"
-  
    if istatus eq {&bef-deleted-status-int}
       then
       return {&sts-del}.
@@ -575,10 +574,10 @@ FUNCTION getStatus RETURNS CHARACTER
 
                vMonth = MONTH(today) -  3.
                vYear =  YEAR(today).
-               if vMonth > 12
+               if vMonth < 1
                   then assign
-                     vMonth = vMonth - 12
-                     vYear  = vYear + 1
+                     vMonth = vMonth + 12
+                     vYear  = vYear - 1
                      . 
                vDateNew = DATE(vMonth,DAY(today),vYear) NO-ERROR.
                DO WHILE ERROR-STATUS:ERROR EQ YES:

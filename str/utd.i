@@ -215,7 +215,8 @@ function CheckGds returns logical
                  and utd-marking-lines.doc-id  = utd-lines.doc-id
                  and utd-marking-lines.LineNum = utd-lines.LineNum
       no-lock:
-         if length(utd-marking-lines.mark) > 13
+         if    isMark(utd-marking-lines.mark)
+            or isOAD (utd-marking-lines.mark)
          then do:
             define variable vnewGdsCode as integer no-undo.
             vnewGdsCode = getGdsCodeByDM(utd-marking-lines.mark).

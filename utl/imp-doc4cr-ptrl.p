@@ -265,13 +265,18 @@ input stream fosnid from value (p-osn-fname).
 repeat:
   define variable v-osn-15 as character no-undo .
   define variable v-osn-16 as integer no-undo .
+  define variable v-error  as logical no-undo .
   import stream fosnid delimiter ';' v-osn-15 v-osn-16.
   create w-osn.
-  assign
-    w-osn.supp-type-15_0 =         substring(v-osn-15, 1, 3)
-    w-osn.supp-code-15_0 = integer(substring(v-osn-15, 4))
-    w-osn.supp-code-16_0 =                   v-osn-16
-  .
+    w-osn.supp-type-15_0 =         substring(v-osn-15, 1, 3) no-error .
+    if error-status:error then v-error = true .
+    w-osn.supp-code-15_0 = integer(substring(v-osn-15, 4)) no-error .
+    if error-status:error then v-error = true .
+    w-osn.supp-code-16_0 =                   v-osn-16 no-error .
+if v-error then do:
+    &scop my-message substitute("Не правильная кодировка в файле для импорта &1", p-osn-fname) 
+    {&display-message}.  
+end.   
 end.
 input stream fosnid close.
 /* для импорта напрямую в w-osn последняя пустая строка в импортируемом файле:
@@ -442,7 +447,6 @@ define buffer new_clients  for ub.clients .
 
   &scop my-message v-my-message
   
-
   assign
     p-count-err  = 0
     p-count-err1 = 0
@@ -620,9 +624,9 @@ define buffer new_clients  for ub.clients .
     do :
     find first ub.place no-lock where ub.place.obj-type = p-obj-type
       and ub.place.obj-code = p-obj-code
-      and ub.place.loc1 = buf_tt-parts.pl-loc1 .
+      and ub.place.loc1 = buf_tt-parts.pl-loc1 no-error .
       
-
+    if not available (ub.place) then next .
     find first temp_parts where 
           temp_parts.new-cli-code = new_cli-code
       and temp_parts.artic = v-artic

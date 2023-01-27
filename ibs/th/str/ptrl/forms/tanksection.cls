@@ -1395,7 +1395,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxABTArir:Name = "maskedTextBoxABTArir".
     this-object:maskedTextBoxABTArir:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxABTArir:TabIndex = 14.
-    this-object:maskedTextBoxABTArir:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_2).
+    this-object:maskedTextBoxABTArir:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_4).
     this-object:maskedTextBoxABTArir:Leave:Subscribe(this-object:calc-weight-vol).
     /*  */
     /* maskedTextBoxMouth */
@@ -2866,6 +2866,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
    Notes:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
+  method private void KeyPressMaskTBIntNegNum_4( input sender as System.Object, input e as System.Windows.Forms.KeyPressEventArgs):
+
+    KeyPressMaskTBIntNegativeNum (sender, e, 4).
+
+  end method.  
+  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
   method private void KeyPressMaskTBInt( input sender as System.Object, input e as System.Windows.Forms.KeyPressEventArgs, maxLenthInt as int):  
     
     def var v-asc as int no-undo.
@@ -3406,7 +3417,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     if error-status:error
       then return "".
     
-    v-str = v-str-2 + ":" + string (integer( ( arg - integer (v-str-2) * 3600 ) / 60 )) + ":00" no-error.
+    v-str = v-str-2 + ":" + string (integer( truncate(( arg - integer (v-str-2) * 3600 ) / 60 , 0 ))) + ":00" no-error.
     if error-status:error
       then return "".
     return v-str.

@@ -1094,6 +1094,7 @@ class ibs.th.utl.method-for-draw-utility final:
                     buffer-copy tt-schedule to buf_schedule
                       assign
                       buf_schedule.cre-db-num  = v-cntxt-db-num-obj
+                      buf_schedule.db-num-char = string(v-cntxt-db-num-obj)
                       /*      buf_schedule.db-num-char = string(v-cntxt-db-num-obj) // = string(v-obj-code) = string(v-db-num)*/
                       .
                     if buf_schedule.task-type = "autonws" then buf_schedule.db-num-char = "0" .
@@ -1837,6 +1838,7 @@ class ibs.th.utl.method-for-draw-utility final:
                           , input tt-user-account.internal-phone-number
                           , input tt-user-account.PS
                           , input tt-user-account.psn-code
+                          , input no
                           , output v-user-id
                           ) no-error.
                         if error-status :error
@@ -1993,7 +1995,7 @@ class ibs.th.utl.method-for-draw-utility final:
                   empty temp-table tt-place-loc .
                   empty temp-table tt-icnt-doc.
                   empty temp-table tt-icnt-line.
-run gbl/inidebug.p.
+
                   vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetPumpDoc >&3", search ("exe/curl.exe"), iaddr, "pumpdoc-temp.json").
                   os-command silent value (vcmd).
   
@@ -2188,7 +2190,7 @@ run gbl/inidebug.p.
                       os-delete value("rest.json") .
                     end.     
                     vok = chek_rest() and vok.
-                    put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
+                    put-log( string( now) + if  vok then "   Остатки по товарам загружены!" else "   Остатки по товарам не загружены!") .
                     put-log("").
                     return vok.
                   end finally.
@@ -2245,7 +2247,7 @@ run gbl/inidebug.p.
                       os-delete value("rest-ptrl.json") .
                     end.     
                     vok = chek_rest_ptrl() and vok.
-                    put-log( string( now) + if  vok then "   Остатки загружены!" else "   Остатки не загружены!") .
+                    put-log( string( now) + if  vok then "   Остатки по топливу загружены!" else "   Остатки по топливу не загружены!") .
                     put-log("").
                     return vok.
                   end finally.
@@ -2677,7 +2679,7 @@ run gbl/inidebug.p.
                   os-command silent value (vcmd).
   
                   fix-codepage_and_SetJsonObj (input "rest-fin-temp.json") .
-  
+
                   parse-json(input temp-table tt-rest-fin:default-buffer-handle, input "tt-rest-fin") .
    
                   put-log ( string(now) +  "   Начинаем загрузку денежных остатков...") .
@@ -2689,7 +2691,7 @@ run gbl/inidebug.p.
                     and buf_shift-obj.obj-code    = v-cntxt-obj-code
                     no-error.
    
-                  for each tt-rest-fin where tt-rest-fin.obj-code = v-cntxt-obj-code and tt-rest-fin.obj-type = v-cntxt-obj-type:
+                  for each tt-rest-fin:
                     find first ub.CashBook no-lock where ub.CashBook.id = tt-rest-fin.CashBookId no-error .
                     if not available (ub.CashBook) then next .
                     find first buf_temp-fin-sum
@@ -3094,7 +3096,7 @@ run gbl/inidebug.p.
                       os-delete value("rest-fin-temp.json") .
                       os-delete value("restfin.json") .
                     end.     
-                    vok = chek_rest() and vok.
+                    vok = chek_rest_fin() and vok.
                     put-log( string( now) + if  vok then "   Денежные остатки загружены!" else "   Денежные остатки не загружены!") .
                     put-log("").
                     return vok.
