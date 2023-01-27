@@ -3406,7 +3406,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     if error-status:error
       then return "".
     
-    v-str = v-str-2 + ":" + string (integer( ( arg - integer (v-str-2) * 3600 ) / 60 )) + ":00" no-error.
+    v-str = v-str-2 + ":" + string (integer( truncate(( arg - integer (v-str-2) * 3600 ) / 60 , 0 ))) + ":00" no-error.
     if error-status:error
       then return "".
     return v-str.
