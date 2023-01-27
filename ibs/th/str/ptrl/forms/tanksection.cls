@@ -1395,7 +1395,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxABTArir:Name = "maskedTextBoxABTArir".
     this-object:maskedTextBoxABTArir:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxABTArir:TabIndex = 14.
-    this-object:maskedTextBoxABTArir:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_2).
+    this-object:maskedTextBoxABTArir:KeyPress:Subscribe(this-object:KeyPressMaskTBIntNegNum_4).
     this-object:maskedTextBoxABTArir:Leave:Subscribe(this-object:calc-weight-vol).
     /*  */
     /* maskedTextBoxMouth */
@@ -2858,6 +2858,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   method private void KeyPressMaskTBIntNegNum_2( input sender as System.Object, input e as System.Windows.Forms.KeyPressEventArgs):
 
     KeyPressMaskTBIntNegativeNum (sender, e, 2).
+
+  end method.  
+  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void KeyPressMaskTBIntNegNum_4( input sender as System.Object, input e as System.Windows.Forms.KeyPressEventArgs):
+
+    KeyPressMaskTBIntNegativeNum (sender, e, 4).
 
   end method.  
   
