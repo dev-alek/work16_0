@@ -257,13 +257,18 @@ repeat:
      Для совместимости импорт производится в промежуточные переменные. */
   define variable v-osn-15 as character no-undo .
   define variable v-osn-16 as integer no-undo .
+  define variable v-error  as logical no-undo .
   import stream fosnid delimiter ';' v-osn-15 v-osn-16.
   create w-osn.
-  assign
-    w-osn.supp-type-15_0 =         substring(v-osn-15, 1, 3)
-    w-osn.supp-code-15_0 = integer(substring(v-osn-15, 4))
-    w-osn.supp-code-16_0 =                   v-osn-16
-  .
+    w-osn.supp-type-15_0 =         substring(v-osn-15, 1, 3) no-error .
+    if error-status:error then v-error = true .
+    w-osn.supp-code-15_0 = integer(substring(v-osn-15, 4)) no-error .
+    if error-status:error then v-error = true .
+    w-osn.supp-code-16_0 =                   v-osn-16 no-error .
+if v-error then do:
+    &scop my-message substitute("Не правильная кодировка в файле для импорта &1", p-osn-fname) 
+    {&display-message}.  
+end. 
 end.
 input stream fosnid close.
 /* для импорта напрямую в w-osn последняя пустая строка в импортируемом файле:

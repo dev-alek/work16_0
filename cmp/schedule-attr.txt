@@ -8,5 +8,5 @@
 "autosale" 8 0 "schedule-param-list" "1,900000005,0,200,no,no" 1
 "autosale" 9 0 "schedule-obj-list" "" 1
 "autosale" 9 0 "schedule-param-list" "1,900000005,100,200,no,no" 1
-"autosuz" 10 0 "schedule-param-list" "|C:\Trade_House16x\Exchange\news-dir\exch\1-000" 1
+"autosuz" 10 0 "schedule-param-list" "C:\Trade_House16x\Exchange\news-dir\exch\1-000|C:\Trade_House16x\Exchange\news-dir\exch\1-000" 1
 "is_PM" 12 0 "schedule-param-list" "0,15,15" 1
