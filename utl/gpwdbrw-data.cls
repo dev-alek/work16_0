@@ -186,25 +186,14 @@ class utl.gpwdbrw-data:
    method public void Report(iFilter as class utl.gpwdbrw-filter):
       
       def var vFullFileName as char  no-undo.
-      def var vReportId     as int64 no-undo.
-      def var vRepViewer    as char  no-undo.
       
       def buffer ttTechProlBrw for ttTechProlBrw.
       
       main:
       do on error undo, throw:
          
-         vRepViewer = search("exe\ReportViewer\reportviewer.exe").
+         vFullFileName = ibs.th.gbl.gbl-inipar:prn-lib-get-report-name() + ".html".
       
-         if vRepViewer = ? then
-         do:
-           message "Не найдена программа просмотра отчёта!" view-as alert-box error.
-           leave main.
-         end.
-         
-         run get-report-num in utl.gpwdbrw:parParentProc (output vReportId).
-      
-         vFullFileName = session:temp-directory + {&DF_Name} + string(vReportId) + ".html".
          
          /*вызов процедуры печати шапки отчета*/      
          output stream sHtml to value(vFullFileName) convert target 'UTF-8'.
@@ -312,13 +301,10 @@ class utl.gpwdbrw-data:
             .  
             
          end.
+         output stream sHtml close.      
          
-         os-command no-wait value(vRepViewer + " " + vFullFileName).
+         ibs.th.gbl.gbl-inipar:prn-lib-reportviewer(vFullFileName, "") .
          
-         finally:
-            output stream sHtml close.      
-         end finally.
-            
       end.
    end method.
 

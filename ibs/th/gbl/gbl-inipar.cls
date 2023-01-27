@@ -29,7 +29,7 @@ block-level on error undo, throw.
 
 
 class ibs.th.gbl.gbl-inipar: 
-
+  { cmp/str-glbl.i class }
   /* REP-SETS */
   &scoped-define section-name {&sec-rep-sets}
   define static property conPar as character no-undo
@@ -288,25 +288,30 @@ class ibs.th.gbl.gbl-inipar:
   end method.
 
   method public static void prn-lib-reportviewer-report-name (input p-report-name-html as character) :
-  define variable v-full-path-RepView as character no-undo.
-  define variable ii                  as integer no-undo .
-  define variable v-report-name       as character no-undo .
+     define variable v-full-path-RepView as character no-undo.
+     define variable ii                  as integer no-undo .
+     define variable v-report-name       as character no-undo .
   
     /* Получение полного пути к исполняемому файлу просмотровщика отчётов RV.exe */
-    v-full-path-RepView = search("exe\ReportViewer\reportviewer.exe").
-    if v-full-path-RepView = ? then do :
-      message "Отсутствует программа просмотра отчёта." view-as alert-box error.
-      return .
-    end .
-
-    do ii = 1 to NUM-ENTRIES (p-report-name-html).
-      v-report-name = ENTRY (ii,p-report-name-html).
-      if search(v-report-name) = ? then do:
-        message substitute("Отсутствует файл отчёта: &1", v-report-name) view-as alert-box error.
-        return error.
-      end.
-    end.
-    os-command no-wait value(substitute("&1 &2", v-full-path-RepView, p-report-name-html)).
+     if search("exe\ReportViewer\reportviewer.exe") <> ? then
+     do:
+       v-full-path-RepView = search("exe\ReportViewer\reportviewer.exe").
+     end.
+     else
+     do:
+       message "Не найдена программа просмотра отчёта!" view-as alert-box error.
+     end.
+   
+     do ii = 1 to NUM-ENTRIES (p-report-name-html).
+       v-report-name = ENTRY (ii,p-report-name-html," ").
+       if search(v-report-name) = ? then
+       do:
+         message "Не найден файл отчёта: " v-report-name view-as alert-box error.
+         return error.
+       end.
+     end.
+   
+     os-command no-wait value(v-full-path-RepView + " true " + p-report-name-html).
   end method.
     
   method public static void prn-lib-reportviewer (input p-report-name-html as character, 
@@ -363,9 +368,8 @@ class ibs.th.gbl.gbl-inipar:
          end case .        
       end.   
 
-   do jj = 1 to NUM-ENTRIES (p-param,";"):
-     
-      v-par = entry (jj,p-param,";") .
+   do jj = 1 to NUM-ENTRIES (p-param,{&delim-par}):
+      v-par = entry (jj,p-param,{&delim-par}) .
       if num-entries(v-par,':') <> 2 then return error 'Не правильно переданы параметры'.
       case entry(1,v-par,':':U):
          when 'GUI' then 
@@ -394,7 +398,8 @@ class ibs.th.gbl.gbl-inipar:
    then
       os-command SILENT value(v-command). 
    else
-      os-command no-wait value(v-command).   end method.
+      os-command no-wait value(v-command).
+end method.
   /* ----- end_of переменные для печати ----- */   
   
 end class.
