@@ -6233,14 +6233,14 @@ PROCEDURE save_bar-code :
    end.     
    mMRCCode  = yes.
 
-   v-marking = GetCodeIdent(v-Mark) .
+  /* v-marking = GetCodeIdent(v-Mark) .
    mMRCCode = no.
    if v-marking <> "" and v-marking <> ? then 
    do:
       v-GTIN = getGtinByDM(v-marking) .
       if v-GTIN <> ""  then m-gds-code = string(getGdsCodeByGtin(v-GTIN)) . 
    end.   
-   else 
+   else */
    do:
       for first buf_prod-bc no-lock where buf_prod-bc.b-str = v-Mark,
          first buf_bar-code no-lock where buf_bar-code.b-code = buf_prod-bc.b-code and

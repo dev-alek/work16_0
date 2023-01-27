@@ -411,7 +411,7 @@ method private logical isOAD
 function isOAD return logical 
 {utl\comment.i} */ 
 (icodeIdent as character):
-   return length(icodeIdent) > 13 and GetTegCod(icodeIdent,"37") ne ? and GetTegCod(icodeIdent,"02") ne ?.
+   return length(icodeIdent) > 18 and GetTegCod(icodeIdent,"37") ne ? and GetTegCod(icodeIdent,"02") ne ?.
 end.
 
 {&CommentStartNoClass}
@@ -420,7 +420,7 @@ method private logical isMark
 function isMark return logical 
 {utl\comment.i} */ 
 (icodeIdent as character):
-   return length(icodeIdent) > 13 and not isOAD(icodeIdent).
+   return length(icodeIdent) > 20 and not isOAD(icodeIdent).
 end.
    
 
