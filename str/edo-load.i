@@ -756,6 +756,15 @@ procedure  UpdateUTDInformOne :
                               end.
                            end.
                         end.
+                        if vunit:Id eq "Документ о соответствии" then do:
+                          define variable v-sert-value as character no-undo .
+                          find first utd-lines-attr exclusive-lock where utd-lines-attr.doc-id = utd-lines.doc-id and
+                          utd-lines-attr.db-num = utd-lines.db-num and
+                          utd-lines-attr.LineNum = utd-lines.LineNum and
+                          utd-lines-attr.attr-code = "doc_sertif" no-error .
+                          if available (utd-lines-attr) then utd-lines-attr.attr-value = utd-lines-attr.attr-value + "; " + vunit:value .
+                          else setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"doc_sertif",vunit:value).
+                        end.
                         release object  vunit.
                      end.
                      release object  vunits.
