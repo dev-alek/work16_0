@@ -601,7 +601,7 @@ define private temp-table tt-recid-TranFuel no-undo
     /* 19/II-2019  Если в чеке есть платеж, с is-nds = 1, то в товарных строках НДС выгружать,
                    если нет, то НДС не выгружать совсем. */
     /* сопоставление по кодам перечня типов, согласно COMBO-BOX cb-prop из ref/cashpayi.w */
-    &scoped-define is-nds-eq-1 can-do ("1,2,3", buf_cash-pay-attr.attr-value)
+    &scoped-define is-nds-eq-1 can-do ("1,2,3,6", buf_cash-pay-attr.attr-value)
     v-chk-pay-is-nds = false .
     for each buf_cash-pay-attr no-lock
        where buf_cash-pay-attr.attr-code  = "cash-prop"
