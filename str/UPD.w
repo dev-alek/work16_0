@@ -235,6 +235,7 @@ DEFINE MENU POPUP-MENU-b-servis
     MENU-ITEM m_checknakl    LABEL "Связать с ПН"
     MENU-ITEM m_return       LABEL "Реквизиты возврата".
     MENU-ITEM m_return_send  LABEL "Отправит возврат повторно".
+    menu-item m_dekl_sertif  label "Сертификаты/декларации".
 
 
 /* Definitions of the field level widgets                               */
@@ -1524,8 +1525,60 @@ DO:
       run bge/sendutd.p(parparentproc,
                         v-sertif,
                         X_utd.db-num,
-                        X_utd.doc-id).
-            
+                        X_utd.doc-id) no-error.
+      if error-status:error
+      then do:
+         message return-value
+         view-as alert-box.
+         
+      end.      
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME menu-item m_dekl_sertif
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL  menu-item m_dekl_sertif
+ON CHOOSE OF menu-item m_dekl_sertif /* Сертификаты/декларации */
+DO:
+
+  if v-rid-list <> "" then 
+  do:
+    do ii = 1 to num-entries (v-rid-list):
+      recid_utd = integer(entry(ii,v-rid-list)) .
+      find first x_utd where recid (x_utd) = recid_utd .
+      create tt-sert-utd .
+      assign
+        tt-sert-utd.doc-id = x_utd.doc-id
+        tt-sert-utd.db-num = x_utd.db-num
+        tt-sert-utd.documentDate = x_utd.documentDate
+        tt-sert-utd.documentNumber = x_utd.documentNumber
+        tt-sert-utd.cli-code = x_utd.cli-code
+        tt-sert-utd.cli-type = x_utd.cli-type        
+        .  
+    end.  
+  end.   
+  else 
+  do:
+    if available (X_utd) then 
+    do:
+      row_utd = rowid (X_utd) .
+      find first x_utd where rowid (x_utd) = row_utd .
+      create tt-sert-utd .
+      assign
+        tt-sert-utd.doc-id = x_utd.doc-id
+        tt-sert-utd.db-num = x_utd.db-num
+        tt-sert-utd.documentDate = x_utd.documentDate
+        tt-sert-utd.documentNumber = x_utd.documentNumber
+        tt-sert-utd.cli-code = x_utd.cli-code
+        tt-sert-utd.cli-type = x_utd.cli-type
+        . 
+    end. /* */
+  end.
+  run rep/dekl_sertif.p (parparentproc, table tt-sert-utd) no-error .   
+  empty temp-table tt-sert-utd .
+  v-rid-list = "" .
+  apply "Choose" to b-refresh in frame {&frame-name}.         
 END.
 
 /* _UIB-CODE-BLOCK-END */
