@@ -42,8 +42,18 @@ define {2} temp-table tt-rep no-undo
    field uuid              as character
    field uuid-cheq         as character
    field grp-num           as integer
+   field db-num            as integer
 index pi obj-code shift-date shift-name sort-date sort-time pay-desk fuel-code trk-num nozzle-num
 index si1 obj-code grp-num datetime-beg
+index CashPayNname cash-pay-name
+index GrpNum grp-num
+index ChkTypeDesc chk-type-desc
+index iuuid db-num uuid-cheq uuid  
+index UuidCheq db-num uuid uuid-cheq
+index UuidCHKType db-num uuid chk-type-desc
+index DateTimeBeg datetime-beg
+index AllTimeLength2 all-time-length-2
+index sort obj-code sort-date sort-time
 .
 
 define {2} temp-table tt-all-total-rep no-undo
@@ -55,9 +65,11 @@ define {2} temp-table tt-all-total-rep no-undo
    field full-time-tran     as integer  /* номер чека + томер транзакции */
    field avg-time-tran      as integer  /* full-time-tran / qty-tran */
    field avg-time-tran-fuel as integer  /* full-time-tran / qty-chk-fuel */
+index obj obj-type obj-code
 .
 define {2} temp-table tt-total-rep no-undo like tt-all-total-rep
    field obj-name           as character
+index ObjName obj-type obj-code obj-name
 .
 
 define {2} temp-table tt-grp no-undo
@@ -70,24 +82,21 @@ define {2} temp-table tt-grp no-undo
    field cash-pay-code      as integer
    field cash-pay-name      as character
    field resume-tran        as logical
-   field uuid               as character
-   field uuid-cheq          as character
- index name  obj-type obj-code obj-name.
+index ObjName obj-type obj-code obj-name
+index ResumeTran  resume-tran
+index GrpNum grp-num
 .
+
 define {2} temp-table tt-grp-uuid no-undo
-   field obj-type           as character
-   field obj-code           as integer
-   field obj-name           as character
+   field grp-num            as integer
    field uuid               as character
- index uid  obj-type obj-code obj-name uuid.
+ index uid uuid grp-num.
 .
 
 define {2} temp-table tt-grp-cheq-uuid no-undo
-   field obj-type           as character
-   field obj-code           as integer
-   field obj-name           as character
+   field grp-num            as integer
    field uuid               as character
- index uid  obj-type obj-code obj-name.
+ index uid uuid grp-num.
 .
 
 define {2} temp-table tt-pay no-undo
@@ -217,17 +226,10 @@ procedure CreateOneRec:
             tt-pay.pay-card      = v-pay-card
             .
       end.
-      find first clients where
-                    clients.obj-type = chk-doc.obj-type
-                and clients.obj-code = chk-doc.obj-code
-      no-lock no-error.
-      if not available clients 
-      then
-         return error "Нет объекта " + chk-doc.obj-type + string(chk-doc.obj-code) + " по чеку " + chk-doc.doc-code.
-         
+
       /* Попробуем найти первую из связанных в цепочке транзакций и возьмем из неё время начала */
       find first b-tran-fuel where
-                 b-tran-fuel.db-num    = clients.db-num
+                 b-tran-fuel.db-num    = tran-fuel.db-num
              and b-tran-fuel.uuid      = tran-fuel.uuid
              and b-tran-fuel.uuid-cheq = ""
       no-lock no-error.
@@ -235,11 +237,10 @@ procedure CreateOneRec:
          vDateBeg = b-tran-fuel.date-beg.
       else
          vDateBeg = tran-fuel.date-beg.
-      
       /* Корректировка по часовому поясу */
       assign
-         vDateBeg = vDateBeg           + Timezone * 60000
-         vDateEnd = tran-fuel.date-end + Timezone * 60000.
+         vDateBeg = vDateBeg           + timezone * 60000
+         vDateEnd = tran-fuel.date-end + timezone * 60000.
          .
       for each tt-pay:
          create tt-rep.
@@ -285,6 +286,7 @@ procedure CreateOneRec:
             tt-rep.resume-tran     = no
             tt-rep.uuid            = tran-fuel.uuid
             tt-rep.uuid-cheq       = tran-fuel.uuid-cheq
+            tt-rep.db-num          = tran-fuel.db-num
             .
          /* Если перевод транзакции, то берем количество, номер колонки и пистолета из строки чека */
          if chk-doc.chk-type = 16 and chk-gds.src-qnty <= 0 then do:
@@ -300,7 +302,7 @@ procedure CreateOneRec:
                   /* tt-rep.nozzle-num = b-chk-gds.nozzle-code */
                   .
          end.
-   
+      
          &if "{1}" <> "class" &then
          { gbl/objdbnum.i obj-list.obj-type obj-list.obj-code v-db-num }
    
@@ -434,8 +436,8 @@ procedure InitTT:
    end.
    else do:
       for each tran-fuel where
-               tran-fuel.date-beg >= datetime(string(i-date-start) + " 00:00:00") - Timezone * 60000
-           and tran-fuel.date-beg <= datetime(string(i-date-end + 2) + " 23:59:59") - Timezone * 60000 /* Отберем транзакции за 2 дня вперед. Отфильтруем после корректировки даты начала транзакции */
+               tran-fuel.date-beg >= datetime(string(i-date-start) + " 00:00:00") - timezone * 60000
+           and tran-fuel.date-beg <= datetime(string(i-date-end + 2) + " 23:59:59") - timezone * 60000 /* Отберем транзакции за 2 дня вперед. Отфильтруем после корректировки даты начала транзакции */
            /* and can-do(iProdBcStrList, string(tran-fuel.fuel-code)) */
            and can-do(iTRKList, string(tran-fuel.trk-num + 1))
       no-lock,
@@ -503,13 +505,14 @@ procedure InitTT:
                           ).
          &endif
       end.
-
+/*      run test\printtt.p("tt-rep 3",temp-table tt-rep:handle).*/
+   
       &if "{1}" <> "class" &then
       /* Отбор транзакций, по которым нет чеков */
       TRAN-FUEL-WITHOUT-CHECK:
       for each tran-fuel where
-               tran-fuel.date-beg >= datetime(string(i-date-start) + " 00:00:00") - Timezone * 60000
-           and tran-fuel.date-beg <= datetime(string(i-date-end) + " 23:59:59") - Timezone * 60000
+               tran-fuel.date-beg >= datetime(string(i-date-start) + " 00:00:00") - timezone * 60000
+           and tran-fuel.date-beg <= datetime(string(i-date-end) + " 23:59:59") - timezone * 60000
            and can-do(iTRKList, string(tran-fuel.trk-num + 1))
            and tran-fuel.num-cheq > 0
       no-lock,
@@ -522,9 +525,11 @@ procedure InitTT:
                 and chk-doc-attr.attr-value = tran-fuel.uuid-cheq
          no-lock no-error.
          if avail chk-doc-attr then next.
+         
          /* Если это транзакция заказа техпролива, то исключаем */
          for first b-tran-fuel where
-                   b-tran-fuel.uuid      =  tran-fuel.uuid
+                   b-tran-fuel.db-num    =  tran-fuel.db-num
+               and b-tran-fuel.uuid      =  tran-fuel.uuid
                and b-tran-fuel.uuid-cheq <> tran-fuel.uuid-cheq
          no-lock,
              first chk-doc-attr where
@@ -537,6 +542,7 @@ procedure InitTT:
          no-lock:
             next TRAN-FUEL-WITHOUT-CHECK.
          end.
+         
          v-gds-code = tran-fuel.fuel-code.
          if v-gds-code < 100 then do: /* Если короткий код, то ищем полный код */
             find first prod-bc where
@@ -560,10 +566,11 @@ procedure InitTT:
                next.
          end.
          if not can-do(iGdsCodeList, string(v-gds-code)) then next.
+
          /* Корректировка по часовому поясу */
          assign
-            vDateBeg = tran-fuel.date-beg + Timezone * 60000
-            vDateEnd = tran-fuel.date-end + Timezone * 60000.
+            vDateBeg = tran-fuel.date-beg + timezone * 60000
+            vDateEnd = tran-fuel.date-end + timezone * 60000.
 
          create tt-rep.
          assign
@@ -594,6 +601,8 @@ procedure InitTT:
             tt-rep.resume-tran     = no
             tt-rep.uuid            = tran-fuel.uuid
             tt-rep.uuid-cheq       = tran-fuel.uuid-cheq
+            tt-rep.db-num          = tran-fuel.db-num
+           
             .
          if tt-rep.uuid-cheq = "" then do:
             vCount = vCount + 1.
@@ -602,6 +611,7 @@ procedure InitTT:
       end.
       &endif
    end.
+/*   run test\printtt.p("tt-rep 4",temp-table tt-rep:handle).*/
    
    release tt-rep.
 end.
@@ -655,12 +665,14 @@ procedure AfterCalc:
             not can-do(iTRKList, string(tt-rep.trk-num)):
       delete tt-rep.
    end.
+/*   run test\printtt.p("tt-rep 6",temp-table tt-rep:handle).*/
    
    /* Попробуем найти отсутствующую информацию в связанном чеке */
    for each tt-rep where
             tt-rep.cash-pay-name = "":
       find first tran-fuel where
-                 tran-fuel.tran-num = tt-rep.tran-num
+                 tran-fuel.db-num   = tt-rep.db-num
+             and tran-fuel.tran-num = tt-rep.tran-num
              and tran-fuel.num-cheq = integer(tt-rep.doc-num2)
       no-lock no-error.
       if avail tran-fuel then do:
@@ -727,6 +739,7 @@ procedure AfterCalc:
          end.
       end.
    end.
+/*   run test\printtt.p("tt-rep 7",temp-table tt-rep:handle).*/
    
    /* Группировка транзакций */
    v-count-grp-num = 0.
@@ -734,28 +747,62 @@ procedure AfterCalc:
       by tt-rep.obj-code
       by tt-rep.sort-date
       by tt-rep.sort-time:
-
-      find first tt-grp-cheq-uuid where tt-grp-cheq-uuid.obj-type = tt-rep.obj-type 
-                                    and tt-grp-cheq-uuid.obj-code = tt-rep.obj-code
-                                    and tt-grp-cheq-uuid.obj-name = tt-rep.obj-name
-                                    and tt-grp-cheq-uuid.uuid     = tt-rep.uuid-cheq
-      no-error.
-      find first tt-grp-uuid where tt-grp-uuid.obj-type = tt-rep.obj-type 
-                               and tt-grp-uuid.obj-code = tt-rep.obj-code
-                               and tt-grp-uuid.obj-name = tt-rep.obj-name
-                               and tt-grp-uuid.uuid     = tt-rep.uuid
-      no-error.
-      find first tt-grp where
+/*
+      block-grp:
+      for each tt-grp where
                  tt-grp.obj-type = tt-rep.obj-type 
              and tt-grp.obj-code = tt-rep.obj-code
              and tt-grp.obj-name = tt-rep.obj-name
-/*             and (   available tt-grp-cheq-uuid*/
-/*                  or available tt-grp-uuid )   */
-             and (tt-grp.uuid = tt-rep.uuid or
-             tt-grp.uuid-cheq = tt-rep.uuid-cheq)   
-      
-      no-error.
-      
+             :
+             find first tt-grp-uuid where tt-grp-uuid.grp-num = tt-grp.grp-num
+                                      and tt-grp-uuid.uuid     = tt-rep.uuid
+             no-error.
+             find first tt-grp-cheq-uuid where tt-grp-cheq-uuid.grp-num = tt-grp.grp-num
+                                           and tt-grp-cheq-uuid.uuid     = tt-rep.uuid
+             no-error.
+             if    available tt-grp-cheq-uuid
+                or available tt-grp-uuid
+             then do:
+                leave block-grp.
+             end.
+      end.
+  */
+  
+      block-grp-uuid:
+      for each tt-grp-uuid where  tt-grp-uuid.uuid     = tt-rep.uuid
+      no-lock:
+             
+         for each tt-grp where
+                    tt-grp.obj-type = tt-rep.obj-type 
+                and tt-grp.obj-code = tt-rep.obj-code
+                and tt-grp.obj-name = tt-rep.obj-name
+                and tt-grp.grp-num  = tt-grp-uuid.grp-num
+                :
+                find first tt-grp-cheq-uuid where tt-grp-cheq-uuid.grp-num = tt-grp.grp-num
+                                              and tt-grp-cheq-uuid.uuid     = tt-rep.uuid-cheq
+                no-error.
+                leave block-grp-uuid.
+             end.
+      end.
+      if not available tt-grp
+      then do:
+         block-grp-cheq:
+         for each tt-grp-cheq-uuid where  tt-grp-cheq-uuid.uuid     = tt-rep.uuid-cheq
+         no-lock:
+                
+            for each tt-grp where
+                       tt-grp.obj-type = tt-rep.obj-type 
+                   and tt-grp.obj-code = tt-rep.obj-code
+                   and tt-grp.obj-name = tt-rep.obj-name
+                   and tt-grp.grp-num  = tt-grp-cheq-uuid.grp-num
+                   :
+                   find first tt-grp-uuid where tt-grp-uuid.grp-num = tt-grp.grp-num
+                                            and tt-grp-uuid.uuid     = tt-rep.uuid
+                   no-error.
+                   leave block-grp-cheq.
+            end.
+         end.
+      end.
       if     not avail tt-grp
       then do:
          v-count-grp-num = v-count-grp-num + 1.
@@ -765,8 +812,6 @@ procedure AfterCalc:
             tt-grp.obj-code = tt-rep.obj-code
             tt-grp.obj-name = tt-rep.obj-name
             tt-grp.grp-num  = v-count-grp-num
-            tt-grp.uuid     = tt-rep.uuid
-            tt-grp.uuid-cheq = tt-rep.uuid-cheq
             .
       end.
       
@@ -774,9 +819,7 @@ procedure AfterCalc:
       then do:
          create tt-grp-cheq-uuid.
          assign
-            tt-grp-cheq-uuid.obj-type = tt-grp.obj-type 
-            tt-grp-cheq-uuid.obj-code = tt-grp.obj-code
-            tt-grp-cheq-uuid.obj-name = tt-grp.obj-name
+            tt-grp-cheq-uuid.grp-num  = tt-grp.grp-num
             tt-grp-cheq-uuid.uuid     = tt-rep.uuid-cheq
          .
       end.
@@ -786,9 +829,7 @@ procedure AfterCalc:
       then do:
          create tt-grp-uuid.
          assign
-            tt-grp-uuid.obj-type = tt-grp.obj-type 
-            tt-grp-uuid.obj-code = tt-grp.obj-code
-            tt-grp-uuid.obj-name = tt-grp.obj-name
+            tt-grp-uuid.grp-num = tt-grp.grp-num
             tt-grp-uuid.uuid     = tt-rep.uuid
          .
       end.
@@ -798,8 +839,9 @@ procedure AfterCalc:
             tt-grp.cash-pay-code = tt-rep.cash-pay-code
             tt-grp.cash-pay-name = tt-rep.cash-pay-name
             .
+      release tt-grp.
    end.
-   
+  
    /* Продолжение налива */
    for each tt-rep
    break
@@ -897,13 +939,15 @@ procedure AfterCalc:
       if avail b-chk-gds then do:
          /* Первоначальная продажа */
          find first b-tt-rep where
-                    b-tt-rep.uuid      =  tt-rep.uuid
+                    b-tt-rep.db-num    =  tt-rep.db-num
+                and b-tt-rep.uuid      =  tt-rep.uuid
                 and b-tt-rep.uuid-cheq <> tt-rep.uuid-cheq
          no-error.
          if avail b-tt-rep then do:
             /* Конечная продажа */
             find first b2-tt-rep where
-                       b2-tt-rep.uuid-cheq =  b-tt-rep.uuid-cheq
+                       b2-tt-rep.db-num    =  B-tt-rep.db-num
+                   and b2-tt-rep.uuid-cheq =  b-tt-rep.uuid-cheq
                    and b2-tt-rep.uuid      <> b-tt-rep.uuid
             no-lock no-error.
             if avail b2-tt-rep then do:
@@ -969,7 +1013,8 @@ procedure AfterCalc:
    for each tt-rep where
             tt-rep.chk-type-desc = "Возврат":
       find last b-tt-rep where
-                b-tt-rep.uuid          = tt-rep.uuid
+                b-tt-rep.DB-NUM        = tt-rep.db-num
+            and b-tt-rep.uuid          = tt-rep.uuid
             and b-tt-rep.chk-type-desc = "Продажа"
       no-error.
       if avail b-tt-rep then do:
@@ -986,7 +1031,8 @@ procedure AfterCalc:
    for each tt-rep where
             tt-rep.chk-type-desc = "СбросТрнзкц":
       find last b-tt-rep where
-                b-tt-rep.uuid          = tt-rep.uuid
+                b-tt-rep.DB-NUM        = tt-rep.db-num
+            and b-tt-rep.uuid          = tt-rep.uuid
             and b-tt-rep.chk-type-desc = "Продажа"
       no-error.
       if avail b-tt-rep then do:
@@ -1003,7 +1049,8 @@ procedure AfterCalc:
    for each tt-rep where
             tt-rep.chk-type-desc = "ПеревТрнзкц":
       find first b-tt-rep where
-                 b-tt-rep.uuid          = tt-rep.uuid
+                 b-tt-rep.DB-NUM        = tt-rep.db-num
+             and b-tt-rep.uuid          = tt-rep.uuid
              and b-tt-rep.chk-type-desc = "Продажа"
       no-error.
       if avail b-tt-rep then do:
@@ -1020,12 +1067,13 @@ procedure AfterCalc:
    for each tt-rep where
             tt-rep.chk-type-desc = "ТехПролив":
       find first tran-fuel where
-                 tran-fuel.uuid      =  tt-rep.uuid
+                 tran-fuel.db-num    =  tt-rep.db-num
+             and tran-fuel.uuid      =  tt-rep.uuid
              and tran-fuel.uuid-cheq <> tt-rep.uuid-cheq
       no-lock no-error.
       if avail tran-fuel then do:
          assign
-            tt-rep.datetime-beg = tran-fuel.date-beg + Timezone * 60000
+            tt-rep.datetime-beg = tran-fuel.date-beg + timezone * 60000
             tt-rep.date-beg     = date(tt-rep.datetime-beg)
             tt-rep.time-beg     = mtime(tt-rep.datetime-beg) / 1000
             tt-rep.time-length  = (tt-rep.datetime-end - tt-rep.datetime-beg) / 1000
@@ -1131,7 +1179,7 @@ procedure AfterCalc:
             tt-rep.chk-type-desc = "Перелив".
       end.
    end.
-
+   
    /* Постобработка данных по фильтру тип оплаты */   
    for each tt-rep where
             not can-do(iCashPayList, string(tt-rep.cash-pay-code)):
@@ -1145,7 +1193,7 @@ procedure AfterCalc:
          delete tt-rep.
       end.
    end.
-
+   
    /* Общее время отпуска НП */
    for each tt-rep
    break
@@ -1229,9 +1277,7 @@ procedure AfterCalc:
          vCheck = no.
          tt-total-rep.qty-chk = tt-total-rep.qty-chk + 1.
       end.
-      find first tt-grp-uuid where tt-grp-uuid.obj-type = "" 
-                               and tt-grp-uuid.obj-code = 0
-                               and tt-grp-uuid.obj-name = ""
+      find first tt-grp-uuid where tt-grp-uuid.grp-num = 0 
                                and tt-grp-uuid.uuid     = tt-rep.uuid
       no-error.
                   
@@ -1240,9 +1286,7 @@ procedure AfterCalc:
          vCheck = yes.
          create tt-grp-uuid.
          assign
-            tt-grp-uuid.obj-type = "" 
-            tt-grp-uuid.obj-code = 0
-            tt-grp-uuid.obj-name = ""
+            tt-grp-uuid.grp-num = 0 
             tt-grp-uuid.uuid     = tt-rep.uuid
          .
       end.
@@ -1252,6 +1296,7 @@ procedure AfterCalc:
             tt-total-rep.qty-chk-fuel = tt-total-rep.qty-chk-fuel + 1.
       end.
    end.
+   
    release tt-total-rep.
    
    for each tt-rep,
@@ -1300,9 +1345,7 @@ procedure AfterCalc:
          vCheck = no.
          tt-all-total-rep.qty-chk = tt-all-total-rep.qty-chk + 1.
       end.
-      find first tt-grp-uuid where tt-grp-uuid.obj-type = "" 
-                               and tt-grp-uuid.obj-code = 0
-                               and tt-grp-uuid.obj-name = ""
+      find first tt-grp-uuid where tt-grp-uuid.grp-num = 0 
                                and tt-grp-uuid.uuid     = tt-rep.uuid
       no-error.
       
@@ -1311,9 +1354,7 @@ procedure AfterCalc:
          vCheck = yes.
          create tt-grp-uuid.
          assign
-            tt-grp-uuid.obj-type = "" 
-            tt-grp-uuid.obj-code = 0
-            tt-grp-uuid.obj-name = ""
+            tt-grp-uuid.grp-num = 0 
             tt-grp-uuid.uuid     = tt-rep.uuid
          .
       end.
@@ -1323,6 +1364,7 @@ procedure AfterCalc:
             tt-all-total-rep.qty-chk-fuel = tt-all-total-rep.qty-chk-fuel + 1.
       end.
    end.
+   
    release tt-all-total-rep.
    
    for each tt-rep,
@@ -1338,9 +1380,10 @@ procedure AfterCalc:
          tt-all-total-rep.full-time-tran = tt-all-total-rep.full-time-tran + tt-rep.time-length.
       end.
    end.
-  
+   
    for each tt-all-total-rep:
       tt-all-total-rep.avg-time-tran      = tt-all-total-rep.full-time-tran / tt-all-total-rep.qty-tran.
       tt-all-total-rep.avg-time-tran-fuel = tt-all-total-rep.full-time-tran / tt-all-total-rep.qty-chk-fuel.
    end.
+  
 end.
