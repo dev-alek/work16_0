@@ -422,16 +422,16 @@ on error undo, return error return-value
     end.
   end.
   
-/*  run ibs/th/adm/upd/sendschedule.p no-error .                        */
-/*  if error-status :error then do:                                     */
-/*    message                                                           */
-/*      vss-workfile vss-revision vss-description skip                  */
-/*      "Ошибка при отправке начальных расписаний автозаданий в 1С" skip*/
-/*      error-status :get-message(1) skip                               */
-/*      return-value skip                                               */
-/*      view-as alert-box error .                                       */
-/*    return .                                                          */
-/*  end.                                                                */
+  run ibs/th/adm/upd/sendschedule.p no-error .
+  if error-status :error then do:
+    message
+      vss-workfile vss-revision vss-description skip
+      "Ошибка при отправке начальных расписаний автозаданий в 1С" skip
+      error-status :get-message(1) skip
+      return-value skip
+      view-as alert-box error .
+    return .
+  end.
   
   if available buf_user-login
   then do :

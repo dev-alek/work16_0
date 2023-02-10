@@ -130,6 +130,28 @@ do:
     run bgelib-tag-put in this-procedure ( input 4, input "PAGPrice":U
       , input string(v-subGood:price), input 0 ).
     run bgelib-tag-close in this-procedure ( input 3, input "PAGoods").
+        if v-promo-action:typecond <> 4 then 
+    do:
+       for each bar-code where bar-code.gds-code      eq v-subGood:GdsCode 
+            and bar-code.b-code                       ne v-subGood:GdsCode
+            and bar-code.in-code                      eq ""
+            and bar-code.part-code                    eq ""        
+       no-lock:
+          run bgelib-tag-open in this-procedure ( input 3, input "PAGoods","").
+          run bgelib-tag-put in this-procedure ( input 4, input "PAGId":U
+            , input string(v-promo-action:id), input 1 ).
+          run bgelib-tag-put in this-procedure ( input 4, input "PAGCode":U
+            , input string(bar-code.b-code), input 1 ).
+          if (    v-subGood:price ne 0
+              and v-subGood:price ne ?)
+          then do:
+             run bgelib-tag-put in this-procedure ( input 4, input "PAGPrice":U
+               , input string(v-subGood:price * bar-code.cli-base-rate), input 0 ).
+          end.
+          run bgelib-tag-close in this-procedure ( input 3, input "PAGoods").
+         
+       end.
+    end.
   end. /*do v-i = 1 to v-lengthGD:*/
 end. /*if valid-object (promoGoodsSubs) then do:*/
 
@@ -150,13 +172,25 @@ do:
     run bgelib-tag-put in this-procedure ( input 4, input "PAFGCode":U
       , input string(v-subGdCr:GdsCode), input 1 ).
     run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
-
+    for each bar-code where bar-code.gds-code       eq v-subGdCr:GdsCode 
+                        and bar-code.b-code         ne v-subGdCr:GdsCode
+                        and bar-code.in-code        eq ""
+                        and bar-code.part-code      eq ""        
+    no-lock:
+      run bgelib-tag-open in this-procedure ( input 3, input "PAFreeGoods","").
+      run bgelib-tag-put in this-procedure ( input 4, input "PAFGId":U
+        , input string(v-promo-action:id), input 1 ).
+      run bgelib-tag-put in this-procedure ( input 4, input "PAFGCode":U
+        , input string(bar-code.b-code), input 1 ).
+      run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
+         
+    end.
   end.
   else 
   do:
-      /*Список товаров*/
-          run bgelib-tag-open in this-procedure ( input 3, input "PAFreeGoods","").
-          run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
+    /*Список товаров*/
+    run bgelib-tag-open in this-procedure ( input 3, input "PAFreeGoods","").
+    run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
    
   end.
 end. /*if VALID-OBJECT (v-subFree) then do:*/
@@ -247,6 +281,23 @@ do:
           run bgelib-tag-put in this-procedure ( input 4, input "PAGGAmount":U
             , input string(v-subCrGift:qnty), input 1 ).
           run bgelib-tag-close in this-procedure ( input 3, input "PAGiftGoods").
+          for each bar-code where bar-code.gds-code       eq v-subCrGift:GdsCode 
+                              and bar-code.b-code         ne v-subCrGift:GdsCode
+                              and bar-code.in-code        eq ""
+                              and bar-code.part-code      eq ""        
+          no-lock:
+             run bgelib-tag-open in this-procedure ( input 3, input "PAGiftGoods","").
+             run bgelib-tag-put in this-procedure ( input 4, input "PAGGId":U
+               , input string(v-promo-action:id), input 1 ).
+             run bgelib-tag-put in this-procedure ( input 4, input "PAGGNum":U
+               , input string(v-subGDCrite:id), input 1 ).
+             run bgelib-tag-put in this-procedure ( input 4, input "PAGGCode":U
+               , input string(bar-code.b-code), input 1 ).
+             run bgelib-tag-put in this-procedure ( input 4, input "PAGGAmount":U
+               , input string(v-subCrGift:qnty), input 1 ).
+             run bgelib-tag-close in this-procedure ( input 3, input "PAGiftGoods").
+               
+          end.
         end.
       end. /*do v-i = 1 to v-subGifts:iCounter:*/
     end. /*if VALID-OBJECT (v-subGifts) then do:*/
@@ -332,6 +383,21 @@ do:
       run bgelib-tag-put in this-procedure ( input 4, input "PASGNum":U
         , input string(v-subPromoSetGood:idSet), input 1 ).
       run bgelib-tag-close in this-procedure ( input 3, input "PASetGoods").
+      for each bar-code where bar-code.gds-code       eq v-subPromoSetGood:GdsCode 
+        and bar-code.b-code         ne v-subPromoSetGood:GdsCode
+         and bar-code.in-code        eq ""
+                              and bar-code.part-code      eq ""        
+        no-lock:
+        run bgelib-tag-open in this-procedure ( input 3, input "PASetGoods","").
+        run bgelib-tag-put in this-procedure ( input 4, input "PASGId":U
+          , input string(v-subPromoSetGood:idaction), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 4, input "PASGCode":U
+          , input string(bar-code.b-code), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 4, input "PASGNum":U
+          , input string(v-subPromoSetGood:idSet), input 1 ).
+        run bgelib-tag-close in this-procedure ( input 3, input "PASetGoods").
+          
+      end.
     end.    
 
   end.

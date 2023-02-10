@@ -35,6 +35,16 @@ define temp-table tt-utd like ub.utd
   field obj-name    as character
   .
 
+define temp-table tt-sert-utd
+  field doc-id like ub.utd.doc-id
+  field db-num like ub.utd.db-num
+  field DocumentDate like ub.utd.DocumentDate
+  field DocumentNumber like ub.utd.DocumentNumber
+  field cli-code as integer
+  field cli-type as character
+  index pi  db-num doc-id 
+  .
+  
 define temp-table tt-utd-lines-filtr no-undo
     field db-num  as integer 
     field doc-id  as integer 

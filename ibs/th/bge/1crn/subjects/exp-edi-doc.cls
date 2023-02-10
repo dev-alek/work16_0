@@ -73,7 +73,9 @@ method public void CrContentToSW (insw as handle):
     
    define variable vdb-num as integer no-undo.
    define variable vdoc-id as integer no-undo.
-    
+   define variable ii as integer no-undo .
+   define variable sertif as character no-undo .
+   
     vdb-num = int(BufHandle:buffer-field( "db-num":U  ):buffer-value ).
     vdoc-id = int(BufHandle:buffer-field( "doc-id":U  ):buffer-value).
    find first utd where utd.db-num eq vdb-num
@@ -161,6 +163,12 @@ method public void CrContentToSW (insw as handle):
                   insw:end-element ({&tag-item2}) .
                end.
                insw:end-element ({&tag-section2}) .
+            end.
+            sertif = GetAttrUtdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.linenum,"doc_sertif").
+            if sertif <> ? then do:
+              do ii = 1 to num-entries(sertif,";"):
+                insw:write-data-element (  "cert-decl",   entry(ii,sertif,";")  ) .
+              end.
             end.
             insw:end-element ({&tag-item1}) .
          end.

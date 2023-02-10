@@ -561,6 +561,15 @@ define private temp-table tt-recid-TranFuel no-undo
     if avail buf_chk-doc-attr
     then
        insw:write-data-element( "CHMgrKey",  buf_chk-doc-attr.attr-value).
+    /* Тип возвратных операций */
+    find first chk-doc-attr where chk-doc-attr.doc-code = p-buf_chk-doc.doc-code
+      and chk-doc-attr.attr-code = 'CHFlag1' no-lock no-error.
+    IF AVAILABLE chk-doc-attr THEN 
+    DO:   
+      insw:write-data-element (  "CHFlag1",  string(chk-doc-attr.attr-value)  ) . /* Тип возвратных операций */  
+      if chk-doc-attr.attr-value = "0" then
+        insw:write-data-element (  "Dry-chk-th",  string(chk-doc-attr.attr-value)  ) . /* Сухой чек */      
+    end. 
     /* 28/XI-2017 term-num будет строкой, поэтому пустой можно, и необязательный. */
     find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
                                   and buf_chk-doc-attr.attr-code eq "CHNumberKKT"
@@ -601,7 +610,7 @@ define private temp-table tt-recid-TranFuel no-undo
     /* 19/II-2019  Если в чеке есть платеж, с is-nds = 1, то в товарных строках НДС выгружать,
                    если нет, то НДС не выгружать совсем. */
     /* сопоставление по кодам перечня типов, согласно COMBO-BOX cb-prop из ref/cashpayi.w */
-    &scoped-define is-nds-eq-1 can-do ("1,2,3", buf_cash-pay-attr.attr-value)
+    &scoped-define is-nds-eq-1 can-do ("1,2,3,6", buf_cash-pay-attr.attr-value)
     v-chk-pay-is-nds = false .
     for each buf_cash-pay-attr no-lock
        where buf_cash-pay-attr.attr-code  = "cash-prop"
@@ -810,15 +819,7 @@ define private temp-table tt-recid-TranFuel no-undo
         end .
         /* Системный код */
         insw:write-data-element (  "src-code",  string(buf_chk-gds.src-code)  ) . /* Системный код */
-        /* Тип возвратных операций */
-        find first chk-doc-attr where chk-doc-attr.doc-code = p-buf_chk-doc.doc-code
-          and chk-doc-attr.attr-code = 'CHFlag1' no-lock no-error.
-        IF AVAILABLE chk-doc-attr THEN 
-        DO:   
-          insw:write-data-element (  "CHFlag1",  string(chk-doc-attr.attr-value)  ) . /* Тип возвратных операций */  
-          if chk-doc-attr.attr-value = "0" then
-            insw:write-data-element (  "Dry-chk-th",  string(chk-doc-attr.attr-value)  ) . /* Сухой чек */      
-        end.    
+   
         /* 23/V-2019  тэги для табачки - цена БД и датаматрикс */
         find first buf_chk-gds-attr no-lock
              where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code

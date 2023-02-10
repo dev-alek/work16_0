@@ -335,8 +335,10 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
             and abs(temp-chk-pay.tot-r-b) >= abs(ub.chk-pay.tot-sum)
             and (temp-chk-pay.tot-r-b >=0) NE (ub.chk-pay.tot-sum >=0)
             no-error.
+            /*
         if not available temp-chk-pay then do:
           /*сдача наличными  в баз вал касы*/
+          
           find first temp-chk-pay where
                   temp-chk-pay.doc-code = ub.chk-pay.doc-code
               and temp-chk-pay.pay-code = 1
@@ -368,11 +370,12 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 view-as alert-box error .
               end.
               next _chk-doc.
-            end.*/
+            end.
           end. /*if not available temp-chk-pay then do:*/
+          */
         end. /*if not available temp-chk-pay then do:*/
   /*    end. /*if (ub.chk-pay.tot-sum >= 0) NEQ (ub.chk-doc.netto >= 0) then do:*/
-      else */
+      else */ */
       if not  avail temp-chk-pay then do:
         /*прямой платеж*/
         find first temp-chk-pay where

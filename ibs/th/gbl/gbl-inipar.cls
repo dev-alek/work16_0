@@ -382,7 +382,7 @@ class ibs.th.gbl.gbl-inipar:
             v-excel = entry(2,v-par,':'). /*при нажатии печать печатает через excel*/
       end case.
    end.   
-   v-path = "exe\ReportViewer\reportviewer7_32.exe" .
+   v-path = "exe\ReportViewer\reportviewer.exe" .
               
    if search(v-path) <> ? then
    do:

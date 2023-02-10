@@ -202,7 +202,10 @@ function ChekTypeMarkByGds return logical
    if available goods-attr
    then do:
       mTypeMark = goods-attr.attr-value.                        
-      return goods-attr.attr-value = objsrv:Env:Marking:Types:tabak:NameProp or goods-attr.attr-value = objsrv:Env:Marking:Types:stiki:NameProp .
+      return goods-attr.attr-value = objsrv:Env:Marking:Types:tabak:NameProp 
+          or goods-attr.attr-value = objsrv:Env:Marking:Types:stiki:NameProp 
+          or goods-attr.attr-value = objsrv:Env:Marking:Types:NSJ  :NameProp
+          .
    end.
    else 
       return no.
@@ -273,9 +276,12 @@ function GetNextElement return character
      then do:
         entry (4,vlistleng) = "06".
      end.
-     else if mtypemark eq objsrv:Env:Marking:Types:tabak:NameProp or mtypemark eq objsrv:Env:Marking:Types:stiki:NameProp
+     else if mtypemark eq objsrv:Env:Marking:Types:tabak:NameProp 
+          or mtypemark eq objsrv:Env:Marking:Types:stiki:NameProp
+          or mtypemark eq objsrv:Env:Marking:Types:NSJ  :NameProp
      then do:
-        entry (4,vlistleng) = "07".
+        entry ( 4,vlistleng) = "07".
+        entry (10,vlistleng) = "07".
      end.
      if iAllTeg
      then 
