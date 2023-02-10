@@ -33,7 +33,9 @@ define variable vss-description as character no-undo init "Загрузка GTIN и штрих
 { gbl/thbj-def.i }
 { ref/gds-attr.i }
 { gbl/waitfram.i }
-
+{ gbl/objsrv.i }
+define variable MarkType as ibs.th.str.marking.Types no-undo.
+MarkType = ObjSrv:Env:Marking:Types.
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc as widget-handle no-undo .      
 define variable conf-par             as character no-undo.                  /* для чтения параметра конфигурации */
@@ -755,54 +757,8 @@ FUNCTION get-mark-char RETURNS CHARACTER
      Purpose:  
        Notes:  
    ------------------------------------------------------------------------------*/
-   define variable v-mark as character no-undo .
-   case p-mark:
-      when '0' then 
-         do:
-            v-mark = "not-type" .
-         end.   
-      when '1' then 
-         do:
-            v-mark = "tabak" .
-         end.   
-      when '2' then 
-         do:
-            v-mark = "shoes" .
-         end.   
-      when '3' then 
-         do:
-            v-mark = "perfume" .
-         end.
-      when '4' then 
-         do:
-            v-mark = "industry" .
-         end.   
-      when '5' then 
-         do:
-            v-mark = "tires" .
-         end.   
-      when '6' then 
-         do:
-            v-mark = "apteka" .
-         end.
-      when '7' then 
-         do:
-            v-mark = "photo" .
-         end.
-      when '8' then 
-         do:
-            v-mark = "milk" .
-         end.                         
-      when '9' then 
-         do:
-            v-mark = "water" .
-         end.                                                                                                        
-      when '10' then 
-         do:
-            v-mark = "stiki" .
-         end.  
-   end case .
-   RETURN v-mark.   /* Function return value. */
+
+   RETURN MarkType:GetNameProp(int(p-mark)).   /* Function return value. */
 
 END FUNCTION.
 
@@ -820,53 +776,7 @@ FUNCTION get-mark-list-integer RETURNS CHARACTER
    define variable v-mark as character no-undo .
 
    do ii = 0 to num-entries (p-mark,","):
-      case entry(ii, p-mark,","):
-         when "not-type" or 
-         when "" then 
-            do:
-               v-mark = v-mark + "," + "0" .
-            end.   
-         when "tabak" then 
-            do:
-               v-mark = v-mark + "," + "1" .
-            end.   
-         when "shoes" then 
-            do:
-               v-mark = v-mark + "," + "2" .
-            end.   
-         when "perfume" then 
-            do:
-               v-mark = v-mark + "," + "3" .
-            end.
-         when "industry" then 
-            do:
-               v-mark = v-mark + "," + "4" .
-            end.   
-         when "tires" then 
-            do:
-               v-mark = v-mark + "," + "5" .
-            end.   
-         when "apteka" then 
-            do:
-               v-mark = v-mark + "," + "6" .
-            end.
-         when "photo" then 
-            do:
-               v-mark = v-mark + "," + "7" .
-            end.
-         when "milk" then 
-            do:
-               v-mark = v-mark + "," + "8" .
-            end.                         
-         when "water" then 
-            do:
-               v-mark = v-mark + "," + "9" .
-            end.                                                                                                        
-         when "stiki" then 
-            do:
-               v-mark = v-mark + "," + "10" .
-            end. 
-      end case .
+      v-mark = v-mark + "," + string(MarkType:GetKeyIntDB(entry(ii, p-mark,","))).
    end.   
    v-mark = trim(v-mark,",") .
    RETURN v-mark.   /* Function return value. */
