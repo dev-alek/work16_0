@@ -62,6 +62,39 @@ class ibs.th.gbl.ggoattr:
   end.
   
 
+
+  method public void ggoattr-value (  
+
+  input   p-node-code    like ub.gds-grp-obj-attr.node-code ,
+  input   p-host-code    like ub.gds-grp-obj-attr.host-code ,
+  input   p-obj-type     like ub.gds-grp-obj-attr.obj-type ,
+  input   p-obj-code     like ub.gds-grp-obj-attr.obj-code ,
+  input   p-code      like ub.gds-grp-obj-attr.attr-code  ,
+  output  p-value     like ub.gds-grp-obj-attr.attr-value ,
+  output  p-type      as character
+  ):
+    
+  run ggoattr-value in hndl-proc-ggoattr (   
+  input   p-node-code ,
+  input   p-host-code,
+  input   p-obj-type,
+  input   p-obj-code,
+  input   p-code ,
+  output  p-value ,
+  output  p-type
+  ) no-error.
+    
+    if error-status:error
+      then 
+    do:
+       return error return-value.
+    end.    
+    
+  end.
+
+
+
+
   method public void ggoattr-write (  
     input  p-node-code as integer,
     input  p-host-code as integer,

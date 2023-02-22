@@ -157,6 +157,18 @@ class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimp
             ,v-value
             ).
         end.    
+		
+define var old_val as character no-undo.
+define var old_tipe as character no-undo.
+ggoattr:ggoattr-value(varnode-code
+            ,0
+            ,""
+            ,0
+            ,{&ggoattr-no-inc-auto-rep}
+            ,output old_val 
+			,output old_tipe
+            ).
+			
         if objGood-Grps:Prohibition-sale = 1 or objGood-Grps:r-mat = 1 then 
         do:
           ggoattr:ggoattr-write(
@@ -167,7 +179,8 @@ class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimp
             ,{&ggoattr-ban-sales-via-cd}
             ,"yes"
             ).
-            
+          old_tipe = "yes".            
+
         end.
         else 
         do:
@@ -179,8 +192,18 @@ class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimp
             ,{&ggoattr-ban-sales-via-cd}
             ,v-value
             ).
-            
-        end.    
+            old_tipe = ?.
+end.    
+        
+    /* if  (old_tipe = ? and old_val = "yes") or (old_tipe ="yes" and old_val = ?) then do: */
+	if  old_tipe <> old_val then do:
+    define variable mImp2CdH as handle no-undo.
+    run str/imp2cdgeth.p(output mImp2CdH).
+        for each ub.goods no-lock where ub.goods.grp-code = varnode-code:  
+           run fill-g-list in mImp2CdH  ( input ub.goods.gds-code, input ?, input ?).
+        END.
+    END.    
+        
       end.  
     end.
   end method.
