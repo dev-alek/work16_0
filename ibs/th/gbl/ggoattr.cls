@@ -56,8 +56,8 @@ class ibs.th.gbl.ggoattr:
     if error-status:error
       then 
     do:
-      
-    end.
+       return error return-value.
+    end.    
     
   end.
   
@@ -83,9 +83,8 @@ class ibs.th.gbl.ggoattr:
     if error-status:error
       then 
     do:
-      
-    end.
-    
+       return error return-value.
+    end.    
   end.
   
   
@@ -95,7 +94,7 @@ class ibs.th.gbl.ggoattr:
     input  p-obj-type  as character,
     input  p-obj-code  as integer, 
     input p-code  as character,
-    input p-deleted as logical
+    output p-deleted as logical
     ):
     
     run ggoattr-delete in hndl-proc-ggoattr (   
@@ -104,13 +103,13 @@ class ibs.th.gbl.ggoattr:
       input  p-obj-type,
       input  p-obj-code, 
       input p-code,
-      input p-deleted
+      output p-deleted
       ) no-error.
     
     if error-status:error
       then 
     do:
-      
+       return error return-value.
     end.
     
   end.  
@@ -119,12 +118,13 @@ class ibs.th.gbl.ggoattr:
     
     delete object hndl-proc-ggoattr no-error.
     
-    if error-status:error
+/*    if error-status:error
       then 
-    do:
-      
-    end.
-    
+     do:
+
+     end.      
+    end. */
+
   end destructor.
   
 
