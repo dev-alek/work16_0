@@ -160,111 +160,111 @@ function  crUtdReturn returns logical
                
                if first-of(tt-prts.doc-code)
                then do:
-                  if    not available utd
-                     or trn-doc.reason-code ne 23
-                  then
-                     find first utd where utd.doc-code eq tt-prts.doc-code no-lock no-error.
-                  if available utd
+                  if    not  available buf_utd
+                        or trn-doc.reason-code ne 23
                   then do:
-                        
-                     MySeqUtd = ?.
-                     vFlag = yes.
-                     create buf_utd.
-                     buffer-copy utd  except Timestamp  
-                                             RevocationStatus 
-                                             RecipientResponseStatus 
-                                             ReceiptStatus 
-                                             ModifyTime 
-                                             ModifyDate  
-                                             LoadTime  
-                                             LoadDate 
-                                             EDocType  
-                                             DocumentExt 
-                                             db-num 
-                                             doc-id
-                                             AdditInfo
-                                             doc-code
-                                             sts 
-                     to buf_utd
-                     assign
-                        buf_utd.parentDocumentExt     = utd.DocumentExt
-                        buf_utd.parentOrganizationExt = utd.OrganizationExt
-                        buf_utd.doc-code              = trn-doc.doc-code
-                        buf_utd.EDocType              = objSrv:Env:Utd:EDocType:returns:KeyIntDB
-                        buf_utd.DocumentDate    = today
-                        buf_utd.DocumentNumber  = "Возврат по " + utd.DocumentNumber + " за " + string(utd.DocumentDate,"99/99/9999")
-                        buf_utd.Direction       = "Inbound"
-                        
-                     .
-                     validate buf_utd.
-                     define variable mTypeUtd as character no-undo.
-                     if   trn-doc.reason-code eq 23
-                     then assign
-                       buf_utd.PackageId = ""
-                       mTypeUtd = "СЧФДОП"
-                     . 
-                     else if trn-doc.reason-code eq 25
-                     then
-                        mTypeUtd = "ДОП".
-                     else
-                        mTypeUtd = "".
-                        
-                     if   mTypeUtd ne ""
-                     then
-                        setattrutd (buf_utd.db-num,buf_utd.doc-id,"TypeUTD",mTypeUtd).
-                     
-                     /* поставим статус новы чтобы сначо создать все марки  по документу а потом отправить в новости */
-                     buf_utd.sts             = ObjSrv:Env:Utd:Sts:th:newstatus:KeyIntDB.  /* меняе после получения doc-id */ 
-                     Buf_utd.sts-edi               = if utd.AmendmentRequested 
-                                                     then ObjSrv:Env:Utd:Sts:edi:AvailAdjustment:KeyIntDB 
-                                                     else ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
-                     assign 
-                        vdb-num = Buf_utd.db-num
-                        vdoc-id = Buf_utd.doc-id
-                        vi      = 0
-                     .
-                     
-                  end.
-                  else do:
-                     MySeqUtd = ?.
-                     vFlag = yes. 
-                     create buf_utd.
-                     assign
-                        buf_utd.contract-code   = parts.contract-code
-                        buf_utd.doc-code        = trn-doc.doc-code
-                        buf_utd.DocumentDate    = today
-                        buf_utd.DocumentNumber  = "Возврат по накладной " + parts.in-code
-                        buf_utd.EDocType        = objSrv:Env:Utd:EDocType:returns:KeyIntDB
-                        buf_utd.host-code       = parts.host-code
-                        buf_utd.obj-type        = parts.obj-type
-                        buf_utd.obj-code        = parts.obj-code
-                        buf_utd.cli-type        = trn-doc.cli-type
-                        buf_utd.cli-code        = trn-doc.cli-code
-                     .
-                     validate buf_utd.
-                     if   trn-doc.reason-code eq 23
-                     then assign
-                        buf_utd.PackageId = ""
-                        mTypeUtd = "СЧФДОП"
-                     . 
-                     else if trn-doc.reason-code eq 25
-                     then
-                        mTypeUtd = "ДОП".
-                     else
-                        mTypeUtd = "".
+                     find first utd where utd.doc-code eq tt-prts.doc-code no-lock no-error.
+                     if available utd
+                     then do:
+                        MySeqUtd = ?.
+                        vFlag = yes.
+                        create buf_utd.
+                        buffer-copy utd  except Timestamp  
+                                                RevocationStatus 
+                                                RecipientResponseStatus 
+                                                ReceiptStatus 
+                                                ModifyTime 
+                                                ModifyDate  
+                                                LoadTime  
+                                                LoadDate 
+                                                EDocType  
+                                                DocumentExt 
+                                                db-num 
+                                                doc-id
+                                                AdditInfo
+                                                doc-code
+                                                sts 
+                        to buf_utd
+                        assign
+                           buf_utd.parentDocumentExt     = utd.DocumentExt
+                           buf_utd.parentOrganizationExt = utd.OrganizationExt
+                           buf_utd.doc-code              = trn-doc.doc-code
+                           buf_utd.EDocType              = objSrv:Env:Utd:EDocType:returns:KeyIntDB
+                           buf_utd.DocumentDate    = today
+                           buf_utd.DocumentNumber  = "Возврат № " + trn-doc.doc-code + (if trn-doc.reason-code ne 23 then " по УПД № " + utd.DocumentNumber + " за " + string(utd.DocumentDate,"99/99/9999") else "")
+                           buf_utd.Direction       = "Inbound"
                            
-                     if   mTypeUtd ne ""
-                     then
-                        setattrutd (buf_utd.db-num,buf_utd.doc-id,"TypeUTD",mTypeUtd).
-                     /* поставим статус новы чтобы сначо создать все марки  по документу а потом отправить в новости */
-                     buf_utd.sts             = ObjSrv:Env:Utd:Sts:th:newstatus:KeyIntDB. 
-                     Buf_utd.sts-edi         = ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
-                  
-                     assign 
-                        vdb-num = Buf_utd.db-num
-                        vdoc-id = Buf_utd.doc-id
-                        vi      = 0
-                     .
+                        .
+                        validate buf_utd.
+                        define variable mTypeUtd as character no-undo.
+                        if   trn-doc.reason-code eq 23
+                        then assign
+                          buf_utd.PackageId = ""
+                          mTypeUtd = "СЧФДОП"
+                        . 
+                        else if trn-doc.reason-code eq 25
+                        then
+                           mTypeUtd = "ДОП".
+                        else
+                           mTypeUtd = "".
+                           
+                        if   mTypeUtd ne ""
+                        then
+                           setattrutd (buf_utd.db-num,buf_utd.doc-id,"TypeUTD",mTypeUtd).
+                        
+                        /* поставим статус новы чтобы сначо создать все марки  по документу а потом отправить в новости */
+                        buf_utd.sts             = ObjSrv:Env:Utd:Sts:th:newstatus:KeyIntDB.  /* меняе после получения doc-id */ 
+                        Buf_utd.sts-edi               = if utd.AmendmentRequested 
+                                                        then ObjSrv:Env:Utd:Sts:edi:AvailAdjustment:KeyIntDB 
+                                                        else ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
+                        assign 
+                           vdb-num = Buf_utd.db-num
+                           vdoc-id = Buf_utd.doc-id
+                           vi      = 0
+                        .
+                     
+                     end.
+                     else do:
+                        MySeqUtd = ?.
+                        vFlag = yes. 
+                        create buf_utd.
+                        assign
+                           buf_utd.contract-code   = parts.contract-code
+                           buf_utd.doc-code        = trn-doc.doc-code
+                           buf_utd.DocumentDate    = today
+                           buf_utd.DocumentNumber  = "Возврат № " + trn-doc.doc-code + " по накладной " + parts.in-code
+                           buf_utd.EDocType        = objSrv:Env:Utd:EDocType:returns:KeyIntDB
+                           buf_utd.host-code       = parts.host-code
+                           buf_utd.obj-type        = parts.obj-type
+                           buf_utd.obj-code        = parts.obj-code
+                           buf_utd.cli-type        = trn-doc.cli-type
+                           buf_utd.cli-code        = trn-doc.cli-code
+                        .
+                        validate buf_utd.
+                        if   trn-doc.reason-code eq 23
+                        then assign
+                           buf_utd.PackageId = ""
+                           mTypeUtd = "СЧФДОП"
+                        . 
+                        else if trn-doc.reason-code eq 25
+                        then
+                           mTypeUtd = "ДОП".
+                        else
+                           mTypeUtd = "".
+                              
+                        if   mTypeUtd ne ""
+                        then
+                           setattrutd (buf_utd.db-num,buf_utd.doc-id,"TypeUTD",mTypeUtd).
+                        /* поставим статус новы чтобы сначо создать все марки  по документу а потом отправить в новости */
+                        buf_utd.sts             = ObjSrv:Env:Utd:Sts:th:newstatus:KeyIntDB. 
+                        Buf_utd.sts-edi         = ObjSrv:Env:Utd:Sts:edi:WaitingForRecipientSignature:KeyIntDB.
+                     
+                        assign 
+                           vdb-num = Buf_utd.db-num
+                           vdoc-id = Buf_utd.doc-id
+                           vi      = 0
+                        .
+                     end.
                   end.
                end.
                if first-of(tt-prts.rec-id-line)
@@ -337,13 +337,16 @@ function  crUtdReturn returns logical
                      buf_utd.Total = buf_utd.Total + buf_utd-lines.Total.
                      buf_utd.Vat   = buf_utd.Vat   + buf_utd-lines.Vat.
                   end.
-                  release buf_utd.
+                  if trn-doc.reason-code ne 23
+                  then
+                     release buf_utd.
                end.
             end.
             
          end.
          
       end.
+      release buf_utd.
       unsubscribe "getNextseq".
       /* изменим статус на правильный для отправки в новости */
       for each buf_utd where buf_utd.doc-code eq trn-doc.doc-code

@@ -281,23 +281,23 @@ do:
           run bgelib-tag-put in this-procedure ( input 4, input "PAGGAmount":U
             , input string(v-subCrGift:qnty), input 1 ).
           run bgelib-tag-close in this-procedure ( input 3, input "PAGiftGoods").
-          for each bar-code where bar-code.gds-code       eq v-subCrGift:GdsCode 
-                              and bar-code.b-code         ne v-subCrGift:GdsCode
-                              and bar-code.in-code        eq ""
-                              and bar-code.part-code      eq ""        
-          no-lock:
-             run bgelib-tag-open in this-procedure ( input 3, input "PAGiftGoods","").
-             run bgelib-tag-put in this-procedure ( input 4, input "PAGGId":U
-               , input string(v-promo-action:id), input 1 ).
-             run bgelib-tag-put in this-procedure ( input 4, input "PAGGNum":U
-               , input string(v-subGDCrite:id), input 1 ).
-             run bgelib-tag-put in this-procedure ( input 4, input "PAGGCode":U
-               , input string(bar-code.b-code), input 1 ).
-             run bgelib-tag-put in this-procedure ( input 4, input "PAGGAmount":U
-               , input string(v-subCrGift:qnty), input 1 ).
-             run bgelib-tag-close in this-procedure ( input 3, input "PAGiftGoods").
-               
-          end.
+/*          for each bar-code where bar-code.gds-code       eq v-subCrGift:GdsCode      */
+/*                              and bar-code.b-code         ne v-subCrGift:GdsCode      */
+/*                              and bar-code.in-code        eq ""                       */
+/*                              and bar-code.part-code      eq ""                       */
+/*          no-lock:                                                                    */
+/*             run bgelib-tag-open in this-procedure ( input 3, input "PAGiftGoods","").*/
+/*             run bgelib-tag-put in this-procedure ( input 4, input "PAGGId":U         */
+/*               , input string(v-promo-action:id), input 1 ).                          */
+/*             run bgelib-tag-put in this-procedure ( input 4, input "PAGGNum":U        */
+/*               , input string(v-subGDCrite:id), input 1 ).                            */
+/*             run bgelib-tag-put in this-procedure ( input 4, input "PAGGCode":U       */
+/*               , input string(bar-code.b-code), input 1 ).                            */
+/*             run bgelib-tag-put in this-procedure ( input 4, input "PAGGAmount":U     */
+/*               , input string(v-subCrGift:qnty), input 1 ).                           */
+/*             run bgelib-tag-close in this-procedure ( input 3, input "PAGiftGoods").  */
+/*                                                                                      */
+/*          end.                                                                        */
         end.
       end. /*do v-i = 1 to v-subGifts:iCounter:*/
     end. /*if VALID-OBJECT (v-subGifts) then do:*/

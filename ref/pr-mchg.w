@@ -3256,6 +3256,7 @@ run create-attr in this-procedure ( input v-marg-min
                                    ,input string(n-mark)
                                    ,input fill-sum-grp
                                    ,input c-mark-type
+                                   ,input c-emrc-type
                                   ) no-error.
 if error-status:error then do:
    message error-status :get-message(1) .

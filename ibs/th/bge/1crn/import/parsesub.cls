@@ -1311,6 +1311,9 @@ class ibs.th.bge.1crn.import.parsesub:
               trn-mark-doc-inlistSubjectsObj:Add(new trn-mark()). /* а вот здесь уже создаем объект сущнности*/
               trn-markSubjectObj = cast (trn-mark-doc-inlistSubjectsObj:SubjectObjCurr, trn-mark).
               GetChildrenSub (hNoderef, (level + 1), trn-markSubjectObj).
+              trn-markSubjectObj:InitProp() .
+              trn-markSubjectObj:SetProp("gds-code", string(trn-gdSubjectObj:gd-code)) .
+              trn-markSubjectObj:InitProp() .
               trn-gdSubjectObj:SetProp(trn-mark-doc-inlistSubjectsObj).
               v-need-parse = false .
             end.
@@ -1393,6 +1396,9 @@ class ibs.th.bge.1crn.import.parsesub:
             trn-prt-doc-inlistSubjectsObj:Add(new trn-prt()). /* а вот здесь уже создаем объект сущнности*/
             trn-prtSubjectObj = cast (trn-prt-doc-inlistSubjectsObj:SubjectObjCurr, trn-prt).
             GetChildrenSub (hNoderef, (level + 1), trn-prtSubjectObj).
+            trn-prtSubjectObj:InitProp() .
+            trn-prtSubjectObj:SetProp("gds-code", string(trn-gdSubjectObj:gd-code)) .
+            trn-prtSubjectObj:InitProp() .
             trn-gdSubjectObj:SetProp (trn-prt-doc-inlistSubjectsObj).
           end.
           else

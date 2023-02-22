@@ -208,7 +208,7 @@ define private temp-table tt-recid-TranFuel no-undo
                       ) .
                       
     v-inkas-dtime = datetime(buf_inkas.fact-date, buf_inkas.sys-time-int * 1000) .
-    for each over_buf_chk-doc no-lock
+    for each over_buf_chk-doc /*no-lock */
        where over_buf_chk-doc.out-code = buf_inkas.inkas-code:
       /* 19/XII-2017 выгружаем только те типы, которые указаны в протоколе */
       v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
@@ -217,16 +217,16 @@ define private temp-table tt-recid-TranFuel no-undo
           v-host-code, v-obj-type, v-obj-code) .
     end . /* end_of for_each buf_chk-doc */
 
-    FOR EACH chk-doc-attr where attr-code = 'CHFlag1S' and attr-value = 'no'.
+    FOR EACH chk-doc-attr where attr-code = 'CHFlag1S' and attr-value = 'no' EXCLUSIVE-LOCK:
 	    find first chk-doc where chk-doc-attr.doc-code = chk-doc.doc-code.
 		if available chk-doc then do:
 		
-		  for each over_buf_chk-doc no-lock where over_buf_chk-doc.doc-code = chk-doc.doc-code:
+		  for each over_buf_chk-doc  no-lock  where over_buf_chk-doc.doc-code = chk-doc.doc-code:
 		    v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
              if not error-status:error then
              CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
              v-host-code, v-obj-type, v-obj-code) .
-			 /* message chk-doc-attr.attr-code VIEW-AS ALERT-BOX. */
+
 			 delete chk-doc-attr.
 			 
 		  end.
@@ -454,8 +454,10 @@ define private temp-table tt-recid-TranFuel no-undo
                                           , input p-obj-type       as character
                                           , input p-obj-code       as integer
                                           ) :
-    define buffer buf_chk-doc-attr for ub.chk-doc-attr .
+
     define buffer buf_dis-card     for ub.dis-card .
+    define buffer buf_chk-doc-attr for ub.chk-doc-attr .
+    define buffer chk-doc-attr for ub.chk-doc-attr .
     define buffer buf_chk-gds      for ub.chk-gds .
     define buffer buf_bar-code     for ub.bar-code .
     define buffer buf_goods        for ub.goods .

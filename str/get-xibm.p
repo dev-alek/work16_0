@@ -1621,7 +1621,9 @@ define variable v-is-modificator as logical no-undo .
 define variable D-CARD2_ as character no-undo .
 define variable v-step as integer   no-undo .
 define variable v-line-type as character no-undo .
+define variable v-VAT-pc like ub.chk-gds.VAT-pc no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
+define buffer buf_bar-code for ub.bar-code .
 
 define buffer buf_temp-temp for temp-temp.
 define buffer buf_tt-sum-grp for tt-sum-grp.
@@ -2192,6 +2194,17 @@ on error undo, return error
     ub.chk-gds.VAT-pc = vCSTaxValue
     ub.chk-gds.VAT-sum-rubl = vCSTValue
     .
+    
+    if p-pos-type = {&cd-type-autotank}
+    and ub.chk-gds.VAT-pc = 0
+    and ub.chk-gds.VAT-sum-rubl = 0
+    then do:
+      for first buf_bar-code no-lock where buf_bar-code.b-code = ub.chk-gds.b-code :
+        { gbl/pftxvalg.i buf_bar-code.gds-code {&vat-tax-code} ? p-host-code p-obj-type p-obj-code v-VAT-pc no-error }
+        ub.chk-gds.VAT-pc = v-VAT-pc .
+        ub.chk-gds.VAT-sum-rubl = (( ub.chk-gds.src-price *  ub.chk-gds.VAT-pc)/(100 +  ub.chk-gds.VAT-pc)) *  ub.chk-gds.src-qnty .
+      end .
+    end .
     /*define variable vCSTValue as decimal no-undo.
     define variable vCSTaxValue as decimal no-undo.*/
    // run proc-01-tax in this-procedure (output ub.chk-gds.VAT-pc, output ub.chk-gds.VAT-sum-rubl).

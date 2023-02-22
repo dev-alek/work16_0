@@ -24,7 +24,7 @@ assign
 
 for each ub.PromoGoods no-lock where ub.PromoGoods.db-num = integer(entry(2,ub.PromoAttr.p-key,{&delim-key})) and
    ub.PromoGoods.idAction = int64(entry(1,ub.PromoAttr.p-key,{&delim-key})) and
-   ub.PromoGoods.gds-code = integer(entry(3,ub.PromoAttr.p-key,{&delim-key})):
+   ub.PromoGoods.gds-code = integer(entry(3,ub.PromoAttr.p-key,{&delim-key})) and ub.PromoGoods.gds-code <> 0:
       find first ub.goods no-lock where ub.goods.gds-code = ub.PromoGoods.gds-code no-error .
       find first ub.bar-code no-lock where ub.bar-code.gds-code = ub.goods.gds-code no-error .
       producer-int = (if ub.goods.prod-type = {&cmp} then 1000000 else 0 ) + ub.goods.prod-code .

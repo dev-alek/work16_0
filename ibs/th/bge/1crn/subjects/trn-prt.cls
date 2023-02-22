@@ -51,6 +51,9 @@ class ibs.th.bge.1crn.subjects.trn-prt inherits ibs.th.bge.1crn.subjects.asubjec
   define property nds-code as decimal no-undo 
     get. 
     private set.
+  define property gds-code as integer no-undo 
+    get.
+    private set.
     
   define property qnty as decimal no-undo
     get.
@@ -96,6 +99,9 @@ class ibs.th.bge.1crn.subjects.trn-prt inherits ibs.th.bge.1crn.subjects.asubjec
       when "qnty" then do:
         assign qnty = decimal (inValue) .
       end.
+      when "gds-code" then do:
+        assign gds-code = integer (inValue) .
+      end.
     end case.
   end.
 
@@ -130,6 +136,7 @@ class ibs.th.bge.1crn.subjects.trn-prt inherits ibs.th.bge.1crn.subjects.asubjec
       sum       = ?
       sum-nds   = ? 
       nds-code  = ?
+      gds-code  = ?
     .
   end.
 

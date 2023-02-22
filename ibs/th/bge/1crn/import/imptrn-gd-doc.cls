@@ -67,7 +67,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     empty temp-table TempTrnDoc.
     empty temp-table TempDocLine.
     empty temp-table TempDocMark.
-   
+
     create TempTrnDoc.
     assign
       TempTrnDoc.obj-type = buf_clients.obj-type
@@ -147,18 +147,22 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
         if valid-object (objPrts)
         then do jj = 1 to objPrts:Get(jj):
           objPrt =  cast (objPrts:SubjectObjCurr, trn-prt).
-          create TempDocPart .
-          assign
-            TempDocPart.gds-code = objGd:gd-code
-            TempDocPart.doc-qnty = objPrt:qnty-ttn
-            TempDocPart.fact-qnty = objPrt:qnty-fact
-            TempDocPart.price-rubl = objPrt:sum / objPrt:qnty-fact
-            TempDocPart.vat-pc = (objPrt:sum-nds / (objPrt:sum - objPrt:sum-nds)) * 100
-            TempDocPart.part-id = objPrt:prt-id
-            TempDocPart.in-doc-id = objPrt:in-doc-id
-            TempDocPart.edoc-id = objPrt:edoc-id
-            TempDocPart.vsd-uuid = objPrt:vad-guid
-          .
+          
+          if objPrt:gds-code = objGd:gd-code
+          then do :
+            create TempDocPart .
+            assign
+              TempDocPart.gds-code = objGd:gd-code
+              TempDocPart.doc-qnty = objPrt:qnty-ttn
+              TempDocPart.fact-qnty = objPrt:qnty-fact
+              TempDocPart.price-rubl = objPrt:sum / objPrt:qnty-fact
+              TempDocPart.vat-pc = (objPrt:sum-nds / (objPrt:sum - objPrt:sum-nds)) * 100
+              TempDocPart.part-id = objPrt:prt-id
+              TempDocPart.in-doc-id = objPrt:in-doc-id
+              TempDocPart.edoc-id = objPrt:edoc-id
+              TempDocPart.vsd-uuid = objPrt:vad-guid
+            .
+          end .
         end .
       end .
       if available (TempDocLine)
@@ -183,16 +187,19 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
       if valid-object (objMarks)
       then do jj = 1 to objMarks:Get(jj):
         objMark = cast (objMarks:SubjectObjCurr, trn-mark).
-        create TempDocMark.
-        assign
-          TempDocMark.mark = replace (replace (objMark:mark-code, "(", "" ), ")", "")
-          TempDocMark.prt-id = objMark:prt-id
-          TempDocMark.in-doc-id = objMark:in-doc-id
-          TempDocMark.gtin = objMark:gtin
-          TempDocMark.gtin_qnt = objMark:gtin_qnt
-          TempDocMark.upd_id = objMark:upd_id
-          TempDocMark.gds-code = objGd:gd-code
-        .
+        if objMark:gds-code = objGd:gd-code
+        then do :
+          create TempDocMark.
+          assign
+            TempDocMark.mark = replace (replace (objMark:mark-code, "(", "" ), ")", "")
+            TempDocMark.prt-id = objMark:prt-id
+            TempDocMark.in-doc-id = objMark:in-doc-id
+            TempDocMark.gtin = objMark:gtin
+            TempDocMark.gtin_qnt = objMark:gtin_qnt
+            TempDocMark.upd_id = objMark:upd_id
+            TempDocMark.gds-code = objGd:gd-code
+          .
+        end .
       end.
       
     end.

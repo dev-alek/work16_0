@@ -56,11 +56,44 @@ class ibs.th.gbl.ggoattr:
     if error-status:error
       then 
     do:
-      
-    end.
+       return error return-value.
+    end.    
     
   end.
   
+
+
+  method public void ggoattr-value (  
+
+  input   p-node-code    like ub.gds-grp-obj-attr.node-code ,
+  input   p-host-code    like ub.gds-grp-obj-attr.host-code ,
+  input   p-obj-type     like ub.gds-grp-obj-attr.obj-type ,
+  input   p-obj-code     like ub.gds-grp-obj-attr.obj-code ,
+  input   p-code      like ub.gds-grp-obj-attr.attr-code  ,
+  output  p-value     like ub.gds-grp-obj-attr.attr-value ,
+  output  p-type      as character
+  ):
+    
+  run ggoattr-value in hndl-proc-ggoattr (   
+  input   p-node-code ,
+  input   p-host-code,
+  input   p-obj-type,
+  input   p-obj-code,
+  input   p-code ,
+  output  p-value ,
+  output  p-type
+  ) no-error.
+    
+    if error-status:error
+      then 
+    do:
+       return error return-value.
+    end.    
+    
+  end.
+
+
+
 
   method public void ggoattr-write (  
     input  p-node-code as integer,
@@ -83,9 +116,8 @@ class ibs.th.gbl.ggoattr:
     if error-status:error
       then 
     do:
-      
-    end.
-    
+       return error return-value.
+    end.    
   end.
   
   
@@ -95,7 +127,7 @@ class ibs.th.gbl.ggoattr:
     input  p-obj-type  as character,
     input  p-obj-code  as integer, 
     input p-code  as character,
-    input p-deleted as logical
+    output p-deleted as logical
     ):
     
     run ggoattr-delete in hndl-proc-ggoattr (   
@@ -104,13 +136,13 @@ class ibs.th.gbl.ggoattr:
       input  p-obj-type,
       input  p-obj-code, 
       input p-code,
-      input p-deleted
+      output p-deleted
       ) no-error.
     
     if error-status:error
       then 
     do:
-      
+       return error return-value.
     end.
     
   end.  
@@ -119,12 +151,13 @@ class ibs.th.gbl.ggoattr:
     
     delete object hndl-proc-ggoattr no-error.
     
-    if error-status:error
+/*    if error-status:error
       then 
-    do:
-      
-    end.
-    
+     do:
+
+     end.      
+    end. */
+
   end destructor.
   
 
