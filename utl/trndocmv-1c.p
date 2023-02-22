@@ -689,6 +689,7 @@ on error undo, return error return-value
               v-total-parts-qnty,
               v-doc-line-chg-qnty ).
       run pcall-log-file in parparentproc (input v-end-message) .
+      undo, return error v-end-message.
     end.
 
     if v-total-parts-qnty <> 0 then do:

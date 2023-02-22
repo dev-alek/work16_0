@@ -48,6 +48,10 @@ class ibs.th.bge.1crn.subjects.asubject abstract implements ibs.th.bge.1crn.subj
     SetPropProtected (inTag, inValue).
   end.
   
+  method public void InitProp ().
+    IsInitSubForWrite = not IsInitSubForWrite .
+  end.
+  
   method public void SetProp (inTag as char, inValue as longchar).
     if inTag = InitTag then do:
       InitSub().

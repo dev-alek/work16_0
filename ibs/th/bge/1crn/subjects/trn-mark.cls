@@ -38,6 +38,9 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
   define property upd_id as character no-undo 
     get. 
     private set.
+  define property gds-code as integer no-undo 
+    get. 
+    private set.
     
   define override property InitTag as character no-undo init "mark"
     get. 
@@ -61,6 +64,9 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
       end.
       when "upd-id" then do:
         assign upd_id = inValue.
+      end.
+      when "gds-code" then do:
+        assign gds-code = integer(inValue) no-error .
       end.
     end case.
   end.
@@ -88,6 +94,7 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
       gtin_qnt = ?
       upd_id = ?
       in-doc-id = ?
+      gds-code = ?
     .
   end.
 
