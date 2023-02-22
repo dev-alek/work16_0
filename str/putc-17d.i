@@ -23,7 +23,7 @@ assign
     no-error .
 
 for each ub.PromoGoods no-lock where ub.PromoGoods.db-num = ub.PromoAction.db-num and
-   ub.PromoGoods.idAction = ub.PromoAction.id:
+   ub.PromoGoods.idAction = ub.PromoAction.id and ub.PromoGoods.gds-code <> 0:
    find first ub.PromoAttr no-lock where ub.PromoAttr.tablename = "PromoGoods" and
       ub.PromoAttr.attr-code = "bc-code" and
       ub.PromoGoods.idAction = int64(entry(1,ub.PromoAttr.p-key,{&delim-key})) and 
