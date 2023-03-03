@@ -203,9 +203,9 @@ function ChekTypeMarkByGds return logical
    then do:
       mTypeMark = goods-attr.attr-value.                        
       return goods-attr.attr-value = objsrv:Env:Marking:Types:tabak:NameProp 
-          or goods-attr.attr-value = objsrv:Env:Marking:Types:stiki:NameProp 
+   /*       or goods-attr.attr-value = objsrv:Env:Marking:Types:stiki:NameProp 
           or goods-attr.attr-value = objsrv:Env:Marking:Types:NSJ  :NameProp
-          .
+     */     .
    end.
    else 
       return no.
@@ -622,7 +622,7 @@ function getLevelUTDByDM return character
 (iDm as char):
    return getLevelUTDByCodId(GetCodeIdent(iDm)).
 end.
-
+define variable mNotMarkQnty as logical no-undo.
 {&CommentStartNoClass}
 method private decimal getQntyUTDByCodId
 {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
@@ -636,15 +636,17 @@ function getQntyUTDByCodId return decimal
    vqnty = dec(GetTegCod(iDM,"37")) no-error.
    if vqnty eq ?
    then do:
-      define buffer marking for ub.marking.
-      define variable vCodident as character no-undo.
-      vCodident = GetCodeIdent(idm).
-      find first marking where marking.mark begins vCodident no-lock no-error.
-      if     available marking
-         and marking.box-qnty ne ?
-      then 
-         return marking.box-qnty.
-        
+      if not mNotMarkQnty
+      then do:
+         define buffer marking for ub.marking.
+         define variable vCodident as character no-undo.
+         vCodident = GetCodeIdent(idm).
+         find first marking where marking.mark begins vCodident no-lock no-error.
+         if     available marking
+            and marking.box-qnty ne ?
+         then 
+            return marking.box-qnty.
+      end.
       vGtin = getGtinByDm(iDM).
       if ChekTypeMarkByGtin (vGtin)
       then do:
