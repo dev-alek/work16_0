@@ -25,7 +25,7 @@ class ibs.th.str.findtank:
     get.
     private set.
 
-  define variable hndl-proc-key-rec as handle.
+  define variable hndl-proc-key-rec as handle no-undo.
  
   constructor public findtank ():
     run str/findtank.p persistent set hndl-proc-key-rec .
