@@ -18,7 +18,7 @@ Creation date: 03/11/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.enum-chk-type.
 using ibs.th.bge.1crn.subjects.*.
-block-level on error undo, throw.
+/*block-level on error undo, throw.*/
 
 class ibs.th.bge.1crn.subjects.check implements iexpsubject:
 
@@ -102,6 +102,8 @@ define private temp-table tt-recid-TranFuel no-undo
   &scop tag-section7  'chk-promos':U
   &scop tag-item7     'chk-promo':U
   constructor public check ():
+     super().
+     libFindtank = new ibs.th.str.findtank ().
   end constructor.
   
   /*------------------------------------------------------------------------------
@@ -125,6 +127,7 @@ define private temp-table tt-recid-TranFuel no-undo
     define variable v-user-name      as character no-undo .
     define variable v-inkas-dtime    as datetime no-undo .
     define variable v-en-chktype     as enum-chk-type no-undo .
+    define buffer chk-doc-attr for ub.chk-doc-attr.
     /* 16/VIII-2018 - добавлена секция <shift>
 Поля из inkas :
     define variable v-fld-inkas-date as handle no-undo .
@@ -152,7 +155,7 @@ define private temp-table tt-recid-TranFuel no-undo
     Msg = "" .
     if not valid-handle(BufHandle) then undo, throw new Progress.Lang.AppError("Отсутствует запись СМЕНЫ shift_obj с документами продажи") .
     
-    libFindtank = new ibs.th.str.findtank ().
+    
     
     assign
       v-fld-host-code  = BufHandle:buffer-field( "host-code":U  )
@@ -212,37 +215,29 @@ define private temp-table tt-recid-TranFuel no-undo
        where over_buf_chk-doc.out-code = buf_inkas.inkas-code:
       /* 19/XII-2017 выгружаем только те типы, которые указаны в протоколе */
       v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
-	  if not error-status:error then
+      if not error-status:error then
         CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
           v-host-code, v-obj-type, v-obj-code) .
     end . /* end_of for_each buf_chk-doc */
 
-    FOR EACH chk-doc-attr where attr-code = 'CHFlag1S' and attr-value = 'no' EXCLUSIVE-LOCK:
-	    find first chk-doc where chk-doc-attr.doc-code = chk-doc.doc-code.
-		if available chk-doc then do:
-		
-		  for each over_buf_chk-doc  no-lock  where over_buf_chk-doc.doc-code = chk-doc.doc-code:
-		    v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
-             if not error-status:error then
-             CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
-             v-host-code, v-obj-type, v-obj-code) .
-
-			 delete chk-doc-attr.
-			 
-		  end.
-	    end.
-	
-	
-	END.
-	
-	
-
-    end. /* end_of for_each_inkas */
-	
-	
-	
-    insw:end-element ({&tag-checks}) .
-    insw:end-element ({&tag-shift}) .
+    for each chk-doc-attr where attr-code = 'CHFlag1S' and attr-value = 'no' exclusive-lock:
+       for each over_buf_chk-doc  no-lock  where over_buf_chk-doc.doc-code = chk-doc-attr.doc-code:
+          v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
+          if not error-status:error 
+          then
+             CrContentInterfaceToSW (insw, 
+                                     buffer over_buf_chk-doc, 
+                                     v-inkas-dtime, 
+                                     v-user-name,
+                                     v-host-code, 
+                                     v-obj-type, 
+                                     v-obj-code) .
+       end.
+       delete chk-doc-attr.
+    end.
+  end. /* end_of for_each_inkas */
+  insw:end-element ({&tag-checks}) .
+  insw:end-element ({&tag-shift}) .
 
 
     catch exAppErrors as class Progress.Lang.AppError :
@@ -258,9 +253,8 @@ define private temp-table tt-recid-TranFuel no-undo
       Msg = "Unexpected error occurred..." .
       undo, throw exAnyErrors .
     end catch .
-    finally :
-      if valid-object(libFindtank) then delete object libFindtank .
-    end finally .
+    
+    
   end method . /* end_of CrContentToSW */
 
   /*------------------------------------------------------------------------------
@@ -339,11 +333,11 @@ define private temp-table tt-recid-TranFuel no-undo
             ttTranFuel.trn-start    = if avail tt-rep then
                                          tt-rep.datetime-beg
                                       else
-                                         tran-fuel.date-beg + Timezone * 60000
+                                         tran-fuel.date-beg + timezone * 60000
             ttTranFuel.trn-end      = if avail tt-rep then
                                          tt-rep.datetime-end
                                       else
-                                         tran-fuel.date-end + Timezone * 60000
+                                         tran-fuel.date-end + timezone * 60000
             ttTranFuel.trk-num      = tran-fuel.trk-num + 1
             ttTranFuel.db-num       = tran-fuel.db-num
             ttTranFuel.uuid         = tran-fuel.uuid
@@ -384,11 +378,11 @@ define private temp-table tt-recid-TranFuel no-undo
                         ttTranFuel.trn-start    = if avail tt-rep then
                                                      tt-rep.datetime-beg
                                                   else
-                                                     b2-tran-fuel.date-beg + Timezone * 60000
+                                                     b2-tran-fuel.date-beg + timezone * 60000
                         ttTranFuel.trn-end      = if avail tt-rep then
                                                      tt-rep.datetime-end
                                                   else
-                                                     b2-tran-fuel.date-end + Timezone * 60000
+                                                     b2-tran-fuel.date-end + timezone * 60000
                         ttTranFuel.trk-num      = b2-tran-fuel.trk-num + 1
                         ttTranFuel.db-num       = b2-tran-fuel.db-num
                         ttTranFuel.uuid         = b2-tran-fuel.uuid
@@ -442,6 +436,17 @@ define private temp-table tt-recid-TranFuel no-undo
    end.
    
   end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public check ( ):
+       if valid-object(libFindtank) then delete object libFindtank .
+    
+	end destructor.
+
+
   /*------------------------------------------------------------------------------
    Purpose: выгружает содержимое чека и вложенные секции в контекст контейнера SAX-writer
    Param:   insw = create sax-writer
@@ -566,8 +571,8 @@ define private temp-table tt-recid-TranFuel no-undo
     /* Тип возвратных операций */
     find first chk-doc-attr where chk-doc-attr.doc-code = p-buf_chk-doc.doc-code
       and chk-doc-attr.attr-code = 'CHFlag1' no-lock no-error.
-    IF AVAILABLE chk-doc-attr THEN 
-    DO:   
+    if available chk-doc-attr then 
+    do:   
       insw:write-data-element (  "CHFlag1",  string(chk-doc-attr.attr-value)  ) . /* Тип возвратных операций */  
       if chk-doc-attr.attr-value = "0" then
         insw:write-data-element (  "Dry-chk-th",  string(chk-doc-attr.attr-value)  ) . /* Сухой чек */      
