@@ -513,6 +513,7 @@ procedure make-rep :
                                         and (buf_c-user-log.corr-date > bf_c-user-log.corr-date
                                           or (buf_c-user-log.corr-date = bf_c-user-log.corr-date
                                           and buf_c-user-log.corr-time > bf_c-user-log.corr-time))
+                                          break by buf_c-user-log.corr-date by buf_c-user-log.corr-time
                                           :
         if num-entries(buf_c-user-log.head-table-key, {&delim-cmd}) = 23
         and entry(15, buf_c-user-log.head-table-key, {&delim-cmd}) > "" /* Установка РВД в СВЕРКЕ */
