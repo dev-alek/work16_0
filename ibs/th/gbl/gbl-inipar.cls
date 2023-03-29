@@ -135,9 +135,18 @@ class ibs.th.gbl.gbl-inipar:
 */
 
   /* ----- переменные для печати ----- */
-  define private static variable cntxt-report-num as integer no-undo initial 0 .
+  define static property cntxt-report-num as integer no-undo initial 0  // значение для переменной oxml-exch-dir
+  get():
+    if  cntxt-report-num = 0
+    then
+       cntxt-report-num = dynamic-next-value( "next-report":U, "ubflt":U ).
+    return cntxt-report-num.
+  end.
+  private set.
     // для формирования имени файла отчетов - обеспечивает уникальность имён временных файлов между сессиями
+  method public static void Setcntxt-report-num ():
      
+  end.
   /* ----- end_of переменные для печати ----- */   
     
   constructor static gbl-inipar():
@@ -280,9 +289,6 @@ class ibs.th.gbl.gbl-inipar:
   end method.
   method public static character prn-lib-get-report-name (input p-df-name as character) :
   define variable v-report-name as character no-undo .
-    assign
-      cntxt-report-num = dynamic-next-value( "next-report":U, "ubflt":U ) when cntxt-report-num = 0
-    .
     v-report-name = substitute("&1&2&3", session:temp-directory, p-df-name, cntxt-report-num ) .
     return v-report-name .
   end method.
