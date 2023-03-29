@@ -198,8 +198,7 @@ end procedure. /* prn-lib-get-report-name */
 procedure prn-lib-reportviewer-report-name :
   define input parameter parParentProc  AS WIDGET-HANDLE NO-UNDO.
   define input parameter p-report-name-html as character no-undo .
-  ibs.th.gbl.gbl-inipar:prn-lib-reportviewer-report-name(p-report-name-html).
-
+  ibs.th.gbl.gbl-inipar:prn-lib-reportviewer-report-name(p-report-name-html) no-error.
 end procedure. /* prn-lib-reportviewer-report-name */
 
 procedure prn-lib-reportviewer :
@@ -232,7 +231,11 @@ procedure prn-lib-reportviewer :
     ) /*no-error*/ .
   if rep-excel then v-excel = "TRUE" . /* защита для отчетов в excel*/
   else v-excel = "FALSE" .
-  p-param = p-param + {&delim-par} + "EXCEL:" + v-excel .   
+  if p-param eq ""
+  then
+     p-param = "EXCEL:" + v-excel.
+  else
+     p-param = p-param + {&delim-par} + "EXCEL:" + v-excel .   
   ibs.th.gbl.gbl-inipar:prn-lib-reportviewer(p-report-name-html, p-param). 
    
 
