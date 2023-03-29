@@ -166,8 +166,8 @@ method public void CrContentToSW (insw as handle):
             end.
             sertif = GetAttrUtdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.linenum,"doc_sertif").
             if sertif <> ? then do:
-              do ii = 1 to num-entries(sertif,";"):
-                insw:write-data-element (  "cert-decl",   entry(ii,sertif,";")  ) .
+              do ii = 1 to num-entries(sertif,{&delim-par}):
+                insw:write-data-element (  "cert-decl",   entry(ii,sertif,{&delim-par})  ) .
               end.
             end.
             insw:end-element ({&tag-item1}) .
