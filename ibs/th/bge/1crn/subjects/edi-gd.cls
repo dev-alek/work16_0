@@ -32,7 +32,7 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
   define property Qnty-accepted   as decimal      no-undo get. private set.
   define property del-l         as integer      no-undo get. private set.
   define property del-f         as integer      no-undo get. private set.
-
+{ cmp/str-glbl.i class }
   define override property InitTag as character no-undo init "gd"
     get.
   
@@ -65,7 +65,11 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
       when "nds-code"     then nds-code         = {&attr-dec} .
       when "price-nonds"  then price-nonds      = {&attr-dec} .
       when "stts-desc"    then stts-desc        = {&attr-str} .
-      when "cert-decl"    then cert-decl        = {&attr-str} .
+      when "cert-decl"    then do:
+        if cert-decl = "" then cert-decl        = {&attr-str} .
+        else cert-decl = cert-decl + {&delim-par} + {&attr-str} .
+      
+      end.
       when "sum-nds"      then sum-nds          = {&attr-dec} .
       when "Qnty-accepted" then Qnty-accepted   = {&attr-dec} .
       
@@ -120,7 +124,7 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
       stts-desc          = ?
       sum-nds            = ?
       Qnty-accepted      = ? 
-      cert-decl          = ?
+      cert-decl          = ""
     .
     if valid-object(marks)        then delete object marks .
   end method.

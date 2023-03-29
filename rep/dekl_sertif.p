@@ -90,7 +90,8 @@ do
     message "УПД не найден"
       view-as alert-box.
     return .
-  end.  
+  end.
+
   for each buf_utd-lines no-lock where buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.db-num = buf_utd.db-num:
     create tt-sert-lines .
     assign 
@@ -101,9 +102,10 @@ do
       tt-sert-lines.gds-name = buf_utd-lines.ProductCode
 
       .
+    
     tt-sert-lines.sertif = GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"doc_sertif").
     tt-sert-lines.gds-TH = GdsName(buf_utd-lines.gds-code) .
-    tt-sert-lines.rowspan = if tt-sert-lines.sertif <> ? then num-entries(tt-sert-lines.sertif,";") else 1.
+    tt-sert-lines.rowspan = if tt-sert-lines.sertif <> ? then num-entries(tt-sert-lines.sertif,{&delim-par}) else 1.
 
   end.
   end.
@@ -174,7 +176,7 @@ do
               '<TR>'.    
           end.
           put stream OutStr-html unformatted
-            '<TD text_wrap="true" style="text-align: left;">' + if tt-sert-lines.sertif <> ? then entry(ii,tt-sert-lines.sertif,"; ") + '</TD>' else ""  + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: left;">' + if tt-sert-lines.sertif <> ? then entry(ii,tt-sert-lines.sertif,{&delim-par}) + '</TD>' else ""  + '</TD>' skip
             .
           put stream OutStr-html unformatted
             '</TR>'.    
@@ -188,13 +190,12 @@ do
         '</body>' skip .
 
  
-
-
-  end.
-        put stream OutStr-html unformatted
+      put stream OutStr-html unformatted
 
         '</html>' skip
         .
+
+  end.
 output stream OutStr-html close.  
   end.
 run prn-lib-reportviewer in this-procedure (
