@@ -143,6 +143,7 @@ define variable after_qnty          like ub.rvs-line.state-measure-qnty     no-u
 define variable after_temperature   like ub.rvs-line.state-temperature      no-undo.
 define variable after_density       like ub.rvs-line.state-density          no-undo.
 define variable after_cli-qnty      like ub.rvs-line.state-measure-cli-qnty no-undo.
+define variable v-water-qnty        as decimal no-undo .
 
 define variable v-InfoSectionsTotal as class InfoSectionsTotal no-undo .
 
@@ -710,12 +711,24 @@ for each buf_doc-line no-lock
             "ДО слива"  format "X(8)"           at {&P-S} + 2
             ":"         format "X(1)"           at {&P-C2-S}
         .
+        
         { rep/akt-topl.i print-field  buf_rvs-line_before.state-measure-qnty     "zz,zz9.999"      "{&P-C3-S}" 2 10 before }
         { rep/akt-topl.i print-field  buf_rvs-line_before.state-temperature      "->>9.99"         "{&P-C4-S}" 1  7 before }
         { rep/akt-topl.i print-field  buf_rvs-line_before.state-density          "9.9999999999"    "{&P-C5-S}" 2 12 before }
         { rep/akt-topl.i print-field  buf_rvs-line_before.state-measure-cli-qnty "zzz,zzz,zz9.999" "{&P-C6-S}" 2 15 before }
-        { rep/akt-topl.i print-field "buf_rvs-line_before.state-brutto-qnty - buf_rvs-line_before.state-measure-qnty"
-                                                                                 "zzz,zzz,zz9.999" "{&P-E}"    2 15 before }
+        v-water-qnty = buf_rvs-line_before.state-brutto-qnty - buf_rvs-line_before.state-measure-qnty .
+        for first rvs-line-attr no-lock
+              where rvs-line-attr.obj-code  = buf_rvs-line_before.obj-code
+                and rvs-line-attr.obj-type  = buf_rvs-line_before.obj-type
+                and rvs-line-attr.gds-code  = buf_rvs-line_before.gds-code
+                and rvs-line-attr.pl-code   = buf_rvs-line_before.pl-code
+                and rvs-line-attr.rvs-code  = buf_rvs-line_before.rvs-code
+                and rvs-line-attr.attr-code = "pokmi-water-qnty"
+        :
+          v-water-qnty = decimal(rvs-line-attr.attr-value) .
+        end .
+        if v-water-qnty = ? then v-water-qnty = 0 . 
+        { rep/akt-topl.i print-field  v-water-qnty "zzz,zzz,zz9.999" "{&P-E}"    2 15 before }
         { rep/akt-topl.i rvs-line-end before }
         /* ---E----- Находим строки топливного документа до слива -------- */
 
@@ -744,8 +757,19 @@ for each buf_doc-line no-lock
         { rep/akt-topl.i print-field  buf_rvs-line_after.state-temperature      "->>9.99"         "{&P-C4-S}" 1  7 after }
         { rep/akt-topl.i print-field  buf_rvs-line_after.state-density          "9.9999999999"    "{&P-C5-S}" 2 12 after }
         { rep/akt-topl.i print-field  buf_rvs-line_after.state-measure-cli-qnty "zzz,zzz,zz9.999" "{&P-C6-S}" 2 15 after }
-        { rep/akt-topl.i print-field "buf_rvs-line_after.state-brutto-qnty - buf_rvs-line_after.state-measure-qnty"
-                                                                                "zzz,zzz,zz9.999" "{&P-E}"    2 15 after }
+        v-water-qnty = buf_rvs-line_after.state-brutto-qnty - buf_rvs-line_after.state-measure-qnty .
+        for first rvs-line-attr no-lock
+              where rvs-line-attr.obj-code  = buf_rvs-line_after.obj-code
+                and rvs-line-attr.obj-type  = buf_rvs-line_after.obj-type
+                and rvs-line-attr.gds-code  = buf_rvs-line_after.gds-code
+                and rvs-line-attr.pl-code   = buf_rvs-line_after.pl-code
+                and rvs-line-attr.rvs-code  = buf_rvs-line_after.rvs-code
+                and rvs-line-attr.attr-code = "pokmi-water-qnty"
+        :
+          v-water-qnty = decimal(rvs-line-attr.attr-value) .
+        end .
+        if v-water-qnty = ? then v-water-qnty = 0 .
+        { rep/akt-topl.i print-field v-water-qnty "zzz,zzz,zz9.999" "{&P-E}"    2 15 after }
 
         { rep/akt-topl.i rvs-line-end after }
         /* ---E----- Находим строки топливного документа после слива -------- */
