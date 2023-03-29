@@ -130,60 +130,6 @@ if error-status:error then do:
 end.
 output stream str-log close.      
 
-FUNCTION get-ffd-version RETURNS CHARACTER
-   ( INPUT p-db-num AS INTEGER
-   ,INPUT p-obj-code AS INTEGER
-   ,INPUT p-pos-type AS CHARACTER
-   ,INPUT  p-cash-num AS INTEGER) :
-   DEFINE VARIABLE v-dop          AS CHARACTER NO-UNDO.
-   DEFINE VARIABLE v-ffd-version  AS CHARACTER NO-UNDO.
-   DEFINE VARIABLE v-kkt-version  AS CHARACTER NO-UNDO.
-   DEFINE VARIABLE v-ffd-version_ AS CHARACTER NO-UNDO.
-   run cd-attr-value in this-procedure (
-      input  p-db-num
-      ,input  p-obj-code
-      ,input  p-pos-type
-      ,input  p-cash-num
-      ,input  {&cd-attr-ffd-version}
-      ,output v-ffd-version
-      ,output v-dop) no-error.
-                            
-   case v-ffd-version :
-      when "0" then 
-         do:
-            run cd-attr-value in this-procedure (
-               input  p-db-num
-               ,input  p-obj-code
-               ,input  p-pos-type
-               ,input  p-cash-num
-               ,input  {&cd-attr-kkt-version}
-               ,output v-kkt-version
-               ,output v-dop) no-error.
-            if error-status:error or v-kkt-version = "0" or v-kkt-version = "" then v-ffd-version_ = "авт" .
-            else 
-            do:
-               case v-kkt-version:
-                  when "2" then 
-                     v-ffd-version_ = "1.05(авт)" .
-                  when "3" then 
-                     v-ffd-version_ = "1.1(авт)" .
-                  when "4" then 
-                     v-ffd-version_ = "1.2(авт)" .
-               end case.
-            end.   
-         end.
-      when "2" then 
-         v-ffd-version_ = "1.05" .
-      when "3" then 
-         v-ffd-version_ = "1.1" .
-      when "4" then 
-         v-ffd-version_ = "1.2" .
-      otherwise 
-      v-ffd-version_ = " - " .
-   end case .
-   RETURN v-ffd-version_.   /* Function return value. */
-
-END FUNCTION.
 
 
 
