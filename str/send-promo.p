@@ -53,6 +53,8 @@ define variable vss-description as character no-undo init "Пересылка промоакций 
 { str/cdsnddef.i }
 { ref/cp-attr.i }
 { str/cp-isuse.i }
+{ bge/ds-promo.i} 
+{ ref/gds-attr.i }
 
 DEFINE VARIABLE kassa-rub-code       as integer.
 DEFINE VARIABLE ibmnalc              as integer   no-undo .
@@ -156,6 +158,10 @@ procedure putc-16 :
   define variable producer-int       as integer   no-undo . 
   define buffer buf_PromoAction for ub.PromoAction .
   define buffer buf_PromoSched  for ub.promo-schedule .
+  define buffer buf_promogoods  for ub.PromoGoods .
+
+  define variable v-attr-emrc as character no-undo .
+  define variable v-attr-type as character no-undo .
   do
     on error undo, return error
     :
@@ -175,8 +181,8 @@ procedure putc-16 :
 
           m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
           v-promo-action:refreshChildObj() . // возвращает
-          if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
           { str/putc-16.i }
+          if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
         END. /* FOR EACh */
       end.
       else 
@@ -193,7 +199,7 @@ procedure putc-16 :
           m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
           v-promo-action:refreshChildObj() . // возвращает
           if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
-        { str/putc-16.i }
+          { str/putc-16.i }
           if ub.PromoAction.typecond = 4 and action = "U":U then 
           do:
             {str/putc-17.i} 
@@ -265,7 +271,7 @@ assign
 
 { gbl/hostcode.i {&shop} i-obj-code v-host-code }
 if action = "D" and not g#esys and not g#news and selective <> 1
-   then 
+  then 
 do:
   message
     "Вы действительно хотите удалить с кассы записи промоакций?"
