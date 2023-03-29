@@ -338,35 +338,37 @@ class ibs.th.gbl.gbl-inipar:
          return error "Не найден файл отчёта: " + v-report-name.
       end.
    end.
-
-      GET-KEY-VALUE section "REP-SETS" key "rep_excel" value v-excel .
-      if v-excel eq ? 
-         then 
-         v-excel = "".
-      else 
-      do:
-         case v-excel:
-            when 'TRUE' then 
-               v-excel = 'TRUE' .
-            when 'YES'  then 
-               v-excel = 'TRUE' .
-            otherwise 
-            v-excel = 'FALSE' .
-         end case .   
-      end.   
-      GET-KEY-VALUE section "REP-SETS" key "Password" value v-password .  
-      if v-password = ? then v-password = "FALSE" .
-      else 
-      do:
-         case v-password:
-            when 'TRUE' then 
-               v-password = 'TRUE' .
-            when 'YES'  then 
-               v-password = 'TRUE' .
-            otherwise 
-            v-password = 'FALSE' .
-         end case .        
-      end.   
+   
+     
+/*                                                                        */
+/*      GET-KEY-VALUE section "REP-SETS" key "rep_excel" value v-excel .  */
+/*      if v-excel eq ?                                                   */
+/*         then                                                           */
+/*         v-excel = "".                                                  */
+/*      else                                                              */
+/*      do:                                                               */
+/*         case v-excel:                                                  */
+/*            when 'TRUE' then                                            */
+/*               v-excel = 'TRUE' .                                       */
+/*            when 'YES'  then                                            */
+/*               v-excel = 'TRUE' .                                       */
+/*            otherwise                                                   */
+/*            v-excel = 'FALSE' .                                         */
+/*         end case .                                                     */
+/*      end.                                                              */
+/*      GET-KEY-VALUE section "REP-SETS" key "Password" value v-password .*/
+/*      if v-password = ? then v-password = "FALSE" .                     */
+/*      else                                                              */
+/*      do:                                                               */
+/*         case v-password:                                               */
+/*            when 'TRUE' then                                            */
+/*               v-password = 'TRUE' .                                    */
+/*            when 'YES'  then                                            */
+/*               v-password = 'TRUE' .                                    */
+/*            otherwise                                                   */
+/*            v-password = 'FALSE' .                                      */
+/*         end case .                                                     */
+/*      end.                                                              */
 
    do jj = 1 to NUM-ENTRIES (p-param,{&delim-par}):
       v-par = entry (jj,p-param,{&delim-par}) .
@@ -393,7 +395,9 @@ class ibs.th.gbl.gbl-inipar:
       return error "Не найдена программа просмотра отчёта!" .
    end.
 
-   v-command = substitute('&1 &2 &3 &4 &5 ',v-fill-path-RepView,v-GUI,v-password,v-excel,p-report-name-html).            
+   v-command = substitute('&1 &2 &3 &4 &5 ',v-fill-path-RepView,v-GUI,v-password,v-excel,p-report-name-html).        
+   
+  
    if v-GUI = 'False'
    then
       os-command SILENT value(v-command). 

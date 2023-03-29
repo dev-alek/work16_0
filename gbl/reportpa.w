@@ -70,8 +70,7 @@ define variable v-onewin-point as character no-undo .
 ardecldt  shft-qty ~
 xl-delim  rep-sort ~
 alcgrpgd s-alcgrpgd cplot cdens 
-&Scoped-define page-1p rep-shift-format rep-excel
-
+&Scoped-define page-1p rep-shift-format rep-excel rep-password
 &Scoped-define page-2p
 
 v-ttho = buffer thbjattr_thbj-attr-o:table-handle .
@@ -100,14 +99,15 @@ BUTTON-2 I-ardecldt I-rep-sort I-sum-from I-sum-step I-sum-to I-sumvals ~
 I-prt-z-no I-shft-qty RECT-2 I-xl-delim I-alcgrpgd I-cplot I-cdens ~
 I-rep-excel actuate B-10 prt-z-no sum-from sum-step sum-to sumvals B-17 ~
 xl-delim rep-sort B-set_rep-sort ardecldt B-11 shft-qty rep-shift-format ~
-rep-excel B-alcgrpgd cplot B-set_cplot cdens F-button-1 F-button-2 ~
-v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to v-sumvals ~
-v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd v-cplot v-cdens 
+rep-password B-alcgrpgd cplot B-set_cplot cdens rep-excel F-button-1 ~
+F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to ~
+v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd v-cplot ~
+v-cdens 
 &Scoped-Define DISPLAYED-OBJECTS actuate prt-z-no sum-from sum-step sum-to ~
-sumvals xl-delim rep-sort ardecldt shft-qty rep-shift-format rep-excel ~
-alcgrpgd cplot cdens F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 ~
-v-sum-from v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt ~
-v-shft-qty v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
+sumvals xl-delim rep-sort ardecldt shft-qty rep-shift-format rep-password ~
+alcgrpgd cplot cdens rep-excel F-button-1 F-button-2 v-actuate v-prt-z-no ~
+FILL-IN-2 v-sum-from v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort ~
+v-ardecldt v-shft-qty v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
 
 /* Custom List Definitions                                              */
 /* page-1,page-2,List-3,List-4,List-5,List-6                            */
@@ -390,7 +390,12 @@ DEFINE VARIABLE prt-z-no AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 45 BY .79 NO-UNDO.
 
-DEFINE VARIABLE rep-excel AS LOGICAL INITIAL no 
+DEFINE VARIABLE rep-excel AS LOGICAL INITIAL yes 
+     LABEL "Вывод отчетов в EXCEL" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 57.25 BY .83 NO-UNDO.
+
+DEFINE VARIABLE rep-password AS LOGICAL INITIAL no 
      LABEL "Excel для отчетов, защита от редактирования" 
      VIEW-AS TOGGLE-BOX
      SIZE 57.25 BY .83 NO-UNDO.
@@ -419,12 +424,13 @@ DEFINE FRAME Dialog-Frame
      B-11 AT ROW 9.58 COL 2.75 WIDGET-ID 314
      shft-qty AT ROW 9.58 COL 47.63 NO-LABEL WIDGET-ID 308
      rep-shift-format AT ROW 10.58 COL 26.63 COLON-ALIGNED NO-LABEL WIDGET-ID 488
-     rep-excel AT ROW 11.75 COL 2.5 WIDGET-ID 368
+     rep-password AT ROW 11.75 COL 2.5 WIDGET-ID 368
      alcgrpgd AT ROW 12.83 COL 34.38 COLON-ALIGNED NO-LABEL WIDGET-ID 472
      B-alcgrpgd AT ROW 12.83 COL 47.25 WIDGET-ID 464
      cplot AT ROW 13.88 COL 2.75 NO-LABEL WIDGET-ID 478
      B-set_cplot AT ROW 13.88 COL 49 WIDGET-ID 476
      cdens AT ROW 15.25 COL 47 NO-LABEL WIDGET-ID 494
+     rep-excel AT ROW 16.33 COL 2.25 WIDGET-ID 370
      F-button-1 AT ROW 1.25 COL 34 COLON-ALIGNED NO-LABEL WIDGET-ID 350
      F-button-2 AT ROW 1.25 COL 47.25 COLON-ALIGNED NO-LABEL WIDGET-ID 348
      v-actuate AT ROW 2.25 COL 5.63 NO-LABEL WIDGET-ID 122
@@ -458,6 +464,12 @@ DEFINE FRAME Dialog-Frame
      I-alcgrpgd AT ROW 12.88 COL 1 WIDGET-ID 466
      I-cplot AT ROW 13.88 COL 1 WIDGET-ID 482
      I-cdens AT ROW 15.25 COL 1 WIDGET-ID 490
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         DEFAULT-BUTTON B-exit CANCEL-BUTTON B-quit WIDGET-ID 100.
+
+/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
+DEFINE FRAME Dialog-Frame
      I-rep-excel AT ROW 11.75 COL 1 WIDGET-ID 500
      SPACE(98.24) SKIP(10.70)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -945,9 +957,20 @@ END.
 
 &Scoped-define SELF-NAME rep-excel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rep-excel Dialog-Frame
-ON VALUE-CHANGED OF rep-excel IN FRAME Dialog-Frame /* Excel для отчетов, защита от редактирования */
+ON VALUE-CHANGED OF rep-excel IN FRAME Dialog-Frame /* Вывод отчетов в EXCEL */
 DO:
   assign rep-excel .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME rep-password
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rep-password Dialog-Frame
+ON VALUE-CHANGED OF rep-password IN FRAME Dialog-Frame /* Excel для отчетов, защита от редактирования */
+DO:
+  assign rep-password .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1040,19 +1063,20 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY actuate prt-z-no sum-from sum-step sum-to sumvals xl-delim rep-sort 
-          ardecldt shft-qty rep-shift-format rep-excel alcgrpgd cplot cdens 
-          F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 v-sum-from 
-          v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort v-ardecldt 
-          v-shft-qty v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
+          ardecldt shft-qty rep-shift-format rep-password alcgrpgd cplot cdens 
+          rep-excel F-button-1 F-button-2 v-actuate v-prt-z-no FILL-IN-2 
+          v-sum-from v-sum-step v-sum-to v-sumvals v-xl-delim v-rep-sort 
+          v-ardecldt v-shft-qty v-alcgrpgd s-alcgrpgd v-cplot v-cdens 
       WITH FRAME Dialog-Frame.
   ENABLE B-exit BUTTON-1 B-quit B-Help I-actuate BUTTON-2 I-ardecldt I-rep-sort 
          I-sum-from I-sum-step I-sum-to I-sumvals I-prt-z-no I-shft-qty RECT-2 
          I-xl-delim I-alcgrpgd I-cplot I-cdens I-rep-excel actuate B-10 
          prt-z-no sum-from sum-step sum-to sumvals B-17 xl-delim rep-sort 
-         B-set_rep-sort ardecldt B-11 shft-qty rep-shift-format rep-excel 
-         B-alcgrpgd cplot B-set_cplot cdens F-button-1 F-button-2 v-actuate 
-         v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to v-sumvals 
-         v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd v-cplot v-cdens 
+         B-set_rep-sort ardecldt B-11 shft-qty rep-shift-format 
+         B-alcgrpgd cplot B-set_cplot cdens F-button-1 F-button-2 
+         v-actuate v-prt-z-no FILL-IN-2 v-sum-from v-sum-step v-sum-to 
+         v-sumvals v-xl-delim v-rep-sort v-ardecldt v-shft-qty v-alcgrpgd 
+         v-cplot v-cdens 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1233,6 +1257,10 @@ FOR EACH thbjattr_thbj-attr-g :
 {&telo1gc}
 
 &scop pole rep-excel
+&scop type logical
+{&telo1gc}
+
+&scop pole rep-password
 &scop type logical
 {&telo1gc}
 
@@ -1550,9 +1578,9 @@ define variable v-found as decimal   no-undo .
      sumvals
      cplot
      rep-shift-format 
-     rep-excel
      cdens
      with frame {&frame-name}.
+     hide rep-excel rep-password I-rep-excel in frame {&frame-name} .
   end.
   /* по фирме */
   if not ( p-obj-type = {&cmp} or  ( p-obj-type = "" and p-obj-code = 0 ) ) then do:
@@ -1568,6 +1596,7 @@ define variable v-found as decimal   no-undo .
   rep-shift-format
   cdens
   rep-excel
+  rep-password
   with frame {&frame-name} .
 
 end procedure.
@@ -1950,6 +1979,7 @@ ASSIGN
     cplot
     rep-shift-format
     rep-excel
+    rep-password
     cdens
  .
  

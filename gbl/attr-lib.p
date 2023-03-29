@@ -4482,6 +4482,7 @@ logical~
 ,integer~
 ,integer~
 ,logical~
+,logical~
 ':U
 &scop prop-label-list-attr-report-glob '~
 Есть отчеты Actuate~
@@ -4495,10 +4496,11 @@ logical~
 ,Сортировка типов касс.пл-жей в отчете по АВТОКУШ~
 ,Формат сменного отчета~
 ,Алгоритм расчета плотности в отчетах~
-,Excel для отчетов, защита от редактирования~
+,Excel для отчетов - защита от редактирования~
+,Вывод отчетов в EXCEL ~
 '
 
-&scop prop-list-attr-report-glob 'actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens,rep-excel'
+&scop prop-list-attr-report-glob 'actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens,rep-password,rep-excel'
 &scop global-attr-report-glob true
 &scop host-attr-report-glob false
 &scop shop-attr-report-glob true
@@ -4516,7 +4518,8 @@ logical~
 &scop attr-report-glob-cplot_tooltip      (cplot)     Глобальный. Перечень типов касс.платежей - билетов лотереи АВТОКУШ. Порядок вывода типов касс.платежа в отчетах <<Отчет по АВТОКУШ>> соответствует порядку перечисления кодов в этом параметре
 &scop attr-report-glob-shift-rep-format_tooltip  (rep-shift-format) Глобальный. Формат сменного отчета
 &scop attr-report-glob-cdens_tooltip      (cdens)     Глобальный. По средней - плотность чека брать из документа продажи. По чекам - в каждом чеке плотность считается по выставленному алгоритму.
-&scop attr-report-glob-rep-excel_tooltip  (rep-excel) Глобальный. Excel для отчетов, защита от редактирования
+&scop attr-report-glob-rep-password_tooltip  (rep-password) Глобальный. Excel для отчетов - защита от редактирования
+&scop attr-report-glob-rep-excel_tooltip  (rep-excel) Глобальный. Вывод отчетов в EXCEL
 &scop prop-tooltip-list-attr-report-glob  {&attr-report-glob-actuate_tooltip}~
 ,{&attr-report-glob-ardecldt_tooltip}~
 ,{&attr-report-glob-rep-sort_tooltip}~
@@ -4528,6 +4531,7 @@ logical~
 ,{&attr-report-glob-cplot_tooltip}~
 ,{&attr-report-glob-rep-shift-format_tooltip}~
 ,{&attr-report-glob-cdens_tooltip}~
+,{&attr-report-glob-rep-password_tooltip} ~
 ,{&attr-report-glob-rep-excel_tooltip}
 
 &scop level-way-attr-report-glob "obj,,global"

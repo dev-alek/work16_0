@@ -468,7 +468,7 @@ attr-prt-obj }
 /* атрибут глобальный  -  ОТЧЕТЫ */
 { cmp/cr-prep.i 1 attr-report-glob  report-glob report-glob report-glob report-glob }
 { cmp/cr-prepc.i 1 prop-list-attr-report-glob
-"actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens,rep-excel"
+"actuate,ardecldt,rep-sort,sum-from,sum-step,sum-to,sumvals,alcgrpgd,cplot,rep-shift-format,cdens,rep-password,rep-excel"
 attr-report-glob }
 
 /* атрибут по фирме  -  ОТЧЕТЫ */
