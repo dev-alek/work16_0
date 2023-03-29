@@ -286,18 +286,20 @@ end.
                   .
     /*      в версии 15.0 модель кассы задается в атрибутах, в 16.0 - в параметрах   */
 
-    run cd-attr-value in this-procedure (
+    /*  run cd-attr-value in this-procedure (
         input  tt-cash-desk.db-num
         ,input  tt-cash-desk.obj-code
         ,input  tt-cash-desk.pos-type
         ,input  tt-cash-desk.cash-num
         ,input  tt-cash-desk.fr-type
-        ,output v-kkm-model
-        ,output v-kkm-type
-        ) .
+        ,output v-kkm-model                              
+        , output v-kkm-type
+        ) . */
+
+    v-kkm-model = tt-cash-desk.pos-type.
 
     assign
-        v-boss          = buf_firm.director
+        v-boss          = buf_firm.director              	
         v-kkm-code-reg  = buf_cash-desk.registration-code
         v-kkm-code-prod = buf_cash-desk.serial-code.
        

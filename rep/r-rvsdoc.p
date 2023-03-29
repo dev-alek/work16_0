@@ -214,6 +214,18 @@ for each buf_rvs-line no-lock
   assign
     v-water-qnty = buf_rvs-line.brutto-qnty - buf_rvs-line.measure-qnty
   .
+  for first rvs-line-attr no-lock
+        where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+          and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+          and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+          and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+          and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+          and rvs-line-attr.attr-code = "pokmi-water-qnty"
+  :
+    v-water-qnty = decimal(rvs-line-attr.attr-value) .
+  end .
+  if v-water-qnty = ? then v-water-qnty = 0 .
+  
   if line-counter( PrnLibStream ) + 1 > page-size( PrnLibStream ) then do:
     put stream PrnLibStream v-line1 .
     page stream PrnLibStream .

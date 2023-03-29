@@ -135,9 +135,18 @@ class ibs.th.gbl.gbl-inipar:
 */
 
   /* ----- переменные для печати ----- */
-  define private static variable cntxt-report-num as integer no-undo initial 0 .
+  define static property cntxt-report-num as integer no-undo initial 0  // значение для переменной oxml-exch-dir
+  get():
+    if  cntxt-report-num = 0
+    then
+       cntxt-report-num = dynamic-next-value( "next-report":U, "ubflt":U ).
+    return cntxt-report-num.
+  end.
+  private set.
     // для формирования имени файла отчетов - обеспечивает уникальность имён временных файлов между сессиями
+  method public static void Setcntxt-report-num ():
      
+  end.
   /* ----- end_of переменные для печати ----- */   
     
   constructor static gbl-inipar():
@@ -280,9 +289,6 @@ class ibs.th.gbl.gbl-inipar:
   end method.
   method public static character prn-lib-get-report-name (input p-df-name as character) :
   define variable v-report-name as character no-undo .
-    assign
-      cntxt-report-num = dynamic-next-value( "next-report":U, "ubflt":U ) when cntxt-report-num = 0
-    .
     v-report-name = substitute("&1&2&3", session:temp-directory, p-df-name, cntxt-report-num ) .
     return v-report-name .
   end method.
@@ -338,35 +344,37 @@ class ibs.th.gbl.gbl-inipar:
          return error "Не найден файл отчёта: " + v-report-name.
       end.
    end.
-
-      GET-KEY-VALUE section "REP-SETS" key "rep_excel" value v-excel .
-      if v-excel eq ? 
-         then 
-         v-excel = "".
-      else 
-      do:
-         case v-excel:
-            when 'TRUE' then 
-               v-excel = 'TRUE' .
-            when 'YES'  then 
-               v-excel = 'TRUE' .
-            otherwise 
-            v-excel = 'FALSE' .
-         end case .   
-      end.   
-      GET-KEY-VALUE section "REP-SETS" key "Password" value v-password .  
-      if v-password = ? then v-password = "FALSE" .
-      else 
-      do:
-         case v-password:
-            when 'TRUE' then 
-               v-password = 'TRUE' .
-            when 'YES'  then 
-               v-password = 'TRUE' .
-            otherwise 
-            v-password = 'FALSE' .
-         end case .        
-      end.   
+   
+     
+/*                                                                        */
+/*      GET-KEY-VALUE section "REP-SETS" key "rep_excel" value v-excel .  */
+/*      if v-excel eq ?                                                   */
+/*         then                                                           */
+/*         v-excel = "".                                                  */
+/*      else                                                              */
+/*      do:                                                               */
+/*         case v-excel:                                                  */
+/*            when 'TRUE' then                                            */
+/*               v-excel = 'TRUE' .                                       */
+/*            when 'YES'  then                                            */
+/*               v-excel = 'TRUE' .                                       */
+/*            otherwise                                                   */
+/*            v-excel = 'FALSE' .                                         */
+/*         end case .                                                     */
+/*      end.                                                              */
+/*      GET-KEY-VALUE section "REP-SETS" key "Password" value v-password .*/
+/*      if v-password = ? then v-password = "FALSE" .                     */
+/*      else                                                              */
+/*      do:                                                               */
+/*         case v-password:                                               */
+/*            when 'TRUE' then                                            */
+/*               v-password = 'TRUE' .                                    */
+/*            when 'YES'  then                                            */
+/*               v-password = 'TRUE' .                                    */
+/*            otherwise                                                   */
+/*            v-password = 'FALSE' .                                      */
+/*         end case .                                                     */
+/*      end.                                                              */
 
    do jj = 1 to NUM-ENTRIES (p-param,{&delim-par}):
       v-par = entry (jj,p-param,{&delim-par}) .
@@ -393,7 +401,9 @@ class ibs.th.gbl.gbl-inipar:
       return error "Не найдена программа просмотра отчёта!" .
    end.
 
-   v-command = substitute('&1 &2 &3 &4 &5 ',v-fill-path-RepView,v-GUI,v-password,v-excel,p-report-name-html).            
+   v-command = substitute('&1 &2 &3 &4 &5 ',v-fill-path-RepView,v-GUI,v-password,v-excel,p-report-name-html).        
+   
+  
    if v-GUI = 'False'
    then
       os-command SILENT value(v-command). 

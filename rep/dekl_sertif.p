@@ -90,7 +90,8 @@ do
     message "УПД не найден"
       view-as alert-box.
     return .
-  end.  
+  end.
+
   for each buf_utd-lines no-lock where buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.db-num = buf_utd.db-num:
     create tt-sert-lines .
     assign 
@@ -101,9 +102,10 @@ do
       tt-sert-lines.gds-name = buf_utd-lines.ProductCode
 
       .
+    
     tt-sert-lines.sertif = GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"doc_sertif").
     tt-sert-lines.gds-TH = GdsName(buf_utd-lines.gds-code) .
-    tt-sert-lines.rowspan = if tt-sert-lines.sertif <> ? then num-entries(tt-sert-lines.sertif,";") else 1.
+    tt-sert-lines.rowspan = if tt-sert-lines.sertif <> ? then num-entries(tt-sert-lines.sertif,{&delim-par}) else 1.
 
   end.
   end.
@@ -132,18 +134,17 @@ do
         '<tr class="set_columns">' skip
         '<td style="width: 50px;"></td>' skip
         '<td style="width: 100px;"></td>' skip
-        '<td style="width: 250px;"></td>' skip
         '<td style="width: 350px;"></td>' skip
         '<td style="width: 450px;"></td>' skip
         '</tr>' skip
 
-        '<tr><td colspan="5">УПД ' + string(tt-sert-utd.DocumentNumber) + ' от ' + string(tt-sert-utd.DocumentDate,"99.99.9999") + '</td></tr>'
+        '<tr><td colspan="4">УПД ' + string(tt-sert-utd.DocumentNumber) + ' от ' + string(tt-sert-utd.DocumentDate,"99.99.9999") + '</td></tr>'
         '<tr>' skip
-        '<td colspan="5">' + CliName(tt-sert-utd.cli-code, tt-sert-utd.cli-type) + '</td>' skip
+        '<td colspan="4">' + CliName(tt-sert-utd.cli-code, tt-sert-utd.cli-type) + '</td>' skip
         '</tr>' skip
         .
       put stream OutStr-html unformatted
-        '<TR><TD colspan="5"></TD></TR>' skip
+        '<TR><TD colspan="4"></TD></TR>' skip
         '</thead>' skip
         '<tbody>' skip
         .
@@ -152,7 +153,6 @@ do
         '<TR>' skip
         '<TD text_wrap="true" style="text-align: center; font-weight: bold;">№ п/п</TD>' skip
         '<TD text_wrap="true" style="text-align: left; font-weight: bold;">Код товара</TD>' skip
-        '<TD text_wrap="true" style="text-align: left; font-weight: bold;">Наименование УПД</TD>' skip
         '<TD text_wrap="true" style="text-align: left; font-weight: bold;">Наименование ТН</TD>' skip
         '<TD text_wrap="true" style="text-align: left; font-weight: bold;">Сертификат/Декларация</TD>' skip
         '</TR>' skip .
@@ -164,7 +164,7 @@ do
           '<TR>' skip
           '<TD text_wrap="true" rowspan="' + string(tt-sert-lines.rowspan)+ '" style="text-align: center;">' + if tt-sert-lines.linenum <> ? then string(tt-sert-lines.linenum) + '</TD>' else ""  + '</TD>' skip
           '<TD text_wrap="true" rowspan="' + string(tt-sert-lines.rowspan)+ '" style="text-align: left;">' + if tt-sert-lines.gds-code <> ? then string(tt-sert-lines.gds-code) + '</TD>' else ""  + '</TD>' skip
-          '<TD text_wrap="true" rowspan="' + string(tt-sert-lines.rowspan)+ '" style="text-align: left;">' + if tt-sert-lines.gds-name <> ? then string(tt-sert-lines.gds-name) + '</TD>' else ""  + '</TD>' skip
+/*          '<TD text_wrap="true" rowspan="' + string(tt-sert-lines.rowspan)+ '" style="text-align: left;">' + if tt-sert-lines.gds-name <> ? then string(tt-sert-lines.gds-name) + '</TD>' else ""  + '</TD>' skip*/
           '<TD text_wrap="true"  rowspan="' + string(tt-sert-lines.rowspan)+ '"style="text-align: left;">' + if tt-sert-lines.gds-TH <> ? then string (tt-sert-lines.gds-TH) + '</TD>' else ""  + '</TD>' skip
           .
         do ii = 1 to tt-sert-lines.rowspan:
@@ -174,7 +174,7 @@ do
               '<TR>'.    
           end.
           put stream OutStr-html unformatted
-            '<TD text_wrap="true" style="text-align: left;">' + if tt-sert-lines.sertif <> ? then entry(ii,tt-sert-lines.sertif,"; ") + '</TD>' else ""  + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: left;">' + if tt-sert-lines.sertif <> ? then entry(ii,tt-sert-lines.sertif,{&delim-par}) + '</TD>' else ""  + '</TD>' skip
             .
           put stream OutStr-html unformatted
             '</TR>'.    
@@ -188,13 +188,12 @@ do
         '</body>' skip .
 
  
-
-
-  end.
-        put stream OutStr-html unformatted
+      put stream OutStr-html unformatted
 
         '</html>' skip
         .
+
+  end.
 output stream OutStr-html close.  
   end.
 run prn-lib-reportviewer in this-procedure (

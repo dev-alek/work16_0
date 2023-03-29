@@ -4219,7 +4219,7 @@ PROCEDURE get-last-context :
 
     /* устанавливаем переменную необходимую для формирования имени файла отчетов */
     assign
-      p-cntxt-report-num = dynamic-next-value( "next-report":U, "ubflt":U) .
+      p-cntxt-report-num = ibs.th.gbl.gbl-inipar:cntxt-report-num .
     .
 
     /* считываем настройки пользователя по умолчанию */

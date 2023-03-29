@@ -1333,41 +1333,41 @@ if p-batch = integer({&repcalc-type-operator}) then
 do:
 /*   define variable v-value-character as character no-undo .*/
 /*   define variable v-value-integer   as character no-undo .*/
-   define variable rep-excel         as logical   no-undo .
+   define variable rep-password         as logical   no-undo .
    define variable excel-string      as character no-undo .
    define variable v-excel           as character no-undo .
-    
+   
    run adm/shattri.p (
       input "get":U
-      ,input  p-obj-type /*p-obj-type*/
-      ,input  p-obj-code /*p-obj-code*/
+      ,input  "" /*p-obj-type*/
+      ,input  0 /*p-obj-code*/
       ,input  {&attr-report-glob}
-      ,input  {&attr-report-glob_rep-excel} /*p-param-code*/
+      ,input  {&attr-report-glob_rep-password} /*p-param-code*/
       ,output v-value-character
       ,output v-value-date
       ,output v-value-decimal
       ,output v-value-integer
-      ,output rep-excel
+      ,output rep-password
       ,output v-param-type
       ,INPUT-OUTPUT table-handle v-tth
       ) /*no-error*/ .
-   if rep-excel then excel-string = "TRUE" . /* защита для отчетов в excel*/
+   if rep-password then excel-string = "TRUE" . /* защита для отчетов в excel*/
    else excel-string = "FALSE" .
    
-   GET-KEY-VALUE section "REP-SETS" key "rep_excel" value v-excel .
-
-   if v-excel eq ? 
-      then 
-      v-excel = "".
-
-   case v-excel:
-      when 'TRUE' then 
-         v-excel = 'TRUE' .
-      when 'YES'  then 
-         v-excel = 'TRUE' .
-      otherwise 
-      v-excel = 'FALSE' .
-   end case .   
+/*   GET-KEY-VALUE section "REP-SETS" key "rep_excel" value v-excel .*/
+/*                                                                   */
+/*   if v-excel eq ?                                                 */
+/*      then                                                         */
+/*      v-excel = "".                                                */
+/*                                                                   */
+/*   case v-excel:                                                   */
+/*      when 'TRUE' then                                             */
+/*         v-excel = 'TRUE' .                                        */
+/*      when 'YES'  then                                             */
+/*         v-excel = 'TRUE' .                                        */
+/*      otherwise                                                    */
+/*      v-excel = 'FALSE' .                                          */
+/*   end case .                                                      */
    
    
    /*      GET-KEY-VALUE section "REP-SETS" key "Password" value v-password .*/
@@ -1388,7 +1388,7 @@ do:
    run prn-lib-reportviewer in this-procedure (
       input parparentproc
       ,input v-report-name-html
-      ,input "PASSWORD:" + excel-string + {&delim-par} + "EXCEL:" + v-excel 
+      ,input "PASSWORD:" + excel-string 
       ) .
    if error-status:error then
    do:

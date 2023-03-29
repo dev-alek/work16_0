@@ -904,8 +904,8 @@ procedure print-total .
             '  
             <tr>
                     <td rowspan="2" text_wrap="true">&1</td>
-                    <td rowspan="2" style="text-align: right;">&2</td>
-                    <td rowspan="2" style="text-align: right;">&3</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&2</td>
+                    <td text_wrap="true" rowspan="2" style="text-align: right;">&3</td>
                     <td text_wrap="true" rowspan="2" style="text-align: left;">&5</td>
                     <td text_wrap="true" rowspan="2">&6</td>
                     <td text_wrap="true" style="text-align: right;">&8</td>
@@ -1188,8 +1188,8 @@ procedure print-total .
         substitute (
         '  <tr>
                     <th text_wrap="true" rowspan="2" style="text-align: left; vertical-align: middle;">&1</th>
-                    <th rowspan="2"></th>
-                    <th rowspan="2" style="text-align: right; vertical-align: middle;">&2</th>
+                    <th text_wrap="true" rowspan="2"></th>
+                    <th text_wrap="true" rowspan="2" style="text-align: right; vertical-align: middle;">&2</th>
                     <th text_wrap="true" rowspan="2" style="text-align: left; vertical-align: middle;">&3</th>
                     <th rowspan="2"></th>
                     <th text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
@@ -1216,8 +1216,8 @@ procedure print-total .
       put stream OutStr-html unformatted
         substitute (
         '
-            <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
-            <th rowspan="2" style="text-align: right; vertical-align: middle;"></th>
+            <th text_wrap="true" rowspan="2" style="text-align: right; vertical-align: middle;"></th>
+            <th text_wrap="true" rowspan="2" style="text-align: right; vertical-align: middle;"></th>
             <th rowspan="2" text_wrap="true" style="text-align: right; vertical-align: middle;">&3</th>
             </tr><tr>
             
@@ -1458,6 +1458,7 @@ procedure print-sug .
     delete actreal-2 .
   end.
   /* непосредственно печать */
+  
   FOR EACH t-2-sug NO-LOCK
     BREAK
     BY t-2-sug.main-code :
@@ -1583,13 +1584,13 @@ procedure print-sug .
             substitute (
             '  <tr> 
                               <td  text_wrap="true">&1</td>
-                              <td  style="text-align: right;">&2</td>
-                              <td  style="text-align: right;">&3</td>
+                              <td  text_wrap="true" style="text-align: right;">&2</td>
+                              <td  text_wrap="true" style="text-align: right;">&3</td>
                               <td  text_wrap="true" style="text-align: right;">&4</td>
                               <td text_wrap="true" >&5</td>
                               <td colspan="2"  text_wrap="true" style="text-align: right;">&6</td>
                               <td colspan="2"  text_wrap="true" style="text-align: right;">&7</td>
-                              <td  >&8</td>
+                              <td text_wrap="true" >&8</td>
                               <td text_wrap="true"  style="text-align: right;">&9</td>'
             ,
             pol1,
@@ -1611,7 +1612,7 @@ procedure print-sug .
                     <td text_wrap="true"  style="text-align: right;">&3</td>
                     <td text_wrap="true"  style="text-align: right;">&4</td>
                     <td text_wrap="true"  style="text-align: right;">&5</td>
-                    <td  text_wrap="true" style="text-align: right;">&6</td>
+                    <td text_wrap="true" style="text-align: right;">&6</td>
                     </tr>
                '
             ,
@@ -1733,13 +1734,13 @@ procedure print-sug .
               substitute (
               '  <tr>
                     <td text_wrap="true">&1</td>
-                    <td style="text-align: right;">&2</td>
-                    <td style="text-align: right;">&3</td>
+                    <td text_wrap="true" style="text-align: right;">&2</td>
+                    <td text_wrap="true" style="text-align: right;">&3</td>
                     <td text_wrap="true" style="text-align: right;">&4</td>
                     <td text_wrap="true">&5</td>
                     <td colspan="2" text_wrap="true" style="text-align: right;">&6</td>
                     <td colspan="2" text_wrap="true" style="text-align: right;">&7</td>
-                    <td >&8</td>
+                    <td text_wrap="true">&8</td>
                     <td text_wrap="true" style="text-align: right;">&9</td>'
               ,
               pol1,
@@ -1841,8 +1842,8 @@ procedure print-sug .
         <tr>
                     <th text_wrap="true"  style="text-align: left; vertical-align: middle;">&1</th>
                     <th ></th>
-                    <th  style="text-align: right; vertical-align: middle;">&2</th>
-                    <th  style="text-align: right; vertical-align: middle;">&3</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&2</th>
+                    <th text_wrap="true" style="text-align: right; vertical-align: middle;">&3</th>
                     <th ></th>
                     <th colspan="2"  text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
                     <th colspan="2"  text_wrap="true" style="text-align: right; vertical-align: middle;">&5</th>
@@ -1867,9 +1868,9 @@ procedure print-sug .
       put stream OutStr-html unformatted
         substitute (
         '
-            <th  style="text-align: right; vertical-align: middle;"></th>
-            <th  style="text-align: right; vertical-align: middle;"></th>       
-            <th  style="text-align: right; vertical-align: middle;"></th>
+            <th text_wrap="true" style="text-align: right; vertical-align: middle;"></th>
+            <th text_wrap="true" style="text-align: right; vertical-align: middle;"></th>       
+            <th text_wrap="true" style="text-align: right; vertical-align: middle;"></th>
             <th  text_wrap="true" style="text-align: right; vertical-align: middle;">&4</th>
             </tr>
             '

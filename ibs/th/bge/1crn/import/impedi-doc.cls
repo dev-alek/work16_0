@@ -285,8 +285,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             if v-gds-gd:stts-desc ne ?
             then
                AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"Load1C","stts-desc-line",v-gds-gd:stts-desc + {&delim-par} + string( utd-lines.LineNum)).            
+
             /*Сертификаты*/
-            if v-gds-gd:cert-decl ne ?
+            if v-gds-gd:cert-decl ne ""
             then
                setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"doc_sertif",v-gds-gd:cert-decl).
             if v-gds-gd:Qnty-accepted ne ?
