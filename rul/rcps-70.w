@@ -90,9 +90,9 @@ custom-par = "all,"  + {&comma-char} +
 
 
 
-run rep/d-report.w
+run rep/dreport.p
     ( input parparentproc      /* 0 */
-    , input 'rep/e-ddinam.w'   /* 1 */
+    , input 'ibs.th.rep.eddinam'   /* 1 */
     , input "Движение денежных средств":U
     , input 0                  /* 3 date нет дат */
     , input ""                 /* 4 нет товаров*/

@@ -28,9 +28,9 @@ define NEW SHARED variable is-rosneft as logical no-undo init YES.
 
 { cmp/str-glbl.i }
 { cmp/r-page1.i new}
-run rep/d-report.w (
+run rep/dreport.p (
                 input parParentProc ,
-                input 'rep/e-ddinam.w',"Движение денежных средств",
+                input 'ibs.th.rep.eddinam',"Движение денежных средств",
                 input 4,
                 input "",
                 input "*",
