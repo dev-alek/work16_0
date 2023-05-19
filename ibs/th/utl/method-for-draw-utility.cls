@@ -1210,9 +1210,7 @@ class ibs.th.utl.method-for-draw-utility final:
                       if available ub.goods
                         then 
                       do :
-                        find first buf_fbr-gds-obj exclusive-lock where buf_fbr-gds-obj.gds-code = ub.goods.gds-code and
-                          buf_fbr-gds-obj.obj-code = v-cntxt-obj-code and
-                          buf_fbr-gds-obj.obj-type = v-cntxt-obj-type no-error .
+                        find first buf_fbr-gds-obj exclusive-lock where buf_fbr-gds-obj.gds-code = ub.goods.gds-code no-error .
                         if not available (buf_fbr-gds-obj) then 
                         do:
                           if tt-fbr-gds-obj.is-menu then 
@@ -1227,10 +1225,14 @@ class ibs.th.utl.method-for-draw-utility final:
                             buf_fbr-gds-obj.gds-code = ub.goods.gds-code
                             buf_fbr-gds-obj.obj-code = v-cntxt-obj-code
                             buf_fbr-gds-obj.obj-type = v-cntxt-obj-type
+                            buf_fbr-gds-obj.fbr-obj-code = v-cntxt-obj-code
+                            buf_fbr-gds-obj.fbr-obj-type = v-cntxt-obj-type
                             .
                           buffer-copy tt-fbr-gds-obj except tt-fbr-gds-obj.obj-code
                             tt-fbr-gds-obj.obj-type
-                            tt-fbr-gds-obj.gds-code to buf_fbr-gds-obj no-error .
+                            tt-fbr-gds-obj.gds-code 
+                            tt-fbr-gds-obj.fbr-obj-code 
+                            tt-fbr-gds-obj.fbr-obj-type to buf_fbr-gds-obj no-error .
                           if error-status:error then
                           do:
                             put-Log(return-value).
@@ -1251,7 +1253,9 @@ class ibs.th.utl.method-for-draw-utility final:
                             tt-fbr-gds-obj.obj-type 
                             tt-fbr-gds-obj.gds-code 
                             tt-fbr-gds-obj.is-menu 
-                            tt-fbr-gds-obj.is-modificator to buf_fbr-gds-obj no-error .
+                            tt-fbr-gds-obj.is-modificator
+                            tt-fbr-gds-obj.fbr-obj-code 
+                            tt-fbr-gds-obj.fbr-obj-type to buf_fbr-gds-obj no-error .
                           if error-status:error then 
                           do:
                             put-Log(return-value).
