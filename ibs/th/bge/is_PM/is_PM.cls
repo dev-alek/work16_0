@@ -834,6 +834,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -1028,6 +1038,16 @@ class ibs.th.bge.is_PM.is_PM:
                                       buf_chk-gds.nozzle-code,
                                       buf_chk-gds.pl-code,
                                       buf_bar-code.gds-code) .
+                if v-pl-code = ?
+                or v-pl-code = 0
+                then do :
+                  v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                               buf_chk-doc.obj-code,
+                                               buf_chk-gds.pump,
+                                               buf_chk-gds.nozzle-code,
+                                               buf_chk-gds.pl-code,
+                                               buf_bar-code.gds-code) .
+                end .
               end .
               else do :
                 v-pl-code = buf_chk-gds.pl-code .
@@ -1255,6 +1275,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -1479,6 +1509,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .                      
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -1757,6 +1797,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -2018,6 +2068,16 @@ class ibs.th.bge.is_PM.is_PM:
                                       buf_chk-gds.nozzle-code,
                                       buf_chk-gds.pl-code,
                                       buf_bar-code.gds-code) .
+                if v-pl-code = ?
+                or v-pl-code = 0
+                then do :
+                  v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                               buf_chk-doc.obj-code,
+                                               buf_chk-gds.pump,
+                                               buf_chk-gds.nozzle-code,
+                                               buf_chk-gds.pl-code,
+                                               buf_bar-code.gds-code) .
+                end .
               end .
               else do :
                 v-pl-code = buf_chk-gds.pl-code .
@@ -2277,6 +2337,16 @@ class ibs.th.bge.is_PM.is_PM:
                                   buf_chk-gds.nozzle-code,
                                   buf_chk-gds.pl-code,
                                   buf_bar-code.gds-code) .
+            if v-pl-code = ?
+            or v-pl-code = 0
+            then do :
+              v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                           buf_chk-doc.obj-code,
+                                           buf_chk-gds.pump,
+                                           buf_chk-gds.nozzle-code,
+                                           buf_chk-gds.pl-code,
+                                           buf_bar-code.gds-code) .
+            end .
           end .
           else do :
             v-pl-code = buf_chk-gds.pl-code .
@@ -2704,6 +2774,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -3345,6 +3425,117 @@ class ibs.th.bge.is_PM.is_PM:
               and buf_pl-gds-pump.pump-code = p-pump-code
               and buf_pl-gds-pump.gds-code  = p-gds-code
               and buf_pl-gds-pump.status_   = {&current-status}
+              and buf_pl-gds-pump.pl-code   = buf_pl-pump-nozzle.pl-code
+          on error undo, return error return-value
+          :
+            assign
+              v-pl-code = buf_pl-pump-nozzle.pl-code
+            .
+            leave _ppnz.
+          end.
+        end.
+      end.
+  
+      if v-pl-code <> 0 then do:
+        assign
+          p-pl-code = v-pl-code
+        .
+      end .
+      
+      return p-pl-code .
+  
+    end . /*doe*/
+  end method .
+  
+  method private integer findblockedtank
+  (
+    input p-obj-type     as character, 
+    input p-obj-code     as integer,   
+    input p-pump-code    as integer,   
+    input p-nozzle-code  as integer,   
+    input p-from-pl-code as integer,   
+    input p-gds-code     as integer   
+  ) :  
+    define variable v-pl-code            like ub.place.pl-code no-undo .
+    define variable p-pl-code            like ub.place.pl-code no-undo .
+    define variable v-dopstr             as character no-undo .
+  
+    define buffer buf_place for ub.place.
+    define buffer buf_pl-gds-pump for ub.pl-gds-pump.
+    define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle.
+    define buffer buf_pl-gds for ub.pl-gds.
+  
+    do
+    on error undo, return error return-value
+    :
+  
+      assign
+        v-pl-code = 0
+        p-pl-code = ?
+      .
+  
+      if p-from-pl-code <> ?
+        and p-from-pl-code <> 0
+      then do:
+        find first buf_pl-gds no-lock
+          where buf_pl-gds.obj-type  = p-obj-type
+            and buf_pl-gds.obj-code  = p-obj-code
+            and buf_pl-gds.pl-code   = p-from-pl-code
+            and buf_pl-gds.gds-code  = p-gds-code
+          no-error.
+        if available buf_pl-gds then do:
+          assign
+            v-pl-code = buf_pl-gds.pl-code
+          .
+        end.
+      end.
+  
+      if v-pl-code <> 0
+        and p-nozzle-code <> ?
+        and p-nozzle-code <> 0
+      then do:
+        find first buf_pl-pump-nozzle no-lock
+          where buf_pl-pump-nozzle.obj-type    = p-obj-type
+            and buf_pl-pump-nozzle.obj-code    = p-obj-code
+            and buf_pl-pump-nozzle.pl-code     = v-pl-code
+            and buf_pl-pump-nozzle.pump-code   = p-pump-code
+            and buf_pl-pump-nozzle.nozzle-code = p-nozzle-code
+  /*          and buf_pl-pump-nozzle.status_     = {&current-status} поле не заполняется*/
+          no-error .
+        if not available buf_pl-pump-nozzle then do:
+          return p-pl-code .
+        end.
+      end.
+  
+      if v-pl-code = 0 then do:
+        if p-nozzle-code = 0 then do:
+          find first buf_pl-gds-pump no-lock
+            where buf_pl-gds-pump.obj-type  = p-obj-type
+              and buf_pl-gds-pump.obj-code  = p-obj-code
+              and buf_pl-gds-pump.pump-code = p-pump-code
+              and buf_pl-gds-pump.gds-code  = p-gds-code
+/*              and buf_pl-gds-pump.status_   = {&current-status}*/
+            no-error.
+          if available buf_pl-gds-pump then do:
+            assign
+              v-pl-code = buf_pl-gds-pump.pl-code
+            .
+          end.
+        end.
+        else do:
+          _ppnz:
+          for each buf_pl-pump-nozzle no-lock
+            where buf_pl-pump-nozzle.obj-type = p-obj-type
+              and buf_pl-pump-nozzle.obj-code = p-obj-code
+              and buf_pl-pump-nozzle.pump-code = p-pump-code
+              and buf_pl-pump-nozzle.nozzle-code = p-nozzle-code
+  /*            and buf_pl-pump-nozzle.status_ = {&current-status} поле не заполняется*/
+            ,first buf_pl-gds-pump no-lock
+            where buf_pl-gds-pump.obj-type  = p-obj-type
+              and buf_pl-gds-pump.obj-code  = p-obj-code
+              and buf_pl-gds-pump.pump-code = p-pump-code
+              and buf_pl-gds-pump.gds-code  = p-gds-code
+/*              and buf_pl-gds-pump.status_   = {&current-status}*/
               and buf_pl-gds-pump.pl-code   = buf_pl-pump-nozzle.pl-code
           on error undo, return error return-value
           :
