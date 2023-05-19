@@ -96,7 +96,7 @@ class ibs.th.ref.code.code_trg final:
             if mode eq {&select}
             then
                rid-keep ().
-            run value( code.procview) (Mode, code.parent , code.code,Code.CodeName).
+            run value( code.procview) (parparentproc, Mode, code.parent , code.code,Code.CodeName).
             if mode eq {&select}
             then
                rid-rest ().

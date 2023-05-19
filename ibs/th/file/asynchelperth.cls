@@ -131,7 +131,7 @@ get.
     method datetime-tz getnowday():
        return datetime-tz(today).
     end.
-
+    
     method ibs.th.file.asyncparam getParamObj (iName as character ):
         find first tt-Param where tt-Param.nameParam eq iName no-lock no-error.
         if not available tt-Param
@@ -278,14 +278,13 @@ get.
       end.
    end.
    
-   define variable mTaskNum as int64 no-undo.
    method public int64 AddTask (ITask    as character,
                                 iProc    as character,
                                 iParam   as character):
       return AddTask(ITask,iProc,iParam, getnowDay()).                             
                                   
    end.
-     
+   define variable mTaskNum as int64 no-undo.
    method public int64 AddTask (ITask    as character,
                                 iProc    as character,
                                 iParam   as character,
@@ -316,6 +315,7 @@ get.
             return error.
          end.
       end.
+      
       
       mTaskNum = mTaskNum + 1 .
       writeStatusProces ("add WaitRun",itask, mtasknum, string(iStartTimeAfter) + " param " + iParam ). 
@@ -407,6 +407,7 @@ get.
    end.
       
    method public integer  WaitForOne ( input iSched as character):
+     
      define variable vFile as character no-undo.
      define variable vCount as character  no-undo. 
      define variable oCount as integer no-undo. 
@@ -540,7 +541,7 @@ get.
      find first ttrun where    (ttrun.task eq iSched
                              or iSched eq ? )
                              and ttrun.fstatusItem ne "WorkEnd"
-                             and ttRun.StartAfter < vnow 
+                             and ttRun.StartAfter <= vnow 
      no-lock no-error.
      WAIT-FOR-COMPLETE = not available ttrun.
      
@@ -771,7 +772,7 @@ Phase 1 of Load completed.  Working.  Please wait ...~
                and myTimeOut    ne ?
                and iSched       ne ?
                and vCountOld    = vCount
-               and dec(getnow(). - vStart) / 1000 > myTimeOut
+               and dec(getnow() - vStart) / 1000 > myTimeOut
               )) or mstop
           then do:
              if WaitForStop (iSched)
@@ -1422,7 +1423,6 @@ end.
    method public logical isWorkShed(iSched as character ):
       define variable vnow as datetime-tz no-undo.
       vnow = getnow().
-      
       find first ttRun where ttrun.fstatusItem ne "WorkEnd"
                          and ttRun.StartAfter  <= vnow
                          and (   ttRun.task        eq iSched
@@ -1518,7 +1518,8 @@ end.
    end method.
    
    method public logical myProcInfo():
-      return FileExists("procinfo.txt") ne ?.
+      
+      return FileExists("procinfo.txt").
    end.
         
    define stream sLogMes. 
@@ -1571,7 +1572,7 @@ end.
             os-rename "meslogasync.log" value ("meslogasync.log" + string(mWriteLogNum)).
             output stream sLogMes to "meslogasync.log".
             assign
-               mWriteLogTime = getnow().
+               mWriteLogTime = getnow()
                mWriteLogMes  = no
             .
             

@@ -57,12 +57,12 @@ class ibs.th.gbl.propmap inherits objth:
       .
   end constructor.
  
-  constructor public propmap (iKeyIntDB as integer, inNameProp as char, inLabel as char):
+  constructor public propmap (iKeyInt as integer, inNameProp as char, inLabel as char):
     super ().
     assign
       Label_   = inLabel
       NameProp = inNameProp
-      KeyIntDB = iKeyInt
+      KeyInt   = iKeyInt
       .
   end constructor.
 

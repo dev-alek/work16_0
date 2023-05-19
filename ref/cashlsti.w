@@ -290,14 +290,14 @@ DEFINE FRAME Dialog-Frame
           DROP-DOWN-LIST
           SIZE 10 BY 1
           BGCOLOR 15 FGCOLOR 0 
-     tt-cash-desk.autonomy AT ROW 8.75 COL 13.63 NO-LABEL
+     tt-cash-desk.autonomy AT ROW 9.75 COL 13.63 NO-LABEL
           VIEW-AS RADIO-SET HORIZONTAL
           RADIO-BUTTONS 
                     "Item 1", 1,
 "Item 2", 2,
 "Item 3", 3
           SIZE 66 BY 1
-     tt-cash-desk.pos-type AT ROW 10.29 COL 61.63 COLON-ALIGNED
+     tt-cash-desk.pos-type AT ROW 11.29 COL 60.2 COLON-ALIGNED
           LABEL "Тип POS"
           VIEW-AS COMBO-BOX INNER-LINES 11
           LIST-ITEM-PAIRS "1","1",
@@ -314,20 +314,18 @@ DEFINE FRAME Dialog-Frame
      tt-cash-desk.version AT ROW 13.67 COL 60.2 COLON-ALIGNED
           LABEL "Версия протокола"
           VIEW-AS FILL-IN 
-          SIZE 19.6 BY 1
+          SIZE 24 BY 1
      f-fr-type AT ROW 14.81 COL 49.6 COLON-ALIGNED WIDGET-ID 8
      T-remote AT ROW 14.95 COL 13
      tt-cash-desk.registration-code AT ROW 16.14 COL 11.8 COLON-ALIGNED
           LABEL "Регистр. №"
           VIEW-AS FILL-IN 
           SIZE 30 BY 1
-     tt-cash-desk.serial-code AT ROW 16.14 COL 49.6 COLON-ALIGNED
+     tt-cash-desk.serial-code AT ROW 16.14 COL 51.6 COLON-ALIGNED
           LABEL "Сер. №"
           VIEW-AS FILL-IN 
           SIZE 30 BY 1
-     " формат общения с кассой" VIEW-AS TEXT
-          SIZE 30 BY .62 AT ROW 7.91 COL 14 WIDGET-ID 12
-     RECT-1 AT ROW 8.14 COL 3 WIDGET-ID 10
+     RECT-1 AT ROW 9.14 COL 3 WIDGET-ID 10
      SPACE(3.99) SKIP(7.76)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -1055,7 +1053,7 @@ DEFINE VARIABLE v-list-items AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-ii         AS INTEGER   NO-UNDO.
  define variable objType    as ibs.th.gbl.propmap no-undo.
    
-
+   mCashDevice      = new ibs.th.str.cash.CashDevice().
    do v-ii = 1 to mCashDevice:mapType:GetItem(v-ii):
       objType = mCashDevice:CurrProp.
       v-list-items = v-list-items + {&comma-char} + objType:Label_ + {&comma-char} + string(objType:KeyIntDB) .

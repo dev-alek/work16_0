@@ -32,6 +32,7 @@ Input:
 
     p-procedure-parameter    as character       - строка параметров, определенная в процедуре
     p-auto-go                as logical         - yes, если после выполнения процедуры окно диалога надо закрыть,
+                                                  ? выводится вслучае view-log = yes
                                                     не дожидаясь нажатия кнопки выхода
     p-stop-button-label      as character       - надпись кнопки Выход во время выполнения процедуры.
                                                     Если задано ? или "", надпись остается "В&ыход", и кнопка
@@ -248,6 +249,7 @@ ASSIGN
 
 
 
+
 /* ************************  Control Triggers  ************************ */
 
 &Scoped-define SELF-NAME Dialog-Frame
@@ -352,20 +354,20 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     do v-ii = 1 to num-entries( entry(1, p-procedure-name, {&delim-par})):
       v-entry = entry(v-ii, entry(1, p-procedure-name, {&delim-par})).
       run value ( v-entry) in p-parent-handle (
-            input p-mainmenu-handle
-          , input p-parent-handle
-          , input this-procedure
-          , input p-procedure-parameter
-      ) no-error.
+              input p-mainmenu-handle
+            , input p-parent-handle
+            , input this-procedure
+            , input p-procedure-parameter
+        ) no-error.
     end.
   end.
   else do:
-    run value ( entry(1, p-procedure-name, {&delim-par}) ) (
-            input p-mainmenu-handle
-          , input p-parent-handle
-          , input this-procedure
-          , input p-procedure-parameter
-      ) no-error.
+  run value ( entry(1, p-procedure-name, {&delim-par}) ) (
+          input p-mainmenu-handle
+        , input p-parent-handle
+        , input this-procedure
+        , input p-procedure-parameter
+    ) no-error.
   end.
   if error-status :error
   then do:
@@ -407,8 +409,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 
   end.
-  if v-view-log then do:
-
+  else if     p-auto-go eq ?
+          and v-view-log 
+  then do:
+     assign
+        b-exit :sensitive       = yes
+        b-exit :label           = "В&ыход"
+        v-diallog-prog-running  = no
+     .
+     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
   end.
   if return-value = "error":U then do:
     if create-window-option = 1 THEN DO:
@@ -533,6 +542,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE delete-window Dialog-Frame
 PROCEDURE delete-window :
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE({&window-name})
@@ -542,7 +552,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame _DEFAULT-DISABLE
 PROCEDURE disable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     DISABLE the User Interface
@@ -559,7 +569,8 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame _DEFAULT-ENABLE
 PROCEDURE enable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     ENABLE the User Interface
@@ -581,6 +592,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-counter-value Dialog-Frame
 PROCEDURE get-counter-value :
 /*------------------------------------------------------------------------------
@@ -601,6 +613,7 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-stop-state Dialog-Frame
 PROCEDURE get-stop-state :
@@ -632,6 +645,7 @@ END PROCEDURE. /* get-stop-state */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-title Dialog-Frame
 PROCEDURE get-title :
@@ -676,6 +690,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE hide-counter Dialog-Frame
 PROCEDURE hide-counter :
 /*------------------------------------------------------------------------------
@@ -695,6 +710,7 @@ END PROCEDURE. /* hide-counter */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-counter-value Dialog-Frame
 PROCEDURE set-counter-value :
@@ -717,6 +733,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-title Dialog-Frame
 PROCEDURE set-title :
 /*------------------------------------------------------------------------------
@@ -737,6 +754,7 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE set-view-log Dialog-Frame
 PROCEDURE set-view-log :
@@ -760,6 +778,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE show-counter Dialog-Frame
 PROCEDURE show-counter :
 /*------------------------------------------------------------------------------
@@ -779,6 +798,7 @@ END PROCEDURE. /* show-counter */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-counter Dialog-Frame
 PROCEDURE write-counter :
@@ -801,6 +821,7 @@ END PROCEDURE. /* write-counter */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-log Dialog-Frame
 PROCEDURE write-log :
@@ -970,6 +991,9 @@ on error undo, return error
         assign
         v-default-name-flag = (if v-default-name-flag = 0 then 1 else v-default-name-flag)
         v-file-name      = entry(1, ENTRY(1, p-procedure-name, {&delim-par}), '.') + '.log'.
+        v-file-name      = entry(num-entries(v-file-name,{&back-slash-char}),v-file-name,{&back-slash-char}).
+        v-file-name      = entry(num-entries(v-file-name,{&slash-char}),v-file-name,{&slash-char}).
+        
 &scop my-message    substitute("Не задано имя файло лога&1Вывод лога будет осуществляться в файл с именем выполняемой процедуры &2" ~
                                    ,v-file-name                                                                    ~
                                    ,v-path                                                                         ~
@@ -1015,28 +1039,28 @@ on error undo, return error
     else do:
       find first buf_temp-file-name where
                 buf_temp-file-name.file-name_ = v-file-name no-error .
-       if not available buf_temp-file-name then do :
-          create buf_temp-file-name.
-          assign
-          buf_temp-file-name.file-name_      = v-file-name
-          buf_temp-file-name.path-file-name_ = v-path-file-name
-          v-default-name-flag = (if v-default-name-flag = 1 then 2 else v-default-name-flag)
-          .
-          assign
-          v-sys-time-string = sys-time_get-sys-str-func() no-error .
-          run gbl/compname.p (output v-comp-name) no-error .
-          run writelog-extended in this-procedure(
-                                          input buf_temp-file-name.path-file-name_
-                                          ,input 3
-                                          ,input g#userid
-                                          ,input substitute("&1 &2", v-sys-time-string, v-comp-name)
-                                          ,input 3
-                                        ) no-error .
-          if error-status:error then do:
-        &scop my-message   substitute("Ошибка при выводе в файл:&1&2&1&3", ~{&new-line~}, error-status:get-message(1), return-value )
-          {&process-error}.
-          end.
-       end.
+      if not available buf_temp-file-name then do :
+        create buf_temp-file-name.
+        assign
+        buf_temp-file-name.file-name_      = v-file-name
+        buf_temp-file-name.path-file-name_ = v-path-file-name
+        v-default-name-flag = (if v-default-name-flag = 1 then 2 else v-default-name-flag)
+        .
+        assign
+        v-sys-time-string = sys-time_get-sys-str-func() no-error .
+        run gbl/compname.p (output v-comp-name) no-error .
+        run writelog-extended in this-procedure(
+                                        input buf_temp-file-name.path-file-name_
+                                        ,input 3
+                                        ,input g#userid
+                                        ,input substitute("&1 &2", v-sys-time-string, v-comp-name)
+                                        ,input 3
+                                      ) no-error .
+        if error-status:error then do:
+      &scop my-message   substitute("Ошибка при выводе в файл:&1&2&1&3", ~{&new-line~}, error-status:get-message(1), return-value )
+        {&process-error}.
+        end.
+      end.
     end.
   end. /*первая попытка записи в файл*/
   if not buf_temp-file-name.blocked then do:

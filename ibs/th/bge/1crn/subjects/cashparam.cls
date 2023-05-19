@@ -33,7 +33,6 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
    
    constructor public cashparam (  ):
       super ().
-      parent_ = substitute ("cash-param&1&1&1",{&delim-par}).
       mCashDevice  = new CashDevice().
       mCashSection = new CashSection().
    end constructor.
@@ -50,7 +49,7 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
     super:SetPropProtected(inTag, inValue).
     case inTag:
       when "sign" then do:
-         vSign = {&attr-ineger} - 1.
+         vSign = {&attr-integer}.
          entry(2,parent_) = string(vSign).
       end.
       when "source" then do:
@@ -118,7 +117,9 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
       assign
          vSign = ?
          vsource = ?
-         vSection = ? 
+         vSection = ?
+         parent_ = substitute ("cash-param&1&1&1",{&delim-par}).
+       
       .
    end method.
 
