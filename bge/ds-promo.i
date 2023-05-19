@@ -56,6 +56,7 @@ define temp-table tt-PromoBc no-undo
   field bc-code    as character
   field mode       as character
   FIELD gdsName AS char 
+  field Chang      as logical
   .    
   
 define temp-table tt-PromoGoodsAppl no-undo
@@ -64,6 +65,7 @@ define temp-table tt-PromoGoodsAppl no-undo
   FIELD gdsName AS char 
   field sub     as class Progress.Lang.Object //serialize-hidden
   FIELD mode    AS char
+  field Chang      as logical
   .
 define temp-table tt-PromoGoodsCrite no-undo
   like tt-PromoGoodsAppl
