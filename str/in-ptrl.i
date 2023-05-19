@@ -459,9 +459,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             else
             do:
-              assign
-                v-act-name = 'actn_rvs-on-doc_upd-revision':U /* Право на изменение сверки */
-              .
+              if p-rvs-type = {&rvs-after-doc} then
+                v-act-name = 'actn_rvs-on-doc_upd-revision':U. /* Право на изменение сверки */
             end.
             case p-rvs-type :
               when {&rvs-before-doc} then do:
