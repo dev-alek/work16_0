@@ -1657,12 +1657,19 @@ when 4 then do:
                                                  no-error .
                   if available buf_place
                   then do :
-                    for first com_rvs-line where com_rvs-line.gds-code = buf_doc-pl.gds-code
-                                             and com_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                                             and com_rvs-line.obj-type = buf_doc-pl.obj-type
-                                             and com_rvs-line.obj-code = buf_doc-pl.obj-code
-                                             and com_rvs-line.pl-code  = buf_place.pl-code
-                    :
+                    find first com_rvs-line where com_rvs-line.gds-code = buf_doc-pl.gds-code
+                                              and com_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                              and com_rvs-line.obj-type = buf_doc-pl.obj-type
+                                              and com_rvs-line.obj-code = buf_doc-pl.obj-code
+                                              and com_rvs-line.pl-code  = buf_place.pl-code
+                    no-error .
+                    if not available com_rvs-line
+                    then do :
+                      message substitute ("Внимание! Не сделана сверка по резервуару №&1, включенному в связку сообщающихся резервуаров! Документ инвентаризации не создан!", buf_place.loc1)
+                      view-as alert-box error .
+                      undo block_cre-inv, leave block_cre-inv .
+                    end .
+                    else do :
                       assign
                         O_FACT-base = O_FACT-base + (com_rvs-line.state-measure-qnty + com_rvs-line.state-add-qnty)
                         O_FACT-cli  = O_FACT-cli + (com_rvs-line.state-measure-cli-qnty + com_rvs-line.state-add-qnty * com_rvs-line.state-density)

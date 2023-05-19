@@ -916,6 +916,45 @@ do :
   define variable v-cv-place as character no-undo .
   if v-com-vessel-changed
   then do :
+    for each com_place-attr exclusive-lock where com_place-attr.obj-type = p-obj-type
+                                             and com_place-attr.obj-code = p-obj-code
+                                             and com_place-attr.attr-code = {&place-com-tanks}
+                                             and com_place-attr.attr-value > ""
+    :
+      ii_ :
+      do ii = 1 to num-entries(com_place-attr.attr-value) :
+        if entry(ii, com_place-attr.attr-value) = tt-place.loc1
+        then do :
+          com_place-attr.attr-value = trim(replace((com_place-attr.attr-value + ","), (tt-place.loc1 + ","), ""), ",") .
+          leave ii_ .
+        end .
+      end .
+      if com_place-attr.attr-value = ""
+      then do :
+        run placelib_write-attr  (input {&place-com-vessel}
+          ,input p-obj-code
+          ,input p-obj-type
+          ,input com_place-attr.pl-code
+          ,input "no"
+          ,output v-ok      ) no-error.
+      end .
+      for first com_place no-lock where com_place.obj-type = p-obj-type
+                                    and com_place.obj-code = p-obj-code
+                                    and com_place.pl-code  = com_place-attr.pl-code
+      :
+        { gbl/rum-runa.i
+          ?
+          this-procedure:handle
+          ?
+          {&thref-proc_ref-event}
+          " buffer com_place:handle "
+          " buffer com_place:handle "
+          ''
+          ''
+          no-error
+        }
+      end .
+    end .
     if com-tanks > ""
     then do :
       do ii = 1 to num-entries(com-tanks) :
@@ -966,47 +1005,6 @@ do :
         
           end.
         end .                              
-      end .
-    end .
-    else do :
-      for each com_place-attr exclusive-lock where com_place-attr.obj-type = p-obj-type
-                                               and com_place-attr.obj-code = p-obj-code
-                                               and com_place-attr.attr-code = {&place-com-tanks}
-                                               and com_place-attr.attr-value > ""
-      :
-        ii_ :
-        do ii = 1 to num-entries(com_place-attr.attr-value) :
-          if entry(ii, com_place-attr.attr-value) = tt-place.loc1
-          then do :
-            com_place-attr.attr-value = trim(replace((com_place-attr.attr-value + ","), (tt-place.loc1 + ","), ""), ",") .
-            leave ii_ .
-          end .
-        end .
-        if com_place-attr.attr-value = ""
-        then do :
-          run placelib_write-attr  (input {&place-com-vessel}
-            ,input p-obj-code
-            ,input p-obj-type
-            ,input com_place-attr.pl-code
-            ,input "no"
-            ,output v-ok      ) no-error.
-        end .
-        for first com_place no-lock where com_place.obj-type = p-obj-type
-                                      and com_place.obj-code = p-obj-code
-                                      and com_place.pl-code  = com_place-attr.pl-code
-        :
-          { gbl/rum-runa.i
-            ?
-            this-procedure:handle
-            ?
-            {&thref-proc_ref-event}
-            " buffer com_place:handle "
-            " buffer com_place:handle "
-            ''
-            ''
-            no-error
-          }
-        end .
       end .
     end .
   end .
