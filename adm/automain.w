@@ -1065,10 +1065,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               if lookup (i-auto-type , mAsyncHelper:getListTask()) eq 0
               then
                  run startproc (i-auto-type
-                         ,mlistdb
-                         ,mListKey
-                         ,now).
-           end.            
+                               ,mlistdb
+                               ,mListKey
+                               ,mAsyncHelper:getnowDay()
+                             ).
+           end.
+                          
            if mAsyncHelper:isWorkShed()
            then do:
               run gbl/dbdiscon.p no-error.

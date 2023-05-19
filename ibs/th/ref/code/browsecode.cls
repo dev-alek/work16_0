@@ -341,8 +341,8 @@ class ibs.th.ref.code.browsecode inherits Form final:
       Modifying the contents of this method using a code editor will invalidate any support for this file. */
       this-object:components = new System.ComponentModel.Container().
       @VisualDesigner.FormMember (NeedsInitialize="true").
-      define variable tableDesc1 as Progress.Data.TableDesc no-undo.
-      tableDesc1 = new Progress.Data.TableDesc("Code").
+      define variable tableDesc3 as Progress.Data.TableDesc no-undo.
+      tableDesc3 = new Progress.Data.TableDesc("Code").
       @VisualDesigner.FormMember (NeedsInitialize="true").
       define variable resources as Progress.Util.ResourceManager no-undo.
       resources = new Progress.Util.ResourceManager("ibs.th.ref.code.browsecode").
@@ -598,7 +598,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
       arrayvar1 = new "Progress.Data.TableDesc[]"(0).
-      tableDesc1:ChildTables = arrayvar1.
+      tableDesc3:ChildTables = arrayvar1.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 19 no-undo.
       arrayvar2[1] = new Progress.Data.ColumnPropDesc("fchange", "", Progress.Data.DataType:LOGICAL).
@@ -620,8 +620,8 @@ class ibs.th.ref.code.browsecode inherits Form final:
       arrayvar2[17] = new Progress.Data.ColumnPropDesc("procdel", "Процедура удаления", Progress.Data.DataType:CHARACTER).
       arrayvar2[18] = new Progress.Data.ColumnPropDesc("procedit", "процедура редактирования", Progress.Data.DataType:CHARACTER).
       arrayvar2[19] = new Progress.Data.ColumnPropDesc("fstatus", "Статус", Progress.Data.DataType:CHARACTER).
-      tableDesc1:Columns = arrayvar2.
-      this-object:bindCode:TableSchema = tableDesc1.
+      tableDesc3:Columns = arrayvar2.
+      this-object:bindCode:TableSchema = tableDesc3.
       /*  */
       /* toolStrip1 */
       /*  */
@@ -744,17 +744,20 @@ class ibs.th.ref.code.browsecode inherits Form final:
       /*  */
       /* ElemMenu */
       /*  */
+      this-object:ElemMenu:AllowMerge = false.
       define variable nestedvar1 as System.Windows.Forms.AnchorStyles no-undo.
       nestedvar1 = System.Windows.Forms.AnchorStyles:Top.
       this-object:ElemMenu:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ElemMenu:BackColor = System.Drawing.SystemColors:ControlLight.
       this-object:ElemMenu:Dock = System.Windows.Forms.DockStyle:None.
+      this-object:ElemMenu:ImageScalingSize = new System.Drawing.Size(28, 28).
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar4 as System.Windows.Forms.ToolStripItem extent 1 no-undo.
       arrayvar4[1] = this-object:Hist.
       this-object:ElemMenu:Items:AddRange(arrayvar4).
-      this-object:ElemMenu:Location = new System.Drawing.Point(954, 0).
+      this-object:ElemMenu:Location = new System.Drawing.Point(796, 0).
       this-object:ElemMenu:Name = "ElemMenu".
-      this-object:ElemMenu:Size = new System.Drawing.Size(36, 24).
+      this-object:ElemMenu:Size = new System.Drawing.Size(194, 36).
       this-object:ElemMenu:TabIndex = 3.
       this-object:ElemMenu:Text = "Меню".
       /*  */
@@ -767,7 +770,8 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:Hist:DropDownItems:AddRange(arrayvar5).
       this-object:Hist:Image = cast(resources:GetObject("Hist.Image"), System.Drawing.Image).
       this-object:Hist:Name = "Hist".
-      this-object:Hist:Size = new System.Drawing.Size(28, 20).
+      this-object:Hist:Size = new System.Drawing.Size(94, 32).
+      this-object:Hist:Text = "История".
       /*  */
       /* oneHist */
       /*  */

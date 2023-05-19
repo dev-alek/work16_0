@@ -88,8 +88,12 @@ on error undo, return error return-value
       undo, return error return-value .
     end.
   end case .
-
-
+   define variable v-value    as character no-undo .
+   define variable v-type     as character no-undo .
+   define variable isERPRN as logical no-undo.
+  
+    run gbl/conf-rd.p ("is-erpRN", "", "", 0, "", "", "", no, output v-value, output v-type) no-error.
+    isERPRN = v-value eq "yes".
   define stream sinp .
   define stream sout .
 
@@ -3341,7 +3345,7 @@ procedure m-cashp-ref :
      return.
   end.  
   run ref/cashpargroup.w ( input  parparentproc
-                     ,input  {&update}
+                     ,input  if isERPRN then {&lookup} else {&update}
                      ,input  ""
                      ,input "cash-param"
                      ,input ?
@@ -4813,7 +4817,7 @@ procedure m-cash-param-exe :
       run saveCashParHash(v-current-db-num).
    vList = "cashp1,cashp2". /* параметры 1 клава 2*/
    if vList ne ""
-   then 
+   then do: 
       run str/diallog.w (
         input parparentproc
       , input this-procedure
@@ -4823,6 +4827,22 @@ procedure m-cash-param-exe :
       , input "":U
       , input substitute("ѕолучение параметров кассы")
       ) no-error.
+      
+      run bge\send1cerp.p (?,
+                      this-procedure,
+                      this-procedure,
+                      "CashParamControl",
+                      ?,
+                      ?,
+                      ?).
+      run bge\send1cerp.p (?,
+                      this-procedure,
+                      this-procedure,
+                      "CashParamHist",
+                      ?,
+                      ?,
+                      ?).
+   end.
 end procedure.
 
 procedure m-catalog-petrol-exe :
