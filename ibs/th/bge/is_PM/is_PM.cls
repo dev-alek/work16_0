@@ -2863,10 +2863,12 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Inv})
-                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
-                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))
+/*                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or                                                */
+/*                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    and ((buf_trn-doc.shift-date > end_rvs-doc.shift-date) or
+                                         (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num > end_rvs-doc.shift-num))
                                     :
           { str/tdat-val.i
               buf_trn-doc.doc-code
@@ -2904,10 +2906,12 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
-                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
-                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))
+/*                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or                                                */
+/*                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    and ((buf_trn-doc.shift-date > end_rvs-doc.shift-date) or
+                                         (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num > end_rvs-doc.shift-num))
                                     :
           { str/tdat-val.i
               buf_trn-doc.doc-code
