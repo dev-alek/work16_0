@@ -29,7 +29,7 @@ define variable vss-description as character no-undo initial "Сводный отчёт по п
 ( input parparentproc ,
   input "rep/e-sum-fuel-supp.w":u ,
   input "Сводный отчёт по поставкам топлива":u ,
-  input 4 ,
+  input 10 ,
   input "":u,
   input "{&o-currency},{&o-choice},{&o-all}":u,
   input "":u,

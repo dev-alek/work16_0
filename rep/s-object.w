@@ -92,6 +92,7 @@ define variable menu-ed_date-alone-handle   as handle    no-undo .
 define variable menu-ed_date-start-handle   as handle    no-undo .
 define variable menu-ed_date-end-handle     as handle    no-undo .
 define variable keep-spis as character no-undo .
+define variable choose-shift as logical no-undo init no .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -2194,6 +2195,12 @@ case temp-param-date:
    End.
 End case.
 
+if choose-shift
+and TOG-Shift:sensitive
+then do :
+  TOG-Shift = yes .
+  apply "value-changed" to TOG-Shift in frame F-Main .
+end .
 
 END PROCEDURE.
 
@@ -2509,6 +2516,11 @@ define buffer buf_shift-obj for ub.shift-obj .
 
 RUN dispatch IN THIS-PROCEDURE ( INPUT 'apply-layout':U ) .
 run take-var in this-procedure .
+if temp-param-date = 10
+then do :
+  temp-param-date = 4 .
+  choose-shift = yes .
+end .
 Assign
  Date-Alone   = X-Date-Alone
  Date-End     = X-Date-End
