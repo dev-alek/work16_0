@@ -3847,6 +3847,10 @@ if error-status :error then do:
   return error.
 end.
 if prt-rec <> ? and pardoc-mode = {&lookup} then reposition br-dtl to recid prt-rec no-error.
+if t-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem}
+then do :
+  disable r-outs with frame {&frame-name} .
+end .
 if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then 
 do:
   menu-item m_no-marks:sensitive in menu m-marks = yes .
