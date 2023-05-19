@@ -50,15 +50,15 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
     case inTag:
       when "sign" then do:
          vSign = {&attr-integer}.
-         entry(2,parent_) = string(vSign).
+         entry(2,parent_,{&delim-par}) = string(vSign).
       end.
       when "source" then do:
          vsource  = {&attr-integer}.
-         entry(3,parent_) = string(vsource).
+         entry(3,parent_,{&delim-par}) = string(vsource).
       end.
       when "section" then do:
          vSection = {&attr-str}.
-        entry(4,parent_) = vSection.
+        entry(4,parent_,{&delim-par}) = vSection.
       end.
       when "name" then do:
         code_ = {&attr-str} .
@@ -108,7 +108,8 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
     then
        undo, throw new Progress.Lang.AppError( substitute ('Тег "&1" имеет не допустимое значение "&2"', "sign",vsign + 1)).
     
-    
+    old_code_ = code_.
+    old_parent_ = parent_.
   end.
 
   method override protected void ClearSub(  ):
@@ -118,6 +119,9 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
          vSign = ?
          vsource = ?
          vSection = ?
+         old_code_ = ?
+         old_parent_ = ?
+         code_  = ?
          parent_ = substitute ("cash-param&1&1&1",{&delim-par}).
        
       .

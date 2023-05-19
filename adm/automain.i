@@ -434,8 +434,8 @@ procedure AddCashParam:
             mFileCashParLog = "". 
       end.
    end.
-   if (    lookup ({&btpr-type-autonws}   ,p-auto-type-list) > 0 
-        or lookup ({&btpr-type-autooxml}  ,p-auto-type-list) > 0
+   if (   /* lookup ({&btpr-type-autonws}   ,p-auto-type-list) > 0 
+        or */ lookup ({&btpr-type-autooxml}  ,p-auto-type-list) > 0
       )
       and voldDate ne iToday
    then do:
@@ -446,8 +446,8 @@ procedure AddCashParam:
       if iTime < 50400 /* 14 * 60 * 60 */
       then
          run addTaskTime in this-procedure("cashParam","utl/proc-send-all.p" , mFileCashParLog, datetime-tz (month (iToday),day (iToday), year (iToday),14,0 )).
-run addTaskTime in this-procedure("cashParam","utl/proc-send-all.p" , mFileCashParLog, datetime-tz (month (iToday),day (iToday), year (iToday),14,0 )).
    end.
+
 end.
 define variable mPrintNextMes as logical no-undo init yes.
 procedure checkConect:

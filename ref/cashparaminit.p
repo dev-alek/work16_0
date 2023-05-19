@@ -24,8 +24,7 @@ define variable vss-description as character no-undo init "".
 { gbl/cd-attr.i}
 define variable Types      as ibs.th.str.cash.CashDevice no-undo.
 Types = new ibs.th.str.cash.CashDevice().
-if g#db-num eq 0
-then do:
+ do:
    define variable objType    as ibs.th.gbl.propmap no-undo.
    
    define buffer cashcode for ub.code .
@@ -117,7 +116,7 @@ then do:
    end.
    
 end.
-else do:
+ do:
    define buffer cash-desk for ub.cash-desk.
    for each cash-desk where cash-desk.db-num   eq g#db-num  
                         and cash-desk.pos-type eq {&cd-type-Autotank}   

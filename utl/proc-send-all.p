@@ -48,5 +48,19 @@ no-lock:
                                    )
                       )
    .
+   run bge\send1cerp.p (?,
+                      this-procedure,
+                      this-procedure,
+                      "CashParamControl",
+                      ?,
+                      ?,
+                      ?).
+   run bge\send1cerp.p (?,
+                      this-procedure,
+                      this-procedure,
+                      "CashParamHist",
+                      ?,
+                      ?,
+                      ?).
 end.
 { utl/proc-async.i proc_end}

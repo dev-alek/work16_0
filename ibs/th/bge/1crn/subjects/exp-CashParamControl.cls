@@ -12,9 +12,10 @@
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.gbl.*.
+using ibs.th.bge.1crn.export.send1cerpsub.
 block-level on error undo, throw.
 
-class ibs.th.bge.1crn.subjects.CashParamControl inherits ibs.th.gbl.sys.objth implements iexpsubject: 
+class ibs.th.bge.1crn.subjects.exp-CashParamControl inherits send1cerpsub implements iexpsubject: 
    define override public property vss-revision    as character no-undo init "$Revision:$":U get .
    define override public property vss-author      as character no-undo init "$Author:$":U get.
    define override public property vss-date        as character no-undo init "$Date:$":U get.
@@ -23,22 +24,13 @@ class ibs.th.bge.1crn.subjects.CashParamControl inherits ibs.th.gbl.sys.objth im
    define override public property  vss-description as character no-undo init "Выгрузка эталонных кассовых параметров" get.  
    {cmp/str-glbl.i class}
    &scop tag-interface 'Control-etalon-params':U
-   define property InitSecTag as character no-undo init {&tag-interface}
+   define override public property InitSecTag as character no-undo init {&tag-interface}
    get.
-    
+   
 
-   define property Msg as character no-undo
-   get:
-      return trim (Msg, {&new-line}).
-   end.
-   private set (inArg as char):
-      Msg = Msg + {&new-line} + inArg.
-   end.
-    
-
-   method public void CrContentToSW( input insw as handle ):
+   method override public void CrContentToSW( input insw as handle ):
       define buffer code for ub.code.
-      for each code where code.code begins "cash-param"
+      for each code where code.parent begins "cash-param"
                       and num-entries (code.parent,{&delim-par}) eq 4
       no-lock:
          insw:start-element ("Control-etalon-param").
