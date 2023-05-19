@@ -25,10 +25,16 @@ class ibs.th.ref.code.code_trg final:
       field hQuery    as handle
   index NameQuery NameQuery.
   
+  define temp-table tt-SaveParam no-undo
+      field LevelSave   as integer  
+      field MaxLevel    as integer 
+  index LevelSave LevelSave.
+  
   define temp-table tt-form no-undo
       field f-level    as integer  
       field f-numfield as integer 
-      field f-brwname  as character 
+      field f-brwname  as character
+      field f-SetLevel as integer
   index indForm f-level f-numfield .
   
   define temp-table tt-menu no-undo
@@ -47,12 +53,62 @@ class ibs.th.ref.code.code_trg final:
     field Frecid as int64 init ?.
   
   {gbl/tmprecid.i }
+  
+  define variable v-code-brw as class ibs.th.ref.code.browsecode no-undo .
+  
   define public variable parent as character no-undo.
   define public variable menuHandle as handle no-undo.
   define public variable title  as character no-undo init ?.
   define public variable startlevel as integer no-undo.
   define public variable mViewdel as logical no-undo.
-  define public variable MaxLevel as integer  no-undo.
+  
+  define property curLevel as integer no-undo
+  get:
+      return if parent eq "" then 0 else num-entries(parent,{&delim-par}).
+  end.
+  
+  define public property MaxLevel as integer  no-undo
+  get. 
+  set(arg as int):
+     saveMaxLevel().
+     MaxLevel = arg.
+  end.
+  
+  define public property isForm as logical  no-undo
+  get:
+     return valid-object (v-code-brw).
+  end. 
+  
+  method  public void saveMaxLevel ():
+     if not isForm  then return.
+     define variable vcurLevel as integer no-undo.
+     vcurLevel = curLevel.
+     find first tt-SaveParam where tt-SaveParam.LevelSave eq vcurLevel no-lock no-error.
+     if not available tt-SaveParam
+     then do:
+        create tt-SaveParam.
+        tt-SaveParam.LevelSave = vcurLevel.
+     end.
+     
+     
+  end.
+  
+  method  public void clearParam ():
+     define variable vcurLevel as integer no-undo.
+     vcurLevel = curLevel.
+     find first tt-SaveParam where tt-SaveParam.LevelSave eq vcurLevel no-lock no-error.
+     if available tt-SaveParam
+     then do:
+        MaxLevel = tt-SaveParam.MaxLevel.
+     end.
+     for each tt-SaveParam where tt-SaveParam.LevelSave ge vcurLevel:
+        delete tt-SaveParam.
+     end.
+     for each tt-form where tt-form.f-SetLevel ge vcurLevel:
+        delete tt-form.
+     end.
+     
+  end.
   
   define property endLevel as logical no-undo
   get:
@@ -68,7 +124,6 @@ class ibs.th.ref.code.code_trg final:
    get. 
    set.
   
-  define variable v-code-brw as class ibs.th.ref.code.browsecode no-undo .
   define variable mode-erprn as logical no-undo init ?.
   method  public logical get1CERP(): 
        define variable conf-par as character no-undo.
@@ -117,13 +172,15 @@ class ibs.th.ref.code.code_trg final:
    destructor public code_trg ( ):
 
    end destructor.
+   
    method public void NextLevel ():
       define buffer code for code.
       find first code where recid(code) eq tt-code-brw.Frecid no-lock no-error.
       if available  code 
       then do:
          
-         if code.procview ne ""
+         if     code.procview ne ""
+            and SearchPFile(code.procview) ne ?
          then do:
             if mode eq {&select}
             then
@@ -134,12 +191,16 @@ class ibs.th.ref.code.code_trg final:
                rid-rest ().
          end.
          else do:
+            
             if not endLevel
-            then
+            then do:
+               codeProcViewSet(code.parent,code.code).
                assign
                   parent  = code.parent + {&delim-par} + code.code
                   parent  = left-trim(parent,{&delim-par})
                .
+               setFieldBrw(num-entries(Parent,{&delim-par})).
+            end.
             getQuery("code").
          end.
       end.
@@ -192,14 +253,16 @@ class ibs.th.ref.code.code_trg final:
          then do:
             if mode eq {&select}
             then do:
-               for each tmprecid:
-                  delete tmprecid.
-               end.  
+/*               for each tmprecid: */
+/*                  delete tmprecid.*/
+/*               end.               */
                run gbl/rid-keep.p (input table tmprecid) no-error.
             end.
             return no.
          end.
-         else do:   
+         else do:
+            clearParam(). 
+            setFieldBrw(num-entries(Parent,{&delim-par})).  
             getQuery("code").
             return yes.
          end.
@@ -208,6 +271,10 @@ class ibs.th.ref.code.code_trg final:
    end.
    
    method public void formLable (ilevel as integer, inumfield as integer ,iname as character   ):
+       formLableSetLevel ((if isForm then curLevel else 0) + ilevel, inumfield, iname).
+   end.
+   
+   method public void formLableSetLevel (ilevel as integer, inumfield as integer ,iname as character   ):
       find first tt-form where tt-form.f-level    eq ilevel
                            and tt-form.f-numfield eq inumfield 
                            no-error.
@@ -219,6 +286,7 @@ class ibs.th.ref.code.code_trg final:
             tt-form.f-level    = ilevel
             tt-form.f-numfield = inumfield
             tt-form.f-brwname  = iname
+            tt-form.f-SetLevel = if isForm then curLevel else -1
          . 
          
       end.
@@ -259,7 +327,7 @@ class ibs.th.ref.code.code_trg final:
       end.
       else
          hQuery = tt-Query.hQuery.
-          setFieldBrw(num-entries(Parent,{&delim-par})).
+          
           case iNameQuery:
               when "code"
               then do:
@@ -333,6 +401,52 @@ class ibs.th.ref.code.code_trg final:
        
        delete object v-code-brw.
     end.
+    
+    method public void codeProcViewSet(iparent as character ,icode as character ):
+       if iparent eq ""
+       then do:
+          if icode eq "CashFunKey"
+          then do:
+             MaxLevel = MaxLevel + 1.
+             formLable(1, 1, "Функция").
+             formLable(1, 2, "Наименование").
+             formLable(1, 3, "Код функции").
+             formLable(1, 4, "   ").
+          end.
+          else if icode eq "CashParamHash"
+          then do:
+             MaxLevel = MaxLevel + 1.
+             formLable(1, 1, "БД").
+             formLable(1, 2, "Дата и время").
+             formLable(1, 3, "Хеш").
+          end.
+          else if icode eq "codeerror"
+          then do:
+             MaxLevel = MaxLevel + 3.
+             formLable(1, 1, "Код").
+             formLable(1, 2, "Наименование").
+
+             formLable(2, 1, "Код").
+             formLable(2, 2, "Наименование").
+
+             formLable(3, 1, "Код").
+             formLable(3, 2, "Наименование").
+             formLable(3, 3, "Текст").
+             formLable(3, 4, "Группировка выгр.").
+             formLable(3, 5, "Знач.Выгр.").
+               
+             
+          end.
+          else if icode eq "okei-kkt"
+          then do:
+             formLable(1, 1, "Код ОКЕИ").
+             formLable(1, 2, "Код ЕИ ККТ").
+             formLable(1, 4, "ПФ ККТ").
+             MaxLevel = MaxLevel + 1.
+          end.
+       end.
+    end.
+    
     method public void setFieldBrw (ilevel as integer ):
        define variable vi as integer no-undo.
        if not valid-object (v-code-brw)
@@ -389,6 +503,7 @@ class ibs.th.ref.code.code_trg final:
        find first sys-ctrl.
        return sys-ctrl.db-num.
     end.
+    
     method public void histOne ( ):
        define variable v-rid-list as character no-undo.
        
@@ -499,13 +614,11 @@ class ibs.th.ref.code.code_trg final:
       
     end method.
     
-    
-    
     method public character  getstatus (iStatus as integer  ):
     define variable vStatus as character no-undo.   
-    &glob status-code string(iStatus)
-    vStatus = {&status-int-name} no-error.
-    return vStatus. 
+       &glob status-code string(iStatus)
+       vStatus = {&status-int-name} no-error.
+       return vStatus. 
     
     end method.
     
@@ -519,7 +632,6 @@ class ibs.th.ref.code.code_trg final:
           and ibuffertt::procedit ne  ?
        then
           oProc = ibuffertt::procedit.
-       
        
        else do:
          assign

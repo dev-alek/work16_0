@@ -136,8 +136,9 @@ class ibs.th.ref.code.browsecode inherits Form final:
             bexport:visible = true
             bimport:visible = true
             bselect:visible = false
-            this-object:dataGridView1:Columns[0]:Visible = no.
+            
          .
+         this-object:dataGridView1:Columns[0]:Visible = no.
       end.
       return.
 
