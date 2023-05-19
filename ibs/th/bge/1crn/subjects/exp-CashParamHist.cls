@@ -30,15 +30,20 @@ class ibs.th.bge.1crn.subjects.exp-CashParamHist inherits send1cerpsub implement
    method private character fConvetDateTime 
       (input iTStamp as dec):
    
-     define variable vDateTime as datetime no-undo.
-     define variable vDate     as date     no-undo.
-     define variable vDays     as int64    no-undo.
-     define variable vSec      as integer  no-undo.
-   
+     define variable vDateTime as datetime  no-undo.
+     define variable vDate     as date      no-undo.
+     define variable vDays     as int64     no-undo.
+     define variable vSec      as integer   no-undo.
+     define variable vTimeZone as character no-undo.
      vDays = truncate(int64(iTStamp) / 3600 / 24, 0).
      vDate = date("01/01/1970") + vDays.
      vSec = (int64(iTStamp) - vDays * 3600 * 24).
-     return string(vDate,"99/99/9999") + " " + string(vSec, "HH:MM:SS").
+     if timezone >= 0 
+     then 
+        vTimeZone = "+" + string( timezone * 60,"HH:MM").
+     else
+        vTimeZone = "-" + string( timezone * -60,"HH:MM").
+     return string(iso-date(datetime-tz(string(vDate,"99/99/9999") + " " + string(vSec, "HH:MM:SS" + vTimeZone) ))).
       
    end method. 
 
