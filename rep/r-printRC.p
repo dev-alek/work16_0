@@ -148,17 +148,7 @@ define variable v-date_to   as character no-undo .
   /*вызов процедуры печати шапки отчета*/      
   output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
   put stream OutStr-html unformatted
-    "<!DOCTYPE HTML>" skip
-    ' <html>' skip
-    '  <head>' skip
-    '   <meta charset="utf-8"/>' skip
-    '    <style type="text/css">' skip
-                        
-    '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-    '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-    '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
-    '   </style>' skip
-    '  </head>' skip
+    { rep/htmlhead.i }
     .
                         
                         
@@ -254,7 +244,7 @@ define variable v-date_to   as character no-undo .
   end.    
 
   for each temp_db-list,
-    last buf_db no-lock where buf_db.db-num = temp_db-list.db-num:
+    last buf_db no-lock where buf_db.db-num = temp_db-list.db-num by buf_db.db-num desc:
     _next:
     for each buf_upgrade where buf_upgrade.db-num = buf_db.db-num and entry(1,buf_upgrade.version-num," ") >= v-date_from and entry(1,buf_upgrade.version-num," ") <= v-date_to
     and (lookup ("Rel",buf_upgrade.version-num," ") > 0 or buf_upgrade.version-num = "v16_0000.000.000")
@@ -280,7 +270,7 @@ define variable v-date_to   as character no-undo .
         buf_upgrade-attr.attr-code = "compile-date" no-error .
        
       put stream OutStr-html unformatted
-        '<td text_wrap="true" style="align: center;">' + if available (buf_upgrade-attr) and string(buf_upgrade-attr.attr-value) <> ? then string(buf_upgrade-attr.attr-value) + '</td>' else "0 " + '</td>' skip
+        '<td text_wrap="true" style="align: center;">' + if available (buf_upgrade-attr) and string(buf_upgrade-attr.attr-value) <> ? then string(buf_upgrade-attr.attr-value) + '</td>' else " " + '</td>' skip
         .
       v-file-date = "" .
       v-file-time = "" .
@@ -302,7 +292,6 @@ define variable v-date_to   as character no-undo .
         .
       put stream OutStr-html unformatted
         '<td text_wrap="true" style="align: center;">' + string(buf_upgrade.UpgDate) + "_" + string(buf_upgrade.UpgTime) + '</td>' skip  .
-      v-menedger = ''.
       for first buf_upgrade-attr no-lock where 
         buf_upgrade-attr.db-num = buf_upgrade.db-num and 
         buf_upgrade-attr.version-num = buf_upgrade.version-num and
@@ -313,11 +302,10 @@ define variable v-date_to   as character no-undo .
         v-menedger = buf_user-account.last-name + '  ' + buf_user-account.first-name + ' ':U + buf_user-account.second-name.
        end.
         put stream OutStr-html unformatted        
-          '<td text_wrap="true" style="align: center;">' + string(v-menedger) + '</td>' skip
-          '</tr>' skip
-          .
+          '<td text_wrap="true" style="align: center;">' + string(v-menedger) + '</td>' skip.
+         put stream OutStr-html unformatted                  '</tr>' skip.
         leave _next .
-      end.
+      
     end.  
   end.
   put stream OutStr-html unformatted

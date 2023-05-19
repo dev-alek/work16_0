@@ -124,8 +124,8 @@ DEFINE BUTTON b-add
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-chiled 
-     LABEL "Параметры" 
-     SIZE 15 BY 1.
+     LABEL "&Открыть" 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-del 
      LABEL "&Удалить":L 
@@ -161,6 +161,7 @@ define menu POPUP-MENU-b-hist
     menu-item mHistOne     label "История этой записи"
     menu-item mHistChiled  label "История потомков"
 .  
+{ gbl/tmprecid.i} 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BROWSE-Code FOR 
@@ -171,6 +172,7 @@ DEFINE QUERY BROWSE-Code FOR
 DEFINE BROWSE BROWSE-Code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-Code f-c-p _STRUCTURED
   QUERY BROWSE-Code NO-LOCK DISPLAY
+      isSelect(buffer code:handle) @ fSelect
       Code.code FORMAT "x(8)":U column-label "Название группы"
       Code.CodeName FORMAT "x(60)":U WIDTH 54.13 column-label "Описание группы"
 /* _UIB-CODE-BLOCK-END */
@@ -397,11 +399,8 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel f-c-p
 ON choose OF b-sel IN FRAME f-c-p /* Выбор  */
 do:
-   define buffer b1-code for code.
-   if not avail buf-code then return.
-   find first b1-code of buf-code no-lock no-error.
-   if avail b1-code then
-      v-rid = recid(b1-code).
+   setSelect(buffer code:handle).
+    {&BROWSE-NAME}:refresh ().
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -500,13 +499,18 @@ on window-close of frame {&FRAME-NAME}
 MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
-
+  if imode eq {&select}
+  then
+     run rid-rest no-error.
   { gbl/getcntxt.i get }
   { gbl/curdbnum.i v-db-num }
 
   run enable_UI in this-procedure .
 
   wait-for go of frame {&FRAME-NAME} focus {&browse-name}.
+  if imode eq {&select}
+  then
+     run rid-keep no-error.
 end.
 run disable_UI in this-procedure .
 
@@ -562,6 +566,7 @@ PROCEDURE enable_UI :
     b-help
     with frame {&frame-name}.
 b-hist:POPUP-MENU in frame {&frame-name} = menu POPUP-MENU-b-hist:HANDLE.
+fselect                :visible in browse {&BROWSE-NAME} = imode eq {&select}.
    b-hist:MENU-MOUSE = 1.  
   {&OPEN-BROWSERS-IN-QUERY-f-c-p}
 

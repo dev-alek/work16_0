@@ -740,18 +740,9 @@ define variable Lines_Counter as integer no-undo .
   
   /* Системная шапка HTML */
   put stream OutStr-html unformatted
-  "<!DOCTYPE HTML>" skip
-  ' <html>' skip
-  '  <head>' skip
-  '   <meta charset="utf-8">' skip
-  '    <style type="text/css">' skip
-  '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-  '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-  '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
-  '   </style>' skip
-  '  </head>' skip
-  .
-    
+  
+{rep/htmlhead.i}
+    .
   put stream OutStr-html unformatted
     '<body>' skip
     '<TABLE name="1"  fit_to_page="true" orientation="portrait" CELLSPACING="0" BORDER="0">'skip

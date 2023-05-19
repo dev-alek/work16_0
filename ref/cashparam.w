@@ -68,7 +68,7 @@ define variable mProcEdit as character no-undo init "ref/cashparamu.w".
 mProcEdit = if entry(3,iParent,{&delim-par}) eq "2" then "ref/cashparamuk.w" else "ref/cashparamu.w".
 &Scoped-define EditWhere and v-db-num = 0
 &Scoped-define SearchTable  buf-code  
-&Scoped-define SearchWhere  {&SearchTable}.parent eq b2-code.parent + {&delim-par} + b2-code.code
+&Scoped-define SearchWhere  ~{&SearchTable~}.parent eq b2-code.parent + {&delim-par} + b2-code.code
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -92,9 +92,9 @@ mProcEdit = if entry(3,iParent,{&delim-par}) eq "2" then "ref/cashparamuk.w" els
 &Scoped-define FIELDS-IN-QUERY-BROWSE-Code buf-code.misc1 buf-code.CodeValue 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BROWSE-Code 
 &Scoped-define QUERY-STRING-BROWSE-Code FOR EACH {&SearchTable} ~
-      WHERE {&SearchWhere} no-lock by buf-code.status_ by buf-code.code INDEXED-REPOSITION
+      WHERE {&SearchWhere} no-lock by buf-code.code INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-BROWSE-Code OPEN QUERY BROWSE-Code FOR EACH {&SearchTable} ~
-      where {&SearchWhere} NO-LOCK by buf-code.status_ by buf-code.code INDEXED-REPOSITION.
+      where {&SearchWhere} NO-LOCK by buf-code.code INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-BROWSE-Code buf-code
 &Scoped-define FIRST-TABLE-IN-QUERY-BROWSE-Code buf-code
 
@@ -119,8 +119,6 @@ b-hist b-help BROWSE-Code
 function getStatus returns character
    ( imisc as char, istatus as int   )  forward.
 
-function getSelect returns character
-   ( irecid as recid   )  forward.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -170,7 +168,6 @@ define menu POPUP-MENU-b-hist
     menu-item mHistOne     label "История этой записи"
     menu-item mHistChiled  label "История потомков"
 .   
-define variable fselect as character no-undo.
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 define query BROWSE-Code for 
@@ -181,7 +178,7 @@ define query BROWSE-Code for
 define browse BROWSE-Code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-Code f-c-p _STRUCTURED
    query BROWSE-Code no-lock display
-   getSelect(recid(buf-code))     @ fselect format "x(1)" column-label ""
+   isSelect(buffer buf-code:handle)     @ fselect
    buf-code.code format "x(20)":U column-label "Название параметра"
    buf-code.CodeName format "x(40)":U column-label "Описание параметра"
 /*   buf-code.code  FORMAT "x(10)":U WIDTH 32*/
@@ -400,30 +397,25 @@ on choose of b-del in frame f-c-p /* Удалить */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BROWSE-Code f-c-p
+on mouse-select-dblclick of BROWSE-Code in frame f-c-p
+or return of {&SELF-NAME} in frame {&FRAME-NAME}
+do:
+   if     iMode eq {&update}
+/*          {&EditWhere}*/
+      and available buf-code
+   then
+      apply "choose" to b-upd in frame {&frame-name}.
+end.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel f-c-p
 on choose of b-sel in frame f-c-p /* Выбор  */
    do:
-      if not avail buf-code then return.
-      define variable vRec as recid no-undo.
-      vRec = recid(buf-code).
-      find first tmprecid where tmprecid.fTable eq "code"
-                         and tmprecid.Frecid eq vRec no-lock no-error.
-      if available tmprecid
-      then
-         delete tmprecid.
-      else do:
-         create tmprecid.
-         assign
-            tmprecid.fTable = "code"
-            tmprecid.Frecid = vrec
-         .
-      end.
-         
-      {&OPEN-QUERY-BROWSE-Code}
-      reposition BROWSE-Code to recid vRec no-error .
-      apply "ENTRY" to BROWSE-Code.                   
+      setSelect(buffer buf-code:handle).
+    {&BROWSE-NAME}:refresh ().                   
    end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -519,7 +511,9 @@ on window-close of frame {&FRAME-NAME}
 MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
    on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
-   run rid-rest.
+   if imode eq {&select}
+   then
+      run rid-rest no-error.
    { gbl/getcntxt.i get }
    { gbl/curdbnum.i v-db-num }
    run enable_UI in this-procedure .
@@ -529,7 +523,9 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
    apply "ENTRY" to BROWSE-Code.
    
    wait-for go of frame {&FRAME-NAME} focus {&browse-name}.
-   run rid-keep.
+   if imode eq {&select}
+   then
+      run rid-keep no-error.
 end.
 run disable_UI in this-procedure .
 
@@ -586,6 +582,7 @@ procedure enable_UI :
    b-hist:POPUP-MENU in frame {&frame-name} = menu POPUP-MENU-b-hist:HANDLE.
    b-hist:MENU-MOUSE = 1.  
  
+   fselect                :visible in browse {&BROWSE-NAME} = imode eq {&select}.
    {&OPEN-BROWSERS-IN-QUERY-f-c-p}
 
 end procedure.
@@ -610,29 +607,3 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getSelect f-c-p 
-
-function getSelect returns character
-   ( irecid as recid   ):
-   find first tmprecid where tmprecid.fTable eq "code"
-                         and tmprecid.Frecid eq irecid no-lock no-error.
-   return if available tmprecid then "*" else "".      
-end.
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rid-keep 
-procedure rid-keep :
-     run gbl/rid-keep.p (input table tmprecid) no-error.
-end.
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rid-rest 
-procedure rid-rest :
-      run gbl/rid-rest.p (output table tmprecid) no-error.
-      
-      
-   end.
-   /* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME

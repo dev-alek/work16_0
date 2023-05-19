@@ -27,14 +27,17 @@ function objExists returns character
  input  iType   as character  ):
     define variable vFileType as character no-undo init "D,F".
     define variable vi        as integer no-undo.
+    define variable vtype as character no-undo.
     if iType ne ?
     then
        vFileType = iType.
     do vi = 1 to num-entries(vFileType):
        file-information:file-name = "./" + ifolder.
-       if index( file-information:file-type, entry(vi,vFileType )) > 0 then return file-information:full-pathname .
+       vtype = file-information:file-type.
+       if index(vtype , entry(vi,vFileType )) > 0 then return file-information:full-pathname .
        file-information:file-name = ifolder.
-       if index( file-information:file-type, entry(vi,vFileType )) > 0 then return file-information:full-pathname .
+       vtype = file-information:file-type.
+       if index( vtype, entry(vi,vFileType )) > 0 then return file-information:full-pathname .
     end.
     return ? .
 

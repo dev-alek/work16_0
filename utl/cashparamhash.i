@@ -6,7 +6,7 @@ function getCashparamHash returns character ():
     define buffer Buf_code for code.
     create query hQuery.
     hQuery:set-buffers(buffer Buf_code :HANDLE). 
-    hQuery:query-prepare("FOR EACH Buf_code ").
+    hQuery:query-prepare("FOR EACH Buf_code where Buf_code.parent begins 'cash-param'").
     hQuery:query-open ().
     exp = new ibs.th.bge.xmlimpexp (). 
     exp:updatetableforxml(hQuery).

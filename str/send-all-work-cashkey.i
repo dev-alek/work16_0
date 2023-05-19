@@ -31,19 +31,32 @@ define variable Mfirst    as logical no-undo.
 function getDevice returns integer ():
    define variable v-attr-value as character no-undo .
    define variable v-attr-type  as character no-undo .
+   define variable v-device-kind as integer no-undo.
+   define variable v-date as date no-undo.
+   define variable v-decimal as decimal no-undo.
+   define variable v-logical as logical no-undo.
+   define variable v-dop as character no-undo.
    run cd-attr-value in this-procedure
       ( input mdb-num
-      ,input mObjCode
-      ,input mPostType
-      ,input mCashNum
-      ,input {&cd-attr-device-kind}
-      ,output v-attr-value
-      ,output v-attr-type
-   ).
-   define variable v-device-kind as integer no-undo.
-   if v-attr-value = "":U or v-attr-value = ?
+         ,input mObjCode
+         ,input mPostType
+         ,input mCashNum
+         ,input  (if mPostType = {&cd-type-ibm-xml}
+                                                           then {&cda-IBM-XML_operative}
+                                                           else {&cda-AUTOTANK_operative})
+         ,input  (if mPostType = {&cd-type-ibm-xml}
+                                                           then {&cda-IBM-XML_operative_device-kind}
+                                                           else {&cda-AUTOTANK_operative_device-kind})
+         ,output v-attr-value
+         ,output v-date
+         ,output v-decimal
+         ,output v-device-kind
+         ,output v-logical
+         ,output v-dop
+         ) no-error.
+   if v-device-kind = ?
    then v-device-kind = 0.
-   else v-device-kind = integer(v-attr-value) no-error .
+   
    return v-device-kind.
 end.
 define variable mParent as character no-undo.

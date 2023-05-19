@@ -136,8 +136,8 @@ DEFINE BUTTON b-exit AUTO-GO
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-chiled 
-     LABEL "Подпараметры":L 
-     SIZE 15 BY 1.
+     LABEL "&Открыть":L 
+     SIZE 10 BY 1.
 
 define button b-hist 
      label "Ис&тория":L 
@@ -183,7 +183,7 @@ DEFINE FRAME f-c-p
      SPACE(0.00) SKIP(0.07)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Группа параметров":L.
+         TITLE "Эталонные наборы параметров АРМ Кассира":L.
 
 
 /* *********************** Procedure Settings ************************ */

@@ -24,7 +24,7 @@ procedure WaitFramStop:
             define variable vtime as int64 no-undo.
             vtime = ( now - vWaitFramStartProc  ) / 1000 .
        
-            run waitfram-show (substitute("&1 Отрправлена команда прерывания. Ожидаем завершения процесса. Прошло: &2 сек. из 10 сек. &3" ,
+            run waitfram-show (substitute("&1 Отправлена команда прерывания. Ожидаем завершения процесса. Прошло: &2 сек. из 10 сек. &3" ,
                                mWaitFramTextBeg , 
                                string( vtime),
                                mWaitFramTextEnd
@@ -36,6 +36,7 @@ procedure WaitFramStop:
          end.
          publish "PutFileLogAsunc"  ("Операция прервана пользователем." ).
          mhelper:EndStopEnd(iSched).
+         mhelper:mStop = no.
          mhelper:WAIT-FOR-COMPLETE = true. /* процес завис */
            
       end.

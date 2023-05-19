@@ -79,7 +79,7 @@ DEFINE VARIABLE v-fr-type-list-items-full AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-fr-type-list-items AS CHARACTER NO-UNDO.
 define variable l-shift-on as logical no-undo .
 define buffer buf_cash-desk for ub.cash-desk.
-
+define variable mCashDevice      as ibs.th.str.cash.CashDevice no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -427,7 +427,7 @@ DO:
 
   ASSIGN
   cb-device-kind.
-  tt-cash-desk.pos-type = if cb-device-kind eq 5
+  tt-cash-desk.pos-type = if cb-device-kind eq mCashDevice:Tanker:keyint
                           then {&cd-type-Autotank}
                           else {&cd-type-IBM-XML}.
   DISPLAY
@@ -985,6 +985,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   RUN MyENable in this-procedure .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
+delete object mCashDevice.
 RUN disable_UI.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1052,6 +1053,16 @@ PROCEDURE MyEnable :
 /* ----- тип POS ----- */
 DEFINE VARIABLE v-list-items AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-ii         AS INTEGER   NO-UNDO.
+ define variable objType    as ibs.th.gbl.propmap no-undo.
+   
+
+   do v-ii = 1 to mCashDevice:mapType:GetItem(v-ii):
+      objType = mCashDevice:CurrProp.
+      v-list-items = v-list-items + {&comma-char} + objType:Label_ + {&comma-char} + string(objType:KeyIntDB) .
+   end.
+   cb-device-kind:LIST-ITEM-PAIRS  in frame {&frame-name} = trim(v-list-items,{&comma-char}) .
+   
+v-list-items = "".
 DO v-ii = 1 TO NUM-ENTRIES({&cd-type-codes-real}):
     ASSIGN
     v-list-items = v-list-items + (IF v-ii > 1 THEN  {&comma-char} ELSE "":U) +

@@ -132,8 +132,8 @@ define button b-add
      size 10 by 1.
 
 define button b-chiled 
-     label "Параметры" 
-     size 15 by 1.
+     label "&Открыть" 
+     size 10 by 1.
 
 define button b-del 
      label "&Удалить":L 
@@ -185,6 +185,7 @@ define query BROWSE-Code for
 define browse BROWSE-Code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-Code f-c-p _STRUCTURED
   query BROWSE-Code no-lock display
+      isSelect(buffer code:handle) @ fSelect
       Code.code format "x(8)":U
       Code.CodeName format "x(60)":U width 54.13
 /* _UIB-CODE-BLOCK-END */
@@ -479,12 +480,9 @@ on choose of b-sel in frame f-c-p /* Выбор  */
 do:
    if imode eq {&select}
    then do:
-      define buffer b1-code for code.
-      if not avail buf-code then return.
-      find first b1-code of buf-code no-lock no-error.
-      if avail b1-code then
-         v-rid = recid(b1-code).
-      apply "GO" to frame {&FRAME-NAME}.
+      if not avail code then return.
+      setSelect(buffer code:handle).
+      {&BROWSE-NAME}:refresh ().
    end.
    else do:
       
@@ -584,13 +582,18 @@ on window-close of frame {&FRAME-NAME}
 MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
-
+  if imode eq {&select}
+  then
+     run rid-rest no-error.
   { gbl/getcntxt.i get }
   { gbl/curdbnum.i v-db-num }
 
   run enable_UI in this-procedure .
 
   wait-for go of frame {&FRAME-NAME} focus {&browse-name}.
+  if imode eq {&select}
+  then
+     run rid-keep no-error.
 end.
 run disable_UI in this-procedure .
 
@@ -647,7 +650,7 @@ procedure enable_UI :
   then do:
      b-sel:label = "Меню".
       enable b-sel
-         when imode ne {&select} {&EditWhere}
+         
       with frame {&frame-name}
       .
       menu-item mGetCashParam:sensitive in menu POPUP-MENU-b-servis = yes {&EditWhere}.
@@ -661,6 +664,7 @@ procedure enable_UI :
          when imode eq {&select}
        with frame {&frame-name}
       .
+  fselect                :visible in browse {&BROWSE-NAME} = imode eq {&select}.
   b-hist:POPUP-MENU in frame {&frame-name} = menu POPUP-MENU-b-hist:HANDLE.
   b-hist:MENU-MOUSE = 1.  
  
@@ -727,18 +731,3 @@ procedure PrevLevel:
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rid-keep 
-procedure rid-keep :
-     run gbl/rid-keep.p (input table tmprecid) no-error.
-end.
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rid-rest 
-procedure rid-rest :
-      run gbl/rid-rest.p (output table tmprecid) no-error.
-      
-      
-   end.
-   /* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME

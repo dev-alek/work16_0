@@ -55,14 +55,14 @@ then do:
    do v-ii = 1 to Types:mapType:GetItem(v-ii):
       objType = Types:CurrProp.
       find first cashcode where cashcode.parent eq "cash-param"
-                            and cashcode.code   eq string(objType:KeyIntDB)
+                            and cashcode.code   eq string(objType:KeyInt)
       no-lock no-error.
       if not available cashcode
       then do:
          create cashcode.
          assign
            cashcode.parent  = "cash-param"
-           cashcode.code    = string(objType:KeyIntDB)
+           cashcode.code    = string(objType:KeyInt)
            cashcode.nwsgbd  = yes
            cashcode.export_ = yes
          .

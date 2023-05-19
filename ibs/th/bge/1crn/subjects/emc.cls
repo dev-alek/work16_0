@@ -30,7 +30,17 @@ class ibs.th.bge.1crn.subjects.emc inherits ibs.th.bge.1crn.subjects.code:
     
   define override property InitTag as character no-undo init "EMC"
     get. 
+  method private date date-mth (inValue as character):
+    
+    inValue = entry (1, inValue, "T").
+    return date (integer (entry (2, Invalue, "-")), integer (entry (3, Invalue, "-")), integer (entry (1, Invalue, "-")) ). 
+    
+  end.
   
+  &scoped-define attr-str      if inValue >= "" then inValue else ""
+  &scoped-define attr-integer  if inValue >= "" then integer (inValue) else 0
+  &scoped-define attr-dec      if inValue >= "" then decimal (inValue) else 0.0
+  &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
   define var emctype-code as integer no-undo.  
   method override protected void SetPropProtected (inTag as char, inValue as char):
     super:SetPropProtected(inTag, inValue).

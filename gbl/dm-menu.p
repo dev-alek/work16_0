@@ -4811,7 +4811,7 @@ procedure m-cash-param-exe :
         input parparentproc
       , input this-procedure
       , input "str/send-all.p":U
-      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + vList + {&delim-par} + 'Получение параметров кассы':U + {&delim-par} + "cash-send=all")
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + vList + {&delim-par} + 'Получение параметров кассы':U + {&delim-par} + "cash-send=all,SocetLog=cashparam.log")
       , input ? /*p-auto-go*/
       , input "":U
       , input substitute("Получение параметров кассы")

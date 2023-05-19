@@ -17,13 +17,13 @@ using Progress.Lang.*.
 using ibs.th.gbl.sys.*.
 using ibs.th.gbl.*.
 class ibs.th.bge.execlimpexp inherits objth:
-   define variable vss-revision    as character no-undo init "$Revision:$":U .
-   define variable vss-author      as character no-undo init "$Author:$":U .
-   define variable vss-date        as character no-undo init "$Date:$":U .
-   define variable vss-workfile    as character no-undo init "$Workfile:$":U .
-   define variable vss-archive     as character no-undo init "$Archive:$":U .
-   define variable vss-description as character no-undo init "".
-    &scop FieldCount "NumLine_"
+   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+   define override public property vss-author      as character no-undo init "$Author:$":U get.
+   define override public property vss-date        as character no-undo init "$Date:$":U get.
+   define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+   define override public property vss-archive     as character no-undo init "$Archive:$":U get. 
+   define override public property  vss-description as character no-undo init " ласс импорта экспорта Ёксель" get.
+   &scop FieldCount "NumLine_"
    /*------------------------------------------------------------------------------
     Purpose:
     Notes:

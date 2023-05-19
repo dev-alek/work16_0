@@ -45,6 +45,7 @@ define variable vss-description as character no-undo init "редактирование параме
 { cmp/library.i }
 { cmp/showinf.i }
 { gbl/sel-date.i }
+{ gbl/is-num.i }
 define variable v-db-num like ub.db.db-num no-undo .
 define variable v-name   as character no-undo .
 define variable vDateIsoOld as character no-undo.
@@ -98,18 +99,18 @@ DEFINE BUTTON B-save AUTO-GO
 DEFINE VARIABLE mParentCode   AS character       FORMAT "x(20)":U 
    LABEL "Группа" 
    VIEW-AS FILL-IN 
-   SIZE 11 BY 1 NO-UNDO.
+   SIZE 20 BY 1 NO-UNDO.
 
 
 DEFINE VARIABLE mCode   AS character       FORMAT "x(20)":U 
    LABEL "Название параметра" 
    VIEW-AS FILL-IN 
-   SIZE 11 BY 1 NO-UNDO.
+   SIZE 20 BY 1 NO-UNDO.
 
 DEFINE VARIABLE mZNACH  AS character    FORMAT "x(40)":U
    LABEL "Значение" 
    VIEW-AS FILL-IN 
-   SIZE 20 BY 1 NO-UNDO.
+   SIZE 40 BY 1 NO-UNDO.
 
 DEFINE VARIABLE mDecript  AS character    FORMAT "x(4000)":U
    LABEL "Описание параметра"
@@ -365,6 +366,14 @@ PROCEDURE proc-save :
     if mcode = "" 
     then do:
       message "Введите Название параметра ! " view-as  alert-box  error.
+      apply "entry"  to mcode .
+      return ERROR.
+    end.
+    if not is-numeral (mcode,
+                   "letter,digit"
+                   ) 
+    then do:
+      message "Название параметра может содержать латинские буквы и цифры! " view-as  alert-box  error.
       apply "entry"  to mcode .
       return ERROR.
     end.

@@ -1061,13 +1061,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                  run write-to-screen (return-value).
               end.
             
-           end.
-         { gbl/mainproc.i }
-           run startproc (i-auto-type
+                    { gbl/mainproc.i }
+              if lookup (i-auto-type , mAsyncHelper:getListTask()) eq 0
+              then
+                 run startproc (i-auto-type
                          ,mlistdb
                          ,mListKey
                          ,now).
-                       
+           end.            
            if mAsyncHelper:isWorkShed()
            then do:
               run gbl/dbdiscon.p no-error.

@@ -44,6 +44,7 @@ define variable vss-description as character no-undo init "Отчет по анализу пара
 { gbl/cur-time.i }
 { gbl/tmprecid.i "new shared"}
 { gbl/cash-list.i }
+{ gbl/cd-attr.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -104,10 +105,11 @@ DEFINE VARIABLE SelectParam  AS CHARACTER
   VIEW-AS RADIO-SET VERTICAL
   RADIO-BUTTONS 
   "Все параметры", "all":U,
+  "Параметры с расхождениями", "diff":U,
   "Обязательные параметры", "mandatory":U,
   "Необязательные параметры", "optional":U,
   "Выбор параметров", "choose":U
-  SIZE 30.63 BY 2.75 NO-UNDO.
+  SIZE 30.63 BY 3.25 NO-UNDO.
 
 DEFINE VARIABLE SelectSource AS CHARACTER 
   VIEW-AS RADIO-SET VERTICAL
@@ -115,11 +117,11 @@ DEFINE VARIABLE SelectSource AS CHARACTER
   "Все", "all":U,
   "Параметры", "param":U,
   "Клавиатура", "keyboard":U
-  SIZE 30.63 BY 2.71 NO-UNDO.
+  SIZE 30.63 BY 2.5 NO-UNDO.
 
 DEFINE RECTANGLE rect-3
   EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-  SIZE 37.25 BY 4.29.
+  SIZE 37.25 BY 4.79.
 
 DEFINE RECTANGLE rect-4
   EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -131,7 +133,7 @@ DEFINE RECTANGLE rect-6
 
 DEFINE RECTANGLE rect-8
   EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-  SIZE 37.13 BY 4.25.
+  SIZE 37.13 BY 3.75.
 
 DEFINE VARIABLE choose-device AS CHARACTER INITIAL "-1" 
   VIEW-AS SELECTION-LIST MULTIPLE SCROLLBAR-VERTICAL 
@@ -143,26 +145,26 @@ DEFINE VARIABLE choose-device AS CHARACTER INITIAL "-1"
 DEFINE FRAME F-Main
   SelectParam AT ROW 2.5 COL 2.75 NO-LABEL
   choose-device AT ROW 2.63 COL 39.63 NO-LABEL WIDGET-ID 10
-  b-sel-param AT ROW 4.33 COL 35.13 WIDGET-ID 80
-  SelectSource AT ROW 6.79 COL 2.88 NO-LABEL WIDGET-ID 64
+  b-sel-param AT ROW 4.83 COL 35.13 WIDGET-ID 80
+  SelectSource AT ROW 7 COL 2.88 NO-LABEL WIDGET-ID 64
   SelectDiff AT ROW 11.04 COL 2.88 NO-LABEL WIDGET-ID 54
   b-sel-cash AT ROW 11.5 COL 35.13 WIDGET-ID 82
-  "По наличию расхождений" VIEW-AS TEXT
-  SIZE 31.25 BY .79 AT ROW 9.96 COL 2.75 WIDGET-ID 60
-  FGCOLOR 4 
   "Выбор по обязательности" VIEW-AS TEXT
   SIZE 31.25 BY .79 AT ROW 1.42 COL 2.63
   FGCOLOR 4 
-  "Выбор источника" VIEW-AS TEXT
-  SIZE 31.25 BY .79 AT ROW 5.71 COL 2.75 WIDGET-ID 70
-  FGCOLOR 4 
   "Выбор признака исполнения касссы" VIEW-AS TEXT
   SIZE 32.88 BY .79 AT ROW 1.46 COL 39.88 WIDGET-ID 50
+  FGCOLOR 4
+  "Выбор источника" VIEW-AS TEXT
+  SIZE 31.25 BY .79 AT ROW 6.13 COL 2.75 WIDGET-ID 70
   FGCOLOR 4 
+  "По наличию расхождений" VIEW-AS TEXT
+  SIZE 31.25 BY .79 AT ROW 9.96 COL 2.75 WIDGET-ID 60
+  FGCOLOR 4  
   rect-3 AT ROW 1.21 COL 1.25
   rect-4 AT ROW 1.25 COL 38.75 WIDGET-ID 42
   rect-6 AT ROW 9.75 COL 1.5 WIDGET-ID 52
-  rect-8 AT ROW 5.5 COL 1.38 WIDGET-ID 62
+  rect-8 AT ROW 6 COL 1.38 WIDGET-ID 62
   WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
   SIDE-LABELS NO-UNDERLINE THREE-D 
   AT COL 1 ROW 1
@@ -238,8 +240,8 @@ ON CHOOSE OF b-sel-cash IN FRAME F-Main
     define variable ii         as integer   no-undo .
     define buffer buf_cash-desk for ub.cash-desk.
     assign SelectDiff.
-    for each cash-list:
-      delete cash-list.
+    for each tt-cash-list:
+      delete tt-cash-list.
     end.
     run ref/cashlist.w (input my-handle
       ,INPUT "b-sel,b-mark"
@@ -258,10 +260,10 @@ ON CHOOSE OF b-sel-cash IN FRAME F-Main
     do ii = 1 to num-entries(v-rid-list):
       find first buf_cash-desk no-lock where
         recid(buf_cash-desk) = integer(entry(ii, v-rid-list)) no-error .
-      if available buf_cash-desk then 
+      if available buf_cash-desk and buf_cash-desk.autonomy <> integer({&cd-slave}) then  
       do:
-        CREATE cash-list.
-        buffer-copy buf_cash-desk to cash-list.
+        CREATE tt-cash-list.
+        buffer-copy buf_cash-desk to tt-cash-list.
       end.
     end.        
 
@@ -317,16 +319,16 @@ ON VALUE-CHANGED OF SelectDiff IN FRAME F-Main
     define variable ii         as integer   no-undo .
     define buffer buf_cash-desk for ub.cash-desk.
     assign SelectDiff.
-    for each cash-list:
-      delete cash-list.
+    for each tt-cash-list:
+      delete tt-cash-list.
     end.
     case SelectDiff:
       when "all" then 
         do:
           disable b-sel-cash with frame {&frame-name} .
           for each obj-list:
-            for each cash-desk where cash-desk.obj-code = obj-list.obj-code and cash-desk.is-del = false:
-              buffer-copy cash-desk to cash-list .
+            for each cash-desk where cash-desk.obj-code = obj-list.obj-code and cash-desk.is-del = false and cash-desk.autonomy <> integer({&cd-slave}):
+              buffer-copy cash-desk to tt-cash-list .
             end.  
           end. 
         end.
@@ -355,10 +357,10 @@ ON VALUE-CHANGED OF SelectDiff IN FRAME F-Main
         do ii = 1 to num-entries(v-rid-list):
           find first buf_cash-desk no-lock where
             recid(buf_cash-desk) = integer(entry(ii, v-rid-list)) no-error .
-          if available buf_cash-desk then 
+          if available buf_cash-desk and buf_cash-desk.autonomy <> integer({&cd-slave}) then 
           do:
-            CREATE cash-list.
-            buffer-copy buf_cash-desk to cash-list.
+            CREATE tt-cash-list.
+            buffer-copy buf_cash-desk to tt-cash-list.
           end.
         end.        
       end. 
@@ -421,6 +423,9 @@ ON VALUE-CHANGED OF SelectSource IN FRAME F-Main
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK F-Frame-Win 
+for each tt-cash-list:
+  delete tt-cash-list.
+end.
 run inifields .
 
 &IF DEFINED(UIB_IS_RUNNING) <> 0 &THEN
@@ -537,9 +542,14 @@ PROCEDURE inifields :
   end.
  
   for each obj-list:
-    for each cash-desk where cash-desk.obj-code = obj-list.obj-code and cash-desk.is-del = false:
-      create cash-list.
-      buffer-copy cash-desk to cash-list .
+    for each cash-desk where cash-desk.obj-code = obj-list.obj-code and cash-desk.is-del = false and cash-desk.autonomy <> integer({&cd-slave}):
+      find first tt-cash-list where tt-cash-list.obj-code = cash-desk.obj-code and tt-cash-list.db-num = cash-desk.db-num and
+        tt-cash-list.pos-type = cash-desk.pos-type and tt-cash-list.cash-num = cash-desk.cash-num no-error .
+      if not available (tt-cash-list) then 
+      do:
+        create tt-cash-list.
+        buffer-copy cash-desk to tt-cash-list .
+      end.
     end.  
   end.
 
@@ -565,6 +575,34 @@ end procedure.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE My-report F-Frame-Win 
 PROCEDURE My-report :
+define variable v-attr-value as character no-undo .
+  define variable v-attr-type  as character no-undo .
+  define variable kk as integer no-undo .
+  empty temp-table cash-list .
+  for each tt-cash-list:
+    run cd-attr-value in this-procedure
+      ( input cash-list.db-num
+      ,input cash-list.obj-code
+      ,input cash-list.pos-type
+      ,input cash-list.cash-num
+      ,input {&cd-attr-device-kind}
+      ,output v-attr-value
+      ,output v-attr-type
+      ) no-error.
+    if v-attr-value = "":U or v-attr-value = ?
+      then tt-cash-list.deviceCode = "0".
+    else tt-cash-list.deviceCode = v-attr-value no-error . 
+    create cash-list .
+    buffer-copy tt-cash-list to cash-list .   
+  end.
+  
+  if choose-device <> "-1" then 
+  do:
+    for each cash-list : 
+      if lookup(string(cash-list.deviceCode), choose-device, ",") = 0 then
+      delete cash-list .
+    end.
+  end.
   run rep/cash-param.p (
     input my-handle,
     input choose-device,

@@ -49,6 +49,9 @@ then do:
          buf_code.code     = mcode
          buf_code.parent   = mparent
          buf_code.CodeName = mcode
+         buf_code.nwsgbd   = new-{&main-tbl}.nwsgbd
+         buf_code.nwsubd   = new-{&main-tbl}.nwsubd
+         buf_Code.export_  = new-{&main-tbl}.export_
       .
    end. 
 end.

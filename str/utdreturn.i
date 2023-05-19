@@ -82,7 +82,9 @@ function  crUtdReturn returns logical
    define variable vType   as character no-undo.
    define variable vUTDReturn as logical no-undo.
    
-   
+   for each  tt-prts:
+      delete  tt-prts.
+   end.
    find first trn-doc where trn-doc.doc-code     eq idoc-code
                         and trn-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh}
    no-lock no-error.

@@ -57,7 +57,7 @@ define variable vss-description as character no-undo init "Код ОКЕИ код ККТ".
 { gbl/prn-lib.i }
 { gbl/waitfram.i }
 { cmp/mrk-strf.i }
-
+{ gbl/tmprecid.i }
 &Scoped-define CODE_PARENT iparent + {&delim-par} + icode
 &Scoped-define EditWhere and v-db-num = 0
 &Scoped-define SearchTable1  buf-code-func  
@@ -96,10 +96,10 @@ buf-code-param.status_ buf-code-param.CodeName
 &Scoped-define ENABLED-FIELDS-IN-QUERY-cashpg 
 &Scoped-define QUERY-STRING-cashpg FOR EACH {&SearchTable1} ~
       WHERE {&SearchWhere1} NO-LOCK, ~
-      EACH  {&SearchTable2} WHERE {&SearchWhere2} NO-LOCK INDEXED-REPOSITION
+      EACH  {&SearchTable2} WHERE {&SearchWhere2} no-lock by getKeyName(buf-code-func.code) + " (" + buf-code-func.code + ")"  INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-cashpg OPEN QUERY cashpg FOR EACH {&SearchTable1} ~
       WHERE {&SearchWhere1} NO-LOCK, ~
-      EACH  {&SearchTable2} WHERE {&SearchWhere2} NO-LOCK INDEXED-REPOSITION.
+      EACH  {&SearchTable2} WHERE {&SearchWhere2} NO-LOCK by getKeyName(buf-code-func.code) + " (" + buf-code-func.code + ")" INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-cashpg buf-code-func buf-code-param
 &Scoped-define FIRST-TABLE-IN-QUERY-cashpg buf-code-func
 &Scoped-define SECOND-TABLE-IN-QUERY-cashpg buf-code-param
@@ -153,7 +153,7 @@ DEFINE BUTTON b-help
      LABEL "Помо&щь":L 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO 
+DEFINE BUTTON b-sel 
      LABEL "Вы&бор ":L 
      SIZE 10 BY 1.
 
@@ -184,6 +184,7 @@ DEFINE QUERY cashpg FOR
 DEFINE BROWSE cashpg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS cashpg f-c-p _STRUCTURED
   QUERY cashpg NO-LOCK DISPLAY
+      isSelect(buffer buf-code-param:handle)     @ fselect 
       getKeyName(buf-code-func.code) + " (" + buf-code-func.code + ")" @ buf-code-func.code COLUMN-LABEL "Наименование функции клавиши" FORMAT "x(30)":U
       getKeytype(buf-code-func.code) @ buf-code-func.misc1 COLUMN-LABEL "" FORMAT "x(3)":U
       buf-code-param.code COLUMN-LABEL "Дополнительное значение" FORMAT "x(23)":U
@@ -191,7 +192,7 @@ DEFINE BROWSE cashpg
       buf-code-param.CodeValue COLUMN-LABEL "Степень защиты" FORMAT "x(20)":U
             WIDTH 15
       getStatus (buf-code-param.misc1,buf-code-param.status_) COLUMN-LABEL "Cтатус" format "x(20)"
-      buf-code-param.CodeName FORMAT "x(60)":U
+      buf-code-param.CodeName COLUMN-LABEL "Описание клавиши" FORMAT "x(60)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 90 BY 20 ROW-HEIGHT-CHARS .67 FIT-LAST-COLUMN.
@@ -385,7 +386,7 @@ do:
    if not avail buf-code-param or not avail buf-code-func then return.
    define variable v-ok as logical no-undo.
 
-   message "Удалить запись группу параметров " buf-code-func.code " (" buf-code-param.code ")" buf-code-param.codename "?"
+   message "Удалить запись параметра " getKeyName(buf-code-func.code) + " (" + buf-code-func.code + ")" " (" buf-code-param.code ")" "?"
       view-as alert-box question
       buttons yes-no
       title "Удаление"
@@ -422,8 +423,9 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel f-c-p
 ON choose OF b-sel IN FRAME f-c-p /* Выбор  */
 do:
-   if not avail buf-code-func then return.
-   v-rid = recid(buf-code-func ).
+   if not avail buf-code-param then return.
+   setSelect(buffer buf-code-param:handle).
+    {&BROWSE-NAME}:refresh ().
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -468,6 +470,19 @@ do:
       end.
 
 /* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BROWSE-Code f-c-p
+on mouse-select-dblclick of cashpg in frame f-c-p
+or return of {&SELF-NAME} in frame {&FRAME-NAME}
+do:
+   if iMode eq {&update} {&EditWhere}
+      and available buf-code-param
+   then
+      apply "choose" to b-upd in frame {&frame-name}.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+
 &ANALYZE-RESUME
 &Scoped-define SELF-NAME mSearch
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL mSearch f-c-p
@@ -546,13 +561,18 @@ on window-close of frame {&FRAME-NAME}
 MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
-
+  if imode eq {&select}
+  then
+      run rid-rest no-error.
   { gbl/getcntxt.i get }
   { gbl/curdbnum.i v-db-num }
 
   run enable_UI in this-procedure .
 
   wait-for go of frame {&FRAME-NAME} focus {&browse-name}.
+  if imode eq {&select}
+  then
+     run rid-keep no-error.
 end.
 run disable_UI in this-procedure .
 
@@ -609,7 +629,7 @@ PROCEDURE enable_UI :
     with frame {&frame-name}.
  b-hist:POPUP-MENU in frame {&frame-name} = menu POPUP-MENU-b-hist:HANDLE.
    b-hist:MENU-MOUSE = 1.  
- 
+  fselect                :visible in browse {&BROWSE-NAME} = imode eq {&select}.
   {&OPEN-BROWSERS-IN-QUERY-f-c-p}
 
 end procedure.

@@ -1223,7 +1223,6 @@ ON STOP UNDO, RETURN ERROR return-value :
   end.
 
   /* признак какая это касса: ТСО, обычная касса или мобильная */
-  define buffer buf_cash-desk-attr for ub.cash-desk-attr .
   if     p-device-kind <> ? 
      and p-device-kind <> 0 
   then do :

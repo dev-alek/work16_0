@@ -14,7 +14,13 @@ using ibs.th.bge.1crn.subjects.*.
 using ibs.th.gbl.*.
 block-level on error undo, throw.
 
-class ibs.th.bge.1crn.subjects.CashParamHist inherits ibs.th.gbl.sys.objth implements iexpsubject: 
+class ibs.th.bge.1crn.subjects.CashParamHist inherits ibs.th.gbl.sys.objth implements iexpsubject:
+   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+   define override public property vss-author      as character no-undo init "$Author:$":U get.
+   define override public property vss-date        as character no-undo init "$Date:$":U get.
+   define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+   define override public property vss-archive     as character no-undo init "$Archive:$":U get. 
+   define override public property vss-description as character no-undo init "Выгрузка кассовых параметров" get. 
    {cmp/str-glbl.i class}
    &scop tag-interface 'Current-params':U
    define property InitSecTag as character no-undo init {&tag-interface}

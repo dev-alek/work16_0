@@ -18,15 +18,15 @@ Creation date: 03/22/98
 define parameter buffer buf-par_goods for ub.goods.
 define parameter buffer buf-par_bar-code       for ub.bar-code.
 define parameter buffer buf-par_scales-gds     for ub.scales-gds.
-define input parameter p-obj-type like ub.clients.obj-type no-undo .
-define input parameter p-obj-code like ub.clients.obj-code no-undo .
-define input parameter Action as character no-undo .
-define input parameter rootnode_code like ub.gds-prt.node-code no-undo .
-define input parameter TickOnw as logical no-undo .
-define input parameter TickOnN as logical no-undo .
-define input parameter QntyType as character no-undo .
-define input parameter PriceType as character no-undo .
-define input parameter scaleprice as decimal no-undo init 0.
+define input parameter p-obj-type      like ub.clients.obj-type no-undo .
+define input parameter p-obj-code      like ub.clients.obj-code no-undo .
+define input parameter Action          as character no-undo .
+define input parameter rootnode_code   like ub.gds-prt.node-code no-undo .
+define input parameter TickOnw         as logical no-undo .
+define input parameter TickOnN         as logical no-undo .
+define input parameter QntyType        as character no-undo .
+define input parameter PriceType       as character no-undo .
+define input parameter scaleprice      as decimal no-undo init 0.
 define input parameter nakl-qnty like ub.gds-dtl.fact-qnty no-undo.
 define input parameter list-qnty like ub.gds-dtl.fact-qnty no-undo.
 define input parameter pr-doc-rubl like ub.price-list.price-sale no-undo.
@@ -34,12 +34,12 @@ define input parameter pr-doc-rb like ub.price-list.price-sale no-undo.
 define input parameter pr-doc-rubl-old like ub.price-list.price-sale no-undo.
 define input parameter pr-doc-rb-old like ub.price-list.price-sale no-undo.
 define input parameter v-fact-order like ub.trn-doc.fact-order     no-undo.
-define input parameter ListProdBc as character no-undo .
-define input parameter curr-rate as decimal no-undo .
-define input parameter TickPS as character no-undo .
+define input parameter ListProdBc       as character no-undo .
+define input parameter curr-rate        as decimal no-undo .
+define input parameter TickPS           as character no-undo .
 define input parameter dflt-cd          as character no-undo .
 define input parameter how-pcnt-kat     as character no-undo . /*обычная катег сикдка или по СТПЛ*/
-define input-output parameter b-count as integer no-undo .
+define input-output parameter b-count   as integer no-undo .
 define input parameter p-part-code      as character no-undo .
 define input parameter p-doc-code       as character no-undo .
 define input parameter p-promo-code     as character no-undo .
@@ -68,8 +68,8 @@ message
 'ListProdBc        '   ListProdBc        skip
 'curr-rate         '   curr-rate         skip
 'TickPS            '   TickPS            view-as alert-box information .
-*/
 
+*/
 
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -844,31 +844,30 @@ do:
    do:
       v-promo-name = ub.PromoAction.nameAction .
       find first ub.PromoGoods no-lock where ub.PromoGoods.db-num = ub.PromoAction.db-num and
-/*         ub.PromoGoods.type = ub.PromoAction.methodCalc and*/
+         ub.PromoGoods.type = ub.PromoAction.methodCalc and
          ub.PromoGoods.idAction = ub.PromoAction.id and
          ub.PromoGoods.gds-code = buf-par_goods.gds-code 
          no-error .
-         find first ub.PromoCriterion no-lock where ub.PromoCriterion.db-num = ub.PromoAction.db-num and
-              ub.PromoCriterion.idAction = ub.PromoAction.id no-error .
+         
       case ub.PromoAction.methodCalc:
          /*абсолютная скидка*/
          when 2 then 
             do:
                v-type-sale-promo = " руб." .
-               if available (ub.PromoCriterion) then 
+               if available (ub.PromoGoods) then 
                do:
-                  v-sale-promo = string(ub.PromoCriterion.discont) + v-type-sale-promo .
-                  v-promo-price = price - ub.PromoCriterion.discont .
+                  v-sale-promo = string(ub.PromoGoods.price) + v-type-sale-promo .
+                  v-promo-price = price - ub.PromoGoods.price .
                end.
             end.
          /*процентная скидка*/
          when 1 then 
             do:
                v-type-sale-promo = "%" .
-               if available (ub.PromoCriterion) then 
+               if available (ub.PromoGoods) then 
                do:
-                  v-sale-promo = string(ub.PromoCriterion.discont) + v-type-sale-promo .
-                  v-promo-price = price - price * (ub.PromoCriterion.discont / 100) .
+                  v-sale-promo = string(ub.PromoGoods.price) + v-type-sale-promo .
+                  v-promo-price = price - price * (ub.PromoGoods.price / 100) .
                end.
             end.
          /*фиксированная скидка*/
@@ -885,14 +884,12 @@ do:
    end.
 end.
 
-message v-promo-price
-view-as alert-box.
 PUT STREAM OutStream UNFORMATTED
 /*N */ /*NF*/
 /*1 */ /*  */  (if buf-par_bar-code.unit-cli <> buf-par_goods.unit-base
           and ((qntytype = "список" and action = "list")
-               or
-               (qntytype = "документ" and action = "document"))
+                     or
+                     (qntytype = "документ" and action = "document"))
                 then integer(round(gds-qnty / buf-par_bar-code.cli-base-rate, 0))
                 else gds-qnty) "|"
    /*2 */ /*0 */  replace( OurHost.obj-name, "|":U, "/":U )  "|":U

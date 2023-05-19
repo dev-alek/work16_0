@@ -141,6 +141,7 @@ procedure   for-cash-cycle:
                for-cash-desk.pos-type eq ub.cash-desk.pos-type      and
                for-cash-desk.obj-code eq i-obj-code       and
                for-cash-desk.is-del   ne  true           and
+               for-cash-desk.autonomy ne {&bef-cd-slave}  and
               (for-cash-desk.cash-on  eq yes or mSendAll)  
                
       break

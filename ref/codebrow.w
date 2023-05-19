@@ -6,7 +6,6 @@
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME f-c-p
 
-
 /* Temp-Table and Buffer definitions                                    */
 DEFINE BUFFER buf-code FOR Code.
 
@@ -132,8 +131,8 @@ DEFINE BUTTON b-add
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-chiled 
-     LABEL "Параметры" 
-     SIZE 15 BY 1.
+     LABEL "&Открыть" 
+     SIZE 10 BY 1.
 
 DEFINE BUTTON b-del 
      LABEL "&Удалить":L 
@@ -155,6 +154,9 @@ DEFINE BUTTON b-upd
      LABEL "&Изменить":L 
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-look 
+     LABEL "&Просмотр":L 
+     SIZE 10 BY 1.
 DEFINE BUTTON b-hist 
    LABEL "Ис&тория" 
    SIZE 3 BY 1.
@@ -178,6 +180,7 @@ DEFINE QUERY BROWSE-Code FOR
 DEFINE BROWSE BROWSE-Code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-Code f-c-p _STRUCTURED
   QUERY BROWSE-Code NO-LOCK DISPLAY
+      isSelect(buffer code:handle) @ fSelect
       Code.code FORMAT "x(20)":U
       Code.CodeName FORMAT "x(60)":U WIDTH 54.13
 /* _UIB-CODE-BLOCK-END */
@@ -193,9 +196,10 @@ DEFINE FRAME f-c-p
      b-add AT ROW 1 COL 24
      b-del AT ROW 1 COL 34 WIDGET-ID 2
      b-upd AT ROW 1 COL 44
-     b-help AT ROW 1 COL 71
-     b-chiled AT ROW 1 COL 54 WIDGET-ID 10
-     b-hist  AT ROW 1 COL 64
+     b-look AT ROW 1 COL 54
+     b-help AT ROW 1 COL 81
+     b-chiled AT ROW 1 COL 64 WIDGET-ID 10
+     b-hist  AT ROW 1 COL 74
      mSearch AT ROW 2.5 col 1.2
      BROWSE-Code AT ROW 4 COL 1 WIDGET-ID 300
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -340,15 +344,32 @@ ON choose OF b-add IN FRAME f-c-p /* Добавить */
 do:
    
    
-   define buffer b1-code for code.
-   define buffer btt-code for code.
+   define buffer b-code for code.
    define variable vRec as recid no-undo.
    define variable v-ok as logical no-undo.
 
-   run ref/cashparamgu.w (
+   define variable vProcNextLevel as character no-undo init "ref/codefrm.w".
+   define variable vparent as character no-undo.
+   define variable vcode as character no-undo.
+   if available code
+   then assign
+      vparent = Code.parent
+      vcode   = code.code
+      .
+   else  assign
+         vparent = mparent
+         vcode    = entry(num-entries(vparent,{&delim-par}),vparent,{&delim-par})
+         entry(num-entries(vparent,{&delim-par}),vparent,{&delim-par}) = ""
+         vparent = substring (vparent,1,length(vparent) - 1)
+   no-error.
+   find first b-code where b-code.parent eq vParent
+                       and b-code.code   eq vcode
+   no-lock no-error.
+   vProcNextLevel = getproceditEx(buffer b-code:handle,vProcNextLevel).
+   run value(vProcNextLevel) (
                             input parparentproc
                           , input {&add-def}
-                          , input {&CODE_PARENT}
+                          , input b-code.parent
                           , input-output ri).
    if ri <> ? then  do:
 
@@ -363,6 +384,39 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-look
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-look f-c-p
+ON choose OF b-look IN FRAME f-c-p /* Добавить */
+do:
+   
+   
+   define variable vRec as recid no-undo.
+   define variable v-ok as logical no-undo.
+
+   define variable vProcNextLevel as character no-undo init "ref/codefrm.w".
+   
+   if not avail code then return.
+
+   vRec = recid(code).
+   vProcNextLevel = getproceditEx(buffer code:handle,vProcNextLevel).
+   run value(vProcNextLevel)
+   (
+                            input parparentproc
+                          , input {&lookup}
+                          , input {&CODE_PARENT}
+                          , input-output vRec).
+   if ri <> ? then  do:
+
+            {&OPEN-QUERY-codebrow}
+            reposition BROWSE-Code to recid ri.
+            apply "ENTRY" to BROWSE-Code.
+
+   end.
+   
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-chiled
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chiled f-c-p
@@ -391,7 +445,6 @@ ON choose OF b-del IN FRAME f-c-p /* Удалить */
 do:
    define buffer b1-code for code.
    if not avail code then return.
-   define variable v-ok as logical no-undo.
 
    message "Удалить запись группу параметров " code.code " (" code.codename ")?"
       view-as alert-box question
@@ -430,11 +483,9 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel f-c-p
 ON choose OF b-sel IN FRAME f-c-p /* Выбор  */
 do:
-   define buffer b1-code for code.
-   if not avail buf-code then return.
-   find first b1-code of buf-code no-lock no-error.
-   if avail b1-code then
-      v-rid = recid(b1-code).
+   if not avail code then return.
+   setSelect(buffer code:handle).
+   {&BROWSE-NAME}:refresh ().
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -451,9 +502,14 @@ do:
    define variable v-ok as logical no-undo.
 
    vRec = recid(code).
-   run ref/cashparamgu.w (
+   define variable vProcNextLevel as character no-undo init "ref/codefrm.w".
+         
+   vProcNextLevel = getproceditEx(buffer code:handle,vProcNextLevel).
+   run value(vProcNextLevel)
+   (
                             input parparentproc
                           , input {&update}
+                          , input Code.parent
                           , input-output vRec).
 
          {&OPEN-QUERY-codebrow}
@@ -520,12 +576,17 @@ on window-close of frame {&FRAME-NAME}
 MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
-
+  if imode eq {&select}
+  then
+     run rid-rest no-error.
   { gbl/getcntxt.i get }
   { gbl/curdbnum.i v-db-num }
   run enable_UI in this-procedure .
 
   wait-for go of frame {&FRAME-NAME} focus {&browse-name}.
+  if imode eq {&select}
+  then
+     run rid-keep no-error.
 end.
 run disable_UI in this-procedure .
 
@@ -578,11 +639,12 @@ PROCEDURE enable_UI :
     b-upd
     when imode eq {&update} {&edit-where}   
     b-help
+    b-look
     b-hist
     with frame {&frame-name}.
    b-hist:POPUP-MENU in frame {&frame-name} = menu POPUP-MENU-b-hist:HANDLE.
    b-hist:MENU-MOUSE = 1.  
- 
+  fselect                :visible in browse {&BROWSE-NAME} = imode eq {&select}.
   {&OPEN-BROWSERS-IN-QUERY-f-c-p}
 
 end procedure.
@@ -662,18 +724,3 @@ PROCEDURE PrevLevel:
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rid-keep 
-procedure rid-keep :
-     run gbl/rid-keep.p (input table tmprecid) no-error.
-end.
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rid-rest 
-procedure rid-rest :
-      run gbl/rid-rest.p (output table tmprecid) no-error.
-      
-      
-   end.
-   /* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME

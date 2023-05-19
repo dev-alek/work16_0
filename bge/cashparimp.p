@@ -39,7 +39,7 @@ Types = new ibs.th.str.cash.CashDevice().
 { bge/cashpartt.i }
 define variable varlog as logical no-undo.
 define variable mFileFullPath as character no-undo.
-system-dialog get-file mFileName title "Выберите файл с ценами поставки"
+system-dialog get-file mFileName title "Выберите файл для загрузки эталонных параметров кассы"
     filters "MS Excel (*.xls,*.xlsx)" "*.xls,*.xlsx",
             "Все файлы" "*.*"
     initial-filter 1
@@ -164,7 +164,7 @@ procedure WorkLineExel:
                                iBuffer::NumLine_,
                                iBuffer::section, 
                                iBuffer:buffer-field( "section"):label,
-                               if iBuffer::source eq 1 then "Латинкские буквы и цыфры" else "Цыфры" )).
+                               if iBuffer::source eq 1 then "Латинкские буквы и цифры" else "Цифры" )).
       return.
    end.
    if iBuffer::source eq 1
@@ -191,10 +191,10 @@ procedure WorkLineExel:
       end.
    end.
    else do:
-      if     iBuffer::fvalue ne "MNG"
+      if     iBuffer::fvalue ne "MGR"
          and iBuffer::fvalue ne "REG"   
       then do:
-         run WriteLog(substitute ("Строка &1 недопустимое значение &2 поля &3 Допустимы MNG - менаджер и REG - кассир",
+         run WriteLog(substitute ("Строка &1 недопустимое значение &2 поля &3 Допустимы MGR - менаджер и REG - кассир",
                                   iBuffer::NumLine_,
                                   iBuffer::fvalue, 
                                   iBuffer:buffer-field( "fvalue"):label)).
