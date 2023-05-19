@@ -56,7 +56,7 @@ def var vss-description as character no-undo init "ќтчет о продажах".
 define variable v-today as date      no-undo.
 define variable v-time  as integer   no-undo.
 
-{ rep/sale-clc.i def}
+{ rep/sale-clc-rom.i def}
 DEFINE FRAME gds-grp
       sym1                          column-label ":!:" format "X(1)" space(0)
       tt-doc-line.gds-type          COLUMN-LABEL "т"   format "x(1)" space(0)
@@ -249,11 +249,8 @@ DO:
   RUN calc-sale
   (INPUT p-curr-obj-type,
    INPUT p-curr-obj-code,
-   INPUT 1,
    INPUT input frame {&frame-name} start-date,
-   INPUT input frame {&frame-name} end-date  ,
-   ?,
-   ?)
+   INPUT input frame {&frame-name} end-date)
   .
   message "—бор данных завершен" view-as alert-box.
 END.
@@ -394,13 +391,13 @@ RUN disable_UI.
 /* **********************  Internal Procedures  *********************** */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE calc-gds-grp Dialog-Frame
-{ rep/sale-clc.i calc-grp}
+{ rep/sale-clc-rom.i calc-grp}
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE calc-sale Dialog-Frame
-{ rep/sale-clc.i calc}
+{ rep/sale-clc-rom.i calc}
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
