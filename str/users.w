@@ -2949,7 +2949,7 @@ on error undo, return error
         FIND FIRST buf_global-state-attr
       WHERE buf_global-state-attr.gls-id = buf_global-state.gls-id
          AND buf_global-state-attr.attr-code = "action-gbl"
-      EXCLUSIVE-LOCK
+      NO-LOCK
       NO-error
       .
    IF AVAILABLE buf_global-state-attr 
