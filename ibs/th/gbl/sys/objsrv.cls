@@ -21,7 +21,7 @@ using ibs.th.gbl.systemsetting.
 
 
 class ibs.th.gbl.sys.objsrv:
-  
+  &glob GlobObjSrvClass yes
   define temp-table tt-objth no-undo
     field iNum      as integer
     field objhndl   as Progress.Lang.Object
@@ -29,7 +29,7 @@ class ibs.th.gbl.sys.objsrv:
     field objparent as character
     
     .
-  &glob GlobObjSrv yes
+
   define public property Env as class env no-undo
     get.
     private set.

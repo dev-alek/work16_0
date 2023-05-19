@@ -18,7 +18,7 @@ Creation date: 01/30/15
 using Progress.Lang.*.
 
 
-class ibs.th.gbl.keyrec: 
+class ibs.th.gbl.keyrec inherits ibs.th.gbl.sys.objth: 
 
   define property ReturnMsg as character no-undo
     get.
@@ -85,7 +85,7 @@ class ibs.th.gbl.keyrec:
                                         
   end.
   
-  method public void GenKkeyFv (
+  method public void GenKeyFv (
     input p-key-rec     as character,
     output p-field-list as character,
     output p-value-list as character

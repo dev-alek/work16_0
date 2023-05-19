@@ -60,7 +60,7 @@ class Ibs.Th.Gbl.TypeMap inherits objth:
       else return ?.
   end method. 
 
-  method private char GetLabel(inKeyStr as char):
+  method public char GetLabel(inKeyStr as char):
     def var prop as class propmap no-undo.    
     if valid-object (mapType:GetItemKeyStr(inKeyStr))
       then return cast (mapType:SubjectObjCurr, ibs.th.gbl.propmap):Label_. 
@@ -74,7 +74,7 @@ class Ibs.Th.Gbl.TypeMap inherits objth:
       else return ?.
   end method. 
  
-  method private char GetNameProp(inKeyStr as char):
+  method public char GetNameProp(inKeyStr as char):
     def var prop as class propmap no-undo.
     if valid-object (mapType:GetItemKeyStr(inKeyStr))
       then return cast (mapType:SubjectObjCurr, ibs.th.gbl.propmap):NameProp. 

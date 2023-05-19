@@ -21,7 +21,7 @@ using ibs.th.bge.1crn.subjects.isubject from propath.
 
 block-level on error undo, throw.
 
-class ibs.th.bge.1crn.subjects.asubject abstract implements ibs.th.bge.1crn.subjects.isubject: 
+class ibs.th.bge.1crn.subjects.asubject abstract inherits ibs.th.gbl.sys.objth implements ibs.th.bge.1crn.subjects.isubject: 
 
   define public property Msg as character
     get.

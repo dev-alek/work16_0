@@ -35,7 +35,6 @@ class ibs.th.gbl.sys.objth:
     getobjserv().
     if valid-object (ObjSrv)
       then ObjSrv:Delobj(this-object).
-/*    message "Умирает objth" view-as alert-box.*/
   end destructor.
 
   method public void getobjserv():

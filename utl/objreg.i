@@ -9,10 +9,20 @@
 &elseif "{5}" eq ""
 &then
 {1} = new {2} ({3},{4}).
-&else 
+&elseif "{6}" eq "" &then 
 {1} = new {2} ({3},{4},{5}).
+&elseif "{7}" eq "" &then
+{1} = new {2} ({3},{4},{5},{6}).
+&elseif "{8}" eq "" &then
+{1} = new {2} ({3},{4},{5},{6},{7}).
+&elseif "{9}" eq "" &then
+{1} = new {2} ({3},{4},{5},{6},{7},{8}).
+&elseif "{10}" eq "" &then
+{1} = new {2} ({3},{4},{5},{6},{7},{8},{9}).
+&else 
+{1} = new {2} ({3},{4},{5},{6},{7},{8},{9},{10}).
 &endif
-&if defined(GlobObjSrv) eq 0
+&if defined(GlobObjSrvClass) eq 0
 &then
 ObjSrv:Regobj(this-object,{1}).
 &else
