@@ -923,9 +923,17 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
               end.
             end .
             else do:
-            ucMain7:INIT_Panel(no, yes, no, no). 
-            ucMain7:PublicEvent("showPrice", "").
-            vLoadForm = yes.
+                ucMain7:INIT_GoodsFix(SelectItem). 
+                ucMain7:PublicEvent("NotOneLable", "").
+                assign
+                  label5:Visible    = false
+                  checkBox1:Visible = false
+                  .
+                vLoadForm = yes.                
+/*                                                 */
+/*            ucMain7:INIT_Panel(no, yes, no, no). */
+/*            ucMain7:PublicEvent("showPrice", "").*/
+/*            vLoadForm = yes.                     */
             end.
           END.
           ELSE

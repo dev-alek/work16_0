@@ -42,6 +42,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     define variable Promovisa as logical no-undo.
     define variable PromoBarCode as logical no-undo .
     define variable PromoBarCodeFix as logical no-undo .
+    define variable PromoGoodsApplFix as logical no-undo .
 
     define property pCrit as logical no-undo
     private get.
@@ -53,6 +54,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        this-object:Promovisa = no.
        this-object:PromoBarCode = no.
        this-object:PromoBarCodeFix = no.
+       this-object:PromoGoodsApplFix = no .
     end.
     define property pPromoSet as logical no-undo
     private get.
@@ -64,6 +66,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        this-object:Promovisa = no.
        this-object:PromoBarCode = no.
        this-object:PromoBarCodeFix = no.
+       this-object:PromoGoodsApplFix = no .
     end.
     define property pPromoSetFix as logical no-undo
     private get.
@@ -75,6 +78,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        this-object:Promovisa = no.
        this-object:PromoBarCode = no.
        this-object:PromoBarCodeFix = no.
+       this-object:PromoGoodsApplFix = no .
     end.    
     define property pPromoSetGoods as logical no-undo
     private get.
@@ -86,6 +90,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        this-object:Promovisa = no.
        this-object:PromoBarCode = no.
        this-object:PromoBarCodeFix = no.
+       this-object:PromoGoodsApplFix = no .
     end.
     define property pPromovisa as logical no-undo
     private get.
@@ -97,6 +102,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        Promovisa = iPromovisa.
        this-object:PromoBarCodeFix = no.
        this-object:PromoBarCode = no.
+       this-object:PromoGoodsApplFix = no .
     end.
     define property pPromoBarCode as logical no-undo
     private get.
@@ -108,6 +114,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        this-object:Promovisa = no.
        this-object:PromoBarCodeFix = no.
        PromoBarCode = iPromobarcode.
+       this-object:PromoGoodsApplFix = no .
     end.     
     define property pPromoBarCodeFix as logical no-undo
     private get.
@@ -119,7 +126,20 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
        this-object:Promovisa = no.
        this-object:PromoBarCode = no.
        PromoBarCodeFix = iPromobarcodeFix.
+       this-object:PromoGoodsApplFix = no .
     end.     
+    define property pPromoGoodsApplFix as logical no-undo
+    private get.
+    set(input iPromoGoodsApplFix as logical):
+       this-object:mCrit = no.
+       this-object:PromoSet = no.
+       this-object:PromoSetFix = no.
+       this-object:PromoSetGoods = no.
+       this-object:Promovisa = no.
+       this-object:PromoBarCode = no.
+       this-object:PromoBarCodeFix = no.
+       PromoGoodsApplFix = iPromoGoodsApplFix.
+    end.      
     define private variable mBind  as character no-undo.
     
     {ibs/th/ref/promo/promo_trg_heder.i }  
@@ -238,6 +258,11 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
             mBind  = "PromoBarCode"
             vLable = "Штрих коды"        
         .        
+        else if PromoGoodsApplFix
+        then assign
+            mBind  = "PromoGoodsApplFix"
+            vLable = "Товары"        
+        . 
         else assign
             mBind  = "PromoGoodsAppl"
             vLable = "Товары"
@@ -316,6 +341,22 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
             this-object:button4:Visible = no
             this-object:button5:Visible = yes
             this-object:button6:Visible = yes
+            
+           // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
+        . 
+        else if PromoGoodsApplFix then
+        assign
+            THIS-OBJECT:dataGridView1:Columns[0]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[1]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[2]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[3]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[4]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[5]:Visible = no
+            
+            this-object:button3:Visible = no
+            this-object:button4:Visible = no
+            this-object:button5:Visible = no
+            this-object:button6:Visible = no
             
            // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
         . 

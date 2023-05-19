@@ -451,6 +451,14 @@ end . /* end_of низ таблицы и html-файла */
                                                  "  and tt-PromoGoodsAppl.mode ne {&h-delete}"
                                              )).
                     end.
+                    when "PromoGoodsApplFix" 
+                    then do:
+                        hQuery:set-buffers(buffer tt-PromoGoodsAppl:HANDLE). 
+                        hQuery:query-prepare("FOR EACH tt-PromoGoodsAppl " + if not available tt-promoaction-one then "" else (
+                                                 "where tt-PromoGoodsAppl.idaction eq " + string(tt-promoaction-one.id)  +
+                                                 "  and tt-PromoGoodsAppl.mode ne {&h-delete}"
+                                             )).
+                    end.                    
                     when "PromoCardsBin" 
                     then do:
                         hQuery:set-buffers(buffer tt-PromoCardsBin:HANDLE). 
@@ -1112,7 +1120,6 @@ end . /* end_of низ таблицы и html-файла */
     .
     if v-sched-sub:schedType = 0 then CreateTableForSchedw0 (p-mode, p-sub:ScheduleWeek).
                                  else CreateTableForSchedw1 (p-mode, p-sub:ScheduleWeek).
-       
      //if p-mode = {&update} then temp-table tt-promoaction-one:tracking-changes = true .
      CreateTableForGoodsCrits(p-mode, p-sub:GoodsCrits).
      CreateTableForGoodsAppl (p-mode, p-sub:GoodsAppl ).
@@ -1202,7 +1209,7 @@ end . /* end_of низ таблицы и html-файла */
   ) :
     define variable vI as int no-undo.
     define variable p-sub as class promogoodssub no-undo.
-    
+
     //if p-mode = {&add-def} then temp-table tt-PromoGoodsAppl:tracking-changes = true . 
     do vi = 1 to p-subs:GetItem(vI):  
         p-sub = p-subs:promoGoodsObjCurr.
