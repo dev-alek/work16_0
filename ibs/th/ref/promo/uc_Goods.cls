@@ -285,7 +285,9 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
         THIS-OBJECT:dataGridView1:Columns[2]:Visible = no
         THIS-OBJECT:dataGridView1:Columns[3]:Visible = yes
         THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
-        THIS-OBJECT:dataGridView1:Columns[5]:Visible = no
+        THIS-OBJECT:dataGridView1:Columns[5]:Visible = yes
+        THIS-OBJECT:dataGridView1:Columns[4]:HeaderText = "Скидка, %"
+        THIS-OBJECT:dataGridView1:Columns[5]:HeaderText = "Количество"
         THIS-OBJECT:dataGridView1:Columns[6]:Visible = no
      
         /* this-object:button1:Visible = no
@@ -298,9 +300,9 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
           THIS-OBJECT:dataGridView1:Columns[1]:Visible    = no
           THIS-OBJECT:dataGridView1:Columns[2]:Visible    = no
           THIS-OBJECT:dataGridView1:Columns[3]:Visible    = yes
-          THIS-OBJECT:dataGridView1:Columns[4]:Visible    = yes
-          THIS-OBJECT:dataGridView1:Columns[4]:HeaderText = "Количество"
-          THIS-OBJECT:dataGridView1:Columns[5]:Visible    = no
+          THIS-OBJECT:dataGridView1:Columns[4]:Visible    = no
+          THIS-OBJECT:dataGridView1:Columns[5]:HeaderText = "Количество"
+          THIS-OBJECT:dataGridView1:Columns[5]:Visible    = yes
           THIS-OBJECT:dataGridView1:Columns[6]:Visible    = no
      
           /* this-object:button1:Visible = no
