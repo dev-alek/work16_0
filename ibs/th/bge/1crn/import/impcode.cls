@@ -14,7 +14,7 @@ Author: Molotkov Sergey
 Creation date: 13/02/19
 
 */
-&scoped-define impclass emc
+&scoped-define impclass code
 using ibs.th.bge.1crn.subjects.subjects.
 using ibs.th.bge.1crn.subjects.{&impclass}.
 
