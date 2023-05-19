@@ -752,9 +752,9 @@ class ibs.th.ref.code.browsecode inherits Form final:
       define variable arrayvar4 as System.Windows.Forms.ToolStripItem extent 1 no-undo.
       arrayvar4[1] = this-object:Hist.
       this-object:ElemMenu:Items:AddRange(arrayvar4).
-      this-object:ElemMenu:Location = new System.Drawing.Point(831, 0).
+      this-object:ElemMenu:Location = new System.Drawing.Point(954, 0).
       this-object:ElemMenu:Name = "ElemMenu".
-      this-object:ElemMenu:Size = new System.Drawing.Size(159, 24).
+      this-object:ElemMenu:Size = new System.Drawing.Size(36, 24).
       this-object:ElemMenu:TabIndex = 3.
       this-object:ElemMenu:Text = "Меню".
       /*  */
@@ -765,9 +765,9 @@ class ibs.th.ref.code.browsecode inherits Form final:
       arrayvar5[1] = this-object:oneHist.
       arrayvar5[2] = this-object:childHist.
       this-object:Hist:DropDownItems:AddRange(arrayvar5).
+      this-object:Hist:Image = cast(resources:GetObject("Hist.Image"), System.Drawing.Image).
       this-object:Hist:Name = "Hist".
-      this-object:Hist:Size = new System.Drawing.Size(59, 20).
-      this-object:Hist:Text = "История".
+      this-object:Hist:Size = new System.Drawing.Size(28, 20).
       /*  */
       /* oneHist */
       /*  */
