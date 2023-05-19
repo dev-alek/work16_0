@@ -35,7 +35,9 @@ define variable parparentproc   as widget-handle no-undo.
 define variable mParamStr       as character     no-undo extent 10.
 define variable mProdBcStrList  as character     no-undo.
 define variable mSuppStrList    as character     no-undo.
-define variable mPrim           as character     no-undo extent 10.
+define variable mPrim1          as character     no-undo extent 10.
+define variable mPrim2          as character     no-undo extent 10.
+define variable mPrim3          as character     no-undo extent 10.
 
 {cmp/str-glbl.i}
 {cmp/vssrevis.i}
@@ -387,13 +389,26 @@ procedure BeforeCalc:
    vI = vI + 1.
    
    
-   mPrim[1] = "Объем в ИТОГО: отображается в виде справочной информации." .
-   mPrim[2] = "<u>Расчет отклонения АЦ к ТТН</u> " + fill("&nbsp;" , 11) + " <u>Расчет отклонения резервуара к АЦ</u>" .
-   mPrim[3] = "Масса = (1.23-1.19)      " + fill("&nbsp;" , 28) + "Масса = (1.32-1.28-1.23)" .
-   mPrim[4] = "% = (1.37/1.19*100)      " + fill("&nbsp;" , 28) + "% = (1.39/1.23*100)" .
-   mPrim[5] = "<u>Расчет отклонения между резервуаром и принятым к учету топливом</u>" .
-   mPrim[6] = "Масса = (1.32-1.28-1.36)" .
-   mPrim[7] = "% = (1.41/1.36*100)" .
+   mPrim1[1] = "Объем в ИТОГО: отображается в виде справочной информации." .
+   mPrim1[2] = "<u>Расчет отклонения АЦ к ТТН</u> " + fill("&nbsp;" , 11) + " <u>Расчет отклонения резервуара к АЦ</u>" .
+   mPrim1[3] = "Масса = (1.23-1.19)      " + fill("&nbsp;" , 28) + "Масса = (1.32-1.28-1.23)" .
+   mPrim1[4] = "% = (1.37/1.19*100)      " + fill("&nbsp;" , 28) + "% = (1.39/1.23*100)" .
+   mPrim1[5] = "<u>Расчет отклонения между резервуаром и принятым к учету топливом</u>" .
+   mPrim1[6] = "Масса = (1.32-1.28-1.36)" .
+   mPrim1[7] = "% = (1.41/1.36*100)" .
+   
+   mPrim2[1] = "Расчет сверхнормативного расхождения между резервуаром и АЦ" .
+   mPrim2[2] = "Если 1.39 < 0 1.39+Корень((1.32*Пр)^2+(1.28*Пр)^2+(1.23*Пац)^2)/100" .
+   mPrim2[3] = "Если 1.39 > 0 1.39-Корень((1.32*Пр)^2+(1.28*Пр)^2+(1.23*Пац)^2)/100" .
+   mPrim2[4] = "Пр - относительная погрешность измерения массы нефтепродукта в резервуаре (в сверках)" .
+   mPrim2[5] = "Пац - погрешность измерения массы в АЦ" .
+   mPrim2[6] = "Результат расчета округляется до десятых." .
+   
+   mPrim3[1] = "Расчет сверхнормативного расхождения между резервуаром и принятым к учету топливом" .
+   mPrim3[2] = "Если 1.41 < 0 1.41+Корень((1.32*Пр)^2+(1.28*Пр)^2)/100" .
+   mPrim3[3] = "Если 1.41 > 0 1.41-Корень((1.32*Пр)^2+(1.28*Пр)^2)/100" .
+   mPrim3[4] = "Пр - относительная погрешность измерения массы нефтепродукта в резервуаре (в сверках)" .
+   mPrim3[5] = "Результат расчета округляется до десятых." .
    
 end procedure.
 
@@ -819,7 +834,7 @@ procedure processTrn :
             tt-rep.col21  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TTNTemp
           .
           assign
-            tt-rep.col22  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol
+            tt-rep.col22  = if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol
             tt-rep.col23  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight
             tt-rep.col24  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
             tt-rep.col25  = if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity
@@ -998,6 +1013,10 @@ procedure processTrn :
         end .
         else do :
           tt-rep.col43 = abs(tt-rep.col39) - v-delta-ac .
+          if tt-rep.col39 < 0
+          then 
+            tt-rep.col43 = tt-rep.col43 * -1
+          .
         end .
         
         if v-is-sug-gds
@@ -1011,6 +1030,10 @@ procedure processTrn :
         end .
         else do :
           tt-rep.col44 = abs(tt-rep.col41) - v-delta-fact .
+          if tt-rep.col41 < 0
+          then 
+            tt-rep.col44 = tt-rep.col44 * -1
+          .
         end .
       end . /* if not available tt-rep */
       else do :
@@ -1043,7 +1066,7 @@ procedure processTrn :
           tt-rep.col21  = tt-rep.col21 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TTNTemp
         .
         assign
-          tt-rep.col22  = tt-rep.col22 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol
+          tt-rep.col22  = tt-rep.col22 + (if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol)
           tt-rep.col23  = tt-rep.col23 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight
           tt-rep.col24  = tt-rep.col24 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
           tt-rep.col25  = tt-rep.col25 + (if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity)
@@ -1056,7 +1079,7 @@ procedure processTrn :
           tt-rep.col20str = tt-rep.col20str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocDensity, "->>>>>>>>9.9999")
           tt-rep.col21str = tt-rep.col21str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TTNTemp, "->>>>>>>>>>>9.9")
                                              
-          tt-rep.col22str = tt-rep.col22str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol, "->>>>>>>>>>>9"  )
+          tt-rep.col22str = tt-rep.col22str + "<br>" + {&new-line} + fDec2Str((if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol), "->>>>>>>>>>>9"  )
           tt-rep.col23str = tt-rep.col23str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight, "->>>>>>>>>>>9.9")
           tt-rep.col24str = tt-rep.col24str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss, "->>>>>>>>>>9.99")
           tt-rep.col25str = tt-rep.col25str + "<br>" + {&new-line} + fDec2Str((if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity), "->>>>>>>>9.9999")
@@ -1116,6 +1139,10 @@ procedure processTrn :
       end .
       else do :
         tt-rep.col43 = abs(tt-rep.col39) - v-delta-ac .
+        if tt-rep.col39 < 0
+        then 
+          tt-rep.col43 = tt-rep.col43 * -1
+        .
       end .
       
       if v-is-sug-gds
@@ -1129,6 +1156,10 @@ procedure processTrn :
       end .
       else do :
         tt-rep.col44 = abs(tt-rep.col41) - v-delta-fact .
+        if tt-rep.col41 < 0
+        then 
+          tt-rep.col44 = tt-rep.col44 * -1
+        .
       end .
     end .
     
@@ -1326,19 +1357,21 @@ procedure PrintTT:
                '<TD style="width:  90px;"></TD>' skip            /*  44   */
            '</TR>' skip
            '<TR>' skip
-               '<TD colspan="14" STYLE="font-size: 14px;">' + 'Сводный отчёт по поставкам топлива' + '</TD>'skip
-               '<TD colspan="10" STYLE="font-size: 14px; font-weight:bold; ">' + 'Примечание к отчету:' + '</TD>'skip
+               '<TD colspan="12" STYLE="font-size: 14px;">' + 'Сводный отчёт по поставкам топлива' + '</TD>'skip
+               '<TD colspan="9" STYLE="font-size: 14px; font-weight:bold; ">' + 'Примечание к отчету:' + '</TD>'skip
            '</TR>' skip
            .
 
       do vI = 1 to extent(mParamStr):
          if mParamStr[vI] = ""
-         and mPrim[vI] = "" 
+         and mPrim1[vI] = "" 
          then leave .
          put stream sOutStr-html unformatted
               '<TR>' skip
-                  '<TD colspan="14" STYLE="font-size: 14px;">' + mParamStr[vI] + '</TD>' skip
-                  '<TD colspan="10" STYLE="font-size: 14px; font-style: italic; ">' + mPrim[vI] + '</TD>' skip
+                  '<TD colspan="12" STYLE="font-size: 14px;">' + mParamStr[vI] + '</TD>' skip
+                  '<TD colspan="9" STYLE="font-size: 14px; font-style: italic; ">' + mPrim1[vI] + '</TD>' skip
+                  '<TD colspan="11" STYLE="font-size: 14px; font-style: italic; ">' + mPrim2[vI] + '</TD>' skip
+                  '<TD colspan="11" STYLE="font-size: 14px; font-style: italic; ">' + mPrim3[vI] + '</TD>' skip
               '</TR>' skip
             .
       end.
@@ -1523,8 +1556,8 @@ procedure PrintTT:
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col40, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col40) > 0.65 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col40, "->>>>>>>>>>9.99") + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col41, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col42) > 0.65  then "red" else "black") + '; ">' + fDec2Str(tt-rep.col41, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col42, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col42) > 0.65 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col42, "->>>>>>>>>>9.99") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col43, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col43, "->>>>>>>>>>>9.9") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col44, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col44, "->>>>>>>>>>>9.9") + '</TH>'  skip
+            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col43, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if tt-rep.col43 <> 0 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col43, "->>>>>>>>>>>9.9") + '</TH>'  skip
+            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col44, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if tt-rep.col44 <> 0 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col44, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '</TR>'skip
           .
         end .
@@ -1577,8 +1610,8 @@ procedure PrintTT:
               '<TH num="#,##0.00" val="' + fDec2Str(tt-itog.col40, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-itog.col40red then "red" else "black") + '; ">' + fDec2Str(tt-itog.col40, "->>>>>>>>>>9.99") + '</TH>'  skip
               '<TH num="#,##0.00" val="' + fDec2Str(tt-itog.col41, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-itog.col42red then "red" else "black") + '; ">' + fDec2Str(tt-itog.col41, "->>>>>>>>>>>9.9") + '</TH>'  skip
               '<TH num="#,##0.00" val="' + fDec2Str(tt-itog.col42, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-itog.col42red then "red" else "black") + '; ">' + fDec2Str(tt-itog.col42, "->>>>>>>>>>9.99") + '</TH>'  skip
-              '<TH num="#,##0.00" val="' + fDec2Str(tt-itog.col43, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; ">' + fDec2Str(tt-itog.col43, "->>>>>>>>>>>9.9") + '</TH>'  skip
-              '<TH num="#,##0.00" val="' + fDec2Str(tt-itog.col44, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; ">' + fDec2Str(tt-itog.col44, "->>>>>>>>>>>9.9") + '</TH>'  skip
+              '<TH num="#,##0.00" val="' + fDec2Str(tt-itog.col43, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-itog.col43 <> 0 then "red" else "black") + '; ">' + fDec2Str(tt-itog.col43, "->>>>>>>>>>>9.9") + '</TH>'  skip
+              '<TH num="#,##0.00" val="' + fDec2Str(tt-itog.col44, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-itog.col44 <> 0 then "red" else "black") + '; ">' + fDec2Str(tt-itog.col44, "->>>>>>>>>>>9.9") + '</TH>'  skip
               '</TR>'skip
             .
           end .
@@ -1630,8 +1663,8 @@ procedure PrintTT:
           '<TH num="#,##0.00" val="' + fDec2Str(tt-all-itog.col40, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-all-itog.col40red then "red" else "black") + '; ">' + fDec2Str(tt-all-itog.col40, "->>>>>>>>>>9.99") + '</TH>'  skip
           '<TH num="#,##0.00" val="' + fDec2Str(tt-all-itog.col41, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-all-itog.col42red then "red" else "black") + '; ">' + fDec2Str(tt-all-itog.col41, "->>>>>>>>>>>9.9") + '</TH>'  skip
           '<TH num="#,##0.00" val="' + fDec2Str(tt-all-itog.col42, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-all-itog.col42red then "red" else "black") + '; ">' + fDec2Str(tt-all-itog.col42, "->>>>>>>>>>9.99") + '</TH>'  skip
-          '<TH num="#,##0.00" val="' + fDec2Str(tt-all-itog.col43, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; ">' + fDec2Str(tt-all-itog.col43, "->>>>>>>>>>>9.9") + '</TH>'  skip
-          '<TH num="#,##0.00" val="' + fDec2Str(tt-all-itog.col44, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; ">' + fDec2Str(tt-all-itog.col44, "->>>>>>>>>>>9.9") + '</TH>'  skip
+          '<TH num="#,##0.00" val="' + fDec2Str(tt-all-itog.col43, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-all-itog.col43 <> 0 then "red" else "black") + '; ">' + fDec2Str(tt-all-itog.col43, "->>>>>>>>>>>9.9") + '</TH>'  skip
+          '<TH num="#,##0.00" val="' + fDec2Str(tt-all-itog.col44, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:bold; color: ' + (if tt-all-itog.col44 <> 0 then "red" else "black") + '; ">' + fDec2Str(tt-all-itog.col44, "->>>>>>>>>>>9.9") + '</TH>'  skip
           '</TR>'skip
         .
       end.
