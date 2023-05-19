@@ -59,6 +59,9 @@ FUNCTION getColorText RETURNS CHARACTER
   
           define temp-table tt-choose-code
             field ParamName as character
+            field section   as character
+            field device    as character
+            field group_    as character
             .
    
           define stream OutStr-html.
@@ -136,7 +139,11 @@ end function.
             for each tmprecid no-lock where tmprecid.fTable = "code":
               for first ub.Code no-lock where recid(ub.Code) = tmprecid.Frecid:
                 create tt-choose-code.
-                tt-choose-code.ParamName = ub.Code.code .
+                tt-choose-code.device = entry(2,ub.Code.parent,{&delim-par}) .
+                tt-choose-code.section = entry(3,ub.Code.parent,{&delim-par}) .
+                tt-choose-code.group_ = entry(4,ub.Code.parent,{&delim-par}) no-error.
+                if tt-choose-code.group_ = "" then tt-choose-code.group_ = ub.Code.code .
+                else tt-choose-code.ParamName = ub.Code.code .
               end.
             end.
           end. 
@@ -150,7 +157,15 @@ end function.
                   if lookup(string(buf_cash-param-hist.device), parDesk, ",") = 0 then next .
                 if parParam = "choose" then 
                 do:
-                  if not can-find (first tt-choose-code where tt-choose-code.ParamName = buf_cash-param-hist.param_name) then next . 
+                  find first tt-choose-code where tt-choose-code.section = buf_cash-param-hist.param_section and 
+                    tt-choose-code.device = string(buf_cash-param-hist.device) and 
+                    tt-choose-code.group_ = string(buf_cash-param-hist.param_group) no-error .
+                  if available tt-choose-code then 
+                  do:
+                    if tt-choose-code.ParamName <> "" then 
+                      if tt-choose-code.ParamName <> string(buf_cash-param-hist.param_name) then next .
+                  end.
+                  else next .
                 end.  
                 create tt-param .
                 assign
@@ -189,7 +204,15 @@ end function.
                 for each code-param where code-param.parent = code-group.parent + {&delim-par} + code-group.code no-lock:
                   if parParam = "choose" then 
                   do:
-                    if not can-find (first tt-choose-code where tt-choose-code.ParamName = code-param.code) then next . 
+                    find first tt-choose-code where tt-choose-code.section = code-section.code and 
+                      tt-choose-code.device = code-device.code and 
+                      tt-choose-code.group_ = code-group.code no-error .
+                    if available (tt-choose-code) then 
+                    do:
+                      if tt-choose-code.ParamName <> "" then 
+                        if tt-choose-code.ParamName <> code-param.code then next .
+                    end.
+                    else next .
                   end. 
                   for each obj-list:
                     for each cash-list where cash-list.obj-code = obj-list.obj-code and cash-list.deviceCode = code-device.code:
@@ -300,21 +323,17 @@ end function.
           for each obj-list no-lock where obj-list.obj-type = {&shop}:          
             for each cash-list no-lock where cash-list.obj-code = obj-list.obj-code:
               cashQntyCheck = cashQntyCheck + 1 .
-              for each buf_param no-lock where buf_param.CashNum = cash-list.cash-num and buf_param.obj-code = cash-list.obj-code:
-                if buf_param.SectionName = "Параметры" then 
-                do:
-                  if buf_param.diff or buf_param.flag <> "" then diffCashParam = diffCashParam + 1 .
-                  else withoutCashParam = withoutCashParam + 1 . 
-                end.
-                else 
-                do:
-                  if buf_param.diff or buf_param.flag <> "" then diffCashKeyBoard = diffCashKeyBoard + 1 .
-                  else 
-                  do: 
-                    withoutCashKeyBoard = withoutCashKeyBoard + 1 . 
-                  end.
-                end.
-              end.
+              if can-find (first buf_param no-lock where buf_param.CashNum = cash-list.cash-num and 
+                buf_param.obj-code = cash-list.obj-code and 
+                buf_param.SectionName = "Параметры" and
+                (buf_param.diff or buf_param.flag <> "")) then diffCashParam = diffCashParam + 1 .
+              else withoutCashParam = withoutCashParam + 1 . 
+              if can-find (first buf_param no-lock where buf_param.CashNum = cash-list.cash-num and 
+                buf_param.obj-code = cash-list.obj-code and 
+                buf_param.SectionName <> "Параметры" and
+                (buf_param.diff or buf_param.flag <> "")) then
+                diffCashKeyBoard = diffCashKeyBoard + 1 .
+              else withoutCashKeyBoard = withoutCashKeyBoard + 1 . 
             end.
           end.
 

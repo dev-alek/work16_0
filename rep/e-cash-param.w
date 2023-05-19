@@ -279,6 +279,7 @@ ON CHOOSE OF b-sel-cash IN FRAME F-Main
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel-param F-Frame-Win
 ON CHOOSE OF b-sel-param IN FRAME F-Main
   DO:
+    empty temp-table tmprecid .
     run ref/cashpargroup.w ( input  my-handle
       ,input  {&select}
       ,input  ""
@@ -392,6 +393,9 @@ ON VALUE-CHANGED OF SelectParam IN FRAME F-Main
       when "choose":u then 
         do:
           enable b-sel-param with frame {&frame-name} .
+          for each tmprecid exclusive-lock where tmprecid.fTable = "code":
+            delete tmprecid .
+        end.
           run ref/cashpargroup.w ( input  my-handle
             ,input  {&select}
             ,input  ""
@@ -530,14 +534,20 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE inifields F-Frame-Win 
 PROCEDURE inifields :
   /*------------------------------------------------------------------------------
-        Purpose:     здесь происходит вызов  процедуры отчета с любыми пареметрами
-      ------------------------------------------------------------------------------*/
-  for each ub.code no-lock where ub.Code.parent = "cash-param":
-
+          Purpose:     здесь происходит вызов  процедуры отчета с любыми пареметрами
+        ------------------------------------------------------------------------------*/
+  define variable mdevice as class ibs.th.str.cash.CashDevice
+    no-undo.
+  mdevice = new ibs.th.str.cash.CashDevice().
+  define variable objType    as ibs.th.gbl.propmap no-undo.
+  define variable kk as integer no-undo .
+  
+  do kk = 1 to mdevice:mapType:GetItem(kk):
+    objType = mdevice:CurrProp.
     create tt-device .
     assign
-      tt-device.code_    = ub.Code.code
-      tt-device.codeName = ub.Code.CodeName
+      tt-device.code_    = string(objType:KeyIntDB)
+      tt-device.codeName = objType:Label_
       .
   end.      
 
