@@ -188,7 +188,9 @@ CLASS ibs.th.ref.promo.uc_Mess INHERITS UserControl:
     END DESTRUCTOR.
     
     method private void closeBind():
-       bindPromoMess:Assign().
+       if valid-handle(bindPromoMess:handle)
+       then
+          bindPromoMess:Assign().
        bindPromoMess:Dispose().
     end.
 

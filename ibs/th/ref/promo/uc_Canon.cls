@@ -277,7 +277,9 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
 	end method.
 
     DESTRUCTOR PUBLIC uc_Canon ( ):
-        bindPromocrit:Assign().
+        if valid-handle(bindPromocrit:handle)
+        then
+          bindPromocrit:Assign().
         bindPromocrit:Dispose().
     END DESTRUCTOR.
 

@@ -330,7 +330,9 @@ CLASS ibs.th.ref.promo.uc_TabAZS INHERITS UserControl:
         if  dataGridView1:SelectedCells:Count >0
         then 
             dataGridView1:SelectedCells[0]:Selected = true.
-        bindPromoObject:Assign().
+        if valid-handle(bindPromoObject:handle)
+        then
+           bindPromoObject:Assign().
         bindPromoObject:dispose().
     END DESTRUCTOR.
 

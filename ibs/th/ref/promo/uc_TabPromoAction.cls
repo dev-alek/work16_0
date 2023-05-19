@@ -123,7 +123,9 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
   END DESTRUCTOR.
     
   method private void closeBind():
-    bindPromoActionOne:Assign().
+    if valid-handle(bindPromoActionOne:handle)
+    then
+        bindPromoActionOne:Assign().
     bindPromoActionOne:Dispose().
   end.
 
