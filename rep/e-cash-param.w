@@ -354,7 +354,17 @@ ON VALUE-CHANGED OF SelectDiff IN FRAME F-Main
           SelectDiff = "all" .
           display SelectDiff with frame F-Main .
           disable b-sel-cash with frame {&frame-name} .
-          
+  for each obj-list:
+    for each cash-desk where cash-desk.obj-code = obj-list.obj-code and cash-desk.is-del = false and cash-desk.autonomy <> integer({&cd-slave}):
+      find first tt-cash-list where tt-cash-list.obj-code = cash-desk.obj-code and tt-cash-list.db-num = cash-desk.db-num and
+        tt-cash-list.pos-type = cash-desk.pos-type and tt-cash-list.cash-num = cash-desk.cash-num no-error .
+      if not available (tt-cash-list) then 
+      do:
+        create tt-cash-list.
+        buffer-copy cash-desk to tt-cash-list .
+      end.
+    end.  
+  end.          
         END.
         do ii = 1 to num-entries(v-rid-list):
           find first buf_cash-desk no-lock where
