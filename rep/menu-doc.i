@@ -193,14 +193,14 @@ initial "@(#)$Workfile$ $Revision$".
                             end.
                             run menu-doc-set-visible-options in this-procedure (
                                   input tmp#list.print-options
+                                , output tmp#list.type-parts-enabled  
                                 , output tmp#list.type-price-enabled
                                 , output tmp#list.type-scale-enabled
                                 , output tmp#list.type-val-enabled
                                 , output tmp#list.sort-name-enabled
                                 , output tmp#list.sort-gr-enabled
                                 , output tmp#list.print-graft-enabled
-                                , output tmp#list.no-vat-enabled
-                                , output tmp#list.type-parts-enabled                                
+                                , output tmp#list.no-vat-enabled                                                                
                             ).
                         end.
                     end.
@@ -432,8 +432,7 @@ initial "@(#)$Workfile$ $Revision$".
                                       + ( if buf_tmp#list.sort-name-enabled   = yes then "+":U else "-":U )
                                       + ( if buf_tmp#list.sort-gr-enabled     = yes then "+":U else "-":U )
                                       + ( if buf_tmp#list.print-graft-enabled = yes then "+":U else "-":U )
-                                      + ( if buf_tmp#list.no-vat-enabled      = yes then "+":U else "-":U )
-                                      + ( if buf_tmp#list.type-parts-enabled  = yes then "+":U else "-":U )
+                                      + ( if buf_tmp#list.no-vat-enabled      = yes then "+":U else "-":U )                                      
         .
     end.
     end procedure. /* menu-doc-create-options-string */
