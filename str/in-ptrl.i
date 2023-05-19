@@ -393,6 +393,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-com-vessel-rvs as logical no-undo init no .
         define variable v-com-vessel-is-meas as logical no-undo init no .
         define variable v-code         as character    no-undo.
+        define variable is-com-tanks   as logical no-undo init no .
 
         define buffer buf_rvs-doc     for ub.rvs-doc .
         define buffer buf_rvs-line    for ub.rvs-line .
@@ -476,17 +477,20 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           and (p-action = {&lookup}
             or p-action-type = "edit")
           then do :
+            is-com-tanks = yes .
+            
             find first buf_place no-lock
               where buf_place.obj-type = t-doc.obj-type
                 and buf_place.obj-code = t-doc.obj-code
                 and buf_place.pl-code  = tt-doc-pl.pl-code
             .
             
-            v-value = v-value + "," + buf_place.loc1 .
+            v-value = buf_place.loc1 + "," + v-value  .
             do ii = 1 to num-entries(v-value) :
               find first buf_place no-lock where buf_place.obj-type = tt-doc-pl.obj-type
                                              and buf_place.obj-code = tt-doc-pl.obj-code
                                              and buf_place.loc1     = entry(ii, v-value)
+                                             and buf_place.status_  = ""
                                              no-error .
               if available buf_place
               then do :
@@ -538,22 +542,46 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         if v-count-doc-pl > 1
           or v-pl-code = ?
         then do:
-          run plgdsfnd in this-procedure
-            ( input yes
-            ,input buf_rvs-doc.obj-type
-            ,input buf_rvs-doc.obj-code
-            ,input buf_goods.gds-code
-            ,output is-rvs-place
-            ,output v-pl-code
-            ) no-error .
-          if error-status :error then do:
-            message
-              substitute( "Ошибка при выборе места хранения по товару &1.", buf_goods.gds-code ) skip
-              return-value skip
-              error-status :get-message(1) skip
-              view-as alert-box error .
-            undo block_tr, return error .
-          end.
+          if is-com-tanks
+          and v-pl-code <> ?
+          then do :
+            run ref/pl-gds-com-tanks.w
+              ( input v-pl-code
+              , output v-pl-code
+              ) no-error .
+            if v-pl-code = ? 
+            or v-pl-code = 0
+            then do:
+              message "Не выбрано место хранения " view-as alert-box .
+              undo block_tr, return error .
+            end.
+            if error-status :error then do:
+              message
+                substitute( "Ошибка при выборе места хранения по товару &1.", buf_goods.gds-code ) skip
+                return-value skip
+                error-status :get-message(1) skip
+                view-as alert-box error .
+              undo block_tr, return error .
+            end.
+          end .
+          else do :
+            run plgdsfnd in this-procedure
+              ( input yes
+              ,input buf_rvs-doc.obj-type
+              ,input buf_rvs-doc.obj-code
+              ,input buf_goods.gds-code
+              ,output is-rvs-place
+              ,output v-pl-code
+              ) no-error .
+            if error-status :error then do:
+              message
+                substitute( "Ошибка при выборе места хранения по товару &1.", buf_goods.gds-code ) skip
+                return-value skip
+                error-status :get-message(1) skip
+                view-as alert-box error .
+              undo block_tr, return error .
+            end.
+          end .
         end. /* v-count-doc-pl > 1 */
 
         find first buf_rvs-line
@@ -683,6 +711,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 find first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
                                                and buf_place.obj-code = buf_rvs-doc.obj-code
                                                and buf_place.loc1     = entry(ii, v-value)
+                                               and buf_place.status_  = ""
                                                no-error .
                 if available buf_place
                 then do :
@@ -1357,6 +1386,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                       find first buf_place no-lock where buf_place.obj-type = t-doc.obj-type
                                                      and buf_place.obj-code = t-doc.obj-code
                                                      and buf_place.loc1     = entry(ii, v-value)
+                                                     and buf_place.status_  = ""
                                                      no-error .
                       if available buf_place
                       then do :
@@ -2546,6 +2576,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   find first buf_place no-lock where buf_place.obj-type = buf_doc-pl.obj-type
                                                  and buf_place.obj-code = buf_doc-pl.obj-code
                                                  and buf_place.loc1     = entry(ii, v-value)
+                                                 and buf_place.status_  = ""
                                                  no-error .
                   if available buf_place
                   then do :

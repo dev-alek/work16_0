@@ -374,6 +374,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
           find first com_place no-lock where com_place.obj-type = tt-place.obj-type
                                          and com_place.obj-code = tt-place.obj-code
                                          and com_place.loc1     = entry(ii, tt-place-attr.com-tanks)
+                                         and com_place.status_  = ""
                                          no-error .
           if available com_place
           then do :

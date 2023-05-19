@@ -961,6 +961,7 @@ do :
         for first com_place no-lock where com_place.obj-type = p-obj-type
                                       and com_place.obj-code = p-obj-code
                                       and com_place.loc1 = entry(ii, com-tanks)
+                                      and com_place.status_ = ""
         :
           run placelib_write-attr  (input {&place-com-vessel}
             ,input p-obj-code

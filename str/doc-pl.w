@@ -1221,6 +1221,7 @@ DO:
           find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
                                          and buf_place.obj-code = buf_pl-gds.obj-code
                                          and buf_place.loc1     = entry(ii, v-value)
+                                         and buf_place.status_  = ""
                                          no-error .
           if available buf_place
           then do :

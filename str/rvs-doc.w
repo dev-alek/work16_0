@@ -1031,11 +1031,12 @@ procedure cycle-add :
                                      and buf_place.obj-code = buf_pl-gds.obj-code
                                      and buf_place.pl-code = buf_pl-gds.pl-code
                                      .
-      v-value = v-value + "," + buf_place.loc1 .
+      v-value = buf_place.loc1 + "," + v-value .
       do ii = 1 to num-entries(v-value) :
         find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
                                        and buf_place.obj-code = buf_pl-gds.obj-code
                                        and buf_place.loc1     = entry(ii, v-value)
+                                       and buf_place.status_  = ""
                                        no-error .
         if available buf_place
         then do :

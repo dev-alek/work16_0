@@ -2069,6 +2069,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable state-vapor-pressure as decimal no-undo .
   define variable sug-volume as decimal no-undo .
   define variable sug-pf-volume as decimal no-undo .
+  define variable is-main-tank as logical no-undo .
   
   define variable v-prev-temp as logical no-undo .
 
@@ -4861,18 +4862,47 @@ END.
                                        no-error.
         if is-sug(bf_rvs-line.gds-code)
         then do :
-          find first buf_doc-pl no-lock where buf_doc-pl.obj-type   = bf_rvs-line.obj-type
-                                          and buf_doc-pl.obj-code   = bf_rvs-line.obj-code
-                                          and buf_doc-pl.gds-code   = bf_rvs-line.gds-code
-                                          and buf_doc-pl.pl-code    = bf_rvs-line.pl-code
-                                          and buf_doc-pl.out-code   = buf_rvs-doc.out-code
-                                          no-error .
-          if not available buf_doc-pl
+          is-main-tank = no .
+          run placelib_get-attr  ( input {&place-com-tanks}
+                                  ,input buf_place.obj-code
+                                  ,input buf_place.obj-type
+                                  ,input buf_place.pl-code
+                                  ,output v-value
+                                  ,output v-ok      ) no-error.
+          if v-ok
+          and v-value > ""
           then do :
-            message "В накладной для товара " string(bf_rvs-line.gds-code) " нет распределения по местам хранения! Невозможно произвести расчет свободной ёмкости в резервуаре." view-as alert-box .
-          end . 
+            run placelib_get-attr  ( input {&place-is-main}
+                                    ,input buf_place.obj-code
+                                    ,input buf_place.obj-type
+                                    ,input buf_place.pl-code
+                                    ,output v-value
+                                    ,output v-ok      ) no-error.
+            if v-ok
+            and v-value > ""
+            and logical(v-value)
+            then do :
+              is-main-tank = yes .
+            end .
+          end .
           else do :
-            v-doc-volume = buf_doc-pl.fact-qnty .
+            is-main-tank = yes .
+          end . 
+          if is-main-tank
+          then do :
+            find first buf_doc-pl no-lock where buf_doc-pl.obj-type   = bf_rvs-line.obj-type
+                                            and buf_doc-pl.obj-code   = bf_rvs-line.obj-code
+                                            and buf_doc-pl.gds-code   = bf_rvs-line.gds-code
+                                            and buf_doc-pl.pl-code    = bf_rvs-line.pl-code
+                                            and buf_doc-pl.out-code   = buf_rvs-doc.out-code
+                                            no-error .
+            if not available buf_doc-pl
+            then do :
+              message "В накладной для товара " string(bf_rvs-line.gds-code) " нет распределения по местам хранения! Невозможно произвести расчет свободной ёмкости в резервуаре." view-as alert-box .
+            end . 
+            else do :
+              v-doc-volume = buf_doc-pl.fact-qnty .
+            end .
           end .
         end .                           
         else do :

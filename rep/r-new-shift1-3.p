@@ -1502,7 +1502,8 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
             do ii = 1 to num-entries(v-com-tanks) :
               find first buf_place no-lock where buf_place.obj-type = bf_temp-rvs-line.obj-type
                                              and buf_place.obj-code = bf_temp-rvs-line.obj-code
-                                             and buf_place.loc1 = entry(ii, v-com-tanks)
+                                             and buf_place.loc1     = entry(ii, v-com-tanks)
+                                             and buf_place.status_  = ""
                                              no-error .
               if not available buf_place
               then do :
@@ -1597,7 +1598,8 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
             do ii = 1 to num-entries(v-com-tanks) :
               find first buf_place no-lock where buf_place.obj-type = bf_temp-rvs-line.obj-type
                                              and buf_place.obj-code = bf_temp-rvs-line.obj-code
-                                             and buf_place.loc1 = entry(ii, v-com-tanks)
+                                             and buf_place.loc1     = entry(ii, v-com-tanks)
+                                             and buf_place.status_  = ""
                                              no-error .
               if not available buf_place
               then do :
