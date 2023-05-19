@@ -479,6 +479,8 @@ procedure asi-send-cmd :
   define variable cmd                   as character    no-undo .
   define variable v-pid                 as integer      no-undo .
   define variable v-addr                as character    no-undo .
+
+  mWaitProcEvent = false.
   run SendReqSocet (v-asi-ip,v-asi-port,"getmeas/?loclist=all","","xml","getResponseMy").
   if oErrMsg ne ""
   then do:
