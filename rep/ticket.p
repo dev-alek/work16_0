@@ -835,6 +835,7 @@ define variable v-promo-name      as character no-undo .
 define variable v-type-sale-promo as character no-undo . /*тип скидки*/
 define variable v-sale-promo      as character   no-undo . /*размер скидки*/
 define variable v-promo-price     as decimal   no-undo . /*цена со скидкой*/
+
 if p-ActionId <> 0 and p-ActionId <> ? then 
 do:
    find first ub.PromoAction no-lock where ub.PromoAction.id = p-ActionId and
@@ -843,36 +844,49 @@ do:
    do:
       v-promo-name = ub.PromoAction.nameAction .
       find first ub.PromoGoods no-lock where ub.PromoGoods.db-num = ub.PromoAction.db-num and
-         ub.PromoGoods.type = ub.PromoAction.methodCalc and
+/*         ub.PromoGoods.type = ub.PromoAction.methodCalc and*/
          ub.PromoGoods.idAction = ub.PromoAction.id and
          ub.PromoGoods.gds-code = buf-par_goods.gds-code 
          no-error .
+         find first ub.PromoCriterion no-lock where ub.PromoCriterion.db-num = ub.PromoAction.db-num and
+              ub.PromoCriterion.idAction = ub.PromoAction.id no-error .
       case ub.PromoAction.methodCalc:
          /*абсолютная скидка*/
-         when 8 then 
+         when 2 then 
             do:
-               v-type-sale-promo = "руб." .
-               if available (ub.PromoGoods) then 
+               v-type-sale-promo = " руб." .
+               if available (ub.PromoCriterion) then 
                do:
-                  v-sale-promo = string(ub.PromoGoods.price) + v-type-sale-promo .
-                  v-promo-price = price - ub.PromoGoods.price .
+                  v-sale-promo = string(ub.PromoCriterion.discont) + v-type-sale-promo .
+                  v-promo-price = price - ub.PromoCriterion.discont .
                end.
             end.
          /*процентная скидка*/
-         when 9 then 
+         when 1 then 
             do:
                v-type-sale-promo = "%" .
+               if available (ub.PromoCriterion) then 
+               do:
+                  v-sale-promo = string(ub.PromoCriterion.discont) + v-type-sale-promo .
+                  v-promo-price = price - price * (ub.PromoCriterion.discont / 100) .
+               end.
+            end.
+         /*фиксированная скидка*/
+         when 5 then 
+            do:
+               v-type-sale-promo = " руб." .
                if available (ub.PromoGoods) then 
                do:
                   v-sale-promo = string(ub.PromoGoods.price) + v-type-sale-promo .
-                  v-promo-price = price - price * (ub.PromoGoods.price / 100) .
+                  v-promo-price = ub.PromoGoods.price .
                end.
-            end.
-         
+            end.         
       end case.
    end.
 end.
 
+message v-promo-price
+view-as alert-box.
 PUT STREAM OutStream UNFORMATTED
 /*N */ /*NF*/
 /*1 */ /*  */  (if buf-par_bar-code.unit-cli <> buf-par_goods.unit-base
@@ -968,7 +982,7 @@ PUT STREAM OutStream UNFORMATTED
    /*86*/ /*84*/  v-promo-name "|":U
    /*87*/ /*85*/  v-type-sale-promo "|":U
    /*88*/ /*86*/  v-sale-promo "|":U
-   /*89*/ /*87*/  v-promo-price
+   /*89*/ /*87*/  string(v-promo-price,">>>>>>>>>>>>9.99")
             SKIP.
 
 assign b-count = b-count + 1.
