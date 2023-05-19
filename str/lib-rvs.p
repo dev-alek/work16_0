@@ -1299,6 +1299,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
     define variable varlevel-sm   as   integer       no-undo.
     define variable Vrevis        as   longchar      no-undo.
     define variable v-reviserr    as   character     no-undo.
+    define variable is-com-tanks  as   logical       no-undo init no .
 
       define variable tt-level-water     as integer no-undo.
       define variable tt-level-water-dec as decimal no-undo.
@@ -1363,6 +1364,30 @@ procedure lib-rvs_rvsplace : /* revision-place */
       then do :
         pl-twice-code = trim(v-value) .
         anl-loc = anl-loc + "," + pl-twice-code .
+      end .
+      run placelib_get-attr  ( input {&place-com-tanks}
+                              ,input bf_place.obj-code
+                              ,input bf_place.obj-type
+                              ,input bf_place.pl-code
+                              ,output v-value
+                              ,output v-ok      ) no-error.
+      if v-ok
+      and v-value > ""
+      then do :
+        do ii = 1 to num-entries(v-value) :
+          find first bf_place no-lock
+          where bf_place.obj-type = tt-meas.obj-type
+            and bf_place.obj-code = tt-meas.obj-code
+            and bf_place.loc1     = entry(ii, v-value)
+            and bf_place.status_ = ""
+          no-error.
+          if available bf_place
+          and bf_place.is-meas
+          then do :
+            anl-loc = anl-loc + "," + bf_place.loc1 .
+          end .
+        end .
+        is-com-tanks = yes .
       end .
     end.
     else do:
@@ -1783,18 +1808,30 @@ procedure lib-rvs_rvsplace : /* revision-place */
           next.
         end.
         else do:
-          assign
-            is_FatalError = yes
-          .
-          put stream str-err unformatted
-            substitute( '&2 Не получены данные по резервуару &1 .'
-                      , tt-meas.pl-code
-                      , cur-time-string-sec()
-                       ) skip .
+          
+          if not is-com-tanks
+          then do :
+            assign
+              is_FatalError = yes
+            .
+          end .
+          
+          put stream str-err unformatted substitute( 'Не получены данные по резервуару &1 .'
+                                                     , tt-meas.pl-code ) skip .
+                                                     
+          if is-com-tanks
+          then do :
+            if p-message-on
+            then do :
+              message substitute( 'Не получены данные по резервуару &1 .', tt-meas.pl-code ) view-as alert-box .
+            end .
+            delete tt-meas.
+            next.
+          end .                                           
         end.
       end. /* if not available tt-meas-file */
     end. /* tt-meas */
-    for each tt-meas-file
+    for each tt-meas-file 
     on error undo, return error return-value
     :
       find first tt-meas where
@@ -4796,8 +4833,16 @@ END.
     
     { gbl/ptrlprop.i run p-obj-type p-obj-code }
     
+    define variable v-calc-free-vol as logical no-undo init no .
+    
+    if (is-sug(bf_rvs-line.gds-code) and ptrlprop-calc-free-vol-sug)
+    or (not is-sug(bf_rvs-line.gds-code) and ptrlprop-calc-free-vol)
+    then do :
+      v-calc-free-vol = yes .
+    end .
+    
     find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-code = bf_rvs-line.rvs-code .
-    if ptrlprop-calc-free-vol
+    if v-calc-free-vol
     and buf_rvs-doc.rvs-type = {&rvs-before-doc}
     then do :
       define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo.

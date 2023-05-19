@@ -302,12 +302,13 @@ define buffer buf_chk-gds       for ub.chk-gds .
 define buffer buf_bar-code      for ub.bar-code .
 define buffer buf_chk-doc       for ub.chk-doc .
 define buffer buf_goods         for ub.goods .
+define buffer buf_place         for ub.place .
 define buffer bf_temp-rvs-line  for temp-rvs-line .
 define buffer buf_rvs-doc       for ub.rvs-doc .
 define variable v-counter as integer no-undo.
 define variable v-fact-order-inv  as decimal  no-undo .
 define buffer buf_temp-line-pump for temp-line-pump .
-
+define buffer com_temp-rvs-line for temp-rvs-line .
 define stream Out-Stream.
 define stream OutStr-html.
 
@@ -1283,6 +1284,11 @@ output stream OutStr-html close.
 end procedure .
 
 procedure print-sug:
+  define variable v-value as character no-undo.
+  define variable v-ok    as logical   no-undo.
+  define variable v-com-tanks as character no-undo .
+  define variable v-num-com-tanks as integer no-undo .
+  
   /*------------------------------------------------------------------------------------------------------------------------------------*/
   /*выводим на печать отчет*/
 
@@ -1472,6 +1478,166 @@ for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
           bf_temp-rvs-line.pol16-kg = (bf_temp-rvs-line.state-brutto-qnty + bf_temp-rvs-line.state-add-qnty) * bf_temp-rvs-line.density  
           bf_temp-rvs-line.pol19 = bf_temp-rvs-line.state-temperature
           .
+        
+        run placelib_get-attr  ( input {&place-com-tanks}
+          ,input bf_temp-rvs-line.obj-code
+          ,input bf_temp-rvs-line.obj-type
+          ,input bf_temp-rvs-line.pl-code
+          ,output v-com-tanks
+          ,output v-ok      ) no-error.
+        if v-ok
+        and v-com-tanks > ""
+        then do :
+          run placelib_get-attr  ( input {&place-is-main}
+            ,input bf_temp-rvs-line.obj-code
+            ,input bf_temp-rvs-line.obj-type
+            ,input bf_temp-rvs-line.pl-code
+            ,output v-value
+            ,output v-ok      ) no-error.
+          if v-ok
+          and logical(v-value)
+          then do : /* Главный */
+            v-num-com-tanks = num-entries(v-com-tanks) + 1 .
+            
+            do ii = 1 to num-entries(v-com-tanks) :
+              find first buf_place no-lock where buf_place.obj-type = bf_temp-rvs-line.obj-type
+                                             and buf_place.obj-code = bf_temp-rvs-line.obj-code
+                                             and buf_place.loc1 = entry(ii, v-com-tanks)
+                                             no-error .
+              if not available buf_place
+              then do :
+                undo, return error ("Не найден сообщающийся резервуар " + entry(ii, v-com-tanks)) .
+              end .   
+              find first com_temp-rvs-line where com_temp-rvs-line.gds-code = bf_temp-rvs-line.gds-code
+                                             and com_temp-rvs-line.pl-code  = buf_place.pl-code
+                                             no-error .
+              if available com_temp-rvs-line
+              then do : 
+                bf_temp-rvs-line.pol21-kg = bf_temp-rvs-line.pol21-kg + com_temp-rvs-line.pol21-kg .
+              end .
+            end .
+            
+            put stream OutStr-html unformatted
+            '<tr>' skip 
+            '<td text_wrap="true" rowspan="' + string((2 * v-num-com-tanks), ">9") + '" style="text-align: right;">   по резер.</td>' skip 
+            '<td text_wrap="true" rowspan="' + string((2 * v-num-com-tanks), ">9") + '" style="text-align: right;">' + bf_temp-rvs-line.place_loc1 + "," + v-com-tanks + '</td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;">л</td>' skip 
+            '<td text_wrap="true" rowspan="' + string((2 * v-num-com-tanks), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-kg-system,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol4-kg-system <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-kg-system,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol5-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol5-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol5-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol6,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol6 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol6,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol7-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol7-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol7-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol8-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol8-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol8-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol9,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol9 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol9,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol10,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol10 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol10,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol11,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol11 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol11,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol12,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol12 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol12,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" style="text-align: center;">' + bf_temp-rvs-line.place_loc1 + '</td>' skip
+            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" rowspan="' + string((2 * v-num-com-tanks), ">9") + '" colspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" rowspan="' + string((2 * v-num-com-tanks), ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string((2 * v-num-com-tanks), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '</tr>' skip
+            .
+            
+            do ii = 1 to num-entries(v-com-tanks) :
+              find first buf_place no-lock where buf_place.obj-type = bf_temp-rvs-line.obj-type
+                                             and buf_place.obj-code = bf_temp-rvs-line.obj-code
+                                             and buf_place.loc1 = entry(ii, v-com-tanks)
+                                             no-error .
+              if not available buf_place
+              then do :
+                undo, return error ("Не найден сообщающийся резервуар " + entry(ii, v-com-tanks)) .
+              end .   
+              find first com_temp-rvs-line where com_temp-rvs-line.gds-code = bf_temp-rvs-line.gds-code
+                                             and com_temp-rvs-line.pl-code  = buf_place.pl-code
+                                             no-error .
+              if not available com_temp-rvs-line
+              then do :
+                put stream OutStr-html unformatted
+                '<tr>' skip
+                '<td text_wrap="true" style="text-align: center;">' + buf_place.loc1 + '</td>' skip
+                '<td text_wrap="true" style="text-align: center;"> - </td>' skip
+                '</tr>' skip
+                . 
+              end . 
+              else do :
+                put stream OutStr-html unformatted
+                '<tr>' skip
+                '<td text_wrap="true" style="text-align: center;">' + buf_place.loc1 + '</td>' skip
+                '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(com_temp-rvs-line.pol17-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if com_temp-rvs-line.pol17-l <> ? then fnc-convert-dot-to-colon(com_temp-rvs-line.pol17-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                '</tr>' skip
+                .  
+              end .
+            end .
+            
+            put stream OutStr-html unformatted
+            '<tr>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;">кг</td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol5-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol5-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol5-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol7-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol7-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol7-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol8-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol8-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol8-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip 
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" rowspan="' + string(v-num-com-tanks, ">9") + '" style="text-align: right;"></td>' skip
+            '<td text_wrap="true" style="text-align: center;">' + bf_temp-rvs-line.place_loc1 + '</td>' skip
+            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '</tr>' skip
+            .   
+            
+            do ii = 1 to num-entries(v-com-tanks) :
+              find first buf_place no-lock where buf_place.obj-type = bf_temp-rvs-line.obj-type
+                                             and buf_place.obj-code = bf_temp-rvs-line.obj-code
+                                             and buf_place.loc1 = entry(ii, v-com-tanks)
+                                             no-error .
+              if not available buf_place
+              then do :
+                undo, return error ("Не найден сообщающийся резервуар " + entry(ii, v-com-tanks)) .
+              end .   
+              find first com_temp-rvs-line where com_temp-rvs-line.gds-code = bf_temp-rvs-line.gds-code
+                                             and com_temp-rvs-line.pl-code  = buf_place.pl-code
+                                             no-error .
+              
+              if not available com_temp-rvs-line
+              then do :
+                put stream OutStr-html unformatted
+                '<tr>' skip
+                '<td text_wrap="true" style="text-align: center;">' + buf_place.loc1 + '</td>' skip
+                '<td text_wrap="true" style="text-align: center;"> - </td>' skip
+                '</tr>' skip
+                . 
+              end . 
+              else do :
+                put stream OutStr-html unformatted
+                '<tr>' skip
+                '<td text_wrap="true" style="text-align: center;">' + buf_place.loc1 + '</td>' skip
+                '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(com_temp-rvs-line.pol17-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if com_temp-rvs-line.pol17-kg <> ? then fnc-convert-dot-to-colon(com_temp-rvs-line.pol17-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                '</tr>' skip
+                .  
+              end .
+            end .
+          
+          end .
+          next .
+        end . 
+      
+        run placelib_get-attr  ( input {&place-twice-code}
+          ,input bf_temp-rvs-line.obj-code
+          ,input bf_temp-rvs-line.obj-type
+          ,input bf_temp-rvs-line.pl-code
+          ,output v-value
+          ,output v-ok      ) no-error.
+        if v-value <> "" then  bf_temp-rvs-line.place_loc1 = string(bf_temp-rvs-line.place_loc1) + "," + v-value .
+        else bf_temp-rvs-line.place_loc1         = bf_temp-rvs-line.place_loc1 .
         /*Итоги по резервуару*/
         put stream OutStr-html unformatted
           '<tr>' skip 

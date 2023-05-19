@@ -42,6 +42,9 @@ def var vss-description as character no-undo init "Добавление связки резервуар-Т
 { cmp/trg-def.i  }
 { cmp/showinf.i  }
 { str/plpmnzav.i }
+{ ref/gds-attr.i }
+{ str/is-sug.i }
+{ str/placelib.i }
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -203,7 +206,12 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-place Dialog-Frame
 ON CHOOSE OF b-place IN FRAME Dialog-Frame
 DO:
- define variable place-list as character no-undo .
+  define variable place-list as character no-undo .
+  define variable v-value           as character no-undo .
+  define variable v-ok              as logical   no-undo .
+  
+  define buffer buf_pl-gds for ub.pl-gds .
+  
   run ref/pl-list.w (
                  input parparentproc
                 ,input "b-sel"
@@ -212,8 +220,45 @@ DO:
                 ,input {&g___object}
                , input-output place-list).
   if place-list <> '':U then do:
-     FIND FIRST ub.place No-LOCK WHERE recid(ub.place) = integer(entry(1, place-list)) NO-ERROR.
-     if available ub.place then display ub.place.pl-code @ varpl-code with frame {&frame-name}.
+    FIND FIRST place No-LOCK WHERE recid(place) = integer(entry(1, place-list)) NO-ERROR.
+    if available place
+    then do :
+      find first buf_pl-gds no-lock where buf_pl-gds.obj-type = place.obj-type
+                                      and buf_pl-gds.obj-code = place.obj-code
+                                      and buf_pl-gds.pl-code = place.pl-code
+                                      no-error .
+      if available buf_pl-gds
+      and is-sug(buf_pl-gds.gds-code)
+      then do :
+        run placelib_get-attr  (
+           input {&place-com-tanks}
+          ,input buf_pl-gds.obj-code
+          ,input buf_pl-gds.obj-type
+          ,input buf_pl-gds.pl-code
+          ,output v-value
+          ,output v-ok      )
+        no-error.
+        if v-ok
+        and v-value > ""
+        then do :
+          run placelib_get-attr  (
+             input {&place-is-main}
+            ,input buf_pl-gds.obj-code
+            ,input buf_pl-gds.obj-type
+            ,input buf_pl-gds.pl-code
+            ,output v-value
+            ,output v-ok      )
+          no-error.
+          if v-ok
+          and not logical(v-value) /* Не главный сообщающийся резервуар (СУГ) */
+          then do :
+            message 'Установить связь Резервуар-ТРК-Пистолеты можно только с резервуаром с отметкой "Главный"!' view-as alert-box .
+            return no-apply .
+          end .
+        end .
+      end .
+      display place.pl-code @ varpl-code with frame {&frame-name}.
+    end .
   end.
 END.
 

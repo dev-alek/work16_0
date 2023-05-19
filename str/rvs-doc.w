@@ -958,8 +958,13 @@ procedure cycle-add :
   define buffer buf_rvs-line for ub.rvs-line.
   define buffer buf_goods    for ub.goods.
   define buffer buf_pl-gds   for ub.pl-gds.
+  define buffer buf_place    for ub.place .
 
   define variable var-pl-code like ub.place.pl-code no-undo.
+  define variable v-value as character no-undo.
+  define variable v-value2 as character no-undo.
+  define variable v-ok as logical no-undo.
+  define variable ii as integer no-undo .
 
   assign lns-cnt = 0.
   do while lns-cnt < num-entries( notes ) :
@@ -1009,54 +1014,139 @@ procedure cycle-add :
         view-as alert-box.
         next.
     end.
-    tr:
-    do transaction on error undo, return error return-value :
-      { str/crrvslin.i
-          r-doc.obj-type
-          r-doc.obj-code
-          r-doc.rvs-code
-          r-doc.rvs-type
-          buf_pl-gds.pl-code
-          buf_pl-gds.gds-code
-          "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
-          cur_shift-obj.shift-date
-          cur_shift-obj.shift-num
-          no-error
-      }
-      if error-status :error then do:
-         message "Ошибка при создании линии."
+    
+    run placelib_get-attr  ( input {&place-com-tanks}
+                              ,input buf_pl-gds.obj-code
+                              ,input buf_pl-gds.obj-type
+                              ,input buf_pl-gds.pl-code
+                              ,output v-value
+                              ,output v-ok      ) no-error.
+
+    if is-sug(buf_goods.gds-code)
+    and v-ok
+    and v-value > ""
+    then do :
+      /*    Сообщающиеся резервуары СУГ   */
+      find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
+                                     and buf_place.obj-code = buf_pl-gds.obj-code
+                                     and buf_place.pl-code = buf_pl-gds.pl-code
+                                     .
+      v-value = v-value + "," + buf_place.loc1 .
+      do ii = 1 to num-entries(v-value) :
+        find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
+                                       and buf_place.obj-code = buf_pl-gds.obj-code
+                                       and buf_place.loc1     = entry(ii, v-value)
+                                       no-error .
+        if available buf_place
+        then do :
+          run placelib_get-attr  ( input {&place-is-main}
+                                  ,input buf_place.obj-code
+                                  ,input buf_place.obj-type
+                                  ,input buf_place.pl-code
+                                  ,output v-value2
+                                  ,output v-ok      ) no-error.
+          
+          tr:
+          do transaction on error undo, return error return-value :
+            { str/crrvslin.i
+                r-doc.obj-type
+                r-doc.obj-code
+                r-doc.rvs-code
+                r-doc.rvs-type
+                buf_place.pl-code
+                buf_pl-gds.gds-code
+                "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
+                cur_shift-obj.shift-date
+                cur_shift-obj.shift-num
+                no-error
+            }
+            if error-status :error then do:
+               message "Ошибка при создании линии."
+                       return-value
+               view-as alert-box error.
+               undo tr, return error.
+            end.
+            
+            if v-ok
+            and logical(v-value2) /* Главный сообщающийся резервуар */
+            then do :
+              { str/crrvslnp.i
+                  r-doc.obj-type
+                  r-doc.obj-code
+                  r-doc.rvs-code
+                  r-doc.rvs-type
+                  buf_place.pl-code
+                  buf_pl-gds.gds-code
+                  yes
+                  "( if available prev_rvs-doc  then prev_rvs-doc.rvs-code  else ? )"
+                  cur_shift-obj.shift-date
+                  cur_shift-obj.shift-num
+                  "( if available prev_icnt-doc then prev_icnt-doc.doc-code else ? )"
+                  yes
+                  no-error
+              }
+              if error-status :error then do:
+                 message "Ошибка при создании строки данных по ТРК. " skip
                  return-value
-         view-as alert-box error.
-         undo tr, return error.
-      end.
-      /*
-      if return-value <> "" then do:
-         message return-value view-as alert-box.
-      end.
-      */
-      { str/crrvslnp.i
-          r-doc.obj-type
-          r-doc.obj-code
-          r-doc.rvs-code
-          r-doc.rvs-type
-          buf_pl-gds.pl-code
-          buf_pl-gds.gds-code
-          yes
-          "( if available prev_rvs-doc  then prev_rvs-doc.rvs-code  else ? )"
-          cur_shift-obj.shift-date
-          cur_shift-obj.shift-num
-          "( if available prev_icnt-doc then prev_icnt-doc.doc-code else ? )"
-          yes
-          no-error
-      }
-      if error-status :error then do:
-         message "Ошибка при создании строки данных по ТРК. " skip
-         return-value
-         error-status :get-message( 1 )
-         view-as alert-box.
-         undo tr, return error.
-      end.
-    end. /* transaction */
+                 error-status :get-message( 1 )
+                 view-as alert-box.
+                 undo tr, return error.
+              end.
+            end .
+          end. /* transaction */                        
+        end .
+      end .
+    end.
+    else do :
+      tr:
+      do transaction on error undo, return error return-value :
+        { str/crrvslin.i
+            r-doc.obj-type
+            r-doc.obj-code
+            r-doc.rvs-code
+            r-doc.rvs-type
+            buf_pl-gds.pl-code
+            buf_pl-gds.gds-code
+            "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
+            cur_shift-obj.shift-date
+            cur_shift-obj.shift-num
+            no-error
+        }
+        if error-status :error then do:
+           message "Ошибка при создании линии."
+                   return-value
+           view-as alert-box error.
+           undo tr, return error.
+        end.
+        /*
+        if return-value <> "" then do:
+           message return-value view-as alert-box.
+        end.
+        */
+        { str/crrvslnp.i
+            r-doc.obj-type
+            r-doc.obj-code
+            r-doc.rvs-code
+            r-doc.rvs-type
+            buf_pl-gds.pl-code
+            buf_pl-gds.gds-code
+            yes
+            "( if available prev_rvs-doc  then prev_rvs-doc.rvs-code  else ? )"
+            cur_shift-obj.shift-date
+            cur_shift-obj.shift-num
+            "( if available prev_icnt-doc then prev_icnt-doc.doc-code else ? )"
+            yes
+            no-error
+        }
+        if error-status :error then do:
+           message "Ошибка при создании строки данных по ТРК. " skip
+           return-value
+           error-status :get-message( 1 )
+           view-as alert-box.
+           undo tr, return error.
+        end.
+      end. /* transaction */
+    end .
   end. /* cycle */
 end procedure. /* cycle-add */
 

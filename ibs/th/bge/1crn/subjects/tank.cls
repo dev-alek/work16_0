@@ -53,10 +53,14 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
 &global-define place-ponton-mass   "place-ponton-mass"                    /*масса понтона*/
 &global-define place-ponton-height "place-ponton-height"                    /*высота всплытия понтона*/
 &global-define place-need-RVD-rvs "place-need-RVD-rvs" /* Необходимо сделать сверку с РВД (в список не добавлять!) */
+&global-define place-com-vessel    "place-com-vessel"                    /*признак сообщающегося резервуара*/
+&global-define place-com-tanks     "place-com-tanks"                    /*коды сообщающихся резервуаров*/
+&global-define place-is-main       "place-is-main"                    /*признак главного резервуара (СР)*/
 
-&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm,place-ponton,place-ponton-mass,place-ponton-height':u /*список атрибутов резервуара*/
+&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm,place-ponton,place-ponton-mass,place-ponton-height,place-com-vessel,place-com-tanks,place-is-main':u /*список атрибутов резервуара*/
 
   define buffer buf_place      for ub.place .
+  define buffer com_place      for ub.place .
   define buffer buf_c-place    for ub.c-place .
   define buffer buf_place-attr for ub.place-attr .
   define buffer buf_pl-level   for ub.pl-level .
@@ -99,6 +103,10 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
       field ponton              as logical
       field ponton-mass         as decimal
       field ponton-height       as decimal
+      field com-vessel          as logical
+      field com-tanks           as character
+      field is-main             as logical
+      field main-com-code       as character
       index pi as primary unique
       pl-code
       .
@@ -345,10 +353,47 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
               end.  
               when {&place-ponton-height} then do: 
                 if v-ok then tt-place-attr.ponton-height = decimal(v-value) .
-              end.                                                                                               
+              end.     
+              when {&place-com-vessel} then do :
+                if v-ok then tt-place-attr.com-vessel = logical(v-value) .
+              end.  
+              when {&place-com-tanks} then do :
+                if v-ok then tt-place-attr.com-tanks = v-value .
+              end.  
+              when {&place-is-main} then do :
+                if v-ok then tt-place-attr.is-main = logical(v-value) .
+              end.                                                                                       
            end case.
         end.
+        
+        if tt-place-attr.com-vessel
+        and not tt-place-attr.is-main
+        and tt-place-attr.com-tanks > ""
+        then
+        do ii = 1 to num-entries(tt-place-attr.com-tanks) :
+          find first com_place no-lock where com_place.obj-type = tt-place.obj-type
+                                         and com_place.obj-code = tt-place.obj-code
+                                         and com_place.loc1     = entry(ii, tt-place-attr.com-tanks)
+                                         no-error .
+          if available com_place
+          then do :
+            placelib:placelib_get-attr (
+            input {&place-is-main}
+            ,input com_place.obj-code
+            ,input com_place.obj-type
+            ,input com_place.pl-code
+            ,output v-value
+            ,output v-ok      ) no-error.
+            if v-ok
+            and logical (v-value)
+            then do :
+              tt-place-attr.main-com-code = string(com_place.pl-code) .
+            end .
+          end .
+        end .
+      
       end.
+      
       
       sw:start-element ("tank") .
       sw:write-data-element ("tank-code", string(tt-place.pl-code)).
@@ -357,7 +402,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
       sw:write-data-element ("del-f", if v-del then "1" else "0").
       sw:write-data-element ("name", if tt-place.pl-name = ? then "" else tt-place.pl-name).
       sw:write-data-element ("gs-code", string(tt-place.obj-code)).
-      for each tt-place-attr no-lock where tt-place-attr.pl-code = tt-place.pl-code:
+      for first tt-place-attr no-lock where tt-place-attr.pl-code = tt-place.pl-code:
         sw:write-data-element ("tank-type", string(tt-place-attr.place-type)).
         sw:write-data-element ("pl-qnty"  , string(tt-place.add-qnty)).
         sw:write-data-element ("max-qnty" , string(tt-place.max-qnty)).
@@ -377,6 +422,8 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("lvl-mi-code" , string(tt-place-attr.place-lvl-mi-code)).
         sw:write-data-element ("rvd-tmp"  , string(tt-place-attr.place-rvd-tmp)).
         sw:write-data-element ("tmp-mi-code" , string(tt-place-attr.place-tmp-mi-code)). 
+        sw:write-data-element ("gd-code", string(tt-place.gds-code)).
+        sw:write-data-element ("izm-pr", if tt-place.is-meas = yes then "1" else "0").
         sw:write-data-element ("passport-num" , string(tt-place-attr.place-passport-num)).  
         sw:write-data-element ("passport-type" , string(tt-place-attr.place-passport-type)). 
         if tt-place-attr.place-type = "1"
@@ -391,9 +438,19 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
             sw:write-data-element ("pontoon", "0").
           end .
         end .
+        if tt-place-attr.com-vessel
+        then do :
+          sw:write-data-element ("com-vessel", "1").
+          if tt-place-attr.is-main
+          then do :
+            sw:write-empty-element ("com-code") .
+          end .
+          else do :
+            sw:write-data-element ("com-code", tt-place-attr.main-com-code) .
+          end .
+        end .
       end.
-      sw:write-data-element ("gd-code", string(tt-place.gds-code)).
-      sw:write-data-element ("izm-pr", if tt-place.is-meas = yes then "1" else "0").
+      
       find first tt-pl-level no-lock where tt-pl-level.pl-code = tt-place.pl-code and
         tt-pl-level.obj-code = tt-place.obj-code and
         tt-pl-level.obj-type = tt-place.obj-type no-error .

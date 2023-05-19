@@ -81,7 +81,7 @@ create: Булгаков Андрей Николаевич
     field t2-not-null as logical
     field t3-not-null as logical
     field is-error    as logical
-    index pi        as primary   unique loc1.
+    index pi        as primary   loc1.
 &endif
 
 &scop self-name tt-meas-file

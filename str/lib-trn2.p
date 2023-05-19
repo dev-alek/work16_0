@@ -44,6 +44,8 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { str/valddnst.i def }
 { gbl/getsect.i  def }
 { gbl/cur-time.i }
+{ str/placelib.i }
+{ str/is-sug.i   }
 
 define variable lns-cnt  as integer no-undo.
 define variable line-rec as recid   no-undo.
@@ -1771,6 +1773,8 @@ procedure lib-trn2_filinvbd :
     define variable is-petrol               as logical   no-undo.
     define variable is-pieces               as logical   no-undo.
     define variable v-day                   as date      no-undo .
+    define variable v-ok                    as logical   no-undo .
+    define variable v-value                 as character no-undo .
 
     define buffer cb_gds-obj    for ub.gds-obj.
     define buffer cb_trn-doc    for ub.trn-doc.
@@ -1875,6 +1879,31 @@ procedure lib-trn2_filinvbd :
             and cb_pl-gds.obj-code  = cb_doc-line.obj-code
         on error undo, return error return-value
         :
+          run placelib_get-attr  ( input {&place-com-tanks}
+                                  ,input cb_pl-gds.obj-code
+                                  ,input cb_pl-gds.obj-type
+                                  ,input cb_pl-gds.pl-code
+                                  ,output v-value
+                                  ,output v-ok      ) no-error.
+    
+          if is-sug(cb_pl-gds.gds-code)
+          and v-ok
+          and v-value > ""
+          then do :
+            run placelib_get-attr  ( input {&place-is-main}
+                                    ,input cb_pl-gds.obj-code
+                                    ,input cb_pl-gds.obj-type
+                                    ,input cb_pl-gds.pl-code
+                                    ,output v-value
+                                    ,output v-ok      ) no-error.
+            if v-ok and logical(v-value)
+            then do :
+              
+            end .
+            else do :
+              next .
+            end .                        
+          end .
           { str/crdocpl.i
             cb_doc-line.doc-code
             cb_pl-gds.gds-code
@@ -2016,12 +2045,37 @@ procedure lib-trn2_filinvbd :
         for each temp-pl-gds
         on error undo, return error return-value
         :
+          run placelib_get-attr  ( input {&place-com-tanks}
+                                  ,input temp-pl-gds.obj-code
+                                  ,input temp-pl-gds.obj-type
+                                  ,input temp-pl-gds.pl-code
+                                  ,output v-value
+                                  ,output v-ok      ) no-error.
+    
+          if is-sug(temp-pl-gds.gds-code)
+          and v-ok
+          and v-value > ""
+          then do :
+            run placelib_get-attr  ( input {&place-is-main}
+                                    ,input temp-pl-gds.obj-code
+                                    ,input temp-pl-gds.obj-type
+                                    ,input temp-pl-gds.pl-code
+                                    ,output v-value
+                                    ,output v-ok      ) no-error.
+            if v-ok and logical(v-value)
+            then do :
+              
+            end .
+            else do :
+              next .
+            end .                        
+          end .
           { str/crdocpl.i
             cb_doc-line.doc-code
-            cb_pl-gds.gds-code
-            cb_pl-gds.pl-code
-            cb_pl-gds.obj-type
-            cb_pl-gds.obj-code
+            temp-pl-gds.gds-code
+            temp-pl-gds.pl-code
+            temp-pl-gds.obj-type
+            temp-pl-gds.obj-code
             v-rowid
           }
           find first cb_doc-pl exclusive-lock

@@ -537,7 +537,7 @@ attr-fbrattr
 { cmp/cr-prep.i 1 attr-petrol petrol " " petrol }
 
 { cmp/cr-prepc.i 1 prop-list-attr-petrol
-"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info,otkl-fact-volue,otkl-temp,otkl-density,otkl-water,CriticalDifInLgas,calc-free-vol,trn-reas-sug,rvd-own-nb,sec-fields,qr-scan-time,trnscanqr,block-nozzle,timeout-block-nozzle"
+"rvsnmter,denstclc,autopump-izm,autopump,avtinvpm,inpptrl,expptrl,invclipt,olddens,algrvspt,temp-for-pomi,rvs-wt-email,CriticalDif,algoincome,mand-choice-autocar,Delta-mass-horiz,Delta-mass-vert,dop-info,otkl-fact-volue,otkl-temp,otkl-density,otkl-water,CriticalDifInLgas,calc-free-vol,trn-reas-sug,rvd-own-nb,sec-fields,qr-scan-time,trnscanqr,block-nozzle,timeout-block-nozzle,calc-free-vol-sug"
 attr-petrol
 }
 

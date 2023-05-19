@@ -642,7 +642,7 @@ DEFINE FRAME Dialog-Frame
           SIZE 13 BY .88
      varmeasure-water-cli-qnty AT ROW 27.75 COL 28.13 COLON-ALIGNED
      varstate-water-cli-qnty AT ROW 27.75 COL 90 COLON-ALIGNED
-     tt-rvs-line.level-petrol AT ROW 8.75 COL 30 COLON-ALIGNED
+     tt-rvs-line.level-petrol AT ROW 8.75 COL 30 COLON-ALIGNED format ">>,>>9.9"
           LABEL "Измер. уровень СУГ (см)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
@@ -2946,7 +2946,7 @@ define buffer buf_doc-pl-attr for doc-pl-attr .
     tt-rvs-line.obj-code
   }
 
-  if ptrlprop-calc-free-vol
+  if ptrlprop-calc-free-vol-sug
   and buf_rvs-doc.rvs-type = {&rvs-before-doc}
   then do :
     find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_rvs-doc.out-code no-error .
