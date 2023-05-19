@@ -844,30 +844,31 @@ do:
    do:
       v-promo-name = ub.PromoAction.nameAction .
       find first ub.PromoGoods no-lock where ub.PromoGoods.db-num = ub.PromoAction.db-num and
-         ub.PromoGoods.type = ub.PromoAction.methodCalc and
+/*         ub.PromoGoods.type = ub.PromoAction.methodCalc and*/
          ub.PromoGoods.idAction = ub.PromoAction.id and
          ub.PromoGoods.gds-code = buf-par_goods.gds-code 
          no-error .
-         
+         find first ub.PromoCriterion no-lock where ub.PromoCriterion.db-num = ub.PromoAction.db-num and
+              ub.PromoCriterion.idAction = ub.PromoAction.id no-error .
       case ub.PromoAction.methodCalc:
          /*абсолютная скидка*/
          when 2 then 
             do:
                v-type-sale-promo = " руб." .
-               if available (ub.PromoGoods) then 
+               if available (ub.PromoCriterion) then 
                do:
-                  v-sale-promo = string(ub.PromoGoods.price) + v-type-sale-promo .
-                  v-promo-price = price - ub.PromoGoods.price .
+                  v-sale-promo = string(ub.PromoCriterion.discont) + v-type-sale-promo .
+                  v-promo-price = price - ub.PromoCriterion.discont .
                end.
             end.
          /*процентная скидка*/
          when 1 then 
             do:
                v-type-sale-promo = "%" .
-               if available (ub.PromoGoods) then 
+               if available (ub.PromoCriterion) then 
                do:
-                  v-sale-promo = string(ub.PromoGoods.price) + v-type-sale-promo .
-                  v-promo-price = price - price * (ub.PromoGoods.price / 100) .
+                  v-sale-promo = string(ub.PromoCriterion.discont) + v-type-sale-promo .
+                  v-promo-price = price - price * (ub.PromoCriterion.discont / 100) .
                end.
             end.
          /*фиксированная скидка*/
