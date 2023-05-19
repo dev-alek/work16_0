@@ -2895,6 +2895,10 @@ END.
 ON VALUE-CHANGED OF edo-return IN FRAME d-out-doc /* возврат по ЭДО */
   DO:
     define variable vLog as logical no-undo .
+    define variable vFlgGenAttr as logical no-undo .
+    define buffer buf_doc-line  for ub.doc-line.
+    define buffer parts         for ub.parts.
+        
     if edo-return:screen-value = "no"
     then do :
       message "По договору с поставщиком осуществляется ЭДО, уверены в возврате без ЭДО?" view-as alert-box question buttons yes-no update vLog .
@@ -2904,6 +2908,56 @@ ON VALUE-CHANGED OF edo-return IN FRAME d-out-doc /* возврат по ЭДО */
         return no-apply .
       end .
     end .
+    if (t-doc.reason-code = 25 or t-doc.reason-code = 23) 
+        and edo-return:screen-value = "yes" 
+    then do:   
+       vFlgGenAttr = yes.    
+       /* проверяем, что не завели еще товары по кнопке Баркод без партии */
+       bdl:
+       for each buf_doc-line where buf_doc-line.doc-code eq t-doc.doc-code 
+           no-lock,
+           each parts where parts.out-code  = buf_doc-line.doc-code
+                        and parts.obj-type  = buf_doc-line.obj-type
+                        and parts.obj-code  = buf_doc-line.obj-code
+                        and parts.artic     = buf_doc-line.artic
+                        and parts.prod-type = buf_doc-line.prod-type
+                        and parts.prod-code = buf_doc-line.prod-code
+           no-lock:
+                   
+           find first gen-attr where gen-attr.table-name = {&table_parts}
+                                 and gen-attr.p-key      = {key/parts.i parts } 
+                                 and gen-attr.attr-code  = "in-part-key"
+              no-lock no-error.
+           if available gen-attr 
+              then vFlgGenAttr = yes.
+           else do:
+              vFlgGenAttr = no.
+              leave bdl.
+           end.                               
+       end.                
+       if vFlgGenAttr = yes then 
+          disable b-bc with frame {&frame-name}.
+       else do:
+          message "Строки документа введены без указания возвращаемой партии." 
+             skip "Удалите все строки документа, что бы установить признак 'Возврат по ЭДО'."
+          view-as alert-box.
+          edo-return:screen-value = "no" .
+          return no-apply .
+       end.      
+    end.    
+    else do:                             
+       /*накл- запр- разр+ для всех внешних и внутреннего расхода*/
+       if ((not t-doc.flag_ and t-doc.status_ = {&inquiry}  or
+            not t-doc.flag_ and t-doc.status_ = {&wayb}     or
+            t-doc.flag_ and t-doc.status_ = {&permitted}   ) and
+            (not t-doc.internal or t-doc.doc-type = {&expense} and t-doc.internal)) or
+            /*накл+ внутреннего прихода*/
+            (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&wayb} and t-doc.flag_) or
+            /*запр- внутреннего прихода*/
+            (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&inquiry} and not t-doc.flag_)
+            then               
+         enable b-bc with frame {&frame-name}.
+    end.
     assign edo-return .
     { str/tdat-wrt.i
       t-doc.doc-code
@@ -4022,6 +4076,7 @@ end.
               if varvalue = "yes"
               then do:
                 edo-return = yes .
+                disable b-bc with frame {&frame-name}.
               end.
               else do :
                 edo-return = no .
@@ -7906,6 +7961,12 @@ PROCEDURE select-reason :
     enable b-cur with frame {&frame-name}.
   end.
 
+  /* если возврат или корректировка и признак ЭДО, 
+  ** то нельзя вводить товар через Баркод */
+  if (t-doc.reason-code = 23 or t-doc.reason-code = 25) 
+     and edo-return = yes then
+     disable b-bc with frame {&frame-name}.      
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -8610,6 +8671,7 @@ if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} or
         if varvalue = "yes"
         then do:
           edo-return = yes .
+          disable b-bc with frame {&frame-name}.
         end.
         else do :
           edo-return = no .

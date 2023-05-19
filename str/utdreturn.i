@@ -165,8 +165,10 @@ function  crUtdReturn returns logical
                   if    not  available buf_utd
                         or trn-doc.reason-code ne 23
                   then do:
+                     if tt-prts.doc-code <> "" then 
                      find first utd where utd.doc-code eq tt-prts.doc-code no-lock no-error.
-                     if available utd
+                     if tt-prts.doc-code <> "" 
+                        and available utd
                      then do:
                         MySeqUtd = ?.
                         vFlag = yes.
@@ -365,6 +367,8 @@ function  crUtdReturn returns logical
                   
       end.
    end.
-   
+   for each  tt-prts:
+      delete  tt-prts.
+   end.
    return vFlag.
 end.
