@@ -310,6 +310,7 @@ define variable v-date_to   as character no-undo .
         .
       put stream OutStr-html unformatted
         '<td text_wrap="true" style="align: center;">' + string(buf_upgrade.UpgDate) + "_" + string(buf_upgrade.UpgTime) + '</td>' skip  .
+      v-menedger = ''.
       for first buf_upgrade-attr no-lock where 
         buf_upgrade-attr.db-num = buf_upgrade.db-num and 
         buf_upgrade-attr.version-num = buf_upgrade.version-num and
@@ -318,6 +319,7 @@ define variable v-date_to   as character no-undo .
         and ub.user-login.user-login = buf_upgrade-attr.attr-value,
         first buf_user-account no-lock where buf_user-account.user-id = ub.user-login.user-id: 
         v-menedger = buf_user-account.last-name + '  ' + buf_user-account.first-name + ' ':U + buf_user-account.second-name.
+       end.
         put stream OutStr-html unformatted        
           '<td text_wrap="true" style="align: center;">' + string(v-menedger) + '</td>' skip
           '</tr>' skip
@@ -344,7 +346,7 @@ define variable v-date_to   as character no-undo .
  
 
 if p-log then do:
-  /*גûחמג ןנמדנאללû ןוקאעט*/ 
+  /* גûחמג ןנמדנאללû ןוקאעט */ 
   run prn-lib-reportviewer-report-name in this-procedure (
     input parParentProc
     ,input v-report-name-html
@@ -365,7 +367,7 @@ else do:
   os-command no-wait value(v-fill-path-RepView + " false " + v-report-name-html).
 end.  
 
-end.
+
   
 
 
