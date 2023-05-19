@@ -537,7 +537,7 @@ end.
 FUNCTION getColorKey RETURNS CHARACTER
   ( isflag as char, istatus as int, isdiff as logical ):
   case istatus:
-    when {&bef-current-status-int} then /*обязательный*/ 
+    when {&bef-current-status-int} or when 2 then /*обязательный*/ 
       do:
         if isflag = "etalon" then return "#FFDD71" /*"orange" */.
         else if isflag = "current" then return "#ffffe0" /*"yellow"*/ .

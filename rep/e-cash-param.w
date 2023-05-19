@@ -46,6 +46,8 @@ define variable vss-description as character no-undo init "Отчет по анализу пара
 { gbl/cash-list.i }
 { gbl/cd-attr.i }
 
+define temp-table tt-cash-list like cash-list .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -99,7 +101,7 @@ DEFINE VARIABLE SelectDiff   AS CHARACTER
   RADIO-BUTTONS 
   "Все кассы", "all":U,
   "Выбор кассы", "select":U
-  SIZE 33.5 BY 1.54 NO-UNDO.
+  SIZE 32.5 BY 1.54 NO-UNDO.
 
 DEFINE VARIABLE SelectParam  AS CHARACTER 
   VIEW-AS RADIO-SET VERTICAL
@@ -577,21 +579,20 @@ end procedure.
 PROCEDURE My-report :
 define variable v-attr-value as character no-undo .
   define variable v-attr-type  as character no-undo .
+  define buffer buf_cash-desk-attr for ub.cash-desk-attr .
   define variable kk as integer no-undo .
   empty temp-table cash-list .
   for each tt-cash-list:
-    run cd-attr-value in this-procedure
-      ( input cash-list.db-num
-      ,input cash-list.obj-code
-      ,input cash-list.pos-type
-      ,input cash-list.cash-num
-      ,input {&cd-attr-device-kind}
-      ,output v-attr-value
-      ,output v-attr-type
-      ) no-error.
-    if v-attr-value = "":U or v-attr-value = ?
-      then tt-cash-list.deviceCode = "0".
-    else tt-cash-list.deviceCode = v-attr-value no-error . 
+      find first buf_cash-desk-attr no-lock
+       where buf_cash-desk-attr.db-num   = tt-cash-list.db-num
+         and buf_cash-desk-attr.obj-code = tt-cash-list.obj-code
+         and buf_cash-desk-attr.pos-type = tt-cash-list.pos-type
+         and buf_cash-desk-attr.cash-num = tt-cash-list.cash-num
+         and buf_cash-desk-attr.upper-attr-code = tt-cash-list.pos-type + "_operative":U
+         and buf_cash-desk-attr.attr-code       = "device-kind":U no-error .
+  if available buf_cash-desk-attr then
+       tt-cash-list.deviceCode = string(buf_cash-desk-attr.attr-value-integer) .
+  else tt-cash-list.deviceCode = "0" .         
     create cash-list .
     buffer-copy tt-cash-list to cash-list .   
   end.
