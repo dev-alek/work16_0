@@ -26,7 +26,13 @@ using ibs.th.str.utd.*.
 using ibs.th.str.utd.sts.*.
 &glob prefixfile IsMotp_
 class ibs.th.bge.is_motp.is_motp inherits objth: 
-  
+    define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+    define override public property vss-author      as character no-undo init "$Author:$":U get.
+    define override public property vss-date        as character no-undo init "$Date:$":U get.
+    define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+    define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+    define override public property vss-description as character no-undo init "Êכאסס הכÿ נאבמעû ס ּ־ֿׂ" get.
+   
   {cmp/str-glbl.i class}
   { ref/extclass.i }
   { str/lib-trn.i class }

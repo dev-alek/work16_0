@@ -20,6 +20,11 @@ using Progress.Lang.*.
 
 
 class ibs.th.bge.1crn.subjects.unit-add-code inherits ibs.th.bge.1crn.subjects.asubject:
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
    
   define property unit-code as character  no-undo get. private set. // 1-1 код дополнительной ЕИ соответствует units.unit-name
   define property unit-k    as decimal    no-undo get. private set. // 1-1 коэффициент пересчёта к базовой ЕИ товара

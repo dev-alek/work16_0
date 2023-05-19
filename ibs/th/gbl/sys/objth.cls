@@ -1,19 +1,21 @@
- 
- /*------------------------------------------------------------------------
-    File        : objth
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : asmorozov
-    Created     : Wed Feb 12 16:56:20 MSK 2020
-    Notes       : 
-  ----------------------------------------------------------------------*/
-
+/*
+  $Revision:$
+  $Author:$
+  $Date:$
+  $Workfile:$
+  $Archive:$
+  
+  Автор: Рубан Дмитрий Андреевич 
+  Дата создания: 9 янв. 2023 г.
+  Author:  Ruban Dmitriy Andreevich
+  Creation date: 9 янв. 2023 г.
+  
+  */
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objsrv.
 
 
-class ibs.th.gbl.sys.objth: 
+class ibs.th.gbl.sys.objth abstract: 
   
   /*------------------------------------------------------------------------------
    Purpose:
@@ -21,14 +23,41 @@ class ibs.th.gbl.sys.objth:
   ------------------------------------------------------------------------------*/
   
   { gbl/objsrv.i def}
+  define abstract property vss-revision    as character no-undo get.
+  define abstract property vss-author      as character no-undo get.
+  define abstract property vss-date        as character no-undo get.
+  define abstract property vss-workfile    as character no-undo get.
+  define abstract property vss-archive     as character no-undo get.
+  define abstract property vss-description as character no-undo get.
+  
+  
+  method final void vss-get-info (
+     output o-vss-revision    as character,
+     output o-vss-author      as character,
+     output o-vss-date        as character,
+     output o-vss-workfile    as character,
+     output o-vss-archive     as character,
+     output o-vss-description as character
+):     
+     assign
+       o-vss-revision    = vss-revision
+       o-vss-author      = vss-author
+       o-vss-date        = vss-date
+       o-vss-workfile    = vss-workfile
+       o-vss-archive     = vss-archive
+       o-vss-description = vss-description
+     .
+   end. /* vss-get-info */
+   
+   method public char getLable():
+      return vss-description.
+   end.
+   
   
   constructor protected objth ():
-/*    message "1" view-as alert-box.*/
     getobjserv().
-/*    message string (ObjSrv) "2" view-as alert-box.*/
     if valid-object (ObjSrv)
       then ObjSrv:Regobj(this-object).
-/*    message "Рождается objth" view-as alert-box.*/
   end constructor.
 
   destructor public objth (  ):

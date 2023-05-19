@@ -21,8 +21,13 @@ using ibs.th.bge.1crn.subjects.{&impclass}.
 block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implements ibs.th.bge.1crn.import.iimpsubject : 
-
-  
+    define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+    define override public property vss-author      as character no-undo init "$Author:$":U get.
+    define override public property vss-date        as character no-undo init "$Date:$":U get.
+    define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+    define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+    define override public property vss-description as character no-undo init "Импорт {&impclass}" get.
+   
   { cmp/str-glbl.i class } /* &add-def, &update, &deletion, &shop, &attr-cash-book-id, &attr-oper-serv-id */
   /* { gbl/attr-lib.i class } gds-attr-write() заинлайнена */
   {utl\gtin.i class}

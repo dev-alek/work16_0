@@ -1,13 +1,16 @@
- 
-/*------------------------------------------------------------------------
-   File        : objsrv
-   Purpose     : 
-   Syntax      : 
-   Description : 
-   Author(s)   : asmorozov
-   Created     : Mon Feb 10 23:38:06 MSK 2020
-   Notes       : 
- ----------------------------------------------------------------------*/
+/*
+  $Revision:$
+  $Author:$
+  $Date:$
+  $Workfile:$
+  $Archive:$
+  
+  Автор: Рубан Дмитрий Андреевич 
+  Дата создания: 9 янв. 2023 г.
+  Author:  Ruban Dmitriy Andreevich
+  Creation date: 9 янв. 2023 г.
+  
+  */
 
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objsrv.
@@ -22,13 +25,7 @@ using ibs.th.gbl.systemsetting.
 
 class ibs.th.gbl.sys.objsrv:
   &glob GlobObjSrvClass yes
-  define temp-table tt-objth no-undo
-    field iNum      as integer
-    field objhndl   as Progress.Lang.Object
-    field objname   as character
-    field objparent as character
-    
-    .
+    { utl/objregtt.i }
 
   define public property Env as class env no-undo
     get.
@@ -71,6 +68,7 @@ class ibs.th.gbl.sys.objsrv:
   ------------------------------------------------------------------------------*/
 
   method public void Initialization(  ):
+    session:error-stack-trace = session:debug-alert.
     {utl\objreg.i SysINI ini}
     {utl\objreg.i out putout "SysINI:SystemLogFileName:Value_" }
     {utl\objreg.i Env env }
@@ -79,39 +77,75 @@ class ibs.th.gbl.sys.objsrv:
     vtext = {utlcomp/keypub.i}.
     {utl\objreg.i SystemSetting systemsetting vtext}.
     return.
+    define variable v-err-msg as character no-undo .  
+/*  catch exAppErrors as class Progress.Lang.AppError :                                  */
+/*    v-err-msg = exAppErrors:ReturnValue .                                              */
+/*    if v-err-msg > "" then . else do :                                                 */
+/*      v-err-msg = exAppErrors:GetMessage(1) .                                          */
+/*      if v-err-msg > "" then . else v-err-msg = "AppError в модуле {&FILE-NAME}" .     */
+/*    end .                                                                              */
+/*    message v-err-msg  view-as alert-box.                                              */
+/*  end catch .                                                                          */
+/*  catch exProErrors as class Progress.Lang.ProError :                                  */
+/*    v-err-msg = exProErrors:GetMessage(1) .                                            */
+/*    if v-err-msg > "" then . else v-err-msg = "ProError в модуле {&FILE-NAME}" .       */
+/*    message "ProError" skip(1) v-err-msg skip exProErrors:CallStack view-as alert-box. */
+/*  end catch .                                                                          */
+/*  catch exAnyErrors as class Progress.Lang.Error:                                      */
+/*    v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1). */
+/*    message "LangError" skip(1) v-err-msg skip exAnyErrors:CallStack view-as alert-box.*/
+/*  end catch .                                                                          */
+/*                                                                                       */
   end method.
 
   /*------------------------------------------------------------------------------
  Purpose:
  Notes:
 ------------------------------------------------------------------------------*/
-    
-  method public void Regobj( iobj as Progress.Lang.Object ):
+  define variable count as integer no-undo.
+  method private void Regobj(iparantProc as character, iobjparen as objth, iobj as objth, propname as char ):
     define variable IdObj as character  no-undo.
-    
     if valid-object (iobj)
-      then 
-    do:
+    then do:
        IdObj = iobj:ToString().
        find first tt-objth where tt-objth.objname eq IdObj no-error.
        if not available tt-objth
        then do:
+          count = count + 1.
           create tt-objth.
           assign
-             tt-objth.objname = IdObj
-             tt-objth.objhndl = iobj
-             tt-objth.objparent = cast (this-object, Progress.Lang.Object):ToString()
+             
+             tt-objth.inum      = count
+             tt-objth.objname   = IdObj
+             tt-objth.objhndl   = iobj
           .
        end.
-      SysLog:EventHndlr("Зарегистрирован - " + iobj:ToString()).
+       tt-objth.propname  = propname.
+       objparent = if valid-object(iobjparen) then iobjparen:ToString() else this-object:ToString().
+       tt-objth.procparent = iparantProc.
+       SysLog:EventHndlr("Зарегистрирован - " + IdObj).
     end.
 
     return.
 
   end method.
+ 
+  method public void Regobj(iobjparen as objth, iobj as objth, propname as char ): /* Регистрируем объект наследник objth или TypeMap в оъекте objth*/
+     Regobj(program-name(3),iobjparen, iobj, propname ).
+  end.
+   
+  method public void Regobj(iobjparen as objth, iobj as objth ):
+     Regobj(program-name(3),iobjparen, iobj, "" ).
+     
+  end.
   
-  
-  
+  method public void Regobj( iobj as objth, propname as char ): /* Регистрируем в ObjSrv */
+     Regobj(program-name(2),?,iobj,propname).
+  end method.
+    
+  method public void Regobj( iobj as objth ): /* Регистрируем объект наследник objth */
+     Regobj(program-name(4),?,iobj,"").
+  end method.
     
   method public void Delobj( obj as Progress.Lang.Object ):
     
@@ -180,28 +214,7 @@ method public void DelobjChild( iParent as character  ):
 
   /*  end method.*/
 
-  method public void Regobj(iobjparen as Progress.Lang.Object, iobj as Progress.Lang.Object ):
-    define variable IdObj as character  no-undo.
-    if valid-object (iobj)
-    then do:
-       IdObj = iobj:ToString().
-       find first tt-objth where tt-objth.objname eq IdObj no-error.
-       if not available tt-objth
-       then do:
-          create tt-objth.
-          assign
-             tt-objth.objname = IdObj
-             tt-objth.objhndl = iobj
-          .
-       end.
-       tt-objth.objparent = iobjparen:ToString().
-       SysLog:EventHndlr("Зарегистрирован - " + IdObj).
-    end.
-
-    return.
-
-  end method.
-  /*------------------------------------------------------------------------------
+   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
@@ -222,17 +235,12 @@ method public void DelobjChild( iParent as character  ):
     delete object SysLog no-error.
   end destructor.
 
-  method public void GetTable(input-output table for tt-objth):
-    
+  method public void GetTableObjTh(output table for tt-objth):
+    for each tt-objth:
+       tt-objth.label_ = cast (tt-objth.objhndl, objth):getLable().
+    end.
     
 
   end method.
-
-  method public void Dispose ():
-    
-    delete object Lib:MarkingTree no-error.
-
-  end method.
-  
 
 end class.

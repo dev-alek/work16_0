@@ -21,7 +21,12 @@ using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.tank-imp_cal-tbl from propath.
 
 class ibs.th.bge.1crn.subjects.tank-imp_cal-tbl inherits ibs.th.bge.1crn.subjects.asubject:
-
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  
    define property lvl_ as decimal no-undo get. 
       private set.
    define property amnt as decimal no-undo get. 

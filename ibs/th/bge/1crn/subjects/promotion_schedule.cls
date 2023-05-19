@@ -20,7 +20,12 @@ using ibs.th.bge.1crn.subjects.subjects from propath.
 
 
 class ibs.th.bge.1crn.subjects.promotion_schedule inherits ibs.th.bge.1crn.subjects.asubject: 
-
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  
   define property sch-code as character no-undo get. private set. // строка 1-1 Код расписания внешней системы
   define property sch-name as character no-undo get. private set. // строка 1-1 Название акции
   define property Sch-type as character no-undo get. private set. // строка 1-1 Тип расписания  0 - Простое \1 - детальное

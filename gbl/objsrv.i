@@ -10,8 +10,7 @@ run gbl/getobjsrvhndl.p (input-output ObjSrv).
 
 &if "{1}" = "def"
 &then
-   &glob globobjSrv yes
-def public var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+define public var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
 &endif
 
 &if "{1}" = "get"

@@ -1,23 +1,28 @@
  
- /*------------------------------------------------------------------------
-    File        : systemseting
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : Daru
-    Created     : Tue Feb 22 00:07:11 MSK 2022
-    Notes       : 
-  ----------------------------------------------------------------------*/
+/*
+  $Revision:$
+  $Author:$
+  $Date:$
+  $Workfile:$
+  $Archive:$
+  
+  Автор: Рубан Дмитрий Андреевич 
+  Дата создания: 9 янв. 2023 г.
+  Author:  Ruban Dmitriy Andreevich
+  Creation date: 9 янв. 2023 г.
+  
+  */
 
 using Progress.Lang.*.
 
-class ibs.th.gbl.systemsetting:
-   define variable vss-revision    as character no-undo init "$Revision:$":U .
-   define variable vss-author      as character no-undo init "$Author:$":U .
-   define variable vss-date        as character no-undo init "$Date:$":U .
-   define variable vss-workfile    as character no-undo init "$Workfile:$":U .
-   define variable vss-archive     as character no-undo init "$Archive:$":U .
-   define variable vss-description as character no-undo init "".
+class ibs.th.gbl.systemsetting inherits   ibs.th.gbl.sys.objth :
+   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+   define override public property vss-author      as character no-undo init "$Author:$":U get.
+   define override public property vss-date        as character no-undo init "$Date:$":U get.
+   define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+   define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+   define override public property vss-description as character no-undo init "Настройки разработчиков" get.
+    
     
    { cmp/str-glbl.i class }  
    { GBL/xmldom.i   class }

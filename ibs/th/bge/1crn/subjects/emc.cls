@@ -18,7 +18,12 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 block-level on error undo, throw.
 
-class ibs.th.bge.1crn.subjects.emc inherits ibs.th.bge.1crn.subjects.code: 
+class ibs.th.bge.1crn.subjects.emc inherits ibs.th.bge.1crn.subjects.code:
+    define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get. 
   { cmp/str-glbl.i class } 
   
   

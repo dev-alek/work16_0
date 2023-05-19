@@ -1,13 +1,16 @@
- 
-/*------------------------------------------------------------------------
-   File        : tree
-   Purpose     : 
-   Syntax      : 
-   Description : 
-   Author(s)   : eshklyar
-   Created     : Tue Mar 24 17:14:12 MSK 2020
-   Notes       : 
- ----------------------------------------------------------------------*/
+/*
+$Revision:$
+$Author:$
+$Date:$
+$Workfile:$
+$Archive:$
+
+Автор: Рубан Дмитрий Андреевич 
+Дата создания: 16 мая 2022 г.
+Author:  Ruban Dmitriy Andreevich
+Creation date: 16 мая 2022 г.
+
+*/
 
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
@@ -15,7 +18,13 @@ using ibs.th.str.marking.handlers.*.
 using ibs.th.str.marking.sts.*.
 
 class ibs.th.str.utd.handlers.introduce inherits objth: 
-
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Вспомгательный клас для обработки марок для ТСД" get.
+ 
   { utl/gtin.i class }
 
   method public character CheckMarkUTD(mark as char, doc-id as integer, db-num as integer):

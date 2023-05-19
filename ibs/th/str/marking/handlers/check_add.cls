@@ -15,7 +15,13 @@ using ibs.th.str.marking.handlers.*.
 using ibs.th.str.marking.sts.*.
 
 class ibs.th.str.marking.handlers.check_add inherits objth: 
-
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Сервис добавления и проверки марок." get.
+ 
   { utl/gtin.i class }
 
 

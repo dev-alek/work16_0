@@ -19,8 +19,12 @@ block-level on error undo, throw.
  
 
 class ibs.th.bge.1crn.subjects.oks inherits ibs.th.bge.1crn.subjects.asubject:
-  
-  
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+    
   define property Code_ok       as character    no-undo get. private set.
   define property Code_ei_kkt   as character    no-undo get. private set.
   define property Code_pf_kkt   as character    no-undo get. private set.

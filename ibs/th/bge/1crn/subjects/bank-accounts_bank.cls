@@ -21,6 +21,11 @@ using ibs.th.bge.1crn.subjects.bank-accounts from propath.
 using ibs.th.bge.1crn.subjects.bank-accounts_bank from propath.
 
 CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subjects.asubject: 
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
   
 
   define property bank-name   as character    no-undo get. 

@@ -18,13 +18,8 @@ using ibs.th.gbl.map.mapstring.
 using ibs.th.gbl.sys.objth.
 
 
-class Ibs.Th.Gbl.TypeMap inherits objth:
-   define variable vss-revision    as character no-undo init "$Revision:$":U .
-   define variable vss-author      as character no-undo init "$Author:$":U .
-   define variable vss-date        as character no-undo init "$Date:$":U .
-   define variable vss-workfile    as character no-undo init "$Workfile:$":U .
-   define variable vss-archive     as character no-undo init "$Archive:$":U .
-   define variable vss-description as character no-undo init "".
+class Ibs.Th.Gbl.TypeMap inherits objth abstract:
+   
    
   define public property mapType as class mapstring no-undo get. 
     protected set.
@@ -45,6 +40,10 @@ class Ibs.Th.Gbl.TypeMap inherits objth:
   define public property  startElem as integer no-undo init 1 get. set.
   constructor protected TypeMap ():
     super().
+    getobjserv().
+    if valid-object (ObjSrv)
+    then 
+       ObjSrv:Regobj(this-object).
     {utl\objreg.i Unknow propmap ? '"Unknow"' '"Неизвестный Type."' }
     {utl\objreg.i mapType mapstring true Unknow}
     
@@ -109,7 +108,8 @@ class Ibs.Th.Gbl.TypeMap inherits objth:
   
   method protected class propmap crProp(inKeyInt as int, inNameProp as char, inLabel as char):
     def var prop as class propmap no-undo.
-    {utl\objreg.i prop propmap inKeyInt inNameProp inLabel}
+    &Scop propNameReg inNameProp
+    { utl/objreg.i prop propmap inKeyInt inNameProp inLabel}
     mapType:AddItem(prop, inKeyInt,inNameProp, inLabel).
     return prop.
   end method. 

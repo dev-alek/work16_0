@@ -18,6 +18,12 @@ using ibs.th.gbl.TypeMap.
 
 
 class ibs.th.str.utd.sts.th inherits TypeMap:
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Статусы ЭДО в TH" get.
   
   define public property  NewStatus  as class propmap no-undo get.  protected set.
   define public property  ReceivedFromSupplier  as class propmap no-undo get.  protected set.

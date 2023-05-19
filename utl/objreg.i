@@ -24,7 +24,19 @@
 &endif
 &if defined(GlobObjSrvClass) eq 0
 &then
-ObjSrv:Regobj(this-object,{1}).
+ObjSrv:Regobj(this-object,{1},
+&if defined (propNameReg) ne 0
+&then
+ {&propNameReg}
 &else
-    Regobj(this-object,{1}).
+"{1}"
+&endif
+) .
+&else
+    Regobj({1},&if defined (propNameReg) ne 0
+&then
+ {&propNameReg}
+&else
+"{1}"
+&endif).
 &endif

@@ -1,13 +1,16 @@
- 
- /*------------------------------------------------------------------------
-    File        : mark
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : asmorozov
-    Created     : Mon Feb 24 19:25:41 MSK 2020
-    Notes       : 
-  ----------------------------------------------------------------------*/
+/*
+  $Revision:$
+  $Author:$
+  $Date:$
+  $Workfile:$
+  $Archive:$
+  
+  Автор: Рубан Дмитрий Андреевич 
+  Дата создания: 9 янв. 2023 г.
+  Author:  Ruban Dmitriy Andreevich
+  Creation date: 9 янв. 2023 г.
+  
+  */
 
 using Progress.Lang.*.
 using ibs.th.gbl.propmap.
@@ -15,7 +18,13 @@ using ibs.th.gbl.TypeMap.
 
 
 class ibs.th.str.marking.Types inherits TypeMap:
-  
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Типы маркировки" get.
+   
   define public property  tabak      as class propmap no-undo get.  protected set.
   define public property  shoes      as class propmap no-undo get.  protected set.
   define public property  perfume    as class propmap no-undo get.  protected set.

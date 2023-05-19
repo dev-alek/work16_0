@@ -33,6 +33,10 @@ class ibs.th.bge.1crn.subjects.asubject abstract inherits ibs.th.gbl.sys.objth i
 
   define abstract property InitTag as character no-undo
     get.
+    
+  define override public property vss-description as character no-undo get():
+       return "Объект сообщения " + InitTag.
+   end.
 
   define public property InitListTag as character no-undo init ""
     get.

@@ -1,19 +1,28 @@
- 
- /*------------------------------------------------------------------------
-    File        : markingtype
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : asmorozov
-    Created     : Mon Mar 30 14:11:07 MSK 2020
-    Notes       : 
-  ----------------------------------------------------------------------*/
+/*
+  $Revision:$
+  $Author:$
+  $Date:$
+  $Workfile:$
+  $Archive:$
+  
+  Автор: Рубан Дмитрий Андреевич 
+  Дата создания: 9 янв. 2023 г.
+  Author:  Ruban Dmitriy Andreevich
+  Creation date: 9 янв. 2023 г.
+  
+  */
 
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
 
 class ibs.th.gbl.env.conf.markingtype inherits objth. 
-
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Настрока для типов маркировки" get.
+   
   
   define public property ConfVal as character initial "" no-undo 
     get.

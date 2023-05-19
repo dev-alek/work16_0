@@ -1,13 +1,16 @@
- 
-/*------------------------------------------------------------------------
-   File        : marking
-   Purpose     : 
-   Syntax      : 
-   Description : 
-   Author(s)   : asmorozov
-   Created     : Mon Mar 16 16:41:03 MSK 2020
-   Notes       : 
- ----------------------------------------------------------------------*/
+/*
+$Revision:$
+$Author:$
+$Date:$
+$Workfile:$
+$Archive:$
+
+Автор: Рубан Дмитрий Андреевич 
+Дата создания: 16 мая 2022 г.
+Author:  Ruban Dmitriy Andreevich
+Creation date: 16 мая 2022 г.
+
+*/
 
 using Progress.Lang.*.
 using ibs.th.skt.ControlledClients.marking.sts.cash.
@@ -19,7 +22,13 @@ using ibs.th.gbl.sys.objth.
 
 
 class ibs.th.skt.ControlledClients.marking inherits objth: 
-
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Обработчик запросов по маркам с кассы" get.
+ 
   {cmp\str-glbl.i class}
   
   define private variable logWrite as class LogWrite no-undo.
