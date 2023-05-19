@@ -26,9 +26,8 @@ create: Перваков Михаил Сергеевич
 
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
-
-function octal-to-char returns character
-  ( p-string as character ) :
+{ def/funcmet.i octal-to-char character}
+( p-string as character ) :
 
   def var v-asc     as integer no-undo .
   def var v-new-asc as integer no-undo .
@@ -57,8 +56,8 @@ function octal-to-char returns character
   return chr(v-asc) .
 end function .
 
-function char-to-octal returns character
-  ( p-chr as character ) :
+{ def/funcmet.i char-to-octal character}
+( p-chr as character ) :
 
   def var v-asc    as integer   no-undo .
   def var ind      as integer   no-undo .
@@ -84,14 +83,13 @@ function char-to-octal returns character
 
   return v-string .
 
-end function .
+end.
 
-
-function str-encode returns character
-  ( p-init-string       as character
+{ def/funcmet.i str-encode character}
+(   p-init-string       as character
   , p-encode-char       as character
   , p-special-char-list as character
-  ) :
+) :
 
   def var p-encode-string as character no-undo .
 
@@ -139,8 +137,7 @@ function str-encode returns character
 
   return p-encode-string .
 
-end function .
-
+end.
 
 function str-decode returns character
   (p-init-string   as character
@@ -206,9 +203,7 @@ function str-decode returns character
   end.
 
   return p-decode-string .
-
-end function .
-
+end.
 &endif
 
 /* $Workfile$ e n d */

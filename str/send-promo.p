@@ -181,8 +181,8 @@ procedure putc-16 :
 
           m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
           v-promo-action:refreshChildObj() . // возвращает
-          { str/putc-16.i }
           if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
+          { str/putc-16.i }
         END. /* FOR EACh */
       end.
       else 

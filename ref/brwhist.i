@@ -769,6 +769,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
  and p-mode <> {&company}
  and p-mode <> "one":U
  and p-mode <> "subject":U
+ and p-mode <> "parentbeg":U
  then dO:
     message
     vss-workfile vss-revision vss-description skip

@@ -67,6 +67,7 @@ define variable vss-description as character no-undo init "Редактирование параме
 { cmp/showinf.i }
 { str/wth-lib.i }
 { gbl/thbjattr.i }
+{ gbl/cd-attr.i }
 define variable v-db-num like ub.db.db-num no-undo.
 define variable tcode as integer no-undo.
 define variable dflt-cd as character no-undo init {&cd-type-ibm}.
@@ -78,7 +79,7 @@ DEFINE VARIABLE v-fr-type-list-items-full AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-fr-type-list-items AS CHARACTER NO-UNDO.
 define variable l-shift-on as logical no-undo .
 define buffer buf_cash-desk for ub.cash-desk.
-
+define variable mCashDevice      as ibs.th.str.cash.CashDevice no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -181,7 +182,7 @@ DEFINE BUTTON b-quit AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE cb-device-kind AS INTEGER FORMAT ">9" INITIAL 0 
+DEFINE VARIABLE cb-device-kind AS INTEGER FORMAT ">9":U 
      LABEL "Признак исполнения кассы" 
      VIEW-AS COMBO-BOX INNER-LINES 4
      LIST-ITEM-PAIRS "Стандартное",0,
@@ -204,14 +205,14 @@ DEFINE VARIABLE COMBO-protocol AS CHARACTER FORMAT "X(256)":U
      VIEW-AS COMBO-BOX INNER-LINES 5
      LIST-ITEMS "","ftp","http","samba","SMTP" 
      DROP-DOWN-LIST
-     SIZE 13 BY 1 NO-UNDO.
+     SIZE 10 BY 1 NO-UNDO.
 
 DEFINE VARIABLE COMBO-protocol-maria AS CHARACTER FORMAT "X(256)":U 
      LABEL "Протокол" 
      VIEW-AS COMBO-BOX INNER-LINES 4
      LIST-ITEMS "","local","remote","ftp","shared" 
      DROP-DOWN-LIST
-     SIZE 13 BY 1 NO-UNDO.
+     SIZE 10 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-cash-num-char AS CHARACTER FORMAT "X(256)":U 
      LABEL "Зав.#" 
@@ -256,32 +257,47 @@ DEFINE FRAME Dialog-Frame
      B-attr AT ROW 1 COL 31
      B-attr-2 AT ROW 1 COL 41 WIDGET-ID 6
      B-cli-attr AT ROW 1 COL 51
-     B-hist AT ROW 1 COL 72
-     B-Help AT ROW 1 COL 75
+     B-hist AT ROW 1 COL 77
+     B-Help AT ROW 1 COL 81
      tt-cash-desk.cash-num AT ROW 2.52 COL 11.4 COLON-ALIGNED
           LABEL "Номер"
           VIEW-AS FILL-IN 
           SIZE 6 BY 1
-     tt-cash-desk.db-num AT ROW 2.52 COL 32.6 COLON-ALIGNED
+     tt-cash-desk.db-num AT ROW 2.5 COL 32.63 COLON-ALIGNED
           LABEL "Номер БД"
           VIEW-AS FILL-IN 
-          SIZE 5.6 BY 1
-     tt-cash-desk.obj-code AT ROW 3.76 COL 11.6 COLON-ALIGNED
+          SIZE 5.63 BY 1
+     tt-cash-desk.obj-code AT ROW 3.75 COL 11.63 COLON-ALIGNED
           LABEL "Магазин"
           VIEW-AS FILL-IN 
-          SIZE 6.4 BY 1
+          SIZE 6.38 BY 1
           BGCOLOR 15 FGCOLOR 0 
-     f-obj-name AT ROW 3.76 COL 22.8 COLON-ALIGNED NO-LABEL
-     f-cash-num-char AT ROW 5 COL 11.6 COLON-ALIGNED
+     f-obj-name AT ROW 3.75 COL 22.75 COLON-ALIGNED NO-LABEL
+     f-cash-num-char AT ROW 5 COL 11.63 COLON-ALIGNED
      f-pswd AT ROW 5 COL 50 COLON-ALIGNED
-     tt-cash-desk.addr-path AT ROW 6.29 COL 11.8 COLON-ALIGNED
+     tt-cash-desk.addr-path AT ROW 7.5 COL 27 COLON-ALIGNED
           LABEL "Адрес/путь"
           VIEW-AS FILL-IN 
-          SIZE 27 BY 1
+          SIZE 25 BY 1
           BGCOLOR 15 FGCOLOR 0 
-     COMBO-protocol-maria AT ROW 6.29 COL 50 COLON-ALIGNED
-     COMBO-protocol AT ROW 6.29 COL 50 COLON-ALIGNED
-     tt-cash-desk.pos-type AT ROW 8.86 COL 12 COLON-ALIGNED
+     COMBO-protocol-maria AT ROW 7.5 COL 64 COLON-ALIGNED
+     COMBO-protocol AT ROW 7.5 COL 64 COLON-ALIGNED
+     cb-device-kind  AT ROW 6.29 COL 27 COLON-ALIGNED WIDGET-ID 14
+     tt-cash-desk.cash-os AT ROW 6.29 COL 64 COLON-ALIGNED
+          LABEL "Тип ОС"
+          VIEW-AS COMBO-BOX INNER-LINES 4
+          LIST-ITEMS "","DOS","LINUX","WINDOWS" 
+          DROP-DOWN-LIST
+          SIZE 10 BY 1
+          BGCOLOR 15 FGCOLOR 0 
+     tt-cash-desk.autonomy AT ROW 9.75 COL 13.63 NO-LABEL
+          VIEW-AS RADIO-SET HORIZONTAL
+          RADIO-BUTTONS 
+                    "Item 1", 1,
+"Item 2", 2,
+"Item 3", 3
+          SIZE 66 BY 1
+     tt-cash-desk.pos-type AT ROW 11.29 COL 60.2 COLON-ALIGNED
           LABEL "Тип POS"
           VIEW-AS COMBO-BOX INNER-LINES 11
           LIST-ITEM-PAIRS "1","1",
@@ -292,41 +308,24 @@ DEFINE FRAME Dialog-Frame
                      "6","6",
                      "7","7"
           DROP-DOWN-LIST
-          SIZE 26.6 BY 1
+          SIZE 24 BY 1
           BGCOLOR 15 FGCOLOR 0 
-     tt-cash-desk.cash-os AT ROW 8.86 COL 50.4 COLON-ALIGNED
-          LABEL "Тип ОС"
-          VIEW-AS COMBO-BOX INNER-LINES 4
-          LIST-ITEMS "","OS/2","DOS","LINUX","WINDOWS" 
-          DROP-DOWN-LIST
-          SIZE 10.6 BY 1
-          BGCOLOR 15 FGCOLOR 0 
-     tt-cash-desk.autonomy AT ROW 10.76 COL 13 NO-LABEL
-          VIEW-AS RADIO-SET HORIZONTAL
-          RADIO-BUTTONS 
-                    "Item 1", 1,
-"Item 2", 2,
-"Item 3", 3
-          SIZE 66 BY 1
-     cb-device-kind AT ROW 11.95 COL 49 COLON-ALIGNED WIDGET-ID 14
      CB-fr-type AT ROW 13.67 COL 11.2 COLON-ALIGNED WIDGET-ID 4
      tt-cash-desk.version AT ROW 13.67 COL 60.2 COLON-ALIGNED
           LABEL "Версия протокола"
           VIEW-AS FILL-IN 
-          SIZE 19.6 BY 1
+          SIZE 24 BY 1
      f-fr-type AT ROW 14.81 COL 49.6 COLON-ALIGNED WIDGET-ID 8
      T-remote AT ROW 14.95 COL 13
      tt-cash-desk.registration-code AT ROW 16.14 COL 11.8 COLON-ALIGNED
           LABEL "Регистр. №"
           VIEW-AS FILL-IN 
           SIZE 30 BY 1
-     tt-cash-desk.serial-code AT ROW 16.14 COL 49.6 COLON-ALIGNED
+     tt-cash-desk.serial-code AT ROW 16.14 COL 51.6 COLON-ALIGNED
           LABEL "Сер. №"
           VIEW-AS FILL-IN 
           SIZE 30 BY 1
-     " формат общения с кассой" VIEW-AS TEXT
-          SIZE 30 BY .62 AT ROW 7.91 COL 14 WIDGET-ID 12
-     RECT-1 AT ROW 8.14 COL 3 WIDGET-ID 10
+     RECT-1 AT ROW 9.14 COL 3 WIDGET-ID 10
      SPACE(3.99) SKIP(7.76)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -418,11 +417,33 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME cb-device-kind
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cb-device-kind Dialog-Frame
+ON VALUE-CHANGED OF cb-device-kind IN FRAME Dialog-Frame
+DO:
+  if p-mode = {&lookup} then return no-apply.
+
+  ASSIGN
+  cb-device-kind.
+  tt-cash-desk.pos-type = if    cb-device-kind eq mCashDevice:Tanker:keyint
+                             or cb-device-kind eq mCashDevice:TankerIntegr:keyint
+                          then {&cd-type-Autotank}
+                          else {&cd-type-IBM-XML}.
+  DISPLAY
+     tt-cash-desk.pos-type
+  WITH FRAME {&FRAME-NAME}.
+     
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME tt-cash-desk.autonomy
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-cash-desk.autonomy Dialog-Frame
 ON VALUE-CHANGED OF tt-cash-desk.autonomy IN FRAME Dialog-Frame
 DO:
   if p-mode = {&lookup} then return no-apply.
+
   ASSIGN
   tt-cash-desk.autonomy.
   CASE tt-cash-desk.autonomy:
@@ -432,11 +453,11 @@ DO:
           .
           DISPLAY
           tt-cash-desk.cash-num
+          cb-device-kind 
           WITH FRAME {&FRAME-NAME}.
           DISABLE
           tt-cash-desk.cash-num
           WITH FRAME {&FRAME-NAME}.
-          hide cb-device-kind in frame {&FRAME-NAME}. 
       END.
       OTHERWISE DO:
           ASSIGN
@@ -731,7 +752,7 @@ DO:
   end.
   else do:
       enable
-      t-remote when (not l-shift-on)
+      t-remote when (p-mode <> {&lookup} and not l-shift-on)
       with frame {&frame-name}.
   end.
   
@@ -739,11 +760,13 @@ DO:
             , ({&cd-type-IBm-XML} + {&comma-char} +
                {&cd-type-autotank})) > 0
       then do:
+      if p-mode <> {&lookup} then do:
         view
         combo-protocol
         in frame {&frame-name}.
+      end.
       enable
-      combo-protocol when (not l-shift-on)
+      combo-protocol when (p-mode <> {&lookup} and not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -757,11 +780,13 @@ DO:
   end.
   if lookup({&cd-type-maria}, tt-cash-desk.pos-type) > 0
       then do:
+      if p-mode <> {&lookup} then do:
         view
         combo-protocol-maria
         in frame {&frame-name}.
+      end.
       enable
-      combo-protocol-maria when (not l-shift-on)
+      combo-protocol-maria when (p-mode <> {&lookup} and not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -777,7 +802,7 @@ DO:
   if lookup({&cd-type-maria}, tt-cash-desk.pos-type) > 0
       then do:
       enable
-      f-cash-num-char when (not l-shift-on)
+      f-cash-num-char when (p-mode <> {&lookup} and not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -792,7 +817,7 @@ DO:
   if lookup({&cd-type-maria}, tt-cash-desk.pos-type) > 0
       then do:
       enable
-      f-pswd when (not l-shift-on)
+      f-pswd when (p-mode <> {&lookup} and not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -804,36 +829,7 @@ DO:
       in frame {&frame-name}.
 
   end.
-  if lookup(tt-cash-desk.pos-type,
-            {&cd-type-IBs-th} ) = 0 then do:
-      disable
-      cb-fr-TYPE
-      with frame {&frame-name}.
-      HIDE
-      cb-fr-TYPE
-      IN frame {&frame-name}.
-      display
-      f-fr-type
-      with frame {&frame-name} .
-      enable
-      f-fr-TYPE
-      with frame {&frame-name}.
 
-  end.
-  else do:
-      disable
-      f-fr-TYPE
-      with frame {&frame-name}.
-      HIDE
-      f-fr-TYPE
-      IN frame {&frame-name}.
-      display
-      cb-fr-type
-      with frame {&frame-name}.
-      enable
-      cb-fr-TYPE
-      with frame {&frame-name}.
-  end.
   if lookup(tt-cash-desk.pos-type,
            ({&cd-type-IBm-XML} + {&comma-char} +
             {&cd-type-NCR-GM} + {&comma-char} +
@@ -842,7 +838,7 @@ DO:
             {&cd-type-autotank}
             )) > 0 then do:
       enable
-      tt-cash-desk.autonomy when (not l-shift-on)
+      tt-cash-desk.autonomy when (p-mode <> {&lookup} and not l-shift-on)
       with frame {&frame-name}.
   end.
   else do:
@@ -879,12 +875,21 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-   
  if num-entries(p-mode, {&delim-par}) > 1 then do:
    assign
    l-shift-on = logical(entry(2, p-mode, {&delim-par}))
    p-mode = entry(1, p-mode, {&delim-par})
    .
+ end.
+ if p-mode  <> {&add-def}
+ and p-mode <> {&update}
+ and p-mode <> {&lookup}
+ then do:
+    message
+    vss-workfile vss-revision vss-description skip
+    "Неверное значение параметров вызова p-mode"  p-mode
+    view-as alert-box ERROR.
+    undo, return error.
  end.
  v-db-num = ibs.th.gbl.gbl-var:g#db-num .
  { gbl/hostcode.i ~{&shop~} p-obj-code v-host-code }
@@ -979,6 +984,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   RUN MyENable in this-procedure .
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
+delete object mCashDevice.
 RUN disable_UI.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1046,6 +1052,16 @@ PROCEDURE MyEnable :
 /* ----- тип POS ----- */
 DEFINE VARIABLE v-list-items AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-ii         AS INTEGER   NO-UNDO.
+ define variable objType    as ibs.th.gbl.propmap no-undo.
+   
+   mCashDevice      = new ibs.th.str.cash.CashDevice().
+   do v-ii = 1 to mCashDevice:mapType:GetItem(v-ii):
+      objType = mCashDevice:CurrProp.
+      v-list-items = v-list-items + {&comma-char} + objType:Label_ + {&comma-char} + string(objType:KeyIntDB) .
+   end.
+   cb-device-kind:LIST-ITEM-PAIRS  in frame {&frame-name} = trim(v-list-items,{&comma-char}) .
+   
+v-list-items = "".
 DO v-ii = 1 TO NUM-ENTRIES({&cd-type-codes-real}):
     ASSIGN
     v-list-items = v-list-items + (IF v-ii > 1 THEN  {&comma-char} ELSE "":U) +
@@ -1184,6 +1200,7 @@ if p-mode = {&lookup} then do:
     in frame {&frame-name}.
 end.
 APPLY "VALUE-CHANGED" to tt-cash-desk.pos-type.
+enable tt-cash-desk.pos-type WITH FRAME {&frame-name}.
 APPLY "VALUE-CHANGED" to tt-cash-desk.autonomy.
 VIEW FRAME {&frame-name} .
 END PROCEDURE.
@@ -1193,6 +1210,12 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save Dialog-Frame 
 PROCEDURE proc-save :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+
 IF COMBO-protocol:visible in FRAME {&FRAME-NAME} THEN
 ASSIGN
 COMBO-protocol

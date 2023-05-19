@@ -45,10 +45,14 @@ define variable vss-description as character no-undo init " опирование накладной
 { str/dtl-rest.i new }
 { str/dtlrestm.i " new shared " }
 { trg/partslib.i }
+{ gbl/objsrv.i }
 { str/fbrcode.i  }
 { str/fbrlib.i   }
 { str/fbrrest.i  }
 { str/fbradd.i   }
+{ ref/gds-attr.i }
+{ ref/gdsoattr.i }
+{ gbl/ggoattr.i  }
 
     define variable v-copy-qnty             like doc-line.fact-qnty     no-undo.    /* количество из источника */
     define variable v-auto-select-recipes   as logical                  no-undo.

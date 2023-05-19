@@ -480,8 +480,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-n
 { cmp/cr-prep.i 1 cd-type-IBS-TH-int         14                  IBS-TH           14              IBS-TH       }
 { cmp/cr-prep.i 1 cd-type-IBS-TH-MOB-int     15                  IBS-TH-MOB       15              IBS-TH-MOB   }
 
-&glob cd-type-codes-int '{&bef-cd-type-IBM-int}~
-,{&bef-cd-type-IBM-XML-int}~
+&glob cd-type-codes-int '{&bef-cd-type-IBM-XML-int}~
+,{&bef-cd-type-Autotank-int}~
+,{&bef-cd-type-IBM-int}~
 ,{&bef-cd-type-IPC-Servispl-int}~
 ,{&bef-cd-type-OMRON-NEW-int}~
 ,{&bef-cd-type-OMRON-int}~
@@ -491,7 +492,6 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-n
 ,{&bef-cd-type-r-keeper-int}~
 ,{&bef-cd-type-NKT-IBM-int}~
 ,{&bef-cd-type-MARIA-int}~
-,{&bef-cd-type-Autotank-int}~
 ,{&bef-cd-type-IBS-TH-int}~
 ,{&bef-cd-type-IBS-TH-MOB-int}~
 ':U
@@ -499,8 +499,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-c
 
 
 
-&glob cd-type-codes-real '{&bef-cd-type-IBM}~
-,{&bef-cd-type-IBM-XML}~
+&glob cd-type-codes-real '{&bef-cd-type-IBM-XML}~
+,{&bef-cd-type-Autotank}~
+,{&bef-cd-type-IBM}~
 ,{&bef-cd-type-IPC-Servispl}~
 ,{&bef-cd-type-OMRON-NEW}~
 ,{&bef-cd-type-OMRON}~
@@ -514,12 +515,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-c
 ,{&bef-cd-type-pricecheck-Servispl}~
 ,{&bef-cd-type-NKT-IBM}~
 ,{&bef-cd-type-MARIA}~
-,{&bef-cd-type-Autotank}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-codes-real {&cd-type-codes-real}" ).
 
-&glob cd-type-codes-real-full '{&bef-cd-type-IBM-full}~
-,{&bef-cd-type-IBM-XML-full}~
+&glob cd-type-codes-real-full '{&bef-cd-type-IBM-XML-full}~
+,{&bef-cd-type-Autotank-full}~
+,{&bef-cd-type-IBM-full}~
 ,{&bef-cd-type-IPC-Servispl-full}~
 ,{&bef-cd-type-OMRON-NEW-full}~
 ,{&bef-cd-type-OMRON-full}~
@@ -533,13 +534,13 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-c
 ,{&bef-cd-type-pricecheck-Servispl-full}~
 ,{&bef-cd-type-NKT-IBM-full}~
 ,{&bef-cd-type-MARIA-full}~
-,{&bef-cd-type-Autotank-full}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-codes-real-full {&cd-type-codes-real-full}" ).
 
 /*¬Õ»Ã¿Õ»≈ ›“¿ œŒ—À≈ƒŒ¬¿“≈À‹ÕŒ—“‹ Œœ–≈ƒ≈À≈Õ»… ƒŒÀ∆Õ¿ ¡€“‹ “¿ Œ… ∆≈  ¿  cd-type-codes-int!!!*/
-&glob cd-type-codes-for-dflt '{&bef-cd-type-IBM}~
-,{&bef-cd-type-IBM-XML}~
+&glob cd-type-codes-for-dflt '{&bef-cd-type-IBM-XML}~
+,{&bef-cd-type-Autotank}~
+,{&bef-cd-type-IBM}~
 ,{&bef-cd-type-IPC-Servispl}~
 ,{&bef-cd-type-OMRON-NEW}~
 ,{&bef-cd-type-OMRON}~
@@ -549,7 +550,6 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-c
 ,{&bef-cd-type-r-keeper}~
 ,{&bef-cd-type-NKT-IBM}~
 ,{&bef-cd-type-MARIA}~
-,{&bef-cd-type-Autotank}~
 ,{&bef-cd-type-IBS-TH}~
 ,{&bef-cd-type-IBS-TH-MOB}~
 ':U
@@ -560,8 +560,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-c
 run filwrlib_append-new-line in this-procedure ( input "&global-define pos-type-int-code {&pos-type-int-code}" ).
 
 
-&glob cd-type-codes-for-dflt-full '{&bef-cd-type-IBM-full}~
-,{&bef-cd-type-IBM-XML-full}~
+&glob cd-type-codes-for-dflt-full '{&bef-cd-type-IBM-XML-full}~
+,{&bef-cd-type-Autotank-full}~
+,{&bef-cd-type-IBM-full}~
 ,{&bef-cd-type-IPC-Servispl-full}~
 ,{&bef-cd-type-OMRON-NEW-full}~
 ,{&bef-cd-type-OMRON-full}~
@@ -571,7 +572,6 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define pos-type-
 ,{&bef-cd-type-r-keeper-full}~
 ,{&bef-cd-type-NKT-IBM-full}~
 ,{&bef-cd-type-MARIA-full}~
-,{&bef-cd-type-Autotank-full}~
 ,{&bef-cd-type-IBS-TH-full}~
 ,{&bef-cd-type-IBS-TH-MOB-full}~
 ':U
@@ -579,8 +579,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-c
 
 
 
-&glob cd-type-codes-discnt '{&bef-cd-type-IBM}~
-,{&bef-cd-type-IBM-XML}~
+&glob cd-type-codes-discnt '{&bef-cd-type-IBM-XML}~
+,{&bef-cd-type-Autotank}~
+,{&bef-cd-type-IBM}~
 ,{&bef-cd-type-IPC-Servispl}~
 ,{&bef-cd-type-OMRON-NEW}~
 ,{&bef-cd-type-OMRON}~
@@ -593,12 +594,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-c
 ,{&bef-cd-type-MARIA}~
 ,{&bef-cd-type-no-cd}~
 ,{&bef-cd-type-bo}~
-,{&bef-cd-type-Autotank}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-codes-discnt {&cd-type-codes-discnt}" ).
 
-&glob cd-type-codes-discnt-full '{&bef-cd-type-IBM-full}~
-,{&bef-cd-type-IBM-XML-full}~
+&glob cd-type-codes-discnt-full '{&bef-cd-type-IBM-XML-full}~
+,{&bef-cd-type-Autotank-full}~
+,{&bef-cd-type-IBM-full}~
 ,{&bef-cd-type-IPC-Servispl-full}~
 ,{&bef-cd-type-OMRON-NEW-full}~
 ,{&bef-cd-type-OMRON-full}~
@@ -611,7 +612,6 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-c
 ,{&bef-cd-type-MARIA-full}~
 ,{&bef-cd-type-no-cd-full}~
 ,{&bef-cd-type-bo-full}~
-,{&bef-cd-type-Autotank-full}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define cd-type-codes-discnt-full {&cd-type-codes-discnt-full}" ).
 

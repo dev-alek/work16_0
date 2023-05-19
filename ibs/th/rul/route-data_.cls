@@ -16,16 +16,18 @@ Creation date: 01/28/07
 */
 
 
-class Ibs.Th.Rul.route-data_:
+class Ibs.Th.Rul.route-data_
+   inherits   ibs.th.gbl.sys.objth:
   { cmp/str-glbl.i class }
+    define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+    define override public property vss-author      as character no-undo init "$Author:$":U get.
+    define override public property vss-date        as character no-undo init "$Date:$":U get.
+    define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+    define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+    define override public property vss-description as character no-undo init "Класс  Данные для экспорта/импорта" get.
+   
   &scoped-define vssseq {&sequence}
   define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
-  define variable vss-revision    as character no-undo init "$Revision$":U .
-  define variable vss-author      as character no-undo init "$Author$":U .
-  define variable vss-date        as character no-undo init "$Date$":U .
-  define variable vss-workfile    as character no-undo init "$Workfile$":U .
-  define variable vss-archive     as character no-undo init "$Archive$":U .
-  define variable vss-description as character no-undo init "Класс  Данные для экспорта/импорта".
   { rul/tempcxml.i }
   { gbl/tmpreldf.i class }
 &scop route-export 1
@@ -48,6 +50,16 @@ class Ibs.Th.Rul.route-data_:
   define private variable v-esys-name as character no-undo .
   define private variable v-tot-recs as integer no-undo .
   define private variable v-pack-num as integer no-undo .
+  define variable objSetError as ibs.th.rul.route_date_error no-undo.
+  CONSTRUCTOR PUBLIC route-data_(      input objError as ibs.th.rul.route_date_error
+                                      ,input parparentproc as widget-handle
+                                      ,input p-parent-handle as handle
+                                      ,input p-log-handle as handle
+                                      ):
+     this-object(parparentproc,p-parent-handle,p-log-handle,?).
+     objSetError = objError.
+  end.
+  
   CONSTRUCTOR PUBLIC route-data_(
                                        input parparentproc as widget-handle
                                       ,input p-parent-handle as handle
@@ -56,10 +68,13 @@ class Ibs.Th.Rul.route-data_:
                                       ):
     define variable glog as logical no-undo .
     define buffer buf_temp-xml-tables for temp-xml-tables.
-    run garbcoll_create-gc-entry in p-gc-handle (input "route-data_",  input this-object) no-error.
-    if error-status:error then do:
-      message error-status:get-message(1) view-as alert-box .
-      return error "Ошибка создания объекта ЭКСПОРТ ДАННЫХ".
+    if valid-handle (p-gc-handle)
+    then do:
+       run garbcoll_create-gc-entry in p-gc-handle (input "route-data_",  input this-object) no-error.
+       if error-status:error then do:
+         message error-status:get-message(1) view-as alert-box .
+         return error "Ошибка создания объекта ЭКСПОРТ ДАННЫХ".
+       end.
     end.
     assign
     v_ph = p-parent-handle
@@ -71,7 +86,6 @@ class Ibs.Th.Rul.route-data_:
     name_ = '':U
     direction = {&route-export}
     .
-    run gate-clear in v_libg ( input v_dataseth, input buffer buf_temp-xml-tables:handle).
   end constructor.
   CONSTRUCTOR PUBLIC route-data_(
                                        input parparentproc as widget-handle
@@ -97,7 +111,6 @@ class Ibs.Th.Rul.route-data_:
     name_ = '':U
     direction = {&route-export}
     .
-    run gate-clear in v_libg ( input v_dataseth, input buffer buf_temp-xml-tables:handle).
   end constructor.
   CONSTRUCTOR PUBLIC route-data_(
                                        input parparentproc as widget-handle
@@ -172,7 +185,7 @@ class Ibs.Th.Rul.route-data_:
                                     ,output v_dataseth
                                     ,input-output v-xmlh) no-error.
       if error-status :error then do:
-        run set-error in v_eh ( input return-value ).
+        setError ( input return-value ).
         return no.
       end.
       name_ = v_dataseth:name.
@@ -224,7 +237,7 @@ class Ibs.Th.Rul.route-data_:
                                     ,output v_dataseth
                                     ,input-output v-xmlh) no-error.
       if error-status :error then do:
-        run set-error in v_eh ( input return-value ).
+        setError ( input return-value ).
         return no.
       end.
       name_ = v_dataseth:name.
@@ -931,7 +944,7 @@ class Ibs.Th.Rul.route-data_:
       if valid-handle (p-esys-cmd-proc-handle ) then do:
         delete procedure p-esys-cmd-proc-handle .
       end.
-      run set-error in v_eh (substitute("Ошибка при добавлении записи &2 в команду с кодом &3&1&4&1&5"
+      setError (substitute("Ошибка при добавлении записи &2 в команду с кодом &3&1&4&1&5"
                                           ,{&new-line}
                                           ,p-table-name
                                           ,p-esys-cmd-code
@@ -1064,7 +1077,7 @@ class Ibs.Th.Rul.route-data_:
                               ) no-error.
 
     if error-status:error then do:
-      run set-error in v_eh ( substitute("Ошибка при записи XML файла данными через гейт &1:&2&3"
+      setError ( substitute("Ошибка при записи XML файла данными через гейт &1:&2&3"
                                       , v_dataseth:name
                                       , {&new-line}, error-status:get-message(1))).
       return no.
@@ -1103,7 +1116,7 @@ class Ibs.Th.Rul.route-data_:
       if valid-handle (p-esys-cmd-proc-handle ) then do:
         delete procedure p-esys-cmd-proc-handle .
       end.
-      run set-error in v_eh (substitute("Ошибка при добавлении записи &2 в команду с кодом &3&1&4&1&5"
+      setError (substitute("Ошибка при добавлении записи &2 в команду с кодом &3&1&4&1&5"
                                           ,{&new-line}
                                           ,"xml data"
                                           ,p-esys-cmd-code
@@ -1114,4 +1127,14 @@ class Ibs.Th.Rul.route-data_:
     end.
     return yes.
   end method.
+  
+  method private void setError (iTxt as char):
+     if valid-handle (v_eh)
+     then
+        run set-error in v_eh (iTxt).
+     if valid-object (objSetError)
+     then
+        objSetError:setError(iTxt).
+   end.
+      
 end class.

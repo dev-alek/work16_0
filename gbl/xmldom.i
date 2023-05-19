@@ -246,10 +246,16 @@ end.
 /*==========================================================================*/
 &if "{1}" eq "class"
 &then
-method public void  xmldom-save(p-full-filename  as character):
+method public void  xmldom-save(iType  as character):
+   define variable result as memptr no-undo.
+   xmldom-save(iType, output result).
+end.
+method public void  xmldom-save(iType  as character,
+output result as memptr):
 &else
 procedure xmldom-save :
-define input parameter p-full-filename  as character        no-undo.
+define input parameter result  as character        no-undo.
+define variable iType  as character no-undo init "file".
 &endif
     define variable v-doc-handle    as handle           no-undo.
     define variable v-root-handle   as handle           no-undo.
@@ -315,14 +321,23 @@ on error undo, return error
         
     end.        /* for each buf_temp_testXML-node */
 /*    v-doc-handle :normalize().*/
-    os-delete p-full-filename.
-    v-doc-handle :save ( "file", p-full-filename ).
+    if    iType eq "file"
+    then do:
+       os-delete result.
+       v-doc-handle :save ( iType, result ).
+       output stream xmldom-out to value( result ) append.
+/*    seek stream xmldom-out to end .*/
+       put stream xmldom-out unformatted {&new-line}.
+       output stream xmldom-out close.
+    end.
+    else if iType eq "memptr"
+    then
+       v-doc-handle :save ( iType, result ).
+    else
+       v-doc-handle :save ( "file", iType ).
     delete object v-doc-handle.
     delete object v-root-handle.
-    output stream xmldom-out to value( p-full-filename ) append.
-/*    seek stream xmldom-out to end .*/
-    put stream xmldom-out unformatted {&new-line}.
-    output stream xmldom-out close.
+    
 end.
 end . /* xmldom-save */
 /*==================================================*/

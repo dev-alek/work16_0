@@ -293,13 +293,16 @@ do transaction
                       and buf_doc-pl.pl-code  = buf_rvs-line.pl-code
                       and buf_doc-pl.out-code = buf_rvs-doc.out-code
                       and buf_doc-pl.gds-code = buf_rvs-line.gds-code
-                  .
+                  no-error .
+                  if available buf_doc-pl
+                  then do :
                   assign
                     buf_rvs-line.system-qnty          = buf_rvs-line.system-qnty          + buf_doc-pl.fact-qnty
                     buf_rvs-line.system-cli-qnty      = buf_rvs-line.system-cli-qnty      + buf_doc-pl.cli-fact-qnty
                     buf_rvs-line.orig-system-qnty     = buf_rvs-line.orig-system-qnty     + buf_doc-pl.fact-qnty
                     buf_rvs-line.orig-system-cli-qnty = buf_rvs-line.orig-system-cli-qnty + buf_doc-pl.cli-fact-qnty
                   .
+                  end .
                 end.
               end.
             end case.

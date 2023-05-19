@@ -26,7 +26,7 @@ for each ub.PromoGoods no-lock where ub.PromoGoods.db-num = integer(entry(2,ub.P
   ub.PromoGoods.idAction = int64(entry(1,ub.PromoAttr.p-key,{&delim-key})) and
   ub.PromoGoods.gds-code = integer(entry(3,ub.PromoAttr.p-key,{&delim-key})):
   find first ub.goods no-lock where ub.goods.gds-code = ub.PromoGoods.gds-code no-error .
-  for each ub.bar-code no-lock where ub.bar-code.gds-code = ub.goods.gds-code :
+  for first ub.bar-code no-lock where ub.bar-code.gds-code = ub.goods.gds-code and ub.bar-code.b-code = ub.goods.gds-code:
     producer-int = (if ub.goods.prod-type = {&cmp} then 1000000 else 0 ) + ub.goods.prod-code .
     run gds-attr-value in this-procedure (
       input ub.goods.gds-code
@@ -53,9 +53,17 @@ for each ub.PromoGoods no-lock where ub.PromoGoods.db-num = integer(entry(2,ub.P
       ub.price-all.obj-type = {&shop} and
       ub.price-all.main-indication = 0 and
       ub.price-all.type-price = 0 no-error .
-    run bgelib-tag-put in this-procedure ( input 3, input "IBCPrice"                                         
-      , input string(ub.price-all.price-sale)
-      , input 1 ).                   
+    if available (ub.price-all) then 
+    do:
+       run bgelib-tag-put in this-procedure ( input 3, input "IBCPrice"                                         
+         , input string(ub.price-all.price-sale)
+         , input 1 ).
+    end.
+    else do:
+       run bgelib-tag-put in this-procedure ( input 3, input "IBCPrice"                                         
+         , input "0"
+         , input 1 ).
+    end.                   
     run bgelib-tag-put in this-procedure ( input 3, input "IBCType"                                         
       , input string( 0 ), input 1 ).                   
     run bgelib-tag-put in this-procedure ( input 3, input "IBC_EMRC"                                        ~

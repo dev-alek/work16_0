@@ -25,6 +25,7 @@ define variable vss-description{&vssseq} as character no-undo init "Работа С сок
 define variable mHSocket       as handle      no-undo.
 define variable mWebRespHead   as longchar    no-undo.
 define variable mWebResp       as longchar    no-undo.
+define variable mWebRespMptr   as memptr      no-undo.
 define variable OerrMsg        as character   no-undo.
 define variable mFileLogSocet  as character   no-undo.
 define variable mReturnXML     as logical     no-undo.
@@ -447,6 +448,7 @@ procedure getResponse:
 /*   then                                                            */
 /*      mWebResp = substring(mWebResp,1,r-index(mWebResp,trim(">"))).*/
    mSocetEndTime = (now - mSocetBegTime) / 1000.
+   copy-lob mWebResp to mWebRespMptr.
    if     mWriteRespFile ne ""
       and mWriteRespFile ne ?
    then

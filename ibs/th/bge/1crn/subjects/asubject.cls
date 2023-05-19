@@ -21,7 +21,7 @@ using ibs.th.bge.1crn.subjects.isubject from propath.
 
 block-level on error undo, throw.
 
-class ibs.th.bge.1crn.subjects.asubject abstract implements ibs.th.bge.1crn.subjects.isubject: 
+class ibs.th.bge.1crn.subjects.asubject abstract inherits ibs.th.gbl.sys.objth implements ibs.th.bge.1crn.subjects.isubject: 
 
   define public property Msg as character
     get.
@@ -33,6 +33,10 @@ class ibs.th.bge.1crn.subjects.asubject abstract implements ibs.th.bge.1crn.subj
 
   define abstract property InitTag as character no-undo
     get.
+    
+  define override public property vss-description as character no-undo get():
+       return "Объект сообщения " + InitTag.
+   end.
 
   define public property InitListTag as character no-undo init ""
     get.

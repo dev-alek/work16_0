@@ -11,8 +11,8 @@ Author:  Ruban Dmitriy Andreevich
 Creation date: 31 июля 2019 г.
 
 */
-{cmp/str-glbl.i }
-{ ibs\th\ref\code\codepar.i }
+{ cmp/str-glbl.i }
+{ ref/codepar.i }
 
 define variable vss-revision    as character no-undo init "$Revision:$":U .
 define variable vss-author      as character no-undo init "$Author:$":U .
@@ -27,8 +27,9 @@ find first code where code.parent eq iparent
                   no-lock no-error.
 if     available code
    and code.procview ne ""
+   and code.procview ne ?
 then do:
-   run value( code.procview) (iParparentproc, imode, code.parent , code.code,Code.CodeName).
+   run value( code.procview) (Parparentproc, imode, code.parent , code.code,Code.CodeName).
 end.
 else do on error undo, leave:                  
    define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
@@ -36,7 +37,7 @@ else do on error undo, leave:
    mCodeTrg = new ibs.th.ref.code.code_trg(imode).
    mCodeTrg:parent = left-trim(iparent + {&delim-par} + icode,{&delim-par}).
    mCodeTrg:startlevel = num-entries(mCodeTrg:parent,{&delim-par}).
-   mCodeTrg:parparentproc = iParparentproc.
+   mCodeTrg:parparentproc = Parparentproc.
    if ititle ne "" and ititle ne ?
    then mCodeTrg:title = ititle.
    else if available code

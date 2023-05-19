@@ -27,9 +27,10 @@ block-level on error undo, throw.
 &scoped-define sec-bge      BGE
 &scoped-define sec-oxml     OXML
 
+&global-define delim-par chr(4)
 
 class ibs.th.gbl.gbl-inipar: 
-  { cmp/str-glbl.i class }
+/*  { cmp/str-glbl.i class }*/
   /* REP-SETS */
   &scoped-define section-name {&sec-rep-sets}
   define static property conPar as character no-undo

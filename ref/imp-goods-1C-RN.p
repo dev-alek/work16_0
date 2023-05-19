@@ -533,6 +533,7 @@ end.
                  v-barcode:bcode + " . Товар " + p-GdsObj:code_) .*/
             end.  
         v-barcode-list = v-barcode-list + v-barcode:bcode + "," .
+        v-bc-mode = "".
         find first ub.prod-bc exclusive-lock where ub.prod-bc.b-str = v-barcode:bcode no-error.
         if not available ub.prod-bc
         then do :
@@ -546,9 +547,11 @@ end.
                 ("Ошибка при определении баркода для собственного кода " +
                  v-barcode:bcode + " . Товар " + p-GdsObj:code_) .
             end.
-            else do :
+            else do :               
+               /* проверяем совпадение кода товара и ед.изм. */
               if ub.bar-code.gds-code = v-gds-code
-              then do :
+              and ub.bar-code.unit-cli = v-barcode:unit-code
+              then do :                 
                   ub.prod-bc.bc-on = true .
                   ub.prod-bc.bc-on-type = (if p-GdsObj:gds-type = "н" then {&loc-pt-code} else if v-barcode:barcode-type = 1 then {&gtin} else "").
                   v-b-str = v-barcode:bcode .
@@ -589,7 +592,7 @@ end.
                   end.
                   next ii_ .
               end. 
-              else do :
+              else do :                 
 /*                  undo, return error                                                      */
 /*                  ("Уже есть собственный код " + v-barcode:bcode +                        */
 /*                   " и он пренадлежит другому товару - " + string(ub.bar-code.gds-code)) .*/
@@ -603,15 +606,15 @@ end.
                 v-bc-mode = {&add-def} .
               end.
             end.
-            v-bc-mode = {&update} .
-        end.
+            if v-bc-mode = "" then v-bc-mode = {&update} .
+        end.       
         if ub.goods.unit-base <> v-barcode:unit-code and v-bc-mode = {&add-def}
         then do :
             find first ub.bar-code where ub.bar-code.gds-code = v-gds-code
                                      and ub.bar-code.unit-cli = v-barcode:unit-code 
                                      no-error.
-            if not available ub.bar-code
-            then do :                         
+            if not available ub.bar-code 
+            then do :                                        
                 run ref/barcode1.p (
                                      input v-bc-mode 
                                     ,input yes /*p-silent*/
@@ -649,7 +652,7 @@ end.
                                                 ) no-error.
       
                 end.
-            end.    
+            end.               
             v-b-str = v-barcode:bcode .
             run trg/prod-bc2.p (
                                  input  parparentproc
@@ -689,7 +692,7 @@ end.
                      no).
               end.
             end.
-        end.
+        end.        
         if ub.goods.unit-base = v-barcode:unit-code
         then do :
             v-b-str = v-barcode:bcode .

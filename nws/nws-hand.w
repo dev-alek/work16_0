@@ -54,7 +54,7 @@ define variable vss-description as character no-undo init "Ручной режим работы С
 { cmp/trg-def.i  }
 { nws/nws-def.i  }
 { cmp/mrk-strf.i }
-{ gbl/color.i    }
+{ gbl/color.i   }
 
 define variable log-res as logical no-undo .
 
@@ -123,14 +123,14 @@ define variable v-have-rights    as logical        no-undo.
         substitute( "БД &1 удалена.", integer( entry( v-ind, v-rid-list ) ) ) ~
         view-as alert-box information. ~
     end. ~
-    else do:  ~
+    else do: ~
       if v-one-db <> true then do: ~
         assign ~
           v-rid-list-new = v-rid-list-new + (if v-rid-list-new = "":U then "":U else {&comma-char}) + entry( v-ind, v-rid-list ) ~
-          . ~
+        . ~
       end. ~
       assign ~
-        v-db-list      = v-db-list + (if v-db-list = "":U then "":U else {&comma-char}) + string( buf_db.db-num ) ~
+        v-db-list = v-db-list + (if v-db-list = "":U then "":U else {&comma-char}) + string( buf_db.db-num ) ~
       . ~
     end. ~
   end. ~
@@ -916,7 +916,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-send-new nws-hand
 ON CHOOSE OF b-send-new IN FRAME nws-hand /* Отправить новые */
 DO:
-    {&test-db}
+  {&test-db}
 
   assign
     v-num-entries = num-entries( v-db-list )
@@ -1000,7 +1000,7 @@ DO:
       loc#log = {&browse-name}:refresh() .
     end.
   end.
-  if num-entries(v-rid-list) <> 0 then do :
+  if num-entries( v-rid-list ) <> 0 then do:
     display
       num-entries( v-rid-list ) @ mark-num
       with frame {&frame-name}.
@@ -1066,26 +1066,26 @@ ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     hand-log-msg-h = news-log:handle
     g#news = true
   .
-
+  define variable mDBInfo as character no-undo.
   run adm/db-info.p
     ( output v-cur-db-num
+    , output mDBInfo
     ) no-error .
 
   if error-status:error then do:
     return error substitute( "&1. &2&3&4"
                              ,vss-workfile
-                             ,return-value
+                             ,mDBInfo
                              ,{&new-line}
                              ,error-status:get-message(error-status:num-messages)
                             ).
   end.
 
   assign
-    frame {&frame-name}:title = "СПН" + {&space-char} + return-value
+    frame {&frame-name}:title = "СПН" + {&space-char} + mDBInfo
     browse br-db :num-locked-columns = 1
   .
   RUN enable_UI.
-
   run refresh-brws in this-procedure
     ( input no
     ).

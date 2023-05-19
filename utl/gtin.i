@@ -755,7 +755,7 @@ function MoveDate return Date
     define variable vDay     as int64 no-undo.
     vMonth = month(iDate) + iMonth.
     vYear =  year(iDate).
-    if vMonth < 0
+    if vMonth <= 0
     then assign
        vMonth = vMonth + 12
         vYear  = vYear - 1

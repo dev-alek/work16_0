@@ -298,6 +298,7 @@ define variable is-fuel                     as logical                       no-
 define variable v-specif-unit-list          as character no-undo . /* ед.изм. из спецификации договора */
 define variable v-specif-cli-base-rate      as decimal no-undo .   /* коэф. к базовой ЕИ для ЕИ из договора */ 
 define variable l-repeat-asi                as logical                       no-undo .
+define variable m-repeat-asi                as character                     no-undo.
 define variable v-is-lgas                   as logical                       no-undo.
 define variable v-is-lgas-corr              as logical                       no-undo.
 define variable v-lgas-gds                  as logical                       no-undo.
@@ -568,7 +569,7 @@ FUNCTION chk-asi-polling RETURNS logical
     then 
   do:
     message
-      "Недостаточно прав для повторного опроса уровнемеров."
+      m-repeat-asi
       view-as alert-box information title "".              
     return no .
   end.
@@ -2801,10 +2802,7 @@ end.
 on choose of menu-item m-rvs-bf-3 in menu m-rvs-bf
 do:
   { gbl/stdbtn.i b-rvs-bf }
-
-  if not chk-asi-polling (yes)
-    then return no-apply .
-
+  
   run action-rvs-line in this-procedure
     ( input {&update}
      ,input "edit":U
@@ -2905,10 +2903,7 @@ end.
 on choose of menu-item m-rvs-af-3 in menu m-rvs-af
 do:
   { gbl/stdbtn.i b-rvs-af }
-
-  if not chk-asi-polling (no)
-    then return no-apply .
-    
+  
   run action-rvs-line in this-procedure
     ( input {&update}
      ,input "edit":U
@@ -3282,6 +3277,7 @@ do on error   undo main-block, leave main-block
     false
     l-repeat-asi
   }
+m-repeat-asi = return-value.
 
 define variable par-1 as character no-undo .
 define variable par-0 as logical   no-undo .

@@ -1388,7 +1388,9 @@ assign
 frame {&FRAME-NAME} :title = for-title
 .
 
-if g-list = "ptrl" or g-list = "lgas"
+if g-list = "ptrl"
+or g-list = "lgas"
+or g-list = "ptrlsug"
 then do:
   assign
   rs-list = {&all}
@@ -3986,7 +3988,9 @@ if not error-status :error then do:
   assign
   gdsreffi = entry(1, v-uf-list_,  {&delim-par} ) no-error.
   v-str-temp = entry(2, v-uf-list_,  {&delim-par} ) no-error.
-  if v-str-temp = "ptrl" or v-str-temp = "lgas"
+  if v-str-temp = "ptrl"
+  or v-str-temp = "lgas"
+  or v-str-temp = "ptrlsug"
   then do:
     entry(2, v-uf-list_,  {&delim-par} ) = {&current}.
   end.

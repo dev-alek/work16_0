@@ -113,6 +113,7 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
     this-object:uc_Goods1:Name = "uc_Goods1".
     this-object:uc_Goods1:Size = new System.Drawing.Size(301, 304).
     this-object:uc_Goods1:TabIndex = 0.
+    this-object:uc_Goods1:Load:Subscribe(this-object:uc_Goods1_Load).
     /*  */
     /* uc_Goods2 */
     /*  */
@@ -220,11 +221,29 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
       end. 
       INIT_Panel(yes,no,no,no,no,yes).
     end method.    
+    METHOD PUBLIC VOID INIT_GoodsFix(input metod_calc as integer):
+
+        assign
+          uc_Goods1:pPromoGoodsApplFix = yes.
+        .
+      INIT_Panel(yes,no,no,no,no,yes).
+    end method.
     METHOD PUBLIC VOID INIT_Promoset():
+      INIT_Promoset(0).
+    end method.  
+    METHOD PUBLIC VOID INIT_Promoset(input method_calc as integer):
+      if method_calc = 5 then do:
+        assign
+            uc_Goods1:pPromoSetFix   = yes
+            uc_Goods2:pPromoSetGoods = yes
+        .
+      end.
+      else do:
         assign
             uc_Goods1:pPromoSet      = yes
             uc_Goods2:pPromoSetGoods = yes
         .
+      end.
         INIT_Panel(yes,yes,no,no,no,yes).
     end method.    
     METHOD PUBLIC VOID INIT_Panel(INPUT IsIndGoods as LOGICAL,INPUT IsGoods as LOGICAL, INPUT IsConditions as LOGICAL, INPUT IsPresents as LOGICAL):
@@ -298,5 +317,16 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
     METHOD PUBLIC VOID INIT_Panel(INPUT IsIndGoods as LOGICAL):
         INIT_Panel(IsIndGoods,uc_Goods2:Visible,uc_Conditions1:Visible,uc_Present1:Visible,uc_Mess1:Visible,uc_Canon1:Visible).
     END METHOD.    
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void uc_Goods1_Load( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
 
 END CLASS.

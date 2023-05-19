@@ -44,6 +44,7 @@ define public variable mProcPublish as handle     no-undo.
 define public variable DbConnect    as logical    no-undo init yes.
 define public variable PrintAll     as logical    no-undo.
 define public variable ChangProPath     as logical    no-undo.
+define variable WAIT-FOR-RUN as logical no-undo.
 
    define public property MyParamStart as character  no-undo
    get.
@@ -122,6 +123,14 @@ get.
        field nameParam as character 
        field objParam  as Progress.Lang.Object
     index nameParam nameParam.
+    
+    method datetime-tz getnow():
+       return datetime-tz(cur-time-string-sec()).
+    end.
+    
+    method datetime-tz getnowday():
+       return datetime-tz(today).
+    end.
     
     method ibs.th.file.asyncparam getParamObj (iName as character ):
         find first tt-Param where tt-Param.nameParam eq iName no-lock no-error.
@@ -272,6 +281,14 @@ get.
    method public int64 AddTask (ITask    as character,
                                 iProc    as character,
                                 iParam   as character):
+      return AddTask(ITask,iProc,iParam, getnowDay()).                             
+                                  
+   end.
+   define variable mTaskNum as int64 no-undo.
+   method public int64 AddTask (ITask    as character,
+                                iProc    as character,
+                                iParam   as character,
+                                iStartTimeAfter as datetime-tz):
       
       firstrun().
       find last ttrun where ttrun.task eq itask
@@ -282,7 +299,7 @@ get.
          then do:
             
             output stream sWriteFile to value(MyWorkDir + itask + ".txt").
-            put stream sWriteFile unformatted "InitProc " now skip.
+            put stream sWriteFile unformatted "InitProc " getnow() skip.
             output stream sWriteFile close.
             
             
@@ -299,11 +316,10 @@ get.
          end.
       end.
       
-      define variable vTaskNum as int64 no-undo.
-      vTaskNum = if available ttrun then ttrun.num + 1 else 1. 
-      output stream sWriteFile to value(MyWorkDir + itask + ".txt") append.
-      put stream sWriteFile unformatted "Add " now " task " itask  " Num " vtasknum skip.
-      output stream sWriteFile close.
+      
+      mTaskNum = mTaskNum + 1 .
+      writeStatusProces ("add WaitRun",itask, mtasknum, string(iStartTimeAfter) + " param " + iParam ). 
+      
       iProc = right-trim(iProc,".r").
       iProc = right-trim(iProc,".p").
       define variable mProcFile as character no-undo.
@@ -320,10 +336,11 @@ get.
          ttrun.task        = itask
          ttrun.proc        = iproc
          ttrun.runproc     = mProcFile
-         ttrun.num         = vTaskNum
+         ttrun.num         = mTaskNum
          ttrun.fparam      = iParam
 /*         ttrun.UserDB      = UserDB*/
          ttrun.fstatusItem = "WaitRun"
+         ttrun.StartAfter  = iStartTimeAfter
       .
       assign
             ttrun.fuser = myUser
@@ -332,11 +349,21 @@ get.
       ttrun.cmd         = CreateComamnd(ttrun.task,ttrun.num,ttrun.Proc).
       
       for each ttrun where ttrun.task eq itask:
-         ttrun.fmaxitem = vTaskNum.
+         ttrun.fmaxitem = mTaskNum.
       end.
       
          
    end.
+   
+   method private void writeStatusProces(iType as char,
+                                         iTask as char,
+                                         inum  as int64,
+                                         iText as char):
+      output stream sWriteFile to value(MyWorkDir + itask + ".txt") append.
+      put stream sWriteFile unformatted iType " " getnow() " task " itask  " Num " inum  " dop " iText skip.
+      output stream sWriteFile close.
+   end.
+   
    method public int64 AsyncProc (
       ITask    as character,
       iProc    as character,
@@ -380,10 +407,12 @@ get.
    end.
       
    method public integer  WaitForOne ( input iSched as character):
+     
      define variable vFile as character no-undo.
      define variable vCount as character  no-undo. 
      define variable oCount as integer no-undo. 
      define variable vtime as int  no-undo.
+     AsyncRun().
      block-ttrun:
      for each ttrun where    (    iSched             ne ?
                               and ttrun.task         eq iSched
@@ -398,7 +427,7 @@ get.
      no-lock:
 
         vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/procinfo.txt".
-        vtime =  (now - ttrun.runtime) / 1000.
+        vtime =  (getnow() - ttrun.runtime) / 1000.
        /* message vtime view-as alert-box. */
          /* ждем 2 минуты если процес не создал файл  считаем что произошла ошибка запуска */ 
         /*vvv = vvv and not FileExists(vFile).*/
@@ -484,6 +513,7 @@ get.
            vCountEnd = vCountend +   int(vCount) no-error.
            copylog(ttrun.task ,ttrun.num, ttrun.filelog).
           /* os-delete value(vFile).*/
+          writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "WorkEnd").
           ttrun.fstatusItem = "WorkEnd".
           mRunProc = mRunProc - 1.
           
@@ -506,32 +536,57 @@ get.
      end.
      
      AsyncRun().
-     
+     define variable vnow as datetime-tz no-undo.
+     vnow = getnow().
      find first ttrun where    (ttrun.task eq iSched
                              or iSched eq ? )
                              and ttrun.fstatusItem ne "WorkEnd"
+                             and ttRun.StartAfter <= vnow 
      no-lock no-error.
      WAIT-FOR-COMPLETE = not available ttrun.
      
+     find first ttrun where    (ttrun.task eq iSched
+                             or iSched eq ? )
+                             and ttrun.fstatusItem eq "WaitRun"
      
-     if WAIT-FOR-COMPLETE
-     then do:
-        find first ttrun where    (ttrun.task eq iSched
-                             or iSched eq ? )
-        no-error.
-        do while available ttrun:
-           if not SaveFile
+     no-lock no-error.
+     WAIT-FOR-RUN = available ttrun.
+       
+     define buffer buf_run for ttrun.
+        
+     find first buf_run where buf_run.task > "" no-lock no-error.
+     do while available buf_run:
+       define variable vtask as character no-undo.
+       vtask = buf_run.task.
+       find first ttrun where ttrun.task        eq vtask
+                          and ttrun.fstatusItem ne "WorkEnd"
+       no-lock no-error.
+       if not available ttrun
+       then do:
+          find first ttrun where ttrun.task        eq vtask
+                             and ttrun.fstatusItem eq "WorkEnd"
+          no-error.
+          do while available ttrun:
+             if not SaveFile
              then do:
-                os-delete value (MyWorkDir + ttrun.task + string(ttrun.num)) recursive.
-                os-delete value (MyWorkDir + ttrun.task + string(ttrun.num) + ".bat").
+                os-delete value (MyWorkDir + vtask + string(ttrun.num)) recursive.
+                os-delete value (MyWorkDir + vtask + string(ttrun.num) + ".bat").
              end.
-           delete ttrun.
-           find first ttrun where    (ttrun.task eq iSched
-                             or iSched eq ? )
-           no-lock no-error.
+             writeStatusProces("Delete", ttrun.task, ttrun.num,  "WorkEnd").
+          
+             delete ttrun.
+             find first ttrun where ttrun.task        eq vtask
+                                and ttrun.fstatusItem eq "WorkEnd"
+             no-lock no-error.
+          end.
+          os-delete  value( MyWorkDir + vtask + "/stop.txt") .
+          os-delete  value( MyWorkDir + vtask + ".txt") .
+          if not FileExists (MyWorkDir + vtask + ".txt")
+          then
+             publish "EndTaskAsunc" from mProcPublish (vtask ).
+           
         end.
-        os-delete  value( MyWorkDir + iSched + "/stop.txt") .
-        os-delete  value( MyWorkDir + iSched + ".txt") .
+        find first buf_run where buf_run.task > vtask no-lock no-error.
      end.
      return oCount.     
    end.
@@ -700,7 +755,7 @@ Phase 1 of Load completed.  Working.  Please wait ...~
        
 /*      output stream sWriteFile to value (getLog(iSched) ).*/
       define variable vStart  as datetime-tz no-undo.
-      vStart = now.
+      vStart = getnow().
 /*      output stream sWriteFile close.*/
        vCountend = 0. 
        WAIT-FOR-COMPLETE = false.      /* на всякий случай */
@@ -717,11 +772,12 @@ Phase 1 of Load completed.  Working.  Please wait ...~
                and myTimeOut    ne ?
                and iSched       ne ?
                and vCountOld    = vCount
-               and dec(now - vStart) / 1000 > myTimeOut
+               and dec(getnow() - vStart) / 1000 > myTimeOut
               )) or mstop
           then do:
              if WaitForStop (iSched)
              then do:
+                mstop = no.
                 vOK = false.
                 WAIT-FOR-COMPLETE = true. /* процес завис */
              end.
@@ -767,6 +823,7 @@ Phase 1 of Load completed.  Working.  Please wait ...~
               then 
                  return no.
             end.
+            writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "WaitReadLog").
             ttrun.fstatusItem = "WaitReadLog".
             mRunProc = mRunProc - 1.
          end.
@@ -777,15 +834,26 @@ Phase 1 of Load completed.  Working.  Please wait ...~
    end.
    
    method public logical EndStopEnd ( input iSched as character):
+      define variable vtask as character no-undo.
       for each ttrun where    ttrun.task eq iSched
                            or iSched eq ? 
-      no-lock:
+      no-lock break by ttrun.task:
          PubFileLog(ttrun.task, ttrun.num, yes).
                
          if not SaveFile
          then
             os-delete value (MyWorkDir + ttrun.task + string(ttrun.num)) recursive. /* удаляем директории процесов */ 
-         os-delete   value(MyWorkDir + ttrun.task + string(ttrun.num) + ".bat"). 
+         os-delete   value(MyWorkDir + ttrun.task + string(ttrun.num) + ".bat").
+         vtask = if last-of(ttrun.task) then ttrun.task else "".
+         delete ttrun.
+         if vtask ne ""
+         then do:
+            os-delete value (MyWorkDir + vtask + ".txt") recursive.
+            if not FileExists (MyWorkDir + vtask + ".txt")
+            then
+               publish "EndTaskAsunc" from mProcPublish (vtask ).
+            
+         end.
       end.
       os-delete value (MyWorkDir + iSched + ".txt") recursive.
    end.
@@ -816,13 +884,13 @@ end.
      define variable vend    as datetime-tz no-undo.
      define variable vint as int64 no-undo.
      
-     vStart = now.
+     vStart = getnow().
      vend   = vStart.
      if valid-handle(mProcPublish)
      then
         publish "MyPause" from mProcPublish (iInterval ).
     /* MyPause:PUBLISH .*/
-     vend   =  now.
+     vend   =  getnow().
      vint = vend - vStart.
      vint = iInterval - vint / 1000.
      if not mStop
@@ -876,8 +944,9 @@ end.
       then
          vSesPar =  substitute(" &1 ",                mProcFile, paramSession).
       else */
-      
-         paramSession = paramSession + " " + GetStartupParamEx("-debugalert").
+         if lookup("-debugalert", paramSession, " ") eq 0
+         then
+            paramSession = paramSession + " " + GetStartupParamEx("-debugalert").
          vSesPar =  substitute(" &1",paramSession).
       /* if UserDB
       then
@@ -895,6 +964,7 @@ end.
          vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/endproc.txt".
          if FileExists(vFile)
          then do:
+            writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "WaitReadLog").
             ttrun.fstatusItem = "WaitReadLog".
             mRunProc = mRunProc - 1.
          end. 
@@ -915,8 +985,11 @@ end.
       define variable vtask as character no-undo.
       define variable vi as integer no-undo.
       define buffer ttrun for ttrun.
+      define variable vnow as datetime-tz no-undo.
+      vnow = getnow().
       find first ttrun where ttrun.task eq iSched 
                          and ttrun.num  eq iSchednum
+                         and ttrun.StartAfter <= vnow
       no-lock no-error.
       if available ttrun
       then do:
@@ -970,8 +1043,9 @@ end.
          end.
          vruncomand =  "cd " + MyWorkDir + vruncomand.
          os-command no-wait value (vruncomand  ).
-         ttrun.fstatusItem = "run".
-         ttrun.runtime     = now.
+         writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "Run").
+         ttrun.fstatusItem = "Run".
+         ttrun.runtime     = getnow().
          mRunProc = mRunProc + 1.
       end.
    end.
@@ -1342,6 +1416,38 @@ end.
       NextLog().
    end.
    
+   method public logical isWorkShed():
+      return isWorkShed(?).
+   end.
+   
+   method public logical isWorkShed(iSched as character ):
+      define variable vnow as datetime-tz no-undo.
+      vnow = getnow().
+      find first ttRun where ttrun.fstatusItem ne "WorkEnd"
+                         and ttRun.StartAfter  <= vnow
+                         and (   ttRun.task        eq iSched
+                              or iSched            eq ?)
+      no-lock no-error.
+      return available ttRun.
+   end.
+   
+   method public character getListTask ():
+      define variable vList as character no-undo.
+      define variable vTask as character no-undo.
+      find first ttRun where ttRun.task > ""
+      no-lock no-error.
+      do while available ttRun:
+         vtask = ttRun.task.
+         vlist = vlist + "," + vtask.
+         find first ttRun where ttRun.task > vtask
+         no-lock no-error.
+      end.
+      if vlist ne ""
+      then
+         vlist = substring (vList,2).
+      return vList.
+   end.
+   
    method public char getStatus (iSched as character  ):
       define buffer ttrun for ttrun.
       define buffer buf_ttrun for ttrun.
@@ -1408,11 +1514,12 @@ end.
       output stream sWriteFile to "procinfo.txt".
       put stream sWriteFile unformatted substitute("&1~001&2~001&3~001&4",vMyPID ,iAllobj,iProcnum,iAllproc) skip.
       output stream sWriteFile close.
-      mWriteLogTime = now.
+      mWriteLogTime = getnow().
    end method.
    
    method public logical myProcInfo():
-      return FileExists("procinfo.txt") ne ?.
+      
+      return FileExists("procinfo.txt").
    end.
         
    define stream sLogMes. 
@@ -1453,7 +1560,7 @@ end.
       if     mWriteLogMes
          and (WritelogInter > 0 or iFlagInter)
       then do:
-         vend   = now.
+         vend   = getnow().
          vint = vend - mWriteLogTime.
          vint = WritelogInter - vint / 1000.
          if     vint < 0
@@ -1465,7 +1572,7 @@ end.
             os-rename "meslogasync.log" value ("meslogasync.log" + string(mWriteLogNum)).
             output stream sLogMes to "meslogasync.log".
             assign
-               mWriteLogTime = now
+               mWriteLogTime = getnow()
                mWriteLogMes  = no
             .
             
@@ -1564,7 +1671,7 @@ end method. /* waitfram-hide */
 define public variable MstarstProc as datetime-tz no-undo.
 method public void waitfram-show (input iInterval as int64  ):
    define variable vtime as int64 no-undo.
-   vtime = ( now - MstarstProc ) / 1000 .
+   vtime = ( getnow() - MstarstProc ) / 1000 .
    waitfram-show(substitute("&1 Прошло: &2 сек" ,mText , string( vtime)), iInterval).
    
 end method.
@@ -1637,7 +1744,7 @@ end method. /* waitfram-show */
 method public logical WaitFor ( input iSched as character, input ipInterval as int64,input itext as character ):
  define variable vFlag as logical no-undo.
   mText = itext.
-  MstarstProc = now.
+  MstarstProc = getnow().
   /*if not session:batch-mode
      this-object:MyPause:Subscribe(this-object:waitfram-show).*/
      mShowFrame = yes.

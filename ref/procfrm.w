@@ -9,6 +9,8 @@
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DECLARATIONS Dialog-Frame 
 {ref\ttprocbrow.i}
 {cmp\str-glbl.i}
+define variable masynchelper as class ibs.th.file.asynchelperTh no-undo.
+{utl/asuncprocauto.i &starterasunc = yes}
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -328,6 +330,16 @@ on choose of Btn_OK in frame Dialog-Frame /* Отказать в подписи */
     
     vParams = right-trim(vParams,{&delim-par}).
     
+       
+    mAsyncHelper = new ibs.th.file.AsyncHelperth().
+    mAsyncHelper:mProcPublish   = this-procedure.
+    mAsyncHelper:setCurrentUserPasswd().
+    mAsyncHelper:MyBachMode     = session:batch-mode.
+    mAsyncHelper:SaveFile       = yes.
+    mAsyncHelper:paramSession   = vparamSession.
+       
+    mAsyncHelper:WaitFile = vwaitfile.
+       
     if tt-procAsunc.proctyperun eq "diallog"
     then do: 
        run str/diallog.w ( parparentproc
@@ -339,26 +351,16 @@ on choose of Btn_OK in frame Dialog-Frame /* Отказать в подписи */
               , tt-procAsunc.procname) no-error .
     end.
     else do:
-       define variable vasynchelper as class ibs.th.file.asynchelperTh no-undo.
-       
-       vAsyncHelper = new ibs.th.file.AsyncHelperth().
-       vAsyncHelper:mProcPublish   = this-procedure.
-       vAsyncHelper:setCurrentUserPasswd().
-       vAsyncHelper:MyBachMode     = session:batch-mode.
-       vAsyncHelper:SaveFile       = yes.
-       vAsyncHelper:paramSession   = vparamSession.
-       
-       vAsyncHelper:WaitFile = vwaitfile.
-       vAsyncHelper:AsyncProc(tt-procAsunc.procval, vParams,1).
+       mAsyncHelper:AsyncProc(tt-procAsunc.procval, vParams,1).
        
                
-       run ibs\th\file\waithelper.p (vAsyncHelper,?, 1,tt-procAsunc.procname).
        
-       message "Результаты выполнения находятся в " vAsyncHelper:SaveArh()
-       view-as alert-box.
-       delete object vAsyncHelper.
    end.
-    
+    run ibs\th\file\waithelper.p (mAsyncHelper,?, 1,tt-procAsunc.procname).
+       
+    message "Результаты выполнения находятся в " mAsyncHelper:SaveArh()
+    view-as alert-box.
+    delete object mAsyncHelper.
   end.
 
 /* _UIB-CODE-BLOCK-END */

@@ -277,40 +277,40 @@ do with frame {&frame-name}:
 end. /* do with frame */
 CASE table-name:
   when "gds-list":U then do:
-  if p-lst-type = "ALL":U then
-  run rep/rgdslstg.p (
-                input parparentproc
-                ,input p-curr-obj-type
-                ,input p-curr-obj-code
-                ,input sorttype
-                ,input classify
-                ).
-  if p-lst-type = "LIST":U then
-  run rep/rgdslsts.p (
-                 input parparentproc
-                ,input p-curr-obj-type
-                ,input p-curr-obj-code
-                ,input sorttype
-                ,input classify
-                ).
+    if p-lst-type = "ALL":U then
+      run rep/rgdslstg.p (
+                    input parparentproc
+                    ,input p-curr-obj-type
+                    ,input p-curr-obj-code
+                    ,input sorttype
+                    ,input classify
+                    ).
+    if p-lst-type = "LIST":U then
+      run rep/rgdslsts.p (
+                     input parparentproc
+                    ,input p-curr-obj-type
+                    ,input p-curr-obj-code
+                    ,input sorttype
+                    ,input classify
+                    ).
   end.
   when "bb-list" then do:
-    run rep/rbblstg.p (
-                  input  parparentproc
-                  ,input p-curr-obj-type
-                  ,input p-curr-obj-code
-                  ,input sorttype
-                  ,input classify
-                  ).
+    if p-lst-type = "ALL":U then
+      run rep/rbblstg.p (
+                    input  parparentproc
+                    ,input p-curr-obj-type
+                    ,input p-curr-obj-code
+                    ,input sorttype
+                    ,input classify
+                    ).
     if p-lst-type = "LIST":U then
-    run rep/rbblsts.p (
-                    input parparentproc
-                  ,input p-curr-obj-type
-                  ,input p-curr-obj-code
-                  ,input sorttype
-                  ,input classify
-                  ).
-
+      run rep/rbblsts.p (
+                      input parparentproc
+                    ,input p-curr-obj-type
+                    ,input p-curr-obj-code
+                    ,input sorttype
+                    ,input classify
+                    ).
   end.
 END CASE.
 return return-value.

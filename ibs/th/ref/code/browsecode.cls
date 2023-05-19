@@ -26,13 +26,17 @@ class ibs.th.ref.code.browsecode inherits Form final:
    define private variable bindCode as Progress.Data.BindingSource no-undo.
    define private variable bnext as System.Windows.Forms.ToolStripButton no-undo.
    define private variable bselect as System.Windows.Forms.ToolStripButton no-undo.
+   define private variable childHist as System.Windows.Forms.ToolStripMenuItem no-undo.
    define private variable codeValueDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
    define private variable codeNameDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
    define private variable codeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
    define private variable components as System.ComponentModel.IContainer no-undo.
    define private variable dataGridView1 as System.Windows.Forms.DataGridView no-undo.
    define private variable dataGridViewCheckBoxColumn1 as System.Windows.Forms.DataGridViewCheckBoxColumn no-undo.
+   define private variable ElemMenu as System.Windows.Forms.MenuStrip no-undo.
    define private variable fchange as System.Windows.Forms.DataGridViewCheckBoxColumn no-undo.
+   define private variable Hist as System.Windows.Forms.ToolStripMenuItem no-undo.
+   define private variable oneHist as System.Windows.Forms.ToolStripMenuItem no-undo.
    define private variable openFileDialog1 as System.Windows.Forms.OpenFileDialog no-undo.
    define private variable saveFileDialog1 as System.Windows.Forms.SaveFileDialog no-undo.
    define private variable statusrow as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
@@ -53,7 +57,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
    define private variable misc10DataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
    define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
    define variable mcretrg  as logical no-undo.
-   { cmp/library.i  class}
+   
    { cmp/str-glbl.i class }
    define property chek-erpRN as logical no-undo
     
@@ -108,7 +112,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
          bexport:visible = false
          bimport:visible = false
          bselect:visible = false
-         this-object:dataGridView1:Columns[1]:Visible = false.
+         this-object:dataGridView1:Columns[0]:Visible = false.
       .
       end.
       else if iMode eq {&select}
@@ -120,7 +124,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
          bexport:visible = false
          bimport:visible = false
          bselect:visible = true
-         this-object:dataGridView1:Columns[1]:Visible = yes.
+         this-object:dataGridView1:Columns[0]:Visible = yes.
       .
       end.
       else do: 
@@ -132,8 +136,9 @@ class ibs.th.ref.code.browsecode inherits Form final:
             bexport:visible = true
             bimport:visible = true
             bselect:visible = false
-            this-object:dataGridView1:Columns[1]:Visible = no.
+            
          .
+         this-object:dataGridView1:Columns[0]:Visible = no.
       end.
       return.
 
@@ -268,6 +273,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
    end method.
 
 
+	
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:
@@ -295,6 +301,36 @@ class ibs.th.ref.code.browsecode inherits Form final:
 
 	end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bHistOne( input sender as System.Object, input e as System.EventArgs ):
+		mCodeTrg:histOne().
+		return.
+
+	end method.
+	
+	@VisualDesigner.
+   method private void bMenuItem( input sender as System.Object, input e as System.EventArgs ):
+      mCodeTrg:runMenu(cast (sender,System.Windows.Forms.ToolStripMenuItem):name).
+      bindCode:RefreshAll().
+      return.
+
+   end method.
+
+/*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void bchildHist( input sender as System.Object, input e as System.EventArgs ):
+      mCodeTrg:histChild().
+      return.
+
+   end method.
+
    method private void InitializeComponent(  ):
       
       /* NOTE: The following method is automatically generated.
@@ -305,8 +341,8 @@ class ibs.th.ref.code.browsecode inherits Form final:
       Modifying the contents of this method using a code editor will invalidate any support for this file. */
       this-object:components = new System.ComponentModel.Container().
       @VisualDesigner.FormMember (NeedsInitialize="true").
-      define variable tableDesc1 as Progress.Data.TableDesc no-undo.
-      tableDesc1 = new Progress.Data.TableDesc("Code").
+      define variable tableDesc3 as Progress.Data.TableDesc no-undo.
+      tableDesc3 = new Progress.Data.TableDesc("Code").
       @VisualDesigner.FormMember (NeedsInitialize="true").
       define variable resources as Progress.Util.ResourceManager no-undo.
       resources = new Progress.Util.ResourceManager("ibs.th.ref.code.browsecode").
@@ -343,9 +379,14 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:bselect = new System.Windows.Forms.ToolStripButton().
       this-object:openFileDialog1 = new System.Windows.Forms.OpenFileDialog().
       this-object:saveFileDialog1 = new System.Windows.Forms.SaveFileDialog().
+      this-object:ElemMenu = new System.Windows.Forms.MenuStrip().
+      this-object:Hist = new System.Windows.Forms.ToolStripMenuItem().
+      this-object:oneHist = new System.Windows.Forms.ToolStripMenuItem().
+      this-object:childHist = new System.Windows.Forms.ToolStripMenuItem().
       cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
       cast(this-object:bindCode, System.ComponentModel.ISupportInitialize):BeginInit().
       this-object:toolStrip1:SuspendLayout().
+      this-object:ElemMenu:SuspendLayout().
       this-object:SuspendLayout().
       /*  */
       /* dataGridView1 */
@@ -386,7 +427,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:dataGridView1:Name = "dataGridView1".
       this-object:dataGridView1:ReadOnly = true.
       this-object:dataGridView1:SelectionMode = System.Windows.Forms.DataGridViewSelectionMode:FullRowSelect.
-      this-object:dataGridView1:Size = new System.Drawing.Size(599, 404).
+      this-object:dataGridView1:Size = new System.Drawing.Size(990, 576).
       this-object:dataGridView1:TabIndex = 0.
       this-object:dataGridView1:CellContentClick:Subscribe(this-object:dataGridView1_CellContentClick).
       this-object:dataGridView1:CellContentDoubleClick:Subscribe(this-object:dataGridView1_CellContentDoubleClick).
@@ -557,7 +598,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
       arrayvar1 = new "Progress.Data.TableDesc[]"(0).
-      tableDesc1:ChildTables = arrayvar1.
+      tableDesc3:ChildTables = arrayvar1.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 19 no-undo.
       arrayvar2[1] = new Progress.Data.ColumnPropDesc("fchange", "", Progress.Data.DataType:LOGICAL).
@@ -579,11 +620,12 @@ class ibs.th.ref.code.browsecode inherits Form final:
       arrayvar2[17] = new Progress.Data.ColumnPropDesc("procdel", "Процедура удаления", Progress.Data.DataType:CHARACTER).
       arrayvar2[18] = new Progress.Data.ColumnPropDesc("procedit", "процедура редактирования", Progress.Data.DataType:CHARACTER).
       arrayvar2[19] = new Progress.Data.ColumnPropDesc("fstatus", "Статус", Progress.Data.DataType:CHARACTER).
-      tableDesc1:Columns = arrayvar2.
-      this-object:bindCode:TableSchema = tableDesc1.
+      tableDesc3:Columns = arrayvar2.
+      this-object:bindCode:TableSchema = tableDesc3.
       /*  */
       /* toolStrip1 */
       /*  */
+      this-object:toolStrip1:Dock = System.Windows.Forms.DockStyle:None.
       this-object:toolStrip1:ImageScalingSize = new System.Drawing.Size(32, 32).
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar3 as System.Windows.Forms.ToolStripItem extent 9 no-undo.
@@ -599,7 +641,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:toolStrip1:Items:AddRange(arrayvar3).
       this-object:toolStrip1:Location = new System.Drawing.Point(0, 0).
       this-object:toolStrip1:Name = "toolStrip1".
-      this-object:toolStrip1:Size = new System.Drawing.Size(599, 39).
+      this-object:toolStrip1:Size = new System.Drawing.Size(228, 39).
       this-object:toolStrip1:TabIndex = 1.
       this-object:toolStrip1:Text = "toolStrip1".
       /*  */
@@ -700,10 +742,56 @@ class ibs.th.ref.code.browsecode inherits Form final:
       /*  */
       this-object:openFileDialog1:FileName = "openFileDialog1".
       /*  */
+      /* ElemMenu */
+      /*  */
+      this-object:ElemMenu:AllowMerge = false.
+      define variable nestedvar1 as System.Windows.Forms.AnchorStyles no-undo.
+      nestedvar1 = System.Windows.Forms.AnchorStyles:Top.
+      this-object:ElemMenu:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+      this-object:ElemMenu:BackColor = System.Drawing.SystemColors:ControlLight.
+      this-object:ElemMenu:Dock = System.Windows.Forms.DockStyle:None.
+      this-object:ElemMenu:ImageScalingSize = new System.Drawing.Size(28, 28).
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar4 as System.Windows.Forms.ToolStripItem extent 1 no-undo.
+      arrayvar4[1] = this-object:Hist.
+      this-object:ElemMenu:Items:AddRange(arrayvar4).
+      this-object:ElemMenu:Location = new System.Drawing.Point(796, 0).
+      this-object:ElemMenu:Name = "ElemMenu".
+      this-object:ElemMenu:Size = new System.Drawing.Size(194, 36).
+      this-object:ElemMenu:TabIndex = 3.
+      this-object:ElemMenu:Text = "Меню".
+      /*  */
+      /* Hist */
+      /*  */
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar5 as System.Windows.Forms.ToolStripItem extent 2 no-undo.
+      arrayvar5[1] = this-object:oneHist.
+      arrayvar5[2] = this-object:childHist.
+      this-object:Hist:DropDownItems:AddRange(arrayvar5).
+      this-object:Hist:Image = cast(resources:GetObject("Hist.Image"), System.Drawing.Image).
+      this-object:Hist:Name = "Hist".
+      this-object:Hist:Size = new System.Drawing.Size(94, 32).
+      this-object:Hist:Text = "История".
+      /*  */
+      /* oneHist */
+      /*  */
+      this-object:oneHist:Name = "oneHist".
+      this-object:oneHist:Size = new System.Drawing.Size(152, 22).
+      this-object:oneHist:Text = "Записи".
+      this-object:oneHist:Click:Subscribe(this-object:bHistOne).
+      /*  */
+      /* childHist */
+      /*  */
+      this-object:childHist:Name = "childHist".
+      this-object:childHist:Size = new System.Drawing.Size(152, 22).
+      this-object:childHist:Text = "Потомков".
+      this-object:childHist:Click:Subscribe(this-object:bchildHist).
+      /*  */
       /* browsecode */
       /*  */
-      this-object:ClientSize = new System.Drawing.Size(599, 446).
+      this-object:ClientSize = new System.Drawing.Size(990, 618).
       this-object:Controls:Add(this-object:toolStrip1).
+      this-object:Controls:Add(this-object:ElemMenu).
       this-object:Controls:Add(this-object:dataGridView1).
       this-object:Name = "browsecode".
       this-object:Text = "Справочники".
@@ -711,6 +799,8 @@ class ibs.th.ref.code.browsecode inherits Form final:
       cast(this-object:bindCode, System.ComponentModel.ISupportInitialize):EndInit().
       this-object:toolStrip1:ResumeLayout(false).
       this-object:toolStrip1:PerformLayout().
+      this-object:ElemMenu:ResumeLayout(false).
+      this-object:ElemMenu:PerformLayout().
       this-object:ResumeLayout(false).
       this-object:PerformLayout().
       catch e as Progress.Lang.Error:
@@ -751,25 +841,8 @@ class ibs.th.ref.code.browsecode inherits Form final:
     end method.
     
     method  public void chek1CERP(): 
-       define variable conf-par as character no-undo.
-       define variable mode-erprn as logical no-undo.
-       define variable par-type as character no-undo.
-       { gbl/conf-rd.i
-         "'is-erpRN'"
-          0
-          "''"
-          0
-          "''"
-          "''"
-          "''"
-          NO
-          conf-par
-          par-type
-          no-error
-          }
-          if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
-          else mode-erprn = no.
-          if mode-erprn and mCodeTrg:mode ne "sysadm"
+       
+          if mCodeTrg:get1CERP() and mCodeTrg:mode ne "sysadm"
           then do:
              assign
              this-object:bAdd:Visible    = no
@@ -783,4 +856,30 @@ class ibs.th.ref.code.browsecode inherits Form final:
   
        
     end method.
+
+    
+   method public void addMenu (inum as integer, Ilable as character , ilistMenu as character ):
+      define variable menuNew as System.Windows.Forms.ToolStripMenuItem no-undo.
+      define variable menuItem as System.Windows.Forms.ToolStripMenuItem no-undo.
+      menuNew = new System.Windows.Forms.ToolStripMenuItem().
+      this-object:ElemMenu:Items:Add(menuNew).
+      menuNew:Name = substitute ("MenuItem_&1",inum).
+      menuNew:Size = new System.Drawing.Size(59, 20).
+      menuNew:Text = Ilable.
+      define variable vi as integer no-undo.
+      do vi = 1 to num-entries (ilistMenu):
+         define variable vNameItem as character no-undo.
+         vNameItem = entry(vi,ilistMenu).
+         if vNameItem ne ""
+         then do:
+            menuItem = new System.Windows.Forms.ToolStripMenuItem().
+            menuNew:DropDownItems:Add(menuItem).
+            menuItem:Name = substitute ("MenuItem_&1_&2",inum,vi).
+            menuItem:Size = new System.Drawing.Size(152, 22).
+            menuItem:Text = vNameItem.
+            menuItem:Click:Subscribe(this-object:bMenuItem).
+         end.
+      end.
+      
+   end.
 end class.

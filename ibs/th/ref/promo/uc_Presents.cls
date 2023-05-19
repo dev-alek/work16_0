@@ -38,7 +38,9 @@ CLASS ibs.th.ref.promo.uc_Presents INHERITS UserControl:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void button1_Click( input sender as System.Object, input e as System.EventArgs ):
-		bindPromoGift:Assign(). 
+	if valid-handle(bindPromoGift:handle)
+        then
+    	   bindPromoGift:Assign(). 
     m-promo-trg:addgds(mBindName).
     bindPromoGift:handle:query-open.
     bindPromoGift:RefreshAll().

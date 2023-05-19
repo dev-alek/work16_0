@@ -17,7 +17,7 @@ Creation date: 04/12/06
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
-function is-numeral returns logical
+{ def/funcmet.i is-numeral logical}
   (input p-string   as character ,
    input char-avail as character) :
 /*------------------------------------------------------------------------------
@@ -80,4 +80,4 @@ function is-numeral returns logical
 
   return p-replace-string = fill ('9', length (p-string)).
 
-END FUNCTION.
+end.

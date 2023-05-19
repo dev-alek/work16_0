@@ -54,6 +54,8 @@ define variable vss-description as character no-undo init "Карточка складского м
 
 { cmp/str-glbl.i }
 { cmp/library.i }
+{ ref/gds-attr.i }
+{ str/is-sug.i }
 { cmp/showinf.i }
 { str/placelib.i }
 
@@ -78,6 +80,11 @@ define variable v-main-mi-old     as integer   no-undo .
 define variable v-dnst-mi-old     as integer   no-undo .
 define variable v-tmp-mi-old      as integer   no-undo .
 define variable v-lvl-mi-old      as integer   no-undo .
+define variable is-main           as logical   no-undo .
+define variable v-com-vessel-changed as logical no-undo init no .
+
+define buffer com_place for ub.place .
+define buffer com_place-attr for ub.place-attr .
 
 define buffer osn_sr-izmerenia for sr-izmerenia .
 define buffer dnst_sr-izmerenia for sr-izmerenia .
@@ -108,7 +115,8 @@ tt-place.start-date tt-place.add-qnty tt-place.max-qnty tt-place.PS
 &Scoped-Define ENABLED-OBJECTS b-exit b-quit B-hist b-help t-place-virtual ~
 rvd-dnstv rvd-lvl rvd-tmp place-type place-locat error-mass place-si ~
 r-sr-izm dead-balance water-level place-diameter place-ratio-error dens-prov ~
-place-twice-code tt-place.chk-max-qnty t-ponton ponton-mass ponton-height
+place-twice-code tt-place.chk-max-qnty t-ponton ponton-mass ponton-height ~
+t-com-vessel com-tanks
 &Scoped-Define DISPLAYED-FIELDS tt-place.loc1 tt-place.loc2 tt-place.loc3 ~
 tt-place.loc4 tt-place.pl-name tt-place.is-meas tt-place.pl-code ~
 tt-place.issue-year tt-place.start-date tt-place.add-qnty tt-place.max-qnty ~
@@ -118,7 +126,8 @@ tt-place.PS
 &Scoped-Define DISPLAYED-OBJECTS t-place-virtual t-asi-srtif rvd-dnstv ~
 rvd-lvl rvd-tmp place-type place-locat error-mass place-si dead-balance water-level ~
 place-diameter place-ratio-error dens-prov place-twice-code tt-place.chk-max-qnty ~
-t-ponton ponton-mass ponton-height
+t-ponton ponton-mass ponton-height ~
+t-com-vessel com-tanks v-is-main
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -176,6 +185,13 @@ DEFINE BUTTON b-mi-lvl
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
      LABEL "b-mi-lvl" 
      SIZE 3 BY .88.
+     
+DEFINE BUTTON b-com-tanks 
+     IMAGE-UP FILE "btn-down-arrow":U
+     IMAGE-DOWN FILE "btn-down-arrow":U
+     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     LABEL "b-mi-dnst" 
+     SIZE 3 BY .88.     
 
 DEFINE VARIABLE dead-balance AS DECIMAL FORMAT "->>,>>>,>>9.<<<":U INITIAL 0 
      LABEL "Мертвый остаток(л)" 
@@ -325,6 +341,22 @@ DEFINE VARIABLE ponton-height AS DECIMAL FORMAT ">>>>>>9.9":U INITIAL ? decimals
      LABEL "Высота всплытия(мм)" 
      VIEW-AS FILL-IN 
      SIZE 12 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE t-com-vessel AS LOGICAL INITIAL no 
+     LABEL "Сообщающиеся резервуары:" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 30 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE com-tanks AS CHARACTER FORMAT "x(15)" 
+     LABEL "" 
+     VIEW-AS FILL-IN 
+     SIZE 15 BY 1 NO-UNDO.       
+     
+DEFINE VARIABLE v-is-main AS character FORMAT "x(11)" 
+     LABEL "" 
+     VIEW-AS fill-in
+     SIZE 11 BY 1 NO-UNDO.      
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -408,8 +440,12 @@ DEFINE FRAME d-pl-form
      place-dead-high at row 15.25 COL 88 RIGHT-ALIGNED
      place-temp-coef at row 16.25 COL 88 RIGHT-ALIGNED
 /*     place-ratio-error AT ROW 17.25 COL 88 RIGHT-ALIGNED WIDGET-ID 20*/
-     dens-prov AT ROW 18.25 COL 88 RIGHT-ALIGNED
-     place-twice-code AT ROW 19.25 COL 88 RIGHT-ALIGNED WIDGET-ID 24
+     dens-prov AT ROW 17.25 COL 88 RIGHT-ALIGNED
+     place-twice-code AT ROW 18.25 COL 88 RIGHT-ALIGNED WIDGET-ID 24
+     t-com-vessel at row 19.25 col 20
+     com-tanks at row 19.25 col 65 no-label
+     b-com-tanks at row 19.25 col 85
+     v-is-main at row 19.25 col 5 no-label
      place-passp-num at row 20.5 col 88 right-aligned
      place-passp-type at row 21.5 col 88 right-aligned
      tt-place.chk-max-qnty AT ROW 23 COL 3 WIDGET-ID 2
@@ -546,6 +582,7 @@ DO:
     v-mi-tmp
     ponton-mass
     ponton-height
+    t-com-vessel
   .
 if v-mi-dnst = ? then v-mi-dnst = 0 . 
 if v-mi-lvl = ? then v-mi-lvl = 0 . 
@@ -588,6 +625,15 @@ then do :
             "Укажите высоту всплытия понтона."
     view-as alert-box error.
     apply "entry" to ponton-height .
+    return no-apply.
+  end .
+end .
+
+if t-com-vessel:screen-value = "yes"
+then do :
+  if com-tanks:screen-value = ""
+  then do :
+    message "Укажите сообщающийся резервуар!" view-as alert-box error.
     return no-apply.
   end .
 end .
@@ -844,6 +890,18 @@ do :
         when {&place-ponton-height} then 
             do: 
                 v-value = ponton-height:screen-value .
+            end.
+        when {&place-com-vessel} then 
+            do: 
+                v-value = t-com-vessel:screen-value .
+            end. 
+        when {&place-com-tanks} then 
+            do: 
+                v-value = com-tanks .
+            end.
+        when {&place-is-main} then 
+            do: 
+                v-value = if is-main then "yes" else "no" .
             end.                                             
     end case.
     run placelib_write-attr  (input v-code
@@ -854,6 +912,103 @@ do :
       ,output v-ok      ) no-error.
 
   end.
+  
+  define variable v-cv-place as character no-undo .
+  if v-com-vessel-changed
+  then do :
+    for each com_place-attr exclusive-lock where com_place-attr.obj-type = p-obj-type
+                                             and com_place-attr.obj-code = p-obj-code
+                                             and com_place-attr.attr-code = {&place-com-tanks}
+                                             and com_place-attr.attr-value > ""
+    :
+      ii_ :
+      do ii = 1 to num-entries(com_place-attr.attr-value) :
+        if entry(ii, com_place-attr.attr-value) = tt-place.loc1
+        then do :
+          com_place-attr.attr-value = trim(replace((com_place-attr.attr-value + ","), (tt-place.loc1 + ","), ""), ",") .
+          leave ii_ .
+        end .
+      end .
+      if com_place-attr.attr-value = ""
+      then do :
+        run placelib_write-attr  (input {&place-com-vessel}
+          ,input p-obj-code
+          ,input p-obj-type
+          ,input com_place-attr.pl-code
+          ,input "no"
+          ,output v-ok      ) no-error.
+      end .
+      for first com_place no-lock where com_place.obj-type = p-obj-type
+                                    and com_place.obj-code = p-obj-code
+                                    and com_place.pl-code  = com_place-attr.pl-code
+      :
+        { gbl/rum-runa.i
+          ?
+          this-procedure:handle
+          ?
+          {&thref-proc_ref-event}
+          " buffer com_place:handle "
+          " buffer com_place:handle "
+          ''
+          ''
+          no-error
+        }
+      end .
+    end .
+    if com-tanks > ""
+    then do :
+      do ii = 1 to num-entries(com-tanks) :
+        for first com_place no-lock where com_place.obj-type = p-obj-type
+                                      and com_place.obj-code = p-obj-code
+                                      and com_place.loc1 = entry(ii, com-tanks)
+                                      and com_place.status_ = ""
+        :
+          run placelib_write-attr  (input {&place-com-vessel}
+            ,input p-obj-code
+            ,input p-obj-type
+            ,input com_place.pl-code
+            ,input "yes"
+            ,output v-ok      ) no-error.
+          v-cv-place = replace(com-tanks, com_place.loc1, tt-place.loc1) .
+          run placelib_write-attr  (input {&place-com-tanks}
+            ,input p-obj-code
+            ,input p-obj-type
+            ,input com_place.pl-code
+            ,input v-cv-place
+            ,output v-ok      ) no-error.
+          run placelib_write-attr  (input {&place-is-main}
+            ,input p-obj-code
+            ,input p-obj-type
+            ,input com_place.pl-code
+            ,input "no"
+            ,output v-ok      ) no-error.
+            
+          { gbl/rum-runa.i
+            ?
+            this-procedure:handle
+            ?
+            {&thref-proc_ref-event}
+            " buffer com_place:handle "
+            " buffer com_place:handle "
+            ''
+            ''
+            no-error
+          }
+          if error-status :error
+            then
+          do:
+            message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
+        
+            return no-apply .
+        
+          end.
+        end .                              
+      end .
+    end .
+  end .
 
   define variable v-rvd-params-on as character no-undo .
   define variable v-rvd-params-off as character no-undo .
@@ -1752,6 +1907,45 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME t-com-vessel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-com-vessel d-pl-form
+ON value-changed OF t-com-vessel IN FRAME d-pl-form
+DO:
+  if t-com-vessel:screen-value = "yes"
+  then do :
+    enable b-com-tanks with frame {&frame-name} .
+  end .
+  else do :
+    if is-main
+    and num-entries(com-tanks) > 1
+    then do :
+      message substitute('Резервуар №&1 отмечен как "Главный", изменение связки сообщающихся резервуаров невозможно! Исключите из связки все "Не главные" резервуары!', tt-place.loc1)
+      view-as alert-box .
+      t-com-vessel:screen-value = "yes" .
+      return no-apply .
+    end .
+    if com-tanks > ""
+    then do :
+      message "Сообщающиеся резервуары будут разъединены! Вы уверены?" view-as alert-box question buttons yes-no update v-ok .
+      if v-ok
+      then do :
+        com-tanks = "" .
+        display com-tanks with frame {&frame-name} .
+        disable b-com-tanks with frame {&frame-name} .
+        hide v-is-main in frame {&frame-name} .
+      end .
+      else do :
+        t-com-vessel:screen-value = "yes" .
+        return no-apply .
+      end .
+    end .
+  end .
+  v-com-vessel-changed = yes .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME r-sr-izm
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-sr-izm d-pl-form
@@ -2160,6 +2354,101 @@ do:
   end .
 end .
 
+&Scoped-define SELF-NAME b-com-tanks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-com-tanks d-pl-form
+ON CHOOSE OF b-com-tanks IN FRAME d-pl-form /* b-com-tanks */
+DO:
+  define variable place-list as character no-undo .
+  define buffer cv_place for ub.place .
+  define buffer cv_place-attr for ub.place-attr .
+  define buffer buf_pl-gds for ub.pl-gds .
+  define buffer cv_pl-gds for ub.pl-gds .
+  
+  find first buf_pl-gds no-lock where buf_pl-gds.obj-type = tt-place.obj-type
+                                  and buf_pl-gds.obj-code = tt-place.obj-code
+                                  and buf_pl-gds.pl-code = tt-place.pl-code
+                                  no-error .
+  if not available buf_pl-gds
+  then do :
+    return no-apply .
+  end . 
+  
+  run ref/pl-list.w (
+                 input parparentproc
+                ,input "b-sel,b-mark"
+                ,input p-obj-type
+                ,input p-obj-code
+                ,input {&g___object}
+               , input-output place-list).
+  if place-list <> '':U then do:
+    com-tanks = "" .
+    do ii = 1 to num-entries(place-list) :
+      find first cv_place no-lock where recid(cv_place) = integer(entry(ii, place-list)) .
+      if cv_place.obj-type = tt-place.obj-type
+      and cv_place.obj-code = tt-place.obj-code
+      and cv_place.pl-code = tt-place.pl-code
+      then do :
+        message "Нельзя связать резервуар с самим собой!" view-as alert-box .
+        next .
+      end .
+      find first cv_pl-gds no-lock where cv_pl-gds.obj-type = cv_place.obj-type
+                                     and cv_pl-gds.obj-code = cv_place.obj-code
+                                     and cv_pl-gds.pl-code = cv_place.pl-code
+                                     no-error .
+      if not available cv_pl-gds
+      then do :
+        message "Нельзя связать резервуар с резервуаром, на котором нет товара!" view-as alert-box .
+        next .
+      end .
+      if cv_pl-gds.gds-code <> buf_pl-gds.gds-code
+      then do :
+        message substitute("В сообщающихся резервуарах должен быть указан один товар! Связь с резервуаром №&1 не установлена!", cv_place.loc1) view-as alert-box .
+        next .
+      end .
+      if cv_pl-gds.fact-qnty <> 0
+      or cv_pl-gds.free-qnty <> 0  
+      or cv_pl-gds.cli-free-qnty <> 0 
+      or cv_pl-gds.cli-fact-qnty <> 0
+      then do :
+        message substitute("На резервуаре №&1 имеются расчетно-книжные остатки! Связь сообщающихся резервуаров не установлена!", cv_place.loc1) view-as alert-box .
+        next .
+      end .
+      find first cv_place-attr no-lock where cv_place-attr.obj-type = cv_place.obj-type
+                                         and cv_place-attr.obj-code = cv_place.obj-code
+                                         and cv_place-attr.pl-code  = cv_place.pl-code
+                                         and cv_place-attr.attr-code = {&place-com-tanks}
+                                         no-error .
+      if available cv_place-attr
+      and cv_place-attr.attr-value > ""
+      then do :
+        message substitute("Резервуар №&1 уже привязан к резервуару №&2. Связь сообщающихся резервуаров не установлена!", cv_place.loc1, cv_place-attr.attr-value) view-as alert-box .
+        next .
+      end .
+      if can-find(first pl-pump-nozzle no-lock where pl-pump-nozzle.obj-type = cv_pl-gds.obj-type
+                                                 and pl-pump-nozzle.obj-code = cv_pl-gds.obj-code
+                                                 and pl-pump-nozzle.pl-code  = cv_pl-gds.pl-code )
+      then do :
+        message "В сообщающихся резервуарах должна быть одна связка Резервуар – ТРК – Пистолеты по объекту! Связь сообщающихся резервуаров не установлена!" view-as alert-box .
+        next .
+      end .
+      com-tanks = com-tanks + cv_place.loc1 + "," .
+    end .
+    com-tanks = trim(com-tanks, ",") .
+    display com-tanks with frame {&frame-name} .
+    
+    if com-tanks > ""
+    then do :
+      is-main = yes .
+      v-is-main = "Главный" .
+      display v-is-main with frame {&frame-name} .
+    end .
+  end.
+  v-com-vessel-changed = yes .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &UNDEFINE SELF-NAME
 
@@ -2390,11 +2679,20 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         if v-ok then t-ponton = logical(v-value) .
       end.
       when {&place-ponton-mass} then do: 
-        if v-ok then ponton-mass = decimal(v-value) .
+        if v-ok then ponton-mass = decimal(v-value) no-error .
       end.  
       when {&place-ponton-height} then do: 
-        if v-ok then ponton-height = decimal(v-value) .
-      end.          
+        if v-ok then ponton-height = decimal(v-value) no-error .
+      end.  
+      when {&place-com-vessel} then do :
+        if v-ok then t-com-vessel = logical(v-value) .
+      end.
+      when {&place-com-tanks} then do: 
+        if v-ok then com-tanks = v-value no-error .
+      end.  
+      when {&place-is-main} then do: 
+        if v-ok then is-main = logical(v-value) no-error .
+      end.        
     end case.
   end.
   run Myenable in this-procedure .
@@ -2530,6 +2828,41 @@ PROCEDURE Myenable :
   
   apply "value-changed" to place-type .
   
+  hide t-com-vessel com-tanks b-com-tanks v-is-main in frame {&frame-name} .
+  
+  run check-com-vessel .
+  
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable d-pl-form 
+PROCEDURE check-com-vessel :
+  define buffer buf_pl-gds for ub.pl-gds .
+  
+  find first buf_pl-gds no-lock where buf_pl-gds.obj-type = tt-place.obj-type
+                                  and buf_pl-gds.obj-code = tt-place.obj-code
+                                  and buf_pl-gds.pl-code = tt-place.pl-code
+                                  no-error .
+  if not available buf_pl-gds
+  then do :
+    return .
+  end . 
+  if is-sug(buf_pl-gds.gds-code)
+  then do :
+    display t-com-vessel com-tanks b-com-tanks v-is-main with frame {&frame-name}.
+    enable t-com-vessel with frame {&frame-name}.
+    if t-com-vessel
+    then do :
+      if is-main then v-is-main = "Главный" . else v-is-main = "Не главный" .
+      display v-is-main with frame {&frame-name}.
+      enable com-tanks b-com-tanks with frame {&frame-name}.
+      com-tanks:read-only in frame {&frame-name} = yes.
+      if com-tanks > "" then disable b-com-tanks with frame {&frame-name}.
+    end .
+  end .
+                     
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

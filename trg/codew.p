@@ -20,14 +20,11 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер изменение {&main-tbl}". 
-{ trg/trghistnws.i}
-
-/*
 { trg/trghistnws.i 
   &hist = yes 
   &seqnamehist = "s-c-code"
 }
-*/
+
 define buffer buf_code for code.
 define variable mparent as character no-undo.
 define variable mcode   as character no-undo.
@@ -52,6 +49,9 @@ then do:
          buf_code.code     = mcode
          buf_code.parent   = mparent
          buf_code.CodeName = mcode
+         buf_code.nwsgbd   = new-{&main-tbl}.nwsgbd
+         buf_code.nwsubd   = new-{&main-tbl}.nwsubd
+         buf_Code.export_  = new-{&main-tbl}.export_
       .
    end. 
 end.

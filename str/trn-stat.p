@@ -3552,7 +3552,54 @@ vartechproliv = no
           run waitfram-hide in this-procedure no-error.
           undo, return error return-value.
         end.
-
+        
+/*        if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} then 
+        do:
+          define variable g-log as logical no-undo .              
+          /*ЗИ 7700183417: Отчет «Прием с превышением допустимого объема резервуара»*/
+          if can-find (first ub.doc-pl-attr where ub.doc-pl-attr.obj-code  = bf_trn-doc.obj-code
+            and ub.doc-pl-attr.obj-type  = bf_trn-doc.obj-type
+            and ub.doc-pl-attr.out-code  = bf_trn-doc.doc-code
+            and ub.doc-pl-attr.attr-code = "free-vol-exceed" 
+            and ub.doc-pl-attr.attr-value = string(yes)) then 
+          do:
+                
+      /*Проверка на права техподдержки*/
+            { gbl/chk-actg.i
+    v-curr-db-num
+    v-curr-userid
+    {&action-head-code-main}
+    'actn_global-trn_update':U
+    {&cntxt-global}
+    0
+    '':U
+    0
+    0
+    0
+    0
+    false
+    g-log
+  }                  
+            if g-log then 
+            do:
+              message "Выполнена приемка с превышением свободного объема." skip
+                "Вы уверены, что хотите закрыть данную накладную до факт?"
+                view-as alert-box question buttons yes-no update lChoice as logical .
+              if not lChoice then undo, return error .
+            end.
+            else 
+            do:
+              message "Выполнена приемка с превышением свободного объема." skip
+                "Закрыть накладную невозможно"
+                view-as alert-box.
+                undo, return error .
+            end.
+  
+          end.
+        end.          */ 
+        if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or
+          bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+        then do:
 /*3----------------------*/
       /* генерация открытой переоценки - вне транзакции */
       if ( par-gen-mrgn-ie = {&typeprice_after-margin} and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} ) or
@@ -3560,30 +3607,16 @@ vartechproliv = no
       then do:
         run str/in-pr.p ( parparentproc, recid (bf_trn-doc) , "after-margin" ) no-error .
         if error-status :error
-        then do:
-          run waitfram-hide in this-procedure no-error.
-          undo, return error substitute( "Ошибка при создании автоматической переоценки. Документ &1. Тип переоценки 'after-margin' &2 &3 .",
-                                        bf_trn-doc.doc-code,
-                                        return-value,
-                                        bf_trn-doc.ext-doc-type) .
+          /* генерация открытой переоценки - вне транзакции */
+            then do:
+              run waitfram-hide in this-procedure no-error.
+              undo, return error substitute( "Ошибка при создании автоматической переоценки. Документ &1. Тип переоценки 'after-margin' &2 &3 .",
+                                            bf_trn-doc.doc-code,
+                                            return-value,
+                                            bf_trn-doc.ext-doc-type) .
+            end.
+          end. /*after-margin*/
         end.
-      end. /*after-margin*/
-
-      /* по партиям  */
-      if ( par-gen-mrgn-ie-parts = {&typeprice_after-margin} and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} ) or
-         ( par-gen-mrgn-iv-parts = {&typeprice_after-margin} and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} ) then do:
-        run str/in-pr.p ( parparentproc, recid (bf_trn-doc) , "after-margin-parts" ) no-error .
-        if error-status :error
-        then do:
-          run waitfram-hide in this-procedure no-error.
-          undo, return error substitute( "Ошибка при создании автоматической переоценки по партиям. Документ &1. Тип переоценки 'after-margin-parts' &2 &3 .",
-                                        bf_trn-doc.doc-code,
-                                        return-value,
-                                        bf_trn-doc.ext-doc-type) .
-        end.
-      end. /* after-margin-parts */
-
-/*3----------------------*/
         /*делаем корректировку отрицательных партий
           приход производство и возврат через кассу обрабатываются вне trn-stat.p*/
 

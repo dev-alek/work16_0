@@ -69,7 +69,11 @@ define variable vss-description as character no-undo init "Обновление БД.".
   define private property changPath as logical no-undo
     get.
     set.
+  define private property UpdBlank as logical no-undo
+    get.
+    set.
     
+  
   define private property ModeUpd as character  no-undo
     get.
     set (iarg as character ):
@@ -87,6 +91,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
           UpdPart     = lookup("iscomp",iarg) eq 0 and lookup("UpdBlank",iarg) eq 0.
           silent      = lookup("updblank",iarg) ne 0.
           changPath   = lookup("iscomp",iarg) ne 0.
+          UpdBlank    = lookup("UpdBlank",iarg) ne 0.
        end.
     end.
     
@@ -604,6 +609,11 @@ define variable vss-description as character no-undo init "Обновление БД.".
     vAsyncHelper:WritelogInter = 5.
     vAsyncHelper:mProcPublish = PublisHandle.
     vAsyncHelper:ChangProPath = changPath.
+    if UpdBlank
+    then do:
+       vAsyncHelper:MyParamStart = " -ininame "  + GetStartupParam("-ininame") + " " + ConPar.
+       vAsyncHelper:DbConnect  = no.
+    end.
     vAsyncHelper:AsyncProc("utl/proc-anyproc", substitute("&1&3&2":U 
                                               , iProc 
                                               ,if iParam eq "" then "" else iParam , 
@@ -668,7 +678,9 @@ define variable vss-description as character no-undo init "Обновление БД.".
        message itext
        view-as alert-box.
     end.
-    publish "WriteLogAsunc" from PublisHandle (itext,yes ).
+    if valid-handle(PublisHandle)
+    then
+       publish "WriteLogAsunc" from PublisHandle (itext,yes ).
     
    end.
    method public void putstat (input itext as char):

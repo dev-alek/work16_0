@@ -112,14 +112,6 @@ define variable v-rep-list as character no-undo.
 
 DEFINE STREAM out-stream.
 
-FUNCTION number-from-string RETURNS INTEGER
-  ( input p-name as character, input p-code as integer )  FORWARD.
-
-FUNCTION get-report-file-name returns character
-  ( input p-date as date, input p-time as integer) FORWARD.
-
-
-
 define buffer buf_clients for ub.clients .
 
 /*************************************************
@@ -156,17 +148,7 @@ define variable v-date_to   as character no-undo .
   /*вызов процедуры печати шапки отчета*/      
   output stream OutStr-html to value(v-report-name-html) convert target 'UTF-8' /*no-convert*/.
   put stream OutStr-html unformatted
-    "<!DOCTYPE HTML>" skip
-    ' <html>' skip
-    '  <head>' skip
-    '   <meta charset="utf-8">' skip
-    '    <style type="text/css">' skip
-                        
-    '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-    '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-    '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
-    '   </style>' skip
-    '  </head>' skip
+    { rep/htmlhead.i }
     .
                         
                         
@@ -262,7 +244,7 @@ define variable v-date_to   as character no-undo .
   end.    
 
   for each temp_db-list,
-    last buf_db no-lock where buf_db.db-num = temp_db-list.db-num:
+    last buf_db no-lock where buf_db.db-num = temp_db-list.db-num by buf_db.db-num desc:
     _next:
     for each buf_upgrade where buf_upgrade.db-num = buf_db.db-num and entry(1,buf_upgrade.version-num," ") >= v-date_from and entry(1,buf_upgrade.version-num," ") <= v-date_to
     and (lookup ("Rel",buf_upgrade.version-num," ") > 0 or buf_upgrade.version-num = "v16_0000.000.000")
@@ -318,12 +300,12 @@ define variable v-date_to   as character no-undo .
         and ub.user-login.user-login = buf_upgrade-attr.attr-value,
         first buf_user-account no-lock where buf_user-account.user-id = ub.user-login.user-id: 
         v-menedger = buf_user-account.last-name + '  ' + buf_user-account.first-name + ' ':U + buf_user-account.second-name.
+       end.
         put stream OutStr-html unformatted        
-          '<td text_wrap="true" style="align: center;">' + string(v-menedger) + '</td>' skip
-          '</tr>' skip
-          .
+          '<td text_wrap="true" style="align: center;">' + string(v-menedger) + '</td>' skip.
+         put stream OutStr-html unformatted                  '</tr>' skip.
         leave _next .
-      end.
+      
     end.  
   end.
   put stream OutStr-html unformatted
@@ -336,15 +318,11 @@ define variable v-date_to   as character no-undo .
     '</body>' skip
     '</html>' skip
     .
-  put stream OutStr-html unformatted   
-    '</tbody>' skip
-    '</table>' skip
-    .
   output stream OutStr-html close.   
- 
+end.
 
 if p-log then do:
-  /*вызов программы печати*/ 
+  /* вызов программы печати */ 
   run prn-lib-reportviewer-report-name in this-procedure (
     input parParentProc
     ,input v-report-name-html
@@ -365,7 +343,7 @@ else do:
   os-command no-wait value(v-fill-path-RepView + " false " + v-report-name-html).
 end.  
 
-end.
+
   
 
 

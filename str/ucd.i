@@ -487,7 +487,7 @@ function CrEdoc returns character
             for each utd-marking-lines where utd-marking-lines.db-num eq utd-lines.db-num 
                                          and utd-marking-lines.doc-id eq utd-lines.doc-id
                                          and utd-marking-lines.LineNum eq utd-lines.LineNum
-            no-lock by utd-marking-lines.site:
+            no-lock by utd-marking-lines.site by utd-marking-lines.doc-level desc:
                if utd-marking-lines.site eq "-"
                then do:
                   if isOAD(utd-marking-lines.mark)
@@ -611,6 +611,7 @@ function CrEdoc returns character
             end.
             release edoc-lines.
          end.
+         release edoc-lines.
       end.
       find first utd_ret where utd_ret.parentDocumentExt     eq utd.parentDocumentExt
                               and utd_ret.parentOrganizationExt eq utd.parentOrganizationExt

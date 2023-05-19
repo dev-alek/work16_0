@@ -19,7 +19,12 @@ using Progress.Lang.*.
 
 
 class ibs.th.bge.1crn.subjects.firms inherits ibs.th.bge.1crn.subjects.asubject:
-
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  
   define property code_ as character no-undo
     get. 
     private set.

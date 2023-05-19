@@ -33,6 +33,7 @@ class ibs.th.bge.xmlimpexp final:
    {GBL\xmldom.i class }
    define variable objKeyRec as ibs.th.gbl.keyrec no-undo.
    define variable iAll as logical no-undo.
+   define variable iDopInfo as logical no-undo.
    constructor public xmlimpexp (  ):
       super ().
       objKeyRec = new ibs.th.gbl.keyrec().
@@ -89,7 +90,8 @@ class ibs.th.bge.xmlimpexp final:
       define buffer buf_XML-entity for temp_testXML-entity.
       define buffer buf_XML-field for temp_testXML-entity.
       define buffer buf_XML-atribut for temp_testXML-atribut.
-   
+      if iDopInfo
+      then do:
       vNodeName = "File-info".
       find first buf_XML-node
           where buf_XML-node.xmhNodName = vNodeName
@@ -128,6 +130,7 @@ class ibs.th.bge.xmlimpexp final:
             buf_XML-entity.xmeEntValue  = "01.01.2100"
          .
       end.
+      end.
       ihquery:get-first().
       vBuffer = ihquery:get-buffer-handle ().
       VTAbleName = vBuffer:table.
@@ -147,13 +150,16 @@ class ibs.th.bge.xmlimpexp final:
                buf_XML-node.xmh-key    = v-xmldom-key
                buf_XML-node.xmhNodName = vNodeName
             .
+            if iDopInfo
+            then do:
+     
             create buf_XML-atribut.
             assign
                buf_XML-atribut.xme-key      = v-xmldom-key
                buf_XML-atribut.xmeAtrName   = "NwsNotSend"
                buf_XML-atribut.xmeAtrValue  = "TableList"
             .
-
+            end.
          end.
          vNodeName = {&record-table} + VTAbleName.
       end.
@@ -169,12 +175,16 @@ class ibs.th.bge.xmlimpexp final:
             buf_XML-entity.xmeEntName   = vNodeName
             buf_XML-entity.xmeEntValue  = ""
          .
+         if iDopInfo
+         then do:
+     
          create buf_XML-atribut.
             assign
             buf_XML-atribut.xme-key      = v-xmldom-key
             buf_XML-atribut.xmeAtrName   = "record-delete"
             buf_XML-atribut.xmeAtrValue  = "no"
          .
+         end.
          block-field:
          do vItem = 1 to vBuffer:num-fields:
             assign hField = vBuffer:buffer-field(vItem) .

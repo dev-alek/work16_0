@@ -56,6 +56,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
   define buffer buf_rvs-doc       for ub.rvs-doc .
   define buffer buf_rvs-line      for ub.rvs-line .
+  define buffer com_rvs-line      for ub.rvs-line .
   define buffer buf_rvs-line-attr for ub.rvs-line-attr .
 
   define buffer buf-add_clients     for ub.clients .
@@ -206,7 +207,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
   define variable v-log              as logical   no-undo .
   define variable v-type              as character no-undo .
-  
+
   define variable v-input-type-p      as character no-undo .
   define variable v-input-type-T      as character no-undo .
   define variable v-input-type-l      as character no-undo .
@@ -446,6 +447,31 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       if is-gas(buf_goods.gds-code)
       then do :
         next block_rvs-line.
+      end .
+      run placelib_get-attr  ( input {&place-com-tanks}
+                              ,input buf_place.obj-code
+                              ,input buf_place.obj-type
+                              ,input buf_place.pl-code
+                              ,output v-value
+                              ,output v-ok      ) no-error.
+
+      if is-sug(buf_goods.gds-code)
+      and v-ok
+      and v-value > ""
+      then do :
+        run placelib_get-attr  ( input {&place-is-main}
+                                ,input buf_place.obj-code
+                                ,input buf_place.obj-type
+                                ,input buf_place.pl-code
+                                ,output v-value
+                                ,output v-ok      ) no-error.
+        if v-ok and logical(v-value)
+        then do :
+          
+        end .
+        else do :
+          next block_rvs-line.
+        end .                        
       end .
       if chs-gds-inv <> yes then do:
         assign
@@ -1613,6 +1639,47 @@ when 4 then do:
               end.
           end.
           else do:
+            if v-lgas-gds
+            then do :
+              run placelib_get-attr  ( input {&place-com-tanks}
+                                      ,input buf_doc-pl.obj-code
+                                      ,input buf_doc-pl.obj-type
+                                      ,input buf_doc-pl.pl-code
+                                      ,output v-value
+                                      ,output v-ok      ) no-error.
+              if v-ok
+              and v-value > ""
+              then do :
+                do ii = 1 to num-entries(v-value) :
+                  find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
+                                                 and buf_place.obj-code = buf_pl-gds.obj-code
+                                                 and buf_place.loc1     = entry(ii, v-value)
+                                                 and buf_place.status_  = ""
+                                                 no-error .
+                  if available buf_place
+                  then do :
+                    find first com_rvs-line where com_rvs-line.gds-code = buf_doc-pl.gds-code
+                                              and com_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                              and com_rvs-line.obj-type = buf_doc-pl.obj-type
+                                              and com_rvs-line.obj-code = buf_doc-pl.obj-code
+                                              and com_rvs-line.pl-code  = buf_place.pl-code
+                    no-error .
+                    if not available com_rvs-line
+                    then do :
+                      message substitute ("Внимание! Не сделана сверка по резервуару №&1, включенному в связку сообщающихся резервуаров! Документ инвентаризации не создан!", buf_place.loc1)
+                      view-as alert-box error .
+                      undo block_cre-inv, leave block_cre-inv .
+                    end .
+                    else do :
+                      assign
+                        O_FACT-base = O_FACT-base + (com_rvs-line.state-measure-qnty + com_rvs-line.state-add-qnty)
+                        O_FACT-cli  = O_FACT-cli + (com_rvs-line.state-measure-cli-qnty + com_rvs-line.state-add-qnty * com_rvs-line.state-density)
+                      .
+                    end .
+                  end .
+                end .
+              end .
+            end .
             assign
               v-reserv-qnty-cli = O_FACT-cli - O_PKH-cli
               v-reserv-qnty-base = O_FACT-base - O_PKH-base 

@@ -59,6 +59,7 @@ DEFINE TEMP-TABLE tt-promo
    field discount-sum as decimal
    field itog-sum     as decimal
    field methodCalc   as integer
+   field return-qnty  as integer
    Index pi obj-code obj-type shift-num shift-date promo-id
    . 
 
@@ -72,6 +73,7 @@ DEFINE TEMP-TABLE tt-promo-itog-obj
    field goods-qnty   as integer
    field discount-sum as decimal
    field itog-sum     as decimal
+   field return-qnty  as integer
    Index pi obj-code obj-type promo-id
    .   
 
@@ -82,6 +84,7 @@ DEFINE TEMP-TABLE tt-promo-itog
    field goods-qnty   as integer
    field discount-sum as decimal
    field itog-sum     as decimal
+   field return-qnty  as integer
    Index pi promo-id
    .   
      
@@ -196,7 +199,9 @@ procedure report:
          assign
             tt-promo.object-qnty = tt-promo.object-qnty + buf_chk-discnt.object-sum
             .
-
+            if buf_chk-doc.chk-type = integer({&rcpt-return}) or buf_chk-doc.chk-type = integer({&rcpt-return-write-off}) then 
+            tt-promo.return-qnty = tt-promo.return-qnty + buf_chk-discnt.object-sum .
+            
          for each bf_chk-discnt-attr no-lock where bf_chk-discnt-attr.attr-code = "promo-id" and 
          bf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and bf_chk-discnt-attr.record-type = 0 and bf_chk-discnt-attr.attr-value = tt-promo.promo-id:
             for first bf_chk-discnt no-lock where bf_chk-discnt.doc-code = bf_chk-discnt-attr.doc-code and bf_chk-discnt.record-type = 0
@@ -253,20 +258,21 @@ put stream OutStr-html unformatted
    '<td style="width: 80px;"></td>' skip
    '<td style="width: 80px;"></td>' skip
    '<td style="width: 80px;"></td>' skip
+   '<td style="width: 80px;"></td>' skip
    '</tr>' skip
    .
                         
  
 put stream OutStr-html unformatted
-   '<TR><TD colspan="8"></TD></TR>' skip
+   '<TR><TD colspan="9"></TD></TR>' skip
    '<TR>' skip
-   '<TD colspan="8" style="font-weight: bold;">Отчет по реализации промо-акций за период с ' + string(x-Date-Start,"99.99.99") + ' по ' + string(x-Date-End,"99.99.99") + '</TD>' skip
+   '<TD colspan="9" style="font-weight: bold;">Отчет по реализации промо-акций за период с ' + string(x-Date-Start,"99.99.99") + ' по ' + string(x-Date-End,"99.99.99") + '</TD>' skip
    '</TR>'skip
    '<TR>' skip
-   '<TD colspan="8">Выбор объекта:</TD>' skip
+   '<TD colspan="9">Выбор объекта:</TD>' skip
    '</TR>'skip
    '<TR>' skip
-   '<TD colspan="8">' + "АЗК №" + v-list-obj + " маг" + '</TD>' skip
+   '<TD colspan="9">' + "АЗК №" + v-list-obj + " маг" + '</TD>' skip
    '</TR>'skip
 
    '</thead>' skip
@@ -279,6 +285,7 @@ put stream OutStr-html unformatted
    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">№ промо-акции</TD>' skip
    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Наименование промо-акции</TD>' skip
    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Кол-во срабатываний</TD>' skip
+   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Кол-во возвратов</TD>' skip
    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Кол-во акционных товаров</TD>' skip
    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Сумма скидки</TD>' skip
    '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Сумма без скидки</TD>' skip
@@ -293,7 +300,7 @@ for each obj-list by obj-list.obj-code:
          if not p-itog then 
          do: 
             put stream OutStr-html unformatted
-               '<tr><TD colspan="8" text_wrap="true" style="text-align: left; font-weight: bold;">' + tt-promo.obj-name + '</TD></tr>' skip
+               '<tr><TD colspan="9" text_wrap="true" style="text-align: left; font-weight: bold;">' + tt-promo.obj-name + '</TD></tr>' skip
                .
          end.
          create tt-promo-itog-obj .
@@ -315,6 +322,7 @@ for each obj-list by obj-list.obj-code:
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-promo.promo-id) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-promo.promo-name) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right;">' + if tt-promo.object-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo.object-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: right;">' + if tt-promo.return-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo.return-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right;">' + if tt-promo.goods-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo.goods-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right;">' + if tt-promo.discount-sum <> 0 then fnc-convert-dot-to-colon(tt-promo.discount-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right;">' + if tt-promo.itog-sum <> 0 then fnc-convert-dot-to-colon(tt-promo.itog-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
@@ -342,6 +350,7 @@ for each obj-list by obj-list.obj-code:
          tt-promo-itog-obj.object-qnty  = tt-promo-itog-obj.object-qnty + tt-promo.object-qnty
          tt-promo-itog-obj.discount-sum = tt-promo-itog-obj.discount-sum + tt-promo.discount-sum
          tt-promo-itog-obj.itog-sum     = tt-promo-itog-obj.itog-sum + tt-promo.itog-sum
+         tt-promo-itog-obj.return-qnty  = tt-promo-itog-obj.return-qnty + tt-promo.return-qnty
          .
    end.
    v-first = true .
@@ -356,6 +365,7 @@ for each obj-list by obj-list.obj-code:
             '<TD text_wrap="true" style="text-align: center; font-weight: bold;">' + string(tt-promo-itog-obj.promo-id) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center; font-weight: bold;">' + string(tt-promo-itog-obj.promo-name) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.object-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.object-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.return-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.return-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.goods-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.goods-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.discount-sum <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.discount-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.itog-sum <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.itog-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
@@ -369,6 +379,7 @@ for each obj-list by obj-list.obj-code:
             '<TD text_wrap="true" style="text-align: center; font-weight: bold;">' + string(tt-promo-itog-obj.promo-id) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center; font-weight: bold;">' + string(tt-promo-itog-obj.promo-name) + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.object-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.object-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.return-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.return-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.goods-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.goods-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.discount-sum <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.discount-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog-obj.itog-sum <> 0 then fnc-convert-dot-to-colon(tt-promo-itog-obj.itog-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
@@ -389,6 +400,7 @@ for each obj-list by obj-list.obj-code:
          tt-promo-itog.goods-qnty   = tt-promo-itog.goods-qnty + tt-promo-itog-obj.goods-qnty
          tt-promo-itog.itog-sum     = tt-promo-itog.itog-sum + tt-promo-itog-obj.itog-sum
          tt-promo-itog.object-qnty  = tt-promo-itog.object-qnty + tt-promo-itog-obj.object-qnty
+         tt-promo-itog.return-qnty  = tt-promo-itog.return-qnty + tt-promo-itog-obj.return-qnty
          .     
    end.
 end.
@@ -405,6 +417,7 @@ for each tt-promo-itog :
          '<TD text_wrap="true" style="text-align: center; font-weight: bold;">' + string(tt-promo-itog.promo-id) + '</TD>' skip
          '<TD text_wrap="true" style="text-align: center; font-weight: bold;">' + string(tt-promo-itog.promo-name) + '</TD>' skip
          '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.object-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.object-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
+         '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.return-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.return-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
          '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.goods-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.goods-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
          '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.discount-sum <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.discount-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
          '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.itog-sum <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.itog-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
@@ -418,6 +431,7 @@ for each tt-promo-itog :
          '<TD text_wrap="true" style="text-align: center; font-weight: bold;">' + string(tt-promo-itog.promo-id) + '</TD>' skip
          '<TD text_wrap="true" style="text-align: center; font-weight: bold;">' + string(tt-promo-itog.promo-name) + '</TD>' skip
          '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.object-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.object-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
+         '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.return-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.return-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
          '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.goods-qnty <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.goods-qnty,"->>>>>>>>>>>9",0) + '</TD>' else "0" + '</TD>' skip
          '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.discount-sum <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.discount-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
          '<TD text_wrap="true" style="text-align: right; font-weight: bold;">' + if tt-promo-itog.itog-sum <> 0 then fnc-convert-dot-to-colon(tt-promo-itog.itog-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip

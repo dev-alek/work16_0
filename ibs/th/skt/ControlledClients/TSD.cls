@@ -23,12 +23,13 @@ using ibs.th.gbl.sys.objth.
 using ibs.th.str.utd.handlers.introduce.
 
 class ibs.th.skt.ControlledClients.TSD inherits objth: 
-   define variable vss-revision    as character no-undo init "$Revision:$":U .
-   define variable vss-author      as character no-undo init "$Author:$":U .
-   define variable vss-date        as character no-undo init "$Date:$":U .
-   define variable vss-workfile    as character no-undo init "$Workfile:$":U .
-   define variable vss-archive     as character no-undo init "$Archive:$":U .
-   define variable vss-description as character no-undo init "ТСД".
+     define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+     define override public property vss-author      as character no-undo init "$Author:$":U get.
+     define override public property vss-date        as character no-undo init "$Date:$":U get.
+     define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+     define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+     define override public property vss-description as character no-undo init "клас для подготовки даныных для ТСД и загрузки из него" get.
+    
    
   &scop delimiteFld chr(30)
   &scop delimiterLine chr(31)

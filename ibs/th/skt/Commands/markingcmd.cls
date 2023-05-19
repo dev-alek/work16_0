@@ -22,7 +22,13 @@ using ibs.th.skt.Adapters.*.
 using ibs.th.gbl.sys.objth.
 
 class ibs.th.skt.Commands.markingcmd inherits objth implements ICommand: 
-
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "обработчик команд по маркам через сокет" get.
+ 
   &scop CRLF chr(13) + chr(10)
   &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 

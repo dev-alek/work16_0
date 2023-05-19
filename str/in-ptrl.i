@@ -67,7 +67,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         
     define variable is-vir as logical no-undo.
     define variable v-value as character no-undo.
+    define variable v-value2 as character no-undo.
     define variable v-ok as logical no-undo.
+    
+    define variable pl-rvd-dens as logical no-undo .
+    define variable pl-rvd-lvl as logical no-undo .
+    define variable pl-rvd-temp as logical no-undo .
     
     procedure return-rvs-qnty :
       define  input parameter p-doc-code            like ub.trn-doc.doc-code            no-undo .
@@ -229,6 +234,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
 
       define buffer buf_before_rvs-doc  for ub.rvs-doc  .
       define buffer buf_before_rvs-line for ub.rvs-line .
+      define buffer buf_place           for ub.place .
+      
+      define variable ii as integer no-undo .
 
       do
       on error undo, return error return-value
@@ -241,27 +249,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           for each tt-doc-pl no-lock
           on error undo, return error return-value
           :
-            if p-pl-code <> ?
-              and tt-doc-pl.pl-code <> p-pl-code
-            then do:
-              next.
-            end.
-            find first buf_before_rvs-line no-lock
-              where buf_before_rvs-line.rvs-code = buf_before_rvs-doc.rvs-code
-                and buf_before_rvs-line.obj-type = buf_before_rvs-doc.obj-type
-                and buf_before_rvs-line.obj-code = buf_before_rvs-doc.obj-code
-                and buf_before_rvs-line.pl-code  = tt-doc-pl.pl-code
-                and buf_before_rvs-line.gds-code = p-gds-code
-              no-error .
-            if not available buf_before_rvs-line then do:
-              message
-                "По данному товару нет заготовки для сверки <<до налива топлива>>"
-                "по резервуару" tt-doc-pl.pl-code "."
-                view-as alert-box error .
-              return error .
-            end.
             
-            if is-gas(buf_before_rvs-line.gds-code) then next.
+            if is-gas(p-gds-code) then next.
             
             run placelib_get-attr(input {&place-virtual}
                                  ,input tt-doc-pl.obj-code
@@ -274,24 +263,96 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             
             if is-vir then next.
             
-            if buf_before_rvs-line.state-measure-qnty = ?
-            then do:
-              message
-                "Не задан фактический остаток в сверке <<до налива топлива>>"
-                "по резервуару" tt-doc-pl.pl-code "." skip
-                "Следует удалить сверки и создать их снова."
-                view-as alert-box error .
-              return error .
-            end.
-            if buf_before_rvs-line.state-density = ?
-            then do:
-              message
-                "Не задана фактическая плотность в сверке <<до налива топлива>>"
-                "по резервуару" tt-doc-pl.pl-code "." skip
-                "Следует удалить сверки и создать их снова."
-                view-as alert-box error .
-              return error .
-            end.
+            find first buf_place no-lock where buf_place.obj-type = tt-doc-pl.obj-type
+                                           and buf_place.obj-code = tt-doc-pl.obj-code
+                                           and buf_place.pl-code  = tt-doc-pl.pl-code
+                                           no-error .
+            
+            run placelib_get-attr  (
+               input {&place-com-tanks}
+              ,input tt-doc-pl.obj-code
+              ,input tt-doc-pl.obj-type
+              ,input tt-doc-pl.pl-code
+              ,output v-value
+              ,output v-ok      )
+            no-error.
+            if is-sug(p-gds-code)
+            and v-ok
+            and v-value > ""
+            then do :
+              v-value = v-value + "," + buf_place.loc1 .
+              do ii = 1 to num-entries(v-value) :
+                find first buf_place no-lock where buf_place.obj-type = tt-doc-pl.obj-type
+                                               and buf_place.obj-code = tt-doc-pl.obj-code
+                                               and buf_place.loc1     = entry(ii, v-value)
+                                               no-error .
+                if available buf_place
+                then do :
+                  find first buf_before_rvs-line no-lock
+                    where buf_before_rvs-line.rvs-code = buf_before_rvs-doc.rvs-code
+                      and buf_before_rvs-line.obj-type = buf_before_rvs-doc.obj-type
+                      and buf_before_rvs-line.obj-code = buf_before_rvs-doc.obj-code
+                      and buf_before_rvs-line.pl-code  = buf_place.pl-code
+                      and buf_before_rvs-line.gds-code = p-gds-code
+                    no-error .
+                  if not available buf_before_rvs-line then do:
+                    message
+                      "По данному товару нет заготовки для сверки <<до налива топлива>>"
+                      "по резервуару" buf_place.pl-code "."
+                      view-as alert-box error .
+                    return error .
+                  end.
+                  if buf_before_rvs-line.state-measure-qnty = ?
+                  then do:
+                    message
+                      "Не заполнены данные по резервуару №" buf_place.loc1
+                      " в документе сверки «До»!"
+                      view-as alert-box error .
+                    return error .
+                  end.
+                end .
+              end .
+            end .
+            else do :
+              if p-pl-code <> ?
+              and tt-doc-pl.pl-code <> p-pl-code
+              then do:
+                next.
+              end.
+              
+              find first buf_before_rvs-line no-lock
+                where buf_before_rvs-line.rvs-code = buf_before_rvs-doc.rvs-code
+                  and buf_before_rvs-line.obj-type = buf_before_rvs-doc.obj-type
+                  and buf_before_rvs-line.obj-code = buf_before_rvs-doc.obj-code
+                  and buf_before_rvs-line.pl-code  = tt-doc-pl.pl-code
+                  and buf_before_rvs-line.gds-code = p-gds-code
+                no-error .
+              if not available buf_before_rvs-line then do:
+                message
+                  "По данному товару нет заготовки для сверки <<до налива топлива>>"
+                  "по резервуару" tt-doc-pl.pl-code "."
+                  view-as alert-box error .
+                return error .
+              end.
+              if buf_before_rvs-line.state-measure-qnty = ?
+              then do:
+                message
+                  "Не задан фактический остаток в сверке <<до налива топлива>>"
+                  "по резервуару" tt-doc-pl.pl-code "." skip
+                  "Следует удалить сверки и создать их снова."
+                  view-as alert-box error .
+                return error .
+              end.
+              if buf_before_rvs-line.state-density = ?
+              then do:
+                message
+                  "Не задана фактическая плотность в сверке <<до налива топлива>>"
+                  "по резервуару" tt-doc-pl.pl-code "." skip
+                  "Следует удалить сверки и создать их снова."
+                  view-as alert-box error .
+                return error .
+              end.
+            end .
           end. /* for each tt-doc-pl */
         end. /* if available buf_before_rvs-doc */
         else do:
@@ -325,6 +386,14 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable varcur-rvs     as   integer             no-undo.
         define variable v-today        as   date                no-undo.
         define variable v-time         as   integer             no-undo.
+        define variable v-value        as character no-undo .
+        define variable v-value2       as character no-undo .
+        define variable v-ok           as logical   no-undo .
+        define variable ii             as integer   no-undo .
+        define variable v-com-vessel-rvs as logical no-undo init no .
+        define variable v-com-vessel-is-meas as logical no-undo init no .
+        define variable v-code         as character    no-undo.
+        define variable is-com-tanks   as logical no-undo init no .
 
         define buffer buf_rvs-doc     for ub.rvs-doc .
         define buffer buf_rvs-line    for ub.rvs-line .
@@ -335,9 +404,14 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-rvs-cli-qnty-before like ub.rvs-line.state-measure-cli-qnty no-undo .
         define variable v-rvs-cli-qnty-after  like ub.rvs-line.state-measure-cli-qnty no-undo .
         define variable v-rvs-density         like ub.rvs-line.state-density          no-undo .
-        define variable v-delta-mass-qnty as decimal   no-undo .
+        define variable v-com-tank-rvs-qnty-before     like ub.rvs-line.state-measure-qnty     no-undo .
+        define variable v-com-tank-rvs-qnty-after      like ub.rvs-line.state-measure-qnty     no-undo .
+        define variable v-com-tank-rvs-cli-qnty-before like ub.rvs-line.state-measure-cli-qnty no-undo .
+        define variable v-com-tank-rvs-cli-qnty-after  like ub.rvs-line.state-measure-cli-qnty no-undo .
         define variable v-attr-type           as character no-undo .
         define variable v-attr-value          as character   no-undo .
+        define variable v-delta-mass-qnty as decimal   no-undo .
+        define variable v-com-tank-delta-mass-qnty as decimal   no-undo .
         
         define variable v-asi-ip  as character no-undo .
         define variable v-asi-port as character no-undo .
@@ -383,49 +457,131 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           v-count-doc-pl = 0
           v-pl-code      = ?
         .
+        
         for each tt-doc-pl no-lock
         on error undo block_tr, return error return-value
         :
-          find first buf_rvs-line no-lock
-            where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-              and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
-              and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
-              and buf_rvs-line.pl-code  = tt-doc-pl.pl-code
-              and buf_rvs-line.gds-code = tt-doc-pl.gds-code
-            no-error .
-          if not available buf_rvs-line then do:
-            message
-              "Не найдена строка сверки:" skip
-              substitute( "товар &1", tt-doc-pl.gds-code ) skip
-              substitute( "место хранения &1", tt-doc-pl.pl-code ) skip
-              view-as alert-box error .
-            undo block_tr, return error .
-          end.
-          assign
-            v-count-doc-pl = v-count-doc-pl + 1
-            v-pl-code      = buf_rvs-line.pl-code
-          .
+          
+          run placelib_get-attr  (
+             input {&place-com-tanks}
+            ,input t-doc.obj-code
+            ,input t-doc.obj-type
+            ,input tt-doc-pl.pl-code
+            ,output v-value
+            ,output v-ok      )
+          no-error.
+          
+          if is-sug(tt-doc-pl.gds-code)
+          and v-ok
+          and v-value > ""
+          and (p-action = {&lookup}
+            or p-action-type = "edit")
+          then do :
+            is-com-tanks = yes .
+            
+            find first buf_place no-lock
+              where buf_place.obj-type = t-doc.obj-type
+                and buf_place.obj-code = t-doc.obj-code
+                and buf_place.pl-code  = tt-doc-pl.pl-code
+            .
+            
+            v-value = buf_place.loc1 + "," + v-value  .
+            do ii = 1 to num-entries(v-value) :
+              find first buf_place no-lock where buf_place.obj-type = tt-doc-pl.obj-type
+                                             and buf_place.obj-code = tt-doc-pl.obj-code
+                                             and buf_place.loc1     = entry(ii, v-value)
+                                             and buf_place.status_  = ""
+                                             no-error .
+              if available buf_place
+              then do :
+                find first buf_rvs-line no-lock
+                  where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                    and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                    and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                    and buf_rvs-line.pl-code  = buf_place.pl-code
+                    and buf_rvs-line.gds-code = tt-doc-pl.gds-code
+                  no-error .
+                if not available buf_rvs-line then do:
+                  message
+                    "Не найдена строка сверки:" skip
+                    substitute( "товар &1", tt-doc-pl.gds-code ) skip
+                    substitute( "место хранения &1", buf_place.pl-code ) skip
+                    view-as alert-box error .
+                  undo block_tr, return error .
+                end.
+                assign
+                  v-count-doc-pl = v-count-doc-pl + 1
+                  v-pl-code      = buf_rvs-line.pl-code
+                .
+              end .
+            end .
+          end .
+          else do :
+            find first buf_rvs-line no-lock
+              where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                and buf_rvs-line.pl-code  = tt-doc-pl.pl-code
+                and buf_rvs-line.gds-code = tt-doc-pl.gds-code
+              no-error .
+            if not available buf_rvs-line then do:
+              message
+                "Не найдена строка сверки:" skip
+                substitute( "товар &1", tt-doc-pl.gds-code ) skip
+                substitute( "место хранения &1", tt-doc-pl.pl-code ) skip
+                view-as alert-box error .
+              undo block_tr, return error .
+            end.
+            assign
+              v-count-doc-pl = v-count-doc-pl + 1
+              v-pl-code      = buf_rvs-line.pl-code
+            .
+          end .
         end. /* for each tt-doc-pl */
 
         if v-count-doc-pl > 1
           or v-pl-code = ?
         then do:
-          run plgdsfnd in this-procedure
-            ( input yes
-            ,input buf_rvs-doc.obj-type
-            ,input buf_rvs-doc.obj-code
-            ,input buf_goods.gds-code
-            ,output is-rvs-place
-            ,output v-pl-code
-            ) no-error .
-          if error-status :error then do:
-            message
-              substitute( "Ошибка при выборе места хранения по товару &1.", buf_goods.gds-code ) skip
-              return-value skip
-              error-status :get-message(1) skip
-              view-as alert-box error .
-            undo block_tr, return error .
-          end.
+          if is-com-tanks
+          and v-pl-code <> ?
+          then do :
+            run ref/pl-gds-com-tanks.w
+              ( input v-pl-code
+              , output v-pl-code
+              ) no-error .
+            if v-pl-code = ? 
+            or v-pl-code = 0
+            then do:
+              message "Не выбрано место хранения " view-as alert-box .
+              undo block_tr, return error .
+            end.
+            if error-status :error then do:
+              message
+                substitute( "Ошибка при выборе места хранения по товару &1.", buf_goods.gds-code ) skip
+                return-value skip
+                error-status :get-message(1) skip
+                view-as alert-box error .
+              undo block_tr, return error .
+            end.
+          end .
+          else do :
+            run plgdsfnd in this-procedure
+              ( input yes
+              ,input buf_rvs-doc.obj-type
+              ,input buf_rvs-doc.obj-code
+              ,input buf_goods.gds-code
+              ,output is-rvs-place
+              ,output v-pl-code
+              ) no-error .
+            if error-status :error then do:
+              message
+                substitute( "Ошибка при выборе места хранения по товару &1.", buf_goods.gds-code ) skip
+                return-value skip
+                error-status :get-message(1) skip
+                view-as alert-box error .
+              undo block_tr, return error .
+            end.
+          end .
         end. /* v-count-doc-pl > 1 */
 
         find first buf_rvs-line
@@ -445,11 +601,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         case p-action :
           when {&update} then
           do:
-              find buf_place no-lock
-              where buf_place.obj-type = t-doc.obj-type
-                and buf_place.obj-code = t-doc.obj-code
-                and buf_place.pl-code  = v-pl-code
-              .
+            find buf_place no-lock
+            where buf_place.obj-type = t-doc.obj-type
+              and buf_place.obj-code = t-doc.obj-code
+              and buf_place.pl-code  = v-pl-code
+            .
                     
             if p-action-type = "meas" or buf_place.is-meas <> yes then /* ТН-3370 Арн 12.01.2015. (Строка Накл в режиме "Изменить") и меню pop-up (по кнопкам "Св.до" и "Св.после") = "Сверка резервуара" [он же парам="meas"] */
             do:
@@ -459,9 +615,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             else
             do:
-              assign
-                v-act-name = 'actn_rvs-on-doc_upd-revision':U /* Право на изменение сверки */
-              .
+              if p-rvs-type = {&rvs-after-doc} then
+                v-act-name = 'actn_rvs-on-doc_upd-revision':U. /* Право на изменение сверки */
             end.
             case p-rvs-type :
               when {&rvs-before-doc} then do:
@@ -525,36 +680,117 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
 
         case p-action-type :
           when "meas":U then do:
+            for each tt-meas
+            :
+              delete tt-meas .
+            end.
+            
+            
             find buf_place no-lock
               where buf_place.obj-type = t-doc.obj-type
                 and buf_place.obj-code = t-doc.obj-code
                 and buf_place.pl-code  = v-pl-code
               .
-            if buf_place.is-meas <> yes then do:
-              message
-                substitute( 'Резервуар &1 не измеряется приборами.', buf_place.pl-code)
-                view-as alert-box error .
-              undo block_tr, return error .
-            end.
-            if buf_place.loc1 = "":U
-              or buf_place.loc1 = ?
-            then do:
-              message
-                substitute( 'Не указан локальный код на складском месте &1 .', buf_place.pl-code )
-                view-as alert-box error .
-              undo block_tr, return error .
-            end.
-
-            for each tt-meas
-            :
-              delete tt-meas .
-            end.
-            create tt-meas .
-            assign
-              tt-meas.obj-type = t-doc.obj-type
-              tt-meas.obj-code = t-doc.obj-code
-              tt-meas.pl-code  = v-pl-code
-            .
+              
+            run placelib_get-attr  (
+               input {&place-com-tanks}
+              ,input buf_rvs-doc.obj-code
+              ,input buf_rvs-doc.obj-type
+              ,input v-pl-code
+              ,output v-value
+              ,output v-ok      )
+            no-error.
+            if is-sug(buf_goods.gds-code)
+            and v-ok
+            and v-value > ""
+            then do :
+              v-com-vessel-rvs = yes .
+              v-com-vessel-is-meas = no .
+              v-value = v-value + "," + buf_place.loc1 .
+              do ii = 1 to num-entries(v-value) :
+                find first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
+                                               and buf_place.obj-code = buf_rvs-doc.obj-code
+                                               and buf_place.loc1     = entry(ii, v-value)
+                                               and buf_place.status_  = ""
+                                               no-error .
+                if available buf_place
+                then do :
+/*                  run placelib_get-attr  ( input {&place-rvd-dnsty}      */
+/*                                            ,input buf_place.obj-code    */
+/*                                            ,input buf_place.obj-type    */
+/*                                            ,input buf_place.pl-code     */
+/*                                            ,output v-value2             */
+/*                                            ,output v-ok      ) no-error.*/
+/*                  if not v-ok then pl-rvd-dens = no.                     */
+/*                  else pl-rvd-dens = logical(v-value2) .                 */
+/*                                                                         */
+/*                  run placelib_get-attr  ( input {&place-rvd-lvl}        */
+/*                                            ,input buf_place.obj-code    */
+/*                                            ,input buf_place.obj-type    */
+/*                                            ,input buf_place.pl-code     */
+/*                                            ,output v-value2             */
+/*                                            ,output v-ok      ) no-error.*/
+/*                  if not v-ok then pl-rvd-lvl = no.                      */
+/*                  else pl-rvd-lvl = logical(v-value2) .                  */
+/*                                                                         */
+/*                  run placelib_get-attr  ( input {&place-rvd-tmp}        */
+/*                                            ,input buf_place.obj-code    */
+/*                                            ,input buf_place.obj-type    */
+/*                                            ,input buf_place.pl-code     */
+/*                                            ,output v-value2             */
+/*                                            ,output v-ok      ) no-error.*/
+/*                  if not v-ok then pl-rvd-temp = no.                     */
+/*                  else pl-rvd-temp = logical(v-value2) .                 */
+                  
+                  if buf_place.is-meas
+/*                  and not pl-rvd-dens*/
+/*                  and not pl-rvd-lvl */
+/*                  and not pl-rvd-temp*/
+                  then do :
+                    v-com-vessel-is-meas = yes .
+                    create tt-meas .
+                    assign
+                      tt-meas.obj-type = buf_rvs-doc.obj-type
+                      tt-meas.obj-code = buf_rvs-doc.obj-code
+                      tt-meas.pl-code  = buf_place.pl-code
+                      tt-meas.loc1     = buf_place.loc1
+                    .
+                  end .
+                end .
+                
+              end .
+              if not v-com-vessel-is-meas
+              then do :
+                message
+                  substitute( 'Ни один из сообщающихся резервуаров не измеряется приборами.', buf_place.pl-code)
+                  view-as alert-box error .
+                undo block_tr, return error .
+              end .
+            end .
+            else do :
+              if buf_place.is-meas <> yes then do:
+                message
+                  substitute( 'Резервуар &1 не измеряется приборами.', buf_place.pl-code)
+                  view-as alert-box error .
+                undo block_tr, return error .
+              end.
+              if buf_place.loc1 = "":U
+                or buf_place.loc1 = ?
+              then do:
+                message
+                  substitute( 'Не указан локальный код на складском месте &1 .', buf_place.pl-code )
+                  view-as alert-box error .
+                undo block_tr, return error .
+              end.
+            
+              create tt-meas .
+              assign
+                tt-meas.obj-type = t-doc.obj-type
+                tt-meas.obj-code = t-doc.obj-code
+                tt-meas.pl-code  = v-pl-code
+              .
+            end .  
+            
             find first sys-ctrl no-lock.
             run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
             run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
@@ -627,99 +863,224 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 view-as alert-box error .
               undo block_tr, return error .
             end.
-
-            { str/fill1plc.i
-              t-doc.obj-type
-              t-doc.obj-code
-              v-pl-code
-              recid(buf_rvs-line)
-              buf_rvs-line.rvs-prev-code
-              tt-meas
-              no-error
-            }
-            if error-status :error then do:
-              message
-                "Ошибка при заполнении данных с приборов на резервуарах." skip( 0 )
-                return-value skip
-                error-status :get-message(1) skip
-                view-as alert-box error .
-              undo block_tr, return error .
-            end.
             
-            find first rvs-line-attr exclusive-lock
-                 where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                   and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                   and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                   and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                   and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                   and rvs-line-attr.attr-code = "input-type-p" no-error.
-            if not available rvs-line-attr then do :
-              create rvs-line-attr.
+            if v-com-vessel-rvs
+            then do :
+              for each buf_rvs-line exclusive-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                                     and buf_rvs-line.obj-type = t-doc.obj-type
+                                                     and buf_rvs-line.obj-code = t-doc.obj-code
+                                                     and buf_rvs-line.gds-code = buf_goods.gds-code,
+              first tt-meas where tt-meas.pl-code = buf_rvs-line.pl-code
+              :
+                { str/fill1plc.i
+                  t-doc.obj-type
+                  t-doc.obj-code
+                  buf_rvs-line.pl-code
+                  recid(buf_rvs-line)
+                  buf_rvs-line.rvs-prev-code
+                  tt-meas
+                  no-error
+                }
+                if error-status :error then do:
+                  message
+                    "Ошибка при заполнении данных с приборов на резервуарах." skip( 0 )
+                    return-value skip
+                    error-status :get-message(1) skip
+                    view-as alert-box error .
+                  undo block_tr, return error .
+                end.
+                
+                find first rvs-line-attr exclusive-lock
+                     where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                       and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                       and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                       and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                       and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                       and rvs-line-attr.attr-code = "input-type-p" no-error.
+                if not available rvs-line-attr then do :
+                  create rvs-line-attr.
+                  assign
+                    rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                    rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                    rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                    rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                    rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                    rvs-line-attr.attr-code = "input-type-p"
+                  .
+                end.
+                if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+                else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+                
+                find first rvs-line-attr exclusive-lock
+                     where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                       and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                       and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                       and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                       and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                       and rvs-line-attr.attr-code = "input-type-t" no-error.
+                if not available rvs-line-attr then do :
+                  create rvs-line-attr.
+                  assign
+                    rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                    rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                    rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                    rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                    rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                    rvs-line-attr.attr-code = "input-type-t"
+                  .
+                end.
+                if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+                else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+                
+                find first rvs-line-attr exclusive-lock
+                     where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                       and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                       and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                       and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                       and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                       and rvs-line-attr.attr-code = "input-type-l" no-error.
+                if not available rvs-line-attr then do :
+                  create rvs-line-attr.
+                  assign
+                    rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                    rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                    rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                    rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                    rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                    rvs-line-attr.attr-code = "input-type-l"
+                  .
+                end.
+                if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+                else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+                
+                release rvs-line-attr no-error .
+    
+                run cur-time in this-procedure
+                  ( output v-today
+                  , output v-time
+                  ) .
+                { gbl/curobjdt.i
+                  t-doc.obj-type
+                  t-doc.obj-code
+                  v-today
+                }
+    
+                assign
+                  buf_rvs-line.real-date = v-today
+                  buf_rvs-line.real-time = v-time
+                .
+              end .
+            end .
+            else do :
+              { str/fill1plc.i
+                t-doc.obj-type
+                t-doc.obj-code
+                v-pl-code
+                recid(buf_rvs-line)
+                buf_rvs-line.rvs-prev-code
+                tt-meas
+                no-error
+              }
+              if error-status :error then do:
+                message
+                  "Ошибка при заполнении данных с приборов на резервуарах." skip( 0 )
+                  return-value skip
+                  error-status :get-message(1) skip
+                  view-as alert-box error .
+                undo block_tr, return error .
+              end.
+            
+              find first rvs-line-attr exclusive-lock
+                   where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                     and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                     and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                     and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                     and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                     and rvs-line-attr.attr-code = "input-type-p" no-error.
+              if not available rvs-line-attr then do :
+                create rvs-line-attr.
+                assign
+                  rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                  rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                  rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                  rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                  rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                  rvs-line-attr.attr-code = "input-type-p"
+                .
+              end.
+              if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+              else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+              
+              find first rvs-line-attr exclusive-lock
+                   where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                     and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                     and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                     and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                     and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                     and rvs-line-attr.attr-code = "input-type-t" no-error.
+              if not available rvs-line-attr then do :
+                create rvs-line-attr.
+                assign
+                  rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                  rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                  rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                  rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                  rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                  rvs-line-attr.attr-code = "input-type-t"
+                .
+              end.
+              if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+              else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+              
+              find first rvs-line-attr exclusive-lock
+                   where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                     and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                     and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                     and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                     and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                     and rvs-line-attr.attr-code = "input-type-l" no-error.
+              if not available rvs-line-attr then do :
+                create rvs-line-attr.
+                assign
+                  rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                  rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                  rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                  rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                  rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                  rvs-line-attr.attr-code = "input-type-l"
+                .
+              end.
+              if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+              else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+              
+              release rvs-line-attr no-error .
+  
+              run cur-time in this-procedure
+                ( output v-today
+                , output v-time
+                ) .
+              { gbl/curobjdt.i
+                t-doc.obj-type
+                t-doc.obj-code
+                v-today
+              }
+  
               assign
-                rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                rvs-line-attr.attr-code = "input-type-p"
+                buf_rvs-line.real-date = v-today
+                buf_rvs-line.real-time = v-time
               .
-            end.
-            if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
-            else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+            end .
             
-            find first rvs-line-attr exclusive-lock
-                 where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                   and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                   and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                   and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                   and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                   and rvs-line-attr.attr-code = "input-type-t" no-error.
-            if not available rvs-line-attr then do :
-              create rvs-line-attr.
-              assign
-                rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                rvs-line-attr.attr-code = "input-type-t"
+            if not available buf_rvs-line
+            then do :
+              find first buf_rvs-line exclusive-lock
+              where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                and buf_rvs-line.obj-type = t-doc.obj-type
+                and buf_rvs-line.obj-code = t-doc.obj-code
+                and buf_rvs-line.pl-code  = v-pl-code
+                and buf_rvs-line.gds-code = buf_goods.gds-code
               .
-            end.
-            if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
-            else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
-            
-            find first rvs-line-attr exclusive-lock
-                 where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                   and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                   and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                   and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                   and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                   and rvs-line-attr.attr-code = "input-type-l" no-error.
-            if not available rvs-line-attr then do :
-              create rvs-line-attr.
-              assign
-                rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                rvs-line-attr.attr-code = "input-type-l"
-              .
-            end.
-            if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
-            else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
-            
-            release rvs-line-attr no-error .
-
-            run cur-time in this-procedure
-              ( output v-today
-              , output v-time
-              ) .
-
-            assign
-              buf_rvs-line.real-date = v-today
-              buf_rvs-line.real-time = v-time
-            .
+            end .
             infoSectionsTotal:CalculateTotal().
             if p-rvs-type = {&rvs-before-doc}  then do:
               if v-prt-start-real-date = ? then v-prt-start-real-date = buf_rvs-line.real-date .
@@ -731,6 +1092,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
           end.
           when "edit":U then do:
+            if not available buf_rvs-line
+            then do :
+              find first buf_rvs-line exclusive-lock
+              where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                and buf_rvs-line.obj-type = t-doc.obj-type
+                and buf_rvs-line.obj-code = t-doc.obj-code
+                and buf_rvs-line.pl-code  = v-pl-code
+                and buf_rvs-line.gds-code = buf_goods.gds-code
+              .
+            end .
 
             if not error-status :error 
                and is-gas(buf_goods.gds-code) then do:
@@ -811,7 +1182,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           end.
        end case.
          
-        def var ii as int no-undo. 
+         
         if not p-action = {&lookup}
         then  
           do ii = 1 to infoSectionsTotal:SectionNum :
@@ -824,17 +1195,27 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         infoSectionsTotal:SaveDB().
         
         run placelib_get-attr(input {&place-virtual}
-                                 ,input buf_rvs-line.obj-code
-                                 ,input buf_rvs-line.obj-type
-                                 ,input buf_rvs-line.pl-code
-                                 ,output v-value
-                                 ,output v-ok) no-error.
+                             ,input t-doc.obj-code
+                             ,input t-doc.obj-type
+                             ,input v-pl-code
+                             ,output v-value
+                             ,output v-ok) no-error.
         
         is-vir = if (v-ok and logical(v-value)) then true else false.
         
         if not is-gas(buf_goods.gds-code)
         and not is-vir then do:
-        
+            if not available buf_rvs-line
+            then do :
+              find first buf_rvs-line exclusive-lock
+              where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                and buf_rvs-line.obj-type = t-doc.obj-type
+                and buf_rvs-line.obj-code = t-doc.obj-code
+                and buf_rvs-line.pl-code  = v-pl-code
+                and buf_rvs-line.gds-code = buf_goods.gds-code
+              .
+            end .
+            
             if p-action = {&update} then do:
               if p-action-type = "meas":U then do:
                 { str/rvsclcln.i
@@ -989,6 +1370,48 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   ) no-error .
                   if v-cardifLgas = ?
                     then v-cardifLgas = 0.
+                    
+                  run placelib_get-attr  (
+                     input {&place-com-tanks}
+                    ,input t-doc.obj-code
+                    ,input t-doc.obj-type
+                    ,input v-pl-code
+                    ,output v-value
+                    ,output v-ok      )
+                  no-error.
+                  if v-ok
+                  and v-value > ""
+                  then do :
+                    do ii = 1 to num-entries(v-value) :
+                      find first buf_place no-lock where buf_place.obj-type = t-doc.obj-type
+                                                     and buf_place.obj-code = t-doc.obj-code
+                                                     and buf_place.loc1     = entry(ii, v-value)
+                                                     and buf_place.status_  = ""
+                                                     no-error .
+                      if available buf_place
+                      then do :
+                        run return-rvs-qnty in this-procedure
+                          ( input t-doc.doc-code
+                           ,input buf_goods.gds-code
+                           ,input buf_place.pl-code
+                           ,output v-com-tank-rvs-qnty-before
+                           ,output v-com-tank-rvs-qnty-after
+                           ,output v-com-tank-rvs-cli-qnty-before
+                           ,output v-com-tank-rvs-cli-qnty-after
+                           ,output v-com-tank-delta-mass-qnty
+                          ) no-error .
+                        if error-status :error then do:
+                          undo block_tr, return error return-value .
+                        end.
+                        assign
+                          v-rvs-qnty-before     = v-rvs-qnty-before     + v-com-tank-rvs-qnty-before
+                          v-rvs-qnty-after      = v-rvs-qnty-after      + v-com-tank-rvs-qnty-after
+                          v-rvs-cli-qnty-before = v-rvs-cli-qnty-before + v-com-tank-rvs-cli-qnty-before
+                          v-rvs-cli-qnty-after  = v-rvs-cli-qnty-after  + v-com-tank-rvs-cli-qnty-after
+                        .
+                      end.
+                    end .
+                  end .
                   
                   dM = buf_doc-line.cli-qnty - (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before).
                   dmdop = SQRT ((v-rvs-cli-qnty-after *  v-cardifLgas) * (v-rvs-cli-qnty-after *  v-cardifLgas) + (v-rvs-cli-qnty-before *  v-cardifLgas) * (v-rvs-cli-qnty-before *  v-cardifLgas)) / 100.
@@ -1837,6 +2260,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
 
   &if "{2}":U = "all-line":U &then
     { ref/gds-attr.i }
+    { str/is-sug.i }
+    { str/placelib.i }
 
     PROCEDURE cr-rvs-doc :
 
@@ -1856,6 +2281,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define buffer buf_trn-doc    for ub.trn-doc .
         define buffer buf_doc-line   for ub.doc-line .
         define buffer buf_goods      for ub.goods .
+        define buffer buf_place      for ub.place .
         define buffer buf_rvs-doc    for ub.rvs-doc .
         define buffer cur_shift-obj  for ub.shift-obj.
         define buffer prev_shift-obj for ub.shift-obj.
@@ -1863,13 +2289,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define buffer prev_icnt-doc  for ub.icnt-doc.
         define buffer buf_doc-pl     for ub.doc-pl.
 
-        define variable is-petrolium       as logical   no-undo.
-        define variable is-pieces          as logical   no-undo.
+        define variable is-petrolium       as logical   no-undo .
+        define variable is-pieces          as logical   no-undo .
         define variable v-ptrl-without-rvs as character no-undo .
         define variable v-attr-type        as character no-undo .
         define variable v-ptrl-avail       as logical   no-undo .
         define variable v-doc-pl-avail     as logical   no-undo .
-        define variable v-today            as date      no-undo.
+        define variable v-today            as date      no-undo .
+        define variable v-value            as character no-undo .
+        define variable v-ok               as logical   no-undo .
+        define variable ii                 as integer   no-undo .
 
         define variable varlog             as logical   no-undo .
 
@@ -2130,6 +2559,49 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   buf_rvs-doc.shift-num
                 }
               end. /* for each buf_rvs-doc */
+              
+              if is-sug(buf_doc-pl.gds-code)
+              then do :
+                run placelib_get-attr  (
+                   input {&place-com-tanks}
+                  ,input buf_doc-pl.obj-code
+                  ,input buf_doc-pl.obj-type
+                  ,input buf_doc-pl.pl-code
+                  ,output v-value
+                  ,output v-ok      )
+                no-error.
+                if v-ok
+                and v-value > ""
+                then do ii = 1 to num-entries(v-value) :
+                  find first buf_place no-lock where buf_place.obj-type = buf_doc-pl.obj-type
+                                                 and buf_place.obj-code = buf_doc-pl.obj-code
+                                                 and buf_place.loc1     = entry(ii, v-value)
+                                                 and buf_place.status_  = ""
+                                                 no-error .
+                  if available buf_place
+                  then do :
+                    for each buf_rvs-doc
+                      where buf_rvs-doc.out-code = buf_trn-doc.doc-code
+                    on error undo tr, return error return-value
+                    :
+                      assign
+                        v-doc-pl-avail = true
+                      .
+                      { str/crrvslin.i
+                        buf_rvs-doc.obj-type
+                        buf_rvs-doc.obj-code
+                        buf_rvs-doc.rvs-code
+                        buf_rvs-doc.rvs-type
+                        buf_place.pl-code
+                        buf_doc-pl.gds-code
+                        "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
+                        buf_rvs-doc.shift-date
+                        buf_rvs-doc.shift-num
+                      }
+                    end. /* for each buf_rvs-doc */
+                  end .
+                end .
+              end .
             end. /* for each ub.doc-pl */
             if v-doc-pl-avail = false then do:
               message

@@ -908,12 +908,13 @@ ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     hand-log-msg-h = oxml-log:handle
   g#esys = true
   .
-  run adm/db-info.p ( output v-db-num ) no-error .
+  define variable mDBInfo as character no-undo.
+  run adm/db-info.p ( output v-db-num, output mDBInfo ) no-error .
 
   if error-status:error then do:
     run write-to-log( substitute( "&1. &2&3&4"
                                   ,vss-workfile
-                                  ,return-value
+                                  ,mDBInfo
                                   ,{&new-line}
                                   ,error-status:get-message(error-status:num-messages)
                                 )
@@ -922,7 +923,7 @@ ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
 
   assign
-   frame {&frame-name}:title = substitute("OpenXML &1", return-value)
+   frame {&frame-name}:title = substitute("OpenXML &1", mDBInfo)
    br-esys:num-locked-columns IN FRAME {&frame-name} = 1
   .
   RUN Myenable in this-procedure.

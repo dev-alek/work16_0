@@ -48,7 +48,9 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
             textBox2:enabled = not iModeview
          .
     end. 
+
      method Public VOID LocalEvent(input iEvent as character, input iEventParam as character  ):
+
         if iEvent eq "CritOneLable"
         then do:
             if entry (1, iEventParam,"#") ne "?"
@@ -83,6 +85,14 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
                 label3:visible      = no
             .
         end. 
+        if iEvent eq "CritOneLableCode" then do:
+          label1:Visible = false .
+          label2:Visible = true .
+          label3:Visible = false .
+          textBox1:Visible = false .
+          textBox2:Visible = true .    
+          label2:text = iEventParam .      
+        end.
         if iEvent eq "NotOneLable" then do:
           label1:Visible = false .
           label2:Visible = false .
@@ -122,8 +132,8 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
     this-object:components = new System.ComponentModel.Container().
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    define variable tableDesc1 as Progress.Data.TableDesc no-undo.
-    tableDesc1 = new Progress.Data.TableDesc("tt-PromoCriterion").
+    define variable tableDesc2 as Progress.Data.TableDesc no-undo.
+    tableDesc2 = new Progress.Data.TableDesc("tt-PromoCriterion").
     this-object:tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel().
     this-object:label2 = new System.Windows.Forms.Label().
     this-object:textBox2 = new System.Windows.Forms.TextBox().
@@ -188,13 +198,13 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     define variable arrayvar0 as "Progress.Data.TableDesc[]" no-undo.
     arrayvar0 = new "Progress.Data.TableDesc[]"(0).
-    tableDesc1:ChildTables = arrayvar0.
+    tableDesc2:ChildTables = arrayvar0.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 2 no-undo.
     arrayvar1[1] = new Progress.Data.ColumnPropDesc("discont", "знач. скидки", Progress.Data.DataType:DECIMAL).
     arrayvar1[2] = new Progress.Data.ColumnPropDesc("mincrit", "минимальное значение критерия", Progress.Data.DataType:DECIMAL).
-    tableDesc1:Columns = arrayvar1.
-    this-object:bindPromoCrit:TableSchema = tableDesc1.
+    tableDesc2:Columns = arrayvar1.
+    this-object:bindPromoCrit:TableSchema = tableDesc2.
     /*  */
     /* textBox1 */
     /*  */
@@ -204,6 +214,7 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
     this-object:textBox1:Name = "textBox1".
     this-object:textBox1:Size = new System.Drawing.Size(144, 20).
     this-object:textBox1:TabIndex = 2.
+    this-object:textBox1:TextChanged:Subscribe(this-object:textBox1_TextChanged).
     /*  */
     /* label1 */
     /*  */
@@ -248,6 +259,17 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
+	method private void textBox1_TextChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
 	method private void textBox2_TextChanged( input sender as System.Object, input e as System.EventArgs ):
 		
 		return.
@@ -255,7 +277,9 @@ CLASS ibs.th.ref.promo.uc_Canon INHERITS UserControl:
 	end method.
 
     DESTRUCTOR PUBLIC uc_Canon ( ):
-        bindPromocrit:Assign().
+        if valid-handle(bindPromocrit:handle)
+        then
+          bindPromocrit:Assign().
         bindPromocrit:Dispose().
     END DESTRUCTOR.
 

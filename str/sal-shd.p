@@ -39,6 +39,7 @@ define variable vss-description as character no-undo init "Обработка документов 
 { str/tpsidoc.i "NEW SHARED"  proc }
 { str/dtlrestm.i "NEW SHARED" }
 { gbl/thbj-def.i }
+{ gbl/getcntxt.i def }
 
 define new shared temp-table temp-inkas no-undo like ub.inkas.
 define variable v-curr-r-b as character no-undo init {&r-b-rubl}.
@@ -259,6 +260,13 @@ on error undo, return error
       define variable v-curr-abbr as character no-undo .
       define variable v-retail    as logical no-undo .
       */
+      assign
+        v-cntxt-obj-type      = temp-obj.obj-type
+        v-cntxt-obj-code      = temp-obj.obj-code
+        v-cntxt-host-code-obj = temp-obj.host-code
+        v-cntxt-db-num-obj    = temp-obj.db-num
+      .
+      
       run write-to-log in this-procedure (
             input substitute( "            &1&2 Обработка документов продаж............."
                              , temp-obj.obj-type
@@ -419,3 +427,30 @@ on error undo, return error
     end. /*for each temp-obj*/
 end. /**/
 
+procedure mainmenu_getcntxt :
+define output parameter p-cntxt-db-num                as integer   no-undo . /* текущая БД            */
+define output parameter p-cntxt-userid                as character no-undo . /* текущий пользователь  */
+define output parameter p-cntxt-level                 as character no-undo . /* уровень контекста     */
+define output parameter p-cntxt-host-code-obj         as integer   no-undo . /* текущая фирма         */
+define output parameter p-cntxt-obj-type              as character no-undo . /* тип текущего объекта  */
+define output parameter p-cntxt-obj-code              as integer   no-undo . /* код текущего объекта  */
+define output parameter p-cntxt-db-num-obj            as integer   no-undo . /* база текущего объекта */
+define output parameter p-cntxt-is-admin              as logical   no-undo . /* база текущего объекта */
+
+  do
+  on error undo, return error return-value
+  :
+
+  assign
+    p-cntxt-db-num          =  g#db-num
+    p-cntxt-userid          =  g#userid
+    p-cntxt-level           =  v-cntxt-level
+    p-cntxt-host-code-obj   =  v-cntxt-host-code-obj
+    p-cntxt-obj-type        =  v-cntxt-obj-type
+    p-cntxt-obj-code        =  v-cntxt-obj-code
+    p-cntxt-is-admin        =  v-cntxt-is-admin
+    p-cntxt-db-num-obj      =  v-cntxt-db-num-obj
+  .
+
+  end.
+ end procedure. /* mainmenu_getcntxt */

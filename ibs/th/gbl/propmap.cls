@@ -1,21 +1,30 @@
- 
-/*------------------------------------------------------------------------
-   File        : prop
-   Purpose     : 
-   Syntax      : 
-   Description : 
-   Author(s)   : asmorozov
-   Created     : Tue Feb 18 18:54:25 MSK 2020
-   Notes       : 
- ----------------------------------------------------------------------*/
-
+/*
+  $Revision:$
+  $Author:$
+  $Date:$
+  $Workfile:$
+  $Archive:$
+  
+  Автор: Рубан Дмитрий Андреевич 
+  Дата создания: 9 янв. 2023 г.
+  Author:  Ruban Dmitriy Andreevich
+  Creation date: 9 янв. 2023 г.
+  
+  */
 using Progress.Lang.*.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.sys.objth.
 using ibs.th.gbl.map.mapstring.
 
 
-class ibs.th.gbl.propmap inherits objth: 
+class ibs.th.gbl.propmap inherits objth:
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Описание элементов справочника" get.
+     
   
   define public property Label_ as character no-undo 
     get.
@@ -24,12 +33,18 @@ class ibs.th.gbl.propmap inherits objth:
   define public property NameProp as character no-undo 
     get.
     set. 
-
-  
+ 
   define public property KeyIntDB as integer no-undo 
     get.
     set.
 
+  define public property KeyInt as integer no-undo 
+    get.
+    set(arg as integer ):
+       KeyInt   = arg.
+       KeyIntDB = arg.
+    end.
+  
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -43,12 +58,12 @@ class ibs.th.gbl.propmap inherits objth:
       .
   end constructor.
  
-  constructor public propmap (iKeyIntDB as integer, inNameProp as char, inLabel as char):
+  constructor public propmap (iKeyInt as integer, inNameProp as char, inLabel as char):
     super ().
     assign
       Label_   = inLabel
       NameProp = inNameProp
-      KeyIntDB = iKeyIntDB
+      KeyInt   = iKeyInt
       .
   end constructor.
   /*------------------------------------------------------------------------------

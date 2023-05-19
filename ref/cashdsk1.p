@@ -37,7 +37,7 @@ define input parameter p-remote              like ub.cash-desk.remote           
 define input parameter p-version             like ub.cash-desk.version            no-undo .
 define input parameter p-registration-code   like ub.cash-desk.registration-code  no-undo .
 define input parameter p-serial-code         like ub.cash-desk.serial-code        no-undo .
-define input parameter p-fr-type             like ub.cash-desk.fr-type            no-undo .
+define input parameter p-fr-type             as character no-undo .
 /* вариант исполнения кассы: обычная, ТСО, мобильная.
    1,2,3 = вариант исполения, отличный от обычного
    0 = обычный вариант исполнения: в БД не пишем, если был записан - стираем. 
@@ -316,6 +316,7 @@ if not p-is-del then do:
                ,{&cd-type-autotank})
     view-as alert-box error .
     undo, return error "autonomy":U.
+
   end.
   if p-pos-type = {&cd-type-infokiosk}
   or p-pos-type = {&cd-type-pricecheck-Servispl}
@@ -1109,15 +1110,27 @@ ON STOP UNDO, RETURN ERROR return-value :
     end.
     if ub.cash-desk.db-num <> p-db-num
     OR ub.cash-desk.obj-code <> p-obj-code
-    OR ub.cash-desk.pos-type <> p-pos-type
     OR ub.cash-desk.cash-num <> p-cash-num
     then do:
       message
       vss-workfile vss-revision vss-description skip
       "Для уже имеющейся записи нельзя изменить"
-      "номер БД, номер магазина, номер кассы и тип кассы" skip
+      "номер БД, номер магазина, номер кассы" skip
       view-as alert-box ERROR.
       undo, return error '':U.
+    end.
+    else if ub.cash-desk.pos-type <> p-pos-type
+    then do:
+       define buffer buf_cash-desk-attr for ub.cash-desk-attr.
+       for each buf_cash-desk-attr where buf_cash-desk-attr.db-num   eq ub.cash-desk.db-num 
+                                     and buf_cash-desk-attr.obj-code eq ub.cash-desk.obj-code
+                                     and buf_cash-desk-attr.cash-num eq ub.cash-desk.cash-num
+                                     and buf_cash-desk-attr.pos-type eq ub.cash-desk.pos-type
+       exclusive-lock:
+          buf_cash-desk-attr.pos-type = p-pos-type.
+       end.
+       /* проверка что такой кассы нет тут не нужна смотри выше */
+       ub.cash-desk.pos-type = p-pos-type.
     end.
   end.
   assign
@@ -1210,7 +1223,6 @@ ON STOP UNDO, RETURN ERROR return-value :
   end.
 
   /* признак какая это касса: ТСО, обычная касса или мобильная */
-  define buffer buf_cash-desk-attr for ub.cash-desk-attr .
   if     p-device-kind <> ? 
      and p-device-kind <> 0 
   then do :

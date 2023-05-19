@@ -284,7 +284,9 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
         if  dataGridView1:SelectedCells:Count > 0
         then
             dataGridView1:SelectedCells[0]:Selected = true.
-        bindPromoPay:Assign().
+        if valid-handle(bindPromoPay:handle)
+        then
+           bindPromoPay:Assign().
         bindPromoPay:Dispose().
  
     end.

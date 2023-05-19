@@ -293,7 +293,9 @@ CLASS ibs.th.ref.promo.uc_Tab_Presents INHERITS UserControl:
     end.
 
     DESTRUCTOR PUBLIC uc_Tab_Presents ( ):
-        bindPromoActionOne:Assign().
+        if valid-handle(bindPromoActionOne:handle)
+        then
+           bindPromoActionOne:Assign().
         bindPromoActionOne:Dispose().
         clenObject().
         

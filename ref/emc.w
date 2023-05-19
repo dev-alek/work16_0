@@ -34,9 +34,7 @@ Creation date: 21/04/21
 
 /* Parameters Definitions ---                                           */
 
-define input parameter  parparentproc as widget-handle no-undo .
-define input parameter  bttns         as character     no-undo .
-define output parameter p-rid         as recid         no-undo   .
+{ ref/codepar.i}
 
 define variable vss-revision    as character no-undo init "$Revision: $":U .
 define variable vss-author      as character no-undo init "$Author: $":U .
@@ -178,7 +176,6 @@ DEFINE FRAME f-okei2
      b-del AT ROW 1 COL 34 WIDGET-ID 2
      b-upd AT ROW 1 COL 44.13
      b-print AT ROW 1 COL 65
-     b-hist AT ROW 1 COL 68
      b-help AT ROW 1 COL 71
      b-add2 AT ROW 2.25 COL 14.13 WIDGET-ID 10
      BROWSE-5 AT ROW 4 COL 1 WIDGET-ID 300
@@ -239,7 +236,7 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-okei2 f-okei2
 ON go OF FRAME f-okei2 /* “ËÔ ≈Ã÷ */
 do:
-    p-rid = v-rid.
+/*    p-rid = v-rid.*/
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -260,10 +257,9 @@ do:
                           , input {&add-def}
                           , input-output ri).
    if ri <> ? then  do:
-
-            {&OPEN-QUERY-br-okei}
-            reposition BROWSE-5 to recid ri.
-            apply "ENTRY" to BROWSE-5.
+         {&OPEN-QUERY-BROWSE-5}
+         reposition BROWSE-5 to recid ri.
+         apply "ENTRY" to BROWSE-5.
 
    end.
 end.
@@ -280,28 +276,15 @@ do:
    define buffer btt-code for code.
    define variable vRec as recid no-undo.
    define variable v-ok as logical no-undo.
-
-   if v-ok
-   then do:
-      find first b1-code where b1-code.code = {&CODE_PARENT} no-lock no-error.
-      if     avail b1-code
-         and not b1-code.nwsgbd
-      then do trans:
-         find first b1-code where b1-code.code = {&CODE_PARENT} exclusive-lock no-error.
-         b1-code.nwsgbd = yes.
-      end.
-   end.
-
-   ri = recid(code).
+   if avail code
+   then
    run ref/emc-value.w (
                             input parparentproc
-                          , input bttns
-                          , input ri).
-   if ri <> ? then  do:
-
-         end.
-      end.
-
+                          , input iMode
+                          , input code.parent
+                          , input code.code
+                          , input ?).
+end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -460,14 +443,14 @@ PROCEDURE enable_UI :
     b-exit
     b-add2
     b-sel
-    when can-do( bttns, "b-sel" )
+    when imode eq {&select}
     b-add
-    when can-do( bttns, "b-add" ) and v-db-num = 0  
+    when imode eq {&update} and v-db-num = 0  
     
     b-del
-    when can-do ( bttns, "b-del" ) and v-db-num = 0
+    when imode eq {&update} and v-db-num = 0
     b-upd
-    when can-do( bttns, "b-upd" ) and v-db-num = 0   
+    when imode eq {&update} and v-db-num = 0   
     b-help
     with frame {&frame-name}.
 

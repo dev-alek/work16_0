@@ -90,6 +90,7 @@ define temp-table gds-list no-undo like ub.goods
   private set.
    
   define private variable m-storage as class promoactionstorage no-undo .
+  define private variable m-goodsStorage as class promogoodsstorage no-undo . 
   define variable dialog1 as class ibs.th.ref.promo.dPromoActions no-undo .
   
   define private variable m-local-sec as int64 no-undo init -1.
@@ -205,6 +206,35 @@ define variable mStatus as integer  no-undo.
                
    end.          
 
+/*  method public class promoGoodsSubs ReturnSubsPromoGoods():                  */
+/*      define variable vSubs  as class promoGoodsSubs  no-undo .               */
+/*      define variable vSub   as class PromoGoodsSub   no-undo .               */
+/*      vSubs = new promoGoodsSubs().                                           */
+/*      for each tt-PromoGoodsAppl where tt-PromoGoodsAppl.Chang:               */
+/*          vsub = cast(tt-PromoGoodsAppl.sub, ibs.th.ref.promo.PromoGoodsSub) .*/
+/*          m-goodsStorage:refreshObj(vsub).                                    */
+/*          vSubs:AddItem(tt-PromoGoodsAppl.sub).                               */
+/*      end.                                                                    */
+/*      return vSubs.                                                           */
+/*   end.                                                                       */
+   
+   method public void ChangBarCode(input iAll as logical):
+       define variable vFlag as logical no-undo.
+       vFlag = if     available tt-PromoBc
+                  and tt-PromoBc.Chang
+               then no
+               else yes.
+       if iAll 
+       then
+           for each   tt-PromoBc:
+               tt-PromoBc.Chang = vFlag.
+           end.
+       else
+            if avail tt-PromoBc
+            then
+                tt-PromoBc.Chang = vFlag.
+               
+   end. 
   method public void printPromoActionList () :
   define variable v-report-name       as character no-undo .
   define variable v-file-name-rep-htm as character no-undo .
@@ -451,6 +481,14 @@ end . /* end_of низ таблицы и html-файла */
                                                  "  and tt-PromoGoodsAppl.mode ne {&h-delete}"
                                              )).
                     end.
+                    when "PromoGoodsApplFix" 
+                    then do:
+                        hQuery:set-buffers(buffer tt-PromoGoodsAppl:HANDLE). 
+                        hQuery:query-prepare("FOR EACH tt-PromoGoodsAppl " + if not available tt-promoaction-one then "" else (
+                                                 "where tt-PromoGoodsAppl.idaction eq " + string(tt-promoaction-one.id)  +
+                                                 "  and tt-PromoGoodsAppl.mode ne {&h-delete}"
+                                             )).
+                    end.                    
                     when "PromoCardsBin" 
                     then do:
                         hQuery:set-buffers(buffer tt-PromoCardsBin:HANDLE). 
@@ -1112,7 +1150,6 @@ end . /* end_of низ таблицы и html-файла */
     .
     if v-sched-sub:schedType = 0 then CreateTableForSchedw0 (p-mode, p-sub:ScheduleWeek).
                                  else CreateTableForSchedw1 (p-mode, p-sub:ScheduleWeek).
-       
      //if p-mode = {&update} then temp-table tt-promoaction-one:tracking-changes = true .
      CreateTableForGoodsCrits(p-mode, p-sub:GoodsCrits).
      CreateTableForGoodsAppl (p-mode, p-sub:GoodsAppl ).
@@ -1202,7 +1239,7 @@ end . /* end_of низ таблицы и html-файла */
   ) :
     define variable vI as int no-undo.
     define variable p-sub as class promogoodssub no-undo.
-    
+
     //if p-mode = {&add-def} then temp-table tt-PromoGoodsAppl:tracking-changes = true . 
     do vi = 1 to p-subs:GetItem(vI):  
         p-sub = p-subs:promoGoodsObjCurr.
@@ -2369,11 +2406,12 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
     end case.
   end.         
 method public void printgds(input iName as character ):
+  define buffer buf_PromoBc for tt-PromoBc .
     case iName:
        when "PromoBarCode" or when "PromoBarCodeFix" 
        then do:
-
-      empty temp-table gds-list .
+         empty temp-table gds-list .
+      if not tt-PromoBc.Chang then do:
                find first ub.goods no-lock where
                   ub.goods.gds-code = tt-PromoBc.gds-code no-error .
                create gds-list.
@@ -2383,8 +2421,24 @@ method public void printgds(input iName as character ):
                   gds-list.ActionId   = tt-PromoBc.idAction
                   gds-list.db-num     = tt-PromoBc.db-num
                   .
+        end.
+        else do:
+          for each buf_PromoBc where buf_PromoBc.Chang:
+               find first ub.goods no-lock where
+                  ub.goods.gds-code = buf_PromoBc.gds-code no-error .
+               create gds-list.
+               buffer-copy goods to gds-list.
+               assign
+                  gds-list.promo-code = buf_PromoBc.bc-code
+                  gds-list.ActionId   = buf_PromoBc.idAction
+                  gds-list.db-num     = buf_PromoBc.db-num
+                  .           
+          end.
+        end.
         run ibs/th/rep/tick-lst.p (input parparentproc, input v-cntxt-obj-type, input v-cntxt-obj-code, input table gds-list).
-
+        for each tt-PromoBc where tt-PromoBc.Chang:
+          tt-PromoBc.Chang = false .
+        end.
          
        end. 
     end case.

@@ -3210,9 +3210,10 @@ release rvs-line-attr no-error .
   tt-rvs-line.obj-code
 }
 
-if ptrlprop-calc-free-vol
-and buf_rvs-doc.rvs-type = {&rvs-before-doc}
+if buf_rvs-doc.rvs-type = {&rvs-before-doc}
 then do :
+if ptrlprop-calc-free-vol then do:
+
   define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo.
   define variable iisec as integer no-undo .
   define variable v-doc-volume as decimal no-undo init 0.0 .
@@ -3263,64 +3264,215 @@ then do :
     then do :
       find first buf_doc-pl-attr exclusive-lock
           where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
-            and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
-            and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
-            and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
-            and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
-            and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-      if available buf_doc-pl-attr then
+          and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+          and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+          and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+          and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+          and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
+        if available buf_doc-pl-attr then
+        do :
+          buf_doc-pl-attr.attr-value = string(no)  .
+        end.
+        else
+        do :
+          create buf_doc-pl-attr.
+          assign
+            buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+            buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+            buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+            buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+            buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+            buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+            buf_doc-pl-attr.attr-value = string(no)
+            .
+        end.
+      end .
+      else 
       do :
-        buf_doc-pl-attr.attr-value = string(no)  .
-      end.
-      else
-      do :
-        create buf_doc-pl-attr.
-        assign
-          buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
-          buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
-          buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
-          buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
-          buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
-          buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-          buf_doc-pl-attr.attr-value = string(no)
-        .
-      end.
-    end .
-    else do :
-      message "Внимание! Объем нефтепродукта по ТТН " string(round(v-doc-volume, 0))
-              "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "
-              string(round(v-free-vol, 0)) "л." skip
-              "Проверьте введенные данные из ТТН или значение фактического объема в резервуаре в сверке до слива"
-              " и при необходимости проинформируйте ответственное лицо ОГ в соответствии со схемой оповещения. Если данные корректны, прием запрещен!"
-      view-as alert-box . 
-      find first buf_doc-pl-attr exclusive-lock
+        run ref/message_volue.w(input string(round(v-doc-volume, 0)),
+          input buf_place.loc1,
+          input string(round(v-free-vol, 0)),
+          input true) no-error .
+/*        message "Внимание! Объем нефтепродукта по ТТН " string(round(v-doc-volume, 0))                                                                 */
+/*          "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "                                                                */
+/*          string(round(v-free-vol, 0)) "л." skip                                                                                                       */
+/*          "Проверьте введенные данные из ТТН или значение фактического объема в резервуаре в сверке до слива"                                          */
+/*          " и при необходимости проинформируйте ответственное лицо ОГ в соответствии со схемой оповещения. Если данные корректны, прием запрещен!" skip*/
+/*          "ВНИМАНИЕ!!! Прием невозможен, недостаточно свободного объема резервуара!!!"                                                                 */
+/*          view-as alert-box .                                                                                                                          */
+        find first buf_doc-pl-attr exclusive-lock
           where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
           and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
           and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
           and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
           and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
           and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-      if available buf_doc-pl-attr then
+        if available buf_doc-pl-attr then
+        do :
+          buf_doc-pl-attr.attr-value = string(yes)  .
+        end.
+        else
+        do :
+          create buf_doc-pl-attr.
+          assign
+            buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+            buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+            buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+            buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+            buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+            buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+            buf_doc-pl-attr.attr-value = string(yes)
+            .
+        end.       
+      end .
+    end .                            
+  end .
+end.
+  if buf_rvs-doc.rvs-type = {&rvs-after-doc} then 
+  do:
+    /*Для сверки после*/
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_rvs-doc.out-code no-error .
+  
+    find first buf_place no-lock where buf_place.obj-code = tt-rvs-line.obj-code
+      and buf_place.obj-type = tt-rvs-line.obj-type
+      and buf_place.pl-code  = tt-rvs-line.pl-code
+      no-error.
+           
+    assign 
+      v-free-vol = 0.95 * buf_place.max-qnty.
+    v-doc-volume = tt-rvs-line.fact-sum-vol .
+  
+    if v-doc-volume > 0
+      then 
+    do :
+      if v-free-vol >= v-doc-volume
+        then 
       do :
-        buf_doc-pl-attr.attr-value = string(yes)  .
+        find first buf_doc-pl-attr exclusive-lock
+          where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+          and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+          and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+          and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+          and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+          and buf_doc-pl-attr.attr-code = "free-vol-exceed-after" no-error.
+        if available buf_doc-pl-attr then
+        do :
+          buf_doc-pl-attr.attr-value = string(no)  .
+        end.
+        else
+        do :
+          create buf_doc-pl-attr.
+          assign
+            buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+            buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+            buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+            buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+            buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+            buf_doc-pl-attr.attr-code  = "free-vol-exceed-after"
+            buf_doc-pl-attr.attr-value = string(no)
+            .
+        end.
+      end .
+      else 
+      do :
+        find first buf_doc-pl-attr exclusive-lock
+          where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+          and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+          and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+          and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+          and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+          and buf_doc-pl-attr.attr-code = "free-vol-exceed" 
+          and buf_doc-pl-attr.attr-value = string(yes) no-error.
+        if available (buf_doc-pl-attr) then 
+        do:
+/*      /*Проверка на права техподдержки*/*/
+/*          { gbl/chk-actg.i              */
+/*    v-cntxt-db-num                      */
+/*    v-cntxt-userid                      */
+/*    {&action-head-code-main}            */
+/*    'actn_global-trn_update':U          */
+/*    {&cntxt-global}                     */
+/*    0                                   */
+/*    '':U                                */
+/*    0                                   */
+/*    0                                   */
+/*    0                                   */
+/*    0                                   */
+/*    false                               */
+/*    g-log                               */
+/*  }                                     */
+/*          if not g-log then                                                                                                           */
+/*          do:                                                                                                                         */
+/*            message "Выполнен слив с превышением свободного объема резервуара. Недостаточно прав продолжения работы с накладной." skip*/
+/*              "Проинформируйте ответственное лицо ОГ в соответствии с принятым в ОГ порядком оповещения."                             */
+/*              view-as alert-box.                                                                                                      */
+/*            apply "choose" to b-cancel in frame {&frame-name} .                                                                       */
+/*          end.                                                                                                                        */
+/*          else                                                                                                                        */
+/*          do:                                                                                                                         */
+/*            message "Выполнен слив с превышением свободного объема резервуара." skip                                                  */
+/*              "Вы уверены, что хотите продолжить работу с накладной?"                                                                 */
+/*              view-as alert-box question buttons yes-no update lChoice as logical .                                                   */
+/*            if lChoice then                                                                                                           */
+/*            do:                                                                                                                       */
+              find first buf_doc-pl-attr exclusive-lock
+                where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+                and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+                and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+                and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+                and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+                and buf_doc-pl-attr.attr-code = "free-vol-exceed-after" no-error.      
+              if available (buf_doc-pl-attr) then               
+                buf_doc-pl-attr.attr-value = string(yes)  .
+              else
+              do :
+                create buf_doc-pl-attr.
+                assign
+                  buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+                  buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+                  buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+                  buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+                  buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+                  buf_doc-pl-attr.attr-code  = "free-vol-exceed-after"
+                  buf_doc-pl-attr.attr-value = string(yes)
+                  .        
+              end.
+/*            end.                                                 */
+/*            else                                                 */
+/*            do:                                                  */
+/*              apply "choose" to b-cancel in frame {&frame-name} .*/
+/*            end.                                                 */
+/*          end.                                                   */
+        end .        
+        else 
+        do:
+          find first buf_doc-pl-attr exclusive-lock
+            where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+            and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+            and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+            and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+            and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+            and buf_doc-pl-attr.attr-code = "free-vol-exceed-after" no-error.      
+          if available (buf_doc-pl-attr) then               
+            buf_doc-pl-attr.attr-value = string(yes)  .
+          else
+          do :
+            create buf_doc-pl-attr.
+            assign
+              buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+              buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+              buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+              buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+              buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+              buf_doc-pl-attr.attr-code  = "free-vol-exceed-after"
+              buf_doc-pl-attr.attr-value = string(yes)
+              .        
+          end.        
+        end.
       end.
-      else
-      do :
-        create buf_doc-pl-attr.
-        assign
-          buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
-          buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
-          buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
-          buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
-          buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
-          buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-          buf_doc-pl-attr.attr-value = string(yes)
-        .
-      end.       
-    end .
-  end .                            
-
-end .
+      
+    end.  
+  end.
 
   define variable v-mi-par-list as character no-undo .
   define variable v-mi-par-list-text as character no-undo .

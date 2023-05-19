@@ -82,7 +82,9 @@ function  crUtdReturn returns logical
    define variable vType   as character no-undo.
    define variable vUTDReturn as logical no-undo.
    
-   
+   for each  tt-prts:
+      delete  tt-prts.
+   end.
    find first trn-doc where trn-doc.doc-code     eq idoc-code
                         and trn-doc.ext-doc-type eq {&TDEDT_Ras_Vnesh}
    no-lock no-error.
@@ -163,8 +165,10 @@ function  crUtdReturn returns logical
                   if    not  available buf_utd
                         or trn-doc.reason-code ne 23
                   then do:
+                     if tt-prts.doc-code <> "" then 
                      find first utd where utd.doc-code eq tt-prts.doc-code no-lock no-error.
-                     if available utd
+                     if tt-prts.doc-code <> "" 
+                        and available utd
                      then do:
                         MySeqUtd = ?.
                         vFlag = yes.
@@ -363,6 +367,8 @@ function  crUtdReturn returns logical
                   
       end.
    end.
-   
+   for each  tt-prts:
+      delete  tt-prts.
+   end.
    return vFlag.
 end.

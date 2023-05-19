@@ -198,9 +198,8 @@ end.
 end procedure. /* fill-dc-list */
 
 procedure fill-PromoAction :
+define input parameter p-id as int64 no-undo .
 define input parameter p-db-num  as integer no-undo .
-define input parameter p-id      as int64   no-undo .
-define input parameter p-del     as logical no-undo.
 
 do
 on error undo, return error
@@ -213,9 +212,8 @@ on error undo, return error
        PromoAction-list.id = p-id
        PromoAction-list.db-num  = p-db-num
     .
+    release PromoAction-list.
   end.
-  PromoAction-list.del_ = p-del.
-  release PromoAction-list.
 end.
 end procedure. /* fill-dc-list */
 

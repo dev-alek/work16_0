@@ -1,13 +1,16 @@
- 
- /*------------------------------------------------------------------------
-    File        : edoctype
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : asmorozov
-    Created     : Thu Mar 05 21:50:33 MSK 2020
-    Notes       : 
-  ----------------------------------------------------------------------*/
+/*
+$Revision:$
+$Author:$
+$Date:$
+$Workfile:$
+$Archive:$
+
+Автор: Рубан Дмитрий Андреевич 
+Дата создания: 9 янв. 2023 г.
+Author:  Ruban Dmitriy Andreevich
+Creation date: 9 янв. 2023 г.
+
+*/
 
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
@@ -17,6 +20,13 @@ using ibs.th.gbl.TypeMap.
 
 
 class ibs.th.str.utd.edoctype inherits TypeMap: 
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Типы элекронных документов" get.
+   
 
   define public property  UTD  as class propmap no-undo get.  protected set.
   define public property  Introduce   as class propmap no-undo get.  protected set.
@@ -28,7 +38,6 @@ class ibs.th.str.utd.edoctype inherits TypeMap:
   define public property  EDoc         as class propmap no-undo get.  protected set.
   define public property  LK_RECEIPT   as class propmap no-undo get.  protected set.
 
-   
   constructor public edoctype ():
     super().
     UTD       = crProp(1, "UTD", "УПД").

@@ -1,18 +1,28 @@
- 
- /*------------------------------------------------------------------------
-    File        : System
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : asmorozov
-    Created     : Thu Feb 20 02:59:00 MSK 2020
-    Notes       : 
-  ----------------------------------------------------------------------*/
+/*
+  $Revision:$
+  $Author:$
+  $Date:$
+  $Workfile:$
+  $Archive:$
+  
+  Автор: Рубан Дмитрий Андреевич 
+  Дата создания: 9 янв. 2023 г.
+  Author:  Ruban Dmitriy Andreevich
+  Creation date: 9 янв. 2023 г.
+  
+  */
 
 using Progress.Lang.*.
 
 
-class ibs.th.gbl.sys.env.ini.section.val:
+class ibs.th.gbl.sys.env.ini.section.val inherits ibs.th.gbl.sys.objth:
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Параметр по секциям" get.
+   
 
   define public property SectionName as character no-undo
     get.

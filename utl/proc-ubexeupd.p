@@ -59,7 +59,7 @@ else do:
    if error-status:error
    then do:
      def var vtext as char no-undo.
-     vtext =  substitute( "Не удалось подключиться к основной БД с параметрами: &1  Ошибка &2"
+     vtext =  substitute( "Не удалось подключиться к болванке с параметрами: &1  Ошибка &2"
                           ,mDbConnet
                           ,error-status :get-message(1)
                            ).

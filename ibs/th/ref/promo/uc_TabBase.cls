@@ -93,7 +93,9 @@ CLASS ibs.th.ref.promo.uc_TabBase INHERITS UserControl:
     END CONSTRUCTOR.
     
     DESTRUCTOR PUBLIC uc_TabBase ( ):
-        bindPromoActionOne:Assign().
+        if valid-handle(bindPromoActionOne:handle)
+        then
+           bindPromoActionOne:Assign().
         bindPromoActionOne:Dispose().
     END DESTRUCTOR.
 

@@ -37,6 +37,7 @@ class ibs.th.bge.is_PM.is_PM:
     field Delivery-ned-izl    as decimal
     field wght-other          as decimal
     field othermoves          as decimal
+    field change-place        as logical
   index pi as primary gds-code
   .
   
@@ -439,6 +440,7 @@ class ibs.th.bge.is_PM.is_PM:
             create tt-result .
             assign
               tt-result.gds-code = buf2_c-pl-gds.gds-code
+              tt-result.change-place = yes
             .
           end .
           
@@ -486,6 +488,7 @@ class ibs.th.bge.is_PM.is_PM:
           create tt-result .
           assign
             tt-result.gds-code = buf_c-pl-gds.gds-code
+            tt-result.change-place = no
           .
         end .
         
@@ -739,6 +742,7 @@ class ibs.th.bge.is_PM.is_PM:
             tt-place.is-calc = false .
             for first tt-result where tt-result.gds-code = tt-place.gds-code :
               tt-result.wght-fact-end = tt-result.wght-fact-end + tt-place.end-rvs-fact-qnty .
+              if abs(tt-result.wght-fact-end) < 0.001 then tt-result.wght-fact-end = 0 .
               if session:debug-alert
               then do:
                 put stream OutStr-html unformatted
@@ -830,6 +834,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -960,6 +974,7 @@ class ibs.th.bge.is_PM.is_PM:
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 2 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty + tt-place.end-chk-fact-qnty - tt-place.end-trn-fact-qnty) .
+        if abs(tt-result.wght-fact-end) < 0.001 then tt-result.wght-fact-end = 0 .
         if session:debug-alert 
         then do:
           put stream OutStr-html unformatted
@@ -1023,6 +1038,16 @@ class ibs.th.bge.is_PM.is_PM:
                                       buf_chk-gds.nozzle-code,
                                       buf_chk-gds.pl-code,
                                       buf_bar-code.gds-code) .
+                if v-pl-code = ?
+                or v-pl-code = 0
+                then do :
+                  v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                               buf_chk-doc.obj-code,
+                                               buf_chk-gds.pump,
+                                               buf_chk-gds.nozzle-code,
+                                               buf_chk-gds.pl-code,
+                                               buf_bar-code.gds-code) .
+                end .
               end .
               else do :
                 v-pl-code = buf_chk-gds.pl-code .
@@ -1250,6 +1275,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -1404,6 +1439,7 @@ class ibs.th.bge.is_PM.is_PM:
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 1 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) .
+        if abs(tt-result.wght-fact-end) < 0.001 then tt-result.wght-fact-end = 0 .
         if session:debug-alert
         then do:
           put stream OutStr-html unformatted
@@ -1473,6 +1509,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .                      
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -1624,6 +1670,7 @@ class ibs.th.bge.is_PM.is_PM:
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 1 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) .
+        if abs(tt-result.wght-fact-end) < 0.001 then tt-result.wght-fact-end = 0 .
         if session:debug-alert 
         then do:
           put stream OutStr-html unformatted
@@ -1717,6 +1764,7 @@ class ibs.th.bge.is_PM.is_PM:
                                        and buf_chk-doc.chk-date <= date-start
                                        :
           if lookup({&shift-err}, buf_chk-doc.office) > 0
+          or (buf_chk-doc.src-shift-date > buf_chk-doc.shift-date and buf_chk-doc.chk-date > buf_chk-doc.shift-date) /* Созданные вручную чеки в другой смене */
           then do :
             if buf_chk-doc.chk-date = start_rvs-doc.fact-date
             and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
@@ -1750,6 +1798,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -1830,14 +1888,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
                                     :
-          { str/tdat-val.i
-              buf_trn-doc.doc-code
-              {&trdcattr-othermoves}
-              vIsOtherMoves
-              vType                 }
-          if vIsOtherMoves > ""
-          and logical(vIsOtherMoves)
-          then next income-doc-line_ .
+/*          { str/tdat-val.i            */
+/*              buf_trn-doc.doc-code    */
+/*              {&trdcattr-othermoves}  */
+/*              vIsOtherMoves           */
+/*              vType                 } */
+/*          if vIsOtherMoves > ""       */
+/*          and logical(vIsOtherMoves)  */
+/*          then next income-doc-line_ .*/
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -1873,14 +1931,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
                                     :
-          { str/tdat-val.i
-              buf_trn-doc.doc-code
-              {&trdcattr-othermoves}
-              vIsOtherMoves
-              vType                 }
-          if vIsOtherMoves > ""
-          and logical(vIsOtherMoves)
-          then next expense-doc-line_ .
+/*          { str/tdat-val.i             */
+/*              buf_trn-doc.doc-code     */
+/*              {&trdcattr-othermoves}   */
+/*              vIsOtherMoves            */
+/*              vType                 }  */
+/*          if vIsOtherMoves > ""        */
+/*          and logical(vIsOtherMoves)   */
+/*          then next expense-doc-line_ .*/
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2011,6 +2069,16 @@ class ibs.th.bge.is_PM.is_PM:
                                       buf_chk-gds.nozzle-code,
                                       buf_chk-gds.pl-code,
                                       buf_bar-code.gds-code) .
+                if v-pl-code = ?
+                or v-pl-code = 0
+                then do :
+                  v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                               buf_chk-doc.obj-code,
+                                               buf_chk-gds.pump,
+                                               buf_chk-gds.nozzle-code,
+                                               buf_chk-gds.pl-code,
+                                               buf_bar-code.gds-code) .
+                end .
               end .
               else do :
                 v-pl-code = buf_chk-gds.pl-code .
@@ -2139,6 +2207,7 @@ class ibs.th.bge.is_PM.is_PM:
           for first tt-result where tt-result.gds-code = tt-place.gds-code :
             /* Формула 4 */
             tt-result.wght-fact-start = tt-result.wght-fact-start + (tt-place.start-rvs-fact-qnty - tt-place.start-chk-fact-qnty + tt-place.start-trn-fact-qnty) .
+            if abs(tt-result.wght-fact-start) < 0.001 then tt-result.wght-fact-start = 0 .
             if session:debug-alert 
             then do:
               put stream OutStr-html unformatted
@@ -2154,6 +2223,7 @@ class ibs.th.bge.is_PM.is_PM:
           tt-place.is-calc = false .
           for first tt-result where tt-result.gds-code = tt-place.gds-code :
             tt-result.wght-fact-start = tt-result.wght-fact-start + start_rvs-line.state-measure-cli-qnty + (start_rvs-line.state-add-qnty * start_rvs-line.state-density) .
+            if abs(tt-result.wght-fact-start) < 0.001 then tt-result.wght-fact-start = 0 .
             if session:debug-alert 
             then do:
               put stream OutStr-html unformatted
@@ -2268,6 +2338,16 @@ class ibs.th.bge.is_PM.is_PM:
                                   buf_chk-gds.nozzle-code,
                                   buf_chk-gds.pl-code,
                                   buf_bar-code.gds-code) .
+            if v-pl-code = ?
+            or v-pl-code = 0
+            then do :
+              v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                           buf_chk-doc.obj-code,
+                                           buf_chk-gds.pump,
+                                           buf_chk-gds.nozzle-code,
+                                           buf_chk-gds.pl-code,
+                                           buf_bar-code.gds-code) .
+            end .
           end .
           else do :
             v-pl-code = buf_chk-gds.pl-code .
@@ -2628,7 +2708,7 @@ class ibs.th.bge.is_PM.is_PM:
     define buffer buf_shift-obj for ub.shift-obj .
     
     run write-to-log in p-parent-handle (" START BOOK-END UTC " + utc-time() ) .
-    
+      
     /* START Определение книжного остатка на конец периода */
     for each tt-place,
     first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
@@ -2662,6 +2742,7 @@ class ibs.th.bge.is_PM.is_PM:
                                        and buf_chk-doc.chk-date <= date-end
                                        :
           if lookup({&shift-err}, buf_chk-doc.office) > 0
+          or (buf_chk-doc.src-shift-date > buf_chk-doc.shift-date and buf_chk-doc.chk-date > buf_chk-doc.shift-date) /* Созданные вручную чеки в другой смене */
           then do :                               
             if buf_chk-doc.chk-date = end_rvs-doc.fact-date
             and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
@@ -2695,6 +2776,16 @@ class ibs.th.bge.is_PM.is_PM:
                                     buf_chk-gds.nozzle-code,
                                     buf_chk-gds.pl-code,
                                     buf_bar-code.gds-code) .
+              if v-pl-code = ?
+              or v-pl-code = 0
+              then do :
+                v-pl-code = findblockedtank (buf_chk-doc.obj-type,
+                                             buf_chk-doc.obj-code,
+                                             buf_chk-gds.pump,
+                                             buf_chk-gds.nozzle-code,
+                                             buf_chk-gds.pl-code,
+                                             buf_bar-code.gds-code) .
+              end .
             end .
             else do :
               v-pl-code = buf_chk-gds.pl-code .
@@ -2772,19 +2863,21 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Inv})
-                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
-                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))
+/*                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or                                                */
+/*                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    and ((buf_trn-doc.shift-date > end_rvs-doc.shift-date) or
+                                         (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num > end_rvs-doc.shift-num))
                                     :
-          { str/tdat-val.i
-              buf_trn-doc.doc-code
-              {&trdcattr-othermoves}
-              vIsOtherMoves
-              vType                 }
-          if vIsOtherMoves > ""
-          and logical(vIsOtherMoves)
-          then next income-doc-line_ .
+/*          { str/tdat-val.i            */
+/*              buf_trn-doc.doc-code    */
+/*              {&trdcattr-othermoves}  */
+/*              vIsOtherMoves           */
+/*              vType                 } */
+/*          if vIsOtherMoves > ""       */
+/*          and logical(vIsOtherMoves)  */
+/*          then next income-doc-line_ .*/
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then                            
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -2813,19 +2906,21 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
-                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
-                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))
+/*                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or                                                */
+/*                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
+                                    and ((buf_trn-doc.shift-date > end_rvs-doc.shift-date) or
+                                         (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num > end_rvs-doc.shift-num))
                                     :
-          { str/tdat-val.i
-              buf_trn-doc.doc-code
-              {&trdcattr-othermoves}
-              vIsOtherMoves
-              vType                 }
-          if vIsOtherMoves > ""
-          and logical(vIsOtherMoves)
-          then next expense-doc-line_ .
+/*          { str/tdat-val.i             */
+/*              buf_trn-doc.doc-code     */
+/*              {&trdcattr-othermoves}   */
+/*              vIsOtherMoves            */
+/*              vType                 }  */
+/*          if vIsOtherMoves > ""        */
+/*          and logical(vIsOtherMoves)   */
+/*          then next expense-doc-line_ .*/
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2861,11 +2956,12 @@ class ibs.th.bge.is_PM.is_PM:
     
     for each tt-result where (tt-result.wght-doc-end = 0 or tt-result.wght-doc-end = ?)
                          and (tt-result.wght-doc-start = 0 or tt-result.wght-doc-start = ?)
+                         and tt-result.change-place
                           :
       delete tt-result .    
     end .
     
-    for each tt-result :
+    for each tt-result where tt-result.change-place :
       if tt-result.wght-doc-end = 0 then tt-result.wght-fact-end = 0 .
 
 /*      if tt-result.wght-doc-start = 0                     */
@@ -3335,6 +3431,117 @@ class ibs.th.bge.is_PM.is_PM:
               and buf_pl-gds-pump.pump-code = p-pump-code
               and buf_pl-gds-pump.gds-code  = p-gds-code
               and buf_pl-gds-pump.status_   = {&current-status}
+              and buf_pl-gds-pump.pl-code   = buf_pl-pump-nozzle.pl-code
+          on error undo, return error return-value
+          :
+            assign
+              v-pl-code = buf_pl-pump-nozzle.pl-code
+            .
+            leave _ppnz.
+          end.
+        end.
+      end.
+  
+      if v-pl-code <> 0 then do:
+        assign
+          p-pl-code = v-pl-code
+        .
+      end .
+      
+      return p-pl-code .
+  
+    end . /*doe*/
+  end method .
+  
+  method private integer findblockedtank
+  (
+    input p-obj-type     as character, 
+    input p-obj-code     as integer,   
+    input p-pump-code    as integer,   
+    input p-nozzle-code  as integer,   
+    input p-from-pl-code as integer,   
+    input p-gds-code     as integer   
+  ) :  
+    define variable v-pl-code            like ub.place.pl-code no-undo .
+    define variable p-pl-code            like ub.place.pl-code no-undo .
+    define variable v-dopstr             as character no-undo .
+  
+    define buffer buf_place for ub.place.
+    define buffer buf_pl-gds-pump for ub.pl-gds-pump.
+    define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle.
+    define buffer buf_pl-gds for ub.pl-gds.
+  
+    do
+    on error undo, return error return-value
+    :
+  
+      assign
+        v-pl-code = 0
+        p-pl-code = ?
+      .
+  
+      if p-from-pl-code <> ?
+        and p-from-pl-code <> 0
+      then do:
+        find first buf_pl-gds no-lock
+          where buf_pl-gds.obj-type  = p-obj-type
+            and buf_pl-gds.obj-code  = p-obj-code
+            and buf_pl-gds.pl-code   = p-from-pl-code
+            and buf_pl-gds.gds-code  = p-gds-code
+          no-error.
+        if available buf_pl-gds then do:
+          assign
+            v-pl-code = buf_pl-gds.pl-code
+          .
+        end.
+      end.
+  
+      if v-pl-code <> 0
+        and p-nozzle-code <> ?
+        and p-nozzle-code <> 0
+      then do:
+        find first buf_pl-pump-nozzle no-lock
+          where buf_pl-pump-nozzle.obj-type    = p-obj-type
+            and buf_pl-pump-nozzle.obj-code    = p-obj-code
+            and buf_pl-pump-nozzle.pl-code     = v-pl-code
+            and buf_pl-pump-nozzle.pump-code   = p-pump-code
+            and buf_pl-pump-nozzle.nozzle-code = p-nozzle-code
+  /*          and buf_pl-pump-nozzle.status_     = {&current-status} поле не заполняется*/
+          no-error .
+        if not available buf_pl-pump-nozzle then do:
+          return p-pl-code .
+        end.
+      end.
+  
+      if v-pl-code = 0 then do:
+        if p-nozzle-code = 0 then do:
+          find first buf_pl-gds-pump no-lock
+            where buf_pl-gds-pump.obj-type  = p-obj-type
+              and buf_pl-gds-pump.obj-code  = p-obj-code
+              and buf_pl-gds-pump.pump-code = p-pump-code
+              and buf_pl-gds-pump.gds-code  = p-gds-code
+/*              and buf_pl-gds-pump.status_   = {&current-status}*/
+            no-error.
+          if available buf_pl-gds-pump then do:
+            assign
+              v-pl-code = buf_pl-gds-pump.pl-code
+            .
+          end.
+        end.
+        else do:
+          _ppnz:
+          for each buf_pl-pump-nozzle no-lock
+            where buf_pl-pump-nozzle.obj-type = p-obj-type
+              and buf_pl-pump-nozzle.obj-code = p-obj-code
+              and buf_pl-pump-nozzle.pump-code = p-pump-code
+              and buf_pl-pump-nozzle.nozzle-code = p-nozzle-code
+  /*            and buf_pl-pump-nozzle.status_ = {&current-status} поле не заполняется*/
+            ,first buf_pl-gds-pump no-lock
+            where buf_pl-gds-pump.obj-type  = p-obj-type
+              and buf_pl-gds-pump.obj-code  = p-obj-code
+              and buf_pl-gds-pump.pump-code = p-pump-code
+              and buf_pl-gds-pump.gds-code  = p-gds-code
+/*              and buf_pl-gds-pump.status_   = {&current-status}*/
               and buf_pl-gds-pump.pl-code   = buf_pl-pump-nozzle.pl-code
           on error undo, return error return-value
           :

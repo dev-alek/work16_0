@@ -58,12 +58,17 @@ on error undo, return error
   run write-to-screen in this-procedure( input ( fill( {&space-char}, p-tab-position) + p-log-string)) .
   if p-file-name <> '':U then do:
     do v-jj = 1 to num-entries(p-file-name, {&delim-nws}):
-  run  auto2dia-writefile in this-procedure (
+      run  auto2dia-writefile in this-procedure (
                                       input entry(v-jj, p-file-name, {&delim-nws})
-                                  ,input p-log-level
-                                  ,input (p-log-string + {&new-line})
-                                ) no-error .
-end.
+                                      ,input p-log-level
+                                      ,input (p-log-string + {&new-line})
+                                    ) no-error .
+    end.
+  end.
+  else do:
+     if writelogvalue eq "AsyncProc" 
+     then 
+        run write-to-log in this-procedure( p-log-string) .
   end.
 end.
 
@@ -286,6 +291,20 @@ PROCEDURE auto2dia-writefile:
     Длина разделительных линий задается в LogLineSize.
 */
 
+  define variable v-SlashPos  as integer no-undo .
+  define variable v-lDirName  as character no-undo .
+  define variable v-lDirName2 as character no-undo .
+  v-SlashPos  = maximum (  r-index(sFileName, "\"),  r-index(sFileName, "/")  ) .
+  v-lDirName  = if v-SlashPos > 0 then substring (sFileName, 1, v-SlashPos - 1) else "".
+  FILE-INFO:FILE-NAME = v-lDirName .
+  v-lDirName2 = FILE-INFO:FULL-PATHNAME .
+  if v-lDirName2 <> ? then do :
+  /* в операции output to ... отсутствует no-error, поэтому доступность файла проверяется перед обращением:
+     1) проверить наличие директории
+     2) файл в директории либо есть, либо создастся
+     3) если директория есть, но писать в неё нельзя - то опаньки
+     4) если файл есть, но писать в него нельзя - аналогично
+  */
 OUTPUT STREAM auto2dia TO VALUE(sFileName) APPEND.
     PUT STREAM auto2dia UNFORMATTED {&new-line}.
     PUT STREAM auto2dia UNFORMATTED (IF (iLogLevel = 0 OR sToWrite = "&DLine"
@@ -296,6 +315,7 @@ OUTPUT STREAM auto2dia TO VALUE(sFileName) APPEND.
              ELSE IF sToWrite = "&DLine" THEN FILL("=", {&LogLineSize})
              ELSE sToWrite).
 OUTPUT STREAM auto2dia CLOSE.
+  end .
 
 END PROCEDURE.
 

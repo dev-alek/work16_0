@@ -39,9 +39,6 @@ define variable vss-description as character no-undo init "Окно входа в систему"
 &global-define db-name_schema ub
 /*{ cmp/str-glbl.i }*/
 { cmp/showinf.i }
-&glob defonly yes
-
-{ adm/auto-def.i new}
 define variable v-cConnect          as character no-undo .
 define variable v-fltConnect        as character no-undo .
 define variable v-user-entered      as logical   no-undo init false .

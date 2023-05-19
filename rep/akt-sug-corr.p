@@ -721,13 +721,17 @@ for each bf_doc-line where bf_doc-line.doc-code = bf_trn-doc.doc-code :
     v-InfoSectionsTotal:GetDBAllAttr().
 
     do iNum = 1 to v-InfoSectionsTotal:SectionNum:
+      assign
+        v-fact-qnty-before = 0 
+        v-fact-qnty-after  = 0
+      .
       for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = v-doc-code and buf_rvs-doc.rvs-type = {&rvs-before-doc},
-        first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-        v-fact-qnty-before = buf_rvs-line.state-measure-cli-qnty .
+        each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
+        v-fact-qnty-before = v-fact-qnty-before + buf_rvs-line.state-measure-cli-qnty .
       end.    
       for first buf_rvs-doc no-lock where buf_rvs-doc.out-code = v-doc-code and buf_rvs-doc.rvs-type = {&rvs-after-doc},
-        first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-        v-fact-qnty-after = buf_rvs-line.state-measure-cli-qnty .
+        each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
+        v-fact-qnty-after = v-fact-qnty-after + buf_rvs-line.state-measure-cli-qnty .
       end.    
       create tt-sug .
       assign
@@ -791,6 +795,18 @@ for each bf_doc-line where bf_doc-line.doc-code = bf_trn-doc.doc-code :
             ,output v-ok      ) no-error.
           if v-value <> "" then  tt-sug.num-pl = string(ub.place.loc1) + "," + v-value .
           else tt-sug.num-pl = string(ub.place.loc1) .
+          
+          run placelib_get-attr  ( input {&place-com-tanks}
+            ,input ub.place.obj-code
+            ,input ub.place.obj-type
+            ,input ub.place.pl-code
+            ,output v-value
+            ,output v-ok      ) no-error.
+          if v-ok
+          and v-value > ""
+          then do :
+            tt-petrol.num-pl = tt-petrol.num-pl + "," + v-value .
+          end .
         end.
       end.  
 

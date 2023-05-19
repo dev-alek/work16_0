@@ -13,6 +13,7 @@ using Progress.Lang.*.
 
 block-level on error undo, throw.
 &glob fileparam "RunTh.xml"
+&glob fileSeporator "\"
 class runth.runth_trg: 
    /*------------------------------------------------------------------------------
     Purpose:
@@ -20,6 +21,7 @@ class runth.runth_trg:
    ------------------------------------------------------------------------------*/
    
    {runth\ds-runth.i}
+   {runth\ds-procstart.i}
    define temp-table tt-ParamsEdit      no-undo like tt-Params.
    define temp-table tt-ParamsOne       no-undo like tt-ParamsEdit.
    define temp-table tt-VerOne          no-undo like tt-Ver.
@@ -30,6 +32,48 @@ class runth.runth_trg:
    set.
    method public void LoadReplaceParam(ifile as character ):
       dataset ds-replace:read-xml ("file", ifile,"empty",?,?).
+      
+      for each tt-fileList where tt-fileList.desc_ eq "" :
+         if tt-fileList.FileId eq "auto"
+         then
+            tt-fileList.desc_ = "Авто задания".
+         else if tt-fileList.FileId eq "cut"
+         then
+            tt-fileList.desc_ = "Обрезка базы".
+            
+         else if tt-fileList.FileId eq "Diadoc"
+         then
+            tt-fileList.desc_ = "Обмен с диадоком (ЭДО)".
+            
+         else if tt-fileList.FileId eq "merc"
+         then
+            tt-fileList.desc_ = "Обмен с меркурем (Сертификаты на продукцию)".
+            
+         else if tt-fileList.FileId eq "motp"
+         then
+            tt-fileList.desc_ = "МОТП (Честный знак)".
+            
+         else if tt-fileList.FileId eq "nws"
+         then
+            tt-fileList.desc_ = "Новости".
+            
+         else if tt-fileList.FileId eq "oxml"
+         then
+            tt-fileList.desc_ = "Обмен с ВС (1С)".
+            
+         else if tt-fileList.FileId eq "skt"
+         then
+            tt-fileList.desc_ = "Сокет сервер".
+            
+         else if tt-fileList.FileId eq "th"
+         then
+            tt-fileList.desc_ = "Trade House".
+            
+         else if tt-fileList.FileId eq "th-prof"
+         then
+            tt-fileList.desc_ = "Trade House c профилирование".
+            
+      end.
    end.
    
    method public void LoadHotParam(ifile as character ):
@@ -45,6 +89,7 @@ class runth.runth_trg:
        SaveHotParam(GetPARAM({&fileparam},"FileHotParam")).
    end.
    method public void SaveHotParam(ifile as character ):
+      if ifile eq ? then return.
       CrPatch(ifile).
       dataset ds-HotParam:write-xml ("file",  ifile, true, "windows-1251", ?, false, true ,false,true ).
    end.
@@ -216,8 +261,15 @@ class runth.runth_trg:
             hQuery:set-buffers(buffer tt-verOne:HANDLE). 
             hQuery:query-prepare("FOR EACH tt-verOne ").
             vFirst = yes.
+         end.
+         when "procRun"
+         then do:
+            hQuery:set-buffers(buffer tt-procList:HANDLE). 
+            hQuery:query-prepare("FOR EACH tt-procList ").
+            vFirst = yes.
          end.                     
       end case.
+      
       if vOpen
       then do:
          hQuery:query-open.
@@ -671,6 +723,186 @@ class runth.runth_trg:
       end.
    end.
     
+   method public logical repaintProc(iFileName as character ):
+      define buffer tt-procList for tt-procList.
+      find first tt-procList where tt-procList.FileName eq iFileName no-lock no-error.
+      if available tt-procList
+         and tt-procList.Repaintrow
+      then do:
+         tt-procList.Repaintrow =false.
+         return true.
+      end.
+      return false.
+   end.
+   
+   method public logical isRun(iFileName as character ):
+      define buffer tt-procList for tt-procList.
+      find first tt-procList where tt-procList.FileName eq iFileName no-lock no-error.
+      return if available tt-procList then tt-procList.RunFile else false.
+   end.
+   
+   method public character  glueDir(iFileName as character,
+                                    iDir1      as character,
+                                    iDir2      as character,
+                                    iDir3      as character):
+      if     iDir1 ne ""
+         and iDir1 ne ?
+      then do:
+         iFileName = glueDir(iFileName,iDir1).
+         if     iDir2 ne ""
+            and iDir2 ne ?
+         then do:
+            iFileName = glueDir(iFileName,iDir2).
+            if     iDir3 ne ""
+               and iDir3 ne ?
+            then do:
+               iFileName = glueDir(iFileName,iDir3).
+            end.
+         end.
+      end.
+      return iFileName.
+   end.
+   
+   method public character  glueDir(iFileName as character,
+                                 iDir      as character):
+      if     iDir ne ""
+         and iDir ne ?
+      then
+         return iFileName + {&fileSeporator} + iDir.  
+   end.
+   
+   method public logical updComboBox(iFileName as character,
+                                     iDir1     as character,
+                                     iDir2     as character,  
+                                     comboBox as System.Windows.Forms.ComboBox):
+      if    iDir1 eq ""
+         or iDir1 eq ?
+         or iDir2 eq ""
+         or iDir2 eq ?
+      then do:
+         comboBox:Items:Clear().
+         comboBox:Items:Add("").
+      end.
+      else do:
+         iFileName = glueDir(iFileName,iDir1,iDir2,?).
+         updComboBox(iFileName,comboBox).
+      end.
+   end.
+   
+   method public logical updComboBox(iFileName as character,
+                                     iDir      as character, 
+                                     comboBox as System.Windows.Forms.ComboBox):
+      if    iDir eq ""
+         or iDir eq ?
+      then do:
+         comboBox:Items:Clear().
+         comboBox:Items:Add("").
+      end.
+      else do:
+         iFileName = glueDir(iFileName,iDir).
+         updComboBox(iFileName,comboBox).
+      end.
+   end.
+   
+   define stream flstream.
+   method public void updComboBox(iFileName as character, 
+                                     comboBox as System.Windows.Forms.ComboBox):
+      define variable v-filename     as character no-undo.
+      define variable v-fullfilename as character no-undo.
+      define variable v-filetype     as character no-undo.
+      comboBox:Items:Clear().
+      comboBox:Items:Add("").
+      file-information:file-name = iFileName.
+      if iFileName eq ?  then return.
+      if index( file-information:file-type, "d") eq 0 then return.
+      input stream flstream from os-dir ( iFileName ) .
+      repeat
+         on error undo, return error
+      :
+         import stream flstream v-filename v-fullfilename v-filetype.
+         if         v-filetype begins "d"
+            and not v-filename begins "."
+         then
+            comboBox:Items:Add(v-filename).
+      end.
+      input stream flstream close.
+      updProcList(iFileName).
+   end.
+   define variable WorkDir as character no-undo.
+   method public void updProcList(iFileName as character):
+      define variable v-filename     as character no-undo.
+      define variable v-fullfilename as character no-undo.
+      define variable v-filetype     as character no-undo.
+      file-information:file-name = iFileName.
+      if index( file-information:file-type, "d") eq 0 then return.
+      input stream flstream from os-dir ( iFileName ) .
+      WorkDir = iFileName.
+      empty temp-table tt-procList.
+      repeat
+         on error undo, return error
+      :
+         import stream flstream v-filename v-fullfilename v-filetype.
+         if v-filetype begins "f"
+         then do:
+            create tt-procList.
+            tt-procList.FileName = v-filename.
+            tt-procList.RunFile  = lookup(entry(num-entries (v-filename,"."),v-filename,"."),"exe,bat,cmd") > 0.
+            if tt-procList.RunFile
+            then do:
+               find first tt-fileList where tt-fileList.FileId eq entry(1,tt-procList.FileName,".") no-lock no-error.
+               if available tt-fileList
+               then
+                  tt-procList.Desc_ = tt-fileList.desc_.
+            end.
+         end.
+      end.
+      input stream flstream close.
+      getQuery("procRun").
+   end.
+   
+   method public void runProc():
+      if available tt-procList
+      then
+         os-command value("start " + WorkDir + {&fileSeporator} + tt-procList.FileName + " & exit").
+   end.
+   
+   method public void saveProc(  idir as character ,
+                                 idir1 as character ,
+                                 idir2 as character ,
+                                 idir3 as character ):
+      find first tt-hotDir no-error.
+      if not available tt-hotDir
+      then
+         create tt-hotDir.
+      if    tt-hotDir.HotDir  ne idir
+         or tt-hotDir.HotDir1 ne idir1
+         or tt-hotDir.HotDir2 ne idir2
+         or tt-hotDir.HotDir3 ne idir3
+      then do:
+         assign
+            tt-hotDir.HotDir  = idir
+            tt-hotDir.HotDir1 = idir1
+            tt-hotDir.HotDir2 = idir2
+            tt-hotDir.HotDir3 = idir3
+         .
+         SaveHotParam().
+      end.
+   end.
+   
+   method public void loadProc( output idir as character ,
+                                output idir1 as character ,
+                                output idir2 as character ,
+                                output idir3 as character ):
+      find first tt-hotDir no-error.
+      if available tt-hotDir
+      then assign
+         idir  = tt-hotDir.HotDir
+         idir1 = tt-hotDir.HotDir1
+         idir2 = tt-hotDir.HotDir2
+         idir3 = tt-hotDir.HotDir3
+      .
+   end.
+   
    constructor public runth_trg (  ):
       super ().
       define variable vfile as character no-undo.

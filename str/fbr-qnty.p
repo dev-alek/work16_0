@@ -703,7 +703,7 @@ on error undo calc-ingr, return error
                            and recid( buf_old_fbr-line )    <> recid( buf_ingr_fbr-line )
                     no-error.
                     if ( v-value-qntc
-                         or available buf_old_fbr-line )
+                         and available buf_old_fbr-line )
 /*                    and p-autofbr = no      */
                     then do:
                         run str/fbr-mrcp.p (

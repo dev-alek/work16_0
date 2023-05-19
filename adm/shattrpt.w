@@ -114,13 +114,13 @@ r-expptrl r-inpptrl sec-fields rvs-wt-email B-set_dop-info B-set_sec-fields ~
 r-algrvspt t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi ~
 r-denstclc mass-proc mass-proc-in-lgas r-algoincptrl t-mand-chioce-autocar ~
 otkl-fact-volue delta-horiz delta-vert otkl-temp otkl-density otkl-water ~
-t-calc-free-vol t-trn-reas-sug t-trnscanqr t-rvd-own-nb qr-scan-time ~
+t-calc-free-vol t-calc-free-vol-sug t-trn-reas-sug t-trnscanqr t-rvd-own-nb qr-scan-time ~
 t-block-nozzle timeout-block-nozzle v-dop-info v-sec-fields 
 &Scoped-Define DISPLAYED-OBJECTS t-autopump-izm t-autopump t-avtinvpm ~
 t-olddens r-expptrl dop-info r-inpptrl sec-fields rvs-wt-email r-algrvspt ~
 t-rvsnmter t-invclipt f-invclipt r-temp-for-pomi r-denstclc mass-proc ~
 mass-proc-in-lgas r-algoincptrl t-mand-chioce-autocar otkl-fact-volue ~
-delta-horiz delta-vert otkl-temp otkl-density otkl-water t-calc-free-vol ~
+delta-horiz delta-vert otkl-temp otkl-density otkl-water t-calc-free-vol t-calc-free-vol-sug ~
 t-trn-reas-sug t-trnscanqr t-rvd-own-nb qr-scan-time t-block-nozzle ~
 timeout-block-nozzle v-dop-info v-sec-fields f-invclipt-name 
 
@@ -327,7 +327,12 @@ DEFINE VARIABLE t-avtinvpm AS LOGICAL INITIAL no
      SIZE 82.5 BY .83 TOOLTIP "если включено, то контроль и создание происходит при закрытии сверки" NO-UNDO.
 
 DEFINE VARIABLE t-calc-free-vol AS LOGICAL INITIAL no 
-     LABEL "Контроль свободного объема в резервуаре при приеме" 
+     LABEL "Контроль свободного объема в резервуаре при приеме НП" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 60.5 BY .79 NO-UNDO.
+     
+DEFINE VARIABLE t-calc-free-vol-sug AS LOGICAL INITIAL no 
+     LABEL "Контроль свободного объема в резервуаре при приеме СУГ" 
      VIEW-AS TOGGLE-BOX
      SIZE 60.5 BY .79 NO-UNDO.
 
@@ -412,12 +417,13 @@ DEFINE FRAME shattrpt
      otkl-density AT ROW 31.5 COL 72.63 COLON-ALIGNED WIDGET-ID 510
      otkl-water AT ROW 32.5 COL 72.63 COLON-ALIGNED WIDGET-ID 512
      t-calc-free-vol AT ROW 34 COL 2.5 WIDGET-ID 524
-     t-trn-reas-sug AT ROW 35 COL 2.5 WIDGET-ID 526
-     t-trnscanqr AT ROW 36 COL 2.5 WIDGET-ID 128
-     t-rvd-own-nb AT ROW 37 COL 2.5 WIDGET-ID 528
-     qr-scan-time AT ROW 38 COL 36.5 COLON-ALIGNED WIDGET-ID 538
-     t-block-nozzle AT ROW 39.25 COL 2.5 WIDGET-ID 600
-     timeout-block-nozzle AT ROW 40.13 COL 2.5 NO-LABEL WIDGET-ID 604
+     t-calc-free-vol-sug AT ROW 35 COL 2.5 WIDGET-ID 524
+     t-trn-reas-sug AT ROW 36 COL 2.5 WIDGET-ID 526
+     t-trnscanqr AT ROW 37 COL 2.5 WIDGET-ID 128
+     t-rvd-own-nb AT ROW 38 COL 2.5 WIDGET-ID 528
+     qr-scan-time AT ROW 39 COL 36.5 COLON-ALIGNED WIDGET-ID 538
+     t-block-nozzle AT ROW 40.25 COL 2.5 WIDGET-ID 600
+     timeout-block-nozzle AT ROW 41.13 COL 2.5 NO-LABEL WIDGET-ID 604
      v-dop-info AT ROW 11.5 COL 3.5 NO-LABEL WIDGET-ID 498
      v-sec-fields AT ROW 12.5 COL 1.5 COLON-ALIGNED NO-LABEL WIDGET-ID 598
      f-invclipt-name AT ROW 18 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
@@ -426,13 +432,13 @@ DEFINE FRAME shattrpt
      "Максимально допустимые отклонения:" VIEW-AS TEXT
           SIZE 33.75 BY .79 AT ROW 28.58 COL 49.88 WIDGET-ID 504
      "Отправлять блокировку пистолетов при приемке" VIEW-AS TEXT
-          SIZE 46.63 BY .67 AT ROW 39.25 COL 4.88 WIDGET-ID 602
+          SIZE 46.63 BY .67 AT ROW 40.25 COL 4.88 WIDGET-ID 602
      "Тип ввода топлива во всех документах кроме прихода внешнего :" VIEW-AS TEXT
           SIZE 63 BY .83 AT ROW 6.29 COL 3.5 WIDGET-ID 514
      "Настройки инвентаризации по сверке" VIEW-AS TEXT
           SIZE 35.5 BY .67 AT ROW 14 COL 3 WIDGET-ID 78
      "Timeout ожидания подтверждения блокировки пистолетов, с" VIEW-AS TEXT
-          SIZE 57.5 BY .67 AT ROW 40.25 COL 11 WIDGET-ID 606
+          SIZE 57.5 BY .67 AT ROW 41.25 COL 11 WIDGET-ID 606
      "При приеме новостей, если в сверке вода, отправлять сообщения" VIEW-AS TEXT
           SIZE 64.5 BY .96 AT ROW 9 COL 3.5 WIDGET-ID 92
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -976,7 +982,7 @@ PROCEDURE enable_UI :
           r-inpptrl sec-fields rvs-wt-email r-algrvspt t-rvsnmter t-invclipt 
           f-invclipt r-temp-for-pomi r-denstclc mass-proc mass-proc-in-lgas 
           r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz 
-          delta-vert otkl-temp otkl-density otkl-water t-calc-free-vol 
+          delta-vert otkl-temp otkl-density otkl-water t-calc-free-vol t-calc-free-vol-sug 
           t-trn-reas-sug t-trnscanqr t-rvd-own-nb qr-scan-time t-block-nozzle 
           timeout-block-nozzle v-dop-info v-sec-fields f-invclipt-name 
       WITH FRAME shattrpt.
@@ -986,7 +992,7 @@ PROCEDURE enable_UI :
          t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc 
          mass-proc mass-proc-in-lgas r-algoincptrl t-mand-chioce-autocar 
          otkl-fact-volue delta-horiz delta-vert otkl-temp otkl-density 
-         otkl-water t-calc-free-vol t-trn-reas-sug t-trnscanqr t-rvd-own-nb 
+         otkl-water t-calc-free-vol t-calc-free-vol-sug t-trn-reas-sug t-trnscanqr t-rvd-own-nb 
          qr-scan-time t-block-nozzle timeout-block-nozzle v-dop-info 
          v-sec-fields 
       WITH FRAME shattrpt.
@@ -1230,6 +1236,13 @@ on error undo, return error return-value
             assign
               t-calc-free-vol = thbjattr_thbj-attr.property-value-logical 
               t-calc-free-vol :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+            .  
+          end.
+        when {&attr-petrol_calc-free-vol-sug} then 
+          do: 
+            assign
+              t-calc-free-vol-sug = thbjattr_thbj-attr.property-value-logical 
+              t-calc-free-vol-sug :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
             .  
           end.
         when {&attr-petrol_trn-reas-sug} then 

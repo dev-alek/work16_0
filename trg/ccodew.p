@@ -21,3 +21,15 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер изменение {&main-tbl}". 
+{ trg/trghistnws.i  &nobufhist = yes}
+
+if    (    g#db-num eq 0 
+   and new-{&main-tbl}.nwsgbd )
+   or (    g#db-num ne 0 
+   and new-{&main-tbl}.nwsubd )
+   then 
+do:
+{ trg/trghistnws.i 
+     &nws  = yes
+   }
+end.

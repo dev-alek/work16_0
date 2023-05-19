@@ -117,6 +117,9 @@ define variable vss-description as character no-undo initial "Складское место с 
 { cmp/showinf.i      }
 { cmp/library.i      }
 { str/lib-trn.i      }
+{ ref/gds-attr.i     }
+{ str/is-sug.i       }
+{ str/placelib.i     }
 { str/valddnst.i def }
 
 &global-define curr-proc-name 'doc-pl':U
@@ -1152,10 +1155,16 @@ DO:
   { gbl/stdbtn.i }
 
   define variable v-rid-list as character no-undo .
-  define variable j-pl-code  as integer   no-undo .
+  define variable v-pl-code  as integer   no-undo .
   define variable ref-rec    as recid     no-undo .
+  define variable v-value    as character no-undo .
+  define variable v-value2   as character no-undo .
+  define variable v-ok       as logical   no-undo .
+  define variable ii         as integer   no-undo .
 
   define buffer buf_pl-gds for ub.pl-gds .
+  define buffer buf_place for ub.place .
+  define buffer buf_place-attr for ub.place-attr .
 
   run ref/pl-gdss.w
     ( input parparentproc
@@ -1180,13 +1189,63 @@ DO:
     where recid( buf_pl-gds ) = ref-rec
     no-error .
   if available buf_pl-gds then do:
-
-    if loc-t-doc-pl.pl-code = buf_pl-gds.pl-code then do:
+    v-pl-code = buf_pl-gds.pl-code .
+    if loc-t-doc-pl.pl-code = v-pl-code then do:
       return no-apply .
     end.
+    
+    if is-sug(buf_pl-gds.gds-code)
+    then do :
+      run placelib_get-attr  (
+         input {&place-is-main}
+        ,input buf_pl-gds.obj-code
+        ,input buf_pl-gds.obj-type
+        ,input buf_pl-gds.pl-code
+        ,output v-value
+        ,output v-ok      )
+      no-error.
+      if v-ok
+      and not logical(v-value) /* Не главный сообщающийся резервуар (СУГ) */
+      then do :
+        run placelib_get-attr  (
+           input {&place-com-tanks}
+          ,input buf_pl-gds.obj-code
+          ,input buf_pl-gds.obj-type
+          ,input buf_pl-gds.pl-code
+          ,output v-value
+          ,output v-ok      )
+        no-error.
+        if v-ok
+        and v-value > ""
+        then do ii = 1 to num-entries(v-value) :
+          find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
+                                         and buf_place.obj-code = buf_pl-gds.obj-code
+                                         and buf_place.loc1     = entry(ii, v-value)
+                                         and buf_place.status_  = ""
+                                         no-error .
+          if available buf_place
+          then do :
+            run placelib_get-attr  (
+               input {&place-is-main}
+              ,input buf_place.obj-code
+              ,input buf_place.obj-type
+              ,input buf_place.pl-code
+              ,output v-value2
+              ,output v-ok      )
+            no-error.
+            if v-ok
+            and logical(v-value2)
+            then do :
+              v-pl-code = buf_place.pl-code .
+              leave .
+            end .
+          end .
+        end .
+      end .
+    end .
 
     assign
-      loc-t-doc-pl.pl-code :screen-value = string( buf_pl-gds.pl-code, loc-t-doc-pl.pl-code :format )
+      loc-t-doc-pl.pl-code :screen-value = string( v-pl-code, loc-t-doc-pl.pl-code :format )
     .
     apply "leave" to loc-t-doc-pl.pl-code in frame {&frame-name} .
 
@@ -1728,14 +1787,14 @@ DO:
   define buffer buf-old_parts  for ub.parts .
   define buffer buf-new_parts  for ub.parts .
 
-  if input frame {&frame-name} loc-t-doc-pl.pl-code = ?
-    or input frame {&frame-name} loc-t-doc-pl.pl-code = 0
-  then do:
-    message
-      "Необходимо указать место хранения!"
-      view-as alert-box information.
-    return no-apply .
-  end.
+/*  if input frame {&frame-name} loc-t-doc-pl.pl-code = ?  */
+/*    or input frame {&frame-name} loc-t-doc-pl.pl-code = 0*/
+/*  then do:                                               */
+/*    message                                              */
+/*      "Необходимо указать место хранения!"               */
+/*      view-as alert-box information.                     */
+/*    return no-apply .                                    */
+/*  end.                                                   */
 
   if input frame {&frame-name} loc-t-doc-pl.pl-code <> loc-t-doc-pl.pl-code then do:
     find first buf_pl-gds no-lock

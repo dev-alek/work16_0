@@ -138,7 +138,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
             TempDocLine.vsd-uuid = objPrt:vad-guid
             TempDocLine.part-id = objPrt:prt-id
             TempDocLine.price-rubl = objGd:sum / objGd:qnty-fact
-            TempDocLine.vat-pc = (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100. 
+            TempDocLine.vat-pc = if objGd:nds-code > 0 then objGd:nds-code else (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100. 
         end.
       end.
       if not v-valid-prt-trn
@@ -156,7 +156,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
               TempDocPart.doc-qnty = objPrt:qnty-ttn
               TempDocPart.fact-qnty = objPrt:qnty-fact
               TempDocPart.price-rubl = objPrt:sum / objPrt:qnty-fact
-              TempDocPart.vat-pc = (objPrt:sum-nds / (objPrt:sum - objPrt:sum-nds)) * 100
+              TempDocPart.vat-pc = if objPrt:nds-code > 0 then objPrt:nds-code else (objPrt:sum-nds / (objPrt:sum - objPrt:sum-nds)) * 100
               TempDocPart.part-id = objPrt:prt-id
               TempDocPart.in-doc-id = objPrt:in-doc-id
               TempDocPart.edoc-id = objPrt:edoc-id
@@ -177,7 +177,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
           TempDocLine.fact-qnty = objGd:qnty-fact
           TempDocLine.doc-qnty = objGd:qnty-ttn
           TempDocLine.price-rubl = objGd:sum / objGd:qnty-fact
-          TempDocLine.vat-pc = (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100
+          TempDocLine.vat-pc = if objGd:nds-code > 0 then objGd:nds-code else (objGd:sum-nds / (objGd:sum - objGd:sum-nds)) * 100
           TempDocLine.koef = objGd:koef
           TempDocLine.unit-code = objGd:unit-code
         .

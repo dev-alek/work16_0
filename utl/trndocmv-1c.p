@@ -441,14 +441,46 @@ on error undo, return error return-value
       if TempDocPart.price-rubl = ?
       or TempDocPart.price-rubl = 0
       then do :
-        for first orig_parts no-lock where orig_parts.in-code   = TempDocPart.in-doc-id
-                                       and orig_parts.part-code = TempDocPart.part-id
-                                       and orig_parts.obj-type  = buf_trn-doc.obj-type
-                                       and orig_parts.obj-code  = buf_trn-doc.obj-code
-                                       and orig_parts.artic     = buf_doc-line.artic
-                                       and orig_parts.prod-type = buf_doc-line.prod-type
-                                       and orig_parts.prod-code = buf_doc-line.prod-code
-        :
+        find first orig_parts no-lock where orig_parts.in-code  = TempDocPart.in-doc-id
+                                        and orig_parts.part-code = TempDocPart.part-id
+                                        and orig_parts.obj-type  = buf_trn-doc.obj-type
+                                        and orig_parts.obj-code  = buf_trn-doc.obj-code
+                                        and orig_parts.artic     = buf_doc-line.artic
+                                        and orig_parts.prod-type = buf_doc-line.prod-type
+                                        and orig_parts.prod-code = buf_doc-line.prod-code
+                                        no-error .
+        if not available orig_parts
+        then do :                                
+          find first orig_parts no-lock where orig_parts.out-code  = replace(buf_trn-doc.doc-code, "*", "-")
+                                          and orig_parts.part-code = TempDocPart.part-id
+                                          and orig_parts.obj-type  = buf_trn-doc.obj-type
+                                          and orig_parts.obj-code  = buf_trn-doc.obj-code
+                                          and orig_parts.artic     = buf_doc-line.artic
+                                          and orig_parts.prod-type = buf_doc-line.prod-type
+                                          and orig_parts.prod-code = buf_doc-line.prod-code
+                                          no-error .
+          if available orig_parts
+          then do :
+            TempDocPart.in-doc-id = orig_parts.in-code .
+          end .
+        end .
+        if not available orig_parts
+        then do :                                
+          find first orig_parts no-lock where orig_parts.out-code = replace(buf_trn-doc.doc-code, "*", "-")
+                                          and orig_parts.obj-type  = buf_trn-doc.obj-type
+                                          and orig_parts.obj-code  = buf_trn-doc.obj-code
+                                          and orig_parts.artic     = buf_doc-line.artic
+                                          and orig_parts.prod-type = buf_doc-line.prod-type
+                                          and orig_parts.prod-code = buf_doc-line.prod-code
+                                          no-error .
+          if available orig_parts
+          then do :
+            TempDocPart.part-id = orig_parts.part-code .
+            TempDocPart.in-doc-id = orig_parts.in-code .
+          end .
+        end .                               
+        if available orig_parts
+        then do :                                
           TempDocPart.price-rubl = orig_parts.price-rubl .
         end .
       end .

@@ -35,26 +35,9 @@ define variable v-char  as character no-undo.
 { cmp/trg-def.i }
 { nws/bintrnpr.i }
 { trg/new-bcod.i }
-define variable p-db-num      as integer no-undo .
-define variable p-from-db-num as integer no-undo .
-define variable p-file-num    as integer no-undo .
 define variable v-log         as logical no-undo .
 define variable var-bc-code   as integer no-undo .
 
-assign
-  p-db-num      = integer(entry(1, p-parameter, {&delim-par}))
-  p-from-db-num = integer(entry(2, p-parameter, {&delim-par}))
-  p-file-num    = integer(entry(3, p-parameter, {&delim-par}))
-no-error.
-if error-status:error then
-do:
-  undo, return error substitute("Ошибка передачи параметров в процедуру &1&2&3&2&4&2"
-    , (this-procedure:filename)
-    , {&new-line}
-    , error-status:get-message(1)
-    , return-value ).
-
-end.
 
 define buffer buf_bar-code for ub.bar-code .
 define buffer buf_bar-code-bl for ub.bar-code .

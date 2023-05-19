@@ -1079,24 +1079,24 @@ PROCEDURE enable_UI :
   ENABLE
     b-quit
     b-rest 
-    when can-do ("b-add", bttns)
+    when lookup("b-add", bttns) > 0
     b-print
     b-help
     br-pl
     X_place.PS
     b-sel 
-    when can-do ("b-sel", bttns)
+    when lookup ("b-sel", bttns) > 0
     b-mark 
-    when can-do ("b-mark", bttns)
+    when lookup ("b-mark", bttns) > 0
     b-add 
-    when can-do ("b-add", bttns)
+    when lookup ("b-add", bttns) > 0
     b-chg 
-    when can-do ("b-add", bttns)
+    when lookup ("b-add", bttns) > 0
     b-del 
-    when can-do ("b-add", bttns)
+    when lookup ("b-add", bttns) > 0
     b-ATD
     b-level 
-    when can-do ("b-add", bttns)
+    when lookup ("b-add", bttns) > 0
     b-sch
     b-hist
     with frame {&frame-name}.

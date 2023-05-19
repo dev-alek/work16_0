@@ -105,7 +105,7 @@ procedure write-to-log :
     then do:
        p-str = trim(p-str, ({&carriage-return} + {&new-line}) )
     .
-       Publish "WriteLogAsunc" (p-str).
+       Publish "WriteLogAsunc" (p-str,yes).
     end.
     else if writelogvalue <> "yes" then do:
       run gbl/fileapnd.p

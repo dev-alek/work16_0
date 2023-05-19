@@ -23,6 +23,7 @@
 
 { cmp/trg-def.i  }
 { cmp/library.i  }
+{ gbl/objsrv.i }
 
 
 if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
@@ -230,34 +231,38 @@ for each ub.utd no-lock where ub.utd.obj-code = buf_shift-obj.obj-code and
                               ub.utd.obj-type = buf_shift-obj.obj-type and
                               (ub.utd.DocumentDate >= buf_shift-obj.shift-date and (if buf_shift-obj.close-date <> ? then ub.utd.DocumentDate <= buf_shift-obj.close-date
                               else ub.utd.DocumentDate <= today)):
-                                find last ub.c-utd no-lock where ub.c-utd.doc-code = ub.utd.doc-code
-                                                             and ub.c-utd.db-num = ub.c-utd.db-num no-error .
-buffer-copy ub.utd except ub.utd.sts ub.utd.sts-edi to tt-utd  .
-if available (ub.c-utd) then do:
-assign 
-        tt-utd.sts = ub.c-utd.sts
-        tt-utd.sts-edi = ub.c-utd.sts-edi
-. /* дл€ имитации изменени€ статуса на факт */
-end.
-{ gbl/rum-runa.i
-           ?
-           this-procedure:handle
-           ?
-           {&edoc-proc_event_utd}
-           " buffer tt-utd:handle "
-           " buffer ub.utd:handle "
-           ''
-           ''
-           no-error
-       }
-if error-status:error 
-    then 
-do:
-    message return-value view-as alert-box.
-end.
-for each tt-utd:
-    delete tt-utd .
-end.    
+   if ub.utd.sts <> ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
+   do:                              
+      find last ub.c-utd no-lock where ub.c-utd.doc-code = ub.utd.doc-code
+                                   and ub.c-utd.db-num = ub.c-utd.db-num no-error .
+      buffer-copy ub.utd except ub.utd.sts ub.utd.sts-edi to tt-utd  .
+      if available (ub.c-utd) then do:
+         assign 
+                 tt-utd.sts = ub.c-utd.sts
+                 tt-utd.sts-edi = ub.c-utd.sts-edi
+         . /* дл€ имитации изменени€ статуса на факт */      
+      end.
+            
+      { gbl/rum-runa.i
+                 ?
+                 this-procedure:handle
+                 ?
+                 {&edoc-proc_event_utd}
+                 " buffer tt-utd:handle "
+                 " buffer ub.utd:handle "
+                 ''
+                 ''
+                 no-error
+             }
+      if error-status:error 
+          then 
+      do:
+          message return-value view-as alert-box.
+      end.
+      for each tt-utd:
+          delete tt-utd .
+      end.    
+   end.
 end.       
 /*¬ыгрузка смены*/
 { gbl/rum-runa.i

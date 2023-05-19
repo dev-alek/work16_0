@@ -79,7 +79,7 @@ class ibs.th.adm.upd.observupd:
   
   define public variable pwd as character no-undo.
 
-  &scop NumWorkBase 31
+  &scop NumWorkBase 32
   define public property  m-upd-list-df      as character extent {&NumWorkBase} no-undo
     initial ["cmp/18051601.df"  
             ,"cmp/18062801.df"
@@ -111,7 +111,8 @@ class ibs.th.adm.upd.observupd:
             ,"cmp/21102101.df"
             ,"cmp/22041401.df"
             ,"cmp/22042901.df"
-            ,"proc:upd/22080401.p"         /*  32 */
+            ,"proc:upd/22080401.p"         /*  31 */
+            ,"cmp/22122601.df"             /*  32 */
             ] 
      get.
   define public property m-upd-list-chk      as character extent {&NumWorkBase} no-undo
@@ -146,6 +147,7 @@ class ibs.th.adm.upd.observupd:
             ,"TABLE:chk-slip-head,TABLE:chk-slip-string"
             ,"INDEX:chk-slip-head.reps-full"
             ,"proc:upd/22080402.p"       
+            ,"TABLE:cash-param-hist"                /* 32 */
             ] 
     get.
   define public property  upd-all-list-df      as character  no-undo /* список df файлов которые грузятся всегда. */ 
@@ -369,7 +371,7 @@ class ibs.th.adm.upd.observupd:
            vStrChk = entry (1,vStrChk,"=")
          no-error.
         /* if entry(vi,upd-list-chk-1) eq "Initial:db.reserve1-char=" then vValue = string(inShm).*/
-         if    can-do("Desc,Help,Valmsg,Valexp,Order,Column-label,Decimals,Extent,Data-Type,Initial,Mandatory",vSearch)
+         if    can-do("Desc,Help,Valmsg,Valexp,Order,Column-label,Decimals,Extent,Data-Type,Initial,Mandatory,inactive",vSearch)
          then assign
             vattr = "_" + vSearch 
             vSearch = "FIELD".

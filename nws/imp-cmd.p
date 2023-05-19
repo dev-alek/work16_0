@@ -450,7 +450,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                                           ,error-status :get-message ( 1 )
                                         )
                             ).
-            return error.
+            return error .
           end.
           find first buf_esys-route exclusive-lock
             where rowid( buf_esys-route ) = v-tbl-row
@@ -1499,18 +1499,19 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_cashbookattr}
             or when {&table_cashbookrule}
             or when {&table_cashbookruleattr}
-            or when {&table_PromoAction}
-            or when {&table_PromoAttr}
-            or when {&table_PromoCriterion}
-            or when {&table_PromoGift}
-            or when {&table_PromoGoods}
-            or when {&table_PromoObject}
-            or when {&table_promo-schedule}
-            or when {&table_promo-schedule-week}
             or when {&table_devisPC}
             or when {&table_devisPC-attr}
             or when {&table_utd}
             or when {&table_marking-lines}
+            or when {&table_promo-schedule}
+            or when {&table_promo-schedule-week}
+            or when {&table_PromoAction}
+            or when {&table_PromoAttr}
+            or when {&table_PromoCriterion}
+            or when {&table_PromoGoods}
+            or when {&table_PromoGift}
+            or when {&table_PromoObject}
+            or when {&table_cash-param-hist}
             then do:
               run nws/del-rec.p
                 ( input v-key-rec

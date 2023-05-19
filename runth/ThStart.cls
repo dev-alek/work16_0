@@ -78,6 +78,7 @@ class runth.ThStart inherits Form :
       super().
       InitializeComponent ( ).
       mtrg = itrg.
+      InitVal().
       catch e as Progress.Lang.Error:
          undo, throw e.
       end catch.      
@@ -428,7 +429,7 @@ class runth.ThStart inherits Form :
       this-object:buttonCancel:Name = "buttonCancel".
       this-object:buttonCancel:Size = new System.Drawing.Size(75, 23).
       this-object:buttonCancel:TabIndex = 1.
-      this-object:buttonCancel:Text = "Отмена".
+      this-object:buttonCancel:Text = "Выход".
       this-object:buttonCancel:UseCompatibleTextRendering = true.
       this-object:buttonCancel:Click:Subscribe(this-object:cancelButton_Click).
       /*  */

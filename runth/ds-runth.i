@@ -27,6 +27,7 @@ define temp-table tt-fileReplase no-undo serialize-name "FileReplase"
 define temp-table tt-fileList no-undo serialize-name "FileList"
     field FileName           as character 
     field FileId             as character
+    field Desc_              as character
     field RunFile            as logical 
     index pi is primary unique
         FileId
@@ -49,7 +50,18 @@ define temp-table tt-HotValList no-undo serialize-name "HotValList"
         HotKeyId HotValList
 .
 
+define temp-table tt-HotDir no-undo serialize-name "HotDir"
+    field HotDir                  as character 
+    field HotDir1                 as character
+    field HotDir2                 as character
+    field HotDir3                 as character 
+    
+    index pi is primary unique
+        HotDir 
+.
+
 define dataset ds-replace xml-node-name "root" for tt-ver, tt-Params, tt-fileList, tt-fileReplase
 data-relation  relver  for tt-ver, tt-Params relation-fields (version,version_run) nested.
-define dataset ds-HotParam xml-node-name "root" for  tt-HotKey, tt-HotValList
+
+define dataset ds-HotParam xml-node-name "root" for  tt-HotKey, tt-HotValList, tt-HotDir
 data-relation  relhot  for tt-HotKey, tt-HotValList relation-fields (HotId,HotKeyId) nested.
