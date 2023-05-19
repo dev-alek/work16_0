@@ -433,6 +433,7 @@ do:
       end .
       
       if vGtinSumDocQnty > temp_doc-line.doc-qnty
+      and not CheckErrForLine(buffer buf_utd-lines:handle)
       then do :
         do while vGtinSumDocQnty <> temp_doc-line.doc-qnty :
           do vGT = 1 to num-entries(vGtinList) :
