@@ -37,6 +37,7 @@ class ibs.th.bge.is_PM.is_PM:
     field Delivery-ned-izl    as decimal
     field wght-other          as decimal
     field othermoves          as decimal
+    field change-place        as logical
   index pi as primary gds-code
   .
   
@@ -439,6 +440,7 @@ class ibs.th.bge.is_PM.is_PM:
             create tt-result .
             assign
               tt-result.gds-code = buf2_c-pl-gds.gds-code
+              tt-result.change-place = yes
             .
           end .
           
@@ -486,6 +488,7 @@ class ibs.th.bge.is_PM.is_PM:
           create tt-result .
           assign
             tt-result.gds-code = buf_c-pl-gds.gds-code
+            tt-result.change-place = no
           .
         end .
         
@@ -739,6 +742,7 @@ class ibs.th.bge.is_PM.is_PM:
             tt-place.is-calc = false .
             for first tt-result where tt-result.gds-code = tt-place.gds-code :
               tt-result.wght-fact-end = tt-result.wght-fact-end + tt-place.end-rvs-fact-qnty .
+              if abs(tt-result.wght-fact-end) < 0.001 then tt-result.wght-fact-end = 0 .
               if session:debug-alert
               then do:
                 put stream OutStr-html unformatted
@@ -960,6 +964,7 @@ class ibs.th.bge.is_PM.is_PM:
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 2 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty + tt-place.end-chk-fact-qnty - tt-place.end-trn-fact-qnty) .
+        if abs(tt-result.wght-fact-end) < 0.001 then tt-result.wght-fact-end = 0 .
         if session:debug-alert 
         then do:
           put stream OutStr-html unformatted
@@ -1404,6 +1409,7 @@ class ibs.th.bge.is_PM.is_PM:
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 1 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) .
+        if abs(tt-result.wght-fact-end) < 0.001 then tt-result.wght-fact-end = 0 .
         if session:debug-alert
         then do:
           put stream OutStr-html unformatted
@@ -1624,6 +1630,7 @@ class ibs.th.bge.is_PM.is_PM:
       for first tt-result where tt-result.gds-code = tt-place.gds-code :
         /* Формула 1 */
         tt-result.wght-fact-end = tt-result.wght-fact-end + (tt-place.end-rvs-fact-qnty - tt-place.end-chk-fact-qnty + tt-place.end-trn-fact-qnty) .
+        if abs(tt-result.wght-fact-end) < 0.001 then tt-result.wght-fact-end = 0 .
         if session:debug-alert 
         then do:
           put stream OutStr-html unformatted
@@ -2139,6 +2146,7 @@ class ibs.th.bge.is_PM.is_PM:
           for first tt-result where tt-result.gds-code = tt-place.gds-code :
             /* Формула 4 */
             tt-result.wght-fact-start = tt-result.wght-fact-start + (tt-place.start-rvs-fact-qnty - tt-place.start-chk-fact-qnty + tt-place.start-trn-fact-qnty) .
+            if abs(tt-result.wght-fact-start) < 0.001 then tt-result.wght-fact-start = 0 .
             if session:debug-alert 
             then do:
               put stream OutStr-html unformatted
@@ -2154,6 +2162,7 @@ class ibs.th.bge.is_PM.is_PM:
           tt-place.is-calc = false .
           for first tt-result where tt-result.gds-code = tt-place.gds-code :
             tt-result.wght-fact-start = tt-result.wght-fact-start + start_rvs-line.state-measure-cli-qnty + (start_rvs-line.state-add-qnty * start_rvs-line.state-density) .
+            if abs(tt-result.wght-fact-start) < 0.001 then tt-result.wght-fact-start = 0 .
             if session:debug-alert 
             then do:
               put stream OutStr-html unformatted
@@ -2861,11 +2870,12 @@ class ibs.th.bge.is_PM.is_PM:
     
     for each tt-result where (tt-result.wght-doc-end = 0 or tt-result.wght-doc-end = ?)
                          and (tt-result.wght-doc-start = 0 or tt-result.wght-doc-start = ?)
+                         and tt-result.change-place
                           :
       delete tt-result .    
     end .
     
-    for each tt-result :
+    for each tt-result where tt-result.change-place :
       if tt-result.wght-doc-end = 0 then tt-result.wght-fact-end = 0 .
 
 /*      if tt-result.wght-doc-start = 0                     */
