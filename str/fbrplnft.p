@@ -37,6 +37,7 @@ define variable vss-description as character no-undo init "Закрытие плана-меню н
 { gbl/getcntxt.i def }
 { str/writelog.i def "'fbrpln.log'" no-create }
 { trg/partslib.i }
+{ gbl/objsrv.i   }
 { str/fbrlib.i   }
 { str/fbrpln.i   }
 { str/fbrrest.i  }

@@ -104,6 +104,7 @@ define buffer buf_goods       for goods.
 define buffer buf_trn-doc     for trn-doc.
 define buffer buf_sale-doc    for ub.sale-doc.
 define buffer buf_obj_recipe  for recipe.
+{ gbl/objsrv.i }
 
 define variable v-ban-recipes as logical no-undo .
 define variable v-ban-altr    as logical no-undo .
@@ -136,6 +137,10 @@ do
       assign
          v-store-type = buf_trn-doc.obj-type
          v-store-code = buf_trn-doc.obj-code
+         .
+      assign
+         v-cntxt-obj-type = buf_trn-doc.obj-type
+         v-cntxt-obj-code = buf_trn-doc.obj-code
          .
       { gbl/hostcode.i
         v-store-type

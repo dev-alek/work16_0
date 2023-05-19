@@ -1205,6 +1205,19 @@ define input parameter p-have-store         as logical          no-undo.  /* при
     define buffer buf_goods                 for ub.goods.
     define buffer buf_fbr-line              for ub.fbr-line.
     define buffer buf_fbr-doc               for ub.fbr-doc.
+    
+    define variable v-value          as character no-undo .
+    define variable v-type           as character no-undo .
+    define variable v-attr-value     as character no-undo .
+    define variable v-attr-value-rec as character no-undo .
+    define variable v-attr-type      as character no-undo .
+
+    define variable v-ban-recipes as logical no-undo .
+    define variable v-ban-altr    as logical no-undo .
+    { gbl/objsrv.i }
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanRecipes then v-ban-recipes = true . 
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):IsBanAltr then v-ban-altr = true .
+   
 
     find first buf_fbr-doc no-lock
          where buf_fbr-doc.doc-code = p-doc-code
@@ -1323,6 +1336,60 @@ define input parameter p-have-store         as logical          no-undo.  /* при
                 end.        /* NOT( not available buf_temp_goods-qnty ) */
             end.        /* when {&dressing} */
             otherwise do:
+      if v-ban-altr or v-ban-recipes then 
+      do:
+          /*проверка */
+          if v-ext-comp-recipe-type = {&manufacturing} and v-ban-recipes then
+          do:
+             for each ub.recipe-gds no-lock where ub.recipe-gds.recipe-code = v-comp-recipe-code:
+                run gds-attr-value in this-procedure  ( input  ub.recipe-gds.gds-code
+                   , input  {&attr-mark-type}
+                   , output v-attr-value
+                   , output v-attr-type
+                   ) no-error .
+                if v-attr-value <> "" and v-attr-value <> "not-type" then
+                do:
+                   message "Рецепт производства " + v-comp-recipe-code + " содержит маркированный товар."
+                      view-as alert-box.
+                   return .
+                end.
+             end.
+          end.
+          if v-ext-comp-recipe-type = {&alternative} and v-ban-altr then
+          do:
+             if not check-ban-sales-via-cd(buf_goods.gds-code) then 
+             do:
+               message "Рецепт альтернатива " + v-comp-recipe-code + " входит в группу, у которой не установлен атрибут: " + {&new-line} + "Запрет передачи на кассу."
+                 view-as alert-box.
+               return .
+             end.
+          end.
+          if v-ext-comp-recipe-type = {&gathering} and v-ban-recipes then
+          do:
+             for each ub.recipe-gds no-lock where ub.recipe-gds.recipe-code = v-comp-recipe-code:
+                run gds-attr-value in this-procedure  ( input  ub.recipe-gds.gds-code
+                   , input  {&attr-mark-type}
+                   , output v-attr-value
+                   , output v-attr-type
+                   ) no-error .
+                if v-attr-value <> "" and v-attr-value <> "not-type" then
+                do:
+                   run gds-attr-value in this-procedure  ( input  p-gds-code
+                      , input  {&attr-mark-type}
+                      , output v-attr-value-rec
+                      , output v-attr-type
+                      ) no-error .
+                   if v-attr-value-rec = "" or v-attr-value-rec = "not-type" then
+                   do:
+                      message "Рецепт комплектации " + v-comp-recipe-code + " должен быть маркированным"
+                         view-as alert-box.
+                      return .
+                   end.
+                   else leave.
+                end.
+             end.
+          end.
+      end.
                 find first buf_temp_goods-qnty
                      where buf_temp_goods-qnty.gds-code = p-gds-code
                        and buf_temp_goods-qnty.trn-type = p-trn-type
@@ -1744,9 +1811,12 @@ define variable v-default-recipe-code   as character    no-undo.
              and buf_recipe-gds.prod-code   = buf_goods.prod-code
         :
             find first buf_recipe no-lock
-                 where buf_recipe.recipe-code = buf_recipe-gds.recipe-code
+                 where buf_recipe.recipe-code = buf_recipe-gds.recipe-code 
+                   and buf_recipe.obj-type    = p-obj-type 
+                   and buf_recipe.obj-code    = p-obj-code
+                 no-error
             .
-            
+            if not available buf_recipe then next search-recipe-gds.
             find buf_ingr_goods no-lock
                 where buf_ingr_goods.gds-code = buf_recipe.gds-code
             .
