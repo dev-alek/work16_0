@@ -682,9 +682,7 @@ end. // end_of_gifts
     
     if v-promo-action:status_enum = enum-promo-status:encompleted or (v-promo-action:status_enum = enum-promo-status:enactive and v-promo-action:changeDate <> ?) then 
     do:
-      run fill-PromoAction in mImp2CdH (v-promo-action:db-num,
-        v-promo-action:ID,             
-        mDelCd).    
+      run fill-PromoAction in mImp2CdH (v-promo-action:ID, v-promo-action:db-num).    
     end.   
     v-retfl = true .
     catch exAppErrors as class Progress.Lang.AppError :

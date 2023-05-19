@@ -118,10 +118,17 @@ define variable v-promo-actions-del as class ibs.th.ref.promo.promoactionsubs no
 
 define variable v-promo-stor as class ibs.th.gbl.storage.promoactionstorage no-undo .
 v-promo-stor = new ibs.th.gbl.storage.promoactionstorage().
+
 for each PromoAction-list no-lock:
-   if PromoAction-list.del_
-   then v-promo-stor:getpromoactionsubs(input-output v-promo-actions-del,PromoAction-list.db-num,PromoAction-list.id).
-   else v-promo-stor:getpromoactionsubs(input-output v-promo-actions-upd,PromoAction-list.db-num,PromoAction-list.id).
+   find first ub.PromoAction where ub.PromoAction.id = PromoAction-list.id
+                         and ub.PromoAction.db-num = PromoAction-list.db-num
+   no-lock no-error.
+   if available ub.PromoAction
+   then do:
+     if ub.PromoAction.Status_ = 2 or ub.PromoAction.changeDate < today then
+      v-promo-stor:getpromoactionsubs(input-output v-promo-actions-del,PromoAction-list.db-num,PromoAction-list.id).
+     else  v-promo-stor:getpromoactionsubs(input-output v-promo-actions-upd,PromoAction-list.db-num,PromoAction-list.id).
+   end.
 end.
 
 delete object v-promo-stor.
