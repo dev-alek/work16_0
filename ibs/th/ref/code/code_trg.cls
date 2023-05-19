@@ -18,6 +18,7 @@ class ibs.th.ref.code.code_trg final:
     Purpose:
     Notes:
    ------------------------------------------------------------------------------*/
+   { cmp/library.i  class}
    { cmp/str-glbl.i class }
    define temp-table tt-query no-undo
       field NameQuery as character 
@@ -30,6 +31,12 @@ class ibs.th.ref.code.code_trg final:
       field f-brwname  as character 
   index indForm f-level f-numfield .
   
+  define temp-table tt-menu no-undo
+      field f-num    as integer  
+      field f-lable  as character 
+      field f-list   as character 
+  index f-num f-num .
+  
   define temp-table tt-code-brw no-undo like code 
     field Frecid as int64 init ?
     field fstatus as character
@@ -41,6 +48,7 @@ class ibs.th.ref.code.code_trg final:
   
   {gbl/tmprecid.i }
   define public variable parent as character no-undo.
+  define public variable menuHandle as handle no-undo.
   define public variable title  as character no-undo init ?.
   define public variable startlevel as integer no-undo.
   define public variable mViewdel as logical no-undo.
@@ -61,7 +69,31 @@ class ibs.th.ref.code.code_trg final:
    set.
   
   define variable v-code-brw as class ibs.th.ref.code.browsecode no-undo .
-
+  define variable mode-erprn as logical no-undo init ?.
+  method  public logical get1CERP(): 
+       define variable conf-par as character no-undo.
+       
+       define variable par-type as character no-undo.
+       if mode-erprn eq ?
+       then do:
+          { gbl/conf-rd.i
+            "'is-erpRN'"
+             0
+             "''"
+             0
+             "''"
+             "''"
+             "''"
+             NO
+             conf-par
+             par-type
+             no-error
+             }
+          if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
+          else mode-erprn = no.
+       end.
+       return mode-erprn.
+    end.
   define property parparentproc as handle no-undo
     private get.
     set(input iH as handle):
@@ -295,7 +327,7 @@ class ibs.th.ref.code.code_trg final:
        v-code-brw = new ibs.th.ref.code.browsecode (input mode, input this-object).
        v-code-brw:chek-erpRN = chek-erpRN.
        v-code-brw:Text = if this-object:title eq ? then "Справочники" else this-object:title. 
-       
+       setMenu().
        setFieldBrw(num-entries(parent,{&delim-par})).
        wait-for  v-code-brw:ShowDialog() .
        
@@ -321,6 +353,97 @@ class ibs.th.ref.code.code_trg final:
        end.
        else
           v-code-brw:defColumn().
+    end.
+    
+    method public void addMenu (inum as integer, iLable as character , ilistMenu as character ):
+       find first tt-menu where tt-menu.f-num eq inum no-error.
+       if not available tt-menu
+       then do:
+          create tt-menu.
+          tt-menu.f-num = inum.
+       end.
+       assign
+          tt-menu.f-lable = iLable
+          tt-menu.f-list  = ilistMenu
+       .
+    end.
+    
+    method public void delMenu (inum as integer):
+       find first tt-menu where tt-menu.f-num eq inum no-error.
+       if available tt-menu
+       then do:
+          delete tt-menu.
+          
+       end.
+      
+    end.
+    
+    method public void setMenu ( ):
+       if not valid-handle (menuHandle) then return.
+       for each tt-menu no-lock:
+          v-code-brw:addMenu(tt-menu.f-num, tt-menu.f-lable, tt-menu.f-list).
+       end.
+    end.
+    
+    method private integer  getDbNum ( ):
+       find first sys-ctrl.
+       return sys-ctrl.db-num.
+    end.
+    method public void histOne ( ):
+       define variable v-rid-list as character no-undo.
+       
+      if avail tt-code-brw then  
+      do:
+         run ref/ccode.w (
+                   tt-code-brw.parent, 
+                   tt-code-brw.code,
+                   parparentproc,
+                   0,
+                   "",
+                   0,
+                   "",
+                   "one",
+                   ?,
+                   "",
+                   "" ,
+                   getDbNum ( ),
+                   ?,
+                   input-output v-rid-list ) .
+      end.
+    end.
+    
+    method public void histChild ( ):
+       define variable v-rid-list as character no-undo.
+      if avail tt-code-brw then  
+      do:
+         run ref/ccode.w (
+                   tt-code-brw.parent, 
+                   tt-code-brw.code,
+                   parparentproc,
+                   0,
+                   "",
+                   0,
+                   "",
+                   "parentBeg",
+                   ?,
+                   "",
+                   "" ,
+                   getDbNum ( ),
+                   ?,
+                   input-output v-rid-list ) .
+      end.
+    end.
+    
+    method public void runMenu (iStr as character ):
+       define buffer code for code.
+       find first code where recid(code) eq tt-code-brw.Frecid no-lock no-error.
+       run value(istr) in menuHandle 
+       ((buffer code:handle)) no-error.
+       if error-status:error
+       then
+          message error-status:get-message (1) skip
+                  return-value
+          view-as alert-box.
     end.
     
     method public void addcode ( ):
