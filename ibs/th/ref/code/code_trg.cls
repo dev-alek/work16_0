@@ -181,23 +181,22 @@ class ibs.th.ref.code.code_trg final:
                            no-error.
       if not available tt-form
       then do:
-         if iname ne ?
-         then do:
-            create tt-form.
-            assign
-               tt-form.f-level    = ilevel
-               tt-form.f-numfield = inumfield
-               tt-form.f-brwname  = iname
-            . 
-         end.
+         
+         create tt-form.
+         assign
+            tt-form.f-level    = ilevel
+            tt-form.f-numfield = inumfield
+            tt-form.f-brwname  = iname
+         . 
+         
       end.
       else do:
-         if iname ne ?
-         then do:
-            delete tt-form.
-            
-         end.
-         else 
+/*         if iname ne ?     */
+/*         then do:          */
+/*            delete tt-form.*/
+/*                           */
+/*         end.              */
+/*         else              */
             tt-form.f-brwname  = iname. 
       end.   
    end.

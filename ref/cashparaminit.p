@@ -34,84 +34,93 @@ Types = new ibs.th.str.cash.CashDevice().
    find first cashcode where cashcode.parent eq ""
                          and cashcode.code   eq "cash-param"
       exclusive-lock no-error.
-   if available cashcode
-   then
-      delete cashcode.
    if not available cashcode
    then do:   
       create cashcode.
       assign
           cashcode.parent   = ""
           cashcode.code     = "Cash-param"
-          cashcode.Codename = "Справочник параметров кассы"
-          cashcode.nwsgbd   = yes
-          cashcode.export_  = yes
-          cashcode.procview = "ref/cashparams.w"
       .
    end.
-  
+   
+   assign
+       cashcode.Codename = "Справочник параметров кассы"
+       cashcode.nwsgbd   = yes
+       cashcode.export_  = yes
+       cashcode.procview = "ibs/th/ref/code/cashparams.p"
+   .
    define variable v-ii as integer no-undo.
    do v-ii = 1 to Types:mapType:GetItem(v-ii):
       objType = Types:CurrProp.
       find first cashcode where cashcode.parent eq "cash-param"
                             and cashcode.code   eq string(objType:KeyInt)
-      no-lock no-error.
+      exclusive-lock no-error.
       if not available cashcode
       then do:
          create cashcode.
          assign
            cashcode.parent  = "cash-param"
            cashcode.code    = string(objType:KeyInt)
-           cashcode.nwsgbd  = yes
-           cashcode.export_ = yes
          .
       end.
-      if    cashcode.CodeName eq ""
-         or cashcode.CodeName eq ?
-         or cashcode.CodeName eq cashcode.code
-      then
-         cashcode.CodeName = objType:Label_.
+      assign
+         cashcode.nwsgbd  = yes
+         cashcode.export_ = yes
+      .
+      cashcode.CodeName = objType:Label_.
       find first cashobj where cashobj.parent    = cashcode.parent + {&delim-par} + cashcode.code
                            and cashobj.code      = "1"
-      no-lock no-error.
+      exclusive-lock no-error.
       if not available cashobj
       then do:
          create cashobj.
          assign
            cashobj.parent    = cashcode.parent + {&delim-par} + cashcode.code
            cashobj.code      = "1"
-           cashobj.CodeName  = "Параметры"
-           cashobj.nwsgbd    = yes
-           cashobj.export_   = yes
-           cashobj.procview     = "ref/cashparamg.w"
          .
       end.
-      
+      assign
+        cashobj.CodeName  = "Параметры"
+        cashobj.nwsgbd    = yes
+        cashobj.export_   = yes
+        cashobj.procview     = "ref/cashparamg.w"
+      .
       find first cashobj where cashobj.parent    = cashcode.parent + {&delim-par} + cashcode.code
                            and cashobj.code      = "2"
-      no-lock no-error.
+      exclusive-lock no-error.
       if not available cashobj
       then do:
          create cashobj.
          assign
            cashobj.parent    = cashcode.parent + {&delim-par} + cashcode.code
            cashobj.code      = "2"
-           cashobj.CodeName  = "Клавиатура"
-           cashobj.nwsgbd    = yes
-           cashobj.export_   = yes
-           cashobj.procview     = "ref/cashparkey.w"
          .
-         for each cashkey where cashkey.parent eq "CashFunKey"
-         no-lock:
+         
+      end.
+      assign
+        cashobj.CodeName  = "Клавиатура"
+        cashobj.nwsgbd    = yes
+        cashobj.export_   = yes
+        cashobj.procview     = "ref/cashparkey.w"
+      .
+      for each cashkey where cashkey.parent eq "CashFunKey"
+      no-lock:
+         find first cashgrp where cashgrp.parent    = cashobj.parent + {&delim-par} + cashobj.code
+                              and cashgrp.code      = cashkey.code
+         exclusive-lock no-error.
+         if not available cashgrp
+         then do: 
             create cashgrp.
             assign
                cashgrp.parent    = cashobj.parent + {&delim-par} + cashobj.code
                cashgrp.code      = cashkey.code
-               cashgrp.nwsgbd    = yes
-               cashgrp.export_   = yes
-               cashgrp.procview     = "ref/codeparam.w"
             .
          end.
+         assign
+            cashgrp.nwsgbd    = yes
+            cashgrp.export_   = yes
+            cashgrp.procview     = "ref/codeparam.w"
+         .
       end.
    end.
    

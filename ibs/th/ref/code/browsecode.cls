@@ -108,7 +108,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
          bexport:visible = false
          bimport:visible = false
          bselect:visible = false
-         this-object:dataGridView1:Columns[1]:Visible = false.
+         this-object:dataGridView1:Columns[0]:Visible = false.
       .
       end.
       else if iMode eq {&select}
@@ -120,7 +120,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
          bexport:visible = false
          bimport:visible = false
          bselect:visible = true
-         this-object:dataGridView1:Columns[1]:Visible = yes.
+         this-object:dataGridView1:Columns[0]:Visible = yes.
       .
       end.
       else do: 
@@ -132,7 +132,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
             bexport:visible = true
             bimport:visible = true
             bselect:visible = false
-            this-object:dataGridView1:Columns[1]:Visible = no.
+            this-object:dataGridView1:Columns[0]:Visible = no.
          .
       end.
       return.
