@@ -148,6 +148,7 @@ define            variable v-param-code              as integer   no-undo .
 define            variable tog-list                  as character no-undo .
 define            variable tog-last                  as character no-undo .
 define            VARIABLE v-param                   as LOGICAL   no-undo .
+define            VARIABLE v-one-shift               as LOGICAL   no-undo .
 define buffer next-shift-obj     for ub.shift-obj.
 define buffer previous-shift-obj for ub.shift-obj.
 define buffer buf_goods          for ub.goods.
@@ -460,8 +461,8 @@ do:
       .
 end.
 
-if x-shift-start = x-shift-end and x-date-start = x-date-end then x-tog-shift = true . 
-else x-tog-shift = false .
+if x-shift-start = x-shift-end and x-date-start = x-date-end then v-one-shift = true . 
+else v-one-shift = false .
 
 /* ищем следующюю смену и ее персонал */
 FIND first next-shift-obj NO-LOCK
@@ -1471,7 +1472,7 @@ procedure first-line-tog1-html :
          rep-shift-store-name
          ).
             
-      if x-tog-shift then 
+      if v-one-shift then 
       do:
          put stream OutStr-html unformatted
             '<tr><td colspan="22">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
@@ -1809,7 +1810,7 @@ procedure first-line-tog2-html :
             rep-shift-store-name
             ).
             
-       if x-tog-shift then 
+       if v-one-shift then 
        do:
           put stream OutStr-html unformatted
              '<tr><td colspan="16">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
@@ -2222,7 +2223,7 @@ procedure first-line-tog3-html :
          rep-shift-store-name
          ).
             
-       if x-tog-shift then 
+       if v-one-shift then 
        do:
           put stream OutStr-html unformatted
              '<tr><td colspan="13">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
@@ -2596,7 +2597,7 @@ procedure first-line-tog4-html :
          rep-shift-store-name
          ).
             
-       if x-tog-shift then 
+       if v-one-shift then 
        do:
           put stream OutStr-html unformatted
              '<tr><td colspan="6">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
@@ -2830,7 +2831,7 @@ procedure first-line-tog5-html :
          rep-shift-store-name
          ).
             
-       if x-tog-shift then 
+       if v-one-shift then 
        do:
           put stream OutStr-html unformatted
              '<tr><td colspan="7">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
@@ -3068,7 +3069,7 @@ procedure first-line-tog5-1-html :
          rep-shift-store-name
          ).
             
-       if x-tog-shift then 
+       if v-one-shift then 
        do:
           put stream OutStr-html unformatted
              '<thead><tr><td colspan="7">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
@@ -3300,7 +3301,7 @@ procedure first-line-tog7-html :
          rep-shift-store-name
          ).
             
-       if x-tog-shift then 
+       if v-one-shift then 
        do:
           put stream OutStr-html unformatted
              '<tr><td colspan="5">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
@@ -3529,7 +3530,7 @@ procedure first-line-tog8-html :
          rep-shift-store-name
          ).
             
-      if x-tog-shift then 
+      if v-one-shift then 
       do:
          put stream OutStr-html unformatted
             '<tr><td colspan="11">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
@@ -3668,7 +3669,7 @@ procedure first-line-tog9-html :
          rep-shift-store-name
          ).
             
-      if x-tog-shift then 
+      if v-one-shift then 
       do:
          put stream OutStr-html unformatted
             '<tr><td colspan="13">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
@@ -3913,7 +3914,7 @@ procedure first-line-tog10-html :
          rep-shift-store-name
          ).
             
-       if x-tog-shift then 
+       if v-one-shift then 
        do:
           put stream OutStr-html unformatted
              '<tr><td colspan="8">—мена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
