@@ -1,7 +1,7 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI ADM1
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS s-object 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS s-object
 /*
 
 $Revision$
@@ -46,6 +46,8 @@ define variable vss-description as character no-undo init "Окно для вызова отчет
 { cmp/cli-list.i cli-list def "new shared" }
 { rep/rep-bt.i   }
 { gbl/userobjs.i }
+{str/lib-trn.i}
+{ str/listhprc.i "gds-list"  }
 &glob max-len-str 6000
 
 define shared variable lns-cnt as integer no-undo .
@@ -93,12 +95,12 @@ define variable menu-ed_date-start-handle   as handle    no-undo .
 define variable menu-ed_date-end-handle     as handle    no-undo .
 define variable keep-spis as character no-undo .
 define variable choose-shift as logical no-undo init no .
-
+define variable temp-param-goods-choose as character no-undo .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -119,19 +121,19 @@ SET_val_TYPE SelectGood SelectObject Radio-customer BUTTON-node ~
 customer-name BUTTON-obj BUTTON-prod BUTTON-gds BUTTON-one BUTTON-keep-spis ~
 Radio-schet BUTTON-node-2 BUTTON-prod-2 Goods-Editor lkp-schet TOG-Excel ~
 TOG-list-hist TEXT-3 TEXT-4 TEXT-2 text-5 TEXT-1 Obj-count text-6 ~
-Goods-count 
+Goods-count
 &Scoped-Define DISPLAYED-OBJECTS Radio-Period TOG-Shift SET_PAY_TYPE ~
 Date-Alone TOG-Shift-2 ShowCrsa RADIO-task ShowCost Shift-Alone Shift-Start ~
 Shift-End ShowSale Date-Start Date-End SET_val_TYPE SelectGood SelectObject ~
 Radio-customer customer-name Radio-schet Goods-Editor lkp-schet TOG-Excel ~
 TOG-list-hist TEXT-3 TEXT-4 TEXT-2 text-5 TEXT-1 Obj-count text-6 ~
-Goods-count 
+Goods-count
 
 /* Custom List Definitions                                              */
 /* List-schet,List-2,List-3,List-4,List-5,List-6                        */
 &Scoped-define List-schet Radio-schet BUTTON-schet BUTTON-schet-one ~
-BUTTON-schet-val lkp-schet text-6 
-&Scoped-define List-6 Shift-Alone Date-Start Date-End 
+BUTTON-schet-val lkp-schet text-6
+&Scoped-define List-6 Shift-Alone Date-Start Date-End
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -542,7 +544,8 @@ DEFINE FRAME F-Main
 
 
 /* *********************** Procedure Settings ************************ */
-
+FUNCTION stat-line RETURNS CHARACTER
+  (input p-status-chr as character )  FORWARD.
 &ANALYZE-SUSPEND _PROCEDURE-SETTINGS
 /* Settings for THIS-PROCEDURE
    Type: SmartObject
@@ -555,7 +558,7 @@ DEFINE FRAME F-Main
 /* *************************  Create Window  ************************** */
 
 &ANALYZE-SUSPEND _CREATE-WINDOW
-/* DESIGN Window definition (used by the UIB) 
+/* DESIGN Window definition (used by the UIB)
   CREATE WINDOW s-object ASSIGN
          HEIGHT             = 17.57
          WIDTH              = 90.
@@ -563,7 +566,7 @@ DEFINE FRAME F-Main
                                                                         */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB s-object 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB s-object
 /* ************************* Included-Libraries *********************** */
 
 {src/adm/method/viewer.i}
@@ -612,8 +615,8 @@ ASSIGN
    NO-ENABLE 1                                                          */
 /* SETTINGS FOR BUTTON BUTTON-schet-val IN FRAME F-Main
    NO-ENABLE 1                                                          */
-ASSIGN 
-       customer-name:READ-ONLY IN FRAME F-Main        = TRUE.
+ASSIGN
+  customer-name:READ-ONLY IN FRAME F-Main = TRUE.
 
 /* SETTINGS FOR FILL-IN Date-End IN FRAME F-Main
    6                                                                    */
@@ -621,13 +624,13 @@ ASSIGN
    6                                                                    */
 /* SETTINGS FOR FILL-IN Goods-count IN FRAME F-Main
    ALIGN-L                                                              */
-ASSIGN 
-       Goods-Editor:READ-ONLY IN FRAME F-Main        = TRUE.
+ASSIGN
+  Goods-Editor:READ-ONLY IN FRAME F-Main = TRUE.
 
 /* SETTINGS FOR EDITOR lkp-schet IN FRAME F-Main
    1                                                                    */
-ASSIGN 
-       lkp-schet:READ-ONLY IN FRAME F-Main        = TRUE.
+ASSIGN
+  lkp-schet:READ-ONLY IN FRAME F-Main = TRUE.
 
 /* SETTINGS FOR COMBO-BOX Radio-Period IN FRAME F-Main
    ALIGN-L                                                              */
@@ -635,14 +638,14 @@ ASSIGN
    1                                                                    */
 /* SETTINGS FOR FILL-IN Shift-Alone IN FRAME F-Main
    6                                                                    */
-ASSIGN 
-       ShowCost:HIDDEN IN FRAME F-Main           = TRUE.
+ASSIGN
+  ShowCost:HIDDEN IN FRAME F-Main = TRUE.
 
-ASSIGN 
-       ShowCrsa:HIDDEN IN FRAME F-Main           = TRUE.
+ASSIGN
+  ShowCrsa:HIDDEN IN FRAME F-Main = TRUE.
 
-ASSIGN 
-       ShowSale:HIDDEN IN FRAME F-Main           = TRUE.
+ASSIGN
+  ShowSale:HIDDEN IN FRAME F-Main = TRUE.
 
 /* SETTINGS FOR FILL-IN text-6 IN FRAME F-Main
    1                                                                    */
@@ -659,7 +662,7 @@ ASSIGN
 */  /* FRAME F-Main */
 &ANALYZE-RESUME
 
- 
+
 
 
 
@@ -669,31 +672,150 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-gds s-object
 ON CHOOSE OF BUTTON-gds IN FRAME F-Main /* BUTTON-gds */
 DO:
-  if not params-only then do:
+  define variable ref-list       as character no-undo.
+  define variable vRecId         as recid     no-undo.
+  define variable vAnswer        as logical   no-undo.
+  define variable vI             as integer   no-undo.
+  define variable v-seq          as integer   no-undo .
+  define variable num-rec        as integer   init 0 no-undo.
+  define variable v-bh           as handle    no-undo .
+  define variable v-recs         as integer   no-undo .
+  define variable v-temp-seq     as integer   no-undo .
+  define variable v-line         as integer   no-undo .
+  define variable v-item         as character no-undo .
+  define variable v-tot-lns      as integer   no-undo .
+  define variable v-ref-rec      as recid     no-undo .
+  define variable dsp-rs         as character no-undo .
+  define variable rs-status      as character no-undo init {&current}.
+  define variable v-tbl-name     as character no-undo .
+  define variable rs-list-method as character no-undo init "goods".
+  define variable tot-lns        as integer   init ? no-undo.
+  define variable v-no-hist      as integer   no-undo init -1.
+  if not params-only then 
+  do:
     for each gds-list :
-        delete gds-list.
+      delete gds-list.
     end.
   end.
+  if temp-param-goods-choose <> "" then 
+  do:
+    run ref/gds-ref.p (
+      input my-handle
+      ,input "b-mark,b-sel"
+      ,input {&all}           /*p-stat */
+      ,input "ptrlsug"        /*p-list  */
+      ,input ?                /*p-cond  */
+      ,input ?                /*p-rec   */
+      ,input ?                /*p-grp   */
+      ,input ?                /*p-cli-type */
+      ,input ?                /*p-cli-code  */
+      ,input v-cntxt-obj-type /*p-obj-type  */
+      ,input v-cntxt-obj-code /*p-obj-code  */
+      ,input ?                /*p-other     */
+      ,output ref-list).
+    if ref-list = "" and can-find(first gds-list) then 
+    do:
+      message
+        "Не было выбрано ни одного товара. Очистить список ранее выбранных товаров?"
+        view-as alert-box QUESTION buttons YES-NO update vAnswer.
+      if not vAnswer then return.
+    end.
 
-  run str/gds-list.w ( input my-handle, input v-cntxt-host-code-obj, input v-cntxt-obj-type, input v-cntxt-obj-code ).
-  lns-cnt = 0 .
-  for each gds-list :
+    if ref-list <> "" then 
+    do:
+      v-recs = num-entries (ref-list).
+      do num-rec = 0 to v-recs:
+
+        if v-recs = 1 then 
+        do:
+          num-rec = 1 .
+        end.
+        if num-rec > 0 then 
+        do:
+          v-ref-rec = integer (entry (num-rec, ref-list)).
+          find goods where recid (goods) = v-ref-rec no-lock.
+          create gds-list .
+          buffer-copy goods to gds-list .
+        end.
+        if v-recs = 1 then 
+        do:
+          assign
+            v-temp-seq = v-seq
+            v-line     = 0
+            dsp-rs     = substitute("Товар :&1 &2", goods.gds-name, stat-line(rs-status))
+            v-item     = '':U
+            v-tbl-name = {&table_goods}
+            v-bh       = buffer goods:handle
+            v-tot-lns  = tot-lns
+            .
+        end.
+        else 
+        do:
+          if num-rec = 0 then 
+          do:
+            assign
+              v-temp-seq = v-seq
+              v-line     = 0
+              dsp-rs     = substitute("Товары : &1", stat-line(rs-status))
+              v-item     = '':U
+              v-tbl-name = '':U
+              v-bh       = ?
+              v-tot-lns  = tot-lns
+              .
+          end.
+          else 
+          do:
+            assign
+              v-temp-seq = v-seq - 1
+              v-line     = num-rec
+              dsp-rs     = substitute("код &1 &2 &3&4 &5", goods.gds-code, goods.artic, goods.prod-type, goods.prod-code, goods.gds-name)
+              v-item     = '':U
+              v-tbl-name = {&table_goods}
+              v-bh       = buffer goods:handle
+              v-tot-lns  = tot-lns + num-rec
+              .
+          end.
+        end.
+        v-no-hist = (if num-rec = 1 then 0 else num-rec).
+        run create-gds-list-hist in this-procedure(input {&add-def}
+          , input-output v-temp-seq
+          , input v-line
+          , input '':U
+          , input dsp-rs
+          , input v-tot-lns
+          , input rs-list-method
+          , input rs-status
+          , input v-item
+          , input v-tbl-name
+          , input v-bh
+          ).
+        if num-rec = 0 or v-recs = 1 then v-seq  = v-temp-seq.
+      end.
+    end.     
+  end.
+
+  else 
+  do:
+    run str/gds-list.w ( input my-handle, input v-cntxt-host-code-obj, input v-cntxt-obj-type, input v-cntxt-obj-code ).
+  end.
+    lns-cnt = 0 .
+    for each gds-list :
       lns-cnt = lns-cnt + 1 .
-  end.
-
-  define variable v-i as integer   no-undo .
-  s-notes =  "" .
-  for each gds-list-hist :
-    v-i = v-i + 1 .
-    s-notes = s-notes + {&new-line} + gds-list-hist.hist-mode +  gds-list-hist.des .
-    if v-i > 10 then do:
-      s-notes = s-notes + " ... " .
-      leave.
     end.
-  end.
 
-  run display-count-other in this-procedure .
-END.
+  define variable v-i as integer no-undo .
+  s-notes =  "" .
+    for each gds-list-hist :
+      v-i = v-i + 1 .
+      s-notes = s-notes + {&new-line} + gds-list-hist.hist-mode +  gds-list-hist.des .
+      if v-i > 10 then 
+      do:
+        s-notes = s-notes + " ... " .
+        leave.
+      end.
+    end.
+    run display-count-other in this-procedure .
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -702,14 +824,14 @@ END.
 &Scoped-define SELF-NAME BUTTON-keep-spis
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BUTTON-keep-spis s-object
 ON CHOOSE OF BUTTON-keep-spis IN FRAME F-Main
-DO:
-for each gds-list :
-    delete gds-list.
-end.
-keep-spis = "".
+  DO:
+    for each gds-list :
+      delete gds-list.
+    end.
+    keep-spis = "".
 
-define buffer buf_clob-bind for ub.clob-bind  .
-define variable v-rid-list as character no-undo .
+    define buffer buf_clob-bind for ub.clob-bind  .
+    define variable v-rid-list as character no-undo .
 
 run ref/clobbnds.w ( input my-handle
                     ,input this-procedure:handle
@@ -733,11 +855,11 @@ run ref/clobbnds.w ( input my-handle
     s-notes = " " .
   end.
 
-  run new-state ("KEEP-SPIS="  + string(keep-spis)).
-  run display-count in this-procedure .
-  run display-count-other in this-procedure .
+    run new-state ("KEEP-SPIS="  + string(keep-spis)).
+    run display-count in this-procedure .
+    run display-count-other in this-procedure .
 
-END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -997,41 +1119,43 @@ DO:
   schet-list          = "" .
  if temp-param-schet-init <> "" and temp-param-schet-init <> ? then do:
       find first buf_fin-schet no-lock where
-          buf_fin-schet.code-schet = integer (temp-param-schet-init) and
-          buf_fin-schet.host-code  = v-cntxt-host-code-obj no-error .
-          if available buf_fin-schet then
-          assign
-            schet-list = string(recid(buf_fin-schet))
-            v-status_ = buf_fin-schet.status_
+        buf_fin-schet.code-schet = integer (temp-param-schet-init) and
+        buf_fin-schet.host-code  = v-cntxt-host-code-obj no-error .
+      if available buf_fin-schet then
+        assign
+          schet-list = string(recid(buf_fin-schet))
+          v-status_  = buf_fin-schet.status_
           .
- end.
+    end.
     run ref/finschts.w
-    (   input my-handle,
-        input v-cntxt-host-code-obj,
-        input "b-sel",
-        input temp-param-schet-mode,
-        input ?,
-        input ?,
-        input 0,
-        input v-cntxt-host-code-obj ,
-        input 0,
-        input-output v-status_,
-        input-output schet-list).
+      (   input my-handle,
+      input v-cntxt-host-code-obj,
+      input "b-sel",
+      input temp-param-schet-mode,
+      input ?,
+      input ?,
+      input 0,
+      input v-cntxt-host-code-obj ,
+      input 0,
+      input-output v-status_,
+      input-output schet-list).
 
-  fin-schet-recid =  schet-list .
+    fin-schet-recid =  schet-list .
 
-  if num-entries(schet-list) > 1 then do:
+    if num-entries(schet-list) > 1 then 
+    do:
       message "Можно выбрать только один счет !!!" view-as alert-box .
       return no-apply.
-  end.
-  find first buf_fin-schet no-lock where    recid(buf_fin-schet) = integer (schet-list)   no-error .
-  if not available buf_fin-schet
-  then do :
-    define variable var-ll as integer no-undo .
-    repeat var-ll = 7 to 1 by -1 :
+    end.
+    find first buf_fin-schet no-lock where    recid(buf_fin-schet) = integer (schet-list)   no-error .
+    if not available buf_fin-schet
+      then 
+    do :
+      define variable var-ll as integer no-undo .
+      repeat var-ll = 7 to 1 by -1 :
         if lookup( string(var-ll) , temp-param-schet-hide) <> 0 then next.
         radio-schet = var-ll .
-    end.
+      end.
 
     display RADIO-schet with frame {&frame-name} .
     run select-radio-schet-no-apply in this-procedure .
@@ -1064,7 +1188,7 @@ DO:
   end.
 
 
-END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1079,28 +1203,30 @@ DO:
   v-curr-abbr =  "" .
 
     run ref/currency.w ( my-handle, "b-sel", input-output ref-rec ).
-    if ref-rec = ? then do:
+    if ref-rec = ? then 
+    do:
 
-         define variable var-ll as integer no-undo .
-         repeat var-ll = 7 to 1 by -1 :
-            if lookup( string(var-ll) , temp-param-schet-hide) <> 0 then next.
-            radio-schet = var-ll .
-         end.
+      define variable var-ll as integer no-undo .
+      repeat var-ll = 7 to 1 by -1 :
+        if lookup( string(var-ll) , temp-param-schet-hide) <> 0 then next.
+        radio-schet = var-ll .
+      end.
       display RADIO-schet with frame {&frame-name} .
       run select-radio-schet-no-apply in this-procedure .
     end.
-    else do:
-      find first buf_currency where recid( buf_currency ) = ref-rec no-lock.
+    else 
+    do:
+      find currency where recid ( currency ) = ref-rec no-lock.
       assign
-        v-curr-code = buf_currency.curr-code
-        schet-list = "curr-code=" + string(buf_currency.curr-code)
-        v-curr-abbr = buf_currency.curr-abbr
-        lkp-schet = temp-param-schet + " по : " + buf_currency.curr-abbr
-      .
+        v-curr-code = currency.curr-code
+        schet-list  = "curr-code=" + string(currency.curr-code)
+        v-curr-abbr = currency.curr-abbr
+        lkp-schet   = temp-param-schet + " по : " + currency.curr-abbr
+        .
       display lkp-schet with frame {&frame-name} .
     end.
 
-END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1524,19 +1650,19 @@ END.
 &Scoped-define SELF-NAME Shift-Alone
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Shift-Alone s-object
 ON LEAVE OF Shift-Alone IN FRAME F-Main /* смена */
-DO:
-  Assign Shift-Alone Shift-End Shift-start.
-  X-Shift-Alone   = Shift-Alone.
-  X-Shift-End     = Shift-Alone.
-  X-Shift-start   = Shift-alone.
-  Shift-End       = Shift-Alone.
-  Shift-start     = Shift-alone.
+  DO:
+    Assign Shift-Alone Shift-End Shift-start.
+    X-Shift-Alone   = Shift-Alone.
+    X-Shift-End     = Shift-Alone.
+    X-Shift-start   = Shift-alone.
+    Shift-End       = Shift-Alone.
+    Shift-start     = Shift-alone.
 
-  if Shift-End:visible in frame {&frame-name}    then   display Shift-end with frame {&frame-name} .
-  if Shift-start:visible in frame {&frame-name}  then   display Shift-start with frame {&frame-name} .
-  display Shift-Alone with frame {&frame-name} .
-  run new-state ("SHIFT-ALONE="  + String(SHIFT-Alone:screen-value)).
-END.
+    if Shift-End:visible in frame {&frame-name}    then   display Shift-end with frame {&frame-name} .
+    if Shift-start:visible in frame {&frame-name}  then   display Shift-start with frame {&frame-name} .
+    display Shift-Alone with frame {&frame-name} .
+    run new-state ("SHIFT-ALONE="  + String(SHIFT-Alone:screen-value)).
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1545,12 +1671,12 @@ END.
 &Scoped-define SELF-NAME Shift-End
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Shift-End s-object
 ON LEAVE OF Shift-End IN FRAME F-Main /* по */
-DO:
-  Assign Shift-End.
-  X-Shift-End  = Shift-End.
-  run new-state ( "SHIFT-END="  + String(SHIFT-END:screen-value)).
+  DO:
+    Assign Shift-End.
+    X-Shift-End  = Shift-End.
+    run new-state ( "SHIFT-END="  + String(SHIFT-END:screen-value)).
 
-END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1559,11 +1685,11 @@ END.
 &Scoped-define SELF-NAME Shift-Start
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Shift-Start s-object
 ON LEAVE OF Shift-Start IN FRAME F-Main /* с */
-DO:
-  Assign Shift-Start.
-  X-Shift-Start = Shift-Start.
-  run new-state ( "SHIFT-START="  + String(SHIFT-START:screen-value)).
-END.
+  DO:
+    Assign Shift-Start.
+    X-Shift-Start = Shift-Start.
+    run new-state ( "SHIFT-START="  + String(SHIFT-START:screen-value)).
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1572,15 +1698,15 @@ END.
 &Scoped-define SELF-NAME TOG-Excel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL TOG-Excel s-object
 ON VALUE-CHANGED OF TOG-Excel IN FRAME F-Main /* Есть экспорт в Excel */
-DO:
-Assign Tog-Excel.
+  DO:
+    Assign Tog-Excel.
 
-If Tog-Excel Then Make-Excel = True.
-             Else Make-Excel = False.
+    If Tog-Excel Then Make-Excel = True.
+    Else Make-Excel = False.
 
- run new-state ( "TOG-EXCEL ="  + String(Tog-Excel)).
+    run new-state ( "TOG-EXCEL ="  + String(Tog-Excel)).
 
-END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1589,15 +1715,15 @@ END.
 &Scoped-define SELF-NAME TOG-list-hist
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL TOG-list-hist s-object
 ON VALUE-CHANGED OF TOG-list-hist IN FRAME F-Main /* Печать истории формир. списков */
-DO:
-Assign Tog-list-hist.
+  DO:
+    Assign Tog-list-hist.
 
-If Tog-list-hist Then print-list-hist = True.
-             Else print-list-hist = False.
+    If Tog-list-hist Then print-list-hist = True.
+    Else print-list-hist = False.
 
- run new-state ("TOG-list-hist ="  + String(Tog-list-hist)).
+    run new-state ("TOG-list-hist ="  + String(Tog-list-hist)).
 
-END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1606,18 +1732,18 @@ END.
 &Scoped-define SELF-NAME TOG-Shift
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL TOG-Shift s-object
 ON VALUE-CHANGED OF TOG-Shift IN FRAME F-Main /* Смены */
-DO:
-  assign TOG-Shift .
-  run val-shift  in this-procedure .
+  DO:
+    assign TOG-Shift .
+    run val-shift  in this-procedure .
 
-  if tog-shift:screen-value = string(true) then tog-shift = true .
-                                           else tog-shift = false .
-  if tog-shift = false  then x-tog-shift   = false .
-                        else x-tog-shift   = true .
+    if tog-shift:screen-value = string(true) then tog-shift = true .
+    else tog-shift = false .
+    if tog-shift = false  then x-tog-shift   = false .
+    else x-tog-shift   = true .
 
-  RUN new-state ("TOG-SHIFT ="  + String(Tog-SHIFT:screen-value)).
+    RUN new-state ("TOG-SHIFT ="  + String(Tog-SHIFT:screen-value)).
 
-END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1692,66 +1818,70 @@ END.
     v-r-b
   }
 
-  { gbl/ed_date.i date-Alone  " " " " " " menu-ed_date-alone-handle }
-  { gbl/ed_date.i date-End    " " " " " " menu-ed_date-end-handle   }
-  { gbl/ed_date.i date-Start  " " " " " " menu-ed_date-start-handle   }
+{ gbl/ed_date.i date-Alone  " " " " " " menu-ed_date-alone-handle }
+{ gbl/ed_date.i date-End    " " " " " " menu-ed_date-end-handle   }
+{ gbl/ed_date.i date-Start  " " " " " " menu-ed_date-start-handle   }
 
 /*триггер для вызова динамически рождаемого пункта меню соответствующего ed_date */
 procedure proc-mi-ed_date :
-  define variable v-widget-ref as character no-undo .
-  if (can-query (self, "sensitive")
-    and
-    self :sensitive = true
-    )
-  or (can-query (self, "read-only")
-    and
-    self :read-only = false
-    )
-  then do:
-    if self :handle <> focus :handle
-    then do:
-      apply "entry":u to self .
-    end.
+    define variable v-widget-ref as character no-undo .
+    if (can-query (self, "sensitive")
+        and
+        self :sensitive = true
+        )
+        or (can-query (self, "read-only")
+        and
+        self :read-only = false
+        )
+        then 
+    do:
+        if self :handle <> focus :handle
+            then 
+        do:
+            apply "entry":u to self .
+        end.
 
     define variable v-curr-sv-date  as date      no-undo .
 
-    assign
-      v-curr-sv-date = date(self :screen-value) no-error
-    .
-    case self:handle:
-      when mi-ed_date-alone-handle then do:
-        v-widget-ref = ref_date-alone.
-      end.
-      when mi-ed_date-start-handle then do:
-        v-widget-ref = ref_date-start.
-      end.
-      when mi-ed_date-end-handle then do:
-        v-widget-ref = ref_date-end.
-      end.
-    end case.
-    assign
-    v-widget-ref = substring(v-widget-ref, index(v-widget-ref, {&delim-par}) + 1).
-    run gbl/getrefdt.p
-      ( input my-handle
-        ,input v-widget-ref
-        ,input-output v-curr-sv-date
-      ) no-error .
-  end.
-  return.
+        assign
+            v-curr-sv-date = date(self :screen-value) no-error
+            .
+        case self:handle:
+            when mi-ed_date-alone-handle then 
+                do:
+                    v-widget-ref = ref_date-alone.
+                end.
+            when mi-ed_date-start-handle then 
+                do:
+                    v-widget-ref = ref_date-start.
+                end.
+            when mi-ed_date-end-handle then 
+                do:
+                    v-widget-ref = ref_date-end.
+                end.
+        end case.
+        assign
+            v-widget-ref = substring(v-widget-ref, index(v-widget-ref, {&delim-par}) + 1).
+        run gbl/getrefdt.p
+            ( input my-handle
+            ,input v-widget-ref
+            ,input-output v-curr-sv-date
+            ) no-error .
+    end.
+    return.
 end procedure. /* proc-mi-ed-date */
 assign
   Radio-period :LIST-ITEM-PAIRS in frame F-Main = {&radio-period-list-scr}
-  Radio-schet  :radio-buttons   in frame F-Main =
-    "Все по фирме,1,Своей фирмы,2,Выборочно,3,Один,4,Все {&abbr_rublevye},5,Все валютные,6,По валюте,7"
-  SET_val_TYPE :radio-buttons in frame F-Main =
-    "{&abbr_rub},1,вал,2,обе валюты,3"
-.
-  if v-r-b = {&r-b-base}
-  then do:
-    assign
-      SET_val_TYPE = 2 .
-    display  set_val_type with frame F-Main .
-  end.
+  Radio-schet  :radio-buttons   in frame F-Main = "Все по фирме,1,Своей фирмы,2,Выборочно,3,Один,4,Все {&abbr_rublevye},5,Все валютные,6,По валюте,7"
+  SET_val_TYPE :radio-buttons in frame F-Main   = "{&abbr_rub},1,вал,2,обе валюты,3"
+  .
+if v-r-b = {&r-b-base}
+  then 
+do:
+  assign
+    SET_val_TYPE = 2 .
+  display  set_val_type with frame F-Main .
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1759,34 +1889,35 @@ assign
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Assign-frame s-object 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Assign-frame s-object
 PROCEDURE Assign-frame :
-define variable L#obj-code like obj-list.obj-code no-undo.
-define variable l#obj-type like obj-list.obj-type no-undo.
+  define variable L#obj-code like obj-list.obj-code no-undo.
+  define variable l#obj-type like obj-list.obj-type no-undo.
 
-define buffer cli-obj   for ub.clients .
-define buffer o-clients for ub.clients.
-/*вызвать процедуру если нужно получить данные что было нажато*/
-Assign frame {&FRAME-NAME}
-  Date-Alone Date-End Date-Start Goods-count
-  Goods-Editor Obj-count SelectGood SelectObject
-  SET_PAY_TYPE SET_val_TYPE Shift-Alone
-  Shift-End Shift-Start TEXT-1 TEXT-2 TEXT-3 TEXT-4 TOG-Shift
-  RADIO-task Tog-Excel tog-list-hist tog-shift-2 showcost showcrsa showsale
-  RADIO-period
+    define buffer cli-obj   for ub.clients .
+    define buffer o-clients for ub.clients.
+    /*вызвать процедуру если нужно получить данные что было нажато*/
+    Assign frame {&FRAME-NAME}
+        Date-Alone Date-End Date-Start Goods-count
+        Goods-Editor Obj-count SelectGood SelectObject
+        SET_PAY_TYPE SET_val_TYPE Shift-Alone
+        Shift-End Shift-Start TEXT-1 TEXT-2 TEXT-3 TEXT-4 TOG-Shift
+        RADIO-task Tog-Excel tog-list-hist tog-shift-2 showcost showcrsa showsale
+        RADIO-period
   no-error.
-if  temp-param-date = 8  or temp-param-date = 7 then  tog-shift = true .
-if  tog-shift AND tog-shift-2 THEN
+  
+  if  temp-param-date = 8  or temp-param-date = 7 then  tog-shift = true .
+  if  tog-shift AND tog-shift-2 THEN
     Assign
-      Date-End       = Date-start
-      Shift-End      = Shift-Start.
+      Date-End  = Date-start
+      Shift-End = Shift-Start.
 
 
-If Tog-Excel Then Make-Excel = True.
-             Else Make-Excel = False.
+  If Tog-Excel Then Make-Excel = True.
+  Else Make-Excel = False.
 
-If Tog-list-hist Then Print-List-Hist = True.
-            Else Print-List-Hist = False.
+  If Tog-list-hist Then Print-List-Hist = True.
+  Else Print-List-Hist = False.
 
 
 
@@ -2209,49 +2340,56 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE display-goods s-object 
 PROCEDURE display-goods :
-/*Обработка 2 параметра - ТОВАРЫ - как показывать блок с выбором товаров */
-define buffer buf_clob-bind for ub.clob-bind  .
-define variable v-temp-str  as character no-undo .
-define variable J#          as integer   no-undo .
-define variable L#          as integer   no-undo .
-define variable RET#        as logical   no-undo .
-define variable R#          as integer   no-undo .
- IF  temp-param-goods = ""
-    then DO:
-         disable TEXT-2 SelectGood BUTTON-gds button-keep-spis BUTTON-node BUTTON-prod BUTTON-node-2 BUTTON-prod-2 BUTTON-one Goods-count Goods-Editor  with frame {&FRAME-NAME} .
-         hide TEXT-2 SelectGood  BUTTON-gds button-keep-spis  BUTTON-node BUTTON-prod  BUTTON-node-2 BUTTON-prod-2  BUTTON-one Goods-count Goods-Editor   in frame {&FRAME-NAME} .
-         End.
-    Else DO:  enable TEXT-2 with frame {&FRAME-NAME} .
-              display TEXT-2 SelectGood with frame {&FRAME-NAME} .
-              { rep/radiohid.i temp-param-goods SelectGood}    /*disable radio-set по номеру */
-              lns-cnt = 0 .
-              for each gds-list :
-                  lns-cnt = lns-cnt + 1 .
-              end.
+    /*Обработка 2 параметра - ТОВАРЫ - как показывать блок с выбором товаров */
+    define buffer buf_clob-bind for ub.clob-bind  .
+    define variable v-temp-str as character no-undo .
+    define variable J#         as integer   no-undo .
+    define variable L#         as integer   no-undo .
+    define variable RET#       as logical   no-undo .
+    define variable R#         as integer   no-undo .
 
-              define variable v-i as integer   no-undo .
-              s-notes =  "" .
-              for each gds-list-hist :
-                v-i = v-i + 1 .
-                s-notes = s-notes + {&new-line} + gds-list-hist.hist-mode +  gds-list-hist.des .
-                if v-i > 10 then do:
-                  s-notes = s-notes + " ... " .
-                  leave.
-                end.
-              end.
-
-              if keep-spis <> "" then do:
-                find first buf_clob-bind no-lock where
-                          buf_clob-bind.field-name_ = keep-spis no-error .
-                if available buf_clob-bind then do:
-                  keep-spis = buf_clob-bind.field-name_ .
-                  s-notes =  substitute("Хранимый Файл списка : &1 &2", buf_clob-bind.field-name, buf_clob-bind.descr ).
-              end.
-              end.
-
-              run display-count-other in this-procedure .
-
+    IF  temp-param-goods = ""
+        then 
+    DO:
+        disable TEXT-2 SelectGood BUTTON-gds button-keep-spis BUTTON-node BUTTON-prod BUTTON-node-2 BUTTON-prod-2 BUTTON-one Goods-count Goods-Editor  with frame {&FRAME-NAME} .
+        hide TEXT-2 SelectGood  BUTTON-gds button-keep-spis  BUTTON-node BUTTON-prod  BUTTON-node-2 BUTTON-prod-2  BUTTON-one Goods-count Goods-Editor   in frame {&FRAME-NAME} .
     End.
+    Else 
+    DO:  
+        enable TEXT-2 with frame {&FRAME-NAME} .
+        display TEXT-2 SelectGood with frame {&FRAME-NAME} .
+        { rep/radiohid.i temp-param-goods SelectGood}    /*disable radio-set по номеру */
+        lns-cnt = 0 .
+        for each gds-list :
+            lns-cnt = lns-cnt + 1 .
+        end.
+
+        define variable v-i as integer no-undo .
+        s-notes =  "" .
+        for each gds-list-hist :
+            v-i = v-i + 1 .
+            s-notes = s-notes + {&new-line} + gds-list-hist.hist-mode +  gds-list-hist.des .
+            if v-i > 10 then 
+            do:
+                s-notes = s-notes + " ... " .
+                leave.
+            end.
+        end.
+
+        if keep-spis <> "" then 
+        do:
+            find first buf_clob-bind no-lock where
+                buf_clob-bind.field-name_ = keep-spis no-error .
+            if available buf_clob-bind then 
+            do:
+                keep-spis = buf_clob-bind.field-name_ .
+                s-notes =  substitute("Хранимый Файл списка : &1 &2", buf_clob-bind.field-name, buf_clob-bind.descr ).
+            end.
+        end.
+
+    run display-count-other in this-procedure .
+
+  End.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3534,6 +3672,33 @@ PROCEDURE take-var :
     output v-all-object
     ).
 
+  define variable temp-param-time   as character no-undo .
+  define variable temp-param-goods1 as character no-undo .
+  
+  define variable ii                as integer   no-undo .
+  temp-param-goods-choose = "" .
+  
+  if temp-param-goods <> "" then 
+  do:
+    if num-entries(temp-param-goods,":") > 1 then 
+    do:
+      do ii = 1 to num-entries (temp-param-goods,","):
+        temp-param-time = entry (ii,temp-param-goods,",") .
+        if num-entries(temp-param-time,":") > 1 then 
+        do:
+          temp-param-goods1 = temp-param-goods1 + "," + entry(1,temp-param-time,":") .
+          temp-param-goods-choose = temp-param-goods-choose + "," + entry(2,temp-param-time,":") .
+        end.
+        else 
+        do:
+          temp-param-goods1 = temp-param-goods1 + "," + temp-param-time .
+        end.
+      end.
+    end.
+  end.
+  if temp-param-goods1 <> "" then temp-param-goods = trim(temp-param-goods1,",") .
+  temp-param-goods-choose = trim(temp-param-goods-choose,",") .
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3797,4 +3962,29 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+FUNCTION stat-line RETURNS CHARACTER(input p-status-chr as character):
+/*функция возвращает строку для message и для dsp-rs*/
+DEFINE VARIABLE var-stat-line as character no-undo .
+
+CASE p-status-chr:
+  when {&all} then do:
+    assign
+    var-stat-line = "(текущие и неактивные товары)"
+    .
+  end.
+  when {&current} then do:
+    assign
+    var-stat-line = "(текущие товары)"
+    .
+  end.
+  when {&deleted} then do:
+    assign
+    var-stat-line = "(неактивные товары)"
+    .
+  end.
+END CASE.
+return var-stat-line .
+END.
 

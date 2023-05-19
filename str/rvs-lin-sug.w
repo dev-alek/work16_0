@@ -2946,9 +2946,12 @@ define buffer buf_doc-pl-attr for doc-pl-attr .
     tt-rvs-line.obj-code
   }
 
-  if ptrlprop-calc-free-vol-sug
-  and buf_rvs-doc.rvs-type = {&rvs-before-doc}
-  then do :
+
+if buf_rvs-doc.rvs-type = {&rvs-before-doc}
+  then 
+do :
+  if ptrlprop-calc-free-vol-sug then 
+  do:
     find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_rvs-doc.out-code no-error .
     if available buf_trn-doc
     and buf_trn-doc.reason-code = 99
@@ -3000,12 +3003,10 @@ define buffer buf_doc-pl-attr for doc-pl-attr .
         end.
       end .
       else do :
-        message "Объем СУГ по ТТН  " string(round(buf_doc-pl.fact-qnty, 0))
-                "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "
-                string(round(v-free-vol, 0)) "л." skip
-                "Проверьте введенные данные из ТТН, значение объема ЖФ в сверке до слива"
-                " и при необходимости оповестите ответственное лицо ОГ в соответствии с принятым в ОГ порядком оповещения"
-        view-as alert-box . 
+        run ref/message_volue.w(input string(round(buf_doc-pl.fact-qnty, 0)) ,
+          input buf_place.loc1,
+          input string(round(v-free-vol, 0)),
+          input false) no-error .
         find first buf_doc-pl-attr exclusive-lock
             where buf_doc-pl-attr.obj-code  = buf_doc-pl.obj-code
             and buf_doc-pl-attr.obj-type  = buf_doc-pl.obj-type
@@ -3034,15 +3035,89 @@ define buffer buf_doc-pl-attr for doc-pl-attr .
     end .                               
   
   end .
+  end.
+    if buf_rvs-doc.rvs-type = {&rvs-after-doc} then 
+    do:
+      /*Для сверки после*/
+      find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_rvs-doc.out-code no-error .
   
-  define variable v-mi-par-list as character no-undo .
-  define variable v-mi-par-list-text as character no-undo .
-  define variable v-mi-old-val-list as character no-undo .
-  define variable v-mi-new-val-list as character no-undo .
+      find first buf_place no-lock where buf_place.obj-code = tt-rvs-line.obj-code
+        and buf_place.obj-type = tt-rvs-line.obj-type
+        and buf_place.pl-code  = tt-rvs-line.pl-code
+        no-error.
+           
+      assign 
+        v-free-vol = 0.85 * buf_place.max-qnty .
+      
+      if tt-rvs-line.fact-sum-vol > 0
+        then 
+      do :
+        if v-free-vol >= tt-rvs-line.fact-sum-vol
+          then 
+        do :
+          find first buf_doc-pl-attr exclusive-lock
+            where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+            and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+            and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+            and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+            and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+            and buf_doc-pl-attr.attr-code = "free-vol-exceed-after" no-error.
+          if available buf_doc-pl-attr then
+          do :
+            buf_doc-pl-attr.attr-value = string(no)  .
+          end.
+          else
+          do :
+            create buf_doc-pl-attr.
+            assign
+              buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+              buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+              buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+              buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+              buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+              buf_doc-pl-attr.attr-code  = "free-vol-exceed-after"
+              buf_doc-pl-attr.attr-value = string(no)
+              .
+          end.
+        end .
+        else 
+        do :
+            find first buf_doc-pl-attr exclusive-lock
+              where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+              and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+              and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+              and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+              and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+              and buf_doc-pl-attr.attr-code = "free-vol-exceed-after" no-error.      
+            if available (buf_doc-pl-attr) then               
+            buf_doc-pl-attr.attr-value = string(yes)  .
+            else
+            do :
+              create buf_doc-pl-attr.
+              assign
+                buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+                buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+                buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+                buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+                buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+                buf_doc-pl-attr.attr-code  = "free-vol-exceed-after"
+                buf_doc-pl-attr.attr-value = string(yes)
+                .        
+            end.
+
+          end.
+        end.
+      end.  
+
+
+define variable v-mi-par-list      as character no-undo .
+define variable v-mi-par-list-text as character no-undo .
+define variable v-mi-old-val-list  as character no-undo .
+define variable v-mi-new-val-list  as character no-undo .
   
-  v-mi-par-list = "" .
-  v-mi-old-val-list = "" .
-  v-mi-new-val-list = "" .
+v-mi-par-list = "" .
+v-mi-old-val-list = "" .
+v-mi-new-val-list = "" .
   
   if rdc-value = "pomi-rn"
   then do :

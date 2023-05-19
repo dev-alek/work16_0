@@ -4842,9 +4842,10 @@ END.
     end .
     
     find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-code = bf_rvs-line.rvs-code .
-    if v-calc-free-vol
-    and buf_rvs-doc.rvs-type = {&rvs-before-doc}
+
+    if buf_rvs-doc.rvs-type = {&rvs-before-doc}
     then do :
+      if v-calc-free-vol then do:
       define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo.
       define variable iisec as integer no-undo .
       
@@ -4932,13 +4933,17 @@ END.
             end.
           end .
           else do :
-            message "Внимание! Объем нефтепродукта по ТТН " string(round(v-doc-volume, 0))
-                    "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "
-                    string(round(v-free-vol, 0)) "л." skip
-                    "Проверьте введенные данные из ТТН или значение фактического объема в резервуаре в сверке до слива"
-                    " и при необходимости проинформируйте ответственное лицо ОГ в соответствии со схемой оповещения."
-                    " Если данные корректны, прием запрещен!"
-            view-as alert-box . 
+            run ref/message_volue.w(input string(round(v-doc-volume, 0)),
+            input buf_place.loc1,
+            input string(round(v-free-vol, 0)),
+            input true) no-error .
+/*            message "Внимание! Объем нефтепродукта по ТТН " string(round(v-doc-volume, 0))                             */
+/*                    "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "                      */
+/*                    string(round(v-free-vol, 0)) "л." skip                                                             */
+/*                    "Проверьте введенные данные из ТТН или значение фактического объема в резервуаре в сверке до слива"*/
+/*                    " и при необходимости проинформируйте ответственное лицо ОГ в соответствии со схемой оповещения."  */
+/*                    " ВНИМАНИЕ!!! Прием невозможен, недостаточно свободного объема резервуара!!!" skip                 */
+/*            view-as alert-box .                                                                                        */
             find first buf_doc-pl-attr exclusive-lock
                 where buf_doc-pl-attr.obj-code  = bf_rvs-line.obj-code
                   and buf_doc-pl-attr.obj-type  = bf_rvs-line.obj-type
@@ -4967,7 +4972,95 @@ END.
         end . 
       end .
     end .
-    
+      end.
+      if buf_rvs-doc.rvs-type = {&rvs-after-doc} then 
+      do:
+        /*Для сверки после*/
+          find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_rvs-doc.out-code no-error .
+          if available buf_trn-doc
+            and buf_trn-doc.reason-code = 98
+            then
+          do :
+          end .
+          else
+          do :
+            v-doc-volume = 0 .
+            find first buf_place no-lock where buf_place.obj-code = bf_rvs-line.obj-code
+              and buf_place.obj-type = bf_rvs-line.obj-type
+              and buf_place.pl-code  = bf_rvs-line.pl-code
+              no-error.
+/*            if is-sug(bf_rvs-line.gds-code)                                                                                                                                                             */
+/*              then                                                                                                                                                                                      */
+/*            do :                                                                                                                                                                                        */
+/*              find first buf_doc-pl no-lock where buf_doc-pl.obj-type   = bf_rvs-line.obj-type                                                                                                          */
+/*                and buf_doc-pl.obj-code   = bf_rvs-line.obj-code                                                                                                                                        */
+/*                and buf_doc-pl.gds-code   = bf_rvs-line.gds-code                                                                                                                                        */
+/*                and buf_doc-pl.pl-code    = bf_rvs-line.pl-code                                                                                                                                         */
+/*                and buf_doc-pl.out-code   = buf_rvs-doc.out-code                                                                                                                                        */
+/*                no-error .                                                                                                                                                                              */
+/*              if not available buf_doc-pl                                                                                                                                                               */
+/*                then                                                                                                                                                                                    */
+/*              do :                                                                                                                                                                                      */
+/*                message "В накладной для товара " string(bf_rvs-line.gds-code) " нет распределения по местам хранения! Невозможно произвести расчет свободной ёмкости в резервуаре." view-as alert-box .*/
+/*              end .                                                                                                                                                                                     */
+/*              else                                                                                                                                                                                      */
+/*              do :                                                                                                                                                                                      */
+/*                v-doc-volume = buf_doc-pl.fact-qnty .                                                                                                                                                   */
+/*              end .                                                                                                                                                                                     */
+/*            end .                                                                                                                                                                                       */
+/*            else                                                                                                                                                                                        */
+/*            do :                                                                                                                                                                                        */
+/*                                                                                                                                                                                                        */
+/*            end .                                                                                                                                                                                       */
+            v-doc-volume = v-doc-volume + bf_rvs-line.state-brutto-qnty .
+            if v-doc-volume > 0
+              then
+            do :
+              if is-sug(bf_rvs-line.gds-code)
+                then
+              do :
+                assign
+                  v-free-vol = 0.85 * buf_place.max-qnty .
+              end .
+              else
+              do :
+                assign
+                  v-free-vol = 0.95 * buf_place.max-qnty .
+              end .
+            end.
+          end.
+
+        if v-free-vol < v-doc-volume then 
+        do :
+             find first buf_doc-pl-attr exclusive-lock
+                where buf_doc-pl-attr.obj-code  = bf_rvs-line.obj-code
+                and buf_doc-pl-attr.obj-type  = bf_rvs-line.obj-type
+                and buf_doc-pl-attr.gds-code  = bf_rvs-line.gds-code
+                and buf_doc-pl-attr.pl-code   = bf_rvs-line.pl-code
+                and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+                and buf_doc-pl-attr.attr-code = "free-vol-exceed-after" no-error.      
+              if available (buf_doc-pl-attr) then               
+              buf_doc-pl-attr.attr-value = string(yes)  .
+              else
+              do :
+                create buf_doc-pl-attr.
+                assign
+                  buf_doc-pl-attr.obj-code   = bf_rvs-line.obj-code
+                  buf_doc-pl-attr.obj-type   = bf_rvs-line.obj-type
+                  buf_doc-pl-attr.gds-code   = bf_rvs-line.gds-code
+                  buf_doc-pl-attr.pl-code    = bf_rvs-line.pl-code
+                  buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+                  buf_doc-pl-attr.attr-code  = "free-vol-exceed-after"
+                  buf_doc-pl-attr.attr-value = string(yes)
+                  .        
+              end.
+/*            end.*/
+/*            else  undo, return error  .*/
+          end.
+/*        end.*/
+/*      end.*/
+    end.
+
     { str/initiator.i }
         
       /* на объекте включены смены */
@@ -5548,6 +5641,26 @@ procedure lib-rvs_rvsclose : /* rvs-clos */
   end. /* on error */
   return .
 end procedure. /* lib-rvs_rvsclose */
+
+PROCEDURE get-userid :
+do
+on error undo, return error
+:
+define output parameter p-userid  as character    no-undo.
+
+    assign
+        p-userid = g#userid
+    .
+end.
+END PROCEDURE.
+
+procedure get-db-num:
+  
+  define output parameter pDbNum as integer no-undo.
+  
+  pDbNum = g#db-num.
+
+end.
 
 procedure lib-rvs_crtt-rvs : /* cr-tt-param */
   define input-output parameter table for tt-param.
