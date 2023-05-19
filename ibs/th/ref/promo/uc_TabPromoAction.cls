@@ -831,7 +831,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                 then 
               do:
                 ucMain7:INIT_BarCode(SelectItem). 
-                ucMain7:PublicEvent("CritOneLable", "Скидка, %").
+                ucMain7:PublicEvent("CritOneLableCode", "Скидка, %").
                 assign
                   label5:Visible    = false
                   checkBox1:Visible = false
@@ -883,7 +883,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                 checkBox1:Visible = false
                 .
               ucMain7:INIT_BarCode(SelectItem).
-              ucMain7:PublicEvent("CritOneLable", "Скидка, абс").
+              ucMain7:PublicEvent("CritOneLableCode", "Скидка, абс").
               vLoadForm = yes.
             end.
               
@@ -891,14 +891,14 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
         end .
       when 3 then 
         do: // Скидка количеством
-          ucMain7:INIT_Panel(no, yes, no, no,no,yes). 
+          ucMain7:INIT_Panel(no, yes, no, no, no,yes). 
           ucMain7:PublicEvent("CritOneLable", "Бесплатно#из").
           ucMain7:PublicEvent("swapCritAndDiscont", "").
           vLoadForm = yes.
         end .
       when 4 then 
         do: //Скидка процентом за количество
-          ucMain7:INIT_Panel(no, yes, no, no,no,yes). 
+          ucMain7:INIT_Panel(no, yes, no, no, no, yes). 
           ucMain7:PublicEvent("CritOneLable", "Каждый#со скидкой#%").
           vLoadForm = yes.
         end .

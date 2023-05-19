@@ -33,7 +33,7 @@ for each ub.PromoGoods no-lock where ub.PromoGoods.db-num = ub.PromoAction.db-nu
   if available (ub.PromoAttr) then 
   do:
     find first ub.goods no-lock where ub.goods.gds-code = ub.PromoGoods.gds-code no-error .
-    for each ub.bar-code no-lock where ub.bar-code.gds-code = ub.goods.gds-code :
+    for first ub.bar-code no-lock where ub.bar-code.gds-code = ub.goods.gds-code and ub.bar-code.b-code = ub.goods.gds-code :
       producer-int = (if ub.goods.prod-type = {&cmp} then 1000000 else 0 ) + ub.goods.prod-code .
       run gds-attr-value in this-procedure (
         input ub.goods.gds-code

@@ -327,7 +327,7 @@ do:
         run bgelib-tag-put in this-procedure ( input 4, input "PACId":U
           , input string(v-promo-action:id), input 1 ).
         run bgelib-tag-put in this-procedure ( input 4, input "PACDiscount":U
-          , input string(v-subGDCrite:mincrit), input 1 ).
+          , input string(v-subGDCrite:discont), input 1 ).
         run bgelib-tag-close in this-procedure ( input 3, input "PACond").        
       end.
     end.

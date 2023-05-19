@@ -28,7 +28,7 @@ do ii = 1 to num-entries (pPromoAttr,","):
   v-bc-code = entry(1,v-PromoAttr,";") .
    
   find first ub.goods no-lock where ub.goods.gds-code = v-goods no-error .
-  for each ub.bar-code no-lock where ub.bar-code.gds-code = ub.goods.gds-code :
+  for first ub.bar-code no-lock where ub.bar-code.gds-code = ub.goods.gds-code and ub.bar-code.b-code = ub.goods.gds-code:
     producer-int = (if ub.goods.prod-type = {&cmp} then 1000000 else 0 ) + ub.goods.prod-code .
     run gds-attr-value in this-procedure (
       input ub.goods.gds-code
