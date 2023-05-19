@@ -37,6 +37,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     DEFINE PRIVATE VARIABLE label1 AS System.Windows.Forms.Label NO-UNDO.
     define variable mCrit as logical no-undo.
     define variable PromoSet as logical no-undo.
+    define variable PromoSetFix as logical no-undo.
     define variable PromoSetGoods as logical no-undo.
     define variable Promovisa as logical no-undo.
     define variable PromoBarCode as logical no-undo .
@@ -58,16 +59,29 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     set(input iPromoSet as logical):
        this-object:mCrit = no.
        PromoSet = iPromoSet.
+       this-object:PromoSetFix = no.
        this-object:PromoSetGoods = no.
        this-object:Promovisa = no.
        this-object:PromoBarCode = no.
        this-object:PromoBarCodeFix = no.
     end.
+    define property pPromoSetFix as logical no-undo
+    private get.
+    set(input iPromoSetFix as logical):
+       this-object:mCrit = no.
+       this-object:PromoSet = no.
+       PromoSetFix = iPromoSetFix.
+       this-object:PromoSetGoods = no.
+       this-object:Promovisa = no.
+       this-object:PromoBarCode = no.
+       this-object:PromoBarCodeFix = no.
+    end.    
     define property pPromoSetGoods as logical no-undo
     private get.
     set(input iPromoSetGoods as logical):
        this-object:mCrit = no.
        this-object:PromoSet = no.
+       this-object:PromoSetFix = no.
        PromoSetGoods = iPromoSetGoods.
        this-object:Promovisa = no.
        this-object:PromoBarCode = no.
@@ -78,6 +92,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     set(input iPromovisa as logical):
        this-object:mCrit = no.
        this-object:PromoSet = no.
+       this-object:PromoSetFix = no.
        this-object:PromoSetGoods = no.
        Promovisa = iPromovisa.
        this-object:PromoBarCodeFix = no.
@@ -88,6 +103,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     set(input iPromobarcode as logical):
        this-object:mCrit = no.
        this-object:PromoSet = no.
+       this-object:PromoSetFix = no.
        this-object:PromoSetGoods = no.
        this-object:Promovisa = no.
        this-object:PromoBarCodeFix = no.
@@ -98,6 +114,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
     set(input iPromobarcodeFix as logical):
        this-object:mCrit = no.
        this-object:PromoSet = no.
+       this-object:PromoSetFix = no.
        this-object:PromoSetGoods = no.
        this-object:Promovisa = no.
        this-object:PromoBarCode = no.
@@ -164,7 +181,7 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
 	@VisualDesigner.
 	method private void dataGridView1_CellMouseClick( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellMouseEventArgs ):
 		bindGoods:Assign().
-		if promoset 
+		if promoset or promosetfix
 		then
 		    m-promo-trg:PublicEventForForm("changePromoset", "").
 		return.
@@ -192,6 +209,11 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
             vLable = "Независимые условия"
         .
         else if PromoSet 
+        then assign
+            mBind  = "PromoSet"
+            vLable = "Промо набор"
+        .
+        else if PromoSetFix 
         then assign
             mBind  = "PromoSet"
             vLable = "Промо набор"
@@ -229,13 +251,29 @@ CLASS ibs.th.ref.promo.uc_Goods INHERITS UserControl:
             THIS-OBJECT:dataGridView1:Columns[1]:Visible = no
             THIS-OBJECT:dataGridView1:Columns[2]:Visible = yes
             THIS-OBJECT:dataGridView1:Columns[3]:Visible = yes
-            THIS-OBJECT:dataGridView1:Columns[4]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[4]:HeaderText = "Количество"
+            THIS-OBJECT:dataGridView1:Columns[3]:HeaderText = "Скидка, %"
             THIS-OBJECT:dataGridView1:Columns[5]:Visible = no
      
             /* this-object:button1:Visible = no
             this-object:button2:Visible = no */
            // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
         .
+        else if PromoSetFix 
+        then assign
+            THIS-OBJECT:dataGridView1:Columns[0]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[1]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[2]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[3]:Visible = no
+            THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
+            THIS-OBJECT:dataGridView1:Columns[4]:HeaderText = "Количество"
+            THIS-OBJECT:dataGridView1:Columns[5]:Visible = no
+     
+            /* this-object:button1:Visible = no
+            this-object:button2:Visible = no */
+           // THIS-OBJECT:dataGridView1:Columns[4]:Visible = yes
+        .        
         else if Promovisa then assign
             THIS-OBJECT:dataGridView1:Columns[0]:Visible = no
             THIS-OBJECT:dataGridView1:Columns[1]:Visible = no

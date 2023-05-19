@@ -842,7 +842,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
           END.
           ELSE
           DO:
-            ucMain7:INIT_PromoSet().
+            ucMain7:INIT_PromoSet(SelectItem).
             ucMain7:PublicEvent("showDiscontForSet", "").
             ucMain7:PublicEvent("CritOneLable", "?").
             vLoadForm = yes.
@@ -930,7 +930,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
           END.
           ELSE
           DO:
-              ucMain7:INIT_PromoSet().
+              ucMain7:INIT_PromoSet(SelectItem).
               ucMain7:PublicEvent("CritOneLable", "?#÷ена, руб").
               vLoadForm = yes.
           end.

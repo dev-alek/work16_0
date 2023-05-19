@@ -221,10 +221,21 @@ CLASS ibs.th.ref.promo.uc_SelectsGCP INHERITS UserControl:
       INIT_Panel(yes,no,no,no,no,yes).
     end method.    
     METHOD PUBLIC VOID INIT_Promoset():
+      INIT_Promoset(0).
+    end method.  
+    METHOD PUBLIC VOID INIT_Promoset(input method_calc as integer):
+      if method_calc = 5 then do:
+        assign
+            uc_Goods1:pPromoSetFix   = yes
+            uc_Goods2:pPromoSetGoods = yes
+        .
+      end.
+      else do:
         assign
             uc_Goods1:pPromoSet      = yes
             uc_Goods2:pPromoSetGoods = yes
         .
+      end.
         INIT_Panel(yes,yes,no,no,no,yes).
     end method.    
     METHOD PUBLIC VOID INIT_Panel(INPUT IsIndGoods as LOGICAL,INPUT IsGoods as LOGICAL, INPUT IsConditions as LOGICAL, INPUT IsPresents as LOGICAL):
