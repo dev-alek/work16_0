@@ -419,6 +419,11 @@ PROCEDURE proc-full-temp-changes :
   assign
     v-num-entries = num-entries( p-label-form, {&delim-flf} )
   .
+  &if defined( myChangeAdd) ne 0
+  &then
+      run {&myChangeAdd} (if p-act-create = true then ? else p-hst-handle,
+                          if p-act-delete = true then ? else h-for-comp).
+  &endif
   do v-ind = 1 to v-num-entries
   on error undo, return error return-value
   :

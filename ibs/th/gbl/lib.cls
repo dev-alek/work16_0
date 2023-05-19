@@ -13,6 +13,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
 using ibs.th.str.marking.handlers.tree.
 using ibs.th.gbl.keyrec.
+using Ibs.Th.Gbl.gbl-print.
 
 
 class ibs.th.gbl.lib inherits objth: 
@@ -33,6 +34,9 @@ class ibs.th.gbl.lib inherits objth:
   get.
   private set.
    
+  define public property prnLib as class gbl-print no-undo 
+  get.
+  private set.
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -42,7 +46,7 @@ class ibs.th.gbl.lib inherits objth:
     super ().
     {utl\objreg.i marTree tree}
     {utl\objreg.i KeyRec keyrec }
-    
+    {utl\objreg.i prnLib gbl-print }
   end constructor.
 
 

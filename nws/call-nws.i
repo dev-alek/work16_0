@@ -302,7 +302,9 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,tran-fuel~
 ,chk-slip-head~
 ,chk-slip-string~
+,cash-param-hist~
 ":U.
+
 
 /*---------------------------------------------------------------------------------------------*/
 
@@ -421,7 +423,9 @@ define variable v-0-rdb_rbd-0-not-news as character no-undo initial
 ,marking~
 ,marking-attr~
 ,code~
+,c-code~
 ":U.
+
 
 /*---------------------------------------------------------------------------------------------*/
 
@@ -1421,6 +1425,7 @@ define output parameter p-variable-value as character no-undo .
          p-variable-value = v-0-rdb-not-news
          .
       end.
+
       when 'v-0-rdb-and-from-news':U then do:
          assign
          p-variable-value = v-0-rdb-and-from-news

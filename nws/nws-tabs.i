@@ -15,7 +15,6 @@ Creation date: 03/23/96
 
 */
 
-
 /* таблицы которые ходят по новостям только в составе 'кустов' */
 
 
@@ -1349,6 +1348,7 @@ abc-analysis-doc-attr~
 ,xyz-analysis-period-attr~
 ,xyz-analysis-prod~
 ,xyz-analysis-prod-attr~
+,cash-param-hist~
 ':U &endif .
 
 &if "{1}" = "check" &then

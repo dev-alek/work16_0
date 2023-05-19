@@ -18,9 +18,9 @@ define temp-table ttRun no-undo
    field UserDB       as logical
    field fuser        as character 
    field fpasw        as character 
-   
+   field StartAfter   as datetime-tz
    field cmd          as char 
 index task is unique primary task num 
 index taskst task fstatusItem runnum
-index statusItem fstatusItem runnum.
+index statusItem fstatusItem StartAfter.
 .

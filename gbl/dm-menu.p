@@ -416,7 +416,7 @@ procedure proc-create-menu-item :
   end.
 
 end procedure. /* proc-create-menu-item */
-  
+
 procedure run-menu-drop-procedure :
 
   define input  parameter p-item-handle as widget-handle no-undo .
@@ -1088,6 +1088,7 @@ end.
   end.
 
 end procedure. /* m_c-fin-doc-del-exe */
+
 
 procedure m_par-obj-auto-exp-exe :    /*автоматические факт*/
 
@@ -3326,6 +3327,57 @@ procedure m-hdd-ref :
 
 end procedure. /* m-hdd-ref */
 
+procedure m-cashp-ref :
+  do
+  on error undo, return error
+  :
+  define buffer code for ub.code.
+  find first code where code.parent eq ""
+                    and code.code eq "cash-param"
+  no-lock no-error.
+  if not avail code
+  then do:
+     message "Справочник не найден." view-as alert-box.
+     return.
+  end.  
+  run ref/cashpargroup.w ( input  parparentproc
+                     ,input  {&update}
+                     ,input  ""
+                     ,input "cash-param"
+                     ,input ?
+                    ) .
+  
+  end.
+
+end procedure. /* m-hdd-ref */
+
+procedure m-code-ref :
+  do
+  on error undo, return error
+  :
+  define buffer code for ub.code.
+  run ref/codelay.p ( input  parparentproc
+                      ,input  {&lookup}
+                      ,input  ""
+                      ,input  ""
+                      ,input  "Дополнительные справочники системы"
+                        ) .
+  
+  end.
+
+end procedure. /* m-hdd-ref */
+
+procedure m-cashp-rep :
+  do
+  on error undo, return error
+  :
+    
+  run rep/g-cash-param.p(input  parparentproc).
+  
+  end.
+
+end procedure. /* m-hdd-ref */
+
 procedure m_action-item :
 
   define variable v-rid-list         as character no-undo .
@@ -3580,7 +3632,13 @@ procedure m-okei-kkt-exe:
   do
   on error undo, return error return-value
   :
-    run ref/codelay.p (parparentproc, "", "", "okei-kkt", "Код ОКЕИ код ККТ") no-error.
+    run ref/codelay.p
+      (input  parparentproc
+      ,input  {&update}
+      ,input  ""
+      ,input  "okei-kkt"
+      ,input  ?
+      ) .
   end.
 
 end procedure. /* m-units-exe */
@@ -3592,9 +3650,11 @@ procedure m-emrc-exe:
   do
   on error undo, return error return-value
   :
-run ref/emc.w(input  parparentproc
-      ,input  "b-add,b-del,b-upd"
-      ,output rid#).
+run ref/codelay.p(input  parparentproc
+      ,input  {&update}
+      ,input  ""
+      ,input  "EMC"
+      ,input  ? ).
       
   end.
 
@@ -3965,9 +4025,9 @@ end procedure. /* m-stop-ls-exe */
 
 
 procedure m-rum-cds-rep-exe :
-  do
-  on error undo, return error return-value
-  :
+do
+on error undo, return error return-value
+:
   run ref/rum-cds.w ( input parparentproc
                     ,input {&attr-rum_rep}
                     ,input {&attr-rum_obj_rep}
@@ -4043,21 +4103,21 @@ procedure m-taxes-exe :
     case v-cntxt-level:
       WHEN {&cntxt-object}
       THEN DO:
-    { gbl/hostcode.i
-      v-cntxt-obj-type
-      v-cntxt-obj-code
-      v-host-code
-    }
-    run ref/tax-tree.w
-      (input  parparentproc
-      ,input  ''
-      ,input  'ALL':U
-      ,input  v-host-code
-      ,input  v-cntxt-obj-type
-      ,input  v-cntxt-obj-code
-      ,input  ?
-      ,input-output ri-list
-      ) .
+         { gbl/hostcode.i
+            v-cntxt-obj-type
+            v-cntxt-obj-code
+            v-host-code
+         }
+         run ref/tax-tree.w
+            (input  parparentproc
+            ,input  ''
+            ,input  'ALL':U
+            ,input  v-host-code
+            ,input  v-cntxt-obj-type
+            ,input  v-cntxt-obj-code
+            ,input  ?
+            ,input-output ri-list
+            ) .
       END.
       WHEN {&cntxt-firm}
       THEN DO:
@@ -4723,8 +4783,8 @@ procedure m-cash-emrc-exe :
         input parparentproc
       , input this-procedure
       , input "str/send-all.p":U
-      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrcdel':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
-      , input yes /*p-auto-go*/
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
+      , input ? /*p-auto-go*/
       , input "":U
       , input substitute("Отсылка очистки справочника ЕМЦ")
   ) no-error.
@@ -4735,13 +4795,28 @@ procedure m-cash-emrc-exe :
       , input this-procedure
       , input "str/send-all.p":U
       , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U)
-      , input yes /*p-auto-go*/
+      , input ? /*p-auto-go*/
       , input "":U
       , input substitute("Отсылка справочника ЕМЦ")
   ) no-error.
 
 end procedure. /* m-cash-emrc-exe */
 
+procedure m-cash-param-exe :
+ def var vlist as char no-undo.
+ vList = "cashp1,cashp2". /* параметры 1 клава 2*/
+ if vList ne ""
+ then 
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/send-all.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + vList + {&delim-par} + 'Получение параметров кассы':U + {&delim-par} + "cash-send=all")
+      , input ? /*p-auto-go*/
+      , input "":U
+      , input substitute("Получение параметров кассы")
+  ) no-error.
+end procedure.
 
 procedure m-catalog-petrol-exe :
 
@@ -4851,7 +4926,6 @@ procedure m-catalog-unblock-nozzle :
   end.
 
 end procedure. /* m-catalog-petrol-exe */
-
 procedure m-bpa-u-exe :
 
   do
@@ -8888,6 +8962,7 @@ define variable v-rid-list as character no-undo .
   end.
 
 end procedure. /* m_clients-parus-exe */
+
 procedure m_clients-parus-2-exe :
 define variable v-rid-list as character no-undo .
 

@@ -33,7 +33,36 @@ define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Отсылка схемы интеграции ККТ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
-
+/* i-value = "cash-send=all,....." - отправка на все кассы*/
+/*str/send-all-work-" + i-type ".p           процедура persistent                     */
+/*get-cash-types (output character )   типы касс по умолчанию {&cd-type-ibm-xml}*/
+/*get-roor-teg   (output character )   туг обертка по умолчанию data            */
+/*putc ( input hSAXWriter              дозаполнение xml при отправки на кассу   */
+/*      ,input cash-desk.pos-type                                               */
+/*      ,input cash-desk.version                                                */
+/*      ,input cash-desk.cash-os                                                */
+/*      ,input cash-desk.cash-num                                               */
+/*      ,input i-action                                                         */
+/*      ,input i-value)                                                         */
+/*parse-result ( input parparentproc   Разбор ответа с кассы                    */
+/*              ,input p-log-handle                                             */
+/*              ,input {&shop}                                                  */
+/*              ,input for-cash-desk.obj-code                                   */
+/*              ,input ub.shop.host-code                                        */
+/*              ,input for-cash-desk.pos-type                                   */
+/*              ,input for-cash-desk.cash-num                                   */
+/*              ,input mWebRespMptr                                             */
+/*              ,input-output v-view-log )                                      */
+define variable v-view-log as logical no-undo.
+define variable log-file-name as character no-undo.
+define variable out as character no-undo.
+define variable v-xml-file-name as character no-undo.
+define variable v-xml-file-name-path as character no-undo.
+define variable v-log-file-name as character no-undo init "send-cd.txt".
+define variable v-locked as logical no-undo.
+{ str/cd-xml-file.i }
+{ bge/socet.i}
+run get-view-log in p-log-handle(output v-view-log).
 
 define variable i-obj-type as character no-undo .
 define variable i-obj-code as integer   no-undo .
@@ -41,9 +70,52 @@ define variable i-action   as character no-undo init 'U':U.
 define variable i-type     as character no-undo .
 define variable i-title     as character no-undo .
 define variable i-value    as character no-undo .
+
 /*define stream str-log .*/
 /*output stream  str-log to value("shema-KKT.log") append.*/
+if num-entries (p-parameter,{&delim-par}) < 4
+then do:
+   run write-log-and-file in p-log-handle (
+        input 1
+      , input log-file-name
+      , input 1
+      , input substitute( "!!!'Send-all' Список параметров должен состоять минимум из 4 элементов "
+                        )
+                        ).
+   run set-view-log in p-log-handle(yes).                     
+   return.
+end.
+else do:
+   define variable vi as integer no-undo.
+   i-Type    = entry(4, p-parameter, {&delim-par}).
+   vi = num-entries (i-Type).
+   if vi eq 0
+   then do:
+      run write-log-and-file in p-log-handle (
+           input 1
+         , input log-file-name
+         , input 1
+         , input substitute( "!!!'Send-all' В список параметров 4 элемент не может быть пустым "
+                           )
+                                 ).
+      run set-view-log in p-log-handle(yes).
+      
+      return.
+   end.
+   else if vi > 1
+   then do:
+      do vi = 1 to num-entries (i-type):
+         entry(4, p-parameter, {&delim-par}) = entry(vi,i-type).
+         run str/send-all.p(parparentproc,
+                            p-parent-handle,
+                            p-log-handle,
+                            p-parameter
+         ).
+      end.
+      return.
+   end.
 
+end.    
 assign
 i-obj-type = entry(1, p-parameter, {&delim-par})
 i-obj-code = integer(entry(2, p-parameter, {&delim-par}))
@@ -53,40 +125,25 @@ i-Title    = entry(5, p-parameter, {&delim-par})
 i-value    = entry(6, p-parameter, {&delim-par})
 no-error
 .
-
-{ str/cdsnddef.i }
-{ bge/bgelib.i }
-{ str/cd-xml.i }
-{ gbl/cd-attr.i }
-{ bge/socet.i}
-     
-FIND FIRST ub.cash-desk NO-LOCK WHERE
-           ub.cash-desk.db-num = g#db-num AND
-           ub.cash-desk.pos-type = {&cd-type-IBM-XML} AND
-           ub.cash-desk.obj-code = i-obj-code
-            No-error.
-IF not avail(cash-desk) then do:
-  run write-log-and-file in p-log-handle (
-        input 1
-      , input log-file-name
-      , input 1
-      , input substitute( "!!!'&1' реализуется только для касс &3 "
-                          , i-Title
-                          , {&cd-type-ibm-xml}
-                        )
-                        ).
-  return.
-end.
-
-
-{ str/putc-emrc.i }
+define variable mValue   as character no-undo.
+define variable mNumPar  as integer no-undo.
+define variable mSendAll as logical no-undo.
+mValue = replace(i-value,",","=").
+mNumPar = lookup("cash-send",mValue,"=").
+if mNumPar > 0
+then
+   mSendAll = entry(mNumPar + 1,mValue,"=") eq "all" no-error.
+mNumPar = lookup("SocetLog",mValue,"=").
+if mNumPar > 0
+then
+   mFileLogSocet = entry(mNumPar + 1,mValue,"=") no-error.    
 
 /*PROCEDURE for-cash-cycle*/
 /*пройдем цикл по всем кассам одного типа*/
-{ str/cd-cyall.i }
+{ str/send-all-cycle.i }
 
 /*PROCEDURE SENDING.*/
-{ str/cd-seall.i }
+{ str/send-all-sending.i }
 
 RUN SENDING no-error.
 
@@ -99,8 +156,9 @@ if error-status:error then do:
                          , i-obj-type, i-obj-code, i-Title
                         )
                                         ).
+   v-view-log = yes.
 end.
-
+run set-view-log in p-log-handle(v-view-log).
 
 
 

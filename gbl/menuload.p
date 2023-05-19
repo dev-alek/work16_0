@@ -347,7 +347,6 @@ define variable vss-description as character no-undo init "Информация об объекте
   "'Включение выключенных доп. БК'"
   "'utl/bc-on.p'"
 }
-
 { gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Имена контрагентов в накладных'"
@@ -794,6 +793,16 @@ define variable vss-description as character no-undo init "Информация об объекте
 }
 { gbl/menuload.i
   {&bef-menuload_adm_archive}
+  "'Утилита пересчета финансовых архивов'"
+  "'utl/rclcfarh1.w'"
+  "''"
+  "''"
+  "''"
+  " "
+  "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_adm_archive}
   "'Выполнить отложенные задания (BatchProcess)'"
   "'utl/run-btpr.p'"
   "yes"
@@ -1205,6 +1214,16 @@ define variable vss-description as character no-undo init "Информация об объекте
   " "
   " "
   "yes"
+}
+{ gbl/menuload.i
+  {&bef-menuload_adm_impexp}
+  "'Экспорт значений параметров'"
+  "'bge/cashparexp.p'"
+}
+{ gbl/menuload.i
+  {&bef-menuload_adm_impexp}
+  "'Импорт значений параметров'"
+  "'bge/cashparimp.p'"
 }
 { gbl/menuload.i
   {&bef-menuload_adm_impexp}

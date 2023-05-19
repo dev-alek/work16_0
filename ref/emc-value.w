@@ -34,9 +34,7 @@ Creation date: 21/04/21
 
 /* Parameters Definitions ---                                           */
 
-define input parameter  parparentproc as widget-handle no-undo .
-define input parameter  bttns         as character     no-undo .
-define input parameter p-rid         as recid         no-undo   .
+{ ref/codepar.i }
 
 define variable vss-revision    as character no-undo init "$Revision: $":U .
 define variable vss-author      as character no-undo init "$Author: $":U .
@@ -65,7 +63,9 @@ define variable v-rid    as recid no-undo .
 define variable v-db-num like ub.db.db-num no-undo .
 define buffer b2-code for code .
 
-find first b2-code where recid(b2-code) eq p-rid no-lock no-error.
+find first b2-code where b2-code.parent eq iparent
+                     and b2-code.code   eq icode 
+no-lock no-error.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -253,7 +253,6 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-okei3 f-okei3
 ON GO OF FRAME f-okei3 /* Значение ЕМЦ */
    DO:
-      p-rid = v-rid.
    END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -501,13 +500,13 @@ PROCEDURE enable_UI :
       BROWSE-4
       b-exit
       b-sel
-      WHEN can-do( bttns, "b-sel" )
+      WHEN imode eq {&select}
       b-add
-/*      WHEN can-do( bttns, "b-add" ) and v-db-num = 0*/
+/*      WHEN imode eq {&update} and v-db-num = 0*/
 /*      b-del*/
-      when can-do ( bttns, "b-del" ) and v-db-num = 0
+      when imode eq {&update} and v-db-num = 0
       b-upd
-      WHEN can-do( bttns, "b-upd" ) and v-db-num = 0
+      WHEN imode eq {&update} and v-db-num = 0
       b-help
       WITH FRAME {&frame-name}.
     

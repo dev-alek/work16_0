@@ -15,11 +15,7 @@ Creation date: 03/22/03
 
 */
 /*define temp-table tt-BatchProcess  like ub.BatchProcess .*/
-define temp-table tt-BatchProcess  
- field CharKey_One as char
- field BP_ExecSysDate as date
- field BP_ExecSysTimeInt as int
- index dt BP_ExecSysDate BP_ExecSysTimeInt.
+{ adm/ttbatch.i }
  
 define input  parameter p-task-type   as character no-undo .
 define input  parameter p-for-db      as character no-undo .
@@ -478,7 +474,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       end.
        
     end.
-    
      for each buf_BatchProcess no-lock
          where buf_BatchProcess.BP_Status         = {&btpr-normal}
            and buf_BatchProcess.BP_Type           = p-task-type

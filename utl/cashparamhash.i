@@ -1,0 +1,59 @@
+
+{ utl/crc32.i }
+function getCashparamHash returns character ():
+    define variable exp as ibs.th.bge.xmlimpexp no-undo.
+    define variable hQuery   as handle  no-undo .
+    define buffer Buf_code for code.
+    create query hQuery.
+    hQuery:set-buffers(buffer Buf_code :HANDLE). 
+    hQuery:query-prepare("FOR EACH Buf_code ").
+    hQuery:query-open ().
+    exp = new ibs.th.bge.xmlimpexp (). 
+    exp:updatetableforxml(hQuery).
+    delete object hQuery.
+    define variable vxmlCode as memptr no-undo.
+    exp:xmldom-save("memptr", output vxmlCode).
+    delete object exp.
+    return string(CRC32(vxmlCode)).
+end.
+
+
+function getCashParamHashDb returns character (idb as int):
+   define buffer code for ub.code.
+   find first code where code.parent eq "CashParamHash"
+                     and code.code   eq  string(idb)
+   no-lock no-error.
+   return if available code then Code.CodeValue else ?.        
+end.
+
+procedure saveCashParHash:
+   define input  parameter iDb as integer no-undo.
+   define buffer code for ub.code.
+   
+   find first code where code.parent eq "" 
+                     and code.code   eq "CashParamHash"
+   no-lock no-error.
+   if not available code
+   then do:
+      create code.
+      assign
+         Code.parent   = ""
+         Code.code     = "CashParamHash"
+         Code.CodeName = "Конрольная сумма Эталонных параметров для кассы"
+      .
+   end.
+   find first code where code.parent eq "CashParamHash"
+                     and code.code   eq  string(idb)
+   exclusive-lock no-error.
+   if not available code
+   then do:
+      create Code.
+      assign
+         code.parent = "CashParamHash"
+         code.code   =  string(idb)
+         Code.nwsubd = yes
+      .
+   end.
+   Code.CodeName  = string(now).
+   Code.CodeValue = getCashparamHash().
+end.   

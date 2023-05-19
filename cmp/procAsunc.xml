@@ -85,39 +85,6 @@
       <ParamValue>*</ParamValue>
     </procParam>
       
-    <procParam>
-      <procid>is_NWS</procid>
-      <paramName>Количество потоков</paramName>
-      <ParamType>integer</ParamType>
-      <numparam>4</numparam>
-      <ParamValue>5</ParamValue>
-    </procParam>
-    <procParam>
-      <procid>is_Nws</procid>
-      <paramName>Параметры сессии</paramName>
-      <numparam>5</numparam>
-      <ParamValue>#paramSession#</ParamValue>
-      <ParamHiden>yes</ParamHiden>
-    
-    </procParam>
-    <procParam>
-      <procid>is_Nws</procid>
-      <paramName>Ожидаемые файлы</paramName>
-      <numparam>6</numparam>
-      <ParamValue>#WaitFile#</ParamValue>
-      <ParamHiden>yes</ParamHiden>
-    
-    </procParam>
-    <procParam>
-      <procid>is_Nws</procid>
-      <paramName>Сохранить результат в архив</paramName>
-      <numparam>7</numparam>
-      <ParamValue>#SaveFile#</ParamValue>
-      <ParamType>logical</ParamType>
-      <ParamHiden>yes</ParamHiden>
-    
-
-    </procParam>
   </procAsunc>
   
   <procAsunc>

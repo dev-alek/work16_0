@@ -701,8 +701,8 @@ Creation date: 01/29/07
 &glob table_c-obj-grp-obj-price-full '{&bef-table_c-obj-grp-obj-price-full}':U
 &glob bef-table_c-OperServ-full Операторы
 &glob table_c-OperServ-full '{&bef-table_c-OperServ-full}':U
-&glob bef-table_c-OperServAttr-full атрибуты кассовой книги
-&glob table_c-OperServAttr-full '{&bef-table_c-OperServAttr-full}':U
+&glob bef-table_c-operServAttr-full атрибуты кассовой книги
+&glob table_c-operServAttr-full '{&bef-table_c-operServAttr-full}':U
 &glob bef-table_c-ord-doc-full История заказа
 &glob table_c-ord-doc-full '{&bef-table_c-ord-doc-full}':U
 &glob bef-table_c-ord-doc-attr-full История атрибутов заказа
@@ -1047,6 +1047,8 @@ Creation date: 01/29/07
 &glob table_cash-desk-full '{&bef-table_cash-desk-full}':U
 &glob bef-table_cash-desk-attr-full Аттр.кассы
 &glob table_cash-desk-attr-full '{&bef-table_cash-desk-attr-full}':U
+&glob bef-table_Cash-param-hist-full Параметры на кассе
+&glob table_Cash-param-hist-full '{&bef-table_Cash-param-hist-full}':U
 &glob bef-table_cash-pay-full Касс.платеж
 &glob table_cash-pay-full '{&bef-table_cash-pay-full}':U
 &glob bef-table_cash-pay-attr-full Аттр.касс.пл-жа

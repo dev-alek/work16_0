@@ -209,8 +209,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     end.
   end.
 
-  define variable v-bytes-to-write as integer   no-undo .
-  define variable v-written-bytes  as integer   no-undo .
+  define variable v-bytes-to-write as int64   no-undo .
+  define variable v-written-bytes  as int64   no-undo .
 
   assign
     v-bytes-to-write = length(p-write-string)

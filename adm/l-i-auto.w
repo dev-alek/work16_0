@@ -362,7 +362,7 @@ on stop   undo, leave do1
     end.
     leave do1.
   end.
-  run adm/db-info.p ( output v-db-num ) no-error.
+  run adm/db-info.p ( output v-db-num, output v-db-info ) no-error.
   if error-status :error then do:
     if v-no-message = false then do:
       message
@@ -375,10 +375,7 @@ on stop   undo, leave do1
     leave do1.
   end.
 
-  assign
-    v-db-info    = return-value
-    v-connection = TRUE
-  .
+  v-connection = TRUE.
   run gbl/dbdiscon.p no-error.
 end.  /* do1:  on endkey ... */
 assign

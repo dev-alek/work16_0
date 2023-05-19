@@ -354,7 +354,7 @@ on error undo, return error return-value
 
       if dictdb._file-trig._trig-crc <> ?
       then do:
-        run write-log in this-procedure
+        run write-log-item in this-procedure
           (input mTextHead,
                 substitute("Триггер &1 ", dictdb._file-trig._proc-name)
               + substitute("Задана контрольная сумма триггера CRC = &1", dictdb._file-trig._trig-crc)
@@ -398,7 +398,7 @@ on error undo, return error return-value
     and v-write-trigger  <> ''
     and v-create-trigger = v-write-trigger
     then do:
-      run write-log in this-procedure
+      run write-log-item in this-procedure
         (input mTextHead,
          input substitute("Триггеры ссылаются на один файл ")
              + substitute("Триггер на создание &1 ", v-create-trigger)
@@ -467,7 +467,7 @@ c-pmp-hist,c-nzl-hist,c-sht-hist,c-table-bind,c-recipe-hist,c-usr-hist,c-user-lo
                 save result in v-cmp.
                 if v-cmp <> "":U
                 then do:
-                  run write-log in this-procedure
+                  run write-log-item in this-procedure
                     (input mTextHead,
                      input substitute( "Таблица истории для &1 Поле &2 отличается от поля в основной таблице: &3" 
                                       ,buf_file._file-name
@@ -889,7 +889,7 @@ procedure validate-filename :
     end.
     if length(v-file-name-no-ext) > 8
     then do:
-      run write-log in this-procedure
+      run write-log-item in this-procedure
         (input p-object-head,
          input p-object-name 
              + substitute(" Имя файла &1", p-file-name) 
@@ -1318,7 +1318,7 @@ procedure validate-pi-idx-hist :
   define input parameter p-tbl-name-main as character no-undo .
 
   do
-  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
+  on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
   on stop   undo, return error substitute( "&1. stop", vss-workfile )
   on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   :

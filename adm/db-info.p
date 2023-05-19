@@ -14,7 +14,8 @@ Author: Dmitry Ukhanov
 Creation date: 03/22/03
 
 */
-define output parameter p-db-num like ub.db.db-num no-undo .
+define output parameter oDbNum  as integer   no-undo .
+define output parameter oDBInfo as character no-undo.
 
 
 def var vss-revision    as character no-undo init "$Revision$":U .
@@ -34,17 +35,18 @@ on error undo, return error
 
   find first buf_sys-ctrl no-lock.
   assign
-    p-db-num = buf_sys-ctrl.db-num
+    oDbNum = buf_sys-ctrl.db-num
   .
   find first buf_db no-lock
     where buf_db.db-num = buf_sys-ctrl.db-num
     no-error
     .
   if not available buf_db then do:
-    return error substitute( "Не найдена информация о текущей БД" ).
+    oDBInfo = substitute( "Не найдена информация о текущей БД" ).
+    return error oDBInfo .
   end.
   else do:
-    return substitute( "БД N: &1 (&2, ключ: &3)", buf_db.db-num, buf_db.db-name, buf_db.db-key ).
+    oDBInfo = substitute( "БД N: &1 (&2, ключ: &3)", buf_db.db-num, buf_db.db-name, buf_db.db-key ).
   end.
 end.
 

@@ -247,7 +247,7 @@
 &glob c-dis-time-rule_primary_key time-rule-num corr-user-db-num chip-num 
 &glob c-doc-attr_primary_key doc-code attr-code corr-user-db-num chip-num 
 &glob c-doc-fbr-gds_primary_key obj-type obj-code fbr-obj-type fbr-obj-code out-code gds-code corr-user-db-num chip-num 
-&glob c-doc-line_primary_key doc-code artic prod-code prod-type line-num corr-user-db-num chip-num 
+&glob c-doc-line_primary_key doc-code artic prod-type prod-code line-num corr-user-db-num chip-num 
 &glob c-doc-line-attr_primary_key doc-code gds-code attr-code corr-user-db-num chip-num 
 &glob c-doc-line-sum_primary_key doc-code gds-code sum-type corr-user-db-num chip-num 
 &glob c-doc-pl_primary_key obj-type obj-code pl-code out-code gds-code corr-user-db-num chip-num 
@@ -296,7 +296,7 @@
 &glob c-firm_primary_key firm-code corr-user-db-num chip-num 
 &glob c-gds-add-charges_primary_key gds-code corr-user-db-num chip-num 
 &glob c-gds-add-charges-attr_primary_key gds-code attr-code corr-user-db-num chip-num 
-&glob c-gds-dtl_primary_key doc-code artic prod-code prod-type prt-code line-num corr-user-db-num chip-num 
+&glob c-gds-dtl_primary_key doc-code artic prod-code prod-type prt-code corr-user-db-num chip-num 
 &glob c-gds-dtl-attr_primary_key doc-code artic prod-code prod-type prt-code attr-code corr-user-db-num chip-num 
 &glob c-gds-grp_primary_key node-code corr-user-db-num chip-num 
 &glob c-gds-grp-attr_primary_key node-code attr-code host-code obj-type obj-code corr-user-db-num chip-num 
@@ -513,6 +513,7 @@
 &glob c-wth-ser-attr_primary_key ser-code db-num attr-code corr-user-db-num chip-num 
 &glob cash-desk_primary_key db-num obj-code pos-type cash-num 
 &glob cash-desk-attr_primary_key db-num obj-code pos-type cash-num upper-attr-code attr-code 
+&glob Cash-param-hist_primary_key obj-type obj-code cash-num param_section param_group param_name 
 &glob cash-pay_primary_key cdpay-code curr-code 
 &glob cash-pay-attr_primary_key cdpay-code curr-code host-code obj-type obj-code attr-code 
 &glob CashBook_primary_key id 
@@ -550,8 +551,6 @@
 &glob chk-gds-pay_primary_key doc-code algo-num line-num cpline-num 
 &glob chk-pay_primary_key doc-code line-num 
 &glob chk-pay-attr_primary_key doc-code line-num attr-code 
-&glob chk-slip-head_primary_key db-num ID CheckID RRN 
-&glob chk-slip-string_primary_key db-num ID CheckID RRN str-num 
 &glob cli-art_primary_key cli-type cli-code artic prod-type prod-code cli-art 
 &glob cli-art-attr_primary_key cli-type cli-code artic prod-type prod-code cli-art attr-code 
 &glob cli-gds_primary_key cli-type cli-code host-code artic prod-type prod-code 
@@ -913,7 +912,7 @@
 &glob ord-line-rcv_primary_key doc-code rcv-code artic prod-type prod-code 
 &glob ord-rcv-attr_primary_key doc-code rcv-code attr-code 
 &glob ord-rcv-line-attr_primary_key doc-code rcv-code gds-code attr-code 
-&glob ot-line_primary_key doc-code artic prod-type prod-code sum-type cat-id line-num 
+&glob ot-line_primary_key doc-code artic prod-type prod-code sum-type cat-id 
 &glob ot-line-attr_primary_key doc-code artic prod-type prod-code sum-type cat-id attr-code 
 &glob ot-supp-line_primary_key doc-code cli-type cli-code artic prod-type prod-code sum-type cat-id 
 &glob ot-supp-line-attr_primary_key doc-code cli-type cli-code artic prod-type prod-code sum-type cat-id attr-code 
