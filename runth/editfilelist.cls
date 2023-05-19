@@ -17,10 +17,12 @@ class runth.editfilelist inherits Form :
    define private variable components as System.ComponentModel.IContainer no-undo.
     define private variable buttonOk as System.Windows.Forms.Button no-undo.
     define private variable buttonCancel as System.Windows.Forms.Button no-undo.
+   define private variable Desc_ as System.Windows.Forms.TextBox no-undo.
    define private variable Filename as System.Windows.Forms.TextBox no-undo.
    define private variable FileId as System.Windows.Forms.TextBox no-undo.
    define private variable label2 as System.Windows.Forms.Label no-undo.
    define private variable label1 as System.Windows.Forms.Label no-undo.
+   define private variable label3 as System.Windows.Forms.Label no-undo.
    define variable mtrg as class runth.runth_trg no-undo.
     
    constructor public editfilelist( ):
@@ -91,6 +93,8 @@ class runth.editfilelist inherits Form :
       this-object:checkBox1 = new System.Windows.Forms.CheckBox().
       this-object:label1 = new System.Windows.Forms.Label().
       this-object:label2 = new System.Windows.Forms.Label().
+      this-object:label3 = new System.Windows.Forms.Label().
+      this-object:Desc_ = new System.Windows.Forms.TextBox().
       cast(this-object:bindfilelist, System.ComponentModel.ISupportInitialize):BeginInit().
       this-object:SuspendLayout().
       /*  */
@@ -99,7 +103,7 @@ class runth.editfilelist inherits Form :
       define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
       nestedvar0 = System.Windows.Forms.AnchorStyles:Bottom.
       this-object:buttonOk:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:buttonOk:Location = new System.Drawing.Point(563, 80).
+      this-object:buttonOk:Location = new System.Drawing.Point(567, 93).
       this-object:buttonOk:Name = "buttonOk".
       this-object:buttonOk:Size = new System.Drawing.Size(75, 23).
       this-object:buttonOk:TabIndex = 0.
@@ -113,7 +117,7 @@ class runth.editfilelist inherits Form :
       nestedvar1 = System.Windows.Forms.AnchorStyles:Bottom.
       this-object:buttonCancel:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
       this-object:buttonCancel:DialogResult = System.Windows.Forms.DialogResult:Cancel.
-      this-object:buttonCancel:Location = new System.Drawing.Point(647, 80).
+      this-object:buttonCancel:Location = new System.Drawing.Point(651, 93).
       this-object:buttonCancel:Name = "buttonCancel".
       this-object:buttonCancel:Size = new System.Drawing.Size(75, 23).
       this-object:buttonCancel:TabIndex = 1.
@@ -139,10 +143,11 @@ class runth.editfilelist inherits Form :
       arrayvar0 = new "Progress.Data.TableDesc[]"(0).
       tableDesc1:ChildTables = arrayvar0.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 3 no-undo.
+      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 4 no-undo.
       arrayvar1[1] = new Progress.Data.ColumnPropDesc("FileName", "", Progress.Data.DataType:CHARACTER).
       arrayvar1[2] = new Progress.Data.ColumnPropDesc("FileId", "", Progress.Data.DataType:CHARACTER).
       arrayvar1[3] = new Progress.Data.ColumnPropDesc("RunFile", "", Progress.Data.DataType:LOGICAL).
+      arrayvar1[4] = new Progress.Data.ColumnPropDesc("Desc_", "Описание", Progress.Data.DataType:CHARACTER).
       tableDesc1:Columns = arrayvar1.
       this-object:bindfilelist:TableSchema = tableDesc1.
       /*  */
@@ -157,7 +162,7 @@ class runth.editfilelist inherits Form :
       /* checkBox1 */
       /*  */
       this-object:checkBox1:DataBindings:Add(new System.Windows.Forms.Binding("CheckState", this-object:bindfilelist, "RunFile", true, System.Windows.Forms.DataSourceUpdateMode:OnPropertyChanged)).
-      this-object:checkBox1:Location = new System.Drawing.Point(126, 66).
+      this-object:checkBox1:Location = new System.Drawing.Point(126, 91).
       this-object:checkBox1:Name = "checkBox1".
       this-object:checkBox1:Size = new System.Drawing.Size(249, 24).
       this-object:checkBox1:TabIndex = 4.
@@ -176,18 +181,37 @@ class runth.editfilelist inherits Form :
       /*  */
       /* label2 */
       /*  */
-      this-object:label2:Location = new System.Drawing.Point(12, 35).
+      this-object:label2:Location = new System.Drawing.Point(12, 39).
       this-object:label2:Name = "label2".
       this-object:label2:Size = new System.Drawing.Size(100, 23).
       this-object:label2:TabIndex = 6.
       this-object:label2:Text = "Файл запуск".
       this-object:label2:UseCompatibleTextRendering = true.
       /*  */
+      /* label3 */
+      /*  */
+      this-object:label3:Location = new System.Drawing.Point(12, 65).
+      this-object:label3:Name = "label3".
+      this-object:label3:Size = new System.Drawing.Size(100, 23).
+      this-object:label3:TabIndex = 8.
+      this-object:label3:Text = "Описание".
+      this-object:label3:UseCompatibleTextRendering = true.
+      /*  */
+      /* Desc_ */
+      /*  */
+      this-object:Desc_:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindfilelist, "Desc_", true)).
+      this-object:Desc_:Location = new System.Drawing.Point(126, 65).
+      this-object:Desc_:Name = "Desc_".
+      this-object:Desc_:Size = new System.Drawing.Size(595, 20).
+      this-object:Desc_:TabIndex = 7.
+      /*  */
       /* editfilelist */
       /*  */
       this-object:AcceptButton = this-object:buttonOk.
       this-object:CancelButton = this-object:buttonCancel.
-      this-object:ClientSize = new System.Drawing.Size(736, 117).
+      this-object:ClientSize = new System.Drawing.Size(740, 130).
+      this-object:Controls:Add(this-object:label3).
+      this-object:Controls:Add(this-object:Desc_).
       this-object:Controls:Add(this-object:label2).
       this-object:Controls:Add(this-object:label1).
       this-object:Controls:Add(this-object:checkBox1).

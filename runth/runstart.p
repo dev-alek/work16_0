@@ -15,9 +15,9 @@ $Archive$
 using System.Windows.Forms.* from assembly.
 block-level on error undo, throw.
 
-  define variable v-listth-brw as class runth.ThStart no-undo .
+  define variable v-listth-brw as class runth.procStart no-undo .
   do trans:
-  v-listth-brw = new runth.ThStart (  ).
+  v-listth-brw = new runth.procStart (  ).
   wait-for  v-listth-brw:ShowDialog() .
   end.
   quit.
