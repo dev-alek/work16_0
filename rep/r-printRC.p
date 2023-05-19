@@ -112,14 +112,6 @@ define variable v-rep-list as character no-undo.
 
 DEFINE STREAM out-stream.
 
-FUNCTION number-from-string RETURNS INTEGER
-  ( input p-name as character, input p-code as integer )  FORWARD.
-
-FUNCTION get-report-file-name returns character
-  ( input p-date as date, input p-time as integer) FORWARD.
-
-
-
 define buffer buf_clients for ub.clients .
 
 /*************************************************
@@ -159,7 +151,7 @@ define variable v-date_to   as character no-undo .
     "<!DOCTYPE HTML>" skip
     ' <html>' skip
     '  <head>' skip
-    '   <meta charset="utf-8">' skip
+    '   <meta charset="utf-8"/>' skip
     '    <style type="text/css">' skip
                         
     '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
@@ -288,7 +280,7 @@ define variable v-date_to   as character no-undo .
         buf_upgrade-attr.attr-code = "compile-date" no-error .
        
       put stream OutStr-html unformatted
-        '<td text_wrap="true" style="align: center;">' + if available (buf_upgrade-attr) and string(buf_upgrade-attr.attr-value) <> ? then string(buf_upgrade-attr.attr-value) + '</td>' else " " + '</td>' skip
+        '<td text_wrap="true" style="align: center;">' + if available (buf_upgrade-attr) and string(buf_upgrade-attr.attr-value) <> ? then string(buf_upgrade-attr.attr-value) + '</td>' else "0 " + '</td>' skip
         .
       v-file-date = "" .
       v-file-time = "" .
@@ -337,10 +329,6 @@ define variable v-date_to   as character no-undo .
         
     '</body>' skip
     '</html>' skip
-    .
-  put stream OutStr-html unformatted   
-    '</tbody>' skip
-    '</table>' skip
     .
   output stream OutStr-html close.   
  
