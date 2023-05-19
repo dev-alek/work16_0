@@ -1,15 +1,15 @@
 {gbl/tmprecid.i}
 &if defined(bufSource) eq 0
 &then
- &message необ€влен источник копипровани€ bufSource
+ &message не объ€влен источник копировани€ bufSource
 &endif
 &if defined(bufSource) eq 0
 &then
- &message необ€влен ѕриемник копипровани€ bufTarget
+ &message не объ€влен ѕриемник копировани€ bufTarget
 &endif  
 &if defined(tableKeyMerge) eq 0
 &then
- &message необ€влен не заданы пол€ дл€ поиска записей tableKeyMerge
+ &message не объ€влен не заданы пол€ дл€ поиска записей tableKeyMerge
 &endif  
 
 for each {&bufSource} 
@@ -41,7 +41,7 @@ on error  undo, return error
 end.
 &if defined (bufHead) ne 0
 &then
-for each {&bufTarget} where {gbl/findtbfortb.i {&bufTarget} {&bufHead} no {&tableHeadKeyMerge}}
+for each {&bufTarget} where {gbl/findtbfortb.i {&bufTarget} {&bufHead} no {&tableHeadKeyMerge}} {&addWhereMainTbl}
 exclusive-lock
 on error  undo, return error
 :

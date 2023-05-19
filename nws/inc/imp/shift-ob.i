@@ -59,113 +59,58 @@ on endkey undo, return error :
   END CASE.
 end.
 
-for each buf_shift-staff where buf_shift-staff.obj-type   = wt-shift-obj.obj-type
-                           and buf_shift-staff.obj-code   = wt-shift-obj.obj-code
-                           and buf_shift-staff.shift-date = wt-shift-obj.shift-date
-                           and buf_shift-staff.shift-num  = wt-shift-obj.shift-num
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  delete buf_shift-staff.
-end.
-for each locb-shift-staff where locb-shift-staff.obj-type   = wt-shift-obj.obj-type
-                            and locb-shift-staff.obj-code   = wt-shift-obj.obj-code
-                            and locb-shift-staff.shift-date = wt-shift-obj.shift-date
-                            and locb-shift-staff.shift-num  = wt-shift-obj.shift-num
-                       no-lock
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  create buf_shift-staff.
-  buffer-copy locb-shift-staff to buf_shift-staff.
-end.
+/* ------------------------------- shift-staff ---------------------------------------------- */
+&glob head-tbl shift-obj
+&glob main-tbl shift-staff
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "{&{&head-tbl}_primary_key}"
+   &bufHead = "wt-{&head-tbl}"
+}
 
-for each buf_shift-cash where buf_shift-cash.obj-type   = wt-shift-obj.obj-type
-                           and buf_shift-cash.obj-code   = wt-shift-obj.obj-code
-                           and buf_shift-cash.shift-date = wt-shift-obj.shift-date
-                           and buf_shift-cash.shift-num  = wt-shift-obj.shift-num
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  delete buf_shift-cash.
-end.
-for each locb-shift-cash where locb-shift-cash.obj-type   = wt-shift-obj.obj-type
-                            and locb-shift-cash.obj-code   = wt-shift-obj.obj-code
-                            and locb-shift-cash.shift-date = wt-shift-obj.shift-date
-                            and locb-shift-cash.shift-num  = wt-shift-obj.shift-num
-                       no-lock
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  create buf_shift-cash.
-  buffer-copy locb-shift-cash to buf_shift-cash.
-end.
+/* ------------------------------- shift-cash ---------------------------------------------- */
+&glob main-tbl shift-cash
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "{&{&head-tbl}_primary_key}"
+   &bufHead = "wt-{&head-tbl}"
+}
 
+/* ------------------------------- c-shift-staff ---------------------------------------------- */
+&glob main-tbl c-shift-staff
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &tableHeadKeyMerge = "{&{&head-tbl}_primary_key}"
+   &bufHead = "wt-{&head-tbl}"
+}
 
-for each buf_c-shift-staff where buf_c-shift-staff.obj-type   = wt-shift-obj.obj-type
-                           and buf_c-shift-staff.obj-code   = wt-shift-obj.obj-code
-                           and buf_c-shift-staff.shift-date = wt-shift-obj.shift-date
-                           and buf_c-shift-staff.shift-num  = wt-shift-obj.shift-num
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  delete buf_c-shift-staff.
-end.
-for each locb-c-shift-staff where locb-c-shift-staff.obj-type   = wt-shift-obj.obj-type
-                            and locb-c-shift-staff.obj-code   = wt-shift-obj.obj-code
-                            and locb-c-shift-staff.shift-date = wt-shift-obj.shift-date
-                            and locb-c-shift-staff.shift-num  = wt-shift-obj.shift-num
-                       no-lock
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  create buf_c-shift-staff.
-  buffer-copy locb-c-shift-staff to buf_c-shift-staff.
-end.
+/* ------------------------------- c-sht-hist ---------------------------------------------- */
+&glob main-tbl c-sht-hist
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &addWhereMainTbl = " and buf_{&main-tbl}.corr-user-db-num = g#news-source-db"
+   &tableHeadKeyMerge = "{&{&head-tbl}_primary_key}"
+   &bufHead = "wt-{&head-tbl}"
+}
 
-for each buf_c-sht-hist where buf_c-sht-hist.obj-type   = wt-shift-obj.obj-type
-                           and buf_c-sht-hist.obj-code   = wt-shift-obj.obj-code
-                           and buf_c-sht-hist.shift-date = wt-shift-obj.shift-date
-                           and buf_c-sht-hist.shift-num  = wt-shift-obj.shift-num
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  delete buf_c-sht-hist.
-end.
-for each locb-c-sht-hist where locb-c-sht-hist.obj-type   = wt-shift-obj.obj-type
-                            and locb-c-sht-hist.obj-code   = wt-shift-obj.obj-code
-                            and locb-c-sht-hist.shift-date = wt-shift-obj.shift-date
-                            and locb-c-sht-hist.shift-num  = wt-shift-obj.shift-num
-                       no-lock
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  create buf_c-sht-hist.
-  buffer-copy locb-c-sht-hist to buf_c-sht-hist.
-end.
-
-for each buf_c-shift-obj where buf_c-shift-obj.obj-type   = wt-shift-obj.obj-type
-                           and buf_c-shift-obj.obj-code   = wt-shift-obj.obj-code
-                           and buf_c-shift-obj.shift-date = wt-shift-obj.shift-date
-                           and buf_c-shift-obj.shift-num  = wt-shift-obj.shift-num
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  delete buf_c-shift-obj.
-end.
-for each locb-c-shift-obj where locb-c-shift-obj.obj-type   = wt-shift-obj.obj-type
-                            and locb-c-shift-obj.obj-code   = wt-shift-obj.obj-code
-                            and locb-c-shift-obj.shift-date = wt-shift-obj.shift-date
-                            and locb-c-shift-obj.shift-num  = wt-shift-obj.shift-num
-                       no-lock
-on error  undo, return error
-on stop   undo, return error
-on endkey undo, return error :
-  create buf_c-shift-obj.
-  buffer-copy locb-c-shift-obj to buf_c-shift-obj.
-end.
-
-
+/* ------------------------------- c-shift-obj ---------------------------------------------- */
+&glob main-tbl c-shift-obj
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &addWhereMainTbl = " and buf_{&main-tbl}.corr-user-db-num = g#news-source-db"
+   &tableHeadKeyMerge = "{&{&head-tbl}_primary_key}"
+   &bufHead = "wt-{&head-tbl}"
+}
 
 if not available tb-shift-obj then do:
   create tb-shift-obj.
