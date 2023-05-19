@@ -350,9 +350,29 @@ procedure BeforeCalc:
      mParamStr[vI] = mParamStr[vI] + vStr.
    end.
    
-   if iTranTimeMax > 0 then do:
+   if iTranTimeMax > 0
+   then do:
      vI = vI + 1.
      mParamStr[vI] = "Только со временем слива секции НП более " + string(iTranTimeMax) + " минут".
+   end.
+   
+   if iDelta-tank-ac
+   and iDelta-tank-fact
+   then do :
+     vI = vI + 1.
+     mParamStr[vI] = "Только со сверхнормативным расхождением между резервуаром и АЦ, либо между резервуаром и принятым НП".
+   end.
+   else
+   if iDelta-tank-ac
+   then do :
+     vI = vI + 1.
+     mParamStr[vI] = "Только со сверхнормативным расхождением между резервуаром и АЦ".
+   end.
+   else
+   if iDelta-tank-fact
+   then do :
+     vI = vI + 1.
+     mParamStr[vI] = "Только со сверхнормативным расхождением между резервуаром и принятым НП".
    end.
    
    vI = vI + 1.
@@ -766,7 +786,7 @@ procedure processTrn :
           tt-rep.col8       = v-auto-cli-name
           tt-rep.col9       = v-nb-cli-name
           tt-rep.col10      = v-car-num
-          tt-rep.col11      = ""
+          tt-rep.col11      = "Без СЭП"
           tt-rep.col12      = v-user-name
           tt-rep.col13      = v-SectionName
           tt-rep.col14      = buf_goods.gds-name
@@ -802,7 +822,7 @@ procedure processTrn :
             tt-rep.col22  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol
             tt-rep.col23  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight
             tt-rep.col24  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
-            tt-rep.col25  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi
+            tt-rep.col25  = if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity
             tt-rep.col26  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankTemp
           .
         end .
@@ -1026,7 +1046,7 @@ procedure processTrn :
           tt-rep.col22  = tt-rep.col22 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol
           tt-rep.col23  = tt-rep.col23 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight
           tt-rep.col24  = tt-rep.col24 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
-          tt-rep.col25  = tt-rep.col25 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi
+          tt-rep.col25  = tt-rep.col25 + (if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity)
           tt-rep.col26  = tt-rep.col26 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankTemp
         .
         
@@ -1039,7 +1059,7 @@ procedure processTrn :
           tt-rep.col22str = tt-rep.col22str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol, "->>>>>>>>>>>9"  )
           tt-rep.col23str = tt-rep.col23str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight, "->>>>>>>>>>>9.9")
           tt-rep.col24str = tt-rep.col24str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss, "->>>>>>>>>>9.99")
-          tt-rep.col25str = tt-rep.col25str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi, "->>>>>>>>9.9999")
+          tt-rep.col25str = tt-rep.col25str + "<br>" + {&new-line} + fDec2Str((if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity), "->>>>>>>>9.9999")
           tt-rep.col26str = tt-rep.col26str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankTemp, "->>>>>>>>>>>9.9")
         .
         
