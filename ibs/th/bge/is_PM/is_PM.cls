@@ -1764,6 +1764,7 @@ class ibs.th.bge.is_PM.is_PM:
                                        and buf_chk-doc.chk-date <= date-start
                                        :
           if lookup({&shift-err}, buf_chk-doc.office) > 0
+          or (buf_chk-doc.src-shift-date > buf_chk-doc.shift-date and buf_chk-doc.chk-date > buf_chk-doc.shift-date) /* Созданные вручную чеки в другой смене */
           then do :
             if buf_chk-doc.chk-date = start_rvs-doc.fact-date
             and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
@@ -2707,7 +2708,7 @@ class ibs.th.bge.is_PM.is_PM:
     define buffer buf_shift-obj for ub.shift-obj .
     
     run write-to-log in p-parent-handle (" START BOOK-END UTC " + utc-time() ) .
-    
+      
     /* START Определение книжного остатка на конец периода */
     for each tt-place,
     first buf_goods no-lock where buf_goods.gds-code = tt-place.gds-code,
@@ -2741,6 +2742,7 @@ class ibs.th.bge.is_PM.is_PM:
                                        and buf_chk-doc.chk-date <= date-end
                                        :
           if lookup({&shift-err}, buf_chk-doc.office) > 0
+          or (buf_chk-doc.src-shift-date > buf_chk-doc.shift-date and buf_chk-doc.chk-date > buf_chk-doc.shift-date) /* Созданные вручную чеки в другой смене */
           then do :                               
             if buf_chk-doc.chk-date = end_rvs-doc.fact-date
             and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
