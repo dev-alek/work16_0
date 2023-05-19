@@ -430,9 +430,9 @@ end function.
                 '<td text_wrap="true">' tt-param.EtalonValue '</td>' skip
                 '<td text_wrap="true">' tt-param.CurrentValue '</td>' skip
                 '<td text_wrap="true" style="background-color: ' + v-color + ';">' getColorText(v-color) '</td>' skip   
-                /*                      '<td text_wrap="true" style="">' tt-param.flag '</td>' skip   */
-                /*                      '<td text_wrap="true" style="">' tt-param.diff '</td>' skip   */
-                /*                      '<td text_wrap="true" style="">' tt-param.status_ '</td>' skip*/
+/*                                      '<td text_wrap="true" style="">' tt-param.flag '</td>' skip   */
+/*                                      '<td text_wrap="true" style="">' tt-param.diff '</td>' skip   */
+/*                                      '<td text_wrap="true" style="">' tt-param.status_ '</td>' skip*/
                 '</tr>' skip
                 .
             end.
@@ -467,9 +467,9 @@ end function.
                 '<td text_wrap="true">' tt-param.EtalonValue '</td>' skip
                 '<td text_wrap="true">' tt-param.CurrentValue '</td>' skip   
                 '<td text_wrap="true" style="background-color: ' + v-color + ';">' getColorText(v-color) '</td>' skip
-                /*                      '<td text_wrap="true" style="">' tt-param.flag '</td>' skip   */
-                /*                      '<td text_wrap="true" style="">' tt-param.diff '</td>' skip   */
-                /*                      '<td text_wrap="true" style="">' tt-param.status_ '</td>' skip*/
+/*                                      '<td text_wrap="true" style="">' tt-param.flag '</td>' skip   */
+/*                                      '<td text_wrap="true" style="">' tt-param.diff '</td>' skip   */
+/*                                      '<td text_wrap="true" style="">' tt-param.status_ '</td>' skip*/
                 '</tr>' skip
                 .
             end.    
@@ -535,14 +535,14 @@ end function.
 FUNCTION getColor RETURNS CHARACTER
   ( isflag as char, istatus as int, isdiff as logical ):
   case istatus:
-    when {&bef-current-status-int} then /*обязательный*/ 
+    when {&bef-current-status-int} or when 2 then /*обязательный*/ 
       do:
         if isflag = "etalon" then return "#FFDD71" /*"orange" */.
         else if isflag = "current" then return "#ffffe0" /*"yellow"*/ .
           else if isdiff then return "#FFB3B3" /*"red"*/ .
             else return "#D8EEC0" /*"green"*/ .
       end.
-    when {&bef-deleted-status-int} then 
+    when {&bef-deleted-status-int} or when 1 then 
       do:
         return "#D5EAFF" /*" "blue" */.
       end.
@@ -563,7 +563,7 @@ FUNCTION getColorKey RETURNS CHARACTER
           else if isdiff then return "#FFB3B3" /*"red"*/ .
             else return "#D8EEC0" /*"green"*/ .
       end.
-    when {&bef-deleted-status-int} then 
+    when {&bef-deleted-status-int} or when 1 then 
       do:
         if isflag = "current" then return "#ffffe0" /*"yellow"*/ .
         else return "#D5EAFF" /*" "blue" */.
