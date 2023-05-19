@@ -1,17 +1,31 @@
 
 { utl/crc32.i }
+{cmp/str-glbl.i }
+define temp-table tt-code like code.
 function getCashparamHash returns character ():
     define variable exp as ibs.th.bge.xmlimpexp no-undo.
     define variable hQuery   as handle  no-undo .
-    define buffer Buf_code for code.
+    define buffer Buf_code for tt-code.
+    define buffer     code for    code.
+    FOR EACH code where code.parent begins 'cash-param'
+                    and num-entries(code.parent,{&delim-par}) eq 4
+    no-lock:
+       create Buf_code.
+       buffer-copy code except export_ nwsgbd procview procedit to Buf_code.
+    end.
     create query hQuery.
     hQuery:set-buffers(buffer Buf_code :HANDLE). 
-    hQuery:query-prepare("FOR EACH Buf_code where Buf_code.parent begins 'cash-param'").
+    hQuery:query-prepare("FOR EACH Buf_code").
     hQuery:query-open ().
+   
     exp = new ibs.th.bge.xmlimpexp (). 
     exp:updatetableforxml(hQuery).
     delete object hQuery.
+    FOR EACH buf_code:
+       delete buf_code.
+    end.
     define variable vxmlCode as memptr no-undo.
+  /*  exp:xmldom-save  ( "c:\11\111.xml" ). */
     exp:xmldom-save("memptr", output vxmlCode).
     delete object exp.
     return string(CRC32(vxmlCode)).

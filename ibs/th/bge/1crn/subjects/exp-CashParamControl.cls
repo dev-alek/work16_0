@@ -34,13 +34,16 @@ class ibs.th.bge.1crn.subjects.exp-CashParamControl inherits send1cerpsub implem
                       and num-entries (code.parent,{&delim-par}) eq 4
       no-lock:
          insw:start-element ("Control-etalon-param").
-         insw:write-data-element (  "sign":U,          string(int(entry(2,Code.parent)) + 1)).
-         insw:write-data-element (  "source":U,                   entry(3,Code.parent)      ).
-         insw:write-data-element (  "section":U,                  entry(4,Code.parent)      ).
+         insw:write-data-element (  "sign":U,          string(int(entry(2,Code.parent,{&delim-par})))).
+         insw:write-data-element (  "source":U,                   entry(3,Code.parent,{&delim-par})      ).
+         insw:write-data-element (  "section":U,                  entry(4,Code.parent,{&delim-par})      ).
          insw:write-data-element (  "name":U,                     Code.code                 ).
          insw:write-data-element (  "value-etalon":U,             Code.CodeValue            ).
          insw:write-data-element (  "required":U,                 string(Code.status_)      ).
-         insw:write-data-element (  "description":U,              Code.CodeName             ).
+         if      Code.CodeName ne ?
+            and  Code.CodeName ne ?
+         then
+            insw:write-data-element (  "description":U,              Code.CodeName             ).
          insw:end-element("Control-etalon-param").
       end.
       return.

@@ -20,6 +20,7 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
   define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
   define override public property vss-archive     as character no-undo init "$Archive:$":U get. 
   { cmp/str-glbl.i class } 
+  { gbl/is-num.i }
     
   define override property InitTag as character no-undo init "Etalon-param"
     get. 
@@ -91,22 +92,52 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
     if v-str > ''
     then 
       undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-    block-code:      
-    for each code where Code.parent    begins "emc" 
-                    and Code.CodeName  eq CodeName
-    no-lock:
-       assign
-          old_parent_ = Code.parent
-          old_code_   = Code.code
-       .
-       leave block-code.
-    end.
-    if mCashSection:GetProp(vsource) eq mCashSection:Unknow
-    then
-       undo, throw new Progress.Lang.AppError( substitute ('Тег "&1" имеет не допустимое значение "&2"', "source",vsource)).
+    
+    
     if mCashDevice:GetProp(vSign) eq mCashDevice:Unknow
     then
-       undo, throw new Progress.Lang.AppError( substitute ('Тег "&1" имеет не допустимое значение "&2"', "sign",vsign + 1)).
+       undo, throw new Progress.Lang.AppError( substitute ('Тег "&1" имеет не допустимое значение "&2"', "sign", vsign + 1)).
+    
+   if mCashSection:GetProp(vsource) eq mCashSection:Unknow
+   then
+       undo, throw new Progress.Lang.AppError( substitute ('Тег "&1" имеет не допустимое значение "&2"', "source",vsource)).
+    
+   if     status_ ne 1 
+      and status_ ne 2   
+   then do:
+      run WriteLog(substitute ("Недопустимое значение &1 поля required Допустимы 1 - обязательный и 2 - Необязательный",
+                               status_)).
+   end.
+   
+   if not is-numeral (vsection,
+                      if vsource eq 1
+                      then "letter,digit"
+                      else "digit")
+   then do:
+      undo, throw new Progress.Lang.AppError(substitute ("Недопустимое значение '&1' поля section Допустимы только &2",
+                               vsection, 
+                               if vsource eq 1 then "Латинкские буквы и цифры" else "Цифры" )).
+   end.
+   if vsource eq 1
+   then do:
+      if not is-numeral (code_,
+                         "letter,digit"
+                         )
+      then do:
+         undo, throw new Progress.Lang.AppError(substitute ("Недопустимое значение '&1' поля name Допустимы только &2",
+                                  code_, 
+                                  if vsource eq 1 then "Латинкские буквы и цыфры" else "Цыфры")).
+      end.
+   end.
+   else do:
+      if     codevalue ne "MGR"
+         and codevalue ne "REG"   
+      then do:
+         undo, throw new Progress.Lang.AppError(substitute ("Недопустимое значение &1 поля value-etalon Допустимы MGR - менаджер и REG - кассир",
+                                  codevalue)).
+      end.
+   end.
+   
     
     old_code_ = code_.
     old_parent_ = parent_.

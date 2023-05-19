@@ -319,7 +319,7 @@ define variable v-date_to   as character no-undo .
     '</html>' skip
     .
   output stream OutStr-html close.   
- 
+end.
 
 if p-log then do:
   /* גûחמג ןנמדנאללû ןוקאעט */ 

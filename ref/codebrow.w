@@ -445,7 +445,7 @@ ON choose OF b-del IN FRAME f-c-p /* Удалить */
 do:
    define buffer b1-code for code.
    if not avail code then return.
-
+define variable v-ok as logical no-undo.
    message "Удалить запись группу параметров " code.code " (" code.codename ")?"
       view-as alert-box question
       buttons yes-no
