@@ -3980,6 +3980,35 @@ if ( v-use-grp-buy or v-use-oborot-buy )  then   is-price-buyer = true .
               end.
         end.
       end.
+      if entry(1, entry(ii, c-other, ";":U), "=":U) = "supp-np-lgas":U then do:
+        for each x_temp-list-buyer :
+          delete x_temp-list-buyer.
+        end.
+        for each X_clients-attr no-lock where X_clients-attr.attr-code = {&attr-supp-np}
+                                          and X_clients-attr.attr-value = "yes" :
+              if not can-find (first x_temp-list-buyer where x_temp-list-buyer.obj-type = X_clients-attr.obj-type
+                                                         and x_temp-list-buyer.obj-code = X_clients-attr.obj-code)
+              then do :
+                create x_temp-list-buyer.
+                assign
+                  x_temp-list-buyer.obj-type = X_clients-attr.obj-type
+                  x_temp-list-buyer.obj-code = X_clients-attr.obj-code
+                .
+              end.
+        end.
+        for each X_clients-attr no-lock where X_clients-attr.attr-code = {&attr-supp-lgas}
+                                          and X_clients-attr.attr-value = "yes" :
+              if not can-find (first x_temp-list-buyer where x_temp-list-buyer.obj-type = X_clients-attr.obj-type
+                                                         and x_temp-list-buyer.obj-code = X_clients-attr.obj-code)
+              then do :
+                create x_temp-list-buyer.
+                assign
+                  x_temp-list-buyer.obj-type = X_clients-attr.obj-type
+                  x_temp-list-buyer.obj-code = X_clients-attr.obj-code
+                .
+              end.
+        end.
+      end.
       if  entry(1, entry(ii, c-other, ";":U), "=":U) = "tank-farm-for":U then do :
         if entry(2, entry(ii, c-other, ";":U), "=":U) <> "":U
         then do:
@@ -4271,7 +4300,11 @@ else do:
    }
 end.
 
-if entry(1,c-other,"=":U) = "supp-lgas" or entry(1,c-other,"=":U) = "supp-np" or entry(1,c-other,"=":U) = "auto-tank-for-supp" or entry(1,c-other,"=":U) = "tank-farm-for-supp"
+if entry(1,c-other,"=":U) = "supp-lgas"
+or entry(1,c-other,"=":U) = "supp-np"
+or entry(1,c-other,"=":U) = "supp-np-lgas"
+or entry(1,c-other,"=":U) = "auto-tank-for-supp"
+or entry(1,c-other,"=":U) = "tank-farm-for-supp"
 then do :
   HIDE
   CLi-list in frame {&frame-name}
@@ -4359,6 +4392,12 @@ if JoinType <> "NO" then
     TitleStr = TitleStr + ". С доп. фильтром." .
 if entry(1,c-other,"=":U) = "supp-np"
 then TitleStr = TitleStr + {&space-char} + "Поставщики НП" .
+else
+if entry(1,c-other,"=":U) = "supp-lgas"
+then TitleStr = TitleStr + {&space-char} + "Поставщики СУГ" .
+else
+if entry(1,c-other,"=":U) = "supp-np-lgas"
+then TitleStr = TitleStr + {&space-char} + "Поставщики НП и СУГ" .
 if entry(1,c-other,"=":U) = "auto-tank-for-supp"
 then TitleStr = TitleStr + {&space-char} + "Является перевозчиком для:" + v-auto-tank-for-supp .
 if entry(1,c-other,"=":U) = "tank-farm-for-supp"

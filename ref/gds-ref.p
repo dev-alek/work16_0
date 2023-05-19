@@ -116,7 +116,9 @@ then do:
   v-other      = entry(8, v-uf-List_, {&delim-par})
   no-error
   .
-  if v-list = "ptrl" or v-list = "lgas"
+  if v-list = "ptrl"
+  or v-list = "lgas"
+  or v-list = "ptrlsug"
   then do:
     entry(2, v-uf-list_,  {&delim-par} ) = {&all}.
     v-list =  {&all}. 
