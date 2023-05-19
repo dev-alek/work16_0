@@ -202,7 +202,7 @@ procedure StartElement:
   end.
   else if mElement = "config"
   then do:
-     mtstamp = dec(attributes:get-value-by-qname("tstamp")).
+     mtstamp = dec(attributes:get-value-by-qname("tstamp"))  + timezone(now) * 60.
   end.
   
 

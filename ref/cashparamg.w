@@ -35,10 +35,6 @@ Creation date: 21/04/21
 /* Parameters Definitions ---                                           */
 { cmp/str-glbl.i  }
 { ref/codepar.i}
-if iMode eq {&lookup} 
-then
-   iMode = {&update}.
-
 
 define variable vss-revision    as character no-undo init "$Revision: $":U .
 define variable vss-author      as character no-undo init "$Author: $":U .

@@ -86,7 +86,6 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
       v-str = v-str + ",source"       when vsource = ?
       v-str = v-str + ",Section" when vSection = ?
       v-str = v-str + ",name" when code_ = ?
-      v-str = v-str + ",value-etalon" when CodeValue = ?
     . 
     v-str = trim (v-str, ",").
     if v-str > ''
@@ -153,6 +152,7 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
          old_code_ = ?
          old_parent_ = ?
          code_  = ?
+         CodeValue = ""
          parent_ = substitute ("cash-param&1&1&1",{&delim-par}).
        
       .

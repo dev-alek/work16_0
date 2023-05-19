@@ -187,7 +187,7 @@ procedure StartElement:
       
       tt-cash-param-hist.param_group = attributes:get-value-by-qname("group")
       tt-cash-param-hist.param_name  = attributes:get-value-by-qname("key")
-      tt-cash-param-hist.tstamp      = mtstamp
+      tt-cash-param-hist.tstamp      = mtstamp + timezone(now) * 60
     .
   end.
   else if mElement = "config"
