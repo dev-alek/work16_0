@@ -53,6 +53,7 @@ define variable vss-description as character no-undo init "Параметры группы".
 { cmp/mrk-strf.i }
 { ref/code-func.i }
 
+
 /* Local Variable Definitions ---                                       */
 
 define variable log-res  as log   no-undo.
@@ -162,6 +163,7 @@ DEFINE QUERY BROWSE-Code FOR
 DEFINE BROWSE BROWSE-Code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-Code f-c-p _STRUCTURED
   QUERY BROWSE-Code NO-LOCK DISPLAY
+      
       buf-code-sign.code FORMAT "x(1)":U column-label "Код"
       buf-code-sign.CodeName FORMAT "x(25)":U column-label "Признак исполнения"
 /*      Getname(buf-code-sign.code) FORMAT "x(20)":U column-label "Предпологаемый тип кассы"*/

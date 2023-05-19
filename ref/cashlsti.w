@@ -286,7 +286,7 @@ DEFINE FRAME Dialog-Frame
      tt-cash-desk.cash-os AT ROW 6.29 COL 64 COLON-ALIGNED
           LABEL "“ËÔ Œ—"
           VIEW-AS COMBO-BOX INNER-LINES 4
-          LIST-ITEMS "","OS/2","DOS","LINUX","WINDOWS" 
+          LIST-ITEMS "","DOS","LINUX","WINDOWS" 
           DROP-DOWN-LIST
           SIZE 10 BY 1
           BGCOLOR 15 FGCOLOR 0 
@@ -425,7 +425,8 @@ DO:
 
   ASSIGN
   cb-device-kind.
-  tt-cash-desk.pos-type = if cb-device-kind eq mCashDevice:Tanker:keyint
+  tt-cash-desk.pos-type = if    cb-device-kind eq mCashDevice:Tanker:keyint
+                             or cb-device-kind eq mCashDevice:TankerIntegr:keyint
                           then {&cd-type-Autotank}
                           else {&cd-type-IBM-XML}.
   DISPLAY

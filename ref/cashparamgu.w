@@ -44,6 +44,7 @@ define variable vss-description as character no-undo init "Карточка редактирован
 { cmp/str-glbl.i }
 { cmp/library.i }
 { cmp/showinf.i }
+{ gbl/is-num.i}
 define variable v-db-num like ub.db.db-num no-undo .
 .
 
@@ -170,13 +171,20 @@ DO:
 
 
     if mcode = "" then do:
-      message "Введите код группы ! " view-as  alert-box  error.
+      message "Введите название группы ! " view-as  alert-box  error.
       apply "entry"  to mcode .
       return no-apply.
     end.
-    
+    if not is-numeral (mcode,
+                   "letter,digit"
+                   ) 
+    then do:
+      message "Название группы может содержать латинские буквы и цифры! " view-as  alert-box  error.
+      apply "entry"  to mcode .
+      return no-apply.
+    end.
     if mNAIM = "" then do:
-      message "Введите Наименование ! " view-as  alert-box  error.
+      message "Введите описание ! " view-as  alert-box  error.
       apply "entry"  to mNAIM .
       return no-apply.
     end.
@@ -188,7 +196,7 @@ DO:
       no-lock no-error.
       if available buf-code
       then do:
-         message "Такой код группы уже есть ! " view-as  alert-box  error.
+         message "Такое название группы уже есть ! " view-as  alert-box  error.
          apply "entry"  to mcode .
          return no-apply.
       end.
@@ -203,7 +211,7 @@ DO:
           no-lock no-error.
           if available buf-code
           then do:
-             message "Такой код группы уже есть ! " view-as  alert-box  error.
+             message "Такое название группы уже есть ! " view-as  alert-box  error.
              apply "entry"  to mcode .
              return no-apply.
           end.

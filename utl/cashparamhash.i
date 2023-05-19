@@ -24,11 +24,18 @@ function getCashparamHash returns character ():
     FOR EACH buf_code:
        delete buf_code.
     end.
-    define variable vxmlCode as memptr no-undo.
-  /*  exp:xmldom-save  ( "c:\11\111.xml" ). */
-    exp:xmldom-save("memptr", output vxmlCode).
+    define variable vxmlCode as character  no-undo.
+    define variable v-md5-signature as character no-undo.
+    exp:xmldom-save  ( "cashparammd5.xml" ).
+    vxmlCode = search("cashparammd5.xml").
+    run gbl/md5.p (
+          input  vxmlCode
+         ,output v-md5-signature /* p-md5-signature */
+         ) .
+    os-delete value (vxmlCode).
+/*    exp:xmldom-save("memptr", output vxmlCode).*/
     delete object exp.
-    return string(CRC32(vxmlCode)).
+    return {utl/chekmd5.i v-md5-signature } .
 end.
 
 

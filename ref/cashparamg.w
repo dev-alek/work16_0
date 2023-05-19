@@ -140,7 +140,7 @@ DEFINE BUTTON b-help
      SIZE 3 BY 1.
 
 
-DEFINE BUTTON b-sel AUTO-GO 
+DEFINE BUTTON b-sel
      LABEL "Вы&бор ":L 
      SIZE 10 BY 1.
 
@@ -160,8 +160,9 @@ define button b-hist
 define menu POPUP-MENU-b-hist 
     menu-item mHistOne     label "История этой записи"
     menu-item mHistChiled  label "История потомков"
-.  
-{ gbl/tmprecid.i} 
+.
+
+{ gbl/tmprecid.i}  
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BROWSE-Code FOR 
@@ -342,12 +343,20 @@ ON choose OF b-chiled IN FRAME f-c-p /* Значение ЕМЦ */
 do:
    
    if not available code then return.
+     if imode eq {&select}
+  then
+     run rid-keep no-error.
+
    run ref/cashparam.w (
                           input parparentproc
                         , input imode
                         , input code.parent
                         , input code.code
                         , input ?).
+                        
+     if imode eq {&select}
+  then
+     run rid-rest no-error.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -399,7 +408,7 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel f-c-p
 ON choose OF b-sel IN FRAME f-c-p /* Выбор  */
 do:
-   setSelect(buffer code:handle).
+    setSelect(buffer code:handle).
     {&BROWSE-NAME}:refresh ().
 end.
 
@@ -502,15 +511,17 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   if imode eq {&select}
   then
      run rid-rest no-error.
+     
   { gbl/getcntxt.i get }
   { gbl/curdbnum.i v-db-num }
 
   run enable_UI in this-procedure .
-
+ 
   wait-for go of frame {&FRAME-NAME} focus {&browse-name}.
   if imode eq {&select}
   then
      run rid-keep no-error.
+  
 end.
 run disable_UI in this-procedure .
 

@@ -4801,13 +4801,20 @@ procedure m-cash-emrc-exe :
   ) no-error.
 
 end procedure. /* m-cash-emrc-exe */
-
+ { utl/cashparamHash.i }
 procedure m-cash-param-exe :
- def var vlist as char no-undo.
- vList = "cashp1,cashp2". /* параметры 1 клава 2*/
- if vList ne ""
- then 
- run str/diallog.w (
+   define variable v-current-db-num as integer   no-undo .
+   def var vlist as char no-undo.
+   { gbl/curdbnum.i
+      v-current-db-num
+    }
+   if v-current-db-num ne 0
+   then
+      run saveCashParHash(v-current-db-num).
+   vList = "cashp1,cashp2". /* параметры 1 клава 2*/
+   if vList ne ""
+   then 
+      run str/diallog.w (
         input parparentproc
       , input this-procedure
       , input "str/send-all.p":U
@@ -4815,7 +4822,7 @@ procedure m-cash-param-exe :
       , input ? /*p-auto-go*/
       , input "":U
       , input substitute("Получение параметров кассы")
-  ) no-error.
+      ) no-error.
 end procedure.
 
 procedure m-catalog-petrol-exe :

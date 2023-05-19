@@ -25,7 +25,9 @@ define variable mError as logical no-undo.
 { cmp/trg-def.i }
 { str/auto2dia.i &highest-window-handle = this-procedure}
 { utl/cashparamHash.i }
-run saveCashParHash(g#db-num).
+if g#db-num ne 0
+then
+   run saveCashParHash(g#db-num).
 define variable mSocetLog as character no-undo.
 mSocetLog = GetParamAsunc(1).
 for each shop no-lock,

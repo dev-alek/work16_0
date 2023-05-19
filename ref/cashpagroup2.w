@@ -153,7 +153,7 @@ DEFINE BUTTON b-help
      LABEL "Помо&щь":L 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel 
+DEFINE BUTTON b-sel  
      LABEL "Вы&бор ":L 
      SIZE 10 BY 1.
 
@@ -425,7 +425,7 @@ ON choose OF b-sel IN FRAME f-c-p /* Выбор  */
 do:
    if not avail buf-code-param then return.
    setSelect(buffer buf-code-param:handle).
-    {&BROWSE-NAME}:refresh ().
+    {&BROWSE-NAME}:refresh (). 
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -471,6 +471,7 @@ do:
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BROWSE-Code f-c-p
 on mouse-select-dblclick of cashpg in frame f-c-p
 or return of {&SELF-NAME} in frame {&FRAME-NAME}
@@ -482,8 +483,9 @@ do:
 end.
 
 /* _UIB-CODE-BLOCK-END */
-
 &ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME mSearch
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL mSearch f-c-p
 on ENTER of mSearch in frame {&frame-name}
@@ -561,8 +563,8 @@ on window-close of frame {&FRAME-NAME}
 MAIN-BLOCK:
 do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   on end-key undo MAIN-BLOCK, leave MAIN-BLOCK:
-  if imode eq {&select}
-  then
+   if imode eq {&select}
+   then
       run rid-rest no-error.
   { gbl/getcntxt.i get }
   { gbl/curdbnum.i v-db-num }

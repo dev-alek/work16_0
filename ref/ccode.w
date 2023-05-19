@@ -26,7 +26,7 @@ input iNum  as integer
    else if iNum = 3
    then "Источник"
    else if iNum = 4
-   then "Группа парамтров/функция"
+   then "Группа параметров/функция"
    else if iNum = 5
    then "Параметр"
    else "Родитель " + string(inum).

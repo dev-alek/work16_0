@@ -133,8 +133,8 @@ DEFINE BUTTON b-exit AUTO-GO
    SIZE 10 BY 1.
 
 DEFINE BUTTON b-chiled  
-   LABEL "Подпараметры":L 
-   SIZE 15 BY 1.
+   LABEL "&Открыть":L 
+   SIZE 10 BY 1.
 DEFINE BUTTON b-help 
      LABEL "Помо&щь":L 
      SIZE 3 BY 1.

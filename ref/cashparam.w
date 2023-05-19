@@ -53,6 +53,7 @@ define variable vss-description as character no-undo init "Параметры группы".
 { gbl/waitfram.i }
 { cmp/mrk-strf.i }
 { gbl/tmprecid.i }
+
 /* Local Variable Definitions ---                                       */
 
 define variable log-res  as log   no-undo.
@@ -178,7 +179,7 @@ define query BROWSE-Code for
 define browse BROWSE-Code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-Code f-c-p _STRUCTURED
    query BROWSE-Code no-lock display
-   isSelect(buffer buf-code:handle)     @ fselect
+   isSelect(buffer buf-code:handle)     @ fselect 
    buf-code.code format "x(20)":U column-label "Название параметра"
    buf-code.CodeName format "x(40)":U column-label "Описание параметра"
 /*   buf-code.code  FORMAT "x(10)":U WIDTH 32*/
@@ -402,7 +403,7 @@ on mouse-select-dblclick of BROWSE-Code in frame f-c-p
 or return of {&SELF-NAME} in frame {&FRAME-NAME}
 do:
    if     iMode eq {&update}
-/*          {&EditWhere}*/
+          {&EditWhere}
       and available buf-code
    then
       apply "choose" to b-upd in frame {&frame-name}.
@@ -410,10 +411,12 @@ end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel f-c-p
 on choose of b-sel in frame f-c-p /* Выбор  */
    do:
+      if not avail buf-code then return.
       setSelect(buffer buf-code:handle).
     {&BROWSE-NAME}:refresh ().                   
    end.
@@ -581,7 +584,6 @@ procedure enable_UI :
     
    b-hist:POPUP-MENU in frame {&frame-name} = menu POPUP-MENU-b-hist:HANDLE.
    b-hist:MENU-MOUSE = 1.  
- 
    fselect                :visible in browse {&BROWSE-NAME} = imode eq {&select}.
    {&OPEN-BROWSERS-IN-QUERY-f-c-p}
 
@@ -606,4 +608,3 @@ function getStatus returns character
 end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-

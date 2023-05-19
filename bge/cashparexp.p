@@ -56,6 +56,13 @@ SYSTEM-DIALOG GET-FILE m_os-dir
     .
 
 if ll_commit <> yes then return.
+m_os-dir = trim(m_os-dir).
+if index(m_os-dir," ") > 0
+then do:
+  message "Файл и деректория не могут содержать пробел" 
+      view-as alert-box.
+  return.
+end.
 define variable exlim as class ibs.th.bge.execlimpexp no-undo.
 exlim = new ibs.th.bge.execlimpexp ().
 m_os-dir = replace(m_os-dir,".xls",".").

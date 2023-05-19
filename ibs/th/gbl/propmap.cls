@@ -33,17 +33,18 @@ class ibs.th.gbl.propmap inherits objth:
   define public property NameProp as character no-undo 
     get.
     set. 
-
-  
+ 
   define public property KeyIntDB as integer no-undo 
     get.
     set.
+
   define public property KeyInt as integer no-undo 
     get.
     set(arg as integer ):
        KeyInt   = arg.
        KeyIntDB = arg.
     end.
+  
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -65,7 +66,6 @@ class ibs.th.gbl.propmap inherits objth:
       KeyInt   = iKeyInt
       .
   end constructor.
-
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:

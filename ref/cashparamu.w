@@ -252,7 +252,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       if available b3-code 
          then 
       do:
-         FRAME Dialog-Frame:TITLE = "Редактирование параметра " + b3-code.codename.
+         FRAME Dialog-Frame:TITLE = "Редактирование параметра " + b3-code.code + "(" + b3-code.codename + ")".
          v-name = b3-code.CodeName .
       end.
    end.
