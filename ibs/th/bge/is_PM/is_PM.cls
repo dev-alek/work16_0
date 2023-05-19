@@ -1888,14 +1888,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
                                     :
-          { str/tdat-val.i
-              buf_trn-doc.doc-code
-              {&trdcattr-othermoves}
-              vIsOtherMoves
-              vType                 }
-          if vIsOtherMoves > ""
-          and logical(vIsOtherMoves)
-          then next income-doc-line_ .
+/*          { str/tdat-val.i            */
+/*              buf_trn-doc.doc-code    */
+/*              {&trdcattr-othermoves}  */
+/*              vIsOtherMoves           */
+/*              vType                 } */
+/*          if vIsOtherMoves > ""       */
+/*          and logical(vIsOtherMoves)  */
+/*          then next income-doc-line_ .*/
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -1931,14 +1931,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
                                     :
-          { str/tdat-val.i
-              buf_trn-doc.doc-code
-              {&trdcattr-othermoves}
-              vIsOtherMoves
-              vType                 }
-          if vIsOtherMoves > ""
-          and logical(vIsOtherMoves)
-          then next expense-doc-line_ .
+/*          { str/tdat-val.i             */
+/*              buf_trn-doc.doc-code     */
+/*              {&trdcattr-othermoves}   */
+/*              vIsOtherMoves            */
+/*              vType                 }  */
+/*          if vIsOtherMoves > ""        */
+/*          and logical(vIsOtherMoves)   */
+/*          then next expense-doc-line_ .*/
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2870,14 +2870,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.shift-date > end_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num > end_rvs-doc.shift-num))
                                     :
-          { str/tdat-val.i
-              buf_trn-doc.doc-code
-              {&trdcattr-othermoves}
-              vIsOtherMoves
-              vType                 }
-          if vIsOtherMoves > ""
-          and logical(vIsOtherMoves)
-          then next income-doc-line_ .
+/*          { str/tdat-val.i            */
+/*              buf_trn-doc.doc-code    */
+/*              {&trdcattr-othermoves}  */
+/*              vIsOtherMoves           */
+/*              vType                 } */
+/*          if vIsOtherMoves > ""       */
+/*          and logical(vIsOtherMoves)  */
+/*          then next income-doc-line_ .*/
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then                            
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -2913,14 +2913,14 @@ class ibs.th.bge.is_PM.is_PM:
                                     and ((buf_trn-doc.shift-date > end_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num > end_rvs-doc.shift-num))
                                     :
-          { str/tdat-val.i
-              buf_trn-doc.doc-code
-              {&trdcattr-othermoves}
-              vIsOtherMoves
-              vType                 }
-          if vIsOtherMoves > ""
-          and logical(vIsOtherMoves)
-          then next expense-doc-line_ .
+/*          { str/tdat-val.i             */
+/*              buf_trn-doc.doc-code     */
+/*              {&trdcattr-othermoves}   */
+/*              vIsOtherMoves            */
+/*              vType                 }  */
+/*          if vIsOtherMoves > ""        */
+/*          and logical(vIsOtherMoves)   */
+/*          then next expense-doc-line_ .*/
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
