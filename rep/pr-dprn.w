@@ -595,7 +595,7 @@ END.
 /*      if Tmp#list.blank-name = 'Акт автоматической переоценки'  and   trn-doc.ov = false*/
 /*                     then  assign Tmp#list.view_ =  0 .*/
       /* отсекаем по sys-key */
-      if sys-key <> 'IBS' then DO:
+      if sys-key <> {&SuperSysKey} then DO:
           if sys-key <> tmp#list.sys-key  and tmp#list.sys-key <> ''
                      THEN  Assign tmp#list.view_ = 0   tmp#list.last-use = false.
       End.
@@ -780,7 +780,7 @@ define input parameter xflag     as character        no-undo.
       tmp#list.view_ = 1 .
 
       /* отсекаем по sys-key */
-      if sys-key <> 'IBS' then DO:
+      if sys-key <> {&SuperSysKey} then DO:
           if sys-key <> tmp#list.sys-key  and tmp#list.sys-key <> ''
                      THEN  Assign tmp#list.view_ = 0   tmp#list.last-use = false.
       End.

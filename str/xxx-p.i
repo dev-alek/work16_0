@@ -837,7 +837,7 @@ define variable v-sys-key as character no-undo .
 }
 
 if error-status :error
-  or v-sys-key <> 'IBS'
+  or v-sys-key <> {&SuperSysKey}
 then do:
   assign
     b-prt-ref :visible   = false

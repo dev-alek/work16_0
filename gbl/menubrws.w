@@ -569,7 +569,7 @@ PROCEDURE create-br-proc :
       undo, return .
     end.
     if v-proc-client = "":U
-      or caps( p-curr-sys-key ) = 'IBS':U
+      or caps( p-curr-sys-key ) = {&SuperSysKey}
       or check-entry-with-mask( p-curr-sys-key, v-proc-client, {&comma-char} ) = true
     then do:
       create buf_br-proc .

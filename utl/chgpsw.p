@@ -139,8 +139,8 @@ then do:
  { gbl/currsysk.i
       v-sys-key 
       no-error
-   }
-   if v-sys-key begins "Rosneft-" or v-sys-key eq "yukos"
+   }                                                      
+   if v-sys-key begins "Rosneft-" or v-sys-key eq "yukos" or v-sys-key eq "ibs"
    then do:
       run SetPwdsysadm .
       {&login} = "odbc".

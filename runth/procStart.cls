@@ -430,7 +430,6 @@ class runth.procStart inherits Form :
       this-object:MaximizeBox = false.
       this-object:MinimizeBox = false.
       this-object:Name = "procStart".
-      this-object:ShowInTaskbar = false.
       this-object:StartPosition = System.Windows.Forms.FormStartPosition:CenterParent.
       this-object:Text = "Запуск Trade House".
       this-object:FormClosing:Subscribe(this-object:procStart_FormClosing).

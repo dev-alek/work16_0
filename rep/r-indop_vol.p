@@ -47,7 +47,7 @@ define stream OutStr-html.
 
 
 define temp-table tt-goods no-undo like ub.goods
-  field b-code as integer.
+   field b-code as integer.
 
 define temp-table tt-report no-undo
    field obj-code             as integer
@@ -73,8 +73,8 @@ define temp-table tt-report no-undo
    .
     
 run get-report-num in parParentProc (
-  output var-report-num
-  ).
+   output var-report-num
+   ).
 
 v-file-name-rep-htm = session:temp-directory + {&DF_Name} + string(var-report-num) + ".html".
 /* Создаём временные файлы. */
@@ -169,6 +169,7 @@ do on error undo, return error return-value:
 end.
 /* end procedure. */ /* create-tt-goods */
 run shapka .
+
 FOR EACH obj-list  NO-LOCK:        
     
    if x-tog-shift then 
@@ -240,10 +241,9 @@ procedure shapka:
    put stream OutStr-html unformatted 
    { rep/htmlhead.i }
 
-      '<body orientation = "landscape" name = "Прием топлива с превышением предельно допустимого объема резервуара" fit_to_page="true">'.
+      '<body> <table orientation = "landscape" name = "Прием топлива с превышением предельно допустимого объема резервуара" fit_to_page="true">'.
 
    put stream OutStr-html unformatted
-      '<table>' skip  /* таблица, в которой содержится весь отчет */
       '<thead>' skip  /* Шапка отчета */
       /* Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px */
       '<tr class="set_columns">' skip
@@ -390,7 +390,7 @@ procedure proc-report:
          ub.c-trn-doc.action = "Закрытие документа" no-error .
       if available (ub.c-trn-doc) then 
       do:
-         find first ub.user-account no-lock where ub.user-account.user-id = ub.c-trn-doc.user-name no-error .
+         find first ub.user-account no-lock where ub.user-account.user-id = ub.c-trn-doc.corr-user-name no-error .
          if available(ub.user-account) then tt-report.user-close = ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name .
       end.
       /*Измер. объем топлива в резер-вуаре после сли-ва АЦ, л*/
@@ -468,18 +468,18 @@ procedure print:
 end procedure .
 
 put stream OutStr-html unformatted
-  substitute (' </tbody></table> </body> </html>  ').
+   substitute (' </tbody></table> </body> </html>  ').
       
 output stream OutStr-html close.   
       
 run prn-lib-reportviewer in this-procedure (
-  input parparentproc
-  ,input v-file-name-rep-htm
-  ,input "" 
-  ) no-error.
+   input parparentproc
+   ,input v-file-name-rep-htm
+   ,input "" 
+   ) no-error.
 if error-status:error then
 do:
-  message return-value view-as alert-box.
-  return .
+   message return-value view-as alert-box.
+   return .
 end.
 

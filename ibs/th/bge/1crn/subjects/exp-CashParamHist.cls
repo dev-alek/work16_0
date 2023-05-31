@@ -52,12 +52,12 @@ class ibs.th.bge.1crn.subjects.exp-CashParamHist inherits send1cerpsub implement
       for each Cash-param-hist 
       no-lock:
          insw:start-element ("Current-param").
-         insw:write-data-element (  "sign":U,                     string(Cash-param-hist.device        + 1)).
+         insw:write-data-element (  "sign":U,                     string(Cash-param-hist.device            )).
          insw:write-data-element (  "source":U,                          Cash-param-hist.param_section     ).
          insw:write-data-element (  "section":U,                         Cash-param-hist.param_group       ).
          insw:write-data-element (  "name-current":U,                    Cash-param-hist.param_name        ).
          insw:write-data-element (  "value-current":U,                   Cash-param-hist.param_value       ).
-         insw:write-data-element (  "source-value":U,                    Cash-param-hist.param_value       ).
+         insw:write-data-element (  "source-value":U,                    Cash-param-hist.param_value_dop   ).
          insw:write-data-element (  "cd-num":U,                   string(Cash-param-hist.cash-num         )).
          insw:write-data-element (  "date-act-check":U, fConvetDateTime (Cash-param-hist.tstamp           )).
          insw:end-element("Current-param").

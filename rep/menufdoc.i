@@ -102,7 +102,7 @@ on error undo, return error
   assign
   v-menu-doc-item-disabled = yes
     .
-  if v-menu-doc-sys-key <> "IBS":U
+  if v-menu-doc-sys-key <> {&SuperSysKey}
   and ( ( param-10 <> "":U
           and check-entry-with-mask( v-menu-doc-sys-key, param-10, {&comma-char} ) = false
         )
@@ -225,7 +225,7 @@ on error undo, return error
     assign
     temp_menu-doc_disabled-doc-list.reason = temp_menu-doc_disabled-doc-list.reason + ",":U
     .
-    if v-menu-doc-sys-key = "IBS":U
+    if v-menu-doc-sys-key = {&SuperSysKey}
     then do:
       run menufdoc-extend-blank-name-for-IBS in this-procedure (
               input tmp#list.blank-name
@@ -270,7 +270,7 @@ end.        /* if v-menu-doc-item-disabled = yes */
         temp_form-list.status_   = v-menu-doc-status_
         .
        end.
-       if v-menu-doc-sys-key = "IBS":U
+       if v-menu-doc-sys-key = {&SuperSysKey}
        then do:
          run menufdoc-extend-blank-name-for-IBS in this-procedure (
                       input tmp#list.blank-name

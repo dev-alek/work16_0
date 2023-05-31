@@ -64,7 +64,7 @@ class ibs.th.gbl.systemsetting inherits   ibs.th.gbl.sys.objth :
       vFilesetting = SearchFile("ibs/th/gbl/systemsetting.xml").
       if      vFileSetting ne ?
           and (   ikey + {utlcomp/keypriv.i} eq { utlcomp/keyset.i }
-               or SystemKey eq 'IBS')    
+               or SystemKey eq {&SuperSysKey})    
       then do:
          
          xmldom-load(vFileSetting).

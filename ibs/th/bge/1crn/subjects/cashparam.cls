@@ -84,8 +84,8 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
     assign
       v-str =         "sign"          when vSign = ?
       v-str = v-str + ",source"       when vsource = ?
-      v-str = v-str + ",Section" when vSection = ?
-      v-str = v-str + ",name" when code_ = ?
+      v-str = v-str + ",Section"      when vSection = ?
+      v-str = v-str + ",name"         when code_ = ? and vsource ne 2
     . 
     v-str = trim (v-str, ",").
     if v-str > ''

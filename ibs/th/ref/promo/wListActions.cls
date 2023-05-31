@@ -198,7 +198,8 @@ class ibs.th.ref.promo.wListActions inherits Form:
      find first ttstatus where ttstatus.item eq comboBox1:text no-error.
      m-promo-trg:getListTable(date(dateTimePicker1:value),(if available ttstatus then ttstatus.code else ? )).
      Init_comboBox1().  
-     bindAction:handle = m-promo-trg:getQuery("promoActionAll").
+     comboBox1:text = "Активная" .
+     bindAction:handle = m-promo-trg:getQuery("promoActionStatus").
      
      //hQuery:query-open.
      // bindAction:handle:query-open.

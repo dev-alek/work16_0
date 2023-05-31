@@ -2226,8 +2226,8 @@ APPLY "value-changed" to br-ret.
 { gbl/currsysk.i
   v-sys-key
   no-error
-}
-if v-sys-key begins "Rosneft-" then hide b-places in frame {&frame-name}.
+}                      
+if v-sys-key begins "Rosneft-" or v-sys-key eq "ibs" or v-sys-key eq "yukos"  then hide b-places in frame {&frame-name}.
     
 run waitfram-hide in this-procedure .
 END PROCEDURE.

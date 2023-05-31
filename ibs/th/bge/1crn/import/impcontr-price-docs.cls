@@ -125,8 +125,8 @@ class ibs.th.bge.1crn.import.impcontr-price-docs implements ibs.th.bge.1crn.impo
               ub.contract-specif.cli-base-rate-ord = 1
               ub.contract-specif.cli-base-rate-rcv = 1
               
-              ub.contract-specif.VAT-type          = {&inc-vat}
-              ub.contract-specif.VAT-pc            = v-Gds-sale:nds-code
+              ub.contract-specif.VAT-type          = if v-Gds-sale:nds-code = -1 then {&without-VAT} else {&inc-vat}
+              ub.contract-specif.VAT-pc            = if v-Gds-sale:nds-code = -1 then 0 else v-Gds-sale:nds-code
               ub.contract-specif.prc               = v-Gds-sale:max-otkl
               ub.contract-specif.db-num            = buf_contract.db-num
               .

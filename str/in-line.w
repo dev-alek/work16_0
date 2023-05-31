@@ -2492,131 +2492,120 @@ find first buf_parts where buf_parts.obj-type  = t-doc.obj-type           and
 end.
 
 on choose of menu-item m-rvs-bf-1 in menu m-rvs-bf
-    do:
-        { gbl/stdbtn.i b-rvs-bf }
-        assign 
-            rvslog = no.
-        find first buf_rvs-doc 
-            where buf_rvs-doc.rvs-type = {&rvs-before-doc}
-            and buf_rvs-doc.out-code = t-doc.doc-code
-            and buf_rvs-doc.state-measure-qnty <> ?
-            no-error .
-            
-         
-        if not available buf_rvs-doc then 
-        do: 
-            run action-rvs-line in this-procedure
-                ( input {&update}
-                ,input "meas":U
-                ,input {&rvs-before-doc}
-                ) no-error .
-            if error-status :error then 
-            do:
-                return no-apply .
-            end.
-		 end.
-run adm/shattri.p (
-   input "get":U
-   ,input  v-cntxt-obj-type
-   ,input  v-cntxt-obj-code
-   ,input  {&attr-petrol}
-   ,input  {&attr-petrol_block-nozzle} /*p-param-code*/
-   ,output v-value-character
-   ,output v-value-date
-   ,output v-value-decimal
-   ,output v-value-integer
-   ,output v-value-logical
-   ,output v-param-type
-   ,INPUT-OUTPUT table-handle v-tth
-   ) no-error .
-if v-value-logical then 
 do:
-   list-pl = "" .
-   for each tt-doc-pl,
-      each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
-      ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
-      ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
-      ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
-      each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
-      ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
-      ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
-      ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
+  { gbl/stdbtn.i b-rvs-bf }
+  assign 
+      rvslog = no.
+  find first buf_rvs-doc 
+      where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+      and buf_rvs-doc.out-code = t-doc.doc-code
+      and buf_rvs-doc.state-measure-qnty <> ?
+      no-error .
+
+  if available buf_rvs-doc then 
+  do: 
+    if not chk-asi-polling (yes)
+      then return no-apply .
+
+    message
+        "Сверка до уже выполнена. Вы уверены, что хотите ее изменить?"  skip
+        view-as alert-box question buttons YES-NO update rvslog.
+    if not rvslog then
+      return no-apply.
+  end.            
+   
+  run adm/shattri.p (
+     input "get":U
+     ,input  v-cntxt-obj-type
+     ,input  v-cntxt-obj-code
+     ,input  {&attr-petrol}
+     ,input  {&attr-petrol_block-nozzle} /*p-param-code*/
+     ,output v-value-character
+     ,output v-value-date
+     ,output v-value-decimal
+     ,output v-value-integer
+     ,output v-value-logical
+     ,output v-param-type
+     ,INPUT-OUTPUT table-handle v-tth
+     ) no-error .
+  if v-value-logical then 
+  do:
+    list-pl = "" .
+    for each tt-doc-pl,
+        each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
+             ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
+             ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
+             ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
+        each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
+             ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
+             ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
+             ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
       if list-pl = "" then 
       do:
-         list-pl = 
-            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-            string(ub.pl-pump-nozzle.pump-code)
-            .
+        list-pl = 
+          string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+          string(ub.pl-pump-nozzle.pump-code)
+        .
       end.
       else 
       do:
-         list-pl = list-pl + ";" +
-            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-            string(ub.pl-pump-nozzle.pump-code)
-            .         
+        list-pl = list-pl + ";" +
+          string(ub.pl-pump-nozzle.nozzle-code) + ":" +
+          string(ub.pl-pump-nozzle.pump-code)
+      .         
       end.            
-   end.
+    end.
 
-   run str/diallog.w ( input parparentproc
-      ,input this-procedure
-      ,input 'str/get-block-nozzle.p':U
-      ,input (v-cntxt-obj-type + {&delim-par} +
-      string(v-cntxt-obj-code) + {&delim-par} +
-      string(0) + {&delim-par} +  /*p-remote */
-      string(0) + {&delim-par} + /*p-shft-close*/
-      {&delim-par} +
-      {&delim-par} +
-      {&delim-par} +
-      substitute("&1,&2"
-      ,"block"
-      ,list-pl))
-      ,input yes
-      ,input ''
-      ,input 'Блокировка пистолетов') .
-   if not error-status:error then 
-   do:
-      if return-value begins "Для кассы" then 
-      do:
-         message return-value
-            view-as alert-box question buttons yes-no update v-ok as logical  .
-         if v-ok then run block-nozzle .
-         else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
-               view-as alert-box.
-      end.
-      else 
-      do:
-         message "Блокировка пистолетов прошла успешно"
-            view-as alert-box.
-      end.   
-        end.
-        else 
-        do:
-            
-            if not chk-asi-polling (yes)
-              then return no-apply .
-            
-            message
-                "Сверка до уже выполнена. Вы уверены, что хотите ее изменить?"  skip
-  
-                view-as alert-box question buttons YES-NO update rvslog.
-            if rvslog then 
-            do:
-                run action-rvs-line in this-procedure
-                    ( input {&update}
-                    ,input "meas":U
-                    ,input {&rvs-before-doc}
-                    ) no-error .
-                if error-status :error then 
-                do:
-                    return no-apply .
-                end.
+    run str/diallog.w ( input parparentproc
+        ,input this-procedure
+        ,input 'str/get-block-nozzle.p':U
+        ,input (v-cntxt-obj-type + {&delim-par} +
+        string(v-cntxt-obj-code) + {&delim-par} +
+        string(0) + {&delim-par} +  /*p-remote */
+        string(0) + {&delim-par} + /*p-shft-close*/
+        {&delim-par} +
+        {&delim-par} +
+        {&delim-par} +
+        substitute("&1,&2"
+        ,"block"
+        ,list-pl))
+        ,input yes
+        ,input ''
+        ,input 'Блокировка пистолетов')
+        no-error.
+    if error-status :error then 
+    do:
+      return no-apply .
+    end.
+     
 
-            end.
-            else 
-            do:
-                return no-apply.
-            end.
-        end.
+     if return-value begins "Для кассы" then 
+     do:
+       message return-value
+         view-as alert-box question buttons yes-no update v-ok as logical  .
+       if v-ok then run block-nozzle .
+       else do:
+         message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
+           view-as alert-box.
+         return no-apply.
+       end.
+     end.
+     else 
+     do:
+       message "Блокировка пистолетов прошла успешно"
+         view-as alert-box.
+     end.   
+  end.
+
+  run action-rvs-line in this-procedure
+      ( input {&update}
+      ,input "meas":U
+      ,input {&rvs-before-doc}
+      ) no-error .
+  if error-status :error then 
+  do:
+    return no-apply .
+  end.
 
   run display-measure in this-procedure
     no-error .
@@ -2627,7 +2616,6 @@ do:
   else do:
     apply "ENTRY":U to b-quit in frame {&frame-name} .
   end.
-end.
 end.
 
 

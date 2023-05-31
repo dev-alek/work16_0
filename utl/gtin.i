@@ -347,8 +347,14 @@ function GetCodeIdent return character
             and (  iDm begins "01"
                 or iDm begins "02")
             and  substring(iDm,17,2) ne "21"
-   then 
-      return iDM.
+   then do:      
+      if checkGtin(substring(iDm,1,14)) and ( (length(idm) eq 25 and substring(iDm,22,1) eq "A")
+                                                or (length(idm) eq 29 and substring(iDm,22,1) eq "A"))
+      then 
+         oCodeIdent = substring(iDm,1,if mMRCCode then 25 else 21).
+      else 
+         oCodeIdent = iDM.
+   end.   
    else  if     (   length(iDm) eq 25
                  or length(iDm) eq 21)
             and (not iDm begins "01"

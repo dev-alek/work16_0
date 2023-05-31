@@ -455,6 +455,11 @@ end . /* end_of низ таблицы и html-файла */
             do: 
                 create query hQuery.    
                 case iNameQuery:
+                    when "promoActionStatus"
+                    then do:
+                        hQuery:set-buffers(buffer tt-promoaction:HANDLE). 
+                        hQuery:query-prepare("FOR EACH tt-promoaction where tt-promoaction.status_ = 1").
+                    end.
                     when "promoActionAll"
                     then do:
                         hQuery:set-buffers(buffer tt-promoaction:HANDLE). 

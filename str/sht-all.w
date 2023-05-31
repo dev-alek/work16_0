@@ -130,10 +130,9 @@ B-hist b-help br-shift
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU MENU-B-rep
-       MENU-ITEM mi-petrol      LABEL "Сменный отчет"
-       MENU-ITEM mi-ptrlch      LABEL "Технологический отчет по ТРК"
-       MENU-ITEM mi-ukrptl      LABEL "Сменный отчет АЗС (Украина)".
+DEFINE MENU MENU-B-rep 
+       MENU-ITEM mi-petrol      LABEL "Сменный отчет" 
+       MENU-ITEM mi-ptrlch      LABEL "Технологический отчет по ТРК".
 
 
 /* Definitions of the field level widgets                               */
@@ -576,19 +575,7 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME mi-ukrptl
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL mi-ukrptl d-shifts
-ON CHOOSE OF MENU-ITEM mi-ukrptl /* Сменный отчет АЗС (Украина) */
-DO:
-  assign
-    rep-name = "g-zmzvit":U
-  .
-  run proc-b-rep in this-procedure ( input-output rep-name ) no-error .
-  if error-status :error then do: return no-apply. end.
-END.
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 
 &UNDEFINE SELF-NAME
@@ -1108,9 +1095,8 @@ END PROCEDURE.
 PROCEDURE UI-on :
 ASSIGN b-rep:POPUP-MENU IN FRAME {&frame-name} = MENU menu-b-rep:HANDLE.
 ASSIGN b-rep:MENU-MOUSE = 1.
-assign
-  menu-item mi-ukrptl :sensitive in menu menu-b-rep = ( lookup( v-sys-key, "Astral_UKR,Lila_UKR,IBS" ) > 0 )
-.
+
+
 if parcall-point = "rep/e-shift.w":U
 or parcall-point = "rep/r-ptrlch.p":U
 or parcall-point = "e-zmzvit.w":U
@@ -1118,8 +1104,25 @@ then
 assign
 menu-item mi-petrol:sensitive  in menu menu-b-rep = no
 menu-item mi-ptrlch:sensitive  in menu menu-b-rep = no
-menu-item mi-ukrptl:sensitive  in menu menu-b-rep = no
 .
+else do:
+   if lookup( v-sys-key, "Astral_UKR,Lila_UKR," + {&SuperSysKey}  ) > 0 
+   then do:
+      define variable h_menu_item as handle no-undo.
+      create menu-item h_menu_item
+      assign
+         parent      = menu menu-b-rep:handle
+         label       = "Сменный отчет АЗС (Украина)"
+         sensitive   = TRUE
+         triggers :
+            ON choose PERSISTENT RUN smenUcr IN THIS-PROCEDURE.
+                    
+         end triggers.
+   end.
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 ENABLE
 b-quit
 b-help
@@ -1134,4 +1137,10 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+procedure smenUcr:
+   rep-name = "g-zmzvit":U.
+   run proc-b-rep in this-procedure ( input-output rep-name ) no-error .
+   if error-status :error then do: return no-apply. end.
+end.
 
