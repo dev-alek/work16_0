@@ -151,7 +151,7 @@ procedure check-menu-item :
           v-sys-key
           no-error
         }
-        if v-sys-key = 'IBS':u
+        if v-sys-key = {&SuperSysKey}
         then do:
           define variable v-ok as logical   no-undo .
           message
@@ -202,7 +202,7 @@ procedure check-menu-item :
           no-error .
         if  error-status :error
         then do:
-          if v-sys-key = 'IBS':u
+          if v-sys-key = {&SuperSysKey}
           then do:
             assign
               v-ok = false

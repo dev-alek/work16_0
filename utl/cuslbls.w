@@ -555,7 +555,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   }
   if error-status:error then return error.
   assign
-  v-ibs = (v-sys-key = "IBS").
+  v-ibs = (v-sys-key = {&SuperSysKey}).
   if not v-ibs then do:
     message
     "Данная программа может вызываться только сотрудниками IBS" skip

@@ -343,7 +343,7 @@ if mFrameView
           run write-to-log( substitute( "&1. Формирование пакета прервано на захваченной записи route (&2)", vss-workfile, buf_route.name-rec )
                             + {&new-line} + substitute( "recid route: &1 уникальный ключ записи: &2 ", recid( buf_route ), buf_route.uniq-key-rec )
                           ).
-          if v-sys-key = "IBS":U
+          if v-sys-key = {&SuperSysKey}
           then do:
             run gbl/findlock.p
               (input  recid( buf_route )

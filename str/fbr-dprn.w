@@ -879,7 +879,7 @@ end.
             buf_tmp#list.view_ = 1
         .
         /* отсекаем по sys-key */
-        if sys-key <> 'IBS'
+        if sys-key <> {&SuperSysKey}
         then do:
             if sys-key <> buf_tmp#list.sys-key
             and buf_tmp#list.sys-key <> ''

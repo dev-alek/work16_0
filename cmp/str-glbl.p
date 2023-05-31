@@ -202,6 +202,10 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define delim-flf
 &glob tech-mark-prefix 'tech_':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define tech-mark-prefix {&tech-mark-prefix}" ).
 
+/* Супер системный ключ */
+&glob SuperSysKey 'ExpertekIBS':U
+run filwrlib_append-new-line in this-procedure ( input "&global-define SuperSysKey {&SuperSysKey}" ).
+
 /* типы маршрутизации */
 &glob send-tbl-oxml 'send-tbl-oxml':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define send-tbl-oxml {&send-tbl-oxml}" ).

@@ -80,7 +80,7 @@ end.
 
 if ( ( lookup( v-sys-key, temp_ext-list.sys-key ) <> 0 or v-sys-key = '' )
 and lookup( v-sys-key, temp_ext-list.sys-key-black ) = 0 )
-or caps( v-sys-key ) = 'IBS'
+or caps( v-sys-key ) = {&SuperSysKey}
 then do:
     if p-init = "init"
     then do:

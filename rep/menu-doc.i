@@ -119,7 +119,7 @@ initial "@(#)$Workfile$ $Revision$".
         assign
             v-menu-doc-item-disabled = yes
         .
-        if v-menu-doc-sys-key <> "IBS":U
+        if v-menu-doc-sys-key <> {&SuperSysKey}
         and ( ( param-10 <> "":U
                 and check-entry-with-mask( v-menu-doc-sys-key, param-10, {&comma-char} ) = false
               )
@@ -270,7 +270,7 @@ initial "@(#)$Workfile$ $Revision$".
                         temp_menu-doc_disabled-doc-list.reason = temp_menu-doc_disabled-doc-list.reason + "flag":U
                     .
                 end.
-                if v-menu-doc-sys-key = "IBS":U
+                if v-menu-doc-sys-key = {&SuperSysKey}
                 then do:
                     run menu-doc-extend-blank-name-for-IBS in this-procedure (
                           input tmp#list.blank-name
@@ -316,7 +316,7 @@ initial "@(#)$Workfile$ $Revision$".
                         temp_form-list.flag      = v-menu-doc-flag
                     .
                 end.
-                if v-menu-doc-sys-key = "IBS":U
+                if v-menu-doc-sys-key = {&SuperSysKey}
                 then do:
                     run menu-doc-extend-blank-name-for-IBS in this-procedure (
                           input tmp#list.blank-name

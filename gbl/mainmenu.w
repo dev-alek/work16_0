@@ -1421,7 +1421,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     v-sys-key
     no-error
   }
-  if v-sys-key = 'IBS':U
+  if v-sys-key = {&SuperSysKey}
   then do:
     assign
       v-cntxt-developer = true

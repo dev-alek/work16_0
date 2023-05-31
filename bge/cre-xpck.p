@@ -426,7 +426,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             run write-to-log( vss-workfile + {&space-char}
                               + substitute( "Подготовка пакета прервана на захваченной записи &1", buf_esys-route.esr-name-rec )
                             ).
-            if v-sys-key = "IBS":U
+            if v-sys-key = {&SuperSysKey}
             then do:
               run gbl/findlock.p
                 (input  recid( buf_esys-route )

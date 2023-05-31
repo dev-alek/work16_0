@@ -598,7 +598,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ASSIGN frame {&frame-name}:TITLE =  "Работа с отчетом о продаже (печать и не только)"
     + " Статус: " + buf_inkas.status_
     + "  № "  + buf_inkas.inkas-code.
-    if sys-key = 'IBS':U
+    if sys-key = {&SuperSysKey}
     then do:
         run init-syskey-names in this-procedure.
     end.
