@@ -29,6 +29,48 @@ define variable mCashNum  as integer   no-undo.
 
 { gbl/cd-attr.i}
 define variable Mfirst as logical no-undo.
+function getValueConvert returns character  (igroup as char,
+                                             iparam as char,
+                                             ivalue as char):
+   if igroup eq "FUCO"
+   then do:
+      if iparam eq "TrkDispAdr"
+      then 
+         ivalue = "".
+   end.
+   else if igroup eq "GS1"
+   then do:
+      if iparam eq "MACC_IP"
+      then 
+         ivalue = "".
+   end.
+   else if igroup eq "INTFACE"
+   then do:
+      if    iparam eq "DOMS_IP"
+         or iparam eq "DOMSPASSWORD"
+         or iparam eq "IFSFIP"
+         or iparam eq "LOGURL"
+         or iparam eq "MW20ADDRESS"
+         or iparam eq "ONLINEADDR"
+         or iparam eq "PRCATCHHOST"
+      then 
+         ivalue = "".
+   end.
+   else if igroup eq "TABLEMENU"
+   then do:
+      if iparam eq "URL"
+      then 
+         ivalue = "".
+   end.
+   else if igroup eq "UFO2"
+   then do:
+      if iparam eq "VPNtestIP"
+      then 
+         ivalue = "".
+   end.
+   return ivalue.
+end.
+
 function getDevice returns integer ():
    define variable v-attr-value as character no-undo .
    define variable v-attr-type  as character no-undo .
@@ -251,9 +293,8 @@ procedure EndElement:
      mOk = false.
   end.
   else if qname = "Param" then do:
-    if     tt-cash-param-hist.param_value ne ""
-       and tt-cash-param-hist.param_value ne ?
-    then do:
+    do:
+    tt-cash-param-hist.param_value = getValueConvert(tt-cash-param-hist.param_group, tt-cash-param-hist.param_name, tt-cash-param-hist.param_value).
 &if defined(SaveCode) eq 0
 &then
        if Mfirst 
