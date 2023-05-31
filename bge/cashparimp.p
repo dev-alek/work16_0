@@ -27,11 +27,23 @@ define variable vfileLog as character no-undo init "ImpCashParam.txt".
 { utl/search.i }
 { cmp/trg-def.i }
 { gbl/is-num.i }
+
 if g#db-num ne 0
 then do:
    message "Импорт возможен только на ГБД" view-as alert-box.
    return error.
 end.
+
+define variable v-is-erpRN    as logical no-undo .
+define variable par-is-erpRN  as character no-undo .
+define variable par-type      as character no-undo .
+{ gbl/conf-rd.i "'is-erpRN'"   "''" "''" 0 "''" "''" "''"  no par-is-erpRN     par-type      no-error}
+v-is-erpRN = lookup(par-is-erpRN, "true,yes":U) > 0.
+if v-is-erpRN then do:
+   message "Импорт возможен только из 1С" view-as alert-box.
+   return error.
+end.
+
 os-command  value (substitute ("del /F &1 &2 exit", searchfile(vfileLog),{&ampersand} )).
 
 define variable Types      as ibs.th.str.cash.CashDevice no-undo.
