@@ -53,6 +53,7 @@ function getValueConvert returns character  (igroup as char,
          or iparam eq "MW20ADDRESS"
          or iparam eq "ONLINEADDR"
          or iparam eq "PRCATCHHOST"
+         or iparam begins "MSG_Cas_"
       then 
          ivalue = "".
    end.
@@ -68,6 +69,7 @@ function getValueConvert returns character  (igroup as char,
       then 
          ivalue = "".
    end.
+   
    return ivalue.
 end.
 
@@ -114,7 +116,8 @@ procedure putc :
    define buffer code-group for ub.code.
    define buffer code-param for ub.code.
    mDevice = getDevice().
-   mParent = substitute ("&2&1&3",{&delim-par},  "Cash-param",  mDevice ).
+
+   mParent = "cash-param" + {&delim-par} + string(mDevice).
    for each code-group where code-group.parent     eq mParent
                          and code-group.code       eq {&source} 
    no-lock:
@@ -129,7 +132,8 @@ procedure putc :
       leave.
       
    end.
-   mParent = substitute ("&2&1&3",{&delim-par},  mParent,  {&source} ).
+
+    mParent = mParent + {&delim-par} + string({&source} ).
 end procedure.
 
 procedure get-cash-types:
@@ -284,7 +288,8 @@ procedure EndElement:
   define input parameter name_ as character.
   define input parameter localName as character.
   define input parameter qName as character.
-  
+  define buffer Cash-param-hist for Cash-param-hist.
+  define buffer code for code.
   define variable ii as integer no-undo .
     
   if qname = "ErrorMessage" then do:
@@ -295,6 +300,19 @@ procedure EndElement:
   else if qname = "Param" then do:
     do:
     tt-cash-param-hist.param_value = getValueConvert(tt-cash-param-hist.param_group, tt-cash-param-hist.param_name, tt-cash-param-hist.param_value).
+    
+    define variable vParantNotCaseSens as character no-undo.
+    define variable vCodeNotCaseSens as character no-undo.
+    vParantNotCaseSens = mParent +  {&delim-par} + tt-cash-param-hist.param_group.
+    vCodeNotCaseSens   = tt-cash-param-hist.param_name.
+    find first code where code.parent eq vParantNotCaseSens
+                      and code.code   eq vCodeNotCaseSens
+    no-lock no-error.
+    if not available code
+    then
+       find first code where code.parent eq vParantNotCaseSens 
+                         and can-do(code.code, tt-cash-param-hist.param_name) no-lock no-error.
+    
 &if defined(SaveCode) eq 0
 &then
        if Mfirst 
@@ -313,18 +331,19 @@ procedure EndElement:
                                     and cash-param-hist.cash-num      = tt-cash-param-hist.cash-num
                                     and cash-param-hist.param_section = tt-cash-param-hist.param_section
                                     and cash-param-hist.param_group   = tt-cash-param-hist.param_group
-                                    and cash-param-hist.param_name    = tt-cash-param-hist.param_name
+                                    and cash-param-hist.param_name    = if available code then code.code else tt-cash-param-hist.param_name
                                      no-error .
-       buffer-copy tt-cash-param-hist to cash-param-hist .
+       buffer-copy tt-cash-param-hist except param_name to cash-param-hist
+       assign
+          cash-param-hist.param_name    = if available code then code.code else tt-cash-param-hist.param_name
+        .
 &else
-       find first code where code.parent eq mParent + {&delim-par} + tt-cash-param-hist.param_group
-                         and code.code   eq tt-cash-param-hist.param_name
-       no-lock no-error.
+       
        if not available code
        then do:
           create code.
           assign 
-             code.parent    = mParent + {&delim-par} + tt-cash-param-hist.param_group
+             code.parent    = vParantNotCaseSens
              code.code      = tt-cash-param-hist.param_name
              code.codename  = tt-cash-param-hist.description
              code.codevalue = tt-cash-param-hist.param_value

@@ -68,7 +68,7 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
         CodeValue = {&attr-str} .
       end.
       when "required" then do:
-        status_ = {&attr-integer} .
+        status_ = ({&attr-integer}) - 1 .
       end.
       when "description" then do:
         CodeName = {&attr-str} .
@@ -78,7 +78,6 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
   end.
 
   method override protected void CheckData ():
-
     def var v-str as char no-undo.
     define buffer code for ub.Code.
     assign
@@ -104,11 +103,11 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
    then
        undo, throw new Progress.Lang.AppError( substitute ('Тег "&1" имеет не допустимое значение "&2"', "source",vsource)).
     
-   if     status_ ne 1 
-      and status_ ne 2   
+   if     status_ ne 0 
+      and status_ ne 1   
    then do:
-      run WriteLog(substitute ("Недопустимое значение &1 поля required Допустимы 1 - обязательный и 2 - Необязательный",
-                               status_)).
+      undo, throw new Progress.Lang.AppError(substitute ("Недопустимое значение &1 поля required Допустимы 1 - обязательный и 2 - Необязательный",
+                               status_ + 1)).
    end.
    
    if not is-numeral (vsection,
@@ -118,17 +117,17 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
    then do:
       undo, throw new Progress.Lang.AppError(substitute ("Недопустимое значение '&1' поля section Допустимы только &2",
                                vsection, 
-                               if vsource eq 1 then "Латинкские буквы и цифры" else "Цифры" )).
+                               if vsource eq 1 then "Латинские буквы, цифры, подчеркивание и * " else "Цифры" )).
    end.
    if vsource eq 1
    then do:
       if not is-numeral (code_,
-                         "letter,digit"
+                         "letter,digit,*"
                          )
       then do:
          undo, throw new Progress.Lang.AppError(substitute ("Недопустимое значение '&1' поля name Допустимы только &2",
                                   code_, 
-                                  if vsource eq 1 then "Латинкские буквы и цыфры" else "Цыфры")).
+                                  if vsource eq 1 then "Латинские буквы, цифры, подчеркивание и * " else "Цифры")).
       end.
    end.
    else do:
