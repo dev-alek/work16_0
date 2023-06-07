@@ -2540,20 +2540,11 @@ do:
              ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
              ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
              ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
-      if list-pl = "" then 
-      do:
-        list-pl = 
-          string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-          string(ub.pl-pump-nozzle.pump-code)
-        .
-      end.
-      else 
-      do:
-        list-pl = list-pl + ";" +
-          string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-          string(ub.pl-pump-nozzle.pump-code)
-      .         
-      end.            
+      list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                 if list-pl = "" then "" else ";",
+                 ub.pl-pump-nozzle.nozzle-code,
+                 ub.pl-pump-nozzle.pump-code,
+                 ub.pl-pump-nozzle.pl-code).
     end.
 
     run str/diallog.w ( input parparentproc
@@ -2661,20 +2652,11 @@ do:
       ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
       ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
       ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
-      if list-pl = "" then 
-      do:
-         list-pl = 
-            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-            string(ub.pl-pump-nozzle.pump-code)
-            .
-      end.
-      else 
-      do:
-         list-pl = list-pl + ";" +
-            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-            string(ub.pl-pump-nozzle.pump-code)
-            .         
-      end.            
+        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                   if list-pl = "" then "" else ";",
+                   ub.pl-pump-nozzle.nozzle-code,
+                   ub.pl-pump-nozzle.pump-code,
+                   ub.pl-pump-nozzle.pl-code).
    end.
 
 
@@ -2707,8 +2689,8 @@ do:
       end.
       else 
       do:
-         message "Разблокировка пистолетов прошла успешно"
-            view-as alert-box.
+         message if return-value begins "Ошибка" then return-value else "Разблокировка пистолетов прошла успешно" 
+           view-as alert-box.
       end.   
 
    end.
@@ -2744,31 +2726,6 @@ do:
   if error-status :error then do:
     return no-apply .
   end.
-   list-pl = "" .
-   for each tt-doc-pl,
-      each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
-      ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
-      ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
-      ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
-      each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
-      ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
-      ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
-      ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
-      if list-pl = "" then 
-      do:
-         list-pl = 
-            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-            string(ub.pl-pump-nozzle.pump-code)
-            .
-      end.
-      else 
-      do:
-         list-pl = list-pl + ";" +
-            string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-            string(ub.pl-pump-nozzle.pump-code)
-            .         
-      end.            
-   end.
 end.
 
 on choose of menu-item m-rvs-af-2 in menu m-rvs-af
@@ -2828,20 +2785,11 @@ do:
          ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
          ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
          ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
-         if list-pl = "" then 
-         do:
-            list-pl = 
-               string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-               string(ub.pl-pump-nozzle.pump-code)
-               .
-         end.
-         else 
-         do:
-            list-pl = list-pl + ";" +
-               string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-               string(ub.pl-pump-nozzle.pump-code)
-               .         
-         end.            
+        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                   if list-pl = "" then "" else ";",
+                   ub.pl-pump-nozzle.nozzle-code,
+                   ub.pl-pump-nozzle.pump-code,
+                   ub.pl-pump-nozzle.pl-code).
       end.
 
       run str/diallog.w ( input parparentproc
@@ -2873,8 +2821,8 @@ do:
          end.
          else 
          do:
-            message "Блокировка пистолетов прошла успешно"
-               view-as alert-box.
+            message if return-value begins "Ошибка" then return-value else "Разблокировка пистолетов прошла успешно" 
+              view-as alert-box.
          end.   
 
       end.
@@ -2929,20 +2877,11 @@ do:
          ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
          ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
          ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
-         if list-pl = "" then 
-         do:
-            list-pl = 
-               string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-               string(ub.pl-pump-nozzle.pump-code)
-               .
-         end.
-         else 
-         do:
-            list-pl = list-pl + ";" +
-               string(ub.pl-pump-nozzle.nozzle-code) + ":" +
-               string(ub.pl-pump-nozzle.pump-code)
-               .         
-         end.            
+        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                   if list-pl = "" then "" else ";",
+                   ub.pl-pump-nozzle.nozzle-code,
+                   ub.pl-pump-nozzle.pump-code,
+                   ub.pl-pump-nozzle.pl-code).
       end.
 
       run str/diallog.w ( input parparentproc
@@ -2973,9 +2912,9 @@ do:
                
          end.
          else 
-         do:
-            message "Разблокировка пистолетов прошла успешно"
-               view-as alert-box.
+         do: 
+            message if return-value begins "Ошибка" then return-value else "Разблокировка пистолетов прошла успешно" 
+              view-as alert-box.
          end.   
 
       end.
