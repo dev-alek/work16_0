@@ -2465,6 +2465,7 @@ class ibs.th.utl.method-for-draw-utility final:
 
                   /* ----- нетопливо ----- */
                   empty temp-table tt-stk-gd2 .
+                  
                   for each tt-stk-gd:
                     find first tt-gds-mapping where tt-gds-mapping.gds-code15 = tt-stk-gd.gds-code no-error .
                     if not available tt-gds-mapping then 
@@ -2525,6 +2526,7 @@ class ibs.th.utl.method-for-draw-utility final:
                         .
 
                     find first tt-stk-gd2 where tt-stk-gd2.gds-code16 = tt-gds-mapping.gds-code16 no-error .
+                    
                     if not available tt-stk-gd2 then 
                     do :
                       /*      assign                                                                       */
@@ -2548,11 +2550,12 @@ class ibs.th.utl.method-for-draw-utility final:
                     end .
                     else 
                     do:
+                      
                       assign
-                        tt-stk-gd2.fact-qnty16     = tt-stk-gd2.fact-qnty16     + v-fact-qnty16
-                        tt-stk-gd2.sum-rubl-cost16 = tt-stk-gd2.sum-rubl-cost16 + v-sum-rubl-cost16
-                        tt-stk-gd2.vat-rubl16      = tt-stk-gd2.vat-rubl16      + v-vat-rubl16
-                        tt-stk-gd2.sum-rubl-crsa16 = tt-stk-gd2.sum-rubl-crsa16 + v-sum-rubl-crsa16
+                        tt-stk-gd2.fact-qnty16     = v-fact-qnty16
+                        tt-stk-gd2.sum-rubl-cost16 = v-sum-rubl-cost16
+                        tt-stk-gd2.vat-rubl16      = v-vat-rubl16
+                        tt-stk-gd2.sum-rubl-crsa16 = v-sum-rubl-crsa16
                         v-count-confirm            = v-count-confirm + 1
                         .
                     end.  
@@ -2582,6 +2585,7 @@ class ibs.th.utl.method-for-draw-utility final:
                   Vfirst = yes.
                   put stream lsOut unformatted skip 
                     "Расхождения по товарам:" skip.
+                    
                   for each tt-stk-gd2:
                     export stream lsIN delimiter ';':U tt-stk-gd2 .
                     /*
