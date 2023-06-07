@@ -35,7 +35,7 @@ run rep/d-report.w
     , input 'rep/r-rvsdin.p'
     , input "Динамика показаний уровнемера":U
     , input 8
-    , input "{&g-one}"
+    , input "{&g-choice}"
     , input "{&o-currency}"
     , input ""
     , input ""
