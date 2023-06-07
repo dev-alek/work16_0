@@ -1054,7 +1054,7 @@ end . /* end_of низ таблицы и html-файла */
       this-object:ModeChangeStatus = no.
       this-object:ModeEarlyTermination = no.
       this-object:modecopy             = no.
-      CleanQuery("promoActionAll").
+      CleanQuery("promoActionAll,promoActionStatus").
       if valid-object(dialog1) then delete object dialog1 .
       
     end finally .
