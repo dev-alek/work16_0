@@ -1032,7 +1032,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /* checkBox11 */
       /*  */
       this-object:checkBox11:Enabled = false.
-      this-object:checkBox11:Location = new System.Drawing.Point(149, 131).
+      this-object:checkBox11:Location = new System.Drawing.Point(149, 106).
       this-object:checkBox11:Name = "checkBox11".
       this-object:checkBox11:Size = new System.Drawing.Size(228, 24).
       this-object:checkBox11:TabIndex = 6.
@@ -1043,7 +1043,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /* checkBox12 */
       /*  */
       this-object:checkBox12:Enabled = false.
-      this-object:checkBox12:Location = new System.Drawing.Point(149, 106).
+      this-object:checkBox12:Location = new System.Drawing.Point(149, 131).
       this-object:checkBox12:Name = "checkBox12".
       this-object:checkBox12:Size = new System.Drawing.Size(228, 24).
       this-object:checkBox12:TabIndex = 5.
