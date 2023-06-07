@@ -214,7 +214,13 @@ class ibs.th.utl.method-for-draw-utility final:
                   field sum-rubl-crsa as decimal /* сумма в продажных ценах в 15 */
                   /* index pi is primary gds-code - для импорта переопределён на поле gds-code16 */
                   .
-                define temp-table tt-stk-gd2 no-undo like tt-stk-gd
+                define temp-table tt-stk-gd2 no-undo 
+                  field gds-name      as character /* переставлена на первую позицию, чтобы соответствовать формату лог-файла */
+                  field gds-code15    as character
+                  field fact-qnty     as decimal /* количество в 15 */
+                  field sum-rubl-cost as decimal /* сумма в учетных ценах в 15 */
+                  field vat-rubl      as decimal /* сумма НДС в учетных ценах в 15 */
+                  field sum-rubl-crsa as decimal /* сумма в продажных ценах в 15 */                
                   field gds-code16      as integer
                   field fact-qnty16     as decimal /* количество в 16 */
                   field sum-rubl-cost16 as decimal /* сумма в учетных ценах в 16 */
@@ -2387,10 +2393,10 @@ class ibs.th.utl.method-for-draw-utility final:
                   put-log(string (now) + "   Отправляем запрос для сравнения остатков...").
                   vcmd = substitute ("&1 --http0.9 &2/THGetInfo?VerifyRest >&3", search ("exe/curl.exe"), iaddr, "verify-rest-temp.json").
                   os-command silent value (vcmd).
-
+  
                   put-log(string (now) + "   Разбираем полученные данные...").
                   fix-codepage_and_SetJsonObj(input "verify-rest-temp.json") .
-  
+
                   empty temp-table tt-stk-gd .
                   parse-json(input temp-table tt-stk-gd:default-buffer-handle, input "tt-stk-gd") .
 
@@ -2467,7 +2473,7 @@ class ibs.th.utl.method-for-draw-utility final:
                   empty temp-table tt-stk-gd2 .
                   
                   for each tt-stk-gd:
-                    find first tt-gds-mapping where tt-gds-mapping.gds-code15 = tt-stk-gd.gds-code no-error .
+                    find first tt-gds-mapping where tt-gds-mapping.gds-code15 = integer(tt-stk-gd.gds-code) no-error .
                     if not available tt-gds-mapping then 
                     do :
                       v-count-decline = v-count-decline + 1 .
@@ -2539,19 +2545,21 @@ class ibs.th.utl.method-for-draw-utility final:
                       /*    end .                                                                          */
                       /*    else do :                                                                      */
                       create tt-stk-gd2 .
-                      buffer-copy tt-stk-gd to tt-stk-gd2 assign
+                      buffer-copy tt-stk-gd to tt-stk-gd2 
+                      assign
                         tt-stk-gd2.gds-code16      = tt-gds-mapping.gds-code16
                         tt-stk-gd2.fact-qnty16     = v-fact-qnty16
                         tt-stk-gd2.sum-rubl-cost16 = v-sum-rubl-cost16
                         tt-stk-gd2.vat-rubl16      = v-vat-rubl16
                         tt-stk-gd2.sum-rubl-crsa16 = v-sum-rubl-crsa16
+                        tt-stk-gd2.gds-code15 = string(tt-stk-gd.gds-code)
                         v-count-confirm = v-count-confirm + 1
       no-error .
                     end .
                     else 
                     do:
-                      
                       assign
+                        tt-stk-gd2.gds-code15 = string(tt-stk-gd2.gds-code15) + "," + string(tt-stk-gd.gds-code)
                         tt-stk-gd2.fact-qnty16     = v-fact-qnty16
                         tt-stk-gd2.sum-rubl-cost16 = v-sum-rubl-cost16
                         tt-stk-gd2.vat-rubl16      = v-vat-rubl16
@@ -2559,6 +2567,7 @@ class ibs.th.utl.method-for-draw-utility final:
                         v-count-confirm            = v-count-confirm + 1
                         .
                     end.  
+                    tt-stk-gd2.gds-code15 = trim(tt-stk-gd2.gds-code15,",").
     
     
                   end . /* end_of for_each нетопливо */
