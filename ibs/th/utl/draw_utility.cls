@@ -315,12 +315,17 @@ class ibs.th.utl.draw_utility inherits Form:
       v-send-param = no
 	  .
 	   define variable vtestlg as logical no-undo init no.
+
+	   for each ub.cash-desk no-lock where ub.cash-desk.pos-type = "IBM-XML":
+	     mutil:sendnum(string(ub.cash-desk.cash-num)) .
+	   end.
 	   find first ub.cash-desk-attr exclusive-lock where ub.cash-desk-attr.attr-code = "string-cash" and
                                                         ub.cash-desk-attr.cash-num = 0 no-error .
       if available (ub.cash-desk-attr) then do:
         if ub.cash-desk-attr.attr-value-character <> "" then  
         mutil:sendnum(ub.cash-desk-attr.attr-value-character) .
-      end.     
+      end.    
+       
       mUtil:put-log("Начато   : удаление кассиров с касс").
       checkBox7:checked =mutil:sendcode(1).
       mUtil:put-log("Выполнено: удаление кассиров с касс").
