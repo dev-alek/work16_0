@@ -160,8 +160,11 @@ class ibs.th.utl.draw_utility inherits Form:
    wait-for this-object:openFileDialog1:ShowDialog().
    
    do vi = 0 to this-object:openFileDialog1:FileNames:Length - 1:
-   listBox2:Items:add(this-object:openFileDialog1:FileNames:GetValue(vi)).
-   listBox2:SetSelected(listBox2:Items:IndexOf(this-object:openFileDialog1:FileNames:GetValue(vi)), true).
+   if not listBox2:Items:Contains(this-object:openFileDialog1:FileNames:GetValue(vi))
+   then do:
+      listBox2:Items:add(this-object:openFileDialog1:FileNames:GetValue(vi)).
+      listBox2:SetSelected(listBox2:Items:IndexOf(this-object:openFileDialog1:FileNames:GetValue(vi)), true).
+   end.
   end.
 
       return.
@@ -267,6 +270,17 @@ class ibs.th.utl.draw_utility inherits Form:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void listBox2_SelectedIndexChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void tabPage2_Click( input sender as System.Object, input e as System.EventArgs ):
 		
 		return.
 
@@ -908,6 +922,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:tabPage2:TabIndex = 1.
       this-object:tabPage2:Text = "Этап 2".
       this-object:tabPage2:UseVisualStyleBackColor = true.
+      this-object:tabPage2:Click:Subscribe(this-object:tabPage2_Click).
       /*  */
       /* listBox2 */
       /*  */
@@ -916,11 +931,10 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:listBox2:FormattingEnabled = true.
       this-object:listBox2:HorizontalScrollbar = true.
       this-object:listBox2:ImeMode = System.Windows.Forms.ImeMode:Katakana.
-      this-object:listBox2:Location = new System.Drawing.Point(191, 361).
-      this-object:listBox2:MultiColumn = true.
+      this-object:listBox2:Location = new System.Drawing.Point(165, 361).
       this-object:listBox2:Name = "listBox2".
       this-object:listBox2:SelectionMode = System.Windows.Forms.SelectionMode:MultiExtended.
-      this-object:listBox2:Size = new System.Drawing.Size(166, 56).
+      this-object:listBox2:Size = new System.Drawing.Size(192, 56).
       this-object:listBox2:Sorted = true.
       this-object:listBox2:TabIndex = 16.
       this-object:listBox2:TabStop = false.
