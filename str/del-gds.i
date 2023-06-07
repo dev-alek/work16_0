@@ -91,6 +91,10 @@ else do:
   if choice = 3 then return.
   if choice = 1 then ModeType = yes.
   else ModeType = no.
+  if choice = 4 then do:
+    g#log = yes.
+  end.
+  else do:
   if ModeType then do:
       g#log = no.
       message "ВЫ ТОЧНО УВЕРЕНЫ, ЧТО ХОТИТЕ УДАЛИТЬ С КАСС ВСЕ ТОВАРЫ?" skip(0)
@@ -109,6 +113,7 @@ else do:
       message "Удалить все товары списка c касс ?"
       view-as alert-box question buttons OK-Cancel update g#log.
       if g#log <> true then return.
+  end.
   end.
 end.
 
