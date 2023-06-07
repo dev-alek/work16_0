@@ -435,181 +435,26 @@ procedure InitTT:
       end.
    end.
    else do:
-      for each tran-fuel where
-               tran-fuel.date-beg >= datetime(string(i-date-start) + " 00:00:00") - timezone * 60000
-           and tran-fuel.date-beg <= datetime(string(i-date-end + 2) + " 23:59:59") - timezone * 60000 /* Отберем транзакции за 2 дня вперед. Отфильтруем после корректировки даты начала транзакции */
-           /* and can-do(iProdBcStrList, string(tran-fuel.fuel-code)) */
-           and can-do(iTRKList, string(tran-fuel.trk-num + 1))
-      no-lock,
-         first chk-doc-attr where
-               chk-doc-attr.attr-code  = "CheckId"
-           and chk-doc-attr.attr-value = tran-fuel.uuid-cheq
-      no-lock,
-         first chk-doc where
-               chk-doc.doc-code = chk-doc-attr.doc-code
-           and can-do(iChkTypeCodeList, string(chk-doc.chk-type))
-      no-lock
-      &if "{1}" <> "class" &then
-      ,
-         first obj-list where
-               obj-list.obj-type = chk-doc.obj-type
-           and obj-list.obj-code = chk-doc.obj-code
-      no-lock
-      &endif
-      :
-         v-gds-code = tran-fuel.fuel-code.
-         if v-gds-code < 100 then do: /* Если короткий код, то ищем полный код */
-            find first prod-bc where
-                       prod-bc.b-str = string(v-gds-code)
-            no-lock no-error.
-            if avail prod-bc then do:
-               find first chk-gds where
-                          chk-gds.doc-code = chk-doc.doc-code
-                      and chk-gds.b-code   = prod-bc.b-code
-               no-lock no-error.
-               find first goods where
-                          goods.gds-code = prod-bc.b-code
-               no-lock no-error.
-               if not avail chk-gds or not avail goods
-               then
-                  next.
-               v-gds-code = goods.gds-code.
-            end.
-            else next.
-         end.
-         else do:
-            find first chk-gds where
-                       chk-gds.doc-code = chk-doc.doc-code
-                   and chk-gds.b-code   = v-gds-code
-            no-lock no-error.
-            find first goods where
-                       goods.gds-code = v-gds-code
-            no-lock no-error.
-            if not avail chk-gds or not avail goods
-            then
-               next.
-         end.
-         if not can-do(iGdsCodeList, string(v-gds-code)) then next.
-         &if "{1}" = "class" &then
-         CreateOneRec(buffer chk-doc,
-                      buffer tran-fuel,
-                      buffer chk-gds,
-                      buffer goods
-                      ).
-         &else
-         run CreateOneRec(buffer obj-list,
-                          buffer chk-doc,
-                          buffer tran-fuel,
-                          buffer chk-gds,
-                          buffer goods
-                          ).
+     TRAN-FUEL:
+     for each tran-fuel where
+              tran-fuel.date-beg >= datetime(string(i-date-start) + " 00:00:00") - timezone * 60000
+          and tran-fuel.date-beg <= datetime(string(i-date-end + 2) + " 23:59:59") - timezone * 60000 /* Отберем транзакции за 2 дня вперед. Отфильтруем после корректировки даты начала транзакции */
+          /* and can-do(iProdBcStrList, string(tran-fuel.fuel-code)) */
+          and can-do(iTRKList, string(tran-fuel.trk-num + 1))
+     no-lock:
+        
+       release chk-doc-attr.
+       if tran-fuel.num-cheq > 0 then do:
+         {rep/r-tranf-chk.i {1}}
+       end.
+       if not available chk-doc-attr then do:
+         &if "{1}" <> "class" &then
+         /* Отбор транзакций, по которым нет чеков */
+           {rep/r-tranf-nochk.i}
          &endif
-      end.
+       end.    
+     end.   /* for each tran-fuel */
 /*      run test\printtt.p("tt-rep 3",temp-table tt-rep:handle).*/
-   
-      &if "{1}" <> "class" &then
-      /* Отбор транзакций, по которым нет чеков */
-      TRAN-FUEL-WITHOUT-CHECK:
-      for each tran-fuel where
-               tran-fuel.date-beg >= datetime(string(i-date-start) + " 00:00:00") - timezone * 60000
-           and tran-fuel.date-beg <= datetime(string(i-date-end) + " 23:59:59") - timezone * 60000
-           and can-do(iTRKList, string(tran-fuel.trk-num + 1))
-           and tran-fuel.num-cheq > 0
-      no-lock,
-         first obj-list where
-               obj-list.obj-type = {&shop}
-           and obj-list.obj-code = tran-fuel.obj-code
-      no-lock:
-         find first chk-doc-attr where
-                    chk-doc-attr.attr-code  = "CheckId"
-                and chk-doc-attr.attr-value = tran-fuel.uuid-cheq
-         no-lock no-error.
-         if avail chk-doc-attr then next.
-         
-         /* Если это транзакция заказа техпролива, то исключаем */
-         for first b-tran-fuel where
-                   b-tran-fuel.db-num    =  tran-fuel.db-num
-               and b-tran-fuel.uuid      =  tran-fuel.uuid
-               and b-tran-fuel.uuid-cheq <> tran-fuel.uuid-cheq
-         no-lock,
-             first chk-doc-attr where
-                   chk-doc-attr.attr-code  = "CheckId"
-               and chk-doc-attr.attr-value = b-tran-fuel.uuid-cheq
-         no-lock,
-             first chk-doc where
-                   chk-doc.doc-code = chk-doc-attr.doc-code
-               and chk-doc.chk-type = 17
-         no-lock:
-            next TRAN-FUEL-WITHOUT-CHECK.
-         end.
-         
-         v-gds-code = tran-fuel.fuel-code.
-         if v-gds-code < 100 then do: /* Если короткий код, то ищем полный код */
-            find first prod-bc where
-                       prod-bc.b-str = string(v-gds-code)
-            no-lock no-error.
-            if avail prod-bc then do:
-               find first goods where
-                          goods.gds-code = prod-bc.b-code
-               no-lock no-error.
-               if not avail goods then
-                  next.
-               v-gds-code = goods.gds-code.
-            end.
-         end.
-         else do:
-            find first goods where
-                       goods.gds-code = v-gds-code
-            no-lock no-error.
-            if not avail goods
-            then
-               next.
-         end.
-         if not can-do(iGdsCodeList, string(v-gds-code)) then next.
-
-         /* Корректировка по часовому поясу */
-         assign
-            vDateBeg = tran-fuel.date-beg + timezone * 60000
-            vDateEnd = tran-fuel.date-end + timezone * 60000.
-
-         create tt-rep.
-         assign
-            tt-rep.obj-type        = obj-list.obj-type
-            tt-rep.obj-code        = obj-list.obj-code
-            tt-rep.obj-name        = obj-list.obj-name
-            tt-rep.sort-date       = date(vDateBeg)
-            tt-rep.sort-time       = mtime(vDateBeg) / 1000
-            tt-rep.chk-num         = tran-fuel.num-cheq
-            tt-rep.tran-num        = tran-fuel.tran-num
-            tt-rep.cash-num        = tran-fuel.cash-num
-            tt-rep.trk-num         = tran-fuel.trk-num + 1
-            tt-rep.nozzle-num      = tran-fuel.nozzle-num + 1
-            tt-rep.fuel-code       = goods.gds-code
-            tt-rep.gds-name        = goods.gds-name
-            tt-rep.volume          = tran-fuel.volume
-            tt-rep.price           = tran-fuel.price
-            tt-rep.money           = tran-fuel.money
-            tt-rep.datetime-beg    = vDateBeg
-            tt-rep.date-beg        = date(vDateBeg)
-            tt-rep.time-beg        = mtime(vDateBeg) / 1000
-            tt-rep.datetime-end    = vDateEnd
-            tt-rep.date-end        = date(vDateEnd)
-            tt-rep.time-end        = mtime(vDateEnd) / 1000
-            tt-rep.time-length     = (vDateEnd - vDateBeg) / 1000
-            tt-rep.all-time-length = tt-rep.time-length
-            tt-rep.multi-pay       = no
-            tt-rep.resume-tran     = no
-            tt-rep.uuid            = tran-fuel.uuid
-            tt-rep.uuid-cheq       = tran-fuel.uuid-cheq
-            tt-rep.db-num          = tran-fuel.db-num
-           
-            .
-         if tt-rep.uuid-cheq = "" then do:
-            vCount = vCount + 1.
-            tt-rep.uuid-cheq = "empty-" + string(vCount, "99999999").
-         end.
-      end.
-      &endif
    end.
 /*   run test\printtt.p("tt-rep 4",temp-table tt-rep:handle).*/
    
@@ -684,13 +529,13 @@ procedure AfterCalc:
                    chk-doc.doc-code = chk-doc-attr.doc-code
          no-lock
          &if "{1}" <> "class" &then
-	 ,
+	       ,
              first obj-list where
                    obj-list.obj-type = chk-doc.obj-type
                and obj-list.obj-code = chk-doc.obj-code
          no-lock
          &endif
-	 :
+	       :
             v-gds-code = tran-fuel.fuel-code.
             if v-gds-code < 100 then do: /* Если короткий код, то ищем полный код */
                find first prod-bc where
@@ -841,7 +686,7 @@ procedure AfterCalc:
             .
       release tt-grp.
    end.
-  
+   
    /* Продолжение налива */
    for each tt-rep
    break
@@ -863,14 +708,14 @@ procedure AfterCalc:
                vResumeTran = yes
                vTrkNum     = tt-rep.trk-num
                .
-            find first b-tt-rep where recid(b-tt-rep) = vFirstRecId no-error.
+         find first b-tt-rep where recid(b-tt-rep) = vFirstRecId no-error.
       end.
       else do:
          if tt-rep.chk-type-desc = "Продажа" and 
             tt-rep.uuid-cheq     = vUuidCheq and
             tt-rep.multi-pay     = no        and /* Транзакции со смешанной оплатой не помечаем как продолжение налива */
-            vResumeTran          = yes       and
-            tt-rep.trk-num       = vTrkNum       /* Продолжение налива может быть только на той же ТРК */
+            vResumeTran          = yes     /*  and  EXPSD-4570 - закомментировано, если это перенос транзакции? 
+            tt-rep.trk-num       = vTrkNum       /* Продолжение налива может быть только на той же ТРК */ */
          then
             assign
                tt-rep.resume-tran = yes
@@ -884,9 +729,25 @@ procedure AfterCalc:
                assign
                   vResumeTran = yes
                   vTrkNum     = tt-rep.trk-num
-                  .
-         else
-            vResumeTran = no.
+               .
+            else
+               vResumeTran = no.
+         
+         /* EXPSD-4570 проверим было ли включение "продолжение налива" при постоплате */
+         for first b-tt-rep where
+                   b-tt-rep.db-num   = tt-rep.db-num
+               and b-tt-rep.uuid     = tt-rep.uuid
+               and b-tt-rep.chk-num = 0:
+           assign
+             tt-rep.resume-tran = yes
+             vConfirmResumeTran = yes
+           .
+           for first tt-grp-uuid where 
+                     tt-grp-uuid.uuid = b-tt-rep.uuid:
+              delete tt-grp-uuid.
+           end.   
+           delete b-tt-rep.
+         end.
       end.
 
       if last-of(tt-rep.grp-num) and not first-of(tt-rep.grp-num) and vConfirmResumeTran then do:

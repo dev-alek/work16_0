@@ -67,6 +67,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     empty temp-table TempTrnDoc.
     empty temp-table TempDocLine.
     empty temp-table TempDocMark.
+    empty temp-table TempDocPart.
 
     create TempTrnDoc.
     assign

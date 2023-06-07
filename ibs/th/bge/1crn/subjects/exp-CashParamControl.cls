@@ -39,7 +39,7 @@ class ibs.th.bge.1crn.subjects.exp-CashParamControl inherits send1cerpsub implem
          insw:write-data-element (  "section":U,                  entry(4,Code.parent,{&delim-par})      ).
          insw:write-data-element (  "name":U,                     Code.code                 ).
          insw:write-data-element (  "value-etalon":U,             Code.CodeValue            ).
-         insw:write-data-element (  "required":U,                 string(Code.status_)      ).
+         insw:write-data-element (  "required":U,                 string(Code.status_ + 1)  ).
          if      Code.CodeName ne ?
             and  Code.CodeName ne ?
          then

@@ -293,8 +293,12 @@ procedure EndElement:
             buffer-copy tt-cash-param-hist to cash-param-hist .
          end.
 &else
-         find first code where code.parent eq mParent + {&delim-par} + tt-cash-param-hist.param_group 
-                           and code.code   eq tt-cash-param-hist.param_name
+         define variable vParantNotCaseSens as character no-undo.
+          define variable vCodeNotCaseSens as character no-undo.
+          vParantNotCaseSens = mParent +  {&delim-par} + tt-cash-param-hist.param_group.
+          vCodeNotCaseSens   = tt-cash-param-hist.param_name.
+         find first code where code.parent eq vParantNotCaseSens 
+                           and code.code   eq vCodeNotCaseSens
          no-lock no-error.
          if not available code
          then do:

@@ -30,11 +30,15 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
   if p-string = ? then
     return false .
+  p-replace-string = p-string.
+  
+  if lookup ("*", char-avail) > 0 then
+      p-replace-string = replace (p-replace-string, '*', '9').
 
   if lookup ("digit", char-avail) > 0 then
     /* проверяем на цифры */
     assign
-      p-replace-string = p-string
+      
       p-replace-string = replace (p-replace-string, '0', '9')
       p-replace-string = replace (p-replace-string, '1', '9')
       p-replace-string = replace (p-replace-string, '2', '9')
@@ -45,7 +49,9 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
       p-replace-string = replace (p-replace-string, '7', '9')
       p-replace-string = replace (p-replace-string, '8', '9')
       .
-
+  else
+     p-replace-string = replace (p-replace-string, '9', chr(15))
+      .
   if lookup ("letter", char-avail) > 0 then
     /* проверяем на латинские буквы */
     assign

@@ -27,7 +27,8 @@ class ibs.th.ref.code.code_trg final:
   
   define temp-table tt-SaveParam no-undo
       field LevelSave   as integer  
-      field MaxLevel    as integer 
+      field MaxLevel    as integer
+      field chek-erpRN  as logical 
   index LevelSave LevelSave.
   
   define temp-table tt-form no-undo
@@ -89,7 +90,7 @@ class ibs.th.ref.code.code_trg final:
         create tt-SaveParam.
         tt-SaveParam.LevelSave = vcurLevel.
      end.
-     
+     tt-SaveParam.MaxLevel = MaxLevel.
      
   end.
   
@@ -99,7 +100,8 @@ class ibs.th.ref.code.code_trg final:
      find first tt-SaveParam where tt-SaveParam.LevelSave eq vcurLevel no-lock no-error.
      if available tt-SaveParam
      then do:
-        MaxLevel = tt-SaveParam.MaxLevel.
+        MaxLevel   = tt-SaveParam.MaxLevel.
+        chek-erpRN = tt-SaveParam.chek-erpRN.
      end.
      for each tt-SaveParam where tt-SaveParam.LevelSave ge vcurLevel:
         delete tt-SaveParam.
@@ -118,7 +120,24 @@ class ibs.th.ref.code.code_trg final:
   
   define property chek-erpRN as logical no-undo
    get. 
-   set.
+   set(arg as logical):
+     saveChekErpRN().
+     chek-erpRN = arg.
+  end.
+  
+  method  public void saveChekErpRN ():
+     if not isForm  then return.
+     define variable vcurLevel as integer no-undo.
+     vcurLevel = curLevel.
+     find first tt-SaveParam where tt-SaveParam.LevelSave eq vcurLevel no-lock no-error.
+     if not available tt-SaveParam
+     then do:
+        create tt-SaveParam.
+        tt-SaveParam.LevelSave = vcurLevel.
+     end.
+     tt-SaveParam.chek-erpRN = chek-erpRN.
+     
+  end.
    
   define property Mode as character  no-undo
    get. 
@@ -412,6 +431,7 @@ class ibs.th.ref.code.code_trg final:
              formLable(1, 2, "Наименование").
              formLable(1, 3, "Код функции").
              formLable(1, 4, "   ").
+             
           end.
           else if icode eq "CashParamHash"
           then do:
@@ -443,6 +463,7 @@ class ibs.th.ref.code.code_trg final:
              formLable(1, 2, "Код ЕИ ККТ").
              formLable(1, 4, "ПФ ККТ").
              MaxLevel = MaxLevel + 1.
+             chek-erpRN = yes.
           end.
        end.
     end.

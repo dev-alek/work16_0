@@ -177,7 +177,8 @@ procedure startproc:
       end.
       when {&btpr-type-hddtest}
       then do:
-         run adm/db-info.p ( output v-db-num ) no-error.
+         define variable Vdbinfo as char no-undo.
+         run adm/db-info.p ( output v-db-num, output Vdbinfo ) no-error.
          if mAsyncProcRun
          then
             run addtask (iAutoType,"utl\proc-anyproc.p",substitute ("&2&1&3&1&4&1&5",

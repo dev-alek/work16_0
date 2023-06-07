@@ -27,26 +27,7 @@ define variable vss-description as character no-undo init "".
    define variable v-ok as logical no-undo.
    define buffer b-code for code.
 &Scoped-define CODE_PARENT "okei-kkt"
-if imode ne {&lookup}
-   then do:
-   
-   run utl/checkStructDb.p (25, output v-ok) no-error.
-   if v-ok 
-   then do:
-      find first b-code where b-code.code = {&CODE_PARENT} no-lock no-error.
-      if     avail b-code
-         and not b-code.nwsgbd
-      then do trans:
-         find first b-code where b-code.code = {&CODE_PARENT} exclusive-lock no-error.
-         b-code.nwsgbd = yes.
-      end.
-   end.
-   else do:
-      message "Редактирование не возможно пока все станции не обновятся до 25 версии" 
-      view-as alert-box.
-      return.
-   end.
-end.
+
 define variable mOkeiKktEdit as class   ibs.th.ref.code.okeikktedit_ no-undo.
 
 mOkeiKktEdit = new ibs.th.ref.code.okeikktedit_(iMode, iCodeTrg).

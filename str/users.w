@@ -112,6 +112,7 @@ define variable v-report-name-html-list   as CHARACTER            no-undo .
     field user-login like ub.user-login.user-login
     field last-login-mjd like ub.user-login.last-login-mjd
     field last-name  as character
+
   .
 
 define buffer buf_global-state      for ub.global-state .
@@ -1664,10 +1665,10 @@ DO:
   v-report-name-html-list = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
     
     run PROC-print-list in this-procedure.
-        {&OPEN-QUERY-br-user}
+      /*  {&OPEN-QUERY-br-user}
         run manage-fields in this-procedure .
         {&OPEN-QUERY-br-login}
-        run manage-fields-login in this-procedure .
+        run manage-fields-login in this-procedure . */
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3366,26 +3367,20 @@ on error undo, return error
 
   if cb-db <> -1 then 
   do:
-        
-    FOR EACH buf_init_user-login where buf_init_user-login.db-num = cb-db:
+    FOR EACH buf_init_user-account :
       case rs-scope
         :
         when 1
-        then 
-          do:
-            for each buf_init_user-account where buf_init_user-account.status_ <> {&bef-user-status-deleted} 
-              and buf_init_user-account.user-id = buf_init_user-login.user-id
-              , first temp_filter-fields
-                   where temp_filter-fields.user-id   = buf_init_user-account.user-id
-                     and temp_filter-fields.fld-record-visible = yes
-                     and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
-              no-lock:
-                  
+        then do:
+            FOR EACH buf_init_user-login where 
+             buf_init_user-account.status_ <> {&bef-user-status-deleted} 
+            AND buf_init_user-account.user-id = buf_init_user-login.user-id
+            and temp_filter-fields.user-id   = buf_init_user-login.user-id
+            and temp_filter-fields.fld-record-visible = yes
+            and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
+            NO-LOCK:
               assign 
-                v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-              find first tt-user-login where tt-user-login.users-id = buf_init_user-login.user-id no-lock no-error .
-              if not available tt-user-login then 
-              do:
+              v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
                 create tt-user-login .
                 assign
                   tt-user-login.db-num         = buf_init_user-login.db-num
@@ -3395,22 +3390,19 @@ on error undo, return error
                   tt-user-login.users-id       = buf_init_user-login.user-id
                   tt-user-login.last-name      = v-last-name
                   .
-              end.   
-            end.        /* when 1 */
-            end.
+            END.
+        end.    /* when 1 */
+        
         when 2
         then do:
-        for each buf_init_user-account where buf_init_user-account.user-id = buf_init_user-login.user-id
-          , first temp_filter-fields
-                   where temp_filter-fields.user-id   = buf_init_user-account.user-id
-                     and temp_filter-fields.fld-record-visible = yes
-                     and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
-          no-lock:
-          assign 
+            FOR EACH  buf_init_user-login where  buf_init_user-account.user-id = buf_init_user-login.user-id
+                   and buf_init_user-login.db-num = cb-db
+                   /*and temp_filter-fields.user-id   = buf_init_user-account.user-id
+                   and temp_filter-fields.fld-record-visible = yes
+                   and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )*/
+            NO-LOCK:
+            assign 
             v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-          find first tt-user-login where tt-user-login.users-id = buf_init_user-login.user-id no-lock no-error .
-          if not available tt-user-login then 
-          do:
             create tt-user-login .
             assign
               tt-user-login.db-num         = buf_init_user-login.db-num
@@ -3420,24 +3412,19 @@ on error undo, return error
               tt-user-login.users-id       = buf_init_user-login.user-id
               tt-user-login.last-name      = v-last-name
               .
-          end.   
-          end.
+            END.  
         end.        /* when 2 */
+        
         when 3
-        then 
-          do:
-            for each buf_init_user-account where buf_init_user-account.status_ = {&bef-user-status-deleted} 
+        then do:
+            FOR EACH buf_init_user-login where buf_init_user-account.status_ = {&bef-user-status-deleted} 
               and buf_init_user-account.user-id = buf_init_user-login.user-id
-              , first temp_filter-fields
-                   where temp_filter-fields.user-id   = buf_init_user-account.user-id
-                     and temp_filter-fields.fld-record-visible = yes
-                     and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
-              no-lock:
+              and temp_filter-fields.user-id   = buf_init_user-account.user-id
+              and temp_filter-fields.fld-record-visible = yes
+              and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
+              NO-LOCK:
               assign 
                 v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-              find first tt-user-login where tt-user-login.users-id = buf_init_user-login.user-id no-lock no-error .
-              if not available tt-user-login then 
-              do:
                 create tt-user-login .
                 assign
                   tt-user-login.db-num         = buf_init_user-login.db-num
@@ -3447,33 +3434,30 @@ on error undo, return error
                   tt-user-login.users-id       = buf_init_user-login.user-id
                   tt-user-login.last-name      = v-last-name
                   .
-              end.   
-              end.
-            end.        /* when 3 */
-          end case.       /* case rs-scope */
-                                 
-      end. 
-    end. /*FOR EACH buf_user-login*/
+            END.
+        end.        /* when 3 */
+      end case.       /* case rs-scope */
+    END.  
+  end. /*FOR EACH buf_user-user-account*/
+  
   else 
   do:
-    FOR EACH buf_init_user-login :
+    FOR EACH buf_init_user-account  /*where buf_init_user-account.user-id = temp_filter-fields.user-id*/
+      /*and temp_filter-fields.user-id   = buf_init_user-account.user-id
+      and temp_filter-fields.fld-record-visible = yes
+      And ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )*/:
       case rs-scope
         :
         when 1
-        then 
-          do:
-            for each buf_init_user-account where buf_init_user-account.status_ <> {&bef-user-status-deleted} 
+        then do:
+            FOR EACH buf_init_user-login where buf_init_user-account.status_ <> {&bef-user-status-deleted} 
               and buf_init_user-account.user-id = buf_init_user-login.user-id
-              , first temp_filter-fields
-                   where temp_filter-fields.user-id   = buf_init_user-account.user-id
+                     and temp_filter-fields.user-id   = buf_init_user-account.user-id
                      and temp_filter-fields.fld-record-visible = yes
                      and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
               no-lock:
               assign 
                 v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-              find first tt-user-login where tt-user-login.users-id = buf_init_user-login.user-id no-lock no-error .
-              if not available tt-user-login then 
-              do:
                 create tt-user-login .
                 assign
                   tt-user-login.db-num         = buf_init_user-login.db-num
@@ -3483,22 +3467,18 @@ on error undo, return error
                   tt-user-login.users-id       = buf_init_user-login.user-id
                   tt-user-login.last-name      = v-last-name
                   .
-              end.   
-            end.        /* when 1 */
-            end.
+            end.        
+        end. /* when 1 */
+        
         when 2
         then do:
-        for each buf_init_user-account where buf_init_user-account.user-id = buf_init_user-login.user-id
-          , first temp_filter-fields
-                   where temp_filter-fields.user-id   = buf_init_user-account.user-id
+            FOR EACH buf_init_user-login where buf_init_user-account.user-id = buf_init_user-login.user-id
+                     /*and temp_filter-fields.user-id   = buf_init_user-account.user-id
                      and temp_filter-fields.fld-record-visible = yes
-                     and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
-          no-lock:
-          assign 
+                     and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )*/
+            NO-LOCK:
+            assign 
             v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-          find first tt-user-login where tt-user-login.users-id = buf_init_user-login.user-id no-lock no-error .
-          if not available tt-user-login then 
-          do:
             create tt-user-login .
             assign
               tt-user-login.db-num         = buf_init_user-login.db-num
@@ -3508,24 +3488,19 @@ on error undo, return error
               tt-user-login.users-id       = buf_init_user-login.user-id
               tt-user-login.last-name      = v-last-name
               .
-          end.   
-          end.
+            end.
         end.        /* when 2 */
+        
         when 3
-        then 
-          do:
-            for each buf_init_user-account where buf_init_user-account.status_ = {&bef-user-status-deleted} 
+        then do:
+            FOR EACH buf_init_user-login where buf_init_user-account.status_ = {&bef-user-status-deleted} 
               and buf_init_user-account.user-id = buf_init_user-login.user-id
-              , first temp_filter-fields
-                   where temp_filter-fields.user-id   = buf_init_user-account.user-id
-                     and temp_filter-fields.fld-record-visible = yes
-                     and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
-              no-lock:
+              and temp_filter-fields.user-id   = buf_init_user-account.user-id
+              and temp_filter-fields.fld-record-visible = yes
+              and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
+              NO-LOCK:
               assign 
-                v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-              find first tt-user-login where tt-user-login.users-id = buf_init_user-login.user-id no-lock no-error .
-              if not available tt-user-login then 
-              do:
+              v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
                 create tt-user-login .
                 assign
                   tt-user-login.db-num         = buf_init_user-login.db-num
@@ -3535,15 +3510,12 @@ on error undo, return error
                   tt-user-login.users-id       = buf_init_user-login.user-id
                   tt-user-login.last-name      = v-last-name
                   .
-              end.   
-              end.
-            end.        /* when 3 */
-          end case.       /* case rs-scope */
+            end.
+        end.        /* when 3 */
+    end case.     /* case rs-scope */
                                  
-      end. 
-    end. /*FOR EACH buf_user-login*/
+ end. /*FOR EACH buf_user-login*/ 
  
-          
           for each tt-user-login no-lock:
                      put stream OutStr-html unformatted
                   substitute(
@@ -3573,9 +3545,9 @@ on error undo, return error
     ).
 EMPTY TEMP-TABLE tt-user-login .
 
-end.
 
-
+END.
+END.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

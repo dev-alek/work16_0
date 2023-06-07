@@ -50,6 +50,8 @@ define temp-table tt_answer no-undo
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { gbl/key-rec.i }
+{ str/nzpl-spl.i }
+{ trg/cplgdspm.i }
 
 define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle .
 define variable v-tth                as handle    no-undo.
@@ -81,6 +83,7 @@ define variable p-other              as character no-undo .
 define variable p-ok                 as logical   no-undo .
 define variable v-FuelPump           as integer   no-undo .
 define variable v-ctrl               as character no-undo .
+define variable existPlCode          as logical   no-undo .
 
 define buffer buf_cash-desk   for cash-desk.
 define buffer bf_cash-desk    for cash-desk.
@@ -106,6 +109,7 @@ define variable p-pl-list       as character no-undo .
 define variable v-teg           as character no-undo .
 define variable v-teg-value     as character no-undo .
 define variable v-string        as character no-undo .
+define variable errorUnblock    as character no-undo .
 
 { bge/socet.i }
 
@@ -120,13 +124,21 @@ p-pl-code = entry(2, p-pl-list, ",").
 /* получаем связку выбранных пистолетов*/  
 do kk = 1 to num-entries (p-pl-code,";"):
    p-pl = entry (kk, p-pl-code,";" ) .   
-   find first tt_place where tt_place.pump-code = integer(entry(2,p-pl,":")) no-error .
+   find first tt_place where tt_place.pump-code = integer(entry(2,p-pl,":"))
+                         and (if num-entries(p-pl,":") > 2 
+                              then tt_place.pl-code = integer(entry(3,p-pl,":")) 
+                              else true) no-error .
    if not available (tt_place) then 
    do: 
       create  tt_place .
       assign
          tt_place.pump-code = integer(entry(2,p-pl,":"))
          .
+      if num-entries(p-pl,":") > 2 then
+        assign 
+          tt_place.pl-code = integer(entry(3,p-pl,":"))
+          existPlCode = true
+        .
    end.
    find first tt_nozzle where tt_nozzle.pump-code = integer(entry(2,p-pl,":")) and tt_nozzle.nozzle-code = integer(entry(1,p-pl,":")) no-error .
    if not available (tt_nozzle) then 
@@ -442,7 +454,11 @@ FOR EACH buf_cash-desk WHERE
                   buf_pl-pump-nozzle.obj-type = p-obj-type            
                   AND buf_pl-pump-nozzle.obj-code = p-obj-code        
                   and buf_pl-pump-nozzle.pump-code = tt_answer.FuelPump
-                  and buf_pl-pump-nozzle.nozzle-code = tt_answer.FPFNzl no-lock,
+                  and buf_pl-pump-nozzle.nozzle-code = tt_answer.FPFNzl 
+                  and (if existPlCode then 
+                      can-find(first tt_place where tt_place.pump-code = buf_pl-pump-nozzle.pump-code 
+                                                and tt_place.pl-code = buf_pl-pump-nozzle.pl-code)
+                      else true) no-lock,
                   each buf_pl-gds-pump exclusive-lock where buf_pl-gds-pump.obj-code = buf_pl-pump-nozzle.obj-code and
                   buf_pl-gds-pump.obj-type = buf_pl-pump-nozzle.obj-type and
                   buf_pl-gds-pump.pump-code = buf_pl-pump-nozzle.pump-code and
@@ -457,7 +473,8 @@ FOR EACH buf_cash-desk WHERE
                   buf_pl-pump-nozzle.obj-type = p-obj-type            
                   AND buf_pl-pump-nozzle.obj-code = p-obj-code        
                   and buf_pl-pump-nozzle.pump-code = tt_nozzle.pump-code
-                  and buf_pl-pump-nozzle.nozzle-code = tt_nozzle.nozzle-code no-lock,
+                  and buf_pl-pump-nozzle.nozzle-code = tt_nozzle.nozzle-code
+                  and (if existPlCode then buf_pl-pump-nozzle.pl-code = tt_place.pl-code else true) no-lock,
                   each buf_pl-gds-pump exclusive-lock where buf_pl-gds-pump.obj-code = buf_pl-pump-nozzle.obj-code and
                   buf_pl-gds-pump.obj-type = buf_pl-pump-nozzle.obj-type and
                   buf_pl-gds-pump.pump-code = buf_pl-pump-nozzle.pump-code and
@@ -489,13 +506,30 @@ FOR EACH buf_cash-desk WHERE
                      buf_pl-pump-nozzle.obj-type = p-obj-type            
                      AND buf_pl-pump-nozzle.obj-code = p-obj-code        
                      and buf_pl-pump-nozzle.pump-code = tt_nozzle.pump-code
-                     and buf_pl-pump-nozzle.nozzle-code = tt_nozzle.nozzle-code no-lock,
+                     and buf_pl-pump-nozzle.nozzle-code = tt_nozzle.nozzle-code
+                     and (if existPlCode then buf_pl-pump-nozzle.pl-code = tt_place.pl-code else true) no-lock,
                      each buf_pl-gds-pump exclusive-lock where buf_pl-gds-pump.obj-code = buf_pl-pump-nozzle.obj-code and
                      buf_pl-gds-pump.obj-type = buf_pl-pump-nozzle.obj-type and
                      buf_pl-gds-pump.pump-code = buf_pl-pump-nozzle.pump-code and
-                     buf_pl-gds-pump.pl-code = buf_pl-pump-nozzle.pl-code
+                     buf_pl-gds-pump.pl-code = buf_pl-pump-nozzle.pl-code and 
+                     buf_pl-gds-pump.status_ <> {&current-status}
                      :
-                     buf_pl-gds-pump.status_ = {&current-status} .
+                     run cplgdspm in this-procedure
+                      ( input buf_pl-gds-pump.obj-type
+                       ,input buf_pl-gds-pump.obj-code
+                       ,input buf_pl-gds-pump.pl-code
+                       ,input buf_pl-gds-pump.gds-code
+                       ,input buf_pl-gds-pump.pump-code
+                       ,input {&current-status}
+                      ) no-error.
+                     if error-status:error then 
+                     do:
+                        errorUnblock = errorUnblock + {&new-line} + {&new-line} + return-value.
+                     end.
+                     else
+                     do:
+                        buf_pl-gds-pump.status_ = {&current-status} .
+                     end.
                   end.
                end.
                else 
@@ -503,7 +537,6 @@ FOR EACH buf_cash-desk WHERE
                   v-string = v-string + {&new-line} + "ТРК № " + string(tt_nozzle.pump-code) + " Пистолет № " + string (tt_nozzle.nozzle-code) .
                end.
             end.
-
             if v-string <> "" then 
             do:
                return "Для кассы: " + string (buf_cash-desk.cash-num) + {&new-line} +
@@ -513,7 +546,8 @@ FOR EACH buf_cash-desk WHERE
             end. 
             else 
             do:
-               return "Разблокировка пистолетов прошла успешно" .
+               return if errorUnblock = "" then "Разблокировка пистолетов прошла успешно" 
+                                            else "Ошибка при разблокировке:" + errorUnblock.
             end.
          end.          
    end case .

@@ -160,8 +160,11 @@ class ibs.th.utl.draw_utility inherits Form:
    wait-for this-object:openFileDialog1:ShowDialog().
    
    do vi = 0 to this-object:openFileDialog1:FileNames:Length - 1:
-   listBox2:Items:add(this-object:openFileDialog1:FileNames:GetValue(vi)).
-   listBox2:SetSelected(listBox2:Items:IndexOf(this-object:openFileDialog1:FileNames:GetValue(vi)), true).
+   if not listBox2:Items:Contains(this-object:openFileDialog1:FileNames:GetValue(vi))
+   then do:
+      listBox2:Items:add(this-object:openFileDialog1:FileNames:GetValue(vi)).
+      listBox2:SetSelected(listBox2:Items:IndexOf(this-object:openFileDialog1:FileNames:GetValue(vi)), true).
+   end.
   end.
 
       return.
@@ -272,6 +275,17 @@ class ibs.th.utl.draw_utility inherits Form:
 
 	end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void tabPage2_Click( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
     method public void write-log (iText as char ):
        listBox1:Items:Add(iText).
         listBox1:SelectedIndex =listBox1:Items:Count - 1.  
@@ -315,12 +329,17 @@ class ibs.th.utl.draw_utility inherits Form:
       v-send-param = no
 	  .
 	   define variable vtestlg as logical no-undo init no.
+
+	   for each ub.cash-desk no-lock where ub.cash-desk.pos-type = "IBM-XML":
+	     mutil:sendnum(string(ub.cash-desk.cash-num)) .
+	   end.
 	   find first ub.cash-desk-attr exclusive-lock where ub.cash-desk-attr.attr-code = "string-cash" and
                                                         ub.cash-desk-attr.cash-num = 0 no-error .
       if available (ub.cash-desk-attr) then do:
         if ub.cash-desk-attr.attr-value-character <> "" then  
         mutil:sendnum(ub.cash-desk-attr.attr-value-character) .
-      end.     
+      end.    
+       
       mUtil:put-log("Начато   : удаление кассиров с касс").
       checkBox7:checked =mutil:sendcode(1).
       mUtil:put-log("Выполнено: удаление кассиров с касс").
@@ -903,6 +922,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:tabPage2:TabIndex = 1.
       this-object:tabPage2:Text = "Этап 2".
       this-object:tabPage2:UseVisualStyleBackColor = true.
+      this-object:tabPage2:Click:Subscribe(this-object:tabPage2_Click).
       /*  */
       /* listBox2 */
       /*  */
@@ -911,11 +931,10 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:listBox2:FormattingEnabled = true.
       this-object:listBox2:HorizontalScrollbar = true.
       this-object:listBox2:ImeMode = System.Windows.Forms.ImeMode:Katakana.
-      this-object:listBox2:Location = new System.Drawing.Point(191, 361).
-      this-object:listBox2:MultiColumn = true.
+      this-object:listBox2:Location = new System.Drawing.Point(165, 361).
       this-object:listBox2:Name = "listBox2".
       this-object:listBox2:SelectionMode = System.Windows.Forms.SelectionMode:MultiExtended.
-      this-object:listBox2:Size = new System.Drawing.Size(166, 56).
+      this-object:listBox2:Size = new System.Drawing.Size(192, 56).
       this-object:listBox2:Sorted = true.
       this-object:listBox2:TabIndex = 16.
       this-object:listBox2:TabStop = false.
@@ -1032,7 +1051,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /* checkBox11 */
       /*  */
       this-object:checkBox11:Enabled = false.
-      this-object:checkBox11:Location = new System.Drawing.Point(149, 131).
+      this-object:checkBox11:Location = new System.Drawing.Point(149, 106).
       this-object:checkBox11:Name = "checkBox11".
       this-object:checkBox11:Size = new System.Drawing.Size(228, 24).
       this-object:checkBox11:TabIndex = 6.
@@ -1043,7 +1062,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /* checkBox12 */
       /*  */
       this-object:checkBox12:Enabled = false.
-      this-object:checkBox12:Location = new System.Drawing.Point(149, 106).
+      this-object:checkBox12:Location = new System.Drawing.Point(149, 131).
       this-object:checkBox12:Name = "checkBox12".
       this-object:checkBox12:Size = new System.Drawing.Size(228, 24).
       this-object:checkBox12:TabIndex = 5.
