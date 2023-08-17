@@ -84,7 +84,7 @@ on error undo, return error return-value
   
   def var gblVarObj as class gbl-var.
   gblVarObj = new gbl-var().
-  gblVarObj:InitObj (g#auto, g#news, g#news-source-db, g#db-num, g#userid, g#passwd, g#esys).
+  gblVarObj:InitObj (g#auto, g#news-source-db, g#db-num, g#userid, g#passwd, g#esys).
   delete object gblVarObj no-error.
 
   /* считываем параметр: €зык €дра системы */
@@ -101,6 +101,7 @@ on error undo, return error return-value
     assign
       v-msg = substitute( "&1. Ќеправильное значение параметра &2&3ƒолжно быть &4 или &5", vss-workfile, "language":U, {&new-line}, 'eng':U, 'rus':U )
     .
+    
     if g#news <> true then do:
       message
         vss-workfile vss-revision vss-description skip

@@ -23,4 +23,4 @@ define variable objGblVar as class Ibs.Th.Gbl.gbl-var.
 
 objGblVar = new Ibs.Th.Gbl.gbl-var().
 
-objGblVar:InitObj(g#auto, g#news, g#news-source-db, g#db-num, g#userid, g#passwd, g#esys).
+objGblVar:InitObj(g#auto, g#news-source-db, g#db-num, g#userid, g#passwd, g#esys).
