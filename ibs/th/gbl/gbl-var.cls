@@ -29,9 +29,9 @@ class ibs.th.gbl.gbl-var:
     get.
     private set.
     
-  define static property g#news as logical no-undo
-    get.
-    private set.
+/*  define static property g#news as logical no-undo*/
+/*    get.                                          */
+/*    private set.                                  */
 
   define static property g#news-source-db as integer no-undo
     get.
@@ -68,7 +68,7 @@ class ibs.th.gbl.gbl-var:
 
 	method public void InitObj (
 	 in_g#auto as log,
-	 in_g#news as log,
+/*	 in_g#news as log,*/
 	 in_g#news-source-db as int,
 	 in_g#db-num as int,
 	 in_g#userid as char,
@@ -78,7 +78,7 @@ class ibs.th.gbl.gbl-var:
   :
     assign
       ibs.th.gbl.gbl-var:g#auto = in_g#auto
-      ibs.th.gbl.gbl-var:g#news = in_g#news
+/*      ibs.th.gbl.gbl-var:g#news = in_g#news*/
       ibs.th.gbl.gbl-var:g#news-source-db = in_g#news-source-db
       ibs.th.gbl.gbl-var:g#db-num = in_g#db-num
       ibs.th.gbl.gbl-var:g#userid = in_g#userid

@@ -133,11 +133,21 @@ procedure startproc:
          end.
          else do:
             run nws/exch-nws.p
-                  (input g#auto-user-id
+                  (input this-procedure
+                  ,input g#auto-user-id
                   ,input g#auto-user-password
                   ,input iListDb
                   ) no-error.
          end.
+          if error-status :error
+            then do:
+               run write-to-log in this-procedure
+                  (input vss-workfile + {&space-char}
+                    + "Ошибка при запуске новостей" + {&new-line}
+                    + error-status :get-message(error-status :num-messages) + {&new-line}
+                    + return-value
+               ) .
+            end.
       end.
       when {&btpr-type-mercury}
       then do:

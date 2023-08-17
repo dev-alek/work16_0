@@ -256,7 +256,7 @@ define buffer buf_{&histheadtbl} for ub.{&histheadtbl} .
 
 &if defined(nws) ne 0
 &then
-  if not ibs.th.gbl.gbl-var:g#news then do :
+  if not g#news then do :
   &if defined(del) eq 0
   &then
      &if defined(notSendDel) eq 0
