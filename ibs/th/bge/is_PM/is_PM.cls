@@ -941,7 +941,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
                                     and buf_trn-doc.fact-date = new_rvs-doc.fact-date
                                     and buf_trn-doc.fact-time >= (if time-end = 86399 then 0 else time-end)
                                     and buf_trn-doc.fact-time <= new_rvs-doc.fact-time
@@ -1167,7 +1167,7 @@ class ibs.th.bge.is_PM.is_PM:
                                           and buf_doc-line.status_   = {&fact}
                                           ,
           first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                      and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                      and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
                                       and ((buf_trn-doc.fact-date > date-start) or
                                            (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time > time-start))
                                       and ((buf_trn-doc.fact-date < date-end) or
@@ -1404,7 +1404,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
                                     and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end) or
@@ -1636,7 +1636,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
                                     and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or
                                          (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >  end_rvs-doc.fact-time))
                                     and ((buf_trn-doc.fact-date < date-end) or
@@ -1923,7 +1923,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
 /*                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or                                                  */
 /*                                         (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-start) or
@@ -2174,7 +2174,7 @@ class ibs.th.bge.is_PM.is_PM:
                                           and buf_doc-line.status_   = {&fact}
                                           ,
           first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                      and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                      and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
                                       and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or
                                            (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))
                                       and ((buf_trn-doc.fact-date < date-start) or
@@ -2905,7 +2905,7 @@ class ibs.th.bge.is_PM.is_PM:
                                         and buf_doc-line.status_   = {&fact}
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
-                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem})
+                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
 /*                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or                                                */
 /*                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-end) or
