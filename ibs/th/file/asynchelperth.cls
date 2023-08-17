@@ -42,6 +42,7 @@ define public variable paramSession as character  no-undo init " -clientlog  myl
 define public variable WaitFile     as character  no-undo.
 define public variable mProcPublish as handle     no-undo.
 define public variable DbConnect    as logical    no-undo init yes.
+define public variable SetGblPar    as logical    no-undo init ?.
 define public variable PrintAll     as logical    no-undo.
 define public variable ChangProPath     as logical    no-undo.
 define variable WAIT-FOR-RUN as logical no-undo.
@@ -107,6 +108,7 @@ get.
             then do:
                
                MyWorkDir = substitute("pid_&1_&2" , string(vpid) , string(random(1,9999999))).
+               os-delete value(MyWorkDir) recursive.
                os-create-dir VALUE(MyWorkDir).
             end. 
          end.
@@ -309,9 +311,14 @@ get.
             
          end.
          else do:
-            message "Процедура " iProc "уже запущена в паралельном режиме." skip
-                    MyWorkDir + itask + ".txt"
-            view-as alert-box.
+            if valid-handle(mProcPublish)
+            then
+               publish "PutFileLogAsunc" from mProcPublish ("Процедура " + iProc + "уже запущена в паралельном режиме." ).
+            if valid-handle(mProcPublish)
+            then
+               publish "PutFileLogAsunc" from mProcPublish (MyWorkDir + itask + ".txt" ).
+            
+            run utl\proc-msg.p ("Процедура " + iProc +  "уже запущена в паралельном режиме." + MyWorkDir + itask) no-error.
             return error.
          end.
       end.
@@ -1012,6 +1019,10 @@ end.
                SavePARAM("user",ttrun.fuser).
                SavePARAM("password",ttrun.fpasw).
                SavePARAM("DbConnect",string(DbConnect)).
+               if SetGblPar ne ?
+               then
+                  SavePARAM("SetGblPar",string(SetGblPar)).
+               
                
                
                
