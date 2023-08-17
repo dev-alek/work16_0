@@ -1765,6 +1765,7 @@ class ibs.th.bge.is_PM.is_PM:
                                        :
           if lookup({&shift-err}, buf_chk-doc.office) > 0
           or (buf_chk-doc.src-shift-date > buf_chk-doc.shift-date and buf_chk-doc.chk-date > buf_chk-doc.shift-date) /* Созданные вручную чеки в другой смене */
+          or buf_chk-doc.out-code = ?
           then do :
             if buf_chk-doc.chk-date = start_rvs-doc.fact-date
             and buf_chk-doc.chk-time <= start_rvs-doc.fact-time
@@ -2743,6 +2744,7 @@ class ibs.th.bge.is_PM.is_PM:
                                        :
           if lookup({&shift-err}, buf_chk-doc.office) > 0
           or (buf_chk-doc.src-shift-date > buf_chk-doc.shift-date and buf_chk-doc.chk-date > buf_chk-doc.shift-date) /* Созданные вручную чеки в другой смене */
+          or buf_chk-doc.out-code = ?
           then do :                               
             if buf_chk-doc.chk-date = end_rvs-doc.fact-date
             and buf_chk-doc.chk-time <= end_rvs-doc.fact-time
