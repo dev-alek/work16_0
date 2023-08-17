@@ -46,12 +46,7 @@ define input param  e-name  as character no-undo . /* не используется */
 define input param  msg-on  as logical   no-undo . /* yes - сообщения выдаются */
 define output param p-value as character no-undo . /* значение параметра - character */
 define output param p-type  as character no-undo .
-if p-code eq "rdc-dnst"
-then do:
-   p-value = "not".
-   p-type = "character".
-return.
-end.
+
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
