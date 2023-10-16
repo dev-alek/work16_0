@@ -733,6 +733,7 @@ class ibs.th.ref.sobj.sShift inherits UserControl:
       cast(this-object:splitContainer1, System.ComponentModel.ISupportInitialize):EndInit().
       this-object:splitContainer1:ResumeLayout(false).
       this-object:ResumeLayout(false).
+      {gbl\ed_date_cls.i this-object:DateStart this-object:DateEnd this-object:DateAlone }
       catch e as Progress.Lang.Error:
          undo, throw e.
       end catch.

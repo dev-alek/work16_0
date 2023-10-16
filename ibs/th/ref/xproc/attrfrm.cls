@@ -11,7 +11,12 @@ using Progress.Windows.Form.
   
 block-level on error undo, throw.
 class ibs.th.ref.xproc.attrfrm inherits Form : 
-
+ define public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define public property vss-author      as character no-undo init "$Author:$":U get.
+  define public property vss-date        as character no-undo init "$Date:$":U get.
+  define public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define public property vss-description as character no-undo init "Редатктор атрибутов" get.
    define public variable checkBox as System.Windows.Forms.CheckBox no-undo.
    define public variable comboBox as System.Windows.Forms.ComboBox no-undo.
    define public variable button as System.Windows.Forms.Button no-undo.
@@ -218,6 +223,7 @@ class ibs.th.ref.xproc.attrfrm inherits Form :
       cast(this-object:numericUpDown, System.ComponentModel.ISupportInitialize):EndInit().
       this-object:ResumeLayout(false).
       this-object:PerformLayout().
+      {gbl\ed_date_cls.i this-object:dateTimePicker This-object}
       catch e as Progress.Lang.Error:
          undo, throw e.
       end catch.

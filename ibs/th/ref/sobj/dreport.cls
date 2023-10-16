@@ -1,17 +1,29 @@
- /*------------------------------------------------------------------------
-    File        : sobject
-    Purpose     : 
-    Syntax      : 
-    Description : 
-    Author(s)   : Nady
-    Created     : Mon Mar 23 02:20:14 MSK 2020
-    Notes       : 
-  ----------------------------------------------------------------------*/
+/*
+$Revision:$
+$Author:$
+$Date:$
+$Workfile:$
+$Archive:$
+
+Автор: Рубан Дмитрий Андреевич 
+Дата создания: 2 марта 2021 г.
+Author:  Ruban Dmitriy Andreevich
+Creation date: 2 марта 2021 г.
+
+*/
+
+
 using Progress.Windows.Form.
   
 block-level on error undo, throw.
 class ibs.th.ref.sobj.dreport inherits Form : 
-
+   define variable vss-revision    as character no-undo init "$Revision:$":U .
+   define variable vss-author      as character no-undo init "$Author:$":U .
+   define variable vss-date        as character no-undo init "$Date:$":U .
+   define variable vss-workfile    as character no-undo init "$Workfile:$":U .
+   define variable vss-archive     as character no-undo init "$Archive:$":U .
+   define variable vss-description as character no-undo init "Форма фильтров для отчетов ".
+      
    define public  variable b_ach as System.Windows.Forms.Button no-undo.
    define private variable Blkp as System.Windows.Forms.Button no-undo.
    define private variable components as System.ComponentModel.IContainer no-undo.
@@ -402,6 +414,7 @@ class ibs.th.ref.sobj.dreport inherits Form :
       this-object:splitContainer3:ResumeLayout(false).
       this-object:tabContin:ResumeLayout(false).
       this-object:ResumeLayout(false).
+      {gbl\ed_date_cls.i this-object}
       catch e as Progress.Lang.Error:
          undo, throw e.
       end catch.
