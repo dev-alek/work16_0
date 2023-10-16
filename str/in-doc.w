@@ -2431,7 +2431,8 @@ end.
 
 on choose of menu-item m-ptrl-2 in menu m-ptrl do:
   {&stdbtn}
-
+  define variable v-Param-Type as character no-undo.
+  define variable list-pl as character no-undo.
   apply "row-leave" to browse {&browse-name}.
 
   run del-rvs-doc in this-procedure
@@ -2445,6 +2446,48 @@ on choose of menu-item m-ptrl-2 in menu m-ptrl do:
       error-status :get-message(1) skip
       return-value skip
       view-as alert-box error .
+  end.
+  else do:
+    run adm/shattri.p (
+       input "get":U
+       ,input  v-cntxt-obj-type
+       ,input  v-cntxt-obj-code
+       ,input  {&attr-petrol}
+       ,input  {&attr-petrol_block-nozzle} /*p-param-code*/
+       ,output v-value-character
+       ,output v-value-date
+       ,output v-value-decimal
+       ,output v-value-integer
+       ,output v-value-logical
+       ,output v-param-type
+       ,INPUT-OUTPUT table-handle v-tth
+       ) no-error .
+
+    if v-value-logical then 
+    do:
+      list-pl = "" .
+      for each ub.doc-pl where
+               ub.doc-pl.obj-type = t-doc.obj-type
+           and ub.doc-pl.obj-code = t-doc.obj-code
+           and ub.doc-pl.out-code = t-doc.doc-code
+          no-lock,
+          each ub.pl-gds-pump where ub.pl-gds-pump.gds-code = ub.doc-pl.gds-code and
+         ub.pl-gds-pump.obj-code = ub.doc-pl.obj-code and
+         ub.pl-gds-pump.obj-type = ub.doc-pl.obj-type and
+         ub.pl-gds-pump.pl-code = ub.doc-pl.pl-code no-lock,
+         each ub.pl-pump-nozzle where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
+         ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
+         ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
+         ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code no-lock:
+        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                   if list-pl = "" then "" else ";",
+                   ub.pl-pump-nozzle.nozzle-code,
+                   ub.pl-pump-nozzle.pump-code,
+                   ub.pl-pump-nozzle.pl-code).
+      end.
+
+      run unblock-nozzle( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
+    end.
   end.
 
   run UI-on in this-procedure ( input "line" ).

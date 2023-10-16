@@ -2574,7 +2574,7 @@ do:
      do:
        message return-value
          view-as alert-box question buttons yes-no update v-ok as logical  .
-       if v-ok then run block-nozzle .
+       if v-ok then run block-nozzle ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
        else do:
          message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
            view-as alert-box.
@@ -2682,7 +2682,7 @@ do:
       do:
          message return-value
             view-as alert-box question buttons yes-no update v-ok as logical  .
-         if v-ok then run unblock-nozzle .
+         if v-ok then run unblock-nozzle ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
          else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
                view-as alert-box.
                
@@ -2814,7 +2814,7 @@ do:
          do:
             message return-value
                view-as alert-box question buttons yes-no update v-ok as logical  .
-            if v-ok then run block-nozzle .
+            if v-ok then run block-nozzle ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
             else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
                   view-as alert-box.
                
@@ -2906,7 +2906,7 @@ do:
          do:
             message return-value
                view-as alert-box question buttons yes-no update v-ok as logical  .
-            if v-ok then run unblock-nozzle .
+            if v-ok then run unblock-nozzle ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
             else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
                   view-as alert-box.
                
@@ -4863,98 +4863,6 @@ procedure check-price:
   end.
 end procedure.
 
-procedure block-nozzle:
-         run str/diallog.w ( input parparentproc
-         ,input this-procedure
-         ,input 'str/get-block-nozzle.p':U
-         ,input (v-cntxt-obj-type + {&delim-par} +
-         string(v-cntxt-obj-code) + {&delim-par} +
-         string(0) + {&delim-par} +  /*p-remote */
-         string(0) + {&delim-par} + /*p-shft-close*/
-         {&delim-par} +
-         {&delim-par} +
-         {&delim-par} +
-         substitute("&1,&2"
-         ,"block"
-         ,list-pl))
-         ,input yes
-         ,input ''
-         ,input 'Блокировка пистолетов') .
-      if not error-status:error then 
-      do:
-         if return-value begins "Для кассы" then 
-         do:
-            message return-value
-               view-as alert-box question buttons yes-no update v-ok as logical  .
-            if v-ok then run block-nozzle .
-            else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
-                  view-as alert-box.
-               
-         end.
-         else 
-         do:
-            message "Блокировка пистолетов прошла успешно"
-               view-as alert-box.
-         end.   
-
-      end.
-      else 
-      do:
-         message return-value
-            view-as alert-box question buttons yes-no update v-ok .
-         if v-ok then run block-nozzle .
-         else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
-               view-as alert-box.
-   
-      end.
-end procedure .
-
-procedure unblock-nozzle:
-         run str/diallog.w ( input parparentproc
-         ,input this-procedure
-         ,input 'str/get-block-nozzle.p':U
-         ,input (v-cntxt-obj-type + {&delim-par} +
-         string(v-cntxt-obj-code) + {&delim-par} +
-         string(0) + {&delim-par} +  /*p-remote */
-         string(0) + {&delim-par} + /*p-shft-close*/
-         {&delim-par} +
-         {&delim-par} +
-         {&delim-par} +
-         substitute("&1,&2"
-         ,"unblock"
-         ,list-pl))
-         ,input yes
-         ,input ''
-         ,input 'Разблокировка пистолетов') .
-      if not error-status:error then 
-      do:
-         if return-value begins "Для кассы" then 
-         do:
-            message return-value
-               view-as alert-box question buttons yes-no update v-ok as logical  .
-            if v-ok then run unblock-nozzle .
-            else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
-                  view-as alert-box.
-               
-         end.
-         else 
-         do:
-            message "Разблокировка пистолетов прошла успешно"
-               view-as alert-box.
-         end.   
-
-      end.
-      else 
-      do:
-         message return-value
-            view-as alert-box question buttons yes-no update v-ok .
-         if v-ok then run unblock-nozzle .
-         else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
-               view-as alert-box.
-   
-      end.
-end procedure .
-   
 procedure delete-doc-line:
 do transaction
    on error   undo , return error

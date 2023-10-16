@@ -2873,6 +2873,104 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       run waitfram-hide in this-procedure .
       return .
     END PROCEDURE.
+
+    PROCEDURE block-nozzle:
+      define input parameter parparentproc  as handle    no-undo.
+      define input parameter obj-type       as character no-undo.
+      define input parameter obj-code       as integer   no-undo.
+      define input parameter list-pl        as character no-undo.
+      run str/diallog.w ( input parparentproc
+         ,input this-procedure
+         ,input 'str/get-block-nozzle.p':U
+         ,input (obj-type + {&delim-par} +
+         string(obj-code) + {&delim-par} +
+         string(0) + {&delim-par} +  /*p-remote */
+         string(0) + {&delim-par} + /*p-shft-close*/
+         {&delim-par} +
+         {&delim-par} +
+         {&delim-par} +
+         substitute("&1,&2"
+         ,"block"
+         ,list-pl))
+         ,input yes
+         ,input ''
+         ,input 'Блокировка пистолетов') .
+      if not error-status:error then 
+      do:
+         if return-value begins "Для кассы" then 
+         do:
+            message return-value
+               view-as alert-box question buttons yes-no update v-ok as logical  .
+            if v-ok then run block-nozzle ( parparentproc, obj-type, obj-code, list-pl ).
+            else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
+                  view-as alert-box.
+               
+         end.
+         else 
+         do:
+            message "Блокировка пистолетов прошла успешно"
+               view-as alert-box.
+         end.   
+
+      end.
+      else 
+      do:
+         message return-value
+            view-as alert-box question buttons yes-no update v-ok .
+         if v-ok then run block-nozzle .
+         else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+               view-as alert-box.
+      end.
+    END PROCEDURE .
+
+    PROCEDURE unblock-nozzle:
+      define input parameter parparentproc  as handle    no-undo.
+      define input parameter obj-type       as character no-undo.
+      define input parameter obj-code       as integer   no-undo.
+      define input parameter list-pl        as character no-undo.
+      run str/diallog.w ( input parparentproc
+        ,input this-procedure
+        ,input 'str/get-block-nozzle.p':U
+        ,input (obj-type + {&delim-par} +
+        string(obj-code) + {&delim-par} +
+        string(0) + {&delim-par} +  /*p-remote */
+        string(0) + {&delim-par} + /*p-shft-close*/
+        {&delim-par} +
+        {&delim-par} +
+        {&delim-par} +
+        substitute("&1,&2"
+        ,"unblock"
+        ,list-pl))
+        ,input yes
+        ,input ''
+        ,input 'Разблокировка пистолетов') .
+      if not error-status:error then 
+      do:
+         if return-value begins "Для кассы" then 
+         do:
+            message return-value
+               view-as alert-box question buttons yes-no update v-ok as logical  .
+            if v-ok then run unblock-nozzle( parparentproc, obj-type, obj-code, list-pl ).
+            else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+                  view-as alert-box.
+               
+         end.
+         else 
+         do:
+            message "Разблокировка пистолетов прошла успешно"
+               view-as alert-box.
+         end.   
+
+      end.
+      else 
+      do:
+        message return-value
+           view-as alert-box question buttons yes-no update v-ok .
+        if v-ok then run unblock-nozzle .
+        else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+              view-as alert-box.
+         end.
+    END PROCEDURE.
   &endif
 
 &endif
