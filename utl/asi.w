@@ -179,6 +179,16 @@ DEFINE VARIABLE FPort AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 26 BY 1 NO-UNDO.
 
+DEFINE VARIABLE rfrtime AS CHARACTER FORMAT "X(100)":U 
+     LABEL "Частота опроса уровнемеров RefreshTime (Секунды)" 
+     VIEW-AS FILL-IN 
+     SIZE 12 BY 1 NO-UNDO.
+
+DEFINE VARIABLE tlive AS CHARACTER FORMAT "X(100)":U 
+     LABEL "Время жизни ответа TimeLive (Секунды)" 
+     VIEW-AS FILL-IN 
+     SIZE 12 BY 1 NO-UNDO.
+
 DEFINE BUTTON bt-add 
      LABEL "Добавить" 
      SIZE 10.75 BY 1.
@@ -246,6 +256,11 @@ DEFINE VARIABLE fSlaveId AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 8 BY 1 NO-UNDO.
 
+DEFINE VARIABLE TOut AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Таймаут опроса TimeOut (миллисекунды)" 
+     VIEW-AS FILL-IN 
+     SIZE 16 BY 1 NO-UNDO.
+
 DEFINE BUTTON bt-add-2 
      LABEL "Добавить" 
      SIZE 15 BY 1.
@@ -300,7 +315,7 @@ DEFINE BROWSE BROWSE-3
       tt-asi.misc3 COLUMN-LABEL "Бит Данных" FORMAT "x(9)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 62 BY 3.5 ROW-HEIGHT-CHARS .58 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 64 BY 3.5 ROW-HEIGHT-CHARS .58 FIT-LAST-COLUMN.
 
 DEFINE BROWSE BROWSE-5
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-5 Dialog-Frame _STRUCTURED
@@ -321,7 +336,7 @@ DEFINE FRAME Dialog-Frame
      Bt_ok AT ROW 2.5 COL 2 WIDGET-ID 12
      bsavefile AT ROW 2.5 COL 18.5 WIDGET-ID 8
      btloabfile AT ROW 2.5 COL 40 WIDGET-ID 10
-     SPACE(4.99) SKIP(26.87)
+     SPACE(7.50) SKIP(30.00)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Параметры подключения уровнемеров" WIDGET-ID 100.
@@ -337,8 +352,8 @@ DEFINE FRAME FRAME-C
      fnompres AT ROW 9 COL 36.5 COLON-ALIGNED WIDGET-ID 28
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1.5 ROW 19.5
-         SIZE 64 BY 10.5
+         AT COL 1.5 ROW 22.5
+         SIZE 66.5 BY 10.75
          TITLE "Параметры резервуарного парка" WIDGET-ID 600.
 
 DEFINE FRAME FRAME-B
@@ -354,20 +369,23 @@ DEFINE FRAME FRAME-B
      fportasi AT ROW 9.25 COL 40 COLON-ALIGNED WIDGET-ID 10
      fspeed AT ROW 9.5 COL 11 COLON-ALIGNED WIDGET-ID 18
      fipasi AT ROW 9.5 COL 11 COLON-ALIGNED WIDGET-ID 8
+     TOut AT ROW 10.75 COL 40 COLON-ALIGNED WIDGET-ID 6
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1.5 ROW 8.5
-         SIZE 64 BY 10.75
+         AT COL 1.5 ROW 10.5
+         SIZE 66.5 BY 11.75
          TITLE "Параметры подключения" WIDGET-ID 400.
 
 DEFINE FRAME FRAME-A
      fip AT ROW 1.25 COL 10 COLON-ALIGNED WIDGET-ID 4
      ftype AT ROW 1.25 COL 44.5 COLON-ALIGNED WIDGET-ID 8
      FPort AT ROW 2.75 COL 10 COLON-ALIGNED WIDGET-ID 6
+     tlive AT ROW 4 COL 50.5 COLON-ALIGNED WIDGET-ID 6
+     rfrtime AT ROW 5.25 COL 50.5 COLON-ALIGNED WIDGET-ID 6
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1.5 ROW 4
-         SIZE 64 BY 4.25
+         AT COL 1.5 ROW 3.75
+         SIZE 66.5 BY 6.5
          TITLE "Параметры для внешних запросов" WIDGET-ID 200.
 
 
@@ -522,10 +540,13 @@ do:
        /*  flic    :screen-value in frame FRAME-B = tt-asi.Misc4*/
          fipasi  :screen-value in frame FRAME-B = tt-asi.misc5
          fportasi:screen-value in frame FRAME-B = tt-asi.misc6
-         fSlaveId:screen-value in frame FRAME-B = tt-asi.misc7 
+         fSlaveId:screen-value in frame FRAME-B = tt-asi.misc7
+         TOut:screen-value in frame FRAME-B = tt-asi.misc9
+
          
         .  
-      {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
+
+        {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
        apply  "VALUE-CHANGED" to BROWSE-5 in frame FRAME-C. 
    end.
 end.
@@ -629,8 +650,14 @@ do:
      tt-asi.misc5  = fipasi  :screen-value in frame FRAME-B 
      tt-asi.misc6  = fportasi:screen-value in frame FRAME-B
      tt-asi.misc7  = fSlaveId:screen-value in frame FRAME-B
-     
+     tt-asi.misc9  = TOut:screen-value in frame FRAME-B
+
   .
+
+
+
+
+
   {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
   apply  "VALUE-CHANGED" to BROWSE-3 in frame FRAME-B. 
   {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
@@ -656,7 +683,7 @@ do:
         view-as alert-box.
         return no-apply.
      end.
-     find first tt-tank_buf where tt-tank_buf.parent    = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6
+     find first tt-tank_buf where tt-tank_buf.parent    = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6   
                               and tt-tank_buf.code      = Faddr:screen-value
      no-lock no-error.
      if available tt-tank_buf
@@ -789,12 +816,17 @@ do:
   if available tt-asi 
                        
   then do:
-     for each tt-tank_buf where tt-tank_buf.parent    = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6: 
+
+
+    for each tt-tank_buf where tt-tank_buf.parent = tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6: 
+
          tt-tank_buf.parent = ftypeasi:screen-value in frame FRAME-B + {&delim-par} 
                             + fCom    :screen-value in frame FRAME-B + {&delim-par} 
-                            + fipasi  :screen-value in frame FRAME-B  + {&delim-par} 
-                            + fportasi:screen-value in frame FRAME-B. 
-     end.
+                            + fipasi  :screen-value in frame FRAME-B + {&delim-par} 
+                            + fportasi:screen-value in frame FRAME-B 
+                            . 
+     end.                    
+
      assign
      tt-asi.Misc1 = ""
      tt-asi.Misc2 = ""
@@ -809,7 +841,7 @@ do:
      tt-asi.misc5  = fipasi  :screen-value in frame FRAME-B 
      tt-asi.misc6  = fportasi:screen-value in frame FRAME-B
      tt-asi.misc7  = fSlaveId:screen-value in frame FRAME-B
-     
+     tt-asi.misc9  = TOut:screen-value in frame FRAME-B
   .
      {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
      apply  "VALUE-CHANGED" to BROWSE-3 in frame FRAME-B. 
@@ -911,7 +943,7 @@ end.
 
 &Scoped-define SELF-NAME Btn_OK
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_OK Dialog-Frame
-ON choose OF Btn_OK IN FRAME Dialog-Frame /* Сохратить в реестр */
+ON choose OF Btn_OK IN FRAME Dialog-Frame /* Сохранить в реестр */
 do:
   run proc-save (?).
 end.
@@ -1146,15 +1178,15 @@ PROCEDURE enable_UI :
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-  DISPLAY fip ftype FPort 
+  DISPLAY fip ftype FPort tlive rfrtime 
       WITH FRAME FRAME-A.
-  ENABLE fip ftype FPort 
+  ENABLE fip ftype FPort tlive rfrtime 
       WITH FRAME FRAME-A.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-A}
-  DISPLAY ftypeasi fipasi 
+  DISPLAY ftypeasi fipasi TOut 
       WITH FRAME FRAME-B.
   ENABLE BROWSE-3 bt-add bt-del bt-edit ftypeasi fSlaveId fCom fchet fbit 
-         fportasi fspeed fipasi 
+         fportasi fspeed fipasi TOut 
       WITH FRAME FRAME-B.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
   DISPLAY Faddr Fcoor fnompres 
@@ -1256,12 +1288,18 @@ end.
                else if mteg = "PORT" 
                then
                   FPort:screen-value = mvalue.
+               else if mteg = "PORT" 
+               then
+                  FPort:screen-value = mvalue.
+               if mteg = "RefreshTime"  then  rfrtime:screen-value = mvalue.
+               if mteg = "TimeLive"     then  tlive:screen-value = mvalue.
                else if mteg = "TYPE" 
                then
                   ftype:screen-value = if  mvalue eq  ? or mvalue eq  "?" then "1" else mvalue.
             end.
             else if mObj = "asi"
             then do:
+               if mteg = "TimeOut"      then tt-asi_exp.misc9 = mvalue.  
                if mteg = "PORT_NUM"
                then
                  tt-asi_exp.code = "COM" + mvalue.
@@ -1339,6 +1377,8 @@ do with frame FRAME-A:
    substitute('"PORT"="&1"',     Fport:screen-value ) skip
    substitute('"TYPE"="&1"',     ftype:screen-value ) skip
    substitute('"CodePage"="&1"', "1251"             ) skip(1).
+   if tlive:screen-value  ne "" and tlive:screen-value  ne ?    then  put unformatted  substitute('"TimeLive"="&1"', tlive:screen-value) skip .
+   if rfrtime:screen-value  ne "" and rfrtime:screen-value  ne ?    then  put unformatted  substitute('"RefreshTime"="&1"', rfrtime:screen-value) skip .
 end.
 for each tt-asi:
    if tt-asi.code begins "Ethernet"
@@ -1350,6 +1390,9 @@ for each tt-asi:
                       if tt-asi.code begins "Ethernet" then string(vi) else "") .
       
    put unformatted vhead + "]" skip.
+   if tt-asi.misc9 ne "" and tt-asi.misc9 ne ?
+   then
+      put unformatted substitute('"TimeOut"="&1"', tt-asi.misc9 ) skip(1).
    if tt-asi.code begins "com"
    then
       put unformatted substitute('"PORT_NUM"="&1"', substring(tt-asi.code,4)                          ) skip
@@ -1370,7 +1413,7 @@ for each tt-asi:
       put unformatted substitute('"PRES_SENSOR_NUM"="&1"', tt-asi.misc8 ) skip(1).
      
    put unformatted vhead + "\TankTop]" skip.
-   for each tt-tank where tt-tank.parent eq tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6:
+   for each tt-tank where tt-tank.parent eq tt-asi.parent + {&delim-par} + tt-asi.code + {&delim-par} + tt-asi.misc5 + {&delim-par} + tt-asi.misc6 :
        if tt-tank.misc1 eq ""
        then
           put unformatted substitute('"ID_&1"="&2"',tt-tank.code, tt-tank.CodeValue) skip.
