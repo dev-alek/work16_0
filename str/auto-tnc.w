@@ -747,6 +747,10 @@ ON CHOOSE OF b-save IN FRAME Dialog-Frame /* ¬вод */
             if available neck_auto-tank-attr then delete neck_auto-tank-attr.
          end.            
       end.
+      ub.auto-tank.brutto-qnty = 0 .
+      for each ub.auto-section no-lock where ub.auto-section.auto-num = varauto-num:
+        ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + ub.auto-section.brutto-qnty.
+      end.
    END.
 
 /* _UIB-CODE-BLOCK-END */
