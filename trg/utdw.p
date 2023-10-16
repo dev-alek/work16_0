@@ -344,17 +344,13 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
        and new-{&main-tbl}.sts      ne old-utd.sts
        and new-{&main-tbl}.EDocType ne objSrv:Env:Utd:EDocType:returns:KeyIntDB
     then do:
-       { gbl/rum-runa.i
-           ?
-           this-procedure:handle
-           ?
-           {&edoc-proc_event_utd}
-           " buffer new-{&main-tbl}:handle "
-           ?
-           ''
-           ''
-           no-error
-       }
+       run bge\send1cerp.p (?,
+                    this-procedure,
+                    this-procedure,
+                    "edi-doc",
+                    (buffer old-{&main-tbl}:handle),
+                    (buffer new-{&main-tbl}:handle),
+                    ?) no-error.
        if error-status:error 
        then do:
           message return-value view-as alert-box.
@@ -512,17 +508,13 @@ procedure sendmark:
    no-lock no-error.
    if     available marking
    then do:
-      { gbl/rum-runa.i
-           ?
-           this-procedure:handle
-           ?
-           {&edoc-proc_event_mark}
-           " buffer marking:handle "
-           ?
-           ''
-           ''
-           no-error
-      }
+       run bge\send1cerp.p (?,
+                    this-procedure,
+                    this-procedure,
+                    "mark",
+                    (buffer old-{&main-tbl}:handle),
+                    (buffer new-{&main-tbl}:handle),
+                    ?) no-error.
       if error-status:error 
       then
          message return-value view-as alert-box.

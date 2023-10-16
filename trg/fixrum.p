@@ -239,12 +239,6 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       end.
     end.
   end.
-  define variable mver as character no-undo.
-  run get-rum-version(output mver). 
-  if mver = "v16_0.12"
-  or mver = "v16_0.13"
-  then
-     run utl\addrule.p.
 end. /*doe*/
 
 run waitfram-hide in this-procedure .

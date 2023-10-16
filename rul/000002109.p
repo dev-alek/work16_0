@@ -19,6 +19,7 @@ define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 
+/*
 {rul\send1cerp.i}
 
 procedure local-proc-main:
@@ -55,3 +56,4 @@ procedure local-load-ruleset-context:
       end.
     end case.
 end.
+*/
