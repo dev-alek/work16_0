@@ -42,6 +42,7 @@ Creation date: 11/29/06
  * procedure lib-rvs_hstc-rvs - history-rvs                                                                              *
  *                                                                                                                       *
 \* ********************************************************************************************************************* */
+using ibs.th.gbl.gbl-hndllib from propath.
 
 define variable vss-revision    as character no-undo initial "$Revision$":U.
 define variable vss-author      as character no-undo initial "$Author$":U.
@@ -101,6 +102,10 @@ else do:
   assign
     g#lib-rvs = this-procedure :handle
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#lib-rvs", g#lib-rvs).
+  delete object gbl-hndllibObj.
 end.
 RUN gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", NO, OUTPUT rdc-value, OUTPUT rdc-type) NO-ERROR.
 
@@ -115,6 +120,10 @@ on delete of this-procedure do:
   assign
     g#lib-rvs = ?
   .
+  def var gbl-hndllibObj as class gbl-hndllib no-undo.
+  gbl-hndllibObj = new gbl-hndllib ().
+  gbl-hndllibObj:InitHndl("g#lib-rvs", g#lib-rvs).
+  delete object gbl-hndllibObj.
 end.
 
 procedure lib-rvs_place-sh : /* place-sh */

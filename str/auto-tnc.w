@@ -558,7 +558,7 @@ ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Ввод */
          message "Выберите тип АЦ" view-as alert-box.
          return no-apply .      
       end.  
-      if c-AC-type = 1 and C-neck = 4 and not SEP then 
+      if c-AC-type = 1 and C-neck = 4 then 
       do:
          message "Выберите тип горловины" view-as alert-box.
          return no-apply .
@@ -674,7 +674,7 @@ ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Ввод */
             create sep_auto-tank-attr.
             assign
                 sep_auto-tank-attr.auto-num   = ub.auto-tank.auto-num
-                sep_auto-tank-attr.attr-code  = "auto-error"
+                sep_auto-tank-attr.attr-code  = "auto-sep"
                 sep_auto-tank-attr.attr-value = string(SEP)
                 .
          end.
@@ -806,14 +806,6 @@ ON VALUE-CHANGED OF c-AC-type IN FRAME Dialog-Frame /* Тип АЦ */
             f-error
             f-temp
             with frame {&frame-name} .
-         if sep then 
-         do:
-            disable
-               C-neck
-               f-error
-               f-temp
-               with frame {&frame-name} .
-         end.   
          display
             f-error
             f-temp
@@ -871,18 +863,7 @@ ON VALUE-CHANGED OF f-temp IN FRAME Dialog-Frame /* Темпер.коэф. линейного расши
 ON VALUE-CHANGED OF SEP IN FRAME Dialog-Frame /* СЭП */
    DO:
       assign SEP .
-      if sep then 
-      do:
-         disable
-            C-neck f-error f-temp
-            with frame {&frame-name} .
-      end.  
-      else 
-      do:
-         enable
-            C-neck f-error f-temp
-            with frame {&frame-name} .     
-      end.    
+        
    END.
 
 /* _UIB-CODE-BLOCK-END */

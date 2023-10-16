@@ -15,6 +15,7 @@ using ibs.th.str.* from propath.
 using OpenEdge.Core.* from propath.
 using System.Windows.Forms.* from assembly.
 using ibs.th.str.ptrl.forms.* from propath.
+using ibs.th.gbl.gbl-var from propath.
 
 &global-define list-shape "Без горловины,Квадратная/прямоугольная,Эллиптическая,Круглая"
 &global-define list-shape-num 4
@@ -22,6 +23,9 @@ using ibs.th.str.ptrl.forms.* from propath.
 class ibs.th.str.ptrl.forms.tanksection inherits UserControl: 
   
   { cmp/str-glbl.i class}
+  { cmp/library.i  class}
+  { str/lib-rvs.i  class}
+  { str/rvsttdef.i rvs  }
   
   define temp-table tt-section no-undo 
       field dif     as integer
@@ -33,10 +37,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     get.
     private set.
   
+  define private variable bRvsAft as System.Windows.Forms.Button no-undo.
+  define private variable bRvsBef as System.Windows.Forms.Button no-undo.
   define private variable button1 as System.Windows.Forms.Button no-undo.
   define private variable buttonCopyPSTemp as System.Windows.Forms.Button no-undo.
   define private variable buttonPl as System.Windows.Forms.Button no-undo.
   define private variable buttonPlSiTemp as System.Windows.Forms.Button no-undo.
+  define private variable cbSGDKK as System.Windows.Forms.CheckBox no-undo.
   define private variable comboBoxGroupNP as System.Windows.Forms.ComboBox no-undo.
   define private variable comboBoxPour as System.Windows.Forms.ComboBox no-undo.
   define private variable comboBoxShape as System.Windows.Forms.ComboBox no-undo.
@@ -49,6 +56,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable label41 as System.Windows.Forms.Label no-undo.
   define private variable label40 as System.Windows.Forms.Label no-undo.
   define private variable label49 as System.Windows.Forms.Label no-undo.
+  define private variable maskedTextBoxAukKey as System.Windows.Forms.MaskedTextBox no-undo.
+  define private variable label50 as System.Windows.Forms.Label no-undo.
   define private variable maskedTextBoxDocVolume as System.Windows.Forms.MaskedTextBox no-undo.
   define private variable label48 as System.Windows.Forms.Label no-undo.
   define private variable maskedTextBoxPaspDens as System.Windows.Forms.MaskedTextBox no-undo.
@@ -169,6 +178,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable maskedTextBoxDocArr          as System.Windows.Forms.MaskedTextBox  extent 10 no-undo.
   
   define private variable maskedTextBoxOnlyReadOnlyArr as System.Windows.Forms.MaskedTextBox  extent 9 no-undo.
+  
+  define private variable menuItemRvsAft1 as System.Windows.Forms.MenuItem no-undo .
+  define private variable menuItemRvsAft2 as System.Windows.Forms.MenuItem no-undo .
+  define private variable menuItemRvsAft3 as System.Windows.Forms.MenuItem no-undo .
+  
+  define private variable menuItemRvsBef1 as System.Windows.Forms.MenuItem no-undo .
+  define private variable menuItemRvsBef2 as System.Windows.Forms.MenuItem no-undo .
+  define private variable menuItemRvsBef3 as System.Windows.Forms.MenuItem no-undo .
+  
+  define private variable rvslog as logical no-undo.
+  define private variable list-pl as character no-undo .
 
   define variable v-dop-volume as decimal no-undo.
   define variable var-list-shape as character no-undo init {&list-shape}.
@@ -194,7 +214,605 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end catch.
 
   end constructor.
+	
+		
+	
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void bRvsBef_MouseClick( input sender as System.Object, input e as System.Windows.Forms.MouseEventArgs ):
+		
+		if infoSecsObj:Mode = {&lookup}
+    then do :
+      ActionRvsSec
+        ( input {&lookup}
+         ,input "edit":U
+         ,input {&rvs-before-doc}
+        ) no-error .
+      if error-status :error then do:
+        return  .
+      end.
+    end .
+    else do :
+      bRvsBef:ContextMenu = new ContextMenu() .
+      menuItemRvsBef1 = new System.Windows.Forms.MenuItem("Сверка резервуара") .
+      menuItemRvsBef2 = new System.Windows.Forms.MenuItem("Просмотр") .
+      menuItemRvsBef3 = new System.Windows.Forms.MenuItem("Редактирование") .
+      bRvsBef:ContextMenu:MenuItems:Add(menuItemRvsBef1) .
+      bRvsBef:ContextMenu:MenuItems:Add(menuItemRvsBef2) .
+      bRvsBef:ContextMenu:MenuItems:Add(menuItemRvsBef3) .
+      menuItemRvsBef1:Click:Subscribe(onClickRvsBef1) .
+      menuItemRvsBef2:Click:Subscribe(onClickRvsBef2) .
+      menuItemRvsBef3:Click:Subscribe(onClickRvsBef3) .
+      bRvsBef:ContextMenu:Show(bRvsBef, new System.Drawing.Point(e:X, e:Y)) .
+      
+    end .
+    
+    return.
 
+	end method.
+  
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void maskedTextBoxAukKey_Leave( input sender as System.Object, input e as System.EventArgs ):
+		def var ii as int no-undo.
+    
+    do ii = 1 to extent (tanksecsObj:tankSectionControl):
+      if not valid-object (tanksecsObj:tankSectionControl[ii]) or tanksecsObj:tankSectionControl[ii]:idSecTabPage = this-object:idSecTabPage 
+        then next.
+
+      tanksecsObj:tankSectionControl[ii]:GetAukKey(maskedTextBoxAukKey:Text, cbSGDKK:Checked).  
+
+    end.
+    
+		return.
+
+	end method.
+
+  @VisualDesigner.
+  method private void onClickRvsBef1 ( input sender as System.Object, input e as System.EventArgs ) :
+    
+    define variable v-sec as character no-undo .
+    define variable infoSecObj as class InfoSection no-undo .
+    
+    define buffer buf_rvs-doc for ub.rvs-doc .
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_doc-pl for ub.doc-pl .
+    define buffer buf_pl-gds-pump for ub.pl-gds-pump .
+    define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle .
+
+    
+    assign rvslog = no .
+    v-sec = infoSecsObj:GetInfoSectionProp(idSecTabPage):SectionName .
+    
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = infoSecsObj:TrnDocNum .
+    
+    find first buf_rvs-doc
+        where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+        and buf_rvs-doc.out-code = infoSecsObj:TrnDocNum
+        and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+        and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec
+        and buf_rvs-doc.state-measure-qnty <> ?
+    no-error .
+    
+    if available buf_rvs-doc then 
+    do: 
+      if not chk-asi-polling (yes)
+        then return no-apply .
+  
+      message
+          "Сверка до уже выполнена. Вы уверены, что хотите ее изменить?"  skip
+          view-as alert-box question buttons YES-NO update rvslog.
+      if not rvslog then
+        return no-apply .
+    end.          
+    
+    if infoSecsObj:petrol_block-nozzle
+    then do :
+      list-pl = "" .
+      for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
+                                    and buf_doc-pl.obj-code = buf_trn-doc.obj-code
+                                    and buf_doc-pl.out-code = buf_trn-doc.doc-code
+                                    and buf_doc-pl.gds-code = infoSecsObj:GdsCode,
+      each buf_pl-gds-pump no-lock where buf_pl-gds-pump.gds-code = infoSecsObj:GdsCode
+                                     and buf_pl-gds-pump.obj-code = buf_doc-pl.obj-code
+                                     and buf_pl-gds-pump.obj-type = buf_doc-pl.obj-type
+                                     and buf_pl-gds-pump.pl-code = buf_doc-pl.pl-code,
+      each buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.obj-code = buf_pl-gds-pump.obj-code
+                                        and buf_pl-pump-nozzle.obj-type = buf_pl-gds-pump.obj-type
+                                        and buf_pl-pump-nozzle.pl-code = buf_pl-gds-pump.pl-code
+                                        and buf_pl-pump-nozzle.pump-code = buf_pl-gds-pump.pump-code
+      :
+        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                 if list-pl = "" then "" else ";",
+                 buf_pl-pump-nozzle.nozzle-code,
+                 buf_pl-pump-nozzle.pump-code,
+                 buf_pl-pump-nozzle.pl-code).          
+      end.
+      
+      run str/diallog.w ( input infoSecsObj:parentproc
+                          ,input infoSecsObj:in-line-handle
+                          ,input 'str/get-block-nozzle.p':U
+                          ,input (buf_trn-doc.obj-type + {&delim-par} +
+                          string(buf_trn-doc.obj-code) + {&delim-par} +
+                          string(0) + {&delim-par} +  /*p-remote */
+                          string(0) + {&delim-par} + /*p-shft-close*/
+                          {&delim-par} +
+                          {&delim-par} +
+                          {&delim-par} +
+                          substitute("&1,&2"
+                          ,"block"
+                          ,list-pl))
+                          ,input yes
+                          ,input ''
+                          ,input 'Блокировка пистолетов') .
+       if error-status :error then 
+       do:
+         return no-apply .
+       end.
+       
+       if return-value begins "Для кассы" then 
+       do:
+         message return-value
+            view-as alert-box question buttons yes-no update v-ok as logical  .
+         if v-ok then run block-nozzle .
+         else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
+               view-as alert-box.
+       end.
+       else 
+       do:
+         message "Блокировка пистолетов прошла успешно"
+            view-as alert-box.
+       end.   
+      
+    end .
+    
+    ActionRvsSec
+       ( input {&update}
+        ,input "meas":U
+        ,input {&rvs-before-doc}
+        ) no-error .
+    if error-status :error then 
+    do:
+      return no-apply .
+    end.
+    
+    infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
+    groupBox5:Enabled   = not groupBox5:Enabled .
+    dateTimePickerDateStart:Enabled = yes .
+    dateTimePickerDateStart:Checked = yes .
+    dateTimePickerDateStart:Focus() .
+    dateTimePickerDateStart:Text      = string (infoSecObj:DateStart) no-error.
+    if error-status:error or infoSecObj:DateStart = ?
+      then 
+    do:
+      blank_datetime (dateTimePickerDateStart).
+    end.
+    dateTimePickerDateStart:Show() .
+    dateTimePickerDateStart:Enabled = no .
+    
+    dateTimePickerTimeStart:Enabled = yes .
+    dateTimePickerTimeStart:Checked = yes .
+    dateTimePickerTimeStart:visible = yes .
+    dateTimePickerTimeStart:Focus() .
+    dateTimePickerTimeStart:Text      = GetTimeStr(infoSecObj:TimeStart) no-error.
+    if error-status:error or infoSecObj:TimeStart = ? or infoSecObj:TimeStart = 0
+      then 
+    do:
+      blank_datetime (dateTimePickerTimeStart).
+    end.
+    dateTimePickerTimeStart:Enabled = no .
+    groupBox5:Enabled   = not groupBox5:enabled .
+    
+  end method .
+  
+  @VisualDesigner.
+  method private void onClickRvsBef2 ( input sender as System.Object, input e as System.EventArgs ) :
+    
+    ActionRvsSec
+      ( input {&lookup}
+       ,input "edit":U
+       ,input {&rvs-before-doc}
+      ) no-error .
+    if error-status :error then do:
+      return  .
+    end.
+    
+  end method .
+  
+  @VisualDesigner.
+  method private void onClickRvsBef3 ( input sender as System.Object, input e as System.EventArgs ) :
+    
+    define variable infoSecObj as class InfoSection no-undo .
+    
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_doc-pl for ub.doc-pl .
+    define buffer buf_pl-gds-pump for ub.pl-gds-pump .
+    define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle .
+
+    
+    assign rvslog = no .
+    
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = infoSecsObj:TrnDocNum .
+    
+    ActionRvsSec
+    ( input {&update}
+     ,input "edit":U
+     ,input {&rvs-before-doc}
+    ) no-error .
+    if error-status :error then do:
+      return no-apply .
+    end.
+    
+    infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
+    groupBox5:Enabled   = not groupBox5:Enabled .
+    dateTimePickerDateStart:Enabled = yes .
+    dateTimePickerDateStart:Checked = yes .
+    dateTimePickerDateStart:Focus() .
+    dateTimePickerDateStart:Text      = string (infoSecObj:DateStart) no-error.
+    if error-status:error or infoSecObj:DateStart = ?
+      then 
+    do:
+      blank_datetime (dateTimePickerDateStart).
+    end.
+    dateTimePickerDateStart:Show() .
+    dateTimePickerDateStart:Enabled = no .
+    
+    dateTimePickerTimeStart:Enabled = yes .
+    dateTimePickerTimeStart:Checked = yes .
+    dateTimePickerTimeStart:visible = yes .
+    dateTimePickerTimeStart:Focus() .
+    dateTimePickerTimeStart:Text      = GetTimeStr(infoSecObj:TimeStart) no-error.
+    if error-status:error or infoSecObj:TimeStart = ? or infoSecObj:TimeStart = 0
+      then 
+    do:
+      blank_datetime (dateTimePickerTimeStart).
+    end.
+    dateTimePickerTimeStart:Enabled = no .
+    groupBox5:Enabled   = not groupBox5:enabled .
+    
+    if infoSecsObj:petrol_block-nozzle
+    then do :
+      list-pl = "" .
+      for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
+                                    and buf_doc-pl.obj-code = buf_trn-doc.obj-code
+                                    and buf_doc-pl.out-code = buf_trn-doc.doc-code
+                                    and buf_doc-pl.gds-code = infoSecsObj:GdsCode,
+      each buf_pl-gds-pump no-lock where buf_pl-gds-pump.gds-code = infoSecsObj:GdsCode
+                                     and buf_pl-gds-pump.obj-code = buf_doc-pl.obj-code
+                                     and buf_pl-gds-pump.obj-type = buf_doc-pl.obj-type
+                                     and buf_pl-gds-pump.pl-code = buf_doc-pl.pl-code,
+      each buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.obj-code = buf_pl-gds-pump.obj-code
+                                        and buf_pl-pump-nozzle.obj-type = buf_pl-gds-pump.obj-type
+                                        and buf_pl-pump-nozzle.pl-code = buf_pl-gds-pump.pl-code
+                                        and buf_pl-pump-nozzle.pump-code = buf_pl-gds-pump.pump-code
+      :
+        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                   if list-pl = "" then "" else ";",
+                   buf_pl-pump-nozzle.nozzle-code,
+                   buf_pl-pump-nozzle.pump-code,
+                   buf_pl-pump-nozzle.pl-code).           
+      end.
+      run str/diallog.w ( input infoSecsObj:parentproc
+                          ,input infoSecsObj:in-line-handle
+                          ,input 'str/get-block-nozzle.p':U
+                          ,input (buf_trn-doc.obj-type + {&delim-par} +
+                          string(buf_trn-doc.obj-code) + {&delim-par} +
+                          string(0) + {&delim-par} +  /*p-remote */
+                          string(0) + {&delim-par} + /*p-shft-close*/
+                          {&delim-par} +
+                          {&delim-par} +
+                          {&delim-par} +
+                          substitute("&1,&2"
+                          ,"block"
+                          ,list-pl))
+                          ,input yes
+                          ,input ''
+                          ,input 'Блокировка пистолетов') .
+       if not error-status:error then 
+       do:
+         if return-value begins "Для кассы" then 
+         do:
+           message return-value
+              view-as alert-box question buttons yes-no update v-ok as logical  .
+           if v-ok then run block-nozzle .
+           else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
+                 view-as alert-box.
+         end.
+         else 
+         do:
+           message "Блокировка пистолетов прошла успешно"
+              view-as alert-box.
+         end.   
+       end.
+       else do:
+         return no-apply .
+       end.
+      
+    end .
+    
+  end method .
+  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  
+  @VisualDesigner.
+  method private void bRvsAft_MouseClick( input sender as System.Object, input e as System.Windows.Forms.MouseEventArgs ):
+    
+    if infoSecsObj:Mode = {&lookup}
+    then do :
+      ActionRvsSec
+        ( input {&lookup}
+         ,input "edit":U
+         ,input {&rvs-after-doc}
+        ) no-error .
+      if error-status :error then do:
+        return  .
+      end.
+    end .
+    else do :
+      bRvsAft:ContextMenu = new ContextMenu() .
+      menuItemRvsAft1 = new System.Windows.Forms.MenuItem("Сверка резервуара") .
+      menuItemRvsAft2 = new System.Windows.Forms.MenuItem("Просмотр") .
+      menuItemRvsAft3 = new System.Windows.Forms.MenuItem("Редактирование") .
+      bRvsAft:ContextMenu:MenuItems:Add(menuItemRvsAft1) .
+      bRvsAft:ContextMenu:MenuItems:Add(menuItemRvsAft2) .
+      bRvsAft:ContextMenu:MenuItems:Add(menuItemRvsAft3) .
+      menuItemRvsAft1:Click:Subscribe(onClickRvsAft1) .
+      menuItemRvsAft2:Click:Subscribe(onClickRvsAft2) .
+      menuItemRvsAft3:Click:Subscribe(onClickRvsAft3) .
+      bRvsAft:ContextMenu:Show(bRvsAft, new System.Drawing.Point(e:X, e:Y)) .
+      
+    end .
+    
+    return.
+
+  end method.
+  
+  @VisualDesigner.
+  method private void onClickRvsAft1 ( input sender as System.Object, input e as System.EventArgs ) :
+    
+    define variable infoSecObj as class InfoSection no-undo .
+    
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_doc-pl for ub.doc-pl .
+    define buffer buf_pl-gds-pump for ub.pl-gds-pump .
+    define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle .
+    
+    assign rvslog = no .
+    
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = infoSecsObj:TrnDocNum .
+    
+    if not chk-asi-polling (no)
+    then return no-apply .
+
+    ActionRvsSec
+      ( input {&update}
+       ,input "meas":U
+       ,input {&rvs-after-doc}
+      ) no-error .
+    if error-status :error then do:
+      return no-apply .
+    end.
+    
+    infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
+    groupBox5:Enabled     = not groupBox5:Enabled .
+    dateTimePickerDateEnd:Enabled     = yes .
+    dateTimePickerDateEnd:Checked     = yes .
+    dateTimePickerDateEnd:Focus() .
+    dateTimePickerDateEnd:Text        = string (infoSecObj:DateEnd) no-error.
+    if error-status:error or infoSecObj:DateEnd = ?
+      then 
+    do:
+      blank_datetime (dateTimePickerDateEnd).
+    end.
+    dateTimePickerDateEnd:Enabled     = no .
+    
+    dateTimePickerTimeEnd:Enabled     = yes .
+    dateTimePickerTimeEnd:Checked     = yes .
+    dateTimePickerTimeEnd:Focus() .
+    dateTimePickerTimeEnd:Text        = GetTimeStr(infoSecObj:TimeEnd) no-error.
+    if error-status:error or infoSecObj:TimeEnd = ? or infoSecObj:TimeEnd = 0
+      then 
+    do:
+      blank_datetime (dateTimePickerTimeEnd).
+    end.
+    dateTimePickerTimeEnd:Enabled     = no .
+    groupBox5:Enabled     = not groupBox5:Enabled .
+    
+    if infoSecsObj:petrol_block-nozzle
+    then do :
+      list-pl = "" .
+      for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
+                                    and buf_doc-pl.obj-code = buf_trn-doc.obj-code
+                                    and buf_doc-pl.out-code = buf_trn-doc.doc-code
+                                    and buf_doc-pl.gds-code = infoSecsObj:GdsCode,
+      each buf_pl-gds-pump no-lock where buf_pl-gds-pump.gds-code = infoSecsObj:GdsCode
+                                     and buf_pl-gds-pump.obj-code = buf_doc-pl.obj-code
+                                     and buf_pl-gds-pump.obj-type = buf_doc-pl.obj-type
+                                     and buf_pl-gds-pump.pl-code = buf_doc-pl.pl-code,
+      each buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.obj-code = buf_pl-gds-pump.obj-code
+                                        and buf_pl-pump-nozzle.obj-type = buf_pl-gds-pump.obj-type
+                                        and buf_pl-pump-nozzle.pl-code = buf_pl-gds-pump.pl-code
+                                        and buf_pl-pump-nozzle.pump-code = buf_pl-gds-pump.pump-code
+      :
+        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                   if list-pl = "" then "" else ";",
+                   buf_pl-pump-nozzle.nozzle-code,
+                   buf_pl-pump-nozzle.pump-code,
+                   buf_pl-pump-nozzle.pl-code).             
+      end.
+      run str/diallog.w ( input infoSecsObj:parentproc
+          ,input infoSecsObj:in-line-handle
+          ,input 'str/get-block-nozzle.p':U
+          ,input (buf_trn-doc.obj-type + {&delim-par} +
+          string(buf_trn-doc.obj-code) + {&delim-par} +
+          string(0) + {&delim-par} +  /*p-remote */
+          string(0) + {&delim-par} + /*p-shft-close*/
+          {&delim-par} +
+          {&delim-par} +
+          {&delim-par} +
+          substitute("&1,&2"
+          ,"unblock"
+          ,list-pl))
+          ,input yes
+          ,input ''
+          ,input 'Разблокировка выбранных пистолетов') .
+      if not error-status:error then 
+      do:
+        if return-value begins "Для кассы" then 
+        do:
+           message return-value
+              view-as alert-box question buttons yes-no update v-ok as logical  .
+           if v-ok then run unblock-nozzle .
+           else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+                 view-as alert-box.
+                 
+        end.
+        else 
+        do:
+           message if return-value begins "Ошибка" then return-value else "Разблокировка пистолетов прошла успешно" 
+             view-as alert-box.
+        end.   
+      end.
+      else 
+      do:
+        return no-apply .   
+      end.
+    end .
+    
+  end method .
+  
+  @VisualDesigner.
+  method private void onClickRvsAft2 ( input sender as System.Object, input e as System.EventArgs ) :
+    
+    ActionRvsSec
+      ( input {&lookup}
+       ,input "edit":U
+       ,input {&rvs-after-doc}
+      ) no-error .
+    if error-status :error then do:
+      return  .
+    end.
+    
+  end method .
+  
+  @VisualDesigner.
+  method private void onClickRvsAft3 ( input sender as System.Object, input e as System.EventArgs ) :
+    
+    define variable infoSecObj as class InfoSection no-undo .
+    
+    define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_doc-pl for ub.doc-pl .
+    define buffer buf_pl-gds-pump for ub.pl-gds-pump .
+    define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle .
+    
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = infoSecsObj:TrnDocNum .
+    
+    ActionRvsSec
+    ( input {&update}
+     ,input "edit":U
+     ,input {&rvs-after-doc}
+    ) no-error .
+    if error-status :error then do:
+      return no-apply .
+    end.
+    
+    infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
+    groupBox5:Enabled     = not groupBox5:Enabled .
+    dateTimePickerDateEnd:Enabled     = yes .
+    dateTimePickerDateEnd:Checked     = yes .
+    dateTimePickerDateEnd:Focus() .
+    dateTimePickerDateEnd:Text        = string (infoSecObj:DateEnd) no-error.
+    if error-status:error or infoSecObj:DateEnd = ?
+      then 
+    do:
+      blank_datetime (dateTimePickerDateEnd).
+    end.
+    dateTimePickerDateEnd:Enabled     = no .
+    
+    dateTimePickerTimeEnd:Enabled     = yes .
+    dateTimePickerTimeEnd:Checked     = yes .
+    dateTimePickerTimeEnd:Focus() .
+    dateTimePickerTimeEnd:Text        = GetTimeStr(infoSecObj:TimeEnd) no-error.
+    if error-status:error or infoSecObj:TimeEnd = ? or infoSecObj:TimeEnd = 0
+      then 
+    do:
+      blank_datetime (dateTimePickerTimeEnd).
+    end.
+    dateTimePickerTimeEnd:Enabled     = no .
+    groupBox5:Enabled     = not groupBox5:Enabled .
+    
+    if infoSecsObj:petrol_block-nozzle
+    then do :
+      list-pl = "" .
+      for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
+                                    and buf_doc-pl.obj-code = buf_trn-doc.obj-code
+                                    and buf_doc-pl.out-code = buf_trn-doc.doc-code
+                                    and buf_doc-pl.gds-code = infoSecsObj:GdsCode,
+      each buf_pl-gds-pump no-lock where buf_pl-gds-pump.gds-code = infoSecsObj:GdsCode
+                                     and buf_pl-gds-pump.obj-code = buf_doc-pl.obj-code
+                                     and buf_pl-gds-pump.obj-type = buf_doc-pl.obj-type
+                                     and buf_pl-gds-pump.pl-code = buf_doc-pl.pl-code,
+      each buf_pl-pump-nozzle no-lock where buf_pl-pump-nozzle.obj-code = buf_pl-gds-pump.obj-code
+                                        and buf_pl-pump-nozzle.obj-type = buf_pl-gds-pump.obj-type
+                                        and buf_pl-pump-nozzle.pl-code = buf_pl-gds-pump.pl-code
+                                        and buf_pl-pump-nozzle.pump-code = buf_pl-gds-pump.pump-code
+      :
+        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                   if list-pl = "" then "" else ";",
+                   buf_pl-pump-nozzle.nozzle-code,
+                   buf_pl-pump-nozzle.pump-code,
+                   buf_pl-pump-nozzle.pl-code).             
+      end.
+      run str/diallog.w ( input infoSecsObj:parentproc
+          ,input infoSecsObj:in-line-handle
+          ,input 'str/get-block-nozzle.p':U
+          ,input (buf_trn-doc.obj-type + {&delim-par} +
+          string(buf_trn-doc.obj-code) + {&delim-par} +
+          string(0) + {&delim-par} +  /*p-remote */
+          string(0) + {&delim-par} + /*p-shft-close*/
+          {&delim-par} +
+          {&delim-par} +
+          {&delim-par} +
+          substitute("&1,&2"
+          ,"unblock"
+          ,list-pl))
+          ,input yes
+          ,input ''
+          ,input 'Разблокировка выбранных пистолетов') .
+      if not error-status:error then 
+      do:
+        if return-value begins "Для кассы" then 
+        do:
+           message return-value
+              view-as alert-box question buttons yes-no update v-ok as logical  .
+           if v-ok then run unblock-nozzle .
+           else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+                 view-as alert-box.
+                 
+        end.
+        else 
+        do:
+           message if return-value begins "Ошибка" then return-value else "Разблокировка пистолетов прошла успешно" 
+             view-as alert-box.
+        end.   
+      end.
+      else 
+      do:
+        return no-apply .   
+      end.
+    end .
+    
+  end method .
+  
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:
@@ -216,7 +834,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       undo, return no-apply.
     end.
     varauto-tank-par = replace(maskedTextBoxDiameter:Text, "/", {&delim-par}). 
-    if (infoSecsObj:Mode = {&update} or infoSecsObj:Mode = {&add-def}) and not infoSecsObj:FlagTrn and maskedTextBoxCarVol:Enabled = true
+    if (infoSecsObj:Mode = {&update} or infoSecsObj:Mode = {&add-def})
+    and (not infoSecsObj:FlagTrn or (infoSecsObj:FlagTrn and infoSecsObj:IsSGDKK and infoSecsObj:IsKP and not infoSecsObj:IsKPrvs))
+    and maskedTextBoxCarVol:Enabled = true
     then v-mode = {&update}.
     else v-mode = {&lookup}.
     
@@ -409,6 +1029,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   @VisualDesigner.
   method private void buttonCopySec_Click( input sender as System.Object, input e as System.EventArgs ):
     def var ii as int no-undo.
+    
     do ii = 1 to extent (tanksecsObj:tankSectionControl):
       if not valid-object (tanksecsObj:tankSectionControl[ii]) or tanksecsObj:tankSectionControl[ii]:idSecTabPage = this-object:idSecTabPage 
         then next.
@@ -463,6 +1084,81 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
 	end method.
 
+
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void cbSGDKK_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		define variable v-log as logical no-undo .
+		define buffer bf_doc-line-attr for ub.doc-line-attr .
+		
+		if infoSecsObj:FlagTrn
+		then do :
+		  if cbSGDKK:Checked
+      then do :
+        message "Установлен флаг «Тревожное событие СГДКК». Для продолжения работы с документом потребуется ввести Идентификатор доступа (ключа) «верхнего уровня» или одноразовый код.?" skip
+                "Вы уверены в правильности установки флага «Тревожное событие СГДКК»?"
+        view-as alert-box question buttons yes-no update v-log .
+        if v-log
+        then do :
+          label50:text = "Идентификатор доступа (ключ) «верхнего уровня» или одноразовый код:" .
+          groupBox2:Enabled = true.
+          groupBox3:Enabled = true.
+          groupBox4:Enabled = true.
+          groupBox5:Enabled = true.
+          groupBox6:Enabled = true.
+          groupBox7:Enabled = true.
+          groupBox8:Enabled = true.
+/*          this-object:maskedTextBoxCarVol:Enabled = true.*/
+/*          comboBoxPour:Enabled = true.                   */
+/*          comboBoxShape:Enabled = true.                  */
+        end .
+        else do :
+          cbSGDKK:checked = no .
+        end .
+      end .
+      else do :
+        label50:text = "Идентификатор доступа (ключ) «нижнего уровня»:" .
+        groupBox2:Enabled = false.
+        groupBox3:Enabled = false.
+        groupBox4:Enabled = false.
+        groupBox5:Enabled = false.
+        groupBox6:Enabled = false.
+        groupBox7:Enabled = false.
+        groupBox8:Enabled = false.
+/*        this-object:maskedTextBoxCarVol:Enabled = false.*/
+/*        comboBoxPour:Enabled = false.                   */
+/*        comboBoxShape:Enabled = false.                  */
+      end .
+		end .
+		else do :
+  		if cbSGDKK:Checked
+      then do :
+        message "При установке флага «Тревожное событие СГДКК» будет активирован комиссионный прием. Продолжить?"
+        view-as alert-box question buttons yes-no update v-log .
+        if v-log
+        then do :
+          label50:text = "Идентификатор доступа (ключ) «верхнего уровня» или одноразовый код:" .
+        end .
+        else do :
+          cbSGDKK:checked = no .
+        end .
+      end .
+      else do :
+        label50:text = "Идентификатор доступа (ключ) «нижнего уровня»:" .
+      end .
+    end .
+    
+/*    infoSecsObj:GetInfoSectionProp(idSecTabPage).              */
+/*    infoSecsObj:InfoSectionCurr:alarm-SGDKK = cbSGDKK:Checked .*/
+		
+		return.
+
+	end method.
 
 	/*------------------------------------------------------------------------------
 	 Purpose:
@@ -543,8 +1239,19 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     return.
 
   end method.
+  
+  method public void GetAukKey(inAukKey as character, inSGDKK as logical) :
+    
+    if cbSGDKK:checked = inSGDKK
+    and trim(maskedTextBoxAukKey:text) = ""
+    then do :
+      maskedTextBoxAukKey:text = inAukKey .
+    end .
+    return .
+    
+  end method.
 
-  method public void GetCopy(a as char, b as char, c as char, d as char ):
+  method public void GetCopy(a as char, b as char, c as char, d as char ) :
     
     assign
       maskedTextBoxNumPassport:Text = a
@@ -582,6 +1289,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     define variable v-value-logical   as logical   no-undo .
     define variable v-field           as character no-undo .
     define variable v-rvd-own-nb      as logical   no-undo .
+    define variable tmpInfoSecs       as class InfoSectionsTotal no-undo .
+    define variable v-num-sec-pl      as integer   no-undo .
     
     define buffer buf_trn-doc for ub.trn-doc .
     
@@ -746,6 +1455,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       //groupBox4:Location = groupBox7:Location.
       maskedTextBoxTankWater:Enabled = false.
     end.
+    
+    if not (infoSecsObj:IsSGDKK)
+    then do :
+      cbSGDKK:Visible = false.
+    end .
 
     if infoSecsObj:Mode = {&lookup}
       then 
@@ -757,6 +1471,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       comboBoxPour:Enabled = false.
       comboBoxGroupNP:Enabled = false.
       maskedTextBoxDocVolume:Enabled = false.
+      cbSGDKK:Enabled = false.
+      maskedTextBoxAukKey:Enabled = false.
       
       do ii = 1 to extent (maskedTextBoxArr):
         this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
@@ -796,6 +1512,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       groupBox6:Visible = false.
       groupBox7:Visible = false.
       groupBox8:Visible = false.
+      label50:Visible   = false.
+      maskedTextBoxAukKey:visible = false.
+      bRvsBef:visible   = false.
+      bRvsAft:visible   = false.
     end.
     
     if (infoSecsObj:Mode = "ДОБАВЛЕНИЕ" or infoSecsObj:Mode = "ИЗМЕНЕНИЕ") and not infoSecsObj:FlagTrn
@@ -969,12 +1689,69 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxCarVol:Enabled = false.
       comboBoxGroupNP:Enabled = false.
       maskedTextBoxDocVolume:Enabled = false.
+      bRvsBef:enabled = false .
+      bRvsAft:enabled = false .
       
       do ii = 1 to extent (maskedTextBoxDocArr):
         this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
         this-object:maskedTextBoxDocArr[ii]:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
         maskedTextBoxDocArr[ii]:Enabled = false.
       end.
+      
+      if infoSecsObj:IsSGDKK
+      then do :
+        if cbSGDKK:Checked
+        then do :
+          cbSGDKK:Enabled = false.
+          label50:text = "Идентификатор доступа (ключ) «верхнего уровня» или одноразовый код:" .
+          label50:ForeColor = System.Drawing.Color:Red.
+        end .
+        else do :
+          label50:text = "Идентификатор доступа (ключ) «нижнего уровня»:" .
+          label50:ForeColor = System.Drawing.Color:Black.
+        end .
+        
+        groupBox2:Enabled = false.
+        groupBox3:Enabled = false.
+        groupBox4:Enabled = false.
+        groupBox5:Enabled = false.
+        groupBox6:Enabled = false.
+        groupBox7:Enabled = false.
+        groupBox8:Enabled = false.
+        
+      end .
+      
+      if infoSecsObj:IsKPrvs
+      then do :
+        tmpInfoSecs = new InfoSectionsTotal () .
+        tmpInfoSecs:Initialization(infoSecsObj:TrnDocNum, infoSecsObj:GdsCode) .
+        do ii = 1 to tmpInfoSecs:SectionNum : 
+          if tmpInfoSecs:GetInfoSectionProp(ii):ListTank = infoSecsObj:InfoSectionCurr:ListTank
+          and tmpInfoSecs:GetInfoSectionProp(ii):SectionName <> infoSecsObj:InfoSectionCurr:SectionName
+          then do :
+            bRvsBef:enabled = true .
+            bRvsAft:enabled = true .
+          end .
+        end .
+        delete object tmpInfoSecs .
+      end .
+      else
+      if infoSecsObj:IsKP
+      then do :
+        if cbSGDKK:Checked
+        then do :
+          groupBox2:Enabled = true.
+          groupBox3:Enabled = true.
+          groupBox4:Enabled = true.
+          groupBox5:Enabled = true.
+          groupBox6:Enabled = true.
+          groupBox7:Enabled = true.
+          groupBox8:Enabled = true.
+/*          this-object:maskedTextBoxCarVol:Enabled = true.*/
+/*          comboBoxPour:Enabled = true.                   */
+/*          comboBoxShape:Enabled = true.                  */
+        end .
+      end .
       
       if infoSecsObj:RdcDnstvalue = "not"
       then do:
@@ -1044,11 +1821,20 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           then do :
             this-object:label43:ForeColor = System.Drawing.Color:Red.
           end .
+          when "accessIDLowerLevel"
+          then do :
+            this-object:label50:ForeColor = System.Drawing.Color:Red.
+          end .
         end case .
       end .
     end.
 
-    
+    if not infoSecsObj:IsSGDKK
+    then do :
+      label50:Visible             = false.
+      maskedTextBoxAukKey:visible = false.
+      cbSGDKK:enabled             = false.
+    end .
   end.
 
 
@@ -1158,6 +1944,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:dateTimePickerTimeStart = new System.Windows.Forms.DateTimePicker().
     this-object:dateTimePickerTimeEnd = new System.Windows.Forms.DateTimePicker().
     this-object:groupBox5 = new System.Windows.Forms.GroupBox().
+    this-object:bRvsAft = new System.Windows.Forms.Button().
+    this-object:bRvsBef = new System.Windows.Forms.Button().
     this-object:maskedTextBoxAccWeight = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxTankWeight = new System.Windows.Forms.MaskedTextBox().
     this-object:maskedTextBoxTankVolPomi = new System.Windows.Forms.MaskedTextBox().
@@ -1180,6 +1968,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:buttonPlSiTemp = new System.Windows.Forms.Button().
     this-object:maskedTextBoxPlaceSiTemp = new System.Windows.Forms.MaskedTextBox().
     this-object:label43 = new System.Windows.Forms.Label().
+    this-object:cbSGDKK = new System.Windows.Forms.CheckBox().
+    this-object:label50 = new System.Windows.Forms.Label().
+    this-object:maskedTextBoxAukKey = new System.Windows.Forms.MaskedTextBox().
     this-object:groupBox3:SuspendLayout().
     this-object:groupBox2:SuspendLayout().
     this-object:groupBox1:SuspendLayout().
@@ -1211,7 +2002,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox3:Controls:Add(this-object:maskedTextBoxTankWater).
     this-object:groupBox3:Controls:Add(this-object:maskedTextBoxABTArir).
     this-object:groupBox3:Controls:Add(this-object:maskedTextBoxMouth).
-    this-object:groupBox3:Location = new System.Drawing.Point(10, 327).
+    this-object:groupBox3:Location = new System.Drawing.Point(10, 353).
     this-object:groupBox3:Name = "groupBox3".
     this-object:groupBox3:Size = new System.Drawing.Size(682, 140).
     this-object:groupBox3:TabIndex = 2.
@@ -1447,9 +2238,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox2:Controls:Add(this-object:label11).
     this-object:groupBox2:Controls:Add(this-object:label10).
     this-object:groupBox2:Controls:Add(this-object:maskedTextBoxNormDoc).
-    this-object:groupBox2:Location = new System.Drawing.Point(10, 180).
+    this-object:groupBox2:Location = new System.Drawing.Point(10, 217).
     this-object:groupBox2:Name = "groupBox2".
-    this-object:groupBox2:Size = new System.Drawing.Size(682, 143).
+    this-object:groupBox2:Size = new System.Drawing.Size(682, 132).
     this-object:groupBox2:TabIndex = 1.
     this-object:groupBox2:TabStop = false.
     this-object:groupBox2:UseCompatibleTextRendering = true.
@@ -1460,7 +2251,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:buttonCopySec:Name = "buttonCopySec".
     this-object:buttonCopySec:Size = new System.Drawing.Size(75, 29).
     this-object:buttonCopySec:TabIndex = 13.
-    this-object:buttonCopySec:Text = "Копировать в секцию".
+    this-object:buttonCopySec:Text = "Копировать в секции".
     this-object:buttonCopySec:UseCompatibleTextRendering = true.
     this-object:buttonCopySec:UseVisualStyleBackColor = true.
     this-object:buttonCopySec:Click:Subscribe(this-object:buttonCopySec_Click).
@@ -1888,7 +2679,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox7:Controls:Add(this-object:buttonPlSi).
     this-object:groupBox7:Controls:Add(this-object:maskedTextBoxPlaceSi).
     this-object:groupBox7:Controls:Add(this-object:label26).
-    this-object:groupBox7:Location = new System.Drawing.Point(10, 470).
+    this-object:groupBox7:Location = new System.Drawing.Point(10, 496).
     this-object:groupBox7:Name = "groupBox7".
     this-object:groupBox7:Size = new System.Drawing.Size(682, 70).
     this-object:groupBox7:TabIndex = 3.
@@ -2102,7 +2893,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox6:Controls:Add(this-object:label32).
     this-object:groupBox6:Controls:Add(this-object:TimeProb).
     this-object:groupBox6:Controls:Add(this-object:label31).
-    this-object:groupBox6:Location = new System.Drawing.Point(10, 723).
+    this-object:groupBox6:Location = new System.Drawing.Point(10, 749).
     this-object:groupBox6:Name = "groupBox6".
     this-object:groupBox6:Size = new System.Drawing.Size(682, 33).
     this-object:groupBox6:TabIndex = 6.
@@ -2199,12 +2990,34 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox5:Controls:Add(this-object:label29).
     this-object:groupBox5:Controls:Add(this-object:label28).
     this-object:groupBox5:Controls:Add(this-object:label27).
-    this-object:groupBox5:Location = new System.Drawing.Point(10, 667).
+    this-object:groupBox5:Location = new System.Drawing.Point(10, 693).
     this-object:groupBox5:Name = "groupBox5".
-    this-object:groupBox5:Size = new System.Drawing.Size(682, 56).
+    this-object:groupBox5:Size = new System.Drawing.Size(588, 56).
     this-object:groupBox5:TabIndex = 5.
     this-object:groupBox5:TabStop = false.
     this-object:groupBox5:UseCompatibleTextRendering = true.
+    /*  */
+    /* bRvsAft */
+    /*  */
+    this-object:bRvsAft:Location = new System.Drawing.Point(605, 726).
+    this-object:bRvsAft:Name = "bRvsAft".
+    this-object:bRvsAft:Size = new System.Drawing.Size(75, 23).
+    this-object:bRvsAft:TabIndex = 44.
+    this-object:bRvsAft:Text = "Св.после".
+    this-object:bRvsAft:UseCompatibleTextRendering = true.
+    this-object:bRvsAft:UseVisualStyleBackColor = true.
+    this-object:bRvsAft:MouseClick:Subscribe(this-object:bRvsAft_MouseClick).
+    /*  */
+    /* bRvsBef */
+    /*  */
+    this-object:bRvsBef:Location = new System.Drawing.Point(605, 700).
+    this-object:bRvsBef:Name = "bRvsBef".
+    this-object:bRvsBef:Size = new System.Drawing.Size(75, 23).
+    this-object:bRvsBef:TabIndex = 43.
+    this-object:bRvsBef:Text = "Св.до".
+    this-object:bRvsBef:UseCompatibleTextRendering = true.
+    this-object:bRvsBef:UseVisualStyleBackColor = true.
+    this-object:bRvsBef:MouseClick:Subscribe(this-object:bRvsBef_MouseClick).
     /*  */
     /* maskedTextBoxAccWeight */
     /*  */
@@ -2304,7 +3117,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox4:Controls:Add(this-object:maskedTextBoxTankVolPomi).
     this-object:groupBox4:Controls:Add(this-object:maskedTextBoxTankWeight).
     this-object:groupBox4:Controls:Add(this-object:maskedTextBoxAccWeight).
-    this-object:groupBox4:Location = new System.Drawing.Point(10, 610).
+    this-object:groupBox4:Location = new System.Drawing.Point(10, 636).
     this-object:groupBox4:Name = "groupBox4".
     this-object:groupBox4:Size = new System.Drawing.Size(682, 61).
     this-object:groupBox4:TabIndex = 4.
@@ -2325,7 +3138,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox8:Controls:Add(this-object:buttonPlSiTemp).
     this-object:groupBox8:Controls:Add(this-object:maskedTextBoxPlaceSiTemp).
     this-object:groupBox8:Controls:Add(this-object:label43).
-    this-object:groupBox8:Location = new System.Drawing.Point(10, 542).
+    this-object:groupBox8:Location = new System.Drawing.Point(10, 568).
     this-object:groupBox8:Name = "groupBox8".
     this-object:groupBox8:Size = new System.Drawing.Size(682, 70).
     this-object:groupBox8:TabIndex = 37.
@@ -2436,10 +3249,45 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label43:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
     this-object:label43:UseCompatibleTextRendering = true.
     /*  */
+    /* cbSGDKK */
+    /*  */
+    this-object:cbSGDKK:BackColor = System.Drawing.Color:OrangeRed.
+    this-object:cbSGDKK:Location = new System.Drawing.Point(507, 181).
+    this-object:cbSGDKK:Name = "cbSGDKK".
+    this-object:cbSGDKK:Padding = new System.Windows.Forms.Padding(5, 0, 0, 0).
+    this-object:cbSGDKK:Size = new System.Drawing.Size(182, 20).
+    this-object:cbSGDKK:TabIndex = 38.
+    this-object:cbSGDKK:Text = "Тревожное событие СГДКК".
+    this-object:cbSGDKK:UseCompatibleTextRendering = true.
+    this-object:cbSGDKK:UseVisualStyleBackColor = false.
+    /*  */
+    /* label50 */
+    /*  */
+    this-object:label50:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label50:Location = new System.Drawing.Point(16, 182).
+    this-object:label50:Name = "label50".
+    this-object:label50:Size = new System.Drawing.Size(434, 20).
+    this-object:label50:TabIndex = 39.
+    this-object:label50:Text = "Идентификатор доступа (ключ) «нижнего уровня»:".
+    this-object:label50:UseCompatibleTextRendering = true.
+    /*  */
+    /* maskedTextBoxAukKey */
+    /*  */
+    this-object:maskedTextBoxAukKey:Location = new System.Drawing.Point(19, 200).
+    this-object:maskedTextBoxAukKey:Name = "maskedTextBoxAukKey".
+    this-object:maskedTextBoxAukKey:Size = new System.Drawing.Size(661, 20).
+    this-object:maskedTextBoxAukKey:TabIndex = 40.
+    this-object:maskedTextBoxAukKey:Leave:Subscribe(this-object:maskedTextBoxAukKey_Leave).
+    /*  */
     /* tanksection */
     /*  */
     this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
     this-object:BackgroundImage = cast(resources:GetObject("$this.BackgroundImage"), System.Drawing.Image).
+    this-object:Controls:Add(this-object:bRvsAft).
+    this-object:Controls:Add(this-object:maskedTextBoxAukKey).
+    this-object:Controls:Add(this-object:label50).
+    this-object:Controls:Add(this-object:bRvsBef).
+    this-object:Controls:Add(this-object:cbSGDKK).
     this-object:Controls:Add(this-object:groupBox7).
     this-object:Controls:Add(this-object:groupBox8).
     this-object:Controls:Add(this-object:groupBox1).
@@ -2449,7 +3297,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:Controls:Add(this-object:groupBox5).
     this-object:Controls:Add(this-object:groupBox6).
     this-object:Name = "tanksection".
-    this-object:Size = new System.Drawing.Size(700, 760).
+    this-object:Size = new System.Drawing.Size(700, 785).
     this-object:groupBox3:ResumeLayout(false).
     this-object:groupBox3:PerformLayout().
     this-object:groupBox2:ResumeLayout(false).
@@ -2466,6 +3314,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox8:ResumeLayout(false).
     this-object:groupBox8:PerformLayout().
     this-object:ResumeLayout(false).
+    this-object:PerformLayout().
     catch e as Progress.Lang.Error:
       undo, throw e.
     end catch.
@@ -2659,6 +3508,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:comboBoxPour:Text                 = infoSecObj:Pour.
     this-object:comboBoxShape:Text                = infoSecObj:Shape.
     this-object:comboBoxGroupNP:Text              = infoSecObj:GroupNP.
+    
+    this-object:cbSGDKK:Checked                   = infoSecObj:alarm-SGDKK.
+    this-object:cbSGDKK:CheckedChanged:Subscribe(this-object:cbSGDKK_CheckedChanged) no-error.
+    this-object:maskedTextBoxAukKey:Text          = infoSecObj:AukKey.
 
     this-object:TimeProb:Text                     = string (infoSecObj:HourProb) + ":" + string (infoSecObj:MinProb) + ":00" no-error.
     if error-status:error or string (infoSecObj:HourProb) + string (infoSecObj:MinProb) = "" or string (infoSecObj:HourProb) + string (infoSecObj:MinProb) = ?
@@ -3221,7 +4074,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   
   end.
   
-  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
   method private void ValueChgMaskTBox( input sender as System.Object, input e as System.EventArgs ):
     
     def var v-asc as int no-undo.
@@ -3249,7 +4105,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
   end method.
   
-  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
   method public void SetInfoSec ():
     
     def var infoSecObj as class InfoSection no-undo.
@@ -3309,6 +4168,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     infoSecObj:Pressure        = decimal(this-object:maskedTextBoxPressure:Text).
     infoSecObj:GroupNP         = this-object:comboBoxGroupNP:Text.
     
+    infoSecObj:alarm-SGDKK     = this-object:cbSGDKK:Checked.
+    infoSecObj:AukKey          = this-object:maskedTextBoxAukKey:Text.
+    
     if num-entries (this-object:TimeProb:Text, ":") >= 2
     then do:
       infoSecObj:HourProb = integer (entry (1, this-object:TimeProb:Text, ":")).
@@ -3321,7 +4183,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     
  
   end.
-  
   
   method private void CalcDoc ( input sender as System.Object, input e as System.EventArgs ):
     def var a as dec no-undo.
@@ -3532,6 +4393,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       /*      input frame {&frame-name} maskedTextBoxTankDens:Text-pomi @ maskedTextBoxTankWeight:Text with frame {&frame-name}.*/
       end.
     end.
+    
+/*    if infoSecsObj:IsSGDKK                            */
+/*    and not (infoSecsObj:InfoSectionCurr:AccMeth = 0) */
+/*    then do :                                         */
+/*      maskedTextBoxTankVol:Text = format_round_0 (0) .*/
+/*    end .                                             */
 
   end method.
   
@@ -3577,96 +4444,184 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 
   method public logical CheckSec (input p-save as logical):
     
-    def var v-dec as decimal no-undo.
-    def var v-str as character no-undo.
+    define variable v-dec as decimal no-undo.
+    define variable v-str as character no-undo.
+    define variable v-sec as character no-undo .
+    
+    define buffer buf_rvs-doc for ub.rvs-doc .
+    
     v-str = "Не заполнено обязательное поле ".
 
     if infoSecsObj:FlagTrn
     then do:
       if not infoSecsObj:RdcDnstvalue = "not"
       then do:
+        if not infoSecsObj:IsSGDKK
+        then do :
   
-        if lookup("a-b-tarir", v-sec-fields) > 0
-        then do :
-          if trim (maskedTextBoxABTArir:Text) = ""
-          then do:
-            ShowMsg( v-str + "отклонение от тарировочной пл." ).
-            setFocusMaskTextDoc = maskedTextBoxABTArir.
-            return false.
-          end.
-        end.
-    
-        if lookup("tank-density", v-sec-fields) > 0
-        then do :
-          v-dec = decimal (maskedTextBoxTankDens:Text) no-error.
-          if (error-status:error or v-dec = 0)
-          then do:
-            ShowMsg( v-str + "плотность топлива" ).
-            setFocusMaskTextDoc = maskedTextBoxTankDens.
-            return false.
-          end.
-          if not valid-density(v-dec)
+          if lookup("a-b-tarir", v-sec-fields) > 0
           then do :
-            ShowMsg( "Неверно введена плотность топлива" ).
-            setFocusMaskTextDoc = maskedTextBoxTankDens.
-            return false.
+            if trim (maskedTextBoxABTArir:Text) = ""
+            then do:
+              ShowMsg( v-str + "отклонение от тарировочной пл." ).
+              setFocusMaskTextDoc = maskedTextBoxABTArir.
+              return false.
+            end.
+          end.
+      
+          if lookup("tank-density", v-sec-fields) > 0
+          then do :
+            v-dec = decimal (maskedTextBoxTankDens:Text) no-error.
+            if (error-status:error or v-dec = 0)
+            then do:
+              ShowMsg( v-str + "плотность топлива" ).
+              setFocusMaskTextDoc = maskedTextBoxTankDens.
+              return false.
+            end.
+            if not valid-density(v-dec)
+            then do :
+              ShowMsg( "Неверно введена плотность топлива" ).
+              setFocusMaskTextDoc = maskedTextBoxTankDens.
+              return false.
+            end .
+          end.
+           
+          if lookup("tank-temp", v-sec-fields) > 0
+          then do : 
+            v-dec = decimal (maskedTextBoxTankTemp:Text) no-error.
+            if (error-status:error or trim (maskedTextBoxTankTemp:Text) = "")
+            then do:
+              ShowMsg( v-str + "температура замера объема" ).
+              setFocusMaskTextDoc = maskedTextBoxTankTemp.
+              return false.
+            end.
+          end.
+            
+          if lookup("dens-temp", v-sec-fields) > 0
+          then do :
+            v-dec = decimal (maskedTextBoxDensTemp:Text) no-error.
+            if (error-status:error or trim (maskedTextBoxDensTemp:Text) = "")
+            then do:
+              ShowMsg( v-str + "температура замера плотности" ).
+              setFocusMaskTextDoc = maskedTextBoxDensTemp.
+              return false.
+            end.
+          end.
+            
+          if lookup("place-si", v-sec-fields) > 0
+          then do :
+            v-dec = decimal (maskedTextBoxPlaceSi:Text) no-error.
+            if (error-status:error or v-dec = 0)
+            then do:
+              ShowMsg( v-str + "средство измерения плотности" ).
+              setFocusMaskTextDoc = maskedTextBoxPlaceSi.
+              return false.
+            end.
+          end.
+            
+          if lookup("place-si-temp", v-sec-fields) > 0
+          then do :
+            v-dec = decimal (maskedTextBoxPlaceSiTemp:Text) no-error.
+            if (error-status:error or v-dec = 0)
+            then do:
+              ShowMsg( v-str + "средство измерения температуры" ).
+              setFocusMaskTextDoc = maskedTextBoxPlaceSiTemp.
+              return false.
+            end.
+          end.
+          
+          if p-save
+          then do :
+            v-dec = decimal (maskedTextBoxTankWeight:Text) no-error.
+            if (error-status:error or v-dec = 0)
+            then do:
+              ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                       "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
+                       "Введите данные и нажмите кнопку Рассчитать." ).
+              return false.
+            end.
           end .
-        end.
-         
-        if lookup("tank-temp", v-sec-fields) > 0
-        then do : 
-          v-dec = decimal (maskedTextBoxTankTemp:Text) no-error.
-          if (error-status:error or trim (maskedTextBoxTankTemp:Text) = "")
-          then do:
-            ShowMsg( v-str + "температура замера объема" ).
-            setFocusMaskTextDoc = maskedTextBoxTankTemp.
-            return false.
-          end.
-        end.
-          
-        if lookup("dens-temp", v-sec-fields) > 0
-        then do :
-          v-dec = decimal (maskedTextBoxDensTemp:Text) no-error.
-          if (error-status:error or trim (maskedTextBoxDensTemp:Text) = "")
-          then do:
-            ShowMsg( v-str + "температура замера плотности" ).
-            setFocusMaskTextDoc = maskedTextBoxDensTemp.
-            return false.
-          end.
-        end.
-          
-        if lookup("place-si", v-sec-fields) > 0
-        then do :
-          v-dec = decimal (maskedTextBoxPlaceSi:Text) no-error.
-          if (error-status:error or v-dec = 0)
-          then do:
-            ShowMsg( v-str + "средство измерения плотности" ).
-            setFocusMaskTextDoc = maskedTextBoxPlaceSi.
-            return false.
-          end.
-        end.
-          
-        if lookup("place-si-temp", v-sec-fields) > 0
-        then do :
-          v-dec = decimal (maskedTextBoxPlaceSiTemp:Text) no-error.
-          if (error-status:error or v-dec = 0)
-          then do:
-            ShowMsg( v-str + "средство измерения температуры" ).
-            setFocusMaskTextDoc = maskedTextBoxPlaceSiTemp.
-            return false.
-          end.
-        end.
         
-        if p-save
-        then do :
-          v-dec = decimal (maskedTextBoxTankWeight:Text) no-error.
-          if (error-status:error or v-dec = 0)
-          then do:
-            ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
-                     "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
-                     "Введите данные и нажмите кнопку Рассчитать." ).
-            return false.
-          end.
+        end .
+        else do :
+          if cbSGDKK:Checked
+          then do :
+            if not infoSecsObj:IsActnComm
+            and infoSecsObj:isKP
+            and trim(maskedTextBoxAukKey:text) > ""
+            then do :
+              ShowMsg( "По накладной установлен флаг комиссионного приема. Недостаточно прав для ввода идентификатора доступа (ключа) верхнего уровня или одноразового кода!" ).
+              setFocusMaskTextDoc = maskedTextBoxAukKey.
+              return false.
+            end .
+            if length(trim(maskedTextBoxAukKey:text)) < 4
+            then do :
+              ShowMsg( "Некорректная длина идентификатора доступа (ключа) верхнего уровня или одноразового кода для разблокировки API-адаптера. Проверьте введенное значение и скорректируйте." ).
+              setFocusMaskTextDoc = maskedTextBoxAukKey.
+              return false.
+            end .
+          end .
+          else do :
+            if lookup("accessIDLowerLevel", v-sec-fields) > 0
+            then do :
+              if length(trim(maskedTextBoxAukKey:text)) < 4
+              then do :
+                ShowMsg( "Некорректная длина идентификатора доступа (ключа) нижнего уровня. Проверьте введенное значение и скорректируйте." ).
+                setFocusMaskTextDoc = maskedTextBoxAukKey.
+                return false.
+              end .
+            end.
+          end .
+          
+          if p-save
+          then do :
+            if infoSecsObj:IsKPrvs
+            then do :
+/*              v-sec = infoSecsObj:GetInfoSectionProp(idSecTabPage):SectionName .                                            */
+/*              find first buf_rvs-doc                                                                                        */
+/*                  where buf_rvs-doc.rvs-type = {&rvs-before-doc}                                                            */
+/*                  and buf_rvs-doc.out-code = infoSecsObj:TrnDocNum                                                          */
+/*                  and num-entries(buf_rvs-doc.rvs-code, "-") = 3                                                            */
+/*                  and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec                                                           */
+/*                  and buf_rvs-doc.state-measure-qnty <> ?                                                                   */
+/*              no-error .                                                                                                    */
+/*              if not available buf_rvs-doc                                                                                  */
+/*              then do :                                                                                                     */
+/*                ShowMsg( "Сохранение параметров секции невозможно. Включен комиссионный приём 'По сверкам'." + {&new-line} +*/
+/*                         "Не заполнена сверка ДО по секции "  + v-sec ).                                                    */
+/*                return false.                                                                                               */
+/*              end .                                                                                                         */
+/*              find first buf_rvs-doc                                                                                        */
+/*                  where buf_rvs-doc.rvs-type = {&rvs-after-doc}                                                             */
+/*                  and buf_rvs-doc.out-code = infoSecsObj:TrnDocNum                                                          */
+/*                  and num-entries(buf_rvs-doc.rvs-code, "-") = 3                                                            */
+/*                  and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec                                                           */
+/*                  and buf_rvs-doc.state-measure-qnty <> ?                                                                   */
+/*              no-error .                                                                                                    */
+/*              if not available buf_rvs-doc                                                                                  */
+/*              then do :                                                                                                     */
+/*                ShowMsg( "Сохранение параметров секции невозможно. Включен комиссионный приём 'По сверкам'." + {&new-line} +*/
+/*                         "Не заполнена сверка ПОСЛЕ по секции "  + v-sec ).                                                 */
+/*                return false.                                                                                               */
+/*              end .                                                                                                         */
+            end .
+            else
+            if infoSecsObj:IsKP
+            then do :
+              if  infoSecsObj:GetInfoSectionProp(idSecTabPage):AccMeth = 0
+              then do :
+                v-dec = decimal (maskedTextBoxTankWeight:Text) no-error.
+                if (error-status:error or v-dec = 0)
+                then do:
+                  ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                           "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
+                           "Введите данные и нажмите кнопку Рассчитать." ).
+                  return false.
+                end .
+              end .
+            end .
+          end .
+          
         end .
         
       end.
@@ -3918,13 +4873,16 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end.
     
   end.
-
-
+  
   method private void ShowMsg (arg as char):
     
     message arg view-as alert-box information title "Сообщение".
   
   end.
+  
+  { gbl/cur-time.i class}
+  
+  { ibs/th/str/ptrl/in-ptrl-cls.i }
 
   destructor public tanksection ( ):
 

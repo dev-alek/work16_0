@@ -9,6 +9,7 @@
 
 /* Temp-Table and Buffer definitions                                    */
 using ibs.th.gbl.storage.*.
+using ibs.th.str.*.
 DEFINE BUFFER t-doc FOR ub.trn-doc.
 DEFINE BUFFER src-doc FOR ub.trn-doc.
 

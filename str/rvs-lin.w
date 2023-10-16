@@ -430,6 +430,11 @@ DEFINE VARIABLE varstate-water-qnty AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0
      LABEL "Объем воды (л)" 
      VIEW-AS FILL-IN 
      SIZE 13 BY .88 NO-UNDO.
+     
+DEFINE VARIABLE v-sec-num AS character FORMAT "X(3)":U
+     LABEL "Номер секции" 
+     VIEW-AS FILL-IN 
+     SIZE 3 BY 1 NO-UNDO.     
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -452,6 +457,7 @@ DEFINE FRAME Dialog-Frame
      b-save AT ROW 1 COL 1
      b-cancel AT ROW 1 COL 11
      b-help AT ROW 1 COL 21
+     v-sec-num at row 1 col 60
      b-POkMI-result at row 1 col 87
      "Доп. средства измерения:" at row 5.25 col 11
        view-as text
@@ -4269,6 +4275,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     .
     
   RUN enable_UI IN THIS-PROCEDURE.
+  
+  if num-entries(buf_rvs-doc.rvs-code, "-") = 3
+  then do :
+    v-sec-num = entry(2, buf_rvs-doc.rvs-code, "-") .
+    display v-sec-num with frame Dialog-Frame.
+  end .
+  else do :
+    hide v-sec-num in frame Dialog-Frame.
+  end .
 
   if tt-rvs-line.system-qnty <> tt-rvs-line.orig-system-qnty
     and tt-rvs-line.system-cli-qnty <> tt-rvs-line.orig-system-cli-qnty

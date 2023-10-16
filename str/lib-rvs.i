@@ -19,9 +19,21 @@ Creation date: 12/07/07
 */
 
 &if defined( include_lib-rvs ) = 0 &then
-  define new global shared variable g#lib-rvs as handle no-undo.
+&glob include_lib-rvs yes
 
-  &glob include_lib-rvs yes
+&if "{1}" = "class" &then
+&else
+  define new global shared variable g#lib-rvs as handle no-undo.
+&endif
+
+&if "{1}" = "class" &then
+
+  &glob run_proc_lib-rvs ~
+    {&check_lib-rvs} ~
+  run ~{&proc-name~} in ibs.th.gbl.gbl-hndllib:g#lib-rvs
+
+&else
+  
   &glob check_lib-rvs ~
     if valid-handle( g#lib-rvs ) <> yes then do: ~
       run str/lib-rvs.p persistent no-error. ~
@@ -40,5 +52,5 @@ Creation date: 12/07/07
     {&check_lib-rvs} ~
     run ~{&proc-name~} in g#lib-rvs
 &endif
-
+&endif
 /* $Workfile$   E n d */

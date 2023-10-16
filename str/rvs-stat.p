@@ -56,13 +56,13 @@ do transaction
     define buffer last-rvs-doc for ub.rvs-doc . 
     define buffer last-rvs-line for ub.rvs-line .
 
-    define variable v-cardif        as integer   no-undo.
-    define variable v-abs-critdif   as decimal   no-undo.
-    define variable v-dif-res-count as integer   no-undo.
-    define variable v-dif-res       as character no-undo.
-    define variable v-ok            as logical no-undo .
+    define variable v-cardif        as integer   no-undo .
+    define variable v-abs-critdif   as decimal   no-undo .
+    define variable v-dif-res-count as integer   no-undo .
+    define variable v-dif-res       as character no-undo .
+    define variable v-ok            as logical   no-undo .
     
-    define variable v-first-volue as decimal  no-undo .
+    define variable v-first-volue      as decimal  no-undo .
     define variable v-first-density    as decimal  no-undo .
     define variable v-first-temp       as decimal  no-undo .
     define variable v-first-water      as decimal  no-undo .

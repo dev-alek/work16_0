@@ -18,6 +18,7 @@ Creation date: 24/05/21
 using ibs.th.str.*.
 
 define input parameter iCntxtHostCodeObj as integer   no-undo.
+define input parameter iACType           as integer   no-undo.
 define input parameter iGdsCodeList      as character no-undo.
 define input parameter iSuppsList        as character no-undo.
 define input parameter iTranTimeMax      as integer   no-undo.
@@ -459,11 +460,14 @@ procedure processTrn :
   define buffer buf_clients       for ub.clients .
   define buffer buf_place         for ub.place .
   define buffer buf_doc-pl        for ub.doc-pl .
+  define buffer sep_auto-tank-attr  for ub.auto-tank-attr.
   
   define variable v-ok                  as logical   no-undo.
   define variable is-petrolium          as logical   no-undo.
   define variable is-pieces             as logical   no-undo.
+  define variable v-isKPrvs             as logical   no-undo.
   define variable v-InfoSectionsTotal   as class     InfoSectionsTotal no-undo .
+  define variable v-InfoSection         as class     InfoSection no-undo .
   define variable iNum                  as integer   no-undo .
   define variable varvalue              as character no-undo .
   define variable vartype               as character no-undo .
@@ -478,6 +482,7 @@ procedure processTrn :
   define variable v-nb-cli-name         as character no-undo .
   define variable v-user-name           as character no-undo .
   define variable v-car-num             as character no-undo .
+  define variable v-sep                 as character no-undo init "¿÷ ·ÂÁ —›œ" .
   define variable v-place-num           as character no-undo .
   define variable v-hour-pour           as integer   no-undo .
   define variable v-min-pour            as integer   no-undo .
@@ -611,6 +616,26 @@ procedure processTrn :
     no-error
   }
   
+  find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = v-car-num
+                                          and sep_auto-tank-attr.attr-code = "auto-sep"
+                                          no-error.
+  if available sep_auto-tank-attr
+  and logical(sep_auto-tank-attr.attr-value)
+  then do :
+    if iACType = 3
+    then do :
+      return .
+    end .
+    v-sep = "¿÷ Ò —›œ" .
+  end .
+  else do :
+    if iACType = 2
+    then do :
+      return .
+    end .
+    v-sep = "¿÷ ·ÂÁ —›œ" .
+  end .
+  
   if is-sug-trn
   then do :
     varvalue = "" .
@@ -717,8 +742,20 @@ procedure processTrn :
     v-InfoSectionsTotal = new InfoSectionsTotal(p-doc-code, buf_goods.gds-code, "").
     
     do iNum = 1 to v-InfoSectionsTotal:SectionNum :
+      if v-infoSectionsTotal:GetInfoSectionProp(iNum):IsKP
+      then do :
+        v-infoSectionsTotal:IsKP = yes .
+        if v-infoSectionsTotal:GetInfoSectionProp(iNum):AccMeth = 1
+        then do :
+          v-infoSectionsTotal:IsKPrvs = yes .
+        end .
+      end .
+    end .
+    
+    do iNum = 1 to v-InfoSectionsTotal:SectionNum :
       
-      v-SectionName = if v-is-sug-gds then "1" else v-InfoSectionsTotal:GetInfoSectionProp(iNum):SectionName .
+      v-InfoSection = v-InfoSectionsTotal:GetInfoSectionProp(iNum) .
+      v-SectionName = if v-is-sug-gds then "1" else v-InfoSection:SectionName .
       
       if v-is-sug-gds
       then do :
@@ -753,16 +790,16 @@ procedure processTrn :
         end .                           
       end .
       else do :
-        v-place-num = v-InfoSectionsTotal:GetInfoSectionProp(iNum):ListTank .
+        v-place-num = v-InfoSection:ListTank .
         
-        v-date-start  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):DateStart .
-        v-date-end    = v-InfoSectionsTotal:GetInfoSectionProp(iNum):DateEnd .
+        v-date-start  = v-InfoSection:DateStart .
+        v-date-end    = v-InfoSection:DateEnd .
         
-        v-hour-start  = integer( truncate( v-InfoSectionsTotal:GetInfoSectionProp(iNum):TimeStart / 3600 , 0 ) ) .
-        v-min-start  = integer( ( v-InfoSectionsTotal:GetInfoSectionProp(iNum):TimeStart - v-hour-start * 3600 ) / 60 ).
+        v-hour-start  = integer( truncate( v-InfoSection:TimeStart / 3600 , 0 ) ) .
+        v-min-start  = integer( truncate(( v-InfoSection:TimeStart - v-hour-start * 3600 ) / 60 , 0 )).
         
-        v-hour-end   = integer( truncate( v-InfoSectionsTotal:GetInfoSectionProp(iNum):TimeEnd / 3600 , 0 ) ).
-        v-min-end    = integer( ( v-InfoSectionsTotal:GetInfoSectionProp(iNum):TimeEnd - v-hour-end * 3600 ) / 60).
+        v-hour-end   = integer( truncate( v-InfoSection:TimeEnd / 3600 , 0 ) ).
+        v-min-end    = integer( truncate(( v-InfoSection:TimeEnd - v-hour-end * 3600 ) / 60 , 0 )).
         
         v-hour-pour = v-hour-end - v-hour-start .
         v-min-pour = v-min-end - v-min-start .
@@ -775,12 +812,24 @@ procedure processTrn :
         
       end .
       
-      find first tt-rep where tt-rep.obj-type   = obj-list.obj-type
-                          and tt-rep.obj-code   = obj-list.obj-code
-                          and tt-rep.gds-code   = buf_goods.gds-code 
-                          and tt-rep.col3       = buf_trn-doc.doc-code
-                          and tt-rep.col15      = v-place-num
-                          no-error .
+      if v-infoSectionsTotal:IsKPrvs
+      then do :
+        find first tt-rep where tt-rep.obj-type   = obj-list.obj-type
+                            and tt-rep.obj-code   = obj-list.obj-code
+                            and tt-rep.gds-code   = buf_goods.gds-code 
+                            and tt-rep.col3       = buf_trn-doc.doc-code
+                            and tt-rep.col13      = v-SectionName
+                            and tt-rep.col15      = v-place-num
+                            no-error .
+      end .
+      else do :
+        find first tt-rep where tt-rep.obj-type   = obj-list.obj-type
+                            and tt-rep.obj-code   = obj-list.obj-code
+                            and tt-rep.gds-code   = buf_goods.gds-code 
+                            and tt-rep.col3       = buf_trn-doc.doc-code
+                            and tt-rep.col15      = v-place-num
+                            no-error .
+      end .
       if not available tt-rep
       then do : 
         create tt-rep .
@@ -801,13 +850,13 @@ procedure processTrn :
           tt-rep.col8       = v-auto-cli-name
           tt-rep.col9       = v-nb-cli-name
           tt-rep.col10      = v-car-num
-          tt-rep.col11      = "¡ÂÁ —›œ"
+          tt-rep.col11      = v-sep
           tt-rep.col12      = v-user-name
           tt-rep.col13      = v-SectionName
           tt-rep.col14      = buf_goods.gds-name
           tt-rep.col15      = v-place-num 
-          tt-rep.col16      = ""
-          tt-rep.col17      = ""
+          tt-rep.col16      = (if v-sep = "¿÷ ·ÂÁ —›œ" then "" else if v-InfoSection:alarm-SGDKK then "¬”" else "Õ”")
+          tt-rep.col17      = v-InfoSection:AukKey
         .
         
         if v-is-sug-gds
@@ -828,17 +877,17 @@ procedure processTrn :
         end .
         else do :
           assign
-            tt-rep.col18  = if v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocVolume > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocVolume else v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocQnty
-            tt-rep.col19  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty
-            tt-rep.col20  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocDensity
-            tt-rep.col21  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TTNTemp
+            tt-rep.col18  = if v-InfoSection:DocVolume > 0 then v-InfoSection:DocVolume else v-InfoSection:DocQnty
+            tt-rep.col19  = v-InfoSection:CliQnty
+            tt-rep.col20  = v-InfoSection:DocDensity
+            tt-rep.col21  = v-InfoSection:TTNTemp
           .
           assign
-            tt-rep.col22  = if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol
-            tt-rep.col23  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight
-            tt-rep.col24  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
-            tt-rep.col25  = if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity
-            tt-rep.col26  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankTemp
+            tt-rep.col22  = if v-InfoSection:TankVolPomi > 0 then v-InfoSection:TankVolPomi else v-InfoSection:TankVol
+            tt-rep.col23  = v-InfoSection:TankWeight
+            tt-rep.col24  = v-InfoSection:NaturalLoss
+            tt-rep.col25  = if v-InfoSection:TankDensityPomi > 0 then v-InfoSection:TankDensityPomi else v-InfoSection:TankDensity
+            tt-rep.col26  = v-InfoSection:TankTemp
           .
         end .
         
@@ -861,7 +910,7 @@ procedure processTrn :
           tt-rep.delta-mass-qnty-ac = 0.65
         .
         
-        v-delta-mass-qnty-ac = v-InfoSectionsTotal:GetInfoSectionProp(iNum):AccPomi .
+        v-delta-mass-qnty-ac = v-InfoSection:AccPomi .
         if v-delta-mass-qnty-ac = 0 
         or v-delta-mass-qnty-ac = ?
         then do :
@@ -885,66 +934,90 @@ procedure processTrn :
                                        no-error .
         if available buf_place
         then do :
-          for first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
-                                          and buf_rvs-doc.out-code = buf_doc-line.doc-code,
-              first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                                           and buf_rvs-line.gds-code = buf_goods.gds-code
-                                           and buf_rvs-line.pl-code  = buf_place.pl-code
-          :
-            assign
-              tt-rep.col27  = buf_rvs-line.state-measure-qnty
-              tt-rep.col28  = buf_rvs-line.state-measure-cli-qnty
-              tt-rep.col29  = buf_rvs-line.state-density
-              tt-rep.col30  = buf_rvs-line.state-temperature
-            .
-            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
-                                                  and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
-                                                  and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
-                                                  and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
-                                                  and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
-                                                  and buf_rvs-line-attr.attr-code = "temp-izm-vol"
+          find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                                           and buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                           and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                                           and entry(2, buf_rvs-doc.rvs-code, "-") = tt-rep.col13
+                                           no-error .
+          if not available buf_rvs-doc
+          then do :
+            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                                             and buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                             no-error .
+          end .
+          if available buf_rvs-doc
+          then do :
+            for first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                             and buf_rvs-line.gds-code = buf_goods.gds-code
+                                             and buf_rvs-line.pl-code  = buf_place.pl-code
             :
-              tt-rep.col30 = decimal(buf_rvs-line-attr.attr-value) .
-            end .
-            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
-                                                  and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
-                                                  and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
-                                                  and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
-                                                  and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
-                                                  and buf_rvs-line-attr.attr-code = "delta-mass-qnty"
-            :
-              tt-rep.delta-mass-qnty-before = decimal(buf_rvs-line-attr.attr-value) .
+              assign
+                tt-rep.col27  = buf_rvs-line.state-measure-qnty
+                tt-rep.col28  = buf_rvs-line.state-measure-cli-qnty
+                tt-rep.col29  = buf_rvs-line.state-density
+                tt-rep.col30  = buf_rvs-line.state-temperature
+              .
+              for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                    and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                    and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                    and buf_rvs-line-attr.attr-code = "temp-izm-vol"
+              :
+                tt-rep.col30 = decimal(buf_rvs-line-attr.attr-value) .
+              end .
+              for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                    and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                    and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                    and buf_rvs-line-attr.attr-code = "delta-mass-qnty"
+              :
+                tt-rep.delta-mass-qnty-before = decimal(buf_rvs-line-attr.attr-value) .
+              end .
             end .
           end .
-          for first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
-                                          and buf_rvs-doc.out-code = buf_doc-line.doc-code,
-              first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                                           and buf_rvs-line.gds-code = buf_goods.gds-code
-                                           and buf_rvs-line.pl-code  = buf_place.pl-code
-          :
-            assign
-              tt-rep.col31  = buf_rvs-line.state-measure-qnty
-              tt-rep.col32  = buf_rvs-line.state-measure-cli-qnty
-              tt-rep.col33  = buf_rvs-line.state-density
-              tt-rep.col34  = buf_rvs-line.state-temperature
-            .
-            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
-                                                  and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
-                                                  and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
-                                                  and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
-                                                  and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
-                                                  and buf_rvs-line-attr.attr-code = "temp-izm-vol"
+          find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                                           and buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                           and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                                           and entry(2, buf_rvs-doc.rvs-code, "-") = tt-rep.col13
+                                           no-error .
+          if not available buf_rvs-doc
+          then do :
+            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                                             and buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                             no-error .
+          end .
+          if available buf_rvs-doc
+          then do :
+            for first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                             and buf_rvs-line.gds-code = buf_goods.gds-code
+                                             and buf_rvs-line.pl-code  = buf_place.pl-code
             :
-              tt-rep.col34 = decimal(buf_rvs-line-attr.attr-value) .
-            end .
-            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
-                                                  and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
-                                                  and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
-                                                  and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
-                                                  and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
-                                                  and buf_rvs-line-attr.attr-code = "delta-mass-qnty"
-            :
-              tt-rep.delta-mass-qnty-after = decimal(buf_rvs-line-attr.attr-value) .
+              assign
+                tt-rep.col31  = buf_rvs-line.state-measure-qnty
+                tt-rep.col32  = buf_rvs-line.state-measure-cli-qnty
+                tt-rep.col33  = buf_rvs-line.state-density
+                tt-rep.col34  = buf_rvs-line.state-temperature
+              .
+              for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                    and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                    and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                    and buf_rvs-line-attr.attr-code = "temp-izm-vol"
+              :
+                tt-rep.col34 = decimal(buf_rvs-line-attr.attr-value) .
+              end .
+              for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                    and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                    and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                    and buf_rvs-line-attr.attr-code = "delta-mass-qnty"
+              :
+                tt-rep.delta-mass-qnty-after = decimal(buf_rvs-line-attr.attr-value) .
+              end .
             end .
           end .
         end .
@@ -985,19 +1058,22 @@ procedure processTrn :
         end .
         
         assign
-          tt-rep.col35  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):FactQnty
-          tt-rep.col36  = v-InfoSectionsTotal:GetInfoSectionProp(iNum):FactKgQnty
+          tt-rep.col35  = v-InfoSection:FactQnty
+          tt-rep.col36  = v-InfoSection:FactKgQnty
         .
         
-        assign
-          tt-rep.col37  = tt-rep.col23 - tt-rep.col19
-          tt-rep.col38  = tt-rep.col37 / tt-rep.col19 * 100
-        .
+        if v-sep = "¿÷ ·ÂÁ —›œ"
+        then do :
+          assign
+            tt-rep.col37  = tt-rep.col23 - tt-rep.col19
+            tt-rep.col38  = tt-rep.col37 / tt-rep.col19 * 100
+          .
         
-        assign
-          tt-rep.col39  = tt-rep.col32 - tt-rep.col28 - tt-rep.col23
-          tt-rep.col40  = tt-rep.col39 / tt-rep.col23 * 100
-        .
+          assign
+            tt-rep.col39  = tt-rep.col32 - tt-rep.col28 - tt-rep.col23
+            tt-rep.col40  = tt-rep.col39 / tt-rep.col23 * 100
+          .
+        end .
         
         assign
           tt-rep.col41  = tt-rep.col32 - tt-rep.col28 - tt-rep.col36
@@ -1039,9 +1115,12 @@ procedure processTrn :
       else do :
         assign
           tt-rep.col13 = tt-rep.col13 + "," + v-SectionName
+          tt-rep.col16 = tt-rep.col16 + "<br>" + {&new-line} + (if v-sep = "¿÷ ·ÂÁ —›œ" then "" else if v-InfoSection:alarm-SGDKK then "¬”" else "Õ”")
+          tt-rep.col17 = tt-rep.col17 + "<br>" + {&new-line} + v-InfoSection:AukKey
         .
         
-        v-delta-mass-qnty-ac = v-InfoSectionsTotal:GetInfoSectionProp(iNum):AccPomi .
+        
+        v-delta-mass-qnty-ac = v-InfoSection:AccPomi .
         if v-delta-mass-qnty-ac = 0 
         or v-delta-mass-qnty-ac = ?
         then do :
@@ -1060,46 +1139,49 @@ procedure processTrn :
         .
         
         assign
-          tt-rep.col18  = tt-rep.col18 + if v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocVolume > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocVolume else v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocQnty
-          tt-rep.col19  = tt-rep.col19 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty
-          tt-rep.col20  = tt-rep.col20 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocDensity
-          tt-rep.col21  = tt-rep.col21 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TTNTemp
+          tt-rep.col18  = tt-rep.col18 + if v-InfoSection:DocVolume > 0 then v-InfoSection:DocVolume else v-InfoSection:DocQnty
+          tt-rep.col19  = tt-rep.col19 + v-InfoSection:CliQnty
+          tt-rep.col20  = tt-rep.col20 + v-InfoSection:DocDensity
+          tt-rep.col21  = tt-rep.col21 + v-InfoSection:TTNTemp
         .
         assign
-          tt-rep.col22  = tt-rep.col22 + (if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol)
-          tt-rep.col23  = tt-rep.col23 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight
-          tt-rep.col24  = tt-rep.col24 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
-          tt-rep.col25  = tt-rep.col25 + (if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity)
-          tt-rep.col26  = tt-rep.col26 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankTemp
+          tt-rep.col22  = tt-rep.col22 + (if v-InfoSection:TankVolPomi > 0 then v-InfoSection:TankVolPomi else v-InfoSection:TankVol)
+          tt-rep.col23  = tt-rep.col23 + v-InfoSection:TankWeight
+          tt-rep.col24  = tt-rep.col24 + v-InfoSection:NaturalLoss
+          tt-rep.col25  = tt-rep.col25 + (if v-InfoSection:TankDensityPomi > 0 then v-InfoSection:TankDensityPomi else v-InfoSection:TankDensity)
+          tt-rep.col26  = tt-rep.col26 + v-InfoSection:TankTemp
         .
         
         assign
-          tt-rep.col18str = tt-rep.col18str + "<br>" + {&new-line} + fDec2Str((if v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocVolume > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocVolume else v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocQnty), "->>>>>>>>>>>9"  )
-          tt-rep.col19str = tt-rep.col19str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):CliQnty, "->>>>>>>>>>>9.9")
-          tt-rep.col20str = tt-rep.col20str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocDensity, "->>>>>>>>9.9999")
-          tt-rep.col21str = tt-rep.col21str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TTNTemp, "->>>>>>>>>>>9.9")
+          tt-rep.col18str = tt-rep.col18str + "<br>" + {&new-line} + fDec2Str((if v-InfoSection:DocVolume > 0 then v-InfoSection:DocVolume else v-InfoSection:DocQnty), "->>>>>>>>>>>9"  )
+          tt-rep.col19str = tt-rep.col19str + "<br>" + {&new-line} + fDec2Str(v-InfoSection:CliQnty, "->>>>>>>>>>>9.9")
+          tt-rep.col20str = tt-rep.col20str + "<br>" + {&new-line} + fDec2Str(v-InfoSection:DocDensity, "->>>>>>>>9.9999")
+          tt-rep.col21str = tt-rep.col21str + "<br>" + {&new-line} + fDec2Str(v-InfoSection:TTNTemp, "->>>>>>>>>>>9.9")
                                              
-          tt-rep.col22str = tt-rep.col22str + "<br>" + {&new-line} + fDec2Str((if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVolPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol), "->>>>>>>>>>>9"  )
-          tt-rep.col23str = tt-rep.col23str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight, "->>>>>>>>>>>9.9")
-          tt-rep.col24str = tt-rep.col24str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss, "->>>>>>>>>>9.99")
-          tt-rep.col25str = tt-rep.col25str + "<br>" + {&new-line} + fDec2Str((if v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi > 0 then v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensityPomi else v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity), "->>>>>>>>9.9999")
-          tt-rep.col26str = tt-rep.col26str + "<br>" + {&new-line} + fDec2Str(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankTemp, "->>>>>>>>>>>9.9")
+          tt-rep.col22str = tt-rep.col22str + "<br>" + {&new-line} + fDec2Str((if v-InfoSection:TankVolPomi > 0 then v-InfoSection:TankVolPomi else v-InfoSection:TankVol), "->>>>>>>>>>>9"  )
+          tt-rep.col23str = tt-rep.col23str + "<br>" + {&new-line} + fDec2Str(v-InfoSection:TankWeight, "->>>>>>>>>>>9.9")
+          tt-rep.col24str = tt-rep.col24str + "<br>" + {&new-line} + fDec2Str(v-InfoSection:NaturalLoss, "->>>>>>>>>>9.99")
+          tt-rep.col25str = tt-rep.col25str + "<br>" + {&new-line} + fDec2Str((if v-InfoSection:TankDensityPomi > 0 then v-InfoSection:TankDensityPomi else v-InfoSection:TankDensity), "->>>>>>>>9.9999")
+          tt-rep.col26str = tt-rep.col26str + "<br>" + {&new-line} + fDec2Str(v-InfoSection:TankTemp, "->>>>>>>>>>>9.9")
         .
         
         assign
-          tt-rep.col35  = tt-rep.col35 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):FactQnty
-          tt-rep.col36  = tt-rep.col36 + v-InfoSectionsTotal:GetInfoSectionProp(iNum):FactKgQnty
+          tt-rep.col35  = tt-rep.col35 + v-InfoSection:FactQnty
+          tt-rep.col36  = tt-rep.col36 + v-InfoSection:FactKgQnty
         .
         
-        assign
-          tt-rep.col37  = tt-rep.col23 - tt-rep.col19
-          tt-rep.col38  = tt-rep.col37 / tt-rep.col19 * 100
-        .
+        if v-sep = "¿÷ ·ÂÁ —›œ"
+        then do :
+          assign
+            tt-rep.col37  = tt-rep.col23 - tt-rep.col19
+            tt-rep.col38  = tt-rep.col37 / tt-rep.col19 * 100
+          .
         
-        assign
-          tt-rep.col39  = tt-rep.col32 - tt-rep.col28 - tt-rep.col23
-          tt-rep.col40  = tt-rep.col39 / tt-rep.col23 * 100
-        .
+          assign
+            tt-rep.col39  = tt-rep.col32 - tt-rep.col28 - tt-rep.col23
+            tt-rep.col40  = tt-rep.col39 / tt-rep.col23 * 100
+          .
+        end .
         
         assign
           tt-rep.col41  = tt-rep.col32 - tt-rep.col28 - tt-rep.col36

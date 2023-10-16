@@ -213,6 +213,30 @@ class ibs.th.str.InfoSectionsTotal:
   define property TPNormSum as decimal no-undo
     get.
     set.
+    
+  define property IsSGDKK as logical no-undo
+    get.
+    set.
+    
+  define property IsKP as logical no-undo
+    get.
+    set.
+    
+  define property IsKPrvs as logical no-undo
+    get.
+    set.
+    
+  define property lRepeatAsi as logical no-undo
+    get.
+    set.
+    
+  define property petrol_block-nozzle as logical no-undo
+    get.
+    set.
+    
+  define property mRepeatAsi as character no-undo
+    get.
+    set.
 
   define property PrtlPropObj as class ptrlprop no-undo
     get.
@@ -221,6 +245,10 @@ class ibs.th.str.InfoSectionsTotal:
   define property FuelType as character no-undo
     get.
     private set.
+    
+  define property in-line-handle as widget-handle no-undo
+    get.
+    set.
 
   define property TempForPomi as decimal no-undo
     get:
@@ -901,6 +929,12 @@ class ibs.th.str.InfoSectionsTotal:
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'acc-meth' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:AccMeth).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'list-tank' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string ( InfoSectionCurr:ListTank).
       create buf_doc-line-attr.
@@ -975,6 +1009,18 @@ class ibs.th.str.InfoSectionsTotal:
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'cmom-nb' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string ( InfoSectionCurr:cmom-nb ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'alarm-SGDKK' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:alarm-SGDKK ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'aukkey' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:AukKey ).
       release buf_doc-line-attr.
       
     end.

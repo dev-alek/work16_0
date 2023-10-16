@@ -70,7 +70,7 @@ define variable mGdsCodeList as character no-undo init "*".
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-5 RECT-9 RECT-7 mSupps mGds ~
 mSuppList mGds-list mTranTimeMax t-delta-tank-ac t-delta-tank-fact ~
-t-itog 
+t-itog rs-ac-type 
 &Scoped-Define DISPLAYED-OBJECTS mSupps mGds mSuppList mGds-list ~
 rs-ac-type mTranTimeMax t-delta-tank-ac t-delta-tank-fact t-itog 
 
@@ -268,6 +268,16 @@ END.
 &ANALYZE-RESUME
 
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-ac-type s-object
+ON VALUE-CHANGED OF rs-ac-type IN FRAME F-Main
+DO:
+   assign rs-ac-type .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL mSupps s-object
 ON VALUE-CHANGED OF mSupps IN FRAME F-Main
 DO:
@@ -386,6 +396,7 @@ PROCEDURE my-report :
    .
 
    run rep/r-sum-fuel-supp.p ( v-cntxt-host-code-obj,
+                               rs-ac-type,
                                mGdsCodeList,
                                mSuppsList,
                                mTranTimeMax,

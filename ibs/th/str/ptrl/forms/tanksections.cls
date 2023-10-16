@@ -251,7 +251,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabControl:Location = new System.Drawing.Point(3, 45).
     this-object:tabControl:Name = "tabControl".
     this-object:tabControl:SelectedIndex = 0.
-    this-object:tabControl:Size = new System.Drawing.Size(710, 785).
+    this-object:tabControl:Size = new System.Drawing.Size(710, 812).
     this-object:tabControl:TabIndex = 1.
     /*  */
     /* imageList */
@@ -400,7 +400,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     /*  */
     /* tanksections */
     /*  */
-    this-object:ClientSize = new System.Drawing.Size(715, 835).
+    this-object:ClientSize = new System.Drawing.Size(715, 862).
     this-object:Controls:Add(this-object:tableLayoutPanel1).
     this-object:Controls:Add(this-object:tabControl).
     this-object:Icon = cast(resources:GetObject("$this.Icon"), System.Drawing.Icon).
@@ -483,14 +483,95 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
 	method private void tool_FormClosing( input sender as System.Object, input e as System.Windows.Forms.FormClosingEventArgs ):
 		
 		define variable vlog as logical no-undo .
-		if not vClickSave
-		and (infoSecsObj:Mode = "ИЗМЕНЕНИЕ" or infoSecsObj:Mode = "ДОБАВЛЕНИЕ")
+		define variable ii as integer no-undo .
+		define variable numsecs as character no-undo .
+		define variable v-sec as character no-undo .
+		define buffer buf_rvs-doc for ub.rvs-doc .
+		
+		if infoSecsObj:Mode = "ИЗМЕНЕНИЕ" or infoSecsObj:Mode = "ДОБАВЛЕНИЕ"
 		then do :
-      message "Несохранённые данные будут утеряны! Выйти без сохранения?"
-      view-as alert-box question buttons yes-no update vlog .
-      if not vlog
-      then do :
-        e:Cancel = yes .
+		  if vClickSave
+		  then do :
+		    if not infoSecsObj:FlagTrn
+		    then do :
+		      numsecs = "" .
+		      do ii = 1 to infoSecsObj:SectionNum:
+            if infoSecsObj:GetInfoSectionProp(ii):alarm-SGDKK
+            then do :
+              numsecs = numsecs + infoSecsObj:GetInfoSectionProp(ii):SectionName + {&new-line} .
+            end .
+          end.
+          if numsecs > ""
+          then do :
+            message "Для секций " skip
+                    numsecs
+                    "установлены флаги «Тревожное событие СГДКК». По обозначенным  секциям будет активирован  комиссионный прием. Продолжить?"
+            view-as alert-box question buttons yes-no update vlog .
+            if not vlog
+            then do :
+              e:Cancel = yes .
+              vClickSave = no .
+              infoSecsObj:WasSetting = no .
+            end .
+            else do :
+              do ii = 1 to infoSecsObj:SectionNum:
+                if infoSecsObj:GetInfoSectionProp(ii):alarm-SGDKK
+                then do :
+                  infoSecsObj:GetInfoSectionProp(ii):IsKP = yes .
+                end .
+              end.
+            end .
+          end .
+		    end .
+		    else do :
+		      if infoSecsObj:IsKPrvs
+		      then
+		      do ii = 1 to infoSecsObj:SectionNum:
+		        v-sec = infoSecsObj:GetInfoSectionProp(ii):SectionName .
+            find first buf_rvs-doc
+                where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                and buf_rvs-doc.out-code = infoSecsObj:TrnDocNum
+                and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec
+                and buf_rvs-doc.state-measure-qnty <> ?
+            no-error .
+            if not available buf_rvs-doc
+            then do :
+              message ( "Сохранение параметров секции невозможно. Включен комиссионный приём 'По сверкам'." + {&new-line} +
+                       "Не заполнена сверка ДО по секции "  + v-sec )
+              view-as alert-box .
+              e:Cancel = yes .
+              vClickSave = no .
+              infoSecsObj:WasSetting = no .
+              leave .
+            end .
+            find first buf_rvs-doc
+                where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                and buf_rvs-doc.out-code = infoSecsObj:TrnDocNum
+                and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec
+                and buf_rvs-doc.state-measure-qnty <> ?
+            no-error .
+            if not available buf_rvs-doc
+            then do :
+              message ( "Сохранение параметров секции невозможно. Включен комиссионный приём 'По сверкам'." + {&new-line} +
+                       "Не заполнена сверка ПОСЛЕ по секции "  + v-sec )
+              view-as alert-box .
+              e:Cancel = yes .
+              vClickSave = no .
+              infoSecsObj:WasSetting = no .
+              leave .
+            end .
+          end .
+		    end .
+		  end .
+		  else do :
+        message "Несохранённые данные будут утеряны! Выйти без сохранения?"
+        view-as alert-box question buttons yes-no update vlog .
+        if not vlog
+        then do :
+          e:Cancel = yes .
+        end .
       end .
     end .
 		return.
@@ -504,6 +585,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
   @VisualDesigner.
   method private void toolSBtn_Exit_Click( input sender as System.Object, input e as System.EventArgs ):
     
+    vClickSave = no .
     this-object:Close().
     return.
 
@@ -516,7 +598,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
   @VisualDesigner.
   method private void toolSBtn_Ok_Click( input sender as System.Object, input e as System.EventArgs ):
 
-    def var ii as int no-undo.
+    define variable ii as integer no-undo .
     
     do ii = 1 to infoSecsObj:SectionNum:
       if not tankSectionControl[ii]:CheckSec(yes)
@@ -541,9 +623,9 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
   @VisualDesigner.
   method private void toolSBtn_Delete_Click( input sender as System.Object, input e as System.EventArgs ):
     
-    def var ii as int no-undo.
-    def var v-idSel as int no-undo.
-    def var tabsel as TabPage no-undo.
+    define variable ii as integer no-undo .
+    define variable v-idSel as int no-undo.
+    define variable tabsel as TabPage no-undo.
     
     if infoSecsObj:SectionNum = 1
     then do:

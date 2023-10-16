@@ -260,6 +260,10 @@ class ibs.th.str.InfoSection:
   define property IsKP as logical no-undo init false
     get.
     set.
+  
+  define property AccMeth as integer no-undo init ?
+    get.
+    set.
 
   define property ListTank as character no-undo
     get.
@@ -333,7 +337,15 @@ class ibs.th.str.InfoSection:
   define property cmom-nb as character no-undo
     get.
     set.
-
+    
+  define property alarm-SGDKK as logical no-undo
+    get.
+    set.
+  
+  define property AukKey as character no-undo
+    get.
+    set.
+  
   /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -658,6 +670,11 @@ class ibs.th.str.InfoSection:
           if error-status:error or inAttrValue = "" or IsKP = ?
             then IsKP = no.
         end.
+      when 'acc-meth' then 
+        do:
+          assign
+            AccMeth = integer (inAttrValue) no-error.
+        end.
       when 'list-tank' then 
         do:
           assign
@@ -747,6 +764,18 @@ class ibs.th.str.InfoSection:
         do:
           assign
             cmom-nb = inAttrValue no-error.
+        end.
+      when 'alarm-SGDKK' then 
+        do:
+          assign
+            alarm-SGDKK = logical (inAttrValue) no-error.
+          if error-status:error or inAttrValue = "" or alarm-SGDKK = ?
+            then alarm-SGDKK = no.
+        end.
+      when 'aukkey' then 
+        do:
+          assign
+            AukKey = inAttrValue no-error.
         end.
     end case.
 		

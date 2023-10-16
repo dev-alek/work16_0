@@ -95,11 +95,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         p-rvs-cli-qnty-before = 0.0
         p-rvs-cli-qnty-after  = 0.0
       .
-      find first bf_bef_rvs-doc no-lock
+      for each bf_bef_rvs-doc no-lock
         where bf_bef_rvs-doc.rvs-type = {&rvs-before-doc}
           and bf_bef_rvs-doc.out-code = p-doc-code
-        no-error .
-      if available bf_bef_rvs-doc then do:
+      :
         for each bf_bef_rvs-line no-lock
           where bf_bef_rvs-line.rvs-code = bf_bef_rvs-doc.rvs-code
             and bf_bef_rvs-line.obj-type = bf_bef_rvs-doc.obj-type
@@ -116,12 +115,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             p-rvs-cli-qnty-before = p-rvs-cli-qnty-before + bf_bef_rvs-line.state-measure-cli-qnty
           .
         end. /* for each bf_bef_rvs-line */
-      end. /* if available bf_bef_rvs-doc */
-      find first bf_aft_rvs-doc no-lock
+      end. /* for each bf_bef_rvs-doc */
+      for each bf_aft_rvs-doc no-lock
         where bf_aft_rvs-doc.rvs-type = {&rvs-after-doc}
           and bf_aft_rvs-doc.out-code = p-doc-code
-        no-error .
-      if available bf_aft_rvs-doc then do:
+      :
         for each bf_aft_rvs-line no-lock
           where bf_aft_rvs-line.rvs-code = bf_aft_rvs-doc.rvs-code
             and bf_aft_rvs-line.obj-type = bf_aft_rvs-doc.obj-type
@@ -151,7 +149,82 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           .
           release bf_rvs-line-attr.
         end. /* for each bf_aft_rvs-line */
-      end. /* if available bf_aft_rvs-doc */
+      end. /* for each bf_aft_rvs-doc */
+    end procedure. /* return-rvs-qnty */
+    
+    procedure return-rvs-sec-qnty :
+      define  input parameter p-doc-code            like ub.trn-doc.doc-code            no-undo .
+      define  input parameter p-gds-code            like ub.goods.gds-code              no-undo .
+      define  input parameter p-sec-name            as character                        no-undo .
+      define output parameter p-rvs-qnty-before     like ub.rvs-line.state-measure-qnty no-undo .
+      define output parameter p-rvs-qnty-after      like ub.rvs-line.state-measure-qnty no-undo .
+      define output parameter p-rvs-cli-qnty-before like ub.rvs-line.state-measure-cli-qnty no-undo .
+      define output parameter p-rvs-cli-qnty-after  like ub.rvs-line.state-measure-cli-qnty no-undo .
+
+      define buffer bf_bef_rvs-doc  for ub.rvs-doc  .
+      define buffer bf_aft_rvs-doc  for ub.rvs-doc  .
+      define buffer bf_bef_rvs-line for ub.rvs-line .
+      define buffer bf_aft_rvs-line for ub.rvs-line .
+      
+      assign
+        p-rvs-qnty-before     = 0.0
+        p-rvs-qnty-after      = 0.0
+        p-rvs-cli-qnty-before = 0.0
+        p-rvs-cli-qnty-after  = 0.0
+      .
+      find first bf_bef_rvs-doc no-lock where bf_bef_rvs-doc.rvs-type = {&rvs-before-doc}
+                                          and bf_bef_rvs-doc.out-code = p-doc-code
+                                          and num-entries(bf_bef_rvs-doc.rvs-code, "-") = 3
+                                          and entry(2, bf_bef_rvs-doc.rvs-code, "-") = p-sec-name
+                                          no-error .
+      if not available bf_bef_rvs-doc
+      then do :
+        find first bf_bef_rvs-doc no-lock where bf_bef_rvs-doc.rvs-type = {&rvs-before-doc}
+                                            and bf_bef_rvs-doc.out-code = p-doc-code
+                                            and num-entries(bf_bef_rvs-doc.rvs-code, "-") = 2
+                                            no-error .
+      end .
+      if available bf_bef_rvs-doc
+      then do :
+        for each bf_bef_rvs-line no-lock
+          where bf_bef_rvs-line.rvs-code = bf_bef_rvs-doc.rvs-code
+            and bf_bef_rvs-line.obj-type = bf_bef_rvs-doc.obj-type
+            and bf_bef_rvs-line.obj-code = bf_bef_rvs-doc.obj-code
+            and bf_bef_rvs-line.gds-code = p-gds-code
+        :
+          assign
+            p-rvs-qnty-before     = p-rvs-qnty-before     + bf_bef_rvs-line.state-measure-qnty
+            p-rvs-cli-qnty-before = p-rvs-cli-qnty-before + bf_bef_rvs-line.state-measure-cli-qnty
+          .
+        end. /* for each bf_bef_rvs-line */
+      end. /* for each bf_bef_rvs-doc */
+      
+      find first bf_aft_rvs-doc no-lock where bf_aft_rvs-doc.rvs-type = {&rvs-after-doc}
+                                          and bf_aft_rvs-doc.out-code = p-doc-code
+                                          and num-entries(bf_aft_rvs-doc.rvs-code, "-") = 3 
+                                          and entry(2, bf_aft_rvs-doc.rvs-code, "-") = p-sec-name
+                                          no-error .
+      if not available bf_aft_rvs-doc
+      then do :
+        find first bf_aft_rvs-doc no-lock where bf_aft_rvs-doc.rvs-type = {&rvs-after-doc}
+                                            and bf_aft_rvs-doc.out-code = p-doc-code
+                                            and num-entries(bf_aft_rvs-doc.rvs-code, "-") = 2
+                                            no-error .
+      end .
+      if available bf_aft_rvs-doc
+      then do :
+        for each bf_aft_rvs-line no-lock
+          where bf_aft_rvs-line.rvs-code = bf_aft_rvs-doc.rvs-code
+            and bf_aft_rvs-line.obj-type = bf_aft_rvs-doc.obj-type
+            and bf_aft_rvs-line.obj-code = bf_aft_rvs-doc.obj-code
+            and bf_aft_rvs-line.gds-code = p-gds-code
+        :
+          assign
+            p-rvs-qnty-after     = p-rvs-qnty-after     + bf_aft_rvs-line.state-measure-qnty
+            p-rvs-cli-qnty-after = p-rvs-cli-qnty-after + bf_aft_rvs-line.state-measure-cli-qnty
+          .
+        end. /* for each bf_aft_rvs-line */
+      end. /* for each bf_aft_rvs-doc */
     end procedure. /* return-rvs-qnty */
 
     procedure check-before :
@@ -285,6 +358,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 find first buf_place no-lock where buf_place.obj-type = tt-doc-pl.obj-type
                                                and buf_place.obj-code = tt-doc-pl.obj-code
                                                and buf_place.loc1     = entry(ii, v-value)
+                                               and buf_place.status_  = ""
                                                no-error .
                 if available buf_place
                 then do :
@@ -416,6 +490,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-asi-ip  as character no-undo .
         define variable v-asi-port as character no-undo .
         define variable v-asi-type as character no-undo .
+        
+        define variable infoSecObj        as class InfoSection no-undo .
+        define variable v-KPrvs-secs      as character no-undo .
+        define variable v-KPrvs-doc-pl    as logical   no-undo .
 
         assign
           v-pl-code = ?
@@ -458,6 +536,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           v-pl-code      = ?
         .
         
+        tt-doc-pl_ :
         for each tt-doc-pl no-lock
         on error undo block_tr, return error return-value
         :
@@ -517,6 +596,31 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end .
           end .
           else do :
+            v-KPrvs-secs = "" .
+            v-KPrvs-doc-pl = no .
+            find first buf_place no-lock where buf_place.obj-type = t-doc.obj-type
+                                           and buf_place.obj-code = t-doc.obj-code
+                                           and buf_place.pl-code  = tt-doc-pl.pl-code
+                                           .
+            do ii = 1 to infoSectionsTotal:SectionNum : 
+              infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+              if infoSecObj:ListTank = buf_place.loc1
+              then do :
+                if infoSecObj:AccMeth = 1
+                then do :
+                  v-KPrvs-doc-pl = yes .
+                end .
+                v-KPrvs-secs = v-KPrvs-secs + "," + infoSecObj:SectionName .
+              end .
+            end .
+            v-KPrvs-secs = trim(v-KPrvs-secs, ",") .
+            
+            if v-KPrvs-doc-pl
+            and num-entries(v-KPrvs-secs) > 1
+            then do :
+              next tt-doc-pl_ .
+            end .
+              
             find first buf_rvs-line no-lock
               where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
                 and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
@@ -618,6 +722,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               if p-rvs-type = {&rvs-after-doc} then
                 v-act-name = 'actn_rvs-on-doc_upd-revision':U. /* Право на изменение сверки */
             end.
+            if infoSectionsTotal:IsKP
+            then do :
+              assign
+                v-act-name = 'actn_income_petrol-сommission':U /* Право на комиссионный приём */
+              .
+            end .
             case p-rvs-type :
               when {&rvs-before-doc} then do:
                 run check-before in this-procedure
@@ -666,6 +776,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             no-error
           }
           if v-log <> yes then do:
+            if infoSectionsTotal:IsKP
+            and p-action = {&update}
+            then do :
+              message "По накладной установлен флаг комиссионного приема. Работа со сверками запрещена!" view-as alert-box .
+            end .
             undo block_tr, return error .
           end.
         end.
@@ -1146,24 +1261,27 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                     ,v-pl-code)) no-error.
               end.
               
-              run cur-time in this-procedure
-                ( output v-today
-                , output v-time
-                ) .
-  
-              assign
-                buf_rvs-line.real-date = v-today
-                buf_rvs-line.real-time = v-time
-              .
-              infoSectionsTotal:CalculateTotal().
-              if p-rvs-type = {&rvs-before-doc}  then do:
-                if v-prt-start-real-date = ? then v-prt-start-real-date = buf_rvs-line.real-date .
-                if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = buf_rvs-line.real-time .
-              end.
-              else do:
-                v-prt-end-real-date = buf_rvs-line.real-date .
-                v-prt-end-real-time = buf_rvs-line.real-time .
-              end.
+              if p-action <> {&lookup}
+              then do :
+                run cur-time in this-procedure
+                  ( output v-today
+                  , output v-time
+                  ) .
+    
+                assign
+                  buf_rvs-line.real-date = v-today
+                  buf_rvs-line.real-time = v-time
+                .
+                infoSectionsTotal:CalculateTotal().
+                if p-rvs-type = {&rvs-before-doc}  then do:
+                  if v-prt-start-real-date = ? then v-prt-start-real-date = buf_rvs-line.real-date .
+                  if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = buf_rvs-line.real-time .
+                end.
+                else do:
+                  v-prt-end-real-date = buf_rvs-line.real-date .
+                  v-prt-end-real-time = buf_rvs-line.real-time .
+                end.
+              end .
             end.
             
             if error-status :error then do:
@@ -1184,14 +1302,23 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
          
          
         if not p-action = {&lookup}
-        then  
+        then do : 
+          find first buf_place no-lock
+              where buf_place.obj-type = t-doc.obj-type
+                and buf_place.obj-code = t-doc.obj-code
+                and buf_place.pl-code  = v-pl-code
+            .
           do ii = 1 to infoSectionsTotal:SectionNum :
             infoSectionsTotal:GetInfoSectionProp(ii).
+            if infoSectionsTotal:InfoSectionCurr:ListTank <> buf_place.loc1 then next .
+            if infoSectionsTotal:InfoSectionCurr:AccMeth = 1 then next .
+            
             infoSectionsTotal:InfoSectionCurr:DateStart = v-prt-start-real-date . 
             infoSectionsTotal:InfoSectionCurr:DateEnd   = v-prt-end-real-date . 
             infoSectionsTotal:InfoSectionCurr:TimeStart = v-prt-start-real-time . 
             infoSectionsTotal:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
           end.
+        end .
         infoSectionsTotal:SaveDB().
         
         run placelib_get-attr(input {&place-virtual}
@@ -1608,11 +1735,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 .
             do ii = 1 to p-infoSectionsTotal:SectionNum : 
 
-              def var v-calc-density like ub.rvs-line.state-density no-undo .
-              def var v-new-sec-fact-qnty as decimal no-undo.
-              def var v-new-sec-fact-qnty-kg as decimal no-undo.
-              def var v-chg-temp as logical no-undo.
-              def var v-st-doc-temp as logical no-undo.
+              define variable v-calc-density like ub.rvs-line.state-density no-undo .
+              define variable v-new-sec-fact-qnty         as decimal no-undo.
+              define variable v-new-sec-fact-qnty-kg      as decimal no-undo.
+              define variable v-chg-temp                  as logical no-undo.
+              define variable v-st-doc-temp               as logical no-undo.
+              define variable v-rvs-sec-qnty-before       as decimal no-undo.
+              define variable v-rvs-sec-qnty-after        as decimal no-undo.
+              define variable v-rvs-sec-cli-qnty-before   as decimal no-undo.
+              define variable v-rvs-sec-cli-qnty-after    as decimal no-undo.
+              
               infoSectionObj = p-infoSectionsTotal:GetInfoSectionProp(ii).
                             
               v-new-sec-fact-qnty = if infoSectionObj:FactQnty = 0 or infoSectionObj:FactQnty = ? then infoSectionObj:DocQnty else infoSectionObj:FactQnty.
@@ -1620,42 +1752,159 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 then v-calc-density = infoSectionObj:TankWeight / infoSectionObj:TankVol.
                 else v-calc-density = ?.
               
-              if p-infoSectionsTotal:IsRNAlgo
-              then do:
-                assign
-                  v-calc-density = infoSectionObj:TankDensityPomi when not p-infoSectionsTotal:RdcDnstvalue = 'not'
-                  v-calc-density = infoSectionObj:TankDensity when p-infoSectionsTotal:RdcDnstvalue = 'not'.
-                p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
-                if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
-                then do:
-                  v-new-sec-fact-qnty = v-new-sec-fact-qnty-kg / v-calc-density.
-                  v-chg-temp = true.
-                  v-st-doc-temp = false.
-                end.
-                else do:
+              if not p-infoSectionsTotal:IsSGDKK
+              then do :
+                if infoSectionObj:IsKP
+                and infoSectionObj:AccMeth = 1
+                then do :
+                  if not p-infoSectionsTotal:IsActnComm
+                  then do:
+                    message substitute ( "По секции &1 включен комиссионный прием нефтепродукта. У пользователя отсутвует право <<Комиссионный прием нефтепродукта>>. Продолжение невозможно.", infoSectionObj:SectionName )
+                    view-as alert-box error .
+                    undo block_tr, return error .
+                  end .
+                  run return-rvs-sec-qnty in this-procedure
+                    (  input p-doc-code
+                      ,input p-gds-code
+                      ,input infoSectionObj:SectionName
+                      ,output v-rvs-sec-qnty-before
+                      ,output v-rvs-sec-qnty-after
+                      ,output v-rvs-sec-cli-qnty-before
+                      ,output v-rvs-sec-cli-qnty-after
+                    ) no-error .
+                  if error-status :error then do:
+                    undo block_tr, return error return-value .
+                  end.
+                  assign
+                    v-new-sec-fact-qnty = v-rvs-sec-qnty-after - v-rvs-sec-qnty-before
+                    v-calc-density = ( v-rvs-sec-cli-qnty-after - v-rvs-sec-cli-qnty-before ) / ( v-rvs-sec-qnty-after - v-rvs-sec-qnty-before )
+                    v-chg-temp = true
+                    v-st-doc-temp = false
+                  .
+                  if v-new-sec-fact-qnty = ?
+                  or v-new-sec-fact-qnty < 0
+                  then do :
+                    message substitute ( "По секции &1 включен комиссионный прием нефтепродукта 'По сверкам'. Проверьте, что данные в сверках ДО и ПОСЛЕ корректны и повторите.", infoSectionObj:SectionName )
+                    view-as alert-box error .
+                    return error .
+                  end .
+                end .
+                else do :
+                  if p-infoSectionsTotal:IsRNAlgo
+                  then do:
+                    assign
+                      v-calc-density = infoSectionObj:TankDensityPomi when not p-infoSectionsTotal:RdcDnstvalue = 'not'
+                      v-calc-density = infoSectionObj:TankDensity when p-infoSectionsTotal:RdcDnstvalue = 'not'
+                    .
+                    p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
+                    if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
+                    then do:
+                      v-new-sec-fact-qnty = v-new-sec-fact-qnty-kg / v-calc-density.
+                      v-chg-temp = true.
+                      v-st-doc-temp = false.
+                    end.
+                    else do:
+                      v-st-doc-temp = true.
+                      v-chg-temp = false.
+                    end.
+                  end.
+                  else do:
+                    { str/stfactqt.i
+                      p-stfactplvalue
+                      infoSectionObj:DocQnty
+                      infoSectionObj:DocDensity
+                      0.00
+                      0.00
+                      infoSectionObj:TankVol
+                      v-calc-density            
+                      no
+                      v-new-sec-fact-qnty
+                      v-chg-temp
+                      v-st-doc-temp
+                      no-error
+                    }
+                    if error-status :error then do:
+                      undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+                    end.
+                  end.
+                end .
+              end .
+              else do :  /* p-infoSectionsTotal:IsSGDKK */
+                if infoSectionObj:IsKP
+                then do :
+                  if infoSectionObj:AccMeth = 1
+                  then do :
+                    run return-rvs-sec-qnty in this-procedure
+                      (  input p-doc-code
+                        ,input p-gds-code
+                        ,input infoSectionObj:SectionName
+                        ,output v-rvs-sec-qnty-before
+                        ,output v-rvs-sec-qnty-after
+                        ,output v-rvs-sec-cli-qnty-before
+                        ,output v-rvs-sec-cli-qnty-after
+                      ) no-error .
+                    if error-status :error then do:
+                      undo block_tr, return error return-value .
+                    end.
+                    assign
+                      v-new-sec-fact-qnty = v-rvs-sec-qnty-after - v-rvs-sec-qnty-before
+                      v-calc-density = ( v-rvs-sec-cli-qnty-after - v-rvs-sec-cli-qnty-before ) / ( v-rvs-sec-qnty-after - v-rvs-sec-qnty-before )
+                      v-chg-temp = true
+                      v-st-doc-temp = false
+                    .
+                    if v-new-sec-fact-qnty = ?
+                    or v-new-sec-fact-qnty < 0
+                    then do :
+                      message substitute ( "По секции &1 включен комиссионный прием нефтепродукта 'По сверкам'. Проверьте, что данные в сверках ДО и ПОСЛЕ корректны и повторите.", infoSectionObj:SectionName )
+                      view-as alert-box error .
+                      return error .
+                    end .
+                  end .
+                  else do :
+                    if p-infoSectionsTotal:IsRNAlgo
+                    then do:
+                      assign
+                        v-calc-density = infoSectionObj:TankDensityPomi when not p-infoSectionsTotal:RdcDnstvalue = 'not'
+                        v-calc-density = infoSectionObj:TankDensity when p-infoSectionsTotal:RdcDnstvalue = 'not'
+                      .
+                      p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
+                      if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
+                      then do:
+                        v-new-sec-fact-qnty = v-new-sec-fact-qnty-kg / v-calc-density.
+                        v-chg-temp = true.
+                        v-st-doc-temp = false.
+                      end.
+                      else do:
+                        v-st-doc-temp = true.
+                        v-chg-temp = false.
+                      end.
+                    end.
+                    else do:
+                      { str/stfactqt.i
+                        p-stfactplvalue
+                        infoSectionObj:DocQnty
+                        infoSectionObj:DocDensity
+                        0.00
+                        0.00
+                        infoSectionObj:TankVol
+                        v-calc-density            
+                        no
+                        v-new-sec-fact-qnty
+                        v-chg-temp
+                        v-st-doc-temp
+                        no-error
+                      }
+                      if error-status :error then do:
+                        undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+                      end.
+                    end.
+                  end .
+                end .
+                else do :
                   v-st-doc-temp = true.
                   v-chg-temp = false.
-                end.
-              end.
-              else do:
-                { str/stfactqt.i
-                  p-stfactplvalue
-                  infoSectionObj:DocQnty
-                  infoSectionObj:DocDensity
-                  0.00
-                  0.00
-                  infoSectionObj:TankVol
-                  v-calc-density            
-                  no
-                  v-new-sec-fact-qnty
-                  v-chg-temp
-                  v-st-doc-temp
-                  no-error
-                }
-                if error-status :error then do:
-                  undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
-                end.
-              end.
+                end .
+              end .
               
               if v-chg-temp
               then do:
@@ -2259,6 +2508,15 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
   &endif
 
   &if "{2}":U = "all-line":U &then
+    define temp-table tt-place-sec
+      field loc1    as character
+      field secs    as character
+      field own-rvs as logical
+      field pl-code as integer
+      index pi as primary unique
+        loc1
+    .
+    
     { ref/gds-attr.i }
     { str/is-sug.i }
     { str/placelib.i }
@@ -2280,6 +2538,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
 
         define buffer buf_trn-doc    for ub.trn-doc .
         define buffer buf_doc-line   for ub.doc-line .
+        define buffer buf_doc-line-attr for ub.doc-line-attr .
         define buffer buf_goods      for ub.goods .
         define buffer buf_place      for ub.place .
         define buffer buf_rvs-doc    for ub.rvs-doc .
@@ -2288,6 +2547,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define buffer prev_rvs-doc   for ub.rvs-doc.
         define buffer prev_icnt-doc  for ub.icnt-doc.
         define buffer buf_doc-pl     for ub.doc-pl.
+        define buffer sep_auto-tank-attr  for ub.auto-tank-attr.
 
         define variable is-petrolium       as logical   no-undo .
         define variable is-pieces          as logical   no-undo .
@@ -2299,29 +2559,149 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-value            as character no-undo .
         define variable v-ok               as logical   no-undo .
         define variable ii                 as integer   no-undo .
+        define variable v-kpsecs           as character no-undo .
+        define variable v-need-rvs-sec     as character no-undo .
+        define variable v-rvs-code         as character no-undo .
+        define variable v-no-need-main-rvs as logical   no-undo .
+        define variable choice             as integer   no-undo .
+        define variable varcar-num         as character no-undo .
+        define variable vartype            as character no-undo .
 
         define variable varlog             as logical   no-undo .
+        
+        define variable infoSectionsTotal as class InfoSectionsTotal no-undo .
+        define variable infoSecObj        as class InfoSection no-undo .
 
         find first buf_trn-doc
           where buf_trn-doc.doc-code = p-doc-code
           .
-
-        { gbl/chk-actg.i
-          v-cntxt-db-num
-          v-cntxt-userid
-          {&action-head-code-main}
-          'actn_rvs-on-doc_cr-revision':U
-          {&cntxt-object}
-          buf_trn-doc.host-code
-          buf_trn-doc.obj-type
-          buf_trn-doc.obj-code
-          0
-          0
-          0
-          true
-          varlog
-          no-error
-        }
+          
+        { str/tdat-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-car-num}
+          varcar-num
+          vartype
+          }
+          
+        find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = varcar-num
+                                                and sep_auto-tank-attr.attr-code = "auto-sep"
+                                                no-error.
+        if available sep_auto-tank-attr
+        and logical(sep_auto-tank-attr.attr-value)
+        then do : /* АЦ с СГДКК */
+          
+        end .
+        else do : /* Обычная АЦ без СГДКК */
+          secs_ :
+          for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                               and buf_doc-line-attr.attr-code = "n",
+          first buf_goods no-lock where buf_goods.gds-code = buf_doc-line-attr.gds-code
+          :
+            infoSectionsTotal = new InfoSectionsTotal().
+            infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+            infoSectionsTotal:GetDBAllAttr().
+            do ii = 1 to infoSectionsTotal:SectionNum :
+              infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+              if not (infoSecObj:TankWeight > 0)
+              then do :
+                delete object infoSectionsTotal.
+                message
+                  "Перед созданием документов сверки по накладной необходимо заполнить всю дополнительную информацию по приемке топлива!"
+                view-as alert-box .
+                return .
+              end .
+            end .
+            delete object infoSectionsTotal.
+          end .
+        end .
+          
+        v-kpsecs = "" .
+        v-need-rvs-sec = "" .
+        v-no-need-main-rvs = no .
+        empty temp-table tt-place-sec .
+        
+        kpsecs_ :
+        for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                             and buf_doc-line-attr.attr-code = "n",
+        first buf_goods no-lock where buf_goods.gds-code = buf_doc-line-attr.gds-code
+        :
+          infoSectionsTotal = new InfoSectionsTotal().
+          infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+          infoSectionsTotal:GetDBAllAttr().
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+            find first tt-place-sec where tt-place-sec.loc1 = infoSecObj:ListTank no-error .
+            if not available tt-place-sec
+            then do :
+              create tt-place-sec .
+              assign
+                tt-place-sec.loc1 = infoSecObj:ListTank
+                tt-place-sec.secs = infoSecObj:SectionName
+                tt-place-sec.own-rvs = no
+              .
+              for first buf_place no-lock where buf_place.obj-type = buf_trn-doc.obj-type
+                                            and buf_place.obj-code = buf_trn-doc.obj-code
+                                            and buf_place.loc1     = tt-place-sec.loc1
+                                            and buf_place.status_  = ""
+              :
+                assign tt-place-sec.pl-code = buf_place.pl-code .
+              end .
+            end .
+            else do :
+              assign
+                tt-place-sec.secs = tt-place-sec.secs + "," + infoSecObj:SectionName
+              .
+            end .
+            if infoSecObj:isKP
+            then do :
+              v-kpsecs = v-kpsecs + infoSecObj:SectionName + " с " + buf_goods.gds-name + ", " .
+            end .
+          end .
+          delete object infoSectionsTotal.
+        end .
+        v-kpsecs = trim(v-kpsecs, ", ") .
+        
+        if v-kpsecs > ""
+        then do :
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_income_petrol-сommission':U
+            {&cntxt-object}
+            buf_trn-doc.host-code
+            buf_trn-doc.obj-type
+            buf_trn-doc.obj-code
+            0
+            0
+            0
+            false
+            varlog
+            no-error
+          }
+          if varlog <> yes then do:
+            message "По накладной установлен флаг комиссионного приема. Работа со сверками запрещена!" view-as alert-box .
+            return error return-value .
+          end.
+        end .
+        else do :
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_rvs-on-doc_cr-revision':U
+            {&cntxt-object}
+            buf_trn-doc.host-code
+            buf_trn-doc.obj-type
+            buf_trn-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+            no-error
+          }
+        end .
         if varlog <> yes then do:
           return error return-value .
         end.
@@ -2380,6 +2760,74 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               if varlog <> yes then return error.
           end.
         end.
+        
+        if v-kpsecs > ""
+        then do :
+          run gbl/d-askw.w (
+             input "Выбор способа выполнения комиссионного приёма"
+            ,input ("Для секций " + v-kpsecs + " требуется комиссионный прием. Каким способом будет выполняться комиссионный прием?")
+            ,input "|"
+            ,input "Замеры в АЦ|По сверкам|Отмена"
+            ,input "Выполнение комиссионного приёма стандартным способом по замерам в автоцистерне|Выполнение комиссионного приёма по данным сверок в резервуаре|Отказ от создания сверок"
+            ,input 1
+            ,input 3
+            ,output choice).
+          case choice :
+            when 1
+            then do :
+              kpsecs_ :
+              for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                                   and buf_doc-line-attr.attr-code = "n"
+              :
+                infoSectionsTotal = new InfoSectionsTotal().
+                infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+                infoSectionsTotal:GetDBAllAttr().
+                do ii = 1 to infoSectionsTotal:SectionNum : 
+                  infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+                  if infoSecObj:isKP
+                  then do :
+                    infoSecObj:AccMeth = 0 .
+                  end .
+                end .
+                infoSectionsTotal:SaveDB() .
+                delete object infoSectionsTotal.
+              end .
+            end .
+            when 2
+            then do :
+              kpsecs_ :
+              for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                                   and buf_doc-line-attr.attr-code = "n"
+              :
+                infoSectionsTotal = new InfoSectionsTotal().
+                infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+                infoSectionsTotal:GetDBAllAttr().
+                do ii = 1 to infoSectionsTotal:SectionNum : 
+                  infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+                  if infoSecObj:isKP
+                  then do :
+                    for first tt-place-sec where tt-place-sec.loc1 = infoSecObj:ListTank
+                                             and not tt-place-sec.own-rvs :
+                      if num-entries(tt-place-sec.secs) > 1
+                      then do :
+                        tt-place-sec.own-rvs = yes .
+                        v-need-rvs-sec = v-need-rvs-sec + tt-place-sec.secs + "," .
+                      end .
+                    end .
+                    infoSecObj:AccMeth = 1 .
+                  end .
+                end .
+                infoSectionsTotal:SaveDB() .
+                delete object infoSectionsTotal.
+              end .
+            end .
+            when 3
+            then do :
+              return .
+            end .
+          end .
+        end .
+        v-need-rvs-sec = trim(v-need-rvs-sec, ",") .
         /*Ищем последнюю инвентаризацию счетчиков ТРК*/
         find last prev_icnt-doc no-lock
           where prev_icnt-doc.obj-type = buf_trn-doc.obj-type
@@ -2390,14 +2838,15 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           no-error.
 
         { gbl/curobjdt.i buf_trn-doc.obj-type buf_trn-doc.obj-code v-today }
-        /*создаем документ before-doc*/
-        create buf_rvs-doc.
+        /*создаем документ(ы) before-doc*/
+        find first tt-place-sec where tt-place-sec.own-rvs = no no-error .
+        
         run doc-code in this-procedure
           ( input "main":U
           ,input buf_trn-doc.obj-type
           ,input buf_trn-doc.obj-code
           ,input ?
-          ,output buf_rvs-doc.rvs-code
+          ,output v-rvs-code
           ) no-error.
         if error-status :error then do:
           message
@@ -2405,79 +2854,33 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             view-as alert-box error.
           return error.
         end.
-        assign
-          buf_rvs-doc.host-code = buf_trn-doc.host-code
-          buf_rvs-doc.obj-type  = buf_trn-doc.obj-type
-          buf_rvs-doc.obj-code  = buf_trn-doc.obj-code
-          buf_rvs-doc.status_   = {&g___new}
-          buf_rvs-doc.rvs-type  = {&rvs-before-doc}
-          buf_rvs-doc.out-code  = buf_trn-doc.doc-code
-          buf_rvs-doc.creid     = v-cntxt-userid
-          buf_rvs-doc.PS        = "@"
-          buf_rvs-doc.is-full   = no
-          buf_rvs-doc.doc-date  = v-today
-        .
-        find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error.
-        if available (ub.user-account) and not (ub.user-account.psn-code = ? or ub.user-account.psn-code = 0)
-        then do:
-          buf_rvs-doc.agnt = ub.user-account.psn-code.
-          buf_rvs-doc.boss = ub.user-account.psn-code.
-          buf_rvs-doc.wrkr = ub.user-account.psn-code.
-        end.
-        
-        run gbl/factdate.p
-          ( input        buf_rvs-doc.obj-type
-          ,input        buf_rvs-doc.obj-code
-          ,input-output buf_rvs-doc.fact-date
-          ,input-output buf_rvs-doc.fact-time
-          ,input-output buf_rvs-doc.shift-date
-          ,input-output buf_rvs-doc.shift-num
-          ,input-output buf_rvs-doc.shift-name
-          ,input        yes
-          ) no-error.
-        if error-status :error then do:
-          message
-            "Ошибка при установке даты в документе " {&rvs-before-doc} skip
-            view-as alert-box error.
-          undo tr, return error.
-        end.
-        /*создаем документ after-doc*/
-        create buf_rvs-doc.
-        run doc-code in this-procedure
-          ( input "main":U
-            ,input buf_trn-doc.obj-type
-            ,input buf_trn-doc.obj-code
-            ,input ?
-            ,output buf_rvs-doc.rvs-code
-          ) no-error.
-        if error-status :error then do:
-          message
-            "Ошибка при генерации номера документа."
-            view-as alert-box error.
-          return error.
-        end.
-        assign
-          buf_rvs-doc.host-code = buf_trn-doc.host-code
-          buf_rvs-doc.obj-type  = buf_trn-doc.obj-type
-          buf_rvs-doc.obj-code  = buf_trn-doc.obj-code
-          buf_rvs-doc.status_   = {&g___new}
-          buf_rvs-doc.rvs-type  = {&rvs-after-doc}
-          buf_rvs-doc.out-code  = buf_trn-doc.doc-code
-          buf_rvs-doc.creid     = v-cntxt-userid
-          buf_rvs-doc.PS        = "@"
-          buf_rvs-doc.is-full   = no
-          buf_rvs-doc.doc-date  = v-today
-        .
-        find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error.
-        if available (ub.user-account) and not (ub.user-account.psn-code = ? or ub.user-account.psn-code = 0)
-        then do:
-          buf_rvs-doc.agnt = ub.user-account.psn-code.
-          buf_rvs-doc.boss = ub.user-account.psn-code.
-          buf_rvs-doc.wrkr = ub.user-account.psn-code.
-        end.
-        
-        run gbl/factdate.p
-          ( input        buf_rvs-doc.obj-type
+        if v-need-rvs-sec = ""
+        or available tt-place-sec
+        then do :
+          create buf_rvs-doc.
+          assign
+            buf_rvs-doc.rvs-code  = v-rvs-code
+            buf_rvs-doc.host-code = buf_trn-doc.host-code
+            buf_rvs-doc.obj-type  = buf_trn-doc.obj-type
+            buf_rvs-doc.obj-code  = buf_trn-doc.obj-code
+            buf_rvs-doc.status_   = {&g___new}
+            buf_rvs-doc.rvs-type  = {&rvs-before-doc}
+            buf_rvs-doc.out-code  = buf_trn-doc.doc-code
+            buf_rvs-doc.creid     = v-cntxt-userid
+            buf_rvs-doc.PS        = "@"
+            buf_rvs-doc.is-full   = no
+            buf_rvs-doc.doc-date  = v-today
+          .
+          find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error.
+          if available (ub.user-account) and not (ub.user-account.psn-code = ? or ub.user-account.psn-code = 0)
+          then do:
+            buf_rvs-doc.agnt = ub.user-account.psn-code.
+            buf_rvs-doc.boss = ub.user-account.psn-code.
+            buf_rvs-doc.wrkr = ub.user-account.psn-code.
+          end.
+          
+          run gbl/factdate.p
+            ( input        buf_rvs-doc.obj-type
             ,input        buf_rvs-doc.obj-code
             ,input-output buf_rvs-doc.fact-date
             ,input-output buf_rvs-doc.fact-time
@@ -2485,13 +2888,150 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             ,input-output buf_rvs-doc.shift-num
             ,input-output buf_rvs-doc.shift-name
             ,input        yes
+            ) no-error.
+          if error-status :error then do:
+            message
+              "Ошибка при установке даты в документе " {&rvs-before-doc} skip
+              view-as alert-box error.
+            undo tr, return error.
+          end.
+        end .
+        do ii = 1 to num-entries(v-need-rvs-sec) :
+          create buf_rvs-doc.
+          assign
+            buf_rvs-doc.rvs-code  = replace(v-rvs-code, "-", "-" + entry(ii, v-need-rvs-sec) + "-")
+            buf_rvs-doc.host-code = buf_trn-doc.host-code
+            buf_rvs-doc.obj-type  = buf_trn-doc.obj-type
+            buf_rvs-doc.obj-code  = buf_trn-doc.obj-code
+            buf_rvs-doc.status_   = {&g___new}
+            buf_rvs-doc.rvs-type  = {&rvs-before-doc}
+            buf_rvs-doc.out-code  = buf_trn-doc.doc-code
+            buf_rvs-doc.creid     = v-cntxt-userid
+            buf_rvs-doc.PS        = "@"
+            buf_rvs-doc.is-full   = no
+            buf_rvs-doc.doc-date  = v-today
+          .
+          find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error.
+          if available (ub.user-account) and not (ub.user-account.psn-code = ? or ub.user-account.psn-code = 0)
+          then do:
+            buf_rvs-doc.agnt = ub.user-account.psn-code.
+            buf_rvs-doc.boss = ub.user-account.psn-code.
+            buf_rvs-doc.wrkr = ub.user-account.psn-code.
+          end.
+          
+          run gbl/factdate.p
+            ( input        buf_rvs-doc.obj-type
+            ,input        buf_rvs-doc.obj-code
+            ,input-output buf_rvs-doc.fact-date
+            ,input-output buf_rvs-doc.fact-time
+            ,input-output buf_rvs-doc.shift-date
+            ,input-output buf_rvs-doc.shift-num
+            ,input-output buf_rvs-doc.shift-name
+            ,input        yes
+            ) no-error.
+          if error-status :error then do:
+            message
+              "Ошибка при установке даты в документе " {&rvs-before-doc} skip
+              view-as alert-box error.
+            undo tr, return error.
+          end.
+        end .
+        /*создаем документ(ы) after-doc*/
+        run doc-code in this-procedure
+          ( input "main":U
+            ,input buf_trn-doc.obj-type
+            ,input buf_trn-doc.obj-code
+            ,input ?
+            ,output v-rvs-code
           ) no-error.
         if error-status :error then do:
           message
-            "Ошибка при установке даты в документе " {&rvs-after-doc} skip
+            "Ошибка при генерации номера документа."
             view-as alert-box error.
-          undo tr, return error.
+          return error.
         end.
+        if v-need-rvs-sec = ""
+        or available tt-place-sec
+        then do :
+          create buf_rvs-doc.
+          assign
+            buf_rvs-doc.rvs-code  = v-rvs-code
+            buf_rvs-doc.host-code = buf_trn-doc.host-code
+            buf_rvs-doc.obj-type  = buf_trn-doc.obj-type
+            buf_rvs-doc.obj-code  = buf_trn-doc.obj-code
+            buf_rvs-doc.status_   = {&g___new}
+            buf_rvs-doc.rvs-type  = {&rvs-after-doc}
+            buf_rvs-doc.out-code  = buf_trn-doc.doc-code
+            buf_rvs-doc.creid     = v-cntxt-userid
+            buf_rvs-doc.PS        = "@"
+            buf_rvs-doc.is-full   = no
+            buf_rvs-doc.doc-date  = v-today
+          .
+          find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error.
+          if available (ub.user-account) and not (ub.user-account.psn-code = ? or ub.user-account.psn-code = 0)
+          then do:
+            buf_rvs-doc.agnt = ub.user-account.psn-code.
+            buf_rvs-doc.boss = ub.user-account.psn-code.
+            buf_rvs-doc.wrkr = ub.user-account.psn-code.
+          end.
+          
+          run gbl/factdate.p
+            ( input        buf_rvs-doc.obj-type
+              ,input        buf_rvs-doc.obj-code
+              ,input-output buf_rvs-doc.fact-date
+              ,input-output buf_rvs-doc.fact-time
+              ,input-output buf_rvs-doc.shift-date
+              ,input-output buf_rvs-doc.shift-num
+              ,input-output buf_rvs-doc.shift-name
+              ,input        yes
+            ) no-error.
+          if error-status :error then do:
+            message
+              "Ошибка при установке даты в документе " {&rvs-after-doc} skip
+              view-as alert-box error.
+            undo tr, return error.
+          end.
+        end .
+        do ii = 1 to num-entries(v-need-rvs-sec) :
+          create buf_rvs-doc.
+          assign
+            buf_rvs-doc.rvs-code  = replace(v-rvs-code, "-", "-" + entry(ii, v-need-rvs-sec) + "-")
+            buf_rvs-doc.host-code = buf_trn-doc.host-code
+            buf_rvs-doc.obj-type  = buf_trn-doc.obj-type
+            buf_rvs-doc.obj-code  = buf_trn-doc.obj-code
+            buf_rvs-doc.status_   = {&g___new}
+            buf_rvs-doc.rvs-type  = {&rvs-after-doc}
+            buf_rvs-doc.out-code  = buf_trn-doc.doc-code
+            buf_rvs-doc.creid     = v-cntxt-userid
+            buf_rvs-doc.PS        = "@"
+            buf_rvs-doc.is-full   = no
+            buf_rvs-doc.doc-date  = v-today
+          .
+          find first ub.user-account no-lock where ub.user-account.user-id = v-cntxt-userid no-error.
+          if available (ub.user-account) and not (ub.user-account.psn-code = ? or ub.user-account.psn-code = 0)
+          then do:
+            buf_rvs-doc.agnt = ub.user-account.psn-code.
+            buf_rvs-doc.boss = ub.user-account.psn-code.
+            buf_rvs-doc.wrkr = ub.user-account.psn-code.
+          end.
+          
+          run gbl/factdate.p
+            ( input        buf_rvs-doc.obj-type
+            ,input        buf_rvs-doc.obj-code
+            ,input-output buf_rvs-doc.fact-date
+            ,input-output buf_rvs-doc.fact-time
+            ,input-output buf_rvs-doc.shift-date
+            ,input-output buf_rvs-doc.shift-num
+            ,input-output buf_rvs-doc.shift-name
+            ,input        yes
+            ) no-error.
+          if error-status :error then do:
+            message
+              "Ошибка при установке даты в документе " {&rvs-before-doc} skip
+              view-as alert-box error.
+            undo tr, return error.
+          end.
+        end .
 
         assign
           v-ptrl-avail = false
@@ -2540,24 +3080,51 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 and buf_doc-pl.gds-code = buf_goods.gds-code
             on error undo tr, return error return-value
             :
+              rvs-doc_ :
               for each buf_rvs-doc
                 where buf_rvs-doc.out-code = buf_trn-doc.doc-code
               on error undo tr, return error return-value
               :
-                assign
-                  v-doc-pl-avail = true
-                .
-                { str/crrvslin.i
-                  buf_rvs-doc.obj-type
-                  buf_rvs-doc.obj-code
-                  buf_rvs-doc.rvs-code
-                  buf_rvs-doc.rvs-type
-                  buf_doc-pl.pl-code
-                  buf_doc-pl.gds-code
-                  "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
-                  buf_rvs-doc.shift-date
-                  buf_rvs-doc.shift-num
-                }
+                if v-need-rvs-sec > ""
+                then do :
+                  for each tt-place-sec where tt-place-sec.pl-code = buf_doc-pl.pl-code
+                  :
+                    if (tt-place-sec.own-rvs and num-entries(buf_rvs-doc.rvs-code, "-") = 3)
+                    or (not tt-place-sec.own-rvs and num-entries(buf_rvs-doc.rvs-code, "-") = 2)
+                    then do :
+                      assign
+                        v-doc-pl-avail = true
+                      .
+                      { str/crrvslin.i
+                        buf_rvs-doc.obj-type
+                        buf_rvs-doc.obj-code
+                        buf_rvs-doc.rvs-code
+                        buf_rvs-doc.rvs-type
+                        buf_doc-pl.pl-code
+                        buf_doc-pl.gds-code
+                        "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
+                        buf_rvs-doc.shift-date
+                        buf_rvs-doc.shift-num
+                      }
+                    end .
+                  end .
+                end .
+                else do :
+                  assign
+                    v-doc-pl-avail = true
+                  .
+                  { str/crrvslin.i
+                    buf_rvs-doc.obj-type
+                    buf_rvs-doc.obj-code
+                    buf_rvs-doc.rvs-code
+                    buf_rvs-doc.rvs-type
+                    buf_doc-pl.pl-code
+                    buf_doc-pl.gds-code
+                    "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
+                    buf_rvs-doc.shift-date
+                    buf_rvs-doc.shift-num
+                  }
+                end .
               end. /* for each buf_rvs-doc */
               
               if is-sug(buf_doc-pl.gds-code)
@@ -2619,74 +3186,76 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             view-as alert-box information.
           undo tr, leave tr.
         end.
-        find first buf_rvs-doc
+        for each buf_rvs-doc
           where buf_rvs-doc.out-code = buf_trn-doc.doc-code
             and buf_rvs-doc.rvs-type = {&rvs-before-doc}
-        .
-        run str/rvs-stat.p
-          ( input parparentproc
-          ,input recid(buf_rvs-doc)
-          ,input "close":U
-          ) no-error.
-        if error-status :error then do:
-          run waitfram-hide in this-procedure .
-          message
-            vss-workfile vss-revision vss-description skip
-            substitute( 'Ошибка при закрытии документа сверки "&1" номер &2', {&rvs-before-doc}, buf_rvs-doc.rvs-code ) skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo tr, return error.
-        end.
-        run str/rvs-stat.p
-          ( input parparentproc
-          ,input recid(buf_rvs-doc)
-          ,input "froze":U
-          ) no-error.
-        if error-status :error then do:
-          run waitfram-hide in this-procedure .
-          message
-            vss-workfile vss-revision vss-description skip
-            substitute( 'Ошибка при изменении статуса документа сверки "&1" номер &2', {&rvs-before-doc}, buf_rvs-doc.rvs-code ) skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo tr, return error.
-        end.
-        find first buf_rvs-doc
-          where buf_rvs-doc.out-code = buf_trn-doc.doc-code
-            and buf_rvs-doc.rvs-type = {&rvs-after-doc}
-        .
-        run str/rvs-stat.p
-          ( input parparentproc
+        :
+          run str/rvs-stat.p
+            ( input parparentproc
             ,input recid(buf_rvs-doc)
             ,input "close":U
-          ) no-error.
-        if error-status :error then do:
-          run waitfram-hide in this-procedure .
-          message
-            vss-workfile vss-revision vss-description skip
-            substitute( 'Ошибка при закрытии документа сверки "&1" номер &2', {&rvs-after-doc}, buf_rvs-doc.rvs-code ) skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo tr, return error.
-        end.
-        run str/rvs-stat.p
-          ( input parparentproc
-          ,input recid(buf_rvs-doc)
-          ,input "froze":U
-          ) no-error.
-        if error-status :error then do:
-          run waitfram-hide in this-procedure .
-          message
-            vss-workfile vss-revision vss-description skip
-            substitute( 'Ошибка при изменении статуса документа сверки "&1" номер &2', {&rvs-after-doc}, buf_rvs-doc.rvs-code ) skip
-            error-status :get-message(1) skip
-            return-value skip
-            view-as alert-box error .
-          undo tr, return error.
-        end.
+            ) no-error.
+          if error-status :error then do:
+            run waitfram-hide in this-procedure .
+            message
+              vss-workfile vss-revision vss-description skip
+              substitute( 'Ошибка при закрытии документа сверки "&1" номер &2', {&rvs-before-doc}, buf_rvs-doc.rvs-code ) skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+            undo tr, return error.
+          end.
+          run str/rvs-stat.p
+            ( input parparentproc
+            ,input recid(buf_rvs-doc)
+            ,input "froze":U
+            ) no-error.
+          if error-status :error then do:
+            run waitfram-hide in this-procedure .
+            message
+              vss-workfile vss-revision vss-description skip
+              substitute( 'Ошибка при изменении статуса документа сверки "&1" номер &2', {&rvs-before-doc}, buf_rvs-doc.rvs-code ) skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+            undo tr, return error.
+          end.
+        end .
+        for each buf_rvs-doc
+          where buf_rvs-doc.out-code = buf_trn-doc.doc-code
+            and buf_rvs-doc.rvs-type = {&rvs-after-doc}
+        :
+          run str/rvs-stat.p
+            ( input parparentproc
+              ,input recid(buf_rvs-doc)
+              ,input "close":U
+            ) no-error.
+          if error-status :error then do:
+            run waitfram-hide in this-procedure .
+            message
+              vss-workfile vss-revision vss-description skip
+              substitute( 'Ошибка при закрытии документа сверки "&1" номер &2', {&rvs-after-doc}, buf_rvs-doc.rvs-code ) skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+            undo tr, return error.
+          end.
+          run str/rvs-stat.p
+            ( input parparentproc
+            ,input recid(buf_rvs-doc)
+            ,input "froze":U
+            ) no-error.
+          if error-status :error then do:
+            run waitfram-hide in this-procedure .
+            message
+              vss-workfile vss-revision vss-description skip
+              substitute( 'Ошибка при изменении статуса документа сверки "&1" номер &2', {&rvs-after-doc}, buf_rvs-doc.rvs-code ) skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+            undo tr, return error.
+          end.
+        end .
       end. /* end transaction */
       return .
     END PROCEDURE.
@@ -2708,29 +3277,74 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define buffer buf_trn-doc for ub.trn-doc .
         define buffer bef-rvs-doc for ub.rvs-doc.
         define buffer aft-rvs-doc for ub.rvs-doc.
-
+        define buffer buf_doc-line-attr for ub.doc-line-attr .
+        
+        define variable v-isKP           as logical   no-undo init no .
         define variable varlog           as logical   no-undo .
+        define variable ii               as integer   no-undo .
+        define variable infoSectionsTotal as class InfoSectionsTotal no-undo .
 
         find first buf_trn-doc
           where buf_trn-doc.doc-code = p-doc-code
           .
-
-        { gbl/chk-actg.i
-          v-cntxt-db-num
-          v-cntxt-userid
-          {&action-head-code-main}
-          'actn_rvs-on-doc_deletion':U
-          {&cntxt-object}
-          buf_trn-doc.host-code
-          buf_trn-doc.obj-type
-          buf_trn-doc.obj-code
-          0
-          0
-          0
-          true
-          varlog
-          no-error
-        }
+          
+        kpsecs_ :
+        for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                             and buf_doc-line-attr.attr-code = "n"
+        :
+          infoSectionsTotal = new InfoSectionsTotal().
+          infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+          infoSectionsTotal:GetDBAllAttr().
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            if infoSectionsTotal:GetInfoSectionProp(ii):isKP
+            then do :
+              v-isKP = yes .
+            end .
+          end .
+          delete object infoSectionsTotal.
+        end .
+        
+        if v-isKP
+        then do :
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_income_petrol-сommission':U
+            {&cntxt-object}
+            buf_trn-doc.host-code
+            buf_trn-doc.obj-type
+            buf_trn-doc.obj-code
+            0
+            0
+            0
+            false
+            varlog
+            no-error
+          }
+          if varlog <> yes then do:
+            message "По накладной установлен флаг комиссионного приема. Работа со сверками запрещена!" view-as alert-box .
+            return error return-value .
+          end.
+        end .
+        else do :
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            'actn_rvs-on-doc_deletion':U
+            {&cntxt-object}
+            buf_trn-doc.host-code
+            buf_trn-doc.obj-type
+            buf_trn-doc.obj-code
+            0
+            0
+            0
+            true
+            varlog
+            no-error
+          }
+        end .
         if varlog <> yes then do:
           return error return-value .
         end.
@@ -2747,11 +3361,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
 
         run waitfram-show in this-procedure (input "Удаляем документы сверки по приходной накладной").
 
-        find first bef-rvs-doc
+        for each bef-rvs-doc
           where bef-rvs-doc.out-code = buf_trn-doc.doc-code
             and bef-rvs-doc.rvs-type = {&rvs-before-doc}
-          no-error.
-        if available bef-rvs-doc then do:
+        :
           run str/rvs-stat.p
             ( input parparentproc
             ,input recid(bef-rvs-doc)
@@ -2793,10 +3406,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               view-as alert-box error .
             undo tr, return error.
           end.
-          find first bef-rvs-doc
+        end.
+        for each bef-rvs-doc
             where bef-rvs-doc.out-code = buf_trn-doc.doc-code
               and bef-rvs-doc.rvs-type = {&rvs-before-doc}
-            no-error.
+        :
           delete bef-rvs-doc no-error .
           if error-status :error then do:
             message
@@ -2807,12 +3421,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               view-as alert-box error .
             undo tr, return error.
           end.
-        end.
-        find first aft-rvs-doc
+        end .
+        for each aft-rvs-doc
           where aft-rvs-doc.out-code = buf_trn-doc.doc-code
             and aft-rvs-doc.rvs-type = {&rvs-after-doc}
-          no-error.
-        if available aft-rvs-doc then do:
+        :
           run str/rvs-stat.p
             ( input parparentproc
             ,input recid(aft-rvs-doc)
@@ -2854,10 +3467,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               view-as alert-box error .
             undo tr, return error.
           end.
-          find first aft-rvs-doc
+        end.
+        for each aft-rvs-doc
             where aft-rvs-doc.out-code = buf_trn-doc.doc-code
               and aft-rvs-doc.rvs-type = {&rvs-after-doc}
-            no-error.
+        :
           delete aft-rvs-doc no-error .
           if error-status :error then do:
             message
@@ -2868,7 +3482,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               view-as alert-box error .
             undo tr, return error.
           end.
-        end.
+        end .
       end. /* transaction */
       run waitfram-hide in this-procedure .
       return .

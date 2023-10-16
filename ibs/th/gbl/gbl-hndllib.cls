@@ -56,6 +56,10 @@ class ibs.th.gbl.gbl-hndllib:
   define static property g#trdcalib as handle no-undo
     get.
     private set.
+    
+  define static property g#lib-rvs as handle no-undo
+    get.
+    private set.
 
 
   constructor static gbl-hndllib():
@@ -84,6 +88,8 @@ class ibs.th.gbl.gbl-hndllib:
         g#lib-trn4 = in_g#libhndl.
       when "g#trdcalib" then 
         g#trdcalib = in_g#libhndl.
+      when "g#lib-rvs" then 
+        g#lib-rvs = in_g#libhndl.
     end case.
     
   end method.

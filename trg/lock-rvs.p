@@ -77,15 +77,37 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
             where ub.rvs-line.rvs-code = ub.rvs-doc.rvs-code
             on error undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
             :
-            run trg/lockplgd.p
-                ( input ub.rvs-line.obj-type    /* p-obj-type          */
-                , input ub.rvs-line.obj-code    /* p-obj-code          */
-                , input ub.rvs-line.pl-code     /* p-pl-code           */
-                , input ub.rvs-line.gds-code    /* p-gds-code          */
-                , input p-action                /* p-action            */
-                , input p-no-check-rvs-code     /* p-no-check-rvs-code */
-                , input p-is-berate             /* выводить сообщения  */
-                ) .
+            if num-entries(ub.rvs-doc.rvs-code, "-") = 3 /* Посекционные сверки (для коммисионного приёма) */
+            and p-action begins "assign-rvs-on=" 
+            then do :
+              for first ub.pl-gds no-lock where ub.pl-gds.obj-type = ub.rvs-line.obj-type
+                                            and ub.pl-gds.obj-code = ub.rvs-line.obj-code
+                                            and ub.pl-gds.pl-code  = ub.rvs-line.pl-code
+                                            and ub.pl-gds.gds-code = ub.rvs-line.gds-code
+                                            and ub.pl-gds.rvs-on  <> logical(entry(2, p-action, "="))
+              :
+                run trg/lockplgd.p
+                    ( input ub.rvs-line.obj-type    /* p-obj-type          */
+                    , input ub.rvs-line.obj-code    /* p-obj-code          */
+                    , input ub.rvs-line.pl-code     /* p-pl-code           */
+                    , input ub.rvs-line.gds-code    /* p-gds-code          */
+                    , input p-action                /* p-action            */
+                    , input p-no-check-rvs-code     /* p-no-check-rvs-code */
+                    , input p-is-berate             /* выводить сообщения  */
+                    ) .
+              end .
+            end .
+            else do :
+              run trg/lockplgd.p
+                  ( input ub.rvs-line.obj-type    /* p-obj-type          */
+                  , input ub.rvs-line.obj-code    /* p-obj-code          */
+                  , input ub.rvs-line.pl-code     /* p-pl-code           */
+                  , input ub.rvs-line.gds-code    /* p-gds-code          */
+                  , input p-action                /* p-action            */
+                  , input p-no-check-rvs-code     /* p-no-check-rvs-code */
+                  , input p-is-berate             /* выводить сообщения  */
+                  ) .
+            end .
         end.
     end.
 end.
