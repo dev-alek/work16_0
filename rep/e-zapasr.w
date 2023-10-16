@@ -338,6 +338,7 @@ v-kol = 0.
    run rep/r-zapasr.p (input base-type,input base-code,input Classify,input SortType,input SumsOnly,input ShowZero, input Tog-obj).
  end.
  else do:
+   run my-var.
    return error "format-page".
    /*message "Необходимо сходить на закладку <Формат...> !".*/
  end.

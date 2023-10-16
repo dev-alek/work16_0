@@ -17,6 +17,7 @@ Creation date: 03/27/06
 &if "{1}" = "" &then
     IF ERROR-STATUS:ERROR then
      DO:
+        run CloseForExcel in this-procedure  .
         CASE RETURN-VALUE:
         When 'First-page':U THEN  DO:
                 return no-apply.
@@ -27,7 +28,7 @@ Creation date: 03/27/06
                     return  no-apply .
                                    END.
         when 'format-page' then DO:
-                    message "Необходимо сходить на закладку <Формат...> !".
+                    message "На закладке <Формат...> необходимо выбрать поля для печати !".
                     RUN select-page IN THIS-PROCEDURE ( 3 ).
                     return no-apply.
                     END.
