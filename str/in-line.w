@@ -7050,7 +7050,7 @@ procedure display-measure :
               create tt-rvs-line-pump-delta .
               buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
               assign
-                tt-rvs-line-pump-delta.rvs-code = "before-doc"
+                tt-rvs-line-pump-delta.rvs-code = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
                 tt-rvs-line-pump-delta.density = (bef_rvs-line.state-density / 2)
               .
               if tt-rvs-line-pump-delta.state-el-cnt = ?
@@ -7085,7 +7085,7 @@ procedure display-measure :
                                                  and buf_rvs-line-pump.pl-code  = aft_rvs-line.pl-code
                                                  and buf_rvs-line-pump.gds-code = aft_rvs-line.gds-code
             :
-              find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc"
+              find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
                                                   and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
                                                   and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
                                                   and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
@@ -7098,7 +7098,7 @@ procedure display-measure :
                 create tt-rvs-line-pump-delta .
                 buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
                 assign
-                  tt-rvs-line-pump-delta.rvs-code = "after-doc"
+                  tt-rvs-line-pump-delta.rvs-code = "after-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
                   tt-rvs-line-pump-delta.is-err = yes
                 .
               end .

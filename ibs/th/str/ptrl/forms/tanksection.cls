@@ -1728,6 +1728,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         do ii = 1 to tmpInfoSecs:SectionNum : 
           if tmpInfoSecs:GetInfoSectionProp(ii):ListTank = infoSecsObj:InfoSectionCurr:ListTank
           and tmpInfoSecs:GetInfoSectionProp(ii):SectionName <> infoSecsObj:InfoSectionCurr:SectionName
+          and (infoSecsObj:InfoSectionCurr:AccMeth = 1 or tmpInfoSecs:GetInfoSectionProp(ii):AccMeth = 1)
           then do :
             bRvsBef:enabled = true .
             bRvsAft:enabled = true .

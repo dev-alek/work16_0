@@ -477,13 +477,13 @@
               tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
             .
           end. /* for each tt-pump-nozzle */
-          for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :
-            v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} . 
-          end. /* for each tt-pump-nozzle */
-          if v-pump-err > ""
-          then do :
-            message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .
-          end .
+/*          for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
+/*            v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
+/*          end. /* for each tt-pump-nozzle */                                                                                                        */
+/*          if v-pump-err > ""                                                                                                                        */
+/*          then do :                                                                                                                                 */
+/*            message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
+/*          end .                                                                                                                                     */
           
           for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
                                                and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
@@ -677,13 +677,13 @@
                 tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
               .
             end. /* for each tt-pump-nozzle */
-            for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :
-              v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} . 
-            end. /* for each tt-pump-nozzle */
-            if v-pump-err > ""
-            then do :
-              message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .
-            end .
+/*            for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
+/*              v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
+/*            end. /* for each tt-pump-nozzle */                                                                                                        */
+/*            if v-pump-err > ""                                                                                                                        */
+/*            then do :                                                                                                                                 */
+/*              message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
+/*            end .                                                                                                                                     */
             
             for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
                                                  and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code

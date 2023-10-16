@@ -136,7 +136,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             create tt-rvs-line-pump-delta .
             buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
             assign
-              tt-rvs-line-pump-delta.rvs-code = "before-doc"
+              tt-rvs-line-pump-delta.rvs-code = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
               tt-rvs-line-pump-delta.density = (bf_bef_rvs-line.state-density / 2)
             .
             if tt-rvs-line-pump-delta.state-el-cnt = ?
@@ -186,7 +186,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                                and buf_rvs-line-pump.pl-code  = bf_aft_rvs-line.pl-code
                                                and buf_rvs-line-pump.gds-code = bf_aft_rvs-line.gds-code
           :
-            find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc"
+            find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
                                                 and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
                                                 and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
                                                 and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
@@ -199,7 +199,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               create tt-rvs-line-pump-delta .
               buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
               assign
-                tt-rvs-line-pump-delta.rvs-code = "after-doc"
+                tt-rvs-line-pump-delta.rvs-code = "after-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
                 tt-rvs-line-pump-delta.is-err = yes
               .
             end .
@@ -1269,13 +1269,13 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
                   .
                 end. /* for each tt-pump-nozzle */
-                for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :
-                  v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} . 
-                end. /* for each tt-pump-nozzle */
-                if v-pump-err > ""
-                then do :
-                  message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .
-                end .
+/*                for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
+/*                  v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
+/*                end. /* for each tt-pump-nozzle */                                                                                                        */
+/*                if v-pump-err > ""                                                                                                                        */
+/*                then do :                                                                                                                                 */
+/*                  message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
+/*                end .                                                                                                                                     */
                 
                 for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
                                                      and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
@@ -1454,13 +1454,13 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
                 .
               end. /* for each tt-pump-nozzle */
-              for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :
-                v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} . 
-              end. /* for each tt-pump-nozzle */
-              if v-pump-err > ""
-              then do :
-                message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .
-              end .
+/*              for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
+/*                v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
+/*              end. /* for each tt-pump-nozzle */                                                                                                        */
+/*              if v-pump-err > ""                                                                                                                        */
+/*              then do :                                                                                                                                 */
+/*                message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
+/*              end .                                                                                                                                     */
               
               for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
                                                    and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
@@ -1655,7 +1655,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                       .
                     end.
                     when 3 then do:
-                      return .
+                      assign
+                        varcur-rvs = 3
+                      .
                     end.
                   end case. /* varnum */
                 end.
@@ -1665,91 +1667,94 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   .
                 end.
                 
-                if varcur-rvs = 1
-                or ptoldfilvalue <> "yes":u
+                if varcur-rvs <> 3
                 then do :
-                  { str/anls-pmp.i
-                    parParentProc
-                    t-doc.obj-type
-                    t-doc.obj-code
-                    yes
-                    tt-pump-nozzle-file
-                    tt-pump-nozzle
-                    yes
-                    ?
-                    no-error
-                  }
-                end.
-                else do :
-                  { str/anls-pmp.i
-                    parParentProc
-                    t-doc.obj-type
-                    t-doc.obj-code
-                    yes
-                    tt-pump-nozzle-file
-                    tt-pump-nozzle
-                    no
-                    ?
-                    no-error
-                  }
-                end.
-                
-                for each tt-pump-nozzle :
-                  find first tt-pump-nozzle-file where
-                             tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
-                             tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
-                             tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
-                             tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
-                  if available tt-pump-nozzle-file
-                  then
-                  assign
-                    tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
-                    tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
-                    tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
-                  .
-                end. /* for each tt-pump-nozzle */
-                for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :
-                  v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} . 
-                end. /* for each tt-pump-nozzle */
-                if v-pump-err > ""
-                then do :
-                  message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .
-                end .
-                
-                for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
-                                                     and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
-                                                     and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
-                                                     and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
-                                                     and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
-                :
-                  { str/fill1pmp.i
-                    "recid( buf_rvs-line-pump )"
-                    tt-pump-nozzle
-                  }
-                end .
-                
-                for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
-                                                            and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
-                                                            and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
-                                                            and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
-                                                            and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
-                :
-                  assign
-                    buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
-                    buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
-                    buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
-                    buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
-                    buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
-                    buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
-                    buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
-                    buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
-                    buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
-                    buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
-                    buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
-                    buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
-                    buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
-                    buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
-                  .
+                  if varcur-rvs = 1
+                  or ptoldfilvalue <> "yes":u
+                  then do :
+                    { str/anls-pmp.i
+                      parParentProc
+                      t-doc.obj-type
+                      t-doc.obj-code
+                      yes
+                      tt-pump-nozzle-file
+                      tt-pump-nozzle
+                      yes
+                      ?
+                      no-error
+                    }
+                  end.
+                  else do :
+                    { str/anls-pmp.i
+                      parParentProc
+                      t-doc.obj-type
+                      t-doc.obj-code
+                      yes
+                      tt-pump-nozzle-file
+                      tt-pump-nozzle
+                      no
+                      ?
+                      no-error
+                    }
+                  end.
+                  
+                  for each tt-pump-nozzle :
+                    find first tt-pump-nozzle-file where
+                               tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
+                               tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
+                               tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
+                               tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
+                    if available tt-pump-nozzle-file
+                    then
+                    assign
+                      tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
+                      tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
+                      tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
+                    .
+                  end. /* for each tt-pump-nozzle */
+  /*                for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
+  /*                  v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
+  /*                end. /* for each tt-pump-nozzle */                                                                                                        */
+  /*                if v-pump-err > ""                                                                                                                        */
+  /*                then do :                                                                                                                                 */
+  /*                  message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
+  /*                end .                                                                                                                                     */
+                  
+                  for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                       and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                       and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                       and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                       and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+                  :
+                    { str/fill1pmp.i
+                      "recid( buf_rvs-line-pump )"
+                      tt-pump-nozzle
+                    }
+                  end .
+                  
+                  for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                              and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                              and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                              and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                              and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+                  :
+                    assign
+                      buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
+                      buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                      buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
+                      buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+                      buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
+                      buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
+                      buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
+                      buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
+                      buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
+                      buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
+                      buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
+                      buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
+                      buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
+                      buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
+                    .
+                  end .
                 end .
               end .
             end.
@@ -2874,11 +2879,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             return error return-value .
           end.
           
-          if v-trk-err
-          then do :
-            message substitute("Масса реализации при расчете расхождения не была учтена из-за ошибок при получении данных с ТРК по месту хр. &1", tt-doc-pl.pl-code) view-as alert-box warning title "Внимание!".
-          end .
-          
           assign
             v-count-pl     = v-count-pl + 1
             v-tot-qnty-rvs = v-tot-qnty-rvs + ( v-rvs-qnty-after - v-rvs-qnty-before )
@@ -2908,8 +2908,15 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                         ,tt-doc-pl.fact-qnty
                                         ,( v-rvs-qnty-after - v-rvs-qnty-before )
                                         ,buf_goods.unit-base
-                                        ) .
+                                        )
               .
+              if v-trk-err
+              then do :
+                v-message = substitute("Масса реализации при расчете расхождения не была учтена из-за ошибок при получении данных с ТРК по месту хр. &1", tt-doc-pl.pl-code)
+                          + {&new-line}
+                          + v-message
+                .
+              end .
             end.
           end.
           else do:
@@ -2932,6 +2939,13 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                         ,round (v-delta-mass-qnty, 3)
                                         )
               .
+              if v-trk-err
+              then do :
+                v-message = substitute("Масса реализации при расчете расхождения не была учтена из-за ошибок при получении данных с ТРК по месту хр. &1", tt-doc-pl.pl-code)
+                          + {&new-line}
+                          + v-message
+                .
+              end .
               message v-message view-as alert-box warning title "Внимание!".
               v-message = "".
             end.

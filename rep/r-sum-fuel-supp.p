@@ -1063,7 +1063,7 @@ procedure processTrn :
                 create tt-rvs-line-pump-delta .
                 buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
                 assign
-                  tt-rvs-line-pump-delta.rvs-code = "before-doc"
+                  tt-rvs-line-pump-delta.rvs-code = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
                 .
                 if tt-rvs-line-pump-delta.state-el-cnt = ?
                 or tt-rvs-line-pump-delta.state-el-cnt <= 0
@@ -1131,7 +1131,7 @@ procedure processTrn :
                                                    and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
                                                    and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
               :
-                find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc"
+                find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
                                                     and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
                                                     and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
                                                     and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
@@ -1144,7 +1144,7 @@ procedure processTrn :
                   create tt-rvs-line-pump-delta .
                   buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
                   assign
-                    tt-rvs-line-pump-delta.rvs-code = "after-doc"
+                    tt-rvs-line-pump-delta.rvs-code = "after-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
                     tt-rvs-line-pump-delta.is-err = yes
                   .
                 end .
