@@ -2,6 +2,13 @@ define variable mForExtsys as character no-undo.
 define variable mHiddenMode as logical no-undo.
 define variable mForDb as character no-undo.
 define variable mForProc as character no-undo.
+
+define variable mSessionBegin as logical no-undo init yes.
+define variable mListDb       as character no-undo.
+define variable mListDbAll    as character no-undo.
+define variable mListKey      as character no-undo.
+define variable mListKeyAll   as character no-undo.
+
 define temp-table tt-db no-undo
    field db-num as integer
    index pi is unique primary
@@ -123,7 +130,8 @@ procedure startproc:
          no-error.
          if    mAsyncProcRun 
             or msesnws > 1
-         then do:     
+         then do:
+            mAsyncHelper:maxproc = msesnws.     
             run bge/auto-nws.p
                (input iAutoType 
                ,input this-procedure
@@ -450,6 +458,7 @@ procedure AddCashParam:
       )
       and voldDate ne iToday
    then do:
+      mAsyncHelper:setTimeOutTask("cashParam",600).
       voldDate = iToday.
       if iTime < 7200 /* 2 * 60 * 60 */
       then
@@ -458,7 +467,7 @@ procedure AddCashParam:
       then
          run addTaskTime in this-procedure("cashParam","utl/proc-send-all.p" , mFileCashParLog, datetime-tz (month (iToday),day (iToday), year (iToday),14,0 )).
    end.
-
+   
 end.
 define variable mPrintNextMes as logical no-undo init yes.
 procedure checkConect:
@@ -525,14 +534,6 @@ procedure checkConect:
       mPrintNextMes = true.
    end.
 end procedure.
-
-
-
-define variable mSessionBegin as logical no-undo init yes.
-define variable mListDb       as character no-undo.
-define variable mListDbAll    as character no-undo.
-define variable mListKey      as character no-undo.
-define variable mListKeyAll   as character no-undo.
 
 procedure initAsyncProc:
    define input  parameter iTitle as character no-undo.

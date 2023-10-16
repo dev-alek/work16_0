@@ -399,6 +399,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       log-exit = true.
    end.
    else do:
+      define variable Vdbinfo as character no-undo.
+      run adm/db-info.p ( output g#db-num, output Vdbinfo ) no-error.
       run gbl/dbdiscon.p no-error.
       if error-status :error then do:
          run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).

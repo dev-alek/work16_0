@@ -683,6 +683,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     .
   end.
   else do:
+     define variable Vdbinfo as character no-undo.
+    run adm/db-info.p ( output g#db-num, output Vdbinfo ) no-error.
     run gbl/dbdiscon.p no-error.
     if error-status :error then do:
       run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
@@ -944,6 +946,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   mAsyncHelper:MyBachMode = yes.
   mAsyncHelper:WritelogInter = 5.
   mAsyncHelper:MyBachMode = yes.
+  mAsyncHelper:maxproc    = 1.
    
    main-cycl:
    do while not log-exit
@@ -954,6 +957,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       run cur-time( output mtoday
                    ,output m-time
                 ) no-error.
+
       run AddCashParam(i-auto-type, mtoday, m-time).
       vRun = no.
       find first tt-BatchProcess no-lock
@@ -1139,7 +1143,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    end.
    if mAsyncHelper:isWorkShed()
    then do:
+      define variable vListTask as character no-undo.
+      vListTask = mAsyncHelper:getListWorkShed().
+      run write-to-log ( substitute( "Ожидаем выполнение асихронных процессов &1.", vListTask) ).
       run waitproc("Ожидаем получение данных").
+      run write-to-log ( "Асихронных процессы выполнены .").
    end.
    assign
       start-time = etime

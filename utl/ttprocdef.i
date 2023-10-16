@@ -23,4 +23,9 @@ define temp-table ttRun no-undo
 index task is unique primary task num 
 index taskst task fstatusItem runnum
 index statusItem fstatusItem StartAfter.
+
+define temp-table ttTimeOutProc no-undo
+   field task         as character
+   field timeOut      as integer
+   index task is unique primary task 
 .
