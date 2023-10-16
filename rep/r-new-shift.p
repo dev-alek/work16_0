@@ -3639,18 +3639,18 @@ procedure first-line-tog9-html :
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
                         <td style="width:150px"></td>
-                        <td style="width:30px"></td>
-                        <td style="width:30px"></td>
+                        <td style="width:40px"></td>
+                        <td style="width:40px"></td>
                         <td style="width:90px"></td>
                         <td style="width:90px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
                       </tr>
                        <tr>  
                         <td colspan="13" >&1</td>
@@ -3728,18 +3728,18 @@ procedure first-line-tog9-html :
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
                         <td style="width:150px"></td>
-                        <td style="width:30px"></td>
-                        <td style="width:30px"></td>
+                        <td style="width:40px"></td>
+                        <td style="width:40px"></td>
                         <td style="width:90px"></td>
                         <td style="width:90px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
                       </tr>
                     <tr>
                       <td colspan="13"></td>
@@ -3820,18 +3820,18 @@ procedure first-line-tog9-html :
                     <!-- Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px-->
                       <tr class="set_columns">
                         <td style="width:150px"></td>
-                        <td style="width:30px"></td>
-                        <td style="width:30px"></td>
+                        <td style="width:40px"></td>
+                        <td style="width:40px"></td>
                         <td style="width:90px"></td>
                         <td style="width:90px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
-                        <td style="width:60px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
+                        <td style="width:90px"></td>
                       </tr>
                       <tr>
                         <td colspan="13" style="height:30px;"></td>
