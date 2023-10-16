@@ -162,7 +162,7 @@ define variable date_          as date      no-undo .
 define variable par-type       as character no-undo .
 define stream Out-Stream.
 define stream OutStr-html.
-
+define variable v-alter-code as character no-undo .
 define variable v-file-name-rep-html  as character no-undo .
 define variable v-file-name-rep-html1 as character no-undo .
 define variable v-ind                 as integer   no-undo .
@@ -342,7 +342,22 @@ do ii = 1 to num-entries (p-cashbook,{&delim-cmd}):
   /*Печать титульного листа по кассовой книге*/
 
   mCashBook = new ibs.th.ref.cashbookstorage () .
-  run utl/fin-doc-nom.p(parparentproc,int64(entry(ii,p-cashbook,{&delim-cmd})),x-Date-Start). 
+  define variable v-ok as logical no-undo .
+        if v-cntxt-db-num = 0 then 
+      do:
+         /*чтобы не мешало на исходниках*/
+         run utl/checkStructDb.p (15, output v-ok) no-error.
+         if v-ok 
+         then do:
+            find first buf_CashBook no-lock where buf_CashBook.id = 0 no-error .
+            if available (buf_CashBook) then 
+            do:
+               run utl/fin-doc-nom.p(parparentproc,int64(entry(ii,p-cashbook,{&delim-cmd})),x-Date-Start). 
+            end.   
+         end.
+      end.
+      else
+  run utl/fin-doc-nom.p(parparentproc,int64(entry(ii,p-cashbook,{&delim-cmd})),x-Date-Start).
   o-head-position = mCashBook:getSinglRule(integer(entry(ii,p-cashbook,{&delim-cmd})), v-obj-type, v-obj-code, "ManagerPosition") .
   o-director      = mCashBook:getSinglRule(integer(entry(ii,p-cashbook,{&delim-cmd})), v-obj-type, v-obj-code, "ManagerFIO") .
   o-snr-accnt     = mCashBook:getSinglRule(integer(entry(ii,p-cashbook,{&delim-cmd})), v-obj-type, v-obj-code, "BuhFIO") .
