@@ -39,6 +39,7 @@ class ibs.th.str.marking.Types inherits TypeMap:
   define public property  NSJ        as class propmap no-undo get.  protected set.
   define public property  Bad        as class propmap no-undo get.  protected set.
   define public property  antiseptic as class propmap no-undo get.  protected set.
+  define public property  Badd2L7    as class propmap no-undo get.  protected set.
   
   constructor public Types ():
     /* типы маркировки */
@@ -57,6 +58,7 @@ class ibs.th.str.marking.Types inherits TypeMap:
     NSJ              = crProp(12,"NSJ",               "Никотинсодержащие жидкости и ЭСДН").
     Bad              = crProp(13,"Bad",               "БАД").
     antiseptic       = crProp(14,"antiseptic",        "Антисептики").
+    Badd2L7          = crProp(16,"Badd2L7",           "БАД d2L7").
     
     Unknow:Label_  = "Неизвестный тип маркировки.".
     
