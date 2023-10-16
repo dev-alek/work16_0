@@ -3628,6 +3628,7 @@ on error undo, return error
 
   /*печать тела*/
   get first br-user.
+  
   do while available buf_init_user-account:
   assign ii = 0
          jj = 0
@@ -3648,6 +3649,8 @@ on error undo, return error
               find FIRST buf_action-role
                 WHERE buf_action-role.action-head-code    = {&action-head-code-main}
                 AND buf_action-role.action-role-code    = buf_user-login-action-role.action-role-code
+                AND buf_action-role.db-num              = buf_init_user-login.db-num
+                AND (buf_init_user-login.db-num          = cb-db or string(cb-db) = '-1')
                 NO-LOCK no-error.
                 if AVAILABLE buf_action-role then do:
 /*                  if not v-action-gbl and buf_action-role.db-num              <> buf_init_user-login.db-num then next .*/
@@ -3680,7 +3683,8 @@ on error undo, return error
                   string(buf_action-role.action-role-name)                                                              
                   ).
                   end.
-                  else do:
+                  else 
+                  if (buf_init_user-login.db-num          = cb-db or string(cb-db) = '-1') then do:
                   put stream OutStr-html unformatted
                           substitute(
                           '<tr>
@@ -3698,7 +3702,7 @@ on error undo, return error
                   end.
 
           end. /*FOR EACH buf_user-login-action-role*/
-          if v-ok2 = no then 
+          if v-ok2 = no and (buf_init_user-login.db-num = cb-db or string(cb-db) = '-1') then 
           do:  
             put stream OutStr-html unformatted
               substitute(
