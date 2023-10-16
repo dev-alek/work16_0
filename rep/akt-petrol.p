@@ -905,7 +905,7 @@ procedure print-table1:
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Номер АЦ</TD>' skip
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Наименование нефтепродуктов</TD>' skip
     '<TD text_wrap="true" colspan="5" style="text-align: center;">Показатели по ТТН (ТН)</TD>' skip
-    '<TD text_wrap="true" colspan="9" style="text-align: center;">Результаты измерений в АЦ</TD>' skip
+    '<TD text_wrap="true" colspan="9" style="text-align: center;">Результаты измерений в АЦ/приемном резервуаре</TD>' skip
     '</TR>'skip       
                     
     '<TR style="height: 20px;">' skip
