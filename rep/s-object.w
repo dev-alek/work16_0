@@ -2329,7 +2329,10 @@ End case.
 if choose-shift
 and TOG-Shift:sensitive
 then do :
-  TOG-Shift = yes .
+/* почему-то на некоторых трейдах при попадение в тригер переменная сбрасывается поэтому положим сразу в 2 места */
+  TOG-Shift:screen-value in frame F-Main = "yes" .
+  TOG-Shift = yes.
+  
   apply "value-changed" to TOG-Shift in frame F-Main .
 end .
 
