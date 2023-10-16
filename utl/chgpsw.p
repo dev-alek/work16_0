@@ -140,7 +140,7 @@ then do:
       v-sys-key 
       no-error
    }                                                      
-   if v-sys-key begins "Rosneft-" or v-sys-key eq "yukos" or v-sys-key eq "ibs"
+   if v-sys-key begins "Rosneft-" or v-sys-key eq "yukos" or v-sys-key eq "ibs" or v-sys-key eq   {&SuperSysKey}
    then do:
       run SetPwdsysadm .
       {&login} = "odbc".
