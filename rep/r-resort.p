@@ -359,7 +359,7 @@ on error undo, return error return-value
 /*        end.
         else 
         do:
-           if bf_parts-out.in-code   = bf_parts-root.orig-in-code then 
+           if bf_parts-out.out-code   = bf_parts-root.in-code then 
            do:
               assign
                  sum-sale-out  = sum-sale-out  + price-sale-out          * bf_parts-out.fact-qnty
