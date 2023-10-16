@@ -242,7 +242,7 @@
                                          and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
                                          and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
                                          and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
-                                         and bf_pump-nozzle.is-meas     = yes                                     
+/*                                         and bf_pump-nozzle.is-meas     = yes*/
           :
             create tt-pump-nozzle.
             assign
@@ -541,6 +541,20 @@
                               ,buf_goods.prod-type
                               ,buf_goods.prod-code
                               ,v-pl-code)) no-error.
+          if error-status :error then do:
+            message
+              "Ошибка при редактировании строки сверки." skip
+              return-value skip
+              error-status :get-message(1) skip
+              view-as alert-box error .
+            undo block_tr, return error .
+          end.
+          if return-value = "cancel":U
+            and pAction <> {&lookup}
+          then do:
+            undo block_tr, return error .
+          end.
+          
           if pAction <> {&lookup}
           then do :
             cur-time
@@ -562,6 +576,126 @@
               v-prt-end-real-date = buf_rvs-line.real-date .
               v-prt-end-real-time = buf_rvs-line.real-time .
             end.
+            
+            for each tt-pump-nozzle
+            :
+              delete tt-pump-nozzle .
+            end.
+            
+            for each bf_pl-pump-nozzle no-lock where bf_pl-pump-nozzle.obj-type = buf_rvs-line.obj-type 
+                                                 and bf_pl-pump-nozzle.obj-code = buf_rvs-line.obj-code
+                                                 and bf_pl-pump-nozzle.pl-code  = buf_rvs-line.pl-code,
+            first bf_pump-nozzle no-lock where bf_pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type 
+                                           and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
+                                           and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                                           and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+/*                                             and bf_pump-nozzle.is-meas     = yes*/
+            :
+              create tt-pump-nozzle.
+              assign
+                tt-pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type
+                tt-pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code
+                tt-pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                tt-pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+                tt-pump-nozzle.gds-code    = buf_goods.gds-code
+              .
+            end .
+            
+            if ptoldfilvalue = "yes":U then do:
+              run gbl/d-askw.w
+                ( input "Выбор источника данных с информацией по ТРК"
+                ,input "Будем читать текущие данные с ТРК или возьмем данные из файла?"
+                ,input "|^"
+                ,input "Текущие данные|Из файлов|Отмена"
+                ,input "Запускается программа для обращения к датчикам резервуаров|Берутся уже сохраненные данные из файла|Ничего не делаем"
+                ,input 1
+                ,input 3
+                ,output varnum
+                ) .
+              case varnum :
+                when 1 then do:
+                  assign
+                    varcur-rvs = 1
+                  .
+                end.
+                when 2  then do:
+                  assign
+                    varcur-rvs = 0
+                  .
+                end.
+                when 3 then do:
+                  return .
+                end.
+              end case. /* varnum */
+            end.
+            else do:
+              assign
+                varcur-rvs = 1
+              .
+            end.
+            
+            if varcur-rvs = 1
+            or ptoldfilvalue <> "yes":u
+            then do :
+              { str/anls-pmp.i
+                infoSecsObj:Parentproc
+                buf_rvs-doc.obj-type
+                buf_rvs-doc.obj-code
+                yes
+                tt-pump-nozzle-file
+                tt-pump-nozzle
+                yes
+                ?
+                no-error
+              }
+            end.
+            else do :
+              { str/anls-pmp.i
+                infoSecsObj:Parentproc
+                buf_rvs-doc.obj-type
+                buf_rvs-doc.obj-code
+                yes
+                tt-pump-nozzle-file
+                tt-pump-nozzle
+                no
+                ?
+                no-error
+              }
+            end.
+            
+            for each tt-pump-nozzle :
+              find first tt-pump-nozzle-file where
+                         tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
+                         tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
+                         tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
+                         tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
+              if available tt-pump-nozzle-file
+              then
+              assign
+                tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
+                tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
+                tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
+              .
+            end. /* for each tt-pump-nozzle */
+            for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :
+              v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} . 
+            end. /* for each tt-pump-nozzle */
+            if v-pump-err > ""
+            then do :
+              message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .
+            end .
+            
+            for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                 and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                 and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                 and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                 and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+            :
+              { str/fill1pmp.i
+                "recid( buf_rvs-line-pump )"
+                tt-pump-nozzle
+              }
+            end .
             
             for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
                                                         and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
@@ -588,19 +722,6 @@
             end .
           end .
           
-          if error-status :error then do:
-            message
-              "Ошибка при редактировании строки сверки." skip
-              return-value skip
-              error-status :get-message(1) skip
-              view-as alert-box error .
-            undo block_tr, return error .
-          end.
-          if return-value = "cancel":U
-            and pAction <> {&lookup}
-          then do:
-            undo block_tr, return error .
-          end.
         end.
       end case.
       

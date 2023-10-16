@@ -19,8 +19,10 @@ using ibs.th.str.*.
 
 define input parameter iCntxtHostCodeObj as integer   no-undo.
 define input parameter iACType           as integer   no-undo.
+define input parameter iTrkErr           as integer   no-undo.
 define input parameter iGdsCodeList      as character no-undo.
 define input parameter iSuppsList        as character no-undo.
+define input parameter iOilBaseList      as character no-undo.
 define input parameter iTranTimeMax      as integer   no-undo.
 define input parameter iDelta-tank-ac    as logical   no-undo.
 define input parameter iDelta-tank-fact  as logical   no-undo.
@@ -139,6 +141,8 @@ define temp-table tt-rep no-undo
   field delta-mass-qnty-after as decimal
   
   field no-itog         as logical
+  
+  field ac-measured     as logical
   
   index pi as primary
     obj-code
@@ -632,6 +636,10 @@ procedure processTrn :
     for first buf_clients no-lock where buf_clients.obj-type = entry (1, varvalue, ";")
                                     and buf_clients.obj-code = integer (entry (2, varvalue, ";"))
     :
+      if not can-do(iOilBaseList, string(buf_clients.obj-code))
+      then do :
+        return .
+      end .
       v-nb-cli-name = buf_clients.obj-name .
     end .
   end .
@@ -911,6 +919,14 @@ procedure processTrn :
           end .
         end .
         
+        if v-InfoSection:TankWeight > 0
+        then
+          tt-rep.ac-measured = yes
+        .
+        else
+          tt-rep.ac-measured = no
+        .
+        
         if v-is-sug-gds
         then do :
           assign
@@ -980,12 +996,10 @@ procedure processTrn :
           tt-rep.delta-mass-qnty-ac = v-delta-mass-qnty-ac
         .
         
-        find first buf_place no-lock where buf_place.obj-type = buf_doc-line.obj-type
-                                       and buf_place.obj-code = buf_doc-line.obj-code
-                                       and buf_place.loc1     = tt-rep.col17
-                                       no-error .
-        if available buf_place
-        then do :
+        for each buf_place no-lock where buf_place.obj-type = buf_doc-line.obj-type
+                                     and buf_place.obj-code = buf_doc-line.obj-code
+                                     and buf_place.loc1     = tt-rep.col17
+        :
           empty temp-table tt-rvs-line-pump-delta .
           
           find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
@@ -1161,19 +1175,8 @@ procedure processTrn :
             tt-rep.col33 = tt-rep.col33 + tt-rvs-line-pump-delta.deltaVol .
           end .
           
-          v-tmp-time = buf_trn-doc.fact-time - 1 .
-          { str/avrgdens.i
-            buf_goods.gds-code
-            buf_trn-doc.obj-type
-            buf_trn-doc.obj-code
-            buf_place.pl-code
-            buf_trn-doc.shift-date
-            buf_trn-doc.shift-num
-            buf_trn-doc.fact-date
-            v-tmp-time
-            v-avrg-dens
-            no-error
-          }
+          v-avrg-dens = (tt-rep.col31 + tt-rep.col38) / 2 .
+          
           tt-rep.col34 = tt-rep.col33 * v-avrg-dens .
         end .
         
@@ -1229,6 +1232,8 @@ procedure processTrn :
           assign
             tt-rep.col38 = tt-rep.col37 / tt-rep.col36
             tt-rep.col39 = tt-rep.col39 / v-num-com-tanks
+            v-avrg-dens = (tt-rep.col31 + tt-rep.col38) / 2 
+            tt-rep.col34 = tt-rep.col33 * v-avrg-dens 
           .
         end .
         
@@ -1250,6 +1255,20 @@ procedure processTrn :
             tt-rep.col44  = tt-rep.col37 + tt-rep.col34 - tt-rep.col30 - tt-rep.col25
             tt-rep.col45  = tt-rep.col44 / tt-rep.col25 * 100
           .
+        end .
+        else do :
+          if v-InfoSection:TankWeight > 0
+          then do :
+            assign
+              tt-rep.col42  = tt-rep.col25 - tt-rep.col21
+              tt-rep.col43  = tt-rep.col42 / tt-rep.col21 * 100
+            .
+          
+            assign
+              tt-rep.col44  = tt-rep.col37 + tt-rep.col34 - tt-rep.col30 - tt-rep.col25
+              tt-rep.col45  = tt-rep.col44 / tt-rep.col25 * 100
+            .
+          end .
         end .
         
         assign
@@ -1300,6 +1319,15 @@ procedure processTrn :
             tt-rep.col50 = "Да (АЦ)" .
           end .
         end .
+        
+        if v-InfoSection:TankWeight > 0
+        and tt-rep.ac-measured = yes
+        then
+          tt-rep.ac-measured = yes
+        .
+        else
+          tt-rep.ac-measured = no
+        .
         
         assign
           tt-rep.col15 = tt-rep.col15 + "," + v-SectionName
@@ -1369,6 +1397,28 @@ procedure processTrn :
             tt-rep.col44  = tt-rep.col37 + tt-rep.col34 - tt-rep.col30 - tt-rep.col25
             tt-rep.col45  = tt-rep.col44 / tt-rep.col25 * 100
           .
+        end .
+        else do :
+          if tt-rep.ac-measured
+          then do :
+            assign
+              tt-rep.col42  = tt-rep.col25 - tt-rep.col21
+              tt-rep.col43  = tt-rep.col42 / tt-rep.col21 * 100
+            .
+          
+            assign
+              tt-rep.col44  = tt-rep.col37 + tt-rep.col34 - tt-rep.col30 - tt-rep.col25
+              tt-rep.col45  = tt-rep.col44 / tt-rep.col25 * 100
+            .
+          end .
+          else do :
+            assign
+              tt-rep.col42  = 0
+              tt-rep.col43  = 0
+              tt-rep.col44  = 0
+              tt-rep.col45  = 0
+            .
+          end .
         end .
         
         assign
@@ -1462,6 +1512,12 @@ procedure calc-itog :
     if iTranTimeMax > 0
     then do :
       if tt-rep.min-pour <= iTranTimeMax then tt-rep.no-itog = yes .
+    end .
+    
+    if (iTrkErr = 2 and tt-rep.col35 = "Нет")
+    or (iTrkErr = 3 and tt-rep.col35 = "Есть")
+    then do :
+      tt-rep.no-itog = yes .
     end .
   end .
   
@@ -1847,20 +1903,20 @@ procedure PrintTT:
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col32, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col32, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col33, "->>>>>>>>>>>9"  ) + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col33, "->>>>>>>>>>>9"  ) + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col34, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col34, "->>>>>>>>>>>9.9") + '</TH>'  skip
-            '<TH style="text-align: center; font-weight:normal; ">' fStrNvl(tt-rep.col35, "") '</TH>'  skip
+            '<TH style="text-align: center; font-weight:normal; color: ' + (if tt-rep.col35 = "Есть" then "red" else "black") + '; ">' fStrNvl(tt-rep.col35, "") '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col36, "->>>>>>>>>>>9"  ) + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col36, "->>>>>>>>>>>9"  ) + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col37, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col37, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col38, "->>>>>>>>9.9999") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col38, "->>>>>>>>9.9999") + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col39, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col39, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col40, "->>>>>>>>>>>9"  ) + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col40, "->>>>>>>>>>>9"  ) + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col41, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col41, "->>>>>>>>>>>9.9") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col42, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col43) > tt-rep.delta-mass-qnty-ac then "red" else "black") + '; ">' + fDec2Str(tt-rep.col42, "->>>>>>>>>>>9.9") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col43, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col43) > tt-rep.delta-mass-qnty-ac then "red" else "black") + '; ">' + fDec2Str(tt-rep.col43, "->>>>>>>>>>9.99") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col44, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col45) > 0.65 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col44, "->>>>>>>>>>>9.9") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col45, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col45) > 0.65 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col45, "->>>>>>>>>>9.99") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col46, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col47) > 0.65  then "red" else "black") + '; ">' + fDec2Str(tt-rep.col46, "->>>>>>>>>>>9.9") + '</TH>'  skip
+            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col42, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if (abs(tt-rep.col43) > tt-rep.delta-mass-qnty-ac or not tt-rep.ac-measured) then "red" else "black") + '; ">' + fDec2Str(tt-rep.col42, "->>>>>>>>>>>9.9") + '</TH>'  skip
+            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col43, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:normal; color: ' + (if (abs(tt-rep.col43) > tt-rep.delta-mass-qnty-ac or not tt-rep.ac-measured) then "red" else "black") + '; ">' + fDec2Str(tt-rep.col43, "->>>>>>>>>>9.99") + '</TH>'  skip
+            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col44, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if (abs(tt-rep.col45) > 0.65 or not tt-rep.ac-measured) then "red" else "black") + '; ">' + fDec2Str(tt-rep.col44, "->>>>>>>>>>>9.9") + '</TH>'  skip
+            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col45, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:normal; color: ' + (if (abs(tt-rep.col45) > 0.65 or not tt-rep.ac-measured) then "red" else "black") + '; ">' + fDec2Str(tt-rep.col45, "->>>>>>>>>>9.99") + '</TH>'  skip
+            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col46, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col47) > 0.65 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col46, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col47, "->>>>>>>>>>9.99") + '" style="text-align: center; font-weight:normal; color: ' + (if abs(tt-rep.col47) > 0.65 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col47, "->>>>>>>>>>9.99") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col48, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if tt-rep.col48 <> 0 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col48, "->>>>>>>>>>>9.9") + '</TH>'  skip
+            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col48, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if (tt-rep.col48 <> 0 or not tt-rep.ac-measured) then "red" else "black") + '; ">' + fDec2Str(tt-rep.col48, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col49, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if tt-rep.col49 <> 0 then "red" else "black") + '; ">' + fDec2Str(tt-rep.col49, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '<TH style="text-align: center; font-weight:normal; color: ' + (if tt-rep.col50 <> "Нет" then "red" else "black") + '; ">' fStrNvl(tt-rep.col50, "") '</TH>'  skip
             '<TH style="text-align: center; font-weight:normal; ">' fStrNvl(tt-rep.col51, "") '</TH>'  skip

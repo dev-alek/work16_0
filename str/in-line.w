@@ -60,6 +60,7 @@ define temp-table tt-fr-doc-line no-undo like ub.doc-line
   field measure-qnty            like ub.doc-line.doc-qnty
   field state-measure-cli-qnty  like ub.doc-line.doc-qnty
   field measure-cli-qnty        like ub.doc-line.doc-qnty
+  field trk-cli-qnty            like ub.doc-line.doc-qnty
   field obj-name                like ub.clients.obj-name
   field cst-code                like ub.parts.cst-code
   field last-num-day            as   integer
@@ -518,6 +519,7 @@ define frame d-in-line
   vargds-obj-cli-type                   at row 22.5 col 2
   vargds-obj-cli-code                   at row 22.5 col 28 no-label
   vargds-obj-cli-name                   at row 22.5 col 39 no-label
+  tt-fr-doc-line.trk-cli-qnty           at row 22.5 col 69  label "Масса реал-и"
   "Количество"                          at row 4    col 12.5                                           view-as text    size 17    by 1  bgcolor 3 fgcolor 15
   "Ед. изм."                            at row 4    col 28.5                                           view-as text    size 11    by 1  bgcolor 3 fgcolor 15
   "Коэффициент"                         at row 4    col 38.5                                           view-as text    size 16    by 1  bgcolor 3 fgcolor 15
@@ -3801,6 +3803,7 @@ assign
   tt-fr-doc-line.measure-qnty           :visible = no
   tt-fr-doc-line.state-measure-qnty     :visible = no
   tt-fr-doc-line.state-measure-cli-qnty :visible = no
+  tt-fr-doc-line.trk-cli-qnty           :visible = no
   road-tax-cli                          :visible = no
   rect-tot                              :visible = no
   tt-fr-doc-line.wt-place               :visible = no
@@ -6998,9 +7001,11 @@ procedure display-measure :
     define buffer aft_rvs-doc  for ub.rvs-doc  .
     define buffer bef_rvs-line for ub.rvs-line .
     define buffer aft_rvs-line for ub.rvs-line .
+    define buffer buf_rvs-line-pump for ub.rvs-line-pump .
     
     define variable v-old-qnty as decimal no-undo .
     define variable v-old-cli-qnty as decimal no-undo .
+    define variable v-trk-err as logical no-undo .
     
     assign
       v-old-qnty = tt-fr-doc-line.state-measure-qnty
@@ -7012,7 +7017,10 @@ procedure display-measure :
       tt-fr-doc-line.measure-qnty           = 0.00
       tt-fr-doc-line.state-measure-cli-qnty = 0.00
       tt-fr-doc-line.measure-cli-qnty       = 0.00
+      tt-fr-doc-line.trk-cli-qnty           = 0.00
     .
+    
+    empty temp-table tt-rvs-line-pump-delta .
     
     if infoSectionsTotal:IsKPrvs
     then do :
@@ -7024,80 +7032,93 @@ procedure display-measure :
           where bef_rvs-doc.out-code  = t-doc.doc-code
             and bef_rvs-doc.rvs-type  = {&rvs-before-doc}
         :
-          if num-entries(bef_rvs-doc.rvs-code, "-") = 3
-          then do :
-            for each bef_rvs-line no-lock
-              where bef_rvs-line.rvs-code = bef_rvs-doc.rvs-code
-                and bef_rvs-line.obj-type = bef_rvs-doc.obj-type
-                and bef_rvs-line.obj-code = bef_rvs-doc.obj-code
-                and bef_rvs-line.pl-code  = tt-doc-pl.pl-code
-                and bef_rvs-line.gds-code = tt-doc-pl.gds-code
-            :
-              assign
-                tt-fr-doc-line.state-measure-qnty     = tt-fr-doc-line.state-measure-qnty     - bef_rvs-line.state-measure-qnty
-                tt-fr-doc-line.measure-qnty           = tt-fr-doc-line.measure-qnty           - bef_rvs-line.measure-qnty
-                tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty - bef_rvs-line.state-measure-cli-qnty
-                tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       - bef_rvs-line.measure-cli-qnty
-              .
-            end .
-          end .
-          else do :
-            find first bef_rvs-line no-lock
+          for each bef_rvs-line no-lock
             where bef_rvs-line.rvs-code = bef_rvs-doc.rvs-code
               and bef_rvs-line.obj-type = bef_rvs-doc.obj-type
               and bef_rvs-line.obj-code = bef_rvs-doc.obj-code
               and bef_rvs-line.pl-code  = tt-doc-pl.pl-code
               and bef_rvs-line.gds-code = tt-doc-pl.gds-code
-            no-error .
-            if available bef_rvs-line
-            then do :
+          :
+            assign
+              tt-fr-doc-line.state-measure-qnty     = tt-fr-doc-line.state-measure-qnty     - bef_rvs-line.state-measure-qnty
+              tt-fr-doc-line.measure-qnty           = tt-fr-doc-line.measure-qnty           - bef_rvs-line.measure-qnty
+              tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty - bef_rvs-line.state-measure-cli-qnty
+              tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       - bef_rvs-line.measure-cli-qnty
+            .
+            
+            for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = bef_rvs-line.rvs-code
+                                                 and buf_rvs-line-pump.obj-type = bef_rvs-line.obj-type
+                                                 and buf_rvs-line-pump.obj-code = bef_rvs-line.obj-code
+                                                 and buf_rvs-line-pump.pl-code  = bef_rvs-line.pl-code
+                                                 and buf_rvs-line-pump.gds-code = bef_rvs-line.gds-code
+            :
+              create tt-rvs-line-pump-delta .
+              buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
               assign
-                tt-fr-doc-line.state-measure-qnty     = tt-fr-doc-line.state-measure-qnty     - bef_rvs-line.state-measure-qnty
-                tt-fr-doc-line.measure-qnty           = tt-fr-doc-line.measure-qnty           - bef_rvs-line.measure-qnty
-                tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty - bef_rvs-line.state-measure-cli-qnty
-                tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       - bef_rvs-line.measure-cli-qnty
+                tt-rvs-line-pump-delta.rvs-code = "before-doc"
+                tt-rvs-line-pump-delta.density = (bef_rvs-line.state-density / 2)
               .
-            end .
+              if tt-rvs-line-pump-delta.state-el-cnt = ?
+              or tt-rvs-line-pump-delta.state-el-cnt <= 0
+              then do :
+                tt-rvs-line-pump-delta.is-err = yes .
+              end .
+            end. /* for each bf_rvs-line-pump */
           end .
         end .
         for each aft_rvs-doc no-lock
           where aft_rvs-doc.out-code  = t-doc.doc-code
             and aft_rvs-doc.rvs-type  = {&rvs-after-doc}
         :
-          if num-entries(aft_rvs-doc.rvs-code, "-") = 3
-          then do :
-            for each aft_rvs-line no-lock
-              where aft_rvs-line.rvs-code = aft_rvs-doc.rvs-code
-                and aft_rvs-line.obj-type = aft_rvs-doc.obj-type
-                and aft_rvs-line.obj-code = aft_rvs-doc.obj-code
-                and aft_rvs-line.pl-code  = tt-doc-pl.pl-code
-                and aft_rvs-line.gds-code = tt-doc-pl.gds-code
-            :
-              assign
-                tt-fr-doc-line.state-measure-qnty     = tt-fr-doc-line.state-measure-qnty     + aft_rvs-line.state-measure-qnty
-                tt-fr-doc-line.measure-qnty           = tt-fr-doc-line.measure-qnty           + aft_rvs-line.measure-qnty 
-                tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty + aft_rvs-line.state-measure-cli-qnty
-                tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       + aft_rvs-line.measure-cli-qnty
-              .
-            end .
-          end .
-          else do :
-            find first aft_rvs-line no-lock
+          for each aft_rvs-line no-lock
             where aft_rvs-line.rvs-code = aft_rvs-doc.rvs-code
               and aft_rvs-line.obj-type = aft_rvs-doc.obj-type
               and aft_rvs-line.obj-code = aft_rvs-doc.obj-code
               and aft_rvs-line.pl-code  = tt-doc-pl.pl-code
               and aft_rvs-line.gds-code = tt-doc-pl.gds-code
-            no-error .
-            if available aft_rvs-line
-            then do :
-              assign
-                tt-fr-doc-line.state-measure-qnty     = tt-fr-doc-line.state-measure-qnty     + aft_rvs-line.state-measure-qnty
-                tt-fr-doc-line.measure-qnty           = tt-fr-doc-line.measure-qnty           + aft_rvs-line.measure-qnty 
-                tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty + aft_rvs-line.state-measure-cli-qnty
-                tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       + aft_rvs-line.measure-cli-qnty
-              .
-            end .
+          :
+            assign
+              tt-fr-doc-line.state-measure-qnty     = tt-fr-doc-line.state-measure-qnty     + aft_rvs-line.state-measure-qnty
+              tt-fr-doc-line.measure-qnty           = tt-fr-doc-line.measure-qnty           + aft_rvs-line.measure-qnty 
+              tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty + aft_rvs-line.state-measure-cli-qnty
+              tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       + aft_rvs-line.measure-cli-qnty
+            .
+            
+            for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = aft_rvs-line.rvs-code
+                                                 and buf_rvs-line-pump.obj-type = aft_rvs-line.obj-type
+                                                 and buf_rvs-line-pump.obj-code = aft_rvs-line.obj-code
+                                                 and buf_rvs-line-pump.pl-code  = aft_rvs-line.pl-code
+                                                 and buf_rvs-line-pump.gds-code = aft_rvs-line.gds-code
+            :
+              find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc"
+                                                  and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
+                                                  and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
+                                                  and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
+                                                  and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
+                                                  and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
+                                                  and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
+                                                  no-error .
+              if not available tt-rvs-line-pump-delta
+              then do :
+                create tt-rvs-line-pump-delta .
+                buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                assign
+                  tt-rvs-line-pump-delta.rvs-code = "after-doc"
+                  tt-rvs-line-pump-delta.is-err = yes
+                .
+              end .
+              else do :
+                tt-rvs-line-pump-delta.find-pair = yes .
+                if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+                then do :
+                  tt-rvs-line-pump-delta.is-err = yes .
+                end .
+                else do :
+                  tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                  tt-rvs-line-pump-delta.density = tt-rvs-line-pump-delta.density + (aft_rvs-line.state-density / 2) .
+                end .
+              end .
+            end . /* for each bf_rvs-line-pump */
           end .
         end .
         assign
@@ -7144,6 +7165,60 @@ procedure display-measure :
             tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty + aft_rvs-line.state-measure-cli-qnty  - bef_rvs-line.state-measure-cli-qnty
             tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       + aft_rvs-line.measure-cli-qnty        - bef_rvs-line.measure-cli-qnty
           .
+          for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = bef_rvs-line.rvs-code
+                                               and buf_rvs-line-pump.obj-type = bef_rvs-line.obj-type
+                                               and buf_rvs-line-pump.obj-code = bef_rvs-line.obj-code
+                                               and buf_rvs-line-pump.pl-code  = bef_rvs-line.pl-code
+                                               and buf_rvs-line-pump.gds-code = bef_rvs-line.gds-code
+          :
+            create tt-rvs-line-pump-delta .
+            buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+            assign
+              tt-rvs-line-pump-delta.rvs-code = "before-doc"
+              tt-rvs-line-pump-delta.density = (bef_rvs-line.state-density / 2)
+            .
+            if tt-rvs-line-pump-delta.state-el-cnt = ?
+            or tt-rvs-line-pump-delta.state-el-cnt <= 0
+            then do :
+              tt-rvs-line-pump-delta.is-err = yes .
+            end .
+          end. /* for each bf_rvs-line-pump */
+          
+          for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = aft_rvs-line.rvs-code
+                                               and buf_rvs-line-pump.obj-type = aft_rvs-line.obj-type
+                                               and buf_rvs-line-pump.obj-code = aft_rvs-line.obj-code
+                                               and buf_rvs-line-pump.pl-code  = aft_rvs-line.pl-code
+                                               and buf_rvs-line-pump.gds-code = aft_rvs-line.gds-code
+          :
+            find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc"
+                                                and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
+                                                and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
+                                                and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
+                                                and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
+                                                and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
+                                                and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
+                                                no-error .
+            if not available tt-rvs-line-pump-delta
+            then do :
+              create tt-rvs-line-pump-delta .
+              buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+              assign
+                tt-rvs-line-pump-delta.rvs-code = "after-doc"
+                tt-rvs-line-pump-delta.is-err = yes
+              .
+            end .
+            else do :
+              tt-rvs-line-pump-delta.find-pair = yes .
+              if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+              then do :
+                tt-rvs-line-pump-delta.is-err = yes .
+              end .
+              else do :
+                tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                tt-rvs-line-pump-delta.density = tt-rvs-line-pump-delta.density + (aft_rvs-line.state-density / 2) .
+              end .
+            end .
+          end . /* for each bf_rvs-line-pump */
         end.
         else do:
           assign
@@ -7166,11 +7241,27 @@ procedure display-measure :
         end.
       end. /* for each tt-doc-pl */
     end .
+    
+    v-trk-err = no .
+    find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.is-err no-error .
+    if available tt-rvs-line-pump-delta
+    then do :
+      v-trk-err = yes .
+      tt-fr-doc-line.trk-cli-qnty = ? .
+    end .
+    else do :
+      for each tt-rvs-line-pump-delta :
+        assign
+          tt-fr-doc-line.trk-cli-qnty = tt-fr-doc-line.trk-cli-qnty + (tt-rvs-line-pump-delta.deltaVol * tt-rvs-line-pump-delta.density)
+        .
+      end .
+    end .
 
     display
       tt-fr-doc-line.state-measure-qnty
       tt-fr-doc-line.measure-qnty
       tt-fr-doc-line.state-measure-cli-qnty
+      tt-fr-doc-line.trk-cli-qnty
     with frame {&frame-name} .
     
     if (v-old-qnty <> tt-fr-doc-line.state-measure-qnty
@@ -7433,6 +7524,8 @@ procedure correct-fact-qnty :
   
   define variable infoSecObj  as class ibs.th.str.InfoSection no-undo .
   define variable ii          as integer no-undo .
+  define variable v-correct-cli-fact-qnty as decimal no-undo .
+  define variable v-correct-fact-qnty as decimal no-undo .
 
   do
   on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
@@ -7481,6 +7574,24 @@ procedure correct-fact-qnty :
 /*          tt-doc-pl.cli-fact-qnty = tt-doc-pl.fact-qnty * tt-fr-doc-line.fact-density*/
 /*        .                                                                            */
       end. /* for each tt-doc-pl */
+      v-correct-cli-fact-qnty = tt-fr-doc-line.fact-qnty-kg .
+      v-correct-fact-qnty = tt-fr-doc-line.fact-qnty .
+      for each tt-doc-pl :
+        assign
+          v-correct-cli-fact-qnty = v-correct-cli-fact-qnty - tt-doc-pl.cli-fact-qnty
+          v-correct-fact-qnty = v-correct-fact-qnty - tt-doc-pl.fact-qnty
+        .
+        if absolute( v-correct-cli-fact-qnty ) <= 0.001 then do:
+          assign
+            tt-doc-pl.cli-fact-qnty = tt-doc-pl.cli-fact-qnty + v-correct-cli-fact-qnty
+          .
+        end.
+        if absolute( v-correct-fact-qnty ) <= 0.001 then do:
+          assign
+            tt-doc-pl.fact-qnty = tt-doc-pl.fact-qnty + v-correct-fact-qnty
+          .
+        end.
+      end .
       run edit-doc-pl in this-procedure
         ( input {&autoupdate}
         ) no-error .

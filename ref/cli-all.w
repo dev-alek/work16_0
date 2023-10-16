@@ -4075,8 +4075,25 @@ if ( v-use-grp-buy or v-use-oborot-buy )  then   is-price-buyer = true .
         if entry(2, entry(ii, c-other, ";":U), "=":U) <> "":U
         then do:
           v-tank-farm-for-supp = entry(2, entry(ii, c-other, ";":U), "=":U).
+          do jj = 1 to num-entries(v-tank-farm-for-supp) :
+            v-str = entry(jj,v-tank-farm-for-supp).
+            for each X_clients-attr no-lock where X_clients-attr.attr-code = {&attr-tank-farm-for}
+                                              and X_clients-attr.attr-value = v-str :
+              if not can-find (first x_temp-list-buyer where x_temp-list-buyer.obj-type = X_clients-attr.obj-type
+                                                          and x_temp-list-buyer.obj-code = X_clients-attr.obj-code)
+              then do :
+                create x_temp-list-buyer.
+                assign
+                  x_temp-list-buyer.obj-type = X_clients-attr.obj-type
+                  x_temp-list-buyer.obj-code = X_clients-attr.obj-code
+                .
+              end.
+            end.
+          end .
+        end.
+        else do :
           for each X_clients-attr no-lock where X_clients-attr.attr-code = {&attr-tank-farm-for}
-                                            and lookup(v-tank-farm-for-supp,X_clients-attr.attr-value) <> 0 :
+                                            and X_clients-attr.attr-value > "" :
             if not can-find (first x_temp-list-buyer where x_temp-list-buyer.obj-type = X_clients-attr.obj-type
                                                         and x_temp-list-buyer.obj-code = X_clients-attr.obj-code)
             then do :
@@ -4087,7 +4104,7 @@ if ( v-use-grp-buy or v-use-oborot-buy )  then   is-price-buyer = true .
               .
             end.
           end.
-        end.
+        end .
       end.
     end.
     /*для пущей корректности*/
