@@ -692,3 +692,22 @@ procedure ReedFileContext:
    end.
 end.
 
+procedure CheckUpdate:
+  define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
+  CheckUpd = new ibs.th.adm.upd.CheckUpd ().
+
+  if CheckUpd:isStopWork
+  then do:
+     run write-to-log ("Идет установка r-кодов. Попробуйте через несколько минут.") .
+     delete object CheckUpd no-error.
+     return error "Идет установка r-кодов. Попробуйте через несколько минут.".  
+  end.
+  
+  if CheckUpd:isNeedUpd
+  then do:
+     run write-to-log ("Необходимо обновить базу. Запустите ТН") .
+     delete object CheckUpd no-error.
+     return error "Необходимо обновить базу. Запустите ТН".  
+  end.
+  delete object CheckUpd no-error.
+end.

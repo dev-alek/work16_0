@@ -31,6 +31,8 @@ define variable vss-description as character no-undo init "Обновление r-кодов, о
 { gbl/waitfram.i }
 { utl/search.i }
 { cmp/str-glbl.i }
+{ adm/auto-def.i }
+define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
 
 define variable p0-pathrc as character no-undo .
 define variable v-pathrc         as character no-undo .
@@ -73,6 +75,12 @@ define variable v-branch            as integer   no-undo.
 
 define variable v-program-tag     as character no-undo .
 
+define new shared variable oxml-exch-dir as character no-undo .
+define new shared variable oxml-heap-dir as character no-undo .
+{ cmp/trg-def.i }
+{ gbl/getcntxa.i }
+define variable parparentproc as handle no-undo.
+parparentproc = this-procedure.
 /* Дата компиляции */
 
 run gbl/vertag.p (
@@ -97,6 +105,8 @@ then do:
    run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
    os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
 end.
+CheckUpd = new ibs.th.adm.upd.CheckUpd ().
+CheckUpd:workStop ().
 run waitfram-show in this-procedure ( input "Идет обновление программ ТН. Ждите..." ).
 
 /* Ищем где лежат r-коды   */
@@ -241,6 +251,85 @@ on error undo, return error
 end.  /*  repeat  on error undo   */
 input stream flstream close.
 
+/*    выгрузка в 1С-Erp*/
+
+   run bge/oxml-ini.p no-error.
+   if error-status :error
+   then do:
+      run write-to-log (  vss-workfile + {&new-line}
+                        + "Ошибка инициализации переменных для системы OpenXML" + {&new-line}
+                        + return-value
+                                ).
+   end.
+   
+   define variable m-db-num as int no-undo.
+   define variable m-extsys as character no-undo.
+   find first sys-ctrl no-error.
+   m-db-num = sys-ctrl.db-num.
+   run bge/oxmlinx.p (
+          input parparentproc
+        , input this-procedure
+        , input this-procedure
+        , input substitute("&1,&2,&3,&4"
+                          , "take+analys"
+                          , m-db-num
+                          , m-extsys
+                          , 0)   /*Т.к. внешние системы заводятся сейчас только в ГБД, то номер БД у них всегде 0. Если ситуация изменится, то надо будет переделать насттройку сессий оxml тоже*/
+    ) no-error.
+    if error-status :error
+    then do:
+        run write-to-log in this-procedure ( substitute( "&2&1Ошибка загрузки OpenXML&1&3&1&4"
+                                        , {&new-line}
+                                        , vss-workfile
+                                        , return-value
+                                        , error-status :get-message( error-status :num-messages )
+                                    )
+                        ) .
+    end.
+    run write-to-log ( substitute( "Подготовка новых пакетов." ) ).
+
+    define variable m-err-code as character no-undo.
+    define variable m-message as character no-undo.
+    run bge/cnewxpck.p (
+                      input  m-extsys
+                    , output m-err-code
+    ) no-error .
+    if error-status:error
+    then do:
+      run write-to-log( substitute( "&1. ERROR!!! Ошибка при подготовке пакетов OpenXML &2&3&4"
+                                    ,vss-workfile
+                                    ,error-status:get-message(error-status:num-messages)
+                                    ,{&new-line}
+                                    ,return-value
+                                  )
+                      ) .
+    end.
+    else do:
+      assign
+        m-message = return-value
+      .
+      if m-message <> "":U then do:
+        run write-to-log ( substitute( "&1", m-message ) ).
+      end.
+      run write-to-log ( substitute( "Завершена подготовка новых пакетов." ) ).
+    end.
+    
+    run bge/oxmloutx.p (
+            input parparentproc
+          , input this-procedure
+          , input this-procedure
+          , input substitute("all,&1", m-db-num )
+      ) no-error.
+    if error-status :error
+    then do:
+       run write-to-log in this-procedure ( substitute( "&2&1Ошибка выгрузки OpenXML&1&3&1&4"
+                                          , {&new-line}
+                                          , vss-workfile
+                                          , return-value
+                                          , error-status :get-message( error-status :num-messages )
+                                      )
+                          ) .
+    end.
 
 for each upgfile-tbl no-lock
   where upgfile-tbl.dateupg > v-compile-date
@@ -315,7 +404,7 @@ then do:
    run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
    os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
 end.
-
+CheckUpd:workStart ().
 v-msg = "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова.".
 run utl\proc-msg.p (v-msg) no-error.
 

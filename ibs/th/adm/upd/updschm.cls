@@ -168,38 +168,6 @@ define variable vss-description as character no-undo init "Обновление БД.".
   define variable mDfUpdaLL as character no-undo.
   define stream sReadfile.
   
-  constructor public updschm ():
-     this-object (yes).
-  end constructor.
-  
-  constructor public updschm (IQS as logical):
-     putStat ("Установка контекста для проверки обновления ... ").
-     
-     obsrvdbObj = new observupd ().
-     obsrvdbObj:ModeUpd = modeupd.
-     obsrvdbObj:PublisHandle = PublisHandle.
-     
-     isNeedUpd = obsrvdbObj:isneedupg(yes).
-     CurrDBShm   = obsrvdbObj:CurrDBShm.  
-     CurrDB0Shm  = obsrvdbObj:CurrDB0Shm. 
-     DbNum       = obsrvdbObj:DbNum.      
-     TargetDBShm = obsrvdbObj:TargetDBShm.
-     if not isNeedUpd
-     then
-        run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
-         
-     if IQS and not isRcode and isNeedUpd
-     then
-        message "Необходимо обновить базу с версии " CurrDBShm  " до " TargetDBShm " до запуска процесса. Остновить выполнение?" view-as alert-box question 
-             buttons yes-no title "[ ВНИМАНИЕ! ]" update isNeedUpd.
-          
-     delete object obsrvdbObj.
-     putStat  ("Установка контекста для проверки обновления завершена").
-     
-  end constructor.
-
-  
-  
   constructor public updschm (input inConPar as char,input iMode as character,ipubhan as handle,iDfFile as character ):
     putStat  ("Установка контекста для обновления ...").
     define variable vupd as logical no-undo.

@@ -665,17 +665,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
   end.
   
-  define variable updschmObj      as class ibs.th.adm.upd.updschm no-undo.
-  updschmObj = new ibs.th.adm.upd.updschm ().
-
-  if updschmObj:isNeedUpd
-  then do:
-     run write-to-log ("Необходимо обновить базу. Запустите ТН") .
-     delete object updschmObj no-error.
-     return error "Необходимо обновить базу. Запустите ТН".  
+  run CheckUpdate no-error.
+  if error-status :error then do:
+     return error return-value.
   end.
-  delete object updschmObj no-error.
-
   { gbl/conf-rd.i "'writelog'" "''" "''" 0 "''" "''" "''" no writelogvalue writelogtype no-error }
 
   run adm/chk-db.p no-error .
@@ -1014,7 +1007,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                leave main-cycl .
             end.
             
-            
+            run CheckUpdate no-error.
+            if error-status :error then do:
+               run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
+               return error return-value.
+            end.
  
            run adm/chk-sch.p
               ( input  i-auto-type
