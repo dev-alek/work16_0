@@ -213,7 +213,7 @@ define variable v-ttype as character no-undo.
     if paris-cash
     or par-is-credit-card
     or par-is-debet-card
-    or par-is-advance
+    or par-is-credit
     then do:
       v-mess = "Платеж <Учет аванса> не может одновременно иметь свойства НАЛИЧНЫЕ, КРЕДИТНАЯ КАРТА, ДЕБЕТОВАЯ КАРТА, ПЛАТЕЖ В КРЕДИТ".
       run err-mess in this-procedure ( input-output v-mess).
