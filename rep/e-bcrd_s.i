@@ -28,7 +28,7 @@ if last-of( {1} ) then  do:
     day_sum.obj-code = obj-list.obj-code
     day_sum.date = {1}
     day_sum.tot-base =  (ACCUM SUB-TOTAL BY {1} ( chk-doc.netto )) - {2}
-    day_sum.chk-cnt =  (ACCUM COUNT BY {1}  chk-doc.doc-code) - {3}.
+    day_sum.chk-cnt-all =  (ACCUM COUNT BY {1}  chk-doc.doc-code) - {3}.
 end.
 
 /* $Workfile$ e n d */

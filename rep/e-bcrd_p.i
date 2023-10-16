@@ -37,7 +37,7 @@ if last-of( chk-doc.pay-desk ) then do:
   day_sum.tot-r-b  = (if v-curr-r-b = {&r-b-base}
                       then day_sum.tot-base
                       else day_sum.tot-rubl)
-  day_sum.chk-cnt =  (ACCUM COUNT BY chk-doc.pay-desk  chk-doc.doc-code) -  {2}
+  day_sum.chk-cnt-all =  (ACCUM COUNT BY chk-doc.pay-desk  chk-doc.doc-code) -  {2}
   .
 end.
 

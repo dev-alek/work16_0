@@ -225,7 +225,7 @@ BY obj-list.obj-code :
 &endif
 
       if benefits.tot-base <> 0
-      or day_sum.chk-cnt <> 0
+      or day_sum.chk-cnt-all <> 0
       then do:
         if DatePrinted then do:
           DISPLAY stream PrnLibStream
@@ -242,11 +242,11 @@ BY obj-list.obj-code :
           benefits.tot-base
 &endif
           sym6
-&if "{1}" = "base" &THEN
+/*&if "{1}" = "base" &THEN
           benefits.tot-r-b
 &else
           benefits.tot-rubl
-&endif
+&endif*/
           sym7
           benefits.pcnt
           sym8
@@ -288,7 +288,7 @@ BY obj-list.obj-code :
         day_sum.tot-r-b  ( TOTAL )
 
         .
-        if day_sum.chk-cnt <> 0 then do:
+        if day_sum.chk-cnt-all <> 0 then do:
           UNDERLINE stream PrnLibStream
           benefits.pay-name
 &if "{1}" = "tot" &then
@@ -305,8 +305,8 @@ BY obj-list.obj-code :
           DISPLAY stream PrnLibStream
 &if "{1}" = "tot" &then
           sym1
-          ("чеков: " + string(day_sum.chk-cnt, ">>>>>") + ",") @ benefits.pay-name
-          (string( ROUND(day_sum.tot-base / day_sum.chk-cnt , 2) ,  "->>>,>>9.99" ) +
+          ("чеков: " + string(day_sum.chk-cnt-all, ">>>>>") + ",") @ benefits.pay-name
+          (string( ROUND(day_sum.tot-base / day_sum.chk-cnt-all , 2) ,  "->>>,>>9.99" ) +
                       "/ чек" ) @ benefits.curr-name
           day_sum.tot-base  @ benefits.tot-base
           doprubl @ benefits.tot-rubl
@@ -315,9 +315,9 @@ BY obj-list.obj-code :
 &endif
 &if "{1}" = "base" &then
           sym1
-          ("чеков: " + string(day_sum.chk-cnt, ">>>>>") +
+          ("чеков: " + string(day_sum.chk-cnt-all, ">>>>>") +
             ", в среднем " +
-          string( ROUND(day_sum.tot-r-b  / day_sum.chk-cnt , 2) ,
+          string( ROUND(day_sum.tot-r-b  / day_sum.chk-cnt-all , 2) ,
                       "->>>,>>9.99" ) +  "/ чек" ) @ benefits.pay-name
           day_sum.tot-r-b  @ benefits.tot-r-b
           "100.00%" @ benefits.pcnt
@@ -325,9 +325,9 @@ BY obj-list.obj-code :
 &endif
 &if "{1}" = "rubl" &then
           sym1
-          ("чеков: " + string(day_sum.chk-cnt, ">>>>>") +
+          ("чеков: " + string(day_sum.chk-cnt-all, ">>>>>") +
             ", в среднем " +
-          string( ROUND(day_sum.tot-rubl / day_sum.chk-cnt , 2) ,
+          string( ROUND(day_sum.tot-rubl / day_sum.chk-cnt-all , 2) ,
                         "->>>,>>9.99" ) +  "/ чек" ) @ benefits.pay-name
           day_sum.tot-rubl @ benefits.tot-rubl
           "100.00%" @ benefits.pcnt
@@ -363,7 +363,7 @@ BY obj-list.obj-code :
 &endif
         with frame Benefit-{1} .
         DISPLAY stream PrnLibStream
-        ("ИТОГО  чеков: " + string(all-days_sum.chk-cnt)
+        ("ИТОГО  чеков: " + string(day_sum.chk-cnt-all)
         )  @ benefits.pay-name
 &if "{1}" = "tot" &then
         all-days_sum.tot-base  @ benefits.tot-base
@@ -496,14 +496,14 @@ BY obj-list.obj-code :
         with frame PayCodes-{1}.
 &if "{1}" = "tot" &then
         DISPLAY stream PrnLibStream
-        (" ИТОГО чеков: " + string(all-days_sum.chk-cnt) )  @ benefits.pay-name
+        (" ИТОГО чеков: " + string(day_sum.chk-cnt-all) )  @ benefits.pay-name
         ( ACCUM TOTAL benefits.tot-base ) @ benefits.tot-base
         ( ACCUM TOTAL benefits.tot-rubl ) @ benefits.tot-rubl
         "100.00%" @ benefits.pcnt     with frame PayCodes-{1} .
 &endif
 &if "{1}" = "base" &then
         DISPLAY stream PrnLibStream
-        (" ИТОГО чеков: " + string(all-days_sum.chk-cnt) )  @ benefits.pay-name
+        (" ИТОГО чеков: " + string(day_sum.chk-cnt-all) )  @ benefits.pay-name
         ( ACCUM TOTAL benefits.tot-r-b ) @ benefits.tot-r-b
         "100.00%" @ benefits.pcnt
         with frame PayCodes-{1} .

@@ -17,50 +17,57 @@ Creation date: 10/18/05
 
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable acc-count-ln as int no-undo.
+        acc-count-ln = acc-count-ln + 1.
+if acc-count-ln > acc-count-step then do:
+  run waitfram-show in this-procedure ( obj-list.obj-type + string( obj-list.obj-code ) +
+                                  ", обработано строк чеков : " +
+                                  string( ACC-count-ln) ) .
+  acc-count-step = acc-count-ln + 96 .                                  
+end.
+        
+        if FIRST-of( chk-pay.curr-code ) then assign
+          acc-curr-sum  = 0
+          acc-curr-base = 0
+          acc-curr-rubl = 0
+        .
+          
+      assign
+          acc-curr-sum  = acc-curr-sum  + chk-pay.tot-sum
+          acc-curr-base = acc-curr-base + chk-pay.tot-base
+          acc-curr-rubl = acc-curr-rubl + chk-pay.tot-rubl
+          acc-desk-base = acc-desk-base + chk-pay.tot-base
+          acc-desk-rubl = acc-desk-rubl + chk-pay.tot-rubl
+      .
 
 if last-of( chk-pay.curr-code ) then do:
-    FIND FIRST ub.cash-pay WHERE
-                        ub.cash-pay.cdpay-code = ub.chk-pay.pay-code AND
-                        ub.cash-pay.curr-code = ub.chk-pay.curr-code
-                        NO-LOCK NO-ERROR.
-    FIND FIRST ub.currency WHERE currency.curr-code = ub.chk-pay.curr-code NO-LOCK NO-ERROR.
-    if avail ub.cash-pay
-    or (not avail ub.cash-pay
-        and acc-curr-sum <> acc-sub-curr-sum) then do:
-      create benefits.
-      assign
-      benefits.pay-desk = ub.chk-doc.pay-desk
-      benefits.obj-type = obj-list.obj-type
-      benefits.obj-code = obj-list.obj-code
-      benefits.pay-code = if avail ub.cash-pay then ub.cash-pay.cdpay-code else ub.chk-pay.pay-code
-      benefits.pay-name = if avail ub.cash-pay then ub.cash-pay.obj-name else "Неопознанная оплата"
-      benefits.curr-code = if avail ub.currency then ub.currency.curr-code else chk-pay.curr-code
-      benefits.curr-name = if avail ub.currency then ub.currency.curr-name else "Неопознанная валюта"
-      benefits.tot-sum   = acc-curr-sum - acc-sub-curr-sum
-      benefits.tot-base = acc-curr-base - acc-sub-curr-base
-      benefits.tot-rubl = acc-curr-rubl - acc-sub-curr-rubl
-      benefits.tot-r-b = if v-curr-r-b = {&r-b-base}
-                          then benefits.tot-base
-                          else benefits.tot-rubl
-      .
-   end.
-end.
-if last-of( ub.chk-doc.pay-desk ) then do:
-    FIND FIRST day_sum WHERE
-                day_sum.obj-type = obj-list.obj-type AND
-                day_sum.obj-code = obj-list.obj-code AND
-                day_sum.pay-desk = ub.chk-doc.pay-desk NO-ERROR.
-
+  run CreateBenefits2 in this-procedure
+  ( obj-list.obj-type
+  , obj-list.obj-code
+  , chk-pay.pay-code
+  , chk-pay.curr-code
+  , chk-doc.pay-desk
+  , acc-curr-sum
+  , acc-curr-base
+  , acc-curr-rubl
+  ) .
+  
+  if not can-find (first ben-chk-count where ben-chk-count.doc-code  = chk-pay.doc-code
+                                         and ben-chk-count.obj-type  = obj-list.obj-type
+                                         and ben-chk-count.obj-code  = obj-list.obj-code
+                                         and ben-chk-count.pay-desk  = chk-doc.pay-desk
+                                         and ben-chk-count.pay-code  = chk-pay.pay-code
+                                         and ben-chk-count.curr-code = chk-pay.curr-code) then do:
+    create ben-chk-count.
     assign
-  day_sum.tot-rubl = acc-desk-rubl  - acc-sub-desk-rubl
-  day_sum.tot-base = acc-desk-base - acc-sub-desk-base
-    day_sum.tot-r-b = (if v-curr-r-b = {&r-b-base} then day_sum.tot-base else day_sum.tot-rubl)
+      ben-chk-count.doc-code  = chk-pay.doc-code
+      ben-chk-count.obj-type  = obj-list.obj-type
+      ben-chk-count.obj-code  = obj-list.obj-code
+      ben-chk-count.pay-desk  = chk-doc.pay-desk
+      ben-chk-count.pay-code  = chk-pay.pay-code
+      ben-chk-count.curr-code = chk-pay.curr-code
     .
-  assign
-  acc-day-rubl = acc-day-rubl + day_sum.tot-rubl
-  acc-day-base = acc-day-base + day_sum.tot-base
-  acc-day-cnt = acc-day-cnt + day_sum.chk-cnt
-  .
+  end.
 end.
 
 /* $Workfile$ e n d */
