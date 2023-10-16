@@ -232,6 +232,12 @@ define temp-table tt-all-itog no-undo
     obj-code
 .
 
+define temp-table tt-rvs-line-pump-delta no-undo like ub.rvs-line-pump
+  field deltaVol as decimal
+  field is-err as logical
+  field find-pair as logical
+.
+
 define stream sOutStr-html.
 
 function f_disp_time returns character
@@ -478,7 +484,8 @@ procedure processTrn :
   define buffer buf_clients       for ub.clients .
   define buffer buf_place         for ub.place .
   define buffer buf_doc-pl        for ub.doc-pl .
-  define buffer sep_auto-tank-attr  for ub.auto-tank-attr.
+  define buffer sep_auto-tank-attr  for ub.auto-tank-attr .
+  define buffer buf_rvs-line-pump for ub.rvs-line-pump .
   
   define variable v-ok                  as logical   no-undo.
   define variable is-petrolium          as logical   no-undo.
@@ -517,6 +524,8 @@ procedure processTrn :
   define variable v-delta-ac            as decimal   no-undo .
   define variable v-delta-fact          as decimal   no-undo .
   define variable v-delta-mass-qnty-ac  as decimal   no-undo .
+  define variable v-avrg-dens           as decimal   no-undo .
+  define variable v-tmp-time            as integer   no-undo .
 /*  define variable v-pl-sum-col24        as decimal   no-undo .*/
 /*  define variable v-pl-sum-col25        as decimal   no-undo .*/
 /*  define variable v-pl-sum-col41        as decimal   no-undo .*/
@@ -886,15 +895,10 @@ procedure processTrn :
           tt-rep.col17      = v-place-num 
           tt-rep.col18      = (if v-sep = "ÀÖ áåç ÑÝÏ" then "" else if v-InfoSection:alarm-SGDKK then "ÂÓ" else "ÍÓ")
           tt-rep.col19      = v-InfoSection:AukKey
+          tt-rep.col35      = "Íåò"
+          tt-rep.col50      = "Íåò"
+          tt-rep.col51      = "ÀÂÄ"
         .
-        
-        if not v-is-sug-gds
-        then do :
-          assign
-            tt-rep.col50      = "Íåò"
-            tt-rep.col51      = "ÀÂÄ"
-          .
-        end .
         
         if v-InfoSection:isKP
         then do :
@@ -982,6 +986,8 @@ procedure processTrn :
                                        no-error .
         if available buf_place
         then do :
+          empty temp-table tt-rvs-line-pump-delta .
+          
           find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
                                            and buf_rvs-doc.out-code = buf_doc-line.doc-code
                                            and num-entries(buf_rvs-doc.rvs-code, "-") = 3
@@ -1033,6 +1039,24 @@ procedure processTrn :
               :
                 tt-rep.col51 = "ÐÂÄ" .
               end .
+              
+              for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                   and buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                   and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                   and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                   and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                create tt-rvs-line-pump-delta .
+                buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                assign
+                  tt-rvs-line-pump-delta.rvs-code = "before-doc"
+                .
+                if tt-rvs-line-pump-delta.state-el-cnt = ?
+                or tt-rvs-line-pump-delta.state-el-cnt <= 0
+                then do :
+                  tt-rvs-line-pump-delta.is-err = yes .
+                end .
+              end. /* for each bf_rvs-line-pump */
             end .
           end .
           find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
@@ -1086,8 +1110,71 @@ procedure processTrn :
               :
                 tt-rep.col51 = "ÐÂÄ" .
               end .
+              
+              for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                   and buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                   and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                   and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                   and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc"
+                                                    and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
+                                                    and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
+                                                    and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
+                                                    and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
+                                                    and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
+                                                    and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
+                                                    no-error .
+                if not available tt-rvs-line-pump-delta
+                then do :
+                  create tt-rvs-line-pump-delta .
+                  buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                  assign
+                    tt-rvs-line-pump-delta.rvs-code = "after-doc"
+                    tt-rvs-line-pump-delta.is-err = yes
+                  .
+                end .
+                else do :
+                  tt-rvs-line-pump-delta.find-pair = yes .
+                  if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+                  then do :
+                    tt-rvs-line-pump-delta.is-err = yes .
+                  end .
+                  else do :
+                    tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                  end .
+                end .
+              end .
             end .
           end .
+          
+          for each tt-rvs-line-pump-delta :
+            if not tt-rvs-line-pump-delta.find-pair
+            then do :
+              tt-rvs-line-pump-delta.is-err = yes .
+            end .
+            if tt-rvs-line-pump-delta.is-err = yes
+            then do :
+              tt-rvs-line-pump-delta.deltaVol = 0 .
+              tt-rep.col35 = "Åñòü" .
+            end .
+            tt-rep.col33 = tt-rep.col33 + tt-rvs-line-pump-delta.deltaVol .
+          end .
+          
+          v-tmp-time = buf_trn-doc.fact-time - 1 .
+          { str/avrgdens.i
+            buf_goods.gds-code
+            buf_trn-doc.obj-type
+            buf_trn-doc.obj-code
+            buf_place.pl-code
+            buf_trn-doc.shift-date
+            buf_trn-doc.shift-num
+            buf_trn-doc.fact-date
+            v-tmp-time
+            v-avrg-dens
+            no-error
+          }
+          tt-rep.col34 = tt-rep.col33 * v-avrg-dens .
         end .
         
         if is-com-tanks
@@ -1103,6 +1190,16 @@ procedure processTrn :
               tt-rep.col30  = tt-rep.col30 + buf_rvs-line.state-measure-cli-qnty
               tt-rep.col32  = tt-rep.col32 + buf_rvs-line.state-temperature
             .
+            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                  and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                  and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                  and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                  and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                  and buf_rvs-line-attr.attr-code begins "input-type"
+                                                  and buf_rvs-line-attr.attr-value <> 'à'
+            :
+              tt-rep.col51 = "ÐÂÄ" .
+            end .
           end .
           assign
             tt-rep.col31 = tt-rep.col30 / tt-rep.col29
@@ -1118,6 +1215,16 @@ procedure processTrn :
               tt-rep.col37  = tt-rep.col37 + buf_rvs-line.state-measure-cli-qnty
               tt-rep.col39  = tt-rep.col39 + buf_rvs-line.state-temperature
             .
+            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                  and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                  and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                  and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                  and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                  and buf_rvs-line-attr.attr-code begins "input-type"
+                                                  and buf_rvs-line-attr.attr-value <> 'à'
+            :
+              tt-rep.col51 = "ÐÂÄ" .
+            end .
           end .
           assign
             tt-rep.col38 = tt-rep.col37 / tt-rep.col36
@@ -1183,6 +1290,17 @@ procedure processTrn :
         end .
       end . /* if not available tt-rep */
       else do :
+        if v-InfoSection:isKP
+        then do :
+          if v-InfoSection:AccMeth = 1
+          then do :
+            tt-rep.col50 = "Äà (ðåçåðâóàð)" .
+          end . 
+          else do :
+            tt-rep.col50 = "Äà (ÀÖ)" .
+          end .
+        end .
+        
         assign
           tt-rep.col15 = tt-rep.col15 + "," + v-SectionName
           tt-rep.col18 = tt-rep.col18 + "<br>" + {&new-line} + (if v-sep = "ÀÖ áåç ÑÝÏ" then "" else if v-InfoSection:alarm-SGDKK then "ÂÓ" else "ÍÓ")
@@ -1248,13 +1366,13 @@ procedure processTrn :
           .
         
           assign
-            tt-rep.col44  = tt-rep.col37 - tt-rep.col30 - tt-rep.col25
+            tt-rep.col44  = tt-rep.col37 + tt-rep.col34 - tt-rep.col30 - tt-rep.col25
             tt-rep.col45  = tt-rep.col44 / tt-rep.col25 * 100
           .
         end .
         
         assign
-          tt-rep.col46  = tt-rep.col37 - tt-rep.col30 - tt-rep.col41
+          tt-rep.col46  = tt-rep.col37 + tt-rep.col34 - tt-rep.col30 - tt-rep.col41
           tt-rep.col47  = tt-rep.col46 / tt-rep.col41 * 100
         .
         
@@ -1427,21 +1545,21 @@ procedure calc-itog :
     if abs(tt-rep.col43) > tt-rep.delta-mass-qnty-ac
     then do :
       assign
-        tt-itog.col43red = yes
+        tt-itog.col43red = yes when available tt-itog
         tt-all-itog.col43red = yes
       .
     end .
     if abs(tt-rep.col45) > 0.65
     then do :
       assign
-        tt-itog.col45red = yes
+        tt-itog.col45red = yes when available tt-itog
         tt-all-itog.col45red = yes
       .
     end .
     if abs(tt-rep.col47) > 0.65
     then do :
       assign
-        tt-itog.col47red = yes
+        tt-itog.col47red = yes when available tt-itog
         tt-all-itog.col47red = yes
       .
     end .

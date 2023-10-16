@@ -2097,7 +2097,7 @@ do:
           
           run str/doc-pls.w
             ( input parparentproc
-             ,input (v-edit-doc-pl-mode + {&delim-par} + "place=" + infoSectionsTotal:InfoSectionCurr:ListTank)
+             ,input (v-edit-doc-pl-mode + {&delim-par} + "place=" + entry(pl, pl-list))
              ,input (if t-doc.status_ = {&wayb} and t-doc.flag_ = false then "doc":U else "fact":U )
              ,input ( if varcli-qnty-input = true then "cli":U else "base":U )
              ,input t-doc.doc-code

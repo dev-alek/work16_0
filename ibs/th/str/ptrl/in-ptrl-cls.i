@@ -44,11 +44,16 @@
       define variable v-com-vessel-is-meas as logical no-undo init no .
       define variable v-code         as character    no-undo.
       define variable is-com-tanks   as logical no-undo init no .
+      define variable v-pump-err     as character no-undo init "" .
 
-      define buffer buf_rvs-doc     for ub.rvs-doc .
-      define buffer buf_rvs-line    for ub.rvs-line .
-      define buffer buf_place       for ub.place .
-      define buffer buf_goods       for ub.goods .
+      define buffer buf_rvs-doc       for ub.rvs-doc .
+      define buffer buf_rvs-line      for ub.rvs-line .
+      define buffer buf_rvs-line-pump for ub.rvs-line-pump .
+      define buffer buf_place         for ub.place .
+      define buffer buf_goods         for ub.goods .
+      define buffer bf_pump-nozzle    for ub.pump-nozzle.
+      define buffer bf_pl-pump-nozzle for ub.pl-pump-nozzle.
+      define buffer bf_pl-gds         for ub.pl-gds.
 
       define variable v-rvs-qnty-before     like ub.rvs-line.state-measure-qnty     no-undo .
       define variable v-rvs-qnty-after      like ub.rvs-line.state-measure-qnty     no-undo .
@@ -197,6 +202,10 @@
             delete tt-meas .
           end.
           
+          for each tt-pump-nozzle
+          :
+            delete tt-pump-nozzle .
+          end.
           
           find buf_place no-lock
             where buf_place.obj-type = buf_rvs-doc.obj-type
@@ -225,6 +234,25 @@
             tt-meas.obj-code = buf_rvs-doc.obj-code
             tt-meas.pl-code  = v-pl-code
           .
+          
+          for each bf_pl-pump-nozzle no-lock where bf_pl-pump-nozzle.obj-type = buf_place.obj-type 
+                                               and bf_pl-pump-nozzle.obj-code = buf_place.obj-code
+                                               and bf_pl-pump-nozzle.pl-code  = buf_place.pl-code,
+          first bf_pump-nozzle no-lock where bf_pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type 
+                                         and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
+                                         and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                                         and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+                                         and bf_pump-nozzle.is-meas     = yes                                     
+          :
+            create tt-pump-nozzle.
+            assign
+              tt-pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type
+              tt-pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code
+              tt-pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+              tt-pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+              tt-pump-nozzle.gds-code    = buf_goods.gds-code
+            .
+          end .
           
           find first sys-ctrl no-lock.
           v-asi-ip = db-attr-value(sys-ctrl.db,"AsiIp").
@@ -399,13 +427,98 @@
           
           infoSecsObj:CalculateTotal().
           if pRvsType = {&rvs-before-doc}  then do:
-            if v-prt-start-real-date = ? then v-prt-start-real-date = buf_rvs-line.real-date .
-            if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = buf_rvs-line.real-time .
+            v-prt-start-real-date = buf_rvs-line.real-date .
+            v-prt-start-real-time = buf_rvs-line.real-time .
           end.
           else do:
             v-prt-end-real-date = buf_rvs-line.real-date .
             v-prt-end-real-time = buf_rvs-line.real-time .
           end.
+          
+          if varcur-rvs = 1
+          or ptoldfilvalue <> "yes":u
+          then do :
+            { str/anls-pmp.i
+              infoSecsObj:Parentproc
+              buf_rvs-doc.obj-type
+              buf_rvs-doc.obj-code
+              yes
+              tt-pump-nozzle-file
+              tt-pump-nozzle
+              yes
+              ?
+              no-error
+            }
+          end.
+          else do :
+            { str/anls-pmp.i
+              infoSecsObj:Parentproc
+              buf_rvs-doc.obj-type
+              buf_rvs-doc.obj-code
+              yes
+              tt-pump-nozzle-file
+              tt-pump-nozzle
+              no
+              ?
+              no-error
+            }
+          end.
+          for each tt-pump-nozzle :
+            find first tt-pump-nozzle-file where
+                       tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
+                       tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
+                       tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
+                       tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
+            if available tt-pump-nozzle-file
+            then
+            assign
+              tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
+              tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
+              tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
+            .
+          end. /* for each tt-pump-nozzle */
+          for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :
+            v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} . 
+          end. /* for each tt-pump-nozzle */
+          if v-pump-err > ""
+          then do :
+            message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .
+          end .
+          
+          for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                               and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                               and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                               and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                               and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+          :
+            { str/fill1pmp.i
+              "recid( buf_rvs-line-pump )"
+              tt-pump-nozzle
+            }
+          end .
+          for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                      and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                      and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                      and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                      and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+          :
+            assign
+              buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
+              buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+              buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
+              buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+              buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
+              buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
+              buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
+              buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
+              buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
+              buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
+              buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
+              buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
+              buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
+              buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
+            .
+          end .      
         end.
         when "edit":U then do:
           if not available buf_rvs-line
@@ -442,13 +555,37 @@
             infoSecsObj:CalculateTotal().
             if pRvsType = {&rvs-before-doc}
             then do:
-              if v-prt-start-real-date = ? then v-prt-start-real-date = buf_rvs-line.real-date .
-              if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = buf_rvs-line.real-time .
+              v-prt-start-real-date = buf_rvs-line.real-date .
+              v-prt-start-real-time = buf_rvs-line.real-time .
             end.
             else do:
               v-prt-end-real-date = buf_rvs-line.real-date .
               v-prt-end-real-time = buf_rvs-line.real-time .
             end.
+            
+            for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                        and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                        and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                        and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                        and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+            :
+              assign
+                buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
+                buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
+                buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+                buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
+                buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
+                buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
+                buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
+                buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
+                buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
+                buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
+                buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
+                buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
+                buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
+              .
+            end .
           end .
           
           if error-status :error then do:

@@ -59,6 +59,13 @@ define variable vss-description as character no-undo initial "Обработка приходно
 define temp-table old-doc-line no-undo like ub.doc-line.
 define buffer doc-line for ub.doc-line  .
 { cmp/vssrevis.i "substitute('&1|&2':u,parext-doc-type,paris-hold)" }
+
+&global-define is-fuel 1
+&global-define is-lgas 2
+&global-define is-lgas-corr 3
+&global-define is-gds 4
+define variable trn-type as integer no-undo init 0.
+
 { cmp/str-glbl.i              }
 { cmp/library.i               }
 { cmp/showinf.i               }
@@ -99,11 +106,7 @@ define buffer doc-line for ub.doc-line  .
 {ibs/th/bge/egais/ab-egais.i 1 new shared}
 { str/marks.i         }
 { gbl/objsrv.i }
-      
-&global-define is-fuel 1
-&global-define is-lgas 2
-&global-define is-lgas-corr 3
-&global-define is-gds 4
+
 
 &global-define store-type v-cntxt-obj-type
 &global-define store-code v-cntxt-obj-code
@@ -224,7 +227,6 @@ define variable d-reason                    as   character                     n
 define variable ch-vsd as character no-undo .
 /*define variable is-fuel as logical no-undo initial no.*/
 /*define variable is-lgas as logical no-undo initial no.*/
-define variable trn-type as integer no-undo init 0.
 define variable choice as integer no-undo.
 define variable isEgais  as logical   no-undo .
 define variable v-mercury-value as character no-undo .

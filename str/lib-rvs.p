@@ -5952,12 +5952,12 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
         end.
         when 2 then do:
           assign
-            p-read-cur = yes
+            p-read-cur = no
           .
         end.
         when 1 then do:
           assign
-            p-read-cur = no
+            p-read-cur = yes
           .
         end.
       end case. /* j_num */
@@ -6350,7 +6350,14 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
                   then 'Log-файл с описанием ошибок ' + v_File-Err + "." 
                   else '' )+ 'Повторите попытку или обратитесь в техническую поддержку.' 
                  .
-    return error vtext.
+    if p-message-on = ?
+    then do :
+      /* Если сверки по приходу До/После то не возвращаем ошибку */
+      return .
+    end .
+    else do :
+      return error vtext.
+    end .
   end.
 
   /* Записываем данные для возврата */

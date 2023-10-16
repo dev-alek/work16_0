@@ -377,12 +377,12 @@ DEFINE VARIABLE v-mi-tmp-name AS character FORMAT "X(10)":U
      SIZE 11 BY 1 NO-UNDO.
 
 DEFINE VARIABLE delta-mass-qnty AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
-     LABEL "Отн. погр. изм. массы НП (ПО к МИ)" 
+     LABEL "Отн. погр. изм. массы НП" 
      VIEW-AS FILL-IN 
      SIZE 10 BY 1 NO-UNDO.
      
 DEFINE VARIABLE abs-delta-mass-qnty AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
-     LABEL "Абс. погр. изм. массы НП (ПО к МИ)" 
+     LABEL "Абс. погр. изм. массы НП" 
      VIEW-AS FILL-IN 
      SIZE 10 BY 1 NO-UNDO.
      

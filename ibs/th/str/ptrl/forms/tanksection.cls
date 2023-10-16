@@ -2223,6 +2223,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* maskedTextBoxListTank */
     /*  */
+    this-object:maskedTextBoxListTank:Enabled = false.
     this-object:maskedTextBoxListTank:Location = new System.Drawing.Point(603, 138).
     this-object:maskedTextBoxListTank:Name = "maskedTextBoxListTank".
     this-object:maskedTextBoxListTank:Size = new System.Drawing.Size(29, 20).

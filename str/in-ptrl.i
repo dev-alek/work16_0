@@ -468,10 +468,15 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-com-vessel-is-meas as logical no-undo init no .
         define variable v-code         as character    no-undo.
         define variable is-com-tanks   as logical no-undo init no .
+        define variable v-pump-err     as character no-undo init "":U .
 
-        define buffer buf_rvs-doc     for ub.rvs-doc .
-        define buffer buf_rvs-line    for ub.rvs-line .
-        define buffer buf_place       for ub.place .
+        define buffer buf_rvs-doc       for ub.rvs-doc .
+        define buffer buf_rvs-line      for ub.rvs-line .
+        define buffer buf_rvs-line-pump for ub.rvs-line-pump .
+        define buffer buf_place         for ub.place .
+        define buffer bf_pump-nozzle    for ub.pump-nozzle.
+        define buffer bf_pl-pump-nozzle for ub.pl-pump-nozzle.
+        define buffer bf_pl-gds         for ub.pl-gds.
 
         define variable v-rvs-qnty-before     like ub.rvs-line.state-measure-qnty     no-undo .
         define variable v-rvs-qnty-after      like ub.rvs-line.state-measure-qnty     no-undo .
@@ -800,6 +805,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               delete tt-meas .
             end.
             
+            for each tt-pump-nozzle
+            :
+              delete tt-pump-nozzle .
+            end.
             
             find buf_place no-lock
               where buf_place.obj-type = t-doc.obj-type
@@ -870,6 +879,24 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                       tt-meas.pl-code  = buf_place.pl-code
                       tt-meas.loc1     = buf_place.loc1
                     .
+                    for each bf_pl-pump-nozzle no-lock where bf_pl-pump-nozzle.obj-type = buf_place.obj-type 
+                                                         and bf_pl-pump-nozzle.obj-code = buf_place.obj-code
+                                                         and bf_pl-pump-nozzle.pl-code  = buf_place.pl-code,
+                    first bf_pump-nozzle no-lock where bf_pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type 
+                                                   and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
+                                                   and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                                                   and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+                                                   and bf_pump-nozzle.is-meas     = yes                                     
+                    :
+                      create tt-pump-nozzle.
+                      assign
+                        tt-pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type
+                        tt-pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code
+                        tt-pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                        tt-pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+                        tt-pump-nozzle.gds-code    = buf_goods.gds-code
+                      .
+                    end .
                   end .
                 end .
                 
@@ -904,6 +931,24 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 tt-meas.obj-code = t-doc.obj-code
                 tt-meas.pl-code  = v-pl-code
               .
+              for each bf_pl-pump-nozzle no-lock where bf_pl-pump-nozzle.obj-type = tt-meas.obj-type 
+                                                   and bf_pl-pump-nozzle.obj-code = tt-meas.obj-code
+                                                   and bf_pl-pump-nozzle.pl-code  = tt-meas.pl-code,
+              first bf_pump-nozzle no-lock where bf_pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type 
+                                             and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
+                                             and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                                             and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+                                             and bf_pump-nozzle.is-meas     = yes                                     
+              :
+                create tt-pump-nozzle.
+                assign
+                  tt-pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type
+                  tt-pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code
+                  tt-pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                  tt-pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+                  tt-pump-nozzle.gds-code    = buf_goods.gds-code
+                .
+              end .
             end .  
             
             find first sys-ctrl no-lock.
@@ -1084,6 +1129,91 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   buf_rvs-line.real-date = v-today
                   buf_rvs-line.real-time = v-time
                 .
+                
+                if varcur-rvs = 1
+                or ptoldfilvalue <> "yes":u
+                then do :
+                  { str/anls-pmp.i
+                    parParentProc
+                    t-doc.obj-type
+                    t-doc.obj-code
+                    yes
+                    tt-pump-nozzle-file
+                    tt-pump-nozzle
+                    yes
+                    ?
+                    no-error
+                  }
+                end.
+                else do :
+                  { str/anls-pmp.i
+                    parParentProc
+                    t-doc.obj-type
+                    t-doc.obj-code
+                    yes
+                    tt-pump-nozzle-file
+                    tt-pump-nozzle
+                    no
+                    ?
+                    no-error
+                  }
+                end.
+                for each tt-pump-nozzle :
+                  find first tt-pump-nozzle-file where
+                             tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
+                             tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
+                             tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
+                             tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
+                  if available tt-pump-nozzle-file
+                  then
+                  assign
+                    tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
+                    tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
+                    tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
+                  .
+                end. /* for each tt-pump-nozzle */
+                for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :
+                  v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} . 
+                end. /* for each tt-pump-nozzle */
+                if v-pump-err > ""
+                then do :
+                  message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .
+                end .
+                
+                for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                     and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                     and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                     and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                     and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+                :
+                  { str/fill1pmp.i
+                    "recid( buf_rvs-line-pump )"
+                    tt-pump-nozzle
+                  }
+                end .
+                for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                            and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                            and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                            and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                            and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+                :
+                  assign
+                    buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
+                    buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                    buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
+                    buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+                    buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
+                    buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
+                    buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
+                    buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
+                    buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
+                    buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
+                    buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
+                    buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
+                    buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
+                    buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
+                  .
+                end .
               end .
             end .
             else do :
@@ -1184,6 +1314,91 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 buf_rvs-line.real-date = v-today
                 buf_rvs-line.real-time = v-time
               .
+              
+              if varcur-rvs = 1
+              or ptoldfilvalue <> "yes":u
+              then do :
+                { str/anls-pmp.i
+                  parParentProc
+                  t-doc.obj-type
+                  t-doc.obj-code
+                  yes
+                  tt-pump-nozzle-file
+                  tt-pump-nozzle
+                  yes
+                  ?
+                  no-error
+                }
+              end.
+              else do :
+                { str/anls-pmp.i
+                  parParentProc
+                  t-doc.obj-type
+                  t-doc.obj-code
+                  yes
+                  tt-pump-nozzle-file
+                  tt-pump-nozzle
+                  no
+                  ?
+                  no-error
+                }
+              end.
+              for each tt-pump-nozzle :
+                find first tt-pump-nozzle-file where
+                           tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
+                           tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
+                           tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
+                           tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
+                if available tt-pump-nozzle-file
+                then
+                assign
+                  tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
+                  tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
+                  tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
+                .
+              end. /* for each tt-pump-nozzle */
+              for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :
+                v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} . 
+              end. /* for each tt-pump-nozzle */
+              if v-pump-err > ""
+              then do :
+                message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .
+              end .
+              
+              for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                   and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                   and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                   and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                   and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                { str/fill1pmp.i
+                  "recid( buf_rvs-line-pump )"
+                  tt-pump-nozzle
+                }
+              end .
+              for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                          and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                          and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                          and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                          and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                assign
+                  buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
+                  buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                  buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
+                  buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+                  buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
+                  buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
+                  buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
+                  buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
+                  buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
+                  buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
+                  buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
+                  buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
+                  buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
+                  buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
+                .
+              end .
             end .
             
             if not available buf_rvs-line
@@ -1198,8 +1413,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end .
             infoSectionsTotal:CalculateTotal().
             if p-rvs-type = {&rvs-before-doc}  then do:
-              if v-prt-start-real-date = ? then v-prt-start-real-date = buf_rvs-line.real-date .
-              if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = buf_rvs-line.real-time .
+              v-prt-start-real-date = buf_rvs-line.real-date .
+              v-prt-start-real-time = buf_rvs-line.real-time .
             end.
             else do:
               v-prt-end-real-date = buf_rvs-line.real-date .
@@ -1274,13 +1489,37 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 .
                 infoSectionsTotal:CalculateTotal().
                 if p-rvs-type = {&rvs-before-doc}  then do:
-                  if v-prt-start-real-date = ? then v-prt-start-real-date = buf_rvs-line.real-date .
-                  if v-prt-start-real-time = ? or v-prt-start-real-time = 0 then v-prt-start-real-time = buf_rvs-line.real-time .
+                  v-prt-start-real-date = buf_rvs-line.real-date .
+                  v-prt-start-real-time = buf_rvs-line.real-time .
                 end.
                 else do:
                   v-prt-end-real-date = buf_rvs-line.real-date .
                   v-prt-end-real-time = buf_rvs-line.real-time .
                 end.
+                
+                for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                            and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                            and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                            and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                            and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+                :
+                  assign
+                    buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
+                    buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                    buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
+                    buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+                    buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
+                    buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
+                    buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
+                    buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
+                    buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
+                    buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
+                    buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
+                    buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
+                    buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
+                    buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
+                  .
+                end .
               end .
             end.
             
@@ -1298,7 +1537,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               undo block_tr, return error .
             end.
           end.
-       end case.
+        end case.
          
          
         if not p-action = {&lookup}
@@ -1786,7 +2025,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   then do :
                     message substitute ( "По секции &1 включен комиссионный прием нефтепродукта 'По сверкам'. Проверьте, что данные в сверках ДО и ПОСЛЕ корректны и повторите.", infoSectionObj:SectionName )
                     view-as alert-box error .
-                    return error .
+                    return .
                   end .
                 end .
                 else do :
@@ -1857,7 +2096,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     then do :
                       message substitute ( "По секции &1 включен комиссионный прием нефтепродукта 'По сверкам'. Проверьте, что данные в сверках ДО и ПОСЛЕ корректны и повторите.", infoSectionObj:SectionName )
                       view-as alert-box error .
-                      return error .
+                      return .
                     end .
                   end .
                   else do :
@@ -2569,9 +2808,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
 
         define variable varlog             as logical   no-undo .
         
-        define variable infoSectionsTotal as class InfoSectionsTotal no-undo .
-        define variable infoSecObj        as class InfoSection no-undo .
+        define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo .
+        define variable infoSecObj        as class ibs.th.str.InfoSection no-undo .
 
+        v-kpsecs = "" .
+        v-need-rvs-sec = "" .
+        
         find first buf_trn-doc
           where buf_trn-doc.doc-code = p-doc-code
           .
@@ -2582,84 +2824,87 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           varcar-num
           vartype
           }
+        
+        if trn-type = {&is-fuel}
+        then do :  
+          find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = varcar-num
+                                                  and sep_auto-tank-attr.attr-code = "auto-sep"
+                                                  no-error.
+          if available sep_auto-tank-attr
+          and logical(sep_auto-tank-attr.attr-value)
+          then do : /* АЦ с СГДКК */
+            
+          end .
+          else do : /* Обычная АЦ без СГДКК */
+            secs_ :
+            for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                                 and buf_doc-line-attr.attr-code = "n",
+            first buf_goods no-lock where buf_goods.gds-code = buf_doc-line-attr.gds-code
+            :
+              infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
+              infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+              infoSectionsTotal:GetDBAllAttr().
+              do ii = 1 to infoSectionsTotal:SectionNum :
+                infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+                if not (infoSecObj:TankWeight > 0)
+                then do :
+                  delete object infoSectionsTotal.
+                  message
+                    "Перед созданием документов сверки по накладной необходимо заполнить всю дополнительную информацию по приемке топлива!"
+                  view-as alert-box .
+                  return .
+                end .
+              end .
+              delete object infoSectionsTotal.
+            end .
+          end .
+            
+          v-kpsecs = "" .
+          v-need-rvs-sec = "" .
+          v-no-need-main-rvs = no .
+          empty temp-table tt-place-sec .
           
-        find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = varcar-num
-                                                and sep_auto-tank-attr.attr-code = "auto-sep"
-                                                no-error.
-        if available sep_auto-tank-attr
-        and logical(sep_auto-tank-attr.attr-value)
-        then do : /* АЦ с СГДКК */
-          
-        end .
-        else do : /* Обычная АЦ без СГДКК */
-          secs_ :
+          kpsecs_ :
           for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
                                                and buf_doc-line-attr.attr-code = "n",
           first buf_goods no-lock where buf_goods.gds-code = buf_doc-line-attr.gds-code
           :
-            infoSectionsTotal = new InfoSectionsTotal().
+            infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
             infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
             infoSectionsTotal:GetDBAllAttr().
             do ii = 1 to infoSectionsTotal:SectionNum :
               infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
-              if not (infoSecObj:TankWeight > 0)
+              find first tt-place-sec where tt-place-sec.loc1 = infoSecObj:ListTank no-error .
+              if not available tt-place-sec
               then do :
-                delete object infoSectionsTotal.
-                message
-                  "Перед созданием документов сверки по накладной необходимо заполнить всю дополнительную информацию по приемке топлива!"
-                view-as alert-box .
-                return .
+                create tt-place-sec .
+                assign
+                  tt-place-sec.loc1 = infoSecObj:ListTank
+                  tt-place-sec.secs = infoSecObj:SectionName
+                  tt-place-sec.own-rvs = no
+                .
+                for first buf_place no-lock where buf_place.obj-type = buf_trn-doc.obj-type
+                                              and buf_place.obj-code = buf_trn-doc.obj-code
+                                              and buf_place.loc1     = tt-place-sec.loc1
+                                              and buf_place.status_  = ""
+                :
+                  assign tt-place-sec.pl-code = buf_place.pl-code .
+                end .
+              end .
+              else do :
+                assign
+                  tt-place-sec.secs = tt-place-sec.secs + "," + infoSecObj:SectionName
+                .
+              end .
+              if infoSecObj:isKP
+              then do :
+                v-kpsecs = v-kpsecs + infoSecObj:SectionName + " с " + buf_goods.gds-name + ", " .
               end .
             end .
             delete object infoSectionsTotal.
           end .
+          v-kpsecs = trim(v-kpsecs, ", ") .
         end .
-          
-        v-kpsecs = "" .
-        v-need-rvs-sec = "" .
-        v-no-need-main-rvs = no .
-        empty temp-table tt-place-sec .
-        
-        kpsecs_ :
-        for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
-                                             and buf_doc-line-attr.attr-code = "n",
-        first buf_goods no-lock where buf_goods.gds-code = buf_doc-line-attr.gds-code
-        :
-          infoSectionsTotal = new InfoSectionsTotal().
-          infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
-          infoSectionsTotal:GetDBAllAttr().
-          do ii = 1 to infoSectionsTotal:SectionNum :
-            infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
-            find first tt-place-sec where tt-place-sec.loc1 = infoSecObj:ListTank no-error .
-            if not available tt-place-sec
-            then do :
-              create tt-place-sec .
-              assign
-                tt-place-sec.loc1 = infoSecObj:ListTank
-                tt-place-sec.secs = infoSecObj:SectionName
-                tt-place-sec.own-rvs = no
-              .
-              for first buf_place no-lock where buf_place.obj-type = buf_trn-doc.obj-type
-                                            and buf_place.obj-code = buf_trn-doc.obj-code
-                                            and buf_place.loc1     = tt-place-sec.loc1
-                                            and buf_place.status_  = ""
-              :
-                assign tt-place-sec.pl-code = buf_place.pl-code .
-              end .
-            end .
-            else do :
-              assign
-                tt-place-sec.secs = tt-place-sec.secs + "," + infoSecObj:SectionName
-              .
-            end .
-            if infoSecObj:isKP
-            then do :
-              v-kpsecs = v-kpsecs + infoSecObj:SectionName + " с " + buf_goods.gds-name + ", " .
-            end .
-          end .
-          delete object infoSectionsTotal.
-        end .
-        v-kpsecs = trim(v-kpsecs, ", ") .
         
         if v-kpsecs > ""
         then do :
@@ -2779,7 +3024,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
                                                    and buf_doc-line-attr.attr-code = "n"
               :
-                infoSectionsTotal = new InfoSectionsTotal().
+                infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
                 infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
                 infoSectionsTotal:GetDBAllAttr().
                 do ii = 1 to infoSectionsTotal:SectionNum : 
@@ -2799,7 +3044,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
                                                    and buf_doc-line-attr.attr-code = "n"
               :
-                infoSectionsTotal = new InfoSectionsTotal().
+                infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
                 infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
                 infoSectionsTotal:GetDBAllAttr().
                 do ii = 1 to infoSectionsTotal:SectionNum : 
@@ -3073,6 +3318,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               v-ptrl-avail   = true
               v-doc-pl-avail = false
             .
+            
             for each buf_doc-pl no-lock
               where buf_doc-pl.obj-type = buf_doc-line.obj-type
                 and buf_doc-pl.obj-code = buf_doc-line.obj-code
@@ -3106,6 +3352,20 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                         buf_rvs-doc.shift-date
                         buf_rvs-doc.shift-num
                       }
+                      { str/crrvslnp.i
+                        buf_rvs-doc.obj-type
+                        buf_rvs-doc.obj-code
+                        buf_rvs-doc.rvs-code
+                        buf_rvs-doc.rvs-type
+                        buf_doc-pl.pl-code
+                        buf_doc-pl.gds-code
+                        yes
+                        "( if available prev_rvs-doc  then prev_rvs-doc.rvs-code  else ? )"
+                        buf_rvs-doc.shift-date
+                        buf_rvs-doc.shift-num
+                        "( if available prev_icnt-doc then prev_icnt-doc.doc-code else ? )"
+                        yes
+                      }
                     end .
                   end .
                 end .
@@ -3123,6 +3383,20 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
                     buf_rvs-doc.shift-date
                     buf_rvs-doc.shift-num
+                  }
+                  { str/crrvslnp.i
+                    buf_rvs-doc.obj-type
+                    buf_rvs-doc.obj-code
+                    buf_rvs-doc.rvs-code
+                    buf_rvs-doc.rvs-type
+                    buf_doc-pl.pl-code
+                    buf_doc-pl.gds-code
+                    yes
+                    "( if available prev_rvs-doc  then prev_rvs-doc.rvs-code  else ? )"
+                    buf_rvs-doc.shift-date
+                    buf_rvs-doc.shift-num
+                    "( if available prev_icnt-doc then prev_icnt-doc.doc-code else ? )"
+                    yes
                   }
                 end .
               end. /* for each buf_rvs-doc */
@@ -3164,6 +3438,20 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                         "( if available prev_rvs-doc then prev_rvs-doc.rvs-code else ? )"
                         buf_rvs-doc.shift-date
                         buf_rvs-doc.shift-num
+                      }
+                      { str/crrvslnp.i
+                        buf_rvs-doc.obj-type
+                        buf_rvs-doc.obj-code
+                        buf_rvs-doc.rvs-code
+                        buf_rvs-doc.rvs-type
+                        buf_place.pl-code
+                        buf_doc-pl.gds-code
+                        yes
+                        "( if available prev_rvs-doc  then prev_rvs-doc.rvs-code  else ? )"
+                        buf_rvs-doc.shift-date
+                        buf_rvs-doc.shift-num
+                        "( if available prev_icnt-doc then prev_icnt-doc.doc-code else ? )"
+                        yes
                       }
                     end. /* for each buf_rvs-doc */
                   end .
@@ -3282,9 +3570,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-isKP           as logical   no-undo init no .
         define variable varlog           as logical   no-undo .
         define variable ii               as integer   no-undo .
-        define variable infoSectionsTotal as class InfoSectionsTotal no-undo .
+        define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo .
+        define variable infoSectionObj as class ibs.th.str.InfoSection no-undo .
 
-        find first buf_trn-doc
+        find first buf_trn-doc 
           where buf_trn-doc.doc-code = p-doc-code
           .
           
@@ -3292,7 +3581,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
                                              and buf_doc-line-attr.attr-code = "n"
         :
-          infoSectionsTotal = new InfoSectionsTotal().
+          infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
           infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
           infoSectionsTotal:GetDBAllAttr().
           do ii = 1 to infoSectionsTotal:SectionNum :
@@ -3360,6 +3649,24 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         end.
 
         run waitfram-show in this-procedure (input "Удаляем документы сверки по приходной накладной").
+        
+        for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                             and buf_doc-line-attr.attr-code = "n"
+        :
+          infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
+          infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+          infoSectionsTotal:GetDBAllAttr().
+          do ii = 1 to infoSectionsTotal:SectionNum :
+            infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+            infoSectionObj:AccMeth = ? .
+            infoSectionObj:DateStart = ? .
+            infoSectionObj:TimeStart = ? .
+            infoSectionObj:DateEnd = ? .
+            infoSectionObj:TimeEnd = ? .
+          end .
+          infoSectionsTotal:SaveDB().
+          delete object infoSectionsTotal.
+        end .
 
         for each bef-rvs-doc
           where bef-rvs-doc.out-code = buf_trn-doc.doc-code
