@@ -88,6 +88,7 @@ define variable p-value-decimal    as decimal no-undo.
 define variable p-value-integer    as integer no-undo.
 define variable p-param-type       as character no-undo.
 define variable v-tth as handle no-undo .
+define variable log-edi-doc_update as logical no-undo .
 
 define variable Tree           as class     tree no-undo .
 
@@ -347,7 +348,9 @@ DEFINE MENU m_marks
 
 DEFINE MENU POPUP-MENU-b-servis 
    MENU-ITEM m_choose-status LABEL "Сменить статус документа"
-   MENU-ITEM m_check-akt    LABEL "Проверить по Акту приема-передачи".
+   MENU-ITEM m_check-akt    LABEL "Проверить по Акту приема-передачи"
+   MENU-ITEM m_reset_row_data LABEL "Сбросить данные по строке"
+   .
 
 
 /* Definitions of the field level widgets                               */
@@ -1790,6 +1793,8 @@ ON CHOOSE OF b_correct IN FRAME d-utd /* Запрос на изменение */
                   run Sendansver( buf_utd.db-num, buf_utd.doc-id, "CorrectionRequest", v-comment) no-error.    
                   if  error-status:error then 
                   do: 
+                     message return-value
+                          view-as alert-box.
                      return return-value .
                   end.
                end.
@@ -2427,6 +2432,8 @@ ON CHOOSE OF b_deliv-cancel IN FRAME d-utd /* Отказать в подписи */
                run SendAnsver(buf_utd.db-num, buf_utd.doc-id,"AcceptDocumentNotAccepted", "") no-error.
                if  error-status:error then 
                do: 
+                  message return-value
+                     view-as alert-box.
                   return return-value .
                end.
             end.
@@ -2604,6 +2611,52 @@ ON CHOOSE OF MENU-ITEM m_choose-status /* Сменить статус документа */
    DO:
       enable c-status with frame {&frame-name} . 
       if c-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or c-type = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB then enable c-status-edi with frame {&frame-name} . 
+   END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_reset_row_data
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_reset_row_data d-utd
+ON CHOOSE OF MENU-ITEM m_reset_row_data /* Сбросить данные по строке */
+   DO:
+      define buffer cancel_utd-marking-lines for ub.utd-marking-lines .
+      define buffer cancel_marking           for ub.marking .
+      define buffer buf_utd-lines-attr       for ub.utd-lines-attr .
+      define variable v-gds-code as integer no-undo.
+    
+      /*    if available (X_utd-lines) and X_utd-lines.stts <> "Проверен"  then*/
+      /*    do:                                                                */
+      if available (X_utd-lines) then 
+      do:
+         for each cancel_utd-marking-lines exclusive-lock where cancel_utd-marking-lines.doc-id  = x_utd-lines.doc-id
+            and cancel_utd-marking-lines.db-num  = x_utd-lines.db-num
+            and cancel_utd-marking-lines.lineNum = x_utd-lines.lineNum
+            and cancel_utd-marking-lines.sts = Marking:Checked_:KeyIntDB:
+            cancel_utd-marking-lines.sts = Marking:PendingVerification:KeyIntDB    .
+         end.
+         X_utd-lines.qnty-scan = 0 .
+         X_utd-lines.stts = "Ожидает проверку" .
+         if x_utd-lines.isMarking then 
+         do:
+            for first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.db-num = X_utd-lines.db-num and
+               buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
+               buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
+               buf_utd-lines-attr.attr-code = "QuantityBarCode":
+               buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) . 
+            end.      
+         end.
+         else 
+         do:   
+            for first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.db-num = X_utd-lines.db-num and
+               buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
+               buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
+               buf_utd-lines-attr.attr-code = "QuantityBarCode":
+               buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) .  
+            end.   
+         end.
+      end.
+      {&OPEN-QUERY-br-utd}      
    END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3460,6 +3513,21 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   0
   false
   log-res-statch
+}
+   { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_edi-doc_update':U
+  {&cntxt-firm}
+  v-cntxt-host-code-obj
+  '':U
+  0
+  0
+  0
+  0
+  false
+  log-edi-doc_update
 }
    { gbl/objat.i
       v-cntxt-obj-type
@@ -4459,6 +4527,14 @@ PROCEDURE enable_UI :
    else 
    do:
       menu-item m_choose-status:sensitive in menu POPUP-MENU-b-servis = no.
+   end.  
+   if log-edi-doc_update and c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB and g#db-num <> 0 then 
+   do:
+      menu-item m_reset_row_data:sensitive in menu POPUP-MENU-b-servis = yes.
+   end.  
+   else 
+   do:
+      menu-item m_reset_row_data:sensitive in menu POPUP-MENU-b-servis = no.
    end.  
    if not v-manual then 
    do:

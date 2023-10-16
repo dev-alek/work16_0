@@ -846,7 +846,7 @@ DO:
       end .  
       else 
       do:
-         run save-mark .
+         return no-apply .
       end.
     end.
   END.
