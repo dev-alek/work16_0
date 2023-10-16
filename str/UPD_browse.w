@@ -4892,15 +4892,17 @@ PROCEDURE mark-temp :
             end.  
          end.
 
-         X_utd-lines.qnty-mark = 0 .
-/*         X_utd-lines.qnty-scan = 0 .*/
+         assign
+           X_utd-lines.qnty-mark = 0
+           X_utd-lines.qnty-scan = 0 
+         .
          for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and
             buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum:
             find first buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark no-error .
             if buf_utd-marking-lines.doc-level = 1 then 
             do:
                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
-/*               if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1 .*/
+               if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1 .
             end .
             if  avail buf_marking and (
                buf_marking.sts = Marking:GrayZone:KeyIntDB or 
@@ -5122,7 +5124,6 @@ PROCEDURE save_mark :
       end.
    end.
    mMRCCode  = no.
-/*run gbl/inidebug.p.*/
    v-marking = GetCodeIdent(v-mark) .
 /*   mMRCCode = no.*/
    if v-marking = "" or v-marking = ? then 
