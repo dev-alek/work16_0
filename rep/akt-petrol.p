@@ -536,14 +536,13 @@ do
   if available ub.auto-tank-attr then sgdkk = true .
     
   /*Тип АЦ - не известно*/
-  for first ub.auto-tank-attr no-lock where ub.auto-tank-attr.auto-num = v-car-num and
-    ub.auto-tank-attr.attr-code = "autotype-AC":
-    case ub.auto-tank-attr.attr-value:
-      when "1" then 
+  for first ub.auto-tank no-lock where ub.auto-tank.auto-num = v-car-num:
+    case ub.auto-tank.type-AC:
+      when 1 then 
         do:
           v-car-type = "Бензовоз" .
         end.   
-      when "2" then 
+      when 2 then 
         do:
           v-car-type = "Газовоз" .
         end.  
