@@ -146,6 +146,7 @@ define variable v-prefix-fin-doc            as character no-undo .
 define variable mCashBook                   as class     ibs.th.ref.cashbookstorage no-undo .
 assign
   v-tth = buffer thbjattr_thbj-attr:table-handle .
+define variable o-uchet as character no-undo .
 
 
 define buffer buf_contract           for ub.contract.
@@ -397,7 +398,7 @@ do
     v-dpt-dflt-name = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, "DptName") .
     v-dpt-dflt-type = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, "DptType") .
     v-dpt-dflt-code = integer(mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, "DptCode")) .
-    
+    o-uchet         = mCashBook:getSinglRule(p-cashbookId, buf_clients-obj.obj-type, buf_clients-obj.obj-code, "uchet") .
     delete object mCashBook no-error .
     
     case v-dpt-option:
@@ -918,6 +919,8 @@ do:
       tt-fin-doc.shift-num  = v-fin-doc-shift-num
       tt-fin-doc.shift-name = v-fin-doc-shift-name
       .
+      if o-uchet <> "0" then tt-fin-doc.doc-date = v-fin-doc-shift-date .
+      else tt-fin-doc.doc-date = v-today .
   end. /*if l-shift-on*/
   else 
   do:
@@ -1114,6 +1117,7 @@ do:
           tt-fin-doc.payer-code     = (if available buf_payer then buf_payer.obj-code else 0)
           tt-fin-doc.payer-name     = (if available buf_payer then buf_payer.obj-name else "":U)
           .
+        if o-uchet = "0" then         tt-fin-doc.doc-date      = v-today .
         if tt-fin-doc.contract-code = 0
           then 
         do:
@@ -1140,7 +1144,6 @@ do:
           tt-fin-doc.payer-code    = p-host-code
           tt-fin-doc.payer-okpo    = buf_firm.okpo
           tt-fin-doc.payer-name    = buf_clients-host.obj-name
-          tt-fin-doc.doc-date      = v-today
           tt-fin-doc.payer-sign1   = v-head-position + {&delim-par} + v-director
           tt-fin-doc.payer-sign2   = v-snr-accnt
           tt-fin-doc.payer-sign3   = v-cashier
@@ -1148,6 +1151,7 @@ do:
           tt-fin-doc.receiver-code = (if available buf_receiver then buf_receiver.obj-code else 0)
           tt-fin-doc.receiver-name = (if available buf_receiver then buf_receiver.obj-name else "":U)
           .
+        if o-uchet = "0" then         tt-fin-doc.doc-date      = v-today .
         if tt-fin-doc.contract-code = 0
           then 
         do:
@@ -1221,7 +1225,6 @@ do:
           tt-fin-doc.receiver-c-schet    = (if available buf_receiver-fin-schet
                                     then buf_receiver-fin-schet.c-schet
                                     else "":U)
-          tt-fin-doc.doc-date            = v-today
           tt-fin-doc.payer-sign1         = buf_firm.director
           tt-fin-doc.payer-sign2         = buf_sysconf.snr-accnt
           tt-fin-doc.ocher-pl            = "6":U
@@ -1261,6 +1264,7 @@ do:
           tt-fin-doc.payer-sign2         = (if available buf_payer-firm then buf_payer-firm.gen-acct else '')
           tt-fin-doc.vid-plat            = {&fin-vp-electronic}
           .
+        if o-uchet = "0" then         tt-fin-doc.doc-date      = v-today .
         if tt-fin-doc.contract-code = 0
           then 
         do:
@@ -1298,7 +1302,6 @@ do:
           tt-fin-doc.payer-c-schet       = (if available buf_payer-fin-schet
                                     then buf_payer-fin-schet.c-schet
                                     else "":U)
-          tt-fin-doc.doc-date            = v-today
           tt-fin-doc.payer-sign1         = buf_firm.director
           tt-fin-doc.payer-sign2         = buf_sysconf.snr-accnt
           tt-fin-doc.ocher-pl            = "6":U
@@ -1336,6 +1339,7 @@ do:
                                     else "":U)
           tt-fin-doc.vid-plat            = {&fin-vp-electronic}
           .
+        if o-uchet = "0" then         tt-fin-doc.doc-date      = v-today .
         if tt-fin-doc.contract-code = 0
           then 
         do:
@@ -1353,7 +1357,6 @@ do:
           tt-fin-doc.receiver-code  = p-host-code
           tt-fin-doc.receiver-okpo  = buf_firm.okpo
           tt-fin-doc.receiver-name  = buf_clients-host.obj-name
-          tt-fin-doc.doc-date       = v-today
           tt-fin-doc.receiver-sign1 = buf_sysconf.head-position + {&delim-par} + buf_firm.director
           tt-fin-doc.payer-sign1    = (if available buf_payer
                             and buf_payer.obj-type = {&cmp}
@@ -1367,6 +1370,7 @@ do:
           tt-fin-doc.payer-code     = (if available buf_payer then buf_payer.obj-code else 0)
           tt-fin-doc.payer-name     = (if available buf_payer then buf_payer.obj-name else "":U)
           .
+        if o-uchet = "0" then         tt-fin-doc.doc-date      = v-today .
         if tt-fin-doc.contract-code = 0
           then 
         do:
@@ -1385,7 +1389,6 @@ do:
           tt-fin-doc.payer-code     = p-host-code
           tt-fin-doc.payer-okpo     = buf_firm.okpo
           tt-fin-doc.payer-name     = buf_clients-host.obj-name
-          tt-fin-doc.doc-date       = v-today
           tt-fin-doc.payer-sign1    = buf_sysconf.head-position + {&delim-par} + buf_firm.director
           tt-fin-doc.receiver-sign1 = (if available buf_receiver
                               and buf_receiver.obj-type = {&cmp}
@@ -1399,6 +1402,7 @@ do:
           tt-fin-doc.receiver-code  = (if available buf_receiver then buf_receiver.obj-code else 0)
           tt-fin-doc.receiver-name  = (if available buf_receiver then buf_receiver.obj-name else "":U)
           .
+        if o-uchet = "0" then         tt-fin-doc.doc-date      = v-today .
         if tt-fin-doc.contract-code = 0
           then 
         do:

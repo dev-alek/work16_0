@@ -1181,6 +1181,7 @@ define variable v-err               as logical    no-undo .
    /*теперь создадим fin-doc*/
    _temp-fin-sum:
    for each buf_temp-fin-sum no-lock
+    by buf_temp-fin-sum.tot-sum descending  /* EXPSD-7148 добавлена обратная сортировка по сумме, чтобы сначала создавались док-ты по приходу */
     on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
     on stop   undo _main, return error substitute( "&1. stop", vss-workfile )
     on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
@@ -1570,7 +1571,7 @@ define variable v-err               as logical    no-undo .
          tt-fin-doc.shift-name = buf_shift-obj.shift-name
          .
        end.
-       
+       if v-uchet = "smen" then tt-fin-doc.doc-date = buf_shift-obj.shift-date .
        assign
        tt-fin-doc.doc-author = {&auto}.
     &scop prfx tt-fin-doc.
