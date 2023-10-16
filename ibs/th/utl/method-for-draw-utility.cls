@@ -3842,9 +3842,9 @@ class ibs.th.utl.method-for-draw-utility final:
                   find first  buf_rvs-doc where buf_rvs-doc.obj-type eq v-cntxt-obj-type
                     and buf_rvs-doc.obj-code   eq v-cntxt-obj-code
                     and buf_rvs-doc.rvs-type   eq {&rvs-shift}
-                    and buf_rvs-doc.status_    <>  {&fact}
+                    and buf_rvs-doc.status_    =  {&fact}
                     no-lock no-error.
-                  return  not available buf_rvs-doc. 
+                  return  available buf_rvs-doc. 
 
                 end method.
    
