@@ -72,6 +72,6 @@ if error-status :error or par-type <> "l" or is-ptrl <> "yes" then do: assign is
 { rep/menu-doc.i "'*'" "'*'"                                            "'*'" "'*'" "'Отчет по неосновным кодам'"                                   "'cost,sale,rubl,base'" "'rep/r-aktn.p'"   "''"                "'------'" "''" "'A4port'" "''" ?                 }
 { rep/menu-doc.i "'*'" "'*'"                                            "'*'" "'*'" "'Ценники (этикетки)'"                                          "'cost,sale,rubl,base'" "'rep/tick-doc.p'" "'price'"           "'------'" "''" "'self'"   "''" ?                 }
 { rep/menu-doc.i "'*'" "'*'"                                            "'*'" "'*'" "'Калькуляционные карточки (печатать только после переоценки)'" "'cost,sale,rubl,base'" "'rep/op-1.p'"     "'yes,yes,1,no,no'" "'------'" "''" "'A4port'" "''" ?                 }
-{ rep/menu-doc.i "'*'"   {&act-overvalue}                               "'*'" "'*'" "'Акт о переоценке товаров'"                                    "'cost,sale,rubl,base'" "'rep/r-ord.p'"    "'akt'"             "'------'" "'Rosneft*'" "'A4lans'" "''" ?                 }
+{ rep/menu-doc.i "'*'"   {&act-overvalue}                               "'*'" "'*'" "'Акт о переоценке товаров'"                                    "'cost,sale,rubl,base'" "'rep/r-ord.p'"    "'akt'"             "'------'" "'yukos,ibs,Rosneft*'" "'A4lans'" "''" ?                 }
 
 /* $Workfile$   E n d */
