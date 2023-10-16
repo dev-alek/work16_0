@@ -148,13 +148,13 @@ DEFINE QUERY BR-pl-gds FOR
 DEFINE BROWSE BR-pl-gds
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-pl-gds Dialog-Frame _FREEFORM
   QUERY BR-pl-gds NO-LOCK DISPLAY
-X_pl-gds.pl-code COLUMN-LABEL "Ñךכה.לוסעמ" FORMAT ">>>>>>>>9":U
+X_pl-gds.pl-code COLUMN-LABEL "Ñךכה.לוסעמ" FORMAT ">>>>>>>>>>9":U
 X_place.pl-name FORMAT "X(40)":U
 X_place.loc1 FORMAT "X(8)":U
 X_place.loc2 FORMAT "X(8)":U
 X_place.loc3 FORMAT "X(8)":U
 X_place.loc4 FORMAT "X(8)":U
-X_pl-gds.gds-code FORMAT "999999999":U
+X_pl-gds.gds-code FORMAT "99999999999":U
 X_goods.artic FORMAT "X(16)":U
 X_goods.gds-name FORMAT "X(48)":U
 X_goods.prod-type FORMAT "X(3)":U
