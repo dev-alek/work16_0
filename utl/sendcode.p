@@ -22,6 +22,9 @@ define input  parameter ireclist as char no-undo.
 */
 define variable mAnswer as character  no-undo.
 {cmp/str-glbl.i}
+{ gbl/getcntxt.i def }
+
+
 subscribe   to "ResponseToQuestion" anywhere run-procedure "SendAnswer".
 if iCode eq 1
 then do:
@@ -109,7 +112,8 @@ then do:
         input iUtil:parparentproc
       , input this-procedure
       , input "str/send-all.p":U
-      , input ( iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
+/*      , input ( iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U) */ 
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
       , input ? /*p-auto-go*/
       , input "":U
       , input substitute("Отсылка очистки справочника ЕМЦ")
@@ -122,7 +126,8 @@ then do:
         input iUtil:parparentproc
       , input this-procedure
       , input "str/send-all.p":U
-      , input ( iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
+/*    , input ( iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U) */ 
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U)
       , input ? /*p-auto-go*/
       , input "":U
       , input substitute("Отсылка справочника ЕМЦ")

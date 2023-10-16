@@ -441,16 +441,6 @@ class ibs.th.utl.draw_utility inherits Form:
         checkBox18:checked = checkBox17:checked.
         mUtil:put-log("Выполнено: передача справочника ОСС на кассы").
       if vtestlg then message "выполнено "   checkBox18:text view-as alert-box.
-      
-        mUtil:put-log("Начато   : удаление товаров с касс").
-      checkBox23:checked = mutil:sendcode(13).
-        mUtil:put-log("Выполнено: удаление товаров с касс").
-      if vtestlg then message "выполнено "   checkBox23:text view-as alert-box.
-      
-        mUtil:put-log("Начато   : передача товаров на кассы").
-      checkBox24:checked = mutil:sendcode(14).
-        mUtil:put-log("Выполнено: передача товаров на кассы").
-      if vtestlg then message "выполнено "   checkBox24:text view-as alert-box.
 
         mUtil:put-log("Начато   : удаление ЕМС с касс").
       delemc:checked = mutil:sendcode(16).
@@ -462,8 +452,16 @@ class ibs.th.utl.draw_utility inherits Form:
         mUtil:put-log("Выполнено: передача ЕМС на кассы").
       if vtestlg then message "выполнено "   sendemc:text view-as alert-box.
 
+        mUtil:put-log("Начато   : удаление товаров с касс").
+      checkBox23:checked = mutil:sendcode(13).
+        mUtil:put-log("Выполнено: удаление товаров с касс").
+      if vtestlg then message "выполнено "   checkBox23:text view-as alert-box.
+      
+        mUtil:put-log("Начато   : передача товаров на кассы").
+      checkBox24:checked = mutil:sendcode(14).
+        mUtil:put-log("Выполнено: передача товаров на кассы").
+      if vtestlg then message "выполнено "   checkBox24:text view-as alert-box.
 
-        
         if listBox2:Text = "" then do:
           mUtil:put-log("Ошибка: отсутствует файл для загрузки новых параметров").
         end.
@@ -986,11 +984,11 @@ class ibs.th.utl.draw_utility inherits Form:
       /* delemc */
       /*  */
       this-object:delemc:Enabled = false.
-      this-object:delemc:Location = new System.Drawing.Point(149, 356).
+      this-object:delemc:Location = new System.Drawing.Point(149, 306).
       this-object:delemc:Name = "delemc".
       this-object:delemc:Size = new System.Drawing.Size(208, 24).
       this-object:delemc:TabIndex = 18.
-      this-object:delemc:Text = "Удаление ЕМЦ ".
+      this-object:delemc:Text = "ЕМЦ удалены с касс".
       this-object:delemc:UseCompatibleTextRendering = true.
       this-object:delemc:UseVisualStyleBackColor = true.
       this-object:delemc:CheckedChanged:Subscribe(this-object:delemc_CheckedChanged).
@@ -998,11 +996,11 @@ class ibs.th.utl.draw_utility inherits Form:
       /* sendemc */
       /*  */
       this-object:sendemc:Enabled = false.
-      this-object:sendemc:Location = new System.Drawing.Point(149, 381).
+      this-object:sendemc:Location = new System.Drawing.Point(149, 331).
       this-object:sendemc:Name = "sendemc".
       this-object:sendemc:Size = new System.Drawing.Size(228, 24).
       this-object:sendemc:TabIndex = 17.
-      this-object:sendemc:Text = "Передача ЕМЦ на кассы".
+      this-object:sendemc:Text = "ЕМЦ переданы на кассы".
       this-object:sendemc:UseCompatibleTextRendering = true.
       this-object:sendemc:UseVisualStyleBackColor = true.
       this-object:sendemc:CheckedChanged:Subscribe(this-object:sendemc_CheckedChanged).
@@ -1046,7 +1044,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /* checkBox24 */
       /*  */
       this-object:checkBox24:Enabled = false.
-      this-object:checkBox24:Location = new System.Drawing.Point(149, 331).
+      this-object:checkBox24:Location = new System.Drawing.Point(149, 381).
       this-object:checkBox24:Name = "checkBox24".
       this-object:checkBox24:Size = new System.Drawing.Size(228, 24).
       this-object:checkBox24:TabIndex = 14.
@@ -1057,7 +1055,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /* checkBox23 */
       /*  */
       this-object:checkBox23:Enabled = false.
-      this-object:checkBox23:Location = new System.Drawing.Point(149, 306).
+      this-object:checkBox23:Location = new System.Drawing.Point(149, 356).
       this-object:checkBox23:Name = "checkBox23".
       this-object:checkBox23:Size = new System.Drawing.Size(228, 24).
       this-object:checkBox23:TabIndex = 13.
