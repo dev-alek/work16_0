@@ -70,9 +70,28 @@ class ibs.th.bge.1crn.import.impgoods implements ibs.th.bge.1crn.import.iimpsubj
                     input recid(buf_goods)
                     ,input yes /*p-silent*/
                     ,input-output v-stts) no-error. 
-      end. 
-      
+      end.
       return true .
+      catch exAppErrors as class Progress.Lang.AppError :
+         Msg = exAppErrors:ReturnValue .
+         if Msg > "" then . else do :
+            Msg = exAppErrors:GetMessage(1) .
+            if Msg > "" then . else Msg = "AppError в модуле {&FILE-NAME}" .
+         end .
+         return false.
+      end catch .
+      catch exProErrors as class Progress.Lang.ProError :
+         msg = exProErrors:GetMessage(1) . 
+         if msg > "" then . else msg = "ProError в модуле {&FILE-NAME}" .
+         return false.
+      end catch .
+      catch exAnyErrors as class Progress.Lang.Error:
+         msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+         return false.
+      end catch .
+       
+      
+      
   end method.    
     
 end class.
