@@ -2607,7 +2607,18 @@ do:
     if not rvslog then
       return no-apply.
   end.            
-   
+
+  run action-rvs-line in this-procedure
+      ( input {&update}
+      ,input "meas":U
+      ,input {&rvs-before-doc}
+      ,output var-code-temp
+      ) no-error .
+  if error-status :error then 
+  do:
+    return no-apply .
+  end.
+
   run adm/shattri.p (
      input "get":U
      ,input  v-cntxt-obj-type
@@ -2625,7 +2636,7 @@ do:
   if v-value-logical then 
   do:
     list-pl = "" .
-    for each tt-doc-pl,
+    for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
         each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
              ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
              ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
@@ -2682,16 +2693,6 @@ do:
      end.   
   end.
 
-  run action-rvs-line in this-procedure
-      ( input {&update}
-      ,input "meas":U
-      ,input {&rvs-before-doc}
-      ) no-error .
-  if error-status :error then 
-  do:
-    return no-apply .
-  end.
-
   run display-measure in this-procedure
     no-error .
 
@@ -2715,6 +2716,7 @@ do:
     ( input {&update}
      ,input "meas":U
      ,input {&rvs-after-doc}
+     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2737,7 +2739,7 @@ run adm/shattri.p (
 if v-value-logical then 
 do:
    list-pl = "" .
-   for each tt-doc-pl,
+   for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
       each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
       ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
       ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
@@ -2816,6 +2818,7 @@ do:
     ( input {&lookup}
      ,input "edit":U
      ,input {&rvs-before-doc}
+     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2831,6 +2834,7 @@ do:
     ( input {&lookup}
      ,input "edit":U
      ,input {&rvs-after-doc}
+     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2846,6 +2850,7 @@ do:
     ( input {&update}
      ,input "edit":U
      ,input {&rvs-before-doc}
+     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2870,7 +2875,7 @@ do:
    do:
   
       list-pl = "" .
-      for each tt-doc-pl,
+      for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
          each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
          ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
          ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
@@ -2908,7 +2913,7 @@ do:
          do:
             message return-value
                view-as alert-box question buttons yes-no update v-ok as logical  .
-            if v-ok then run block-nozzle ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
+            if v-ok then run block-nozzle  in this-procedure ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
             else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
                   view-as alert-box.
                
@@ -2938,6 +2943,7 @@ do:
     ( input {&update}
      ,input "edit":U
      ,input {&rvs-after-doc}
+     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2962,7 +2968,7 @@ do:
    do:
   
       list-pl = "" .
-      for each tt-doc-pl,
+      for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
          each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
          ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
          ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and

@@ -537,6 +537,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       define input parameter p-action      as   character           no-undo .
       define input parameter p-action-type as   character           no-undo .
       define input parameter p-rvs-type    like ub.rvs-doc.rvs-type no-undo .
+      define output parameter p-pl-code      like ub.place.pl-code    no-undo .
       define buffer buf_doc-line for ub.doc-line.
 
       block_tr:
@@ -545,7 +546,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       on stop   undo block_tr, return error substitute( "&1 (action-rvs-line). stop", vss-workfile )
       on endkey undo block_tr, return error substitute( "&1 (action-rvs-line). endkey", vss-workfile )
       :
-        define variable v-pl-code      like ub.place.pl-code    no-undo .
         define variable v-rvs-code     like ub.rvs-doc.rvs-code no-undo .
         define variable v-act-name     as   character           no-undo .
         define variable v-log          as   logical             no-undo .
@@ -598,7 +598,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-trk-err         as logical   no-undo .
 
         assign
-          v-pl-code = ?
+          p-pl-code = ?
         .
 
         find first buf_rvs-doc exclusive-lock
@@ -635,7 +635,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
 
         assign
           v-count-doc-pl = 0
-          v-pl-code      = ?
+          p-pl-code      = ?
         .
         
         tt-doc-pl_ :
@@ -692,7 +692,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 end.
                 assign
                   v-count-doc-pl = v-count-doc-pl + 1
-                  v-pl-code      = buf_rvs-line.pl-code
+                  p-pl-code      = buf_rvs-line.pl-code
                 .
               end .
             end .
@@ -740,23 +740,23 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             assign
               v-count-doc-pl = v-count-doc-pl + 1
-              v-pl-code      = buf_rvs-line.pl-code
+              p-pl-code      = buf_rvs-line.pl-code
             .
           end .
         end. /* for each tt-doc-pl */
 
         if v-count-doc-pl > 1
-          or v-pl-code = ?
+          or p-pl-code = ?
         then do:
           if is-com-tanks
-          and v-pl-code <> ?
+          and p-pl-code <> ?
           then do :
             run ref/pl-gds-com-tanks.w
-              ( input v-pl-code
-              , output v-pl-code
+              ( input p-pl-code
+              , output p-pl-code
               ) no-error .
-            if v-pl-code = ? 
-            or v-pl-code = 0
+            if p-pl-code = ? 
+            or p-pl-code = 0
             then do:
               message "Не выбрано место хранения " view-as alert-box .
               undo block_tr, return error .
@@ -777,7 +777,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               ,input buf_rvs-doc.obj-code
               ,input buf_goods.gds-code
               ,output is-rvs-place
-              ,output v-pl-code
+              ,output p-pl-code
               ) no-error .
             if error-status :error then do:
               message
@@ -794,12 +794,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
             and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
             and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
-            and buf_rvs-line.pl-code  = v-pl-code
+            and buf_rvs-line.pl-code  = p-pl-code
             and buf_rvs-line.gds-code = buf_goods.gds-code
           no-error.
         if not available buf_rvs-line then do:
           message
-            substitute( "Не найдена строка сверки по резервуару &1", v-pl-code ) skip
+            substitute( "Не найдена строка сверки по резервуару &1", p-pl-code ) skip
             view-as alert-box error .
           undo block_tr, return error .
         end.
@@ -810,7 +810,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             find buf_place no-lock
             where buf_place.obj-type = t-doc.obj-type
               and buf_place.obj-code = t-doc.obj-code
-              and buf_place.pl-code  = v-pl-code
+              and buf_place.pl-code  = p-pl-code
             .
                     
             if p-action-type = "meas" or buf_place.is-meas <> yes then /* ТН-3370 Арн 12.01.2015. (Строка Накл в режиме "Изменить") и меню pop-up (по кнопкам "Св.до" и "Св.после") = "Сверка резервуара" [он же парам="meas"] */
@@ -835,7 +835,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 run check-before in this-procedure
                   ( input t-doc.doc-code
                    ,input buf_goods.gds-code
-                   ,input v-pl-code
+                   ,input p-pl-code
                   ) no-error .
                 if error-status :error then do:
                   undo block_tr, return error .
@@ -845,7 +845,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 run check-after in this-procedure
                   ( input t-doc.doc-code
                    ,input buf_goods.gds-code
-                   ,input v-pl-code
+                   ,input p-pl-code
                   ) no-error .
                 if error-status :error then do:
                   undo block_tr, return error .
@@ -891,7 +891,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
             and buf_rvs-line.obj-type = t-doc.obj-type
             and buf_rvs-line.obj-code = t-doc.obj-code
-            and buf_rvs-line.pl-code  = v-pl-code
+            and buf_rvs-line.pl-code  = p-pl-code
             and buf_rvs-line.gds-code = buf_goods.gds-code
           .
 
@@ -910,14 +910,14 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             find buf_place no-lock
               where buf_place.obj-type = t-doc.obj-type
                 and buf_place.obj-code = t-doc.obj-code
-                and buf_place.pl-code  = v-pl-code
+                and buf_place.pl-code  = p-pl-code
               .
               
             run placelib_get-attr  (
                input {&place-com-tanks}
               ,input buf_rvs-doc.obj-code
               ,input buf_rvs-doc.obj-type
-              ,input v-pl-code
+              ,input p-pl-code
               ,output v-value
               ,output v-ok      )
             no-error.
@@ -1026,7 +1026,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               assign
                 tt-meas.obj-type = t-doc.obj-type
                 tt-meas.obj-code = t-doc.obj-code
-                tt-meas.pl-code  = v-pl-code
+                tt-meas.pl-code  = p-pl-code
               .
               for each bf_pl-pump-nozzle no-lock where bf_pl-pump-nozzle.obj-type = tt-meas.obj-type 
                                                    and bf_pl-pump-nozzle.obj-code = tt-meas.obj-code
@@ -1317,7 +1317,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               { str/fill1plc.i
                 t-doc.obj-type
                 t-doc.obj-code
-                v-pl-code
+                p-pl-code
                 recid(buf_rvs-line)
                 buf_rvs-line.rvs-prev-code
                 tt-meas
@@ -1504,7 +1504,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
                 and buf_rvs-line.obj-type = t-doc.obj-type
                 and buf_rvs-line.obj-code = t-doc.obj-code
-                and buf_rvs-line.pl-code  = v-pl-code
+                and buf_rvs-line.pl-code  = p-pl-code
                 and buf_rvs-line.gds-code = buf_goods.gds-code
               .
             end .
@@ -1525,7 +1525,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
                 and buf_rvs-line.obj-type = t-doc.obj-type
                 and buf_rvs-line.obj-code = t-doc.obj-code
-                and buf_rvs-line.pl-code  = v-pl-code
+                and buf_rvs-line.pl-code  = p-pl-code
                 and buf_rvs-line.gds-code = buf_goods.gds-code
               .
             end .
@@ -1542,7 +1542,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                     ,buf_goods.artic
                                     ,buf_goods.prod-type
                                     ,buf_goods.prod-code
-                                    ,v-pl-code)) no-error.
+                                    ,p-pl-code)) no-error.
             end.
             
             else do:
@@ -1558,7 +1558,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                       ,buf_goods.artic
                                       ,buf_goods.prod-type
                                       ,buf_goods.prod-code
-                                      ,v-pl-code)) no-error.
+                                      ,p-pl-code)) no-error.
               end.
               else do :
                 run str/rvs-lin.w
@@ -1570,7 +1570,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                     ,buf_goods.artic
                                     ,buf_goods.prod-type
                                     ,buf_goods.prod-code
-                                    ,v-pl-code)) no-error.
+                                    ,p-pl-code)) no-error.
               end.
               
               if error-status :error then do:
@@ -1781,7 +1781,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           find first buf_place no-lock
               where buf_place.obj-type = t-doc.obj-type
                 and buf_place.obj-code = t-doc.obj-code
-                and buf_place.pl-code  = v-pl-code
+                and buf_place.pl-code  = p-pl-code
             .
           do ii = 1 to infoSectionsTotal:SectionNum :
             infoSectionsTotal:GetInfoSectionProp(ii).
@@ -1803,7 +1803,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         run placelib_get-attr(input {&place-virtual}
                              ,input t-doc.obj-code
                              ,input t-doc.obj-type
-                             ,input v-pl-code
+                             ,input p-pl-code
                              ,output v-value
                              ,output v-ok) no-error.
         
@@ -1817,7 +1817,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
                 and buf_rvs-line.obj-type = t-doc.obj-type
                 and buf_rvs-line.obj-code = t-doc.obj-code
-                and buf_rvs-line.pl-code  = v-pl-code
+                and buf_rvs-line.pl-code  = p-pl-code
                 and buf_rvs-line.gds-code = buf_goods.gds-code
               .
             end .
@@ -1855,7 +1855,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               run return-rvs-qnty in this-procedure
                 ( input t-doc.doc-code
                  ,input buf_goods.gds-code
-                 ,input v-pl-code
+                 ,input p-pl-code
                  ,output v-rvs-qnty-before
                  ,output v-rvs-qnty-after
                  ,output v-rvs-cli-qnty-before
@@ -1873,7 +1873,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 then do:
                   message
                     "Не задано количество по сверке <<после_док>>"
-                    "по резервуару" v-pl-code "."
+                    "по резервуару" p-pl-code "."
                     view-as alert-box error .
                   undo block_tr, return error .
                 end.
@@ -1884,14 +1884,14 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   then do :
                     message
                       "Не задана масса в сверке <<после_док>>"
-                      "по резервуару" v-pl-code "."
+                      "по резервуару" p-pl-code "."
                       view-as alert-box error .
                   end.
                   else do :
                     /* ругаемся на плотность потому что в строке редактирования сверки у нас открыто поле плотность */
                     message
                       "Масса не рассчитана. Не задана плотность в сверке <<после_док>>"
-                      "по резервуару" v-pl-code "."
+                      "по резервуару" p-pl-code "."
                       view-as alert-box error .
                   end.
                   undo block_tr, return error .
@@ -1906,7 +1906,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 then do:
                   message
                     substitute( "Ошибка по результатам сверки." ) skip
-                    substitute( "Место хранения: &1 .", v-pl-code ) skip
+                    substitute( "Место хранения: &1 .", p-pl-code ) skip
                     substitute( "Количество залитого топлива: &1 (&2).", v-rvs-qnty-after - v-rvs-qnty-before, buf_goods.unit-base ) skip
                     substitute( "Объем в сверке до: &1 ", v-rvs-qnty-before ) skip
                     substitute( "Объем в сверке после: &1 ", v-rvs-qnty-after ) skip
@@ -1918,7 +1918,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 then do:
                   message
                     substitute( "Ошибка по результатам сверки." ) skip
-                    substitute( "Место хранения: &1 .", v-pl-code ) skip
+                    substitute( "Место хранения: &1 .", p-pl-code ) skip
                     substitute( "Количество залитого топлива: &1 (&2).", v-rvs-cli-qnty-after - v-rvs-cli-qnty-before, buf_goods.unit-cli ) skip
                     substitute( "Масса в сверке до: &1 ", v-rvs-cli-qnty-before ) skip
                     substitute( "Масса в сверке после: &1 ", v-rvs-cli-qnty-after ) skip
@@ -1934,7 +1934,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   if Valid-Density( v-rvs-density, (buf_goods.unit-base = buf_goods.unit-cli)  ) <> true then do:
                     message
                       substitute( "Ошибка по результатам сверки." ) skip
-                      substitute( "Место хранения: &1 .", v-pl-code ) skip
+                      substitute( "Место хранения: &1 .", p-pl-code ) skip
                       substitute( "Плотность залитого топлива: &1.", v-rvs-density ) skip
                       view-as alert-box .
                     undo block_tr, return error .
@@ -1982,7 +1982,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                      input {&place-com-tanks}
                     ,input t-doc.obj-code
                     ,input t-doc.obj-type
-                    ,input v-pl-code
+                    ,input p-pl-code
                     ,output v-value
                     ,output v-ok      )
                   no-error.
@@ -3071,6 +3071,104 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
 
     end procedure. /* eq-qnty-rvs-pl */
 
+    PROCEDURE block-nozzle:
+      define input parameter parparentproc  as handle    no-undo.
+      define input parameter obj-type       as character no-undo.
+      define input parameter obj-code       as integer   no-undo.
+      define input parameter list-pl        as character no-undo.
+      run str/diallog.w ( input parparentproc
+         ,input this-procedure
+         ,input 'str/get-block-nozzle.p':U
+         ,input (obj-type + {&delim-par} +
+         string(obj-code) + {&delim-par} +
+         string(0) + {&delim-par} +  /*p-remote */
+         string(0) + {&delim-par} + /*p-shft-close*/
+         {&delim-par} +
+         {&delim-par} +
+         {&delim-par} +
+         substitute("&1,&2"
+         ,"block"
+         ,list-pl))
+         ,input yes
+         ,input ''
+         ,input 'Блокировка пистолетов') .
+      if not error-status:error then 
+      do:
+         if return-value begins "Для кассы" then 
+         do:
+            message return-value
+               view-as alert-box question buttons yes-no update v-ok as logical  .
+            if v-ok then run block-nozzle ( parparentproc, obj-type, obj-code, list-pl ).
+            else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
+                  view-as alert-box.
+               
+         end.
+         else 
+         do:
+            message "Блокировка пистолетов прошла успешно"
+               view-as alert-box.
+         end.   
+
+      end.
+      else 
+      do:
+         message return-value
+            view-as alert-box question buttons yes-no update v-ok .
+         if v-ok then run block-nozzle .
+         else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+               view-as alert-box.
+      end.
+    END PROCEDURE .
+
+    PROCEDURE unblock-nozzle:
+      define input parameter parparentproc  as handle    no-undo.
+      define input parameter obj-type       as character no-undo.
+      define input parameter obj-code       as integer   no-undo.
+      define input parameter list-pl        as character no-undo.
+      run str/diallog.w ( input parparentproc
+        ,input this-procedure
+        ,input 'str/get-block-nozzle.p':U
+        ,input (obj-type + {&delim-par} +
+        string(obj-code) + {&delim-par} +
+        string(0) + {&delim-par} +  /*p-remote */
+        string(0) + {&delim-par} + /*p-shft-close*/
+        {&delim-par} +
+        {&delim-par} +
+        {&delim-par} +
+        substitute("&1,&2"
+        ,"unblock"
+        ,list-pl))
+        ,input yes
+        ,input ''
+        ,input 'Разблокировка пистолетов') .
+      if not error-status:error then 
+      do:
+         if return-value begins "Для кассы" then 
+         do:
+            message return-value
+               view-as alert-box question buttons yes-no update v-ok as logical  .
+            if v-ok then run unblock-nozzle( parparentproc, obj-type, obj-code, list-pl ).
+            else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+                  view-as alert-box.
+               
+         end.
+         else 
+         do:
+            message "Разблокировка пистолетов прошла успешно"
+               view-as alert-box.
+         end.   
+
+      end.
+      else 
+      do:
+        message return-value
+           view-as alert-box question buttons yes-no update v-ok .
+        if v-ok then run unblock-nozzle .
+        else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
+              view-as alert-box.
+         end.
+    END PROCEDURE.
+
   &endif
 
   &if "{2}":U = "all-line":U &then
@@ -4122,104 +4220,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       end. /* transaction */
       run waitfram-hide in this-procedure .
       return .
-    END PROCEDURE.
-
-    PROCEDURE block-nozzle:
-      define input parameter parparentproc  as handle    no-undo.
-      define input parameter obj-type       as character no-undo.
-      define input parameter obj-code       as integer   no-undo.
-      define input parameter list-pl        as character no-undo.
-      run str/diallog.w ( input parparentproc
-         ,input this-procedure
-         ,input 'str/get-block-nozzle.p':U
-         ,input (obj-type + {&delim-par} +
-         string(obj-code) + {&delim-par} +
-         string(0) + {&delim-par} +  /*p-remote */
-         string(0) + {&delim-par} + /*p-shft-close*/
-         {&delim-par} +
-         {&delim-par} +
-         {&delim-par} +
-         substitute("&1,&2"
-         ,"block"
-         ,list-pl))
-         ,input yes
-         ,input ''
-         ,input 'Блокировка пистолетов') .
-      if not error-status:error then 
-      do:
-         if return-value begins "Для кассы" then 
-         do:
-            message return-value
-               view-as alert-box question buttons yes-no update v-ok as logical  .
-            if v-ok then run block-nozzle ( parparentproc, obj-type, obj-code, list-pl ).
-            else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
-                  view-as alert-box.
-               
-         end.
-         else 
-         do:
-            message "Блокировка пистолетов прошла успешно"
-               view-as alert-box.
-         end.   
-
-      end.
-      else 
-      do:
-         message return-value
-            view-as alert-box question buttons yes-no update v-ok .
-         if v-ok then run block-nozzle .
-         else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
-               view-as alert-box.
-      end.
-    END PROCEDURE .
-
-    PROCEDURE unblock-nozzle:
-      define input parameter parparentproc  as handle    no-undo.
-      define input parameter obj-type       as character no-undo.
-      define input parameter obj-code       as integer   no-undo.
-      define input parameter list-pl        as character no-undo.
-      run str/diallog.w ( input parparentproc
-        ,input this-procedure
-        ,input 'str/get-block-nozzle.p':U
-        ,input (obj-type + {&delim-par} +
-        string(obj-code) + {&delim-par} +
-        string(0) + {&delim-par} +  /*p-remote */
-        string(0) + {&delim-par} + /*p-shft-close*/
-        {&delim-par} +
-        {&delim-par} +
-        {&delim-par} +
-        substitute("&1,&2"
-        ,"unblock"
-        ,list-pl))
-        ,input yes
-        ,input ''
-        ,input 'Разблокировка пистолетов') .
-      if not error-status:error then 
-      do:
-         if return-value begins "Для кассы" then 
-         do:
-            message return-value
-               view-as alert-box question buttons yes-no update v-ok as logical  .
-            if v-ok then run unblock-nozzle( parparentproc, obj-type, obj-code, list-pl ).
-            else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
-                  view-as alert-box.
-               
-         end.
-         else 
-         do:
-            message "Разблокировка пистолетов прошла успешно"
-               view-as alert-box.
-         end.   
-
-      end.
-      else 
-      do:
-        message return-value
-           view-as alert-box question buttons yes-no update v-ok .
-        if v-ok then run unblock-nozzle .
-        else                   message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
-              view-as alert-box.
-         end.
     END PROCEDURE.
   &endif
 
