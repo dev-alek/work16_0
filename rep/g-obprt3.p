@@ -31,7 +31,7 @@ define input  parameter parParentProc  as widget-handle no-undo.
 run rep/d-report.w (
   input parParentProc ,
   input "rep/e-obort3.w" ,
-  input "ќборотна€ ведомасть с ценами производител€",
+  input "ќборотна€ ведомость с ценами производител€",
   input 2,
   input "{&g-all},{&g-grp},{&g-prod},{&g-choice},{&g-one},{&g-grp-prod}":U,
   input "*":U,
