@@ -25,11 +25,18 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер удаления {&main-tbl}".
+
+define buffer buf_marking-attr for ub.{&main-tbl}-attr.
 {cmp\trg-def.i}
 if not g#auto
 then do:
    message " попытка удаления марки" view-as alert-box. 
    return error " попытка удаления марки".
+end.
+for each buf_marking-attr where
+         buf_marking-attr.mark = ub.{&main-tbl}.mark
+    exclusive-lock:
+    delete buf_marking-attr.
 end.
 /*{ trg/trghistnws.i 
   &hist = yes 

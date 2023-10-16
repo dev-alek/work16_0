@@ -836,9 +836,18 @@ method private logical CheckOneTable(iTable as  handle):
                else if vFieldName eq "_COLUMN-LABEL"
                then
                   vFieldName = "_Col-label".
+               else if vFieldName eq "_COLUMN-LABEL-SA"
+               then
+                  vFieldName = "_Label-SA".
                else if vFieldName eq "_CASE-SENSITIVE"
                then
                   vFieldName = "_fld-case".
+               else if vFieldName eq "_NOT-CASE-SENSITIVE"
+               then
+                  assign
+                    vValuelog  = no
+                    vFieldName = "_fld-case"
+                  .
                else if vFieldName eq "_NULL-ALLOWED"
                then
                   assign

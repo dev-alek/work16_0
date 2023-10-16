@@ -353,6 +353,7 @@ Creation date: 04/05/06
 &glob table_c-layout-elem-attr 'c-layout-elem-attr':U
 &glob table_c-layout-elem-rule 'c-layout-elem-rule':U
 &glob table_c-layout-elem-rule-attr 'c-layout-elem-rule-attr':U
+&glob table_c-marking 'c-marking':U
 &glob table_c-norm-loss 'c-norm-loss':U
 &glob table_c-nozzle 'c-nozzle':U
 &glob table_c-nozzle-attr 'c-nozzle-attr':U

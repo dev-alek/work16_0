@@ -149,6 +149,7 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,operservattr~
 ,cashbook~
 ,cashbookattr~
+,c-marking~
 ":U.
 
 

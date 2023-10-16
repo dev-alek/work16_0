@@ -1300,8 +1300,10 @@ procedure nws-impl-without-check :
         assign
           v-fh = p-buf-handle:buffer-field( v-fld-name ) no-error
         .
-        if error-status :error
-          or v-fh = ?
+        if (error-status :error
+          or v-fh = ?)
+          /* and можно убрать, когда во всех БД будет обновлена структура БД до 36 версии и выше */
+          and p-buf-handle:name <> "locb-marking" 
         then do:
           return error substitute( "(nws-impl-without-check) &1&2Поле &3 не найдено в таблице &4&2&5"
                                     ,vss-workfile
@@ -1311,9 +1313,9 @@ procedure nws-impl-without-check :
                                     ,error-status :get-message ( 1 )
                                   ).
         end.
-        assign
-          v-fh:buffer-value = v-fld-value
-        .
+        if v-fh <> ? then do:
+          v-fh:buffer-value = v-fld-value.
+        end.
       end.
       else do:
         leave block_read.
