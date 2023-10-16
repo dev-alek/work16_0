@@ -482,6 +482,7 @@ fact-close:
                               OUTPUT varvalue,
                               OUTPUT vartype
                               ).
+          if varvalue = "antiseptic" then next LK_RECEIPT_ .
           if varvalue > ""
           and EDOParSec:GetIsArticForType(varvalue)
           then do:
