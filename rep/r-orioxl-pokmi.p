@@ -39,6 +39,7 @@ define variable vss-description as character no-undo initial "Инвентаризационная
 { rep/html-conv.i }
 { str/is-sug.i }
 { str/placelib.i }
+{ rep/c-place-attr.i }
 
 define variable g#report-num  as integer no-undo .
 define variable g#quest-print as logical no-undo initial yes .
@@ -109,13 +110,16 @@ define temp-table tt-petrol
   index pi gds-code pl-code .
 
 
-define buffer bf_trn-doc  for ub.trn-doc  .
-define buffer bf_rvs-doc  for ub.rvs-doc  .
-define buffer bf_rvs-line for ub.rvs-line .
-define buffer bf_goods    for ub.goods    .
-define buffer bf_object   for ub.clients  .
-define buffer bf_place    for ub.place    .
-define buffer bf_doc-line for ub.doc-line.
+define buffer bf_trn-doc         for ub.trn-doc  .
+define buffer bf_rvs-doc         for ub.rvs-doc  .
+define buffer bf_rvs-line        for ub.rvs-line .
+define buffer bf_goods           for ub.goods    .
+define buffer bf_object          for ub.clients  .
+define buffer bf_place           for ub.place    .
+define buffer bf_doc-line        for ub.doc-line.
+define buffer bf_c-place-attr    for ub.c-place-attr .
+define buffer after_c-place-attr for ub.c-place-attr .
+define buffer befor_c-place-attr for ub.c-place-attr .
 
 &scop f-l MonthNameRusCase,Sparse
 
@@ -305,6 +309,9 @@ procedure data-print :
          tt-petrol.qnty1    = round((tt-petrol.volue-pl * tt-petrol.density),0)
          tt-petrol.pl-type  = "трубопровод"
          .
+    find first c-rvs-doc no-lock where c-rvs-doc.rvs-code = bf_rvs-doc.rvs-code and c-rvs-doc.obj-code = bf_rvs-doc.obj-code and
+      c-rvs-doc.obj-type = bf_rvs-doc.obj-type and c-rvs-doc.status_ = {&permitted} .
+
       for each rvs-line-attr no-lock
          where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
          and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
@@ -363,37 +370,41 @@ procedure data-print :
       ,output v-ok      ) no-error.
       
     tt-petrol.place-type = v-value .
-    
-    if not bf_place.is-meas then tt-petrol.type_dan = "PВД" .
+
+    if not get_meas(bf_rvs-line.obj-code, bf_rvs-line.obj-type, bf_rvs-line.pl-code, c-rvs-doc.fact-date, c-rvs-doc.fact-time) then
+      tt-petrol.type_dan = "PВД" .
     else 
     do:
-      run placelib_get-attr  ( input {&place-rvd-dnsty}
+      run c-place_get-attr (input {&place-rvd-lvl}
         ,input bf_rvs-line.obj-code
         ,input bf_rvs-line.obj-type
         ,input bf_rvs-line.pl-code
-        ,output v-value
-        ,output v-ok      ) no-error.
-      if not v-ok then pl-rvd-dens = no.
-      else pl-rvd-dens = logical(v-value) .
-          
-      run placelib_get-attr  ( input {&place-rvd-lvl}
-        ,input bf_rvs-line.obj-code
-        ,input bf_rvs-line.obj-type
-        ,input bf_rvs-line.pl-code
-        ,output v-value
-        ,output v-ok      ) no-error.
-      if not v-ok then pl-rvd-lvl = no.
-      else pl-rvd-lvl = logical(v-value) .
+        ,input c-rvs-doc.fact-date
+        ,input c-rvs-doc.fact-time
+        ,output v-value ) no-error .
+      
+      if v-value = "" then pl-rvd-lvl = false .
+      else pl-rvd-lvl = not logical(v-value) .
   
-      run placelib_get-attr  ( input {&place-rvd-tmp}
+      run c-place_get-attr (input {&place-rvd-tmp}
         ,input bf_rvs-line.obj-code
         ,input bf_rvs-line.obj-type
         ,input bf_rvs-line.pl-code
-        ,output v-value
-        ,output v-ok      ) no-error.
-      if not v-ok then pl-rvd-temp = no.
-      else pl-rvd-temp = logical(v-value) . 
-            
+        ,input c-rvs-doc.fact-date
+        ,input c-rvs-doc.fact-time
+        ,output v-value ) no-error .
+      if v-value = "" then pl-rvd-temp = false .
+      else pl-rvd-temp = not logical(v-value) . 
+      
+      run c-place_get-attr (input {&place-rvd-dnsty}
+        ,input bf_rvs-line.obj-code
+        ,input bf_rvs-line.obj-type
+        ,input bf_rvs-line.pl-code
+        ,input c-rvs-doc.fact-date
+        ,input c-rvs-doc.fact-time
+        ,output v-value ) no-error .
+      if v-value = "" then pl-rvd-dens = false .
+      else pl-rvd-dens = not logical(v-value) .
             
       if pl-rvd-dens or pl-rvd-lvl or pl-rvd-temp then tt-petrol.type_dan = "PВД" .
       else tt-petrol.type_dan = "AВД" .
