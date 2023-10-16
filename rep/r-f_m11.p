@@ -95,6 +95,9 @@ DEFINE VARIABLE sym10 AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL ":":U.
 DEFINE VARIABLE sym11 AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL ":":U.
 DEFINE VARIABLE sym12 AS CHARACTER NO-UNDO FORMAT "x(1)":U INITIAL ":":U.
 
+DEFINE VARIABLE v-host-code AS INTEGER   NO-UNDO.
+DEFINE VARIABLE v-curr-code AS INTEGER   NO-UNDO.
+
 DEFINE VARIABLE v-account   AS CHARACTER NO-UNDO FORMAT "x(7)":U.
 DEFINE VARIABLE v-analytics AS CHARACTER NO-UNDO FORMAT "x(10)":U.
 DEFINE VARIABLE wealth-name AS CHARACTER NO-UNDO FORMAT "x(35)":U.
@@ -303,7 +306,18 @@ DO ON ERROR   UNDO Main-Block, LEAVE Main-Block
 
   IF printrubl
     THEN FIND ub.currency NO-LOCK WHERE ub.currency.curr-code = 0.
-    ELSE FIND ub.currency NO-LOCK WHERE ub.currency.curr-code = 1.
+  ELSE DO:
+    { gbl/hostcode.i
+      buf_doc.obj-type
+      buf_doc.obj-code
+      v-host-code
+    }
+    { gbl/basecode.i
+      v-host-code
+      v-curr-code
+    }
+    FIND ub.currency NO-LOCK WHERE ub.currency.curr-code = v-curr-code.
+  END.
   ASSIGN word-sum = Word-Sum( total-noVAT ).
   ASSIGN word-ord = Word-Sum( DECIMAL( j-order# ) ).
   ASSIGN word-sum = ( IF total-noVAT < 0 THEN "- " ELSE "":U ) + TRIM( word-sum  ) + " ":U + ub.currency.curr-abbr + ". ":U +
