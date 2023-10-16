@@ -511,7 +511,7 @@ for each buf_clients no-lock
                        input parparentproc
                       ,input this-procedure:handle
                       ,input p-log-handle
-                      ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrcdel':U + {&delim-par} + 'Передача справочника ЕМЦ':U
+                      ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U
                       ) no-error.
    run str/send-all.p (
                        input parparentproc
