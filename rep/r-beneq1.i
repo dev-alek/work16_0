@@ -23,7 +23,7 @@ define output parameter AllDay-RublSum as decimal no-undo .
 define output parameter ObjAmount    as      integer no-undo.
 define output parameter ChkAmount    as      integer no-undo.
 
-/*define variable vss-revision    as character no-undo init "$Revision$":U .*/
+define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
