@@ -49,7 +49,7 @@ define stream OutStr-html.
 { gbl/cur-time.i }
 { gbl/prn-lib.i   }
 { rep/html-conv.i }
-{ rep/e-nobenq.i }
+/*{ rep/e-nobenq.i }*/
 
 /* --------------------------------------------------------------------- */
 function putRowAmount1 returns character private

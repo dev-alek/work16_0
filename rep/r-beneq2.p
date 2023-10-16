@@ -103,7 +103,7 @@ CASE  X-Radio-Task > 1:
       all-days_sum.tot-r-b  = (if v-curr-r-b = {&r-b-base}
                               then all-days_sum.tot-base
                               else all-days_sum.tot-rubl)
-      all-days_sum.chk-cnt = acc-day-cnt
+      /* all-days_sum.chk-cnt = acc-day-cnt */
       .
       release all-days_sum.
     END . /*    FOR EACH obj-list WHERE*/
@@ -164,7 +164,7 @@ CASE  X-Radio-Task > 1:
       all-days_sum.tot-r-b  = (if v-curr-r-b = {&r-b-base}
                               then all-days_sum.tot-base
                               else all-days_sum.tot-rubl)
-      all-days_sum.chk-cnt = acc-day-cnt
+   /*   all-days_sum.chk-cnt = acc-day-cnt */
       .
       release all-days_sum.
     END . /*FOR EACH OBJ-list*/

@@ -23,14 +23,14 @@ define output parameter AllDay-RublSum as decimal no-undo .
 define output parameter ObjAmount    as      integer no-undo.
 define output parameter ChkAmount    as      integer no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
+/*define variable vss-revision    as character no-undo init "$Revision$":U .*/
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Заполнение временной таблицы по чекам для отчета о выручке".
 
-/*{ cmp/vssrevis.i }*/
+{ cmp/vssrevis.i }
 
 { cmp/str-glbl.i }
 { cmp/library.i }
