@@ -518,7 +518,7 @@ define frame d-in-line
   vargds-obj-last-rubl                  at row 21.5 col 73
   vargds-obj-cli-type                   at row 22.5 col 2
   vargds-obj-cli-code                   at row 22.5 col 28 no-label
-  vargds-obj-cli-name                   at row 22.5 col 39 no-label
+  vargds-obj-cli-name                   at row 22.5 col 39 no-label  view-as text    size 30   by 1
   tt-fr-doc-line.trk-cli-qnty           at row 22.5 col 69  label "Масса реал-и"
   "Количество"                          at row 4    col 12.5                                           view-as text    size 17    by 1  bgcolor 3 fgcolor 15
   "Ед. изм."                            at row 4    col 28.5                                           view-as text    size 11    by 1  bgcolor 3 fgcolor 15

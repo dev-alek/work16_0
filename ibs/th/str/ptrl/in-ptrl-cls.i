@@ -624,7 +624,9 @@
                   .
                 end.
                 when 3 then do:
-                  return .
+                  assign
+                    varcur-rvs = 3
+                  .
                 end.
               end case. /* varnum */
             end.
@@ -634,91 +636,94 @@
               .
             end.
             
-            if varcur-rvs = 1
-            or ptoldfilvalue <> "yes":u
+            if varcur-rvs <> 3
             then do :
-              { str/anls-pmp.i
-                infoSecsObj:Parentproc
-                buf_rvs-doc.obj-type
-                buf_rvs-doc.obj-code
-                yes
-                tt-pump-nozzle-file
-                tt-pump-nozzle
-                yes
-                ?
-                no-error
-              }
-            end.
-            else do :
-              { str/anls-pmp.i
-                infoSecsObj:Parentproc
-                buf_rvs-doc.obj-type
-                buf_rvs-doc.obj-code
-                yes
-                tt-pump-nozzle-file
-                tt-pump-nozzle
-                no
-                ?
-                no-error
-              }
-            end.
-            
-            for each tt-pump-nozzle :
-              find first tt-pump-nozzle-file where
-                         tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
-                         tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
-                         tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
-                         tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
-              if available tt-pump-nozzle-file
-              then
-              assign
-                tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
-                tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
-                tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
-              .
-            end. /* for each tt-pump-nozzle */
-/*            for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
-/*              v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
-/*            end. /* for each tt-pump-nozzle */                                                                                                        */
-/*            if v-pump-err > ""                                                                                                                        */
-/*            then do :                                                                                                                                 */
-/*              message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
-/*            end .                                                                                                                                     */
-            
-            for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
-                                                 and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
-                                                 and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
-                                                 and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
-                                                 and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
-            :
-              { str/fill1pmp.i
-                "recid( buf_rvs-line-pump )"
-                tt-pump-nozzle
-              }
-            end .
-            
-            for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
-                                                        and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
-                                                        and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
-                                                        and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
-                                                        and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
-            :
-              assign
-                buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
-                buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
-                buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
-                buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
-                buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
-                buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
-                buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
-                buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
-                buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
-                buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
-                buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
-                buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
-                buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
-                buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
-              .
+              if varcur-rvs = 1
+              or ptoldfilvalue <> "yes":u
+              then do :
+                { str/anls-pmp.i
+                  infoSecsObj:Parentproc
+                  buf_rvs-doc.obj-type
+                  buf_rvs-doc.obj-code
+                  yes
+                  tt-pump-nozzle-file
+                  tt-pump-nozzle
+                  yes
+                  ?
+                  no-error
+                }
+              end.
+              else do :
+                { str/anls-pmp.i
+                  infoSecsObj:Parentproc
+                  buf_rvs-doc.obj-type
+                  buf_rvs-doc.obj-code
+                  yes
+                  tt-pump-nozzle-file
+                  tt-pump-nozzle
+                  no
+                  ?
+                  no-error
+                }
+              end.
+              
+              for each tt-pump-nozzle :
+                find first tt-pump-nozzle-file where
+                           tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
+                           tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
+                           tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
+                           tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
+                if available tt-pump-nozzle-file
+                then
+                assign
+                  tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
+                  tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
+                  tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
+                .
+              end. /* for each tt-pump-nozzle */
+  /*            for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
+  /*              v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
+  /*            end. /* for each tt-pump-nozzle */                                                                                                        */
+  /*            if v-pump-err > ""                                                                                                                        */
+  /*            then do :                                                                                                                                 */
+  /*              message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
+  /*            end .                                                                                                                                     */
+              
+              for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                   and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                   and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                   and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                   and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                { str/fill1pmp.i
+                  "recid( buf_rvs-line-pump )"
+                  tt-pump-nozzle
+                }
+              end .
+              
+              for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                          and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                          and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                          and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                          and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                assign
+                  buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
+                  buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                  buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
+                  buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+                  buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
+                  buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
+                  buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
+                  buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
+                  buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
+                  buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
+                  buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
+                  buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
+                  buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
+                  buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
+                .
+              end .
             end .
           end .
           

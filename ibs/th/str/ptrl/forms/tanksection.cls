@@ -383,7 +383,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end.
     
     infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
-    groupBox5:Enabled   = not groupBox5:Enabled .
+    groupBox5:Enabled               = yes .
     dateTimePickerDateStart:Enabled = yes .
     dateTimePickerDateStart:Checked = yes .
     dateTimePickerDateStart:Focus() .
@@ -407,7 +407,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       blank_datetime (dateTimePickerTimeStart).
     end.
     dateTimePickerTimeStart:Enabled = no .
-    groupBox5:Enabled   = not groupBox5:enabled .
+    groupBox5:Enabled               = no .
     
   end method .
   
@@ -450,7 +450,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end.
     
     infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
-    groupBox5:Enabled   = not groupBox5:Enabled .
+    groupBox5:Enabled               = yes .
     dateTimePickerDateStart:Enabled = yes .
     dateTimePickerDateStart:Checked = yes .
     dateTimePickerDateStart:Focus() .
@@ -474,7 +474,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       blank_datetime (dateTimePickerTimeStart).
     end.
     dateTimePickerTimeStart:Enabled = no .
-    groupBox5:Enabled   = not groupBox5:enabled .
+    groupBox5:Enabled               = no .
     
     if infoSecsObj:petrol_block-nozzle
     then do :
@@ -603,7 +603,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end.
     
     infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
-    groupBox5:Enabled     = not groupBox5:Enabled .
+    groupBox5:Enabled                 = yes .
     dateTimePickerDateEnd:Enabled     = yes .
     dateTimePickerDateEnd:Checked     = yes .
     dateTimePickerDateEnd:Focus() .
@@ -625,7 +625,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       blank_datetime (dateTimePickerTimeEnd).
     end.
     dateTimePickerTimeEnd:Enabled     = no .
-    groupBox5:Enabled     = not groupBox5:Enabled .
+    groupBox5:Enabled                 = no .
     
     if infoSecsObj:petrol_block-nozzle
     then do :
@@ -726,7 +726,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end.
     
     infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
-    groupBox5:Enabled     = not groupBox5:Enabled .
+    groupBox5:Enabled                 = yes .
     dateTimePickerDateEnd:Enabled     = yes .
     dateTimePickerDateEnd:Checked     = yes .
     dateTimePickerDateEnd:Focus() .
@@ -748,7 +748,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       blank_datetime (dateTimePickerTimeEnd).
     end.
     dateTimePickerTimeEnd:Enabled     = no .
-    groupBox5:Enabled     = not groupBox5:Enabled .
+    groupBox5:Enabled                 = no .
     
     if infoSecsObj:petrol_block-nozzle
     then do :
