@@ -294,6 +294,17 @@ on error undo, return error return-value
         buf_trn-doc.shift-date = ub.shift-obj.shift-date
       .
     end.
+    /* для внутреннего прихода заполняем атрибут Прочие перемещения */
+    { str/tdat-wrt.i 
+             buf_trn-doc.doc-code
+             {&trdcattr-othermoves}
+             "yes" 
+             no-error }
+     if error-status:error then do :
+       v-end-message = substitute(" Ошибка записи атрибута документа &1 &2" , error-status :get-message(1)  , return-value) .
+       run pcall-log-file in parparentproc ( input v-end-message ) .
+       undo, return error v-end-message.
+     end.
   end .
     
   for each TempDocMark where TempDocMark.in-doc-id > ""

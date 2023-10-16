@@ -254,6 +254,7 @@ define variable trn-type as integer no-undo init 0.
 define variable Tree                 as class     tree         no-undo .
 define variable v-is-return          as logical   no-undo init no .
 define variable varpart-rec          as   recid                      no-undo.
+define variable vExist as logical no-undo.
 
 define new shared temp-table tt-doc-pl no-undo
 field pl-code as integer format "99999999999"
@@ -4099,7 +4100,15 @@ end.
           disable r-reas r-clients t-doc.cli-code b-cur r-outs with frame {&frame-name}.
         end .
       end .
-      
+  /* Если внутренний приход или расход, то предустанавливаем "Прочие перемещения НП" = yes */    
+  if pardoc-mode = {&add-def} and
+     (t-doc.ext-doc-type = {&TDEDT_Pri_Perem} or
+      t-doc.ext-doc-type = {&TDEDT_Ras_Perem}) then do:
+      run create-record in this-procedure (  input t-doc.doc-code
+                                           , input {&trdcattr-othermoves}
+                                           , input "yes":U
+                                           , output vExist ) .
+  end.       
 if pardoc-mode = {&add-def} then do:
   wait-for go of frame {&frame-name} focus t-doc.cli-code.
 end.

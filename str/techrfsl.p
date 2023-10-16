@@ -43,11 +43,11 @@ define variable vss-description as character no-undo init "Создание приходного д
 { str/lib-trn.i }
 { str/lib-def.i }
 { cmp/gds-list.i gds-list def "new shared" }
-{ str/saledoc.i " " }
 { cmp/croslist.i }
 { ref/gdsoattr.i }
 { str/placelib.i }
 { str/trdcalib.i }
+{ str/saledoc.i " " }
 
 define variable v-mes as character no-undo .
 define variable v-out-pay         as integer   no-undo .
@@ -481,6 +481,15 @@ on error undo, return error return-value :
        {&trdcattr-is-auto-trn}
        "yes" 
     no-error}
+    
+    /* Для техпролива устанавливаем атрибут "Прочие перемещения НП" = yes */
+    if p-doc-kind = {&sale-add-tech-refuell} then do:
+       { str/tdat-wrt.i                                    
+          buf-new_trn-doc.doc-code
+          {&trdcattr-othermoves}
+          "yes" 
+       no-error}
+    end.
     
     run saledoc-create  in this-procedure (
                                             input buf_trn-doc.out-code

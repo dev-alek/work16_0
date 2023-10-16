@@ -1224,7 +1224,7 @@ define variable fi-raschet-header as character format "x(20)":U initial "РАСЧЁТ 
      size 20.9 by 0.60
      bgcolor cyan_color fgcolor white_color .
 
-define variable t-othermoves as logical
+define variable t-othermoves as logical 
      LABEL "Прочие перемещения НП" 
      VIEW-AS TOGGLE-BOX
      SIZE 30 BY .77 NO-UNDO.
@@ -2459,17 +2459,27 @@ define variable p-type  as character no-undo.
   assign
     rsn-name = ( if available bf_trn-reason then bf_trn-reason.reason-name else "":U )
   .
-  
-  t-othermoves = no .
-  { str/tdat-val.i t-doc.doc-code
-                   {&trdcattr-othermoves}
-                   p-value
-                   p-type              }
-  if p-value > ""
-  then
-    t-othermoves = logical(p-value)
-  .                
-
+  if pardoc-mode = {&add-def} 
+  then do:
+     t-othermoves = yes.
+     { str/tdat-wrt.i
+         t-doc.doc-code
+         {&trdcattr-othermoves}
+         string(t-othermoves)
+         no-error
+     }
+  end.   
+  else do:
+     t-othermoves = no .
+     { str/tdat-val.i t-doc.doc-code
+                      {&trdcattr-othermoves}
+                      p-value
+                      p-type              }
+     if p-value > ""
+     then
+       t-othermoves = logical(p-value)
+     .    
+  end. 
   display t-doc.tot-doc t-doc.tot-rubl t-doc.fact-base
           t-doc.fact-rubl t-doc.fact-qnty dif-only varinvclcwtol varinvclcasol
           vardocextra-qnty vardocextra-base vardocextra-rubl vardocextra-rb
