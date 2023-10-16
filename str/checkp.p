@@ -447,7 +447,7 @@ FOR EACH chk-pay No-LOCK WHERE
       '<TD text_wrap="true" colspan="2" style="text-align: center; border: 1px solid black;">' + string(chk-pay.curr-code) + '</TD>' skip
       '<TD text_wrap="true" colspan="2" style="text-align: center; border: 1px solid black;">' + if available (currency) then currency.curr-name + '</TD>' else "ÍÅÎÏÎÇÍÀÍÍÀß ÂÀËŞÒÀ" + '</TD>' skip
       '<TD text_wrap="true" colspan="2" style="text-align: center; border: 1px solid black;">' + string(chk-pay.pay-code) + '</TD>' skip
-      '<TD text_wrap="true" colspan="3" style="text-align: center; border: 1px solid black;">' + if available (cash-pay) then cash-pay.obj-name + '</TD>' else "ÍÅÎÏÎÍÀÍÍÀß ÎÏËÀÒÀ" + '</TD>' skip
+      '<TD text_wrap="true" colspan="3" style="text-align: center; border: 1px solid black;">' + if available (cash-pay) then cash-pay.obj-name + '</TD>' else "ÍÅÎÏÎÇÍÀÍÍÀß ÎÏËÀÒÀ" + '</TD>' skip
       '<TD text_wrap="true" colspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-pay.tot-sum,"->>>>>>>>>>>9.99") + '</TD>' skip
       '<TD text_wrap="true" colspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-pay.tot-base,"->>>>>>>>>>>9.99") + '</TD>' skip
       '<TD text_wrap="true" colspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-pay.tot-rubl,"->>>>>>>>>>>9.99") + '</TD>' skip
