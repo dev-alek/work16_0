@@ -1,4 +1,3 @@
-
 define input  parameter iUtil as class ibs.th.utl.method-for-draw-utility no-undo.
 define input  parameter iCode as integer no-undo.
 define input  parameter ireclist as char no-undo.
@@ -15,6 +14,11 @@ define input  parameter ireclist as char no-undo.
 10 Маски карт переданы на кассы
 11 Справочник ОСС удалены с касс
 12 Справочник ОСС переданы на кассы
+
+16 ЕМС удалены с касс
+17 ЕМС переданы на кассы
+
+
 */
 define variable mAnswer as character  no-undo.
 {cmp/str-glbl.i}
@@ -98,6 +102,33 @@ else if iCode eq 15
 then do:
   run str/sendcashcomm.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U","execute","dbClear",ireclist).
 end.
+
+else if iCode eq 16
+then do:
+ run str/diallog.w (
+        input iUtil:parparentproc
+      , input this-procedure
+      , input "str/send-all.p":U
+      , input ( iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
+      , input ? /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка очистки справочника ЕМЦ")
+  ) no-error.
+end.
+
+else if iCode eq 17
+then do:
+ run str/diallog.w (
+        input iUtil:parparentproc
+      , input this-procedure
+      , input "str/send-all.p":U
+      , input ( iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
+      , input ? /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка справочника ЕМЦ")
+  ) no-error.
+end.
+
 
 unsubscribe to "ResponseToQuestion".
 
