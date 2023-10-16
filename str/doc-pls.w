@@ -1194,6 +1194,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable v-column-handle as   handle            no-undo .
   define variable v-for-upd-units as   character         no-undo .
   define variable v-loc1          like ub.place.loc1     no-undo .
+  define variable v-pl-fact-qnty  as   decimal           no-undo . 
+  define variable v-pl-cli-fact-qnty  as   decimal       no-undo . 
 
   assign /* это нужно для устранения глюка прогресса всязанного с передачей параметров - обрезаем все переменные соответственно их decimals */
     p-doc-line-cli-base-rate    = p-doc-line-cli-base-rate
@@ -1555,10 +1557,27 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             end case.
           end.
         end.
-
         if v-mode = {&autoupdate} then do:
           return .
         end.
+      end. /* if v-single-place = true */
+      
+      if v-mode = {&autoupdate} then do:
+        assign
+          v-pl-fact-qnty      = 0
+          v-pl-cli-fact-qnty  = 0
+        .
+        for each tt-doc-pl :
+          assign
+            v-pl-fact-qnty = v-pl-fact-qnty + tt-doc-pl.fact-qnty
+            v-pl-cli-fact-qnty = v-pl-cli-fact-qnty + tt-doc-pl.cli-fact-qnty
+          .
+        end .
+        if abs(p-doc-line-fact-qnty - v-pl-fact-qnty) <= 0.001
+        and abs(p-doc-line-fact-cli-qnty - v-pl-cli-fact-qnty) <= 0.001
+        then do :
+          return .
+        end .
       end.
     end.
     else do:

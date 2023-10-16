@@ -3397,9 +3397,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void maskedTextBoxSecName_Leave( input sender as System.Object, input e as System.EventArgs ):
-    def var ii as int no-undo.
+    define variable ii as integer no-undo.
     
-    def var v-maskTextBox as System.Windows.Forms.MaskedTextBox no-undo.
+    define variable v-maskTextBox as System.Windows.Forms.MaskedTextBox no-undo.
+    
+    define buffer buf_auto-section for ub.auto-section .
+    define buffer sec_auto-section for ub.auto-section .
     
     v-maskTextBox = cast(sender, System.Windows.Forms.MaskedTextBox).
     
@@ -3418,10 +3421,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       v-maskTextBox:Focus().
       return.
     end.
-    find first ub.auto-section no-lock where ub.auto-section.auto-num = infoSecsObj:InfoSectionCurr:infoSectionTotal:CarNum
-                                         and ub.auto-section.section-num = integer(v-maskTextBox:Text)
-                                         no-error .
-    if available ub.auto-section   
+    
+    find first buf_auto-section no-lock where buf_auto-section.auto-num = infoSecsObj:InfoSectionCurr:infoSectionTotal:CarNum no-error .
+    find first sec_auto-section no-lock where sec_auto-section.auto-num = infoSecsObj:InfoSectionCurr:infoSectionTotal:CarNum
+                                          and sec_auto-section.section-num = integer(v-maskTextBox:Text)
+                                          no-error .
+    if available sec_auto-section   
     then do : 
       infoSecsObj:GetInfoSectionProp(idSecTabPage).  
       infoSecsObj:InfoSectionCurr:SetCarVol(maskedTextBoxSecName:Text).
@@ -3433,6 +3438,16 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       /*if infoSecsObj:DocQntyInput
         then maskedTextBoxDocQnty:Text = format_round_3(infoSecsObj:InfoSectionCurr:DocQnty).*/
       maskedTextBoxCarVol:Text = format_round_3(infoSecsObj:InfoSectionCurr:CarVol).
+    end .
+    else do :
+      if available buf_auto-section
+      and v-maskTextBox:Text > ""
+      then do :
+        message ("В АЦ с номером " + infoSecsObj:InfoSectionCurr:infoSectionTotal:CarNum + " не найдена секция " + v-maskTextBox:Text) view-as alert-box title "Сообщение".
+        v-maskTextBox:Text = "".
+        v-maskTextBox:Focus().
+        return .
+      end .
     end .
     
     tanksecsObj:SetSecName (v-maskTextBox:Text).

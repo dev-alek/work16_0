@@ -599,6 +599,21 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
   method private void toolSBtn_Ok_Click( input sender as System.Object, input e as System.EventArgs ):
 
     define variable ii as integer no-undo .
+    define variable v-idSel as int no-undo.
+    define variable tabsel as TabPage no-undo.
+    
+    tabsel = tabControl:SelectedTab.
+    v-idSel = integer (tabsel:Name).
+    
+    tankSectionControl[v-idSel]:SetInfoSec().
+    
+    do ii = 1 to extent (tankSectionControl):
+      if not valid-object (tankSectionControl[ii]) or tankSectionControl[ii]:idSecTabPage = tankSectionControl[infoSecsObj:idSecCurr]:idSecTabPage 
+        then next.
+
+      tankSectionControl[ii]:GetAukKey(infoSecsObj:InfoSectionCurr:AukKey, infoSecsObj:InfoSectionCurr:alarm-SGDKK).  
+
+    end.
     
     do ii = 1 to infoSecsObj:SectionNum:
       if not tankSectionControl[ii]:CheckSec(yes)
@@ -608,6 +623,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     do ii = 1 to infoSecsObj:SectionNum:
       tankSectionControl[ii]:SetInfoSec().
     end.
+    
 /*    infoSecsObj:SaveDB() .*/
     infoSecsObj:WasSetting = true.
     vClickSave = yes .

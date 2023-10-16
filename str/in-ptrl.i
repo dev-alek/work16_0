@@ -156,6 +156,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       define  input parameter p-doc-code            like ub.trn-doc.doc-code            no-undo .
       define  input parameter p-gds-code            like ub.goods.gds-code              no-undo .
       define  input parameter p-sec-name            as character                        no-undo .
+      define  input parameter p-loc1                as character                        no-undo .
       define output parameter p-rvs-qnty-before     like ub.rvs-line.state-measure-qnty no-undo .
       define output parameter p-rvs-qnty-after      like ub.rvs-line.state-measure-qnty no-undo .
       define output parameter p-rvs-cli-qnty-before like ub.rvs-line.state-measure-cli-qnty no-undo .
@@ -165,6 +166,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       define buffer bf_aft_rvs-doc  for ub.rvs-doc  .
       define buffer bf_bef_rvs-line for ub.rvs-line .
       define buffer bf_aft_rvs-line for ub.rvs-line .
+      define buffer bf_place        for ub.place .
       
       assign
         p-rvs-qnty-before     = 0.0
@@ -186,11 +188,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       end .
       if available bf_bef_rvs-doc
       then do :
-        for each bf_bef_rvs-line no-lock
+        for first bf_place no-lock where bf_place.obj-type = bf_bef_rvs-doc.obj-type
+                                     and bf_place.obj-code = bf_bef_rvs-doc.obj-code
+                                     and bf_place.loc1     = p-loc1
+                                     and bf_place.status_  = "",
+        each bf_bef_rvs-line no-lock
           where bf_bef_rvs-line.rvs-code = bf_bef_rvs-doc.rvs-code
             and bf_bef_rvs-line.obj-type = bf_bef_rvs-doc.obj-type
             and bf_bef_rvs-line.obj-code = bf_bef_rvs-doc.obj-code
             and bf_bef_rvs-line.gds-code = p-gds-code
+            and bf_bef_rvs-line.pl-code  = bf_place.pl-code
         :
           assign
             p-rvs-qnty-before     = p-rvs-qnty-before     + bf_bef_rvs-line.state-measure-qnty
@@ -213,11 +220,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       end .
       if available bf_aft_rvs-doc
       then do :
-        for each bf_aft_rvs-line no-lock
+        for first bf_place no-lock where bf_place.obj-type = bf_aft_rvs-doc.obj-type
+                                     and bf_place.obj-code = bf_aft_rvs-doc.obj-code
+                                     and bf_place.loc1     = p-loc1
+                                     and bf_place.status_  = "",
+        each bf_aft_rvs-line no-lock
           where bf_aft_rvs-line.rvs-code = bf_aft_rvs-doc.rvs-code
             and bf_aft_rvs-line.obj-type = bf_aft_rvs-doc.obj-type
             and bf_aft_rvs-line.obj-code = bf_aft_rvs-doc.obj-code
             and bf_aft_rvs-line.gds-code = p-gds-code
+            and bf_aft_rvs-line.pl-code  = bf_place.pl-code
         :
           assign
             p-rvs-qnty-after     = p-rvs-qnty-after     + bf_aft_rvs-line.state-measure-qnty
@@ -886,7 +898,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                                    and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
                                                    and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
                                                    and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
-                                                   and bf_pump-nozzle.is-meas     = yes                                     
+/*                                                   and bf_pump-nozzle.is-meas     = yes*/
                     :
                       create tt-pump-nozzle.
                       assign
@@ -938,7 +950,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                              and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
                                              and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
                                              and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
-                                             and bf_pump-nozzle.is-meas     = yes                                     
+/*                                             and bf_pump-nozzle.is-meas     = yes*/
               :
                 create tt-pump-nozzle.
                 assign
@@ -1550,12 +1562,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           do ii = 1 to infoSectionsTotal:SectionNum :
             infoSectionsTotal:GetInfoSectionProp(ii).
             if infoSectionsTotal:InfoSectionCurr:ListTank <> buf_place.loc1 then next .
-            if infoSectionsTotal:InfoSectionCurr:AccMeth = 1 then next .
             
-            infoSectionsTotal:InfoSectionCurr:DateStart = v-prt-start-real-date . 
-            infoSectionsTotal:InfoSectionCurr:DateEnd   = v-prt-end-real-date . 
-            infoSectionsTotal:InfoSectionCurr:TimeStart = v-prt-start-real-time . 
-            infoSectionsTotal:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
+            if p-rvs-type = {&rvs-before-doc}
+            then do:
+              infoSectionsTotal:InfoSectionCurr:DateStart = v-prt-start-real-date .
+              infoSectionsTotal:InfoSectionCurr:TimeStart = v-prt-start-real-time . 
+            end .
+            else do :
+              infoSectionsTotal:InfoSectionCurr:DateEnd   = v-prt-end-real-date .
+              infoSectionsTotal:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
+            end .
           end.
         end .
         infoSectionsTotal:SaveDB().
@@ -2006,6 +2022,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     (  input p-doc-code
                       ,input p-gds-code
                       ,input infoSectionObj:SectionName
+                      ,input infoSectionObj:ListTank
                       ,output v-rvs-sec-qnty-before
                       ,output v-rvs-sec-qnty-after
                       ,output v-rvs-sec-cli-qnty-before
@@ -2077,6 +2094,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                       (  input p-doc-code
                         ,input p-gds-code
                         ,input infoSectionObj:SectionName
+                        ,input infoSectionObj:ListTank
                         ,output v-rvs-sec-qnty-before
                         ,output v-rvs-sec-qnty-after
                         ,output v-rvs-sec-cli-qnty-before
@@ -2208,18 +2226,38 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 or v-new-density <> p-new-density
               then do:
                 if p-fact-edit = true then do:
-                  message
-                    substitute( "По результатам измерения автоцистерны фактическое кол-во необходимо изменить." ) skip
-                    substitute( "Будем менять фактические" ) skip
-                    substitute( "количество на &1 (&2),", v-new-fact-qnty, buf_goods.unit-base ) skip
-                    substitute( "плотность на &1 ?", v-new-density ) skip
+                  if infoSectionsTotal:isKPrvs
+                  then do :
+                    message
+                      substitute( "По результатам измерения в резервуаре фактическое кол-во необходимо изменить." ) skip
+                      substitute( "Будем менять фактические" ) skip
+                      substitute( "количество на &1 (&2),", (v-new-fact-qnty * v-new-density), "кг" ) skip
+                      substitute( "плотность на &1 ?", v-new-density ) skip
                     view-as alert-box question buttons yes-no update v-log .
+                  end .
+                  else do :
+                    message
+                      substitute( "По результатам измерения автоцистерны фактическое кол-во необходимо изменить." ) skip
+                      substitute( "Будем менять фактические" ) skip
+                      substitute( "количество на &1 (&2),", (v-new-fact-qnty * v-new-density), "кг" ) skip
+                      substitute( "плотность на &1 ?", v-new-density ) skip
+                    view-as alert-box question buttons yes-no update v-log .
+                  end .  
                 end.
                 else do:
-                  message
-                    substitute( "По результатам измерения фактическое кол-во товара изменяется на &1 (&2),", v-new-fact-qnty, buf_goods.unit-base ) skip
-                    substitute( "фактическая плотность на &1.", v-new-density ) skip
+                  if infoSectionsTotal:isKPrvs
+                  then do :
+                    message
+                      substitute( "По результатам измерения в резервуаре фактическое кол-во товара изменяется на &1 (&2),", (v-new-fact-qnty * v-new-density), "кг" ) skip
+                      substitute( "фактическая плотность на &1.", v-new-density ) skip
                     view-as alert-box information .
+                  end .
+                  else do :
+                    message
+                      substitute( "По результатам измерения автоцистерны фактическое кол-во товара изменяется на &1 (&2),", (v-new-fact-qnty * v-new-density), "кг" ) skip
+                      substitute( "фактическая плотность на &1.", v-new-density ) skip
+                    view-as alert-box information .
+                  end .
                 end.
               end.
               if v-log = yes then do:
@@ -2244,6 +2282,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
       do
       on error undo, return error return-value
       :
+        define variable v-found as logical no-undo .       
+        
         define buffer buf-before_rvs-doc  for ub.rvs-doc  .
         define buffer buf-before_rvs-line for ub.rvs-line .
         define buffer buf-after_rvs-doc   for ub.rvs-doc  .
@@ -2282,6 +2322,26 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               and buf-before_rvs-line.gds-code = tt-doc-pl.gds-code
             no-error .
           if not available buf-before_rvs-line then do:
+            assign v-found = no .
+            for each buf-before_rvs-doc no-lock
+              where buf-before_rvs-doc.rvs-type = {&rvs-before-doc}
+                and buf-before_rvs-doc.out-code = p-doc-code
+            :
+              find first buf-before_rvs-line no-lock
+                where buf-before_rvs-line.rvs-code = buf-before_rvs-doc.rvs-code
+                  and buf-before_rvs-line.obj-type = buf-before_rvs-doc.obj-type
+                  and buf-before_rvs-line.obj-code = buf-before_rvs-doc.obj-code
+                  and buf-before_rvs-line.pl-code  = tt-doc-pl.pl-code
+                  and buf-before_rvs-line.gds-code = tt-doc-pl.gds-code
+                no-error .
+              if available buf-before_rvs-line
+              then do :
+                assign v-found = yes .
+                leave .
+              end .
+            end .
+            if not v-found 
+            then
             return substitute( 'По документу "&1" для товара &2 на месте хранения &3 нет строки сверки <<до налива топлива>>.'
                                ,p-doc-code
                                ,p-gds-code
@@ -2296,6 +2356,26 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               and buf-after_rvs-line.gds-code = tt-doc-pl.gds-code
             no-error .
           if not available buf-after_rvs-line then do:
+            assign v-found = no .
+            for each buf-after_rvs-doc no-lock
+              where buf-after_rvs-doc.rvs-type = {&rvs-after-doc}
+                and buf-after_rvs-doc.out-code = p-doc-code
+            :
+              find first buf-after_rvs-line no-lock
+                where buf-after_rvs-line.rvs-code = buf-after_rvs-doc.rvs-code
+                  and buf-after_rvs-line.obj-type = buf-after_rvs-doc.obj-type
+                  and buf-after_rvs-line.obj-code = buf-after_rvs-doc.obj-code
+                  and buf-after_rvs-line.pl-code  = tt-doc-pl.pl-code
+                  and buf-after_rvs-line.gds-code = tt-doc-pl.gds-code
+                no-error .
+              if available buf-after_rvs-line
+              then do :
+                assign v-found = yes .
+                leave .
+              end .
+            end .
+            if not v-found 
+            then
             return substitute( 'По документу "&1" для товара &2 на месте хранения &3 нет строки сверки <<после налива топлива>>.'
                                ,p-doc-code
                                ,p-gds-code
@@ -3335,7 +3415,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 then do :
                   for each tt-place-sec where tt-place-sec.pl-code = buf_doc-pl.pl-code
                   :
-                    if (tt-place-sec.own-rvs and num-entries(buf_rvs-doc.rvs-code, "-") = 3)
+                    if (tt-place-sec.own-rvs and num-entries(buf_rvs-doc.rvs-code, "-") = 3 and lookup(entry(2, buf_rvs-doc.rvs-code, "-"), tt-place-sec.secs) > 0)
                     or (not tt-place-sec.own-rvs and num-entries(buf_rvs-doc.rvs-code, "-") = 2)
                     then do :
                       assign

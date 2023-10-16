@@ -242,49 +242,57 @@ def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@
       define buffer aft_rvs-line for ub.rvs-line .
 
       assign
-        p-state-measure-qnty     = ?
-        p-measure-qnty           = ?
-        p-state-measure-cli-qnty = ?
-        p-measure-cli-qnty       = ?
+        p-state-measure-qnty     = 0
+        p-measure-qnty           = 0
+        p-state-measure-cli-qnty = 0
+        p-measure-cli-qnty       = 0
         p-label                  = "":U
       .
 
       case buf_trn-doc.doc-type :
         when {&income} then do:
-          find first bef_rvs-doc no-lock
+          for each bef_rvs-doc no-lock
             where bef_rvs-doc.out-code  = p-doc-code
               and bef_rvs-doc.rvs-type  = {&rvs-before-doc}
-            no-error .
-          find first bef_rvs-line no-lock
-            where bef_rvs-line.rvs-code = bef_rvs-doc.rvs-code
-              and bef_rvs-line.obj-type = bef_rvs-doc.obj-type
-              and bef_rvs-line.obj-code = bef_rvs-doc.obj-code
-              and bef_rvs-line.pl-code  = p-pl-code
-              and bef_rvs-line.gds-code = p-gds-code
-            no-error .
-          find first aft_rvs-doc no-lock
+          :
+            for each bef_rvs-line no-lock
+              where bef_rvs-line.rvs-code = bef_rvs-doc.rvs-code
+                and bef_rvs-line.obj-type = bef_rvs-doc.obj-type
+                and bef_rvs-line.obj-code = bef_rvs-doc.obj-code
+                and bef_rvs-line.pl-code  = p-pl-code
+                and bef_rvs-line.gds-code = p-gds-code
+            :  
+              assign
+                p-state-measure-qnty     = p-state-measure-qnty     - bef_rvs-line.state-measure-qnty
+                p-measure-qnty           = p-measure-qnty           - bef_rvs-line.measure-qnty
+                p-state-measure-cli-qnty = p-state-measure-cli-qnty - bef_rvs-line.state-measure-cli-qnty
+                p-measure-cli-qnty       = p-measure-cli-qnty       - bef_rvs-line.measure-cli-qnty
+              .
+            end .
+          end .
+          for each aft_rvs-doc no-lock
             where aft_rvs-doc.out-code  = p-doc-code
               and aft_rvs-doc.rvs-type  = {&rvs-after-doc}
-            no-error .
-          find first aft_rvs-line no-lock
-            where aft_rvs-line.rvs-code = aft_rvs-doc.rvs-code
-              and aft_rvs-line.obj-type = aft_rvs-doc.obj-type
-              and aft_rvs-line.obj-code = aft_rvs-doc.obj-code
-              and aft_rvs-line.pl-code  = p-pl-code
-              and aft_rvs-line.gds-code = p-gds-code
-            no-error .
-          if available bef_rvs-line
-            and available aft_rvs-line
-          then do:
-            assign
-              p-state-measure-qnty     = aft_rvs-line.state-measure-qnty     - bef_rvs-line.state-measure-qnty
-              p-measure-qnty           = aft_rvs-line.measure-qnty           - bef_rvs-line.measure-qnty
-              p-state-measure-cli-qnty = aft_rvs-line.state-measure-cli-qnty - bef_rvs-line.state-measure-cli-qnty
-              p-measure-cli-qnty       = aft_rvs-line.measure-cli-qnty       - bef_rvs-line.measure-cli-qnty
-              p-state-density          = p-state-measure-cli-qnty / p-state-measure-qnty
-              p-measure-density        = p-measure-cli-qnty / p-measure-qnty
-            .
-          end.
+          :
+            for each aft_rvs-line no-lock
+              where aft_rvs-line.rvs-code = aft_rvs-doc.rvs-code
+                and aft_rvs-line.obj-type = aft_rvs-doc.obj-type
+                and aft_rvs-line.obj-code = aft_rvs-doc.obj-code
+                and aft_rvs-line.pl-code  = p-pl-code
+                and aft_rvs-line.gds-code = p-gds-code
+            :
+              assign
+                p-state-measure-qnty     = p-state-measure-qnty     + aft_rvs-line.state-measure-qnty
+                p-measure-qnty           = p-measure-qnty           + aft_rvs-line.measure-qnty
+                p-state-measure-cli-qnty = p-state-measure-cli-qnty + aft_rvs-line.state-measure-cli-qnty
+                p-measure-cli-qnty       = p-measure-cli-qnty       + aft_rvs-line.measure-cli-qnty
+              .
+            end.
+          end .
+          assign
+            p-state-density          = p-state-measure-cli-qnty / p-state-measure-qnty
+            p-measure-density        = p-measure-cli-qnty / p-measure-qnty
+          .
           assign
             p-label = "По сверкам":U
           .
