@@ -1,7 +1,7 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI ADM1
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS F-Frame-Win 
 /*
 
 $Revision$
@@ -57,12 +57,11 @@ define shared variable cas-shft as logical no-undo init no.
 DEFINE VARIABLE HowBreak        as logical     no-undo.
 DEFINE VARIABLE my-SET_val_TYPE as integer no-undo.
 
-
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -71,13 +70,13 @@ DEFINE VARIABLE my-SET_val_TYPE as integer no-undo.
 
 &Scoped-define ADM-CONTAINER FRAME
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME F-Main
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-detail RECT-method RECT-3 RS-by ~
-RS-method RS-cass
-&Scoped-Define DISPLAYED-OBJECTS RS-by RS-method RS-cass
+RS-method RS-cass 
+&Scoped-Define DISPLAYED-OBJECTS RS-by RS-method RS-cass 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -91,69 +90,70 @@ RS-method RS-cass
 
 
 /* Definitions of the field level widgets                               */
-DEFINE VARIABLE Cas-Num AS INTEGER FORMAT ">>9":U INITIAL 0
-     LABEL "N"
-     VIEW-AS FILL-IN
-     SIZE 4.5 BY 1 NO-UNDO.
+DEFINE VARIABLE Cas-Num AS INTEGER FORMAT ">>9":U INITIAL 0 
+     LABEL "N" 
+     VIEW-AS FILL-IN 
+     SIZE 4.6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE RS-by AS INTEGER
+DEFINE VARIABLE RS-by AS INTEGER 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Без разбиения", 0,
 "C разбиением по дням", 1,
-"C разбиением по кассам", 2
-     SIZE 24.63 BY 3.13 NO-UNDO.
+"C разбиением по кассам", 2,
+"С разбиением по товарам", 3
+     SIZE 31.8 BY 3.81 NO-UNDO.
 
-DEFINE VARIABLE RS-cass AS CHARACTER INITIAL "all"
+DEFINE VARIABLE RS-cass AS CHARACTER INITIAL "all" 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", "all":U,
 "Выборочно", "selective":U
-     SIZE 14.75 BY 1.79 NO-UNDO.
+     SIZE 14.8 BY 1.81 NO-UNDO.
 
-DEFINE VARIABLE RS-method AS CHARACTER INITIAL "chk-doc"
+DEFINE VARIABLE RS-method AS CHARACTER INITIAL "chk-doc" 
      VIEW-AS RADIO-SET VERTICAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Отчет о продаже", "inkas":U,
 "Чеки", "chk-doc":U
-     SIZE 25.88 BY 2.08 NO-UNDO.
+     SIZE 25.8 BY 2.1 NO-UNDO.
 
 DEFINE RECTANGLE RECT-3
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 35.5 BY 3.46.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 35.6 BY 3.48.
 
 DEFINE RECTANGLE RECT-detail
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 36.13 BY 5.63.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 36.2 BY 5.86.
 
 DEFINE RECTANGLE RECT-method
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
-     SIZE 35.88 BY 3.71.
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 35.8 BY 3.71.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
-     RS-by AT ROW 2.71 COL 4.25 NO-LABEL
-     RS-method AT ROW 8.5 COL 4.25 NO-LABEL
-     RS-cass AT ROW 12.25 COL 4.25 NO-LABEL
-     Cas-Num AT ROW 12.88 COL 28.75 COLON-ALIGNED
+     RS-by AT ROW 2.71 COL 4.2 NO-LABEL
+     RS-method AT ROW 8.91 COL 4 NO-LABEL
+     RS-cass AT ROW 12.67 COL 4 NO-LABEL
+     Cas-Num AT ROW 13.29 COL 28.6 COLON-ALIGNED
      "Кассы" VIEW-AS TEXT
-          SIZE 21.38 BY 1 AT ROW 11.25 COL 4.25
-          FGCOLOR 4
+          SIZE 21.4 BY 1 AT ROW 11.67 COL 4
+          FGCOLOR 4 
      "Детализация" VIEW-AS TEXT
-          SIZE 27.88 BY 1 AT ROW 1.42 COL 4.25
-          FGCOLOR 4
+          SIZE 27.8 BY 1 AT ROW 1.43 COL 4.2
+          FGCOLOR 4 
      "Метод формирования" VIEW-AS TEXT
-          SIZE 23.75 BY .96 AT ROW 7.42 COL 4.25
-          FGCOLOR 4
-     RECT-detail AT ROW 1.13 COL 2.25
-     RECT-method AT ROW 7.08 COL 2.25
-     RECT-3 AT ROW 11.04 COL 2.25
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
-         SIDE-LABELS NO-UNDERLINE THREE-D
+          SIZE 23.8 BY .95 AT ROW 7.81 COL 4
+          FGCOLOR 4 
+     RECT-detail AT ROW 1.14 COL 2.2
+     RECT-method AT ROW 7.52 COL 2
+     RECT-3 AT ROW 11.48 COL 2
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1
-         SIZE 38 BY 13.88.
+         SIZE 38 BY 14.54.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -162,21 +162,22 @@ DEFINE FRAME F-Main
 /* Settings for THIS-PROCEDURE
    Type: SmartObject
    Allow: Basic,Browse,DB-Fields,Smart,Query
+   Container Links: 
  */
 &ANALYZE-RESUME _END-PROCEDURE-SETTINGS
 
 /* *************************  Create Window  ************************** */
 
 &ANALYZE-SUSPEND _CREATE-WINDOW
-/* DESIGN Window definition (used by the UIB)
+/* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW F-Frame-Win ASSIGN
-         HEIGHT             = 13.88
+         HEIGHT             = 14.52
          WIDTH              = 38.
 /* END WINDOW DEFINITION */
                                                                         */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB F-Frame-Win 
 /* ************************* Included-Libraries *********************** */
 
 {src/adm/method/containr.i}
@@ -193,10 +194,10 @@ DEFINE FRAME F-Main
 /* SETTINGS FOR WINDOW F-Frame-Win
   VISIBLE,,RUN-PERSISTENT                                               */
 /* SETTINGS FOR FRAME F-Main
-   NOT-VISIBLE                                                          */
+   NOT-VISIBLE FRAME-NAME                                               */
 /* SETTINGS FOR FILL-IN Cas-Num IN FRAME F-Main
    NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN
+ASSIGN 
        Cas-Num:HIDDEN IN FRAME F-Main           = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -212,7 +213,7 @@ ASSIGN
 */  /* FRAME F-Main */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -222,6 +223,14 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL RS-by F-Frame-Win
 ON VALUE-CHANGED OF RS-by IN FRAME F-Main
 DO:
+    assign RS-by.
+    if RS-by = 3 then assign /* с разбиением по товарам - только для "Чеки", не для "Отчёт о продаже" */
+      RS-method:SENSITIVE in frame F-Main = false
+      RS-method:SCREEN-VALUE in frame F-Main = "chk-doc":U 
+    .
+    else assign
+      RS-method:SENSITIVE in frame F-Main = true
+    .
     assign
     RS-method.
 END.
@@ -278,7 +287,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK F-Frame-Win 
 
 
 /* ***************************  Main Block  *************************** */
@@ -337,7 +346,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -357,12 +366,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY RS-by RS-method RS-cass
+  DISPLAY RS-by RS-method RS-cass 
       WITH FRAME F-Main.
-  ENABLE RECT-detail RECT-method RECT-3 RS-by RS-method RS-cass
+  ENABLE RECT-detail RECT-method RECT-3 RS-by RS-method RS-cass 
       WITH FRAME F-Main.
   {&OPEN-BROWSERS-IN-QUERY-F-Main}
 END PROCEDURE.
@@ -370,7 +379,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ini-from-selobj F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ini-from-selobj F-Frame-Win 
 PROCEDURE ini-from-selobj :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -409,7 +418,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-initialize F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-initialize F-Frame-Win 
 PROCEDURE local-initialize :
 /*------------------------------------------------------------------------------
   Purpose:     Override standard ADM method
@@ -429,71 +438,76 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE My-report F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE My-report F-Frame-Win 
 PROCEDURE My-report :
 /*------------------------------------------------------------------------------
   Purpose:
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
+define variable v-err-message as character no-undo .
+
 Run My-var.
 run waitfram-show in this-procedure ( input "Ждите..." ) .
-IF Rs-by > 0 then HowBreak = YES.
-ELSE HowBreak = no.
+HowBreak = (Rs-by > 0) .
 if RS-method = "inkas" then do:
-  if RS-by = 2 then do:
-    case my-Set_val_type:
-      when {&v-base} then do:
-        run rep/r-beneb4.p (
+  case RS-by:
+    when 2 then do: /* с разбиением по кассам */
+      case my-Set_val_type:
+        when {&v-base} then do:
+          run rep/r-beneb4.p (
                         input my-handle
                         ,input cas-num
                         ,input howbreak
                         ) no-error.
-      end.
-      when {&v-rubl} then do:
-        run rep/r-bener4.p (
+        end.
+        when {&v-rubl} then do:
+          run rep/r-bener4.p (
                         input my-handle
                         ,input cas-num
                         ,input howbreak
                         ) no-error.
-      end.
-      when {&v-all} then do:
-        run rep/r-bento4.p (
+        end.
+        when {&v-all} then do:
+          run rep/r-bento4.p (
                         input my-handle
                         ,input cas-num
                         ,input howbreak
                         ) no-error.
-      end.
-    END CASE.
-  end.
-  ELSE DO:
-    case my-Set_val_type:
-      when {&v-base} then do:
-        run rep/r-beneb3.p (
+        end.
+      END CASE.
+    end.
+    when 3 then .   /* с разбиением по товарам для inkas не применяется: inkas не содержит информации о товарах */
+    otherwise do: /* без разбиения (0), с разбиением по дням (1) */
+      case my-Set_val_type:
+        when {&v-base} then do:
+          run rep/r-beneb3.p (
                         input my-handle
                         ,input cas-num
                         ,input howbreak
                         ) no-error .
-      end.
-      when {&v-rubl} then do:
-        run rep/r-bener3.p (
+        end.
+        when {&v-rubl} then do:
+          run rep/r-bener3.p (
                         input my-handle
                         ,input cas-num
                         ,input howbreak
                         ) no-error .
-      end.
-      when {&v-all} then do:
-        run rep/r-bento3.p (
+        end.
+        when {&v-all} then do:
+          run rep/r-bento3.p (
                         input my-handle
                         ,input cas-num
                         ,input howbreak
                         ) no-error.
-      end.
-    END CASE.
-  END.
-end.
-else do:
-    if RS-by = 2 then do:
+        end.
+      END CASE.
+    end.
+  end case. /* RS-by */
+end. /* end_of inkas */
+else do: /* chk-doc */
+  case RS-by:
+    when 2 then do: /* с разбиением по кассам */
       case my-Set_val_type:
         when {&v-base} then do:
           run rep/r-beneb2.p (
@@ -518,7 +532,19 @@ else do:
         end.
       END CASE.
     end.
-    else  do:
+    when 3 then do: /* с разбиением по товарам (только для chk-doc) */
+      /* 13-sep-2017:
+         Распределение оплат по товарам в таблице chk-gds-pay ведётся только в одной валюте,
+         сумма хранится в поле chk-gds-pay.tot-r-b
+         Будем считать, что это базовая валюта и отчёт будем строить по базовой валюте.
+      */
+          run rep/r-beneb5.p (
+                        input my-handle
+                        ,input cas-num
+                        ,input howbreak
+                        ) no-error.
+    end.
+    otherwise do: /* без разбиения (0), с разбиением по дням (1) */
       case my-Set_val_type:
         when {&v-base} then do:
           run rep/r-beneb1.p (
@@ -543,10 +569,14 @@ else do:
         end.
       END CASE.
     end.
-end.
+  end case. /* RS-by */
+end. /* end_of chk-doc */
 if error-status:error then do:
+  v-err-message = substitute("&2&1&3&1всего ошибок &4",
+                             {&new-line}, return-value, error-status:get-message(1), error-status:num-messages) .
+  message v-err-message view-as alert-box.
   run waitfram-hide in this-procedure .
-  return error .
+  return .
 end.
 run waitfram-hide in this-procedure .
 END PROCEDURE.
@@ -554,7 +584,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE My-var F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE My-var F-Frame-Win 
 PROCEDURE My-var :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -567,23 +597,35 @@ frame {&frame-name} Rs-BY
 frame {&frame-name} Rs-Method
 frame {&frame-name} Rs-Cass
 frame {&frame-name} Cas-num
-.
+no-error .
 assign
-my-Set_val_TYPE = if x-SET_val_TYPE = 0 then {&v-base} else x-SET_val_TYPE.
+my-Set_val_TYPE = if x-SET_val_TYPE = 0 then {&v-base} else x-SET_val_TYPE
+no-error .
+/*
+
+x-SET_val_TYPE: 1 = Руб, 2 = Вал
+
+&glob v-rubl 1
+&glob v-base 2
+&glob v-all  3
+  
+*/
+
 Assign
  STR-obj-type = ''
  STR-obj-code = ''
  STR-obj-name = ''
- STR-obj      = ''.
+ STR-obj      = ''
+no-error .
 
 For each obj-list no-lock:
  Assign
  STR-obj-type = STR-obj-type + obj-list.obj-type + ','
  STR-obj-code = STR-obj-code + String(obj-list.obj-code) + ','
  STR-obj-name = STR-obj-name + obj-list.obj-name + ','
- STR-obj = STR-obj +  obj-list.obj-type + '#' + string(obj-list.obj-code)  + ',' .
+ STR-obj = STR-obj +  obj-list.obj-type + '#' + string(obj-list.obj-code)  + ','
+ no-error .
 End.
-ReportNAme = "Отчет о выручке".
 ReportHeader =  "Метод формирования: " +
                             radio-label(string(rs-method), rs-method:radio-buttons) + {&new-line} +
                             "Детализация: " +
@@ -591,13 +633,15 @@ ReportHeader =  "Метод формирования: " +
                             "Кассы: " +
                             radio-label(string(rs-cass), rs-cass:radio-buttons) + {&new-line} +
                             (IF cas-num > 0 then ("Касса N: " + String(cas-num)) else "")
-                            .
+                            no-error .
+ReportNAme = "Отчет о выручке" no-error .
+  return .                              
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE report-to-ach F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE report-to-ach F-Frame-Win 
 PROCEDURE report-to-ach :
 /* -----------------------------------------------------------
   Purpose: Для выгрузки параметров в ACTUETE
@@ -665,7 +709,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE state-changed F-Frame-Win
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE state-changed F-Frame-Win 
 PROCEDURE state-changed :
 /* -----------------------------------------------------------
   Purpose:
@@ -686,3 +730,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

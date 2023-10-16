@@ -471,11 +471,6 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE My-report F-Frame-Win
 PROCEDURE My-report :
-/*------------------------------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
-------------------------------------------------------------------------------*/
 Run My-var.
 run waitfram-show in this-procedure ( "ֶהטעו..." ) .
 IF Rs-by > 0 then HowBreak = YES.
