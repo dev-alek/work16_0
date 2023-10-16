@@ -70,9 +70,9 @@ define variable mGdsCodeList as character no-undo init "*".
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-5 RECT-9 RECT-7 mSupps mGds ~
 mSuppList mGds-list mTranTimeMax t-delta-tank-ac t-delta-tank-fact ~
-t-itog rs-ac-type 
+t-itog rs-ac-type t-no-azk-itog
 &Scoped-Define DISPLAYED-OBJECTS mSupps mGds mSuppList mGds-list ~
-rs-ac-type mTranTimeMax t-delta-tank-ac t-delta-tank-fact t-itog 
+rs-ac-type mTranTimeMax t-delta-tank-ac t-delta-tank-fact t-itog t-no-azk-itog
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -147,6 +147,11 @@ DEFINE VARIABLE t-itog AS LOGICAL INITIAL no
      LABEL "только итоги" 
      VIEW-AS TOGGLE-BOX
      SIZE 16 BY .81 NO-UNDO.
+     
+DEFINE VARIABLE t-no-azk-itog AS LOGICAL INITIAL no 
+     LABEL "не выводить итоги по АЗК" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 26 BY .81 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -161,6 +166,7 @@ DEFINE FRAME F-Main
      t-delta-tank-ac AT ROW 11.95 COL 4 WIDGET-ID 88
      t-delta-tank-fact AT ROW 13.14 COL 4 WIDGET-ID 90
      t-itog AT ROW 14.33 COL 4 WIDGET-ID 92
+     t-no-azk-itog  AT ROW 15.5 COL 4 WIDGET-ID 92
      "мин" VIEW-AS TEXT
           SIZE 3.6 BY .76 AT ROW 10.33 COL 15.6 WIDGET-ID 84
      " Минимальное время приёмки:" VIEW-AS TEXT
@@ -393,6 +399,7 @@ PROCEDURE my-report :
      t-delta-tank-ac
      t-delta-tank-fact
      t-itog
+     t-no-azk-itog
    .
 
    run rep/r-sum-fuel-supp.p ( v-cntxt-host-code-obj,
@@ -402,7 +409,8 @@ PROCEDURE my-report :
                                mTranTimeMax,
                                t-delta-tank-ac,
                                t-delta-tank-fact,
-                               t-itog
+                               t-itog,
+                               t-no-azk-itog
                               ).
 
 END PROCEDURE.
