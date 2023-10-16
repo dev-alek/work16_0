@@ -5189,9 +5189,11 @@ procedure CrTempDump:
    
    define variable vBegTime as datetime no-undo.
    define variable vEndTime as datetime no-undo. 
+   define variable vTimeAutoSkip as integer no-undo.
    
-   empty temp-table ttDump. 
-     
+   /* определяем продолжительность пропуска автосверки после приема НП */
+   vTimeAutoSkip = if ptrlprop-autopump-skip-time <> ? then ptrlprop-autopump-skip-time else 0.
+        
    /* отбираем все сверки до */
    rvsdoc:            
    for each buf_rvs-doc no-lock
@@ -5243,20 +5245,21 @@ procedure CrTempDump:
          no-error.       
       if available buf_doc-line-attr and 
          available buf_doc-line-attr1 
-      then  vEndTime = datetime(date(buf_doc-line-attr.attr-value), (int(buf_doc-line-attr1.attr-value) * 1000 )).  
-      else  vEndTime = datetime(buf_rvs-doc_end.sys-date, (buf_rvs-doc_end.sys-time-int * 1000 )).        
+      then  vEndTime = datetime(date(buf_doc-line-attr.attr-value), ((int(buf_doc-line-attr1.attr-value) + vTimeAutoSkip * 60) * 1000 )).  
+      else  vEndTime = datetime(buf_rvs-doc_end.sys-date, ((buf_rvs-doc_end.sys-time-int + vTimeAutoSkip * 60) * 1000 )).        
       /* определяем время фиксации показателей */
       create ttDump.
       assign
          ttDump.BegTime = vBegTime
-         ttDump.EndTime = vEndTime
+         ttDump.EndTime = vEndTime 
          .  
       if session:debug-alert
       then do:
          OUTPUT STREAM out_s TO "avrgdens.log" APPEND. 
          put stream out_s unformatted "Приемка топлива: "          
          " Начало слива " ttDump.BegTime 
-         " Конец слива " ttDump.EndTime
+         " Конец слива плюс время пропуска после слива " ttDump.EndTime
+         " Время пропуска автосверок после слива " vTimeAutoSkip
          " Топливо " p-pl-code 
          " Код товара " p-gds-code
          skip.
@@ -5305,9 +5308,9 @@ procedure ChkRvsSkip:
          then do:
             OUTPUT STREAM out_s TO "avrgdens.log" APPEND. 
             put stream out_s unformatted "Пропуск автосверки из-за попадания в период слива: " 
-            " Время чека " datetime(p-sys-date, (p-sys-time-int * 1000 )) 
+            " Время сверки " datetime(p-sys-date, (p-sys-time-int * 1000 )) 
             " Начало слива " ttDump.BegTime 
-            " Конец слива " ttDump.EndTime
+            " Конец слива плюс время пропуска после слива " ttDump.EndTime
             " Топливо " p-pl-code
             " Код товара " p-gds-code
             skip.

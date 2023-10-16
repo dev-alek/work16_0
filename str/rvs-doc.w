@@ -56,6 +56,7 @@ define variable vss-description as character no-undo initial "Обработка документ
 { str/is-sug.i        }
 { str/placelib.i      }
 { gbl/db-attr.i       }
+{ gbl/ptrlprop.i def  }
 
 define buffer r-doc             for ub.rvs-doc.
 define buffer cur_shift-obj     for ub.shift-obj.
@@ -194,6 +195,8 @@ define variable v-asi-ip          as character no-undo .
 define variable v-asi-port        as character no-undo .
 define variable v-asi-type        as character no-undo .
 define variable v-attr-type       as character no-undo .
+
+define variable vTimeAutoSkip     as integer  no-undo.
 
 define buffer cli-buf      for ub.clients.
 define buffer del-rvs-line for ub.rvs-line.
@@ -929,6 +932,16 @@ procedure ui-on :
   /* ----------------------------------------------------------------------------------------------------------------------------
     purpose:     включение пользовательского интерфейса в нужном режиме
   --------------------------------------------------------------------------------------------------------------------------------- */
+    /* определяем продолжительность пропуска автосверки после приема НП */
+  { gbl/ptrlprop.i
+     run
+     r-doc.obj-type
+     r-doc.obj-code
+  }
+  if not error-status :error then do:
+    vTimeAutoSkip = if ptrlprop-autopump-skip-time <> ? then ptrlprop-autopump-skip-time else 0.
+  end.
+  
   del-list = "".
   find first ub.clients where ub.clients.obj-type = r-doc.obj-type and
     ub.clients.obj-code = r-doc.obj-code no-lock.
