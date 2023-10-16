@@ -1071,27 +1071,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                              ).
            end.
                           
-           if mAsyncHelper:isWorkShed()
-           then do:
-              run gbl/dbdiscon.p no-error.
-              if error-status :error then do:
-                 run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ) no-error.
-                 if error-status:error
-                 then do:
-                    run write-to-screen (return-value).
-                 end.
-              end.
-              run waitproc("Ожидаем получение данных").
-              run adm/autoconn.p no-error.
-              if error-status :error 
-              then do:
-                 run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
-                 assign
-                    {&window-name}:title = mtitle
-                 .
-              end.
-           end.
-         
          find first tt-BatchProcess no-lock
          where 
         /*and buf_BatchProcess.CharKey_One       = string( buf_db.db-num )
@@ -1160,6 +1139,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          end.
          
       end.
+   end.
+   if mAsyncHelper:isWorkShed()
+   then do:
+      run waitproc("Ожидаем получение данных").
    end.
    assign
       start-time = etime
