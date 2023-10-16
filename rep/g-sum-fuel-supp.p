@@ -31,7 +31,7 @@ define variable vss-description as character no-undo initial "Сводный отчёт по п
   input "Сводный отчёт по поставкам топлива":u ,
   input 10 ,
   input "":u,
-  input "{&o-currency},{&o-choice},{&o-all}":u,
+  input "{&o-currency},{&o-choice},!{&o-all}":u,
   input "":u,
   input "":u,
   input "all,{&Excel-yes}":u,
