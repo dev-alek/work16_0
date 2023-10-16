@@ -2,7 +2,7 @@
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME Dialog-Frame
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
 $Revision$
@@ -102,7 +102,7 @@ v-tthf = buffer thbjattr_thbj-attr-f:table-handle .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -160,7 +160,6 @@ B-outrecv outrecv sort-prd torg2-no outprops B-24 B-25 B-26 B-27 v-outssdoc ~
 v-factur01 v-incurrat v-tick-w v-in-docpr v-outrecv v-sort-prd v-torg2-no ~
 v-outprops v-outR v-outogr v-outb v-outc rep-artic I-rep-artic v-rep-artic
 &Scoped-define no-dis B-exit B-quit B-Help 
-
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -775,7 +774,7 @@ DEFINE VARIABLE factur01 AS LOGICAL INITIAL no
 DEFINE VARIABLE fgdsnind AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 48 BY .92 NO-UNDO.
+     SIZE 3 BY .92 NO-UNDO.
 
 DEFINE VARIABLE incurrat AS LOGICAL INITIAL no 
      LABEL "" 
