@@ -522,48 +522,8 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
               end.
             end .
           end .
-		    end .
-		    else do :
-/*		      if infoSecsObj:IsKPrvs                                                                                             */
-/*		      then                                                                                                               */
-/*		      do ii = 1 to infoSecsObj:SectionNum:                                                                               */
-/*		        v-sec = infoSecsObj:GetInfoSectionProp(ii):SectionName .                                                         */
-/*            find first buf_rvs-doc                                                                                         */
-/*                where buf_rvs-doc.rvs-type = {&rvs-before-doc}                                                             */
-/*                and buf_rvs-doc.out-code = infoSecsObj:TrnDocNum                                                           */
-/*                and num-entries(buf_rvs-doc.rvs-code, "-") = 3                                                             */
-/*                and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec                                                            */
-/*                and buf_rvs-doc.state-measure-qnty <> ?                                                                    */
-/*            no-error .                                                                                                     */
-/*            if not available buf_rvs-doc                                                                                   */
-/*            then do :                                                                                                      */
-/*              message ( "Сохранение параметров секции невозможно. Включен комиссионный приём 'По сверкам'." + {&new-line} +*/
-/*                       "Не заполнена сверка ДО по секции "  + v-sec )                                                      */
-/*              view-as alert-box .                                                                                          */
-/*              e:Cancel = yes .                                                                                             */
-/*              vClickSave = no .                                                                                            */
-/*              infoSecsObj:WasSetting = no .                                                                                */
-/*              leave .                                                                                                      */
-/*            end .                                                                                                          */
-/*            find first buf_rvs-doc                                                                                         */
-/*                where buf_rvs-doc.rvs-type = {&rvs-after-doc}                                                              */
-/*                and buf_rvs-doc.out-code = infoSecsObj:TrnDocNum                                                           */
-/*                and num-entries(buf_rvs-doc.rvs-code, "-") = 3                                                             */
-/*                and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec                                                            */
-/*                and buf_rvs-doc.state-measure-qnty <> ?                                                                    */
-/*            no-error .                                                                                                     */
-/*            if not available buf_rvs-doc                                                                                   */
-/*            then do :                                                                                                      */
-/*              message ( "Сохранение параметров секции невозможно. Включен комиссионный приём 'По сверкам'." + {&new-line} +*/
-/*                       "Не заполнена сверка ПОСЛЕ по секции "  + v-sec )                                                   */
-/*              view-as alert-box .                                                                                          */
-/*              e:Cancel = yes .                                                                                             */
-/*              vClickSave = no .                                                                                            */
-/*              infoSecsObj:WasSetting = no .                                                                                */
-/*              leave .                                                                                                      */
-/*            end .                                                                                                          */
-/*          end .                                                                                                            */
-		    end .
+          if infoSecsObj:Mode = "ИЗМЕНЕНИЕ" then infoSecsObj:SaveDB() .
+		    end . /* if not infoSecsObj:FlagTrn (в накл-) */
 		  end .
 		  else do :
         message "Несохранённые данные будут утеряны! Выйти без сохранения?"
