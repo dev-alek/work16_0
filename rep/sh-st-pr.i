@@ -22,11 +22,11 @@ define variable v-doc-prt as logical no-undo .
 
 DEFINE FRAME main
     sym1 column-label ":!:" format "x(1)"
-ub.clients.obj-code COLUMN-LABEL "Номер! " FORMAT ">>>>9"
+ub.clients.obj-code COLUMN-LABEL "Номер! " FORMAT ">>>9"
     sym2 column-label ":!:" format "x(1)"
     ub.clients.obj-name COLUMN-LABEL "Название! "
     sym8 column-label ":!:" format "x(1)"
-    ub.clients.host-code COLUMN-LABEL "фирма" FORMAT ">>>>9"
+    ub.clients.host-code COLUMN-LABEL "фирма" FORMAT ">>>>>>>>9"
     sym3 column-label ":!:" format "x(1)"
 v-price-calc COLUMN-LABEL "Запр.прих!при нерав.цен" FORMAT "да/нет"
     sym4 column-label ":!:" format "x(1)"
@@ -85,7 +85,7 @@ or ub.clients.obj-type = {&stock}
 FOR EACH {1} NO-LOCK:
         FIND ub.clients WHERE
             ub.clients.obj-code = {1}.obj-code
-&if "{1}" = "shop" &then
+&if ("{1}" = "shop" OR "{1}" = "ub.shop" ) &then
        AND ub.clients.obj-type = {&shop}.
 &else
       AND ub.clients.obj-type = {&stock}.
@@ -99,9 +99,9 @@ FOR EACH {1} NO-LOCK:
                 sym1
   ub.clients.obj-code
                 sym2
-                ub.clients.obj-name
+                ub.clients.obj-name 
                 sym8
-                ub.clients.host-code COLUMN-LABEL "Фирма" FORMAT ">>>>9"
+                ub.clients.host-code COLUMN-LABEL "Фирма" FORMAT ">>>>>>>>>9"
                 sym3
   v-price-calc
                 sym4
@@ -119,7 +119,7 @@ FOR EACH {1} NO-LOCK:
     &if "{1}" = "clients" &then
         run waitfram-show in this-procedure ( "Просмотрено объектов - " + string( ACCUM COUNT ub.clients.obj-code) ).
     &else
-        &if "{1}" = "shop"
+        &if ("{1}" = "shop" OR "{1}" = "ub.shop")
         &then
         run waitfram-show in this-procedure ( "Просмотрено магазинов - " + string( ACCUM COUNT ub.clients.obj-code) ).
         &else
