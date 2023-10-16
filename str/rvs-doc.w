@@ -63,6 +63,7 @@ define buffer prev_shift-obj    for ub.shift-obj.
 define buffer prev_rvs-doc      for ub.rvs-doc.
 define buffer prev_icnt-doc     for ub.icnt-doc.
 define buffer buf_rvs-line-attr for ub.rvs-line-attr.
+define buffer buf_doc-attr      for ub.doc-attr.
 
 define variable v-ref-rec         as recid     no-undo .
 define variable ii                as integer   no-undo.
@@ -827,8 +828,16 @@ on value-changed of {&browse-name} in frame {&frame-name}
 
 ON ROW-DISPLAY OF {&browse-name} IN FRAME {&frame-name} 
   DO:
-      
-    if available ub.rvs-line then 
+  define variable vChkColor as log no-undo.
+    if avail r-doc and 
+       (r-doc.rvs-type  = {&rvs-before-doc} or 
+        r-doc.rvs-type  = {&rvs-after-doc}) then 
+    do:
+       do ii = 1 to 37:
+          bcol[ii]:FGcolor  = 7.
+       end.  
+    end.
+    else if available ub.rvs-line then 
     do:
       find first buf_rvs-line-attr no-lock 
         where buf_rvs-line-attr.attr-code = "rvd-on"
@@ -846,6 +855,29 @@ ON ROW-DISPLAY OF {&browse-name} IN FRAME {&frame-name}
         do ii = 1 to 37:
           bcol[ii]:FGcolor  = 7.
         end.
+      end.
+      else if avail r-doc then 
+      do:
+         if can-find(first buf_doc-attr no-lock where 
+                     buf_doc-attr.doc-code = r-doc.rvs-code 
+                 and buf_doc-attr.attr-code = "rvs-auto" 
+                 and buf_doc-attr.attr-value = "Yes") then 
+         do:        
+            run CheckColorSkip in this-procedure 
+                     (r-doc.obj-type,
+                      r-doc.obj-code,
+                      r-doc.shift-date,
+                      r-doc.shift-num,
+                      ub.rvs-line.pl-code,
+                      ub.rvs-line.gds-code,
+                      r-doc.sys-date,
+                      r-doc.sys-time-int,
+                      output vChkColor).
+             if vChkColor then 
+                do ii = 1 to 37:
+                   bcol[ii]:FGcolor  = 7.
+                end.
+         end.
       end.        
     end.
   END.
@@ -3534,3 +3566,90 @@ procedure proc_m-meas-2 :
     then 
     return error.
 end procedure. /* proc_m-meas-2 */
+
+/* определение, попадает ли сверка в период слива */
+procedure CheckColorSkip:
+   define input parameter p-obj-type as character no-undo.
+   define input parameter p-obj-code as integer no-undo. 
+   define input parameter p-shift-date as date no-undo.
+   define input parameter p-shift-num as integer no-undo.
+   define input parameter p-pl-code as integer no-undo.
+   define input parameter p-gds-code as integer no-undo.
+   define input parameter p-sys-date     as date      no-undo.
+   define input parameter p-sys-time-int as integer   no-undo.
+   define output parameter vNeedSkip     as logical   no-undo.
+      
+   define buffer buf_rvs-doc for ub.rvs-doc.
+   define buffer buf_rvs-line for ub.rvs-line.
+   define buffer buf_rvs-doc_end for ub.rvs-doc. 
+   define buffer buf_doc-line-attr  for ub.doc-line-attr.
+   define buffer buf_doc-line-attr1 for ub.doc-line-attr.
+   
+   define variable vBegTime as datetime no-undo.
+   define variable vEndTime as datetime no-undo. 
+   
+   vNeedSkip = no.
+   
+   /* отбираем все сверки до */
+   rvsdoc:            
+   for each buf_rvs-doc no-lock
+        where buf_rvs-doc.obj-type   = p-obj-type
+          and buf_rvs-doc.obj-code   = p-obj-code
+          and buf_rvs-doc.shift-date = p-shift-date
+          and buf_rvs-doc.shift-num  = p-shift-num
+          and buf_rvs-doc.status_    = {&fact}
+          and buf_rvs-doc.rvs-type  = {&rvs-before-doc}
+        ,first buf_rvs-line no-lock
+        where buf_rvs-line.rvs-code   = buf_rvs-doc.rvs-code
+          and buf_rvs-line.obj-type   = buf_rvs-doc.obj-type
+          and buf_rvs-line.obj-code   = buf_rvs-doc.obj-code
+          and buf_rvs-line.pl-code    = p-pl-code
+          and buf_rvs-line.gds-code   = p-gds-code:
+             
+      /* ищем сверку после */       
+      find first  buf_rvs-doc_end no-lock 
+           where buf_rvs-doc_end.rvs-type = {&rvs-after-doc}
+          and buf_rvs-doc_end.out-code =  buf_rvs-doc.out-code
+          no-error.
+      if not avail buf_rvs-doc_end then next  rvsdoc.    
+      
+      /* ищем атрибуты накладной с временем начала и окончания слива */ 
+      find first buf_doc-line-attr no-lock where 
+                 buf_doc-line-attr.doc-code = buf_rvs-doc.out-code
+             and buf_doc-line-attr.gds-code = buf_rvs-line.gds-code
+             and buf_doc-line-attr.attr-code begins "date-start"
+         no-error.
+      find first buf_doc-line-attr1 no-lock where 
+                 buf_doc-line-attr1.doc-code = buf_rvs-doc.out-code
+             and buf_doc-line-attr1.gds-code = buf_rvs-line.gds-code
+             and buf_doc-line-attr1.attr-code begins "time-start"
+         no-error.       
+      if available buf_doc-line-attr and 
+         available buf_doc-line-attr1 
+      then  vBegTime = datetime(date(buf_doc-line-attr.attr-value), (int(buf_doc-line-attr1.attr-value) * 1000 )).
+      else  vBegTime = datetime(buf_rvs-doc.sys-date, (buf_rvs-doc.sys-time-int * 1000 )).
+         
+      find first buf_doc-line-attr no-lock where 
+                 buf_doc-line-attr.doc-code = buf_rvs-doc.out-code
+             and buf_doc-line-attr.gds-code = buf_rvs-line.gds-code
+             and buf_doc-line-attr.attr-code begins "date-end"
+         no-error.
+      find first buf_doc-line-attr1 no-lock where 
+                 buf_doc-line-attr1.doc-code = buf_rvs-doc.out-code
+             and buf_doc-line-attr1.gds-code = buf_rvs-line.gds-code
+             and buf_doc-line-attr1.attr-code begins "time-end"
+         no-error.       
+      if available buf_doc-line-attr and 
+         available buf_doc-line-attr1 
+      then  vEndTime = datetime(date(buf_doc-line-attr.attr-value), (int(buf_doc-line-attr1.attr-value) * 1000 )).  
+      else  vEndTime = datetime(buf_rvs-doc_end.sys-date, (buf_rvs-doc_end.sys-time-int * 1000 )).        
+      
+      if vBegTime <= datetime(p-sys-date, (p-sys-time-int * 1000 )) 
+         and vEndTime >= datetime(p-sys-date, (p-sys-time-int * 1000 )) then 
+      do:
+         vNeedSkip = yes.
+         leave rvsdoc.
+      end.          
+   end.          
+   
+end procedure. /* CheckColorSkip */

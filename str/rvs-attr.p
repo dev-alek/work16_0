@@ -523,7 +523,7 @@ end.
         buf_rvs-line-attr.gds-code = buf_tt-rvs-line-attr.gds-code
       .  
       end.
-      if buf_rvs-line-attr.attr-code = "rdv-on" 
+      if buf_rvs-line-attr.attr-code = "rvd-on" 
          then buf_rvs-line-attr.attr-value = buf_tt-rvs-line-attr.attr-value_s .
       else 
       buf_rvs-line-attr.attr-value = string(buf_tt-rvs-line-attr.attr-value) .                                                      
