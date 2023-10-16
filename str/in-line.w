@@ -1718,14 +1718,9 @@ do:
   
     do ii = 1 to infoSectionsTotal:SectionNum :
       infoSectionsTotal:GetInfoSectionProp (ii).
-      if infoSectionsTotal:InfoSectionCurr:FactQnty = 0
-      or infoSectionsTotal:InfoSectionCurr:FactQnty = ?
+      if infoSectionsTotal:FlagTrn = no
       then do :
         infoSectionsTotal:InfoSectionCurr:FactQnty = infoSectionsTotal:InfoSectionCurr:DocQnty.
-      end .
-      if infoSectionsTotal:InfoSectionCurr:FactDensity = 0
-      or infoSectionsTotal:InfoSectionCurr:FactDensity = ?
-      then do :
         infoSectionsTotal:InfoSectionCurr:FactDensity = infoSectionsTotal:InfoSectionCurr:DocDensity.
       end .
       if lookup(infoSectionsTotal:InfoSectionCurr:ListTank, pl-list) = 0
