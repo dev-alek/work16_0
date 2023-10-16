@@ -47,12 +47,12 @@ define variable vss-description as character no-undo init "Редактирование фильтр
 { ref/grplibfn.i }
 { ref/cgrplbfn.i }
 { nws/db-rec.i   }
-
+{ gbl/cur-time.i }
 define variable k as int no-undo.
 define variable s as char no-undo.
 define variable v_type     as char no-undo.
-define variable v-private-data as logical no-undo .
-
+define variable vlistValue    as character no-undo.
+define variable vlistValueRet as character no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -145,6 +145,17 @@ DEFINE VARIABLE togl AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 15 BY .83 NO-UNDO.
 
+DEFINE VARIABLE in-log AS CHARACTER
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS
+          "Да (Истино)", "TRUE",
+"Нет (Ложь)", "FALSE"
+     SIZE 14 BY 2.25 NO-UNDO.
+
+DEFINE VARIABLE toggle-date AS LOGICAL INITIAL no
+     LABEL "СЕГОДНЯ +/- ДНЕЙ"
+     VIEW-AS TOGGLE-BOX
+     SIZE 21 BY .83 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -152,6 +163,8 @@ DEFINE FRAME DIALOG-1
      in-int AT ROW 1.5 COL 3 NO-LABEL
      in-dec AT ROW 1.5 COL 3 NO-LABEL
      in-date AT ROW 1.5 COL 3 NO-LABEL
+     in-log  AT ROW 1.5    COL  4.5 NO-LABEL
+     toggle-date  AT ROW 1.5  COL 15
      in-char AT ROW 1.5 COL 3 NO-LABEL
      comb AT ROW 1.5 COL 1 COLON-ALIGNED NO-LABEL
      b-spr AT ROW 1.5 COL 31.5
@@ -216,46 +229,18 @@ DO:
 define variable s-private as character no-undo .
   case type:
      when "character" then do:
-        if lookup(spr, "trn-stat,trn-type,order-status-all,order-type-all,ext-doc-type,pr-stat,fbr-stat,gds-type,form-type,actions," +
-                        "tbl-name,purch-code,fin-doc-stat,fin-doc-type,fin-ext-doc-type," +
-                        "gds-hist-subject,cli-hist-subject,dc-hist-subject,dc-type-hist-subject,tax-hist-subject,gds-grp-hist-subject,cli-grp-hist-subject,scl-hist-subject," +
-                        "fbr-gds-grp-hist-subject,plc-hist-subject,pmp-hist-subject,nzl-hist-subject,sht-hist-subject,sert-hist-subject," +
-                        "hist-source-type,contract-type,usl-opl,db-rec-attr-type,db-rec-attr-cmd,nws-coll_codes," +
-                        "cd-types,cd-types-real,cd-type-discnt,rcv-type-all,wth-ext-type") > 0
-                        then do:
+        if comb:visible
+        then do:
           s = input frame {&frame-name} comb.
+          if vlistValueRet ne ?
+          then do:
+             k = comb:lookup(s).
+             s = entry( k, comb:list-items).
+             s-private = entry( k, vlistValueRet)          .
+           end.
         end.
         else s = input frame {&frame-name} in-char.
-        if lookup(spr, "ext-doc-type") > 0
-        or lookup(spr, "fin-ext-doc-type") > 0
-        or lookup(spr, "gds-hist-subject") > 0
-        or lookup(spr, "cli-hist-subject") > 0
-        or lookup(spr, "dc-hist-subject") > 0
-        or lookup(spr, "dc-type-hist-subject") > 0
-        or lookup(spr, "tax-hist-subject") > 0
-        or lookup(spr, "gds-grp-hist-subject") > 0
-        or lookup(spr, "cli-grp-hist-subject") > 0
-        or lookup(spr, "fbr-gds-grp-hist-subject") > 0
-        or lookup(spr, "plc-hist-subject") > 0
-        or lookup(spr, "pmp-hist-subject") > 0
-        or lookup(spr, "nzl-hist-subject") > 0
-        or lookup(spr, "sht-hist-subject") > 0
-        or lookup(spr, "sert-hist-subject") > 0
-        or lookup(spr, "hist-action") > 0
-        or lookup(spr, "hist-source-type") > 0
-        or lookup(spr, "db-rec-attr-cmd") > 0
-        or lookup(spr, "nws-coll_codes") > 0
-        or lookup(spr, "cd-types") > 0
-        or lookup(spr, "cd-types-real") > 0
-        or lookup(spr, "cd-types-discnt") > 0
-        or lookup(spr, "rcv-type-all") > 0
-        or lookup(spr, "scl-hist-subject") > 0
-        or lookup(spr, "wth-ext-type") > 0
-        then do:
-          k = comb:lookup(s).
-          s = entry( k, comb:list-items).
-          s-private = entry( k, comb:private-data)          .
-        end.
+        
      end.
      when "date" then
      assign
@@ -266,52 +251,29 @@ define variable s-private as character no-undo .
          else string(input frame {&frame-name} in-date, "99/99/9999").
      when "decimal" then s = string(input frame {&frame-name} in-dec).
      when "integer" then do:
-      CASE spr:
-        when "course-type" then do:
-          assign
-          s = string( comb:lookup( input frame {&frame-name} comb ) )
+        if    comb:visible in frame {&frame-name}
+        then do:
+           assign
+              s         =  input frame {&frame-name} comb
+              s-private =  entry(lookup(s,vlistValue), vlistValueRet) when vlistValueRet ne ?
           .
         end.
-        when "purch-code" then do:
-          assign
-          s = string( comb:lookup( input frame {&frame-name} comb ) )
-          .
+        else do:
+           assign
+              s = string(input frame {&frame-name} in-int)
+              
+           .
         end.
-        when "hist-action" then do:
-          assign
-          s = string( comb:lookup( input frame {&frame-name} comb ) )
-          .
-        end.
-        when "receipt-code" then do:
-          assign
-          s = string( comb:lookup( input frame {&frame-name} comb ) )
-          .
-        end.
-        when "wth-receipt-code" then do:
-          assign
-          s = string( comb:lookup( input frame {&frame-name} comb ) )
-          .
-        end.
-        when "dcp-node-code" then do:
-          assign
-          s = string( comb:lookup( input frame {&frame-name} comb ) )
-          .
-        end.
-        otherwise do:
-          assign
-          s = string( input frame {&frame-name} in-int )
-          .
-        end.
-      END CASE.
      end.
-  end case.
-  k = lookup( s, list:list-items ).
-  if k = 0 or k = ? then do:
-    if list:add-last( s ) then do:
-      assign
-      list:private-data = list:private-data + (if list:private-data = "":u then "":U else {&comma-char}) + s-private.
-    end.
-  end.
+     end case.
+     k = lookup( s, list:list-items ).
+     if k = 0 or k = ? then do:
+        if list:add-last( s ) 
+        then do:
+           assign
+              list:private-data = list:private-data + (if list:private-data = "":u then "":U else {&comma-char}) + s-private.
+        end.
+     end.
   apply "entry" to btn_cancel in frame {&frame-name}.
 END.
 
@@ -325,8 +287,8 @@ ON CHOOSE OF b-del IN FRAME DIALOG-1 /* Удалить */
 DO:
   assign list.
   if list:delete( list ) then do:
-    if v-private-data then do:
-      replace(list:private-data, entry(lookup(comb, comb:list-items), comb:private-data), "":U) no-error .
+    if comb:visible then do:
+      replace(list:private-data, entry(lookup(comb, comb:list-items), vlistValueRet), "":U) no-error .
       replace(list:private-data, ({&comma-char} + {&comma-char}), {&comma-char}).
     end.
   end.
@@ -529,8 +491,15 @@ DO:
   assign list.
   case type:
      when "character" then do:
-        in-char = list.
-        disp in-char with frame {&frame-name}.
+        if comb:visible
+        then do:
+           comb = list.
+           disp comb with frame {&frame-name}.
+        end.
+        else do:
+           in-char = list.
+           disp in-char with frame {&frame-name}.
+        end.
      end.
      when "date" then do:
         in-date = date(list).
@@ -541,8 +510,15 @@ DO:
         disp in-dec with frame {&frame-name}.
      end.
      when "integer" then do:
-        in-int = integer( list ).
-        disp in-int with frame {&frame-name}.
+        if comb:visible
+        then do:
+           comb = list.
+           disp comb with frame {&frame-name}.
+        end.
+        else do:
+           in-int = integer( list ).
+           disp in-int with frame {&frame-name}.
+        end.
      end.
   end case.
 END.
@@ -569,6 +545,8 @@ ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} APPLY "END-ERROR":U TO SELF.
 
 { gbl/app_help.i }
 
+{ gbl/ed_date.i in-date }
+
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
@@ -587,7 +565,7 @@ DO ON ERROR    UNDO MAIN-BLOCK, return error
   assign incl = input frame {&frame-name} togl.
   assign
   sel_list_rus = list:list-items
-  sel_list     = (if v-private-data then list:private-data else list:list-items)
+  sel_list     = (if vlistValueRet ne ? then list:private-data else list:list-items)
   .
 
 END.
@@ -647,303 +625,17 @@ PROCEDURE UI_on :
   Parameters:  <none>
   Notes:
 -------------------------------------------------------------*/
-define variable dca as integer no-undo .
-define variable v-label as character no-undo .
-define variable v-tooltip as character no-undo .
-define variable ii as integer no-undo .
 assign
 list:private-data in frame {&frame-name} = "".
 
   disp togl with frame {&frame-name}.
   enable b-add b-del list togl Btn_OK Btn_Cancel b-help with frame {&frame-name}.
-  case type:
-          when "character" then do:
-            if can-do( "trn-stat,trn-type,order-status-all,order-type-all,ext-doc-type,pr-stat,fbr-stat,gds-type,form-type,actions," +
-                        "tbl-name,purch-code,fin-doc-stat,fin-doc-type,fin-ext-doc-type," +
-                        "gds-hist-subject,cli-hist-subject,dc-hist-subject,dc-type-hist-subject,tax-hist-subject,hist-source-type,scl-hist-subject," +
-                        "contract-type,usl-opl,db-rec-attr-type,db-rec-attr-cmd,nws-coll_codes," +
-                        "cd-types,cd-types-real,cd-types-discnt,rcv-type-all,wth-ext-type", spr ) then do:
-               frame {&frame-name}:title = "Выберите значение".
-               case spr:
-                 when "trn-stat" then comb:list-items = {&trn-stat}.
-                 when "order-status-all"  then comb:list-items = {&ord-status}.
-                 when "rcv-type-all"      then
-                  assign
-                    comb:list-items =  {&rcv-type-spis_full}
-                    comb:private-data = {&rcv-type-spis}
-                    comb:inner-lines = num-entries({&rcv-type-spis})
-                    v-private-data = yes
-                    .
-                 when "order-type-all"  then comb:list-items = {&order-type-all}.
-                 when "trn-type" then comb:list-items = {&trn-type}.
-                 when "ext-doc-type" then do:
-                  assign
-                  comb:list-items = {&TDEDT_List-full}
-                  comb:private-data = {&TDEDT_List}
-                  comb:inner-lines = num-entries({&TDEDT_List})
-                  v-private-data = yes
-                  .
-                 end.
-                 when "db-rec-attr-cmd" then do:
-                  assign
-                  comb:private-data = {&db-rec-attr-list}
-                  comb:inner-lines = num-entries({&db-rec-attr-list})
-                  v-private-data = yes
-                  .
-                  do ii = 1 to comb:inner-lines:
-                    assign
-                    comb:list-items = (if ii = 1 then "":U else comb:list-items) +
-                                      (if ii = 1 then "":U else {&comma-char}) +
-                                      progs-title-function(entry(ii, comb:private-data))
-                    .
-                  end.
-                 end.
-                 when "nws-coll_codes" then do:
-                  assign
-                  comb:private-data = {&nws-coll_codes}
-                  comb:inner-lines = num-entries({&nws-coll_codes})
-                  v-private-data = yes
-                  .
-&scop nws-coll_code entry(ii, comb:private-data)
-                  do ii = 1 to comb:inner-lines:
-                    assign
-                    comb:list-items = (if ii = 1 then "":U else comb:list-items) +
-                                      (if ii = 1 then "":U else {&comma-char}) +
-                                      {&nws-coll_name}
-                    .
-                  end.
-                 end.
-
-                 when "fin-doc-stat"  then comb:list-items = {&fin-status-all}.
-                 when "fin-doc-type"  then comb:list-items = {&fin-doc-types}.
-                 when "fin-ext-doc-type" then do:
-                  assign
-                  comb:list-items = {&fin-ext-doc-types-full}
-                  comb:private-data = {&fin-ext-doc-types}
-                  comb:inner-lines = num-entries({&fin-ext-doc-types-full})
-                  v-private-data = yes
-                  .
-                 end.
-                 when "pr-stat" then comb:list-items  = {&pr-stat}.
-                 when "fbr-stat" then comb:list-items = {&fbr-stat}.
-                 when "gds-type" then comb:list-items = {&gds-type}.
-                 when "actions" then comb:list-items = {&h-actions}.
-                 when "tbl-name" then comb:list-items = {&h-tbl-names}.
-                 when "purch-code" then comb:list-items = {&purchase-codes-full}.
-                 WHEN "form-type" THEN DO:
-                   ASSIGN comb :LIST-ITEMS  = "{&form-type}"
-                          comb :INNER-LINES = NUM-ENTRIES( "{&form-type}" ).
-                 END.
-                 when "gds-hist-subject"  then do:
-                 assign
-                 comb:list-items = {&gds-hist-subject-full}
-                 comb:private-data = {&gds-hist-subject}
-                 v-private-data = yes
-                 .
-                 end.
-                 when "cli-hist-subject"  then
-                 assign
-                 comb:list-items = {&cli-hist-subject-full}
-                 comb:private-data = {&cli-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "dc-hist-subject"  then
-                 assign
-                 comb:list-items = {&dc-hist-subject-full}
-                 comb:private-data = {&dc-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "dc-type-hist-subject"  then
-                 assign
-                 comb:list-items = {&dc-type-hist-subject-full}
-                 comb:private-data = {&dc-type-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "tax-hist-subject"  then
-                 assign
-                 comb:list-items = {&tax-hist-subject-full}
-                 comb:private-data = {&tax-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "gds-grp-hist-subject"  then
-                 assign
-                 comb:list-items = {&gds-grp-hist-subject-full}
-                 comb:private-data = {&gds-grp-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "cli-grp-hist-subject"  then
-                 assign
-                 comb:list-items = {&cli-grp-hist-subject-full}
-                 comb:private-data = {&cli-grp-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "fbr-gds-grp-hist-subject"  then
-                 assign
-                 comb:list-items = {&fbr-gds-grp-hist-subject-full}
-                 comb:private-data = {&fbr-gds-grp-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "plc-hist-subject"  then
-                 assign
-                 comb:list-items = {&plc-hist-subject-full}
-                 comb:private-data = {&plc-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "pmp-hist-subject"  then
-                 assign
-                 comb:list-items = {&pmp-hist-subject-full}
-                 comb:private-data = {&pmp-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "nzl-hist-subject"  then
-                 assign
-                 comb:list-items = {&nzl-hist-subject-full}
-                 comb:private-data = {&nzl-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "sht-hist-subject"  then
-                 assign
-                 comb:list-items = {&sht-hist-subject-full}
-                 comb:private-data = {&sht-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "sert-hist-subject"  then
-                 assign
-                 comb:list-items = {&sert-hist-subject-full}
-                 comb:private-data = {&sert-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "hist-source-type"  then
-                 assign
-                 comb:list-items = {&hn-sources-full}
-                 comb:private-data = {&hn-sources}
-                 v-private-data = yes
-                 .
-                 when "scl-hist-subject"  then
-                 assign
-                 comb:list-items = {&scl-hist-subject-full}
-                 comb:private-data = {&scl-hist-subject}
-                 v-private-data = yes
-                 .
-                 when "contract-type"  then assign comb:list-items = {&contract-type-list} .
-                 when "usl-opl"  then assign comb:list-items = {&contr-usl-opl-list} .
-                 when "db-rec-attr-type" then do:
-                  assign
-                  comb:list-items = "commit,execution,recover"
-                  .
-                 end.
-                 when "cd-types" then do:
-                  assign
-                  comb:list-items = {&cd-type-codes-full}
-                  comb:private-data = {&cd-type-codes}
-                  comb:inner-lines = num-entries({&cd-type-codes})
-                  v-private-data = yes
-                  .
-                 end.
-                 when "cd-types-real" then do:
-                  assign
-                  comb:list-items = {&cd-type-codes-real-full}
-                  comb:private-data = {&cd-type-codes-real}
-                  comb:inner-lines = num-entries({&cd-type-codes-real})
-                  v-private-data = yes
-                  .
-                 end.
-                 when "cd-types-discnt" then do:
-                  assign
-                  comb:list-items = {&cd-type-codes-discnt-full}
-                  comb:private-data = {&cd-type-codes-discnt}
-                  comb:inner-lines = num-entries({&cd-type-codes-discnt})
-                  v-private-data = yes
-                  .
-                 end.
-                 when "wth-ext-type" then do:
-                  assign
-                    comb:list-items   = {&WDEDT_List-full}
-                    comb:private-data = {&WDEDT_List}
-                    comb:inner-lines  = num-entries({&WDEDT_List})
-                    v-private-data = yes
-                  .
-                 end.
-               end case.
-               assign comb = entry( 1, comb:list-items ).
-               disp comb with frame {&frame-name}.
-               enable comb  Btn_OK Btn_Cancel b-help with frame {&frame-name}.
-               assign
-                 in-char:visible = no
-                 in-date:visible = no
-                 in-dec:visible  = no
-                 in-int:visible    = no.
-            end.
-            else do:
-               frame {&frame-name}:title = "Введите символьное значение".
-               disp in-char togl with frame {&frame-name}.
-               enable in-char with frame {&frame-name}.
-               assign
-                 comb:visible   = no
-                 in-date:visible = no
-                 in-dec:visible  = no
-                 in-int:visible    = no.
-            end.
-          end.
-          when "date" then do:
-               frame {&frame-name}:title = "Введите дату".
-               disp in-date togl with frame {&frame-name}.
-               enable in-date  with frame {&frame-name}.
-               assign
-                 comb:visible   = no
-                 in-char:visible = no
-                 in-dec:visible  = no
-                 in-int:visible    = no.
-          end.
-          when "decimal" then do:
-               frame {&frame-name}:title = "Введите десятичное значение".
-               disp in-dec togl with frame {&frame-name}.
-               enable in-dec with frame {&frame-name}.
-               assign
-                 comb:visible   = no
-                 in-date:visible = no
-                 in-char:visible = no
-                 in-int:visible    = no.
-          end.
-          when "integer" then do:
-            if can-do( "course-type,purch-code,hist-action,receipt-code,wth-receipt-code", spr ) then do:
-               assign frame {&frame-name}:title = "Выберите значение".
-               case spr :
-                 when "course-type" then assign comb:list-items    = "ЦБ,ММВБ"  comb:inner-lines = 2.
-                 when "purch-code" then assign
-                                        comb:list-items  = {&purchase-codes-full}
-                                        comb:inner-lines = num-entries({&purchase-codes-full})
-                                        .
-                 when "hist-action"  then
-                 assign
-                 comb:list-items = {&hn-actions-full}
-                 comb:inner-lines = num-entries({&hn-actions-full})
-                 .
-                 when "receipt-code" then comb:list-items = {&receipt-codes-full}.
-                 when "wth-receipt-code" then comb:list-items = {&wth-receipt-codes-full}.
-               end case.
-               assign comb = entry( 1, comb:list-items ).
-               disp comb with frame {&frame-name}.
-               enable comb  Btn_OK Btn_Cancel b-help with frame {&frame-name}.
-               assign
-                in-char:visible = no
-                in-date:visible = no
-                in-dec:visible  = no
-                in-int:visible    = no.
-            end.
-            else do:
-               frame {&frame-name}:title = "Введите целое значение".
-               disp in-int togl with frame {&frame-name}.
-               enable in-int with frame {&frame-name}.
-               assign
-                 comb:visible   = no
-                 in-date:visible = no
-                 in-dec:visible  = no
-                 in-char:visible = no.
-            end.
-          end.
-  end case.
+run InitForm.
+toggle-date:visible = false.
 END PROCEDURE.
+
+
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+{ gbl\f-const.i }

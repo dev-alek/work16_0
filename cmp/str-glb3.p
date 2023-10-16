@@ -931,7 +931,6 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fbr-type 
 ,{&bef-hn-rename}~
 ,{&bef-hn-art-rename}~
 ,{&bef-hn-switch-off}~
-,{&bef-hn-delete}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define hn-actions {&hn-actions}" ).
 
@@ -943,7 +942,6 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define hn-action
 ,{&bef-hn-rename-full}~
 ,{&bef-hn-art-rename-full}~
 ,{&bef-hn-switch-off-full}~
-,{&bef-hn-delete-full}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define hn-actions-full {&hn-actions-full}" ).
 
