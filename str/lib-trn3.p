@@ -5250,7 +5250,18 @@ procedure CrTempDump:
       assign
          ttDump.BegTime = vBegTime
          ttDump.EndTime = vEndTime
-         .         
+         .  
+      if session:debug-alert
+      then do:
+         OUTPUT STREAM out_s TO "avrgdens.log" APPEND. 
+         put stream out_s unformatted "Приемка топлива: "          
+         " Начало слива " ttDump.BegTime 
+         " Конец слива " ttDump.EndTime
+         " Топливо " p-pl-code 
+         " Код товара " p-gds-code
+         skip.
+         OUTPUT STREAM out_s CLOSE.
+      end.       
    end.          
    
 end procedure. /* CrTempDump */
@@ -5286,11 +5297,24 @@ procedure ChkRvsSkip:
    else do:                         
       /* проверяем, что мы не попали во временной период слива */
       find first ttDump where 
-                 ttDump.BegTime >= datetime(p-sys-date, (p-sys-time-int * 1000 )) 
-             and ttDump.EndTime <= datetime(p-sys-date, (p-sys-time-int * 1000 ))
+                 ttDump.BegTime <= datetime(p-sys-date, (p-sys-time-int * 1000 )) 
+             and ttDump.EndTime >= datetime(p-sys-date, (p-sys-time-int * 1000 ))
              no-error.
-      if available ttDump then      
+      if available ttDump then do:
+         if session:debug-alert
+         then do:
+            OUTPUT STREAM out_s TO "avrgdens.log" APPEND. 
+            put stream out_s unformatted "Пропуск автосверки из-за попадания в период слива: " 
+            " Время чека " datetime(p-sys-date, (p-sys-time-int * 1000 )) 
+            " Начало слива " ttDump.BegTime 
+            " Конец слива " ttDump.EndTime
+            " Топливо " p-pl-code
+            " Код товара " p-gds-code
+            skip.
+            OUTPUT STREAM out_s CLOSE.     
+         end.   
          vNeedSkip = yes.
+      end.   
    end.    
 end procedure. /* ChkRvsRvd */   
 
