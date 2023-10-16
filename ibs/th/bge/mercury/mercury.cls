@@ -199,7 +199,7 @@ class ibs.th.bge.mercury.mercury:
         sw:start-element ("apldef:submitApplicationRequest") .
           sw:write-data-element ("apldef:apiKey", apiKey) .
           sw:start-element ("apl:application") .
-            sw:write-data-element ("apl:serviceId", "mercury-g2b.service:2.0") .
+            sw:write-data-element ("apl:serviceId", "mercury-g2b.service:2.1") .
             sw:write-data-element ("apl:issuerId", issuerId) .
             sw:write-data-element ("apl:issueDate", iso-date(now)) .
             sw:start-element ("apl:data") .
@@ -225,16 +225,16 @@ class ibs.th.bge.mercury.mercury:
     then do :
       if proxy-ssl
       then do :
-        cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+        cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.1/ApplicationManagementService >&3",
                         search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_, proxy-addr).
       end.
       else do :
-        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.1/ApplicationManagementService >&3",
                         search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
       end.
     end.
     else do :
-      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.1/ApplicationManagementService >&3",
                       search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_).
     end. 
     os-command silent value (cmd).
@@ -326,7 +326,13 @@ class ibs.th.bge.mercury.mercury:
       v-cli-ent-guid = entry(2, buf_ext-classif.charKey_Two, {&delim-cmd}) no-error.
     if (v-cli-be-guid = "" or v-cli-be-guid = ?) and inVsdSubs:VsdObjCurr:CliType = 'маг' then v-cli-be-guid = issuerId .
     
-    find first buf_goods no-lock where buf_goods.gds-code = inVsdSubs:VsdObjCurr:GdsCode .
+    find first buf_goods no-lock where buf_goods.gds-code = inVsdSubs:VsdObjCurr:GdsCode no-error .
+    if not available buf_goods
+    then do :
+      p-Status_ = "CritErr_GdsCode" .
+      p-Msg = "Не найден товар из ВСД. Код товара в ВСД - " + string(inVsdSubs:VsdObjCurr:GdsCode) . .
+      return .
+    end .
     find first buf_units-attr no-lock where buf_units-attr.unit-name = buf_goods.unit-base
                                         and buf_units-attr.attr-code = "MercGuid"
                                         no-error .
@@ -395,7 +401,7 @@ class ibs.th.bge.mercury.mercury:
         sw:start-element ("apldef:submitApplicationRequest") .
           sw:write-data-element ("apldef:apiKey", apiKey) .
           sw:start-element ("apl:application") .
-            sw:write-data-element ("apl:serviceId", "mercury-g2b.service:2.0") .
+            sw:write-data-element ("apl:serviceId", "mercury-g2b.service:2.1") .
             sw:write-data-element ("apl:issuerId", issuerId) .
             sw:write-data-element ("apl:issueDate", iso-date(now)) .
             sw:start-element ("apl:data") .
@@ -455,7 +461,8 @@ class ibs.th.bge.mercury.mercury:
                     sw:start-element ("vd:dateOfProduction") .
                       sw:start-element ("vd:firstDate") .
                         sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:DateOut, ":")) .
-                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                        if entry(2, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:DateOut, ":")) .
                         if entry(3, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
                         then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:DateOut, ":")) .
                         if entry(4, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
@@ -465,7 +472,8 @@ class ibs.th.bge.mercury.mercury:
                     then do :
                       sw:start-element ("vd:secondDate") .
                         sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
-                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                        if entry(2, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
+                        then sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
                         if entry(3, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
                         then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
                         if entry(4, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
@@ -476,17 +484,19 @@ class ibs.th.bge.mercury.mercury:
                     sw:start-element ("vd:expiryDate") .
                       sw:start-element ("vd:firstDate") .
                         sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
-                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
-                        if entry(3, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        if entry(2, inVsdSubs:VsdObjCurr:ExpiryDate, ":") <> ""
+                        then sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:ExpiryDate, ":") <> ""
                         then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
-                        if entry(4, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        if entry(4, inVsdSubs:VsdObjCurr:ExpiryDate, ":") <> ""
                         then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
                       sw:end-element ("vd:firstDate") .
                     if inVsdSubs:VsdObjCurr:ExpiryDate2 <> ? and inVsdSubs:VsdObjCurr:ExpiryDate2 <> ":::" and inVsdSubs:VsdObjCurr:ExpiryDate2 <> ""
                     then do :
                       sw:start-element ("vd:secondDate") .
                         sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
-                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                        if entry(2, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
+                        then sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
                         if entry(3, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
                         then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
                         if entry(4, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
@@ -635,7 +645,8 @@ class ibs.th.bge.mercury.mercury:
                     sw:start-element ("vd:dateOfProduction") .
                       sw:start-element ("vd:firstDate") .
                         sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:DateOut, ":")) .
-                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:DateOut, ":")) .
+                        if entry(2, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        then sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:DateOut, ":")) .
                         if entry(3, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
                         then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:DateOut, ":")) .
                         if entry(4, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
@@ -645,7 +656,8 @@ class ibs.th.bge.mercury.mercury:
                     then do :
                       sw:start-element ("vd:secondDate") .
                         sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
-                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
+                        if entry(2, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
+                        then sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
                         if entry(3, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
                         then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":")) .
                         if entry(4, inVsdSubs:VsdObjCurr:ExpiryOutDate, ":") <> ""
@@ -656,17 +668,19 @@ class ibs.th.bge.mercury.mercury:
                     sw:start-element ("vd:expiryDate") .
                       sw:start-element ("vd:firstDate") .
                         sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
-                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
-                        if entry(3, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        if entry(2, inVsdSubs:VsdObjCurr:ExpiryDate, ":") <> ""
+                        then sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
+                        if entry(3, inVsdSubs:VsdObjCurr:ExpiryDate, ":") <> ""
                         then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
-                        if entry(4, inVsdSubs:VsdObjCurr:DateOut, ":") <> ""
+                        if entry(4, inVsdSubs:VsdObjCurr:ExpiryDate, ":") <> ""
                         then sw:write-data-element ("dt:hour", entry(4, inVsdSubs:VsdObjCurr:ExpiryDate, ":")) .
                       sw:end-element ("vd:firstDate") .
                     if inVsdSubs:VsdObjCurr:ExpiryDate2 <> ? and inVsdSubs:VsdObjCurr:ExpiryDate2 <> ":::" and inVsdSubs:VsdObjCurr:ExpiryDate2 <> ""
                     then do :
                       sw:start-element ("vd:secondDate") .
                         sw:write-data-element ("dt:year", entry(1, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
-                        sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
+                        if entry(2, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
+                        then sw:write-data-element ("dt:month", entry(2, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
                         if entry(3, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
                         then sw:write-data-element ("dt:day", entry(3, inVsdSubs:VsdObjCurr:ExpiryDate2, ":")) .
                         if entry(4, inVsdSubs:VsdObjCurr:ExpiryDate2, ":") <> ""
@@ -732,7 +746,7 @@ class ibs.th.bge.mercury.mercury:
                           sw:write-data-element ("vd:issueNumber", entry(rd, inVsdSubs:VsdObjCurr:TTNissueNumber, chr(4))) .
                           sw:write-data-element ("vd:issueDate", entry(rd, inVsdSubs:VsdObjCurr:TTNissueDate, chr(4))) .
                           sw:write-data-element ("vd:type", entry(rd, inVsdSubs:VsdObjCurr:TTNtype, chr(4))) .
-                        sw:end-element ("vd:waybill") .  
+                        sw:end-element ("vd:waybill") . 
                       end.
                     end.
                     sw:start-element ("vd:vetCertificate") .
@@ -798,16 +812,16 @@ class ibs.th.bge.mercury.mercury:
     then do :
       if proxy-ssl
       then do :
-        cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+        cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.1/ApplicationManagementService >&3",
                         search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_, proxy-addr).
       end.
       else do :
-        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.1/ApplicationManagementService >&3",
                         search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
       end.
     end.
     else do :
-      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.1/ApplicationManagementService >&3",
                       search ("exe/curl.exe"), SearchFile(v-file), v-resp-file, login, password, server_).
     end.
     os-command silent value (cmd).
@@ -1134,16 +1148,16 @@ class ibs.th.bge.mercury.mercury:
     then do :
       if proxy-ssl
       then do :
-        cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+        cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.1/ApplicationManagementService >&3",
                         search ("exe/curl.exe"), SearchFile(v-file), v-result-file, login, password, server_, proxy-addr).
       end.
       else do :
-        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+        cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.1/ApplicationManagementService >&3",
                         search ("exe/curl.exe"), SearchFile(v-file), v-result-file, login, password, server_, proxy-addr, proxy-login, proxy-pswd).
       end.
     end.
     else do :
-      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ApplicationManagementService >&3",
+      cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.1/ApplicationManagementService >&3",
                       search ("exe/curl.exe"), SearchFile(v-file), v-result-file, login, password, server_).
     end.
     os-command silent value (cmd).
