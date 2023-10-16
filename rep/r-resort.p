@@ -223,10 +223,9 @@ on error undo, return error return-value
     'Дата проведения: ' string( t_inv-date, "99/99/9999":U ) skip
   .
   put stream text_out unformatted
-    '-----------------------------------------------------------------------------------------------------------------------------' skip
-    '|  N |Номенкла-|     Наименование, сорт,                        |Ед.|Количест-|  Цена   |   Сумма   |     %     |   Сумма   |' skip
-    '| п/п|  турный |        размер                                  |изм|   во    |Розничная| Розничная | Отклонения|  Учетная  |' skip
-    '|    |  номер  |                                                |   |         |         |           |           |           |' skip
+    '-----------------------------------------------------------------------------------------------------------------------------------' skip
+    '|  N | Номенклатурный |     Наименование, сорт,                        |Ед.|Количест-|  Цена   |   Сумма   |     %     |   Сумма   |' skip
+    '| п/п|     номер      |        размер                                  |изм|   во    |Розничная| Розничная | Отклонения|  Учетная  |' skip
     /*'-----------------------------------------------------------------------------------------------------------------------------' skip */
   .
 
@@ -292,6 +291,7 @@ on error undo, return error return-value
         sum-cost-in    = 0.00
         sum-cost-out   = 0.00
         fact-qnty-in   = 0.00
+        v-sum-sale-in  = 0.00
         fact-qnty-out  = 0.00.
     end.
 
@@ -340,23 +340,25 @@ on error undo, return error return-value
       view-as alert-box error .
       undo, return error .
     end.
-    for each bf_parts-out no-lock where
-             bf_parts-out.out-code  = bf_trn-doc.doc-code          and
-             bf_parts-out.obj-type  = bf_trn-doc.obj-type          and
-             bf_parts-out.obj-code  = bf_trn-doc.obj-code          and
-             bf_parts-out.artic     = bf_goods-out.artic           and
-             bf_parts-out.prod-type = bf_goods-out.prod-type       and
-             bf_parts-out.prod-code = bf_goods-out.prod-code       /*and
+
+     for each bf_parts-out no-lock where
+        bf_parts-out.out-code  = bf_trn-doc.doc-code          and
+        bf_parts-out.obj-type  = bf_trn-doc.obj-type          and
+        bf_parts-out.obj-code  = bf_trn-doc.obj-code          and
+        bf_parts-out.artic     = bf_goods-out.artic           and
+        bf_parts-out.prod-type = bf_goods-out.prod-type       and
+        bf_parts-out.prod-code = bf_goods-out.prod-code       and
+        bf_parts-out.fact-qnty < 0 /*and
              bf_parts-out.in-code   = bf_parts-root.orig-in-code   and
              bf_parts-out.part-code = bf_parts-root.orig-part-code*/ on error undo, return error return-value :
-        /*if bf_parts-out.part-code = bf_parts-root.orig-part-code then 
-        do:                */
+        if bf_parts-out.part-code = bf_parts-root.orig-part-code then 
+        do:                
            assign
               sum-sale-out  = sum-sale-out  + price-sale-out          * bf_parts-out.fact-qnty
               sum-cost-out  = sum-cost-out  + bf_parts-out.price-rubl * bf_parts-out.fact-qnty 
               fact-qnty-out = fact-qnty-out + bf_parts-out.fact-qnty
               .
-/*        end.
+        end.
         else 
         do:
            if bf_parts-out.out-code   = bf_parts-root.in-code then 
@@ -367,7 +369,7 @@ on error undo, return error return-value
                  fact-qnty-out = fact-qnty-out + bf_parts-out.fact-qnty
                  .            
            end.   
-        end.    */
+        end.   
      end. /* for each bf_parts-out */
      for each bf_parts-in   no-lock where
         bf_parts-in.out-code   = bf_trn-doc.doc-code         and
@@ -375,7 +377,8 @@ on error undo, return error return-value
         bf_parts-in.obj-code   = bf_trn-doc.obj-code         and
         bf_parts-in.artic      = bf_goods-in.artic           and
         bf_parts-in.prod-type  = bf_goods-in.prod-type       and
-        bf_parts-in.prod-code  = bf_goods-in.prod-code       /*and
+        bf_parts-in.prod-code  = bf_goods-in.prod-code       and
+        bf_parts-in.fact-qnty > 0 /*and
              bf_parts-in.in-code    = bf_parts-root.in-code       and
              bf_parts-in.part-code  = bf_parts-root.part-code */    on error undo, return error return-value :
         if bf_parts-in.part-code  = bf_parts-root.part-code then 
@@ -433,7 +436,7 @@ on error undo, return error return-value
     end .
     find first tt-resort-out where tt-resort-out.artic = bf_goods-out.artic no-error .
     if available tt-resort-out then do :
-       assign tt-resort-out.d-per-cent = - (( v-sum-sale-in + tt-resort-out.sum-sale ) / tt-resort-out.sum-sale ) * 100.00 .
+       assign tt-resort-out.d-per-cent = (( v-sum-sale-in + tt-resort-out.sum-sale) / v-sum-sale-in ) * 100.00 .
     end .
   end. /* for each bf_parts-root */
 
@@ -447,11 +450,11 @@ on error undo, return error return-value
         v-stroka-out      = v-stroka-out      + 1
       .
       put stream text_out unformatted
-        '|----|---------|------------------------------------------------|---|---------|---------|-----------|-----------|-----------|' skip
+        '|----|----------------|------------------------------------------------|---|---------|---------|-----------|-----------|-----------|' skip
       .
       put stream text_out unformatted                                                '|'      /* списание */
         string( string( v-stroka-out,                 ">>>9":U  ), "x(4)":U  )       '|'      /* 1 */
-        string( tt-resort-out.artic,                  "x(9)":U  )                    '|'      /* 2 */
+        string( tt-resort-out.artic,                  "x(16)":U  )                   '|'      /* 2 */
         string( tt-resort-out.gds-name,               "x(48)":U )                    '|'      /* 3 */
         string( tt-resort-out.unit-base,              "x(3)":U  )                    '|'      /* 4 */
         string( string( tt-resort-out.fact-qnty,      "->>>>9.<<":U ), "x(9)":U  )   '|'      /* 5 */
@@ -463,7 +466,7 @@ on error undo, return error return-value
       if length( tt-resort-out.gds-name ) > 48
       then do:
         put stream text_out unformatted
-          '|    |         |'
+          '|    |                |'
           string( substring( tt-resort-out.gds-name, 49 ), "x(48)":U )
           '|   |         |         |           |           |           |' skip
         .
@@ -471,7 +474,7 @@ on error undo, return error return-value
       run r-resort-write-line-data in this-procedure
         (                                                                     /* списание */
           input v-stroka-out                                                  /* 1 */
-        , input tt-resort-out.artic                                           /* 2 */
+        , input "'" + tt-resort-out.artic                                           /* 2 */
         , input tt-resort-out.gds-name                                        /* 3 */
         , input tt-resort-out.unit-base                                       /* 4 */
         , input trim( string( tt-resort-out.fact-qnty,    "->>>>9.<<":U ) )   /* 5 */
@@ -488,11 +491,11 @@ on error undo, return error return-value
           itog-sum-sale-in = itog-sum-sale-in + tt-resort-in.sum-sale
         .
       put stream text_out unformatted
-        '|    |---------|------------------------------------------------|---|---------|---------|-----------|-----------|-----------|' skip
+        '|    |----------------|------------------------------------------------|---|---------|---------|-----------|-----------|-----------|' skip
       .
       put stream text_out unformatted                                            '|'      /* оприходование */
                                                                              '    |'      /* 1 */
-        string( tt-resort-in.artic,               "x(9)":U  )                    '|'      /* 2 */
+        string( tt-resort-in.artic,               "x(16)":U  )                   '|'      /* 2 */
         string( tt-resort-in.gds-name,            "x(48)":U )                    '|'      /* 3 */
         string( tt-resort-in.unit-base,           "x(3)":U  )                    '|'      /* 4 */
         string( string ( tt-resort-in.fact-qnty,  "->>>>9.<<":U ), "x(9)":U  )   '|'      /* 5 */
@@ -504,7 +507,7 @@ on error undo, return error return-value
       if length( tt-resort-in.gds-name ) > 48
       then do:
         put stream text_out unformatted
-          '|    |         |'
+          '|    |                |'
           string( substring( tt-resort-in.gds-name, 49 ), "x(48)":U )
           '|   |         |         |           |           |           |' skip
         .
@@ -560,13 +563,13 @@ on error undo, return error return-value
     .
   end.
   put stream text_out unformatted
-    '-----------------------------------------------------------------------------------------------------------------------------' skip
-    '                                                       Итого:                           |'
+    '------------------------------------------------------------------------------------------------------------------------------------' skip
+    '                                                              Итого:                           |'
     string( string( sum-sale-total, "->>>>>>9.99":U ), "x(11)":U )
                                                                                                         '|           |'
     string( string( sum-cost-total, "->>>>>>9.99":U ), "x(11)":U )
                                                                                                                                 '|' skip
-    '                                                                                        -------------------------------------' skip
+    '                                                                                               -------------------------------------' skip
     '    Разница сумм розничная: '
     string( word-sum-buf-1, "x(97)":U  ) skip
     string( word-sum-buf-2, "x(125)":U ) skip
