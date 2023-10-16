@@ -278,6 +278,7 @@ assortment-matrix~
 ,tax~
 ,c-tax~
 ,tax-rate~
+,tax-rate-attr~
 ,c-tax-rate~
 ,tax-rate-gds~
 ,tax-rate-gds-grp~
