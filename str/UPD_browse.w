@@ -5177,10 +5177,13 @@ PROCEDURE save_mark :
    define VARIABLE v-rowid      as rowid     no-undo .
    define VARIABLE v-tbl-name   as character no-undo .
    define variable v-ungroup_ok as logical   no-undo .
+   define variable v-gds-code   as integer   no-undo.
+   define variable vFlag        as logical   no-undo.
+   
    b_cleaggds:sensitive in frame {&frame-name} = no.
    b_cleaggds:visible   in frame {&frame-name} = no.
    m-gds-code:visible   in frame {&frame-name} = no.
-   define variable v-gds-code as integer no-undo.
+   
    F-text = "" .
    f-text:screen-value in frame {&frame-name} = "" .
    v-GTIN = "" .
@@ -5214,17 +5217,6 @@ PROCEDURE save_mark :
    /*УПД проверка марок*/
    if p-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
    do:
-      define variable vFlag as logical no-undo.
-      run checkEMRC(v-mark, output vFlag).
-      if not vFlag
-      then do:
-         F-text = "МРЦ на упаковке меньше ЕМЦ. Приемка товара запрещена." .
-         display F-text with frame {&frame-name}.
-         v-mark:screen-value = "" .
-         v-mark = "" .
-         return no-apply.
-      end.
-         
       /*Проверка марки*/
       /*           f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .                                                                      */
       /*      if F-text = "" then do:                                                                                                                          */
@@ -5240,6 +5232,15 @@ PROCEDURE save_mark :
          and buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
       if available (buf_utd-marking-lines) then
       do:
+         run checkEMRC(v-mark, output vFlag).
+         if not vFlag
+         then do:
+            F-text = "МРЦ на упаковке меньше ЕМЦ. Приемка товара запрещена." .
+            display F-text with frame {&frame-name}.
+            v-mark:screen-value = "" .
+            v-mark = "" .
+            return no-apply.
+         end.
          if CheckErrForMarkLine(buffer buf_utd-marking-lines:handle)
          then do:
             F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .
