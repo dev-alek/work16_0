@@ -2781,48 +2781,6 @@ then do:
     /*    v-file-name =   "delta.txt".*/
     v-delta-mas-qnty = 0.
     v-lvl-qnty = 0 .
-    /*     if search(v-file-name ) <> ? then do:*/
-
-    IF rdc-value = "pomi-rn"
-    and available tt-meas-file
-    and   tt-meas-file.log-brutto = yes
-    and not is-sug(bf_rvs-line.gds-code)
-    then do:
-    /*Тип резервуара*/
-    run placelib_get-attr in this-procedure  (
-        input {&place-type}
-        ,input p-obj-code
-        ,input p-obj-type
-        ,input p-pl-code
-        ,output v-value
-        ,output v-ok      ) no-error.
-    if v-ok then 
-    do :
-
-        { gbl/getsect.i run  p-obj-type  p-obj-code  {&attr-petrol} }
-
-        if integer(v-value) = 1 then 
-        do:
-            for each thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-petrol_Delta-mass-vert}:    
-                 assign v-full-name = thbjattr_thbj-attr.property-value-character .
-            end.
-        end.    
-        else 
-        do:
-            for each thbjattr_thbj-attr where thbjattr_thbj-attr.prop-code = {&attr-petrol_Delta-mass-horiz}:    
-                assign v-full-name = thbjattr_thbj-attr.property-value-character .
-            end.
-        end.    
-    
-        do ii = 1 to NUM-ENTRIES(v-full-name,{&new-line}): 
-            v-file-name = string(entry(ii,v-full-name,{&new-line})).
-            if v-lvl-qnty < bf_rvs-line.state-level-total and bf_rvs-line.state-level-total <=  (decimal ( entry(1, v-file-name, ";")) * 100) then 
-            do: 
-                v-delta-mas-qnty =  decimal( entry(2, v-file-name, ";") ) no-error.
-            end.
-            v-lvl-qnty =  decimal ( entry(1, v-file-name, ";")  ) * 100   .
-        end.
-    end.
     find first rvs-line-attr exclusive-lock
         where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
         and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
@@ -2830,11 +2788,7 @@ then do:
         and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
         and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
         and rvs-line-attr.attr-code = "delta-mass-qnty" no-error.
-    if available rvs-line-attr then
-    do :
-        if v-delta-mas-qnty > 0.65 then rvs-line-attr.attr-value = "0.65" . else rvs-line-attr.attr-value = string(v-delta-mas-qnty  ).
-    end.
-    else
+    if not available rvs-line-attr then 
     do :
         create rvs-line-attr.
         assign
@@ -2845,54 +2799,13 @@ then do:
             rvs-line-attr.rvs-code   = bf_rvs-line.rvs-code
             rvs-line-attr.attr-code  = "delta-mass-qnty"
         .
-        if v-delta-mas-qnty > 0.65 then rvs-line-attr.attr-value = "0.65" . else rvs-line-attr.attr-value = string(v-delta-mas-qnty  ).
-
-    end.
-    find first rvs-line-attr no-lock
-         where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-           and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-           and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-           and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-           and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-           and rvs-line-attr.attr-code = "is-olddens" no-error.
-    if available rvs-line-attr
-    then do :
-      v-is-olddens = logical(rvs-line-attr.attr-value) no-error.
-      if error-status:error then v-is-olddens = no .
-    end.
-    else do :
-      v-is-olddens = no .
-    end.    
-    find first rvs-line-attr exclusive-lock
-          where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-            and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-            and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-            and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-            and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-            and rvs-line-attr.attr-code = "izmer-density" no-error.
-    if available rvs-line-attr then do :
-      rvs-line-attr.attr-value = if not v-is-olddens then string(bf_rvs-line.density) else string(?) .
-    end.
-    else do :
-      create rvs-line-attr.
-        assign
-            rvs-line-attr.obj-code   = bf_rvs-line.obj-code
-            rvs-line-attr.obj-type   = bf_rvs-line.obj-type
-            rvs-line-attr.gds-code   = bf_rvs-line.gds-code
-            rvs-line-attr.pl-code    = bf_rvs-line.pl-code
-            rvs-line-attr.rvs-code   = bf_rvs-line.rvs-code
-            rvs-line-attr.attr-code  = "izmer-density"
-            rvs-line-attr.attr-value = if not v-is-olddens then string(bf_rvs-line.density) else string(?)
-            .
-    END.
     end.
 
-/*end.*/
-/*end. /**/*/
+    if bf_rvs-line.state-measure-cli-qnty > 200000 then rvs-line-attr.attr-value = "0.5" . else rvs-line-attr.attr-value = "0.65".    
 
     IF ( bf_rvs-line.state-density <= 0 or bf_rvs-line.state-density > 1 or bf_rvs-line.state-density = ? )
     or ( bf_rvs-line.state-temperature = ? )
-    or ( is-sug(bf_rvs-line.gds-code) and (vapor-density = ? or vapor-density = 0 or vapor-density >1 ) )
+    or ( is-sug(bf_rvs-line.gds-code) and (vapor-density = ? or vapor-density = 0 or vapor-density > 1 ) )
     THEN DO:
       /* Для тех у кого установлен параметр olddens */
     { gbl/ptrlprop.i run p-obj-type p-obj-code }
@@ -4482,7 +4395,7 @@ THEN DO:
                   and rvs-line-attr.attr-code = "delta-mass-qnty" no-error.
               if available rvs-line-attr then 
               do :
-                  if v-mm:DeltaOtn_M > 0.65 then rvs-line-attr.attr-value = "0.65". else rvs-line-attr.attr-value = v-mm:DeltaOtn_M  . 
+                  if v-mm:M > 200000 then rvs-line-attr.attr-value = "0.5" . else rvs-line-attr.attr-value = "0.65".     
               end.
               else 
               do :
@@ -4495,7 +4408,7 @@ THEN DO:
                       rvs-line-attr.rvs-code   = bf_rvs-line.rvs-code
                       rvs-line-attr.attr-code  = "delta-mass-qnty"
                   .
-                  if v-mm:DeltaOtn_M > 0.65 then rvs-line-attr.attr-value = "0.65". else rvs-line-attr.attr-value = v-mm:DeltaOtn_M  .
+                  if v-mm:M > 200000 then rvs-line-attr.attr-value = "0.5". else rvs-line-attr.attr-value = "0.65"  .
               end.
             
               ASSIGN
@@ -4721,7 +4634,7 @@ THEN DO:
                   and rvs-line-attr.attr-code = "delta-mass-qnty" no-error.
               if available rvs-line-attr then 
               do :
-                  if v-mm:DeltaOtn_M > 0.65 then rvs-line-attr.attr-value = "0.65". else rvs-line-attr.attr-value = v-mm:DeltaOtn_M  . 
+                  if v-mm:M > 200000 then rvs-line-attr.attr-value = "0.5" . else rvs-line-attr.attr-value = "0.65". 
               end.
               else 
               do :
@@ -4734,7 +4647,7 @@ THEN DO:
                       rvs-line-attr.rvs-code   = bf_rvs-line.rvs-code
                       rvs-line-attr.attr-code  = "delta-mass-qnty"
                   .
-                  if v-mm:DeltaOtn_M > 0.65 then rvs-line-attr.attr-value = "0.65". else rvs-line-attr.attr-value = v-mm:DeltaOtn_M  .
+                  if v-mm:M > 200000 then rvs-line-attr.attr-value = "0.5" . else rvs-line-attr.attr-value = "0.65".
               end.
             
               ASSIGN
@@ -5652,7 +5565,7 @@ procedure lib-rvs_rvsclose : /* rvs-clos */
         ( input parparentproc
          ,input recid( rc_rvs-doc )
          ,input 'close':U
-        ) no-error .
+        )  .
       if error-status :error then do:
         undo tr, return error substitute( 'lib-rvs_rvsclose: Ошибка при изменении статуса&1&2.', {&new-line}, return-value ) .
       end.
