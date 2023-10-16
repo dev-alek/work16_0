@@ -33,10 +33,11 @@ define input parameter parparentproc as widget-handle no-undo .
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$" .
+define variable vss-archive     as character no-undo init "$Archive$":U .  
 define variable vss-description as character no-undo init "Толкач выгрузки на прайс-чекер".
-{ cmp/vssrevis.i }
+
+{ cmp/vssrevis.i } 
 { gbl/getcntxt.i def }
 { cmp/str-glbl.i }
 { cmp/library.i  }
@@ -52,7 +53,6 @@ define variable vss-description as character no-undo init "Толкач выгрузки на пр
 { gbl/prn-lib.i }
 { gbl/waitfram.i }
 { str/placelib.i }
-
 
 
 function f-int-to-chr returns character (input v-int as integer) :
@@ -149,6 +149,78 @@ define buffer buf_tt-place for tt-place .
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD f-int-to-chr Procedure
+function f-int-to-chr returns character (input v-int as integer) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 
 /* ***********************  Control Definitions  ********************** */
@@ -186,7 +258,7 @@ define browse br-place
     tt-place.level-water
     tt-place.total-vol
     tt-place.avrg-temp
-    tt-place.density
+    tt-place.density FORMAT ">>>9.9999"
     tt-place.mass
     tt-place.vapor-density
     tt-place.vapor-pressure
