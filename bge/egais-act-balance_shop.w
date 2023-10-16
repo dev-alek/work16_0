@@ -242,7 +242,7 @@ DEFINE FRAME Dialog-Frame
     tt-act-header.date_ at row 2.5 col 34
     tt-act-header.type_ at row 2.5 col 57
         view-as combo-box inner-lines 7
-        list-items "Пересортица,Излишки,Продукция полученная до 01.01.2016"
+        list-items "Пересортица"
         DROP-DOWN-LIST
     b-mark AT ROW 4 COL 2
     b-sel-all AT ROW 4 COL 5
@@ -975,7 +975,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         b-good:popup-menu in frame {&FRAME-NAME} = menu m-add:handle
         b-good:menu-mouse = 1
         nn = 0
-        tt-act-header.type_:list-items = "Пересортица,Излишки,Продукция полученная до 01.01.2016"
+        tt-act-header.type_:list-items = "Пересортица"
     .
     empty temp-table tt-exts .
     
@@ -986,7 +986,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             tt-act-header.num = "ACOS-" + v-date + '-' + substring(v-cntxt-obj-type,1,1) + string(v-cntxt-obj-code) + '-' + string(int(TIME))
             tt-act-header.date_ = TODAY
             tt-act-header.is-sent = no
-            tt-act-header.type_ = "Продукция полученная до 01.01.2016"
+            tt-act-header.type_ = "Пересортица"
         .
         display tt-act-header.num tt-act-header.date_ tt-act-header.type_ with frame {&FRAME-NAME}.
         enable  tt-act-header.date_ tt-act-header.type_ b-good with frame {&FRAME-NAME}.
