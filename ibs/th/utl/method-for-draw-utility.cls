@@ -215,12 +215,12 @@ class ibs.th.utl.method-for-draw-utility final:
                   /* index pi is primary gds-code - для импорта переопределён на поле gds-code16 */
                   .
                 define temp-table tt-stk-gd2 no-undo 
-                  field gds-name      as character /* переставлена на первую позицию, чтобы соответствовать формату лог-файла */
-                  field gds-code15    as character
-                  field fact-qnty     as decimal /* количество в 15 */
-                  field sum-rubl-cost as decimal /* сумма в учетных ценах в 15 */
-                  field vat-rubl      as decimal /* сумма НДС в учетных ценах в 15 */
-                  field sum-rubl-crsa as decimal /* сумма в продажных ценах в 15 */                
+                  field gds-name        as character /* переставлена на первую позицию, чтобы соответствовать формату лог-файла */
+                  field gds-code15      as character
+                  field fact-qnty       as decimal /* количество в 15 */
+                  field sum-rubl-cost   as decimal /* сумма в учетных ценах в 15 */
+                  field vat-rubl        as decimal /* сумма НДС в учетных ценах в 15 */
+                  field sum-rubl-crsa   as decimal /* сумма в продажных ценах в 15 */                
                   field gds-code16      as integer
                   field fact-qnty16     as decimal /* количество в 16 */
                   field sum-rubl-cost16 as decimal /* сумма в учетных ценах в 16 */
@@ -2535,35 +2535,31 @@ class ibs.th.utl.method-for-draw-utility final:
                     
                     if not available tt-stk-gd2 then 
                     do :
-                      /*      assign                                                                       */
-                      /*        tt-stk-gd2.fact-qnty16     = tt-stk-gd2.fact-qnty16     + v-fact-qnty16    */
-                      /*        tt-stk-gd2.sum-rubl-cost16 = tt-stk-gd2.sum-rubl-cost16 + v-sum-rubl-cost16*/
-                      /*        tt-stk-gd2.vat-rubl16      = tt-stk-gd2.vat-rubl16      + v-vat-rubl16     */
-                      /*        tt-stk-gd2.sum-rubl-crsa16 = tt-stk-gd2.sum-rubl-crsa16 + v-sum-rubl-crsa16*/
-                      /*        v-count-confirm = v-count-confirm + 1                                      */
-                      /*      no-error .                                                                   */
-                      /*    end .                                                                          */
-                      /*    else do :                                                                      */
                       create tt-stk-gd2 .
                       buffer-copy tt-stk-gd to tt-stk-gd2 
-                      assign
+                        assign
                         tt-stk-gd2.gds-code16      = tt-gds-mapping.gds-code16
                         tt-stk-gd2.fact-qnty16     = v-fact-qnty16
                         tt-stk-gd2.sum-rubl-cost16 = v-sum-rubl-cost16
                         tt-stk-gd2.vat-rubl16      = v-vat-rubl16
                         tt-stk-gd2.sum-rubl-crsa16 = v-sum-rubl-crsa16
                         tt-stk-gd2.gds-code15 = string(tt-stk-gd.gds-code)
+                        tt-stk-gd2.gds-name = buf_goods.gds-name
                         v-count-confirm = v-count-confirm + 1
-      no-error .
+                        no-error .
                     end .
                     else 
                     do:
                       assign
-                        tt-stk-gd2.gds-code15 = string(tt-stk-gd2.gds-code15) + "," + string(tt-stk-gd.gds-code)
+                        tt-stk-gd2.gds-code15      = string(tt-stk-gd2.gds-code15) + ", " + string(tt-stk-gd.gds-code)
                         tt-stk-gd2.fact-qnty16     = v-fact-qnty16
                         tt-stk-gd2.sum-rubl-cost16 = v-sum-rubl-cost16
                         tt-stk-gd2.vat-rubl16      = v-vat-rubl16
                         tt-stk-gd2.sum-rubl-crsa16 = v-sum-rubl-crsa16
+                        tt-stk-gd2.fact-qnty       = tt-stk-gd2.fact-qnty + tt-stk-gd.fact-qnty
+                        tt-stk-gd2.sum-rubl-cost   = tt-stk-gd2.sum-rubl-cost + tt-stk-gd.sum-rubl-cost
+                        tt-stk-gd2.vat-rubl        = tt-stk-gd2.vat-rubl + tt-stk-gd.vat-rubl
+                        tt-stk-gd2.sum-rubl-crsa   = tt-stk-gd2.sum-rubl-crsa + tt-stk-gd.sum-rubl-crsa
                         v-count-confirm            = v-count-confirm + 1
                         .
                     end.  
@@ -2579,7 +2575,7 @@ class ibs.th.utl.method-for-draw-utility final:
   
                   output STREAM lsIN  to value(v-logfile-gd).
                   put stream lsIn unformatted
-                    "наименование товара в "  + string(version-name) +  ";"
+                    "наименование товара в 16.0;"
                     "код товара в " + string(version-name) +  ";"
                     "количество в " + string(version-name) +  ";"
                     "сумма в учетных ценах в " + string(version-name) +  ";"
@@ -2616,7 +2612,7 @@ class ibs.th.utl.method-for-draw-utility final:
                       do:
                         vfirst = no.
                         put stream lsOut unformatted
-                          "наименование товара в " + string(version-name) +  ";"
+                          "наименование товара в 16.0;"
                           "код товара в " + string(version-name) +  ";"
                           "количество в " + string(version-name) +  ";"
                           "сумма в учетных ценах в " + string(version-name) +  ";"
@@ -2646,7 +2642,7 @@ class ibs.th.utl.method-for-draw-utility final:
                             то в этот файл добавляется вторая строка заголовков для топлива */
                   output STREAM lsIN to value(v-logfile-fu).
                   put stream lsIn unformatted
-                    "наименование товара в " + string(version-name) +  ";"
+                    "наименование товара в 16.0;"
                     "код товара в " + string(version-name) +  ";"
                     "остатки в лт в " + string(version-name) +  ";"
                     "остатки в кг в " + string(version-name) +  ";"
@@ -2665,7 +2661,7 @@ class ibs.th.utl.method-for-draw-utility final:
                       do:
                         vfirst = no.
                         put stream lsOut unformatted
-                          "наименование товара в " + string(version-name) +  ";"
+                          "наименование товара в 16.0;"
                           "код товара в " + string(version-name) +  ";"
                           "остатки в лт в " + string(version-name) +  ";"
                           "остатки в кг в " + string(version-name) +  ";"
