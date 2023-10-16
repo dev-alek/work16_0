@@ -244,7 +244,7 @@ define variable v-date_to   as character no-undo .
   end.    
 
   for each temp_db-list,
-    last buf_db no-lock where buf_db.db-num = temp_db-list.db-num by buf_db.db-num desc:
+    last buf_db no-lock where buf_db.db-num = temp_db-list.db-num by buf_db.db-num :
     _next:
     for each buf_upgrade where buf_upgrade.db-num = buf_db.db-num and entry(1,buf_upgrade.version-num," ") >= v-date_from and entry(1,buf_upgrade.version-num," ") <= v-date_to
     and (lookup ("Rel",buf_upgrade.version-num," ") > 0 or buf_upgrade.version-num = "v16_0000.000.000")
