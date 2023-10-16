@@ -94,49 +94,50 @@ do
 on stop  undo calc-ingr, return error
 on error undo calc-ingr, return error
 :
+    find first buf_fbr-doc
+         where recid( buf_fbr-doc )  = p-fbr-doc-recid
+    .
 
-   run adm/shattri.p ( input "get":U
-                     , input  '':u
-                     , input  0
-                     , input  {&attr-fbrattr}
-                     , input  {&attr-fbrattr_fbr-ioff}
-                     , output v-value-character
-                     , output v-value-date
-                     , output v-value-decimal
-                     , output v-value-integer
-                     , output v-value-ioff
-                     , output v-param-type
-                     , input-output table-handle v-tth
-                     ) no-error .
-   if error-status :error then do:
+    run adm/shattri.p ( input "get":U
+                       , input  buf_fbr-doc.obj-type
+                       , input  buf_fbr-doc.obj-code
+                       , input  {&attr-fbrattr}
+                       , input  {&attr-fbrattr_fbr-ioff}
+                       , output v-value-character
+                       , output v-value-date
+                       , output v-value-decimal
+                       , output v-value-integer
+                       , output v-value-ioff
+                       , output v-param-type
+                       , input-output table-handle v-tth
+                       ) no-error .
+    if error-status :error then do:
       /* параметр может быть не задан */
       assign
          v-value-ioff = FALSE
       .
-   end.
+    end.
 
-   run adm/shattri.p ( input "get":U
-                     , input  '':u
-                     , input  0
-                     , input  {&attr-fbrattr}
-                     , input  {&attr-fbrattr_fbr-qntc}
-                     , output v-value-character
-                     , output v-value-date
-                     , output v-value-decimal
-                     , output v-value-integer
-                     , output v-value-qntc
-                     , output v-param-type
-                     , input-output table-handle v-tth
-                     ) no-error .
-   if error-status :error then do:
+    run adm/shattri.p ( input "get":U
+                       , input  buf_fbr-doc.obj-type
+                       , input  buf_fbr-doc.obj-code
+                       , input  {&attr-fbrattr}
+                       , input  {&attr-fbrattr_fbr-qntc}
+                       , output v-value-character
+                       , output v-value-date
+                       , output v-value-decimal
+                       , output v-value-integer
+                       , output v-value-qntc
+                       , output v-param-type
+                       , input-output table-handle v-tth
+                       ) no-error .
+    if error-status :error then do:
       /* параметр может быть не задан */
       assign
          v-value-qntc = FALSE
       .
-   end.
-    find first buf_fbr-doc
-         where recid( buf_fbr-doc )  = p-fbr-doc-recid
-    .
+    end.
+    
     if p-have-store = no
     then do:
         assign
@@ -702,7 +703,7 @@ on error undo calc-ingr, return error
                            and buf_old_fbr-line.is-comp      = buf_ingr_fbr-line.is-comp
                            and recid( buf_old_fbr-line )    <> recid( buf_ingr_fbr-line )
                     no-error.
-                    if ( v-value-qntc
+                    if ( not v-value-qntc
                          and available buf_old_fbr-line )
 /*                    and p-autofbr = no      */
                     then do:
@@ -722,6 +723,11 @@ on error undo calc-ingr, return error
                     assign
                         v-need-qnty = v-required-qnty - ( v-produced-qnty + v-free-qnty )
                     .
+                     run writelog in this-procedure (
+                              input log-file-name
+                            , input 4
+                            , input substitute( "Производим недостающее количество: &1", v-need-qnty )
+                        ).
                     if v-need-qnty > 0
                     then do:
                         run writelog in this-procedure (
