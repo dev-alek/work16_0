@@ -3365,159 +3365,168 @@ on error undo, return error
 
   /*ןוקאעü עוכא*/
 
-  if cb-db <> -1 then 
-  do:
-    FOR EACH buf_init_user-account :
-      case rs-scope
+
+if cb-db <> -1 then do:
+    case rs-scope
         :
-        when 1
-        then do:
-            FOR EACH buf_init_user-login where 
-             buf_init_user-account.status_ <> {&bef-user-status-deleted} 
-            AND buf_init_user-account.user-id = buf_init_user-login.user-id
-            and temp_filter-fields.user-id   = buf_init_user-login.user-id
-            and temp_filter-fields.fld-record-visible = yes
-            and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
-            NO-LOCK:
+        when 1 then do:
+            message   temp_filter-fields.user-id view-as alert-box.
+            FOR EACH buf_init_user-login where temp_filter-fields.user-id =  buf_init_user-login.user-id
+            
+             and buf_init_user-account.status_ <> {&bef-user-status-deleted} 
+             /*AND buf_init_user-account.user-id = buf_init_user-login.user-id */
+             /* and temp_filter-fields.fld-record-visible = yes
+             and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )*/
+             NO-LOCK:
               assign 
               v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
                 create tt-user-login .
                 assign
-                  tt-user-login.db-num         = buf_init_user-login.db-num
-                  tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
-                  tt-user-login.nik            = buf_init_user-account.nik
-                  tt-user-login.user-login     = buf_init_user-login.user-login
-                  tt-user-login.users-id       = buf_init_user-login.user-id
-                  tt-user-login.last-name      = v-last-name
-                  .
+                tt-user-login.db-num         = buf_init_user-login.db-num
+                tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
+                tt-user-login.nik            = buf_init_user-account.nik
+                tt-user-login.user-login     = buf_init_user-login.user-login
+                tt-user-login.users-id       = buf_init_user-login.user-id
+                tt-user-login.last-name      = v-last-name
+                .
             END.
         end.    /* when 1 */
         
-        when 2
-        then do:
-            FOR EACH  buf_init_user-login where  buf_init_user-account.user-id = buf_init_user-login.user-id
-                   and buf_init_user-login.db-num = cb-db
-                   /*and temp_filter-fields.user-id   = buf_init_user-account.user-id
-                   and temp_filter-fields.fld-record-visible = yes
-                   and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )*/
-            NO-LOCK:
-            assign 
-            v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-            create tt-user-login .
-            assign
-              tt-user-login.db-num         = buf_init_user-login.db-num
-              tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
-              tt-user-login.nik            = buf_init_user-account.nik
-              tt-user-login.user-login     = buf_init_user-login.user-login
-              tt-user-login.users-id       = buf_init_user-login.user-id
-              tt-user-login.last-name      = v-last-name
-              .
-            END.  
+        when 2 then do:
+            FOR EACH buf_init_user-account :
+            	FOR EACH  buf_init_user-login where  buf_init_user-account.user-id = buf_init_user-login.user-id
+                   AND buf_init_user-login.db-num = cb-db
+                   /* and temp_filter-fields.user-id   = buf_init_user-account.user-id */
+                   AND temp_filter-fields.fld-record-visible = yes
+                   and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
+	              NO-LOCK :
+        	      assign 
+	              v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
+        	      create tt-user-login .
+	              assign
+        	      tt-user-login.db-num         = buf_init_user-login.db-num
+	              tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
+        	      tt-user-login.nik            = buf_init_user-account.nik
+	              tt-user-login.user-login     = buf_init_user-login.user-login
+	              tt-user-login.users-id       = buf_init_user-login.user-id
+	              tt-user-login.last-name      = v-last-name
+	              .
+	            END. 
+            end.  /*  FOR EACH buf_user-user-account*/
         end.        /* when 2 */
         
-        when 3
-        then do:
-            FOR EACH buf_init_user-login where buf_init_user-account.status_ = {&bef-user-status-deleted} 
-              and buf_init_user-account.user-id = buf_init_user-login.user-id
-              and temp_filter-fields.user-id   = buf_init_user-account.user-id
-              and temp_filter-fields.fld-record-visible = yes
-              and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
-              NO-LOCK:
-              assign 
-                v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-                create tt-user-login .
-                assign
-                  tt-user-login.db-num         = buf_init_user-login.db-num
-                  tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
-                  tt-user-login.nik            = buf_init_user-account.nik
-                  tt-user-login.user-login     = buf_init_user-login.user-login
-                  tt-user-login.users-id       = buf_init_user-login.user-id
-                  tt-user-login.last-name      = v-last-name
-                  .
-            END.
-        end.        /* when 3 */
-      end case.       /* case rs-scope */
-    END.  
-  end. /*FOR EACH buf_user-user-account*/
+        when 3  then do:
+            FOR EACH buf_init_user-account WHERE buf_init_user-account.status_ <> {&bef-user-status-deleted} no-lock:
+            	FOR EACH  buf_init_user-login where  buf_init_user-account.user-id = buf_init_user-login.user-id
+                AND buf_init_user-login.db-num = cb-db
+                /* and temp_filter-fields.user-id   = buf_init_user-account.user-id */
+                AND temp_filter-fields.fld-record-visible = yes
+                and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
+	            NO-LOCK BY buf_init_user-account.nik :
+            	assign 
+	            v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
+        	    create tt-user-login .
+	            assign
+        	    tt-user-login.db-num         = buf_init_user-login.db-num
+	            tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
+        	    tt-user-login.nik            = buf_init_user-account.nik
+	            tt-user-login.user-login     = buf_init_user-login.user-login
+	            tt-user-login.users-id       = buf_init_user-login.user-id
+	            tt-user-login.last-name      = v-last-name
+	            .
+	            END. 
+            END.    
+        end.     /* when 3 */
+    end case.        /* case rs-scope */
+END.
   
-  else 
-  do:
-    FOR EACH buf_init_user-account  /*where buf_init_user-account.user-id = temp_filter-fields.user-id*/
-      /*and temp_filter-fields.user-id   = buf_init_user-account.user-id
-      and temp_filter-fields.fld-record-visible = yes
-      And ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )*/:
-      case rs-scope
-        :
-        when 1
-        then do:
+
+  
+  
+ if cb-db = -1 then do:
+   FOR EACH buf_init_user-account  /*where buf_init_user-account.user-id = temp_filter-fields.user-id*/
+      /*and temp_filter-fields.user-id   = buf_init_user-account.user-id*/
+      /*and temp_filter-fields.fld-record-visible = yes*/
+      /*And ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )*/ 
+      no-lock:
+      case rs-scope :
+        when 1 then do:
             FOR EACH buf_init_user-login where buf_init_user-account.status_ <> {&bef-user-status-deleted} 
-              and buf_init_user-account.user-id = buf_init_user-login.user-id
-                     and temp_filter-fields.user-id   = buf_init_user-account.user-id
-                     and temp_filter-fields.fld-record-visible = yes
-                     and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
-              no-lock:
-              assign 
-                v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-                create tt-user-login .
-                assign
-                  tt-user-login.db-num         = buf_init_user-login.db-num
-                  tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
-                  tt-user-login.nik            = buf_init_user-account.nik
-                  tt-user-login.user-login     = buf_init_user-login.user-login
-                  tt-user-login.users-id       = buf_init_user-login.user-id
-                  tt-user-login.last-name      = v-last-name
-                  .
-            end.        
-        end. /* when 1 */
-        
-        when 2
-        then do:
-            FOR EACH buf_init_user-login where buf_init_user-account.user-id = buf_init_user-login.user-id
-                     /*and temp_filter-fields.user-id   = buf_init_user-account.user-id
-                     and temp_filter-fields.fld-record-visible = yes
-                     and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )*/
-            NO-LOCK:
+            and buf_init_user-account.user-id = buf_init_user-login.user-id
+            and temp_filter-fields.user-id   = buf_init_user-account.user-id
+            and temp_filter-fields.fld-record-visible = yes
+            and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
+            no-lock:
             assign 
             v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
             create tt-user-login .
             assign
-              tt-user-login.db-num         = buf_init_user-login.db-num
-              tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
-              tt-user-login.nik            = buf_init_user-account.nik
-              tt-user-login.user-login     = buf_init_user-login.user-login
-              tt-user-login.users-id       = buf_init_user-login.user-id
-              tt-user-login.last-name      = v-last-name
-              .
+            tt-user-login.db-num         = buf_init_user-login.db-num
+            tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
+            tt-user-login.nik            = buf_init_user-account.nik
+            tt-user-login.user-login     = buf_init_user-login.user-login
+            tt-user-login.users-id       = buf_init_user-login.user-id
+            tt-user-login.last-name      = v-last-name
+            .
+            end.        
+        end.  /* when 1 */
+        
+        when 2 then do:
+            FOR EACH buf_init_user-login where buf_init_user-account.user-id = buf_init_user-login.user-id
+                /*and temp_filter-fields.user-id   = buf_init_user-account.user-id*/
+                and temp_filter-fields.fld-record-visible = yes
+                and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
+                NO-LOCK:
+                assign 
+                v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
+                create tt-user-login .
+                assign
+                tt-user-login.db-num         = buf_init_user-login.db-num
+                tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
+                tt-user-login.nik            = buf_init_user-account.nik
+                tt-user-login.user-login     = buf_init_user-login.user-login
+                tt-user-login.users-id       = buf_init_user-login.user-id
+                tt-user-login.last-name      = v-last-name
+                .
             end.
         end.        /* when 2 */
         
-        when 3
-        then do:
+        when 3  then do:
+        
             FOR EACH buf_init_user-login where buf_init_user-account.status_ = {&bef-user-status-deleted} 
               and buf_init_user-account.user-id = buf_init_user-login.user-id
               and temp_filter-fields.user-id   = buf_init_user-account.user-id
-              and temp_filter-fields.fld-record-visible = yes
-              and ( temp_filter-fields.flt-record-visible = yes or tb-filter = no )
+              /*and temp_filter-fields.fld-record-visible = yes
+              and ( temp_filter-fields.flt-record-visible = yes or tb-filter = yes)*/
               NO-LOCK:
-              assign 
-              v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
-                create tt-user-login .
-                assign
+                 assign 
+                 v-last-name = buf_init_user-account.last-name + ' ' + buf_init_user-account.first-name + ' ' + buf_init_user-account.second-name .
+                 create tt-user-login .
+                 assign
                   tt-user-login.db-num         = buf_init_user-login.db-num
                   tt-user-login.last-login-mjd = buf_init_user-login.last-login-mjd
                   tt-user-login.nik            = buf_init_user-account.nik
                   tt-user-login.user-login     = buf_init_user-login.user-login
                   tt-user-login.users-id       = buf_init_user-login.user-id
                   tt-user-login.last-name      = v-last-name
-                  .
-            end.
-        end.        /* when 3 */
-    end case.     /* case rs-scope */
-                                 
- end. /*FOR EACH buf_user-login*/ 
+                 .
+            end. 
+                  
+        end.         /*  when 3 */
+        
+      end case.      /* case rs-scope */
+    end. /*buf_init_user-account*/                               
+END.                        
+                                       
  
-          for each tt-user-login no-lock:
-                     put stream OutStr-html unformatted
+  /*גûחמג ןנמדנאללû ןוקאעט*/ 
+  run prn-lib-reportviewer-report-name in this-procedure (
+    input parParentProc
+    ,input v-report-name-html-list
+    ).
+
+  for each tt-user-login no-lock:
+                  put stream OutStr-html unformatted
                   substitute(
                   '<tr>
                             <td>&1</td>
@@ -3535,19 +3544,10 @@ on error undo, return error
                   ,if tt-user-login.last-login-mjd <> 0 then string(sys-time_mjd-to-loc-str-func(tt-user-login.last-login-mjd)) else ""
                   ).
           end.
-
+        
          output stream OutStr-html close.   
- 
-  /*גûחמג ןנמדנאללû ןוקאעט*/ 
-  run prn-lib-reportviewer-report-name in this-procedure (
-    input parParentProc
-    ,input v-report-name-html-list
-    ).
+END.         
 EMPTY TEMP-TABLE tt-user-login .
-
-
-END.
-END.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
