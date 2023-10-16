@@ -374,7 +374,7 @@ if not can-find (first benefits) then do:
   return.
 end.
 
-define variable v-curr-r-b as character no-undo .
+/*define variable v-curr-r-b as character no-undo .*/
 { gbl/curr-r-b.i
   v-curr-r-b
 }

@@ -17,7 +17,7 @@ Creation date: 10/18/05
 
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
-define variable acc-count-ln as int no-undo.
+/*define variable acc-count-ln as int no-undo.*/
         acc-count-ln = acc-count-ln + 1.
 if acc-count-ln > acc-count-step then do:
   run waitfram-show in this-procedure ( obj-list.obj-type + string( obj-list.obj-code ) +
