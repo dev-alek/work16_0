@@ -62,7 +62,7 @@ define variable v-log-file-name as character no-undo init "send-cd.txt".
 define variable v-locked as logical no-undo.
 { str/cd-xml-file.i }
 { bge/socet.i}
-run get-view-log in p-log-handle(output v-view-log).
+run get-view-log in p-log-handle(output v-view-log)  no-error.
 
 define variable i-obj-type as character no-undo .
 define variable i-obj-code as integer   no-undo .
@@ -82,7 +82,7 @@ then do:
       , input substitute( "!!!'Send-all' Список параметров должен состоять минимум из 4 элементов "
                         )
                         ).
-   run set-view-log in p-log-handle(yes).                     
+   run set-view-log in p-log-handle(yes)  no-error.                     
    return.
 end.
 else do:
@@ -98,7 +98,7 @@ else do:
          , input substitute( "!!!'Send-all' В список параметров 4 элемент не может быть пустым "
                            )
                                  ).
-      run set-view-log in p-log-handle(yes).
+      run set-view-log in p-log-handle(yes)  no-error.
       
       return.
    end.
@@ -158,7 +158,7 @@ if error-status:error then do:
                                         ).
    v-view-log = yes.
 end.
-run set-view-log in p-log-handle(v-view-log).
+run set-view-log in p-log-handle(v-view-log) no-error.
 
 
 

@@ -22,7 +22,6 @@ define input  parameter ireclist as char no-undo.
 */
 define variable mAnswer as character  no-undo.
 {cmp/str-glbl.i}
-{ gbl/getcntxt.i def }
 
 
 subscribe   to "ResponseToQuestion" anywhere run-procedure "SendAnswer".
@@ -31,7 +30,7 @@ then do:
   mAnswer = "4".
   run str/sendcash.p(iUtil:parparentproc,this-procedure,this-procedure,string(iUtil:Obj-code) + {&delim-par} + "D").
 end.
-else if iCode eq 2
+ else if iCode eq 2
 then do:
   mAnswer = "1".
   run str/sendcash.p(iUtil:parparentproc,this-procedure,this-procedure,string(iUtil:obj-code) + {&delim-par} + "U").
@@ -79,7 +78,7 @@ else if iCode eq 10
 then do:
   mAnswer = "1".
   run str/senddcty.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U").
-end.
+end. 
 
 else  if iCode eq 11
 then do:
@@ -100,7 +99,7 @@ else if iCode eq 14
 then do:
   mAnswer = "1".
   run str/send-gds-draw.p (iUtil:parparentproc).
-end.
+end.  
 else if iCode eq 15
 then do:
   run str/sendcashcomm.p (iUtil:parparentproc,this-procedure,this-procedure,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + "U","execute","dbClear",ireclist).
@@ -108,32 +107,21 @@ end.
 
 else if iCode eq 16
 then do:
- run str/diallog.w (
-        input iUtil:parparentproc
-      , input this-procedure
-      , input "str/send-all.p":U
-/*      , input ( iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U) */ 
-      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U)
-      , input ? /*p-auto-go*/
-      , input "":U
-      , input substitute("Отсылка очистки справочника ЕМЦ")
-  ) no-error.
+run str/send-all.p ( iUtil:parparentproc
+                    ,this-procedure
+                    ,this-procedure
+                    ,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U 
+                     ) no-error.
 end.
 
 else if iCode eq 17
 then do:
- run str/diallog.w (
-        input iUtil:parparentproc
-      , input this-procedure
-      , input "str/send-all.p":U
-/*    , input ( iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Удаление справочника ЕМЦ':U) */ 
-      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U)
-      , input ? /*p-auto-go*/
-      , input "":U
-      , input substitute("Отсылка справочника ЕМЦ")
-  ) no-error.
+run str/send-all.p ( iUtil:parparentproc
+                    ,this-procedure
+                    ,this-procedure
+                    ,iUtil:obj-type + {&delim-par} + string(iUtil:obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U 
+                     ) no-error.
 end.
-
 
 unsubscribe to "ResponseToQuestion".
 

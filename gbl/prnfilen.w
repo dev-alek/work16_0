@@ -911,7 +911,9 @@ if v-postpone-print then do:
   end.
 end.
 /* Проверка на пустой файл */
-if p-file-name <> '' then do:
+
+if p-file-name <> '' AND SEARCH(p-file-name) <> ?  then do:
+ 
 INPUT stream temp-stream FROM value(p-file-name).
 def var str1 as character no-undo .
 def var kol-row as integer init 0 no-undo  .
@@ -923,6 +925,7 @@ REPEAT:
      leave.
     End.
 END.
+
 INPUT stream temp-stream CLOSE.
 
 if kol-row = 0 then DO:
