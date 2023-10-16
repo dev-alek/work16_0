@@ -109,14 +109,14 @@ define temp-table sect_twowin_itemsSelected_col no-undo
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 ~
-RECT-4 RECT-5 RECT-6 t-autopump-izm t-autopump t-avtinvpm t-olddens ~
+RECT-4 RECT-5 RECT-6 t-autopump-izm t-autopump-skip-time t-autopump t-avtinvpm t-olddens ~
 r-expptrl r-inpptrl sec-fields rvs-wt-email B-set_dop-info B-set_sec-fields ~
 r-algrvspt t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi ~
 r-denstclc mass-proc mass-proc-in-lgas r-algoincptrl t-mand-chioce-autocar ~
 otkl-fact-volue delta-horiz delta-vert otkl-temp otkl-density otkl-water ~
 t-calc-free-vol t-calc-free-vol-sug t-trn-reas-sug t-trnscanqr t-rvd-own-nb qr-scan-time ~
 t-block-nozzle timeout-block-nozzle v-dop-info v-sec-fields 
-&Scoped-Define DISPLAYED-OBJECTS t-autopump-izm t-autopump t-avtinvpm ~
+&Scoped-Define DISPLAYED-OBJECTS t-autopump-izm t-autopump-skip-time t-autopump t-avtinvpm ~
 t-olddens r-expptrl dop-info r-inpptrl sec-fields rvs-wt-email r-algrvspt ~
 t-rvsnmter t-invclipt f-invclipt r-temp-for-pomi r-denstclc mass-proc ~
 mass-proc-in-lgas r-algoincptrl t-mand-chioce-autocar otkl-fact-volue ~
@@ -320,7 +320,12 @@ DEFINE VARIABLE t-autopump-izm AS LOGICAL INITIAL no
      LABEL "Автоматические сверки создавать только по измеряемым резервуарам" 
      VIEW-AS TOGGLE-BOX
      SIZE 82.5 BY .83 NO-UNDO.
-
+     
+DEFINE VARIABLE t-autopump-skip-time AS INTEGER INITIAL 0 
+     LABEL "Время после приема НП (мин)"  
+     VIEW-AS FILL-IN
+     SIZE 5 BY 1 NO-UNDO.
+     
 DEFINE VARIABLE t-avtinvpm AS LOGICAL INITIAL no 
      LABEL "Автомат. создание инв. счетчиков ТРК при переполнении разрядности эл. счетчика" 
      VIEW-AS TOGGLE-BOX
@@ -387,7 +392,7 @@ DEFINE FRAME shattrpt
      B-exit AT ROW 1 COL 1 WIDGET-ID 2
      b-quit AT ROW 1 COL 11 WIDGET-ID 6
      B-Help AT ROW 1 COL 96 WIDGET-ID 4
-     t-autopump-izm AT ROW 2 COL 3 WIDGET-ID 40
+     t-autopump-izm AT ROW 2 COL 3 WIDGET-ID 40     
      t-autopump AT ROW 3 COL 3 WIDGET-ID 40
      t-avtinvpm AT ROW 4 COL 3 WIDGET-ID 42
      t-olddens AT ROW 5 COL 3 WIDGET-ID 76
@@ -422,6 +427,7 @@ DEFINE FRAME shattrpt
      t-trnscanqr AT ROW 37 COL 2.5 WIDGET-ID 128
      t-rvd-own-nb AT ROW 38 COL 2.5 WIDGET-ID 528
      qr-scan-time AT ROW 39 COL 36.5 COLON-ALIGNED WIDGET-ID 538
+     t-autopump-skip-time AT ROW 39 COL 60 WIDGET-ID 250
      t-block-nozzle AT ROW 40.25 COL 2.5 WIDGET-ID 600
      timeout-block-nozzle AT ROW 41.13 COL 2.5 NO-LABEL WIDGET-ID 604
      v-dop-info AT ROW 11.5 COL 3.5 NO-LABEL WIDGET-ID 498
@@ -978,7 +984,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl dop-info 
+  DISPLAY t-autopump-izm t-autopump-skip-time t-autopump t-avtinvpm t-olddens r-expptrl dop-info 
           r-inpptrl sec-fields rvs-wt-email r-algrvspt t-rvsnmter t-invclipt 
           f-invclipt r-temp-for-pomi r-denstclc mass-proc mass-proc-in-lgas 
           r-algoincptrl t-mand-chioce-autocar otkl-fact-volue delta-horiz 
@@ -987,7 +993,7 @@ PROCEDURE enable_UI :
           timeout-block-nozzle v-dop-info v-sec-fields f-invclipt-name 
       WITH FRAME shattrpt.
   ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 RECT-5 RECT-6 
-         t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
+         t-autopump-izm t-autopump-skip-time t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
          sec-fields rvs-wt-email B-set_dop-info B-set_sec-fields r-algrvspt 
          t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc 
          mass-proc mass-proc-in-lgas r-algoincptrl t-mand-chioce-autocar 
@@ -1077,6 +1083,11 @@ on error undo, return error return-value
              t-autopump-izm :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
         .
           end.
+      when {&attr-petrol_autopump-skip-time} then do: 
+          assign t-autopump-skip-time =  thbjattr_thbj-attr.property-value-integer
+             t-autopump-skip-time :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+        .
+      end.    
       when {&attr-petrol_avtinvpm} then do:
         assign
           t-avtinvpm = thbjattr_thbj-attr.property-value-logical

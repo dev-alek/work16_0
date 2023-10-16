@@ -41,6 +41,7 @@ define variable ptrlprop-rvd-own-nb as logical no-undo init false.
 define variable ptrlprop-qr-scan-time as integer no-undo init 5000 .
 define variable ptrlprop-block-nozzle as logical no-undo init false.
 define variable ptrlprop-timeout-block-nozzle as integer no-undo init 5 .
+define variable ptrlprop-autopump-skip-time as integer no-undo init 0 .
 
 procedure get-ptrl-prop :
   define input  parameter p-obj-type as character no-undo .
@@ -232,7 +233,14 @@ procedure get-ptrl-prop :
             .
           end.
         end.
-        
+        when {&attr-petrol_autopump-skip-time} then do:
+          if thbjattr_thbj-attr.prop-value-type = {&ABL-datatype-integer} then do:
+            assign
+              ptrlprop-autopump-skip-time = thbjattr_thbj-attr.property-value-integer
+            .
+          end.
+        end.
+
       end case.
       delete thbjattr_thbj-attr .
     end.

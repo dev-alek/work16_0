@@ -62,8 +62,11 @@ define buffer cur_shift-obj  for ub.shift-obj.
 define buffer prev_shift-obj for ub.shift-obj.
 define buffer prev_rvs-doc   for ub.rvs-doc.
 define buffer prev_icnt-doc  for ub.icnt-doc.
+define buffer  buf_rvs-line-attr for ub.rvs-line-attr.
 
-define variable v-ref-rec as recid no-undo .
+define variable v-ref-rec         as recid     no-undo .
+define variable ii                as integer   no-undo.
+define variable bcol              as handle    extent 37 no-undo.
 
 /* ********************  preprocessor definitions  ******************** */
 &scop open-query-{&browse-name} open query {&browse-name} ~
@@ -760,6 +763,28 @@ on value-changed of {&browse-name} in frame {&frame-name} do:
   end.
 end.
 
+ON ROW-DISPLAY OF {&browse-name} IN FRAME {&frame-name} 
+DO:
+      
+    if available ub.rvs-line then do:
+        find first buf_rvs-line-attr no-lock 
+                 where buf_rvs-line-attr.attr-code = "rvd-on"
+                   and buf_rvs-line-attr.gds-code = ub.rvs-line.gds-code
+                   and buf_rvs-line-attr.obj-code = ub.rvs-line.obj-code
+                   and buf_rvs-line-attr.obj-type = ub.rvs-line.obj-type
+                   and buf_rvs-line-attr.pl-code  = ub.rvs-line.pl-code
+                   and buf_rvs-line-attr.rvs-code = ub.rvs-line.rvs-code
+               no-error .    
+   
+       if available buf_rvs-line-attr and 
+          buf_rvs-line-attr.attr-value > ""
+       then do:
+          do ii = 1 to 37:
+             bcol[ii]:FGcolor  = 7.
+          end.
+       end.        
+    end.
+END.
 
 /* ***************************  main block  *************************** */
 if valid-handle(active-window) and frame {&frame-name}:parent eq ?
@@ -773,6 +798,10 @@ main-block:
 do on error   undo main-block, leave main-block
    on end-key undo main-block, leave main-block
    on stop    undo main-block, leave main-block:
+   
+   do ii = 1 to 37:
+      bcol[ii] = {&browse-name}:get-browse-column(ii).
+   end.
 
    run mode-on in this-procedure
      no-error.

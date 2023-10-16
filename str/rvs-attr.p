@@ -33,7 +33,9 @@ define variable vss-description as character no-undo init "Оборот по по чекам".
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { gbl/cur-time.i }  
-{ gbl/cur-time.i }  
+{ str/placelib.i }
+{ gbl/ptrlprop.i def}
+
 define temp-table tt-doc-line-attr no-undo
   field gds-code    like ub.goods.gds-code
   field pl-code     like ub.place.pl-code
@@ -52,7 +54,8 @@ define TEMP-TABLE tt-rvs-line-attr no-undo
   field pl-code     like ub.rvs-line-attr.pl-code
   field gds-code    like ub.rvs-line-attr.gds-code
   field attr-code   like ub.rvs-line-attr.attr-code
-  field attr-value  as decimal 
+  field attr-value  as decimal
+  field attr-value_s  as character 
 index pi is primary unique gds-code pl-code obj-type obj-code attr-code
 .
 
@@ -66,6 +69,7 @@ define buffer buf_trn-doc           for ub.trn-doc .
 define buffer buf_goods             for ub.goods .
 define buffer buf_doc-line          for ub.doc-line .
 define buffer buf_doc-line-attr     for ub.doc-line-attr .
+define buffer buf_doc-line-attr1    for ub.doc-line-attr.
 define buffer curr_shift-obj        for ub.shift-obj .
 define buffer prev_shift-obj        for ub.shift-obj .
 define buffer buf_rvs-doc           for ub.rvs-doc .
@@ -75,12 +79,39 @@ define buffer buf_chk-doc           for ub.chk-doc .
 define buffer buf_chk-gds           for ub.chk-gds .
 define buffer buf_bar-code          for ub.bar-code .
 define buffer buf_pl-pump-nozzle    for ub.pl-pump-nozzle .
+define buffer buf_place-attr        for ub.place-attr.
+define buffer buf_doc-attr          for ub.doc-attr.
 define variable v-sign              as decimal   no-undo .
 define variable v-pl-code           as integer   no-undo .
-
+define variable vRvdDnstOn          as log no-undo.
+define variable vRvdTmpOn           as log no-undo.
+define variable vRvdLvlOn           as log no-undo.
+define variable vSkipAuto           as log no-undo.
+define variable vTimeAutoSkip       as integer no-undo.
+ 
 do
 on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
 :
+  /* определяем продолжительность пропуска автосверки после приема НП */
+  { gbl/ptrlprop.i
+     run
+     p-obj-type
+     p-obj-code
+  }
+  if not error-status :error then do:
+    vTimeAutoSkip = if ptrlprop-autopump-skip-time <> ? then ptrlprop-autopump-skip-time else 0.
+  end.
+        
+  /* находим текущую смену */
+  find first curr_shift-obj no-lock
+    where curr_shift-obj.obj-type = p-obj-type
+      and curr_shift-obj.obj-code = p-obj-code
+      and curr_shift-obj.status_  = {&sht-current}
+    no-error .
+  if not available curr_shift-obj then do:
+    undo, return error substitute( "&1. Не найдена текущая смена.", vss-workfile ).
+  end.
+  
    /* собираем резервуарные товары */
   for each buf_place no-lock
     where buf_place.obj-type = p-obj-type
@@ -111,17 +142,149 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
         .
       end.
     end.
+    
+    /* только для автосверок - помечаем резервуар в сверке, 
+    ** если по нему включен режим РВД или прошло мало времени с приема НП */
+    if can-find(first buf_doc-attr no-lock where 
+                     buf_doc-attr.doc-code = p-rvs-code 
+                 and buf_doc-attr.attr-code = "rvs-auto" 
+                 and buf_doc-attr.attr-value = "Yes")
+    then do:             
+       assign 
+          vRvdDnstOn = no 
+          vRvdTmpOn = no
+          vRvdLvlOn = no
+          vSkipAuto = no
+          .
+       
+       /* если не измеряется приборами, надо поставить признак РВД */
+       if buf_place.is-meas  = no then do: 
+          assign 
+             vRvdDnstOn = yes 
+             vRvdTmpOn = yes
+             vRvdLvlOn = yes
+             .
+       end. 
+       else do:
+          /* Ищем установленный признак РВД по плотности на резервуаре */
+          find first buf_place-attr where 
+                    buf_place-attr.obj-type = p-obj-type
+                and buf_place-attr.obj-code = p-obj-code
+                and buf_place-attr.pl-code  = buf_place.pl-code
+                and buf_place-attr.attr-code = {&place-rvd-dnsty}
+                and logical(buf_place-attr.attr-value) = yes 
+            no-lock no-error.
+         if available buf_place-attr then vRvdDnstOn = yes.
+         
+         /* Ищем установленный признак РВД по температуре на резервуаре */
+         find first buf_place-attr where 
+                    buf_place-attr.obj-type = p-obj-type
+                and buf_place-attr.obj-code = p-obj-code
+                and buf_place-attr.pl-code  = buf_place.pl-code
+                and buf_place-attr.attr-code = {&place-rvd-tmp}
+                and logical(buf_place-attr.attr-value) = yes 
+            no-lock no-error.
+         if available buf_place-attr then vRvdTmpOn = yes.
+         
+         /* Ищем установленный признак РВД по уровню на резервуаре */
+         find first buf_place-attr where 
+                    buf_place-attr.obj-type = p-obj-type
+                and buf_place-attr.obj-code = p-obj-code
+                and buf_place-attr.pl-code  = buf_place.pl-code
+                and buf_place-attr.attr-code = {&place-rvd-lvl}
+                and logical(buf_place-attr.attr-value) = yes 
+            no-lock no-error.
+         if available buf_place-attr then vRvdLvlOn = yes.
+       end.
+     
+       /* ищем сверку после слива */
+       if vTimeAutoSkip > 0 then do:
+         rvsdoc:            
+         for each buf_rvs-doc no-lock
+              where buf_rvs-doc.obj-type   = p-obj-type
+                and buf_rvs-doc.obj-code   = p-obj-code
+                and buf_rvs-doc.shift-date = curr_shift-obj.shift-date
+                and buf_rvs-doc.shift-num  = curr_shift-obj.shift-num
+                and buf_rvs-doc.status_    = {&fact}
+                and buf_rvs-doc.rvs-type  = {&rvs-after-doc}
+              ,first buf_rvs-line no-lock
+              where buf_rvs-line.rvs-code   = buf_rvs-doc.rvs-code
+                and buf_rvs-line.obj-type   = buf_rvs-doc.obj-type
+                and buf_rvs-line.obj-code   = buf_rvs-doc.obj-code
+                and buf_rvs-line.pl-code    = buf_place.pl-code
+                and buf_rvs-line.gds-code   =  buf_pl-gds.gds-code
+             by buf_rvs-doc.fact-order:
+             /* определяем время окончания слива */      
+             find first buf_doc-line-attr no-lock where 
+                       buf_doc-line-attr.doc-code = buf_rvs-doc.out-code
+                   and buf_doc-line-attr.gds-code = buf_rvs-line.gds-code
+                   and buf_doc-line-attr.attr-code begins "date-end"
+               no-error.
+             find first buf_doc-line-attr1 no-lock where 
+                       buf_doc-line-attr1.doc-code = buf_rvs-doc.out-code
+                   and buf_doc-line-attr1.gds-code = buf_rvs-line.gds-code
+                   and buf_doc-line-attr1.attr-code begins "time-end"
+               no-error.
+             if available buf_doc-line-attr and available  buf_doc-line-attr1
+             then do:
+                if buf_doc-line-attr.attr-value <> ? and
+                   buf_doc-line-attr1.attr-value <> ? and 
+                   datetime(date(buf_doc-line-attr.attr-value), 
+                            ((int(buf_doc-line-attr1.attr-value) + vTimeAutoSkip * 60) * 1000 )) >= datetime(today, time * 1000)
+                then vSkipAuto = yes.
+             end.  
+             if vSkipAuto then leave rvsdoc.    
+         end.           
+       end.
+       if vRvdDnstOn or 
+          vRvdTmpOn or 
+          vRvdLvlOn or 
+          vSkipAuto 
+       then do:
+          find first buf_rvs-line no-lock
+             where   buf_rvs-line.rvs-code = p-rvs-code
+                 and buf_rvs-line.obj-type = p-obj-type
+                 and buf_rvs-line.obj-code = p-obj-code
+                 and buf_rvs-line.pl-code  = buf_pl-gds.pl-code
+                 and buf_rvs-line.gds-code = buf_pl-gds.gds-code
+             no-error . 
+          if available buf_rvs-line then do:
+               find first tt-rvs-line-attr EXCLUSIVE-LOCK 
+                    where tt-rvs-line-attr.attr-code = "rvd-on"
+                      and tt-rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                      and tt-rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                      and tt-rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                      and tt-rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                      and tt-rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                  no-error .
+              if not AVAILABLE tt-rvs-line-attr then do:
+                 create tt-rvs-line-attr .
+                 ASSIGN
+                    tt-rvs-line-attr.attr-code = "rvd-on"
+                    tt-rvs-line-attr.gds-code =  buf_rvs-line.gds-code
+                    tt-rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                    tt-rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                    tt-rvs-line-attr.pl-code = buf_rvs-line.pl-code
+                    tt-rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                    tt-rvs-line-attr.attr-value_s = ""
+                 .
+              end.
+              else tt-rvs-line-attr.attr-value_s = "".
+              
+              if vRvdDnstOn then tt-rvs-line-attr.attr-value_s = if tt-rvs-line-attr.attr-value_s = "" then "p" 
+                                                               else tt-rvs-line-attr.attr-value_s + ",p".
+              if vRvdTmpOn then  tt-rvs-line-attr.attr-value_s = if tt-rvs-line-attr.attr-value_s = "" then "t" 
+                                                               else tt-rvs-line-attr.attr-value_s + ",t".
+              if vRvdLvlOn then  tt-rvs-line-attr.attr-value_s = if tt-rvs-line-attr.attr-value_s = "" then "l" 
+                                                               else tt-rvs-line-attr.attr-value_s + ",l".
+              if vSkipAuto then  tt-rvs-line-attr.attr-value_s = if tt-rvs-line-attr.attr-value_s = "" then "s" 
+                                                               else tt-rvs-line-attr.attr-value_s + ",s".
+          end.
+       end.
+    end.        
   end.
 
-  /* находим текущую смену */
-  find first curr_shift-obj no-lock
-    where curr_shift-obj.obj-type = p-obj-type
-      and curr_shift-obj.obj-code = p-obj-code
-      and curr_shift-obj.status_  = {&sht-current}
-    no-error .
-  if not available curr_shift-obj then do:
-    undo, return error substitute( "&1. Не найдена текущая смена.", vss-workfile ).
-  end.
+  
 
   /* находим предыдущую смену */
   find last prev_shift-obj no-lock
@@ -360,6 +523,9 @@ end.
         buf_rvs-line-attr.gds-code = buf_tt-rvs-line-attr.gds-code
       .  
       end.
+      if buf_rvs-line-attr.attr-code = "rdv-on" 
+         then buf_rvs-line-attr.attr-value = buf_tt-rvs-line-attr.attr-value_s .
+      else 
       buf_rvs-line-attr.attr-value = string(buf_tt-rvs-line-attr.attr-value) .                                                      
     end.  
   end.     /* do transaction */
