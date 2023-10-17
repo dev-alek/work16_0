@@ -79,6 +79,7 @@ function func-src returns character
   case v-int-type :
     when 1 then return "Документ из ФН ККТ" .
     when 2 then return "Документ сформирован ТУ" .
+    when 3 then return "Касса" .
     otherwise return " - " .
   end case .
 end function .
@@ -88,6 +89,7 @@ function func-kind returns character
   case v-int-type :
     when 1 then return "Закрывающий с гашением" .
     when 2 then return "Отчет о сверке ТУ" .
+    when 3 then return "Кассовый отчет" .
     otherwise return " - " .
   end case .
 end function .
@@ -121,7 +123,8 @@ DEFINE VARIABLE v-kind AS INTEGER FORMAT ">>9":U INITIAL 0
      VIEW-AS COMBO-BOX INNER-LINES 3
      LIST-ITEM-PAIRS "Все",         0,
                      "Закрывающий с гашением", 1,
-                     "Отчет о сверке ТУ", 2
+                     "Отчет о сверке ТУ", 2,
+                     "Касса", 3
      DROP-DOWN-LIST
      SIZE 23 BY 1 NO-UNDO.
 
@@ -130,7 +133,8 @@ DEFINE VARIABLE v-src AS INTEGER FORMAT ">>9":U INITIAL 0
      VIEW-AS COMBO-BOX INNER-LINES 3
      LIST-ITEM-PAIRS "Все",         0,
                      "Документ из ФН ККТ", 1,
-                     "Документ сформирован ТУ", 2
+                     "Документ сформирован ТУ", 2,
+                     "Кассовый отчет", 3
      DROP-DOWN-LIST
      SIZE 24 BY 1 NO-UNDO.
 
@@ -391,7 +395,6 @@ end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 &Scoped-define SELF-NAME m_all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_all Dialog-Frame

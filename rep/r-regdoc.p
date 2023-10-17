@@ -507,11 +507,11 @@ do on error undo, return error return-value
          v-size = v-size + "10" + {&comma-char}
       .
    end.
-   if v-col02 = yes  then do: PUT stream OutStream "|"  "Номер"                    format "X(10)"  .
+   if v-col02 = yes  then do: PUT stream OutStream "|"  "Номер"                    format "X(15)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Номер"    + {&comma-char}
-         v-size = v-size + "10" + {&comma-char}
+         v-size = v-size + "15" + {&comma-char}
       .
    end.
    if v-col03 = yes  then do: PUT stream OutStream "|"  "Номер док-та "            format "X(20)"  .
@@ -570,63 +570,63 @@ do on error undo, return error return-value
          v-size = v-size + "11" + {&comma-char}
       .
    end.
-   if v-col10 = yes then do: PUT stream OutStream  "|"  "Сумма с НДС"              format "X(12)"  .
+   if v-col10 = yes then do: PUT stream OutStream  "|"  "Сумма с НДС"              format "X(18)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Сумма с НДС в уч. ценах"    + {&comma-char}
-         v-size = v-size + "12" + {&comma-char}
+         v-size = v-size + "15" + {&comma-char}
       .
    end.
-   if v-col11 = yes then do: PUT stream OutStream  "|"  "Сумма НДС"                format "X(12)"  .
+   if v-col11 = yes then do: PUT stream OutStream  "|"  "Сумма НДС"                format "X(15)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Сумма НДС в уч. ценах"    + {&comma-char}
          v-size = v-size + "12" + {&comma-char}
       .
    end.
-   if v-col12 = yes then do: PUT stream OutStream  "|"  "Сумма без НДС"            format "X(13)"  .
+   if v-col12 = yes then do: PUT stream OutStream  "|"  "Сумма без НДС"            format "X(15)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Сумма без НДС в уч. ценах"    + {&comma-char}
          v-size = v-size + "13" + {&comma-char}
       .
    end.
-   if v-col13 = yes then do: PUT stream OutStream  "|"  "Сумма с НДС"              format "X(12)"  .
+   if v-col13 = yes then do: PUT stream OutStream  "|"  "Сумма с НДС"              format "X(18)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Сумма с НДС в ценах док-та"    + {&comma-char}
-         v-size = v-size + "12" + {&comma-char}
+         v-size = v-size + "15" + {&comma-char}
       .
    end.
-   if v-col14 = yes then do: PUT stream OutStream  "|"  "Сумма НДС"                format "X(12)"  .
+   if v-col14 = yes then do: PUT stream OutStream  "|"  "Сумма НДС"                format "X(15)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Сумма НДС в ценах док-та"    + {&comma-char}
          v-size = v-size + "12" + {&comma-char}
       .
    end.
-   if v-col15 = yes then do: PUT stream OutStream  "|"  "Сумма без НДС"            format "X(13)"  .
+   if v-col15 = yes then do: PUT stream OutStream  "|"  "Сумма без НДС"            format "X(15)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Сумма без НДС в ценах док-та"    + {&comma-char}
          v-size = v-size + "13" + {&comma-char}
       .
    end.
-   if v-col16 = yes then do: PUT stream OutStream  "|"  "Сумма с НДС"              format "X(12)"  .
+   if v-col16 = yes then do: PUT stream OutStream  "|"  "Сумма с НДС"              format "X(15)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Сумма с НДС в прод. ценах"    + {&comma-char}
          v-size = v-size + "12" + {&comma-char}
       .
    end.
-   if v-col17 = yes then do: PUT stream OutStream  "|"  "Сумма НДС"                format "X(12)"  .
+   if v-col17 = yes then do: PUT stream OutStream  "|"  "Сумма НДС"                format "X(15)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Сумма НДС в прод. ценах"    + {&comma-char}
          v-size = v-size + "12" + {&comma-char}
       .
    end.
-   if v-col18 = yes then do: PUT stream OutStream  "|"  "Сумма без НДС"            format "X(13)"  .
+   if v-col18 = yes then do: PUT stream OutStream  "|"  "Сумма без НДС"            format "X(15)"  .
          assign
          num#col# = num#col# + 1
          v-column = v-column + "Сумма без НДС в прод. ценах"    + {&comma-char}
@@ -640,18 +640,18 @@ do on error undo, return error return-value
          v-size = v-size + "10" + {&comma-char}
       .
    end.
-   if v-col20 = yes then do: PUT stream OutStream  "|"  "Наценка"                  format "X(12)"  .
+   if v-col20 = yes then do: PUT stream OutStream  "|"  "Наценка"                  format "X(15)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Наценка с НДС"    + {&comma-char}
-         v-size = v-size + "10" + {&comma-char}
+         v-size = v-size + "13" + {&comma-char}
       .
    end.
-   if v-col21 = yes then do : PUT stream OutStream  "|"  "Наценка"                  format "X(10)"  .
+   if v-col21 = yes then do : PUT stream OutStream  "|"  "Наценка"                  format "X(15)"  .
       assign
          num#col# = num#col# + 1
          v-column = v-column + "Наценка без НДС"    + {&comma-char}
-         v-size = v-size + "10" + {&comma-char}
+         v-size = v-size + "15" + {&comma-char}
       .
    end.
    if v-col22 = yes then do: PUT stream OutStream  "|"  "Основание"                format "X(30)"  .
@@ -671,7 +671,7 @@ do on error undo, return error return-value
       assign num#col# = num#col# + 1 .
    end.
    if v-col02 = yes then do :
-      PUT stream OutStream  "|"  ""                       format "X(10)"  .
+      PUT stream OutStream  "|"  ""                       format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col03 = yes then do :
@@ -707,39 +707,39 @@ do on error undo, return error return-value
       assign num#col# = num#col# + 1 .
    end.
    if v-col10 = yes then do :
-      PUT stream OutStream  "|"  "в уч. ценах"             format "X(12)"  .
+      PUT stream OutStream  "|"  "в уч. ценах"             format "X(18)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col11 = yes then do :
-      PUT stream OutStream  "|"  "в уч. ценах"             format "X(12)"  .
+      PUT stream OutStream  "|"  "в уч. ценах"             format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col12 = yes then do :
-      PUT stream OutStream  "|"  "в уч. ценах"             format "X(13)"  .
+      PUT stream OutStream  "|"  "в уч. ценах"             format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col13 = yes then do :
-      PUT stream OutStream  "|"  "В ценах док-та"          format "X(12)"  .
+      PUT stream OutStream  "|"  "В ценах док-та"          format "X(18)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col14 = yes then do :
-      PUT stream OutStream  "|"  "в ценах док-та"          format "X(12)"  .
+      PUT stream OutStream  "|"  "в ценах док-та"          format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col15 = yes then do :
-      PUT stream OutStream  "|"  "в ценах док-та"          format "X(13)"  .
+      PUT stream OutStream  "|"  "в ценах док-та"          format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col16 = yes then do :
-      PUT stream OutStream  "|"  "в прод. ценах"           format "X(12)"  .
+      PUT stream OutStream  "|"  "в прод. ценах"           format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col17 = yes then do :
-      PUT stream OutStream  "|"  "в прод. ценах"           format "X(12)"  .
+      PUT stream OutStream  "|"  "в прод. ценах"           format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col18 = yes then do :
-      PUT stream OutStream  "|"  "в прод. ценах"           format "X(13)"  .
+      PUT stream OutStream  "|"  "в прод. ценах"           format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col19 = yes then do :
@@ -747,11 +747,11 @@ do on error undo, return error return-value
       assign num#col# = num#col# + 1 .
    end.
    if v-col20 = yes then do :
-      PUT stream OutStream  "|"  "с НДС"                   format "X(12)"  .
+      PUT stream OutStream  "|"  "с НДС"                   format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col21 = yes then do :
-      PUT stream OutStream  "|"  "без НДС"                 format "X(10)"  .
+      PUT stream OutStream  "|"  "без НДС"                 format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col22 = yes then do :
@@ -778,7 +778,7 @@ on error undo, return error
 :
 
    if v-col01 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(11)"  .
-   if v-col02 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(11)"  .
+   if v-col02 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
    if v-col03 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(21)"  .
    if v-col23 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(11)"  .
    if v-col04 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(21)"  .
@@ -787,18 +787,18 @@ on error undo, return error
    if v-col07 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(51)"  .
    if v-col08 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(7)"  .
    if v-col09 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(11)"  .
-   if v-col10 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(13)"  .
-   if v-col11 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(13)"  .
-   if v-col12 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(14)"  .
-   if v-col13 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(13)"  .
-   if v-col14 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(13)"  .
-   if v-col15 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(14)"  .
-   if v-col16 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(13)"  .
-   if v-col17 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(13)"  .
-   if v-col18 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(14)"  .
+   if v-col10 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(19)"  .
+   if v-col11 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
+   if v-col12 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
+   if v-col13 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(19)"  .
+   if v-col14 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
+   if v-col15 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
+   if v-col16 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
+   if v-col17 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
+   if v-col18 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
    if v-col19 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(11)"  .
-   if v-col20 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(13)"  .
-   if v-col21 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(11)"  .
+   if v-col20 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
+   if v-col21 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(16)"  .
    if v-col22 = yes then PUT stream OutStream  fill( "-" , 50 )             format "X(31)"  .
    PUT stream OutStream skip.
 
@@ -845,7 +845,8 @@ on error undo, return error
             for EACH obj-list:
                 if x-TOG-Shift then 
                 do:
-                    run factshift (obj-list.obj-code, obj-list.obj-type) .
+                    run factshift (obj-list.obj-code, obj-list.obj-type) no-error.
+                    if error-status:error then next .
 
                 end.        
                
@@ -882,7 +883,8 @@ on error undo, return error
             for EACH obj-list:
                 if x-TOG-Shift then 
                 do:
-                    run factshift (obj-list.obj-code, obj-list.obj-type) .
+                    run factshift (obj-list.obj-code, obj-list.obj-type) no-error.
+                    if error-status:error then next .
 
                 end.  
                 for EACH g#post-f
@@ -931,7 +933,8 @@ on error undo, return error
             for EACH obj-list:
                 if x-TOG-Shift then 
                 do:
-                    run factshift (obj-list.obj-code, obj-list.obj-type) .
+                    run factshift (obj-list.obj-code, obj-list.obj-type) no-error.
+                    if error-status:error then next .
 
                 end.                  
                
@@ -994,7 +997,8 @@ on error undo, return error
          :
           if x-TOG-Shift then 
           do:
-              run factshift (obj-list.obj-code, obj-list.obj-type) .
+              run factshift (obj-list.obj-code, obj-list.obj-type) no-error.
+              if error-status:error then next .
 
           end.  
          /* выбранные типы документов */
@@ -2141,7 +2145,7 @@ on error undo, return error
       if tt-all.col02-num = "zzz"
       then v-out = "":U.
       else v-out = string(tt-all.col02-num                 ).
-      PUT stream OutStream  "|"  v-out                     format "X(10)"  .
+      PUT stream OutStream  "|"  v-out                     format "X(15)"  .
       run macr_excel_char_with_format in this-procedure (input v-out, input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
@@ -2152,7 +2156,7 @@ on error undo, return error
    end.
    if v-col23 = yes then do: PUT stream OutStream  "|"  tt-all.col23-date-post                  format "99/99/9999"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_char_with_format in this-procedure (input string(tt-all.col23-date-post, "99/99/9999"), input num#str#, input num#col# ) .
+      run macr_excel_char_with_format in this-procedure (input string(tt-all.col23-date-post), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
    if v-col04 = yes then do: PUT stream OutStream  "|"  string(tt-all.col04-code-attr           )                     format "X(20)"  .
@@ -2189,49 +2193,49 @@ on error undo, return error
       run macr_excel_dec in this-procedure (input string(tt-all.col09-qnty), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col10 = yes then do: PUT stream OutStream  "|"  string(tt-all.col10-SumWithNDS-coast    , "->>>>>>>9.99")    format "X(12)"  .
+   if v-col10 = yes then do: PUT stream OutStream  "|"  string(tt-all.col10-SumWithNDS-coast    , "->>>>>>>>>>>>>9.99")    format "X(18)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col10-SumWithNDS-coast    , "->>>>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col10-SumWithNDS-coast    , "->>>>>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col11 = yes then do: PUT stream OutStream  "|"  string(tt-all.col11-VAT-Sum-coast       , "->>>>>>>9.99")    format "X(12)"  .
+   if v-col11 = yes then do: PUT stream OutStream  "|"  string(tt-all.col11-VAT-Sum-coast       , "->>>>>>>>>>9.99")    format "X(15)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col11-VAT-Sum-coast       , "->>>>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col11-VAT-Sum-coast       , "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col12 = yes then do: PUT stream OutStream  "|"  string(tt-all.col12-SumWithoutNDS-coast , "->>>>>>>>9.99")   format "X(13)"  .
+   if v-col12 = yes then do: PUT stream OutStream  "|"  string(tt-all.col12-SumWithoutNDS-coast , "->>>>>>>>>>9.99")   format "X(15)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col12-SumWithoutNDS-coast , "->>>>>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col12-SumWithoutNDS-coast , "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col13 = yes then do: PUT stream OutStream  "|"  string(tt-all.col13-SumWithNDS          , "->>>>>>>9.99")    format "X(12)"  .
+   if v-col13 = yes then do: PUT stream OutStream  "|"  string(tt-all.col13-SumWithNDS          , "->>>>>>>>>>>>>9.99")    format "X(18)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col13-SumWithNDS          , "->>>>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col13-SumWithNDS          , "->>>>>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col14 = yes then do: PUT stream OutStream  "|"  string(tt-all.col14-VAT-Sum             , "->>>>>>>9.99")    format "X(12)"  .
+   if v-col14 = yes then do: PUT stream OutStream  "|"  string(tt-all.col14-VAT-Sum             , "->>>>>>>>>>9.99")    format "X(15)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col14-VAT-Sum             , "->>>>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col14-VAT-Sum             , "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col15 = yes then do: PUT stream OutStream  "|"  string(tt-all.col15-SumWithoutNDS       , "->>>>>>>>9.99")   format "X(13)"  .
+   if v-col15 = yes then do: PUT stream OutStream  "|"  string(tt-all.col15-SumWithoutNDS       , "->>>>>>>>>>9.99")   format "X(15)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input  string(tt-all.col15-SumWithoutNDS       , "->>>>>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input  string(tt-all.col15-SumWithoutNDS       , "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col16 = yes then do: PUT stream OutStream  "|"  string(tt-all.col16-SumWithNDS-sp       , "->>>>>>>9.99")    format "X(12)"  .
+   if v-col16 = yes then do: PUT stream OutStream  "|"  string(tt-all.col16-SumWithNDS-sp       , "->>>>>>>>>>9.99")    format "X(15)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col16-SumWithNDS-sp       , "->>>>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col16-SumWithNDS-sp       , "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col17 = yes then do: PUT stream OutStream  "|"  string(tt-all.col17-VAT-Sum-sp          , "->>>>>>>9.99")    format "X(12)"  .
+   if v-col17 = yes then do: PUT stream OutStream  "|"  string(tt-all.col17-VAT-Sum-sp          , "->>>>>>>>>>9.99")    format "X(15)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col17-VAT-Sum-sp          , "->>>>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col17-VAT-Sum-sp          , "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col18 = yes then do: PUT stream OutStream  "|"  string(tt-all.col18-SumWithoutNDS-sp    , "->>>>>>>>9.99")   format "X(13)"  .
+   if v-col18 = yes then do: PUT stream OutStream  "|"  string(tt-all.col18-SumWithoutNDS-sp    , "->>>>>>>>>>9.99")   format "X(15)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col18-SumWithoutNDS-sp    , "->>>>>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col18-SumWithoutNDS-sp    , "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
    if v-col19 = yes then do: PUT stream OutStream  "|"  string(tt-all.col19-discnt-sum          , "->>>>>9.99")      format "X(10)"  .
@@ -2239,14 +2243,14 @@ on error undo, return error
       run macr_excel_dec in this-procedure (input string(tt-all.col19-discnt-sum          , "->>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col20 = yes then do: PUT stream OutStream  "|"  string(tt-all.col20-SumWithNDS-disp     , "->>>>>>>9.99")      format "X(12)"  .
+   if v-col20 = yes then do: PUT stream OutStream  "|"  string(tt-all.col20-SumWithNDS-disp     , "->>>>>>>>>>9.99")      format "X(15)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col20-SumWithNDS-disp     , "->>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col20-SumWithNDS-disp     , "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
-   if v-col21 = yes then do: PUT stream OutStream  "|"  string(tt-all.col21-SumWithoutNDS-disp  , "->>>>>9.99")      format "X(10)"  .
+   if v-col21 = yes then do: PUT stream OutStream  "|"  string(tt-all.col21-SumWithoutNDS-disp  , "->>>>>>>>>>9.99")      format "X(15)"  .
       assign num#col# = num#col# + 1 .
-      run macr_excel_dec in this-procedure (input string(tt-all.col21-SumWithoutNDS-disp  , "->>>>>>9.99"), input num#str#, input num#col# ) .
+      run macr_excel_dec in this-procedure (input string(tt-all.col21-SumWithoutNDS-disp  , "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run format-itog in this-procedure.
    end.
    if v-col22 = yes then do: PUT stream OutStream  "|"  tt-all.col22-reason                                   format "X(30)"  .
@@ -2275,7 +2279,7 @@ on error undo, return error
       assign num#col# = num#col# + 1 .
    end.
    if v-col02 = yes then do :
-      PUT stream OutStream  "|"  "":U    format "X(10)"  .
+      PUT stream OutStream  "|"  "":U    format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col03 = yes then do :
@@ -2306,18 +2310,18 @@ on error undo, return error
    end.
    if v-col08 = yes then PUT stream OutStream  "|"  "":U    format "X(6)"   .
    if v-col09 = yes then PUT stream OutStream  "|"  "":U    format "X(10)"  .
-   if v-col10 = yes then PUT stream OutStream  "|"  "":U    format "X(12)"  .
-   if v-col11 = yes then PUT stream OutStream  "|"  "":U    format "X(12)"  .
-   if v-col12 = yes then PUT stream OutStream  "|"  "":U    format "X(13)"  .
-   if v-col13 = yes then PUT stream OutStream  "|"  "":U    format "X(12)"  .
-   if v-col14 = yes then PUT stream OutStream  "|"  "":U    format "X(12)"  .
-   if v-col15 = yes then PUT stream OutStream  "|"  "":U    format "X(13)"  .
-   if v-col16 = yes then PUT stream OutStream  "|"  "":U    format "X(12)"  .
-   if v-col17 = yes then PUT stream OutStream  "|"  "":U    format "X(12)"  .
-   if v-col18 = yes then PUT stream OutStream  "|"  "":U    format "X(13)"  .
+   if v-col10 = yes then PUT stream OutStream  "|"  "":U    format "X(18)"  .
+   if v-col11 = yes then PUT stream OutStream  "|"  "":U    format "X(15)"  .
+   if v-col12 = yes then PUT stream OutStream  "|"  "":U    format "X(15)"  .
+   if v-col13 = yes then PUT stream OutStream  "|"  "":U    format "X(18)"  .
+   if v-col14 = yes then PUT stream OutStream  "|"  "":U    format "X(15)"  .
+   if v-col15 = yes then PUT stream OutStream  "|"  "":U    format "X(15)"  .
+   if v-col16 = yes then PUT stream OutStream  "|"  "":U    format "X(15)"  .
+   if v-col17 = yes then PUT stream OutStream  "|"  "":U    format "X(15)"  .
+   if v-col18 = yes then PUT stream OutStream  "|"  "":U    format "X(15)"  .
    if v-col19 = yes then PUT stream OutStream  "|"  "":U    format "X(10)"  .
-   if v-col20 = yes then PUT stream OutStream  "|"  "":U    format "X(12)"  .
-   if v-col21 = yes then PUT stream OutStream  "|"  "":U    format "X(10)"  .
+   if v-col20 = yes then PUT stream OutStream  "|"  "":U    format "X(15)"  .
+   if v-col21 = yes then PUT stream OutStream  "|"  "":U    format "X(15)"  .
    if v-col22 = yes then PUT stream OutStream  "|"  "":U    format "X(30)"  .
    PUT stream OutStream  "|"  .
 
@@ -2341,7 +2345,7 @@ on error undo, return error
       assign num#col# = num#col# + 1 .
    end.
    if v-col02 = yes then do :
-      PUT stream OutStream  "|"  "":U                         format "X(10)"  .
+      PUT stream OutStream  "|"  "":U                         format "X(15)"  .
       assign num#col# = num#col# + 1 .
    end.
    if v-col03 = yes then do :
@@ -2399,20 +2403,20 @@ on error undo, return error
       assign num#col# = num#col# + 1 .
    end.
    if v-col10 = yes then do :
-      PUT stream OutStream  "|"  string(bf_tt-itog.SumWithNDS-cost, "->>>>>>>9.99")       format "X(12)"  .
-      run macr_excel_dec in this-procedure (input string(bf_tt-itog.SumWithNDS-cost, "->>>>>>>9.99"), input num#str#, input num#col# ) .
+      PUT stream OutStream  "|"  string(bf_tt-itog.SumWithNDS-cost, "->>>>>>>>>>>>>9.99")       format "X(18)"  .
+      run macr_excel_dec in this-procedure (input string(bf_tt-itog.SumWithNDS-cost, "->>>>>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run print-bold in this-procedure .
       assign num#col# = num#col# + 1 .
    end.
    if v-col11 = yes then do :
-      PUT stream OutStream  "|"  string(bf_tt-itog.VAT-cost, "->>>>>>>9.99")          format "X(12)"  .
-      run macr_excel_dec in this-procedure (input string(bf_tt-itog.VAT-cost, "->>>>>>>9.99"), input num#str#, input num#col# ) .
+      PUT stream OutStream  "|"  string(bf_tt-itog.VAT-cost, "->>>>>>>>>>9.99")          format "X(15)"  .
+      run macr_excel_dec in this-procedure (input string(bf_tt-itog.VAT-cost, "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run print-bold in this-procedure .
       assign num#col# = num#col# + 1 .
    end.
    if v-col12 = yes then do :
-      PUT stream OutStream  "|"  string((bf_tt-itog.SumWithNDS-cost - bf_tt-itog.VAT-cost), "->>>>>>>>9.99")    format "X(13)"  .
-      run macr_excel_dec in this-procedure (input string((bf_tt-itog.SumWithNDS-cost - bf_tt-itog.VAT-cost), "->>>>>>>>>9.99"), input num#str#, input num#col# ) .
+      PUT stream OutStream  "|"  string((bf_tt-itog.SumWithNDS-cost - bf_tt-itog.VAT-cost), "->>>>>>>>>>9.99")    format "X(15)"  .
+      run macr_excel_dec in this-procedure (input string((bf_tt-itog.SumWithNDS-cost - bf_tt-itog.VAT-cost), "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run print-bold in this-procedure .
       assign num#col# = num#col# + 1 .
    end.
@@ -2432,26 +2436,26 @@ on error undo, return error
 /*   if v-col14 = yes then PUT stream OutStream  "|"  string(bf_tt-itog.VAT-sale, "->>>>>>>9.99")                 format "X(12)"  .*/
 /*   if v-col15 = yes then PUT stream OutStream  "|"  string((bf_tt-itog.SumWithNDS-sale - bf_tt-itog.VAT-sale), "->>>>>>>>9.99")           format "X(13)"  .*/
    if v-col16 = yes then do :
-      PUT stream OutStream  "|"  string(bf_tt-itog.SumWithNDS-crsa, "->>>>>>>9.99")          format "X(12)"  .
-      run macr_excel_dec in this-procedure (input string(bf_tt-itog.SumWithNDS-crsa, "->>>>>>>>9.99"), input num#str#, input num#col# ) .
+      PUT stream OutStream  "|"  string(bf_tt-itog.SumWithNDS-crsa, "->>>>>>>>>>9.99")          format "X(15)"  .
+      run macr_excel_dec in this-procedure (input string(bf_tt-itog.SumWithNDS-crsa, "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run print-bold in this-procedure .
       assign num#col# = num#col# + 1 .
    end.
    if v-col17 = yes then do :
-      PUT stream OutStream  "|"  string(bf_tt-itog.VAT-crsa, "->>>>>>>9.99")            format "X(12)"  .
-      run macr_excel_dec in this-procedure (input string(bf_tt-itog.VAT-crsa, "->>>>>>>>9.99"), input num#str#, input num#col# ) .
+      PUT stream OutStream  "|"  string(bf_tt-itog.VAT-crsa, "->>>>>>>>>>9.99")            format "X(15)"  .
+      run macr_excel_dec in this-procedure (input string(bf_tt-itog.VAT-crsa, "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run print-bold in this-procedure .
       assign num#col# = num#col# + 1 .
    end.
    if v-col18 = yes then do :
-      PUT stream OutStream  "|"  string((bf_tt-itog.SumWithNDS-crsa - bf_tt-itog.VAT-crsa), "->>>>>>>>9.99")       format "X(13)"  .
-      run macr_excel_dec in this-procedure (input string((bf_tt-itog.SumWithNDS-crsa - bf_tt-itog.VAT-crsa), "->>>>>>>>>9.99"), input num#str#, input num#col# ) .
+      PUT stream OutStream  "|"  string((bf_tt-itog.SumWithNDS-crsa - bf_tt-itog.VAT-crsa), "->>>>>>>>>>9.99")       format "X(15)"  .
+      run macr_excel_dec in this-procedure (input string((bf_tt-itog.SumWithNDS-crsa - bf_tt-itog.VAT-crsa), "->>>>>>>>>>9.99"), input num#str#, input num#col# ) .
       run print-bold in this-procedure .
       assign num#col# = num#col# + 1 .
    end.
    if v-col19 = yes then PUT stream OutStream  "|"  "":U                format "X(10)"  .
-   if v-col20 = yes then PUT stream OutStream  "|"  "":U                format "X(12)"  .
-   if v-col21 = yes then PUT stream OutStream  "|"  "":U                format "X(10)"  .
+   if v-col20 = yes then PUT stream OutStream  "|"  "":U                format "X(15)"  .
+   if v-col21 = yes then PUT stream OutStream  "|"  "":U                format "X(15)"  .
    if v-col22 = yes then PUT stream OutStream  "|"  "":U                format "X(30)"  .
 /*   if v-col23 = yes then PUT stream OutStream  "|"  "":U                format "X(10)"  .*/
 
@@ -2735,7 +2739,8 @@ on error undo, return error
    for EACH obj-list:
        if x-TOG-Shift then 
        do:
-           run factshift (obj-list.obj-code, obj-list.obj-type) .
+           run factshift (obj-list.obj-code, obj-list.obj-type) no-error.
+           if error-status:error then next .
 
        end.  
        for EACH tt-gds
@@ -3092,12 +3097,77 @@ end procedure. /* update-ost-line */
 procedure factshift:
 define input parameter p-obj-code as integer no-undo .
 define input parameter p-obj-type as character no-undo .  
+define buffer end_shift-obj      for ub.shift-obj .
+define buffer previous-shift-obj for ub.shift-obj.
+define variable fo      as decimal no-undo init 0.
+define variable prev-fo as decimal no-undo init 0.
+define variable moving  as logical no-undo init yes.
 
 assign
 pobj-code = p-obj-code .
 pobj-type = p-obj-type .
 
-{ rep/r-shftfo.i attr-arh-detail-date }
+   find first end_shift-obj share-lock
+      where end_shift-obj.obj-type   = pobj-type
+      and end_shift-obj.obj-code   = pobj-code
+      and end_shift-obj.shift-date = pshift-date1
+      and end_shift-obj.shift-num  = pshift-num1
+      no-error.
+   if not available end_shift-obj then 
+   do:
+      find last end_shift-obj share-lock
+         where end_shift-obj.obj-type   = pobj-type
+         and end_shift-obj.obj-code   = pobj-code
+         and end_shift-obj.shift-date = pshift-date1
+         no-error.
+      if not available (end_shift-obj) then 
+      do: 
+         find last end_shift-obj share-lock
+            where end_shift-obj.obj-type   = pobj-type
+            and end_shift-obj.obj-code   = pobj-code
+            and end_shift-obj.shift-date < pshift-date1
+            no-error.
+         if not available (end_shift-obj) then 
+         do:          
+/*            message                                                                                                                                 */
+/*               vss-workfile vss-revision vss-description skip                                                                                       */
+/*               substitute("Не найдена смена с порядковым номером &1 от &2 для объекта &3 &4", pshift-num1, pshift-date1, pobj-type, pobj-code ) skip*/
+/*               view-as alert-box error .                                                                                                            */
+            return error.
+         end.
+      end.
+   end.
+   assign
+      fo = end_shift-obj.fact-order
+      .
+
+
+   find last previous-shift-obj share-lock
+      where previous-shift-obj.obj-type = pobj-type
+      and previous-shift-obj.obj-code = pobj-code
+      and (( previous-shift-obj.shift-date = pshift-date
+      and previous-shift-obj.shift-num < pshift-num
+      )
+      or previous-shift-obj.shift-date < pshift-date
+      )
+      use-index pi no-error.
+   if available previous-shift-obj then 
+   do:
+
+      if  previous-shift-obj.shift-date < p-previous-shift-date then 
+      do:
+         run day-begin-fact-order in this-procedure (
+            input  p-previous-shift-date
+            ,output prev-fo).
+      end.
+      else 
+      do:
+         assign
+            prev-fo = previous-shift-obj.fact-order
+            .
+      end.
+   end.
+
 v-fact-order-start = prev-fo.
 
 if fo > 0 then

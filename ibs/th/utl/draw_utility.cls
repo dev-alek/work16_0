@@ -58,6 +58,7 @@ class ibs.th.utl.draw_utility inherits Form:
   define private variable checkBox7 as System.Windows.Forms.CheckBox no-undo.
   define private variable checkBox9 as System.Windows.Forms.CheckBox no-undo.
   define private variable components as System.ComponentModel.IContainer no-undo.
+   define private variable delemc as System.Windows.Forms.CheckBox no-undo.
   define private variable label19 as System.Windows.Forms.Label no-undo.
   define private variable label2 as System.Windows.Forms.Label no-undo.
   define private variable label3 as System.Windows.Forms.Label no-undo.
@@ -67,6 +68,7 @@ class ibs.th.utl.draw_utility inherits Form:
     define private variable listBox1 as System.Windows.Forms.ListBox no-undo.
    define private variable listBox2 as System.Windows.Forms.ListBox no-undo.
   define private variable openFileDialog1 as System.Windows.Forms.OpenFileDialog no-undo.
+   define private variable sendemc as System.Windows.Forms.CheckBox no-undo.
    define private variable tabPage4 as System.Windows.Forms.TabPage no-undo.
    define private variable tabPage5 as System.Windows.Forms.TabPage no-undo.
   define private variable textBox1 as System.Windows.Forms.TextBox no-undo.
@@ -224,7 +226,19 @@ class ibs.th.utl.draw_utility inherits Form:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
-	method private void checkBox29_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+	method private void checkBox21_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void delemc_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
 		
 		return.
 
@@ -280,8 +294,30 @@ class ibs.th.utl.draw_utility inherits Form:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
+	method private void sendemc_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
 	method private void tabPage2_Click( input sender as System.Object, input e as System.EventArgs ):
 		
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void tabPage4_Click( input sender as System.Object, input e as System.EventArgs ):
+    
 		return.
 
 	end method.
@@ -324,9 +360,12 @@ class ibs.th.utl.draw_utility inherits Form:
   	  checkBox16:checked = no
   	  checkBox17:checked = no
   	  checkBox18:checked = no
-      checkBox23:checked = no
-      checkBox24:checked = no
-      v-send-param = no
+          checkBox23:checked = no
+          checkBox24:checked = no
+          sendemc:checked = no
+          delemc:checked  = no
+          checkBox24:checked = no
+          v-send-param = no
 	  .
 	   define variable vtestlg as logical no-undo init no.
 
@@ -339,6 +378,7 @@ class ibs.th.utl.draw_utility inherits Form:
         if ub.cash-desk-attr.attr-value-character <> "" then  
         mutil:sendnum(ub.cash-desk-attr.attr-value-character) .
       end.    
+
        
       mUtil:put-log("Начато   : удаление кассиров с касс").
       checkBox7:checked =mutil:sendcode(1).
@@ -401,7 +441,17 @@ class ibs.th.utl.draw_utility inherits Form:
         checkBox18:checked = checkBox17:checked.
         mUtil:put-log("Выполнено: передача справочника ОСС на кассы").
       if vtestlg then message "выполнено "   checkBox18:text view-as alert-box.
+
+        mUtil:put-log("Начато   : удаление ЕМС с касс").
+      delemc:checked = mutil:sendcode(16).
+        mUtil:put-log("Выполнено: удаление ЕМС с касс").
+      if vtestlg then message "выполнено "   delemc:text view-as alert-box.
       
+        mUtil:put-log("Начато   : передача ЕМС на кассы").
+      sendemc:checked = mutil:sendcode(17).
+        mUtil:put-log("Выполнено: передача ЕМС на кассы").
+      if vtestlg then message "выполнено "   sendemc:text view-as alert-box.
+
         mUtil:put-log("Начато   : удаление товаров с касс").
       checkBox23:checked = mutil:sendcode(13).
         mUtil:put-log("Выполнено: удаление товаров с касс").
@@ -411,7 +461,7 @@ class ibs.th.utl.draw_utility inherits Form:
       checkBox24:checked = mutil:sendcode(14).
         mUtil:put-log("Выполнено: передача товаров на кассы").
       if vtestlg then message "выполнено "   checkBox24:text view-as alert-box.
-        
+
         if listBox2:Text = "" then do:
           mUtil:put-log("Ошибка: отсутствует файл для загрузки новых параметров").
         end.
@@ -509,7 +559,8 @@ class ibs.th.utl.draw_utility inherits Form:
        view-as alert-box.
        return.
     end.
-    mutil:mAddr = textbox1:Text.    
+    mutil:mAddr = textbox1:Text.
+     
     checkBox21:checked =  mutil:chek_rvs-shift().
     if not checkBox21:checked
     then
@@ -553,6 +604,8 @@ class ibs.th.utl.draw_utility inherits Form:
      checkBox25:checked = if v-log-param then true else false.
      /* и таблица с пользователями тоже заполнена, но, возможно, не полностью */
      v-log-param = logical( getPARAM("darw_util_user") ) no-error .      
+    checkBox21:checked =  mutil:chek_rvs-shift().
+    checkBox22:checked = mutil:chek_rvs-close().
     checkBox26:checked = if v-log-param then true else false.
     checkBox19:checked = mutil:chek_rest().
     if checkBox19:Checked then checkBox19:Enabled = false .
@@ -562,6 +615,7 @@ class ibs.th.utl.draw_utility inherits Form:
     if checkBox30:Checked then checkBox30:Enabled = false .
     checkBox27:checked = mutil:chek_schedule().
     checkBox29:checked = mutil:chek_fbrgds().
+
   end method .  
   
   method private void BtnStart():
@@ -669,6 +723,8 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:checkBox1 = new System.Windows.Forms.CheckBox().
       this-object:button1 = new System.Windows.Forms.Button().
       this-object:tabPage2 = new System.Windows.Forms.TabPage().
+      this-object:delemc = new System.Windows.Forms.CheckBox().
+      this-object:sendemc = new System.Windows.Forms.CheckBox().
       this-object:listBox2 = new System.Windows.Forms.ListBox().
       this-object:label5 = new System.Windows.Forms.Label().
       this-object:button12 = new System.Windows.Forms.Button().
@@ -749,7 +805,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:tabControl1:Location = new System.Drawing.Point(12, 111).
       this-object:tabControl1:Name = "tabControl1".
       this-object:tabControl1:SelectedIndex = 0.
-      this-object:tabControl1:Size = new System.Drawing.Size(404, 455).
+      this-object:tabControl1:Size = new System.Drawing.Size(404, 501).
       this-object:tabControl1:TabIndex = 2.
       /*  */
       /* tabPage1 */
@@ -768,7 +824,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:tabPage1:Location = new System.Drawing.Point(4, 22).
       this-object:tabPage1:Name = "tabPage1".
       this-object:tabPage1:Padding = new System.Windows.Forms.Padding(3).
-      this-object:tabPage1:Size = new System.Drawing.Size(396, 429).
+      this-object:tabPage1:Size = new System.Drawing.Size(396, 475).
       this-object:tabPage1:TabIndex = 0.
       this-object:tabPage1:Text = "Этап 1".
       this-object:tabPage1:UseVisualStyleBackColor = true.
@@ -783,7 +839,6 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:checkBox29:Text = "Перенос атрибутов автопроизводства".
       this-object:checkBox29:UseCompatibleTextRendering = true.
       this-object:checkBox29:UseVisualStyleBackColor = true.
-      this-object:checkBox29:CheckedChanged:Subscribe(this-object:checkBox29_CheckedChanged).
       /*  */
       /* checkBox27 */
       /*  */
@@ -897,6 +952,8 @@ class ibs.th.utl.draw_utility inherits Form:
       /*  */
       /* tabPage2 */
       /*  */
+      this-object:tabPage2:Controls:Add(this-object:delemc).
+      this-object:tabPage2:Controls:Add(this-object:sendemc).
       this-object:tabPage2:Controls:Add(this-object:listBox2).
       this-object:tabPage2:Controls:Add(this-object:label5).
       this-object:tabPage2:Controls:Add(this-object:button12).
@@ -918,11 +975,35 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:tabPage2:Location = new System.Drawing.Point(4, 22).
       this-object:tabPage2:Name = "tabPage2".
       this-object:tabPage2:Padding = new System.Windows.Forms.Padding(3).
-      this-object:tabPage2:Size = new System.Drawing.Size(396, 429).
+      this-object:tabPage2:Size = new System.Drawing.Size(396, 475).
       this-object:tabPage2:TabIndex = 1.
       this-object:tabPage2:Text = "Этап 2".
       this-object:tabPage2:UseVisualStyleBackColor = true.
       this-object:tabPage2:Click:Subscribe(this-object:tabPage2_Click).
+      /*  */
+      /* delemc */
+      /*  */
+      this-object:delemc:Enabled = false.
+      this-object:delemc:Location = new System.Drawing.Point(149, 306).
+      this-object:delemc:Name = "delemc".
+      this-object:delemc:Size = new System.Drawing.Size(208, 24).
+      this-object:delemc:TabIndex = 18.
+      this-object:delemc:Text = "ЕМЦ удалены с касс".
+      this-object:delemc:UseCompatibleTextRendering = true.
+      this-object:delemc:UseVisualStyleBackColor = true.
+      this-object:delemc:CheckedChanged:Subscribe(this-object:delemc_CheckedChanged).
+      /*  */
+      /* sendemc */
+      /*  */
+      this-object:sendemc:Enabled = false.
+      this-object:sendemc:Location = new System.Drawing.Point(149, 331).
+      this-object:sendemc:Name = "sendemc".
+      this-object:sendemc:Size = new System.Drawing.Size(228, 24).
+      this-object:sendemc:TabIndex = 17.
+      this-object:sendemc:Text = "ЕМЦ переданы на кассы".
+      this-object:sendemc:UseCompatibleTextRendering = true.
+      this-object:sendemc:UseVisualStyleBackColor = true.
+      this-object:sendemc:CheckedChanged:Subscribe(this-object:sendemc_CheckedChanged).
       /*  */
       /* listBox2 */
       /*  */
@@ -931,7 +1012,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:listBox2:FormattingEnabled = true.
       this-object:listBox2:HorizontalScrollbar = true.
       this-object:listBox2:ImeMode = System.Windows.Forms.ImeMode:Katakana.
-      this-object:listBox2:Location = new System.Drawing.Point(165, 361).
+      this-object:listBox2:Location = new System.Drawing.Point(165, 409).
       this-object:listBox2:Name = "listBox2".
       this-object:listBox2:SelectionMode = System.Windows.Forms.SelectionMode:MultiExtended.
       this-object:listBox2:Size = new System.Drawing.Size(192, 56).
@@ -942,7 +1023,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /*  */
       /* label5 */
       /*  */
-      this-object:label5:Location = new System.Drawing.Point(6, 370).
+      this-object:label5:Location = new System.Drawing.Point(6, 428).
       this-object:label5:Name = "label5".
       this-object:label5:Size = new System.Drawing.Size(165, 14).
       this-object:label5:TabIndex = 15.
@@ -952,7 +1033,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /*  */
       /* button12 */
       /*  */
-      this-object:button12:Location = new System.Drawing.Point(363, 361).
+      this-object:button12:Location = new System.Drawing.Point(363, 409).
       this-object:button12:Name = "button12".
       this-object:button12:Size = new System.Drawing.Size(28, 23).
       this-object:button12:TabIndex = 12.
@@ -963,7 +1044,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /* checkBox24 */
       /*  */
       this-object:checkBox24:Enabled = false.
-      this-object:checkBox24:Location = new System.Drawing.Point(149, 331).
+      this-object:checkBox24:Location = new System.Drawing.Point(149, 381).
       this-object:checkBox24:Name = "checkBox24".
       this-object:checkBox24:Size = new System.Drawing.Size(228, 24).
       this-object:checkBox24:TabIndex = 14.
@@ -974,7 +1055,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /* checkBox23 */
       /*  */
       this-object:checkBox23:Enabled = false.
-      this-object:checkBox23:Location = new System.Drawing.Point(149, 306).
+      this-object:checkBox23:Location = new System.Drawing.Point(149, 356).
       this-object:checkBox23:Name = "checkBox23".
       this-object:checkBox23:Size = new System.Drawing.Size(228, 24).
       this-object:checkBox23:TabIndex = 13.
@@ -1137,7 +1218,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:tabPage3:Controls:Add(this-object:button5).
       this-object:tabPage3:Location = new System.Drawing.Point(4, 22).
       this-object:tabPage3:Name = "tabPage3".
-      this-object:tabPage3:Size = new System.Drawing.Size(396, 429).
+      this-object:tabPage3:Size = new System.Drawing.Size(396, 475).
       this-object:tabPage3:TabIndex = 2.
       this-object:tabPage3:Text = "Этап 3".
       this-object:tabPage3:UseVisualStyleBackColor = true.
@@ -1219,10 +1300,11 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:tabPage4:Controls:Add(this-object:checkBox21).
       this-object:tabPage4:Location = new System.Drawing.Point(4, 22).
       this-object:tabPage4:Name = "tabPage4".
-      this-object:tabPage4:Size = new System.Drawing.Size(396, 429).
+      this-object:tabPage4:Size = new System.Drawing.Size(396, 475).
       this-object:tabPage4:TabIndex = 3.
       this-object:tabPage4:Text = "Этап 4".
       this-object:tabPage4:UseVisualStyleBackColor = true.
+      this-object:tabPage4:Click:Subscribe(this-object:tabPage4_Click).
       /*  */
       /* button7 */
       /*  */
@@ -1256,6 +1338,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:checkBox21:Text = "Сменная сверка ".
       this-object:checkBox21:UseCompatibleTextRendering = true.
       this-object:checkBox21:UseVisualStyleBackColor = true.
+      this-object:checkBox21:CheckedChanged:Subscribe(this-object:checkBox21_CheckedChanged).
       /*  */
       /* tabPage5 */
       /*  */
@@ -1266,7 +1349,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:tabPage5:Controls:Add(this-object:button8).
       this-object:tabPage5:Location = new System.Drawing.Point(4, 22).
       this-object:tabPage5:Name = "tabPage5".
-      this-object:tabPage5:Size = new System.Drawing.Size(396, 429).
+      this-object:tabPage5:Size = new System.Drawing.Size(396, 475).
       this-object:tabPage5:TabIndex = 4.
       this-object:tabPage5:Text = "Утилиты".
       this-object:tabPage5:UseVisualStyleBackColor = true.
@@ -1392,7 +1475,7 @@ class ibs.th.utl.draw_utility inherits Form:
       this-object:listBox1:FormattingEnabled = true.
       this-object:listBox1:Location = new System.Drawing.Point(449, 133).
       this-object:listBox1:Name = "listBox1".
-      this-object:listBox1:Size = new System.Drawing.Size(326, 433).
+      this-object:listBox1:Size = new System.Drawing.Size(326, 446).
       this-object:listBox1:TabIndex = 9.
       /*  */
       /* button6 */
@@ -1410,7 +1493,7 @@ class ibs.th.utl.draw_utility inherits Form:
       /* draw_utility */
       /*  */
       this-object:CancelButton = this-object:button6.
-      this-object:ClientSize = new System.Drawing.Size(795, 604).
+      this-object:ClientSize = new System.Drawing.Size(795, 617).
       this-object:Controls:Add(this-object:button6).
       this-object:Controls:Add(this-object:listBox1).
       this-object:Controls:Add(this-object:label3).

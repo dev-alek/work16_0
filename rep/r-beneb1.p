@@ -63,6 +63,7 @@ DEFINE VARIABLE ChkAmount    as      integer no-undo.
 DEFINE VARIABLE  AllDay-BaseSum as decimal no-undo .
 DEFINE VARIABLE  AllDay-RublSum as decimal no-undo .
 DEFINE SHARED VARIABLE cas-shft as logical no-undo init no.
+define variable v-is-sub-count as logical no-undo. /* true: вычесть чек из общего количества как нефискальный */
 define buffer t-benefits for benefits.
 
 { rep/e-nobenq.i }

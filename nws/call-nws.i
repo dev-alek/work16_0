@@ -149,6 +149,7 @@ define variable v-0-rdb-not-news as character no-undo initial
 ,operservattr~
 ,cashbook~
 ,cashbookattr~
+,c-marking~
 ":U.
 
 
@@ -738,7 +739,9 @@ v-custom-except-list-erprn =
 ,assortment-matrix-goods~
 ,assortment-matrix-goods-attr~
 ,auto-tank~
+,auto-section~
 ,auto-tank-attr~
+,auto-section-attr~
 ,auto-tank-meas~
 ,auto-tank-meas-attr~
 ,bar-code~
@@ -1368,6 +1371,18 @@ define variable v-custom-0-rdb-not-news-erprn as character no-undo initial
 ,c-cash-pay~
 ,cash-pay-attr~
 ,c-cash-pay-attr~
+,auto-tank~
+,auto-section~
+,auto-section-table~
+,auto-tank-meas~
+,c-auto-tank~
+,c-auto-tank-attr~
+,c-auto-section~
+,c-auto-section-attr~
+,c-auto-section-table~
+,auto-tank-attr~
+,auto-section-attr~
+,c-auto-tank-meas-attr~
 ,gds-mercury~
 ,gds-mercury-attr~
 ":U.

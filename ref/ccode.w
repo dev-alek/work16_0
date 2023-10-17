@@ -11,7 +11,9 @@ function fLabel returns character forward.
 &glob buf_obj-hist c-code
 &Glob VisibleKeyField yes
 &glob myChangeAdd ParentPars
+subscribe "getComboList" anywhere.
 {ref/brwhist.i &lable = fLabel()}
+unsubscribe "getComboList".
 function getParentLabel returns character (
 input itype as character, 
 input iNum  as integer 
@@ -61,15 +63,15 @@ function  getStsCashParam returns character (istatus as int ):
    
 end.
 &glob tt_name temp-changes
+define variable mType      as character no-undo.
 procedure ParentPars:
    define input  parameter iOldBuf as handle no-undo.
    define input  parameter iCurBuf as handle no-undo.
    define variable vparentOld as character no-undo.
    define variable vparentCur as character no-undo.
-   define variable vType      as character no-undo.
    vparentOld = if valid-handle(iOldBuf) and iOldBuf:available then iOldBuf::parent else "".
    vparentCur = if valid-handle(iCurBuf) and iCurBuf:available then iCurBuf::parent else "".
-   vType = if    vparentOld begins "cash-param"
+   mType = if    vparentOld begins "cash-param"
               or vparentCur begins "cash-param"
            then "cash-param"
            else ""
@@ -82,7 +84,7 @@ procedure ParentPars:
         {&tt_name}.t_name = "code"
         {&tt_name}.f_name = "Parent_" + string(vi) 
       .
-      {&tt_name}.l_name   = getParentLabel(vtype,vi).
+      {&tt_name}.l_name   = getParentLabel(mtype,vi).
       {&tt_name}.v_old    = entry(vi,vparentOld,{&delim-par}) no-error.
       {&tt_name}.v_new    = entry(vi,vparentCur,{&delim-par}) no-error.
       {&tt_name}.fNotChange = {&tt_name}.v_old eq {&tt_name}.v_new.
@@ -220,4 +222,13 @@ function local-open-br returns logical
   return true.
 end.
 
-
+procedure getComboList:
+   define input  parameter ispr        as character no-undo.
+   define output parameter oListVal    as character no-undo.
+   define output parameter oListValRet as character no-undo.
+   if ispr eq "hist-action"
+   then assign
+      oListVal    = "{&bef-hn-delete-full},{&bef-hn-create-full},{&bef-hn-update-full}"
+      oListValRet = "{&bef-hn-delete},{&bef-hn-create},{&bef-hn-update}"
+   .
+end.

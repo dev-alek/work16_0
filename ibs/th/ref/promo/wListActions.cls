@@ -95,7 +95,6 @@ class ibs.th.ref.promo.wListActions inherits Form:
           super().
           InitializeComponent().
           Visual_Columns(FALSE).
-          THIS-OBJECT:KeyPreview = true.
           this-object:ComponentsCollection:ADD(this-object:components).
           m-promo-trg = new ibs.th.ref.promo.promo_trg().
           vDeleteTRG = yes.
@@ -111,7 +110,6 @@ class ibs.th.ref.promo.wListActions inherits Form:
         super().
         InitializeComponent().
         Visual_Columns(FALSE).
-        THIS-OBJECT:KeyPreview = true.
         this-object:ComponentsCollection:ADD(this-object:components).
         m-promo-trg = pPromoTrg.
        prepareobj ( ) .
@@ -683,7 +681,6 @@ class ibs.th.ref.promo.wListActions inherits Form:
       this-object:Controls:Add(this-object:tableLayoutPanel1).
       this-object:Name = "wListActions".
       this-object:Text = "Список акций".
-      this-object:KeyDown:Subscribe(this-object:wListActions_KeyDown).
       this-object:tableLayoutPanel1:ResumeLayout(false).
       cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
       cast(this-object:bindAction, System.ComponentModel.ISupportInitialize):EndInit().
@@ -691,6 +688,7 @@ class ibs.th.ref.promo.wListActions inherits Form:
       this-object:toolStrip1:ResumeLayout(false).
       this-object:toolStrip1:PerformLayout().
       this-object:ResumeLayout(false).
+      {gbl\ed_date_cls.i this-object:dateTimePicker1 This-object}
       catch e as Progress.Lang.Error:
          undo, throw e.
       end catch.
@@ -906,40 +904,5 @@ class ibs.th.ref.promo.wListActions inherits Form:
         
 
     END METHOD.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void wListActions_KeyPress( input sender as System.Object, input e as System.Windows.Forms.KeyPressEventArgs ):
-		message e:KeyChar
-        view-as alert-box.
-		return.
-
-	end method.
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	METHOD PRIVATE VOID wListActions_KeyDown( INPUT sender AS System.Object, INPUT e AS System.Windows.Forms.KeyEventArgs ):
-	    
-		IF   e:KeyCode = Keys:F3 AND e:Shift AND e:Alt 
-         THEN
-        DO:
-          message program-name( 1 ) skip( 1 )
-          vss-revision                  skip( 0 )
-          vss-author                    skip( 0 )
-          vss-date                      skip( 0 )
-          vss-workfile                  skip( 0 )
-          vss-archive                   skip( 1 )
-          vss-description               skip( 1 )
-  view-as alert-box title "Текущая программа".
-        END.
-		RETURN.
-
-	END METHOD.
 
 end class.

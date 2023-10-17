@@ -2329,7 +2329,10 @@ End case.
 if choose-shift
 and TOG-Shift:sensitive
 then do :
-  TOG-Shift = yes .
+/* почему-то на некоторых трейдах при попадение в тригер переменная сбрасывается поэтому положим сразу в 2 места */
+  TOG-Shift:screen-value in frame F-Main = "yes" .
+  TOG-Shift = yes.
+  
   apply "value-changed" to TOG-Shift in frame F-Main .
 end .
 
@@ -2657,7 +2660,6 @@ run take-var in this-procedure .
 if temp-param-date = 10
 then do :
   temp-param-date = 4 .
-  choose-shift = yes .
 end .
 Assign
  Date-Alone   = X-Date-Alone
@@ -2887,6 +2889,8 @@ ASSIGN parParentProc = my-handle.
 { gbl/basecode.i   v-cntxt-host-code-obj base-code }
 run take-var in this-procedure .
 run init-radio-schet in this-procedure  .
+If temp-param-date = 10 then 
+  tog-shift:screen-value in frame {&frame-name} = string(true) .
 
   /* Dispatch standard ADM method.                             */
   RUN dispatch IN THIS-PROCEDURE ( INPUT 'initialize':U ) .
@@ -3474,8 +3478,8 @@ define buffer buf_shop for ub.shop .
 define buffer buf_sysconf for ub.sysconf .
 
  If NOT (temp-param-obj = '*'
-    OR Lookup(string({&o-all}),temp-param-obj) > 0
-    OR Lookup(string({&o-firm}),temp-param-obj) > 0  ) then DO:
+    OR Lookup(string({&o-all}),replace(temp-param-obj,"!","")) > 0
+    OR Lookup(string({&o-firm}),replace(temp-param-obj,"!","")) > 0  ) then DO:
    message "Выполнить невозможно, смените текущий объект !" view-as alert-box error .
   return error.
  End.

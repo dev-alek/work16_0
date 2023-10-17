@@ -28,8 +28,9 @@ define variable vss-description as character no-undo init "".
 
 define buffer buf_db for ub.db.
 find first buf_db no-lock where buf_db.db-num = v-cntxt-db-num no-error.
-define variable updschmObj      as class ibs.th.adm.upd.updschm no-undo.
-updschmObj = new ibs.th.adm.upd.updschm (no).
+define variable updschmObj      as class ibs.th.adm.upd.CheckUpd no-undo.
+updschmObj = new ibs.th.adm.upd.CheckUpd (no).
+updschmObj:updChceck().
 if     buf_db.reserve1-char begins "updto:"
     or updschmObj:CurrDBShm ne int(buf_db.reserve1-char)
 then do trans:

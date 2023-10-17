@@ -330,7 +330,10 @@ procedure update-clients-prod :
     find buf_clients
       where buf_clients.obj-type = new-prod-type
         and buf_clients.obj-code = new-prod-code
-      .
+    no-error  .
+    if not avail buf_clients
+    then
+       return error substitute( "Производитель с типом &1 и кодом &2 НЕ СУЩЕСТВУЕТ!", new-prod-type, new-prod-code ) .
     if buf_clients.is-prod <> true
     then do:
       assign

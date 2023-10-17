@@ -18,58 +18,366 @@ Creation date: 10/19/05
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
-define variable acc-netto as decimal no-undo.
-define variable acc-count as integer no-undo.
-define variable acc-base as decimal no-undo.
-define variable acc-rubl as decimal no-undo.
-define variable acc-sub-netto as decimal no-undo.
-define variable acc-sub-count as integer no-undo.
-define variable acc-desk-netto as decimal no-undo.
-define variable acc-desk-count as integer no-undo.
-define variable acc-sub-desk-netto as decimal no-undo.
-define variable acc-sub-desk-count as integer no-undo.
-define variable acc-sub-curr-sum as decimal no-undo.
-define variable acc-sub-curr-base as decimal no-undo.
-define variable acc-sub-curr-rubl as decimal no-undo.
-define variable acc-desk-rubl as decimal no-undo.
-define variable acc-desk-base as decimal no-undo.
-define variable acc-sub-desk-rubl as decimal no-undo.
-define variable acc-sub-desk-base as decimal no-undo.
-define variable acc-day-rubl as decimal no-undo .
+define variable acc-count-ln as integer no-undo . /* кол-во линий оплат для отображения в хронометраже */
+define variable acc-count-step as integer no-undo . /* шаг хронометража */
 define variable acc-day-base as decimal no-undo .
-define variable acc-day-cnt as integer no-undo .
-define variable acc-curr-sum as decimal no-undo.
-define variable acc-curr-base as decimal no-undo.
-define variable acc-curr-rubl as decimal no-undo.
+define variable acc-day-rubl as decimal no-undo .
+define variable acc-day-cnt  as integer no-undo . /* кол-во чеков за все дни */
+define variable acc-day-nf   as integer no-undo . /* кол-во чеков за все дни нефискальных */
+define variable acc-desk-rubl  as decimal no-undo .
+define variable acc-desk-base  as decimal no-undo .
+define variable acc-desk-count as integer no-undo .
+define variable acc-desk-count-nf as integer no-undo .
+define variable acc-curr-sum  as decimal no-undo .
+define variable acc-curr-base as decimal no-undo .
+define variable acc-curr-rubl as decimal no-undo .
+define variable v-skip-line    as logical no-undo . /* true: пропустить запись */
+define variable v-is-sub-count as logical no-undo. /* true: вычесть чек из общего количества как нефискальный */
+/* define variable v-is-sub-pay   as logical no-undo .  true: вычесть оплату чека как нефискального 15/IV-2019 вычитается через sub-count */
+define variable v-report-name       as character no-undo .
+define variable v-file-name-rep-htm as character no-undo .
+define variable v-vsex-cas          as character no-undo .
+define variable v-avg-chk           as decimal decimals  2 no-undo .
+define variable v-times             as character no-undo.
+define variable v-td-date           as character no-undo .
 
+define variable v-chk-count as integer no-undo .
+define query qben-chk-count for ben-chk-count .
 
-DEFINE VARIABLE is-counted as logical no-undo .
- { gbl/cur-time.i }
+define stream OutStr-html.
+
+{ gbl/cur-time.i }
+{ gbl/prn-lib.i   }
+{ rep/html-conv.i }
+/*{ rep/e-nobenq.i }*/
+
+/* --------------------------------------------------------------------- */
+function putRowAmount1 returns character private
+(input p-curr-name as character
+,input p-total1    as decimal
+) :
+define variable v-row-amount as character no-undo .
+define variable v-curr-name  as character no-undo .
+
+  v-curr-name = if p-curr-name > "" then p-curr-name else "<br />":U .
+  v-row-amount = substitute (
+      '<td>&1</td><td num="0.00" val="&2">&2</td><td><br /></td><td><br /></td>'
+      , v-curr-name
+      , fnc-convert-dot-to-colon(p-total1, "->>>>>>>>>>>9.99", 2)
+  ) .
+
+  return v-row-amount .
+end function . /* end_of putRowAmount1 */  
+/* ----------------------------------------------------------------------*/
+function putRowAmount returns character private
+(input p-curr-name as character
+,input p-total1    as decimal
+,input p-total2    as decimal
+,input p-total3    as decimal
+) :
+define variable v-row-amount as character no-undo .
+define variable v-curr-name  as character no-undo .
+
+  v-curr-name = if p-curr-name > "" then p-curr-name else "<br />":U .
+  v-row-amount = substitute (
+      '<td>&1</td><td num="0.00" val="&2">&2</td><td num="0.00" val="&3">&3</td><td num="0.00" val="&4">&4</td>'
+      , v-curr-name
+      , fnc-convert-dot-to-colon(p-total1, "->>>>>>>>>>>9.99", 2)
+      , fnc-convert-dot-to-colon(p-total2, "->>>>>>>>>>>9.99", 2)
+      , fnc-convert-dot-to-colon(p-total3, "->>>>>>>>>>>9.99", 2)
+  ) .
+
+  return v-row-amount .
+end function . /* end_of putRowAmount */  
+/* ----------------------------------------------------------------------*/
+procedure CreateBenefits2 private :
+define input parameter p-obj-type  as character no-undo .
+define input parameter p-obj-code  as integer no-undo .
+define input parameter p-pay-code  as integer no-undo .
+define input parameter p-curr-code as integer no-undo .
+define input parameter p-pay-desk  as integer no-undo .
+define input parameter p-sum       as decimal no-undo .
+define input parameter p-base      as decimal no-undo .
+define input parameter p-rubl      as decimal no-undo .
+define buffer buf_benefits for benefits .
+define buffer buf_cash-pay for ub.cash-pay .
+define buffer buf_currency for ub.currency .
+
+  find first buf_benefits
+       where buf_benefits.obj-type  = p-obj-type
+         and buf_benefits.obj-code  = p-obj-code
+         and buf_benefits.pay-code  = p-pay-code
+         and buf_benefits.curr-code = p-curr-code
+ /* ! */ and buf_benefits.pay-desk  = p-pay-desk no-error .
+  if not available buf_benefits then do:
+    FIND FIRST buf_cash-pay NO-LOCK
+         WHERE buf_cash-pay.cdpay-code = p-pay-code
+           AND buf_cash-pay.curr-code  = p-curr-code NO-ERROR.
+    FIND FIRST buf_currency NO-LOCK
+         WHERE buf_currency.curr-code = p-curr-code NO-ERROR.
+    create buf_benefits.
+    assign
+      buf_benefits.pay-desk  = p-pay-desk
+      buf_benefits.obj-type  = p-obj-type
+      buf_benefits.obj-code  = p-obj-code
+      buf_benefits.pay-code  = p-pay-code
+      buf_benefits.pay-name  = if available buf_cash-pay then buf_cash-pay.obj-name  else "Неопознанная оплата"
+      buf_benefits.curr-code = p-curr-code
+      buf_benefits.curr-name = if available buf_currency then buf_currency.curr-name else "Неопознанная валюта"
+      buf_benefits.tot-sum   = p-sum
+      buf_benefits.tot-base  = p-base
+      buf_benefits.tot-rubl  = p-rubl
+    .
+  end .
+  else assign
+    buf_benefits.tot-sum  = buf_benefits.tot-sum  + p-sum
+    buf_benefits.tot-base = buf_benefits.tot-base + p-base
+    buf_benefits.tot-rubl = buf_benefits.tot-rubl + p-rubl
+  .
+end procedure . /* end_of CreateBenefits2 */  
+/* ----------------------------------------------------------------------*/
 
 &global-define  no-benefits    "Не было никакой выручки на выбранных объектах ~
 в течение заданного Вами периода времени."
 
 
+empty temp-table benefits .
+empty temp-table inkas-num .
+empty temp-table day_sum .
+empty temp-table all-days_sum .
+empty temp-table ben-chk-count .
+
+
 assign
 date_string = cur-time-print()
-Line = fill( "-", 140 ).
+.
 
-for each benefits:
-    delete benefits.
+/* 09/VIII-2019 сообщение об отсутствии выручки выводится по отсутствию записей в benefits
+run no-benq(output found).
+
+run waitfram-hide in this-procedure .
+if not found then do:
+  message {&no-benefits} view-as alert-box information .
+  return.
+end.
+*/
+assign
+ChkAmount = 0
+ObjAmount = 0
+AllDay-BaseSum = 0
+AllDay-RublSum = 0
+  acc-count-ln = 0 
+  acc-count-step = 0 
+.
+
+FOR EACH obj-list WHERE obj-list.obj-type = {&shop} NO-LOCK :
+  ACCUMULATE obj-list.obj-code ( COUNT ).
+  assign
+  acc-day-base = 0
+  acc-day-rubl = 0
+  acc-day-cnt = 0
+  acc-day-nf  = 0
+  .
+  /* X-radio-task =
+    "Календарные даты", 1,
+    "Сменные сутки", 2,
+    "Сменные сутки и порядок", 3,
+    "По сменам", 4  
+  */
+  CASE X-radio-Task > 1 :
+    WHEN YES THEN DO:
+      _chk-doc3:
+      FOR EACH chk-doc WHERE
+                chk-doc.obj-type = obj-list.obj-type AND
+              chk-doc.obj-code = obj-list.obj-code AND
+              chk-doc.shift-date >= x-date-start AND
+              chk-doc.shift-date <= x-date-end AND
+              (IF cas-num > 0 then chk-doc.pay-desk = cas-num else TRUE) NO-LOCK
+      BREAK
+      by chk-doc.obj-type
+      by chk-doc.obj-code
+      by chk-doc.pay-desk :
+        IF FIRST-OF(chk-doc.pay-desk) then assign
+          acc-desk-rubl = 0
+          acc-desk-base = 0
+          acc-desk-count = 0
+          acc-desk-count-nf = 0
+        .
+        v-skip-line = 
+        (
+             X-Radio-task = 3 AND
+             ((chk-doc.shift-date = x-date-start AND chk-doc.shift-num < X-shift-start) OR
+              (chk-doc.shift-date = x-date-end   AND chk-doc.shift-num > X-shift-end))
+        ) OR (
+             X-radio-task = 4 AND
+             chk-doc.shift-num <> X-Shift-Alone
+&if "{1}" = "time" &then
+        ) OR (
+             T-time AND
+             NOT can-find (FIRST times WHERE times.time1 <= chk-doc.chk-time
+                                         AND times.time2 >= chk-doc.chk-time)
+&endif
+        ) .
+        if not v-skip-line then do :
+          v-is-sub-count = (  lookup(string(chk-doc.chk-type), {&no-sale-receipt-codes}) > 0  ).
+          found = false .
+          if v-is-sub-count then do :
+            for EACH chk-pay NO-LOCK
+               WHERE chk-pay.doc-code = chk-doc.doc-code :
+              if chk-pay.tot-sum <> 0 then do :
+                found = true .
+                leave .
+              end .
+            END .
+          end .
+          else do :
+            for EACH chk-pay NO-LOCK
+               WHERE chk-pay.doc-code = chk-doc.doc-code
+            BREAK
+            BY chk-pay.pay-code
+            BY chk-pay.curr-code:
+              if chk-pay.tot-sum <> 0 then do :
+                found = true .
+                { rep/e-bcrbnp.i  }
+              end .
+            END .
+          end .
+          if found then assign
+            acc-desk-count    = acc-desk-count    + 1
+            acc-desk-count-nf = acc-desk-count-nf + 1 when (v-is-sub-count)
+          .
+        end .
+        
+        if last-of( chk-doc.pay-desk ) then do:
+          create day_sum.
+          assign
+            day_sum.obj-type = obj-list.obj-type
+            day_sum.obj-code = obj-list.obj-code
+            day_sum.pay-desk = chk-doc.pay-desk
+            day_sum.tot-rubl = acc-desk-rubl
+            day_sum.tot-base = acc-desk-base
+            day_sum.chk-cnt-all =  acc-desk-count
+            day_sum.chk-cnt-nf  =  acc-desk-count-nf
+          .
+          assign
+            acc-day-rubl = acc-day-rubl + day_sum.tot-rubl
+            acc-day-base = acc-day-base + day_sum.tot-base
+            acc-day-cnt  = acc-day-cnt  + day_sum.chk-cnt-all
+            acc-day-nf   = acc-day-nf   + day_sum.chk-cnt-nf
+          .
+        end.
+
+      END.
+    END. /*when YES*/
+    WHEN NO THEN DO:
+      _chk-doc4:
+      FOR EACH chk-doc WHERE
+                  chk-doc.obj-type = obj-list.obj-type AND
+                chk-doc.obj-code = obj-list.obj-code AND
+                chk-doc.chk-date >= x-date-start AND
+                chk-doc.chk-date <= x-date-end AND
+                (IF cas-num > 0 then chk-doc.pay-desk = cas-num else TRUE) NO-LOCK
+        BREAK
+        by chk-doc.obj-type
+        by chk-doc.obj-code
+        by chk-doc.pay-desk :
+        IF FIRST-OF(chk-doc.pay-desk) then assign
+          acc-desk-rubl = 0
+          acc-desk-base = 0
+          acc-desk-count = 0
+          acc-desk-count-nf = 0
+        .
+&if "{1}" = "time" &then
+        v-skip-line = 
+        (
+             T-time AND
+             NOT can-find (FIRST times WHERE times.time1 <= chk-doc.chk-time
+                                         AND times.time2 >= chk-doc.chk-time)
+        ) .
+&else 
+        v-skip-line = false . 
+&endif
+        if not v-skip-line then do :
+          v-is-sub-count = (  lookup(string(chk-doc.chk-type), {&no-sale-receipt-codes}) > 0  ).
+          found = false .
+          if v-is-sub-count then do :
+            for EACH chk-pay NO-LOCK
+               WHERE chk-pay.doc-code = chk-doc.doc-code :
+              if chk-pay.tot-sum <> 0 then do :
+                found = true .
+                leave .
+              end .
+            END .
+          end .
+          else do :
+            for EACH chk-pay NO-LOCK
+               WHERE chk-pay.doc-code = chk-doc.doc-code
+            BREAK
+            BY chk-pay.pay-code
+            BY chk-pay.curr-code:
+              if chk-pay.tot-sum <> 0 then do :
+                found = true .
+                { rep/e-bcrbnp.i  }
+              end .
+            END .
+          end .
+          if found then assign
+            acc-desk-count    = acc-desk-count    + 1
+            acc-desk-count-nf = acc-desk-count-nf + 1 when (v-is-sub-count)
+          .
+        end .
+          
+        if last-of( chk-doc.pay-desk ) then do:
+          create day_sum.
+          assign
+            day_sum.obj-type = obj-list.obj-type
+            day_sum.obj-code = obj-list.obj-code
+            day_sum.pay-desk = chk-doc.pay-desk
+            day_sum.tot-rubl = acc-desk-rubl
+            day_sum.tot-base = acc-desk-base
+            day_sum.chk-cnt-all =  acc-desk-count
+            day_sum.chk-cnt-nf  =  acc-desk-count-nf
+          .
+          assign
+            acc-day-rubl = acc-day-rubl + day_sum.tot-rubl
+            acc-day-base = acc-day-base + day_sum.tot-base
+            acc-day-cnt  = acc-day-cnt  + day_sum.chk-cnt-all
+            acc-day-nf   = acc-day-nf   + day_sum.chk-cnt-nf
+          .
+        end.
+
+      END.
+    END. /*when no*/
+  END CASE.
+  
+  
+  CREATE all-days_sum .
+  assign
+    all-days_sum.obj-type = obj-list.obj-type
+    all-days_sum.obj-code = obj-list.obj-code
+    all-days_sum.tot-base = acc-day-base
+    all-days_sum.tot-rubl = acc-day-rubl
+    all-days_sum.chk-cnt-all  = acc-day-cnt
+    all-days_sum.chk-cnt-nf   = acc-day-nf
+  .
+  assign
+    AllDay-BaseSum = AllDay-BaseSum + acc-day-base
+    AllDay-RublSum = AllDay-RublSum + acc-day-rubl
+    ObjAmount      = ObjAmount + 1
+    ChkAmount      = ChkAmount + (all-days_sum.chk-cnt-all - all-days_sum.chk-cnt-nf)
+  .
+END. /*FOR EACH OBJ-LIST*/
+
+
+if not can-find (first benefits) then do:
+  message {&no-benefits} view-as alert-box information .
+  return.
 end.
 
-for each inkas-num:
-    delete inkas-num.
-end.
-
-for each day_sum:
-    delete day_sum.
-end.
-
-for each all-days_sum:
-    delete all-days_sum.
-end.
-
+/*define variable v-curr-r-b as character no-undo .*/
+{ gbl/curr-r-b.i
+  v-curr-r-b
+}
 if v-curr-r-b = {&r-b-base} then do:
 &if "{1}" = "rubl" &then
 sale-price-type = "{&abbr_rubley}".
@@ -79,423 +387,142 @@ sale-price-type = base-type.
 end.
 else sale-price-type = "{&abbr_rubley}".
 
-run no-benq(output found).
-
+for each benefits :
+  benefits.tot-r-b = if v-curr-r-b = {&r-b-base} then benefits.tot-base else benefits.tot-rubl .
+end .
+for each day_sum :
+  day_sum.tot-r-b = if v-curr-r-b = {&r-b-base} then day_sum.tot-base else day_sum.tot-rubl .
+end .
+for each all-days_sum :
+  all-days_sum.tot-r-b = if v-curr-r-b = {&r-b-rubl} then all-days_sum.tot-rubl else all-days_sum.tot-base .
+end .
+ 
 run waitfram-hide in this-procedure .
-if not found then do:
-  message {&no-benefits} view-as alert-box information .
-  return.
-end.
-CASE X-Radio-Task > 1:
-  WHEN YES THEN DO:
-    FOR EACH obj-list WHERE
-            obj-list.obj-type = {&shop} NO-LOCK :
-      ObjAmount = ObjAmount + 1.
-      _chk-doc:
-      FOR EACH ub.chk-doc WHERE
-               ub.chk-doc.obj-type = obj-list.obj-type AND
-              ub.chk-doc.obj-code = obj-list.obj-code AND
-              ub.chk-doc.shift-date >= x-date-start AND
-              ub.chk-doc.shift-date <= x-date-end AND
-              (IF cas-num > 0 then ub.chk-doc.pay-desk = cas-num else TRUE)
-              NO-LOCK
-      BREAK
-      BY ub.chk-doc.obj-type
-      BY ub.chk-doc.obj-code
-      BY ub.chk-doc.pay-desk:
-        is-counted = no.
-        IF FIRST-OF(ub.chk-doc.pay-desk) then do:
-          assign
-          acc-sub-desk-netto = 0
-          acc-sub-desk-count = 0
-          acc-desk-netto = 0
-          acc-desk-count = 0
-          .
-        end.
-        IF X-Radio-Task = 3 AND
-        ((ub.chk-doc.shift-date = X-date-start AND ub.chk-doc.shift-num < X-shift-Start) OR
-          (ub.chk-doc.shift-date = X-date-end AND  ub.chk-doc.shift-num > X-shift-End) ) THEN DO:
-          assign
-          acc-sub-desk-netto = acc-sub-desk-netto + ub.chk-doc.netto
-          acc-sub-desk-count = acc-sub-desk-count + 1
-          is-counted = yes
-          .
-        END.
-        IF X-Radio-Task = 4 AND
-        (ub.chk-doc.shift-num <> X-shift-Alone ) THEN DO:
-          assign
-          acc-sub-desk-netto = acc-sub-desk-netto + ub.chk-doc.netto
-          acc-sub-desk-count = acc-sub-desk-count + 1
-          is-counted = yes
-          .
-        END.
-        if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0
-&if "{2}" = "time" &then
-        or (T-time and NOT is-counted AND
-                      NOT can-find(FIRST times where
-                                        times.time1  <= ub.chk-doc.chk-time AND
-                                        times.time2 >= ub.chk-doc.chk-time))
-&endif
-                                          then do:
-          assign
-          acc-sub-desk-netto = acc-sub-desk-netto + ub.chk-doc.netto
-          acc-sub-desk-count = acc-sub-desk-count + 1
-          .
-        end.
-        assign
-        acc-desk-netto = acc-desk-netto + ub.chk-doc.netto
-        acc-desk-count = acc-desk-count + 1
-        .
-        if last-of( ub.chk-doc.pay-desk ) then do:
-          assign
-          acc-netto = acc-netto + acc-desk-netto
-          acc-count = acc-count + acc-desk-count
-          acc-sub-netto = acc-sub-netto + acc-sub-desk-netto
-          acc-sub-count = acc-sub-count + acc-sub-desk-count
-          .
-          create day_sum.
-          assign
-          day_sum.obj-type = obj-list.obj-type
-          day_sum.obj-code = obj-list.obj-code
-          day_sum.pay-desk = ub.chk-doc.pay-desk
-          day_sum.tot-rubl = (if v-curr-r-b = {&r-b-base}
-                              then day_sum.tot-rubl
-                              else acc-desk-netto - acc-sub-desk-netto)
-          day_sum.tot-base = (if v-curr-r-b = {&r-b-rubl}
-                              then day_sum.tot-base
-                              else acc-desk-netto - acc-sub-desk-netto)
-          day_sum.tot-r-b  = (if v-curr-r-b = {&r-b-base}
-                              then day_sum.tot-base
-                              else day_sum.tot-rubl)
-          day_sum.chk-cnt =  acc-desk-count -  acc-sub-desk-count
-          .
-        end.
-      END.
-    END.
-  END.
-  WHEN NO THEN DO:
-    FOR EACH obj-list WHERE
-             obj-list.obj-type = {&shop} NO-LOCK :
-      ACCUMULATE obj-list.obj-code ( COUNT ) .
-      _chk-doc2:
-      FOR EACH ub.chk-doc WHERE
-               ub.chk-doc.obj-type = obj-list.obj-type AND
-              ub.chk-doc.obj-code = obj-list.obj-code AND
-              ub.chk-doc.chk-date >= x-date-start AND
-              ub.chk-doc.chk-date <= x-date-end AND
-              (IF cas-num > 0 then ub.chk-doc.pay-desk = cas-num else TRUE)
-              NO-LOCK
-      BREAK
-      BY ub.chk-doc.obj-type
-      BY ub.chk-doc.obj-code
-      BY ub.chk-doc.pay-desk:
-        IF FIRST-OF(ub.chk-doc.pay-desk) then do:
-            assign
-            acc-sub-desk-netto = 0
-            acc-sub-desk-count = 0
-            acc-desk-netto = 0
-            acc-desk-count = 0
-            .
-        end.
-        if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0
-&if "{2}" = "time" &then
-        or (T-time and NOT can-find(FIRST times where
-                                          times.time1  <= ub.chk-doc.chk-time AND
-                                          times.time2 >= ub.chk-doc.chk-time))
-&endif
-                                          then do:
-            assign
-          acc-sub-desk-netto = acc-sub-desk-netto + ub.chk-doc.netto
-          acc-sub-desk-count = acc-sub-desk-count + 1
-          .
-        end.
-        assign
-        acc-desk-netto = acc-desk-netto + ub.chk-doc.netto
-        acc-desk-count = acc-desk-count + 1
-        .
-        if last-of( chk-doc.pay-desk ) then do:
-          assign
-          acc-netto = acc-netto + acc-desk-netto
-          acc-count = acc-count + acc-desk-count
-          acc-sub-netto = acc-sub-netto + acc-sub-desk-netto
-          acc-sub-count = acc-sub-count + acc-sub-desk-count
-          .
-          create day_sum.
-          assign
-          day_sum.obj-type = obj-list.obj-type
-          day_sum.obj-code = obj-list.obj-code
-          day_sum.pay-desk = ub.chk-doc.pay-desk
-          day_sum.tot-rubl = (if v-curr-r-b = {&r-b-base}
-                              then day_sum.tot-rubl
-                              else acc-desk-netto - acc-sub-desk-netto)
-          day_sum.tot-base = (if v-curr-r-b = {&r-b-rubl}
-                              then day_sum.tot-base
-                              else acc-desk-netto - acc-sub-desk-netto)
-          day_sum.tot-r-b  = (if v-curr-r-b = {&r-b-base}
-                              then day_sum.tot-base
-                              else day_sum.tot-rubl)
-          day_sum.chk-cnt =  acc-desk-count -  acc-sub-desk-count
-            .
-        end.
-      END.
-    END.
-  END.
-END CASE.
-assign
-ChkAmount = acc-count - acc-sub-count
-AllDay-BaseSum = 0
-AllDay-RublSum = 0
-.
 
-FOR EACH obj-list WHERE obj-list.obj-type = {&shop} NO-LOCK :
+
+    run prn-lib-get-report-name  in this-procedure (
+                                                       input parParentProc
+                                                      ,output v-report-name
+                                                    ).
   assign
-  acc-day-base = 0
-  acc-day-rubl = 0
-  acc-day-cnt = 0
-  acc-count = 0
+    v-file-name-rep-htm = v-report-name + ".html"
+    v-vsex-cas = IF cas-num = 0 then "ВСЕХ КАСС" ELSE ("КАССЫ " + string(cas-num))
+    v-avg-chk  = if ChkAmount > 0 then round(                  
+      (if v-curr-r-b = {&r-b-rubl} then AllDay-RublSum else AllDay-BaseSum)  /  ChkAmount
+                                             , 2 ) else 0 
   .
-  CASE X-radio-Task > 1 :
-    WHEN YES THEN DO:
-      _chk-doc3:
-      FOR EACH ub.chk-doc WHERE
-                ub.chk-doc.obj-type = obj-list.obj-type AND
-              ub.chk-doc.obj-code = obj-list.obj-code AND
-              ub.chk-doc.shift-date >= x-date-start AND
-              ub.chk-doc.shift-date <= x-date-end AND
-              (IF cas-num > 0 then ub.chk-doc.pay-desk = cas-num else TRUE) NO-LOCK,
-          EACH ub.chk-pay WHERE ub.chk-pay.doc-code = ub.chk-doc.doc-code  NO-LOCK
-      BREAK
-      by ub.chk-doc.obj-type
-      by ub.chk-doc.obj-code
-      by ub.chk-doc.shift-date
-      BY ub.chk-pay.out-code
-      BY ub.chk-pay.pay-code
-      BY ub.chk-pay.curr-code:
-        acc-count = acc-count + 1.
-        if (acc-count modulo 25 ) = 0
-        AND acc-count >= 25
-        then do:
-        run waitfram-show in this-procedure ( obj-list.obj-type + string( obj-list.obj-code ) +
-                      ", обработано строк чеков : " +
-                        string( acc-count ) ) .
-        end.
-        is-counted = no.
-        IF X-Radio-Task = 3 AND
-          ((ub.chk-doc.shift-date = X-date-start AND ub.chk-doc.shift-num < X-shift-Start) OR
-            (ub.chk-doc.shift-date = X-date-end AND  ub.chk-doc.shift-num > X-shift-End) ) THEN DO:
-          is-counted = yes
-          .
-          END.
-          IF X-Radio-Task = 4 AND
-            (ub.chk-doc.shift-num <> X-shift-Alone ) THEN DO:
-            is-counted = yes
-            .
-          END.
-          if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0
 &if "{2}" = "time" &then
-          or (T-time and NOT is-counted AND
-                        NOT can-find(FIRST times where
-                                            times.time1  <= ub.chk-doc.chk-time AND
-                                            times.time2 >= ub.chk-doc.chk-time))
+  v-times = "" .
+  IF T-time then
+    FOR EACH times No-LOCK :
+      v-times = v-times + times + {&space-char} .
+    END .
 &endif
-                                            then do:
-            is-counted = yes.
-          end.
-          if not is-counted then do:
-            find first benefits where
-                    benefits.pay-desk = ub.chk-doc.pay-desk
-                and benefits.obj-type = obj-list.obj-type
-                and benefits.obj-code = obj-list.obj-code
-                and benefits.pay-code = ub.chk-pay.pay-code
-                and benefits.curr-code = ub.chk-pay.curr-code no-error.
-            if not available benefits then do:
-              FIND FIRST ub.cash-pay WHERE
-                        ub.cash-pay.cdpay-code = ub.chk-pay.pay-code
-                    AND ub.cash-pay.curr-code = ub.chk-pay.curr-code  NO-LOCK NO-ERROR.
-              FIND FIRST ub.currency WHERE
-                      ub.currency.curr-code = ub.chk-pay.curr-code NO-LOCK NO-ERROR.
-              create benefits.
-              assign
-              benefits.pay-desk = ub.chk-doc.pay-desk
-              benefits.obj-type = obj-list.obj-type
-              benefits.obj-code = obj-list.obj-code
-              benefits.pay-code = if avail ub.cash-pay then ub.cash-pay.cdpay-code else ub.chk-pay.pay-code
-              benefits.pay-name = if avail ub.cash-pay then ub.cash-pay.obj-name else "Неопознанная оплата"
-              benefits.curr-code = if avail ub.currency then ub.currency.curr-code else ub.chk-pay.curr-code
-              benefits.curr-name = if avail ub.currency then ub.currency.curr-name else "Неопознанная валюта"
-              .
-            end.
-            assign
-            benefits.tot-sum   = benefits.tot-sum + ub.chk-pay.tot-sum
-            benefits.tot-base  = benefits.tot-base + ub.chk-pay.tot-base
-            benefits.tot-rubl  = benefits.tot-rubl + ub.chk-pay.tot-rubl
-            benefits.tot-r-b = if v-curr-r-b = {&r-b-base}
-                                then benefits.tot-base
-                                else benefits.tot-rubl
-            .
-            assign
-            acc-day-rubl = acc-day-rubl + ub.chk-pay.tot-rubl
-            acc-day-base = acc-day-base + ub.chk-pay.tot-base
-            acc-day-cnt = acc-day-cnt + ub.chk-pay.tot-base
-              .
-          end.
-        END.
-      END. /*when YES*/
-      WHEN NO THEN DO:
-        _chk-doc4:
-        FOR EACH ub.chk-doc WHERE
-                  ub.chk-doc.obj-type = obj-list.obj-type AND
-                ub.chk-doc.obj-code = obj-list.obj-code AND
-                ub.chk-doc.chk-date >= x-date-start AND
-                ub.chk-doc.chk-date <= x-date-end AND
-                (IF cas-num > 0 then ub.chk-doc.pay-desk = cas-num else TRUE) NO-LOCK,
-            EACH ub.chk-pay WHERE ub.chk-pay.doc-code = ub.chk-doc.doc-code  NO-LOCK
-        BREAK
-        BY ub.chk-pay.obj-type
-        BY ub.chk-pay.obj-code
-        BY ub.chk-doc.pay-desk
-        BY ub.chk-pay.pay-code
-        BY ub.chk-pay.curr-code:
 
-          if FIRST-of( ub.chk-pay.curr-code ) then do:
-              assign
-              acc-sub-curr-sum = 0
-              acc-sub-curr-base = 0
-              acc-sub-curr-rubl = 0
-            acc-curr-sum = 0
-            acc-curr-base = 0
-            acc-curr-rubl = 0
-              .
-          END.
-          IF FIRST-OF(ub.chk-doc.pay-desk) then do:
-              assign
-              acc-sub-desk-rubl = 0
-            acc-sub-desk-base = 0
-            acc-desk-rubl = 0
-            acc-desk-base = 0
-              .
-          end.
-          assign
-          acc-curr-sum = acc-curr-sum + ub.chk-pay.tot-sum
-          acc-curr-base = acc-curr-base + ub.chk-pay.tot-base
-          acc-curr-rubl = acc-curr-rubl + ub.chk-pay.tot-rubl
-          acc-desk-base = acc-desk-base + ub.chk-pay.tot-base
-          acc-desk-rubl = acc-desk-rubl + ub.chk-pay.tot-rubl
-          acc-rubl = acc-rubl + ub.chk-pay.tot-rubl
-          acc-count = acc-count + 1
-          .
-
-          if ( acc-count modulo 25 ) = 0
-          AND  acc-count >= 25
-          then do:
-          run waitfram-show in this-procedure ( obj-list.obj-type + string( obj-list.obj-code ) +
-                          ", обработано строк чеков : " +
-                            string( acc-count ) ) .
-          end.
-          if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0
-&if "{2}" = "time" &then
-          or (T-time and NOT can-find(FIRST times where
-                                            times.time1  <= ub.chk-doc.chk-time AND
-                                            times.time2 >= ub.chk-doc.chk-time))
-&endif
-                                            then do:
-            assign
-            acc-sub-curr-sum = acc-sub-curr-sum + ub.chk-pay.tot-sum
-            acc-sub-curr-base = acc-sub-curr-base + ub.chk-pay.tot-base
-            acc-sub-curr-rubl = acc-sub-curr-rubl + ub.chk-pay.tot-rubl
-            acc-sub-desk-rubl = acc-sub-desk-rubl + ub.chk-pay.tot-rubl
-            acc-sub-desk-base = acc-sub-desk-base + ub.chk-pay.tot-base
-            .
-          end.
-          { rep/e-bcrbnp.i  }
-        END.
-      END. /*when no*/
-    END CASE.
-    CREATE all-days_sum .
-    assign
-    all-days_sum.obj-type = obj-list.obj-type
-    all-days_sum.obj-code = obj-list.obj-code
-    all-days_sum.tot-base = acc-day-base
-    all-days_sum.tot-rubl = acc-day-rubl
-    all-days_sum.tot-r-b = (if v-curr-r-b = {&r-b-rubl}
-                            then all-days_sum.tot-rubl
-                            else all-days_sum.tot-base)
-    all-days_sum.chk-cnt  = acc-day-cnt
-    all-days_sum.pay-desk = ub.chk-doc.pay-desk
-    AllDay-BaseSum = AllDay-BaseSum + acc-day-base
-    AllDay-RublSum = AllDay-RublSum + acc-day-rubl
-    .
-END. /*FOR EACH OBJ-LIST*/
-
-run waitfram-hide in this-procedure .
-
-if x-date-start = x-date-end then
-choice = TRUE .
-else
-choice = HowBreak .
-
+do : /* prepare_header */
+  output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8' .
+  put stream OutStr-html unformatted
+    "<!DOCTYPE HTML>" skip
+    '<html>' skip
+    '<head>' skip
+    '  <meta charset="utf-8">' skip
+    '  <style type="text/css">' skip
+    '      table ~{border-collapse: collapse~;~}' skip
+    '      tbody td, th ~{border: 1px solid black~; height: 14px~;}' skip
+    '      tbody td:nth-child(4), tbody td:nth-child(5), tbody td:nth-child(6) ~{text-align: right~; padding-right: 4px~;~}' skip
+    '      tfoot td ~{height: 14px~;}' skip
+    '      .sumtotal ~{text-align: right~; padding-right: 4px~;~}' skip
+    '  </style>' skip
+    '</head>' skip
+    '<body>' skip
+    '<TABLE name="1" fit_to_page="true" orientation="portrait">' skip
+    '<thead>' skip
+    
+    /* Обязательно создаётся строка таблицы, в которой находятся размеры колонок в px */
+    '  <tr>' skip
+    '    <td style="width:  35px;"></td>' skip /* benefits.date_    "Дата","Касса"      "99.99.99" */
+    '    <td style="width: 124px;"></td>' skip /* benefits.pay-name "Вид оплаты" "X(41)" */
 &if "{1}" = "tot" &then
-run prn-lib-open-stream  in this-procedure (
-                                             input parParentProc
-                                            ,input {&LS_PS_A4}
-                                            ,input yes /*p-is-stream*/
-                                            ,input no /*p-append*/
-                                            ).
+    '    <td style="width: 31px;"></td>' skip /* benefits.curr-name "Валюта"    "X(19)" */
+    '    <td style="width: 71px;"></td>' skip /* benefits.tot-sum   "Сумма!в валюте" "->>>>,>>>,>>>,>>9.99" */
+    '    <td style="width: 63px;"></td>' skip /* benefits.tot-base  "Сумма!в Б.Вал."    "->>>>>,>>>,>>9.99" */
+    '    <td style="width: 63px;"></td>' skip /* benefits.tot-rubl  "Сумма!в {&abbr_rublyah}" "->>>>,>>>,>>>,>>9.99" */
+&elseif "{1}" = "base" &then
+    '    <td style="width: 31px;"></td>' skip /* заглушка для выравнивания с benefits.curr-name в &tot */
+    '    <td style="width: 71px;"></td>' skip /* benefits.tot-r-b  "Сумма (вал.продаж)" format "->,>>>,>>>,>>>,>>9.99" */
+    '    <td style="width: 63px;"></td>' skip /* заглушка для выравнивания с суммами в &tot */
+    '    <td style="width: 63px;"></td>' skip /* заглушка для выравнивания с суммами в &tot */
 &else
-run prn-lib-open-stream  in this-procedure (
-                                             input parParentProc
-                                            ,input {&LS_PS_A4}
-                                            ,input yes /*p-is-stream*/
-                                            ,input no /*p-append*/
-                                            ).
+    '    <td style="width: 31px;"></td>' skip /* заглушка для выравнивания с benefits.curr-name в &tot */
+    '    <td style="width: 71px;"></td>' skip /* benefits.tot-rubl  like chk-pay.tot-rubl */
+    '    <td style="width: 63px;"></td>' skip /* заглушка для выравнивания с суммами в &tot */
+    '    <td style="width: 63px;"></td>' skip /* заглушка для выравнивания с суммами в &tot */
 &endif
+    '    <td style="width: 49px;"></td>' skip /* benefits.pcnt     "% от суммы" format "->>>>9.99%" */
+    '    <td style="width: 41px;"></td>' skip /* chk-cnt-all - chk-cnt-nf  "кол-во фискальных чеков" format ">>>>9" */
+    '  </tr>' skip
 
 
-FORM HEADER
-Line format "X(136)" AT 1 SKIP
-"Продолжение - на следующей странице" AT 30 SKIP
-with FRAME BottomFrame width {&A4_CW} PAGE-BOTTOM NO-LABELS NO-BOX .
-VIEW stream PrnLibStream FRAME BottomFrame .
-PUT stream PrnLibStream UNFORMATTED
-space(5) string( "ОТЧЕТ  О  ВЫРУЧКЕ " + str1) format "X(120)" SKIP(1)
-str4 skip(0)
-space(5)
-(IF NotInc
-  then
-  "( сформирован по ВСЕМ ЧЕКАМ " + (IF cas-num = 0 then "ВСЕХ КАСС" ELSE
-    ("КАССЫ " + string(cas-num))) + " , включая невошедшие в отчеты о продажах )"
-  else
-  "( сформирован по ВСЕМ ЧЕКАМ " + (IF cas-num = 0 then "ВСЕХ КАСС" ELSE
-    ("КАССЫ " + string(cas-num) ) ) + ")"
-  ) format "x(80)" skip
-space(5) string( "( всего чеков : " + string( ChkAmount ) +
-", в среднем " + string( (if ChkAmount > 0 then  round((if v-curr-r-b = {&r-b-rubl}
-                                                        then AllDay-RublSum
-                                                        else AllDay-BaseSum)
-                                                        / ChkAmount, 2 ) else 0) ) +
-" " + sale-price-type + " / на чек )" ) format "x(80)" skip(1)
-.
+    /* Теперь шапка таблицы */
+    '  <tr>' skip
+    '    <td colspan="8">' + date_string + '</td>' skip
+    '  </tr>' skip
+    '  <tr>' skip
+    '    <td colspan="8">ОТЧЕТ  О  ВЫРУЧКЕ ' + str1
+         + '<br />' + str4
+         + '<br />( сформирован по ВСЕМ ЧЕКАМ '
+         + (IF NotInc then v-vsex-cas + ", включая невошедшие в отчеты о продажах" else v-vsex-cas)
+         + ' )'
+         + '<br />'
+         + substitute("( всего чеков : &1, в среднем &2 &3 / чек )",  ChkAmount,  v-avg-chk,  sale-price-type  )
+         + '</td>' skip
+    '  </tr>' skip
+  .
+
 &if "{2}" = "time" &then
-IF T-time then do:
-  PUT stream PrnLibStream UNFORMATTED
-  "Выборочно по времени: ".
-  FOR EACH times No-LOCK :
-    PUT stream PrnLibStream UNFORMATTED
-    times
-    {&space-char}
+  IF T-time then do:
+    put stream OutStr-html unformatted
+      '  <tr>' skip
+      '    <td colspan="7">Выборочно по времени: '
+         + v-times
+         + '</td>' skip
+      '  </tr>' skip
     .
-  END.
-  PUT stream PrnLibStream UNFORMATTED
-  SKIP (1).
-end.
+  end.
 &endif
 
-if choice then do:
-  FORM with frame Benefit-{1}.
-end.
-else do:
-  FORM with FRAME PayCodes-{1} .
-end.
+  put stream OutStr-html unformatted
+    '</thead>' skip
+    
+    /* Здесь начинается таблица отчета */
+    '<tbody>' skip
+    
+    /* Первые строки – шапка табоицы с тэгами th */
+    '  <tr>' skip
+    '    <th>Касса</th>' skip
+    '    <th>Вид оплаты</th>' skip
+&if "{1}" = "tot" &then
+    '    <th>Валюта продаж</th>' skip
+    '    <th>Сумма в валюте продаж</th>' skip
+    '    <th>Сумма в Б.Вал.</th>' skip
+    '    <th>Сумма в {&abbr_rublyah}</th>' skip
+&elseif "{1}" = "base" &then
+    '    <th></th>' skip
+    '    <th>Сумма в ' (if v-curr-r-b = {&r-b-base} then 'Б.Вал.' else '{&abbr_rublyah}') '</th>' skip
+    '    <th></th>' skip
+    '    <th></th>' skip
+&else
+    '    <th></th>' skip
+    '    <th>Сумма в {&abbr_rublyah}</th>' skip
+    '    <th></th>' skip
+    '    <th></th>' skip
+&endif
+    '    <th>~% от суммы</th>' skip
+    '    <th>Кол-во фиск. чеков</th>' skip
+    '  </tr>' skip    
+  .
+end . /* end_of prepare_header */
+
 FOR EACH obj-list WHERE
           obj-list.obj-type = {&shop} ,
     EACH all-days_sum WHERE
@@ -508,317 +535,233 @@ BY obj-list.obj-code :
   all-days_sum.tot-base ( TOTAL )
   all-days_sum.tot-rubl ( TOTAL )
   all-days_sum.tot-r-b ( TOTAL )
+  all-days_sum.chk-cnt-all ( TOTAL )
+  all-days_sum.chk-cnt-nf  ( TOTAL )
   obj-list.obj-code ( COUNT ) .
-  if choice then do:
-    FOR EACH benefits WHERE
+    if first-of( obj-list.obj-code ) then do:
+      FIND FIRST clients WHERE
+                   clients.obj-type = obj-list.obj-type  AND
+                   clients.obj-code = obj-list.obj-code  NO-LOCK no-error .
+      put stream OutStr-html unformatted
+          '  <tr><td colspan="8">'
+          if available clients then clients.obj-name else '<br />'
+          '</td></tr>'
+      .
+    end.
+    
+  FOR EACH benefits WHERE
               benefits.obj-type = obj-list.obj-type AND
               benefits.obj-code = obj-list.obj-code
-    BREAK
-    BY benefits.obj-type
-    BY benefits.obj-code
-    BY benefits.pay-desk
-    BY benefits.pay-code
-    BY benefits.curr-code :
-      if first( benefits.obj-code ) then do:
-        FIND FIRST clients WHERE
-                    clients.obj-type = obj-list.obj-type  AND
-                    clients.obj-code = obj-list.obj-code  NO-LOCK .
-        DOWN stream PrnLibStream 1 with frame Benefit-{1} .
-        PUT stream PrnLibStream space(10) clients.obj-name format "x(60)" skip.
-
-        UNDERLINE stream PrnLibStream
-        benefits.pay-name
-&if "{1}" = "tot" &then
-        benefits.curr-name
-        benefits.tot-base
-&endif
-&if "{1}" = "base" &then
-        benefits.tot-r-b
-&else
-        benefits.tot-rubl
-&endif
-        benefits.pcnt
-        with frame Benefit-{1}.
-      end.
-      if first-of( benefits.pay-desk ) then do:
+  BREAK
+  BY benefits.obj-type
+  BY benefits.obj-code
+  BY benefits.pay-desk
+  BY benefits.pay-code
+  BY benefits.curr-code :
+    if first-of( benefits.pay-desk ) then do:
         FIND FIRST day_sum WHERE
                     day_sum.obj-type = obj-list.obj-type AND
                     day_sum.obj-code = obj-list.obj-code AND
                     day_sum.pay-desk = benefits.pay-desk NO-ERROR.
         DatePrinted = FALSE .
-      end.
+    end.
+
+    /* benefits накапливается повалютно по видам оплаты внутри каждой кассы */
+    /* по каждой валюте внутри вида оплаты очередной кассы магазина */
 &if "{1}" = "rubl" &then
-      benefits.pcnt = round( benefits.tot-rubl / day_sum.tot-rubl * 100 , 2 ) .
+    benefits.pcnt = round( benefits.tot-rubl / day_sum.tot-rubl * 100 , 2 ) .
 &else
-      benefits.pcnt = round( benefits.tot-r-b / day_sum.tot-r-b * 100 , 2 ) .
+    benefits.pcnt = round( benefits.tot-r-b / day_sum.tot-r-b * 100 , 2 ) .
 &endif
-      if benefits.tot-base  <> 0
-      or day_sum.chk-cnt <> 0
-      then do:
-        if DatePrinted then do:
-          DISPLAY stream PrnLibStream
-          sym1
-          " " format "X(8)" @ benefits.date_ column-label "Касса"
-          sym2 benefits.pay-name
+    if benefits.tot-base  <> 0
+    or (day_sum.chk-cnt-all > day_sum.chk-cnt-nf)
+    then do:
+      if DatePrinted then assign
+        v-td-date = '<br />'
+      .
+      else assign
+        v-td-date   = string(benefits.pay-desk)
+        DatePrinted = TRUE
+      .
+      open query qben-chk-count
+       preselect each ben-chk-count
+                where ben-chk-count.obj-type  = obj-list.obj-type
+                  and ben-chk-count.obj-code  = obj-list.obj-code
+                  and ben-chk-count.pay-desk  = benefits.pay-desk
+                  and ben-chk-count.pay-code  = benefits.pay-code
+                  and ben-chk-count.curr-code = benefits.curr-code.
+      v-chk-count = query qben-chk-count:num-results .
+      close query qben-chk-count.
+        
+      put stream OutStr-html unformatted
+        '  <tr>'
+        '<td>' + v-td-date + '</td>'
+        '<td>' + benefits.pay-name + '</td>'
 &if "{1}" = "tot" &then
-          sym3 benefits.curr-name
-          sym4 benefits.tot-sum
-          sym5 benefits.tot-base
+        putRowAmount (benefits.curr-name, benefits.tot-sum, benefits.tot-base, benefits.tot-rubl)
+&elseif "{1}" = "base" &THEN
+        putRowAmount1 ("", benefits.tot-r-b)
+&elseif "{1}" = "rubl" &then
+        putRowAmount1 ("", benefits.tot-rubl)
+&endif
+        substitute(  '<td num="0.00" val="&1">&1</td>',  fnc-convert-dot-to-colon(benefits.pcnt,    "->>9.99",2)  )
+        substitute(  '<td num="0" val="&1" class="sumtotal">&1</td>',  v-chk-count  )
+        '</tr>' skip
+      .
+    end.
+
+    /* по одной кассе */
+    if last-of( benefits.pay-desk ) then do:
+      if day_sum.chk-cnt-all > day_sum.chk-cnt-nf then do:
+        put stream OutStr-html unformatted
+&if "{1}" = "tot" &then
+          substitute(  '  <td colspan="3">средн.чек: &1</td>',
+            ROUND(day_sum.tot-base / (day_sum.chk-cnt-all - day_sum.chk-cnt-nf), 2)  )
+          substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(day_sum.tot-base,"->>>>>>>>>>>9.99",2)  )
+          '<td></td>'
+          substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(day_sum.tot-rubl,"->>>>>>>>>>>9.99",2)  )
 &endif
 &if "{1}" = "base" &then
-          sym6 benefits.tot-r-b
-&else
-          sym6 benefits.tot-rubl
-&endif
-          sym7 benefits.pcnt
-          sym8
-          with frame Benefit-{1} .
-          DOWN stream PrnLibStream 1 with frame Benefit-{1} .
-        end.
-        else do:
-          DISPLAY stream PrnLibStream
-          sym1 benefits.pay-desk @ benefits.date_ column-label "Касса"
-          sym2 benefits.pay-name
-&if "{1}" = "tot" &then
-          sym3 benefits.curr-name
-          sym4 benefits.tot-sum
-          sym5 benefits.tot-base
-&endif
-&if "{1}" = "base" &then
-          sym6 benefits.tot-r-b
-&else
-          sym6 benefits.tot-rubl
-&endif
-          sym7 benefits.pcnt
-          sym8
-          with frame Benefit-{1} .
-          DOWN stream PrnLibStream 1 with frame Benefit-{1}.
-          DatePrinted = TRUE .
-        end.
-      end.
-      if last-of( benefits.pay-desk ) then do:
-        ACCUMULATE
-        day_sum.tot-base ( TOTAL )
-        day_sum.tot-rubl ( TOTAL )
-        day_sum.tot-r-b ( TOTAL )
-        day_sum.chk-cnt ( TOTAL )
-        .
-        if day_sum.chk-cnt <> 0 then do:
-          UNDERLINE stream PrnLibStream
-          benefits.pay-name
-&if "{1}" = "tot" &then
-          benefits.curr-name
-          benefits.tot-base
-&endif
-&if "{1}" = "base" &then
-          benefits.tot-r-b
-&else
-          benefits.tot-rubl
-&endif
-          benefits.pcnt
-          with frame Benefit-{1} .
-&if "{1}" = "tot" &then
-          DISPLAY stream PrnLibStream
-          sym1
-          ("чеков: " + string(day_sum.chk-cnt, ">>>>>") + ",")
-            @ benefits.pay-name
-          (string( ROUND(day_sum.tot-base / day_sum.chk-cnt , 2) ,
-                  "->>>,>>9.99" ) + "/ чек" ) @ benefits.curr-name
-          day_sum.tot-base  @ benefits.tot-base
-          day_sum.tot-rubl  @ benefits.tot-rubl
-          "100.00%" @ benefits.pcnt
-          sym8
-          with frame Benefit-{1} .
-&endif
-&if "{1}" = "base" &then
-          DISPLAY stream PrnLibStream
-          sym1
-          ("чеков: " + string(day_sum.chk-cnt, ">>>>>") +
-          ", в среднем " +
-          string( ROUND(day_sum.tot-r-b / day_sum.chk-cnt , 2) ,
-                "->>>,>>9.99" ) +
-            "/ чек" ) @ benefits.pay-name
-          day_sum.tot-r-b  @ benefits.tot-r-b
-          "100.00%" @ benefits.pcnt
-          sym8
-          with frame Benefit-{1} .
+          substitute(  '  <td colspan="3">средн.чек: &1</td>',
+            ROUND(day_sum.tot-r-b  / (day_sum.chk-cnt-all - day_sum.chk-cnt-nf) , 2)  )
+          substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(day_sum.tot-r-b,"->>>>>>>>>>>9.99",2)  )
+          '<td></td>'
+          '<td></td>'
 &endif
 &if "{1}" = "rubl" &then
-          DISPLAY stream PrnLibStream
-          sym1
-          ("чеков: " + string(day_sum.chk-cnt, ">>>>>") +
-          ", в среднем " +
-          string( ROUND(day_sum.tot-rubl / day_sum.chk-cnt , 2) ,
-                "->>>,>>9.99" ) +
-            "/ чек" ) @ benefits.pay-name
-          day_sum.tot-rubl  @ benefits.tot-rubl
-          "100.00%" @ benefits.pcnt
-          sym8
-          with frame Benefit-{1} .
+          substitute(  '  <td colspan="3">средн.чек: &1</td>',
+            ROUND(day_sum.tot-rubl / (day_sum.chk-cnt-all - day_sum.chk-cnt-nf), 2)  ) 
+          substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(day_sum.tot-rubl,"->>>>>>>>>>>9.99",2)  )
+          '<td></td>'
+          '<td></td>'
 &endif
-          UNDERLINE stream PrnLibStream
-          benefits.pay-name
-&if "{1}" = "tot" &then
-          benefits.curr-name
-          benefits.tot-base
-&endif
-&if "{1}" = "base" &then
-          benefits.tot-r-b
-&else
-          benefits.tot-rubl
-&endif
-          benefits.pcnt
-          with frame Benefit-{1} .
-        end.
+          '<td>100.00%</td>'
+          substitute(  '<td num="0" val="&1" class="sumtotal">&1</td>',  day_sum.chk-cnt-all - day_sum.chk-cnt-nf  )
+          '</tr>' skip
+        .     
       end.
-      if last( benefits.pay-desk ) AND ( x-date-start <> x-date-end ) then do:
-        UNDERLINE stream PrnLibStream
-        benefits.pay-name
+    end. /* end_of last-of benefits.pay-desk */
+    
+    /* по одному магазину: итог по всем кассам за весь период */
+    if last-of( benefits.obj-code ) then do:
+      put stream OutStr-html unformatted
+        '  <tr><td colspan="3">ИТОГО:</td>'
 &if "{1}" = "tot" &then
-        benefits.curr-name
-        benefits.tot-base
+        substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(all-days_sum.tot-base,"->>>>>>>>>>>9.99",2)  )
+        '<td></td>'
+        substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(all-days_sum.tot-rubl,"->>>>>>>>>>>9.99",2)  )
+&elseif "{1}" = "base" &then
+        substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(all-days_sum.tot-r-b,"->>>>>>>>>>>9.99",2)  )
+        '<td></td>'
+        '<td></td>'
+&elseif "{1}" = "rubl" &then
+        substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(all-days_sum.tot-rubl,"->>>>>>>>>>>9.99",2)  )
+        '<td></td>'
+        '<td></td>'
 &endif
-&if "{1}" = "base" &then
-        benefits.tot-r-b
-&else
-        benefits.tot-rubl
-&endif
-        benefits.pcnt
-        with frame Benefit-{1} .
-&if "{1}" = "tot" &then
-        DISPLAY stream PrnLibStream
-        (" ИТОГО  чеков: " + string(ACCUM TOTAL day_sum.chk-cnt) )  @ benefits.pay-name
-        ACCUM TOTAL day_sum.tot-base  @ benefits.tot-base
-        ACCUM TOTAL day_sum.tot-rubl  @ benefits.tot-rubl
-        with frame Benefit-{1} .
-        DOWN stream PrnLibStream 1 with frame Benefit-{1}.
-&endif
-&if "{1}" = "base" &then
-        DISPLAY stream PrnLibStream
-        (" ИТОГО чеков: " + string(ACCUM TOTAL day_sum.chk-cnt) )  @ benefits.pay-name
-        ACCUM TOTAL day_sum.tot-r-b  @ benefits.tot-r-b
-        with frame Benefit-{1} .
-&endif
-&if "{1}" = "rubl" &then
-        DISPLAY stream PrnLibStream
-        (" ИТОГО чеков: " + string(ACCUM TOTAL day_sum.chk-cnt) )  @ benefits.pay-name
-        ACCUM TOTAL day_sum.tot-rubl  @ benefits.tot-rubl
-        with frame Benefit-{1} .
-&endif
-        DOWN stream PrnLibStream 1 with frame Benefit-{1}.
-        if NOT last( obj-list.obj-code ) then do:
-          UNDERLINE stream PrnLibStream
-          benefits.pay-name
-&if "{1}" = "tot" &then
-          benefits.curr-name
-          benefits.tot-base
-&endif
-&if "{1}" = "base" &then
-          benefits.tot-r-b
-&else
-          benefits.tot-rubl
-&endif
-          benefits.pcnt
-          with frame Benefit-{1} .
-        end.
-      end.
-    END.
-  end.
+        '<td></td>'
+        substitute(  '<td num="0" val="&1" class="sumtotal">&1</td>',  all-days_sum.chk-cnt-all - all-days_sum.chk-cnt-nf  )
+        '</tr>' skip
+      .
+    end. /* end_of last-of obj-code */
+  END. /* end_of for_each benefits... */
+
+  /* итого по всем магазинам */
   if last( obj-list.obj-code ) AND ( ACCUM COUNT obj-list.obj-code ) > 1 then do:
+    put stream OutStr-html unformatted
+      '  <tr><td colspan="3">ИТОГО по всем</td>'
 &if "{1}" = "tot" &then
-    DISPLAY stream PrnLibStream
-    "ИТОГО по всем" @ benefits.pay-name
-    ACCUM TOTAL all-days_sum.tot-base @ benefits.tot-base
-    ACCUM TOTAL all-days_sum.tot-rubl @ benefits.tot-rubl
-    with FRAME Benefit-{1} .
+      substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(ACCUM TOTAL all-days_sum.tot-base,"->>>>>>>>>>>9.99",2)  )
+      '<td></td>'
+      substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(ACCUM TOTAL all-days_sum.tot-rubl,"->>>>>>>>>>>9.99",2)  )
+&elseif "{1}" = "base" &then
+      substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(ACCUM TOTAL all-days_sum.tot-r-b,"->>>>>>>>>>>9.99",2)  )
+      '<td></td>'
+      '<td></td>'
+&elseif "{1}" = "rubl" &then
+      substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(ACCUM TOTAL all-days_sum.tot-rubl,"->>>>>>>>>>>9.99",2)  )
+      '<td></td>'
+      '<td></td>'
 &endif
-&if "{1}" = "base" &then
-    DISPLAY stream PrnLibStream
-    "ИТОГО по всем" @ benefits.pay-name
-    ( ACCUM TOTAL all-days_sum.tot-r-b ) @ benefits.tot-r-b
-    with FRAME Benefit-{1} .
-&endif
-&if "{1}" = "rubl" &then
-    DISPLAY stream PrnLibStream
-    "ИТОГО по всем" @ benefits.pay-name
-    ( ACCUM TOTAL all-days_sum.tot-rubl ) @ benefits.tot-rubl
-    with FRAME Benefit-{1} .
-&endif
+      '<td></td>'
+      substitute(  '<td num="0" val="&1" class="sumtotal">&1</td>',
+        (ACCUM TOTAL all-days_sum.chk-cnt-all) - (ACCUM TOTAL all-days_sum.chk-cnt-nf)  )
+      '</tr>' skip
+    .
   end.
 END.    /* FOR EACH obj-list ... */
 
 if  ObjAmount > 1  then do:
-  FORM with frame ZUM-PayCodes-{1} .
+  /* FORM with frame ZUM-PayCodes-{1} . */
   FOR EACH benefits
   BREAK
-  BY benefits.pay-code
-  BY benefits.curr-code
-  :
+  BY benefits.pay-code :
     ACCUMULATE
-    benefits.tot-sum ( SUB-TOTAL BY benefits.curr-code )
-    benefits.tot-base ( SUB-TOTAL BY benefits.curr-code )
-    benefits.tot-rubl ( SUB-TOTAL BY benefits.curr-code )
-    benefits.tot-r-b ( SUB-TOTAL BY benefits.curr-code )
+    benefits.tot-base ( SUB-TOTAL BY benefits.pay-code )
+    benefits.tot-rubl ( SUB-TOTAL BY benefits.pay-code )
+    benefits.tot-r-b  ( SUB-TOTAL BY benefits.pay-code )
     .
-    if last-of( benefits.curr-code ) AND
-      ( ACCUM SUB-TOTAL BY benefits.curr-code benefits.tot-base ) <> 0 then dO:
+    if last-of( benefits.pay-code ) AND
+        ( ACCUM SUB-TOTAL BY benefits.pay-code benefits.tot-base ) <> 0 then do:
+      open query qben-chk-count
+       preselect each ben-chk-count
+                where ben-chk-count.pay-code  = benefits.pay-code.
+      v-chk-count = query qben-chk-count:num-results .
+      close query qben-chk-count.
+      
+      put stream OutStr-html unformatted
+        substitute(  '  <tr><td colspan="3">/итого по &1</td>',  benefits.pay-name  ) 
 &if "{1}" = "tot" &then
-      DISPLAY stream PrnLibStream
-      ( "/итого по " + benefits.pay-name ) @ benefits.pay-name
-      ( ACCUM SUB-TOTAL BY benefits.curr-code benefits.tot-base ) @ benefits.tot-base
-      ( ACCUM SUB-TOTAL BY benefits.curr-code benefits.tot-rubl ) @ benefits.tot-rubl
-      with frame ZUM-PayCodes-{1}.
+        substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(ACCUM SUB-TOTAL BY benefits.pay-code benefits.tot-base,"->>>>>>>>>>>9.99",2)  )
+        '<td></td>'
+        substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(ACCUM SUB-TOTAL BY benefits.pay-code benefits.tot-rubl,"->>>>>>>>>>>9.99",2)  )
+&elseif "{1}" = "base" &then
+        substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(ACCUM SUB-TOTAL BY benefits.pay-code benefits.tot-r-b,"->>>>>>>>>>>9.99",2)  )
+        '<td></td>'
+        '<td></td>'
+&elseif "{1}" = "rubl" &then
+        substitute(  '<td num="0.00" val="&1" class="sumtotal">&1</td>',  fnc-convert-dot-to-colon(ACCUM SUB-TOTAL BY benefits.pay-code benefits.tot-rubl,"->>>>>>>>>>>9.99",2)  )
+        '<td></td>'
+        '<td></td>'
 &endif
-&if "{1}" = "base" &then
-      DISPLAY stream PrnLibStream
-      ( "/итого по " + benefits.pay-name ) @ benefits.pay-name
-      ( ACCUM SUB-TOTAL BY benefits.curr-code benefits.tot-r-b ) @ benefits.tot-r-b
-      with frame ZUM-PayCodes-{1}.
-&endif
-&if "{1}" = "rubl" &then
-      DISPLAY stream PrnLibStream
-      ( "/итого по " + benefits.pay-name ) @ benefits.pay-name
-      ( ACCUM SUB-TOTAL BY benefits.curr-code benefits.tot-rubl ) @ benefits.tot-rubl
-      with frame ZUM-PayCodes-{1}.
-&endif
-      DOWN stream PrnLibStream 1 with frame ZUM-PayCodes-{1} .
-
+        '<td></td>'
+        substitute(  '<td num="0" val="&1" class="sumtotal">&1</td>',  v-chk-count  )
+        '</tr>' skip
+      .
     end.
   END.
 end.
 
-HIDE stream PrnLibStream FRAME BottomFrame .
-&if "{1}" = "tot" &then
-PUT stream PrnLibStream Line format "X(136)" SKIP(1) .
-&else
-PUT stream PrnLibStream Line format "X(82)" SKIP(1) .
-&endif
-if ( ACCUM COUNT obj-list.obj-code ) < 2 then do:
-  if ( line-counter( PrnLibStream ) + 9 ) > page-size( PrnLibStream ) then page stream PrnLibStream.
-  PUT stream PrnLibStream
-  space(10) "Директор _______________" format "X(30)"
-  "Старший продавец ______________" format "X(30)" SKIP(2)
-  space(10) "Бухгалтер ______________" format "X(30)"
-  "Кассир ________________________" format "X(30)" SKIP .
-  end.
-  output stream PrnLibStream CLOSE.
-/*
-assign
-g#rep-tblname = ""
-g#rep-tblrid = -101
-g#rep-updflds = string( "Отчет о выручке|" + str1 ) .
-*/
-&if "{1}" = "tot" &then
-run prn-lib-prn-file in this-procedure (
-                                          input parParentProc
-                                          ,input 8
-                                          ).
-&else
-run prn-lib-prn-file in this-procedure (
-                                          input parParentProc
-                                          ,input 0
-                                          ).
+put stream OutStr-html unformatted
+  '</tbody>' skip
+  '<tfoot>' skip
+.
 
-&endif
+if ( ACCUM COUNT obj-list.obj-code ) < 2 then do:
+  put stream OutStr-html unformatted
+    '  <tr><td colspan="8"><br /></td></tr>' skip
+    '  <tr><td colspan="4">Директор _______________</td><td colspan="4">Старший продавец ______________</td></tr>' skip
+    '  <tr><td colspan="8"><br /></td></tr>' skip
+    '  <tr><td colspan="4">Бухгалтер ______________</td><td colspan="4">Кассир ________________________</td></tr>' skip
+  .
+end.
+
+put stream OutStr-html unformatted
+  '</tfoot>' skip
+  '</table>' skip
+  '</body>' skip
+  '</html>' skip
+.
+output stream OutStr-html close.     
+run prn-lib-reportviewer in this-procedure (
+    input this-procedure
+    ,input v-file-name-rep-htm
+    ,input "" 
+    ) no-error.
+if error-status:error then
+do:
+    message return-value view-as alert-box.
+    return .
+end.
 
 /* $Workfile$ e n d */

@@ -47,6 +47,8 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
       private set.
    define property name_       as character    no-undo get. 
       private set.
+   define property ess         as integer      no-undo get. 
+      private set.
    define property neck-type   as integer      no-undo get. 
       private set.
    define property me-vlm      as decimal      no-undo get. 
@@ -111,6 +113,11 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
                assign 
                   name_ = inValue.
             end.
+         when "ess" then 
+            do:
+               assign 
+                  ess = integer(inValue).
+            end.
          when "neck-type" then 
             do:
                assign 
@@ -134,7 +141,8 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
       case SubsObj:InitTag:   
          when "sections" then
             do:
-               sections = SubsObj.            
+               sections = SubsObj.  
+                         
             end.
          when "calibration-table" then
             do:
@@ -162,12 +170,12 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
 /*         when is-ac = ?              */
 /*         v-str = v-str + ",name"     */
 /*         when name_ = ?              */
-/*         v-str = v-str + ",neck-type"*/
-/*         when neck-type = ?          */
-/*         v-str = v-str + ",me-vlm"   */
-/*         when me-vlm = ?             */
-/*         v-str = v-str + ",ac-tk"    */
-/*         when ac-tk = ?              */
+         v-str = v-str + ",neck-type"
+         when neck-type = ? and ess = 0
+         v-str = v-str + ",me-vlm"
+         when me-vlm = ? and ess = 0
+         v-str = v-str + ",ac-tk"
+         when ac-tk = ? and ess = 0
          .
       v-str = trim (v-str, ",").
       if v-str > ''
@@ -190,6 +198,7 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
          neck-type = ?
          me-vlm    = ?
          ac-tk     = ?
+         ess       = ?
          .
       delete object sections no-error .
       delete object calibration-table no-error .

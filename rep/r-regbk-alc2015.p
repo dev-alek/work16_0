@@ -35,6 +35,7 @@ DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Журнал учёта рознично
 /*{ gbl/paramls.i  }*/
 { rep/fmtcli.i   }
 { cmp/r-pril.i new  } 
+{ gbl/prn-lib.i }
 { gbl/clntattr.i }
 { rep/r-pychk0.i defalgo }
 define variable v-grp-code like ub.gds-grp.node-code no-undo.
@@ -774,10 +775,19 @@ FOR EACH obj-list :
     v-addres = v-fmtcli-addres.
         
     RUN proc-create-HTML (INPUT v-addres, INPUT v-inc-qnty-tot, INPUT v-inc-litres-tot, INPUT v-out-qnty-tot , INPUT v-out-litres-tot, INPUT obj-list.obj-name, INPUT obj-list.obj-code, INPUT obj-list.obj-type).
-    RUN search-full-path-Report (INPUT v-file-name-rep-htm).
-    v-search = v-search + " "  + search(v-file-name-rep-htm).
+
+    v-search = v-search + " "  + v-file-name-rep-htm.
+    v-search = trim(v-search," ") .
 END.
-RUN Report-Viewer (INPUT v-full-path-RepView, INPUT v-search).
+    run prn-lib-reportviewer in this-procedure (
+        input parParentProc
+        ,input v-search
+        ,input "" 
+        ) no-error.
+    if error-status:error then
+    do:
+        return .
+    end.
 
 
 

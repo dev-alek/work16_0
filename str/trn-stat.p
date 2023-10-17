@@ -106,6 +106,7 @@ define buffer buf_cash-pay      for ub.cash-pay.
 define buffer buf_cash-pay-attr for ub.cash-pay-attr.
 define buffer bf_utd            for ub.utd.
 define buffer bf_utd-l          for ub.utd-lines.
+define buffer sep_auto-tank-attr  for ub.auto-tank-attr.
 
 define variable inv-shipvalue                as   logical                     no-undo.
 define variable par-gen-mrgn-ie              as   character                   no-undo.
@@ -207,6 +208,8 @@ define variable v-attr-type    as character no-undo.
 define variable v-is-foreign-producer as logical no-undo.
 define variable p-cons        as integer no-undo .
 define variable v-iskp              as logical no-undo .
+define variable v-kpsecs       as character no-undo.
+define variable v-needsavesec  as logical no-undo.
 define variable v-vid-action        as integer no-undo .
 define variable v-vid-param         as longchar no-undo .
 { str/initiator.i }
@@ -676,11 +679,29 @@ end.
 if ((varstatus = {&wayb} and varflag) or varstatus = {&fact}) and varauto-tank = true and stfactplvalue <> ""
 then do:
   define variable v-dec as decimal no-undo .
+  v-kpsecs = "" .
   for each bf_doc-line-attr where bf_doc-line-attr.doc-code = bf_trn-doc.doc-code and bf_doc-line-attr.attr-code = "n":
     def var infoSectionObj as class InfoSection no-undo.
     infoSectionsTotal = new InfoSectionsTotal().
     infoSectionsTotal:Initialization(bf_trn-doc.doc-code, bf_doc-line-attr.gds-code).
-    infoSectionsTotal:GetDBAllAttr().
+/*    infoSectionsTotal:GetDBAllAttr().*/
+    { str/tdat-val.i
+      bf_trn-doc.doc-code
+      {&trdcattr-car-num}
+      v-attr-value
+      v-attr-type
+    }
+    if v-attr-value > ""
+    then do :
+      find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = v-attr-value
+                                              and sep_auto-tank-attr.attr-code = "auto-sep"
+                                              no-error.
+      if available sep_auto-tank-attr
+      and logical(sep_auto-tank-attr.attr-value)
+      then do :
+        infoSectionsTotal:IsSGDKK = yes .
+      end .
+    end .
 /*    infoSectionsTotal:CalculateTotal().*/
     find first bf_goods no-lock where bf_goods.gds-code = bf_doc-line-attr.gds-code. 
     find first bf_doc-line no-lock where
@@ -704,7 +725,7 @@ then do:
       infoSectionsTotal:SaveDB().
     end.
     else do:
-      if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 1
+        if absolute (infoSectionsTotal:DocQntyTotal - bf_doc-line.doc-qnty) > 1
         or absolute (infoSectionsTotal:DocDensityAvg - bf_doc-line.doc-density) > 1
         or absolute (infoSectionsTotal:CliQntyTotal - bf_doc-line.cli-qnty) > 1
         then do:
@@ -737,26 +758,58 @@ then do:
             undo, return error v-mess.
           end.
         end.
-        v-iskp = false.
+        v-iskp = no .
+        v-needsavesec = no .
         do ii = 1 to infoSectionsTotal:SectionNum : 
           infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii).
           if varstatus = {&fact}
           then do :
-            v-dec = decimal(infoSectionObj:TankWeight) no-error .
-            if error-status:error
-            or v-dec = 0
+            if infoSectionsTotal:IsSGDKK
             then do :
-              v-mess = "Не произведён расчёт измеренной массы НП (" + string(infoSectionsTotal:GdsCode) + ") в секции АЦ (" + infoSectionObj:SectionName + "). Закрытие документа невозможно".
-              delete object infoSectionsTotal .
-              undo, return error v-mess.
+              
+            end .
+            else do :
+              v-dec = decimal(infoSectionObj:TankWeight) no-error .
+              if error-status:error
+              or v-dec = 0
+              then do :
+                v-mess = "Не произведён расчёт измеренной массы НП (" + string(infoSectionsTotal:GdsCode) + ") в секции АЦ (" + infoSectionObj:SectionName + "). Закрытие документа невозможно".
+                delete object infoSectionsTotal .
+                undo, return error v-mess.
+              end .
+            end .
+          end .
+          else do :
+            if infoSectionsTotal:IsSGDKK
+            then do :
+              if infoSectionObj:alarm-SGDKK
+              then do :
+                v-kpsecs = v-kpsecs + infoSectionObj:SectionName + " (" + bf_goods.gds-name + "), " .
+                if not infoSectionObj:IsKP
+                then do :
+                  infoSectionObj:IsKP = yes .
+                  v-needsavesec = yes .
+                end .
+              end .
+              else do :
+                if infoSectionObj:IsKP
+                then do :
+                  infoSectionObj:IsKP = no .
+                  v-needsavesec = yes .
+                end .
+              end .
             end .
           end .
           if not v-iskp 
+          and not infoSectionsTotal:IsSGDKK
           then do:
             v-iskp = infoSectionObj:IsKP.
           end.
         end.
-      
+        if v-needsavesec
+        then do :
+          infoSectionsTotal:SaveDB().
+        end .
         
         delete object infoSectionsTotal.
         
@@ -787,6 +840,17 @@ then do:
       end.
     
   end.
+  v-kpsecs = trim(v-kpsecs, ", ") .
+  if v-kpsecs > ""
+  then do :
+    message "Для секций " v-kpsecs " установлен флаг «Тревожное событие СГДКК». После перевода накладной в статус «накл+» продолжение ее обработки будет доступно только пользователю с правами комиссионной приемки." skip
+            "Вы уверены, что хотите закрыть накладную?"
+    view-as alert-box question buttons yes-no update varlog .
+    if not varlog
+    then do :
+      undo, return .
+    end .
+  end .
 end.
 
 
@@ -1747,7 +1811,7 @@ vartechproliv = no
         then do:
          { str/tdat-val.i
             bf_trn-doc.doc-code
-            {&trdcattr-is-lgas}
+            {&trdcattr-is-lgas-corr}
             v-attr-value
             v-attr-type
             no-error 
@@ -3405,6 +3469,7 @@ vartechproliv = no
                                 OUTPUT varvalue,
                                 OUTPUT vartype
                                 ).
+            if varvalue = "antiseptic" then next LK_RECEIPT_ .
             if varvalue > ""
             and EDOParSec:GetIsArticForType(varvalue)
             then do:
@@ -4373,11 +4438,10 @@ procedure close-rvs :
   :
     define buffer buf_rvs-doc for ub.rvs-doc .
 
-    find first buf_rvs-doc
+    for each buf_rvs-doc
       where buf_rvs-doc.rvs-type = p-rvs-type
         and buf_rvs-doc.out-code = p-trn-doc-code
-      no-error.
-    if available buf_rvs-doc then do:
+    :
       run str/rvs-stat.p
         ( input parparentproc
          ,input recid(buf_rvs-doc)

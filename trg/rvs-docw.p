@@ -780,7 +780,9 @@ procedure change-status-fact :
                 assign
                     varis-back-date = yes.
             end.
-            /* проверяем, что не нарушается порядок закрытия сверок */
+            /* проверяем, что не нарушается порядок закрытия сверок
+            Теперь не проверяем http://exp-jira.expertek.local:8080/browse/EXPSD-8081
+            
             if varis-back-date <> yes
                 and not ( ub.rvs-doc.status_ = {&fact}
                 and ub.rvs-doc.is-corr
@@ -821,6 +823,8 @@ procedure change-status-fact :
                     undo , return error .
                 end.
             end.
+            
+            */
             run clcavrgd in this-procedure (input rvs-doc.rvs-code)  no-error.
             if error-status:error then 
             do:

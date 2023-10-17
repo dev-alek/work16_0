@@ -23,6 +23,15 @@ define output parameter AllDay-RublSum as decimal no-undo .
 define output parameter ObjAmount    as      integer no-undo.
 define output parameter ChkAmount    as      integer no-undo.
 
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-description as character no-undo init "«аполнение временной таблицы по чекам дл€ отчета о выручке".
+
+{ cmp/vssrevis.i }
+
 { cmp/str-glbl.i }
 { cmp/library.i }
 { cmp/r-page1.i }
@@ -35,6 +44,73 @@ define output parameter ChkAmount    as      integer no-undo.
 { rep/r-benttm.i shared }
 &endif
 
+/* --------------------------------------------------------------------- */
+procedure CreateBenefits private :
+define input parameter p-obj-type  as character no-undo .
+define input parameter p-obj-code  as integer no-undo .
+define input parameter p-pay-code  as integer no-undo .
+define input parameter p-curr-code as integer no-undo .
+define input parameter p-date      as date no-undo .
+define input parameter p-sum       as decimal no-undo .
+define input parameter p-base      as decimal no-undo .
+define input parameter p-rubl      as decimal no-undo .
+define buffer buf_benefits for benefits .
+define buffer buf_cash-pay for ub.cash-pay .
+define buffer buf_currency for ub.currency .
+
+  find first buf_benefits
+       where buf_benefits.obj-type  = p-obj-type
+         and buf_benefits.obj-code  = p-obj-code
+         and buf_benefits.pay-code  = p-pay-code
+         and buf_benefits.curr-code = p-curr-code
+         and buf_benefits.date_     = p-date no-error .
+  if not available buf_benefits then do:
+    FIND FIRST buf_cash-pay NO-LOCK
+         WHERE buf_cash-pay.cdpay-code = p-pay-code
+           AND buf_cash-pay.curr-code  = p-curr-code NO-ERROR.
+    FIND FIRST buf_currency NO-LOCK
+         WHERE buf_currency.curr-code = p-curr-code NO-ERROR.
+    create buf_benefits.
+    assign
+      buf_benefits.date_     = p-date
+      buf_benefits.obj-type  = p-obj-type
+      buf_benefits.obj-code  = p-obj-code
+      buf_benefits.pay-code  = p-pay-code
+      buf_benefits.pay-name  = if available buf_cash-pay then buf_cash-pay.obj-name  else "Ќеопознанна€ оплата"
+      buf_benefits.curr-code = p-curr-code
+      buf_benefits.curr-name = if available buf_currency then buf_currency.curr-name else "Ќеопознанна€ валюта"
+    .
+  end .
+  assign
+    buf_benefits.tot-sum  = buf_benefits.tot-sum  + p-sum
+    buf_benefits.tot-base = buf_benefits.tot-base + p-base
+    buf_benefits.tot-rubl = buf_benefits.tot-rubl + p-rubl
+    buf_benefits.tot-r-b  = (if v-curr-r-b = {&r-b-base} then buf_benefits.tot-base else buf_benefits.tot-rubl)
+  .
+  
+end procedure . /* end_of CreateBenefits */  
+/* ----------------------------------------------------------------------*/
+procedure CreateDaySum private :
+define input parameter p-obj-type  as character no-undo .
+define input parameter p-obj-code  as integer no-undo .
+define input parameter p-date      as date no-undo .
+define input parameter p-cnt-all   as integer no-undo .
+define input parameter p-cnt-nf    as integer no-undo .
+define input parameter p-acc-rubl  as decimal no-undo .
+define input parameter p-acc-base  as decimal no-undo .
+define buffer buf_day_sum for day_sum .
+  create buf_day_sum.
+  assign
+    buf_day_sum.obj-type = p-obj-type
+    buf_day_sum.obj-code = p-obj-code
+    buf_day_sum.date     = p-date
+    buf_day_sum.chk-cnt-all = p-cnt-all
+    buf_day_sum.chk-cnt-nf  = p-cnt-nf
+    buf_day_sum.tot-rubl    = p-acc-rubl
+    buf_day_sum.tot-base    = p-acc-base
+  .
+end procedure . /* end_of CreateDaySumm */    
+/* ----------------------------------------------------------------------*/
 
 define variable acc-curr-sum as decimal no-undo.
 define variable acc-curr-base as decimal no-undo.
@@ -42,334 +118,232 @@ define variable acc-curr-rubl as decimal no-undo.
 define variable acc-sub-curr-sum as decimal no-undo.
 define variable acc-sub-curr-base as decimal no-undo.
 define variable acc-sub-curr-rubl as decimal no-undo.
-define variable acc-base as decimal no-undo.
-define variable acc-rubl as decimal no-undo.
-define variable acc-netto as decimal no-undo.
-define variable acc-count as integer no-undo.
-define variable acc-sub-netto as decimal no-undo.
-define variable acc-sub-count as integer no-undo.
+/*define variable acc-base as decimal no-undo. 09/IV-2019 не используетс€ */
+/*define variable acc-rubl as decimal no-undo. 09/IV-2019 не используетс€ */
+define variable acc-count-ln as integer no-undo. /* кол-во линий оплат дл€ отображени€ в хронометраже */
+define variable acc-count-step as integer no-undo . /* шаг хронометража */
 define variable acc-date-base as decimal no-undo.
 define variable acc-date-rubl as decimal no-undo.
-define variable acc-date-netto as decimal no-undo.
-define variable acc-date-count as integer no-undo.
+define variable acc-date-count as integer no-undo. /* кол-во чеков за день всего */
 define variable acc-sub-date-base as decimal no-undo.
 define variable acc-sub-date-rubl as decimal no-undo.
-define variable acc-sub-date-netto as decimal no-undo.
-define variable acc-sub-date-count as integer no-undo.
+define variable acc-sub-date-count as integer no-undo.  /* кол-во чеков за день нефискальных */
 define variable acc-day-rubl as decimal no-undo .
 define variable acc-day-base as decimal no-undo .
-define variable acc-day-cnt as integer no-undo .
-DEFINE VARIABLE is-counted as logical no-undo .
+define variable acc-day-cnt as integer no-undo . /* кол-во чеков за все дни */
+define variable acc-day-nf  as integer no-undo . /* кол-во чеков за все дни нефискальных */
+define variable v-skip-line    as logical no-undo . /* true: ghj */
+define variable v-is-sub-count as logical no-undo . /* true: вычесть чек из общего количества как нефискальный */
+define variable found as logical no-undo .
+/*define variable v-is-sub-pay   as logical no-undo. true: вычесть оплату чека как нефискального 15/IV-2019 вычитаетс€ через sub-count */
 
-FOR EACH obj-list WHERE obj-list.obj-type = {&shop} NO-LOCK :
-  ObjAmount = ObjAmount + 1.
-  CASE X-Radio-task > 1 :
-    WHEN YES THEN DO:
-      _chk-doc:
-      FOR EACH ub.chk-doc WHERE
-                ub.chk-doc.obj-type = obj-list.obj-type AND
-                ub.chk-doc.obj-code = obj-list.obj-code AND
-              ( ub.chk-doc.shift-date >= x-date-start AND
-                ub.chk-doc.shift-date <= x-date-end)
-                AND
-              (IF cas-num > 0 then ub.chk-doc.pay-desk = cas-num else TRUE)
-                NO-LOCK
-      BREAK
-      BY ub.chk-doc.obj-type
-      BY ub.chk-doc.obj-code
-      BY ub.chk-doc.shift-date:
-        is-counted = no.
-        IF FIRST-OF(ub.chk-doc.shift-date) then do:
-            assign
-              acc-sub-date-netto = 0
-              acc-sub-date-count = 0
-          acc-date-netto = 0
-          acc-date-count = 0
-            .
-        end.
-        IF X-Radio-task = 3 AND
-            ((ub.chk-doc.shift-date = x-date-start AND ub.chk-doc.shift-num < X-shift-start) OR
-              (ub.chk-doc.shift-date = x-date-end AND  ub.chk-doc.shift-num > X-shift-end) ) THEN DO:
-              assign
-              acc-sub-date-netto = acc-sub-date-netto + ub.chk-doc.netto
-              acc-sub-date-count = acc-sub-date-count + 1
-              is-counted = yes
-              .
-        END.
-        IF X-radio-task = 4 AND
-        ub.chk-doc.shift-num <> X-Shift-Alone then DO:
-              assign
-              acc-sub-date-netto = acc-sub-date-netto + ub.chk-doc.netto
-              acc-sub-date-count = acc-sub-date-count + 1
-              is-counted = yes
-              .
-        END.
-        if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0
-&if "{1}" = "time" &then
-        or T-time AND NOT is-counted AND
-                      NOT can-find(FIRST times No-LOCK WHERE
-                                        times.time1 <= ub.chk-doc.chk-time AND
-                                        times.time2 >= ub.chk-doc.chk-time)
-&endif
-                                        then do:
-          assign
-          acc-sub-date-netto = acc-sub-date-netto + ub.chk-doc.netto
-          acc-sub-date-count = acc-sub-date-count + 1
-          .
-        end.
-        assign
-        acc-date-netto = acc-date-netto + ub.chk-doc.netto
-          acc-date-count = acc-date-count + 1
-          .
-        if last-of( ub.chk-doc.shift-date ) then  do:
-          assign
-          acc-netto = acc-netto + acc-date-netto
-          acc-count = acc-count + acc-date-count
-          acc-sub-netto = acc-sub-netto + acc-sub-date-netto
-          acc-sub-count = acc-sub-count + acc-sub-date-count
-          .
-          create day_sum.
-          assign
-          day_sum.obj-type = obj-list.obj-type
-          day_sum.obj-code = obj-list.obj-code
-          day_sum.date = ub.chk-doc.shift-date
-          day_sum.tot-base =  acc-date-netto - acc-sub-date-netto
-          day_sum.chk-cnt  =  acc-date-count - acc-sub-date-count
-          .
-        end.
-      END. /*FOR EACH ub.chk-doc*/
-    END. /*WHEN YES*/
-    WHEN NO THEN DO:
-      _chk-doc2:
-      FOR EACH ub.chk-doc WHERE
-               ub.chk-doc.obj-type = obj-list.obj-type AND
-              ub.chk-doc.obj-code = obj-list.obj-code AND
-              ub.chk-doc.chk-date >= x-date-start AND
-              ub.chk-doc.chk-date <= x-date-end AND
-              (IF cas-num > 0 then ub.chk-doc.pay-desk = cas-num else TRUE)
-              NO-LOCK
-      BREAK
-      BY ub.chk-doc.obj-type
-      BY ub.chk-doc.obj-code
-      BY ub.chk-doc.chk-date:
-        IF FIRST-OF(ub.chk-doc.chk-date) then do:
-          assign
-          acc-sub-date-netto = 0
-          acc-sub-date-count = 0
-          acc-date-netto = 0
-          acc-date-count = 0
-          .
-        end.
-        if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0
-&if "{1}" = "time" &then
-        or (T-time AND NOT can-find(FIRST times No-LOCK WHERE
-                                        times.time1 <= ub.chk-doc.chk-time AND
-                                        times.time2 >= ub.chk-doc.chk-time))
-&endif
-                                        then do:
-          assign
-          acc-sub-date-netto = acc-sub-date-netto + ub.chk-doc.netto
-          acc-sub-date-count = acc-sub-date-count + 1
-         .
-        end.
-        assign
-        acc-date-netto = acc-date-netto + ub.chk-doc.netto
-          acc-date-count = acc-date-count + 1
-          .
-        if last-of( ub.chk-doc.chk-date) then  do:
-          assign
-          acc-netto = acc-netto + acc-date-netto
-          acc-count = acc-count + acc-date-count
-          acc-sub-netto = acc-sub-netto + acc-sub-date-netto
-          acc-sub-count = acc-sub-count + acc-sub-date-count
-          .
-          create day_sum.
-          assign
-          day_sum.obj-type = obj-list.obj-type
-          day_sum.obj-code = obj-list.obj-code
-          day_sum.date = ub.chk-doc.chk-date
-          day_sum.tot-base =  acc-date-netto - acc-sub-date-netto
-          day_sum.chk-cnt  =  acc-date-count - acc-sub-date-count
-          .
-        end.
-      END. /*FOR EACH ub.chk-doc*/
-    END. /*WHEN NO*/
-  END CASE.
-END. /*FOR EACH obj-list*/
-assign
-ChkAmount = acc-count -  acc-sub-count
-AllDay-BaseSUm = 0
-.
+  acc-count-ln = 0 .
+  acc-count-step = 0 .
 
+/* @FUTU: если выбраны "¬се магазины", то делать суммирование по всем,
+          т.е. без for each obj-list и без where chk-doc.obj-type = ... */  
 FOR EACH obj-list WHERE
          obj-list.obj-type = {&shop} NO-LOCK :
-  assign
-  acc-day-base = 0
-  acc-day-rubl = 0
-  acc-day-cnt = 0
-  acc-count = 0
-  .
-
+  /* X-radio-task =
+    " алендарные даты", 1,
+    "—менные сутки", 2,
+    "—менные сутки и пор€док", 3,
+    "ѕо сменам", 4  
+  */
   CASE X-radio-task > 1:
     WHEN YES THEN DO:
       _chk-doc3:
-      FOR EACH ub.chk-doc NO-LOCK WHERE
-                ub.chk-doc.obj-type = obj-list.obj-type
-            AND ub.chk-doc.obj-code = obj-list.obj-code
-            AND ub.chk-doc.shift-date >= x-date-start
-            AND ub.chk-doc.shift-date <= x-date-end
-            AND (IF cas-num > 0 then ub.chk-doc.pay-desk = cas-num else TRUE),
-      EACH ub.chk-pay No-LOCK WHERE
-           ub.chk-pay.doc-code = ub.chk-doc.doc-code
+      FOR EACH chk-doc NO-LOCK WHERE
+                chk-doc.obj-type = obj-list.obj-type
+            AND chk-doc.obj-code = obj-list.obj-code
+            AND chk-doc.shift-date >= x-date-start
+            AND chk-doc.shift-date <= x-date-end
+            AND (IF cas-num > 0 then chk-doc.pay-desk = cas-num else TRUE)
       BREAK
-      BY ub.chk-doc.obj-type
-      BY ub.chk-doc.obj-code
-      BY ub.chk-doc.shift-date
-      BY ub.chk-pay.out-code
-      BY ub.chk-pay.pay-code
-      BY ub.chk-pay.curr-code :
-        is-counted = yes.
-        if FIRST-of( ub.chk-pay.curr-code ) then do:
-          assign
-          acc-sub-curr-sum = 0
-          acc-sub-curr-base = 0
-          acc-sub-curr-rubl = 0
-          acc-curr-sum = 0
-          acc-curr-base = 0
-          acc-curr-rubl = 0
-          .
-        end.
-        if first-of( ub.chk-doc.shift-date ) then do:
+      BY chk-doc.obj-type
+      BY chk-doc.obj-code
+      BY chk-doc.shift-date :
+        if first-of( chk-doc.shift-date ) then do:
           assign
           acc-date-rubl = 0
           acc-date-base = 0
+          acc-date-count = 0
           acc-sub-date-rubl = 0
           acc-sub-date-base = 0
+          acc-sub-date-count = 0
           .
         end.
-        IF X-radio-task = 3 AND
-        ((ub.chk-doc.shift-date = x-date-start AND ub.chk-doc.shift-num < X-shift-start) OR
-          (ub.chk-doc.shift-date = x-date-end AND  ub.chk-doc.shift-num > X-shift-end) ) THEN DO:
-          assign
-          acc-sub-curr-sum = acc-sub-curr-sum + ub.chk-pay.tot-sum
-          acc-sub-curr-base = acc-sub-curr-base + ub.chk-pay.tot-base
-          acc-sub-curr-rubl = acc-sub-curr-rubl + ub.chk-pay.tot-rubl
-          acc-sub-date-rubl = acc-sub-date-rubl + ub.chk-pay.tot-rubl
-          acc-sub-date-base = acc-sub-date-base + ub.chk-pay.tot-base
-          is-counted = yes
-          .
-        END.
-        IF X-radio-task = 4 AND
-        ub.chk-doc.shift-num <> X-Shift-Alone then DO:
-          assign
-          acc-sub-curr-sum = acc-sub-curr-sum + ub.chk-pay.tot-sum
-          acc-sub-curr-base = acc-sub-curr-base + ub.chk-pay.tot-base
-          acc-sub-curr-rubl = acc-sub-curr-rubl + ub.chk-pay.tot-rubl
-          acc-sub-date-rubl = acc-sub-date-rubl + ub.chk-pay.tot-rubl
-          acc-sub-date-base = acc-sub-date-base + ub.chk-pay.tot-base
-          is-counted = yes
-          .
-        END.
-        if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0
+        v-skip-line = 
+        (
+             X-Radio-task = 3 AND
+             ((chk-doc.shift-date = x-date-start AND chk-doc.shift-num < X-shift-start) OR
+              (chk-doc.shift-date = x-date-end   AND chk-doc.shift-num > X-shift-end))
+        ) OR (
+             X-radio-task = 4 AND
+             chk-doc.shift-num <> X-Shift-Alone
 &if "{1}" = "time" &then
-        or (T-time AND Not is-counted AND
-                        NOT can-find(FIRST times No-LOCK WHERE
-                                            times.time1 <= ub.chk-doc.chk-time AND
-                                            times.time2 >= ub.chk-doc.chk-time))
+        ) OR (
+             T-time AND
+             NOT can-find (FIRST times WHERE times.time1 <= chk-doc.chk-time
+                                         AND times.time2 >= chk-doc.chk-time)
 &endif
-                                              then do:
-            assign
-            acc-sub-curr-sum = acc-sub-curr-sum + ub.chk-pay.tot-sum
-            acc-sub-curr-base = acc-sub-curr-base + ub.chk-pay.tot-base
-            acc-sub-curr-rubl = acc-sub-curr-rubl + ub.chk-pay.tot-rubl
-            acc-sub-date-rubl = acc-sub-date-rubl + ub.chk-pay.tot-rubl
-            acc-sub-date-base = acc-sub-date-base + ub.chk-pay.tot-base
-            .
-          END.
-        assign
-        acc-curr-sum = acc-curr-sum + ub.chk-pay.tot-sum
-        acc-curr-base = acc-curr-base + ub.chk-pay.tot-base
-        acc-curr-rubl = acc-curr-rubl + ub.chk-pay.tot-rubl
-        .
-        { rep/e-bcrben.i ub.chk-doc.shift-date }
-      END. /*FOR EACH ub.chk-doc*/
+        ) .
+        if not v-skip-line then do :
+          v-is-sub-count = (  lookup(string(chk-doc.chk-type), {&no-sale-receipt-codes}) > 0  ).
+          found = false .
+          if v-is-sub-count then do :
+            for first chk-pay No-LOCK
+               WHERE chk-pay.doc-code = chk-doc.doc-code
+                 and chk-pay.tot-sum <> 0 :
+              found = true .
+              leave .
+            end .
+          end .
+          else do :
+            for EACH chk-pay No-LOCK
+               WHERE chk-pay.doc-code = chk-doc.doc-code
+                 and chk-pay.tot-sum <> 0
+            break BY chk-pay.pay-code
+                  BY chk-pay.curr-code :
+              found = true .
+              { rep/e-bcrben.i chk-doc.shift-date }
+            end .
+          end .
+          if found then assign
+            acc-date-count     = acc-date-count     + 1
+            acc-sub-date-count = acc-sub-date-count + 1 when (v-is-sub-count)
+          .
+        end .
+        if last-of( chk-doc.shift-date ) then do:
+          run CreateDaySum in this-procedure
+          ( obj-list.obj-type
+          , obj-list.obj-code
+          , chk-doc.shift-date
+          , acc-date-count
+          , acc-sub-date-count
+          , acc-date-rubl - acc-sub-date-rubl
+          , acc-date-base - acc-sub-date-base
+          ) .
+        end.
+      END. /*FOR EACH chk-doc*/
     END. /*WHEN YES*/
     WHEN NO THEN DO:
       _chk-doc4:
-      FOR EACH ub.chk-pay No-LOCK WHERE
-              ub.chk-pay.obj-type = obj-list.obj-type AND
-              ub.chk-pay.obj-code = obj-list.obj-code AND
-              ub.chk-pay.chk-date >= x-date-start AND
-              ub.chk-pay.chk-date <= x-date-end,
-          FIRST ub.chk-doc NO-LOCK WHERE
-                    ub.chk-pay.doc-code = ub.chk-doc.doc-code  AND
-                    (IF cas-num > 0 then ub.chk-doc.pay-desk = cas-num else TRUE)
+      FOR EACH chk-pay No-LOCK WHERE
+              chk-pay.obj-type = obj-list.obj-type AND
+              chk-pay.obj-code = obj-list.obj-code AND
+              chk-pay.chk-date >= x-date-start AND
+              chk-pay.chk-date <= x-date-end AND
+              chk-pay.tot-sum <> 0
+               /* 15/IV-2019  перенесено внутрь first-of chk-pay.doc-code
+              , FIRST chk-doc NO-LOCK WHERE
+                    chk-pay.doc-code = chk-doc.doc-code  AND
+                    (IF cas-num > 0 then chk-doc.pay-desk = cas-num else TRUE) */
       BREAK
-      BY ub.chk-pay.obj-type
-      BY ub.chk-pay.obj-code
-      BY ub.chk-pay.chk-date
-      BY ub.chk-pay.pay-code
-      BY ub.chk-pay.curr-code :
-
-        if FIRST-of( ub.chk-pay.curr-code ) then do:
-          assign
-          acc-sub-curr-sum = 0
-          acc-sub-curr-base = 0
-          acc-sub-curr-rubl = 0
-          acc-curr-sum = 0
-          acc-curr-base = 0
-          acc-curr-rubl = 0
-          .
-        end.
-        if first-of( ub.chk-pay.chk-date ) then do:
+      BY chk-pay.obj-type
+      BY chk-pay.obj-code
+      BY chk-pay.chk-date
+      BY chk-pay.doc-code
+      BY chk-pay.pay-code
+      BY chk-pay.curr-code :
+        if first-of( chk-pay.chk-date ) then do:
           assign
           acc-date-rubl = 0
           acc-date-base = 0
+          acc-date-count = 0
           acc-sub-date-rubl = 0
           acc-sub-date-base = 0
+          acc-sub-date-count = 0
           .
         end.
-        if lookup(string(ub.chk-doc.chk-type), {&no-sale-receipt-codes}) > 0
+        if first-of( chk-pay.doc-code ) then do:
+          IF cas-num > 0 then
+          find FIRST chk-doc NO-LOCK
+               WHERE chk-doc.doc-code = chk-pay.doc-code
+                 AND chk-doc.pay-desk = cas-num no-error .
+          else 
+          find FIRST chk-doc NO-LOCK
+               WHERE chk-doc.doc-code = chk-pay.doc-code no-error .
+          if available chk-doc then do :
+          
 &if "{1}" = "time" &then
-        or (T-time AND NOT can-find(FIRST times No-LOCK WHERE
-                                          times.time1 <= ub.chk-doc.chk-time AND
-                                          times.time2 >= ub.chk-doc.chk-time) )
+          v-skip-line = 
+          (
+             T-time AND
+             NOT can-find (FIRST times WHERE times.time1 <= chk-doc.chk-time
+                                         AND times.time2 >= chk-doc.chk-time)
+          ) .
+&else 
+          v-skip-line = false . 
 &endif
-                                          then do:
+          end .
+          else v-skip-line = true . 
+
+          if not v-skip-line then do :
+          v-is-sub-count = (  lookup(string(chk-doc.chk-type), {&no-sale-receipt-codes}) > 0  ).
           assign
-          acc-sub-curr-sum = acc-sub-curr-sum + ub.chk-pay.tot-sum
-          acc-sub-curr-base = acc-sub-curr-base + ub.chk-pay.tot-base
-          acc-sub-curr-rubl = acc-sub-curr-rubl + ub.chk-pay.tot-rubl
-          acc-sub-date-rubl = acc-sub-date-rubl + ub.chk-pay.tot-rubl
-          acc-sub-date-base = acc-sub-date-base + ub.chk-pay.tot-base
+            acc-date-count     = acc-date-count     + 1
+            acc-sub-date-count = acc-sub-date-count + 1 when (v-is-sub-count)
           .
-        END.
-        assign
-        acc-curr-sum = acc-curr-sum + ub.chk-pay.tot-sum
-        acc-curr-base = acc-curr-base + ub.chk-pay.tot-base
-        acc-curr-rubl = acc-curr-rubl + ub.chk-pay.tot-rubl
-        .
-        { rep/e-bcrben.i ub.chk-pay.chk-date  }
-      END. /*FOR EACH ub.chk-doc*/
+          end .
+        end.
+        if not v-skip-line then do :
+        { rep/e-bcrben.i chk-pay.chk-date  }
+        end .
+        if last-of( chk-pay.chk-date ) then do:
+          run CreateDaySum in this-procedure
+          ( obj-list.obj-type
+          , obj-list.obj-code
+          , chk-pay.chk-date
+          , acc-date-count
+          , acc-sub-date-count
+          , acc-date-rubl - acc-sub-date-rubl
+          , acc-date-base - acc-sub-date-base
+          ) .
+        end.
+      END. /*FOR EACH chk-doc*/
     END. /*WHEN NO*/
   END CASE.
-  CREATE all-days_sum .
-  assign
-  all-days_sum.obj-type = obj-list.obj-type
-  all-days_sum.obj-code = obj-list.obj-code
-  all-days_sum.tot-base = acc-day-base
-  all-days_sum.tot-rubl = acc-day-rubl
-  all-days_sum.tot-r-b  = (if v-curr-r-b = {&r-b-base}
-                           then all-days_sum.tot-base
-                           else all-days_sum.tot-rubl)
-  all-days_sum.chk-cnt = acc-day-cnt
-  AllDay-BaseSum = AllDay-BaseSum + (if v-curr-r-b = {&r-b-base}
-                                     then acc-day-base
-                                     else acc-day-rubl
-                                     )
-  AllDay-rublSum = AllDay-RublSum + acc-day-rubl
- .
 END. /*FOR EACH obj-list*/
 
-run waitfram-hide in this-procedure .
+  assign
+    AllDay-BaseSum = 0.0
+    AllDay-RublSum = 0.0
+    ObjAmount = 0
+    ChkAmount = 0
+  .
+  for each day_sum break by day_sum.obj-code :
+    if first-of (day_sum.obj-code) then do :
+      assign
+        acc-day-base = 0
+        acc-day-rubl = 0
+        acc-day-cnt  = 0
+        acc-day-nf   = 0
+      .
+    end .
+    assign
+      day_sum.tot-r-b  = (if v-curr-r-b = {&r-b-base} then day_sum.tot-base else day_sum.tot-rubl)
+      acc-day-rubl = acc-day-rubl + day_sum.tot-rubl
+      acc-day-base = acc-day-base + day_sum.tot-base
+      acc-day-cnt  = acc-day-cnt  + day_sum.chk-cnt-all
+      acc-day-nf   = acc-day-nf   + day_sum.chk-cnt-nf  
+    .
+    if last-of (day_sum.obj-code) then do :
+      create all-days_sum .
+      assign
+        all-days_sum.obj-type = day_sum.obj-type
+        all-days_sum.obj-code = day_sum.obj-code
+        all-days_sum.tot-base = acc-day-base
+        all-days_sum.tot-rubl = acc-day-rubl
+        all-days_sum.tot-r-b  = (if v-curr-r-b = {&r-b-base} then acc-day-base else acc-day-rubl)
+        all-days_sum.chk-cnt-all = acc-day-cnt
+        all-days_sum.chk-cnt-nf  = acc-day-nf
+        AllDay-BaseSum = AllDay-BaseSum + all-days_sum.tot-r-b
+        AllDay-rublSum = AllDay-RublSum + acc-day-rubl
+        ObjAmount      = ObjAmount + 1
+        ChkAmount      = ChkAmount + (all-days_sum.chk-cnt-all - all-days_sum.chk-cnt-nf)
+      .
+    end .
+  end . /* end_of for_each day_sum */
+  
 /* $Workfile$ e n d */

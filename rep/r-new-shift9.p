@@ -165,7 +165,7 @@ on error undo, return error
             <tr>
                 <th style="text-align: center;">Наименование топлива</th>
                 <th style="text-align: center;">№ ТРК</th>
-                <th style="text-align: center;">№ пистолета</th>
+                <th style="text-align: center;">№ пист</th>
                 <th style="text-align: center;">Счетчик на начало</th>
                 <th style="text-align: center;">Счетчик на конец</th>
                 <th style="text-align: center;">Оборот</th>

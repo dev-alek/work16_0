@@ -296,13 +296,13 @@ DO:
      ,input {&add-def}
      ,input-output varauto-tank-rec
     ) no-error.
-  if varauto-tank-rec <> ? then do :
-      find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
-      ub.auto-tank.brutto-qnty = 0 .
-      for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :
-          ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .    
-      end.
-  end.    
+/*  if varauto-tank-rec <> ? then do :                                                                    */
+/*      find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.              */
+/*      ub.auto-tank.brutto-qnty = 0 .                                                                    */
+/*      for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :*/
+/*          ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .             */
+/*      end.                                                                                              */
+/*  end.                                                                                                  */
   run local-enable_ui.
 END.
 
@@ -325,10 +325,10 @@ DO:
        ,input-output varauto-tank-rec
       ) no-error.
     find first ub.auto-tank exclusive-lock where recid(ub.auto-tank) = varauto-tank-rec.
-    ub.auto-tank.brutto-qnty = 0 .
-    for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :
-        ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .    
-    end.    
+/*    ub.auto-tank.brutto-qnty = 0 .                                                                    */
+/*    for each auto-tank-sec no-lock where auto-tank-sec.auto-num begins (ub.auto-tank.auto-num + "#") :*/
+/*        ub.auto-tank.brutto-qnty = ub.auto-tank.brutto-qnty + auto-tank-sec.brutto-qnty .             */
+/*    end.                                                                                              */
     run local-enable_ui.
   end.
   else do:

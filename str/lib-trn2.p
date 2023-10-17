@@ -115,6 +115,14 @@ for each thbjattr_thbj-attr :
 end.
 empty temp-table thbjattr_thbj-attr.
 
+{ str/tdat-wrt.i cr_trn-doc.doc-code
+             {&trdcattr-othermoves}
+             "yes" no-error }
+if error-status :error then do:
+  return error substitute( "Ошибка при вызове процедуры tdat-wrt &1 &2"
+                         , return-value
+                         , error-status :get-message( 1 ) ).
+end.                
 if varwastagevalue = "yes" and
    varinvclcwt     = "yes" then do:
    { str/tdat-wrt.i cr_trn-doc.doc-code

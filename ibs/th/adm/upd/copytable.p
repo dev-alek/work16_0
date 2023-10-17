@@ -1,109 +1,22 @@
 
-/*{ gbl/waitfram.i }*/
-
-define variable v-waitfram-action01         as character no-undo .
-define variable v-waitfram-action02         as character no-undo .
-define variable v-waitfram-action03         as character no-undo .
-define variable v-waitfram-prev-left-margin as integer   no-undo init 0 .
-
-define frame waitfram
-  v-waitfram-action01 format "x(72)" no-label skip
-  v-waitfram-action02 format "x(72)" no-label skip
-  v-waitfram-action03 format "x(72)" no-label skip
-  with view-as dialog-box side-labels three-d
-  .
-
-procedure waitfram-hide :
-
-  do
-  on error undo, return error return-value
-  :
-    pause 0 before-hide .
-    hide frame waitfram .
-
-&if "{1}" = "" &then
-    process events .
-&endif
-  end.
-
-end procedure. /* waitfram-hide */
-
-
-procedure waitfram-show :
-
-  define input  parameter p-message as character no-undo .
-
-  define variable v-left-margin as integer   no-undo .
-
-  do
-  on error undo, return error return-value
-  :
-    if length(p-message) <= 70 then do:
-      assign
-        v-left-margin = integer((70 - length(p-message)) / 2)
-      .
-      assign
-        v-left-margin = max(0, v-left-margin - (v-left-margin mod 5))
-      .
-      if abs(v-left-margin - v-waitfram-prev-left-margin) > 5 then do:
-        assign
-          v-waitfram-prev-left-margin = v-left-margin
-        .
-      end.
-
-      assign
-        v-waitfram-action01 = " "
-        v-waitfram-action02 = " "
-                                 + fill(" ", v-waitfram-prev-left-margin)
-                                 + p-message
-        v-waitfram-action03 = " "
-      .
-    end.
-    else do:
-      if length(p-message) <= 140 then do:
-        assign
-          v-waitfram-action01 = " "
-          v-waitfram-action02 = " " + substring(p-message,   1, 70)
-          v-waitfram-action03 = " " + substring(p-message,  71, 70)
-        .
-      end.
-      else do:
-        assign
-          v-waitfram-action01 = " " + substring(p-message,   1, 70)
-          v-waitfram-action02 = " " + substring(p-message,  71, 70)
-          v-waitfram-action03 = " " + substring(p-message, 141, 70)
-        .
-      end.
-    end.
-
-    display
-      v-waitfram-action01 skip
-      v-waitfram-action02 skip
-      v-waitfram-action03 skip
-      with frame waitfram .
-&if "{1}" = "" &then
-    process events .
-&endif
-  end.
-
-end procedure. /* waitfram-show */
-
-/*session:debug-alert = yes.*/
-define variable vTableList as character no-undo.
-vTableList = trim(session:parameter,'"').
+define input parameter iTableList as character no-undo.
 
 define variable vi as integer no-undo.
- 
+define variable vTableList as character no-undo.
+{ utl/proc-async.i proc_def}
+
+vTableList = trim(iTableList,'"').
+
 function copytable returns logical (itable_old as character, itable_new as character ) forward.
-run waitfram-show in this-procedure ("Копирование данных в новую структуру...").
+
+run putStatAsunc in this-procedure ("Копирование данных в новую структуру...").
 def var mtablename as char no-undo.
 do vi = 1 to num-entries (vTableList,"|"):
    mtablename  = entry(vi,vTableList,"|").
-   run waitfram-show in this-procedure ("Копирование данных в новую структуру. Обработка таблицы " + mtablename ).
+   run putStatAsunc in this-procedure ("Копирование данных в новую структуру. Обработка таблицы " + mtablename ).
    copytable(mtablename + "_old", mtablename).
 end.
-run waitfram-hide in this-procedure .
-quit.
+{ utl/proc-async.i proc_end}
 
 function copytable returns logical (itable_old as character, itable_new as character ):
    define variable vBufTargetTable as handle no-undo.
@@ -121,10 +34,13 @@ function copytable returns logical (itable_old as character, itable_new as chara
    vQuery:query-prepare("preselect EACH " + vBufSourseTable:name + " no-lock").
    vQuery:query-open().
    vQuery:get-first().
-
+   
    do while vBufSourseTable:available:
       
-      run waitfram-show in this-procedure ("Копирование данных в новую структуру. Oбработка таблицы " + itable_new + ". Обработано записей : " + string (vi)).
+      if vi mod 1000 = 0 then 
+        run putStatAsunc in this-procedure 
+          (substitute("Копирование данных в новую структуру. Oбработка таблицы &1. Обработано записей: &2 из &3.",
+          itable_new, vi, vQuery:num-results)).
       do transaction:
          vBufTargetTable:buffer-create ().
          vBufTargetTable:buffer-copy (vBufSourseTable).

@@ -1590,62 +1590,65 @@ DO:
     end .
   end .
   
-  if rvd-dnstv:screen-value = "yes" then do:
-    if not v-rvd-on
-    and not v-rvd-dnsty-on
-    then do :
-      message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
-      view-as alert-box question buttons ok-cancel update vlog .
-      if not vlog
+  if p-mode =  {&update} then    /* EXPSD-8061 */
+  do:
+    if rvd-dnstv:screen-value = "yes" then do:
+      if not v-rvd-on
+      and not v-rvd-dnsty-on
       then do :
-        rvd-dnstv:screen-value = "no" .
-        rvd-tmp:screen-value = v-tmp-old-val .
-        return no-apply .
+        message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
+        view-as alert-box question buttons ok-cancel update vlog .
+        if not vlog
+        then do :
+          rvd-dnstv:screen-value = "no" .
+          rvd-tmp:screen-value = v-tmp-old-val .
+          return no-apply .
+        end .
+        v-rvd-reason-on = ? .
+        run ref/rvd-reasons.w (input parparentproc,
+                               input 0, /* РГС */
+                               output v-rvd-reason-on,
+                               output v-ITSM-num-on,
+                               output v-oper-fio-on)
+                               .
+        if v-rvd-reason-on = ?
+        then do :
+          rvd-dnstv:screen-value = "no" .
+          rvd-tmp:screen-value = v-tmp-old-val .
+          return no-apply .
+        end . 
+        v-rvd-on = yes .                     
       end .
-      v-rvd-reason-on = ? .
-      run ref/rvd-reasons.w (input parparentproc,
-                             input 0, /* РГС */
-                             output v-rvd-reason-on,
-                             output v-ITSM-num-on,
-                             output v-oper-fio-on)
-                             .
-      if v-rvd-reason-on = ?
+    end.  
+    else do:
+      if not v-rvd-off
+      and v-rvd-dnsty-on
       then do :
-        rvd-dnstv:screen-value = "no" .
-        rvd-tmp:screen-value = v-tmp-old-val .
-        return no-apply .
-      end . 
-      v-rvd-on = yes .                     
-    end .
-  end.  
-  else do:
-    if not v-rvd-off
-    and v-rvd-dnsty-on
-    then do :
-      message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
-      view-as alert-box question buttons ok-cancel update vlog .
-      if not vlog 
-      then do :
-        rvd-dnstv:screen-value = "yes" .
-        rvd-tmp:screen-value = v-tmp-old-val .
-        return no-apply .
+        message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
+        view-as alert-box question buttons ok-cancel update vlog .
+        if not vlog 
+        then do :
+          rvd-dnstv:screen-value = "yes" .
+          rvd-tmp:screen-value = v-tmp-old-val .
+          return no-apply .
+        end .
+        v-rvd-reason-off = ? .
+        run ref/rvd-reasons.w (input parparentproc,
+                               input 0, /* РГС */
+                               output v-rvd-reason-off,
+                               output v-ITSM-num-off,
+                               output v-oper-fio-off)
+                               .
+        if v-rvd-reason-off = ?
+        then do :
+          rvd-dnstv:screen-value = "yes" .
+          rvd-tmp:screen-value = v-tmp-old-val .
+          return no-apply .
+        end .
+        v-rvd-off = yes .
       end .
-      v-rvd-reason-off = ? .
-      run ref/rvd-reasons.w (input parparentproc,
-                             input 0, /* РГС */
-                             output v-rvd-reason-off,
-                             output v-ITSM-num-off,
-                             output v-oper-fio-off)
-                             .
-      if v-rvd-reason-off = ?
-      then do :
-        rvd-dnstv:screen-value = "yes" .
-        rvd-tmp:screen-value = v-tmp-old-val .
-        return no-apply .
-      end .
-      v-rvd-off = yes .
-    end .
-  end.  
+    end.  
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1657,57 +1660,60 @@ ON VALUE-CHANGED OF rvd-lvl IN FRAME d-pl-form /* Измеряется приборами */
 DO:
   define variable vlog as logical no-undo .
   
-  if rvd-lvl:screen-value = "yes" then do:
-    if not v-rvd-on
-    and not v-rvd-lvl-on
-    then do :
-      message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
-      view-as alert-box question buttons ok-cancel update vlog .
-      if not vlog
+  if p-mode =  {&update} then    /* EXPSD-8061 */
+  do:
+    if rvd-lvl:screen-value = "yes" then do:
+      if not v-rvd-on
+      and not v-rvd-lvl-on
       then do :
-        rvd-lvl:screen-value = "no" .
-        return no-apply .
+        message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
+        view-as alert-box question buttons ok-cancel update vlog .
+        if not vlog
+        then do :
+          rvd-lvl:screen-value = "no" .
+          return no-apply .
+        end .
+        v-rvd-reason-on = ? .
+        run ref/rvd-reasons.w (input parparentproc,
+                               input 0, /* РГС */
+                               output v-rvd-reason-on,
+                               output v-ITSM-num-on,
+                               output v-oper-fio-on)
+                               .
+        if v-rvd-reason-on = ?
+        then do :
+          rvd-lvl:screen-value = "no" .
+          return no-apply .
+        end . 
+        v-rvd-on = yes .                     
       end .
-      v-rvd-reason-on = ? .
-      run ref/rvd-reasons.w (input parparentproc,
-                             input 0, /* РГС */
-                             output v-rvd-reason-on,
-                             output v-ITSM-num-on,
-                             output v-oper-fio-on)
-                             .
-      if v-rvd-reason-on = ?
+    end.  
+    else do:
+      if not v-rvd-off
+      and v-rvd-lvl-on
       then do :
-        rvd-lvl:screen-value = "no" .
-        return no-apply .
-      end . 
-      v-rvd-on = yes .                     
-    end .
-  end.  
-  else do:
-    if not v-rvd-off
-    and v-rvd-lvl-on
-    then do :
-      message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
-      view-as alert-box question buttons ok-cancel update vlog .
-      if not vlog
-      then do :
-        rvd-lvl:screen-value = "yes" .
-        return no-apply .
+        message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
+        view-as alert-box question buttons ok-cancel update vlog .
+        if not vlog
+        then do :
+          rvd-lvl:screen-value = "yes" .
+          return no-apply .
+        end .
+        v-rvd-reason-off = ? .
+        run ref/rvd-reasons.w (input parparentproc,
+                               input 0, /* РГС */
+                               output v-rvd-reason-off,
+                               output v-ITSM-num-off,
+                               output v-oper-fio-off)
+                               .
+        if v-rvd-reason-off = ?
+        then do :
+          rvd-lvl:screen-value = "yes" .
+          return no-apply .
+        end .
+        v-rvd-off = yes .
       end .
-      v-rvd-reason-off = ? .
-      run ref/rvd-reasons.w (input parparentproc,
-                             input 0, /* РГС */
-                             output v-rvd-reason-off,
-                             output v-ITSM-num-off,
-                             output v-oper-fio-off)
-                             .
-      if v-rvd-reason-off = ?
-      then do :
-        rvd-lvl:screen-value = "yes" .
-        return no-apply .
-      end .
-      v-rvd-off = yes .
-    end .
+    end.
   end.  
 END.
 
@@ -1740,62 +1746,65 @@ DO:
     end .
   end .
   
-  if rvd-tmp:screen-value = "yes" then do:
-    if not v-rvd-on
-    and not v-rvd-temp-on
-    then do :
-      message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
-      view-as alert-box question buttons ok-cancel update vlog .
-      if not vlog 
+  if p-mode =  {&update} then    /* EXPSD-8061 */
+  do:
+    if rvd-tmp:screen-value = "yes" then do:
+      if not v-rvd-on
+      and not v-rvd-temp-on
       then do :
-        rvd-tmp:screen-value = "no" .
-        rvd-dnstv:screen-value = v-dnst-old-val .
-        return no-apply .
+        message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
+        view-as alert-box question buttons ok-cancel update vlog .
+        if not vlog 
+        then do :
+          rvd-tmp:screen-value = "no" .
+          rvd-dnstv:screen-value = v-dnst-old-val .
+          return no-apply .
+        end .
+        v-rvd-reason-on = ? .
+        run ref/rvd-reasons.w (input parparentproc,
+                               input 0, /* РГС */
+                               output v-rvd-reason-on,
+                               output v-ITSM-num-on,
+                               output v-oper-fio-on)
+                               .
+        if v-rvd-reason-on = ?
+        then do :
+          rvd-tmp:screen-value = "no" .
+          rvd-dnstv:screen-value = v-dnst-old-val .
+          return no-apply .
+        end .        
+        v-rvd-on = yes .              
       end .
-      v-rvd-reason-on = ? .
-      run ref/rvd-reasons.w (input parparentproc,
-                             input 0, /* РГС */
-                             output v-rvd-reason-on,
-                             output v-ITSM-num-on,
-                             output v-oper-fio-on)
-                             .
-      if v-rvd-reason-on = ?
+    end.  
+    else do:
+      if not v-rvd-off
+      and v-rvd-temp-on
       then do :
-        rvd-tmp:screen-value = "no" .
-        rvd-dnstv:screen-value = v-dnst-old-val .
-        return no-apply .
-      end .        
-      v-rvd-on = yes .              
-    end .
-  end.  
-  else do:
-    if not v-rvd-off
-    and v-rvd-temp-on
-    then do :
-      message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
-      view-as alert-box question buttons ok-cancel update vlog .
-      if not vlog
-      then do :
-        rvd-tmp:screen-value = "yes" .
-        rvd-dnstv:screen-value = v-dnst-old-val .
-        return no-apply .
+        message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
+        view-as alert-box question buttons ok-cancel update vlog .
+        if not vlog
+        then do :
+          rvd-tmp:screen-value = "yes" .
+          rvd-dnstv:screen-value = v-dnst-old-val .
+          return no-apply .
+        end .
+        v-rvd-reason-off = ? .
+        run ref/rvd-reasons.w (input parparentproc,
+                               input 0, /* РГС */
+                               output v-rvd-reason-off,
+                               output v-ITSM-num-off,
+                               output v-oper-fio-off)
+                               .
+        if v-rvd-reason-off = ?
+        then do :
+          rvd-tmp:screen-value = "yes" .
+          rvd-dnstv:screen-value = v-dnst-old-val .
+          return no-apply .
+        end .
+        v-rvd-off = yes .
       end .
-      v-rvd-reason-off = ? .
-      run ref/rvd-reasons.w (input parparentproc,
-                             input 0, /* РГС */
-                             output v-rvd-reason-off,
-                             output v-ITSM-num-off,
-                             output v-oper-fio-off)
-                             .
-      if v-rvd-reason-off = ?
-      then do :
-        rvd-tmp:screen-value = "yes" .
-        rvd-dnstv:screen-value = v-dnst-old-val .
-        return no-apply .
-      end .
-      v-rvd-off = yes .
-    end .
-  end.  
+    end.  
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1807,59 +1816,62 @@ ON VALUE-CHANGED OF tt-place.is-meas IN FRAME d-pl-form /* Измеряется приборами 
 DO:
   define variable vlog as logical no-undo .
   
-  if tt-place.is-meas:screen-value = "yes" then do:
-    if not v-rvd-off
-    and not v-rvd-is-meas-on
-    then do :
-      message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
-      view-as alert-box question buttons ok-cancel update vlog .
-      if not vlog 
+  if p-mode =  {&update} then    /* EXPSD-8061 */
+  do:
+    if tt-place.is-meas:screen-value = "yes" then do:
+      if not v-rvd-off
+      and not v-rvd-is-meas-on
       then do :
-        tt-place.is-meas:screen-value = "no" .
-        return no-apply .
+        message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
+        view-as alert-box question buttons ok-cancel update vlog .
+        if not vlog 
+        then do :
+          tt-place.is-meas:screen-value = "no" .
+          return no-apply .
+        end .
+        v-rvd-reason-off = ? .
+        run ref/rvd-reasons.w (input parparentproc,
+                               input 0, /* РГС */
+                               output v-rvd-reason-off,
+                               output v-ITSM-num-off,
+                               output v-oper-fio-off)
+                               .
+        if v-rvd-reason-off = ?
+        then do :
+          tt-place.is-meas:screen-value = "no" .
+          return no-apply .
+        end .
+        v-rvd-off = yes .
       end .
-      v-rvd-reason-off = ? .
-      run ref/rvd-reasons.w (input parparentproc,
-                             input 0, /* РГС */
-                             output v-rvd-reason-off,
-                             output v-ITSM-num-off,
-                             output v-oper-fio-off)
-                             .
-      if v-rvd-reason-off = ?
+      enable t-asi-srtif with frame {&frame-name} .
+    end.  
+    else do:
+      if not v-rvd-on
+      and v-rvd-is-meas-on
       then do :
-        tt-place.is-meas:screen-value = "no" .
-        return no-apply .
+        message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
+        view-as alert-box question buttons ok-cancel update vlog .
+        if not vlog
+        then do :
+          tt-place.is-meas:screen-value = "yes" .
+          return no-apply .
+        end .
+        v-rvd-reason-on = ? .
+        run ref/rvd-reasons.w (input parparentproc,
+                               input 0, /* РГС */
+                               output v-rvd-reason-on,
+                               output v-ITSM-num-on,
+                               output v-oper-fio-on)
+                               .
+        if v-rvd-reason-on = ?
+        then do :
+          tt-place.is-meas:screen-value = "yes" .
+          return no-apply .
+        end . 
+        v-rvd-on = yes .                     
       end .
-      v-rvd-off = yes .
-    end .
-    enable t-asi-srtif with frame {&frame-name} .
-  end.  
-  else do:
-    if not v-rvd-on
-    and v-rvd-is-meas-on
-    then do :
-      message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
-      view-as alert-box question buttons ok-cancel update vlog .
-      if not vlog
-      then do :
-        tt-place.is-meas:screen-value = "yes" .
-        return no-apply .
-      end .
-      v-rvd-reason-on = ? .
-      run ref/rvd-reasons.w (input parparentproc,
-                             input 0, /* РГС */
-                             output v-rvd-reason-on,
-                             output v-ITSM-num-on,
-                             output v-oper-fio-on)
-                             .
-      if v-rvd-reason-on = ?
-      then do :
-        tt-place.is-meas:screen-value = "yes" .
-        return no-apply .
-      end . 
-      v-rvd-on = yes .                     
-    end .
-    disable t-asi-srtif with frame {&frame-name} .
+      disable t-asi-srtif with frame {&frame-name} .
+    end.
   end.  
 END.
 

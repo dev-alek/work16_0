@@ -670,6 +670,22 @@ do
                     v-clob-db-num = self_clob-bind.db-num
                     v-int64-id    = self_clob-bind.int64-id
                     .
+                run trg/userlog.p (
+                        input {&nwsdochs_action_delete}
+                        , input {&table_clob-bind}
+                        , input ( buffer self_clob-bind :handle )
+                        , input ?
+                        , input ""
+                        ) no-error.
+                if error-status :error
+                then 
+                do:
+                   undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+                            , {&new-line}
+                            , vss-workfile
+                            , return-value
+                            , error-status :get-message ( 1 ) ).
+                end.
                 delete self_clob-bind no-error .
                 if error-status:error then 
                 do:
@@ -683,27 +699,8 @@ do
                         , error-status:get-message(1)
                         , return-value ).
                 end.
-                else 
-                do:
-                    run trg/userlog.p (
-                        input {&nwsdochs_action_delete}
-                        , input {&table_clob-bind}
-                        , input ( buffer self_clob-bind :handle )
-                        , input ?
-                        , input ""
-                        ) no-error.
-                    if error-status :error
-                        then 
-                    do:
-                        undo, return error substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
-                            , {&new-line}
-                            , vss-workfile
-                            , return-value
-                            , error-status :get-message ( 1 ) ).
-                    end.
-                end.  
-
-
+                    
+                
                 if p-clob-mode  = "delete" then 
                 do:
                     find first buf_clob-data exclusive-lock where

@@ -241,7 +241,7 @@ define variable vss-description as character no-undo init "".
     " "
     " "
     " "
-    "'Yukos,Rosneft-*'"
+    "'Yukos,ibs,Rosneft-*'"
     "yes"
 }
 
@@ -409,7 +409,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -421,7 +421,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Rosneft-*'"
+  "'yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -454,7 +454,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -487,7 +487,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -520,7 +520,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -1288,7 +1288,7 @@ define variable vss-description as character no-undo init "".
   "no"
   "'12.2'"
   "'1'"
-  "'UKOS,Rosneft-*'"
+  "'yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -1387,7 +1387,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Rosneft-*'"
+  "'yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -1463,7 +1463,7 @@ define variable vss-description as character no-undo init "".
   "no"
   "'15.0'"
   "'1'"
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1503,7 +1503,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1513,7 +1513,7 @@ define variable vss-description as character no-undo init "".
   " "
   " "
   " "
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -1535,7 +1535,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -1557,7 +1557,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1567,7 +1567,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -1578,7 +1578,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -1600,7 +1600,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -1634,7 +1634,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 
@@ -1656,7 +1656,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Rosneft-*'"
+  "'yukos,ibs,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1666,7 +1666,7 @@ define variable vss-description as character no-undo init "".
   "no"
   "'15.0'"
   "'1'"
-  "'Rosneft-*'"
+  "'yukos,ibs,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1676,7 +1676,7 @@ define variable vss-description as character no-undo init "".
   "no"
   "'15.0'"
   "'1'"
-  "'Yukos,Rosneft-*'"
+  "'Yukos,ibs,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1686,7 +1686,7 @@ define variable vss-description as character no-undo init "".
   "no"
   "'15.0'"
   "'1'"
-  "'Rosneft-*'"
+  "'yukos,ibs,Rosneft-*'"
   "yes"
 }
 { gbl/menuload.i
@@ -1696,7 +1696,7 @@ define variable vss-description as character no-undo init "".
   "''"
   "''"
   "''"
-  "'Rosneft-*'"
+  "'yukos,ibs,Rosneft-*'"
   "yes"
 }
 

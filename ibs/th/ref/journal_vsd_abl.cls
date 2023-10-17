@@ -1152,6 +1152,9 @@ CLASS ibs.th.ref.journal_vsd_abl INHERITS Form:
       cast(this-object:numericUpDown1, System.ComponentModel.ISupportInitialize):EndInit().
       this-object:ResumeLayout(false).
       this-object:PerformLayout().
+            
+      {gbl\ed_date_cls.i this-object:dateTimePicker1 This-object this-object:dateTimePicker2}
+ 
       catch e as Progress.Lang.Error:
          undo, throw e.
       end catch.

@@ -816,35 +816,47 @@ Phase 1 of Load completed.  Working.  Please wait ...~
       define variable vi as integer no-undo.
       define variable vfileWait as character no-undo.
       define variable vFlfileWait as logical no-undo.
-     
+      define variable vOk as logical no-undo init true.
       for each ttrun where    ttrun.task eq iSched
                            or iSched eq ? 
       no-lock:
          vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/endproc.txt".
          if FileExists(vFile)
          then do:
-            do vi = 1 to num-entries(WaitFile):
-              vfileWait = MyWorkDir + ttrun.task + string(ttrun.num) + "/" + entry(vi,waitFile).
-              vFlfileWait = WaitForfile(vfileWait,ipause).
-              if not vFlfileWait
-              then 
-                 return no.
-            end.
+/*            do vi = 1 to num-entries(WaitFile):                                                                   */
+/*              vfileWait = MyWorkDir + ttrun.task + string(ttrun.num) + "/" + entry(vi,waitFile).                  */
+/*              vFlfileWait = WaitForfile(vfileWait,ipause).                                                        */
+/*              if not vFlfileWait                                                                                  */
+/*              then                                                                                                */
+/*                 return no.                                                                                       */
+/*            end.                                                                                                  */
             writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "WaitReadLog").
             ttrun.fstatusItem = "WaitReadLog".
             mRunProc = mRunProc - 1.
          end.
-         else 
-            return no.
+         else do:
+            vOk = no.
+         end.
       end.
-      return yes.
+      return vOk.
    end.
    
    method public logical EndStopEnd ( input iSched as character):
       define variable vtask as character no-undo.
+      define variable vFile as character no-undo.
       for each ttrun where    ttrun.task eq iSched
                            or iSched eq ? 
       no-lock break by ttrun.task:
+         vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/endproc.txt".
+         if not FileExists(vFile)
+         then do:
+            if termprc(MyWorkDir,ttrun.task , ttrun.num, ttRun.fpid)
+            then do:
+               writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "WaitReadLog").
+               ttrun.fstatusItem = "WaitReadLog".
+               mRunProc = mRunProc - 1.
+            end.
+         end.
          PubFileLog(ttrun.task, ttrun.num, yes).
                
          if not SaveFile
@@ -1369,20 +1381,35 @@ end.
 method public void  termprc(input iDir as character,iProc as character,iNum as integer ):
    if avail ttrun
    then do:
-   if termprc(ttrun.fpid)
-   then do:
-      output stream sWriteFile to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
-      put stream sWriteFile skip.
-      output stream sWriteFile close.
-   end.
-   if ttrun.fpid eq 0
-   then
-   do: 
-       output stream sWriteFile to value (substitute("&1\&2&3\endproc.txt",iDir,iProc,if iNum  ne 0 then string(iNum) else "") ).
-      put stream sWriteFile skip.
-      output stream sWriteFile close.
-   end.
+      termprc(iDir, iProc, iNum, ttrun.fpid).
    end.       
+end.    
+
+method public logical  termprc(input iDir as character,iProc as character,iNum as integer, iPid as integer ):
+   define variable vOk as logical no-undo.
+   define variable vdir as character no-undo.
+   vdir = substitute("&1\&2&3",iDir,iProc,if iNum  ne 0 then string(iNum) else "").
+   if termprc(iPid)
+   then do:
+      vOk = true.
+      if FolderExists (vdir)
+      then do:
+         output stream sWriteFile to value (substitute("&1\endproc.txt",vdir )).
+         put stream sWriteFile skip.
+         output stream sWriteFile close.
+      end.
+   end.
+   if iPid eq 0
+   then
+   do:
+      if FolderExists (vdir)
+      then do:
+         output stream sWriteFile to value (substitute("&1\endproc.txt",vDir) ).
+         put stream sWriteFile skip.
+         output stream sWriteFile close.
+      end.
+   end.
+   return vOk.       
 end.    
  
 method public logical  termprc(iPid as integer):
@@ -1440,6 +1467,27 @@ end.
                               or iSched            eq ?)
       no-lock no-error.
       return available ttRun.
+   end.
+   
+   method public character getListWorkShed():
+      return getListWorkShed(?).
+   end.
+   
+   method public character getListWorkShed(iSched as character ):
+      define variable vnow as datetime-tz no-undo.
+      define variable vList as character no-undo.
+      vnow = getnow().
+      for each ttRun where ttrun.fstatusItem ne "WorkEnd"
+                       and ttRun.StartAfter  <= vnow
+                       and (   ttRun.task        eq iSched
+                            or iSched            eq ?)
+      no-lock:
+         vList = vList + "," + ttrun.task + string(ttrun.num).
+      end.
+      if vList ne ""
+      then
+         vList = substring (vList,2). 
+      return vList.
    end.
    
    method public character getListTask ():
@@ -1771,4 +1819,42 @@ method public logical WaitFor ( input iSched as character, input ipInterval as i
         this-object:MyPause:Unsubscribe(this-object:waitfram-show).*/
   end finally.
   end.
+  
+  method public void setTimeOutTask(iTask as character, iTimeOut as integer ):
+     find first ttTimeOutProc where ttTimeOutProc.task eq iTask no-error.
+     if not available ttTimeOutProc
+     then do:
+        create ttTimeOutProc.
+        ttTimeOutProc.task = iTask.
+     end.
+     ttTimeOutProc.timeOut = iTimeOut.
+  end.
+  
+  method public void delTimeOutTask(iTask as character):
+     find first ttTimeOutProc where ttTimeOutProc.task eq iTask no-error.
+     if available ttTimeOutProc
+     then do:
+        delete ttTimeOutProc.
+     end.
+  end.
+  
+  method public integer getTimeOutTask(iTask as character):
+     find first ttTimeOutProc where ttTimeOutProc.task eq iTask no-error.
+     return if available ttTimeOutProc then ttTimeOutProc.timeOut else ?. 
+  end.
+  
+  method public logical isAvailWorkShed(iSched as character ):
+      define variable vnow as datetime-tz no-undo.
+      vnow = getnow().
+      for each ttRun where       ttRun.task        eq iSched
+                              or iSched            eq ?
+      no-lock:
+         if      ttrun.fstatusItem ne "WaitRun"
+            or (     ttrun.fstatusItem eq "WaitRun"
+                 and ttRun.StartAfter  <= vnow)
+         then
+            return yes.
+      end.
+      return no.
+   end.
 end class.

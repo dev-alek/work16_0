@@ -15,7 +15,12 @@ using Progress.Windows.Form.
 block-level on error undo, throw.
 
 class ibs.th.ref.report_hdd inherits Form: 
-  
+   define public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define public property vss-author      as character no-undo init "$Author:$":U get.
+  define public property vss-date        as character no-undo init "$Date:$":U get.
+  define public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define public property vss-description as character no-undo init "Отчет HDD" get.
   define private variable attr_type     as System.Windows.Forms.TextBox        no-undo.
   define private variable attr_name     as System.Windows.Forms.TextBox        no-undo.
   define private variable b_run         as System.Windows.Forms.Button         no-undo.
@@ -593,6 +598,7 @@ class ibs.th.ref.report_hdd inherits Form:
     this-object:groupBox1:PerformLayout().
     this-object:ResumeLayout(false).
     this-object:PerformLayout().
+    {gbl\ed_date_cls.i this-object:date_start this-object:date_end This-object }
     catch e as Progress.Lang.Error:
       undo, throw e.
     end catch.

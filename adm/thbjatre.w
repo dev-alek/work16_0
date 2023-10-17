@@ -786,8 +786,21 @@ END.
 /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
 IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+&Scoped-define BROWSE-NAME BR-values
 { gbl/app_help.i }
-
+run diasize_add_browse in this-procedure
+  (input  'width':u
+  ,input  browse BR-2values :handle
+  ) .
+run diasize_add_browse in this-procedure
+  (input  'width':u
+  ,input  browse BR-section :handle
+  ) .
+run diasize_add_browse in this-procedure
+  (input  'height':u
+  ,input  browse br-tree :handle
+  ) .
+/*run diasize_init in this-procedure .*/
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
@@ -959,6 +972,7 @@ assign
 b-add:menu-mouse in frame {&frame-name}  = 1
 section_thbj-attr.upper-prop-name:RESIZABLE IN BROWSE br-section = YES
     .
+
 DO v-ii = 1 TO BROWSE br-values:NUM-COLUMNS:
   ASSIGN
   BROWSE br-values:GET-BROWSE-COLUMN(v-ii):RESIZABLE = YES.

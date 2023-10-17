@@ -91,6 +91,7 @@ on stop    undo tr, return error
   end.
   /* Ќе может существовать двух документов сверки, в одной смене и с одним типом */
   /*                    по одному складскому документу                           */
+  /*             ”же может... ѕосекционные сверки дл€ комиссионного прихода      
   if ub.rvs-doc.rvs-type = {&rvs-before-doc}
     or ub.rvs-doc.rvs-type = {&rvs-after-doc}
   then do:
@@ -109,11 +110,11 @@ on stop    undo tr, return error
     undo tr, return error substitute( "≈сть аналогичный закрытый документ: &1 —мена: &2 &3",
                                       aft-rvs-doc.rvs-code, aft-rvs-doc.shift-date, (if aft-rvs-doc.shift-name = string(aft-rvs-doc.shift-num) then aft-rvs-doc.shift-name else aft-rvs-doc.shift-name + "(" + string(aft-rvs-doc.shift-num) + ")") ).
   end.
-
+  */
   /* ≈сли есть сверка "до" по документы, то должна существовать сверка "после" */
   if ub.rvs-doc.status_ <> {&g___new} then do:
     if ub.rvs-doc.rvs-type = {&rvs-after-doc} then do:
-      find broser-rvs-doc no-lock where
+      find first broser-rvs-doc no-lock where
            broser-rvs-doc.out-code = ub.rvs-doc.out-code and
            broser-rvs-doc.rvs-type = {&rvs-before-doc}   no-error.
       if not available broser-rvs-doc then do:

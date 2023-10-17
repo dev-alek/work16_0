@@ -17,6 +17,12 @@ using ibs.th.ref.code.SDedit_ from propath.
 block-level on error undo, throw.
 
 class ibs.th.ref.code.SDedit_ inherits Form: 
+  define public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define public property vss-author      as character no-undo init "$Author:$":U get.
+  define public property vss-date        as character no-undo init "$Date:$":U get.
+  define public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define public property vss-description as character no-undo init "Справочник устройств" get.
   
   define public variable bindcode        as Progress.Data.BindingSource         no-undo.
   define private variable buttonOk        as System.Windows.Forms.Button         no-undo.
@@ -258,6 +264,7 @@ class ibs.th.ref.code.SDedit_ inherits Form:
     cast(this-object:bindcode, System.ComponentModel.ISupportInitialize):EndInit().
     this-object:ResumeLayout(false).
     this-object:PerformLayout().
+    {gbl\ed_date_cls.i this-object this-object:dateTimePicker2}
     catch e as Progress.Lang.Error:
       undo, throw e.
     end catch.

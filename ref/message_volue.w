@@ -164,7 +164,7 @@ ASSIGN
 &Scoped-define SELF-NAME gDialog
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gDialog gDialog
 ON WINDOW-CLOSE OF FRAME gDialog /* Сообщение о превышении */
-  DO:  
+DO:  
     /* Add Trigger to equate WINDOW-CLOSE to END-ERROR. */
     APPLY "END-ERROR":U TO SELF.
   END.
@@ -232,14 +232,14 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI gDialog  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-  /*------------------------------------------------------------------------------
-    Purpose:     DISABLE the User Interface
-    Parameters:  <none>
-    Notes:       Here we clean-up the user-interface by deleting
-                 dynamic widgets we have created and/or hide 
-                 frames.  This procedure is usually called when
-                 we are ready to "clean-up" after running.
-  ------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
+  Purpose:     DISABLE the User Interface
+  Parameters:  <none>
+  Notes:       Here we clean-up the user-interface by deleting
+               dynamic widgets we have created and/or hide 
+               frames.  This procedure is usually called when
+               we are ready to "clean-up" after running.
+------------------------------------------------------------------------------*/
   /* Hide all frames. */
   HIDE FRAME gDialog.
 END PROCEDURE.
@@ -259,7 +259,7 @@ PROCEDURE enable_UI :
                  Settings" section of the widget Property Sheets.
   ------------------------------------------------------------------------------*/
 
-        mes = "Слив запрещен! Объем по ТТН " + p-1 + " л превышает свободный объем резервуара " + p-2 + " - " + p-3 + " л. " + {&new-line} +
+        mes = "Слив запрещен! Объем по ТТН " + p-1 + " л превышает свободный объем резервуара " + p-2 + ". " + {&new-line} +
           "Проверьте введенные данные из ТТН или значение фактического объема в резервуаре".      
 
   DISPLAY mes 

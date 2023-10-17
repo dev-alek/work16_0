@@ -52,10 +52,13 @@ then do:
                                input 1
                              , input log-file-name
                              , input 1
-                             , input substitute('Отправка данных на кассы &1://&2'
-                                           ,entry(1, for-cash-desk.addr-path, {&delim-par})
-                                           ,entry(2, for-cash-desk.addr-path, {&delim-par})
-                                         )).
+                             , input substitute('Отправка данных на кассы &1 &2'
+                                           ,for-cash-desk.cash-num /* entry(1, for-cash-desk.addr-path, {&delim-par}) */
+                                           ,for-cash-desk.obj-code /* entry(2, for-cash-desk.addr-path, {&delim-par}) */
+                                         )). 
+
+
+
      run ConectSocet (entry(1,entry(2, for-cash-desk.addr-path, {&delim-par}),":"),
                       entry(2,entry(2, for-cash-desk.addr-path, {&delim-par}),":"),
                       "",

@@ -195,7 +195,7 @@ put stream OutStr-html unformatted
 put stream OutStr-html unformatted  
    '<TR>'skip
    '<TD colspan="14" style="font-weight: bold;">' + string(date_string) + '</TD>' skip
-   '<TD colspan="4" style="text-align: center;">Фискальные данные</TD>' skip
+   '<TD colspan="4" style="text-align: center;">Для поиска чека на кассе</TD>' skip
    '<TD colspan="3" style="text-align: center;">RRN</TD>' skip
    '<TD colspan="3" style="text-align: center;">SBPRRN</TD>' skip
    '</TR>' skip 
@@ -447,7 +447,7 @@ FOR EACH chk-pay No-LOCK WHERE
       '<TD text_wrap="true" colspan="2" style="text-align: center; border: 1px solid black;">' + string(chk-pay.curr-code) + '</TD>' skip
       '<TD text_wrap="true" colspan="2" style="text-align: center; border: 1px solid black;">' + if available (currency) then currency.curr-name + '</TD>' else "НЕОПОЗНАННАЯ ВАЛЮТА" + '</TD>' skip
       '<TD text_wrap="true" colspan="2" style="text-align: center; border: 1px solid black;">' + string(chk-pay.pay-code) + '</TD>' skip
-      '<TD text_wrap="true" colspan="3" style="text-align: center; border: 1px solid black;">' + if available (cash-pay) then cash-pay.obj-name + '</TD>' else "НЕОПОНАННАЯ ОПЛАТА" + '</TD>' skip
+      '<TD text_wrap="true" colspan="3" style="text-align: center; border: 1px solid black;">' + if available (cash-pay) then cash-pay.obj-name + '</TD>' else "НЕОПОЗНАННАЯ ОПЛАТА" + '</TD>' skip
       '<TD text_wrap="true" colspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-pay.tot-sum,"->>>>>>>>>>>9.99") + '</TD>' skip
       '<TD text_wrap="true" colspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-pay.tot-base,"->>>>>>>>>>>9.99") + '</TD>' skip
       '<TD text_wrap="true" colspan="3" style="text-align: right; border: 1px solid black;">' + string(chk-pay.tot-rubl,"->>>>>>>>>>>9.99") + '</TD>' skip
@@ -456,6 +456,33 @@ FOR EACH chk-pay No-LOCK WHERE
       '</TR>'skip       
       .    
 END.
+
+
+
+
+/* ФН – номер фискального накопителя (атрибут чека CHNumberFN), 
+ФД – порядковый номер фискального документа (атрибут чека CHFiscalDocNumber)
+ФПД – номер фискального признака документа (атрибут чека CHFiscalDocSign) */ 
+
+define variable NumberFN as character no-undo .
+define variable FiscalDocNumber as character no-undo .
+define variable FiscalDocSign as character no-undo .
+
+find first chk-doc-attr where chk-doc-attr.attr-code = 'CHNumberFN' and chk-doc-attr.doc-code = chk-doc.doc-code no-lock no-error.
+IF AVAILABLE chk-doc-attr THEN DO: 
+NumberFN = chk-doc-attr.attr-value.
+end.
+
+find first chk-doc-attr where chk-doc-attr.attr-code = 'CHFiscalDocNumber' and chk-doc-attr.doc-code = chk-doc.doc-code no-lock no-error.
+IF AVAILABLE chk-doc-attr THEN DO: 
+FiscalDocNumber = chk-doc-attr.attr-value.
+end.
+
+find first chk-doc-attr where chk-doc-attr.attr-code = 'CHFiscalDocSign' and chk-doc-attr.doc-code = chk-doc.doc-code no-lock no-error.
+IF AVAILABLE chk-doc-attr THEN DO: 
+FiscalDocSign = chk-doc-attr.attr-value.
+end.
+
 
 put stream OutStr-html unformatted
    '<TR>' skip
@@ -466,6 +493,30 @@ put stream OutStr-html unformatted
    '<TD text_wrap="true"></TD>' skip
    '<TD text_wrap="true" colspan="4"></TD>' skip
    '</TR>'skip 
+
+   '<TR>' skip
+   '<TD text_wrap="true" colspan="18" style="font-weight: bold;"> ФИСКАЛЬНЫЕ ДАННЫЕ </TD>' skip
+   '</TR>' skip
+
+   '<TR>' skip
+   '<TD ><BR></TD>' skip
+   '</TR>' skip
+
+   '<TR>' skip
+   '<TD text_wrap="true" colspan="2"> ФН </TD>' skip
+   '<TD text_wrap="true" colspan="10">' NumberFN '</TD>' skip
+   '</TR>' skip
+
+   '<TR>' skip
+   '<TD text_wrap="true" colspan="2"> ФД </TD>' skip
+   '<TD text_wrap="true" colspan="10">' FiscalDocNumber '</TD>' skip
+   '</TR>' skip
+
+   '<TR>' skip
+   '<TD text_wrap="true" colspan="2"> ФПД </TD>' skip
+   '<TD text_wrap="true" colspan="10">' FiscalDocSign '</TD>' skip
+   '</TR>'skip 
+
    '</thead>' skip  
    '</table>' skip
    '</body>' skip

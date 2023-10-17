@@ -372,6 +372,16 @@ on error undo, return error return-value
   buf_trn-doc.agnt = buf_main_trn-doc.agnt
   buf_trn-doc.boss = buf_main_trn-doc.boss
   .
+  /* для техпролива и списания ставим атрибут другое перемещение для доп.документа */
+  if p-doc-kind = {&sale-add-write-off} or
+     p-doc-kind = {&sale-add-tech-refuell}   
+  then do:
+     { str/tdat-wrt.i                                    
+          buf_trn-doc.doc-code
+          {&trdcattr-othermoves}
+          "yes" 
+       no-error}
+  end.           
   run saledoc-create  in this-procedure (
                                            input buf_main_trn-doc.doc-code
                                           ,input buf_main_trn-doc.host-code

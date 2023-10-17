@@ -488,6 +488,7 @@ function getlevelByCodId return int
    define variable vLength as int no-undo.
    define variable vLevel  as int no-undo.
    if not ChekTypeMarkByDM (icode) then return ?.
+   
    vLength = length(iCode).
    if    vLength eq 18
       or vLength eq 20
@@ -514,7 +515,7 @@ function getlevelByCodId return int
              and substring(iCode,26,4) ne "8005")
       then
          Vlevel = 4.
-      else if    vLength eq 31
+      else if    vLength eq 31 /* 2 + 14 + 2 + 7 + 4 + 6*/
               or vLength eq 38
               or vLength eq 39
               or vLength eq 45    
@@ -674,7 +675,15 @@ method private decimal getQntyUTDByDM
 function getQntyUTDByDM return decimal    
 {utl\comment.i} */ 
 (iDm as char):
-   return getQntyUTDByCodId(iDm).
+   define variable vDM as character no-undo.
+   if     length (iDm) ne 25 
+      and length (iDm) ne 29 
+      and substring (iDm,length (iDm) - 6 + 1, 2 ) eq "93"
+   then   
+      vDM = substring (iDm,1,length (iDm) - 6 ).
+   else
+      vDM = substring (iDm,1,length (iDm) - 4 ).
+   return getQntyUTDByCodId(vDM).
 end.
 
 {&CommentStartNoClass}

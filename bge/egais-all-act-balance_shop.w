@@ -578,6 +578,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   end.
 
   run enable_UI. 
+  RADIO-SET-1 = 2 .
+/*  RADIO-SET-1:disable ("Новые") .*/
   apply "value-changed" to RADIO-SET-1 in frame {&FRAME-NAME}. 
 
   wait-for go of frame {&FRAME-NAME}.

@@ -335,6 +335,7 @@
 &glob c-layout-elem-rule_primary_key layout-id mode-id widget-id corr-user-db-num chip-num 
 &glob c-layout-elem-rule-attr_primary_key layout-id mode-id widget-id attr-code corr-user-db-num chip-num 
 &glob c-norm-loss_primary_key id corr-user-db-num chip-num 
+&glob c-marking_primary_key mark corr-user-db-num chip-num 
 &glob c-nozzle_primary_key obj-type obj-code nozzle-code corr-user-db-num chip-num 
 &glob c-nozzle-attr_primary_key obj-type obj-code nozzle-code attr-code corr-user-db-num chip-num 
 &glob c-nzl-hist_primary_key obj-type obj-code nozzle-code corr-user-db-num chip-num subject 

@@ -687,18 +687,18 @@ ON choose OF b-load IN FRAME Dialog-Frame /* Запрос */
                 if v-proxy-ssl
                   then 
                 do :
-                  cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                  cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.1/ProductService >&3",
                     search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres).
                 end.
                 else 
                 do :
-                  cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+                  cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.1/ProductService >&3",
                     search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
                 end.
               end.
               else 
               do :
-                cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+                cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.1/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
               end.
               os-command silent value (cmd). /*закрытие окна*/
           
@@ -788,9 +788,11 @@ ON choose OF b-load IN FRAME Dialog-Frame /* Запрос */
       sw:write-data-element ("bs:count", "1000") .
       sw:write-data-element ("bs:offset", "0") .
       sw:end-element ("bs:listOptions") .
+      sw:start-element ("dt:producer") .
       sw:start-element ("dt:enterprise") .
       sw:write-data-element ("bs:guid", v-prod-guid) .
       sw:end-element ("dt:enterprise") .  
+      sw:end-element ("dt:producer") .
       sw:end-element ("ws:getProductItemListRequest") .
       sw:end-element ("se:Body") .
     
@@ -803,18 +805,18 @@ ON choose OF b-load IN FRAME Dialog-Frame /* Запрос */
         if v-proxy-ssl
           then 
         do :
-          cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+          cmd = substitute ("&1 -k --proxy-negotiate -x &7 -U : -u &4:&5 -d @&2 &6/platform/services/2.1/ProductService >&3",
             search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres).
         end.
         else 
         do :
-          cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3",
+          cmd = substitute ("&1 -x &7 -U &8:&9 -u &4:&5 -d @&2 &6/platform/services/2.1/ProductService >&3",
             search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server, v-proxy-addres, v-proxy-login, v-proxy-pswd).
         end.
       end.
       else 
       do :
-        cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.0/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
+        cmd = substitute ("&1 -u &4:&5 -d @&2 &6/platform/services/2.1/ProductService >&3", search ("exe/curl.exe"), search (v-file-gds), "ItemList_.xml", v-login, v-password, v-server).
       end.
       os-command silent value (cmd).
     end.

@@ -40,6 +40,7 @@ define variable vss-description as character no-undo init "Импорт накладных из в
 {ibs/th/skt/ControlledClients/TSDTT-1c.i}
 { gbl/getcntxt.i def }
 { str/doc-code.i }
+{ str/trdcalib.i }
 
 define shared variable g#auto-user-id as character no-undo .
 
@@ -231,6 +232,17 @@ do:
     end.
   end case.  
   
+  /* для внутреннего прихода заполняем атрибут Прочие перемещения */
+  if ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+  then do:
+    { str/tdat-wrt.i 
+             ub.trn-doc.doc-code
+             {&trdcattr-othermoves}
+             "yes" 
+             no-error }
+     if error-status:error 
+        then return error return-value.
+  end.
 
 end.
 

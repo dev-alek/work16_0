@@ -41,6 +41,7 @@ define variable vss-description as character no-undo initial "Инвентаризационная
 { rep/html-conv.i }
 { str/is-sug.i }
 { str/placelib.i }
+{ rep/c-place-attr.i }
 
 define variable g#report-num  as integer no-undo .
 define variable g#quest-print as logical no-undo initial yes .
@@ -94,6 +95,7 @@ define temp-table tt-sug
   field name-pl  as character
   field volue-pl as decimal
   field log-pl   as character 
+  field type_dan as character
   index pi gds-code pl-code .
 
 
@@ -314,7 +316,9 @@ procedure data-print :
       tt-sug.volue-pl = bf_place.add-qnty
       tt-sug.qnty1    = tt-sug.volue-pl * tt-sug.density
       tt-sug.pl-type  = "трубопровод"
-    .
+      .
+    find first c-rvs-doc no-lock where c-rvs-doc.rvs-code = bf_rvs-doc.rvs-code and c-rvs-doc.obj-code = bf_rvs-doc.obj-code and
+      c-rvs-doc.obj-type = bf_rvs-doc.obj-type and c-rvs-doc.status_ = {&permitted} .
       
     for first rvs-line-attr no-lock
          where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -336,9 +340,53 @@ procedure data-print :
     tt-sug.log-pl = if tt-sug.volue-pl <> 0 then "заполнено" else "не заполнено" .
     tt-sug.delta  = (tt-sug.qnty * delta-mass-qnty)/ 100 .
     tt-sug.delta1  = (tt-sug.qnty1 * delta-mass-qnty)/ 100 .
-    define variable v-value as character no-undo.
-    define variable v-ok    as logical   no-undo.
+    define variable v-value     as character no-undo.
+    define variable v-ok        as logical   no-undo.
+    define variable pl-rvd-dens as logical   no-undo .
+    define variable pl-rvd-lvl  as logical   no-undo .
+    define variable pl-rvd-temp as logical   no-undo .
+    
+    
+    if not get_meas(bf_rvs-line.obj-code, bf_rvs-line.obj-type, bf_rvs-line.pl-code, c-rvs-doc.fact-date, c-rvs-doc.fact-time) then
+      tt-sug.type_dan = "PВД" .
+    else 
+    do:
+      run c-place_get-attr (input {&place-rvd-lvl}
+        ,input bf_rvs-line.obj-code
+        ,input bf_rvs-line.obj-type
+        ,input bf_rvs-line.pl-code
+        ,input c-rvs-doc.fact-date
+        ,input c-rvs-doc.fact-time
+        ,output v-value ) no-error .
       
+      if v-value = "" then pl-rvd-lvl = false .
+      else pl-rvd-lvl = not logical(v-value) .
+  
+      run c-place_get-attr (input {&place-rvd-tmp}
+        ,input bf_rvs-line.obj-code
+        ,input bf_rvs-line.obj-type
+        ,input bf_rvs-line.pl-code
+        ,input c-rvs-doc.fact-date
+        ,input c-rvs-doc.fact-time
+        ,output v-value ) no-error .
+      if v-value = "" then pl-rvd-temp = false .
+      else pl-rvd-temp = not logical(v-value) . 
+      
+      run c-place_get-attr (input {&place-rvd-dnsty}
+        ,input bf_rvs-line.obj-code
+        ,input bf_rvs-line.obj-type
+        ,input bf_rvs-line.pl-code
+        ,input c-rvs-doc.fact-date
+        ,input c-rvs-doc.fact-time
+        ,output v-value ) no-error .
+      if v-value = "" then pl-rvd-dens = false .
+      else pl-rvd-dens = not logical(v-value) .
+            
+            
+      if pl-rvd-dens or pl-rvd-lvl or pl-rvd-temp then tt-sug.type_dan = "PВД" .
+      else tt-sug.type_dan = "AВД" .
+    end.
+    
     run placelib_get-attr  ( input {&place-twice-code}
       ,input bf_rvs-line.obj-code
       ,input bf_rvs-line.obj-type
@@ -368,11 +416,12 @@ procedure table-inv:
     '</Thead>' skip
     .  
   put stream OutStr-html unformatted
-    '<TR style="height: 35px">' skip
+    '<TR style="height: 45px">' skip
     '<TD text_wrap="true" colspan = "4" rowspan = "2" style="text-align: center; border: 1px solid black;">№</TD>' skip
     '<TD text_wrap="true" colspan = "14" style="text-align: center; border: 1px solid black;">СУГ</TD>' skip
-    '<TD text_wrap="true" colspan = "8" rowspan = "2" style="text-align: center; border: 1px solid black;">Тип, номер резервуара</TD>' skip
-    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Уровень наполнения резервуара, %</TD>' skip
+    '<TD text_wrap="true" colspan = "6" rowspan = "2" style="text-align: center; border: 1px solid black;">Тип, номер резервуара</TD>' skip
+    '<TD text_wrap="true" colspan = "6" rowspan = "2" style="text-align: center; border: 1px solid black;">Тип ввода данных</TD>' skip
+    '<TD text_wrap="true" colspan = "6" rowspan = "2" style="text-align: center; border: 1px solid black;">Уровень напол. резервуара, %</TD>' skip
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Объем СУГ, л</TD>' skip
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Плотность СУГ, г/см3</TD>' skip
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Температура СУГ, °С</TD>' skip
@@ -380,7 +429,7 @@ procedure table-inv:
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг</TD>' skip
     '</TR>'skip       
 
-    '<TR style="height: 35px">' skip
+    '<TR style="height: 45px">' skip
     '<TD text_wrap="true" colspan = "9" style="text-align: center; border: 1px solid black;">наимен.</TD>' skip
     '<TD text_wrap="true" colspan = "5" style="text-align: center; border: 1px solid black;">код</TD>' skip
     '</TR>'skip                           
@@ -389,13 +438,14 @@ procedure table-inv:
     '<TD colspan = "4" style="text-align: center; border: 1px solid black;">1</TD>' skip
     '<TD colspan = "9" style="text-align: center; border: 1px solid black;">2</TD>' skip
     '<TD colspan = "5" style="text-align: center; border: 1px solid black;">3</TD>' skip
-    '<TD colspan = "8" style="text-align: center; border: 1px solid black;">4</TD>' skip
-    '<TD colspan = "10" style="text-align: center; border: 1px solid black;">5</TD>' skip
-    '<TD colspan = "10" style="text-align: center; border: 1px solid black;">6</TD>' skip
+    '<TD colspan = "6" style="text-align: center; border: 1px solid black;">4</TD>' skip
+    '<TD colspan = "6" style="text-align: center; border: 1px solid black;">5</TD>' skip
+    '<TD colspan = "6" style="text-align: center; border: 1px solid black;">6</TD>' skip
     '<TD colspan = "10" style="text-align: center; border: 1px solid black;">7</TD>' skip
     '<TD colspan = "10" style="text-align: center; border: 1px solid black;">8</TD>' skip
     '<TD colspan = "10" style="text-align: center; border: 1px solid black;">9</TD>' skip
     '<TD colspan = "10" style="text-align: center; border: 1px solid black;">10</TD>' skip
+    '<TD colspan = "10" style="text-align: center; border: 1px solid black;">11</TD>' skip
     '</TR>'skip     
     .
   for each tt-sug:
@@ -407,8 +457,9 @@ procedure table-inv:
       '<TD colspan = "4" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(j_LineCount + 1) + '</TD>' skip
       '<TD colspan = "9" text_wrap="true" style="text-align: center; border: 1px solid black;">' + tt-sug.gds-name + '</TD>' skip
       '<TD colspan = "5" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.gds-code) + '</TD>' skip
-      '<TD colspan = "8" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.pl-code_) + '</TD>' skip
-      '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;"></TD>' skip
+      '<TD colspan = "6" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.pl-code_) + '</TD>' skip
+      '<TD colspan = "6" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.type_dan) + '</TD>' skip
+      '<TD colspan = "6" text_wrap="true" style="text-align: center; border: 1px solid black;"></TD>' skip
 /*      '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.level,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.level,"->>>>>>>>>>>9.999",3) + '</TD>' skip*/
       '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-sug.volue,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.volue,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '<TD colspan = "10" text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-sug.density,"->>>>>>>>>>>9.9999",4) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-sug.density,"->>>>>>>>>>>9.9999",4) + '</TD>' skip

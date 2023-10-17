@@ -352,17 +352,7 @@ on stop   undo, leave
       view-as alert-box error.
     leave do1.
   end.
-  define variable updschmObj      as class ibs.th.adm.upd.updschm no-undo.
-  updschmObj = new ibs.th.adm.upd.updschm ().
-
-  if updschmObj:isNeedUpd
-  then do:
-     delete object updschmObj no-error.
-     leave do1.  
-  end.
-  delete object updschmObj no-error.
-
-
+  
  /*проерка кофигурационнго параметра */
    run gbl/conf-rd.p ("skt-serv":U, "":U, "":U, 0, "":U, "":U, "":U, yes, output v-par-val, output v-par-type) no-error.
    if error-status:error

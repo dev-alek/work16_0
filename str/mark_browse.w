@@ -846,7 +846,7 @@ DO:
       end .  
       else 
       do:
-         run save-mark .
+         return no-apply .
       end.
     end.
   END.
@@ -1427,11 +1427,11 @@ ON CHOOSE OF b_block IN FRAME d-mark /* Проверка */
         end.   
         recid_mark = recid (X_marking) .
         empty temp-table tt-gray-marking-lines .
-        br-mark :refresh().
+        browse br-mark :refresh().
         reposition br-mark to recid recid_mark no-error .
-        /*                  {&OPEN-BROWSERS-IN-QUERY-d-mark}*/
-        br-mark-item:refresh () no-error .
-
+        browse br-mark-item:refresh () no-error .
+        {&OPEN-BROWSERS-IN-QUERY-d-mark}
+        apply "value-changed" to br-mark in frame {&frame-name}.
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1655,7 +1655,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       IF p-value-logical = yes THEN  iLang = 68748313.
 
     run ActivateKeyboardLayout (input iLang, input 0).
-/*        run gbl/inidebug.p.*/
 /*    output to hhhhhhh.txt.       */
 /*    for each tt-marking-lines:   */
 /*        export tt-marking-lines .*/
@@ -1943,10 +1942,12 @@ PROCEDURE enable_UI :
         display qnty-mark with frame {&frame-name} .
         display qnty-mark-2 with frame {&frame-name} .
         hide f-qnty-unit in frame {&frame-name} .
+        hide f-qnty-bar-code  in frame {&frame-name} .
     end.
     else 
     do:  
         display f-qnty-unit with frame {&frame-name} .
+        display f-qnty-bar-code with frame {&frame-name} .
         hide qnty-mark   in frame {&frame-name} .
         hide qnty-mark-2 in frame {&frame-name} .
     end.
@@ -1988,6 +1989,7 @@ PROCEDURE save-mark :
             create ub.marking .
             assign
                 ub.marking.mark = X_marking-line.mark
+                ub.marking.box-qnty    = ?
                 .
         end.  
         v-GTIN = getGtinByDM(X_marking-line.mark) .
@@ -1999,7 +2001,7 @@ PROCEDURE save-mark :
             ub.marking.obj-type    = X_marking-line.obj-type
             ub.marking.mark-parent = mark-parent
             .
-            if v-edoc-type then ub.marking.sts = Marking:Checked_:KeyIntDB .
+        if v-edoc-type then ub.marking.sts = Marking:Checked_:KeyIntDB .
         ub.marking.unit-ext  = getLevelMotpByDM(X_marking-line.mark) .
         ub.marking.box-qnty  = getQntyUTDByDM(X_marking-line.mark) .
     /*          ub.marking.unit = getLevelUTDByDM(v-marking) .*/
@@ -2051,6 +2053,8 @@ PROCEDURE init-temp :
 /*        if tt-marking-lines.isMark*/
 /*        then                      */
            v-qnty-mark = v-qnty-mark + 1 .
+           if tt-marking-lines.sts-utd = Marking:Checked_:KeyIntDB then 
+             qnty-mark-2 = qnty-mark-2 + 1.
     end.  
 /*    end.*/
 

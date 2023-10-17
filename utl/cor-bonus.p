@@ -1,5 +1,5 @@
 /* def input parameter p-type as int. */
-
+{utl/runpro.i}
 def input parameter p-type as int.
 def input parameter p-obj as int.
 def input parameter p-date as date.

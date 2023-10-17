@@ -124,6 +124,7 @@ on error undo, return error return-value
        buf_user-account.position              = p-position
        buf_user-account.room                  = p-room
        buf_user-account.e-mail                = p-e-mail
+       buf_user-account.psn-code              = p-psn-code
        buf_user-account.internal-phone-number = p-internal-phone-number
        buf_user-account.PS                    = p-PS
     .

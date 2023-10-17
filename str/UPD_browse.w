@@ -88,6 +88,7 @@ define variable p-value-decimal    as decimal no-undo.
 define variable p-value-integer    as integer no-undo.
 define variable p-param-type       as character no-undo.
 define variable v-tth as handle no-undo .
+define variable log-edi-doc_update as logical no-undo .
 
 define variable Tree           as class     tree no-undo .
 
@@ -347,7 +348,9 @@ DEFINE MENU m_marks
 
 DEFINE MENU POPUP-MENU-b-servis 
    MENU-ITEM m_choose-status LABEL "Сменить статус документа"
-   MENU-ITEM m_check-akt    LABEL "Проверить по Акту приема-передачи".
+   MENU-ITEM m_check-akt    LABEL "Проверить по Акту приема-передачи"
+   MENU-ITEM m_reset_row_data LABEL "Сбросить данные по строке"
+   .
 
 
 /* Definitions of the field level widgets                               */
@@ -1790,6 +1793,8 @@ ON CHOOSE OF b_correct IN FRAME d-utd /* Запрос на изменение */
                   run Sendansver( buf_utd.db-num, buf_utd.doc-id, "CorrectionRequest", v-comment) no-error.    
                   if  error-status:error then 
                   do: 
+                     message return-value
+                          view-as alert-box.
                      return return-value .
                   end.
                end.
@@ -2427,6 +2432,8 @@ ON CHOOSE OF b_deliv-cancel IN FRAME d-utd /* Отказать в подписи */
                run SendAnsver(buf_utd.db-num, buf_utd.doc-id,"AcceptDocumentNotAccepted", "") no-error.
                if  error-status:error then 
                do: 
+                  message return-value
+                     view-as alert-box.
                   return return-value .
                end.
             end.
@@ -2604,6 +2611,52 @@ ON CHOOSE OF MENU-ITEM m_choose-status /* Сменить статус документа */
    DO:
       enable c-status with frame {&frame-name} . 
       if c-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB or c-type = objSrv:Env:Utd:EDocType:EDoc:KeyIntDB then enable c-status-edi with frame {&frame-name} . 
+   END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME m_reset_row_data
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_reset_row_data d-utd
+ON CHOOSE OF MENU-ITEM m_reset_row_data /* Сбросить данные по строке */
+   DO:
+      define buffer cancel_utd-marking-lines for ub.utd-marking-lines .
+      define buffer cancel_marking           for ub.marking .
+      define buffer buf_utd-lines-attr       for ub.utd-lines-attr .
+      define variable v-gds-code as integer no-undo.
+    
+      /*    if available (X_utd-lines) and X_utd-lines.stts <> "Проверен"  then*/
+      /*    do:                                                                */
+      if available (X_utd-lines) then 
+      do:
+         for each cancel_utd-marking-lines exclusive-lock where cancel_utd-marking-lines.doc-id  = x_utd-lines.doc-id
+            and cancel_utd-marking-lines.db-num  = x_utd-lines.db-num
+            and cancel_utd-marking-lines.lineNum = x_utd-lines.lineNum
+            and cancel_utd-marking-lines.sts = Marking:Checked_:KeyIntDB:
+            cancel_utd-marking-lines.sts = Marking:PendingVerification:KeyIntDB    .
+         end.
+         X_utd-lines.qnty-scan = 0 .
+         X_utd-lines.stts = "Ожидает проверку" .
+         if x_utd-lines.isMarking then 
+         do:
+            for first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.db-num = X_utd-lines.db-num and
+               buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
+               buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
+               buf_utd-lines-attr.attr-code = "QuantityBarCode":
+               buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) . 
+            end.      
+         end.
+         else 
+         do:   
+            for first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.db-num = X_utd-lines.db-num and
+               buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
+               buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
+               buf_utd-lines-attr.attr-code = "QuantityBarCode":
+               buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) .  
+            end.   
+         end.
+      end.
+      {&OPEN-QUERY-br-utd}      
    END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3460,6 +3513,21 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   0
   false
   log-res-statch
+}
+   { gbl/chk-actg.i
+  v-cntxt-db-num
+  v-cntxt-userid
+  {&action-head-code-main}
+  'actn_edi-doc_update':U
+  {&cntxt-firm}
+  v-cntxt-host-code-obj
+  '':U
+  0
+  0
+  0
+  0
+  false
+  log-edi-doc_update
 }
    { gbl/objat.i
       v-cntxt-obj-type
@@ -4460,6 +4528,14 @@ PROCEDURE enable_UI :
    do:
       menu-item m_choose-status:sensitive in menu POPUP-MENU-b-servis = no.
    end.  
+   if log-edi-doc_update and c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB and g#db-num <> 0 then 
+   do:
+      menu-item m_reset_row_data:sensitive in menu POPUP-MENU-b-servis = yes.
+   end.  
+   else 
+   do:
+      menu-item m_reset_row_data:sensitive in menu POPUP-MENU-b-servis = no.
+   end.  
    if not v-manual then 
    do:
       v-mark:READ-ONLY IN FRAME d-utd        = TRUE .
@@ -4892,15 +4968,17 @@ PROCEDURE mark-temp :
             end.  
          end.
 
-         X_utd-lines.qnty-mark = 0 .
-/*         X_utd-lines.qnty-scan = 0 .*/
+         assign
+           X_utd-lines.qnty-mark = 0
+           X_utd-lines.qnty-scan = 0 
+         .
          for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and
             buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum:
             find first buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark no-error .
             if buf_utd-marking-lines.doc-level = 1 then 
             do:
                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
-/*               if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1 .*/
+               if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1 .
             end .
             if  avail buf_marking and (
                buf_marking.sts = Marking:GrayZone:KeyIntDB or 
@@ -5099,10 +5177,13 @@ PROCEDURE save_mark :
    define VARIABLE v-rowid      as rowid     no-undo .
    define VARIABLE v-tbl-name   as character no-undo .
    define variable v-ungroup_ok as logical   no-undo .
+   define variable v-gds-code   as integer   no-undo.
+   define variable vFlag        as logical   no-undo.
+   
    b_cleaggds:sensitive in frame {&frame-name} = no.
    b_cleaggds:visible   in frame {&frame-name} = no.
    m-gds-code:visible   in frame {&frame-name} = no.
-   define variable v-gds-code as integer no-undo.
+   
    F-text = "" .
    f-text:screen-value in frame {&frame-name} = "" .
    v-GTIN = "" .
@@ -5122,7 +5203,6 @@ PROCEDURE save_mark :
       end.
    end.
    mMRCCode  = no.
-/*run gbl/inidebug.p.*/
    v-marking = GetCodeIdent(v-mark) .
 /*   mMRCCode = no.*/
    if v-marking = "" or v-marking = ? then 
@@ -5137,17 +5217,6 @@ PROCEDURE save_mark :
    /*УПД проверка марок*/
    if p-type = objSrv:Env:Utd:EDocType:UTD:KeyIntDB then 
    do:
-      define variable vFlag as logical no-undo.
-      run checkEMRC(v-mark, output vFlag).
-      if not vFlag
-      then do:
-         F-text = "МРЦ на упаковке меньше ЕМЦ. Приемка товара запрещена." .
-         display F-text with frame {&frame-name}.
-         v-mark:screen-value = "" .
-         v-mark = "" .
-         return no-apply.
-      end.
-         
       /*Проверка марки*/
       /*           f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .                                                                      */
       /*      if F-text = "" then do:                                                                                                                          */
@@ -5163,6 +5232,15 @@ PROCEDURE save_mark :
          and buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
       if available (buf_utd-marking-lines) then
       do:
+         run checkEMRC(v-mark, output vFlag).
+         if not vFlag
+         then do:
+            F-text = "МРЦ на упаковке меньше ЕМЦ. Приемка товара запрещена." .
+            display F-text with frame {&frame-name}.
+            v-mark:screen-value = "" .
+            v-mark = "" .
+            return no-apply.
+         end.
          if CheckErrForMarkLine(buffer buf_utd-marking-lines:handle)
          then do:
             F-text = "Товар не подлежит приемке, т.к. не прошел проверку на корректность" .

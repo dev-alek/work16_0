@@ -239,6 +239,7 @@ abc-analysis-gds-obj~
 ,utd-marking-lines~
 ,marking~
 ,c-contract-specif-attr~
+,c-marking~
 ":U
 
 procedure valid-ren-gdsc-tbl-list :

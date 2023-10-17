@@ -112,6 +112,15 @@ prod-type
 prod-code
 .
 
+define temp-table ttDump no-undo
+   field BegTime as datetime
+   field EndTime as datetime
+   index bt BegTime
+   index et EndTime
+   . 
+   
+def stream out_s.
+
 procedure lib-trn3_add-scal :
   define input parameter parparentproc as widget-handle no-undo .
   define input parameter p-obj-type   like ub.clients.obj-type no-undo .
@@ -2608,6 +2617,9 @@ procedure lib-trn3_avrgdens :
   :
     define variable is-petrol       as logical   no-undo .
     define variable is-pieces       as logical   no-undo .
+    define variable v-host-code     as integer   no-undo .
+    define variable v-avrgdens      as character no-undo .
+    define variable v-data-type     as character no-undo .
     define variable from_fact-order as decimal   no-undo .
 
     define variable v-density-acc   as decimal   no-undo .
@@ -2639,11 +2651,16 @@ procedure lib-trn3_avrgdens :
     define buffer buf_doc-line       for ub.doc-line .
     define buffer buf_doc-pl         for ub.doc-pl .
     define buffer buf_pl-gds         for ub.pl-gds .
+    define buffer buf_doc-attr       for doc-attr.
     define variable v-attr-type            as character  no-undo.
     define variable v-gds-ptrl-densities   as character  no-undo.
     define variable v-min-dens             as   decimal  no-undo.
     define variable v-max-dens             as   decimal  no-undo.
-    
+    define variable v-delta             as   decimal  no-undo.
+    define variable v-prev-rvs-doc   as character no-undo.
+    define variable v-next-rvs-doc   as character no-undo.
+    define variable vNeedSkip        as logical   no-undo.
+     
     find first buf_goods no-lock
       where buf_goods.gds-code = p-gds-code
       no-error.
@@ -2662,6 +2679,7 @@ procedure lib-trn3_avrgdens :
     define variable is-vir as logical no-undo.
     define variable v-value as character no-undo.
     define variable v-ok as logical no-undo.
+    define variable vAutoRvd as logical no-undo.
     
     run placelib_get-attr(input {&place-virtual}
                          ,input p-obj-code
@@ -2766,6 +2784,8 @@ procedure lib-trn3_avrgdens :
               v-next-density    = ?
               v-prev-density    = ?
               v-num-rvs         = 0
+              v-prev-rvs-doc    = ""
+              v-next-rvs-doc    = ""
             .
 
             if available buf-prev_rvs-line then do:
@@ -2777,7 +2797,14 @@ procedure lib-trn3_avrgdens :
                 v-num-rvs         = 1
               .
             end.
-
+            
+            run CrTempDump (p-obj-type,
+                            p-obj-code, 
+                            p-shift-date,
+                            p-shift-num,
+                            p-pl-code,
+                            buf_goods.gds-code).
+            rvsdoc:
             for each buf_rvs-doc no-lock
               where buf_rvs-doc.obj-type   = p-obj-type
                 and buf_rvs-doc.obj-code   = p-obj-code
@@ -2793,6 +2820,11 @@ procedure lib-trn3_avrgdens :
               by buf_rvs-doc.fact-order
             on error undo, return error substitute( "&1 (lib-trn3_avrgdens). &2 ", vss-workfile, return-value )
             :
+                /* сверку до и сверку после пропускаем */
+              if buf_rvs-doc.rvs-type  = {&rvs-before-doc} or 
+                 buf_rvs-doc.rvs-type  = {&rvs-after-doc}
+                 then next rvsdoc.
+                 
               assign
                 v-num-rvs = v-num-rvs + 1
               .
@@ -2813,14 +2845,25 @@ procedure lib-trn3_avrgdens :
                       and v-prev-time = buf_rvs-doc.sys-time-int
                       and v-prev-fact-order < buf_rvs-doc.fact-order
                     )
-                then do:
-                  assign
-                    v-prev-date       = buf_rvs-doc.sys-date
-                    v-prev-time       = buf_rvs-doc.sys-time-int
-                    v-prev-density    = buf_rvs-line.state-density
-                    v-prev-fact-order = buf_rvs-doc.fact-order
-                  .
-                end.
+                then do:   
+                   run ChkRvsSkip(buf_rvs-line.obj-type,
+                                  buf_rvs-line.obj-code,
+                                  buf_rvs-line.rvs-code,
+                                  buf_rvs-line.pl-code,
+                                  buf_rvs-line.gds-code,
+                                  buf_rvs-doc.sys-date,
+                                  buf_rvs-doc.sys-time-int,
+                                  output vNeedSkip).
+                   if vNeedSkip then .
+                   else
+                     assign
+                       v-prev-date       = buf_rvs-doc.sys-date
+                       v-prev-time       = buf_rvs-doc.sys-time-int
+                       v-prev-density    = buf_rvs-line.state-density
+                       v-prev-fact-order = buf_rvs-doc.fact-order
+                       v-prev-rvs-doc    = buf_rvs-doc.rvs-code
+                     .
+                end.               
               end.
               if buf_rvs-doc.sys-date > p-fact-date
                 or ( buf_rvs-doc.sys-date = p-fact-date
@@ -2840,16 +2883,42 @@ procedure lib-trn3_avrgdens :
                         and v-next-fact-order > buf_rvs-doc.fact-order
                       )
                 then do:
-                  assign
-                    v-next-date       = buf_rvs-doc.sys-date
-                    v-next-time       = buf_rvs-doc.sys-time-int
-                    v-next-density    = buf_rvs-line.state-density
-                    v-next-fact-order = buf_rvs-doc.fact-order
-                  .
+                   run ChkRvsSkip(buf_rvs-line.obj-type,
+                                  buf_rvs-line.obj-code,
+                                  buf_rvs-line.rvs-code,
+                                  buf_rvs-line.pl-code,
+                                  buf_rvs-line.gds-code,
+                                  buf_rvs-doc.sys-date,
+                                  buf_rvs-doc.sys-time-int,
+                                  output vNeedSkip).
+                   if vNeedSkip then .
+                   else
+                     assign
+                       v-next-date       = buf_rvs-doc.sys-date
+                       v-next-time       = buf_rvs-doc.sys-time-int
+                       v-next-density    = buf_rvs-line.state-density
+                       v-next-fact-order = buf_rvs-doc.fact-order
+                       v-next-rvs-doc    = buf_rvs-doc.rvs-code
+                     .                  
                 end.
               end. /* date & time */
             end. /* for each buf_rvs-doc, first buf_rvs-line */
-
+            
+            empty temp-table ttDump.
+            if session:debug-alert
+            then do:
+             OUTPUT STREAM out_s TO "avrgdens.log" APPEND. 
+               put stream out_s unformatted "Расчет средней плотности чека. Время чека: " 
+               datetime(p-fact-date, (p-fact-time * 1000 ))  
+               " Сверка до " v-prev-rvs-doc 
+               " Время " datetime(v-prev-date, (v-prev-time * 1000 ))
+               " Плотность " v-prev-density 
+               " Сверка после " v-next-rvs-doc 
+               " Время " datetime(v-next-date, (v-next-time * 1000 ))
+               " Плотность " v-next-density
+               skip.
+               OUTPUT STREAM out_s CLOSE.
+            end.   
             if v-num-rvs = 0 then do:
               undo, return error substitute( 'lib-trn3_avrgdens: нет ни одной сверки за смену &1 &2 и нет сменной сверки за предыдущую смену на объекте &3 &4 по месту хранения &5'
                                             ,p-shift-num
@@ -5101,5 +5170,155 @@ k = 0.
 
   end.
 end procedure. /* lib-trn3_avprpart */
+
+
+/* создание временной таблицы с временем начала и окончания слива */
+procedure CrTempDump:
+   define input parameter p-obj-type as character no-undo.
+   define input parameter p-obj-code as integer no-undo. 
+   define input parameter p-shift-date as date no-undo.
+   define input parameter p-shift-num as integer no-undo.
+   define input parameter p-pl-code as integer no-undo.
+   define input parameter p-gds-code as integer no-undo.
+      
+   define buffer buf_rvs-doc for ub.rvs-doc.
+   define buffer buf_rvs-line for ub.rvs-line.
+   define buffer buf_rvs-doc_end for ub.rvs-doc. 
+   define buffer buf_doc-line-attr  for ub.doc-line-attr.
+   define buffer buf_doc-line-attr1 for ub.doc-line-attr.
+   
+   define variable vBegTime as datetime no-undo.
+   define variable vEndTime as datetime no-undo. 
+   define variable vTimeAutoSkip as integer no-undo.
+   
+   /* определяем продолжительность пропуска автосверки после приема НП */
+   vTimeAutoSkip = if ptrlprop-autopump-skip-time <> ? then ptrlprop-autopump-skip-time else 0.
+        
+   /* отбираем все сверки до */
+   rvsdoc:            
+   for each buf_rvs-doc no-lock
+        where buf_rvs-doc.obj-type   = p-obj-type
+          and buf_rvs-doc.obj-code   = p-obj-code
+          and buf_rvs-doc.shift-date = p-shift-date
+          and buf_rvs-doc.shift-num  = p-shift-num
+          and buf_rvs-doc.status_    = {&fact}
+          and buf_rvs-doc.rvs-type  = {&rvs-before-doc}
+        ,first buf_rvs-line no-lock
+        where buf_rvs-line.rvs-code   = buf_rvs-doc.rvs-code
+          and buf_rvs-line.obj-type   = buf_rvs-doc.obj-type
+          and buf_rvs-line.obj-code   = buf_rvs-doc.obj-code
+          and buf_rvs-line.pl-code    = p-pl-code
+          and buf_rvs-line.gds-code   = p-gds-code:
+             
+      /* ищем сверку после */       
+      find first  buf_rvs-doc_end no-lock 
+           where buf_rvs-doc_end.rvs-type = {&rvs-after-doc}
+          and buf_rvs-doc_end.out-code =  buf_rvs-doc.out-code
+          no-error.
+      if not avail buf_rvs-doc_end then next  rvsdoc.    
+      
+      /* ищем атрибуты накладной с временем начала и окончания слива */ 
+      find first buf_doc-line-attr no-lock where 
+                 buf_doc-line-attr.doc-code = buf_rvs-doc.out-code
+             and buf_doc-line-attr.gds-code = buf_rvs-line.gds-code
+             and buf_doc-line-attr.attr-code begins "date-start"
+         no-error.
+      find first buf_doc-line-attr1 no-lock where 
+                 buf_doc-line-attr1.doc-code = buf_rvs-doc.out-code
+             and buf_doc-line-attr1.gds-code = buf_rvs-line.gds-code
+             and buf_doc-line-attr1.attr-code begins "time-start"
+         no-error.       
+      if available buf_doc-line-attr and 
+         available buf_doc-line-attr1 
+      then  vBegTime = datetime(date(buf_doc-line-attr.attr-value), (int(buf_doc-line-attr1.attr-value) * 1000 )).
+      else  vBegTime = datetime(buf_rvs-doc.sys-date, (buf_rvs-doc.sys-time-int * 1000 )).
+         
+      find first buf_doc-line-attr no-lock where 
+                 buf_doc-line-attr.doc-code = buf_rvs-doc.out-code
+             and buf_doc-line-attr.gds-code = buf_rvs-line.gds-code
+             and buf_doc-line-attr.attr-code begins "date-end"
+         no-error.
+      find first buf_doc-line-attr1 no-lock where 
+                 buf_doc-line-attr1.doc-code = buf_rvs-doc.out-code
+             and buf_doc-line-attr1.gds-code = buf_rvs-line.gds-code
+             and buf_doc-line-attr1.attr-code begins "time-end"
+         no-error.       
+      if available buf_doc-line-attr and 
+         available buf_doc-line-attr1 
+      then  vEndTime = datetime(date(buf_doc-line-attr.attr-value), ((int(buf_doc-line-attr1.attr-value) + vTimeAutoSkip * 60) * 1000 )).  
+      else  vEndTime = datetime(buf_rvs-doc_end.sys-date, ((buf_rvs-doc_end.sys-time-int + vTimeAutoSkip * 60) * 1000 )).        
+      /* определяем время фиксации показателей */
+      create ttDump.
+      assign
+         ttDump.BegTime = vBegTime
+         ttDump.EndTime = vEndTime 
+         .  
+      if session:debug-alert
+      then do:
+         OUTPUT STREAM out_s TO "avrgdens.log" APPEND. 
+         put stream out_s unformatted "Приемка топлива: "          
+         " Начало слива " ttDump.BegTime 
+         " Конец слива плюс время пропуска после слива " ttDump.EndTime
+         " Время пропуска автосверок после слива " vTimeAutoSkip
+         " Топливо " p-pl-code 
+         " Код товара " p-gds-code
+         skip.
+         OUTPUT STREAM out_s CLOSE.
+      end.       
+   end.          
+   
+end procedure. /* CrTempDump */
+
+procedure ChkRvsSkip:
+   define input parameter p-obj-type     as character no-undo.
+   define input parameter p-obj-code     as integer   no-undo. 
+   define input parameter p-rvs-code     as character no-undo.
+   define input parameter p-pl-code      as integer   no-undo.
+   define input parameter p-gds-code     as integer   no-undo.
+   define input parameter p-sys-date     as date      no-undo.
+   define input parameter p-sys-time-int as integer   no-undo.
+   define output parameter vNeedSkip     as logical   no-undo.
+   
+   define buffer buf_doc-attr      for ub.doc-attr.
+   define buffer buf_rvs-line-attr for ub.rvs-line-attr.
+   
+   vNeedSkip = no.
+   /* автосверку в РВД режиме пропускаем */
+   if can-find(first buf_doc-attr no-lock where 
+                     buf_doc-attr.doc-code = p-rvs-code 
+                 and buf_doc-attr.attr-code = "rvs-auto" 
+                 and buf_doc-attr.attr-value = "Yes") 
+       and can-find(first buf_rvs-line-attr no-lock where 
+                          buf_rvs-line-attr.obj-code  = p-obj-code
+                      and buf_rvs-line-attr.obj-type  = p-obj-type
+                      and buf_rvs-line-attr.gds-code  = p-gds-code
+                      and buf_rvs-line-attr.pl-code   = p-pl-code
+                      and buf_rvs-line-attr.rvs-code  = p-rvs-code 
+                      and buf_rvs-line-attr.attr-code = "rvd-on"
+                      and buf_rvs-line-attr.attr-value > "")
+   then vNeedSkip = yes.
+   else do:                         
+      /* проверяем, что мы не попали во временной период слива */
+      find first ttDump where 
+                 ttDump.BegTime <= datetime(p-sys-date, (p-sys-time-int * 1000 )) 
+             and ttDump.EndTime >= datetime(p-sys-date, (p-sys-time-int * 1000 ))
+             no-error.
+      if available ttDump then do:
+         if session:debug-alert
+         then do:
+            OUTPUT STREAM out_s TO "avrgdens.log" APPEND. 
+            put stream out_s unformatted "Пропуск автосверки из-за попадания в период слива: " 
+            " Время сверки " datetime(p-sys-date, (p-sys-time-int * 1000 )) 
+            " Начало слива " ttDump.BegTime 
+            " Конец слива плюс время пропуска после слива " ttDump.EndTime
+            " Топливо " p-pl-code
+            " Код товара " p-gds-code
+            skip.
+            OUTPUT STREAM out_s CLOSE.     
+         end.   
+         vNeedSkip = yes.
+      end.   
+   end.    
+end procedure. /* ChkRvsRvd */   
 
 /* $Workfile$   E n d */

@@ -50,10 +50,11 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
 
     find first buf_marking no-lock where buf_marking.mark-parent = mark no-error .
     if available (buf_marking) then do:
-      if can-find(first buf_marking-lines no-lock where buf_marking-lines.obj-code = obj-code and buf_marking-lines.obj-type = obj-type
-        and buf_marking-lines.mark = buf_marking.mark and buf_marking-lines.in-code = in-code and buf_marking-lines.out-code = out-code)
-      then return yes .
-      else return no .      
+      for first buf_marking-lines no-lock where buf_marking-lines.obj-type = obj-type and buf_marking-lines.obj-code = obj-code
+        and buf_marking-lines.mark = buf_marking.mark and buf_marking-lines.in-code = in-code and buf_marking-lines.out-code = out-code:
+        return yes .
+      end.
+      return no .      
     end.  
     else return no .  
       

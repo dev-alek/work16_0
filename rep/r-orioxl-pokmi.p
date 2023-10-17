@@ -39,6 +39,7 @@ define variable vss-description as character no-undo initial "Инвентаризационная
 { rep/html-conv.i }
 { str/is-sug.i }
 { str/placelib.i }
+{ rep/c-place-attr.i }
 
 define variable g#report-num  as integer no-undo .
 define variable g#quest-print as logical no-undo initial yes .
@@ -85,179 +86,183 @@ define variable v-loc1              as character no-undo .
 define variable pl-error-mass       as decimal   no-undo .
 
 define temp-table tt-petrol
-   field gds-code as integer
-   field gds-name as character
-   field pl-code  as integer
-   field pl-code_ as character
-   field pl-type  as character
-   field level    as decimal
-   field volue    as decimal
-   field density  as decimal
-   field temp     as decimal
-   field qnty     as decimal
-   field delta    as decimal
-   field density1 as decimal
-   field temp1    as decimal
-   field qnty1    as decimal
-   field delta1   as decimal
-   field name-pl  as character
-   field volue-pl as decimal
-   field log-pl   as character 
-   field place-num as character
-   field place-type as character
-   index pi gds-code pl-code .
+  field gds-code   as integer
+  field gds-name   as character
+  field pl-code    as integer
+  field pl-code_   as character
+  field pl-type    as character
+  field level      as decimal
+  field volue      as decimal
+  field density    as decimal
+  field temp       as decimal
+  field qnty       as decimal
+  field delta      as decimal
+  field density1   as decimal
+  field temp1      as decimal
+  field qnty1      as decimal
+  field delta1     as decimal
+  field name-pl    as character
+  field volue-pl   as decimal
+  field log-pl     as character 
+  field place-num  as character
+  field place-type as character
+  field type_dan   as character
+  index pi gds-code pl-code .
 
 
-define buffer bf_trn-doc  for ub.trn-doc  .
-define buffer bf_rvs-doc  for ub.rvs-doc  .
-define buffer bf_rvs-line for ub.rvs-line .
-define buffer bf_goods    for ub.goods    .
-define buffer bf_object   for ub.clients  .
-define buffer bf_place    for ub.place    .
-define buffer bf_doc-line for ub.doc-line.
+define buffer bf_trn-doc         for ub.trn-doc  .
+define buffer bf_rvs-doc         for ub.rvs-doc  .
+define buffer bf_rvs-line        for ub.rvs-line .
+define buffer bf_goods           for ub.goods    .
+define buffer bf_object          for ub.clients  .
+define buffer bf_place           for ub.place    .
+define buffer bf_doc-line        for ub.doc-line.
+define buffer bf_c-place-attr    for ub.c-place-attr .
+define buffer after_c-place-attr for ub.c-place-attr .
+define buffer befor_c-place-attr for ub.c-place-attr .
 
 &scop f-l MonthNameRusCase,Sparse
 
 do
-   on error undo, return error return-value
-   :
-   run WaitFram-Show in this-procedure
-      ( input 'Идет формирование отчета, ждите...'
-      ) .
-   run get-report-num  in p-parent-proc
-      (
-      output g#report-num
-      ) .
-   run get-quest-print in p-parent-proc
-      (
-      output g#quest-print
-      ) .
-   find first bf_trn-doc no-lock where
-      recid( bf_trn-doc ) = p-rec-invent no-error .
-   if not available bf_trn-doc
-      then 
-   do:
-      run waitfram-hide in this-procedure .
-      message substitute( 'Не найден документ с идентификатором &1.'
-         , p-rec-invent
-         )
-         view-as alert-box error .
-      undo, return error .
-   end.
-   if bf_trn-doc.doc-type     <> {&inventory} or
-      bf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
-      then 
-   do:
-      run waitfram-hide in this-procedure .
-      message
-         'Данная форма только для печати инвентаризации.'
-         view-as alert-box error .
-      undo, return error .
-   end.
-   find first bf_rvs-doc no-lock where
-      bf_rvs-doc.rvs-code = bf_trn-doc.out-code no-error .
-   if not available bf_rvs-doc
-      then 
-   do:
-      run waitfram-hide in this-procedure .
-      message substitute( 'Не найдена сверка к документу "&1".'
-         , bf_trn-doc.doc-code
-         )
-         view-as alert-box error .
-      undo, return error .
-   end.
-   if bf_rvs-doc.rvs-type <> {&rvs-control}
-      then 
-   do:
-      run waitfram-hide in this-procedure .
-      message substitute( 'Сверка имеет тип "&1", а должен быть "&2".'
-         , bf_rvs-doc.rvs-type
-         , {&rvs-control}
-         )
-         view-as alert-box error .
-      undo, return error .
-   end.
-   find first bf_object no-lock where
-      bf_object.obj-type = bf_trn-doc.obj-type and
-      bf_object.obj-code = bf_trn-doc.obj-code .
-      { gbl/hostname.i
+  on error undo, return error return-value
+  :
+  run WaitFram-Show in this-procedure
+    ( input 'Идет формирование отчета, ждите...'
+    ) .
+  run get-report-num  in p-parent-proc
+    (
+    output g#report-num
+    ) .
+  run get-quest-print in p-parent-proc
+    (
+    output g#quest-print
+    ) .
+  find first bf_trn-doc no-lock where
+    recid( bf_trn-doc ) = p-rec-invent no-error .
+  if not available bf_trn-doc
+    then 
+  do:
+    run waitfram-hide in this-procedure .
+    message substitute( 'Не найден документ с идентификатором &1.'
+      , p-rec-invent
+      )
+      view-as alert-box error .
+    undo, return error .
+  end.
+  if bf_trn-doc.doc-type     <> {&inventory} or
+    bf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
+    then 
+  do:
+    run waitfram-hide in this-procedure .
+    message
+      'Данная форма только для печати инвентаризации.'
+      view-as alert-box error .
+    undo, return error .
+  end.
+  find first bf_rvs-doc no-lock where
+    bf_rvs-doc.rvs-code = bf_trn-doc.out-code no-error .
+  if not available bf_rvs-doc
+    then 
+  do:
+    run waitfram-hide in this-procedure .
+    message substitute( 'Не найдена сверка к документу "&1".'
+      , bf_trn-doc.doc-code
+      )
+      view-as alert-box error .
+    undo, return error .
+  end.
+  if bf_rvs-doc.rvs-type <> {&rvs-control}
+    then 
+  do:
+    run waitfram-hide in this-procedure .
+    message substitute( 'Сверка имеет тип "&1", а должен быть "&2".'
+      , bf_rvs-doc.rvs-type
+      , {&rvs-control}
+      )
+      view-as alert-box error .
+    undo, return error .
+  end.
+  find first bf_object no-lock where
+    bf_object.obj-type = bf_trn-doc.obj-type and
+    bf_object.obj-code = bf_trn-doc.obj-code .
+  { gbl/hostname.i
       bf_trn-doc.obj-type
       bf_trn-doc.obj-code
       p-host-code
       v-host-name
       no-error
   }
-   if error-status :error
-      then 
-   do:
-      run waitfram-hide in this-procedure .
-      message
-         'Не могу определить текущую фирму.'
-         view-as alert-box error .
-      undo, return error .
-   end.
-   if bf_trn-doc.host-code <> p-host-code
-      then 
-   do:
-      run waitfram-hide in this-procedure .
-      message
-         'Ошибка определения текущей фирмы.'
-         view-as alert-box error .
-      undo, return error .
-   end.
-   assign
-      t_inv-date = ( if bf_trn-doc.status_ = {&fact} then bf_trn-doc.fact-date else bf_trn-doc.doc-date )
-      .
+  if error-status :error
+    then 
+  do:
+    run waitfram-hide in this-procedure .
+    message
+      'Не могу определить текущую фирму.'
+      view-as alert-box error .
+    undo, return error .
+  end.
+  if bf_trn-doc.host-code <> p-host-code
+    then 
+  do:
+    run waitfram-hide in this-procedure .
+    message
+      'Ошибка определения текущей фирмы.'
+      view-as alert-box error .
+    undo, return error .
+  end.
+  assign
+    t_inv-date = ( if bf_trn-doc.status_ = {&fact} then bf_trn-doc.fact-date else bf_trn-doc.doc-date )
+    .
 
-   /*печать*/
-   run get-report-num (output p-report-id).
+  /*печать*/
+  run get-report-num (output p-report-id).
     
-   v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
-   output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
-   put stream OutStr-html unformatted
-      "<!DOCTYPE HTML>" skip
-      ' <html>' skip
-      '  <head>' skip
-      '   <meta charset="utf-8">' skip
-      '    <style type="text/css">' skip
+  v-file-name-rep-htm = session:temp-directory + string(p-report-id) + ".html".   
+  output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
+  put stream OutStr-html unformatted
+    "<!DOCTYPE HTML>" skip
+    ' <html>' skip
+    '  <head>' skip
+    '   <meta charset="utf-8">' skip
+    '    <style type="text/css">' skip
                         
-      '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-      '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
-      '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
-      '   </style>' skip
-      '  </head>' skip
-      .
+    '      table ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      .class1 ' + chr(123) + ' border-collapse: collapse; ' + chr(125) skip
+    '      tbody td, th ' + chr(123) + ' border-collapse: collapse; border: 1px solid black; height: 14px;' + chr(125) skip
+    '   </style>' skip
+    '  </head>' skip
+    .
 
-   { rep/r-orioxl-pokmi.i }                      
-   run shapka-inv .
-   run data-print .
-   run table-inv .
-   run foot-inv .
+  { rep/r-orioxl-pokmi.i }                      
+  run shapka-inv .
+  run data-print .
+  run table-inv .
+  run foot-inv .
 
-   put stream OutStr-html unformatted
-      '</tfoot>' skip
-      '</table>' skip
-      '</body>' skip
-      '</html>' skip
-      .
-   output stream OutStr-html close.     
+  put stream OutStr-html unformatted
+    '</tfoot>' skip
+    '</table>' skip
+    '</body>' skip
+    '</html>' skip
+    .
+  output stream OutStr-html close.     
                                                                                                                 
-   run prn-lib-reportviewer-report-name in this-procedure (
-      input this-procedure
-      ,input v-file-name-rep-htm
-      ) no-error .
-   if error-status:error then
-   do:
-      message return-value view-as alert-box.
-      return .
-   end.
+  run prn-lib-reportviewer-report-name in this-procedure (
+    input this-procedure
+    ,input v-file-name-rep-htm
+    ) no-error .
+  if error-status:error then
+  do:
+    message return-value view-as alert-box.
+    return .
+  end.
         
 procedure data-print :
-   next_:
-   for each  bf_rvs-line no-lock where
-      bf_rvs-line.rvs-code = bf_rvs-doc.rvs-code  and
-      bf_rvs-line.obj-type = bf_rvs-doc.obj-type  and
-      bf_rvs-line.obj-code = bf_rvs-doc.obj-code
+  next_:
+  for each  bf_rvs-line no-lock where
+    bf_rvs-line.rvs-code = bf_rvs-doc.rvs-code  and
+    bf_rvs-line.obj-type = bf_rvs-doc.obj-type  and
+    bf_rvs-line.obj-code = bf_rvs-doc.obj-code
        
       , first bf_goods    no-lock where
       bf_goods.gds-code = bf_rvs-line.gds-code 
@@ -304,6 +309,9 @@ procedure data-print :
          tt-petrol.qnty1    = round((tt-petrol.volue-pl * tt-petrol.density),0)
          tt-petrol.pl-type  = "трубопровод"
          .
+    find first c-rvs-doc no-lock where c-rvs-doc.rvs-code = bf_rvs-doc.rvs-code and c-rvs-doc.obj-code = bf_rvs-doc.obj-code and
+      c-rvs-doc.obj-type = bf_rvs-doc.obj-type and c-rvs-doc.status_ = {&permitted} .
+
       for each rvs-line-attr no-lock
          where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
          and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
@@ -326,7 +334,9 @@ procedure data-print :
                end.        
          end case.
       end.  
-
+    define variable pl-rvd-dens as logical   no-undo .
+    define variable pl-rvd-lvl  as logical   no-undo .
+    define variable pl-rvd-temp as logical   no-undo .
       define variable v-value as character no-undo .
       define variable v-ok    as logical   no-undo .
       run placelib_get-attr  ( input {&place-error-mass}
@@ -343,162 +353,203 @@ procedure data-print :
       if v-loc1 <> "" then  tt-petrol.pl-code_ = string(bf_place.loc1) + "," + v-loc1 .
       else tt-petrol.pl-code_ = string(bf_place.loc1) .
       
-     run placelib_get-attr  ( input {&place-passp-num}
+    run placelib_get-attr  ( input {&place-passp-num}
       ,input bf_place.obj-code
       ,input bf_place.obj-type
       ,input bf_place.pl-code
       ,output v-value
       ,output v-ok      ) no-error.
       
-      tt-petrol.place-num = v-value .
+    tt-petrol.place-num = v-value .
 
-     run placelib_get-attr  ( input {&place-passp-type}
+    run placelib_get-attr  ( input {&place-passp-type}
       ,input bf_place.obj-code
       ,input bf_place.obj-type
       ,input bf_place.pl-code
       ,output v-value
       ,output v-ok      ) no-error.
       
-      tt-petrol.place-type = v-value .
+    tt-petrol.place-type = v-value .
 
-   end. /* for each bf_rvs-line */
+    if not get_meas(bf_rvs-line.obj-code, bf_rvs-line.obj-type, bf_rvs-line.pl-code, c-rvs-doc.fact-date, c-rvs-doc.fact-time) then
+      tt-petrol.type_dan = "PВД" .
+    else 
+    do:
+      run c-place_get-attr (input {&place-rvd-lvl}
+        ,input bf_rvs-line.obj-code
+        ,input bf_rvs-line.obj-type
+        ,input bf_rvs-line.pl-code
+        ,input c-rvs-doc.fact-date
+        ,input c-rvs-doc.fact-time
+        ,output v-value ) no-error .
+      
+      if v-value = "" then pl-rvd-lvl = false .
+      else pl-rvd-lvl = not logical(v-value) .
+  
+      run c-place_get-attr (input {&place-rvd-tmp}
+        ,input bf_rvs-line.obj-code
+        ,input bf_rvs-line.obj-type
+        ,input bf_rvs-line.pl-code
+        ,input c-rvs-doc.fact-date
+        ,input c-rvs-doc.fact-time
+        ,output v-value ) no-error .
+      if v-value = "" then pl-rvd-temp = false .
+      else pl-rvd-temp = not logical(v-value) . 
+      
+      run c-place_get-attr (input {&place-rvd-dnsty}
+        ,input bf_rvs-line.obj-code
+        ,input bf_rvs-line.obj-type
+        ,input bf_rvs-line.pl-code
+        ,input c-rvs-doc.fact-date
+        ,input c-rvs-doc.fact-time
+        ,output v-value ) no-error .
+      if v-value = "" then pl-rvd-dens = false .
+      else pl-rvd-dens = not logical(v-value) .
+            
+      if pl-rvd-dens or pl-rvd-lvl or pl-rvd-temp then tt-petrol.type_dan = "PВД" .
+      else tt-petrol.type_dan = "AВД" .
+    end.
+
+  end. /* for each bf_rvs-line */
 end procedure .
-   run waitfram-hide  in this-procedure .
+  run waitfram-hide  in this-procedure .
 end. /* on error */
 
 
 
 
 procedure table-inv:
-   put stream OutStr-html unformatted
-      '<Thead>' skip
-      '<TR><TD colspan="86" style="height: 14px;"></TD></TR>' skip
-      '<TR><TD colspan="86">При инвентаризации в резервуарах АЗС/АЗК установлено следующее:</TD></TR>' skip
-      '</Thead>' skip
-      .  
-   put stream OutStr-html unformatted
-      '<TR style="height: 55px">' skip
-      '<TD text_wrap="true" colspan = "4" rowspan = "2" style="text-align: center; border: 1px solid black;">№</TD>' skip
-      '<TD text_wrap="true" colspan = "14" style="text-align: center; border: 1px solid black;">Нефтепродукт</TD>' skip
-      '<TD text_wrap="true" colspan = "15" rowspan = "2" style="text-align: center; border: 1px solid black;">Тип, номер резервуара</TD>' skip
-      '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Уровень наполнения резервуара, мм</TD>' skip
-      '<TD text_wrap="true" colspan = "8" rowspan = "2" style="text-align: center; border: 1px solid black;">Объем нефтепродукта, м3</TD>' skip
-      '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Плотность нефтепродукта, кг/м3</TD>' skip
-      '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Температура нефтепродукта, °С</TD>' skip
-      '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Масса нефтепродукта, кг</TD>' skip
-      '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг</TD>' skip
-      '</TR>'skip       
+  put stream OutStr-html unformatted
+    '<Thead>' skip
+    '<TR><TD colspan="86" style="height: 14px;"></TD></TR>' skip
+    '<TR><TD colspan="86">При инвентаризации в резервуарах АЗС/АЗК установлено следующее:</TD></TR>' skip
+    '</Thead>' skip
+    .  
+  put stream OutStr-html unformatted
+    '<TR style="height: 55px">' skip
+    '<TD text_wrap="true" colspan = "4" rowspan = "2" style="text-align: center; border: 1px solid black;">№</TD>' skip
+    '<TD text_wrap="true" colspan = "14" style="text-align: center; border: 1px solid black;">Нефтепродукт</TD>' skip
+    '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Тип, номер резервуара</TD>' skip
+    '<TD text_wrap="true" colspan = "6" rowspan = "2" style="text-align: center; border: 1px solid black;">Тип ввода данных</TD>' skip
+    '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Уровень наполнения резервуара, мм</TD>' skip
+    '<TD text_wrap="true" colspan = "8" rowspan = "2" style="text-align: center; border: 1px solid black;">Объем нефтепродукта, м3</TD>' skip
+    '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Плотность нефтепродукта, кг/м3</TD>' skip
+    '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Температура нефтепродукта, °С</TD>' skip
+    '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Масса нефтепродукта, кг</TD>' skip
+    '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг</TD>' skip
+    '</TR>'skip       
 
-      '<TR style="height: 35px">' skip
-      '<TD text_wrap="true" colspan = "9" style="text-align: center; border: 1px solid black;">наимен.</TD>' skip
-      '<TD text_wrap="true" colspan = "5" style="text-align: center; border: 1px solid black;">код</TD>' skip
-      '</TR>'skip                           
+    '<TR style="height: 35px">' skip
+    '<TD text_wrap="true" colspan = "9" style="text-align: center; border: 1px solid black;">наимен.</TD>' skip
+    '<TD text_wrap="true" colspan = "5" style="text-align: center; border: 1px solid black;">код</TD>' skip
+    '</TR>'skip                           
     
+    '<TR>' skip
+    '<TD colspan = "4" style="text-align: center; border: 1px solid black;">1</TD>' skip
+    '<TD colspan = "9" style="text-align: center; border: 1px solid black;">2</TD>' skip
+    '<TD colspan = "5" style="text-align: center; border: 1px solid black;">3</TD>' skip
+    '<TD colspan = "9" style="text-align: center; border: 1px solid black;">4</TD>' skip
+    '<TD colspan = "6" style="text-align: center; border: 1px solid black;">5</TD>' skip
+    '<TD colspan = "9" style="text-align: center; border: 1px solid black;">6</TD>' skip
+    '<TD colspan = "8" style="text-align: center; border: 1px solid black;">7</TD>' skip
+    '<TD colspan = "9" style="text-align: center; border: 1px solid black;">8</TD>' skip
+    '<TD colspan = "9" style="text-align: center; border: 1px solid black;">9</TD>' skip
+    '<TD colspan = "9" style="text-align: center; border: 1px solid black;">10</TD>' skip
+    '<TD colspan = "9" style="text-align: center; border: 1px solid black;">11</TD>' skip
+    '</TR>'skip     
+    .
+  assign
+    j_LineCount = 0
+    .
+  for each tt-petrol:
+    j_LineCount = j_LineCount + 1 .
+    put stream OutStr-html unformatted
       '<TR>' skip
-      '<TD colspan = "4" style="text-align: center; border: 1px solid black;">1</TD>' skip
-      '<TD colspan = "9" style="text-align: center; border: 1px solid black;">2</TD>' skip
-      '<TD colspan = "5" style="text-align: center; border: 1px solid black;">3</TD>' skip
-      '<TD colspan = "15" style="text-align: center; border: 1px solid black;">4</TD>' skip
-      '<TD colspan = "9" style="text-align: center; border: 1px solid black;">5</TD>' skip
-      '<TD colspan = "8" style="text-align: center; border: 1px solid black;">6</TD>' skip
-      '<TD colspan = "9" style="text-align: center; border: 1px solid black;">7</TD>' skip
-      '<TD colspan = "9" style="text-align: center; border: 1px solid black;">8</TD>' skip
-      '<TD colspan = "9" style="text-align: center; border: 1px solid black;">9</TD>' skip
-      '<TD colspan = "9" style="text-align: center; border: 1px solid black;">10</TD>' skip
+      '<TD colspan = "4" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(j_LineCount) + '</TD>' skip
+      '<TD colspan = "9" text_wrap="true" style="text-align: center; border: 1px solid black;">' + tt-petrol.gds-name + '</TD>' skip
+      '<TD colspan = "5" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.gds-code) + '</TD>' skip
+      '<TD colspan = "9" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.place-type) + " " + string(tt-petrol.place-num) + '</TD>' skip
+      '<TD colspan = "6" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.type_dan) + '</TD>' skip
+      '<TD colspan = "9" text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.level,"->>>>>>>>>>>9",0) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.level,"->>>>>>>>>>>9",0) + '</TD>' skip
+      '<TD colspan = "8" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.volue,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.volue,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD colspan = "9" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD colspan = "9" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD colspan = "9" text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.qnty,"->>>>>>>>>>>9",0) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.qnty,"->>>>>>>>>>>9",0) + '</TD>' skip
+      '<TD colspan = "9" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.delta,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.delta,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '</TR>'skip     
       .
-   assign
-      j_LineCount = 0
-      .
-   for each tt-petrol:
-      j_LineCount = j_LineCount + 1 .
-      put stream OutStr-html unformatted
-         '<TR>' skip
-         '<TD colspan = "4" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(j_LineCount) + '</TD>' skip
-         '<TD colspan = "9" text_wrap="true" style="text-align: center; border: 1px solid black;">' + tt-petrol.gds-name + '</TD>' skip
-         '<TD colspan = "5" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.gds-code) + '</TD>' skip
-         '<TD colspan = "15" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.place-type) + " " + string(tt-petrol.place-num) + '</TD>' skip
-/*      '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;"></TD>' skip*/
-         '<TD colspan = "9" text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.level,"->>>>>>>>>>>9",0) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.level,"->>>>>>>>>>>9",0) + '</TD>' skip
-         '<TD colspan = "8" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.volue,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.volue,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-         '<TD colspan = "9" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-         '<TD colspan = "9" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-         '<TD colspan = "9" text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.qnty,"->>>>>>>>>>>9",0) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.qnty,"->>>>>>>>>>>9",0) + '</TD>' skip
-         '<TD colspan = "9" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.delta,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.delta,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-         '</TR>'skip     
-         .
-   end.
+  end.
   
-   put stream OutStr-html unformatted
-      '<Thead>' skip
-      '<TR><TD colspan="86" style="height: 14px;"></TD></TR>' skip
-      '<TR><TD colspan="86">Наличие нефтепродуктов в технологических трубопроводах и оборудовании:</TD></TR>' skip
-      '</Thead>' skip
-      .
+  put stream OutStr-html unformatted
+    '<Thead>' skip
+    '<TR><TD colspan="86" style="height: 14px;"></TD></TR>' skip
+    '<TR><TD colspan="86">Наличие нефтепродуктов в технологических трубопроводах и оборудовании:</TD></TR>' skip
+    '</Thead>' skip
+    .
 
-   put stream OutStr-html unformatted
-      '<TR style="height: 65px">' skip
-      '<TD text_wrap="true" colspan = "4" rowspan = "2" style="text-align: center; border: 1px solid black;">№</TD>' skip
-      '<TD text_wrap="true" colspan = "14" style="text-align: center; border: 1px solid black;">Нефтепродукт</TD>' skip
-      '<TD text_wrap="true" colspan = "8" rowspan = "2" style="text-align: center; border: 1px solid black;">Наим. участка техн. трубопровода (оборуд)</TD>' skip
-      '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Вместимость (объем) участка трубопровода (оборуд), м3</TD>' skip
-      '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Факт заполнения на момент инвентар (заполнено/ не заполнено)</TD>' skip
-      '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Плотность нефтепродукта, кг/м3</TD>' skip
-      '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Температура нефтепродукта, °С</TD>' skip
-      '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Масса нефтепродукта, кг</TD>' skip
-      '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг</TD>' skip
-      '</TR>'skip       
+  put stream OutStr-html unformatted
+    '<TR style="height: 65px">' skip
+    '<TD text_wrap="true" colspan = "4" rowspan = "2" style="text-align: center; border: 1px solid black;">№</TD>' skip
+    '<TD text_wrap="true" colspan = "14" style="text-align: center; border: 1px solid black;">Нефтепродукт</TD>' skip
+    '<TD text_wrap="true" colspan = "8" rowspan = "2" style="text-align: center; border: 1px solid black;">Наим. участка техн. трубопровода (оборуд)</TD>' skip
+    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Вместимость (объем) участка трубопровода (оборуд), м3</TD>' skip
+    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Факт заполнения на момент инвентар (заполнено/ не заполнено)</TD>' skip
+    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Плотность нефтепродукта, кг/м3</TD>' skip
+    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Температура нефтепродукта, °С</TD>' skip
+    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Масса нефтепродукта, кг</TD>' skip
+    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг</TD>' skip
+    '</TR>'skip       
 
-      '<TR style="height: 65px">' skip
-      '<TD text_wrap="true" colspan = "9" style="text-align: center; border: 1px solid black;">наимен.</TD>' skip
-      '<TD text_wrap="true" colspan = "5" style="text-align: center; border: 1px solid black;">код</TD>' skip
-      '</TR>'skip                           
+    '<TR style="height: 65px">' skip
+    '<TD text_wrap="true" colspan = "9" style="text-align: center; border: 1px solid black;">наимен.</TD>' skip
+    '<TD text_wrap="true" colspan = "5" style="text-align: center; border: 1px solid black;">код</TD>' skip
+    '</TR>'skip                           
     
+    '<TR>' skip
+    '<TD colspan = "4" style="text-align: center; border: 1px solid black;">1</TD>' skip
+    '<TD colspan = "9" style="text-align: center; border: 1px solid black;">2</TD>' skip
+    '<TD colspan = "5" style="text-align: center; border: 1px solid black;">3</TD>' skip
+    '<TD colspan = "8" style="text-align: center; border: 1px solid black;">4</TD>' skip
+    '<TD colspan = "10" style="text-align: center; border: 1px solid black;">5</TD>' skip
+    '<TD colspan = "10" style="text-align: center; border: 1px solid black;">6</TD>' skip
+    '<TD colspan = "10" style="text-align: center; border: 1px solid black;">7</TD>' skip
+    '<TD colspan = "10" style="text-align: center; border: 1px solid black;">8</TD>' skip
+    '<TD colspan = "10" style="text-align: center; border: 1px solid black;">9</TD>' skip
+    '<TD colspan = "10" style="text-align: center; border: 1px solid black;">10</TD>' skip
+    '</TR>'skip     
+    .
+  assign
+    j_LineCount = 0
+    .
+  for each tt-petrol:
+    j_LineCount = j_LineCount + 1 .
+    put stream OutStr-html unformatted
       '<TR>' skip
-      '<TD colspan = "4" style="text-align: center; border: 1px solid black;">1</TD>' skip
-      '<TD colspan = "9" style="text-align: center; border: 1px solid black;">2</TD>' skip
-      '<TD colspan = "5" style="text-align: center; border: 1px solid black;">3</TD>' skip
-      '<TD colspan = "8" style="text-align: center; border: 1px solid black;">4</TD>' skip
-      '<TD colspan = "10" style="text-align: center; border: 1px solid black;">5</TD>' skip
-      '<TD colspan = "10" style="text-align: center; border: 1px solid black;">6</TD>' skip
-      '<TD colspan = "10" style="text-align: center; border: 1px solid black;">7</TD>' skip
-      '<TD colspan = "10" style="text-align: center; border: 1px solid black;">8</TD>' skip
-      '<TD colspan = "10" style="text-align: center; border: 1px solid black;">9</TD>' skip
-      '<TD colspan = "10" style="text-align: center; border: 1px solid black;">10</TD>' skip
+      '<TD colspan = "4" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(j_LineCount) + '</TD>' skip
+      '<TD colspan = "9" text_wrap="true" style="text-align: center; border: 1px solid black;">' + tt-petrol.gds-name + '</TD>' skip
+      '<TD colspan = "5" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.gds-code) + '</TD>' skip
+      '<TD colspan = "8" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.pl-type) + '</TD>' skip
+      '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.volue-pl,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.volue-pl,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.log-pl) + '</TD>' skip
+      '<TD colspan = "10" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD colspan = "10" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD colspan = "10" text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.qnty1,"->>>>>>>>>>>9",0) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.qnty1,"->>>>>>>>>>>9",0) + '</TD>' skip
+/*      '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;"></TD>' skip*/
+      '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.delta1,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.delta1,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '</TR>'skip     
       .
-   assign
-      j_LineCount = 0
-      .
-   for each tt-petrol:
-      j_LineCount = j_LineCount + 1 .
-      put stream OutStr-html unformatted
-         '<TR>' skip
-         '<TD colspan = "4" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(j_LineCount) + '</TD>' skip
-         '<TD colspan = "9" text_wrap="true" style="text-align: center; border: 1px solid black;">' + tt-petrol.gds-name + '</TD>' skip
-         '<TD colspan = "5" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.gds-code) + '</TD>' skip
-         '<TD colspan = "8" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.pl-type) + '</TD>' skip
-         '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.volue-pl,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.volue-pl,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-         '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.log-pl) + '</TD>' skip
-         '<TD colspan = "10" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-         '<TD colspan = "10" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-         '<TD colspan = "10" text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.qnty1,"->>>>>>>>>>>9",0) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.qnty1,"->>>>>>>>>>>9",0) + '</TD>' skip
-/*      '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;"></TD>' skip*/
-         '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.delta1,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.delta1,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-         '</TR>'skip     
-         .
-   end.  
+  end.  
 end procedure .
 
 PROCEDURE get-report-num :
 
-    define output parameter p-report-num as integer no-undo .
+  define output parameter p-report-num as integer no-undo .
 
-    do
-        on error undo, return error return-value
-        :
-        run gbl/getrpnum.p (output p-report-num).
-    end.
+  do
+    on error undo, return error return-value
+    :
+    run gbl/getrpnum.p (output p-report-num).
+  end.
 
 END PROCEDURE.
                               

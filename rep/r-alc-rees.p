@@ -35,7 +35,7 @@ define variable vss-description as character no-undo init "Реестр документов ЕГА
 { ref/extclass.i }
 { gbl/thbjattr.i }
 {ibs/th/bge/egais/wb-egais.i}
-
+{ gbl/prn-lib.i }
 
 define input parameter p-column-list as character no-undo.
 
@@ -248,12 +248,22 @@ for each obj-list no-lock
             then alc-rees.status_ = buf_trn-doc.status_ + (if buf_trn-doc.flag_ then "+" else "-").
     end.
     run proc-create-HTML (input obj-list.obj-code, input obj-list.obj-type, input obj-list.obj-name).
-    RUN search-full-path-Report (INPUT v-file-name-rep-htm).
-    v-search = v-search + " "  + search(v-file-name-rep-htm).   
+
+    v-search = v-search + " "  + v-file-name-rep-htm.
+    v-search = trim(v-search," ") .
      
 end.
-RUN Report-Viewer (INPUT v-full-path-RepView, INPUT v-search).
 
+run prn-lib-reportviewer in this-procedure (
+    input parParentProc
+    ,input v-search
+    ,input "" 
+    ) .
+if error-status:error then
+do:
+    message return-value view-as alert-box.
+    return .
+end.  
 
 
 procedure proc-create-HTML: 

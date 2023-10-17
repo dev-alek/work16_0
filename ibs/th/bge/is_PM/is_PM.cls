@@ -331,8 +331,8 @@ class ibs.th.bge.is_PM.is_PM:
           time-start = time-start + 86400 .
         end .
         date-end   = today .
-        time-end   = (vHour - 1) * 3600 + (59 * 60) + 59 .
-        if time-end < 0
+        time-end   = (vHour - 1) * 3600 + (59 * 60) + 60 .
+        if time-end <= 0
         then do :
           date-end   = today - 1 .
           time-end   = time-end + 86400 . 
@@ -354,8 +354,8 @@ class ibs.th.bge.is_PM.is_PM:
           time-start = time-start + 86400 .
         end .
         date-end   = vMoscowDate + 1 .
-        time-end   = timezone-diff * 60 - 1 . 
-        if time-end < 0
+        time-end   = timezone-diff * 60 . 
+        if time-end <= 0
         then do :
           date-end   = vMoscowDate .
           time-end   = time-end + 86400 . 
@@ -375,8 +375,8 @@ class ibs.th.bge.is_PM.is_PM:
         time-start = time-start + 86400 .
       end .
       date-end   = toDate + 1 .
-      time-end   = timezone-diff * 60 - 1 . 
-      if time-end < 0
+      time-end   = timezone-diff * 60 . 
+      if time-end <= 0
       then do :
         date-end   = toDate .
         time-end   = time-end + 86400 . 
@@ -526,7 +526,7 @@ class ibs.th.bge.is_PM.is_PM:
     end .
     
     run write-to-log in p-parent-handle (if is-full-backdate then "Суточная за прошедшие сутки" else  (if is-full then "Суточная" else "Промежуточная")) .
-    run write-to-log in p-parent-handle (string(date-start) + " " + string(time-start, "HH:MM:SS") + " - " + string(date-end) + " " + string(time-end, "HH:MM:SS")) .
+    run write-to-log in p-parent-handle (string(date-start) + " " + string(time-start, "HH:MM:SS") + " - " + string(date-end) + " " + (if time-end = 86400 then "23:59:59" else string(time-end, "HH:MM:SS"))) .
     run write-to-log in p-parent-handle (string(vMoscowDate) + " " + string(0, "HH:MM:SS") + " - " + string(vMoscowDate) + " " + string(vMoscowTimeEnd, "HH:MM:SS")) .
     
     run write-to-log in p-parent-handle (" END PRESTAGE UTC " + utc-time() ) .

@@ -96,6 +96,7 @@ CREATE WIDGET-POOL.
 define variable hServerSocket    as handle       no-undo.
 define variable v-connect-param  as CHAR         no-undo.
 define variable v-srv-connected  as LOG          no-undo.
+define variable mExit            as LOG          no-undo.
 define variable us-tmo           as INTEGER   INIT 60 no-undo. /*тайм-аут в сек.*/
 
 if num-entries (p-param, ";") = 2
@@ -298,7 +299,7 @@ ON CHOOSE OF b-exit IN FRAME DEFAULT-FRAME /* Выход  */
 DO:
 
 RUN proc-stop-srv.
-
+mExit = yes.
 PAUSE 2.
 APPLY 'close':U TO THIS-PROCEDURE.
 END.
@@ -360,9 +361,18 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   then do:
     message "Ошибка получения глобальный переменных." view-as alert-box.
     return error.
-  end. 
-  IF NOT THIS-PROCEDURE:PERSISTENT THEN
-    WAIT-FOR CLOSE OF THIS-PROCEDURE.
+  end.
+  define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
+  CheckUpd = new ibs.th.adm.upd.CheckUpd ().
+  IF NOT THIS-PROCEDURE:PERSISTENT THEN 
+  do while not mExit:
+     WAIT-FOR CLOSE OF this-procedure pause 60.
+     if CheckUpd:isStopWork or CheckUpd:isNeedUpd
+     then do:
+        RUN proc-stop-srv.
+        mExit = yes.
+     end.
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */

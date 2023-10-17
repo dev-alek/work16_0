@@ -20,6 +20,7 @@ using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.transport_section from propath.
 using ibs.th.bge.1crn.subjects.transport_section_calibration-table from propath.
+using ibs.th.bge.1crn.subjects.transport from propath.
 
 class ibs.th.bge.1crn.subjects.transport_section inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -53,10 +54,6 @@ class ibs.th.bge.1crn.subjects.transport_section inherits ibs.th.bge.1crn.subjec
     
    define override property InitTag as character no-undo init "section"
       get. 
-
-/*   constructor public transport_section ():*/
-/*      InitListTag = "calibration-table".   */
-/*   end constructor.                        */
 
    method override protected void SetPropProtected (inTag as char, inValue as char):
       case inTag:
@@ -112,44 +109,34 @@ class ibs.th.bge.1crn.subjects.transport_section inherits ibs.th.bge.1crn.subjec
             end.                                        
       end case.
    end.
-
-/*   method override protected void SetPropProtected(SubsObj as subjects):*/
-/*      run gbl/inidebug.p.                                               */
-/*      case SubsObj:InitTag:                                             */
-/*         when "calibration-table" then                                  */
-/*            do:                                                         */
-/*               calibration-table = SubsObj.                             */
-/*            end.                                                        */
-/*      end case.                                                         */
-/*   end.                                                                 */
  
    method override protected void CheckData ():
 
       def var v-str as char no-undo.
-    
+
       assign
          v-str = v-str + ",sec-num" 
          when sec-num = ?
-         v-str = v-str + ",capacity" 
-         when capacity = ?
-         v-str = v-str + ",min-of-lvl" 
-         when min-of-lvl = ?
-         v-str = v-str + ",max-of-lvl" 
-         when max-of-lvl = ?
-         v-str = v-str + ",diameter" 
-         when diameter = ?
-         v-str = v-str + ",length" 
-         when length_ = ?
-         v-str = v-str + ",width" 
-         when width_ = ?
-         v-str = v-str + ",circumference" 
-         when circumference = ?
-         v-str = v-str + ",wall" 
-         when wall = ?
-         v-str = v-str + ",pipe-vlm" 
-         when pipe-vlm = ?
-         .
-      v-str = trim (v-str, ",").
+         v-str = v-str + ",capacity" .
+/*         when capacity = ? and ess = 0  */
+/*         v-str = v-str + ",min-of-lvl"  */
+/*         when min-of-lvl = ? and ess = 0*/
+/*         v-str = v-str + ",max-of-lvl"  */
+/*         when max-of-lvl = ? and ess = 0*/
+/*         v-str = v-str + ",diameter"    */
+/*         when diameter = ? and ess = 0  */
+/*         v-str = v-str + ",length"       */
+/*         when length_ = ?                */
+/*         v-str = v-str + ",width"        */
+/*         when width_ = ?                 */
+/*         v-str = v-str + ",circumference"*/
+/*         when circumference = ?          */
+/*         v-str = v-str + ",wall"         */
+/*         when wall = ?                   */
+/*         v-str = v-str + ",pipe-vlm"     */
+/*         when pipe-vlm = ?               */
+/*         .                      */
+/*      v-str = trim (v-str, ",").*/
       if v-str > ''
          then 
          undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).

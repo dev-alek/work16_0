@@ -490,6 +490,7 @@ CLASS ibs.th.ref.promo.uc_TabBase INHERITS UserControl:
     this-object:tableLayoutPanel6:ResumeLayout(false).
     this-object:tableLayoutPanel6:PerformLayout().
     this-object:ResumeLayout(false).
+    {gbl\ed_date_cls.i this-object:dateTimePicker1 This-object:dateTimePicker2 this-object:dateTimePicker3}
     catch e as Progress.Lang.Error:
       undo, throw e.
     end catch.

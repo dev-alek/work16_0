@@ -61,6 +61,6 @@ DEFINE SHARED VARIABLE cas-shft as logical no-undo init no.
 */
 
 
-{ rep/e-nobenq.i }
+/*{ rep/e-nobenq.i }*/
 { rep/r-benfr.i base }
 { rep/r-benef2.i base }

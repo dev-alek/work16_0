@@ -384,16 +384,10 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
    end.
   
-   define variable updschmObj      as class ibs.th.adm.upd.updschm no-undo.
-   updschmObj = new ibs.th.adm.upd.updschm ().
-
-   if updschmObj:isNeedUpd
-   then do:
-      run write-to-log ("Необходимо обновить базу. Запустите ТН") .
-      delete object updschmObj no-error.
-      return error "Необходимо обновить базу. Запустите ТН".  
+   run CheckUpdate no-error.
+   if error-status :error then do:
+     return error return-value.
    end.
-   delete object updschmObj no-error.
 
    run adm/chk-db.p no-error .
    if error-status :error then do:
@@ -405,6 +399,8 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
       log-exit = true.
    end.
    else do:
+      define variable Vdbinfo as character no-undo.
+      run adm/db-info.p ( output g#db-num, output Vdbinfo ) no-error.
       run gbl/dbdiscon.p no-error.
       if error-status :error then do:
          run write-to-log (  substitute( "&1. Не удалось отсоединиться от БД&2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message(1) ) ).
@@ -516,6 +512,10 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
          run cur-time( output v-today
                       ,output v-time
                    ) no-error.
+         run CheckUpdate no-error.
+         if error-status :error then do:
+              return error return-value.
+         end.
          run AddCashParam(i-auto-type,v-today, v-time).
         
          run initAsyncProc ({&window-name}:title,
