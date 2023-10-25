@@ -156,7 +156,6 @@ define variable v-old-doc-qnty             like ub.gds-dtl.doc-qnty no-undo .
 define variable v-old-doc-cli-qnty         like ub.gds-dtl.doc-qnty no-undo .
 define variable v-old-fact-qnty            like ub.gds-dtl.doc-qnty no-undo .
 define variable v-old-fact-cli-qnty        like ub.gds-dtl.doc-qnty no-undo .
-define variable var-code-temp               like ub.place.pl-code            no-undo.
 
 define variable pr-naklvalue               as logical   no-undo .
 define variable pr-nakltype                as character initial ?         no-undo.
@@ -2222,7 +2221,6 @@ do:
     ( input {&update}
      ,input "meas":U
      ,input {&rvs-before-doc}
-     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2238,7 +2236,6 @@ do:
     ( input {&update}
      ,input "meas":U
      ,input {&rvs-after-doc}
-     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2256,7 +2253,6 @@ do:
     ( input {&lookup}
      ,input "edit":U
      ,input {&rvs-before-doc}
-     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2273,7 +2269,6 @@ do:
     ( input {&lookup}
      ,input "edit":U
      ,input {&rvs-after-doc}
-     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2289,7 +2284,6 @@ do:
     ( input {&update}
      ,input "edit":U
      ,input {&rvs-before-doc}
-     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
@@ -2305,7 +2299,6 @@ do:
     ( input {&update}
      ,input "edit":U
      ,input {&rvs-after-doc}
-     ,output var-code-temp
     ) no-error .
   if error-status :error then do:
     return no-apply .
