@@ -168,6 +168,38 @@ define variable vss-description as character no-undo init "Обновление БД.".
   define variable mDfUpdaLL as character no-undo.
   define stream sReadfile.
   
+  constructor public updschm ():
+     this-object (yes).
+  end constructor.
+  
+  constructor public updschm (IQS as logical):
+     putStat ("Установка контекста для проверки обновления ... ").
+     
+     obsrvdbObj = new observupd ().
+     obsrvdbObj:ModeUpd = modeupd.
+     obsrvdbObj:PublisHandle = PublisHandle.
+     
+     isNeedUpd = obsrvdbObj:isneedupg(yes).
+     CurrDBShm   = obsrvdbObj:CurrDBShm.  
+     CurrDB0Shm  = obsrvdbObj:CurrDB0Shm. 
+     DbNum       = obsrvdbObj:DbNum.      
+     TargetDBShm = obsrvdbObj:TargetDBShm.
+     if not isNeedUpd
+     then
+        run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
+         
+     if IQS and not isRcode and isNeedUpd
+     then
+        message "Необходимо обновить базу с версии " CurrDBShm  " до " TargetDBShm " до запуска процесса. Остновить выполнение?" view-as alert-box question 
+             buttons yes-no title "[ ВНИМАНИЕ! ]" update isNeedUpd.
+          
+     delete object obsrvdbObj.
+     putStat  ("Установка контекста для проверки обновления завершена").
+     
+  end constructor.
+
+  
+  
   constructor public updschm (input inConPar as char,input iMode as character,ipubhan as handle,iDfFile as character ):
     putStat  ("Установка контекста для обновления ...").
     define variable vupd as logical no-undo.
@@ -340,7 +372,9 @@ define variable vss-description as character no-undo init "Обновление БД.".
   end method.
   method public void upddbshmAllOneDf ():  
     
-    
+    if not connected ("ub")
+    then
+       connect value(substitute(ConPar + " &1", m-user-passwd-upd)).
     
     
     if CurrDBShm < TargetDBShm
@@ -513,7 +547,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
        putStat  (substitute ("Выполнение процедуры &1 ...",iparam)).
        if vproc ne ""
        then 
-          runsession (vproc,vparam,yes).
+          runsession (vproc,vparam).
        putStat  (substitute ("Выполнение процедуры &1 завершено",iparam)).
        
     end.
@@ -542,14 +576,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
     
   end.
   method private void runsession (input iProc as char,input iParam as char):
-     runsession(iProc,iParam,no).
-  end.   
-  method private void runsession (input iProc as char,input iParam as char,input Ini as logical ):
      define variable vParamStart as character no-undo.
-     if Ini
-     then do:
-         vParamStart = " -ininame "  + GetStartupParam("-ininame").
-     end.
      if SearchPFile (iProc) eq ?
      then do:
         Msg = substitute ( "Не найден файл &1 !", iProc).
@@ -562,13 +589,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
        
      if iproc eq loadDFprocFile and isRcode
      then 
-        vParamStart = vParamStart + " -rx " .
-    /* def var v-cmd-comm as character no-undo.
-     if isRcode
-     then v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
-     else v-cmd-comm = substitute ("&1 &2 &3 &4 -p &5 &6 &7 &8",m-prowin32FileName, vParamStart, ConPar,m-user-passwd, iProc, if m-Batch then "-b" else "", if iparam eq "" then "" else "-param" , iParam).
-     
-    os-command silent value (v-cmd-comm). */
+        vParamStart = vParamStart + " -rx  -clientlog  mylog.lg -logginglevel 1" .
     define variable vAsyncHelper as class ibs.th.file.AsyncHelperth no-undo.
     vAsyncHelper = new ibs.th.file.AsyncHelperth().
     vAsyncHelper:myUser = myUser.
@@ -577,6 +598,8 @@ define variable vss-description as character no-undo init "Обновление БД.".
     vAsyncHelper:WritelogInter = 5.
     vAsyncHelper:mProcPublish = PublisHandle.
     vAsyncHelper:ChangProPath = changPath.
+    vAsyncHelper:paramSession = vParamStart.
+    vAsyncHelper:SetGblPar = false.
     if UpdBlank
     then do:
        vAsyncHelper:MyParamStart = " -ininame "  + GetStartupParam("-ininame") + " " + ConPar.
@@ -586,10 +609,12 @@ define variable vss-description as character no-undo init "Обновление БД.".
                                               , iProc 
                                               ,if iParam eq "" then "" else iParam , 
                                                if iParam eq "" then "" else {&delim-par} ),1).
-    vAsyncHelper:myTimeOut = 60.
     
     run ibs\th\file\waithelper.p (vAsyncHelper,?, 1, substitute ("Обновление БД с &1 версии до &2 версии",CurrDBShm,NewCurrDBShm)).
     define variable vLogFile as character no-undo.
+    define variable vSilent as logical no-undo.
+    vSilent = silent.
+    silent = yes.
     vLogFile = searchfile(vAsyncHelper:getLog(?)).
     if vLogFile ne ?
     then do:
@@ -598,6 +623,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
        repeat:
           define variable vstr as character no-undo.
           import stream sReadfile unformatted vStr.
+          putmes (vStr).
           define variable vtext1 as character no-undo.
           define variable vtext3 as character no-undo.
           assign
@@ -613,7 +639,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
        end.
        input stream sReadfile close.
     end.
-    
+    silent = vSilent.
     delete object vAsyncHelper.
   end method.
    
