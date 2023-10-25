@@ -921,7 +921,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       input-output v-str
     ).
     
-    maskedTextBoxListTank:text = v-str.
+    if maskedTextBoxListTank:text <> v-str
+    then do :
+      infoSecsObj:PlChanged = yes .
+      maskedTextBoxListTank:text = v-str.
+    end .
     
     infoSecsObj:GetInfoSectionProp(idSecTabPage).
     infoSecsObj:InfoSectionCurr:ListTank = maskedTextBoxListTank:text .

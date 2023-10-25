@@ -1669,10 +1669,8 @@ do:
   define variable pl_doc-density   as decimal   no-undo initial 0.00 .
   define variable pl_fact-density  as decimal   no-undo initial 0.00 .
   define variable pl-list          as character no-undo initial "" .
-  define variable pl-list-old      as character no-undo initial "" .
 
   define variable v-log            as logical   no-undo .
-  define variable pl-changed       as logical no-undo init false .
   define variable pl-setted        as logical no-undo init false .
   define variable ii               as integer no-undo .
   define variable pl               as integer no-undo .
@@ -1711,11 +1709,6 @@ do:
   if infoSectionsTotal:WasSetting = false 
   then infoSectionsTotal:GetDBAllAttr().
   else do:
-    for each tt-doc-pl,
-    first ub.place no-lock where ub.place.pl-code = tt-doc-pl.pl-code :
-      pl-list-old = pl-list-old + "," + ub.place.loc1 .
-    end .
-    pl-list-old = trim(pl-list-old, ",") .
   
     do ii = 1 to infoSectionsTotal:SectionNum :
       infoSectionsTotal:GetInfoSectionProp (ii).
@@ -1731,12 +1724,7 @@ do:
     end .
     pl-list = trim(pl-list, ",") .
     
-    if pl-list <> pl-list-old
-    then do :
-      pl-changed = yes .
-    end .
-    
-    if pl-changed
+    if infoSectionsTotal:PlChanged
     then do :
       for each tt-doc-pl :
         delete tt-doc-pl .
@@ -2374,7 +2362,7 @@ do:
       end .
     end.
     
-    if pl-changed
+    if infoSectionsTotal:PlChanged
     and not pl-setted
     and trim(pl-list) > ""
     then do :
