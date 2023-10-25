@@ -1504,6 +1504,24 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       buttonPlSi:Visible = false.
       buttonPlSiTemp:Visible = false.
       buttonCopyPSTemp:Visible = false.
+      bRvsBef:enabled = false .
+      bRvsAft:enabled = false .
+      
+      if infoSecsObj:IsKPrvs
+      then do :
+        tmpInfoSecs = new InfoSectionsTotal () .
+        tmpInfoSecs:Initialization(infoSecsObj:TrnDocNum, infoSecsObj:GdsCode) .
+        do ii = 1 to tmpInfoSecs:SectionNum : 
+          if tmpInfoSecs:GetInfoSectionProp(ii):ListTank = infoSecsObj:InfoSectionCurr:ListTank
+          and tmpInfoSecs:GetInfoSectionProp(ii):SectionName <> infoSecsObj:InfoSectionCurr:SectionName
+          and (infoSecsObj:InfoSectionCurr:AccMeth = 1 or tmpInfoSecs:GetInfoSectionProp(ii):AccMeth = 1)
+          then do :
+            bRvsBef:enabled = true .
+            bRvsAft:enabled = true .
+          end .
+        end .
+        delete object tmpInfoSecs .
+      end .
       
     end.
     
