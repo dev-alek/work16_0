@@ -563,15 +563,16 @@ end function.
 FUNCTION chk-asi-polling RETURNS logical
   ( is-bef as log ) :
     
-  def buffer bf_rsv for ub.rvs-doc .
+  def buffer bf_rvs-doc for ub.rvs-doc .
   
-  find first bf_rsv 
-    no-lock where bf_rsv.rvs-type = (if is-bef then {&rvs-before-doc} else {&rvs-after-doc}) 
-    and bf_rsv.out-code = t-doc.doc-code
-    and bf_rsv.state-measure-qnty <> ?
-    no-error .
+  find first bf_rvs-doc no-lock
+    where bf_rvs-doc.rvs-type = (if is-bef then {&rvs-before-doc} else {&rvs-after-doc}) 
+      and bf_rvs-doc.out-code = t-doc.doc-code
+      and num-entries(bf_rvs-doc.rvs-code, "-") = 2
+      and bf_rvs-doc.state-measure-qnty <> ?
+      no-error .
             
-  if available (bf_rsv) and not l-repeat-asi
+  if available (bf_rvs-doc) and not l-repeat-asi
     then 
   do:
     message
@@ -2590,7 +2591,7 @@ do:
   assign 
       rvslog = no.
   find first buf_rvs-doc 
-      where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+    where buf_rvs-doc.rvs-type = {&rvs-before-doc}
       and buf_rvs-doc.out-code = t-doc.doc-code
       and num-entries(buf_rvs-doc.rvs-code, "-") = 2
       and buf_rvs-doc.state-measure-qnty <> ?
