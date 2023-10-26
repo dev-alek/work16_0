@@ -1816,11 +1816,10 @@ ON VALUE-CHANGED OF tt-place.is-meas IN FRAME d-pl-form /* Измеряется приборами 
 DO:
   define variable vlog as logical no-undo .
   
-  if p-mode =  {&update} then    /* EXPSD-8061 */
-  do:
     if tt-place.is-meas:screen-value = "yes" then do:
       if not v-rvd-off
       and not v-rvd-is-meas-on
+      and p-mode = {&update}   /* EXPSD-8061 */
       then do :
         message "Для снятия разрешения РВД необходимо указать причину перехода на АВД, номер заявки в ITSM, ФИО инициатора заявки."
         view-as alert-box question buttons ok-cancel update vlog .
@@ -1848,6 +1847,7 @@ DO:
     else do:
       if not v-rvd-on
       and v-rvd-is-meas-on
+      and p-mode = {&update}   /* EXPSD-8061 */
       then do :
         message "Для установки разрешения РВД необходимо указать причину перехода на РВД, номер заявки в ITSM, ФИО инициатора заявки."
         view-as alert-box question buttons ok-cancel update vlog .
@@ -1872,7 +1872,6 @@ DO:
       end .
       disable t-asi-srtif with frame {&frame-name} .
     end.
-  end.  
 END.
 
 /* _UIB-CODE-BLOCK-END */

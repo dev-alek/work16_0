@@ -563,15 +563,16 @@ end function.
 FUNCTION chk-asi-polling RETURNS logical
   ( is-bef as log ) :
     
-  def buffer bf_rsv for ub.rvs-doc .
+  def buffer bf_rvs-doc for ub.rvs-doc .
   
-  find first bf_rsv 
-    no-lock where bf_rsv.rvs-type = (if is-bef then {&rvs-before-doc} else {&rvs-after-doc}) 
-    and bf_rsv.out-code = t-doc.doc-code
-    and bf_rsv.state-measure-qnty <> ?
-    no-error .
+  find first bf_rvs-doc no-lock
+    where bf_rvs-doc.rvs-type = (if is-bef then {&rvs-before-doc} else {&rvs-after-doc}) 
+      and bf_rvs-doc.out-code = t-doc.doc-code
+      and num-entries(bf_rvs-doc.rvs-code, "-") = 2
+      and bf_rvs-doc.state-measure-qnty <> ?
+      no-error .
             
-  if available (bf_rsv) and not l-repeat-asi
+  if available (bf_rvs-doc) and not l-repeat-asi
     then 
   do:
     message
@@ -1668,10 +1669,8 @@ do:
   define variable pl_doc-density   as decimal   no-undo initial 0.00 .
   define variable pl_fact-density  as decimal   no-undo initial 0.00 .
   define variable pl-list          as character no-undo initial "" .
-  define variable pl-list-old      as character no-undo initial "" .
 
   define variable v-log            as logical   no-undo .
-  define variable pl-changed       as logical no-undo init false .
   define variable pl-setted        as logical no-undo init false .
   define variable ii               as integer no-undo .
   define variable pl               as integer no-undo .
@@ -1710,11 +1709,6 @@ do:
   if infoSectionsTotal:WasSetting = false 
   then infoSectionsTotal:GetDBAllAttr().
   else do:
-    for each tt-doc-pl,
-    first ub.place no-lock where ub.place.pl-code = tt-doc-pl.pl-code :
-      pl-list-old = pl-list-old + "," + ub.place.loc1 .
-    end .
-    pl-list-old = trim(pl-list-old, ",") .
   
     do ii = 1 to infoSectionsTotal:SectionNum :
       infoSectionsTotal:GetInfoSectionProp (ii).
@@ -1730,12 +1724,7 @@ do:
     end .
     pl-list = trim(pl-list, ",") .
     
-    if pl-list <> pl-list-old
-    then do :
-      pl-changed = yes .
-    end .
-    
-    if pl-changed
+    if infoSectionsTotal:PlChanged
     then do :
       for each tt-doc-pl :
         delete tt-doc-pl .
@@ -2373,7 +2362,7 @@ do:
       end .
     end.
     
-    if pl-changed
+    if infoSectionsTotal:PlChanged
     and not pl-setted
     and trim(pl-list) > ""
     then do :
@@ -2590,7 +2579,7 @@ do:
   assign 
       rvslog = no.
   find first buf_rvs-doc 
-      where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+    where buf_rvs-doc.rvs-type = {&rvs-before-doc}
       and buf_rvs-doc.out-code = t-doc.doc-code
       and num-entries(buf_rvs-doc.rvs-code, "-") = 2
       and buf_rvs-doc.state-measure-qnty <> ?

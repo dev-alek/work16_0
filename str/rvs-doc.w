@@ -3654,8 +3654,8 @@ procedure CheckColorSkip:
          no-error.       
       if available buf_doc-line-attr and 
          available buf_doc-line-attr1 
-      then  vEndTime = datetime(date(buf_doc-line-attr.attr-value), (int(buf_doc-line-attr1.attr-value) * 1000 )).  
-      else  vEndTime = datetime(buf_rvs-doc_end.sys-date, (buf_rvs-doc_end.sys-time-int * 1000 )).        
+      then  vEndTime = datetime(date(buf_doc-line-attr.attr-value), ((int(buf_doc-line-attr1.attr-value) + vTimeAutoSkip * 60) * 1000 )).  
+      else  vEndTime = datetime(buf_rvs-doc_end.sys-date, ((buf_rvs-doc_end.sys-time-int + vTimeAutoSkip * 60) * 1000 )).        
       
       if vBegTime <= datetime(p-sys-date, (p-sys-time-int * 1000 )) 
          and vEndTime >= datetime(p-sys-date, (p-sys-time-int * 1000 )) then 

@@ -562,12 +562,21 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     define variable v-idSel as int no-undo.
     define variable tabsel as TabPage no-undo.
     
+    
     tabsel = tabControl:SelectedTab.
     v-idSel = integer (tabsel:Name).
     
     tankSectionControl[v-idSel]:SetInfoSec().
     
-    do ii = 1 to extent (tankSectionControl):
+    if infoSecsObj:FlagTrn
+    then do :
+      do ii = 1 to infoSecsObj:SectionNum:
+        tabControl:SelectTab(ii - 1) .
+      end .
+      tabControl:SelectTab(v-idSel - 1) .
+    end .
+    
+    do ii = 1 to infoSecsObj:SectionNum:
       if not valid-object (tankSectionControl[ii]) or tankSectionControl[ii]:idSecTabPage = tankSectionControl[infoSecsObj:idSecCurr]:idSecTabPage 
         then next.
 

@@ -322,7 +322,7 @@ do:
             then do :
               next utd-marking-lines_ .
             end .  
-            vGtinQnty = getQntyUTDByDM(buf_utd-marking-lines.mark) .
+            vGtinQnty = getQntyUTDByCodId(buf_utd-marking-lines.mark) .
           end .
           if vGtinQnty > 0
           then do :

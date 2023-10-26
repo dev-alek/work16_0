@@ -87,20 +87,10 @@ define variable vRvdDnstOn          as log no-undo.
 define variable vRvdTmpOn           as log no-undo.
 define variable vRvdLvlOn           as log no-undo.
 define variable vSkipAuto           as log no-undo.
-define variable vTimeAutoSkip       as integer no-undo.
  
 do
 on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( 1 ) )
 :
-  /* определяем продолжительность пропуска автосверки после приема НП */
-  { gbl/ptrlprop.i
-     run
-     p-obj-type
-     p-obj-code
-  }
-  if not error-status :error then do:
-    vTimeAutoSkip = if ptrlprop-autopump-skip-time <> ? then ptrlprop-autopump-skip-time else 0.
-  end.
         
   /* находим текущую смену */
   find first curr_shift-obj no-lock
@@ -143,7 +133,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
       end.
     end.
     
-    /* только для автосверок - помечаем резервуар в сверке, 
+    /* помечаем резервуар в сверке,
     ** если по нему включен режим РВД или прошло мало времени с приема НП */
     if can-find(first buf_doc-attr no-lock where 
                      buf_doc-attr.doc-code = p-rvs-code 
@@ -154,7 +144,6 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
           vRvdDnstOn = no 
           vRvdTmpOn = no
           vRvdLvlOn = no
-          vSkipAuto = no
           .
        
        /* если не измеряется приборами, надо поставить признак РВД */
@@ -197,49 +186,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
          if available buf_place-attr then vRvdLvlOn = yes.
        end.
      
-       /* ищем сверку после слива */
-       if vTimeAutoSkip > 0 then do:
-         rvsdoc:            
-         for each buf_rvs-doc no-lock
-              where buf_rvs-doc.obj-type   = p-obj-type
-                and buf_rvs-doc.obj-code   = p-obj-code
-                and buf_rvs-doc.shift-date = curr_shift-obj.shift-date
-                and buf_rvs-doc.shift-num  = curr_shift-obj.shift-num
-                and buf_rvs-doc.status_    = {&fact}
-                and buf_rvs-doc.rvs-type  = {&rvs-after-doc}
-              ,first buf_rvs-line no-lock
-              where buf_rvs-line.rvs-code   = buf_rvs-doc.rvs-code
-                and buf_rvs-line.obj-type   = buf_rvs-doc.obj-type
-                and buf_rvs-line.obj-code   = buf_rvs-doc.obj-code
-                and buf_rvs-line.pl-code    = buf_place.pl-code
-                and buf_rvs-line.gds-code   =  buf_pl-gds.gds-code
-             by buf_rvs-doc.fact-order:
-             /* определяем время окончания слива */      
-             find first buf_doc-line-attr no-lock where 
-                       buf_doc-line-attr.doc-code = buf_rvs-doc.out-code
-                   and buf_doc-line-attr.gds-code = buf_rvs-line.gds-code
-                   and buf_doc-line-attr.attr-code begins "date-end"
-               no-error.
-             find first buf_doc-line-attr1 no-lock where 
-                       buf_doc-line-attr1.doc-code = buf_rvs-doc.out-code
-                   and buf_doc-line-attr1.gds-code = buf_rvs-line.gds-code
-                   and buf_doc-line-attr1.attr-code begins "time-end"
-               no-error.
-             if available buf_doc-line-attr and available  buf_doc-line-attr1
-             then do:
-                if buf_doc-line-attr.attr-value <> ? and
-                   buf_doc-line-attr1.attr-value <> ? and 
-                   datetime(date(buf_doc-line-attr.attr-value), 
-                            ((int(buf_doc-line-attr1.attr-value) + vTimeAutoSkip * 60) * 1000 )) >= datetime(today, time * 1000)
-                then vSkipAuto = yes.
-             end.  
-             if vSkipAuto then leave rvsdoc.    
-         end.           
-       end.
        if vRvdDnstOn or 
           vRvdTmpOn or 
-          vRvdLvlOn or 
-          vSkipAuto 
+          vRvdLvlOn  
        then do:
           find first buf_rvs-line no-lock
              where   buf_rvs-line.rvs-code = p-rvs-code
@@ -277,8 +226,6 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                                                                else tt-rvs-line-attr.attr-value_s + ",t".
               if vRvdLvlOn then  tt-rvs-line-attr.attr-value_s = if tt-rvs-line-attr.attr-value_s = "" then "l" 
                                                                else tt-rvs-line-attr.attr-value_s + ",l".
-              if vSkipAuto then  tt-rvs-line-attr.attr-value_s = if tt-rvs-line-attr.attr-value_s = "" then "s" 
-                                                               else tt-rvs-line-attr.attr-value_s + ",s".
           end.
        end.
     end.        

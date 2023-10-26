@@ -57,6 +57,10 @@ class ibs.th.str.InfoSectionsTotal:
   define property WasSetting as logical no-undo
     get.
     set.
+    
+  define property PlChanged as logical no-undo
+    get.
+    set.
 
   define property GdsCode as integer no-undo
     get.

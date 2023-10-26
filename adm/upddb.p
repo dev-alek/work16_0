@@ -32,8 +32,11 @@ define input parameter p-connpar as character no-undo.
 define output parameter p-isUpdShm as logical init false no-undo.
 define variable updschmObj as class updschm no-undo.
 define variable str as character no-undo.
-
-updschmObj = new updschm (input p-connpar).
+define stream slogwrite.
+output stream slogwrite to "update.log".
+subscribe "WriteLogAsunc" anywhere.
+subscribe "PutStatAsunc" anywhere run-procedure "WriteLogAsunc".
+updschmObj = new updschm (input p-connpar,"",this-procedure).
 if updschmObj:IsErr
 then do:
   str = updschmObj:Msg.
@@ -54,3 +57,13 @@ end.
 
 p-isUpdShm = updschmObj:isUpdShm.
 delete object updschmObj.
+unsubscribe "WriteLogAsunc".
+unsubscribe "PutStatAsunc".
+output stream slogwrite close.
+
+procedure WriteLogAsunc:
+   define input  parameter itext as character no-undo.
+   define input  parameter iMes  as logical   no-undo.
+   put stream slogwrite unformatted itext skip.
+end.
+   

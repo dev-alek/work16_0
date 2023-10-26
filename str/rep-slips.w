@@ -79,7 +79,7 @@ function func-src returns character
   case v-int-type :
     when 1 then return "Документ из ФН ККТ" .
     when 2 then return "Документ сформирован ТУ" .
-    when 3 then return "Касса" .
+    when 3 then return "Документ сформирован кассой" .
     otherwise return " - " .
   end case .
 end function .
@@ -124,7 +124,7 @@ DEFINE VARIABLE v-kind AS INTEGER FORMAT ">>9":U INITIAL 0
      LIST-ITEM-PAIRS "Все",         0,
                      "Закрывающий с гашением", 1,
                      "Отчет о сверке ТУ", 2,
-                     "Касса", 3
+                     "Кассовый отчет", 3
      DROP-DOWN-LIST
      SIZE 23 BY 1 NO-UNDO.
 
@@ -134,9 +134,9 @@ DEFINE VARIABLE v-src AS INTEGER FORMAT ">>9":U INITIAL 0
      LIST-ITEM-PAIRS "Все",         0,
                      "Документ из ФН ККТ", 1,
                      "Документ сформирован ТУ", 2,
-                     "Кассовый отчет", 3
+                     "Документ сформирован кассой", 3
      DROP-DOWN-LIST
-     SIZE 24 BY 1 NO-UNDO.
+     SIZE 30 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-cash-num AS INTEGER FORMAT ">>>9":U INITIAL 0 
      LABEL "Касса" 
@@ -168,7 +168,7 @@ define browse br-chk-slip-head
   chk-slip-head.cash-num label "Касса" width 10
   func-src(chk-slip-head.src_) label "Источник" width 35 format "X(35)"
   func-kind(chk-slip-head.kind) label "Тип" width 35 format "X(35)"
-WITH SEPARATORS SIZE 100 BY 12 FIT-LAST-COLUMN.
+WITH SEPARATORS SIZE 106 BY 12 FIT-LAST-COLUMN.
   
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -184,7 +184,7 @@ DEFINE FRAME Dialog-Frame
      v-cash-num AT ROW 2.3 COL 28 COLON-ALIGNED WIDGET-ID 6
      b-cd AT ROW 2.3 COL 34 COLON-ALIGNED WIDGET-ID 14
      v-src AT ROW 2.3 COL 47.3 COLON-ALIGNED WIDGET-ID 8
-     v-kind AT ROW 2.3 COL 77.2 COLON-ALIGNED WIDGET-ID 12
+     v-kind AT ROW 2.3 COL 83.2 COLON-ALIGNED WIDGET-ID 12
      br-chk-slip-head AT ROW 3.5 COL 2
      SPACE(1) SKIP(0.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
