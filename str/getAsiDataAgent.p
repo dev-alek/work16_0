@@ -59,22 +59,31 @@ find first sys-ctrl no-lock.
 run db-attr-value(sys-ctrl.db,"AsiIp",output v-asi-ip,output v-attr-type).
 run db-attr-value(sys-ctrl.db,"AsiPort",output v-asi-port,output v-attr-type).
 mFileLogSocet = v-log-file-name.
-run ConectSocet (v-asi-ip,
-                 v-asi-port,
-                 ("getmeas/?loclist=" + p-loclist),
-                 "",
-                 "xml",
-                 180,
-                 no,
-                 "Получение данных от АСИ. ").
-
-if length(mWebResp) eq 0
-then 
-   return.
+{gbl/objsrv.i}
+if     objSrv:SystemSetting:asifile ne ?
+     and objSrv:SystemSetting:asifile ne ""
+     and search(objSrv:SystemSetting:asifile) ne ?
+then do:
+   copy-lob from file search(objSrv:SystemSetting:asifile) to mWebResp no-convert no-error.
+   output to value (  v-log-file-name  ) append .
+   put unformatted string(today) ' ' string(time, "HH:MM:SS") " Прочитан файл  " skip .
+   output close .
+end.
+else do:
+   run ConectSocet (v-asi-ip,
+                    v-asi-port,
+                    ("getmeas/?loclist=" + p-loclist),
+                    "",
+                    "xml",
+                    180,
+                    no,
+                    "Получение данных от АСИ. ").
+end.
 empty temp-table tt-place .
 
 if length(mWebResp) >0
 then do:
+   
    output to value (  v-log-file-name  ) append .
    put unformatted string(today) ' ' string(time, "HH:MM:SS") " Разбираем полученные данныи  " skip .
    output close .

@@ -72,6 +72,7 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 {utl\search.i}
 {bge/place-def.i}
 {str/revis.i }
+{gbl/objsrv.i}
 
 define stream str-err.
 define stream str-log.
@@ -5943,15 +5944,23 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
       end case. /* j_num */
     end.
   end.
-
-  if p-read-cur = yes then do:
+  if     objSrv:SystemSetting:pumpfile ne ?
+     and objSrv:SystemSetting:pumpfile ne ""
+     and search(objSrv:SystemSetting:pumpfile) ne ?
+  then do:
+     run readfiletxt(search(objSrv:SystemSetting:pumpfile),output vPump).
+  end.
+  else if p-read-cur = yes then do:
     assign
       v_File-Name = './pump.txt'
       v_File-Err  = substitute('&1pump.err', ibs.th.gbl.gbl-inipar:logDir) .
     .
     output to value(v_File-Err) .
     output close.
-    run getpump(v_File-Err ,p-obj-type, p-obj-code, output vPump).
+    run getpump(v_File-Err ,p-obj-type, p-obj-code, output vPump) no-error.
+    if error-status:error
+    then
+       return error substitute ("&1 Повторите попытку или обратитесь в техническую поддержку.",return-value).
   end.
   else do:
     v_DirFilePump = ibs.th.gbl.gbl-inipar:dirflpmp .
