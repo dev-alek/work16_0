@@ -111,13 +111,20 @@ define VARIABLE v-attr-value        as character no-undo .
 define variable v-obj-type          as character no-undo .
 define variable v-obj-code          as integer   no-undo .
 define variable sgdkk               as logical   no-undo .
-define variable alarmEventSGDKK     as logical   no-undo .
+define variable v-msg               as character no-undo .
+define variable v-kpsecs            as character no-undo .
+define variable v-kpgds             as character no-undo .
+define variable is-kp               as logical   no-undo .
+define variable is-kprvs            as logical   no-undo .
+define variable v-dec               as decimal   no-undo .
+define variable v-sec-name          as character no-undo .
 
 define buffer buf_trn-doc       for ub.trn-doc.
 define buffer buf_doc-line      for ub.doc-line.
 define buffer buf_doc-line-attr for ub.doc-line-attr.
 define buffer buf_doc-attr      for ub.doc-attr.
 define buffer buf_goods         for ub.goods.
+define buffer buf_place         for ub.place.
 define buffer buf_rvs-line      for ub.rvs-line.
 define buffer buf_rvs-doc       for ub.rvs-doc.
 define buffer buf_clients       for ub.clients.
@@ -161,6 +168,113 @@ do
   find first buf_trn-doc no-lock
     where recid( buf_trn-doc ) = rec_id.
   /*Общие данные*/
+  
+  /*Номер АЦ*/
+  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-car-num},OUTPUT v-car-num) no-error .
+    
+  /*Наличие СГДКК*/
+  find first ub.auto-tank-attr no-lock where ub.auto-tank-attr.auto-num = v-car-num and
+    ub.auto-tank-attr.attr-code = "auto-sep" and
+    logical(ub.auto-tank-attr.attr-value) = true no-error .
+  if available ub.auto-tank-attr then sgdkk = true .
+  
+  v-InfoSectionsTotal = new InfoSectionsTotal().
+  
+  gdsecs_ :
+  for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code,
+     first buf_goods where buf_goods.artic = buf_doc-line.artic
+       and buf_goods.prod-code = buf_doc-line.prod-code
+       and buf_goods.prod-type = buf_doc-line.prod-type
+  :
+    
+    v-InfoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_goods.gds-code).
+    v-InfoSectionsTotal:GetDBAllAttr().
+    do iNum = 1 to v-InfoSectionsTotal:SectionNum:
+      v-InfoSection = v-InfoSectionsTotal:GetInfoSectionProp(iNum).
+      if v-InfoSection:IsKP
+      then do :
+        is-kp = yes .
+        if v-InfoSection:AccMeth = 1
+        then do :
+          is-kprvs = yes .
+        end .
+      end .
+    end .
+  end .
+  
+  v-kpsecs = "" .
+  v-kpgds = "" .
+  if is-kprvs
+  then do :
+    for each buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                                   and buf_rvs-doc.out-code = buf_trn-doc.doc-code,
+        each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code,
+        first buf_goods where buf_goods.gds-code = buf_rvs-line.gds-code,
+        first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
+                                  and buf_place.obj-code = buf_rvs-doc.obj-code
+                                  and buf_place.pl-code  = buf_rvs-line.pl-code
+    :
+      if buf_rvs-line.state-measure-cli-qnty = ?
+      then do :
+        if lookup(buf_place.loc1 + " " + buf_place.pl-name, v-kpsecs) > 0
+        then next .
+        v-kpsecs = v-kpsecs + buf_place.loc1 + " " + buf_place.pl-name + ", " .
+        v-kpgds = v-kpgds + string(buf_goods.gds-code) + " " + buf_goods.gds-name + ", " .
+      end .
+    end .
+  end .
+  else if is-kp
+  then do :
+    gdsecs_ :
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code,
+       first buf_goods where buf_goods.artic = buf_doc-line.artic
+         and buf_goods.prod-code = buf_doc-line.prod-code
+         and buf_goods.prod-type = buf_doc-line.prod-type
+    :
+      
+      v-InfoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_goods.gds-code).
+      v-InfoSectionsTotal:GetDBAllAttr().
+      do iNum = 1 to v-InfoSectionsTotal:SectionNum:
+        v-InfoSection = v-InfoSectionsTotal:GetInfoSectionProp(iNum).
+        if (sgdkk and v-InfoSection:alarm-SGDKK and v-InfoSection:IsKP)
+        or (not sgdkk)
+        then do :
+          v-dec = decimal(v-InfoSection:TankWeight) no-error .
+          if error-status:error
+          or v-dec = 0
+          then do :
+            v-kpsecs = v-kpsecs + v-InfoSection:SectionName + ", " .
+            v-kpgds = v-kpgds + string(buf_goods.gds-code) + " " + buf_goods.gds-name + ", " .
+          end .
+        end .
+      end .
+    end .
+  end .
+  v-kpsecs = trim(v-kpsecs, ", ") .
+  v-kpgds = trim(v-kpgds, ", ") .
+  
+  if v-kpsecs > ""
+  and v-kpgds > ""
+  then do :
+    if is-kprvs
+    then do :
+      message "Не заполнены данные по замерам в резервуаре " + v-kpsecs +
+              ". Не может быть определено принимаемое к учету количество " + v-kpgds +
+              ". Печать Акта приема нефтепродуктов возможна только после определения количества принимаемого к учету по всем НП. Заполните данные по замерам в резервуаре " + v-kpsecs +
+              "."
+      view-as alert-box .
+    end .
+    else
+    if is-kp
+    then do :
+      message "Не заполнены данные по замерам в секции " + v-kpsecs +
+              ". Не может быть определено принимаемое к учету количество " + v-kpgds +
+              ". Печать Акта приема нефтепродуктов возможна только после определения количества принимаемого к учету по всем НП. Заполните данные по замерам в секции " + v-kpsecs +
+              "."
+      view-as alert-box .
+    end .
+    return .
+  end .
     
   /*Название объекта*/
   run clients-write(INPUT buf_trn-doc.obj-code,INPUT buf_trn-doc.obj-type,OUTPUT v-obj-name) no-error .    
@@ -240,16 +354,7 @@ do
       v-doc-not    = "НЕ ПРЕДОСТАВЛЕНЫ" 
       v-spisok-doc = v-attr-value .
   end. 
-    
-  /*Тревожное событие СГДКК*/
-  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT "alarmEventSGDKK",OUTPUT v-attr-value) no-error .
-  if v-attr-value <> "" then alarmEventSGDKK = logical(v-attr-value) .
-  else alarmEventSGDKK = false .
 
-  v-InfoSectionsTotal = new InfoSectionsTotal().
-  v-InfoSection = new InfoSection().
-        
-         
   /*печать*/
   run get-report-num (output p-report-id).
     
@@ -499,10 +604,10 @@ do
 
 
 
-  /*Сбор данных*/
+    /*Сбор данных*/
 
-  /*По накладной*/
-  /*Номер ТТН (ТН)*/
+    /*По накладной*/
+    /*Номер ТТН (ТН)*/
   { str/tdat-val.i buf_trn-doc.doc-code {&trdcattr-nids} v-attr-value v-attr-type }
   if v-attr-value > "" then 
   do :
@@ -514,7 +619,7 @@ do
     assign 
       v-nakl = buf_trn-doc.doc-code .
   end.                    
-  /*Дата ТТН (ТН)*/
+    /*Дата ТТН (ТН)*/
   { str/tdat-val.i buf_trn-doc.doc-code {&trdcattr-dids} v-attr-value v-attr-type }
   if v-attr-value > "" then v-date = v-attr-value.
   else 
@@ -525,15 +630,6 @@ do
         + substring(string(date(buf_trn-doc.doc-date), "99/99/9999") , 1, 3)
         + substring(string(date(buf_trn-doc.doc-date), "99/99/9999") , 7, 4).
   end.
-    
-  /*Номер АЦ*/
-  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-car-num},OUTPUT v-car-num) no-error .
-    
-  /*Наличие СГДКК*/
-  find first ub.auto-tank-attr no-lock where ub.auto-tank-attr.auto-num = v-car-num and
-    ub.auto-tank-attr.attr-code = "auto-sep" and
-    logical(ub.auto-tank-attr.attr-value) = true no-error .
-  if available ub.auto-tank-attr then sgdkk = true .
     
   /*Тип АЦ - не известно*/
   for first ub.auto-tank no-lock where ub.auto-tank.auto-num = v-car-num:
@@ -551,7 +647,7 @@ do
   if sgdkk then v-car-type = "СЭП" .   
                                            
   next_:
-  for each buf_doc-line where buf_doc-line.doc-code = buf_trn-doc.doc-code :  
+  for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code :  
 
     { str/is-petrl.i
       buf_doc-line.artic
@@ -595,22 +691,23 @@ do
         v-InfoSectionsTotal:GetDBAllAttr().
 
         do iNum = 1 to v-InfoSectionsTotal:SectionNum:
+          v-InfoSection = v-InfoSectionsTotal:GetInfoSectionProp(iNum) .
           assign
-            v-num-prob       = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Tests
-            v-norm-doc       = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NormDoc
-            v-kol-prob       = v-InfoSectionsTotal:GetInfoSectionProp(iNum):KolProb
-            v-tank-vol       = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol
-            v-tank-density   = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity 
-            v-tank-weight    = v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight / 1000 
-            v-tank-temp      = v-InfoSectionsTotal:GetInfoSectionProp(iNum):DensTemp
-            v-date-prob      = v-InfoSectionsTotal:GetInfoSectionProp(iNum):DateProb
-            v-hour-prob      = v-InfoSectionsTotal:GetInfoSectionProp(iNum):HourProb
-            v-min-prob       = v-InfoSectionsTotal:GetInfoSectionProp(iNum):MinProb
-            v-num-print-prob = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NumPrintProb
-            v-car-vol        = v-InfoSectionsTotal:GetInfoSectionProp(iNum):CarVol
-            v-mouth          = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Mouth
+            v-num-prob       = v-InfoSection:Tests
+            v-norm-doc       = v-InfoSection:NormDoc
+            v-kol-prob       = v-InfoSection:KolProb
+            v-tank-vol       = v-InfoSection:TankVol
+            v-tank-density   = v-InfoSection:TankDensity 
+            v-tank-weight    = v-InfoSection:TankWeight / 1000 
+            v-tank-temp      = v-InfoSection:DensTemp
+            v-date-prob      = v-InfoSection:DateProb
+            v-hour-prob      = v-InfoSection:HourProb
+            v-min-prob       = v-InfoSection:MinProb
+            v-num-print-prob = v-InfoSection:NumPrintProb
+            v-car-vol        = v-InfoSection:CarVol
+            v-mouth          = v-InfoSection:Mouth
             .
-          if v-komis <> yes then v-komis          = v-InfoSectionsTotal:GetInfoSectionProp(iNum):IsKP .       
+          if v-komis <> yes then v-komis          = v-InfoSection:IsKP .       
 
           create tt-petrol .
           assign
@@ -622,35 +719,103 @@ do
             .
           assign
             tt-petrol.name-gds   = v-gds-name
-            tt-petrol.vol-TH     = decimal(v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocQnty)
-            tt-petrol.density-TH = decimal(v-InfoSectionsTotal:GetInfoSectionProp(iNum):DocDensity) * 1000
-            tt-petrol.temp-TH    = decimal(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TTNTemp)
+            tt-petrol.vol-TH     = decimal(v-InfoSection:DocQnty)
+            tt-petrol.density-TH = decimal(v-InfoSection:DocDensity) * 1000
+            tt-petrol.temp-TH    = decimal(v-InfoSection:TTNTemp)
             .
           tt-petrol.weight-TH   = tt-petrol.vol-TH  * tt-petrol.density-TH / 1000.
-          if v-InfoSectionsTotal:GetInfoSectionProp(iNum):ABTarir <> 0 then 
+          if v-InfoSection:ABTarir <> 0 then 
           do: 
-            tt-petrol.urov-AC = string(((v-InfoSectionsTotal:GetInfoSectionProp(iNum):ABTarir) * 100),"->>>>>>>>>>>9,99") .
+            tt-petrol.urov-AC = string(((v-InfoSection:ABTarir) * 100),"->>>>>>>>>>>9,99") .
           end.    
           else 
           do:
             tt-petrol.urov-AC = "по планку".
           end.    
           assign
-            tt-petrol.vol-AC     = decimal(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankVol) / 1000
-            tt-petrol.density-AC = decimal(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankDensity) * 1000
-            tt-petrol.temp-AC    = decimal(v-InfoSectionsTotal:GetInfoSectionProp(iNum):DensTemp)
-            tt-petrol.weight-AC  = decimal(v-InfoSectionsTotal:GetInfoSectionProp(iNum):TankWeight)
-            tt-petrol.passport   = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NumPassport
+            tt-petrol.vol-AC     = decimal(v-InfoSection:TankVol) / 1000
+            tt-petrol.density-AC = decimal(v-InfoSection:TankDensity) * 1000
+            tt-petrol.temp-AC    = decimal(v-InfoSection:DensTemp)
+            tt-petrol.weight-AC  = decimal(v-InfoSection:TankWeight)
+            tt-petrol.passport   = v-InfoSection:NumPassport
             .
-
+            
           assign
-            tt-petrol.limit      = v-InfoSectionsTotal:GetInfoSectionProp(iNum):AccAbsFact
-            tt-petrol.weight-est = v-InfoSectionsTotal:GetInfoSectionProp(iNum):NaturalLoss
-            tt-petrol.deficit    = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Deficit
-            tt-petrol.excess     = v-InfoSectionsTotal:GetInfoSectionProp(iNum):Excess
-            tt-petrol.weight-pri = v-InfoSectionsTotal:GetInfoSectionProp(iNum):FactKgQnty
-            tt-petrol.num-pl     = v-InfoSectionsTotal:GetInfoSectionProp(iNum):ListTank
+            tt-petrol.limit      = v-InfoSection:AccAbsFact
+            tt-petrol.weight-est = v-InfoSection:NaturalLoss
+            tt-petrol.deficit    = v-InfoSection:Deficit
+            tt-petrol.excess     = v-InfoSection:Excess
+            tt-petrol.weight-pri = v-InfoSection:FactKgQnty
+            tt-petrol.num-pl     = v-InfoSection:ListTank
             .  
+            
+          if sgdkk
+          and not v-InfoSection:IsKP
+          then do :
+            tt-petrol.urov-AC = "SGDKK".
+          end .
+          
+          if sgdkk
+          and v-InfoSection:IsKP
+          and v-InfoSection:AccMeth = 1
+          then do :
+            tt-petrol.urov-AC = "".
+            tt-petrol.density-AC = ? .
+            tt-petrol.temp-AC    = ? .
+            tt-petrol.limit      = ? .
+            
+            v-sec-name = v-InfoSection:SectionName .
+            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                                                and buf_rvs-doc.out-code = v-doc-code
+                                                and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                                                and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec-name
+                                                no-error .
+            if not available buf_rvs-doc
+            then do :
+              find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                                                  and buf_rvs-doc.out-code = v-doc-code
+                                                  and num-entries(buf_rvs-doc.rvs-code, "-") = 2
+                                                  no-error .
+            end .
+            if available buf_rvs-doc
+            then do :
+              for each buf_rvs-line no-lock
+                where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                  and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                  and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                  and buf_rvs-line.gds-code = buf_goods.gds-code
+              :
+                tt-petrol.vol-AC     = tt-petrol.vol-AC     + buf_rvs-line.state-measure-qnty .
+                tt-petrol.weight-AC  = tt-petrol.weight-AC  + buf_rvs-line.state-measure-cli-qnty .
+              end .
+            end .
+            
+            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                                                and buf_rvs-doc.out-code = v-doc-code
+                                                and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                                                and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec-name
+                                                no-error .
+            if not available buf_rvs-doc
+            then do :
+              find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                                                  and buf_rvs-doc.out-code = v-doc-code
+                                                  and num-entries(buf_rvs-doc.rvs-code, "-") = 2
+                                                  no-error .
+            end .
+            if available buf_rvs-doc
+            then do :
+              for each buf_rvs-line no-lock
+                where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                  and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                  and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                  and buf_rvs-line.gds-code = buf_goods.gds-code
+              :
+                tt-petrol.vol-AC     = tt-petrol.vol-AC     - buf_rvs-line.state-measure-qnty .
+                tt-petrol.weight-AC  = tt-petrol.weight-AC  - buf_rvs-line.state-measure-cli-qnty .
+              end .
+            end .
+          end .
+
         /*                    for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_doc-line.obj-type     */
         /*                        and buf_doc-pl.obj-code = buf_doc-line.obj-code                               */
         /*                        and buf_doc-pl.out-code = buf_doc-line.doc-code                               */
@@ -945,20 +1110,29 @@ procedure print-table1:
       '<TD text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9",0) + '</TD>' skip
       '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9",1) + '" colspan="2" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip        
       '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip.
-      if tt-petrol.urov-AC <> ? then do:  put stream OutStr-html unformatted
-      '<TD text_wrap="true" colspan="2" style="text-align: center;"> ' tt-petrol.urov-AC ' </TD>' skip.
-      end.
-      else do:  put stream OutStr-html unformatted
-      '<TD colspan="2"> </TD>' skip.
-      end.
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+    . 
+    if tt-petrol.urov-AC = "SGDKK"
+    then do :
       put stream OutStr-html unformatted
+      '<TD text_wrap="true" colspan="2" style="text-align: center;"> </TD>' skip
+      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>>9.999",3) + '" colspan="2"  style="text-align: center;"> </TD>' skip
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;"> </TD>' skip        
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;"> </TD>' skip
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;"> </TD>' skip
+      '</TR>'skip     
+      .
+    end .
+    else do : 
+      put stream OutStr-html unformatted
+      '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.urov-AC + '</TD>' skip
       '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.999",3) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip        
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + if tt-petrol.density-AC = ? then " " else fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip        
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + if tt-petrol.temp-AC = ? then " " else fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip
       '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip
       '</TR>'skip     
       .
+    end .
   end.
 end procedure .
 
@@ -1011,9 +1185,23 @@ procedure print-table2:
       '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.num-AC + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.name-gds + '</TD>' skip
       '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.passport + '</TD>' skip
-      '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '</TD>' skip           
+    .
+    if tt-petrol.urov-AC = "SGDKK"
+    then do :
+      put stream OutStr-html unformatted
+      '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>9.9",1) + '" style="text-align: center;"> </TD>' skip
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>9.9",1) + '" style="text-align: center;"> </TD>' skip
+      '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>9.9",1) + '" style="text-align: center;"> </TD>' skip           
+      .
+    end .
+    else do :
+      put stream OutStr-html unformatted
+      '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + if tt-petrol.limit = ? then " " else fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + if tt-petrol.limit = ? then " " else fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + if tt-petrol.limit = ? then " " else fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '</TD>' skip           
+      .
+    end .
+    put stream OutStr-html unformatted
       '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-pri,"->>>>>>>>>>9.9",1) + '</TD>' skip
       '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-est,"->>>>>>>>>>9.9",1) + '</TD>' skip
       '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.num-pl + '</TD>' skip
