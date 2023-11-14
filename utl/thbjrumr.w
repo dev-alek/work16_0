@@ -423,7 +423,7 @@ if v-needs-ifile then do:
     SYSTEM-DIALOG GET-FILE v_os-file
     TITLE "Задайте файл для импорта"
     FILTERS
-      " Все EXCEL файлы (*.xls) " "*.xls",
+      " Все EXCEL файлы (*.xls,*.xlsx) " "*.xls,*.xlsx",
       " Все файлы (*.*) "                      "*.*"
     INITIAL-FILTER 1
     DEFAULT-EXTENSION ".xml"
