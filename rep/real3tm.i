@@ -27,7 +27,6 @@ field discnt as decimal
 field line-type  as character
 field line-sign as logical
 field sum as decimal
-field ost-sum as decimal   /* остаток нераспределенной суммы */
 field line-num as integer
 field num-lines as integer
 field doc-qnty as decimal
