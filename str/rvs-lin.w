@@ -4538,7 +4538,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end case .
      if not g-log then do:
         message "Ќедостаточно прав дл€ редактировани€!" view-as alert-box error .
-        undo, return .
+        undo, return error.
      end.
   end.
   
