@@ -4232,6 +4232,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     b = decimal (maskedTextBoxDocDens:Text) no-error.
     c = decimal (maskedTextBoxCliQnty:Text) no-error.
     
+    maskedTextBoxTankWeight:text = "" .
+    maskedTextBoxTankVolPomi:text = "" .
+    maskedTextBoxTankDensityPomi:text = "" .
+    maskedTextBoxAccWeight:text = "" .
+    
     assign
       v-doc-qnty      = a
       v-doc-density   = b
