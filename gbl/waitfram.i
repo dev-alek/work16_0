@@ -58,6 +58,8 @@ define frame waitfram
   B-WaitFramStop at row 4 col 30
   with view-as dialog-box side-labels three-d cancel-button B-WaitFramStop
   .
+define variable mWaitFramHandle as handle no-undo.      
+mWaitFramHandle = frame waitfram:handle.
 on choose of B-WaitFramStop in frame waitfram /* Добавить в АМ */
 do:
   mWaitFramStop = yes.
@@ -103,7 +105,6 @@ procedure waitfram-hide :
     process events .
 &endif
   end.
-
 end procedure. /* waitfram-hide */
 
 
@@ -164,10 +165,11 @@ procedure waitfram-show :
     end.
     B-viewProcInfo:visible   in frame waitfram = no. /*session:debug-alert.*/
     B-viewProcInfo:sensitive in frame waitfram = no. /*session:debug-alert.*/
-    B-WaitFramStop:visible   in frame waitfram = mWaitFramView .
-    B-WaitFramStop:sensitive in frame waitfram = mWaitFramView .
-    if     mWaitFramView
-       or  mWaitProcEvent 
+    B-WaitFramStop:visible   in frame waitfram = if mWaitFramHandle:visible then mWaitFramView else no .
+    B-WaitFramStop:sensitive in frame waitfram = if mWaitFramHandle:visible then mWaitFramView else no .
+    if  (   mWaitFramView
+       or  mWaitProcEvent)
+       and mWaitFramHandle:visible 
     then
        display
           v-waitfram-action01 skip
@@ -175,15 +177,16 @@ procedure waitfram-show :
           v-waitfram-action03 skip
        with frame waitfram .
 &if "{1}" = "" &then
-    
-       if     mWaitFramView 
+    if     mWaitFramView 
        then do:
-          if mWaitFramInterval ne ?
+          if     mWaitFramInterval ne ?
+             and mWaitFramHandle:visible
           then
              wait-for go of frame waitfram pause mWaitFramInterval.
        end.
        else
-          if mWaitProcEvent
+          if     mWaitProcEvent
+             and mWaitFramHandle:visible
           then
              process events .
 &endif
@@ -234,8 +237,9 @@ end procedure. /* waitfram-show */
 /*      publish "WaitFramStop".*/
       if     not mWaitFramStop
          and vint > 0
-      then
-         pause vint no-message.
+      then do:
+         run gbl/pause.p (vint * 1000).
+      end.
       if iInterval ne ?
       then
          publish "WaitFramStop".

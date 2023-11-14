@@ -19,6 +19,7 @@ define variable vss-workfile{&vssseq}    as character no-undo init "$Workfile:$"
 define variable vss-archive{&vssseq}     as character no-undo init "$Archive:$":U .
 define variable vss-description{&vssseq} as character no-undo init "Работа С сокетом".
 {cmp\str-glbl.i}
+{ utl/proc-async.i proc_log}
 &scop CRLF chr(13) + chr(10)
 &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 { gbl/waitfram.i }
@@ -28,11 +29,16 @@ define variable mWebResp       as longchar    no-undo.
 define variable mWebRespMptr   as memptr      no-undo.
 define variable OerrMsg        as character   no-undo.
 define variable mFileLogSocet  as character   no-undo.
-define variable mReturnXML     as logical     no-undo.
+define variable mReturnHttp    as logical     no-undo.
+define variable mAddTimeOut    as logical     no-undo init yes.
 define variable mSocetBegTime  as datetime-tz no-undo.
 define variable mSocetEndTime  as dec         no-undo.
 define variable mWriteRespFile as character   no-undo.
-if session:debug-alert
+publish "getSocetLog" (output mFileLogSocet).
+if 
+   (   mFileLogSocet eq ""
+    or mFileLogSocet eq ?)
+   and session:debug-alert
 then
    mFileLogSocet = "socet.log".
 /*------------------------------------------------------------------------------
@@ -42,23 +48,23 @@ then
               iUrl             - часть адреса, идентифицирующая ссылку
               iPostData        - параметры (после ? в URL)
               iPostData        - параметры (после ? в URL)
-              iReturnXML       - Что ожидать в ответе text или xml
+              iReturnType      - Что ожидать в ответе text или xml или http
               iTimeOut         - время ожидания ответа
               iSilent          - Молчаливый режим по умолчанию no
               iTextWait        - Текст для пользователя во время ожидания 
   Notes:
 ------------------------------------------------------------------------------*/
 procedure ConectSocet:
-   define input  parameter iHost      as character no-undo.
-   define input  parameter iPort      as character no-undo.
-   define input  parameter iUrl       as character no-undo.
-   define input  parameter iPostData  as longchar  no-undo.
-   define input  parameter iReturnXML as character no-undo.
-   define input  parameter iTimeOut   as decimal   no-undo.
-   define input  parameter iSilent    as logical   no-undo.
-   define input  parameter iTextWait  as character no-undo.
+   define input  parameter iHost       as character no-undo.
+   define input  parameter iPort       as character no-undo.
+   define input  parameter iUrl        as character no-undo.
+   define input  parameter iPostData   as longchar  no-undo.
+   define input  parameter iReturnType as character no-undo.
+   define input  parameter iTimeOut    as decimal   no-undo.
+   define input  parameter iSilent     as logical   no-undo.
+   define input  parameter iTextWait   as character no-undo.
    mWaitFramTextBeg = iTextWait.
-   run SendReqSocet (iHost, iPort, iUrl, iPostData, iReturnXML, 'getResponse').
+   run SendReqSocet (iHost, iPort, iUrl, iPostData, iReturnType, 'getResponse').
    if OerrMsg eq ""
    then
       run waitrespsocet (iTimeOut, iSilent, iTextWait).
@@ -71,7 +77,7 @@ end.
               iPort            - Порт обращения
               iUrl             - часть адреса, идентифицирующая ссылку
               iPostData        - параметры (после ? в URL)
-              iReturnXML       - Что ожидать в ответе text или xml
+              iReturnType      - Что ожидать в ответе text или xml или http
               iProcGetResponse - процедура обработки ответа по умолчанию getResponse
   Notes:
 ------------------------------------------------------------------------------*/
@@ -80,7 +86,7 @@ procedure SendReqSocet:
    define input  parameter iPort            as character no-undo.
    define input  parameter iUrl             as character no-undo.
    define input  parameter iPostData        as longchar  no-undo.
-   define input  parameter iReturnXML       as character no-undo.
+   define input  parameter iReturnType      as character no-undo.
    define input  parameter iProcGetResponse as character no-undo.
    mSocetBegTime = now.
    run writeLogSocet in this-procedure (substitute("Подключаемся к адресу &1 по порту &2",iHost,iPort )).
@@ -88,7 +94,7 @@ procedure SendReqSocet:
       mWebResp         = ""
       mWebResphead     = ""
       OerrMsg          = ""
-      mReturnXML       = iReturnXML eq "xml"
+      mReturnHttp      = iReturnType eq "xml" or iReturnType eq "http" or iReturnType eq "yes" 
       iProcGetResponse = "getResponse"  when iProcGetResponse eq ? or iProcGetResponse eq "" 
    .
    define variable vPostData as longchar                       no-undo.
@@ -158,8 +164,11 @@ procedure WaitRespSocet:
    mWaitFramTimeOut = iTimeOut.
    mWaitFramTextEnd = "".
    mWaitFramStop = no.
-   mWaitFramTimeOut = 300.
-   run writeLogSocet in this-procedure (substitute ("Таймаут увеличен до &1 при учтановке соодинения",mWaitFramTimeOut)).
+   if mAddTimeOut
+   then do:
+      mWaitFramTimeOut = 300.
+      run writeLogSocet in this-procedure (substitute ("Таймаут увеличен до &1 при уcтановке соодинения",mWaitFramTimeOut)).
+   end.
    
    run writeLogSocet in this-procedure (substitute("Ожидаем ответ TimeOut &1 сек.",iTimeOut )).
    
@@ -246,7 +255,7 @@ procedure PostRequest:
        
       'Accept: */*&1' +
       'Content-Type: text/xml&1'               +
-      'Content-Length:&3&1'                                  +
+      'Content-Length: &3&1'                                  +
       '&1&5' 
       ,
       {&carriage-return} + {&new-line}, 
@@ -268,6 +277,7 @@ procedure PostRequest:
       run writeLogSocet in this-procedure (substitute("Соединение было разорвано другой стороной getResponse")).
    
       oErrMsg = "Not connected".
+      delete object mHSocket no-error.
       return oErrMsg.
    end.
    mHSocket:write(vMRequest, 1, length(vCRequest)).
@@ -321,11 +331,16 @@ procedure getResponse:
       return oErrMsg.
    end.
    
-   mWaitFramTimeOut = 1000.
-   run writeLogSocet in this-procedure (substitute ("Таймаут увеличен до &1 при получении ответа",mWaitFramTimeOut)).
+   if mAddTimeOut
+   then do:
+      mWaitFramTimeOut = 1000.
+      run writeLogSocet in this-procedure (substitute ("Таймаут увеличен до &1 при получении ответа",mWaitFramTimeOut)).
+   end.
    
    run writeLogSocet in this-procedure (substitute("Получаем ответ")).
    mWaitFramTextEnd = "Получаем ответ".
+   define variable vWaitProcEvent as logical no-undo.
+   vWaitProcEvent = mWaitProcEvent.
    mWaitProcEvent = no. /* Отключим proces event иначе бедет беда с получением данных*/
    run WaitFramRunPause (?).
    define variable vByte as int64 no-undo.
@@ -344,13 +359,13 @@ procedure getResponse:
       
       mHSocket:read(vResponse,1,vNumByte).
       vMessage = vMessage + GET-STRING(vResponse,1).
-      if  mReturnXML
+      if  mReturnHTTp
       then do:
          /*Отсечение HTTP HEADER*/
          vCnt = index(vMessage,{&carriage-return} + {&new-line} + {&carriage-return} + {&new-line}).
          if vCnt > 0
          then do:
-            mReturnXML = no.
+            mReturnHttp = no.
             mWebResphead = substring (vMessage,1,vCnt).
             vMessage     = substring (vMessage,vCnt + 4).
             mWebResphead = replace (mWebResphead,";",{&CRLF}).
@@ -384,7 +399,8 @@ procedure getResponse:
       then do:
          VFlag = yes.
          run WaitFramRunPause (?).
-         pause 1 no-message.      /* ответ приходит медленее чем мы читаем ответ */
+         
+         run gbl/pause.p (1000) .      /* ответ приходит медленее чем мы читаем ответ */
       end.
       else if vByte > vNextMese
       then do:
@@ -442,7 +458,7 @@ procedure getResponse:
    end.
    else
       mWebResp = vMessage.
-   
+   mWaitProcEvent = vWaitProcEvent.
 /*   if     vFlagTag                                                 */
 /*      and R-INDEX(mWebResp,trim(">")) > 0                          */
 /*   then                                                            */
@@ -463,8 +479,12 @@ end procedure.
 
 procedure writeLogSocet:
    define input  parameter itext as longchar no-undo.
-   if     mFileLogSocet ne ?
-      and mFileLogSocet ne ""
+   
+   if mFileLogSocet eq "Async"
+   then
+      run writeLogSocetOnlyText(itext).
+   else if     mFileLogSocet ne ?
+           and mFileLogSocet ne ""
    then do:
       run gbl/fileapnd.p
           ( mFileLogSocet
@@ -477,19 +497,33 @@ procedure writeLogSocet:
           , substitute(" &1&2", {&carriage-return} , {&new-line})
           ,input 10 /* время ожинания освобождения файла */
           ) no-error .
-      
    end.
 end.
+
 procedure writeLogSocetOnlyText:
    define input  parameter itext as longchar no-undo.
-   if     mFileLogSocet ne ?
-      and mFileLogSocet ne ""
+   define variable vtext as character no-undo.
+   if length (itext) > 32000
+   then
+      vtext = substitute (itext,1,32000) + "..." no-error.
+   else
+      vtext = itext.
+   if mFileLogSocet eq "Async"
+   then 
+      run PutMesAsunc(vtext).
+   else if     mFileLogSocet ne ?
+           and mFileLogSocet ne ""
    then do:
       run gbl/fileapnd.p
           ( mFileLogSocet
-          , itext 
+          , vtext 
           ,input 10 /* время ожинания освобождения файла */
           ) no-error .
    end.
+end.
+
+procedure Disconect:
+   mHSocket:disconnect() no-error.
+   delete object mHSocket no-error.
 end.
 
