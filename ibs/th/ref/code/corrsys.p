@@ -33,6 +33,7 @@ mCodeTrg:formLable(1, 2, "Наименование").
 mCodeTrg:MaxLevel = 1.
 mCodeTrg:Mode = imode.
 mCodeTrg:chek-erpRN = g#db-num ne 0.
+mCodeTrg:nwsGbd = yes.
 if imode = {&select} then do:
 mCodeTrg:formLable(1, 1, "").  
 end.  
