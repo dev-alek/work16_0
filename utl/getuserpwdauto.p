@@ -18,7 +18,7 @@ define variable vss-workfile    as character no-undo init "$Workfile:$":U .
 define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
-
+&glob defonly yes
 { adm/auto-def.i}
 define input  parameter SystemUser as ibs.th.file.asyncparam no-undo.
 define input  parameter SystemPass as ibs.th.file.asyncparam no-undo.

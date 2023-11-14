@@ -1,3 +1,4 @@
+{ cmp/str-glbl.i }
 &if defined(starterasunc) eq 0
 &then
 define input  parameter iType            as character no-undo. 
@@ -21,8 +22,10 @@ procedure waitproc:
 end.  
 
 &else
+{ adm/auto-def-log.i }
 define variable mLableText as character no-undo.
 define variable mStartTime as datetime-tz no-undo init ?.
+
 procedure addtask:
    define input  parameter ITask as character no-undo.
    define input  parameter iProc as character no-undo.

@@ -1,14 +1,14 @@
 { cmp/str-glbl.i }
 &if "{1}" eq "beg_proc" or "{1}" eq "proc_def"
 &then
-define variable mAsyncHelper as class ibs.th.file.AsyncHelperth. 
-mAsyncHelper = new ibs.th.file.AsyncHelperth().
+define variable mAsyncProc as class ibs.th.file.AsyncProc. 
+run ibs\th\file\getasyncproc.p (output mAsyncProc).
 
 define variable mstopAsunc as logical no-undo.
 {&CommentStartNoClass}
 method private logical StopCheck () 
 {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-mAsyncHelper:mProcPublish = this-procedure.
+mAsyncProc:mProcPublish = this-procedure.
 function StopCheck returns logical:
    define variable oFlag as logical no-undo.
    run StopCheckAsync (output oFlag).
@@ -22,7 +22,7 @@ procedure StopCheckAsync:
     then 
        oFlag = mstopAsunc.
     else do:
-       oFlag = mAsyncHelper:CheckStop().
+       oFlag = mAsyncProc:CheckStop().
        mstopAsunc = oFlag.
     end.
 {&CommentStartNoClass}
@@ -103,7 +103,7 @@ method private character  GetParamAsunc
 function GetParamAsunc returns character 
 {utl\comment.i} */
 (input iNumPar as integer  ):
-   return mAsyncHelper:GetPARAM(iNumPar).
+   return mAsyncProc:GetPARAM(iNumPar).
 end.
 
 {&CommentStartNoClass}
@@ -112,7 +112,7 @@ method private ibs.th.file.asyncparam GetParamAsuncStr
 function GetParamAsuncStr returns ibs.th.file.asyncparam 
 {utl\comment.i} */
 (input iParamName as character ):
-   return mAsyncHelper:GetPARAM(iParamName).
+   return mAsyncProc:GetPARAM(iParamName).
 end.
 
 &endif
@@ -125,7 +125,7 @@ procedure WriteLogAsunc:
     define input  parameter IFlag as logical   no-undo.
     
     define variable vflag as logical no-undo.
-    mAsyncHelper:PutMes(input Itext, input IFlag).
+    mAsyncProc:PutMes(input Itext, input IFlag).
     run StopCheckAsync(output vflag).
     if vflag
     then do:
@@ -140,7 +140,7 @@ procedure SetGblError:
    if mAsuncStopUser
    then do:
       vtext = "Error Операция прервана пользователем.".
-      mAsyncHelper:PutMes(vtext).
+      mAsyncProc:PutMes(vtext).
    end.
    else do:
       if Itext eq ?
@@ -148,7 +148,7 @@ procedure SetGblError:
          vtext = "Error Ошибка при выполнениее асинхроного процесса".
       else
          vtext = "Error " + vtext.
-      mAsyncHelper:SetGblError(input Itext).
+      mAsyncProc:SetGblError(input Itext).
    end.
 end.
 
@@ -162,7 +162,7 @@ procedure writeFileLogAsunc:
     ifile = searchfile(ifile).
     if ifile ne ?
     then
-       mAsyncHelper:Nextlog(ifile).
+       mAsyncProc:Nextlog(ifile).
 end.
 
 {&CommentStartNoClass}
@@ -172,7 +172,7 @@ procedure WriteStatAsunc:
     define input  parameter IText    as character no-undo.
     define input  parameter IFlagAdd as logical no-undo.
 {utl\comment.i} */
-   mAsyncHelper:putStatus (Itext,IFlagAdd).    
+   mAsyncProc:putStatus (Itext,IFlagAdd).    
 end.
 
 
@@ -185,31 +185,27 @@ subscribe "PutStatAsunc"       anywhere run-procedure "WriteStatAsunc".
 subscribe "PutFileLogAsunc"    anywhere run-procedure "writeFileLogAsunc" .      
 
 output to "errorasync.log".
-mAsyncHelper:BegRec () .
-mNum   = int(mAsyncHelper:GetPARAM("numSession"):valueparam).
-mCount = int(mAsyncHelper:GetPARAM("countSession"):valueparam).
-mAsyncHelper:creatProcInfo(1,mNum,mCount).
-mAsyncHelper:WritelogInter = decimal (mAsyncHelper:GetPARAM("WritelogInter"):valueparam).
+mAsyncProc:BegRec () .
+mNum   = int(mAsyncProc:GetPARAM("numSession"):valueparam).
+mCount = int(mAsyncProc:GetPARAM("countSession"):valueparam).
+mAsyncProc:creatProcInfo(1,mNum,mCount).
+mAsyncProc:WritelogInter = decimal (mAsyncProc:GetPARAM("WritelogInter"):valueparam).
 
 &endif
 
 &if "{1}" eq "end_proc"
 &then
 
-mAsyncHelper:EndRec ()  .
+mAsyncProc:EndRec ()  .
 unsubscribe "StopProc".
 unsubscribe "WriteLogAsunc".
 unsubscribe "PutStatAsunc".      
 unsubscribe "PutFileLogAsunc".      
 
-delete object mAsyncHelper.
+delete object mAsyncProc.
 output close.
 output to "endproc.txt".
 output close.
 
 &endif
 
-&if "{1}" eq "proc_end"
-&then
-delete object mAsyncHelper.
-&endif
