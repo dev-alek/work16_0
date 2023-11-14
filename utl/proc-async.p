@@ -17,16 +17,22 @@ do on error   undo MAIN-BLOCK, retry MAIN-BLOCK
    end.
 
 writelogvalue = "AsyncProc". 
-define variable mProc as char no-undo.
-define variable mParam as character no-undo.
-define variable mParamName as character no-undo.
+define variable mProc       as char no-undo.
+define variable mParam      as character no-undo.
+define variable mParamName  as character no-undo.
 define variable mParamValue as character no-undo.
 define variable mNumEntries as integer no-undo.
-define variable mI      as integer no-undo.
+define variable mI          as integer no-undo.
+define variable mSetGblPar  as logical no-undo.
+
 mname = GetParamAsuncStr("User"):valueparam.
 mpassword = GetParamAsuncStr("password"):valueparam.
 mProc = GetParamAsuncStr("procedure"):valueparam.
 mDbConnect = logical(GetParamAsuncStr("DbConnect"):valueparam).
+mSetGblPar = logical(GetParamAsuncStr("SetGblPar"):valueparam).
+if mSetGblPar eq ?
+then
+   mSetGblPar = true.
 if     mProc ne ?
    and mProc ne ""
 then do:   
@@ -45,7 +51,8 @@ then do:
                run PutMesAsunc ("Error Не удалось подключиться к БД: " + return-value) .
             end.
             else do:
-               if mname ne ""
+               if     mname ne ""
+                  and mSetGblPar
                then
                run gbl/set-gbl-async.p
                   (input  true
