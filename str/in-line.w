@@ -4361,7 +4361,7 @@ if varrvs-place = yes then do:
               end .
             end .
             v-KPrvs-secs = trim(v-KPrvs-secs, ",") .
-            if num-entries(v-KPrvs-secs) = 1
+            if not v-KPrvs-doc-pl
             then do :
               disable-rvs = no .
               leave .
