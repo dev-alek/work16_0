@@ -33,7 +33,12 @@ define variable vss-description as character no-undo init "Обновление r-кодов, о
 { cmp/str-glbl.i }
 { adm/auto-def.i }
 define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
-
+procedure write-log:
+   define input  parameter iTabPosition as integer   no-undo.
+    define input parameter i-message    as character no-undo.
+    
+    run write-to-log in this-procedure( i-message).
+end.
 define variable p0-pathrc as character no-undo .
 define variable v-pathrc         as character no-undo .
 define variable v-filename         as character no-undo .
