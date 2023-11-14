@@ -6,9 +6,10 @@ run ibs\th\file\getasyncproc.p (output mAsyncProc).
 
 define variable mstopAsunc as logical no-undo.
 {&CommentStartNoClass}
-method private logical StopCheck () 
+method private logical StopCheck ():
+define variable oFlag as logical no-undo. 
 {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-mAsyncProc:mProcPublish = this-procedure.
+
 function StopCheck returns logical:
    define variable oFlag as logical no-undo.
    run StopCheckAsync (output oFlag).
@@ -30,71 +31,6 @@ procedure StopCheckAsync:
 {utl\comment.i} */
 end.
 
-{&CommentStartNoClass}
-method private logical PutMesAsunc (input Itext as character ):
-{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-procedure PutMesAsunc:
-    define input  parameter Itext as character no-undo.
-    define variable vflag as logical no-undo.
-{utl\comment.i} */
-    Publish "WriteLogAsunc" (Itext, yes).
-/*    run gbl\inidebug.p.*/
-    
-end.
-
-{&CommentStartNoClass}
-method private logical PutMesAsuncNoTime (input Itext as character ):
-{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-procedure PutMesAsuncNoTime:
-    define input  parameter Itext as character no-undo.
-    define variable vflag as logical no-undo.
-{utl\comment.i} */
-    Publish "WriteLogAsunc" (Itext,no).
-/*    run gbl\inidebug.p.*/
-    
-end.
-
-
-{&CommentStartNoClass}
-method private logical PutStatAsunc (input Itext as character ):
-{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-procedure PutStatAsunc:
-    define input  parameter Itext as character no-undo.
-{utl\comment.i} */
-    Publish "PutStatAsunc" (Itext,no).
-    {&CommentStartClass} run {utl\comment.i} */
-    PutMesAsunc (itext).
-end.
-
-{&CommentStartNoClass}
-method private logical PutStatAsuncNoTime (input Itext as character ):
-{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-procedure PutStatAsuncNoTime:
-    define input  parameter Itext as character no-undo.
-{utl\comment.i} */
-    Publish "PutStatAsunc" (Itext,no).
-    {&CommentStartClass} run {utl\comment.i} */
-    PutMesAsuncNoTime (itext).
-end.
-
-{&CommentStartNoClass}
-method private logical PutStatAsuncAdd (input Itext as character ):
-{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-procedure PutStatAsuncAdd:
-    define input  parameter Itext as character no-undo.
-{utl\comment.i} */
-    
-    Publish "PutStatAsunc" (Itext,yes).
-end.
-
-{&CommentStartNoClass}
-method private logical PutFileLogAsunc (input IFile as character ):
-{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-procedure PutFileLogAsunc:
-    define input  parameter IFile as character no-undo.
-{utl\comment.i} */
-    Publish "PutFileLogAsunc" (ifile).
-end.
 
 
 {&CommentStartNoClass}
@@ -115,6 +51,85 @@ function GetParamAsuncStr returns ibs.th.file.asyncparam
    return mAsyncProc:GetPARAM(iParamName).
 end.
 
+&endif
+&if defined(ProcASyncLogDef) eq 0 
+   and ("{1}" eq "beg_proc" or "{1}" eq "proc_def" or "{1}" eq "beg_class" or "{1}" eq "proc_log")
+&then
+&glob ProcASyncLogDef = yes
+{&CommentStartNoClass}
+method private logical PutMesAsunc (input Itext as character ):
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+procedure PutMesAsunc:
+    define input  parameter Itext as character no-undo.
+    define variable vflag as logical no-undo.
+{utl\comment.i} */
+    Publish "WriteLogAsunc" &if "{2}" ne "" &then from {2} &endif (Itext, yes)  .
+end.
+
+{&CommentStartNoClass}
+method private logical PutMesAsuncNoTime (input Itext as character ):
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+procedure PutMesAsuncNoTime:
+    define input  parameter Itext as character no-undo.
+    define variable vflag as logical no-undo.
+{utl\comment.i} */
+    Publish "WriteLogAsunc" &if "{2}" ne "" &then from {2} &endif (Itext,no)  .
+end.
+
+
+{&CommentStartNoClass}
+method private logical PutStatAsunc (input Itext as character ):
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+procedure PutStatAsunc:
+    define input  parameter Itext as character no-undo.
+{utl\comment.i} */
+    Publish "PutStatAsunc" &if "{2}" ne "" &then from {2} &endif (Itext,no) .
+    {&CommentStartClass} run {utl\comment.i} */
+    PutMesAsunc (itext).
+end.
+
+{&CommentStartNoClass}
+method private logical PutStatAsuncNoTime (input Itext as character ):
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+procedure PutStatAsuncNoTime:
+    define input  parameter Itext as character no-undo.
+{utl\comment.i} */
+    Publish "PutStatAsunc" &if "{2}" ne "" &then from {2} &endif (Itext,no)  .
+    {&CommentStartClass} run {utl\comment.i} */
+    PutMesAsuncNoTime (itext).
+end.
+
+{&CommentStartNoClass}
+method private logical PutStatAsuncAdd (input Itext as character ):
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+procedure PutStatAsuncAdd:
+    define input  parameter Itext as character no-undo.
+{utl\comment.i} */
+    
+    Publish "PutStatAsunc" &if "{2}" ne "" &then from {2} &endif (Itext,yes)  .
+end.
+
+{&CommentStartNoClass}
+method private logical PutFileLogAsunc (input IFile as character ):
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+procedure PutFileLogAsunc:
+    define input  parameter IFile as character no-undo.
+{utl\comment.i} */
+    Publish "PutFileLogAsunc" &if "{2}" ne "" &then from {2} &endif (ifile)  .
+end.
+
+&endif
+
+&if "{1}" eq "beg_proc" or "{1}" eq "proc_def" or "{1}" eq "class_init"
+&then
+   &if "{2}" ne "" 
+   &then  
+       mAsyncProc:mProcPublish = {2}.
+   &elseif "{1}" eq "beg_proc" or "{1}" eq "proc_def"
+   &then
+       mAsyncProc:mProcPublish = this-procedure.
+    
+   &endif
 &endif
 
 &if "{1}" eq "beg_proc"
@@ -175,6 +190,10 @@ procedure WriteStatAsunc:
    mAsyncProc:putStatus (Itext,IFlagAdd).    
 end.
 
+procedure IsAsyncProc:
+   define output parameter oIsAsync as logical no-undo.
+   oIsAsync = yes.
+end.
 
 
 define variable mnum   as integer no-undo.
@@ -182,7 +201,8 @@ define variable mCount as integer no-undo.
 subscribe "StopProc"           anywhere run-procedure "StopCheckAsync".
 subscribe "WriteLogAsunc"      anywhere.      
 subscribe "PutStatAsunc"       anywhere run-procedure "WriteStatAsunc".      
-subscribe "PutFileLogAsunc"    anywhere run-procedure "writeFileLogAsunc" .      
+subscribe "PutFileLogAsunc"    anywhere run-procedure "writeFileLogAsunc" .    
+subscribe "IsAsyncProc"        anywhere .  
 
 output to "errorasync.log".
 mAsyncProc:BegRec () .
@@ -196,16 +216,18 @@ mAsyncProc:WritelogInter = decimal (mAsyncProc:GetPARAM("WritelogInter"):valuepa
 &if "{1}" eq "end_proc"
 &then
 
-mAsyncProc:EndRec ()  .
-unsubscribe "StopProc".
-unsubscribe "WriteLogAsunc".
-unsubscribe "PutStatAsunc".      
-unsubscribe "PutFileLogAsunc".      
-
-delete object mAsyncProc.
-output close.
-output to "endproc.txt".
-output close.
-
+finally:
+   mAsyncProc:EndRec ()  .
+   unsubscribe "StopProc".
+   unsubscribe "WriteLogAsunc".
+   unsubscribe "PutStatAsunc".      
+   unsubscribe "PutFileLogAsunc".      
+   unsubscribe "IsAsyncProc".
+   delete object mAsyncProc.
+   output close.
+   output to "endproc.txt".
+   output close.
+   quit. 
+end.
 &endif
 

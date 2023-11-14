@@ -1444,7 +1444,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
         run str/getAsiDataAgent.p (input anl-loc, output table tt-place ) no-error.
         if error-status:error
         then do :
-          return error return-value .
+          return error return-value + error-status:get-message (1).
         end.
       end.
       when 3 /* ifsf */
@@ -5700,10 +5700,11 @@ define temp-table tt-User no-undo
    
 {bge/socet.i}
 procedure getpump:
-   define input  parameter ilogfile as character no-undo.
-   define input  parameter iobjtype as character no-undo.
-   define input  parameter iobjcode as integer no-undo.
-   define output parameter Opump as longchar no-undo.
+   define input  parameter ilogfile    as character no-undo.
+   define input  parameter iobjtype    as character no-undo.
+   define input  parameter iobjcode    as integer no-undo.
+   define input  parameter imessageon  as logical no-undo.
+   define output parameter Opump       as longchar no-undo.
    define variable vadr as character no-undo.
    define variable vport as character no-undo.
    define variable vtext as character no-undo.
@@ -5805,7 +5806,7 @@ procedure getpump:
                        "pumpread" + chr(13) + chr(10), 
                        "text",
                        30,
-                       no,
+                       not imessageon,
                        "Получение данных по ТРК. ") no-error.
       if     not error-status:error
          and length(mWebResp) > 0
@@ -5948,7 +5949,11 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
      and objSrv:SystemSetting:pumpfile ne ""
      and search(objSrv:SystemSetting:pumpfile) ne ?
   then do:
-     run readfiletxt(search(objSrv:SystemSetting:pumpfile),output vPump).
+     assign
+        v_File-Name = search(objSrv:SystemSetting:pumpfile)
+        v_File-Err  = substitute('&1pump.err', ibs.th.gbl.gbl-inipar:logDir) .
+     .
+     run readfiletxt(v_File-Name,output vPump).
   end.
   else if p-read-cur = yes then do:
     assign
@@ -5957,7 +5962,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     .
     output to value(v_File-Err) .
     output close.
-    run getpump(v_File-Err ,p-obj-type, p-obj-code, output vPump) no-error.
+    run getpump(v_File-Err ,p-obj-type, p-obj-code,p-message-on , output vPump) no-error.
     if error-status:error
     then
        return error substitute ("&1 Повторите попытку или обратитесь в техническую поддержку.",return-value).

@@ -1,6 +1,7 @@
 &glob defonly yes
 { adm/auto-def.i new}
 { cmp/trg-def.i new }
+
 { utl/proc-async.i beg_proc}
 define variable mDbConnect as logical no-undo.
 define variable mName as character  no-undo.
@@ -91,6 +92,6 @@ else
    run PutMesAsunc ("Error Не переданы параметры.") .
 end.
 { utl/proc-async.i end_proc}
-quit. 
+
 
 

@@ -65,11 +65,10 @@ on error undo, return error
                                     ) no-error .
     end.
   end.
-  else do:
-     if writelogvalue eq "AsyncProc" 
-     then 
-        run write-to-log in this-procedure( p-log-string) .
-  end.
+  if writelogvalue eq "AsyncProc" 
+  then 
+     run write-to-log in this-procedure( p-log-string) .
+  
 end.
 
 END PROCEDURE.
