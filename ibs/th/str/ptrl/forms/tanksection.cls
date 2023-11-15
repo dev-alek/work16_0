@@ -1110,13 +1110,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         if v-log
         then do :
           label50:text = "Идентификатор доступа (ключ) «верхнего уровня» или одноразовый код:" .
-          groupBox2:Enabled = true.
-          groupBox3:Enabled = true.
-          groupBox4:Enabled = true.
-          groupBox5:Enabled = true.
-          groupBox6:Enabled = true.
-          groupBox7:Enabled = true.
-          groupBox8:Enabled = true.
+/*          groupBox2:Enabled = true.*/
+/*          groupBox3:Enabled = true.*/
+/*          groupBox4:Enabled = true.*/
+/*          groupBox5:Enabled = true.*/
+/*          groupBox6:Enabled = true.*/
+/*          groupBox7:Enabled = true.*/
+/*          groupBox8:Enabled = true.*/
 /*          this-object:maskedTextBoxCarVol:Enabled = true.*/
 /*          comboBoxPour:Enabled = true.                   */
 /*          comboBoxShape:Enabled = true.                  */
@@ -1127,13 +1127,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       end .
       else do :
         label50:text = "Идентификатор доступа (ключ) «нижнего уровня»:" .
-        groupBox2:Enabled = false.
-        groupBox3:Enabled = false.
-        groupBox4:Enabled = false.
-        groupBox5:Enabled = false.
-        groupBox6:Enabled = false.
-        groupBox7:Enabled = false.
-        groupBox8:Enabled = false.
+/*        groupBox2:Enabled = false.*/
+/*        groupBox3:Enabled = false.*/
+/*        groupBox4:Enabled = false.*/
+/*        groupBox5:Enabled = false.*/
+/*        groupBox6:Enabled = false.*/
+/*        groupBox7:Enabled = false.*/
+/*        groupBox8:Enabled = false.*/
 /*        this-object:maskedTextBoxCarVol:Enabled = false.*/
 /*        comboBoxPour:Enabled = false.                   */
 /*        comboBoxShape:Enabled = false.                  */
@@ -4231,6 +4231,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     a = decimal (maskedTextBoxDocQnty:Text) no-error.
     b = decimal (maskedTextBoxDocDens:Text) no-error.
     c = decimal (maskedTextBoxCliQnty:Text) no-error.
+    
+    maskedTextBoxTankWeight:text = "" .
+    maskedTextBoxTankVolPomi:text = "" .
+    maskedTextBoxTankDensityPomi:text = "" .
+    maskedTextBoxAccWeight:text = "" .
     
     assign
       v-doc-qnty      = a

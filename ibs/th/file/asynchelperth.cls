@@ -17,7 +17,7 @@ class ibs.th.file.AsyncHelperth:
    { cmp/str-glbl.i class}
    {utl/ttprocdef.i}
    {utl/ttfileList.i  ttfile  }
-   { gbl/cur-time.i}
+   
  /*  {utl/setpwd.i class}*/
 /*define temp-table ttfileTarget no-undo like ttfile.*/
 define temp-table ttfileList no-undo like ttfile.
@@ -33,19 +33,27 @@ define variable v-path-tls-dir-delim as character no-undo init "\":u.
 define variable mRunProc as integer no-undo.
 
 define public variable maxproc       as integer no-undo init 10.
-define public variable WritelogInter as decimal no-undo init 0.
+
    
 define public variable mShowFrame   as logical    no-undo.
 define public variable SaveFile     as logical    no-undo.
-define public variable ErrorProc    as logical    no-undo.
+
 define public variable paramSession as character  no-undo init " -clientlog  mylog.lg -logginglevel 1".
 define public variable WaitFile     as character  no-undo.
-define public variable mProcPublish as handle     no-undo.
+
 define public variable DbConnect    as logical    no-undo init yes.
 define public variable SetGblPar    as logical    no-undo init ?.
 define public variable PrintAll     as logical    no-undo.
 define public variable ChangProPath     as logical    no-undo.
 define variable WAIT-FOR-RUN as logical no-undo.
+define variable mAsyncProc as class ibs.th.file.asyncproc no-undo.
+
+define public property mProcPublish as handle     no-undo
+get.
+set(arg as handle):
+   mAsyncProc:mProcPublish = arg.
+   mProcPublish = arg.
+end. 
 
    define public property MyParamStart as character  no-undo
    get.
@@ -57,6 +65,14 @@ define variable WAIT-FOR-RUN as logical no-undo.
       else if arg ne ?
       then
          MyParamStart = arg.
+    end.
+    
+    define public property WritelogInter as decimal no-undo
+    get:
+       return mAsyncProc:WritelogInter.
+    end.
+    set(arg as decimal):
+       mAsyncProc:WritelogInter = arg.
     end.
 
 define public property ConPar as character  no-undo init ?
@@ -74,7 +90,7 @@ end.
 
 define public property InAsyncProc as logical  no-undo 
 get:
-   return myProcInfo().
+   return mAsyncProc:myProcInfo().
 end.
    
 define public variable MyBachMode as logical no-undo init yes.
@@ -121,30 +137,12 @@ get.
     get.
     set.
     
-    define temp-table tt-Param no-undo
-       field nameParam as character 
-       field objParam  as Progress.Lang.Object
-    index nameParam nameParam.
-    
-    method datetime-tz getnow():
-       return datetime-tz(cur-time-string-sec()).
+    method public datetime-tz getnow():
+       return mAsyncProc:getnow().
     end.
     
-    method datetime-tz getnowday():
-       return datetime-tz(today).
-    end.
-    
-    method ibs.th.file.asyncparam getParamObj (iName as character ):
-        find first tt-Param where tt-Param.nameParam eq iName no-lock no-error.
-        if not available tt-Param
-        then do:
-            create tt-Param.
-            assign 
-               tt-Param.nameParam = iName
-            .
-            tt-Param.objParam  = new ibs.th.file.asyncparam(iName).
-        end.
-        return cast (tt-Param.objParam,ibs.th.file.asyncparam).
+    method public datetime-tz getnowday():
+       return mAsyncProc:getnowday().
     end.
     
     define public property myUser as character initial ? no-undo 
@@ -155,8 +153,8 @@ get.
           then do:
              define variable vSystemUser as ibs.th.file.asyncparam no-undo.
              define variable vSystemPass as ibs.th.file.asyncparam no-undo.
-             vSystemUser = getParamObj("SystemUser").
-             vSystemPass = getParamObj("SystemPass").
+             vSystemUser = mAsyncProc:getParamObj("SystemUser").
+             vSystemPass = mAsyncProc:getParamObj("SystemPass").
              
              run utl/syspwd.p(input vSystemUser, input vSystemPass)no-error.
              myUser = vSystemUser:valueParam.
@@ -174,8 +172,8 @@ get.
           then do:
              define variable vSystemUser as ibs.th.file.asyncparam no-undo.
              define variable vSystemPass as ibs.th.file.asyncparam no-undo.
-             vSystemUser = getParamObj("SystemUser").
-             vSystemPass = getParamObj("SystemPass").
+             vSystemUser = mAsyncProc:getParamObj("SystemUser").
+             vSystemPass = mAsyncProc:getParamObj("SystemPass").
              
              run utl/syspwd.p(input vSystemUser, input vSystemPass)no-error.
              myPass = substitute("nocrypt:&1",vSystemPass:valueParam).
@@ -188,8 +186,8 @@ get.
     method public void  setCurrentUserPasswd ():
        define variable vSystemUser as ibs.th.file.asyncparam no-undo.
        define variable vSystemPass as ibs.th.file.asyncparam no-undo.
-       vSystemUser = getParamObj("SystemUser").
-       vSystemPass = getParamObj("SystemPass").
+       vSystemUser = mAsyncProc:getParamObj("SystemUser").
+       vSystemPass = mAsyncProc:getParamObj("SystemPass").
        run utl/getuserpwdauto.p(input vSystemUser, input vSystemPass) no-error.
        if error-status:error
        then do:
@@ -214,6 +212,7 @@ get.
    
       super ().
       m-prowin32FileName =  search ("bin/prowin32.exe").
+      mAsyncProc = new ibs.th.file.asyncproc().
 /*      MyWorkDir = "pid_".*/
     /*  creatTTForDir("c:\11").
       updateFolder("c:\22", input table ttfile).
@@ -223,16 +222,12 @@ get.
    end constructor.
    
    destructor public AsyncHelperth ( ):
-      for each tt-Param:
-          delete object tt-Param.objParam.
-      end.
-      empty temp-table tt-Param.
       if     SaveFile
          and not MSaveArhive
       then
          SaveArh().
       delworkdir().
-      
+      delete object mAsyncProc.
    end destructor.
    method public character  SaveArh ():
       return SaveArh("").
@@ -657,7 +652,7 @@ Phase 1 of Load completed.  Working.  Please wait ...~
                           )
                           
                   then 
-                     put stream sWriteFile unformatted substitute ("&1 &2",cur-time-string-sec(), vStr) skip.
+                     put stream sWriteFile unformatted substitute ("&1 &2",mAsyncProc:getnow(), vStr) skip.
                end.
                input stream sReadfile close.
                output stream sWriteFile close.
@@ -680,15 +675,6 @@ Phase 1 of Load completed.  Working.  Please wait ...~
       then 
          iSched = taskname.
        return MyWorkDir + iSched .
-   end.
-   
-   &glob errstoptext #### Error Read ClientLog #### :
-   method public character  SetGblError (input itext as character ):
-      putmes (itext).
-      
-      if  log-manager:logfile-name ne ?
-      then
-         put unformatted (substitute ("{&errstoptext}&1",searchfile (log-manager:logfile-name)))  skip.
    end.
    
    method public logical copylog ( input iSched as character,input iItem as integer, input ilogFile as integer  ):
@@ -1019,30 +1005,30 @@ end.
             os-create-dir VALUE(MyWorkDir + vTask ).
          os-copy value(MyWorkDir + "assemblies.xml" )
                  value(MyWorkDir + vTask + v-path-tls-dir-delim + "assemblies.xml").  
-            SavePARAM(?,?).
-            SavePARAM("numSession",string(ttrun.num)).
-            SavePARAM("countSession",string(ttrun.fmaxitem)).
-            SavePARAM("procedure",ttrun.runproc).
+            mAsyncProc:SavePARAM(?,?).
+            mAsyncProc:SavePARAM("numSession",string(ttrun.num)).
+            mAsyncProc:SavePARAM("countSession",string(ttrun.fmaxitem)).
+            mAsyncProc:SavePARAM("procedure",ttrun.runproc).
                
 /*            SavePARAM("UserDB",string(ttrun.UserDB)).*/
-            SavePARAM("WritelogInter",string(WritelogInter)).
+            mAsyncProc:SavePARAM("WritelogInter",string(WritelogInter)).
             /*if not ttrun.UserDB
             then do:*/
-               SavePARAM("user",ttrun.fuser).
-               SavePARAM("password",ttrun.fpasw).
-               SavePARAM("DbConnect",string(DbConnect)).
+               mAsyncProc:SavePARAM("user",ttrun.fuser).
+               mAsyncProc:SavePARAM("password",ttrun.fpasw).
+               mAsyncProc:SavePARAM("DbConnect",string(DbConnect)).
                if SetGblPar ne ?
                then
-                  SavePARAM("SetGblPar",string(SetGblPar)).
+                  mAsyncProc:SavePARAM("SetGblPar",string(SetGblPar)).
                
                
                
                
 /*            end.*/
             do vi = 1 to num-entries(ttrun.fParam, {&delim-par} ):
-               SavePARAM("ParamProc_" + string(vi),entry(vi,ttrun.fParam, {&delim-par} )).
+               mAsyncProc:SavePARAM("ParamProc_" + string(vi),entry(vi,ttrun.fParam, {&delim-par} )).
             end.
-            SavefilePARAM(MyWorkDir + vTask + v-path-tls-dir-delim + "param.txt").
+            mAsyncProc:SavefilePARAM(MyWorkDir + vTask + v-path-tls-dir-delim + "param.txt").
             output stream sWriteFile to value(MyWorkDir + vTask + v-path-tls-dir-delim + "propath.txt").
             put stream sWriteFile unformatted propath skip.
             output stream sWriteFile close.
@@ -1114,86 +1100,10 @@ end.
    end.
       return vList.
    end method. 
-   {utl/search.i class} 
-   method public logical FolderExists  (input  ifolder as character ):
-      return objExists(ifolder,"D") ne ?.
-   end. 
-   method public logical FileExists  (input  ifolder as character ):
-      return objExists(ifolder,"F") ne ?.
-   end.
-   method public logical  objExists  (input  ifile as character):
-      return    (objExists(ifile,"D") ne ?) or ( objExists(ifile,"F") ne ?) .                                  
-   end.   
+    
                                             
      
-   &GLOBAL-DEFINE PARAM-BEG-TAG SUBSTITUTE("<PARAM name='&1'>", iName)
-   &GLOBAL-DEFINE PARAM-END-TAG SUBSTITUTE("</PARAM name='&1'>", iName)
-   define variable mxmlParam as longchar no-undo init "".
-   method public  void SavePARAM ( input iName as char, input iValue as char ):
-      if iName eq ?
-      then
-         mxmlParam = "".
-      else
-         mxmlParam = mxmlParam + substitute ("&1&2&3&4&5",
-                                            {&PARAM-BEG-TAG},
-                                            iValue,
-                                            {&PARAM-END-TAG},
-                                            {&carriage-return}, 
-                                            {&new-line}
-         ). 
-   end method.
    
-   method public  void  SavefilePARAM (ifile as character ):
-      define variable vLob as longchar no-undo.
-      run utl\filecrypchar.p(mxmlParam,
-                            "sysadmasync",
-                            yes,
-                            output vLob
-                            ).
-      copy-lob vLob to file ifile no-error.
-         
-   end.
-   
-   method public ibs.th.file.asyncparam GetPARAM (  input iName as char ):
-      return GetPARAM("param.txt",iName).
-   end.
-   
-   method public char GetPARAM (  input iNum as integer ):
-      define variable vresult as ibs.th.file.asyncparam no-undo.
-      vresult = GetPARAM("param.txt","ParamProc_" + string(iNum)).
-      return vresult:valueParam.
-   end.
-   
-   method public ibs.th.file.asyncparam GetPARAM ( input iFile as char, input iName as char ):
-      def var vLob  as longchar no-undo.
-      def var vFrom as int64    no-undo.
-      def var vTo   as int64    no-undo.
-      def var vParInt as integer no-undo.
-      define variable paramObj as ibs.th.file.asyncparam no-undo. 
-      vParInt = int(iname) no-error.
-      if not error-status:error
-      then
-         iname = "ParamProc_" + string(vParInt).
-      paramObj = getParamObj(iname).
-      if paramObj:valueParam eq ? and mxmlParam eq ""
-      then do:
-         if not FileExists (iFile) then return ?.
-         copy-lob file iFile to vLob no-error.
-         run utl\filecrypchar.p(vLob,
-                            "sysadmasync",
-                            no,
-                            output mxmlParam
-                            ).
-      end.
-      vFrom = index(mxmlParam, {&PARAM-BEG-TAG}).
-      if vFrom <= 0 then return paramObj.
-      assign
-         vTo = index(mxmlParam, {&PARAM-END-TAG})
-         vFrom = vFrom + LENGTH({&PARAM-BEG-TAG}). 
-      if vTo < vFrom then return paramObj.
-      paramObj:valueParam = string(substring(mxmlParam, vFrom, vTo - vFrom)).
-      return paramObj.
-   end method.
 /*********************************************** beg procView *********************************************************/
    
   method public void  creatTTForProc (input iDir as char ):
@@ -1433,26 +1343,7 @@ method public logical  termprc(iPid as integer):
    return vOk.    
 end. 
 /*********************************************** End procView *********************************************************/
-   method public void putStatus (itext as character ):
-      putStatus (itext,no).
-   end.
    
-   define variable putStatusText as character no-undo.
-   
-   method public void putStatus (itext as character, iAdd as logical ):
-      define variable vText as character no-undo.
-      if iAdd 
-      then
-         vText = putStatusText + " " + iText.
-      else assign
-         putStatusText = iText
-         vtext         = iText
-      .
-      output stream sWriteFile to "procstatus.txt". 
-      put stream sWriteFile unformatted vtext skip.
-      output stream sWriteFile close.
-      NextLog().
-   end.
    
    method public logical isWorkShed():
       return isWorkShed(?).
@@ -1563,90 +1454,19 @@ end.
       return vStat.
    end method.
    
-   define variable mWriteLogTime  as datetime-tz no-undo.
-   define variable mWriteLogNum   as integer     no-undo.
-   define variable mWriteLogMes   as logical     no-undo.
-        
-   method public void  creatProcInfo (input iAllobj as integer,iProcnum as integer,iAllproc as integer   ):
-       define variable vMyPid as int64 no-undo.
-      run utl/getpid.p (output vMyPid) no-error.
-      output stream sWriteFile to "procinfo.txt".
-      put stream sWriteFile unformatted substitute("&1~001&2~001&3~001&4",vMyPID ,iAllobj,iProcnum,iAllproc) skip.
-      output stream sWriteFile close.
-      mWriteLogTime = getnow().
-   end method.
+    
    
-   method public logical myProcInfo():
-      
-      return FileExists("procinfo.txt").
-   end.
-        
-   define stream sLogMes. 
-   method public logical BegRec():
-      output stream sLogMes to "meslogasync.log".
-   end.
+   
 
-   method public logical PutMes 
-     (input Itext as character  ):
-      PutMes(Itext,yes).
-   end.
-
-   method public logical PutMes 
-     (input Itext as character ,
-      input IFlagtime as logical):
-      if Itext begins "error"
-      then
-         ErrorProc = yes.
-      if IFlagtime
-      then do:
-         put stream sLogMes unformatted substitute ("&1 &2",cur-time-string-sec(), Itext) skip .
-         if Itext begins "error"
-         then
-            put stream sLogMes unformatted "ERROR Произошла ошибка во время выполнения." skip.
-      end.
-      else
-         put stream sLogMes unformatted Itext skip .
-      mWriteLogMes = yes.
-      NextLog().
-   end.
-
-   method public logical NextLog():
+   /*method public logical NextLog():
       nextLog(no).
    end.
    method public logical NextLog(iFlagInter as logical):
-      define variable vend    as datetime-tz no-undo.
-      define variable vint as int64 no-undo.
-      if     mWriteLogMes
-         and (WritelogInter > 0 or iFlagInter)
-      then do:
-         vend   = getnow().
-         vint = vend - mWriteLogTime.
-         vint = WritelogInter - vint / 1000.
-         if     vint < 0
-             or iFlagInter
-         then do:
-            output stream sLogMes close.
-            mWriteLogNum = mWriteLogNum + 1.
-            os-delete             value ("meslogasync.log" + string(mWriteLogNum)).
-            os-rename "meslogasync.log" value ("meslogasync.log" + string(mWriteLogNum)).
-            output stream sLogMes to "meslogasync.log".
-            assign
-               mWriteLogTime = getnow()
-               mWriteLogMes  = no
-            .
-            
-         end.
-      end.
+      mAsyncProc:NextLog(iFlagInter).
    end.
    
    method public logical NextLog(iFile as char):
-      NextLog(yes).
-      mWriteLogNum = mWriteLogNum + 1.
-      os-delete            value ("meslogasync.log" + string(mWriteLogNum)).
-      os-command value(substitute ("copy &1 meslogasync.log&2 > copy.log &3 Exit",iFile,string(mWriteLogNum),{&ampersand}) ).
-            
-/*      os-copy value() value ("meslogasync.log" + ).*/
-   
+      mAsyncProc:NextLog(iFlagInter).
    end.
    
    method public logical EndRec():
@@ -1678,7 +1498,7 @@ end.
       return FileExists("param.txt").
    end. 
    
-
+*/
 /*************************************************/
 
 define variable v-waitfram-action01         as character no-undo .
@@ -1856,5 +1676,16 @@ method public logical WaitFor ( input iSched as character, input ipInterval as i
             return yes.
       end.
       return no.
+   end.
+   
+   {utl/search.i class} 
+   method public logical FolderExists  (input  ifolder as character ):
+      return objExists(ifolder,"D") ne ?.
+   end. 
+   method public logical FileExists  (input  ifolder as character ):
+      return objExists(ifolder,"F") ne ?.
+   end.
+   method public logical  objExists  (input  ifile as character):
+      return    (objExists(ifile,"D") ne ?) or ( objExists(ifile,"F") ne ?) .                                  
    end.
 end class.

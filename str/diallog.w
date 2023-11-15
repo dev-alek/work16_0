@@ -329,12 +329,18 @@ end.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-  IF create-window-option = 1 THEN DO:
-    CREATE WIDGET-POOL.
-    RUN create-window IN THIS-PROCEDURE.
-  END.
-  else do:
-    RUN enable_UI.
+   define variable mSilent as logical no-undo.
+   publish "IsAsyncProc" (output mSilent).
+   if mSilent ne true
+   then do:
+     IF create-window-option = 1 THEN DO:
+       CREATE WIDGET-POOL.
+       RUN create-window IN THIS-PROCEDURE.
+     END.
+     else do:
+        
+           RUN enable_UI.
+     end.
   end.
   assign
   frame {&frame-name}:title = p-title
@@ -420,7 +426,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
      WAIT-FOR GO OF FRAME {&FRAME-NAME}.
   end.
   if return-value = "error":U then do:
-    if create-window-option = 1 THEN DO:
+    if     create-window-option = 1
+       and mSilent ne true
+    THEN DO:
       RUN delete-window IN THIS-PROCEDURE.
     END.
     if valid-handle(p-parent-handle)
@@ -430,7 +438,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     return "error":U.
   end.
   if v-error and return-value-option = 1 then do:
-    if create-window-option = 1 THEN DO:
+    if     create-window-option = 1 
+       and mSilent ne true
+    THEN DO:
       RUN delete-window IN THIS-PROCEDURE.
     END.
     if valid-handle(p-parent-handle)
@@ -444,7 +454,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
      return error v-return-value.
   end.
   if return-value-option = 1 then do:
-    if create-window-option = 1 THEN DO:
+    if     create-window-option = 1 
+       and mSilent ne true    
+    THEN DO:
       RUN delete-window IN THIS-PROCEDURE.
     END.
     return return-value .
@@ -453,7 +465,9 @@ END.
 for each temp-file-name:
   delete temp-file-name.
 end.
-if create-window-option = 1 THEN DO:
+if     create-window-option = 1 
+   and mSilent ne true
+THEN DO:
   RUN delete-window IN THIS-PROCEDURE.
 END.
 else do:

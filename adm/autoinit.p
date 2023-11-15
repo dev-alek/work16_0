@@ -30,6 +30,7 @@ def var vss-workfile    as character no-undo init "$Workfile$":U .
 def var vss-archive     as character no-undo init "$Archive$":U .
 def var vss-description as character no-undo init "инициализация глобальных переменных автоматической системы".
 { cmp/vssrevis.i }
+&glob defonly yes
 { adm/auto-def.i }
 
 do

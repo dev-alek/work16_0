@@ -2,13 +2,13 @@ session:debug-alert = yes.
 output to "error.log".
 
 output close.
-define variable vAsyncHelper as class ibs.th.file.AsyncHelperth. 
+define variable vAsyncProc as class ibs.th.file.AsyncProc. 
 define variable mDir as character no-undo.
-vAsyncHelper = new ibs.th.file.AsyncHelperth().
-vAsyncHelper:creatProcInfo(1,1,1).
+vAsyncProc = new ibs.th.file.AsyncProc().
+vAsyncProc:creatProcInfo(1,1,1).
 assign
    mdir = 
-   vAsyncHelper:GetPARAM(1)
+   vAsyncProc:GetPARAM(1)
     .
     
 output to "endproc.txt". 
@@ -25,7 +25,7 @@ output close.
   
   
 
-delete object vAsyncHelper.
+delete object vAsyncProc.
 delete object v-ProcView.
 /*output to "endproc.txt". 
 put unformatted "end" skip.

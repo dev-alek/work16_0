@@ -169,14 +169,22 @@ on error undo, return error
             no-error
           .
           if not available buf-all_db-rec-attr then do:
-            run write-to-log
-              ( substitute( 'Отсутствует запись о проведении операции "&1" над записью &2 для БД &3'
-                            ,v-action
-                            ,v-uniq-key-rec
-                            ,v-db-num
-                          )
-              ).
-            return error .
+/*            run write-to-log                                                                        */
+/*              ( substitute( 'Отсутствует запись о проведении операции "&1" над записью &2 для БД &3'*/
+/*                            ,v-action                                                               */
+/*                            ,v-uniq-key-rec                                                         */
+/*                            ,v-db-num                                                               */
+/*                          )                                                                         */
+/*              ).                                                                                    */
+/*            return error .                                                                          */
+            create buf-all_db-rec-attr.
+            assign
+              buf-all_db-rec-attr.db-num             = v-db-num
+              buf-all_db-rec-attr.uniq-key-rec       = v-uniq-key-rec
+              buf-all_db-rec-attr.attr-code          = v-action
+              buf-all_db-rec-attr.attr-value-decimal = v-db-init
+              buf-all_db-rec-attr.attr-type          = "commit"
+            .
           end.
           if buf-all_db-rec-attr.attr-type <> v-operation
             or ( buf-all_db-rec-attr.attr-type = v-operation
@@ -405,11 +413,12 @@ on error undo, return error
         .
       end.
       else do:
-        if not available buf_db-rec-attr
-          and v-operation = "execution":U
-        then do:
-          return error substitute( '&1. Нельзя выполнить шаг "&2" не выполнив шага "&3"', vss-workfile, v-operation, "commit":U ).
-        end.
+/*        EXPSD-8175 убрана проверка. если 1-го запроса commit не было. ну и ладно. выполняем без него */ 
+/*        if not available buf_db-rec-attr                                                                                          */
+/*          and v-operation = "execution":U                                                                                         */
+/*        then do:                                                                                                                  */
+/*          return error substitute( '&1. Нельзя выполнить шаг "&2" не выполнив шага "&3"', vss-workfile, v-operation, "commit":U ).*/
+/*        end.                                                                                                                      */
 
         if available buf_db-rec-attr
           and buf_db-rec-attr.attr-type = v-operation

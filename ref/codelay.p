@@ -21,14 +21,14 @@ define variable vss-workfile    as character no-undo init "$Workfile:$":U .
 define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
-
+{ utl/search.i }
 find first code where code.parent eq iparent
                   and code.code   eq icode
                   no-lock no-error.
 if     available code
    and code.procview ne ""
    and code.procview ne ?
-   and search(code.procview)  ne ?
+   and SearchPFile(code.procview)  ne ?
 then do:
    run value( code.procview) (Parparentproc, imode, code.parent , code.code,Code.CodeName).
 end.

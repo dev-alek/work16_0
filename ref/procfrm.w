@@ -10,7 +10,7 @@
 {ref\ttprocbrow.i}
 {cmp\str-glbl.i}
 define variable masynchelper as class ibs.th.file.asynchelperTh no-undo.
-{utl/asuncprocauto.i &starterasunc = yes}
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -50,10 +50,16 @@ define input  parameter parparentproc as handle no-undo.
 define input  parameter iProcId as character no-undo.
 define input  parameter dataset  for ds-asuncProc bind.
 /* Local Variable Definitions ---                                       */
-
+define variable vss-revision    as character no-undo init "$Revision$":u .
+define variable vss-author      as character no-undo init "$Author$":u .
+define variable vss-date        as character no-undo init "$Date$":u .
+define variable vss-workfile    as character no-undo init "$Workfile$":u .
+define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-description as character no-undo init "Асинхронные процессы" .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
+{adm/auto-def-log.i new}
+{utl/asuncprocauto.i &starterasunc = yes}
 
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
@@ -357,7 +363,7 @@ on choose of Btn_OK in frame Dialog-Frame /* Отказать в подписи */
        
    end.
     run ibs\th\file\waithelper.p (mAsyncHelper,?, 1,tt-procAsunc.procname).
-       
+    os-command no-wait value (mAsyncHelper:getlog(?)).   
     message "Результаты выполнения находятся в " mAsyncHelper:SaveArh()
     view-as alert-box.
     delete object mAsyncHelper.

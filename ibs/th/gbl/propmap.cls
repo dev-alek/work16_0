@@ -36,7 +36,7 @@ class ibs.th.gbl.propmap inherits objth:
  
   define public property KeyIntDB as integer no-undo 
     get.
-    set.
+    private set.
 
   define public property KeyInt as integer no-undo 
     get.

@@ -380,7 +380,7 @@ procedure proc-report:
          find first ub.user-account no-lock where ub.user-account.user-id = ub.c-trn-doc.user-name no-error .
          if available(ub.user-account) then tt-report.user-open = ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name .
       end.
-        
+
       /*ФИО сотрудника техподдержки, закрывшего ПН*/
       find first ub.c-trn-doc no-lock where ub.c-trn-doc.doc-code = buf_trn-doc.doc-code and 
          ub.c-trn-doc.obj-code = buf_trn-doc.obj-code and
@@ -394,7 +394,7 @@ procedure proc-report:
          if available(ub.user-account) then tt-report.user-close = ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name .
       end.
       /*Измер. объем топлива в резер-вуаре после сли-ва АЦ, л*/
-      for first buf_rvs-doc no-lock where buf_rvs-doc.obj-code = buf_doc-pl-attr.obj-code and
+      for each buf_rvs-doc no-lock where buf_rvs-doc.obj-code = buf_doc-pl-attr.obj-code and
          buf_rvs-doc.obj-type = buf_doc-pl-attr.obj-type and
          buf_rvs-doc.out-code = buf_trn-doc.doc-code and
          buf_rvs-doc.rvs-type = {&rvs-after-doc},
@@ -403,10 +403,10 @@ procedure proc-report:
          buf_rvs-line.gds-code = buf_doc-pl-attr.gds-code and
          buf_rvs-line.pl-code = buf_doc-pl-attr.pl-code and
          buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-         tt-report.fact-calc-vol_after = buf_rvs-line.state-measure-qnty .
+         tt-report.fact-calc-vol_after = tt-report.fact-calc-vol_after + buf_rvs-line.state-measure-qnty .
       end.
       /*Измер. объем топлива в резервуаре до слива АЦ, л*/
-      for first buf_rvs-doc no-lock where buf_rvs-doc.obj-code = buf_doc-pl-attr.obj-code and
+      for each buf_rvs-doc no-lock where buf_rvs-doc.obj-code = buf_doc-pl-attr.obj-code and
          buf_rvs-doc.obj-type = buf_doc-pl-attr.obj-type and
          buf_rvs-doc.out-code = buf_trn-doc.doc-code and
          buf_rvs-doc.rvs-type = {&rvs-before-doc},
@@ -415,7 +415,7 @@ procedure proc-report:
          buf_rvs-line.gds-code = buf_doc-pl-attr.gds-code and
          buf_rvs-line.pl-code = buf_doc-pl-attr.pl-code and
          buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-         tt-report.fact-calc-vol_before = buf_rvs-line.state-measure-qnty .
+         tt-report.fact-calc-vol_before = tt-report.fact-calc-vol_before + buf_rvs-line.state-measure-qnty .
       end.
       /*Объем по ТТН, л*/
       find first ub.goods no-lock where ub.goods.gds-code = buf_doc-pl-attr.gds-code no-error .

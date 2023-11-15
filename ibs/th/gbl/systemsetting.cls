@@ -51,6 +51,13 @@ class ibs.th.gbl.systemsetting inherits   ibs.th.gbl.sys.objth :
    get.
    private set.
    
+   define public property PumpFile as character no-undo 
+   get.
+   private set.
+   
+   define public property AsiFile as character no-undo 
+   get.
+   private set.
    
    constructor public systemsetting (input ikey as character ):
       define variable vFilesetting as character no-undo.
@@ -76,6 +83,10 @@ class ibs.th.gbl.systemsetting inherits   ibs.th.gbl.sys.objth :
          DeveloperMode = logical(vText)no-error.
          xmldom-read-unique("settings","CrLogin",output CrLogin, output vFound).
          xmldom-read-unique("settings","CrPswd" ,output CrPswd , output vFound).
+         xmldom-read-unique("settings","PumpFile" ,output PumpFile , output vFound).
+         xmldom-read-unique("settings","AsiFile" ,output AsiFile , output vFound).
+      
+
       end.
    end constructor.
   

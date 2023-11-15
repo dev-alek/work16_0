@@ -45,7 +45,6 @@ else do:
    if mDB eq ? then do:
       
       run PutstatAsunc( "error   ѕолучение данных было преврвано пользователем." ).
-      delete object mAsyncHelper.
       return.
    end.
    else

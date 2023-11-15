@@ -248,7 +248,7 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
     
     assign
       v-str = ",code" 
-      when (basic-kb = 1 and code_ = ?) /* Условно-обязательное поле. Добавлено в ТР вер.2.5 от 07/III-2019 */
+      when code_ = ? /* Условно-обязательное поле. Добавлено в ТР вер.2.5 от 07/III-2019 */
       v-str = v-str + ",name" 
       when name_ = ?
       .

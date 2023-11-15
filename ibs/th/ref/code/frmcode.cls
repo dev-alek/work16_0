@@ -612,7 +612,7 @@ class ibs.th.ref.code.frmcode inherits Form  final:
             
          .
       end.
-      if inum eq 2 
+      if inum eq 1 
       then do:
          if itext eq ?
          then assign
@@ -625,7 +625,7 @@ class ibs.th.ref.code.frmcode inherits Form  final:
             label1  :text    = itext
          .
       end.
-      else if inum eq 3 
+      else if inum eq 2 
       then do:
          if itext eq ?
          then assign
@@ -638,7 +638,7 @@ class ibs.th.ref.code.frmcode inherits Form  final:
             label2  :text    = itext
          .
       end.
-      else if inum eq 4 
+      else if inum eq 3 
       then do:
          if itext eq ?
          then assign

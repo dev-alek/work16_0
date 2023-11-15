@@ -62,6 +62,8 @@ class ibs.th.ref.code.code_trg final:
   define public variable title  as character no-undo init ?.
   define public variable startlevel as integer no-undo.
   define public variable mViewdel as logical no-undo.
+  define public variable nwsGbd   as logical no-undo.
+  define public variable nwsUbd   as logical no-undo.
   
   define property curLevel as integer no-undo
   get:
@@ -708,7 +710,11 @@ class ibs.th.ref.code.code_trg final:
           if ibuffertt::frecid ne ?
           then
              find first buf_code where recid(buf_code) eq ibuffertt::frecid exclusive-lock.
-          buffer-copy tt-code-frm to buf_code.
+          buffer-copy tt-code-frm to buf_code
+          assign
+             buf_code.nwsgbd = nwsGbd when nwsGbd
+             buf_code.nwsubd = nwsUbd when nwsUbd 
+          .
           if available tt-code-brw
           then
              buffer-copy tt-code-frm to tt-code-brw.

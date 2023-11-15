@@ -61,7 +61,6 @@ define variable rv                        as integer                  no-undo .
 define variable v-pid                     as integer                  no-undo .
 define variable v-instant                 as logical                  no-undo .
 
-
 main-block:
 do
 on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status:get-message (1))
@@ -166,14 +165,16 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         assign
           v-time-count = v-time-count + 1
         .
-        pause 1 no-message .
+        
+        run gbl/pause.p( 1000).
 
         assign
           FILE-INFO :FILE-NAME = p-response-file-name
         .
         if file-info = ? then do:
           v-time-count = v-time-count - 1.
-          pause 1 no-message .
+          
+          run gbl/pause.p( 1000).
           next _repeat.
         end.
         IF INDEX(FILE-INFO:FILE-TYPE, "F")  > 0 then  do:

@@ -1,14 +1,15 @@
 { cmp/str-glbl.i }
 &if "{1}" eq "beg_proc" or "{1}" eq "proc_def"
 &then
-define variable mAsyncHelper as class ibs.th.file.AsyncHelperth. 
-mAsyncHelper = new ibs.th.file.AsyncHelperth().
+define variable mAsyncProc as class ibs.th.file.AsyncProc. 
+run ibs\th\file\getasyncproc.p (output mAsyncProc).
 
 define variable mstopAsunc as logical no-undo.
 {&CommentStartNoClass}
-method private logical StopCheck () 
+method private logical StopCheck ():
+define variable oFlag as logical no-undo. 
 {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-mAsyncHelper:mProcPublish = this-procedure.
+
 function StopCheck returns logical:
    define variable oFlag as logical no-undo.
    run StopCheckAsync (output oFlag).
@@ -22,7 +23,7 @@ procedure StopCheckAsync:
     then 
        oFlag = mstopAsunc.
     else do:
-       oFlag = mAsyncHelper:CheckStop().
+       oFlag = mAsyncProc:CheckStop().
        mstopAsunc = oFlag.
     end.
 {&CommentStartNoClass}
@@ -30,6 +31,31 @@ procedure StopCheckAsync:
 {utl\comment.i} */
 end.
 
+
+
+{&CommentStartNoClass}
+method private character  GetParamAsunc 
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function GetParamAsunc returns character 
+{utl\comment.i} */
+(input iNumPar as integer  ):
+   return mAsyncProc:GetPARAM(iNumPar).
+end.
+
+{&CommentStartNoClass}
+method private ibs.th.file.asyncparam GetParamAsuncStr 
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function GetParamAsuncStr returns ibs.th.file.asyncparam 
+{utl\comment.i} */
+(input iParamName as character ):
+   return mAsyncProc:GetPARAM(iParamName).
+end.
+
+&endif
+&if defined(ProcASyncLogDef) eq 0 
+   and ("{1}" eq "beg_proc" or "{1}" eq "proc_def" or "{1}" eq "beg_class" or "{1}" eq "proc_log")
+&then
+&glob ProcASyncLogDef = yes
 {&CommentStartNoClass}
 method private logical PutMesAsunc (input Itext as character ):
 {utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
@@ -37,9 +63,7 @@ procedure PutMesAsunc:
     define input  parameter Itext as character no-undo.
     define variable vflag as logical no-undo.
 {utl\comment.i} */
-    Publish "WriteLogAsunc" (Itext, yes).
-/*    run gbl\inidebug.p.*/
-    
+    Publish "WriteLogAsunc" &if "{2}" ne "" &then from {2} &endif (Itext, yes)  .
 end.
 
 {&CommentStartNoClass}
@@ -49,9 +73,7 @@ procedure PutMesAsuncNoTime:
     define input  parameter Itext as character no-undo.
     define variable vflag as logical no-undo.
 {utl\comment.i} */
-    Publish "WriteLogAsunc" (Itext,no).
-/*    run gbl\inidebug.p.*/
-    
+    Publish "WriteLogAsunc" &if "{2}" ne "" &then from {2} &endif (Itext,no)  .
 end.
 
 
@@ -61,7 +83,7 @@ method private logical PutStatAsunc (input Itext as character ):
 procedure PutStatAsunc:
     define input  parameter Itext as character no-undo.
 {utl\comment.i} */
-    Publish "PutStatAsunc" (Itext,no).
+    Publish "PutStatAsunc" &if "{2}" ne "" &then from {2} &endif (Itext,no) .
     {&CommentStartClass} run {utl\comment.i} */
     PutMesAsunc (itext).
 end.
@@ -72,7 +94,7 @@ method private logical PutStatAsuncNoTime (input Itext as character ):
 procedure PutStatAsuncNoTime:
     define input  parameter Itext as character no-undo.
 {utl\comment.i} */
-    Publish "PutStatAsunc" (Itext,no).
+    Publish "PutStatAsunc" &if "{2}" ne "" &then from {2} &endif (Itext,no)  .
     {&CommentStartClass} run {utl\comment.i} */
     PutMesAsuncNoTime (itext).
 end.
@@ -84,7 +106,7 @@ procedure PutStatAsuncAdd:
     define input  parameter Itext as character no-undo.
 {utl\comment.i} */
     
-    Publish "PutStatAsunc" (Itext,yes).
+    Publish "PutStatAsunc" &if "{2}" ne "" &then from {2} &endif (Itext,yes)  .
 end.
 
 {&CommentStartNoClass}
@@ -93,28 +115,21 @@ method private logical PutFileLogAsunc (input IFile as character ):
 procedure PutFileLogAsunc:
     define input  parameter IFile as character no-undo.
 {utl\comment.i} */
-    Publish "PutFileLogAsunc" (ifile).
+    Publish "PutFileLogAsunc" &if "{2}" ne "" &then from {2} &endif (ifile)  .
 end.
 
+&endif
 
-{&CommentStartNoClass}
-method private character  GetParamAsunc 
-{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-function GetParamAsunc returns character 
-{utl\comment.i} */
-(input iNumPar as integer  ):
-   return mAsyncHelper:GetPARAM(iNumPar).
-end.
-
-{&CommentStartNoClass}
-method private ibs.th.file.asyncparam GetParamAsuncStr 
-{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
-function GetParamAsuncStr returns ibs.th.file.asyncparam 
-{utl\comment.i} */
-(input iParamName as character ):
-   return mAsyncHelper:GetPARAM(iParamName).
-end.
-
+&if "{1}" eq "beg_proc" or "{1}" eq "proc_def" or "{1}" eq "class_init"
+&then
+   &if "{2}" ne "" 
+   &then  
+       mAsyncProc:mProcPublish = {2}.
+   &elseif "{1}" eq "beg_proc" or "{1}" eq "proc_def"
+   &then
+       mAsyncProc:mProcPublish = this-procedure.
+    
+   &endif
 &endif
 
 &if "{1}" eq "beg_proc"
@@ -125,7 +140,7 @@ procedure WriteLogAsunc:
     define input  parameter IFlag as logical   no-undo.
     
     define variable vflag as logical no-undo.
-    mAsyncHelper:PutMes(input Itext, input IFlag).
+    mAsyncProc:PutMes(input Itext, input IFlag).
     run StopCheckAsync(output vflag).
     if vflag
     then do:
@@ -140,7 +155,7 @@ procedure SetGblError:
    if mAsuncStopUser
    then do:
       vtext = "Error Операция прервана пользователем.".
-      mAsyncHelper:PutMes(vtext).
+      mAsyncProc:PutMes(vtext).
    end.
    else do:
       if Itext eq ?
@@ -148,7 +163,7 @@ procedure SetGblError:
          vtext = "Error Ошибка при выполнениее асинхроного процесса".
       else
          vtext = "Error " + vtext.
-      mAsyncHelper:SetGblError(input Itext).
+      mAsyncProc:SetGblError(input Itext).
    end.
 end.
 
@@ -162,7 +177,7 @@ procedure writeFileLogAsunc:
     ifile = searchfile(ifile).
     if ifile ne ?
     then
-       mAsyncHelper:Nextlog(ifile).
+       mAsyncProc:Nextlog(ifile).
 end.
 
 {&CommentStartNoClass}
@@ -172,9 +187,13 @@ procedure WriteStatAsunc:
     define input  parameter IText    as character no-undo.
     define input  parameter IFlagAdd as logical no-undo.
 {utl\comment.i} */
-   mAsyncHelper:putStatus (Itext,IFlagAdd).    
+   mAsyncProc:putStatus (Itext,IFlagAdd).    
 end.
 
+procedure IsAsyncProc:
+   define output parameter oIsAsync as logical no-undo.
+   oIsAsync = yes.
+end.
 
 
 define variable mnum   as integer no-undo.
@@ -182,34 +201,33 @@ define variable mCount as integer no-undo.
 subscribe "StopProc"           anywhere run-procedure "StopCheckAsync".
 subscribe "WriteLogAsunc"      anywhere.      
 subscribe "PutStatAsunc"       anywhere run-procedure "WriteStatAsunc".      
-subscribe "PutFileLogAsunc"    anywhere run-procedure "writeFileLogAsunc" .      
+subscribe "PutFileLogAsunc"    anywhere run-procedure "writeFileLogAsunc" .    
+subscribe "IsAsyncProc"        anywhere .  
 
 output to "errorasync.log".
-mAsyncHelper:BegRec () .
-mNum   = int(mAsyncHelper:GetPARAM("numSession"):valueparam).
-mCount = int(mAsyncHelper:GetPARAM("countSession"):valueparam).
-mAsyncHelper:creatProcInfo(1,mNum,mCount).
-mAsyncHelper:WritelogInter = decimal (mAsyncHelper:GetPARAM("WritelogInter"):valueparam).
+mAsyncProc:BegRec () .
+mNum   = int(mAsyncProc:GetPARAM("numSession"):valueparam).
+mCount = int(mAsyncProc:GetPARAM("countSession"):valueparam).
+mAsyncProc:creatProcInfo(1,mNum,mCount).
+mAsyncProc:WritelogInter = decimal (mAsyncProc:GetPARAM("WritelogInter"):valueparam).
 
 &endif
 
 &if "{1}" eq "end_proc"
 &then
 
-mAsyncHelper:EndRec ()  .
-unsubscribe "StopProc".
-unsubscribe "WriteLogAsunc".
-unsubscribe "PutStatAsunc".      
-unsubscribe "PutFileLogAsunc".      
-
-delete object mAsyncHelper.
-output close.
-output to "endproc.txt".
-output close.
-
+finally:
+   mAsyncProc:EndRec ()  .
+   unsubscribe "StopProc".
+   unsubscribe "WriteLogAsunc".
+   unsubscribe "PutStatAsunc".      
+   unsubscribe "PutFileLogAsunc".      
+   unsubscribe "IsAsyncProc".
+   delete object mAsyncProc.
+   output close.
+   output to "endproc.txt".
+   output close.
+   quit. 
+end.
 &endif
 
-&if "{1}" eq "proc_end"
-&then
-delete object mAsyncHelper.
-&endif

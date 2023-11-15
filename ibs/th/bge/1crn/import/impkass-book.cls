@@ -91,7 +91,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     .
     empty temp-table tt-cashbook .
     v-storage = new ibs.th.ref.cashbookstorage () .
-    if v-code > "" and v-basic-kb ne 0 then do :
+    if v-basic-kb ne 0 then do :
       v-basic-kb = ? .
       
       v-storage:getcashbook(v-code, output dataset ds-cashbook by-reference) .
@@ -122,33 +122,33 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     end .
     else do :
       if objImp:del-l > 0 then
-        undo, throw new Progress.Lang.AppError("Не задан код Типа кассовой книги для логического удаления.").
-      if v-basic-kb = 0 
-      then do :
-        v-storage:getcashbook(0, output dataset ds-cashbook by-reference) .
-        find first tt-cashbook no-error .
-        if available tt-cashbook then assign
-          v-str-kb-id = "0"
-          v-mode = {&update}
+        undo, throw new Progress.Lang.AppError("Удаление основной кассовой книги не возможно.").
+      v-storage:getcashbook(0, output dataset ds-cashbook by-reference) .
+      find first tt-cashbook no-error .
+      if available tt-cashbook 
+      then do: 
+         if     tt-cashbook.ext-code ne "0"
+            and tt-cashbook.ext-code ne v-code
+         then
+            undo, throw new Progress.Lang.AppError(substitute ("Редактирование номера основной кассовой книги во внешней ВС запрещено. Старый номер: &1 Новый номер: &2", tt-cashbook.ext-code, v-code)).
+         
+         assign
+            tt-cashbook.ext-code = v-code
+            v-str-kb-id = "0"
+            v-mode = {&update}
         .
-        else do: 
-           v-mode = {&add-def} .
-           create tt-cashbook .
-           assign
-               tt-cashbook.ext-code = v-code
-               tt-cashbook.id       = 0
-               tt-cashbook.basic-kb = yes
-           .
+      end.
+      else do: 
+         v-mode = {&add-def} .
+         create tt-cashbook .
+         assign
+            tt-cashbook.ext-code = v-code
+            tt-cashbook.id       = 0
+            tt-cashbook.basic-kb = yes
+        .
            
-         end.  
-      end .
-      else do :
-        v-mode = {&add-def} .
-        create tt-cashbook .
-        assign
-          tt-cashbook.ext-code = v-code
-        .
-      end .
+      end.  
+      
     end.
     
     if v-mode = {&deletion} then do :
