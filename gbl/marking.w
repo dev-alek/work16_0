@@ -19,6 +19,11 @@ DEFINE TEMP-TABLE type-marking NO-UNDO
   field saleReturn      as logical
   field saleUPD         as logical
   field onlySale        as logical
+  field checkBlock      as logical
+  field checkDate       as logical
+  field checkMRC        as logical
+  field checkOwner      as logical
+  field checkStatusKM   as logical
   index mark-type mark-type
   .
 
@@ -78,9 +83,15 @@ define variable S-type-EDO as character no-undo .
 define variable S-type-artic as character no-undo .
 define variable S-type-transitional as character no-undo .
 define variable S-type-blockCashUnMark as character no-undo .
-define variable S-type-saleReturn as character no-undo .
-define variable S-type-saleUPD as character no-undo .
-define variable S-type-onlySale as character no-undo .
+define variable S-type-saleReturn      as character no-undo .
+define variable S-type-saleUPD         as character no-undo .
+define variable S-type-onlySale        as character no-undo .
+define variable S-type-checkBlock      as character no-undo .
+define variable S-type-checkDate       as character no-undo .
+define variable S-type-checkMRC        as character no-undo .
+define variable S-type-checkOwner      as character no-undo .
+define variable S-type-checkStatusKM   as character no-undo .
+
 assign
 v-tth      = buffer temp-thbj-attr:table-handle .
 
@@ -109,9 +120,11 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 
 /* Definitions for BROWSE br_marking-type                                      */
 &Scoped-define FIELDS-IN-QUERY-br_marking-type type-marking.mark-type ~
-type-marking.mark type-marking.edo type-marking.artic type-marking.transitional type-marking.blockCashUnMark type-marking.saleReturn type-marking.saleUPD type-marking.onlySale
+type-marking.mark type-marking.edo type-marking.artic type-marking.transitional type-marking.blockCashUnMark type-marking.saleReturn type-marking.saleUPD type-marking.onlySale~
+type-marking.checkBlock type-marking.checkDate type-marking.checkMRC type-marking.checkOwner type-marking.checkStatusKM
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br_marking-type type-marking.mark-type ~
-type-marking.mark type-marking.edo type-marking.artic type-marking.transitional type-marking.blockCashUnMark type-marking.saleReturn type-marking.saleUPD type-marking.onlySale
+type-marking.mark type-marking.edo type-marking.artic type-marking.transitional type-marking.blockCashUnMark type-marking.saleReturn type-marking.saleUPD type-marking.onlySale~
+type-marking.checkBlock type-marking.checkDate type-marking.checkMRC type-marking.checkOwner type-marking.checkStatusKM
 &Scoped-define ENABLED-TABLES-IN-QUERY-br_marking-type type-marking
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br_marking-type type-marking
 &Scoped-define QUERY-STRING-br_marking-type FOR EACH type-marking INDEXED-REPOSITION
@@ -195,6 +208,40 @@ FUNCTION isonlySaleAvail RETURNS LOGICAL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ischeckBlockAvail Dialog-Frame 
+FUNCTION ischeckBlockAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ischeckDateAvail Dialog-Frame 
+FUNCTION ischeckDateAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ischeckMRCAvail Dialog-Frame 
+FUNCTION ischeckMRCAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ischeckOwnerAvail Dialog-Frame 
+FUNCTION ischeckOwnerAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ischeckStatusKMAvail Dialog-Frame 
+FUNCTION ischeckStatusKMAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
@@ -273,21 +320,31 @@ DEFINE QUERY br_marking-type FOR
 DEFINE BROWSE br_marking-type
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br_marking-type Dialog-Frame _STRUCTURED
   QUERY br_marking-type NO-LOCK DISPLAY
-      type-marking.mark-type COLUMN-LABEL "Тип!маркировки" LABEL-BGCOLOR 8 FORMAT "X(35)":U 
-      type-marking.mark COLUMN-LABEL "Помарочный!учет АЗК" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
-      type-marking.EDO column-label "Приходование!учет внеш." LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
-      type-marking.artic column-label "Объемно-!артикульный!учет" LABEL-BGCOLOR 8 FORMAT "yes/no":U 
-      view-as toggle-box
-      type-marking.transitional column-label "Переходный" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
-/*      type-marking.blockCashUnMark column-label "Блок.на кассе!операций!с неизвестными!марками" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box*/
-      type-marking.saleReturn column-label "Разрешена!продажа!возвращенных!товаров" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
-/*      type-marking.saleUPD column-label "Разрешена!продажа до!подписания!УПД" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box*/
-/*      type-marking.onlySale column-label "Возврат!только!проданных" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box          */
+  type-marking.mark-type COLUMN-LABEL "Тип!маркировки" LABEL-BGCOLOR 8 FORMAT "X(35)":U 
+  type-marking.mark COLUMN-LABEL "Помарочный!учет АЗК" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  type-marking.EDO column-label "Приходование!учет внеш." LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  type-marking.artic column-label "Объемно-!артикульный!учет" LABEL-BGCOLOR 8 FORMAT "yes/no":U 
+  view-as toggle-box
+  type-marking.transitional column-label "Переходный" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  /*      type-marking.blockCashUnMark column-label "Блок.на кассе!операций!с неизвестными!марками" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box*/
+  type-marking.saleReturn column-label "Разрешена!продажа!возвращенных!товаров" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  /*      type-marking.saleUPD column-label "Разрешена!продажа до!подписания!УПД" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box*/
+  /*      type-marking.onlySale column-label "Возврат!только!проданных" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box          */
+  type-marking.checkBlock column-label "Проверка!блокировок!контрол.!органов" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  type-marking.checkDate column-label "Проверка!срока!годности" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  type-marking.checkMRC column-label "Проверка!МРЦ" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  type-marking.checkOwner column-label "Проверка!владельцав" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  type-marking.checkStatusKM column-label "Проверка!статуса КМ" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   ENABLE
       type-marking.mark
       type-marking.EDO
       type-marking.artic
       type-marking.transitional
+      type-marking.checkBlock
+      type-marking.checkDate
+      type-marking.checkMRC
+      type-marking.checkOwner
+      type-marking.checkStatusKM
 /*      type-marking.blockCashUnMark*/
       type-marking.saleReturn
 /*      type-marking.saleUPD */
@@ -508,52 +565,70 @@ END.
 &Scoped-define SELF-NAME br_marking-type
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br_marking-type Dialog-Frame
 ON ROW-DISPLAY OF br_marking-type IN FRAME Dialog-Frame
-   DO:
-     type-marking.artic       :bgcolor  IN BROWSE br_marking-type = if isArticAvail()        then WHITE_COLOR else GRAY_COLOR .
-     type-marking.edo         :bgcolor  IN BROWSE br_marking-type = if isMarkVnAvail()       then WHITE_COLOR else GRAY_COLOR .
-     type-marking.transitional:bgcolor  IN BROWSE br_marking-type = if isTransitionalAvail() then WHITE_COLOR else GRAY_COLOR .
-     type-marking.mark        :bgcolor  IN BROWSE br_marking-type = if isMarkAZKAvail()      then WHITE_COLOR else GRAY_COLOR .
-/*     type-marking.blockCashUnMark   :bgcolor  IN BROWSE br_marking-type = if isblockCashUnMarkAvail() then WHITE_COLOR else GRAY_COLOR .*/
-     type-marking.saleReturn        :bgcolor  IN BROWSE br_marking-type = if issaleReturnAvail()      then WHITE_COLOR else GRAY_COLOR .
-/*     type-marking.saleUPD           :bgcolor  IN BROWSE br_marking-type = if issaleUPDAvail()         then WHITE_COLOR else GRAY_COLOR .*/
-/*     type-marking.onlySale          :bgcolor  IN BROWSE br_marking-type = if isonlySaleAvail()        then WHITE_COLOR else GRAY_COLOR .*/
-
-end.
+  DO:
+    type-marking.artic       :bgcolor  IN BROWSE br_marking-type = if isArticAvail()        then WHITE_COLOR else GRAY_COLOR .
+    type-marking.edo         :bgcolor  IN BROWSE br_marking-type = if isMarkVnAvail()       then WHITE_COLOR else GRAY_COLOR .
+    type-marking.transitional:bgcolor  IN BROWSE br_marking-type = if isTransitionalAvail() then WHITE_COLOR else GRAY_COLOR .
+    type-marking.mark        :bgcolor  IN BROWSE br_marking-type = if isMarkAZKAvail()      then WHITE_COLOR else GRAY_COLOR .
+    /*     type-marking.blockCashUnMark   :bgcolor  IN BROWSE br_marking-type = if isblockCashUnMarkAvail() then WHITE_COLOR else GRAY_COLOR .*/
+    type-marking.saleReturn        :bgcolor  IN BROWSE br_marking-type = if issaleReturnAvail()      then WHITE_COLOR else GRAY_COLOR .
+    /*     type-marking.saleUPD           :bgcolor  IN BROWSE br_marking-type = if issaleUPDAvail()         then WHITE_COLOR else GRAY_COLOR .*/
+    /*     type-marking.onlySale          :bgcolor  IN BROWSE br_marking-type = if isonlySaleAvail()        then WHITE_COLOR else GRAY_COLOR .*/
+    type-marking.checkBlock        :bgcolor  IN BROWSE br_marking-type = if ischeckBlockAvail()      then WHITE_COLOR else GRAY_COLOR .
+    type-marking.checkDate        :bgcolor  IN BROWSE br_marking-type = if ischeckDateAvail()      then WHITE_COLOR else GRAY_COLOR .
+    type-marking.checkMRC        :bgcolor  IN BROWSE br_marking-type = if ischeckMRCAvail()      then WHITE_COLOR else GRAY_COLOR .
+    type-marking.checkOwner        :bgcolor  IN BROWSE br_marking-type = if ischeckOwnerAvail()      then WHITE_COLOR else GRAY_COLOR .
+    type-marking.checkStatusKM        :bgcolor  IN BROWSE br_marking-type = if ischeckStatusKMAvail()      then WHITE_COLOR else GRAY_COLOR .
+  end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br_marking-type Dialog-Frame
 ON row-leave OF br_marking-type IN FRAME Dialog-Frame
-DO:
-define variable vMarkvn as logical no-undo.
-define variable vartic as logical no-undo.
-define variable vtransitional as logical no-undo.
-define variable vMarkAZK as logical no-undo.
-define variable vBlockCashMark as logical no-undo .
-define variable vSaleReturn as logical no-undo .
-define variable vSaleUPD as logical no-undo .
-define variable vOnlySale as logical no-undo .
+  DO:
+    define variable vMarkvn        as logical no-undo.
+    define variable vartic         as logical no-undo.
+    define variable vtransitional  as logical no-undo.
+    define variable vMarkAZK       as logical no-undo.
+    define variable vBlockCashMark as logical no-undo .
+    define variable vSaleReturn    as logical no-undo .
+    define variable vSaleUPD       as logical no-undo .
+    define variable vOnlySale      as logical no-undo .
+    define variable vcheckBlock    as logical no-undo .
+    define variable vcheckDate     as logical no-undo .
+    define variable vcheckMRC      as logical no-undo .
+    define variable vcheckOwner    as logical no-undo .
+    define variable vcheckStatusKM as logical no-undo .
 
-   assign
-      vMarkvn = type-marking.edo
-      vartic  = type-marking.artic
-      vtransitional = type-marking.transitional
-      vMarkAZK      = type-marking.mark
-/*      vBlockCashMark = type-marking.blockCashUnMark*/
-      vSaleReturn = type-marking.saleReturn
-/*      vSaleUPD = type-marking.saleUPD  */
-/*      vOnlySale = type-marking.onlySale*/
-      
+    assign
+      vMarkvn        = type-marking.edo
+      vartic         = type-marking.artic
+      vtransitional  = type-marking.transitional
+      vMarkAZK       = type-marking.mark
+      /*      vBlockCashMark = type-marking.blockCashUnMark*/
+      vSaleReturn    = type-marking.saleReturn
+      /*      vSaleUPD = type-marking.saleUPD  */
+      /*      vOnlySale = type-marking.onlySale*/
+      vcheckBlock    = type-marking.checkBlock
+      vcheckDate     = type-marking.checkDate
+      vcheckMRC      = type-marking.checkMRC
+      vcheckOwner    = type-marking.checkOwner
+      vcheckStatusKM = type-marking.checkStatusKM
       browse br_marking-type type-marking.edo
       browse br_marking-type type-marking.artic
       browse br_marking-type type-marking.transitional
       browse br_marking-type type-marking.mark
 /*      browse br_marking-type type-marking.blockCashUnMark*/
       browse br_marking-type type-marking.saleReturn
-/*      browse br_marking-type type-marking.saleUPD */
-/*      browse br_marking-type type-marking.onlySale*/
-   .
-   if      not isArticAvail()
+      /*      browse br_marking-type type-marking.saleUPD */
+      /*      browse br_marking-type type-marking.onlySale*/
+      browse br_marking-type type-marking.checkBlock
+      browse br_marking-type type-marking.checkDate
+      browse br_marking-type type-marking.checkMRC
+      browse br_marking-type type-marking.checkOwner
+      browse br_marking-type type-marking.checkStatusKM
+      .
+    if      not isArticAvail()
       and  type-marking.artic ne vartic
       and  type-marking.artic ne no
    then do:
@@ -716,8 +791,8 @@ PROCEDURE enable_UI :
           cb-gray_zone_qnty 
       WITH FRAME Dialog-Frame.
   ENABLE B-exit B-quit t-edo t-edo-NotMark t-manual t-ban_recipes t-ban-altr 
-         t-bar-code t-rus-key cb-gray_zone_qnty br_marking-type 
-      WITH FRAME Dialog-Frame.
+    t-bar-code t-rus-key cb-gray_zone_qnty
+    WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   if p-mode <> {&update} then disable B-exit with frame Dialog-Frame.
 END PROCEDURE.
@@ -750,108 +825,152 @@ end.
    end.  
 run adm/shattri.p (
     input "init":U
-  , input p-obj-type
-  , input p-obj-code
-  , input {&attr-marking}
-  , input "":U
-  , output v-value-character
-  , output v-value-date
-  , output v-value-decimal
-  , output v-value-integer
-  , output v-value-logical
-  , output v-param-type
-  , input-output TABLE-HANDLE v-tth
-  ) no-error .
-if error-status:error then do:
-  message
-  "Не удалось получить начальные значения настроек" skip
-  error-status:get-message(1) return-value
-  view-as alert-box error .
-  undo, return error .
-end.
+    , input p-obj-type
+    , input p-obj-code
+    , input {&attr-marking}
+    , input "":U
+    , output v-value-character
+    , output v-value-date
+    , output v-value-decimal
+    , output v-value-integer
+    , output v-value-logical
+    , output v-param-type
+    , input-output TABLE-HANDLE v-tth
+    ) no-error .
+  if error-status:error then 
+  do:
+    message
+      "Не удалось получить начальные значения настроек" skip
+      error-status:get-message(1) return-value
+      view-as alert-box error .
+    undo, return error .
+  end.
 
-FOR EACH temp-thbj-attr where temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type
-  :
-    IF temp-thbj-attr.prop-code = {&attr-marking_marking-EDO} THEN DO:
+  FOR EACH temp-thbj-attr where temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type
+    :
+    IF temp-thbj-attr.prop-code = {&attr-marking_marking-EDO} THEN 
+    DO:
       t-edo = temp-thbj-attr.property-value-logical .
       display t-edo with frame {&frame-name} .
     END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-EDO-NotMark} THEN DO:
-      t-edo-NotMark = temp-thbj-attr.property-value-logical .
-      display t-edo-NotMark with frame {&frame-name} .
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-manual} THEN DO:
-      t-manual = temp-thbj-attr.property-value-logical .
-      display t-manual with frame {&frame-name} .
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type} THEN DO:
-       S-type-mark = temp-thbj-attr.property-value-character .
-/*       display s-type with frame {&frame-name} .*/
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} THEN DO:
-       S-type-edo = temp-thbj-attr.property-value-character .
-/*       display S-type-edo with frame {&frame-name} .*/
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-artic} THEN DO:
-       S-type-artic = temp-thbj-attr.property-value-character .
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-transitional} THEN DO:
-       S-type-transitional = temp-thbj-attr.property-value-character .
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-blockCashUnMark} THEN DO:
-       S-type-blockCashUnMark = temp-thbj-attr.property-value-character .
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleReturn} THEN DO:
-       S-type-saleReturn = temp-thbj-attr.property-value-character .
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleUPD} THEN DO:
-       S-type-saleUPD = temp-thbj-attr.property-value-character .
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-onlySale} THEN DO:
-       S-type-onlySale = temp-thbj-attr.property-value-character .
-    END.                
-    else IF temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} THEN DO:
-       cb-gray_zone_qnty = temp-thbj-attr.property-value-integer .
-       display cb-gray_zone_qnty with frame {&frame-name} .
-    END.
-    else IF temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} THEN DO:
-       t-ban_recipes = temp-thbj-attr.property-value-logical .
-       display t-ban_recipes with frame {&frame-name} .
-    END.    
-    else IF temp-thbj-attr.prop-code = {&attr-marking_ban-altr} THEN DO:
-       t-ban-altr = temp-thbj-attr.property-value-logical .
-       display t-ban-altr with frame {&frame-name} .
-    END.    
-    else IF temp-thbj-attr.prop-code = {&attr-marking_bar-code} THEN DO:
-       t-bar-code = temp-thbj-attr.property-value-logical .
-       display t-bar-code with frame {&frame-name} .
-    END.
-
-    else IF temp-thbj-attr.prop-code = {&attr-marking_rus-key} THEN DO:
-       t-rus-key = temp-thbj-attr.property-value-logical .
-       display t-rus-key with frame {&frame-name} .
-    END.
-
-         
-END.
-for each type-marking:
-   if lookup (type-marking.mark-orig,S-type-mark) > 0 then type-marking.mark = true .
-   else type-marking.mark = false .
-   if lookup (type-marking.mark-orig,S-type-EDO) > 0 then type-marking.EDO = true .
-   else type-marking.EDO = false .
-   if lookup (type-marking.mark-orig,S-type-artic) > 0 then type-marking.artic = true .
-   else type-marking.artic = false . 
-   if lookup (type-marking.mark-orig,S-type-transitional) > 0 then type-marking.transitional = true .
-   else type-marking.transitional = false .
-   if lookup (type-marking.mark-orig,S-type-blockCashUnMark) > 0 then type-marking.blockCashUnMark = true .
-   else type-marking.blockCashUnMark = false .
-   if lookup (type-marking.mark-orig,S-type-saleReturn) > 0 then type-marking.saleReturn = true .
-   else type-marking.saleReturn = false .
-   if lookup (type-marking.mark-orig,S-type-saleUPD) > 0 then type-marking.saleUPD = true .
-   else type-marking.saleUPD = false .
-   if lookup (type-marking.mark-orig,S-type-onlySale) > 0 then type-marking.onlySale = true .
-   else type-marking.onlySale = false .              
-end.   
+    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-EDO-NotMark} THEN 
+      DO:
+        t-edo-NotMark = temp-thbj-attr.property-value-logical .
+        display t-edo-NotMark with frame {&frame-name} .
+      END.
+      else IF temp-thbj-attr.prop-code = {&attr-marking_marking-manual} THEN 
+        DO:
+          t-manual = temp-thbj-attr.property-value-logical .
+          display t-manual with frame {&frame-name} .
+        END.
+        else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type} THEN 
+          DO:
+            S-type-mark = temp-thbj-attr.property-value-character .
+          /*       display s-type with frame {&frame-name} .*/
+          END.
+          else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} THEN 
+            DO:
+              S-type-edo = temp-thbj-attr.property-value-character .
+            /*       display S-type-edo with frame {&frame-name} .*/
+            END.
+            else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-artic} THEN 
+              DO:
+                S-type-artic = temp-thbj-attr.property-value-character .
+              END.
+              else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-transitional} THEN 
+                DO:
+                  S-type-transitional = temp-thbj-attr.property-value-character .
+                END.
+                else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-blockCashUnMark} THEN 
+                  DO:
+                    S-type-blockCashUnMark = temp-thbj-attr.property-value-character .
+                  END.
+                  else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleReturn} THEN 
+                    DO:
+                      S-type-saleReturn = temp-thbj-attr.property-value-character .
+                    END.
+                    else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleUPD} THEN 
+                      DO:
+                        S-type-saleUPD = temp-thbj-attr.property-value-character .
+                      END.
+                      else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-onlySale} THEN 
+                        DO:
+                          S-type-onlySale = temp-thbj-attr.property-value-character .
+                        END.                
+                        else IF temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} THEN 
+                          DO:
+                            cb-gray_zone_qnty = temp-thbj-attr.property-value-integer .
+                            display cb-gray_zone_qnty with frame {&frame-name} .
+                          END.
+                          else IF temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} THEN 
+                            DO:
+                              t-ban_recipes = temp-thbj-attr.property-value-logical .
+                              display t-ban_recipes with frame {&frame-name} .
+                            END.    
+                            else IF temp-thbj-attr.prop-code = {&attr-marking_ban-altr} THEN 
+                              DO:
+                                t-ban-altr = temp-thbj-attr.property-value-logical .
+                                display t-ban-altr with frame {&frame-name} .
+                              END.    
+                              else IF temp-thbj-attr.prop-code = {&attr-marking_bar-code} THEN 
+                                DO:
+                                  t-bar-code = temp-thbj-attr.property-value-logical .
+                                  display t-bar-code with frame {&frame-name} .
+                                END.
+                                else IF temp-thbj-attr.prop-code = {&attr-marking_rus-key} THEN 
+                                  DO:
+                                    t-rus-key = temp-thbj-attr.property-value-logical .
+                                    display t-rus-key with frame {&frame-name} .
+                                  END.
+                                  else IF temp-thbj-attr.prop-code = {&attr-marking_checkBlock} THEN 
+                                    DO:
+                                      S-type-checkBlock = temp-thbj-attr.property-value-character .
+                                    END.
+                                    else IF temp-thbj-attr.prop-code = {&attr-marking_checkDate} THEN 
+                                      DO:
+                                        S-type-checkDate = temp-thbj-attr.property-value-character .
+                                      END.
+                                      else IF temp-thbj-attr.prop-code = {&attr-marking_checkMRC} THEN 
+                                        DO:
+                                          S-type-checkMRC = temp-thbj-attr.property-value-character .
+                                        END.
+                                        else IF temp-thbj-attr.prop-code = {&attr-marking_checkOwner} THEN 
+                                          DO:
+                                            S-type-checkOwner = temp-thbj-attr.property-value-character .
+                                          END.
+                                          else IF temp-thbj-attr.prop-code = {&attr-marking_checkStatusKM} THEN 
+                                            DO:
+                                              S-type-checkStatusKM = temp-thbj-attr.property-value-character .
+                                            END.                                                                                                               
+  END.
+  for each type-marking:
+    if lookup (type-marking.mark-orig,S-type-mark) > 0 then type-marking.mark = true .
+    else type-marking.mark = false .
+    if lookup (type-marking.mark-orig,S-type-EDO) > 0 then type-marking.EDO = true .
+    else type-marking.EDO = false .
+    if lookup (type-marking.mark-orig,S-type-artic) > 0 then type-marking.artic = true .
+    else type-marking.artic = false . 
+    if lookup (type-marking.mark-orig,S-type-transitional) > 0 then type-marking.transitional = true .
+    else type-marking.transitional = false .
+    if lookup (type-marking.mark-orig,S-type-blockCashUnMark) > 0 then type-marking.blockCashUnMark = true .
+    else type-marking.blockCashUnMark = false .
+    if lookup (type-marking.mark-orig,S-type-saleReturn) > 0 then type-marking.saleReturn = true .
+    else type-marking.saleReturn = false .
+    if lookup (type-marking.mark-orig,S-type-saleUPD) > 0 then type-marking.saleUPD = true .
+    else type-marking.saleUPD = false .
+    if lookup (type-marking.mark-orig,S-type-onlySale) > 0 then type-marking.onlySale = true .
+    else type-marking.onlySale = false .  
+    if lookup (type-marking.mark-orig,S-type-checkBlock) > 0 then type-marking.checkBlock = true .
+    else type-marking.checkBlock = false .    
+    if lookup (type-marking.mark-orig,S-type-checkDate) > 0 then type-marking.checkDate = true .
+    else type-marking.checkDate = false .  
+    if lookup (type-marking.mark-orig,S-type-checkMRC) > 0 then type-marking.checkMRC = true .
+    else type-marking.checkMRC = false .  
+    if lookup (type-marking.mark-orig,S-type-checkOwner) > 0 then type-marking.checkOwner = true .
+    else type-marking.checkOwner = false .  
+    if lookup (type-marking.mark-orig,S-type-checkStatusKM) > 0 then type-marking.checkStatusKM = true .
+    else type-marking.checkStatusKM = false .                   
+  end.   
   
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}    
 END PROCEDURE.
@@ -923,72 +1042,91 @@ ASSIGN FRAME {&FRAME-NAME}
         t-bar-code
         t-rus-key
     .
-S-type-mark = "" .
-S-type-artic = "" .
-S-type-EDO = "" .
-S-type-transitional = "".    
-S-type-blockCashUnMark = "".
-S-type-saleReturn = "".
-S-type-saleUPD = "".
-S-type-onlySale = "".
-for each type-marking:
-   if type-marking.mark = true then S-type-mark = S-type-mark + "," + type-marking.mark-orig . 
-   if type-marking.edo = true then S-type-EDO = S-type-edo + "," + type-marking.mark-orig .
-   if type-marking.artic = true then S-type-artic = S-type-artic + "," + type-marking.mark-orig .
-   if type-marking.transitional = true then S-type-transitional = S-type-transitional + "," + type-marking.mark-orig .   
-   if type-marking.blockCashUnMark = true then S-type-blockCashUnMark = S-type-blockCashUnMark + "," + type-marking.mark-orig .   
-   if type-marking.saleReturn = true then S-type-saleReturn = S-type-saleReturn + "," + type-marking.mark-orig .   
-   if type-marking.saleUPD = true then S-type-saleUPD = S-type-saleUPD + "," + type-marking.mark-orig .   
-   if type-marking.onlySale = true then S-type-onlySale = S-type-onlySale + "," + type-marking.mark-orig .   
-end.    
+  S-type-mark = "" .
+  S-type-artic = "" .
+  S-type-EDO = "" .
+  S-type-transitional = "".    
+  S-type-blockCashUnMark = "".
+  S-type-saleReturn = "".
+  S-type-saleUPD = "".
+  S-type-onlySale = "".
+  S-type-checkBlock = "".
+  S-type-checkDate = "".
+  S-type-checkMRC = "".
+  S-type-checkOwner = "".
+  S-type-checkStatusKM = "".
+  for each type-marking:
+    if type-marking.mark = true then S-type-mark = S-type-mark + "," + type-marking.mark-orig . 
+    if type-marking.edo = true then S-type-EDO = S-type-edo + "," + type-marking.mark-orig .
+    if type-marking.artic = true then S-type-artic = S-type-artic + "," + type-marking.mark-orig .
+    if type-marking.transitional = true then S-type-transitional = S-type-transitional + "," + type-marking.mark-orig .   
+    if type-marking.blockCashUnMark = true then S-type-blockCashUnMark = S-type-blockCashUnMark + "," + type-marking.mark-orig .   
+    if type-marking.saleReturn = true then S-type-saleReturn = S-type-saleReturn + "," + type-marking.mark-orig .   
+    if type-marking.saleUPD = true then S-type-saleUPD = S-type-saleUPD + "," + type-marking.mark-orig .   
+    if type-marking.onlySale = true then S-type-onlySale = S-type-onlySale + "," + type-marking.mark-orig .   
+    if type-marking.checkBlock = true then S-type-checkBlock = S-type-checkBlock + "," + type-marking.mark-orig .
+    if type-marking.checkDate = true then S-type-checkDate = S-type-checkDate + "," + type-marking.mark-orig .
+    if type-marking.checkMRC = true then S-type-checkMRC = S-type-checkMRC + "," + type-marking.mark-orig .
+    if type-marking.checkOwner = true then S-type-checkOwner = S-type-checkOwner + "," + type-marking.mark-orig .
+    if type-marking.checkStatusKM = true then S-type-checkStatusKM = S-type-checkStatusKM + "," + type-marking.mark-orig .   
+  end.    
 
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-edo.
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-EDO-NotMark} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-edo-NotMark.
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-manual} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-manual.
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-mark,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-edo,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-artic} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-artic,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-transitional} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-transitional,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-blockCashUnMark} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-blockCashUnMark,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleReturn} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-saleReturn,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleUPD} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-saleUPD,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-onlySale} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-onlySale,",").
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-integer = cb-gray_zone_qnty.    
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-ban_recipes.    
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_ban-altr} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-ban-altr. 
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_bar-code} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-bar-code. 
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_rus-key} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type no-error.
-    IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-rus-key.  
-
-
-    do transaction:
-        RUN thbjattr_set-section IN THIS-PROCEDURE (
-             input p-obj-type
-            ,input p-obj-code
-            ,input {&attr-marking}
-            ,INPUT table temp-thbj-attr
-        ) NO-ERROR.
-        if error-status:error then do:
-            message "Не удалось сохранить настройки"
-            view-as alert-box.
-            undo, return error.
-        end.
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-logical = t-edo.
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-EDO-NotMark} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-logical = t-edo-NotMark.
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-manual} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-logical = t-manual.
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-mark,",").
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-edo,",").
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-artic} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-artic,",").
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-transitional} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-transitional,",").
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-blockCashUnMark} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-blockCashUnMark,",").
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleReturn} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-saleReturn,",").
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleUPD} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-saleUPD,",").
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-onlySale} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-onlySale,",").
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-integer = cb-gray_zone_qnty.    
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-logical = t-ban_recipes.    
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_ban-altr} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-logical = t-ban-altr. 
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_bar-code} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-logical = t-bar-code. 
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_rus-key} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-rus-key.  
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkBlock} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkBlock,",").  
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkDate} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkDate,",").  
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkMRC} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkMRC,",").  
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkOwner} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkOwner,",").  
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkStatusKM} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkStatusKM,",").  
+  do transaction:
+    RUN thbjattr_set-section IN THIS-PROCEDURE (
+      input p-obj-type
+      ,input p-obj-code
+      ,input {&attr-marking}
+      ,INPUT table temp-thbj-attr
+      ) NO-ERROR.
+    if error-status:error then 
+    do:
+      message "Не удалось сохранить настройки"
+        view-as alert-box.
+      undo, return error.
     end.
+  end.
 
 
 END PROCEDURE.
@@ -1106,10 +1244,85 @@ END FUNCTION.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION isonlySaleAvail Dialog-Frame 
 FUNCTION isonlySaleAvail RETURNS LOGICAL
   ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
+
+  RETURN yes.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ischeckBlockAvail Dialog-Frame 
+FUNCTION ischeckBlockAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
+
+  RETURN yes.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ischeckDateAvail Dialog-Frame 
+FUNCTION ischeckDateAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
+
+  RETURN yes.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ischeckMRCAvail Dialog-Frame 
+FUNCTION ischeckMRCAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
+
+  RETURN yes.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ischeckOwnerAvail Dialog-Frame 
+FUNCTION ischeckOwnerAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
+
+  RETURN yes.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ischeckStatusKMAvail Dialog-Frame 
+FUNCTION ischeckStatusKMAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
 
   RETURN yes.   /* Function return value. */
 
