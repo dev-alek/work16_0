@@ -587,6 +587,7 @@ on error undo, return error
                             buf_user-login.db-num             = db.db-num
                             buf_user-login.user-id            = i-user-id
                             buf_user-login.status_            = {&bef-user-status-normal}
+                            buf_user-login.user-password-encoded = i-encoded-pass
                         .
                      end.
                      assign
@@ -595,7 +596,6 @@ on error undo, return error
                          buf_user-login.user-administrator = i-adm-ubd
                          buf_user-login.max-discnt         = i-max-discnt
                          buf_user-login.quest-print        = i-quest-print
-                         buf_user-login.user-password-encoded = i-encoded-pass
                      .
                      if i-nextcon ne ?
                      then do:
@@ -642,6 +642,7 @@ on error undo, return error
                                buf_user-login.db-num             = UserDbAdm.db-num
                                buf_user-login.user-id            = i-user-id
                                buf_user-login.status_            = if UserDbAdm.db-block then {&bef-user-status-deleted} else {&bef-user-status-normal}
+                               buf_user-login.user-password-encoded = i-encoded-pass
                            .
                         end.
                         assign
@@ -650,7 +651,6 @@ on error undo, return error
                             buf_user-login.user-administrator = UserDbAdm.db-adm
                             buf_user-login.max-discnt         = i-max-discnt
                             buf_user-login.quest-print        = i-quest-print
-                            buf_user-login.user-password-encoded = i-encoded-pass
                         .
                         if i-nextcon ne ?
                         then do:
