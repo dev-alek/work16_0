@@ -505,7 +505,7 @@ attr-bge-export
 { cmp/cr-prep.i 1 attr-auto-task             auto-task             " " auto-task }
 
 { cmp/cr-prepc.i 1 prop-list-attr-auto-task
-"send-msg-to-email,user-list"
+"send-msg-to-email,user-list,maxColMarks"
 attr-auto-task
 }
 
@@ -575,7 +575,7 @@ attr-egais-host }
 /*Ёлектронный документооборот*/
 { cmp/cr-prep.i 1 attr-marking marking " " marking }
 { cmp/cr-prepc.i 1 prop-list-attr-marking
-"marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional"
+"marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional,marking-type-blockCashUnMark,marking-type-saleReturn,marking-type-saleUPD,marking-type-onlySale"
 attr-marking }
 
 /*набор опций работы с документами ћ÷*/

@@ -1386,7 +1386,7 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.      
-      v-prop-code = "{&bef-attr-marking_marking-type},{&bef-attr-marking_marking-type-edo},{&bef-attr-marking_marking-type-artic},{&bef-attr-marking_marking-type-transitional}".
+      v-prop-code = "{&bef-attr-marking_marking-type},{&bef-attr-marking_marking-type-edo},{&bef-attr-marking_marking-type-artic},{&bef-attr-marking_marking-type-transitional},{&bef-attr-marking_marking-type-blockCashUnMark},{&bef-attr-marking_marking-type-saleUPD},{&bef-attr-marking_marking-type-onlySale},{&bef-attr-marking_marking-type-saleReturn}".
 &scop ptype character
 &scop prop-value ''
 &scop prop-code  entry(v-ii,v-prop-code)
@@ -2657,6 +2657,13 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+            v-prop-code = "{&bef-attr-auto-task_maxColMarks}".
+&scop ptype integer
+&scop prop-value 1000
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.            
     end.
     when {&attr-wnd-size} then do:
       v-prop-code = "{&bef-attr-wnd-size_max},{&bef-attr-wnd-size_store}"  .

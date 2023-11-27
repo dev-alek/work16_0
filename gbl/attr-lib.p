@@ -4664,8 +4664,8 @@ character~
 &scop user-can-edit-attr-auto-task   true
 &scop output-display-attr-auto-task  true
 &scop other-attr-auto-task 'spr-ext=adm\shattrat.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-auto-task 'character,character':U
-&scop prop-label-list-attr-auto-task 'email на который отсылать сообщения,список пользователей для авто процессов'
+&scop prop-type-list-attr-auto-task 'character,character,integer':U
+&scop prop-label-list-attr-auto-task 'email на который отсылать сообщения,список пользователей для авто процессов,Максимальное количество очищаемых марок'
 &scop global-attr-auto-task true
 &scop host-attr-auto-task false
 &scop shop-attr-auto-task false
@@ -4900,9 +4900,9 @@ Timeout ожидания подтверждения блокировки пистолетов,~
 &scop user-can-edit-attr-marking   true
 &scop output-display-attr-marking  true
 &scop other-attr-marking           'spr-ext=gbl\marking.w':U
-&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical,logical,logical,character,character':U
-&scop prop-label-list-attr-marking 'Включена работа с ЭДО для маркированных документов,Включена работа с ЭДО для не маркированных документов,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций с маркированными товарами,Использования рецепта Альтернатива только для получения ингредиентов,Определение товара по штрих-коду,автоматическое переключение раскладки на рус,Типы маркировок для объемно-артикульного учета,Типы маркировок переходный период'
-&scop prop-list-attr-marking       'marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional'
+&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical,logical,logical,character,character,character,character,character,character':U
+&scop prop-label-list-attr-marking 'Включена работа с ЭДО для маркированных документов,Включена работа с ЭДО для не маркированных документов,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций с маркированными товарами,Использования рецепта Альтернатива только для получения ингредиентов,Определение товара по штрих-коду,автоматическое переключение раскладки на рус,Типы маркировок для объемно-артикульного учета,Типы маркировок переходный период,Блокировка на кассе операций с неизвестными марками,Разрешена продажа возвращенных товаров,Разрешены продажи до подписания УПД,Возврат только проданных'
+&scop prop-list-attr-marking       'marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional,marking-type-blockCashUnMark,marking-type-saleReturn,marking-type-saleUPD,marking-type-onlySale'
 &scop global-attr-marking true
 &scop host-attr-marking false
 &scop shop-attr-marking true
