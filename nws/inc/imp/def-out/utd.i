@@ -26,6 +26,7 @@ define temp-table locb-marking no-undo like  ub.marking.
 define temp-table locb-marking-attr no-undo like  ub.marking-attr.
 { gbl/tmprecid.i}
 { utlcomp/pikey.i }
+{ utl/gtin.i }
 define variable mySeqUtd as int64 no-undo init ?.
 procedure MySeqForUtd:
    define input  parameter iTable       as character no-undo.

@@ -130,6 +130,26 @@ MySeqUtd = ?.
    &tableHeadKeyMerge = "doc-id db-num"
    &bufHead = "wt-utd"
 }
+
+/* ------------------------------------- marking -------------------------------------------------- */
+&glob main-tbl marking
+&glob addwhere or buf_{&main-tbl}.mark eq gtin
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+   &copy-except = "except sts loc-key last-change"
+   &beforefind = "gtin = GetCodeIdent(locb-{&main-tbl}.mark)."
+}
+&glob addwhere
+
+&glob main-tbl marking-attr
+{gbl/mergetable.i
+   &bufSource = "locb-{&main-tbl}"
+   &bufTarget = "buf_{&main-tbl}"
+   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
+}
+
 /* ------------------------------- utd-marking-lines ---------------------------------------------- */
 &glob main-tbl utd-marking-lines
 {gbl/mergetable.i
@@ -139,20 +159,6 @@ MySeqUtd = ?.
    &tableHeadKeyMerge = "doc-id db-num"
    &bufHead = "wt-utd"
 }
-&glob main-tbl marking
-{gbl/mergetable.i
-   &bufSource = "locb-{&main-tbl}"
-   &bufTarget = "buf_{&main-tbl}"
-   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
-}
-
-&glob main-tbl marking-attr
-{gbl/mergetable.i
-   &bufSource = "locb-{&main-tbl}"
-   &bufTarget = "buf_{&main-tbl}"
-   &tableKeyMerge = "{&{&main-tbl}_primary_key}"
-}
-
 
 /* ------------------------------- utd-marking-lines-attr ---------------------------------------------- */
 &glob main-tbl utd-marking-lines-attr

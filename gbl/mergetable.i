@@ -20,12 +20,18 @@ where {gbl/findtbfortb.i {&bufSource} {&bufHead} no {&tableHeadKeyMerge}}
 no-lock
 on error  undo, return error
 :
+   &if defined(beforefind) <> 0 &then
+     {&beforefind}
+   &endif
    &glob modlock exclusive-lock
    {gbl/findtbfortb.i {&bufTarget} {&bufSource} {&tableKeyMerge}}
    if not available {&bufTarget}
-   then 
+   then do:
       create {&bufTarget}.
-   buffer-copy {&bufSource} to {&bufTarget}.
+      buffer-copy {&bufSource} to {&bufTarget}.
+   end.
+   else
+     buffer-copy {&bufSource} {&copy-except} to {&bufTarget}.
    validate {&bufTarget} no-error.
    if error-status:error
    then

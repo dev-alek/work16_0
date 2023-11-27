@@ -28,6 +28,11 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Триггер на изменение таблицы abc-analysis-doc-attr".
 
+define buffer marking-attr  for ub.marking-attr.
+define buffer marking-lines for ub.marking-lines.
+define buffer marking-chk   for ub.marking-chk.
+define buffer parentMarking for ub.marking.
+
 { trg/trghistnws.i }
 
 main-block:
@@ -42,6 +47,7 @@ if new-{&main-tbl}.gds-code eq 0
 then 
    new-{&main-tbl}.gds-code = ?.
 
+if not new(new-{&main-tbl}) then do:
 if (old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
   or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
@@ -67,7 +73,34 @@ then do:
 end.
 if new-{&main-tbl}.sts <> old-{&main-tbl}.sts then do:
   new-{&main-tbl}.last-change = now.
-end .   
+end . 
+
+if new-{&main-tbl}.mark <> old-{&main-tbl}.mark then do:
+  for each marking-attr exclusive-lock 
+      where marking-attr.mark = old-{&main-tbl}.mark:
+    marking-attr.mark = new-{&main-tbl}.mark.
+  end.
+  for each marking-lines exclusive-lock 
+      where marking-lines.mark = old-{&main-tbl}.mark:
+    marking-lines.mark = new-{&main-tbl}.mark.
+  end.
+  for each marking-chk exclusive-lock 
+      where marking-chk.mark = old-{&main-tbl}.mark:
+    marking-chk.mark = new-{&main-tbl}.mark.
+  end.
+end .  
+end. 
+  
+if new(new-{&main-tbl}) and new-{&main-tbl}.mark-parent <> "" then 
+do:   /* при создании новой дочерней марки меняем статус марки как у родителя, если родитель продан или возвращен на кассу */
+  for first parentMarking where
+            parentMarking.mark = new-{&main-tbl}.mark-parent 
+      no-lock:
+    if can-do(objSrv:Env:Marking:Sts:Mark:EqualChecked,string(parentMarking.sts)) then
+     new-{&main-tbl}.sts = parentMarking.sts.
+  end.
+end.
+
 end. /* main-block */
 
 /*if not g#auto*/

@@ -27,8 +27,11 @@ define variable vss-date        as character no-undo initial "$Date$":U .
 define variable vss-workfile    as character no-undo initial "$Workfile$":U .
 define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер изменение {&main-tbl}". 
+
+define buffer marking for ub.marking. 
 { trg/trghistnws.i } 
 {str/utd-err.i}
+{ gbl/objsrv.i }
 {str/utd.i}
 if new-{&main-tbl}.gds-code eq 0
 then 
@@ -39,6 +42,17 @@ if     not g#news
    and new-{&main-tbl}.doc-level eq 1
 then
    addMark(buffer new-{&main-tbl} ).
+
+if     g#esys
+   and new new-{&main-tbl}
+then do:  /* при загрузке новостей у новой УПД статус марок меняем на глобальный статус марки */
+  for first marking where
+            marking.mark = new-{&main-tbl}.mark
+      no-lock:
+    if can-do(objSrv:Env:Marking:Sts:Mark:EqualChecked,string(marking.sts)) then
+      new-{&main-tbl}.sts = marking.sts.
+  end.
+end.
 
 { trg/trghistnws.i 
   &hist = yes 

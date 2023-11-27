@@ -371,14 +371,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                      vqnty = vqnty + vQntyMark.
                   define variable vsts as integer no-undo.
                    
-                   
-                  vsts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).
-                  if     vsts = ObjSrv:Env:marking:Sts:mark:DeliveryControl:KeyIntDB
-                     or  vsts = ObjSrv:Env:marking:Sts:mark:GrayZone:KeyIntDB
-                  then
-                     utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:PendingVerification:KeyIntDB.
-                  else 
-                     utd-marking-lines.sts = vsts.
+                  if not can-do(ObjSrv:Env:marking:Sts:mark:EqualChecked,string(utd-marking-lines.sts)) then do:
+                  /* статус меняем, если марка не проверена, не продана не возвражена на кассу */
+                      vsts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).
+                      if     vsts = ObjSrv:Env:marking:Sts:mark:DeliveryControl:KeyIntDB
+                         or  vsts = ObjSrv:Env:marking:Sts:mark:GrayZone:KeyIntDB
+                      then
+                         utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:PendingVerification:KeyIntDB.
+                      else 
+                         utd-marking-lines.sts = vsts.
+                  end.
                   if     v-marks-mark:stts-desc ne ?
                      and available marking
                   then
