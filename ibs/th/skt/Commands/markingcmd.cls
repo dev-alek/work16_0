@@ -19,9 +19,8 @@ using Progress.Lang.*.
 using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.Adapters.*.
-using ibs.th.gbl.sys.objth.
 
-class ibs.th.skt.Commands.markingcmd inherits objth implements ICommand: 
+class ibs.th.skt.Commands.markingcmd inherits ICommand: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
   define override public property vss-author      as character no-undo init "$Author:$":U get.
   define override public property vss-date        as character no-undo init "$Date:$":U get.
@@ -44,14 +43,12 @@ class ibs.th.skt.Commands.markingcmd inherits objth implements ICommand:
   define private variable logWrite    as class     LogWrite no-undo.
   define private variable hndlSocket as handle no-undo.
 
-  method public void Execute_( input req as ibs.th.skt.Commands.IRequest, output resp as class IResponse ):
-    
-    resp = new SimpleResponse().
+  method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse ):
     
     logWrite = new LogWrite().
     marking = new marking().
-    hndlsocket = cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket.
-    marking:hndler(cast(req, ibs.th.skt.Commands.SimpleRequest)).
+    hndlsocket = req:HndlSocket.
+    marking:hndler(req).
     writeSock(marking:SomeStr).
 
   end method.

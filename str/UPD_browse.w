@@ -2170,7 +2170,11 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                            if buf_marking.sts <> Marking:MarkError:KeyIntDB and buf_marking.sts <> Marking:Ungrouped:KeyIntDB then
                               buf_marking.sts = Marking:Checked_:KeyIntDB .
                         end.
-                     when Marking:MarkError:KeyIntDB then 
+                     when Marking:MarkError:KeyIntDB or 
+                     when Marking:SaleLock:KeyIntDB or 
+                     when Marking:SaleWaitLock:KeyIntDB or 
+                     when Marking:ReturnLock:KeyIntDB or 
+                     when Marking:ReturnWaitLock:KeyIntDB then 
                         do:
                         end.    
                      otherwise 
@@ -4955,7 +4959,7 @@ PROCEDURE mark-temp :
                buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and 
                buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum and 
                buf_utd-marking-lines.doc-level = 1 and 
-               buf_utd-marking-lines.sts <> Marking:Checked_:KeyIntDB no-error .
+               not can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) no-error .
             if available (buf_utd-marking-lines) then  X_utd-lines.stts = "Ожидает проверку" .
             else 
             do:
@@ -4963,7 +4967,7 @@ PROCEDURE mark-temp :
                   buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and 
                   buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum and 
                   buf_utd-marking-lines.doc-level = 1 and 
-                  buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB no-error .
+                  can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) no-error .
                if available (buf_utd-marking-lines) then  X_utd-lines.stts = "Проверен" .
             end.  
          end.
@@ -4978,7 +4982,8 @@ PROCEDURE mark-temp :
             if buf_utd-marking-lines.doc-level = 1 then 
             do:
                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
-               if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1 .
+               if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) then 
+                 X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1 .
             end .
             if  avail buf_marking and (
                buf_marking.sts = Marking:GrayZone:KeyIntDB or 
@@ -5262,7 +5267,7 @@ PROCEDURE save_mark :
                return no-apply.  
             end.
                
-            if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then
+            if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) then
             do:
                F-text = "            Марка уже проверена, просканируйте следующую" .
                display F-text with frame {&frame-name}.

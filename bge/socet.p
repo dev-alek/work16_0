@@ -12,6 +12,9 @@ procedure setParam:
    else if iParamName eq "FileLogSocet"
    then
       mFileLogSocet = iParamValue.
+   else if iParamName eq "TypeResponce"
+   then
+      mTypeResponse = iParamValue.
 end.
 
 procedure isEndWork:
@@ -24,6 +27,14 @@ procedure getResponceMemptr:
    if OerrMsg eq ""
    then
       oMemptr = mWebRespMptr.
+   delete object mHSocket no-error.
+end.
+
+procedure getResponceLongchar:
+   define output parameter oMemptr as longchar no-undo.
+   if OerrMsg eq ""
+   then
+      oMemptr = mWebResp.
    delete object mHSocket no-error.
 end.
 

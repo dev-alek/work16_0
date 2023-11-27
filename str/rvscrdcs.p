@@ -484,6 +484,20 @@ do
     logger:StrLogPut = 
       "Создается инвентаризация: " + string(v-inv-code) + {&new-line} .
 
+    /*Фиксируем дату и время создания инвентаризации*/
+    create ub.inv-doc-attr .
+    assign
+    ub.inv-doc-attr.doc-code = buf_rvs-doc.rvs-code
+    ub.inv-doc-attr.attr-code = "create_date"
+    ub.inv-doc-attr.attr-value = string(today)
+    .
+    create ub.inv-doc-attr .
+    assign
+    ub.inv-doc-attr.doc-code = buf_rvs-doc.rvs-code
+    ub.inv-doc-attr.attr-code = "create_time"
+    ub.inv-doc-attr.attr-value = string(time)
+    .
+    
     /* Заполняем инвентаризацию товарами */
     block_rvs-line:
     for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code,

@@ -34,6 +34,7 @@ define variable mAddTimeOut    as logical     no-undo init yes.
 define variable mSocetBegTime  as datetime-tz no-undo.
 define variable mSocetEndTime  as dec         no-undo.
 define variable mWriteRespFile as character   no-undo.
+define variable mTypeResponse  as character   no-undo init "POST".
 publish "getSocetLog" (output mFileLogSocet).
 if 
    (   mFileLogSocet eq ""
@@ -249,7 +250,7 @@ procedure PostRequest:
       iPostHost,
       iPostData).*/
       vCRequest =substitute( 
-      'POST /&2 HTTP/1.1&1'                                   +
+      '&6 /&2 HTTP/1.1&1'                                   +
       'Host: &4&1'                                           +
       'User-Agent: Apache-HttpClient/4.1.1 (java 1.5)&1'    +
        
@@ -262,7 +263,8 @@ procedure PostRequest:
       iPostUrl, 
       length(iPostData),
       iPostHost,
-      iPostData).
+      iPostData,
+      mTypeResponse).
    end.
    else
       vCRequest = iPostData.
@@ -323,6 +325,17 @@ procedure getResponse:
    define variable v-cont-length as int64 no-undo.
    define variable vi           as integer no-undo.
    define variable v-hd-line    as character no-undo.
+   define variable level        as integer no-undo initial 2.
+   
+   /* EXPSD-7337 проверим, что не было вызова процедуры еще раз */
+   repeat while program-name(level) <> ?:
+     if program-name(level) = program-name(1) then do:
+       run writeLogSocet in this-procedure (substitute("Повторный вызов getResponse.")).
+       return "".
+     end.
+     level = level + 1.
+   end. 
+   
    if mHSocket:connected() = false then 
    do:
       run writeLogSocet in this-procedure (substitute("Соединение было разорвано другой стороной getResponse")).
@@ -479,10 +492,9 @@ end procedure.
 
 procedure writeLogSocet:
    define input  parameter itext as longchar no-undo.
-   
    if mFileLogSocet eq "Async"
    then
-      run writeLogSocetOnlyText(itext).
+      run PutMesAsunc(itext).
    else if     mFileLogSocet ne ?
            and mFileLogSocet ne ""
    then do:
@@ -502,21 +514,23 @@ end.
 
 procedure writeLogSocetOnlyText:
    define input  parameter itext as longchar no-undo.
-   define variable vtext as character no-undo.
-   if length (itext) > 32000
-   then
-      vtext = substitute (itext,1,32000) + "..." no-error.
-   else
-      vtext = itext.
    if mFileLogSocet eq "Async"
-   then 
-      run PutMesAsunc(vtext).
+   then
+      run PutMesAsunc(itext).
    else if     mFileLogSocet ne ?
            and mFileLogSocet ne ""
    then do:
+      if length(itext) > 32000
+      then
+         copy-lob
+   from object itext
+   to file mFileLogSocet append
+   no-error
+   .
+      else
       run gbl/fileapnd.p
           ( mFileLogSocet
-          , vtext 
+          , string(itext) 
           ,input 10 /* время ожинания освобождения файла */
           ) no-error .
    end.

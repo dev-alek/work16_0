@@ -5508,3 +5508,24 @@ procedure restore-{&sequence-name} :
     {&update-sequence}
   end.
 end procedure. /* restore-s-c-mark-chip-num */
+
+
+&scoped-define sequence-name s-c-mark-attr-chip-num
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  chip-num
+    
+    &scoped-define table-name      c-counter
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-c-mark-chip-num */
+

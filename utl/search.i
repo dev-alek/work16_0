@@ -1,28 +1,9 @@
 &if defined(search_def) eq 0
 &then
 &glob search_def yes
-&if "{1}" = "class"
-&then
-method public character  SearchFile
-&else
-function objExists returns character 
+{ cmp/str-glbl.i }
 
-(input  ifolder as character,
- input  iType   as character  ) forward.
-
-function SearchFile returns character 
-&endif 
-(input  ifile as character):
-   return objExists(ifile,?).
-end.
-
-
-&if "{1}" = "class"
-&then
-method public character  objExists 
-&else
-function objExists returns character 
-&endif 
+{ def/funcmet.i objExists character }
 (input  ifolder as character,
  input  iType   as character  ):
     define variable vFileType as character no-undo init "D,F".
@@ -43,13 +24,13 @@ function objExists returns character
 
 end.
 
-&if "{1}" = "class"
-&then
-method private character  SearchPFile 
-&else
-function SearchPFile returns character 
-&endif 
- (input inFile as char):
+{ def/funcmet.i SearchFile character }
+(input  ifile as character):
+   return objExists(ifile,?).
+end.
+
+{ def/funcmet.i SearchPFile character }
+(input inFile as char):
      define variable oFile       as character no-undo.
      define variable vFileSearch as character no-undo.
      define variable vNumEntry   as integer no-undo.

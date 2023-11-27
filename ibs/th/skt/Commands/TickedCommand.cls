@@ -20,8 +20,14 @@ using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.Adapters.*.
 
-class ibs.th.skt.Commands.TickedCommand implements ICommand: 
-
+class ibs.th.skt.Commands.TickedCommand inherits ICommand: 
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Обработка запросов в сокет по Ticked" get.
+  
   &scop CRLF chr(13) + chr(10)
   &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 
@@ -37,14 +43,12 @@ class ibs.th.skt.Commands.TickedCommand implements ICommand:
   define private variable logWrite    as class     LogWrite no-undo.
   define private variable hndlSocket as handle no-undo.
 
-  method public void Execute_( input req as ibs.th.skt.Commands.IRequest, output resp as class IResponse ):
-    
-    resp = new SimpleResponse().
+  method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse ):
     
     logWrite = new LogWrite().
     ticked = new Ticked().
-    hndlsocket = cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket.
-    ticked:AuthorizationTicked(cast(req, ibs.th.skt.Commands.SimpleRequest)).
+    hndlsocket = req:HndlSocket.
+    ticked:AuthorizationTicked(req).
     writeSock("").
 
   end method.

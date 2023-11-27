@@ -172,63 +172,66 @@ on error undo, return error
         assign
           v-file-cnt = v-file-cnt + 1
         .
-        if file-info :file-mod-date + buf_db.save-packs < v-today
-        and num-entries( v-filename, "." ) > 1
-          and lookup(entry( num-entries( v-filename, ".":U ), v-filename, ".":U ), "txt":U) > 0
-        and v-filename begins "p":U
-      then do:
+        if     file-info :file-mod-date + buf_db.save-packs < v-today
+           and num-entries( v-filename, "." ) > 1
+           and lookup(entry( num-entries( v-filename, ".":U ), v-filename, ".":U ), "txt":U) > 0
+           and v-filename begins "p":U
+        then do:
 
           assign
             v-pack-num    = integer( substring( v-filename, 2, r-index(v-filename, '.':U) - 1 ) )
             v-add-to-list = true
-          .
-          case v-action :
-            when "put":U then do:
-              find first buf_pck-sent no-lock
-                where buf_pck-sent.db-num   = v-pck-for-db
-                  and buf_pck-sent.pack-num = v-pack-num
+          no-error.
+          if not error-status:error
+          then do:
+            case v-action :
+              when "put":U then do:
+                find first buf_pck-sent no-lock
+                  where buf_pck-sent.db-num   = v-pck-for-db
+                    and buf_pck-sent.pack-num = v-pack-num
                 no-error .
-              if not available buf_pck-sent
-                or buf_pck-sent.rcvd <> true
-              then do:
-                assign
-                  v-add-to-list = false
-                .
+                if   not available buf_pck-sent
+                  or buf_pck-sent.rcvd <> true
+                then do:
+                  assign
+                    v-add-to-list = false
+                  .
+                end.
               end.
-            end.
-            when "get":U then do:
-              find first buf_pck-rcvd no-lock
-                where buf_pck-rcvd.db-num   = v-pck-for-db
-                  and buf_pck-rcvd.pack-num = v-pack-num
+              when "get":U then do:
+                find first buf_pck-rcvd no-lock
+                  where buf_pck-rcvd.db-num   = v-pck-for-db
+                    and buf_pck-rcvd.pack-num = v-pack-num
                 no-error .
-              if not available buf_pck-rcvd then do:
-                assign
-                  v-add-to-list = false
-                .
+                if not available buf_pck-rcvd then do:
+                  assign
+                    v-add-to-list = false
+                  .
+                end.
               end.
-            end.
-          end case.
+            end case.
 
-          if v-add-to-list = true then do:
+            if v-add-to-list = true then do:
 
-            if v-count-need-del = 0 then do:
-              run write-to-log( substitute("Удаление пакетов СПН по БД &1", v-pck-for-db ) ) .
-            end.
+              if v-count-need-del = 0 then do:
+                run write-to-log( substitute("Удаление пакетов СПН по БД &1", v-pck-for-db ) ) .
+              end.
 
-            assign
-              v-count-need-del = v-count-need-del + 1
-            .
-            run gbl/del-file.p
-              ( input file-info :full-pathname
-              ) no-error .
-            if error-status:error then do:
-              run write-to-log( substitute( "&1. Ошибка при удалении пакета. &2&3&2&4", vss-workfile, {&new-line}, error-status:get-message(1), return-value )
-                              ) .
-            end.
-            else do:
               assign
-                v-count-del = v-count-del + 1
+                v-count-need-del = v-count-need-del + 1
               .
+              run gbl/del-file.p
+                ( input file-info :full-pathname
+                ) no-error .
+              if error-status:error then do:
+                run write-to-log( substitute( "&1. Ошибка при удалении пакета. &2&3&2&4", vss-workfile, {&new-line}, error-status:get-message(1), return-value )
+                              ) .
+              end.
+              else do:
+                assign
+                  v-count-del = v-count-del + 1
+                .
+              end.
             end.
           end.
         end.

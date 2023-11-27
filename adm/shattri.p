@@ -1371,6 +1371,85 @@ end.
       end.
     end.
     
+    when {&attr-gisMT} then do:
+      v-prop-code = "{&bef-attr-gisMT_adressPort}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_dopParam}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_gisAdress}".
+&scop ptype character
+&scop prop-value 'https://markirovka.sandbox.crptech.ru/api/v4/true-api/codes/check'
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_proxyLogin}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_proxyPswd}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_maxTime}".
+&scop ptype integer
+&scop prop-value 72
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_regKey}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_timeFalStart}".
+&scop ptype integer
+&scop prop-value 24
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_waitTime}".
+&scop ptype decimal
+&scop prop-value 1.5
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.   
+      v-prop-code = "{&bef-attr-gisMT_crashSituat}".
+&scop ptype logical
+&scop prop-value no
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end. 
+      v-prop-code = "{&bef-attr-gisMT_banDate}".
+&scop ptype integer
+&scop prop-value 5
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.             
+    end.    
     when {&attr-marking} then do:
       v-prop-code = "{&bef-attr-marking_marking-EDO}".
 &scop ptype logical
@@ -1386,7 +1465,42 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.      
-      v-prop-code = "{&bef-attr-marking_marking-type},{&bef-attr-marking_marking-type-edo},{&bef-attr-marking_marking-type-artic},{&bef-attr-marking_marking-type-transitional}".
+      v-prop-code = "{&bef-attr-marking_checkBlock}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.               
+      v-prop-code = "{&bef-attr-marking_checkDate}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.    
+      v-prop-code = "{&bef-attr-marking_checkMRC}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.    
+      v-prop-code = "{&bef-attr-marking_checkOwner}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.       
+      v-prop-code = "{&bef-attr-marking_checkStatusKM}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.           
+      v-prop-code = "{&bef-attr-marking_marking-type},{&bef-attr-marking_marking-type-edo},{&bef-attr-marking_marking-type-artic},{&bef-attr-marking_marking-type-transitional},{&bef-attr-marking_marking-type-blockCashUnMark},{&bef-attr-marking_marking-type-saleUPD},{&bef-attr-marking_marking-type-onlySale},{&bef-attr-marking_marking-type-saleReturn}".
 &scop ptype character
 &scop prop-value ''
 &scop prop-code  entry(v-ii,v-prop-code)
@@ -2657,6 +2771,13 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.
+            v-prop-code = "{&bef-attr-auto-task_maxColMarks}".
+&scop ptype integer
+&scop prop-value 1000
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.            
     end.
     when {&attr-wnd-size} then do:
       v-prop-code = "{&bef-attr-wnd-size_max},{&bef-attr-wnd-size_store}"  .

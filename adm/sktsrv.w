@@ -33,6 +33,8 @@ using ibs.th.skt.ControlledClients.*.
 /* Parameters Definitions ---                                           */
 define input parameter p-param as character no-undo.
 define input parameter p-hide as logical no-undo.
+define input parameter p-user-login    as character no-undo .
+define input parameter p-user-password as character no-undo .
 /* Local Variable Definitions ---                                       */
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -45,6 +47,8 @@ define variable vss-description as character no-undo init "4GL socket server (HT
 
 define new shared variable g#LogStr       as character no-undo .
 define shared     variable g#auto-user-id as character no-undo .
+define shared     variable g#auto-user-login as character no-undo .
+define shared     variable g#auto-user-password as character no-undo .
 
 define variable v-header      as character no-undo.
 define variable v-hd-line     as character no-undo.
@@ -52,7 +56,8 @@ define variable v-cont-length as integer   no-undo.
 define variable v-cont-type   as character no-undo.
 define variable v-user-agent  as character no-undo.
 define variable v-querypar    as character no-undo.
-define variable v-path    as character no-undo.
+define variable v-path        as character no-undo.
+define variable mWork         as logical no-undo.
 
 { cmp/trg-def.i new }
 { cmp/showinf.i  }
@@ -96,7 +101,6 @@ CREATE WIDGET-POOL.
 define variable hServerSocket    as handle       no-undo.
 define variable v-connect-param  as CHAR         no-undo.
 define variable v-srv-connected  as LOG          no-undo.
-define variable mExit            as LOG          no-undo.
 define variable us-tmo           as INTEGER   INIT 60 no-undo. /*тайм-аут в сек.*/
 
 if num-entries (p-param, ";") = 2
@@ -286,6 +290,7 @@ ON WINDOW-CLOSE OF C-Win /* Сокет-сервер */
 DO:
   /* This event will close the window and terminate the procedure.  */
   APPLY "CLOSE":U TO THIS-PROCEDURE.
+  mWork = no.
   RETURN NO-APPLY.
 END.
 
@@ -299,9 +304,11 @@ ON CHOOSE OF b-exit IN FRAME DEFAULT-FRAME /* Выход  */
 DO:
 
 RUN proc-stop-srv.
-mExit = yes.
+
 PAUSE 2.
+
 APPLY 'close':U TO THIS-PROCEDURE.
+mWork = no.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -351,30 +358,47 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       C-Win:HIDDEN = no.
       RUN enable_UI.
   end.
+  define variable sktserv  as class SktServer no-undo.
+  define variable logWrite as class LogWrite  no-undo.
+
+  logWrite = new LogWrite().          
+  sktserv = new SktServer(this-procedure).
+  
   apply 'choose':U to Btn-st.
     { gbl/curdbnum.i
       g#db-num
     }
   g#language = 'RUS'.
+  run gbl/set-gbl.p
+    (input true
+    ,input p-user-login
+    ,input p-user-password
+    ) no-error.
   run gbl/get-gbl.p no-error.
   if error-status:error
   then do:
     message "Ошибка получения глобальный переменных." view-as alert-box.
     return error.
   end.
+  mWork = yes.
+  subscribe "write-to-log" anywhere.
   define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
   CheckUpd = new ibs.th.adm.upd.CheckUpd ().
   IF NOT THIS-PROCEDURE:PERSISTENT THEN 
-  do while not mExit:
-     WAIT-FOR CLOSE OF this-procedure pause 60.
+  do while mWork:
      if CheckUpd:isStopWork or CheckUpd:isNeedUpd
      then do:
         RUN proc-stop-srv.
-        mExit = yes.
+        mWork = no.
      end.
+     wait-for close of this-procedure pause 0.001.
+     sktserv:checkEnd().
+     
   end.
+  unsubscribe "write-to-log".  
 END.
-
+delete object sktserv.
+delete object logWrite.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -567,11 +591,6 @@ PROCEDURE connproc :
           SET-SIZE(mbuffer) = LENGTH(v-content,'RAW') + 2.
           PUT-STRING(mbuffer,1) = v-content.
 
-          define variable sktserv  as class SktServer no-undo.
-          define variable logWrite as class LogWrite  no-undo.
-
-          logWrite = new LogWrite().          
-          sktserv = new SktServer().
           case v-path:
           when "AuthMarking" then do:
             sktserv:ClientPar = v-path. 
@@ -582,14 +601,13 @@ PROCEDURE connproc :
             then do:
               if num-entries (v-querypar, "?") > 1
               then do:
-                sktserv:ClientPar = entry (1, v-querypar, "?"). 
+                sktserv:ClientPar  = entry (1, v-querypar, "?"). 
                 sktserv:QueryParam = entry (2, v-querypar, "?").
               end.
               else sktserv:ClientPar = v-querypar.
             end.
           end.
           end.
-
           case true:
           when sktserv:ClientPar <> '' then do:
             sktserv:RequestProcessing(v-content, hsocket) no-error.
@@ -614,23 +632,11 @@ PROCEDURE connproc :
           else do:
 /*            resp-head = "OK".*/
           end.*/
-          delete object sktserv.
+          
       END.
   end. /* ContBlock */
-  /* шапка http-ответа + тело ответа помещенное в память*/
-/*  SET-SIZE(mbuffer-out) = 0.                            */
-/*  SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW':U) + 1.*/
-/*  PUT-STRING(mbuffer-out,1) = resp-head.*/
-  lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.
+  RUN write-to-log('RESPONSE: ' + resp-head).
   
-  IF lsocket = FALSE OR ERROR-STATUS:GET-MESSAGE(1) <> '' THEN
-        DO:
-            RUN write-to-log('RESPONSE: ' + resp-head).
-            hsocket:disconnect ().
-            RETURN.
-        END.
- 
-  hsocket:disconnect ().
     
 END PROCEDURE.
 
@@ -691,7 +697,10 @@ DEF VAR vl-cnt AS LOG NO-UNDO.
 IF v-connect-param > '' THEN.
 ELSE DO:
   RUN write-to-log('Не указаны параметры подключения!').
-  return.
+  RUN write-to-log('Параметры задаются -param "Sock:-S <Port>" или -param "M:<h+>Sock:<Port>" ').
+  v-connect-param = "-S 8080".
+  RUN write-to-log('Задаем порт по умочанию 8080').
+  
 END.
 /* v-connect-param = 'sdj78'. */
 CREATE SERVER-SOCKET hServerSocket.
@@ -782,6 +791,7 @@ procedure parseheader:
   
   define input parameter p-header as character no-undo.
   define variable n as integer no-undo.
+  define variable idxQuerypar as integer no-undo.
   
   def var i as int no-undo.
   RUN write-to-log('REQUEST-HEADER:' + p-header ).
@@ -789,19 +799,23 @@ procedure parseheader:
   n = 2.
   if p-header begins "GET" and num-entries (p-header, "/") > 1
   then do:
-    v-querypar = entry (n, p-header, "/").
+    v-querypar = right-trim (right-trim  (entry(n, p-header, "/"), "HTTP"), " ").
   end.
   if v-querypar = "AuthMarking"
   then do:
-    v-path = v-querypar.
-    v-querypar = entry (n, p-header, "?").
-    n = 3.
+    /* нельзя использовать entry, т.к. в коде марки может быть слеш "/" */
+    assign
+      v-path = v-querypar
+      idxQuerypar = index(p-header,"/")
+      idxQuerypar = index(p-header,"/",idxQuerypar + 1)
+      v-querypar = right-trim (substring(p-header, idxQuerypar + 1, r-index(p-header,"HTTP") - idxQuerypar - 1), " ")
+      n = 3
+    .
   end.
-  
+
   p-header = replace (p-header,";",{&CRLF}).
   DO i = 1 TO NUM-ENTRIES(p-header,{&CRLF}):
       v-hd-line = trim(ENTRY(i,p-header,{&CRLF})).
-      v-querypar = right-trim (right-trim  (entry(n, v-header, "/"), "HTTP"), " ").
       IF  v-hd-line  BEGINS "Content-Length"  THEN  do:
           v-cont-length = INT(trim(SUBSTRING(v-hd-line,16,LENGTH(v-hd-line)))).
       END.

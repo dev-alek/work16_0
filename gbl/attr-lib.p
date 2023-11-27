@@ -4048,6 +4048,25 @@ logical~
 &scop level-way-attr-egais-host "obj,,global"
 &scop up-way-attr-egais-host "egais,egais,egais,egais,egais"
 
+/* Настройки для подключения к ГИС МТ и проверки КМ */
+&scop type-attr-gisMT            {&type-char}
+&scop format-attr-gisMT          "x(40)"
+&scop label-attr-gisMT           "Настройки для подключения к ГИС МТ и проверки КМ"
+&scop tooltip-attr-gisMT         "Настройки для подключения к ГИС МТ и проверки КМ"
+&scop user-can-edit-attr-gisMT   true
+&scop output-display-attr-gisMT  true
+&scop other-attr-gisMT           'spr-ext=gbl\gis.w':U
+&scop prop-type-list-attr-gisMT  'character,character,character,character,character,integer,character,integer,decimal,logical,integer':U
+&scop prop-label-list-attr-gisMT 'Адрес и порт проски-сервера,Дополнительные параметры запроса,Адрес ГИС МТ,Логин,Пароль,Макс.допуст. время разрешения продажи при сбое,ключ авторизации,Время с момента сбоя до начала уведомления персонала,Длительность ожидания ответа ГИС МТ,~
+Аварийная ситуация в ГИС МТ,Опережение срабатывания запрета по сроку годности в минутах'
+&scop prop-list-attr-gisMT       'adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate'
+&scop global-attr-gisMT true
+&scop host-attr-gisMT false
+&scop shop-attr-gisMT false
+&scop store-attr-gisMT false
+&scop db-attr-gisMT true
+&scop level-way-attr-gisMT ",db,global"
+&scop up-way-attr-gisMT ",gisMT,gisMT"
 
 /* Общие параметры по АРХИВАМ */
 &scop type-attr-arh-global            {&type-char}
@@ -4664,8 +4683,8 @@ character~
 &scop user-can-edit-attr-auto-task   true
 &scop output-display-attr-auto-task  true
 &scop other-attr-auto-task 'spr-ext=adm\shattrat.w/init-ext=adm\shattri.p':U
-&scop prop-type-list-attr-auto-task 'character,character':U
-&scop prop-label-list-attr-auto-task 'email на который отсылать сообщения,список пользователей для авто процессов'
+&scop prop-type-list-attr-auto-task 'character,character,integer':U
+&scop prop-label-list-attr-auto-task 'email на который отсылать сообщения,список пользователей для авто процессов,Максимальное количество очищаемых марок'
 &scop global-attr-auto-task true
 &scop host-attr-auto-task false
 &scop shop-attr-auto-task false
@@ -4900,9 +4919,11 @@ Timeout ожидания подтверждения блокировки пистолетов,~
 &scop user-can-edit-attr-marking   true
 &scop output-display-attr-marking  true
 &scop other-attr-marking           'spr-ext=gbl\marking.w':U
-&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical,logical,logical,character,character':U
-&scop prop-label-list-attr-marking 'Включена работа с ЭДО для маркированных документов,Включена работа с ЭДО для не маркированных документов,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций с маркированными товарами,Использования рецепта Альтернатива только для получения ингредиентов,Определение товара по штрих-коду,автоматическое переключение раскладки на рус,Типы маркировок для объемно-артикульного учета,Типы маркировок переходный период'
-&scop prop-list-attr-marking       'marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional'
+&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical,logical,logical,character,character,character,character,character,character,character,character,character,character,character':U
+&scop prop-label-list-attr-marking 'Включена работа с ЭДО для маркированных документов,Включена работа с ЭДО для не маркированных документов,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций с маркированными товарами,Использования рецепта Альтернатива только для получения ингредиентов,~
+Определение товара по штрих-коду,автоматическое переключение раскладки на рус,Типы маркировок для объемно-артикульного учета,Типы маркировок переходный период,Блокировка на кассе операций с неизвестными марками,Разрешена продажа возвращенных товаров,Разрешены продажи до подписания УПД,Возврат только проданных,~
+Проверка блокировок контролирующих органов,Проверка срока годности,Проверка МРЦ,Проверка владельца,Проверка статуса КМ'
+&scop prop-list-attr-marking       'marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional,marking-type-blockCashUnMark,marking-type-saleReturn,marking-type-saleUPD,marking-type-onlySale,checkBlock,checkDate,checkMRC,checkOwner,checkStatusKM'
 &scop global-attr-marking true
 &scop host-attr-marking false
 &scop shop-attr-marking true
@@ -5132,6 +5153,8 @@ procedure thbjattr_code :
       {&attr-temp-full-code}
       &scop attr-code attr-egais-host
       {&attr-temp-full-code}
+      &scop attr-code attr-gisMT
+      {&attr-temp-full-code}
       &scop attr-code attr-marking
       {&attr-temp-full-code}
       &scop attr-code attr-mercur
@@ -5315,6 +5338,8 @@ on error undo, return error return-value
     &scop attr-code attr-srv-auth-ASU
     {&attr-temp-code}
     &scop attr-code attr-egais-host
+    {&attr-temp-code}
+    &scop attr-code attr-gisMT
     {&attr-temp-code}
     &scop attr-code attr-marking
     {&attr-temp-code}
@@ -6027,6 +6052,8 @@ on error undo, return error return-value
     &scop attr-code attr-srv-auth-ASU
     {&attr-legacy-code}
     &scop attr-code attr-egais-host
+    {&attr-legacy-code}
+    &scop attr-code attr-gisMT
     {&attr-legacy-code}
 	&scop attr-code attr-marking
     {&attr-legacy-code}

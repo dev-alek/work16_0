@@ -53,7 +53,7 @@ assign
 .
     repeat i = 1 to v-kol :
       find first  buf_trn-doc no-lock
-          where recid( buf_trn-doc ) = int(entry(i,v-trn-doc-recid)) no-error
+          where recid( buf_trn-doc ) = int64(entry(i,v-trn-doc-recid)) no-error
       .
       if available  buf_trn-doc then do:
       create buf_temp_trn-doc-code .

@@ -45,6 +45,7 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
   
   define public property  UnknowSts as class propmap no-undo get.  protected set.
   
+  define public property  EqualChecked as character  no-undo get.  protected set.
   /*
   define public property  ErrorSubordinateCodes as class propmap no-undo get.  protected set.
   define public property  ErrorOver as class propmap no-undo get.  protected set.
@@ -80,6 +81,8 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
     
     
     UnknowSts  = crProp(0,"UnknowSts","Неизвестный статус маркированного товара.").
+    
+    EqualChecked = "7,11,12".
     
    /* 
     ErrorSubordinateCodes  = crProp(6,"ErrorSubordinateCodes","Ошибка подчиненных кодов").

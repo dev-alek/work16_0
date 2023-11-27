@@ -23,8 +23,14 @@ using ibs.th.skt.Commands.*.
 &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 
 
-class ibs.th.skt.Commands.KioskCommand implements ICommand: 
-
+class ibs.th.skt.Commands.KioskCommand inherits ICommand: 
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Обработка запросов в сокет по Kiosk" get.
+  
   { cmp/str-glbl.i class}
 
   define public property ErrStatus as logical no-undo 
@@ -65,7 +71,7 @@ class ibs.th.skt.Commands.KioskCommand implements ICommand:
   define private variable i          as integer   no-undo.
   define private variable bcode      as character no-undo.
 
-  method public void Execute_( input req as ibs.th.skt.Commands.IRequest, output resp as class IResponse):
+  method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse):
 
     define variable contLength     as integer   no-undo.
     define variable priceSale      as character no-undo.
@@ -88,7 +94,6 @@ class ibs.th.skt.Commands.KioskCommand implements ICommand:
     
     run gbl/conf-rd.p ("gdsscrvw", "", "", 0, "", "", "", no, output confPar, output parType) no-error.
     
-    resp = new SimpleResponse().
     logWrite = new LogWrite().
 
     create x-document hDoc.
@@ -96,9 +101,9 @@ class ibs.th.skt.Commands.KioskCommand implements ICommand:
     create x-noderef  hRow.
     create x-noderef  hText.
     
-    hndlsocket = cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket.
+    hndlsocket = req:HndlSocket.
 
-    hDoc:load("longchar",cast(req, ibs.th.skt.Commands.SimpleRequest):Content,no).
+    hDoc:load("longchar",req:Content,no).
     hDoc:encoding = "UTF-8".
     hDoc:get-document-element(hRoot) .
     assign

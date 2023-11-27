@@ -28,7 +28,7 @@ using ibs.th.skt.Adapters.*.
 
 class ibs.th.skt.ControlledClients.atdclient : 
   
-  {cmp/str-glbl.i class}
+  { cmp/str-glbl.i class}
   {str/lib-trn.i class}
   
   define private variable logWrite as class LogWrite no-undo.
@@ -43,7 +43,7 @@ class ibs.th.skt.ControlledClients.atdclient :
        
   end.
   
-  method public void hndler (req as class ibs.th.skt.Commands.SimpleRequest):
+  method public void hndler (req as class ibs.th.skt.Commands.IRequest):
     define variable vExp as class ibs.th.bge.atd.dict-atd-exp no-undo.
     define variable mbuffer-out as character no-undo.
     define variable vLC as longchar no-undo.

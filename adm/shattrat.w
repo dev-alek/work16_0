@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,11 +8,11 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER locked_thbj-attr FOR ub.thbj-attr.
+DEFINE BUFFER locked_thbj-attr FOR thbj-attr.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS shattrat
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS shattrat 
 /*
 
 $Revision$
@@ -63,7 +63,7 @@ define variable v-to-create     as logical  no-undo .
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -74,9 +74,10 @@ define variable v-to-create     as logical  no-undo .
 &Scoped-define FRAME-NAME shattrat
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help f-email-list f-user-list
-&Scoped-Define DISPLAYED-OBJECTS f-email-list f-user-list ~
-label-email-list label-user-list
+&Scoped-Define ENABLED-OBJECTS B-exit b-quit B-Help f-email-list ~
+f-user-list maxColMarks 
+&Scoped-Define DISPLAYED-OBJECTS f-email-list f-user-list maxColMarks ~
+label-email-list label-user-list 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -91,36 +92,42 @@ label-email-list label-user-list
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-exit AUTO-GO
-     LABEL "&Ввод"
+DEFINE BUTTON B-exit AUTO-GO 
+     LABEL "&Ввод" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON B-Help
-     LABEL "Помо&щь"
+DEFINE BUTTON B-Help 
+     LABEL "Помо&щь" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-email-list AS CHARACTER
+DEFINE VARIABLE f-email-list AS CHARACTER 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL
      SIZE 55 BY 5 DROP-TARGET NO-UNDO.
 
-DEFINE VARIABLE f-user-list AS CHARACTER
-     VIEW-AS fill-in 
+DEFINE VARIABLE f-user-list AS CHARACTER FORMAT "x(8)" 
+     VIEW-AS FILL-IN 
      SIZE 55 BY 1 DROP-TARGET NO-UNDO.
 
-DEFINE VARIABLE label-email-list AS CHARACTER FORMAT "X(256)":U INITIAL "Список email для отправки сообщений"
-      VIEW-AS TEXT
+DEFINE VARIABLE label-email-list AS CHARACTER FORMAT "X(256)":U INITIAL "Список email для отправки сообщений" 
+      VIEW-AS TEXT 
      SIZE 47.5 BY .67 NO-UNDO.
 
-DEFINE VARIABLE label-user-list AS CHARACTER FORMAT "X(256)":U INITIAL "Список логинов исключенных из проверки подключений при обновление системы"
-      VIEW-AS TEXT
+DEFINE VARIABLE label-user-list AS CHARACTER FORMAT "X(256)":U INITIAL "Список логинов исключенных из проверки подключений при обновление системы" 
+      VIEW-AS TEXT 
      SIZE 75 BY .67 NO-UNDO.
+
+DEFINE VARIABLE maxColMarks AS INTEGER FORMAT "->>>>,>>>,>>9":U INITIAL 1000 
+     LABEL "Максимальное количество очищаемых марок" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -128,13 +135,14 @@ DEFINE FRAME shattrat
      B-exit AT ROW 1 COL 1 WIDGET-ID 2
      b-quit AT ROW 1 COL 11 WIDGET-ID 6
      B-Help AT ROW 1 COL 50 WIDGET-ID 4
-     f-email-list AT ROW 3.75 COL 4.5 NO-LABEL WIDGET-ID 22
-     f-user-list AT ROW 10.75 COL 4.5 NO-LABEL WIDGET-ID 22
-     label-email-list AT ROW 2.75 COL 2.5 NO-LABEL WIDGET-ID 28
-     label-user-list AT ROW 9.75 COL 2.5 NO-LABEL WIDGET-ID 28
-     SPACE(1)  SKIP(2.40) 
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     f-email-list AT ROW 3.74 COL 4.5 NO-LABEL WIDGET-ID 22
+     f-user-list AT ROW 10.74 COL 2.5 COLON-ALIGNED NO-LABEL WIDGET-ID 22
+     maxColMarks AT ROW 11.89 COL 43.38 COLON-ALIGNED WIDGET-ID 30
+     label-email-list AT ROW 2.74 COL 2.5 NO-LABEL WIDGET-ID 28
+     label-user-list AT ROW 9.74 COL 2.5 NO-LABEL WIDGET-ID 28
+     SPACE(0.99) SKIP(3.54)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки АВТОПРОЦЕССОВ" WIDGET-ID 100.
 
 
@@ -157,16 +165,17 @@ DEFINE FRAME shattrat
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX shattrat
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME shattrat:SCROLLABLE       = FALSE.
 
 /* SETTINGS FOR FILL-IN label-email-list IN FRAME shattrat
    NO-ENABLE ALIGN-L                                                    */
-ASSIGN
+ASSIGN 
        label-email-list:READ-ONLY IN FRAME shattrat        = TRUE.
+
 /* SETTINGS FOR FILL-IN label-user-list IN FRAME shattrat
    NO-ENABLE ALIGN-L                                                    */
-ASSIGN
+ASSIGN 
        label-user-list:READ-ONLY IN FRAME shattrat        = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -182,7 +191,7 @@ ASSIGN
 */  /* DIALOG-BOX shattrat */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -213,7 +222,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK shattrat
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK shattrat 
 
 
 /* ***************************  Main Block  *************************** */
@@ -336,7 +345,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -355,12 +364,12 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-email-list f-user-list label-email-list label-user-list
+  DISPLAY f-email-list f-user-list maxColMarks label-email-list label-user-list 
       WITH FRAME shattrat.
-  ENABLE B-exit b-quit B-Help f-email-list f-user-list
+  ENABLE B-exit b-quit B-Help f-email-list f-user-list maxColMarks 
       WITH FRAME shattrat.
   {&OPEN-BROWSERS-IN-QUERY-shattrat}
 END PROCEDURE.
@@ -368,7 +377,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets shattrat
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fill-widgets shattrat 
 PROCEDURE fill-widgets :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -437,6 +446,13 @@ on error undo, return error return-value
           f-user-list  :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
         .
       end.
+      when {&attr-auto-task_maxColMarks} then do:
+        assign
+          maxColMarks  = thbjattr_thbj-attr.property-value-integer
+          maxColMarks  :private-data in frame {&frame-name} = "recid=" + string(recid(thbjattr_thbj-attr))
+        .
+      end.      
+
     end case.
 
     create temp-thbj-attr.
@@ -448,7 +464,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save shattrat
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-save shattrat 
 PROCEDURE proc-save :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -572,3 +588,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

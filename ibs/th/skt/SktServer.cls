@@ -40,12 +40,12 @@ class ibs.th.skt.SktServer:
   ------------------------------------------------------------------------------*/
 
   define private variable clientControl as class     ClientControl no-undo.
-  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking". /*список клиентов через запятую, с которыми работает сокет-сервер*/
+  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand". /*список клиентов через запятую, с которыми работает сокет-сервер*/
 
   define private variable req           as class     IRequest      no-undo.
   define private variable resp          as class     IResponse     no-undo.
   define private variable client_       as character no-undo.
-
+  define private variable hLog          as handle no-undo.
   define public property LogMsg as character no-undo
     get.
     set.
@@ -67,7 +67,10 @@ class ibs.th.skt.SktServer:
    Notes:
   ------------------------------------------------------------------------------*/
   constructor SktServer (  ):
-		
+     this-object(?).
+  end.
+  constructor SktServer (iLog as handle  ):
+	 hLog = iLog.	
     define variable conf-par   as character no-undo .  /* для чтения параметра конфигурации */
     define variable par-type   as character no-undo .  /* тип параметра конфигурации */
     define variable tsdCommand    as class TSDCommand.
@@ -77,8 +80,9 @@ class ibs.th.skt.SktServer:
     define variable webCommand    as class webCommand.
     define variable atdclientcmd  as class atdclientcmd.
     define variable AuthMarking   as class markingcmd.
+    define variable DeferredCommand   as class DeferredCommand.
 		
-    clientControl = new ClientControl(). /*количество возможных комманд соответсвует кол-ву клиентов*/
+    clientControl = new ClientControl(hLog). /*количество возможных комманд соответсвует кол-ву клиентов*/
     
     /*создадим объекты конкретных комманд для клиентов сокет-сервера. вешаем комманду на порядковый номер клиента в списке*/
     run gbl/conf-rd.p ("is-tsd", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
@@ -109,6 +113,9 @@ class ibs.th.skt.SktServer:
     AuthMarking = new markingcmd ().
     clientControl:SetCommandForClient(lookup("AuthMarking",clientList), AuthMarking).
     
+    DeferredCommand = new DeferredCommand ().
+    clientControl:SetCommandForClient(lookup("DeferredCommand",clientList), DeferredCommand).
+    
   end constructor.
 
   
@@ -117,24 +124,28 @@ class ibs.th.skt.SktServer:
    Notes:
   ------------------------------------------------------------------------------*/
   method public void RequestProcessing (content as longchar, hndlSocket as handle):
+    define variable vDelete as logical no-undo.
     req = new SimpleRequest().
     resp = new SimpleResponse().
-    cast(req, ibs.th.skt.Commands.SimpleRequest):Content = content.
-    cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket = hndlSocket.
+    req:Content = content.
+    req:HndlSocket = hndlSocket.
     if QueryParam <> ""
-      then cast(req, ibs.th.skt.Commands.SimpleRequest):QueryPar = QueryParam.
+      then req:QueryPar = QueryParam.
     identifyClients().
     if client_ <> ? then 
     do:
-      clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
+      vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
       if error-status:error then 
       do:
         return error return-value.
       end.
-/*      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.*/
     end.
-    delete object req no-error.
-    delete object resp no-error.
+    if vDelete
+    then do:
+       delete object req  no-error.
+       delete object resp no-error.
+       hndlSocket:disconnect ().
+    end.
   end.
   
   /*------------------------------------------------------------------------------
@@ -142,47 +153,29 @@ class ibs.th.skt.SktServer:
    Notes:
   ------------------------------------------------------------------------------*/
   method public void RequestProcessing (content as memptr, hndlSocket as handle, lpar as character):
+    define variable vDelete as logical no-undo.
     req = new SimpleRequest().
     resp = new SimpleResponse().
-    cast(req, ibs.th.skt.Commands.SimpleRequest):ContentBuff = content.
-    cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket = hndlSocket.
+    req:ContentBuff = content.
+    req:HndlSocket = hndlSocket.
     identifyClients().
     client_ = "tsd".
     if client_ <> ? then 
     do:
-      clientControl:SendRequest(lookup (client_,clientList), cast(req, ibs.th.skt.Commands.SimpleRequest):ContentBuff, resp, hndlSocket, lpar) no-error.
+      vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp, lpar) no-error.
       if error-status:error then 
       do:
         return error return-value.
       end.
 /*      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.*/
     end.
-    delete object req no-error.
-    delete object resp no-error.
+    if vDelete
+    then do:
+       delete object req no-error.
+       delete object resp no-error.
+       hndlSocket:disconnect ().
+    end.
   end.
-
-  /*------------------------------------------------------------------------------
-   Purpose: Публичный метод, который все что нужно дальше делает с контентом. Его и вызываем для обработки контента.
-   Notes:
-  ------------------------------------------------------------------------------*/
-  /*method public void RequestProcessing (contentObj as class content, hndlSocket as handle):
-    req = new SimpleRequest().
-    resp = new SimpleResponse().
-    cast(req, ibs.th.skt.Commands.SimpleRequest):ContentObj = contentObj.
-    cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket = hndlSocket.
-    identifyClients().
-    if client_ <> ? then 
-    do:
-      clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
-      if error-status:error then 
-      do:
-        return error return-value.
-      end.
-/*      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.*/
-    end.
-    delete object req no-error.
-    delete object resp no-error.
-  end.*/
 
   method private void identifyClients ():
     define variable hRoot   as handle.
@@ -196,7 +189,8 @@ class ibs.th.skt.SktServer:
     end.
     
     
-    if not (cast(req, ibs.th.skt.Commands.SimpleRequest):Content matches '*<data req="gds"*' or cast(req, ibs.th.skt.Commands.SimpleRequest):Content matches '*<data req="grp"*')
+    if not    req:Content matches '*<data req="gds"*' 
+           or req:Content matches '*<data req="grp"*'
       then do:
     
       create x-document hDoc.
@@ -217,7 +211,8 @@ class ibs.th.skt.SktServer:
     /*далее случаи не по стандарту*/    
     if lookup (client_,clientList) = 0 then 
     do:
-      if cast(req, ibs.th.skt.Commands.SimpleRequest):Content matches '*<data req="gds"*' or cast(req, ibs.th.skt.Commands.SimpleRequest):Content matches '*<data req="grp"*' 
+      if    req:Content matches '*<data req="gds"*' 
+         or req:Content matches '*<data req="grp"*' 
         then 
       do:
         client_ = "TableMenu".
@@ -229,6 +224,19 @@ class ibs.th.skt.SktServer:
     end.
 
   end.
+
+  method public void checkEnd ():
+     clientControl:checkEnd().
+  end.
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public SktServer ( ):
+    
+    delete object clientControl no-error.
+    
+	end destructor.
 
 
 end class.

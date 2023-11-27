@@ -24,7 +24,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &GLOBAL-DEFINE STILL_ACTIVE 259
 
 
-FUNCTION IsProcessRunning RETURNS integer (PID AS INTEGER) :
+{ def/funcmet.i IsProcessRunning integer } (PID AS INTEGER) :
   DEFINE VARIABLE IsRunning   AS LOGICAL NO-UNDO INITIAL NO.
   DEFINE VARIABLE hProcess    AS INTEGER NO-UNDO.
   DEFINE VARIABLE ExitCode    AS INTEGER NO-UNDO.
@@ -47,6 +47,6 @@ FUNCTION IsProcessRunning RETURNS integer (PID AS INTEGER) :
      RUN CloseHandle in hpapi (hProcess, OUTPUT ReturnValue).
   END.
   RETURN rv.
-END FUNCTION.
+end.
 
 /* $Workfile$ e n d */

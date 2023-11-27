@@ -67,7 +67,7 @@ class ibs.th.skt.ControlledClients.marking.sts.cash inherits TypeMap:
     
     CashMap = new mapstring(true).
     NotAccessible  = crProp(1,"NotAccessible","Маркированный товар еще не поступил в продажу на АЗК. Его реализация невозможна").
-    NotAccessibleRet = crProp(9,"NotAccessible","Маркированный товар еще не поступил в продажу на АЗК. Его оборот невозможен").
+    NotAccessibleRet = crProp(9,"NotAccessibleRet","Маркированный товар еще не поступил в продажу на АЗК. Его оборот невозможен").
 /*    NotReadyForSale = crProp(2,"CheckContr","Ожидает проверку по договору").*/
 /*    Received   = crProp(7,"Received","Получен").                            */
 /*    Return_ = crProp(8,"Return","Возврат").                                 */
@@ -76,7 +76,7 @@ class ibs.th.skt.ControlledClients.marking.sts.cash inherits TypeMap:
     SaleLock  = crProp(2,"sale_lock","Маркированный товар заблокирован для продажи.").
     ReturnLock  = crProp(3,"return_lock","Маркированный товар заблокирован для возврата.").
     Unlock  = crProp(4,"unlock","Блокировка по кассе сброшена.").
-    UnlockAll  = crProp(5,"unlock","Блокировки по кассе сброшены.").
+    UnlockAll  = crProp(5,"unlock_all","Блокировки по кассе сброшены.").
     Commit  = crProp(6,"commit","Чек завершен.").
     
     LockOtherCash  = crProp(7,"LockOtherCash","Маркированный товар заблокирован другой кассой.").

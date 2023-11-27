@@ -370,17 +370,26 @@ procedure data-print :
       ,output v-ok      ) no-error.
       
     tt-petrol.place-type = v-value .
-
-    if not get_meas(bf_rvs-line.obj-code, bf_rvs-line.obj-type, bf_rvs-line.pl-code, c-rvs-doc.fact-date, c-rvs-doc.fact-time) then
+    define variable corr-date as date no-undo .
+    define variable corr-time as integer no-undo .
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = bf_rvs-line.rvs-code and
+    ub.inv-doc-attr.attr-code = "create_date" no-error .
+    if available (ub.inv-doc-attr) then corr-date = date(ub.inv-doc-attr.attr-value). else corr-date = c-rvs-doc.corr-date .
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = bf_rvs-line.rvs-code and
+    ub.inv-doc-attr.attr-code = "create_time" no-error .
+    if available (ub.inv-doc-attr) then corr-time = integer(ub.inv-doc-attr.attr-value). else corr-time = c-rvs-doc.corr-time . 
+    
+    if not get_meas(bf_rvs-line.obj-code, bf_rvs-line.obj-type, bf_rvs-line.pl-code,corr-date, corr-time) then
       tt-petrol.type_dan = "PÂÄ" .
     else 
     do:
+
       run c-place_get-attr (input {&place-rvd-lvl}
         ,input bf_rvs-line.obj-code
         ,input bf_rvs-line.obj-type
         ,input bf_rvs-line.pl-code
-        ,input c-rvs-doc.fact-date
-        ,input c-rvs-doc.fact-time
+        ,input corr-date
+        ,input corr-time
         ,output v-value ) no-error .
       
       if v-value = "" then pl-rvd-lvl = false .
@@ -390,8 +399,8 @@ procedure data-print :
         ,input bf_rvs-line.obj-code
         ,input bf_rvs-line.obj-type
         ,input bf_rvs-line.pl-code
-        ,input c-rvs-doc.fact-date
-        ,input c-rvs-doc.fact-time
+        ,input corr-date
+        ,input corr-time
         ,output v-value ) no-error .
       if v-value = "" then pl-rvd-temp = false .
       else pl-rvd-temp = not logical(v-value) . 
@@ -400,8 +409,8 @@ procedure data-print :
         ,input bf_rvs-line.obj-code
         ,input bf_rvs-line.obj-type
         ,input bf_rvs-line.pl-code
-        ,input c-rvs-doc.fact-date
-        ,input c-rvs-doc.fact-time
+        ,input corr-date
+        ,input corr-time
         ,output v-value ) no-error .
       if v-value = "" then pl-rvd-dens = false .
       else pl-rvd-dens = not logical(v-value) .

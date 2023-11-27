@@ -20,8 +20,14 @@ using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.Adapters.*.
 
-class ibs.th.skt.Commands.webCommand implements ICommand: 
-
+class ibs.th.skt.Commands.webCommand inherits ICommand: 
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Обработка запросов в сокет по web" get.
+  
   { cmp/str-glbl.i class}  
   {ibs/th/skt/ControlledClients/websrvTT.i}
   
@@ -47,7 +53,7 @@ class ibs.th.skt.Commands.webCommand implements ICommand:
   define private variable line-num    as integer no-undo .
   define private variable v-type      as character no-undo .
 
-  method public void Execute_( input req as IRequest, output resp as class IResponse ):
+  method public override void Execute_( input req as IRequest, resp as class IResponse ):
   
   do transaction:
 
@@ -64,7 +70,6 @@ class ibs.th.skt.Commands.webCommand implements ICommand:
     define buffer bfTempDocLine for TempDocLine.
     define variable ANS as logical .
     
-    resp = new SimpleResponse().
     websrv = new websrv().
     logWrite = new LogWrite().
 
@@ -72,18 +77,18 @@ class ibs.th.skt.Commands.webCommand implements ICommand:
     create x-noderef  hRoot.
 /*    create x-noderef  hRow.*/
     
-    hDoc:load("longchar",cast(req, ibs.th.skt.Commands.SimpleRequest):Content,no).
+    hDoc:load("longchar",req:Content,no).
     websrv:CP = hDoc:encoding.
     if hDoc:encoding <> "windows-" + session:charset then
     do:
-      str = cast(req, ibs.th.skt.Commands.SimpleRequest):Content.
+      str = req:Content.
       str = codepage-convert (str, session:charset, hDoc:encoding) no-error.
       if error-status:error
         then return error "Ошибка при преобразовании кодировки".
-      cast(req, ibs.th.skt.Commands.SimpleRequest):Content = str.
+      req:Content = str.
       delete object hDoc.
       create x-document hDoc.
-      hDoc:load("longchar",cast(req, ibs.th.skt.Commands.SimpleRequest):Content,no).
+      hDoc:load("longchar",req:Content,no).
     end.
     hDoc:encoding = if session:charset begins "12" then "windows-" + session:charset else session:charset.
     hDoc:get-document-element(hRoot) .
@@ -92,7 +97,7 @@ class ibs.th.skt.Commands.webCommand implements ICommand:
 /*      websrv:ObjType = substring (hRoot:get-attribute("to"), 1, 3)       */
       websrv:ReqType = hRoot:get-attribute("item")
     .
-    hndlsocket = cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket.
+    hndlsocket = req:HndlSocket.
     case websrv:ReqType :
       when "WAYBILL" then 
         do:

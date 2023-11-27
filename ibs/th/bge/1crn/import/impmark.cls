@@ -48,6 +48,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     define variable v-i-counter as integer no-undo .
     define variable v-i-num     as integer no-undo .
     define variable v-stub      as integer no-undo .
+    define variable vmark       as character no-undo.
+    define variable vKM         as character no-undo.
     
     define variable v-host-code  as integer no-undo .
     define buffer buf_bar-code    for ub.bar-code .
@@ -78,18 +80,15 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    if objImp:obj-load ne "mark"
    then
       undo, throw new Progress.Lang.AppError(substitute("Загрузка &1 не предусмотрена",objImp:obj-load)) .
-   define variable vmark as character no-undo.
-  
    vmark = repTegforDm(objImp:mark-code).
-   find first marking where marking.mark eq vmark
+   vKM = GetCodeIdent(vmark).
+   find first marking where marking.mark begins vKM
    exclusive-lock no-error.
    if not available marking
    then do:
-      
       create marking.
-      marking.mark     = vmark.
-      
    end.
+   else 
      
    if objImp:gds-code ne ?
    then do:
@@ -115,6 +114,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       end.
    end.
    assign
+      marking.mark         = vmark
       marking.gds-code     = objImp:gds-code
       marking.gds-ext-id   = objImp:GTIN
       marking.mark-parent  = repTegforDm(objImp:mark-parent) when objImp:mark-parent ne ? 

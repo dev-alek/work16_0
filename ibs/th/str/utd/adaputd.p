@@ -220,7 +220,10 @@ do:
           and buf_utd-marking-lines.doc-level = 1
           no-lock:
              v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
-          
+             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB).
+             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB).
+             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB).
+             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB).
         end.      
       end.
       

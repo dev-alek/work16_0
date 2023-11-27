@@ -505,7 +505,7 @@ attr-bge-export
 { cmp/cr-prep.i 1 attr-auto-task             auto-task             " " auto-task }
 
 { cmp/cr-prepc.i 1 prop-list-attr-auto-task
-"send-msg-to-email,user-list"
+"send-msg-to-email,user-list,maxColMarks"
 attr-auto-task
 }
 
@@ -572,10 +572,16 @@ attr-srv-auth-ASU
 "egais-fsrar,egais-utm,egais-ver-xsd,egais-inn,egais-exsys"
 attr-egais-host }
 
+/*Настройки для подключения к ГИС МТ и проверки КМ*/
+{ cmp/cr-prep.i 1 attr-gisMT gisMT " " gisMT }
+{ cmp/cr-prepc.i 1 prop-list-attr-gisMT
+"adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate"
+attr-gisMT }
+
 /*Электронный документооборот*/
 { cmp/cr-prep.i 1 attr-marking marking " " marking }
 { cmp/cr-prepc.i 1 prop-list-attr-marking
-"marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional"
+"marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional,marking-type-blockCashUnMark,marking-type-saleReturn,marking-type-saleUPD,marking-type-onlySale,checkBlock,checkDate,checkMRC,checkOwner,checkStatusKM"
 attr-marking }
 
 /*набор опций работы с документами МЦ*/
@@ -649,6 +655,7 @@ run filwrlib_append-new-line in this-procedure (input "&global-define cpdoc-attr
 ,{&bef-attr-srv-auth-ASU}~
 ,{&bef-attr-egais-host}~
 ,{&bef-attr-mercur}~
+,{&bef-attr-gisMT}~
 ,{&bef-attr-marking}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list {&thbjattr-list}" ).
@@ -720,6 +727,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-
 ,{&bef-attr-srv-auth-ASU}~
 ,{&bef-attr-egais-host}~
 ,{&bef-attr-mercur}~
+,{&bef-attr-gisMT}~
 ,{&bef-attr-marking}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define thbjattr-list-all {&thbjattr-list-all}" ).

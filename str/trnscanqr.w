@@ -449,7 +449,10 @@ procedure save_update :
   define variable v-bool as logical no-undo.
   define variable v-gds-attr as character no-undo .
   
+  define buffer buf_goods for ub.goods .
   define buffer buf_pl-gds for ub.pl-gds .
+  define buffer buf_doc-line for ub.doc-line .
+  define buffer buf_doc-line-attr for ub.doc-line-attr .
   define buffer buf_auto-tank for ub.auto-tank .
   
   v-bad-symb = '!' + {&delim-par} + '@' + {&delim-par} + '#' + {&delim-par} + '$' + {&delim-par} + '%' + {&delim-par} + '^' + {&delim-par} + '&' + {&delim-par}
@@ -1004,6 +1007,19 @@ procedure save_update :
   if error-status:error
     then message "Ошибка добавление товара." return-value view-as alert-box.
   v-sts:screen-value in frame {&frame-name}  = "считано".
+  
+  for each buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = t_doc.doc-code,
+  first buf_goods no-lock where buf_goods.gds-code = buf_doc-line-attr.gds-code
+  :
+    if not can-find (first buf_doc-line no-lock where buf_doc-line.doc-code = buf_doc-line-attr.doc-code
+                                                  and buf_doc-line.artic = buf_goods.artic
+                                                  and buf_doc-line.prod-code = buf_goods.prod-code
+                                                  and buf_doc-line.prod-type = buf_goods.prod-type)
+    then do :
+      delete buf_doc-line-attr .
+    end .
+  end .
+  
   apply "choose" to b-exit in frame {&frame-name}.
   
 

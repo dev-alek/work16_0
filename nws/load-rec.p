@@ -3349,7 +3349,9 @@ PROCEDURE proc-load-utd: /* 91 */
   on endkey undo, return error substitute( "$proc-load-utd. endkey" ) 
   :                                                   
     define buffer tb-utd for ub.utd.            
-    define variable compare-log as logical no-undo.   
+    define variable compare-log as logical no-undo.
+    define variable gtin as character no-undo.
+
     { nws/inc/imp/def-ins/utd.i }
     for each wt-utd  
     on error undo, return error substitute( "$proc-load-utd(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  

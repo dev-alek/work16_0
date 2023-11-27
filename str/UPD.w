@@ -325,6 +325,15 @@ DEFINE BUTTON bt-not-sel-desel-all
     LABEL "-" 
     SIZE 3 BY 1 TOOLTIP "Отменить выбор".
 
+DEFINE VARIABLE f-mark AS CHARACTER FORMAT "X(256)":U 
+    LABEL "Марка" 
+    VIEW-AS FILL-IN 
+    SIZE 38 BY 1 NO-UNDO.
+
+DEFINE BUTTON b_cl_mark 
+    LABEL "Сбросить" 
+    SIZE 10 BY 1.13.
+
 DEFINE BUTTON bt-sel-obj 
     IMAGE-UP FILE "btn-down-arrow":U
     IMAGE-DOWN FILE "btn-down-arrow":U
@@ -492,7 +501,9 @@ DEFINE FRAME d-utd
     c-type AT ROW 7.17 COL 74.5 COLON-ALIGNED WIDGET-ID 278
     bt-not-sel-all AT ROW 7.21 COL 5.5 WIDGET-ID 10 NO-TAB-STOP 
     bt-not-sel-desel-all AT ROW 7.21 COL 8.5 WIDGET-ID 12 NO-TAB-STOP 
-    b-mark AT ROW 7.21 COL 11.5 WIDGET-ID 4 NO-TAB-STOP 
+    b-mark AT ROW 7.21 COL 11.5 WIDGET-ID 4 NO-TAB-STOP
+    f-mark AT ROW 7.21 COL 15.5 WIDGET-ID 98
+    b_cl_mark AT ROW 7.14 COL 60.5
     br-utd AT ROW 8.21 COL 1.5
     B-write-sertif AT ROW 26.38 COL 4 WIDGET-ID 236
     B-write-cancel AT ROW 26.38 COL 36.25 WIDGET-ID 70
@@ -1518,7 +1529,7 @@ DO:
    vsend = not logical(getattrutdex (X_utd.db-num,X_utd.doc-id,"returnSend","no")).
    if not vsend
    then
-      message "Документ был отправлен рание, отправить повторно?"
+      message "Документ был отправлен ранее, отправить повторно?"
       view-as alert-box question buttons yes-no update vsend.
    if vsend
    then 
@@ -1678,6 +1689,8 @@ ON CHOOSE OF b_anul IN FRAME d-utd /* Аннуляция */
                 run Sendansver( X_utd.db-num, X_utd.doc-id, "RevocationRequest","") no-error.
                 if  error-status:error then
                 do:
+                    message return-value
+                    view-as alert-box.
                     return return-value .
                 end.
                 run init-id (X_utd.doc-id, X_utd.db-num).  
@@ -2130,6 +2143,46 @@ ON TAB OF F-date-from IN FRAME d-utd
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME f-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-mark Dialog-Frame
+ON return,tab OF f-mark IN FRAME d-utd /* mark */
+DO:
+   if f-mark eq f-mark:screen-value
+   then
+      return no-apply.
+   assign
+      f-mark
+   .
+   f-mark:sensitive    = f-mark eq "".
+   b_cl_mark:visible   = f-mark ne "".
+   b_cl_mark:sensitive = b_cl_mark:visible. 
+   apply "entry" to b_cl_mark IN FRAME d-utd .
+   run init-sort .
+   {&OPEN-QUERY-br-utd}
+   run enable_BUTTON.  
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b_cl_mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b_cl_mark IN FRAME d-utd
+ON CHOOSE OF b_cl_mark  IN FRAME d-utd /* Повторно проверить */
+DO:
+   f-mark:screen-value = "".
+   assign
+      f-mark
+   .
+   f-mark:sensitive    = f-mark eq "".
+   b_cl_mark:visible   = f-mark ne "".
+   b_cl_mark:sensitive = b_cl_mark:visible.
+   apply "entry" to f-mark IN FRAME d-utd .
+   run init-sort .
+   {&OPEN-QUERY-br-utd}
+   run enable_BUTTON. 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME F-date-to
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL F-date-to d-utd
@@ -2416,7 +2469,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             do while not mflagExit:
                 /*WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} pause vtime .*/
 
-                WAIT-FOR CHOOSE OF FRAME {&frame-name}  focus {&browse-name} pause vtime .
+                WAIT-FOR CHOOSE OF FRAME {&frame-name}  focus f-mark pause vtime .
     
                 vtime = max(0,time_motp + 10500000 - now).
                 if vtime = 0 and not v-flag then
@@ -2428,13 +2481,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         else 
         do:
 
-            WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} .
+            WAIT-FOR GO OF FRAME {&FRAME-NAME} focus f-mark .
         end.  
     end.
     else 
     do:
 
-        WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name} .
+        WAIT-FOR GO OF FRAME {&FRAME-NAME} focus f-mark .
     end.  
 END.
 run disable_UI in this-procedure .
@@ -2472,12 +2525,9 @@ PROCEDURE enable_BUTTON :
     display
         F-timeToken
         with frame {&frame-name} .
-
     if available (X_utd) and mDiadocConnection <> ? 
         then 
-    do:
-         
-               
+    do:                      
         enable
             b_anul
             B-write-cancel
@@ -2592,6 +2642,7 @@ PROCEDURE enable_UI :
             bt-not-sel-all
             b-servis
             f-DocumentNumber
+            f-mark
             radio-set-2
             bt-not-sel-desel-all
             B-LK_RECEIPT
@@ -2607,11 +2658,12 @@ PROCEDURE enable_UI :
             mark-num
             F-date-from
             F-date-to
+            f-mark
             with frame {&frame-name} .
         enable
             b-choose-sertif
             with frame {&frame-name} .   
-        hide b-sel in frame {&frame-name} . 
+        hide b-sel b_cl_mark in frame {&frame-name} . 
         if v-obj-active then enable b-add with frame {&frame-name} .    
         if v-cntxt-db-num <> 0 
         then
@@ -2637,6 +2689,7 @@ PROCEDURE enable_UI :
             F-date-from
             F-date-to
             f-DocumentNumber
+            f-mark
             WITH FRAME {&frame-name}.
         display     F-date-from
             b-inout
@@ -2656,8 +2709,9 @@ PROCEDURE enable_UI :
             F-sertif
             mark-num
             b-choose-sertif
+            f-mark
             with frame {&frame-name} .    
-        hide b-update in frame {&Frame-name} .
+        hide b-update b_cl_mark in frame {&Frame-name} .
     end.  
     if log-res-Token then 
     do:
@@ -2814,6 +2868,68 @@ PROCEDURE init-sort :
     
         vqry = substitute("FOR EACH buf_utd where &1 and buf_utd.DocumentDate >= &2 and buf_utd.DocumentDate <= &3 no-lock" , vinout,f-date-to,f-date-from).
     end.
+    define variable vGdsCode  as integer   no-undo.
+    define variable vGtin     as character no-undo.
+    define variable vMark     as character no-undo.
+    define variable vMarkGtin as character no-undo.
+    define variable vInt      as logical   no-undo.
+    define variable vi        as integer   no-undo.
+    define buffer goods             for goods.
+    define buffer bar-code          for bar-code.
+    define buffer prod-bc           for prod-bc.
+    define buffer utd-lines         for utd-lines.
+    define buffer utd-marking-lines for utd-marking-lines.
+    assign
+       vGdsCode = 0
+       vGtin    = ""
+       vMark    = ""
+    .
+    if f-mark ne ""
+    then do:
+       int(f-mark) no-error.
+       vInt = not error-status:error.
+       if vInt
+       then
+          find first goods where goods.gds-code eq int(f-mark) no-lock no-error.
+       if available goods
+       then do:
+          vGdsCode  = goods.gds-code.
+       end.
+       else do:
+          if vInt
+          then
+             find first bar-code where bar-code.b-code eq int(f-mark) no-lock no-error.
+          if available bar-code
+          then do:
+             vGdsCode  = bar-code.gds-code.
+          end.
+          else do:
+             block-fill:
+             do vi = 0 to 10:
+                find first prod-bc where prod-bc.b-str eq fill("0",vi) + f-mark no-lock no-error.
+                if available prod-bc
+                then
+                   leave block-fill.
+             end. 
+             if available prod-bc
+             then do:    
+                if prod-bc.bc-on-type = {&gtin}
+                then
+                   vGtin = prod-bc.b-str.
+                else do:
+                    find first bar-code where bar-code.b-code eq prod-bc.b-code no-lock no-error.
+                    if available bar-code
+                    then
+                       vGdsCode  = bar-code.gds-code.
+                end.
+             end.
+             else do:
+                vMark     = getcodeident(f-mark).
+                vMarkGtin = getGtinByDM (f-mark).
+             end.
+          end.
+       end.
+    end. 
     mQuery:query-prepare(vqry).
     mQuery:query-open ().
     mQuery:get-first ().
@@ -2834,7 +2950,55 @@ PROCEDURE init-sort :
           mQuery:get-next (). /* Вывод из оборота */
           next .
         end .
-    
+        if vGdsCode  ne 0
+        then do:
+           find first utd-lines where utd-lines.db-num   eq buf_utd.db-num
+                                  and utd-lines.doc-id   eq buf_utd.doc-id
+                                  and utd-lines.gds-code eq vGdsCode
+           no-lock no-error.
+           if not available utd-lines
+           then do :
+              mQuery:get-next (). /* Вывод из оборота */
+              next .
+           end .
+        end.
+        if vGtin ne ""
+        then do:
+           find first utd-marking-lines where utd-marking-lines.db-num   eq buf_utd.db-num
+                                          and utd-marking-lines.doc-id   eq buf_utd.doc-id
+                                          and utd-marking-lines.mark     begins "01" + vGtin + "21"
+           no-lock no-error.
+           if not available utd-marking-lines
+           then
+              find first utd-marking-lines where utd-marking-lines.db-num   eq buf_utd.db-num
+                                             and utd-marking-lines.doc-id   eq buf_utd.doc-id
+                                             and utd-marking-lines.mark     begins "02" + vGtin + "37"
+              no-lock no-error.
+           if not available utd-marking-lines
+           then do :
+              mQuery:get-next (). /* Вывод из оборота */
+              next .
+           end .
+        end.
+        if vMark ne ""
+        then do:
+           find first utd-marking-lines where utd-marking-lines.db-num   eq buf_utd.db-num
+                                          and utd-marking-lines.doc-id   eq buf_utd.doc-id
+                                          and utd-marking-lines.mark     begins vMark
+           no-lock no-error.
+           if not available utd-marking-lines
+           then
+              find first utd-marking-lines where utd-marking-lines.db-num   eq buf_utd.db-num
+                                             and utd-marking-lines.doc-id   eq buf_utd.doc-id
+                                             and utd-marking-lines.mark     begins "02" + vMarkGtin + "37"
+              no-lock no-error.
+           
+           if not available utd-marking-lines
+           then do :
+              mQuery:get-next (). /* Вывод из оборота */
+              next .
+           end .
+        end.
         create X_utd .
         buffer-copy buf_utd to X_utd . 
         X_utd.stts = StatusTHName(X_utd.sts).
@@ -3054,16 +3218,20 @@ PROCEDURE proc-sertif :
     do:
 
         vCertificates = mDiadocApi:GetPersonalCertificates(true).
+        cerfcnt:
         do vi = 1 to  vCertificates:count:
             vCertificate = vCertificates:GetItem(vi - 1).
             if vCertificate:SerialNumber = v-sertif_num then 
+            do: 
                 v-sertif = vCertificate:Thumbprint .
+                leave cerfcnt.
+            end.    
         end.
-        conectbyCertif(v-sertif) .
+        conectbyCertif(v-sertif) .        
         p-connect = mDiadocConnection.
-        if mDiadocConnection eq ?
-            then message "Не удалось подключиться к Диадок" view-as alert-box.
-        else run SendAuto.
+        if mDiadocConnection ne ?
+        then
+           run SendAuto.
     end.
     else 
     do:

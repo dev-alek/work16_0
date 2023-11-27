@@ -14,31 +14,8 @@ Author: Alexandr Morozov
 Creation date: 01/30/15
 
 */
-
-
 using ibs.th.skt.Commands.*.
-using ibs.th.skt.ControlledClients.*.
 
-class ibs.th.skt.Commands.SimpleRequest implements IRequest: 
-
-  define public property Content as longchar no-undo 
-    get.
-    set.
-
-  define public property ContentBuff as memptr no-undo 
-    get.
-    set.
-
-  define public property QueryPar as character no-undo 
-    get.
-    set.
-
-  define public property ContentObj as class content no-undo 
-    get.
-    set.
-
-  define public property HndlSocket as handle no-undo 
-    get.
-    set.
+class ibs.th.skt.Commands.SimpleRequest inherits IRequest: 
 
 end class.

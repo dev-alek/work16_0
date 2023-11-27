@@ -60,7 +60,38 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
   define public property MarkingTypeTransitional as character initial "" no-undo 
     get.
     private set.
-        
+
+  define public property MarkingTypeBlockCashUnMarkObj as class markingtype no-undo 
+    get.
+    private set.
+
+  define public property MarkingTypeBlockCashUnMark as character initial "" no-undo 
+    get.
+    private set.
+    
+  define public property MarkingTypeSaleReturnObj as class markingtype no-undo 
+    get.
+    private set.
+
+  define public property MarkingTypeSaleReturn as character initial "" no-undo 
+    get.
+    private set.
+    
+  define public property MarkingTypeSaleUPDObj as class markingtype no-undo 
+    get.
+    private set.
+
+  define public property MarkingTypeSaleUPD as character initial "" no-undo 
+    get.
+    private set.
+    
+  define public property MarkingTypeOnlySaleObj as class markingtype no-undo 
+    get.
+    private set.
+
+  define public property MarkingTypeOnlySale as character initial "" no-undo 
+    get.
+    private set.                    
 /*  define public property IsMarking as logical initial false no-undo*/
 /*    get:                                                           */
 /*       return MarkingTypeobj:IsMarking.                            */
@@ -287,7 +318,74 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ) no-error .
     MarkingTypeTransitional = v-value-character.
     {utl\objreg.i MarkingTypeTransitionalObj markingtype MarkingTypeTransitional}
-        
+
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "marking-type-blockCashUnMark"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    MarkingTypeBlockCashUnMark = v-value-character.
+    {utl\objreg.i MarkingTypeBlockCashUnMarkObj markingtype MarkingTypeBlockCashUnMark}
+    
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "marking-type-saleReturn"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    MarkingTypeSaleReturn = v-value-character.
+    {utl\objreg.i MarkingTypeSaleReturnObj markingtype MarkingTypeSaleReturn}
+    
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "marking-type-saleUPD"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    MarkingTypeSaleUPD = v-value-character.
+    {utl\objreg.i MarkingTypeSaleUPDObj markingtype MarkingTypeSaleUPD}
+    
+    run adm/shattri.p (
+      input "get":U
+      ,input pObjType
+      ,input pObjCode
+      ,input {&attr-marking}
+      ,input "marking-type-onlySale"
+      ,output v-value-character
+      ,output v-value-date
+      ,output v-value-decimal
+      ,output v-value-integer
+      ,output v-value-logical
+      ,output v-value-type
+      ,input-output TABLE thbjattr_thbj-attr
+      ) no-error .
+    MarkingTypeOnlySale = v-value-character.
+    {utl\objreg.i MarkingTypeOnlySaleObj markingtype MarkingTypeOnlySale}                    
   end constructor.
 
   /*------------------------------------------------------------------------------
@@ -318,5 +416,28 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
     return MarkingTypeTransitionalObj:GetValForType(pType).
 
   end method.  
-      
+
+  method public logical GetIsBlockCashUnMarkForType(pType as char):
+
+    return MarkingTypeBlockCashUnMarkObj:GetValForType(pType).
+
+  end method.  
+  
+  method public logical GetIsSaleReturnForType(pType as char):
+
+    return MarkingTypeSaleReturnObj:GetValForType(pType).
+
+  end method.  
+  
+  method public logical GetIsSaleUPDForType(pType as char):
+
+    return MarkingTypeSaleUPDObj:GetValForType(pType).
+
+  end method.  
+  
+  method public logical GetIsOnlySaleForType(pType as char):
+
+    return MarkingTypeOnlySaleObj:GetValForType(pType).
+
+  end method.              
 end class.

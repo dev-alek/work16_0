@@ -323,15 +323,24 @@ ON STOP UNDO _main, RETURN ERROR:
         {&ddctr-def-categ}
         v-categ
       }
+      
       if v-d-pcnt = ? then do:
         v-d-pcnt = 0.
       end.
       if v-cash-d-pcnt = ? then do:
         v-cash-d-pcnt = 0.
       end.
-      if v-categ = ? then do:
+
+      if buf_dis-card.category = ? then do:
         v-categ = 0.
-      end.
+      end. 
+      else do:
+      v-categ = buf_dis-card.category.
+      end. 
+
+/*    if v-categ = ? then do:
+        v-categ = 0.
+      end. */
 
       run ref/dcardi01.p (
                      input parparentproc
@@ -422,9 +431,14 @@ ON STOP UNDO _main, RETURN ERROR:
       if v-cash-d-pcnt = ? then do:
         v-cash-d-pcnt = 0.
       end.
-      if v-categ = ? then do:
+
+      if buf_dis-card.category = ? then do:
         v-categ = 0.
-      end.
+      end. 
+      else do:
+      v-categ = buf_dis-card.category.
+      end. 
+      /* message  v-categ  view-as alert-box. */
       run ref/dcardi01.p (
                      input parparentproc
                     ,input this-procedure
