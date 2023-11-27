@@ -691,7 +691,10 @@ DEF VAR vl-cnt AS LOG NO-UNDO.
 IF v-connect-param > '' THEN.
 ELSE DO:
   RUN write-to-log('Не указаны параметры подключения!').
-  return.
+  RUN write-to-log('Параметры задаются -param "Sock:-S <Port>" или -param "M:<h+>Sock:<Port>" ').
+  v-connect-param = "-S 8080".
+  RUN write-to-log('Задаем порт по умочанию 8080').
+  
 END.
 /* v-connect-param = 'sdj78'. */
 CREATE SERVER-SOCKET hServerSocket.
