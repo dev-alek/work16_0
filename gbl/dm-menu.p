@@ -6627,6 +6627,55 @@ PROCEDURE m_calendar-exe :
           ) no-error.
 END PROCEDURE.
 
+
+PROCEDURE m_disable-online-check :
+  define buffer buf_thbj-attr for ub.thbj-attr .
+  define variable p-enable-item as logical   no-undo .
+  run chk-goods_add(output p-enable-item)no-error .
+  if not p-enable-item then return .
+  for each ub.shop no-lock : 
+    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
+      buf_thbj-attr.obj-type = {&shop} and
+      buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
+      buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
+      buf_thbj-attr.property-value-logical = true .
+    end. 
+  end.
+  for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = 0 and
+    buf_thbj-attr.obj-type = "" and
+    buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
+    buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
+    buf_thbj-attr.property-value-logical = true .
+  end. 
+  message "Параметр «Аварийная ситуация в ГИС МТ» - включен"
+    view-as alert-box.          
+
+END PROCEDURE.
+
+PROCEDURE m_enable-online-check :
+  define buffer buf_thbj-attr for ub.thbj-attr .
+  define variable p-enable-item as logical   no-undo .
+  run chk-goods_add(output p-enable-item)no-error .
+  if not p-enable-item then return .
+  for each ub.shop no-lock : 
+    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
+      buf_thbj-attr.obj-type = {&shop} and
+      buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
+      buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
+      buf_thbj-attr.property-value-logical = false .
+    end. 
+  end.
+  for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = 0 and
+    buf_thbj-attr.obj-type = "" and
+    buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
+    buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
+    buf_thbj-attr.property-value-logical = false .
+  end. 
+  message "Параметр «Аварийная ситуация в ГИС МТ» - выключен"
+    view-as alert-box.          
+
+END PROCEDURE.
+
 PROCEDURE m_obj-sht-all-exe :
   define variable varrid-list   as   character           no-undo.
   run str/sht-all.w (parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, 'b-add', 'obj', v-cntxt-obj-type, v-cntxt-obj-code, '':U,  input-OUTPUT varrid-list) no-error.
@@ -10657,6 +10706,34 @@ run bge/egais-all-act-writeOff_shop.w (input parparentproc, input no, output v-R
     
 end procedure . /* m_EGAIS-all-awoS_exe */
 
+procedure chk-goods_add :
+
+  define output parameter p-enable-item as logical   no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+
+    IF not p-enable-item then do:
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_cashdesk-goods_add-def':U
+    {&cntxt-object}
+    v-cntxt-host-code-obj
+    v-cntxt-obj-type
+    v-cntxt-obj-code
+    0
+    0
+    0
+    true
+    p-enable-item
+  }
+    end.
+  end.
+
+end procedure. /* chk-goods_add */
 
 procedure chk-user-adm :
 
