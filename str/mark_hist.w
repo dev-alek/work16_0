@@ -75,7 +75,8 @@ define variable p-value-integer    as integer no-undo.
 define variable p-param-type       as character no-undo.
 define variable v-tth as handle no-undo .
 define variable v-marking   as character no-undo .
-define variable canEditStatus as logical no-undo.
+define variable canEditStatus      as logical no-undo.
+define variable canEditOnlineCheck as logical no-undo.
 
 define buffer buf_marking       for ub.marking .
 define buffer buf_marking-attr  for ub.marking-attr .
@@ -157,7 +158,7 @@ X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-lin
 &Scoped-Define ENABLED-OBJECTS b-exit b-hist B-1 v-mark v-mark-2  f-last-change emission_Date ~
 Btn_rn br-mark Btn_pn 
 &Scoped-Define DISPLAYED-OBJECTS v-mark v-mark-2 f-status f-GTIN  f-last-change f-gds-code ~
-f-gds-name f-obj-code f-obj-type mrc produced_Date emission_Date f-rn ~
+f-gds-name f-obj-code f-obj-type mrc produced_Date emission_Date online-check f-rn ~
 f-unit f-unit-2 f-loc-key f-pn 
 
 /* Custom List Definitions                                              */
@@ -303,6 +304,10 @@ DEFINE VARIABLE v-mark-2 AS CHARACTER FORMAT "X(255)"
      VIEW-AS FILL-IN 
      SIZE 44 BY 1.
 
+DEFINE VARIABLE online-check AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+    SIZE 10 BY .81 NO-UNDO.
 
 
 { gbl/objsrv.i }
@@ -353,6 +358,7 @@ DEFINE FRAME d-mark
      mrc AT ROW 6 COL 107 RIGHT-ALIGNED WIDGET-ID 266
      produced_Date AT ROW 7.25 COL 107 RIGHT-ALIGNED WIDGET-ID 262
      emission_Date AT ROW 8.5 COL 107 RIGHT-ALIGNED WIDGET-ID 264
+     online-check AT ROW 8.84 COL 44.4 WIDGET-ID 274
      f-rn AT ROW 10.25 COL 10.5 COLON-ALIGNED WIDGET-ID 246
      Btn_rn AT ROW 10.25 COL 34.13 WIDGET-ID 250
      f-unit AT ROW 10.25 COL 81.13 COLON-ALIGNED WIDGET-ID 226
@@ -361,6 +367,8 @@ DEFINE FRAME d-mark
      f-loc-key AT ROW 24.5 COL 18.25 COLON-ALIGNED WIDGET-ID 260
      f-pn AT ROW 24.5 COL 81 COLON-ALIGNED WIDGET-ID 244
      Btn_pn AT ROW 24.5 COL 104.75 WIDGET-ID 68
+     "Игнорировать результат online-проверки:" VIEW-AS TEXT
+          SIZE 40 BY .62 AT ROW 8.86 COL 4 WIDGET-ID 276
      "Статус:" VIEW-AS TEXT
           SIZE 8 BY .62 AT ROW 3.76 COL 4.4 WIDGET-ID 272
      SPACE(0.87) SKIP(0.32)
@@ -471,16 +479,45 @@ END.
 ON CHOOSE OF b-exit IN FRAME d-mark
 DO:
   define buffer b_marking for ub.marking.
-  
-  if available buf_marking and buf_marking.sts <> f-status then do:
-    message "У марки был изменен статус.~nСохранить?" view-as alert-box question buttons yes-no 
-      update isSave as logical.
-    if isSave then do:
-      find first b_marking where rowid(b_marking) = rowid(buf_marking) exclusive-lock.
-      assign
-        b_marking.sts = f-status
-        b_marking.last-change = now 
-      .      
+  define buffer buf_marking-attr for ub.marking-attr.
+
+  if available buf_marking and online-check:sensitive then
+  do:
+    assign online-check.
+    find first buf_marking-attr where 
+               buf_marking-attr.attr-code = "notOnlineCheck"
+           and buf_marking-attr.mark begins buf_marking.mark
+         exclusive-lock no-error.
+    if (available buf_marking-attr and buf_marking-attr.attr-value <> string(online-check))
+       or (not available buf_marking-attr and online-check) then
+    do:
+      if available buf_marking-attr and not online-check then 
+      do:
+        delete buf_marking-attr.
+      end.
+      else do:
+        if not available buf_marking-attr then
+        do:
+          create buf_marking-attr.
+          assign
+            buf_marking-attr.mark = buf_marking.mark
+            buf_marking-attr.attr-code = "notOnlineCheck"
+          .
+        end.
+        buf_marking-attr.attr-value = string(online-check).
+      end.
+    end.
+
+    if buf_marking.sts <> f-status then do:
+      message "У марки был изменен статус.~nСохранить?" view-as alert-box question buttons yes-no 
+        update isSave as logical.
+      if isSave then do:
+        find first b_marking where rowid(b_marking) = rowid(buf_marking) exclusive-lock.
+        assign
+          b_marking.sts = f-status
+          b_marking.last-change = now 
+        .      
+      end.
     end.
   end.
 END.
@@ -621,7 +658,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   run ActivateKeyboardLayout (input iLang, input 0).
 
   /*Проверка прав на изменение статуса марки */
-    { gbl/chk-actg.i
+  { gbl/chk-actg.i
     v-cntxt-db-num
     v-cntxt-userid
     {&action-head-code-main}
@@ -635,6 +672,22 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     0
     false
     canEditStatus
+  }
+  /*Проверка прав на изменение признака марки Игнорироать online-проверку*/
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_mark_online_check':U
+    {&cntxt-global}
+    0
+    '':U
+    0
+    0
+    0
+    0
+    false
+    canEditOnlineCheck
   }
   run init-status in this-procedure .
   run init-temp in this-procedure .
@@ -695,13 +748,15 @@ PROCEDURE enable_mark :
     mrc
     produced_Date
     emission_Date
+    online-check
     with frame {&frame-name} .
 
   if available (buf_marking) then do:
     display f-status with frame {&frame-name} .
-    if canEditStatus then do:
+    if canEditStatus then
       enable f-status with frame {&frame-name} .
-    end.
+    if canEditOnlineCheck then
+      enable online-check with frame {&frame-name} .
   end.
   else do:
     hide f-status in frame {&frame-name} .
@@ -881,6 +936,10 @@ PROCEDURE init-temp :
      for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "producedDate"
                                           and buf_marking-attr.mark begins buf_marking.mark:
         produced_Date = buf_marking-attr.attr-value .                                              
+     end.                                       
+     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "notOnlineCheck"
+                                          and buf_marking-attr.mark begins buf_marking.mark:
+        online-check = logical(buf_marking-attr.attr-value).                                              
      end.                                       
       for each buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark:
         /*      if NumUPD = "" then NumUPD = buf_marking-lines.DocumentExt .*/
