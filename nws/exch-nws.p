@@ -314,6 +314,19 @@ end.
     end.
   end.
 
+   /* архивирование лога проверки марок и удаление лога */
+  run utl/gismt-arh.p no-error.
+  if error-status:error then do:
+    run write-to-log( substitute( "&1. ERROR!!! Ошибка при архивировании лога проверки марок &2&3&4&5"
+                                  ,vss-workfile
+                                  ,{&new-line}
+                                  ,error-status:get-message(error-status:num-messages)
+                                  ,{&new-line}
+                                  ,return-value
+                                )
+                    ) .
+  end.
+  
 end.
 
 /* $Workfile$ end */
