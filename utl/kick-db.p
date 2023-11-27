@@ -419,11 +419,11 @@ end.
 if not v-is-1c-erp then do:
 run waitfram-show in this-procedure ("Заполнение справочника регионов РФ").
 run utl/reg-cre.p.
-end.
 
 run waitfram-show in this-procedure ("Создание кассовой книги по основному виду деятельности.").
 run cre-CashBook in this-procedure .
 
+end.
 run waitfram-hide in this-procedure .
 message "Инициализация закончена.".
 
