@@ -57,7 +57,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     logWrite = new LogWrite().
   end.
 
-  method public void hndler (req as class ibs.th.skt.Commands.SimpleRequest):
+  method public void hndler (req as class ibs.th.skt.Commands.iRequest):
     define variable vLC       as longchar  no-undo.
     define variable ii        as integer   no-undo.
     define variable n         as integer   no-undo.
