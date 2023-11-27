@@ -79,6 +79,7 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
     do trans:
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
     define buffer buf_marking           for ub.marking .
+    define buffer marking               for ub.marking .
     define variable vOk  as logical no-undo init yes.
     define variable vBad as logical no-undo.
     
@@ -90,20 +91,31 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
           end.
           else 
              vOk = yes.
-          if vOk
-             and ( sts ne ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
-                   or ( sts eq ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
-                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
-                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
-                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
-                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
-                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
-                        and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
-                        )
-                )
-          then do:
-             
-             buf_utd-marking-lines.sts = sts .
+          if vOk then do:
+            if sts ne ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+               or ( sts eq ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                    and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+                    and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+                    and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+                    and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+                    and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+                    and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+                   )
+            then do:
+               buf_utd-marking-lines.sts = sts .
+            end.
+            if sts eq ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+               and (buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+                 or buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+                 or buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
+                 or buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB)
+            then do:
+              find first marking exclusive-lock where marking.mark = mark.
+              assign
+                buf_utd-marking-lines.sts = buf_marking.sts
+                marking.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+              .
+            end.
           end.
           else 
              vBad = yes.

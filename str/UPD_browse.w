@@ -2170,7 +2170,11 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                            if buf_marking.sts <> Marking:MarkError:KeyIntDB and buf_marking.sts <> Marking:Ungrouped:KeyIntDB then
                               buf_marking.sts = Marking:Checked_:KeyIntDB .
                         end.
-                     when Marking:MarkError:KeyIntDB then 
+                     when Marking:MarkError:KeyIntDB or 
+                     when Marking:SaleLock:KeyIntDB or 
+                     when Marking:SaleWaitLock:KeyIntDB or 
+                     when Marking:ReturnLock:KeyIntDB or 
+                     when Marking:ReturnWaitLock:KeyIntDB then 
                         do:
                         end.    
                      otherwise 

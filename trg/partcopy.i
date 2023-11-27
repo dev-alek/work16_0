@@ -307,7 +307,8 @@ procedure partcopy :
           for first buf_marking exclusive-lock where buf_marking.mark = buf_orig_ml.mark 
             and not (buf_marking.sts = oMarkSts:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
             
-            assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+            if not can-do({&NOT_CHANGE_MARKING_STS},string(buf_marking.sts)) then
+              buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
 /*            if buf_marking.mark-parent <> ""                                                                      */
 /*            and buf_marking.unit-ext = "UNIT"                                                                     */
 /*            then do :                                                                                             */
@@ -2082,7 +2083,8 @@ procedure partcopy-update-parts-delete :
               then do :
                 delete free_marking-lines .
               end .
-              assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB .
+              if not can-do({&NOT_CHANGE_MARKING_STS},string(buf_marking.sts)) then
+                buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB .
             end . 
           end.
 
