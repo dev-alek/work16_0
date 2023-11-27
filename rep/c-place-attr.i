@@ -48,15 +48,39 @@ FUNCTION get_meas returns logical (
   input endTime as integer ):
   
   define buffer bf_c-place     for ub.c-place .
+  define buffer buf_c-place     for ub.c-place .
   define buffer bf_place       for ub.place .
-  
+  define variable ii as integer no-undo init 0.
+  define variable is-meas as logical no-undo .
+  define variable is-true as logical no-undo .
+
   find last bf_c-place no-lock where bf_c-place.pl-code = pl-code and
     bf_c-place.obj-code = obj-code and
     bf_c-place.obj-type = obj-type and
     ((bf_c-place.corr-date = endDate and 
     bf_c-place.corr-time < endTime) or 
     bf_c-place.corr-date < endDate) no-error .
-  if available (bf_c-place) then return not bf_c-place.is-meas .
+  if available (bf_c-place) then 
+  do:
+    find last buf_c-place no-lock where buf_c-place.pl-code = bf_c-place.pl-code and
+      buf_c-place.obj-code = bf_c-place.obj-code and
+      buf_c-place.obj-type = bf_c-place.obj-type and
+      ((buf_c-place.corr-date = bf_c-place.corr-date and 
+      buf_c-place.corr-time < bf_c-place.corr-time) or 
+      buf_c-place.corr-date < bf_c-place.corr-date) no-error .   
+    if available (buf_c-place) then 
+    do:
+      if buf_c-place.is-meas <> bf_c-place.is-meas then return not bf_c-place.is-meas .
+      else return bf_c-place.is-meas .
+    end. 
+    else 
+    do:
+      find first bf_place no-lock where bf_place.pl-code = pl-code and
+        bf_place.obj-code = obj-code and
+        bf_place.obj-type = obj-type no-error .
+      return bf_place.is-meas .
+    end.
+  end. 
   else 
   do:
     find first bf_place no-lock where bf_place.pl-code = pl-code and
