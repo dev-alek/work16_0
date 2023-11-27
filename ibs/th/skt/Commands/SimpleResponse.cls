@@ -17,10 +17,8 @@ Creation date: 01/30/15
 
 using ibs.th.skt.Commands.*.
 
-class ibs.th.skt.Commands.SimpleResponse implements IResponse: 
+class ibs.th.skt.Commands.SimpleResponse inherits IResponse: 
 
-	define public property Content as memptr no-undo 
-	get.
-	set.
+	
 
 end class.

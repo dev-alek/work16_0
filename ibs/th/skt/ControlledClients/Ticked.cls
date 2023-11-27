@@ -539,7 +539,7 @@ class ibs.th.skt.ControlledClients.Ticked:
   
   end method.
 
-  method public character AuthorizationTicked (req as class ibs.th.skt.Commands.SimpleRequest):
+  method public character AuthorizationTicked (req as class ibs.th.skt.Commands.IRequest):
     
     define variable str as character no-undo.
     

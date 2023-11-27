@@ -20,11 +20,22 @@ using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.Adapters.*.
 
-class ibs.th.skt.Commands.TSDCommand implements ICommand: 
-
+class ibs.th.skt.Commands.TSDCommand inherits ICommandProc: 
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Обработка запросов в сокет по ТСД" get.
+  
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   define variable is-ProcArch64 as logical  no-undo init no.  
+   
   { cmp/str-glbl.i class}  
-  {ibs/th/skt/ControlledClients/TSDTT.i}
-  {utl\search.i class}
+  { ibs/th/skt/ControlledClients/TSDTT.i}
   &scop CRLF chr(13) + chr(10)
   &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
   
@@ -57,8 +68,26 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
   ------------------------------------------------------------------------------*/
     
   constructor public TSDCommand (  ):
-
+    define variable tempStr       as char     no-undo.
+    
     super ().
+    os-command silent value( 'set pro >>procarch') .
+    if search ("procarch") = ? 
+    then do:
+      logWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
+      ErrStatus = true.
+      return.
+    end.    
+
+    input from value (search('procarch')) no-convert.
+    if not index ("PROCESSOR_ARCHITECTURE=AMD64", tempStr) = 0
+      then assign is-ProcArch64 = true.
+    import tempStr.
+    if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
+      then assign is-ProcArch64 = true.
+    input close.
+    logWrite = new LogWrite().
+    tsd = new tsd().
     
   end constructor.
 
@@ -76,28 +105,50 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     put unformatted string (string (now) + "   " + msg  + {&new-line}).
     output close.    
   end.
-
-  method public void Execute_( input req as memptr, output resp as class IResponse, hndlsocket1 as handle, list-par as char ):
-    
+  define variable mServiceBusy as logical no-undo.
+  method public void Execute_( input req as IRequest, resp as class IResponse, list-par as char ):
     define variable mbuffer       as memptr   no-undo.
     define variable mbuffer1      as memptr   no-undo.
     define variable tempLongCh    as longchar no-undo.
-    define variable tempStr       as char     no-undo.
     define variable glog          as logical  no-undo.
-    define variable is-ProcArch64 as logical  no-undo init no.
+    
+    if mServiceBusy
+    then do:
+       logWrite:LogStr = "При обмене возникли ошибки. Уже выполняется одна задание получения данных".
+       tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&1ETag: &4&2",
+                              {&CRLF},
+                              {&HdEnd},
+                              length(logWrite:LogStr,'RAW':U), 
+                              logWrite:LogStr). 
+    
+       set-size(mbuffer) = 0.
+       set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
+       put-string(mbuffer,1) = tempLongCh.
+       glog = req:HndlSocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
+       if not glog 
+       then do:
+          logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
+       end.
+       ErrStatus = true.
+       undo.
+    end.
+    mServiceBusy = yes.  
+    
+    startStep('Начало выгрузка из базы ТСД').
+          
     define variable vobjtype as character no-undo.
-
-    logWrite = new LogWrite().
+    logWrite:LogStr = "".
+    
     copy-lob
-    from  object req
+    from  object req:ContentBuff
     to file "documents.s3db"
     no-convert
     no-error .
     
-    tsd = new tsd().
     vobjtype = entry (1, list-par, "?").
     if vobjtype eq "" or vobjtype eq ?
     then do:
+      mServiceBusy = no.
       logWrite:LogStr = "Не задан тип объекта".
       ErrStatus = true.
       return.
@@ -114,6 +165,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     tsd:ObjCode = integer (entry (2, list-par, "?")) no-error.
     if error-status:error
     then do:
+      mServiceBusy = no.
       logWrite:LogStr = "Не задан код объекта".
       ErrStatus = true.
       return.
@@ -125,24 +177,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     tsd:CurrDecSeparator = entry (4, list-par, "?")
     tsd:IsMarkOn = if entry (5, list-par, "?") = "true" then true else false
     no-error.
-
-    os-command silent value( 'set pro >>procarch') .
-    if search ("procarch") = ? 
-    then do:
-      logWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
-      ErrStatus = true.
-      return.
-    end.    
-
-    input from value (search('procarch')) no-convert.
-    import tempStr.
-    if not index ("PROCESSOR_ARCHITECTURE=AMD64", tempStr) = 0
-      then assign is-ProcArch64 = true.
-    import tempStr.
-    if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
-      then assign is-ProcArch64 = true.
-    input close.
-
+    
     os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
     
     if is-ProcArch64 
@@ -152,58 +187,90 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     else do:
       os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
     end.    
+    define variable vpid as integer no-undo.
+    vpid = runProc('DBInit.exe ExpDoc 30 31 >>DBInitExpDoc.txt').
+    resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
+    resp:ParamWait = substitute ("pid,&1,status,Step1", vpid).
     
+  end method.
+  
+  method override public void ContinueExecution( input req as IRequest, input resp as IResponse ):
+    define variable tempLongCh    as longchar no-undo.
+    define variable mbuffer       as memptr   no-undo.
+    define variable mbuffer1      as memptr   no-undo.
+    define variable glog          as logical  no-undo.
     
-    os-command silent value( 'DBInit.exe ExpDoc 30 31 >>DBInitExpDoc.txt') .
+    define variable vPos as integer no-undo.
+    define variable vPid as integer no-undo.
+    vpos = lookup("pid",resp:ParamWait).
+    vpid = int64(entry(vpos + 1,resp:ParamWait)).
+    if IsProcessRunning(vpid) > 0
+    then
+       return. /* ждем завершения процеса */
+    define variable vStatus as character no-undo.
+    vpos    = lookup("status",resp:ParamWait).
+    vStatus = entry(vpos + 1,resp:ParamWait).
+    if vStatus eq "step1"
+    then do transaction:
+       endStep('Завершена выгрузка из базы ТСД').
+       startStep('Начало загрузки документов.').
+       parseCSV().
+       endStep('Завершена загрузки документов.').
+       startStep('Начало выгрузки накладных.').
+       
+       tsd:getWB().
+       endStep('Завершена выгрузка накладных').
+       startStep('Начало выгрузки ЭДО.').
+       
+       tsd:getUTDDoc().
+       endStep('Завершена выгрузка ЭДО').
+       startStep('Начало загрузки документов в ТСД.').
+         
+       vpid = runProc('DBInit.exe Doc 30 31 >>DBInitDoc.txt').
+       resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
+       resp:ParamWait = substitute ("pid,&1,status,Step2", vpid).
+    end.
+    else if vStatus eq "step2"
+    then do:
+      endStep('Завершена загрузка документов в ТСД.').
+      
+      resp:condition = resp:STSlist:ReciveCommand:NameProp.
+      file-info:file-name = "documents.s3db"
+      .
+      set-size (mbuffer1) = file-info:file-size.
+      input from value (file-info:file-name) binary no-convert.
+      import mbuffer1.
+      input close.
     
-    do transaction:
-    parseCSV().
-    
-    tsd:getWB().
-    tsd:getUTDDoc().
-    
-    delete object tsd no-error.
-    
-    os-command silent value( 'DBInit.exe Doc 30 31 >>DBInitDoc.txt') .
-    
-    
-    file-info:file-name = "documents.s3db"
-    .
-    set-size (mbuffer1) = file-info:file-size.
-    input from value (file-info:file-name) binary no-convert.
-    import mbuffer1.
-    input close.
-    
-    if logWrite:LogStr = ""
+      if logWrite:LogStr = ""
       then tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1)).
       else tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&1ETag: &4&1&5&2",{&CRLF},{&HdEnd},get-size(mbuffer1), "При обмене возникли ошибки.",logWrite:LogStr). 
     
-    set-size(mbuffer) = 0.
-    set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
-    put-string(mbuffer,1) = tempLongCh.
-    assign
-      glog = hndlsocket1:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
-    if not glog 
+      set-size(mbuffer) = 0.
+      set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
+      put-string(mbuffer,1) = tempLongCh.
+      mServiceBusy = no.
+      assign
+         glog = req:HndlSocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
+      if not glog 
       then do:
         logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
         ErrStatus = true.
         undo.
       end.
-    assign
-      glog = hndlsocket1:write(mbuffer1,1,get-size(mbuffer1)) no-error.
-    if not glog
+      assign
+         glog = req:HndlSocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
+      if not glog
       then do:
         logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
         ErrStatus = true.
         undo.
       end.
     end.
-
-    
   end.
   
 
-  method public void Execute_( input req as IRequest, output resp as class IResponse ):
+  method public override void Execute_( input req as IRequest, resp as class IResponse ):
   
   do transaction:
 
@@ -215,7 +282,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     define buffer buf_place     for ub.place.
     define buffer bfTempDocLine for TempDocLine.
     
-    resp = new SimpleResponse().
+    
     tsd = new tsd().
     logWrite = new logWrite().
 
@@ -223,18 +290,18 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     create x-noderef  hRoot.
     create x-noderef  hRow.
     
-    hDoc:load("longchar",cast(req, ibs.th.skt.Commands.SimpleRequest):Content,no).
+    hDoc:load("longchar",req:Content,no).
     tsd:CP = hDoc:encoding.
     if hDoc:encoding <> "windows-" + session:charset then
     do:
-      str = cast(req, ibs.th.skt.Commands.SimpleRequest):Content.
+      str = req:Content.
       str = codepage-convert (str, session:charset, hDoc:encoding) no-error.
       if error-status:error
         then return error "Ошибка при преобразовании кодировки".
-      cast(req, ibs.th.skt.Commands.SimpleRequest):Content = str.
+      req:Content = str.
       delete object hDoc.
       create x-document hDoc.
-      hDoc:load("longchar",cast(req, ibs.th.skt.Commands.SimpleRequest):Content,no).
+      hDoc:load("longchar",req:Content,no).
     end.
     hDoc:encoding = if session:charset begins "12" then "windows-" + session:charset else session:charset.
     hDoc:get-document-element(hRoot) .
@@ -245,7 +312,7 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
       tsd:CurrDecSeparator = hRoot:get-attribute("currDecSeparator")
       tsd:IsMarkOn = if hRoot:get-attribute("MarksReg") = "true" then true else false
       .
-    hndlsocket = cast(req, ibs.th.skt.Commands.SimpleRequest):HndlSocket.
+    hndlsocket = req:HndlSocket.
     case tsd:ReqType :
       when "SETTINGS" then 
         do:
@@ -948,6 +1015,18 @@ class ibs.th.skt.Commands.TSDCommand implements ICommand:
     return true.
       
   end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public TSDCommand ( ):
+      delete object tsd no-error.
+   end destructor.
   
-  
+   
+  { utl/search.i class}
+
 end class.
+
+   

@@ -51,5 +51,3 @@ else do:
       run PutstatAsunc(substitute ("Отправка и получение новостей по БД &1", mdb)).
    run nws/exch-nws.p (this-procedure,?,?,mDB).
 end.
-
-{ utl/proc-async.i proc_end}

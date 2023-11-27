@@ -52,7 +52,8 @@ define variable v-cont-length as integer   no-undo.
 define variable v-cont-type   as character no-undo.
 define variable v-user-agent  as character no-undo.
 define variable v-querypar    as character no-undo.
-define variable v-path    as character no-undo.
+define variable v-path        as character no-undo.
+define variable mWork         as logical no-undo.
 
 { cmp/trg-def.i new }
 { cmp/showinf.i  }
@@ -96,7 +97,6 @@ CREATE WIDGET-POOL.
 define variable hServerSocket    as handle       no-undo.
 define variable v-connect-param  as CHAR         no-undo.
 define variable v-srv-connected  as LOG          no-undo.
-define variable mExit            as LOG          no-undo.
 define variable us-tmo           as INTEGER   INIT 60 no-undo. /*тайм-аут в сек.*/
 
 if num-entries (p-param, ";") = 2
@@ -286,6 +286,7 @@ ON WINDOW-CLOSE OF C-Win /* Сокет-сервер */
 DO:
   /* This event will close the window and terminate the procedure.  */
   APPLY "CLOSE":U TO THIS-PROCEDURE.
+  mWork = no.
   RETURN NO-APPLY.
 END.
 
@@ -299,9 +300,11 @@ ON CHOOSE OF b-exit IN FRAME DEFAULT-FRAME /* Выход  */
 DO:
 
 RUN proc-stop-srv.
-mExit = yes.
+
 PAUSE 2.
+
 APPLY 'close':U TO THIS-PROCEDURE.
+mWork = no.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -351,6 +354,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       C-Win:HIDDEN = no.
       RUN enable_UI.
   end.
+  define variable sktserv  as class SktServer no-undo.
+  define variable logWrite as class LogWrite  no-undo.
+
+  logWrite = new LogWrite().          
+  sktserv = new SktServer(this-procedure).
+  
   apply 'choose':U to Btn-st.
     { gbl/curdbnum.i
       g#db-num
@@ -362,19 +371,25 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     message "Ошибка получения глобальный переменных." view-as alert-box.
     return error.
   end.
+  mWork = yes.
+  subscribe "write-to-log" anywhere.
   define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
   CheckUpd = new ibs.th.adm.upd.CheckUpd ().
   IF NOT THIS-PROCEDURE:PERSISTENT THEN 
-  do while not mExit:
-     WAIT-FOR CLOSE OF this-procedure pause 60.
+  do while mWork:
      if CheckUpd:isStopWork or CheckUpd:isNeedUpd
      then do:
         RUN proc-stop-srv.
-        mExit = yes.
+        mWork = no.
      end.
+     wait-for close of this-procedure pause 0.001.
+     sktserv:checkEnd().
+     
   end.
+  unsubscribe "write-to-log".  
 END.
-
+delete object sktserv.
+delete object logWrite.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -567,11 +582,6 @@ PROCEDURE connproc :
           SET-SIZE(mbuffer) = LENGTH(v-content,'RAW') + 2.
           PUT-STRING(mbuffer,1) = v-content.
 
-          define variable sktserv  as class SktServer no-undo.
-          define variable logWrite as class LogWrite  no-undo.
-
-          logWrite = new LogWrite().          
-          sktserv = new SktServer().
           case v-path:
           when "AuthMarking" then do:
             sktserv:ClientPar = v-path. 
@@ -582,14 +592,13 @@ PROCEDURE connproc :
             then do:
               if num-entries (v-querypar, "?") > 1
               then do:
-                sktserv:ClientPar = entry (1, v-querypar, "?"). 
+                sktserv:ClientPar  = entry (1, v-querypar, "?"). 
                 sktserv:QueryParam = entry (2, v-querypar, "?").
               end.
               else sktserv:ClientPar = v-querypar.
             end.
           end.
           end.
-
           case true:
           when sktserv:ClientPar <> '' then do:
             sktserv:RequestProcessing(v-content, hsocket) no-error.
@@ -614,23 +623,11 @@ PROCEDURE connproc :
           else do:
 /*            resp-head = "OK".*/
           end.*/
-          delete object sktserv.
+          
       END.
   end. /* ContBlock */
-  /* шапка http-ответа + тело ответа помещенное в память*/
-/*  SET-SIZE(mbuffer-out) = 0.                            */
-/*  SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW':U) + 1.*/
-/*  PUT-STRING(mbuffer-out,1) = resp-head.*/
-  lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.
+  RUN write-to-log('RESPONSE: ' + resp-head).
   
-  IF lsocket = FALSE OR ERROR-STATUS:GET-MESSAGE(1) <> '' THEN
-        DO:
-            RUN write-to-log('RESPONSE: ' + resp-head).
-            hsocket:disconnect ().
-            RETURN.
-        END.
- 
-  hsocket:disconnect ().
     
 END PROCEDURE.
 
