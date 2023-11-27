@@ -75,6 +75,7 @@ define variable p-value-integer    as integer no-undo.
 define variable p-param-type       as character no-undo.
 define variable v-tth as handle no-undo .
 define variable v-marking   as character no-undo .
+define variable canEditStatus as logical no-undo.
 
 define buffer buf_marking       for ub.marking .
 define buffer buf_marking-attr  for ub.marking-attr .
@@ -153,9 +154,9 @@ X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-lin
     ~{&OPEN-QUERY-br-mark}
     
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit B-1 v-mark v-mark-2 emission_Date ~
+&Scoped-Define ENABLED-OBJECTS b-exit b-hist B-1 v-mark v-mark-2  f-last-change emission_Date ~
 Btn_rn br-mark Btn_pn 
-&Scoped-Define DISPLAYED-OBJECTS v-mark v-mark-2 f-status f-GTIN f-gds-code ~
+&Scoped-Define DISPLAYED-OBJECTS v-mark v-mark-2 f-status f-GTIN  f-last-change f-gds-code ~
 f-gds-name f-obj-code f-obj-type mrc produced_Date emission_Date f-rn ~
 f-unit f-unit-2 f-loc-key f-pn 
 
@@ -196,6 +197,13 @@ DEFINE BUTTON b-exit AUTO-GO
      LABEL "&Выход ":L 
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-hist 
+    IMAGE-UP FILE "cmp/b-hist.bmp":U
+    IMAGE-DOWN FILE "cmp/b-hist.bmp":U
+    IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
+    LABEL "Ис&тория" 
+    SIZE 3 BY 1.
+
 DEFINE BUTTON Btn_pn 
      IMAGE-UP FILE "cmp/btn-fnd.bmp":U
      IMAGE-DOWN FILE "cmp/btn-fnd.bmp":U
@@ -209,6 +217,12 @@ DEFINE BUTTON Btn_rn
      IMAGE-INSENSITIVE FILE "cmp/btn-fnd.bmp":U NO-CONVERT-3D-COLORS
      LABEL "" 
      SIZE 3 BY 1.
+
+DEFINE VARIABLE f-status AS INTEGER FORMAT "->>9":U INITIAL -1 
+     VIEW-AS COMBO-BOX INNER-LINES 7
+     LIST-ITEM-PAIRS "",-1
+     DROP-DOWN-LIST
+     SIZE 39.2 BY 1 NO-UNDO.
 
 DEFINE VARIABLE emission_Date AS CHARACTER FORMAT "X(256)":U 
      LABEL "Дата эмиссии кода маркировки" 
@@ -229,6 +243,11 @@ DEFINE VARIABLE f-GTIN AS CHARACTER FORMAT "X(256)":U
      LABEL "GTIN" 
      VIEW-AS FILL-IN 
      SIZE 44 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-last-change AS DATETIME FORMAT "99/99/99 HH:MM:SS":U 
+     LABEL "Изменен" 
+     VIEW-AS FILL-IN 
+     SIZE 44 BY 1 TOOLTIP "Дата и время изменения статуса" NO-UNDO.
 
 DEFINE VARIABLE f-loc-key AS CHARACTER FORMAT "X(256)":U 
      LABEL "Блокировка марки" 
@@ -254,11 +273,6 @@ DEFINE VARIABLE f-rn AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 21 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-status AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Статус" 
-     VIEW-AS FILL-IN 
-     SIZE 44 BY 1 NO-UNDO.
-
 DEFINE VARIABLE f-unit AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ед.изм. EDO" 
      VIEW-AS FILL-IN 
@@ -282,12 +296,12 @@ DEFINE VARIABLE produced_Date AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(255)" 
      LABEL "Марка" 
      VIEW-AS FILL-IN 
-     SIZE 78.5 BY 1.
+     SIZE 75.6 BY 1.
 
 DEFINE VARIABLE v-mark-2 AS CHARACTER FORMAT "X(255)" 
      LABEL "Марка" 
      VIEW-AS FILL-IN 
-     SIZE 95.5 BY 1.
+     SIZE 44 BY 1.
 
 
 
@@ -327,9 +341,11 @@ DEFINE FRAME d-mark
      b-exit AT ROW 1 COL 1.38
      B-1 AT ROW 1 COL 11.5 WIDGET-ID 248
      v-mark AT ROW 1.08 COL 27.5 COLON-ALIGNED WIDGET-ID 34
+     b-hist AT ROW 1.08 COL 106
      v-mark-2 AT ROW 2.33 COL 10.5 COLON-ALIGNED WIDGET-ID 252
-     f-status AT ROW 3.5 COL 10.5 COLON-ALIGNED WIDGET-ID 218
-     f-GTIN AT ROW 3.5 COL 62 COLON-ALIGNED WIDGET-ID 220
+     f-GTIN AT ROW 2.33 COL 62 COLON-ALIGNED WIDGET-ID 220
+     f-status AT ROW 3.52 COL 10.5 COLON-ALIGNED WIDGET-ID 218
+     f-last-change AT ROW 3.52 COL 62 COLON-ALIGNED WIDGET-ID 268
      f-gds-code AT ROW 4.75 COL 10.5 COLON-ALIGNED WIDGET-ID 224
      f-gds-name AT ROW 4.75 COL 62 COLON-ALIGNED WIDGET-ID 222
      f-obj-code AT ROW 6 COL 10.5 COLON-ALIGNED WIDGET-ID 256
@@ -345,6 +361,8 @@ DEFINE FRAME d-mark
      f-loc-key AT ROW 24.5 COL 18.25 COLON-ALIGNED WIDGET-ID 260
      f-pn AT ROW 24.5 COL 81 COLON-ALIGNED WIDGET-ID 244
      Btn_pn AT ROW 24.5 COL 104.75 WIDGET-ID 68
+     "Статус:" VIEW-AS TEXT
+          SIZE 8 BY .62 AT ROW 3.76 COL 4.4 WIDGET-ID 272
      SPACE(0.87) SKIP(0.32)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -423,12 +441,48 @@ DO:
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME f-status
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-status d-mark
+ON value-changed OF f-status IN FRAME d-mark
+DO:
+   assign 
+     f-status
+   .
+END .
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME Btn_pn
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_pn d-mark
 ON CHOOSE OF Btn_pn IN FRAME d-mark
 DO:
     { gbl/stdbtn.i }
 run show-in-code in this-procedure .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-exit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-mark
+ON CHOOSE OF b-exit IN FRAME d-mark
+DO:
+  define buffer b_marking for ub.marking.
+  
+  if available buf_marking and buf_marking.sts <> f-status then do:
+    message "У марки был изменен статус.~nСохранить?" view-as alert-box question buttons yes-no 
+      update isSave as logical.
+    if isSave then do:
+      find first b_marking where rowid(b_marking) = rowid(buf_marking) exclusive-lock.
+      assign
+        b_marking.sts = f-status
+        b_marking.last-change = now 
+      .      
+    end.
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -496,6 +550,33 @@ DO:
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-hist d-mark
+ON CHOOSE OF B-hist IN FRAME d-mark /* История */
+DO:
+  DEFINE VARIABLE v-rid-list AS CHARACTER NO-undo.
+  IF available buf_marking THEN DO:
+    run ref/cmarking.w (
+              buf_marking.mark, 
+              parparentproc,
+              0,
+              "",
+              0,
+              "",
+              "one",
+              ?,
+              "",
+              "" ,
+              v-cntxt-db-num,
+              ?,
+              input-output v-rid-list ) .
+  END.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-mark 
@@ -537,7 +618,25 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                ) no-error . 
       IF p-value-logical = yes THEN  iLang = 68748313.
 
-  run ActivateKeyboardLayout (input iLang, input 0).   
+  run ActivateKeyboardLayout (input iLang, input 0).
+
+  /*Проверка прав на изменение статуса марки */
+    { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_mark_stchange':U
+    {&cntxt-firm}
+    v-cntxt-host-code-obj
+    '':U
+    0
+    0
+    0
+    0
+    false
+    canEditStatus
+  }
+  run init-status in this-procedure .
   run init-temp in this-procedure .
   run enable_UI in this-procedure .
   run enable_mark in this-procedure .
@@ -583,7 +682,7 @@ PROCEDURE enable_mark :
                                Settings" section of the widget Property Sheets.
                    -------------------------------------------------------------------- */
   display 
-    f-status
+    f-last-change
     f-gds-code
     f-obj-code
     f-obj-type
@@ -597,6 +696,16 @@ PROCEDURE enable_mark :
     produced_Date
     emission_Date
     with frame {&frame-name} .
+
+  if available (buf_marking) then do:
+    display f-status with frame {&frame-name} .
+    if canEditStatus then do:
+      enable f-status with frame {&frame-name} .
+    end.
+  end.
+  else do:
+    hide f-status in frame {&frame-name} .
+  end.
   if available (buf_marking) and buf_marking.sts = Marking:MarkError:KeyIntDB then do:
     f-status:fgcolor in frame {&frame-name} = 12.
   end.   
@@ -649,6 +758,7 @@ PROCEDURE enable_UI :
   ENABLE
     br-mark
     b-exit
+    b-hist
     WITH FRAME {&frame-name}.
   hide B-1 in frame {&frame-name} .
   if p-mark <> "" then 
@@ -684,7 +794,6 @@ PROCEDURE enable_UI :
 
   display
     f-gds-name
-    f-status
     f-obj-code
     f-obj-type
     f-gds-code
@@ -694,11 +803,32 @@ PROCEDURE enable_UI :
     v-mark-2
     f-loc-key
     with frame {&frame-name} .    
+  hide f-status in frame {&frame-name} .   
     
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-status d-mark 
+PROCEDURE init-status :
+  define variable vi as integer no-undo.
+  define variable MarkType as ibs.th.gbl.map.mapstring no-undo.
+  define variable objMark  as ibs.th.gbl.propmap no-undo.
+  do with frame {&frame-name}:
+/*    f-status:delete(1).*/
+    MarkType = ObjSrv:Env:Marking:Sts:Mark:MAPTYPE.
+    do vi = 1 to MarkType:GetItemByLab(vi):
+      objMark  = ObjSrv:Env:Marking:Sts:Mark:CurrProp.
+      f-status:add-last(objMark:Label_, objMark:KeyIntDB).
+    end.
+  end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-temp d-mark 
 PROCEDURE init-temp :
@@ -712,6 +842,7 @@ PROCEDURE init-temp :
                                Settings" section of the widget Property Sheets.
                    -------------------------------------------------------------------- */
   /*GTIN в любом случае показывать*/
+  release buf_marking. 
   empty temp-table X_marking-line.
 
   /*  f-GTIN:screen-value =*/
@@ -728,7 +859,8 @@ PROCEDURE init-temp :
     no-error .
     if available (buf_marking) then 
     do:
-      f-status = StatusName(buf_marking.sts) .
+      f-status = buf_marking.sts .
+      f-last-change = buf_marking.last-change .
       /*соответствие товаров*/
       f-gds-code = string(buf_marking.gds-code) .
       f-gds-name = GdsName(buf_marking.gds-code) .
@@ -787,7 +919,8 @@ PROCEDURE init-temp :
       f-GTIN = getGtinByDM(v-mark) .
       f-gds-code = string(getGdsCodeByGtin(f-GTIN)) .
       f-gds-name = GdsName(integer(f-gds-code)) .
-      f-status = "" .
+      f-status = 0 .
+      f-last-change = ? .
       /*соответствие товаров*/
       f-unit     = "" .     
       f-unit-2   = "" . 
@@ -805,7 +938,8 @@ PROCEDURE init-temp :
       f-GTIN = "" .
       f-gds-code = "" .
       f-gds-name = "" .
-      f-status = "" .
+      f-status = 0 .
+      f-last-change = ? .
       /*соответствие товаров*/
       f-unit     = "" .     
       f-unit-2   = "" . 
@@ -823,7 +957,8 @@ PROCEDURE init-temp :
       f-GTIN = "" .
       f-gds-code = "" .
       f-gds-name = "" .
-      f-status = "" .
+      f-status = 0 .
+      f-last-change = ? .
       /*соответствие товаров*/
       f-unit     = "" .     
       f-unit-2   = "" . 

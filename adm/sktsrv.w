@@ -33,6 +33,8 @@ using ibs.th.skt.ControlledClients.*.
 /* Parameters Definitions ---                                           */
 define input parameter p-param as character no-undo.
 define input parameter p-hide as logical no-undo.
+define input parameter p-user-login    as character no-undo .
+define input parameter p-user-password as character no-undo .
 /* Local Variable Definitions ---                                       */
 
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -45,6 +47,8 @@ define variable vss-description as character no-undo init "4GL socket server (HT
 
 define new shared variable g#LogStr       as character no-undo .
 define shared     variable g#auto-user-id as character no-undo .
+define shared     variable g#auto-user-login as character no-undo .
+define shared     variable g#auto-user-password as character no-undo .
 
 define variable v-header      as character no-undo.
 define variable v-hd-line     as character no-undo.
@@ -365,6 +369,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       g#db-num
     }
   g#language = 'RUS'.
+  run gbl/set-gbl.p
+    (input true
+    ,input p-user-login
+    ,input p-user-password
+    ) no-error.
   run gbl/get-gbl.p no-error.
   if error-status:error
   then do:
@@ -782,6 +791,7 @@ procedure parseheader:
   
   define input parameter p-header as character no-undo.
   define variable n as integer no-undo.
+  define variable idxQuerypar as integer no-undo.
   
   def var i as int no-undo.
   RUN write-to-log('REQUEST-HEADER:' + p-header ).
@@ -789,19 +799,23 @@ procedure parseheader:
   n = 2.
   if p-header begins "GET" and num-entries (p-header, "/") > 1
   then do:
-    v-querypar = entry (n, p-header, "/").
+    v-querypar = right-trim (right-trim  (entry(n, p-header, "/"), "HTTP"), " ").
   end.
   if v-querypar = "AuthMarking"
   then do:
-    v-path = v-querypar.
-    v-querypar = entry (n, p-header, "?").
-    n = 3.
+    /* нельзя использовать entry, т.к. в коде марки может быть слеш "/" */
+    assign
+      v-path = v-querypar
+      idxQuerypar = index(p-header,"/")
+      idxQuerypar = index(p-header,"/",idxQuerypar + 1)
+      v-querypar = right-trim (substring(p-header, idxQuerypar + 1, r-index(p-header,"HTTP") - idxQuerypar - 1), " ")
+      n = 3
+    .
   end.
-  
+
   p-header = replace (p-header,";",{&CRLF}).
   DO i = 1 TO NUM-ENTRIES(p-header,{&CRLF}):
       v-hd-line = trim(ENTRY(i,p-header,{&CRLF})).
-      v-querypar = right-trim (right-trim  (entry(n, v-header, "/"), "HTTP"), " ").
       IF  v-hd-line  BEGINS "Content-Length"  THEN  do:
           v-cont-length = INT(trim(SUBSTRING(v-hd-line,16,LENGTH(v-hd-line)))).
       END.

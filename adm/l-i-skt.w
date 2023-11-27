@@ -388,7 +388,8 @@ on stop   undo, leave
   
   RUN disable_UI.
   /*Вызов основного экрана*/
-  run adm/sktsrv.w (input v-soket-param, input v-hide).
+  run adm/sktsrv.w (input v-soket-param, input v-hide, 
+                    input name, input password).
 
 end.  /* do1:  on endkey ... */
 assign
