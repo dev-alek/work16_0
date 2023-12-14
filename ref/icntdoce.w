@@ -1282,9 +1282,9 @@ WITH frame {&frame-name}.
   glog
 }
 
-if not glog then do:
-    ASSIGN {&sort-clmn_4-br-dtl}:READ-ONLY in browse {&browse-name} = YES.
-end.
+/*if not glog then do:                                                      */
+/*    ASSIGN {&sort-clmn_4-br-dtl}:READ-ONLY in browse {&browse-name} = YES.*/
+/*end.                                                                      */
 if p-mode = {&lookup} then do:
    ASSIGN
    {&sort-clmn_5-br-dtl}:READ-ONLY in browse {&browse-name} = YES
