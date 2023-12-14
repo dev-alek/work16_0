@@ -191,6 +191,25 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
     delete ub.doc-attr.
   end.
 
+  /* при удалении док-та инвентаризации, удаляем дату и время инвентаризации на док-те сверки*/
+  if ub.trn-doc.doc-type = {&inventory} then
+  do:
+    for first ub.inv-doc-attr where
+              ub.inv-doc-attr.doc-code = ub.trn-doc.out-code
+          and ub.inv-doc-attr.attr-code = "create_date"
+    on error undo main-block, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
+    :
+      delete ub.inv-doc-attr.
+    end.
+    for first ub.inv-doc-attr where
+              ub.inv-doc-attr.doc-code = ub.trn-doc.out-code
+          and ub.inv-doc-attr.attr-code = "create_time"
+    on error undo main-block, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value ) 
+    :
+      delete ub.inv-doc-attr.
+    end.
+  end.
+
 /* Удаление связок от с накладными */
 /*
   for each ub.ord-chain
