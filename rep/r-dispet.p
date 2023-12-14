@@ -299,7 +299,7 @@ on stop   undo , return error return-value
   IF p-batch  > 0 THEN DO:
     IF p-excel THEN DO:
       RUN reprumpr_print-xlt (  input p-dir-excel
-                               ,input "dispet"
+                               ,input ""
                                ,input get-report-file-name( p-date, p-time) + ".xls"
                                ,input 8 /*p-disable-option*/
                                ,input 7 /*p-font-number*/
