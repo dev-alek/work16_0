@@ -146,7 +146,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
     end.  
     else 
     do:
-      find first buf_c-place no-lock where buf_c-place.pl-code = INTEGER (pl-code) no-error .
+      find LAST buf_c-place no-lock where buf_c-place.pl-code = INTEGER (pl-code) no-error .
       if AVAILABLE buf_c-place then 
       do:
         v-del = yes .

@@ -133,7 +133,7 @@ procedure shapka-inv :
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="25" style="height: 14px"></TD>' skip
+    '<TD colspan="25" style="height: 14px; text-align: left;">' + bf_object.obj-name + '</TD>' skip
     '<TD colspan="61" style="text-align: right;"></TD>' skip
     '</TR>'skip
 

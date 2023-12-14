@@ -896,6 +896,28 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
        vlongJson = replace(vlongJson, ">", "&gt;") 
        vlongJson = replace(vlongJson, ':null', ':""') 
        vlongJson = replace(vlongJson, (':' + CHR(91) + CHR(123) + CHR(125) + CHR(93)), ':""') 
+       vlongJson = replace(vlongJson, ':~{~}', ':""')
+       vlongJson = replace(vlongJson, '"1":', '"n1":')
+       vlongJson = replace(vlongJson, '"2":', '"n2":')
+       vlongJson = replace(vlongJson, '"3":', '"n3":')
+       vlongJson = replace(vlongJson, '"4":', '"n4":')
+       vlongJson = replace(vlongJson, '"5":', '"n5":')
+       vlongJson = replace(vlongJson, '"6":', '"n6":')
+       vlongJson = replace(vlongJson, '"7":', '"n7":')
+       vlongJson = replace(vlongJson, '"8":', '"n8":')
+       vlongJson = replace(vlongJson, '"9":', '"n9":')
+       vlongJson = replace(vlongJson, '"10":', '"n10":')
+       vlongJson = replace(vlongJson, '"11":', '"n11":')
+       vlongJson = replace(vlongJson, '"12":', '"n12":')
+       vlongJson = replace(vlongJson, '"13":', '"n13":')
+       vlongJson = replace(vlongJson, '"14":', '"n14":')
+       vlongJson = replace(vlongJson, '"15":', '"n15":')
+       vlongJson = replace(vlongJson, '"16":', '"n16":')
+       vlongJson = replace(vlongJson, '"17":', '"n17":')
+       vlongJson = replace(vlongJson, '"18":', '"n18":')
+       vlongJson = replace(vlongJson, '"19":', '"n19":')
+       vlongJson = replace(vlongJson, '"20":', '"n20":')
+       vlongJson = replace(vlongJson, '"21":', '"n21":')
        .
     
     copy-lob from vlongJson to file vfileresult .
@@ -938,7 +960,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     copy-lob from vlongJson to file vfileresultxml.
     vRetOk = dataset gismt-mark-body:read-xml("FILE":U, vfileresultxml, "EMPTY":U, ?, ?) no-error.
     if not vRetOk or error-status:error then do:
-       dbgPrint("marking.log", "Запрос не выполнен! Ошибка при чтении XML <body>.").
+       dbgPrint("marking.log", "Запрос не выполнен! Ошибка при чтении XML <body>. " + error-status:get-message(1)).
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  

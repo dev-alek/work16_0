@@ -30,7 +30,7 @@ def var vss-description as character no-undo init "Чистка marking с датой послед
 
 define variable thMarkSts      as class ibs.th.str.marking.sts.mark no-undo.
 define variable timeMunisYear  as datetime no-undo.     /* значение даты со смещение назад на 1 год) */
-define variable datePlus2Year  as date     no-undo .    /* значение даты со смещение вперед  на 1 год) */
+define variable datePlus2Year  as date     no-undo .    /* значение даты, с которой удаляются марки с пустой датой изменения статуса) */
 define variable maxDelMarks    as integer  no-undo.
 define variable cntDelMarks    as integer  no-undo.
 define variable currentTime    as character no-undo .
@@ -73,7 +73,8 @@ assign
   currentTime   = string(time,"HH:MM:SS")
   timeMunisYear = datetime(month(today), day(today), year(today) - 1,
                            integer(entry(1,currentTime,":")),integer(entry(2,currentTime,":")),
-                           integer(entry(3,currentTime,":"))).
+                           integer(entry(3,currentTime,":")))
+  datePlus2Year = 04/01/2026
 .
 
 run write-to-log( "Удаление марок, измененных до " +  string(timeMunisYear,"99/99/9999 HH:MM:SS")) .
@@ -103,7 +104,7 @@ run write-to-log( substitute("Удалено &1 марок.", cntDelMarks ) ) .
 /* удаление марок с пустой датой изменения */
 run write-to-log( "Удаление марок с пустой датой изменения" ) .
 cntDelMarks = 0.
-if maxDelMarks > 0 and today > datePlus2Year then
+if maxDelMarks > 0 and today >= datePlus2Year then
 do:
   DEL_MARK_2:
   for each buf_marking where

@@ -537,20 +537,20 @@ procedure create-routes :
       return error return-value.
     end.
   end.
-  
-  for each ub.cashbook no-lock :
-    run nws/cr-route.p ( input {&send-tbl}, input {&table_cashbook}, input (buffer ub.cashbook:handle), input string(p-dbnum) ) no-error. 
-    if error-status :error then do:
-      return error return-value.
-    end.
-    for each ub.goods-attr exclusive-lock where ub.goods-attr.attr-code = {&attr-cash-book-id}
-                                            and ub.goods-attr.attr-value = string(ub.cashbook.id):
-      run nws/cr-route.p ( input {&send-tbl}, input {&table_goods-attr}, input (buffer ub.goods-attr:handle), input string(p-dbnum) ) no-error. 
-      if error-status :error then do:
-        return error return-value.
-      end.                                        
-    end.                                          
-  end.
+/*  EXPSD-8369                                                                                                                                   */
+/*  for each ub.cashbook no-lock :                                                                                                               */
+/*    run nws/cr-route.p ( input {&send-tbl}, input {&table_cashbook}, input (buffer ub.cashbook:handle), input string(p-dbnum) ) no-error.      */
+/*    if error-status :error then do:                                                                                                            */
+/*      return error return-value.                                                                                                               */
+/*    end.                                                                                                                                       */
+/*    for each ub.goods-attr exclusive-lock where ub.goods-attr.attr-code = {&attr-cash-book-id}                                                 */
+/*                                            and ub.goods-attr.attr-value = string(ub.cashbook.id):                                             */
+/*      run nws/cr-route.p ( input {&send-tbl}, input {&table_goods-attr}, input (buffer ub.goods-attr:handle), input string(p-dbnum) ) no-error.*/
+/*      if error-status :error then do:                                                                                                          */
+/*        return error return-value.                                                                                                             */
+/*      end.                                                                                                                                     */
+/*    end.                                                                                                                                       */
+/*  end.                                                                                                                                         */
   
   for each ub.cashbookrule no-lock where ub.CashBookRule.Obj-type = v-curr-obj-type
                                      and ub.CashBookRule.Obj-code = v-curr-obj-code :

@@ -65,6 +65,7 @@ define variable mWork         as logical no-undo.
 { str/defc-gds.i }
 { cmp/vssrevis.i }
 { cmp/library.i  }
+{ utl/search.i   }
 
 /*------------------------------------------------------------------------
 
@@ -361,9 +362,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable sktserv  as class SktServer no-undo.
   define variable logWrite as class LogWrite  no-undo.
 
-  logWrite = new LogWrite().          
-  sktserv = new SktServer(this-procedure).
-  
   apply 'choose':U to Btn-st.
     { gbl/curdbnum.i
       g#db-num
@@ -380,6 +378,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     message "Ошибка получения глобальный переменных." view-as alert-box.
     return error.
   end.
+
+  logWrite = new LogWrite().          
+  sktserv  = new SktServer(this-procedure).
+  
   mWork = yes.
   subscribe "write-to-log" anywhere.
   define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
@@ -392,12 +394,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         mWork = no.
      end.
      wait-for close of this-procedure pause 0.001.
-     sktserv:checkEnd().
+     if valid-object(sktserv)
+     then
+        sktserv:checkEnd().
      
   end.
   unsubscribe "write-to-log".  
 END.
-delete object sktserv.
 delete object logWrite.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -715,6 +718,7 @@ v-srv-connected = YES.
 /* IF VALID-HANDLE(hServerSocket) AND hServerSocket:CONNECTED() THEN */
 RUN write-to-log(substitute('Запущен сокет-сервер с параметрами: &1 ',v-connect-param)).
 btn-st:LABEL IN FRAME {&FRAME-NAME} = 'Стоп'.
+sktserv  = new SktServer(this-procedure).
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -733,6 +737,7 @@ IF NOT vl-dis THEN DO:
   RUN write-to-log(substitute('Ошибка остановки сервера &1!',error-status:get-message(1) )).
   return.
 END.
+DELETE OBJECT sktserv.
 DELETE OBJECT hServerSocket.
 IF NOT valid-handle(hServerSocket) THEN
 RUN write-to-log(substitute('Остановлен сокет-сервер (&1)',v-connect-param)).
@@ -751,16 +756,32 @@ PROCEDURE write-to-log :
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-DEFINE INPUT PARAMETER str AS character NO-UNDO.
+DEFINE INPUT PARAMETER itext AS character NO-UNDO.
 
-/*define variable str as character no-undo.*/
-
-RUN write-to-log-file(str).
-
-str = cur-time-string-sec() + {&tabulation} + str + {&new-line}.
+define variable str as char no-undo.
 
 auto-log:move-to-eof( ) IN FRAME {&FRAME-NAME} NO-ERROR.
-auto-log:insert-string( str ) NO-ERROR.
+if objExists(itext,"F") eq ?
+then do:
+   str = cur-time-string-sec() + {&tabulation} + itext + {&new-line}.
+
+   auto-log:insert-string( str ) NO-ERROR.
+   RUN write-to-log-file(str).
+end.
+else do:
+   def var varfile-str as longchar no-undo.
+   
+   str = cur-time-string-sec() + {&tabulation} + "Файл: " +  itext + {&new-line}.
+   auto-log:insert-string(str) NO-ERROR.
+   auto-log:insert-file(search(itext)) no-error.
+   RUN write-to-log-file(str).
+   copy-lob
+      file itext
+      to object varfile-str
+   no-error.
+   RUN write-to-log-file(varfile-str + {&new-line}).
+end.
+
 END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-to-log-file C-Win
@@ -792,7 +813,7 @@ procedure parseheader:
   define input parameter p-header as character no-undo.
   define variable n as integer no-undo.
   define variable idxQuerypar as integer no-undo.
-  
+
   def var i as int no-undo.
   RUN write-to-log('REQUEST-HEADER:' + p-header ).
   /*разбор шапки*/
@@ -812,7 +833,7 @@ procedure parseheader:
       n = 3
     .
   end.
-
+  
   p-header = replace (p-header,";",{&CRLF}).
   DO i = 1 TO NUM-ENTRIES(p-header,{&CRLF}):
       v-hd-line = trim(ENTRY(i,p-header,{&CRLF})).

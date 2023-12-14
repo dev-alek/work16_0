@@ -118,9 +118,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
     keyrec = new keyrec ().
     logWrite = new LogWrite().
-    os-delete value (search ("MT_documents.txt")) no-error.
-    os-delete value (search ("MT_lines.txt")) no-error.
-    os-delete value (search ("MT_MarkLines.txt")) no-error.
     if not valid-handle (ibs.th.gbl.gbl-hndllib:g#trdcalib)
     then do:
       run str/trdcalib.p persistent no-error.
@@ -128,7 +125,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     { str/trdcalib.i class}
 		
   end constructor.
-
+  method public void clear():
+     os-delete value (search ("MT_documents.txt")) no-error.
+    os-delete value (search ("MT_lines.txt")) no-error.
+    os-delete value (search ("MT_MarkLines.txt")) no-error.
+  end.
 
 
   define temp-table TempBCode no-undo
@@ -223,7 +224,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     
     run gbl/conf-rd.p ("bc-pfx", "", "", 0, "", "", "", yes, output bc-pfx, output v-par-type) no-error.
     run gbl/conf-rd.p ("bc-frmt", "", "", 0, "", "", "", yes, output bc-frmt, output v-par-type) no-error.  
-    
     for each buf_trn-doc where 
             buf_trn-doc.obj-type = ObjType 
         and buf_trn-doc.obj-code = ObjCode 
@@ -576,7 +576,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     
     run gbl/conf-rd.p ("bc-pfx", "", "", 0, "", "", "", yes, output bc-pfx, output v-par-type) no-error.
     run gbl/conf-rd.p ("bc-frmt", "", "", 0, "", "", "", yes, output bc-frmt, output v-par-type) no-error.   
-
+    empty temp-table TempBCode.
     tsdstreamopen("TH_barcodes.txt").
     cicle:
     for each buf_goods where buf_goods.stts = 0 and gds-type = 'т' no-lock use-index ists:
@@ -689,7 +689,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     
     tsdstreamclose().
-    
+    empty temp-table TempBCode.
   end.
 
   
@@ -1397,33 +1397,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     for each buf_utd where buf_utd.obj-type = ObjType and buf_utd.obj-code = ObjCode and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB
       and buf_utd.EDocType = ObjSrv:Env:Utd:EDocType:UTD:KeyIntDB:
       v-doc-num = buf_utd.DocumentNumber + "(" + string(buf_utd.db-num) + "_" + string(buf_utd.doc-id) + ")".
-/*      if buf_utd.doc-id eq 220*/
-/*      then                    */
-/*         run gbl\inidebug.p.  */
-      for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
-         block-mark:
-         for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd-l.db-num 
-                             and buf_utd-m-l.doc-id    = buf_utd-l.doc-id
-                             and buf_utd-m-l.LineNum   = buf_utd-l.LineNum 
-         no-lock:
-            if not ismark(buf_utd-m-l.mark)
-            then do:
-               leave block-mark. 
-            end.
-         end.
-         if available buf_utd-m-l
-         then do:
-            ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
-                  input  buffer buf_utd-l:handle, 
-                  output vRecKey-line). 
-            find first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-l.doc-id and buf_utd-err.db-num = buf_utd-l.db-num and buf_utd-err.reckey = vRecKey-line no-error .
-            if not available buf_utd-err
-            then do:
-               LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Документ содержит не маркированный товар УТД &1.", v-doc-num).
-               next l_utd.
-            end.
-         end.
-      end.  
       
       myflagsDoc:unSetAllFlags().
       myflagsDoc:isDocMarkOn = true.
@@ -1435,8 +1408,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         next l_utd.
       end.
       
-      if not can-find (first buf_utd-m-l where buf_utd-m-l.db-num = buf_utd.db-num and buf_utd-m-l.doc-id = buf_utd.doc-id)
-        then next l_utd.
       pos = 0.
       for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
 
