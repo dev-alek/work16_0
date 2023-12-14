@@ -170,6 +170,17 @@ define variable vss-description as character no-undo init "".
 
 { gbl/menuload.i
   {&bef-menuload_service_impexp}
+  "'Импорт топливных накладных по партиям'"
+  "'utl/impdoc4run-ptrl.p'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_service_impexp}
   "'Импорт для Фэшн групп'"
   "'cus/imp-fg1.w'"
   "no"
