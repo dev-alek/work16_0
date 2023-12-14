@@ -49,6 +49,7 @@ define variable ii-excel as integer no-undo .
 define variable ii-page as integer no-undo init 1.
 define variable v-curr-code like ub.currency.curr-code no-undo init ?.
 define variable v-one-curr-code as logical no-undo .
+define variable inkas-uslugi as character no-undo .
 
 
 define buffer buf_inkas for ub.inkas.
@@ -331,6 +332,8 @@ on error undo, return error
   END. /*FOR EACH ub.chk-doc No-LOCK WHERE*/
   /*заполним vat*/
   /*пройдем по всем записям, которые обновлялись  в текущей продаже */
+  inkas-uslugi = entry(1,buf_inkas.inkas-code,"-") + "у-" + entry(2,buf_inkas.inkas-code,"-") .  
+
   _doc-line:
   FOR EACH treal-3 where
           treal-3.vat-pc = - 1,
@@ -354,6 +357,21 @@ on error undo, return error
     or treal-3.rv = - 1 then do:
       FIND FIRST buf_doc-line no-lock WHERE
                 buf_doc-line.doc-code = v-ret-doc-code AND
+                buf_doc-line.artic     = buf_goods.artic AND
+                buf_doc-line.prod-type = buf_goods.prod-type AND
+                buf_doc-line.prod-code = buf_goods.prod-code  no-error .
+      if available buf_doc-line then do:
+        assign
+        treal-3.vat-pc = buf_doc-line.vat-pc.
+        {&create-treal-vat}.
+        {&create-treal-vat2}.
+        NEXT _doc-line.
+      end.
+    end.
+    /*для услуг*/
+     if not p-rv or treal-3.rv = 1 then do:
+      FIND FIRST buf_doc-line no-lock WHERE
+                buf_doc-line.doc-code = inkas-uslugi AND
                 buf_doc-line.artic     = buf_goods.artic AND
                 buf_doc-line.prod-type = buf_goods.prod-type AND
                 buf_doc-line.prod-code = buf_goods.prod-code  no-error .
