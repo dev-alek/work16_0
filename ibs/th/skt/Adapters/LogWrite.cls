@@ -23,5 +23,9 @@ class ibs.th.skt.Adapters.LogWrite:
     set (str as char):
       run ibs/th/skt/Adapters/SetLogStrProc.p (input str).
     end.
+    
+    method public void WriteFileToLog(ifile as char) :
+      run ibs/th/skt/Adapters/WriteFileToLog.p (ifile).
+    end.
 
 end class.

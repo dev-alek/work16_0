@@ -42,11 +42,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   define public property ErrStatus as logical no-undo 
     get.
     private set.
-
-  define public property LogMsg as character no-undo 
-    get.
-    private set.
-
+  
   define private variable tsd         as class     TSD .
   define private variable logWrite    as class     logWrite no-undo.
   define private variable hRoot       as handle    no-undo.
@@ -132,7 +128,10 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        ErrStatus = true.
        undo.
     end.
-    mServiceBusy = yes.  
+    mServiceBusy = yes.
+    os-delete value (search ("MT_documentsSend.txt")) no-error.
+    os-delete value (search ("MT_lineSend.txt")) no-error.
+    os-delete value (search ("MT_MarkLinesSend.txt")) no-error.  
     
     startStep('Начало выгрузка из базы ТСД').
           
@@ -188,7 +187,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
     end.    
     define variable vpid as integer no-undo.
-    vpid = runProc('DBInit.exe ExpDoc 30 31 >>DBInitExpDoc.txt').
+    vpid = runProc('DBInit.exe ExpDoc 30 31 >DBInitExpDoc.txt').
+    
     resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
     resp:ParamWait = substitute ("pid,&1,status,Step1", vpid).
     
@@ -212,32 +212,45 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     vStatus = entry(vpos + 1,resp:ParamWait).
     if vStatus eq "step1"
     then do transaction:
+       logWrite:WriteFileToLog("DBInitExpDoc.txt").
+       run gbl/pause.p( 1000).
        endStep('Завершена выгрузка из базы ТСД').
        startStep('Начало загрузки документов.').
        parseCSV().
        endStep('Завершена загрузки документов.').
        startStep('Начало выгрузки накладных.').
-       
+       tsd:clear().
        tsd:getWB().
        endStep('Завершена выгрузка накладных').
        startStep('Начало выгрузки ЭДО.').
-       
        tsd:getUTDDoc().
        endStep('Завершена выгрузка ЭДО').
        startStep('Начало загрузки документов в ТСД.').
-         
-       vpid = runProc('DBInit.exe Doc 30 31 >>DBInitDoc.txt').
+       os-delete "documents_new.s3db".
+       vpid = runProc('DBInit.exe Doc 30 31 >DBInitDoc.txt'  + {&new-line} + 'rename documents.s3db documents_new.s3db').
+       
        resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
        resp:ParamWait = substitute ("pid,&1,status,Step2", vpid).
     end.
     else if vStatus eq "step2"
     then do:
+      logWrite:WriteFileToLog("DBInitDoc.txt").
       endStep('Завершена загрузка документов в ТСД.').
-      
       resp:condition = resp:STSlist:ReciveCommand:NameProp.
-      file-info:file-name = "documents.s3db"
-      .
-      set-size (mbuffer1) = file-info:file-size.
+      define variable vsize as int64 no-undo.
+      define variable vi as integer no-undo.
+      block-size:
+      do vi = 1 to 50:
+         file-info:file-name = "documents_new.s3db".
+         vsize = file-info:file-size. 
+         run gbl/pause.p( 1000). /* Пауза для того чтобы файл успел дозаписаться иначе размер определяется не правильно*/
+         if     vsize ne ?
+            and vsize eq file-info:file-size
+         then
+            leave block-size.
+      end.
+      
+      set-size (mbuffer1) = vsize.
       input from value (file-info:file-name) binary no-convert.
       import mbuffer1.
       input close.
@@ -283,7 +296,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     define buffer bfTempDocLine for TempDocLine.
     
     
-    tsd = new tsd().
     logWrite = new logWrite().
 
     create x-document hDoc.
@@ -496,7 +508,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     myflagsDoc = new flagsdoc ().
 
     iDbNum = tsd:GetDbNum().
-
+    empty temp-table TempTrnDocMT.
+    empty temp-table TempTrnLineMT.
+    empty temp-table TempMarkLineMT.
     vFilename = "MT_documentsSend.txt".
     if SearchFile(vFilename) ne ? 
     then do:
