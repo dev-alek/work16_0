@@ -72,24 +72,13 @@ define buffer buf_place for ub.place.
 define buffer buf_pl-gds for ub.pl-gds.
 define buffer bcash-gds for cash-gds.
 define buffer buf_cash-desk-attr for cash-desk-attr.
-define variable vcash-desk-stndart as logical no-undo.
+define variable vcash-desk-stndart as logical no-undo init yes.
 assign
 v-version-dec = decimal(p-version)
 no-error .
 if buf_cash-desk.autonomy = integer({&cd-manager})
 then do:
    vcash-desk-stndart = no.
-end.
-else do:
-   find first buf_cash-desk-attr no-lock
-        where buf_cash-desk-attr.db-num          = buf_cash-desk.db-num
-          and buf_cash-desk-attr.obj-code        = buf_cash-desk.obj-code
-          and buf_cash-desk-attr.pos-type        = buf_cash-desk.pos-type
-          and buf_cash-desk-attr.cash-num        = buf_cash-desk.cash-num
-          and buf_cash-desk-attr.upper-attr-code = buf_cash-desk.pos-type + "_operative":U
-          and buf_cash-desk-attr.attr-code       = "device-kind":U 
-   no-error .
-   vcash-desk-stndart = not available buf_cash-desk-attr or buf_cash-desk-attr.attr-value-integer eq 0. 
 end.
 
 define variable is-petrol   as logical   no-undo.
