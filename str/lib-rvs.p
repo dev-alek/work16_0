@@ -5745,6 +5745,7 @@ procedure getpump:
     define variable vuser as character no-undo.
     define variable vuserobj as ibs.th.file.asyncparam no-undo.
     define variable vPassobj as ibs.th.file.asyncparam no-undo.
+    define buffer buf_cash-desk for ub.cash-desk .
     vuserobj =  new ibs.th.file.asyncparam("user").
     vpassobj =  new ibs.th.file.asyncparam("pass").
     
@@ -5765,18 +5766,18 @@ procedure getpump:
   
    define variable vnoActivCash as logical no-undo.
    block-cash:
-   for each cash-desk  where cash-desk.db-num   = g#db-num 
-                         and cash-desk.obj-code = iobjcode
-                         and cash-desk.is-del = no 
+   for each buf_cash-desk  where buf_cash-desk.db-num   = g#db-num 
+                             and buf_cash-desk.obj-code = iobjcode
+                             and buf_cash-desk.is-del = no 
    no-lock 
-   by cash-desk.db-num 
-   by cash-desk.is-del 
-   by ub.cash-desk.cash-on descending
-   by ub.cash-desk.pos-type descending 
-   by ub.cash-desk.cash-num
+   by buf_cash-desk.db-num 
+   by buf_cash-desk.is-del 
+   by buf_cash-desk.cash-on descending
+   by buf_cash-desk.pos-type descending 
+   by buf_cash-desk.cash-num
       :
       if     not vnoActivCash
-         and not ub.cash-desk.cash-on
+         and not buf_cash-desk.cash-on
       then do:
          vnoActivCash = yes.
          run gbl/fileapnd.p
@@ -5786,9 +5787,9 @@ procedure getpump:
           ) no-error .            
       end.
       vadr = entry(1,
-                   (if num-entries(cash-desk.addr-path, {&delim-par}) > 1
-                    then  entry(2, cash-desk.addr-path, {&delim-par})
-                    else cash-desk.addr-path
+                   (if num-entries(buf_cash-desk.addr-path, {&delim-par}) > 1
+                    then  entry(2, buf_cash-desk.addr-path, {&delim-par})
+                    else buf_cash-desk.addr-path
                     )   
                   ,":").
       if vadr eq ""
