@@ -301,10 +301,16 @@ function GetNextElement return character
        vTeg = entry(vi,vlistElem).
        if pstr begins vTeg
        then do:
-          vLength = int(entry(vi,vlistleng)).
-          oteg = entry(vi,vlistElem).
-          otegval = substring (pstr,length(oteg) + 1, vLength).
-          vTeg = oteg + otegval.
+          if    vTeg eq "21"
+          then
+             vLength = index(pstr,chr(29)) - 2 no-error.
+          if vLength  <= 0
+          then
+             vLength = int(entry(vi,vlistleng)).
+          
+          otegval = substring (pstr,length(vteg) + 1, vLength).
+          vTeg = vteg + otegval.
+          otegval = replace(otegval,chr(29),"").
           oteg = replace(replace(oteg,")",""),"(","").
           
           pstr = substring (pstr,length(vTeg)+ 1).
