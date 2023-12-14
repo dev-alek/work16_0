@@ -1408,8 +1408,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         next l_utd.
       end.
       
-      if not can-find (first buf_utd-m-l where buf_utd-m-l.db-num = buf_utd.db-num and buf_utd-m-l.doc-id = buf_utd.doc-id)
-        then next l_utd.
       pos = 0.
       for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
 
