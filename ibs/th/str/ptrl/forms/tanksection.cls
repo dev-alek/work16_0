@@ -4387,7 +4387,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       end.
     end .
     
-    if not infoSecsObj:RdcDnstvalue = "not"
+    if     not infoSecsObj:RdcDnstvalue = "not"
+       and ((not infoSecsObj:IsSGDKK)
+            or (    infoSecsObj:IsSGDKK 
+                and cbSGDKK:checked
+                and infoSecsObj:InfoSectionCurr:AccMeth = 0)
+           )
     then do: 
       maskedTextBoxTankVol:Text = format_round_0 ((decimal (maskedTextBoxCarVol:Text)) + decimal (maskedTextBoxMouth:Text) - decimal(maskedTextBoxTankWater:Text) + (if comboBoxPour:Text = "Нижний налив" then infoSecsObj:InfoSectionCurr:DopVolume else 0)).
     end.

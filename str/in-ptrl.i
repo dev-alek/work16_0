@@ -1797,8 +1797,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               infoSectionsTotal:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
             end .
           end.
+          infoSectionsTotal:SaveDB().
         end .
-        infoSectionsTotal:SaveDB().
+        
         
         run placelib_get-attr(input {&place-virtual}
                              ,input t-doc.obj-code
@@ -2195,9 +2196,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             
             do ii = 1 to p-infoSectionsTotal:SectionNum :
               infoSectionObj = p-infoSectionsTotal:GetInfoSectionProp(ii).
-              infoSectionObj:FactQnty = infoSectionObj:TankVol.
-              infoSectionObj:FactDensity = infoSectionObj:TankDensity.
-              p-infoSectionsTotal:SaveDb().
+              if p-mode ne {&lookup}
+              then do:
+                 infoSectionObj:FactQnty = infoSectionObj:TankVol.
+                 infoSectionObj:FactDensity = infoSectionObj:TankDensity.
+                 p-infoSectionsTotal:SaveDb().
+              end.
               p-infoSectionsTotal:GetDBAllAttr().
               p-infoSectionsTotal:CalculateTotal().
             end.
@@ -2408,7 +2412,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               end.
             
             end.
-            p-infoSectionsTotal:SaveDb().
+            if p-mode ne {&lookup}
+            then
+               p-infoSectionsTotal:SaveDb().
             p-infoSectionsTotal:GetDBAllAttr().
             p-infoSectionsTotal:CalculateTotal().
             

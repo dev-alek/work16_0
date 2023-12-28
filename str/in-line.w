@@ -1702,7 +1702,9 @@ do:
   
   if v-is-looksec
   then do :
-    infoSectionsTotal:SaveDBNoCheck() .
+    if parline-mode ne {&lookup}
+    then
+       infoSectionsTotal:SaveDBNoCheck() .
     infoSectionsTotal:WasSetting = true . 
   end .
 
@@ -3171,7 +3173,9 @@ do:
         infoSectionObj:FactDensity = v-calc-density.
                       
       end .
-      infoSectionsTotal:SaveDb().
+      if parline-mode ne {&lookup}
+      then
+         infoSectionsTotal:SaveDb().
       infoSectionsTotal:GetDBAllAttr().
       infoSectionsTotal:CalculateTotal().
       
@@ -3287,8 +3291,9 @@ do:
   end.
   if valid-object (infoSectionsTotal) 
   then do:
-    
-    infoSectionsTotal:SaveDB().
+    if parline-mode ne {&lookup}
+    then
+       infoSectionsTotal:SaveDB().
   
     if infoSectionsTotal:isFlagKPChg
     then do:
