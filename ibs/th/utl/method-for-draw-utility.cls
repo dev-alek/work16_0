@@ -1513,7 +1513,6 @@ class ibs.th.utl.method-for-draw-utility final:
                   define variable v-addr-path as character no-undo .
                   define buffer buf_tt-cash-desk for tt-cash-desk .
                   define variable v-send as logical no-undo .
- 
                   for each tt-cash-desk where not tt-cash-desk.is-del and not tt-cash-desk.isSave exclusive-lock:
                     v-send = false .  
                     find first buf_tt-cash-desk where not buf_tt-cash-desk.isSave and buf_tt-cash-desk.pos-type = "Autotank" and buf_tt-cash-desk.autonomy = 2 no-error .
@@ -1555,8 +1554,10 @@ class ibs.th.utl.method-for-draw-utility final:
                       + " ¹"     + string(buf_tt-cash-desk.cash-num) 
                       + " IP: "  + entry(if buf_tt-cash-desk.addr-path eq "" then 1 else num-entries(buf_tt-cash-desk.addr-path, chr(4)) ,
                       buf_tt-cash-desk.addr-path, 
-                      chr(4))).      
-
+                      chr(4))).
+                            
+                    define variable vOldCashNum as integer no-undo.
+                    vOldCashNum = buf_tt-cash-desk.cash-num.
                     if buf_tt-cash-desk.cash-num <> v-cash-num then
                       assign
                         buf_tt-cash-desk.cash-num = v-cash-num 
@@ -1594,7 +1595,7 @@ class ibs.th.utl.method-for-draw-utility final:
                     for each tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = buf_tt-cash-desk.db-num
                       and tt-cash-desk-attr.obj-code = buf_tt-cash-desk.obj-code
                       and tt-cash-desk-attr.pos-type = buf_tt-cash-desk.pos-type
-                      and tt-cash-desk-attr.cash-num = buf_tt-cash-desk.cash-num :
+                      and tt-cash-desk-attr.cash-num = vOldCashNum :
                       case tt-cash-desk-attr.attr-code :
 
                         when "device-kind"
@@ -1613,10 +1614,10 @@ class ibs.th.utl.method-for-draw-utility final:
                               ,input  (if buf_tt-cash-desk.pos-type = {&cd-type-IBM-XML}
                                         then {&cda-IBM-XML_operative_device-kind}
                                         else {&cda-AUTOTANK_operative_device-kind})
-                              ,input tt-cash-desk-attr.attr-value
+                              ,input "" /* p-character */ 
                               ,input ? /*p-date*/
                               ,input 0 /*p-decimal*/
-                              ,input 0 /*p-integer*/
+                              ,input int(tt-cash-desk-attr.attr-value) /*p-integer*/
                               ,input no /*p-logical*/
                               ) .
                              if error-status:error then 
