@@ -39,6 +39,23 @@ procedure write-log:
     
     run write-to-log in this-procedure( i-message).
 end.
+
+procedure write-log-and-file:
+   define input parameter iTabPosition  as integer   no-undo.
+   define input parameter iFile         as character no-undo.
+   define input parameter ilog-level    as integer   no-undo.
+   define input parameter i-message     as character no-undo.
+    
+    run write-to-log in this-procedure( i-message).
+end.
+
+procedure writelog :
+define input parameter p-file-name AS CHAR     NO-UNDO.
+define input parameter p-log-level AS INTEGER  NO-UNDO.
+define input parameter p-log-string  AS CHAR     NO-UNDO.
+    run write-to-log in this-procedure( p-log-string).
+end procedure. /* writelog */
+
 define variable p0-pathrc as character no-undo .
 define variable v-pathrc         as character no-undo .
 define variable v-filename         as character no-undo .
@@ -105,6 +122,13 @@ run gbl/vertag.p (
 define variable mRunFile as character no-undo.
 mRunFile = SearchFile ("!upd-rc-before.bat").
 
+if mRunFile ne ?
+then do:
+   run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
+   os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
+end.
+
+mRunFile = SearchFile ("beforeTH.bat").
 if mRunFile ne ?
 then do:
    run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
