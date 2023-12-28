@@ -37,6 +37,33 @@ class ibs.th.bge.1crn.subjects.code abstract inherits ibs.th.bge.1crn.subjects.a
   define property misc1 as character no-undo 
     get. 
     protected set.
+  define property misc2 as character no-undo 
+    get. 
+    protected set.
+  define property misc3 as character no-undo 
+    get. 
+    protected set.
+  define property misc4 as character no-undo 
+    get. 
+    protected set.
+  define property misc5 as character no-undo 
+    get. 
+    protected set.
+  define property misc6 as character no-undo 
+    get. 
+    protected set.
+  define property misc7 as character no-undo 
+    get. 
+    protected set.
+  define property misc8 as character no-undo 
+    get. 
+    protected set.
+  define property misc9 as character no-undo 
+    get. 
+    protected set.
+  define property misc10 as character no-undo 
+    get. 
+    protected set.
   define property codeValue as character no-undo 
     get. 
     protected set.
@@ -83,6 +110,15 @@ class ibs.th.bge.1crn.subjects.code abstract inherits ibs.th.bge.1crn.subjects.a
       CodeName      = ?
       CodeValue     = ?
       misc1         = ?
+      misc2         = ?
+      misc3         = ?
+      misc4         = ?
+      misc5         = ?
+      misc6         = ?
+      misc7         = ?
+      misc8         = ?
+      misc9         = ?
+      misc10        = ?
     .
   end.
 end class.

@@ -214,10 +214,18 @@ class ibs.th.gbl.storage.promogoodsstorage:
     return.
 
   end method.
-  
+
   method public class promoGoodssubs getpromoGoodssubs (input idaction as int64,
     input iTYPE as ibs.th.ref.promo.enum-promo-goods-type,
     input idb-num as integer ):
+
+    return getpromoGoodssubs(idaction, iTYPE, idb-num, ?).
+  end method.
+  
+  method public class promoGoodssubs getpromoGoodssubs (input idaction as int64,
+    input iTYPE as ibs.th.ref.promo.enum-promo-goods-type,
+    input idb-num as integer,
+    input iobj-code as integer ):
     define buffer buf_promogoods for ub.promogoods.                                                        
     define variable promoGoodssubsObj as class   promoGoodssubs.
     define variable vType             as integer no-undo.
@@ -236,7 +244,7 @@ class ibs.th.gbl.storage.promogoodsstorage:
         and buf_promoGoods.db-num   eq idb-num
         no-lock:
     
-        promoGoodssubsObj:AddItem(getDataStorage (buffer buf_promoGoods)).
+        promoGoodssubsObj:AddItem(getDataStorage (buffer buf_promoGoods, iobj-code)).
     
       end.      
     
@@ -246,7 +254,8 @@ class ibs.th.gbl.storage.promogoodsstorage:
   method public class promoGoodssubs getpromoGoodssubs (input idaction as int64,
     input iIdSet    as int64,
     input iTYPE    as ibs.th.ref.promo.enum-promo-goods-type,
-    input idb-num  as integer ):
+    input idb-num  as integer,
+    input iobj-code as integer ):
     define buffer buf_promogoods for ub.promogoods.                                                        
     define variable promoGoodssubsObj as class   promoGoodssubs.
     define variable vType             as integer no-undo.
@@ -267,7 +276,7 @@ class ibs.th.gbl.storage.promogoodsstorage:
         and buf_promoGoods.type     eq vtype
         and buf_promoGoods.db-num  eq idb-num
         no-lock:
-        promoGoodssubsObj:AddItem(getDataStorage (buffer buf_promoGoods)).
+        promoGoodssubsObj:AddItem(getDataStorage (buffer buf_promoGoods, iobj-code)).
       end.      
     return promoGoodssubsObj.
   end method.
@@ -286,14 +295,25 @@ class ibs.th.gbl.storage.promogoodsstorage:
     validate inbf_promoGoods.
   end.
   
-  method private class promoGoodssub getDataStorage ( buffer inbf_promoGoods for ub.promoGoods ):
+  method private class promoGoodssub getDataStorage ( buffer inbf_promoGoods for ub.promoGoods):
+    
+    return getDataStorage(buffer inbf_promoGoods, ?).
+  end.
+
+
+  method private class promoGoodssub getDataStorage ( buffer inbf_promoGoods for ub.promoGoods, objCode as integer ):
     
     define variable promoGoodssubObj as class promoGoodssub.
     promoGoodssubObj = new promoGoodssub ().
-    return getDataStorage(promoGoodssubObj,buffer inbf_promoGoods).
+    return getDataStorage(promoGoodssubObj,buffer inbf_promoGoods, objCode).
+  end.
+
+  method private class promoGoodssub getDataStorage (inpromoGoodsSubObj as class promoGoodssub, buffer inbf_promoGoods for ub.promoGoods):  
+
+    return getDataStorage (inpromoGoodsSubObj, buffer inbf_promoGoods, ?).
   end.
   
-  method private class promoGoodssub getDataStorage (inpromoGoodsSubObj as class promoGoodssub, buffer inbf_promoGoods for ub.promoGoods ):  
+  method private class promoGoodssub getDataStorage (inpromoGoodsSubObj as class promoGoodssub, buffer inbf_promoGoods for ub.promoGoods, objCode as integer ):  
     assign
       inpromoGoodsSubObj:ID       = inbf_promoGoods.id
       inpromoGoodsSubObj:type     = inbf_promoGoods.type
@@ -304,7 +324,7 @@ class ibs.th.gbl.storage.promogoodsstorage:
       inpromoGoodsSubObj:price    = inbf_promoGoods.price          
       inpromoGoodsSubObj:qnty     = inbf_promoGoods.qnty           
       inpromoGoodsSubObj:NameSet  = inbf_promoGoods.NameSet            
-               
+      inpromoGoodsSubObj:objCode  = objCode         
       .  
        
     return inpromoGoodsSubObj.

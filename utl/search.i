@@ -34,6 +34,7 @@ end.
      define variable oFile       as character no-undo.
      define variable vFileSearch as character no-undo.
      define variable vNumEntry   as integer no-undo.
+     if inFile = "" then return ?.
      vNumEntry = num-entries(inFile,".").
      vFileSearch = inFile.
      if    vNumEntry > 0

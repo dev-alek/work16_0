@@ -37,6 +37,7 @@ define variable v-name-2cd as character no-undo .
 define variable v-dop-alt-name as character no-undo.
 define variable v-type as character no-undo.
 define buffer buf_parts for ub.parts.
+define buffer buf_code for ub.code.
 if not p-mode and p-name-2cd = "PLU":U then do:
   return "PLU кассы":U.
 end.
@@ -49,14 +50,35 @@ if not p-mode then do:
 end.
 end.
 if p-part-code = "":U or p-cod-pcod = no then do:
-  run gdsoattr-value in this-procedure
-                      ( input  {&attr-dop-alt-name-o}
-                       ,input  p-gds-code
-                       ,input  p-obj-type
-                       ,input  p-obj-code
-                       ,output v-dop-alt-name
-                       ,output v-type
-                      ) no-error .
+  run gdsoattr-value in this-procedure (
+    {&attr-dt-seasons},
+    p-gds-code,
+    p-obj-type,
+    p-obj-code,
+    output v-dop-alt-name,
+    output v-type
+  ) no-error.
+  if v-dop-alt-name <> "" then do:
+    find first buf_code where
+               buf_code.parent = "DTSeasons"
+           and buf_code.code   = v-dop-alt-name
+         no-lock no-error.
+    if available buf_code then
+      assign
+        p-engl-name = ""
+        v-dop-alt-name =  buf_code.misc1
+      .
+  end.
+  else do:
+    run gdsoattr-value in this-procedure
+                        ( input  {&attr-dop-alt-name-o}
+                         ,input  p-gds-code
+                         ,input  p-obj-type
+                         ,input  p-obj-code
+                         ,output v-dop-alt-name
+                         ,output v-type
+                        ) no-error .
+  end.
 
   CASE p-name-2cd:
     when "name" then do:

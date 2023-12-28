@@ -120,12 +120,12 @@ do:
     if v-promo-action:typecond <> 4 then 
     do:
       run bgelib-tag-put in this-procedure ( input 4, input "PAGCode":U
-        , input string(v-subGood:GdsCode), input 1 ).
+        , input if v-subGood:dtSeason = "" then string(v-subGood:GdsCode) else v-subGood:dtSeason, input 1 ).
     end.
     else 
     do:
       run bgelib-tag-put in this-procedure ( input 4, input "PAGCode":U
-        , input string(v-subGood:promo-code), input 1 ).
+        , input if v-subGood:dtSeason = "" then string(v-subGood:GdsCode) else v-subGood:dtSeason, input 1 ).
     end.
     run bgelib-tag-put in this-procedure ( input 4, input "PAGPrice":U
       , input string(v-subGood:price), input 0 ).
@@ -170,7 +170,7 @@ do:
     run bgelib-tag-put in this-procedure ( input 4, input "PAFGId":U
       , input string(v-promo-action:id), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "PAFGCode":U
-      , input string(v-subGdCr:GdsCode), input 1 ).
+      , input if v-subGdCr:dtSeason = "" then string(v-subGdCr:GdsCode) else v-subGdCr:dtSeason, input 1 ).
     run bgelib-tag-close in this-procedure ( input 3, input "PAFreeGoods").
     for each bar-code where bar-code.gds-code       eq v-subGdCr:GdsCode 
                         and bar-code.b-code         ne v-subGdCr:GdsCode
@@ -238,7 +238,7 @@ do:
     run bgelib-tag-put in this-procedure ( input 4, input "PAGGId":U
       , input string(v-promo-action:id), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "PAGGCode":U
-      , input string(v-subGift:GdsCode), input 1 ).
+      , input if v-subGift:dtSeason = "" then string(v-subGift:GdsCode) else v-subGift:dtSeason, input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "PAGGAmount":U
       , input string(v-subGift:qnty), input 1 ).
     run bgelib-tag-close in this-procedure ( input 3, input "PAGiftGoods").
@@ -277,7 +277,7 @@ do:
           run bgelib-tag-put in this-procedure ( input 4, input "PAGGNum":U
             , input string(v-subGDCrite:id), input 1 ).
           run bgelib-tag-put in this-procedure ( input 4, input "PAGGCode":U
-            , input string(v-subCrGift:GdsCode), input 1 ).
+            , input if v-subCrGift:dtSeason = "" then string(v-subCrGift:GdsCode) else v-subCrGift:dtSeason, input 1 ).
           run bgelib-tag-put in this-procedure ( input 4, input "PAGGAmount":U
             , input string(v-subCrGift:qnty), input 1 ).
           run bgelib-tag-close in this-procedure ( input 3, input "PAGiftGoods").
@@ -379,7 +379,7 @@ do:
       run bgelib-tag-put in this-procedure ( input 4, input "PASGId":U
         , input string(v-subPromoSetGood:idaction), input 1 ).
       run bgelib-tag-put in this-procedure ( input 4, input "PASGCode":U
-        , input string(v-subPromoSetGood:GdsCode), input 1 ).
+        , input if v-subPromoSetGood:dtSeason = "" then string(v-subPromoSetGood:GdsCode) else v-subPromoSetGood:dtSeason, input 1 ).
       run bgelib-tag-put in this-procedure ( input 4, input "PASGNum":U
         , input string(v-subPromoSetGood:idSet), input 1 ).
       run bgelib-tag-close in this-procedure ( input 3, input "PASetGoods").

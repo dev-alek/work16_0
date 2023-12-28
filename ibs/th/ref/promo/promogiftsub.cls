@@ -30,6 +30,7 @@ define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo initial "Объект подаркок акции.". 
   
   { cmp/str-glbl.i class}
+  { ref/gdsoattr.i '' class}
   
   define property Msg as character no-undo
     get.
@@ -92,7 +93,11 @@ define variable vss-description as character no-undo initial "Объект подаркок ак
         setFlagChange (true).
       end.
     END.
-    
+  
+  define property objCode as integer no-undo
+    get.
+    set.
+
     define buffer bf_gds for ub.goods.
     define property GdsName as character no-undo
     get:
@@ -111,6 +116,28 @@ define variable vss-description as character no-undo initial "Объект подаркок ак
       end.
     end.
     
+    define property dtSeason as character no-undo
+    get:
+      define variable typeAttr as character no-undo.
+      if not available (bf_gds) then 
+      do:
+        find first bf_gds no-lock 
+          where bf_gds.gds-code = GdsCode no-error.
+      end.
+      if available (bf_gds) then 
+      do:
+          return 
+            gdsoattr-value(
+              {&attr-dt-seasons},
+              gdsCode,
+              {&shop},
+              objCode,
+              output typeAttr
+            ).
+      end.
+      else return "".
+    end.
+
     define property qnty as dec no-undo
     get.
     set(arg as dec):

@@ -51,6 +51,7 @@ define stream stmXMLOut.
 { str/magiachk.i }
 { str/magiachk.i -line " extent 2 "}
 { str/magiachk.i proc }
+{ ref/gdsoattr.i }
 /*{ gbl/thbj-def.i } 15/I-2019 - подключается внутри str/get-chkc.i */
 DEFINE VARIABLE n-entry                    as   char no-undo extent 20.
 DEFINE VARIABLE accept-types               as   character no-undo .
@@ -85,6 +86,7 @@ define variable v-oss-code as character no-undo init "".
 define variable price-old as decimal no-undo .
 define variable disc-d-card as character no-undo.
 define variable ibm-ccm as integer no-undo.
+define variable seasonDT as integer no-undo.
 
 define buffer buf_ext-classif for ub.ext-classif.
 
@@ -1621,6 +1623,7 @@ define variable v-is-modificator as logical no-undo .
 define variable D-CARD2_ as character no-undo .
 define variable v-step as integer   no-undo .
 define variable v-line-type as character no-undo .
+define variable v-dt-season as integer no-undo .
 define variable v-VAT-pc like ub.chk-gds.VAT-pc no-undo .
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf_bar-code for ub.bar-code .
@@ -2101,6 +2104,8 @@ on error undo, return error
         price-from-check = 1.
     end.
 
+    run gds-attr_check-code-dt-seasons in this-procedure
+      (b-c, shop-type, shop-code, output b-c,output v-dt-season).
 
     CREATE chk-gds.
     assign
@@ -2229,7 +2234,16 @@ on error undo, return error
       .
       v-oss-code = "".
     end.
-    
+
+    if v-dt-season <> 0 then do:
+      create ub.chk-gds-attr.
+      assign
+        ub.chk-gds-attr.doc-code = ub.chk-gds.doc-code
+        ub.chk-gds-attr.line-num = ub.chk-gds.line-num
+        ub.chk-gds-attr.attr-code = "SeasonDT"
+        ub.chk-gds-attr.attr-value =  string(v-dt-season)
+      .
+    end.
       
       create ub.chk-gds-attr.
       assign
@@ -2761,7 +2775,9 @@ define variable  bonus-type-chr_    as character no-undo .
 define variable  bonus-string       as integer no-undo .
 define variable  bonus-src-code_    as decimal no-undo .
 define variable  bonus-src-code-chr as character no-undo .
-define variable  bonus-relation     as character no-undo . 
+define variable  bonus-relation     as character no-undo .
+define variable  i-bonus-relation   as integer   no-undo . 
+define variable  dt-season          as integer   no-undo .  
 define buffer buf_temp-temp for temp-temp .
 define buffer buf_chk-gds for ub.chk-gds.
 define variable local-netto-for-sub-d as decimal no-undo .
@@ -2866,6 +2882,14 @@ define variable local-netto-for-sub-d as decimal no-undo .
       chk-discnt.chk-time = chk-doc.chk-time
       .
       if bonus-relation <> "" then do:
+          dt-season = 0.
+          i-bonus-relation = integer(bonus-relation) no-error.
+          if not error-status:error then
+          do:
+            run gds-attr_check-code-dt-seasons in this-procedure
+              (i-bonus-relation, shop-type, shop-code, output i-bonus-relation,output dt-season).
+            bonus-relation = string(i-bonus-relation).
+          end.
           find first chk-discnt-attr EXCLUSIVE-LOCK where chk-discnt-attr.attr-code = "RRN-bonus"
                                        and chk-discnt-attr.line-num = chk-discnt.line-num
                                        and chk-discnt-attr.doc-code = chk-discnt.doc-code
@@ -2886,6 +2910,28 @@ define variable local-netto-for-sub-d as decimal no-undo .
             chk-discnt-attr.attr-value = bonus-relation
             .
           end.  
+          
+          if dt-season <> 0 then do:
+            find first chk-discnt-attr EXCLUSIVE-LOCK where chk-discnt-attr.attr-code = "SeasonDT"
+                                         and chk-discnt-attr.line-num = chk-discnt.line-num
+                                         and chk-discnt-attr.doc-code = chk-discnt.doc-code
+                                         and chk-discnt-attr.discnt-id = chk-discnt.discnt-id 
+                                         and chk-discnt-attr.object-line-num = chk-discnt.object-line-num no-error .
+            if AVAILABLE chk-discnt-attr then do:
+              chk-discnt-attr.attr-value = string(dt-season) .
+            end. 
+            else do:
+              create chk-discnt-attr .
+              assign
+              chk-discnt-attr.attr-code = "SeasonDT"
+              chk-discnt-attr.line-num = chk-discnt.line-num
+              chk-discnt-attr.doc-code = chk-discnt.doc-code
+              chk-discnt-attr.discnt-id = chk-discnt.discnt-id
+              chk-discnt-attr.object-line-num = chk-discnt.object-line-num
+              chk-discnt-attr.attr-value = string(dt-season)
+              .
+            end.  
+          end.
       end.                                   
       if chk-discnt.line-type = integer({&discnt-gds}) then do:
         if available chk-gds

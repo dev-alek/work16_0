@@ -152,6 +152,11 @@ class ibs.th.gbl.storage.promoGiftstorage:
   end method.
   
   method public class promoGiftsubs getpromoGiftsubs (input idaction as int64,input idcrit as int64,input idb-num as integer ):
+  
+    return getpromoGiftsubs (idaction, idcrit, idb-num, ?).
+  end method.
+
+  method public class promoGiftsubs getpromoGiftsubs (input idaction as int64,input idcrit as int64,input idb-num as integer, input iobj-code as integer ):
     define variable promoGiftsubsObj as class promoGiftsubs.
     define buffer buf_promoGift for ub.promoGift.
     promoGiftsubsObj = new promoGiftsubs ().
@@ -160,7 +165,7 @@ class ibs.th.gbl.storage.promoGiftstorage:
                                 and buf_promoGift.idcrit  eq idcrit
                                 and buf_promoGift.db-num  eq idb-num
     no-lock:
-        promoGiftsubsObj:AddItem(getDataStorage (buffer buf_promoGift)).
+        promoGiftsubsObj:AddItem(getDataStorage (buffer buf_promoGift, iobj-code)).
     end.      
     return promoGiftsubsObj.
   end method.
@@ -181,12 +186,22 @@ class ibs.th.gbl.storage.promoGiftstorage:
   
   method private class promoGiftsub getDataStorage ( buffer inbf_promoGift for ub.promoGift ):
     
+    return getDataStorage(buffer inbf_promoGift, ?).
+  end.
+
+  method private class promoGiftsub getDataStorage ( buffer inbf_promoGift for ub.promoGift, objCode as integer ):
+    
     define variable promoGiftsubObj  as class promoGiftsub.
     promoGiftsubObj = new promoGiftsub ().
-    return getDataStorage(promoGiftsubObj,buffer inbf_promoGift).
+    return getDataStorage(promoGiftsubObj,buffer inbf_promoGift, objCode).
   end.
-  
+
   method private class promoGiftsub getDataStorage (inpromoGiftSubObj as class promoGiftsub, buffer inbf_promoGift for ub.promoGift ):
+    return getDataStorage(inpromoGiftSubObj,buffer inbf_promoGift, ?).
+    
+  end.
+
+  method private class promoGiftsub getDataStorage (inpromoGiftSubObj as class promoGiftsub, buffer inbf_promoGift for ub.promoGift, obj-code as integer ):
     assign
       inpromoGiftSubObj:ID        = inbf_promoGift.id
       inpromoGiftSubObj:idCrit    = inbf_promoGift.idCrit
@@ -195,7 +210,7 @@ class ibs.th.gbl.storage.promoGiftstorage:
       inpromoGiftSubObj:qnty      = inbf_promoGift.qnty             
       inpromoGiftSubObj:mess      = inbf_promoGift.mess
       inpromoGiftSubObj:db-num    = inbf_promoGift.db-num      
-               
+      inpromoGiftSubObj:objCode   = obj-code         
     .  
        
     return inpromoGiftSubObj.

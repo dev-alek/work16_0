@@ -227,7 +227,7 @@ class ibs.th.gbl.storage.promoactionstorage:
     end.  
     return promoactionsubsObj.
   end method.
-    method public class promoactionsubs getpromoactionsubs (input iDate as date,input istatus as integer  ):
+  method public class promoactionsubs getpromoactionsubs (input iDate as date,input istatus as integer  ):
     define buffer buf_promoaction for ub.promoaction.
     define variable hQuery   as handle  no-undo .
     define variable vStrWhere as character no-undo.
@@ -260,11 +260,15 @@ class ibs.th.gbl.storage.promoactionstorage:
   end method.
   method public class promoactionsubs getpromoactionsubs (input iDb as integer ,input iId as int64  ):
       define variable promoactionsubsObj as class promoactionsubs no-undo.
-      getpromoactionsubs (input-output promoactionsubsObj,idb, iid).
+      getpromoactionsubs (input-output promoactionsubsObj,idb, iid, ?).
       return promoactionsubsObj.
   end.
+
+  method public void getpromoactionsubs (input-output ipromoactionsubsObj as promoactionsubs, input iDb as integer ,input iId as int64 ):
+    getpromoactionsubs  (input-output ipromoactionsubsObj, input iDb, input iId, ? ).
+  end.
   
-  method public void getpromoactionsubs (input-output ipromoactionsubsObj as promoactionsubs, input iDb as integer ,input iId as int64  ):
+  method public void getpromoactionsubs (input-output ipromoactionsubsObj as promoactionsubs, input iDb as integer ,input iId as int64, input objCode as integer  ):
     define buffer buf_promoaction for ub.promoaction.
     define variable hQuery   as handle  no-undo .
     define variable vStrWhere as character no-undo.
@@ -281,7 +285,7 @@ class ibs.th.gbl.storage.promoactionstorage:
     hQuery:query-open ().
     hQuery:get-first ().
     do while hQuery:query-off-end = false :
-        ipromoactionsubsObj:AddItem(getDataStorage (buffer buf_promoaction)).
+        ipromoactionsubsObj:AddItem(getDataStorage (buffer buf_promoaction, objCode)).
         hQuery:get-next().
     end.
     hQuery:query-close() .
@@ -347,11 +351,21 @@ class ibs.th.gbl.storage.promoactionstorage:
   
   method private class promoactionsub getDataStorage ( buffer inbf_promoaction for ub.promoaction ):
     
+    return getDataStorage(buffer inbf_promoaction, ?).
+  end.
+
+  method private class promoactionsub getDataStorage ( buffer inbf_promoaction for ub.promoaction, input objCode as integer):
+    
     define variable promoactionsubObj  as class promoactionsub.
     promoactionsubObj = new promoactionsub ().
-    return getDataStorage(promoactionsubObj,buffer inbf_promoaction).
+    return getDataStorage(promoactionsubObj,buffer inbf_promoaction, objCode).
   end.
-  method private class promoactionsub getDataStorage (input inpromoactionSubObj as class promoactionsub, buffer inbf_promoaction for ub.promoaction ):  
+
+  method private class promoactionsub getDataStorage (input inpromoactionSubObj as class promoactionsub, buffer inbf_promoaction for ub.promoaction):
+    return getDataStorage(inpromoactionSubObj,buffer inbf_promoaction, ?).
+  end.
+    
+  method private class promoactionsub getDataStorage (input inpromoactionSubObj as class promoactionsub, buffer inbf_promoaction for ub.promoaction, input objCode as integer):  
     
     assign
       inpromoactionSubObj:ID            = inbf_promoaction.id
@@ -370,12 +384,17 @@ class ibs.th.gbl.storage.promoactionstorage:
       inpromoactionSubObj:paymenttype   = inbf_promoaction.paymenttype
       inpromoactionSubObj:priority      = inbf_promoaction.priority
       inpromoactionSubObj:status_       = inbf_promoaction.status_
+      inpromoactionSubObj:objCode       = objCode
     .  
     return inpromoactionSubObj.
     
   end.
-  
+
   method public void refreshObj (inpromoactionSubObj as class promoactionsub):
+    refreshObj(inpromoactionSubObj, ?).
+  end.
+
+  method public void refreshObj (inpromoactionSubObj as class promoactionsub, input objCode as integer):
     define buffer buf_promoaction for ub.promoaction.
     if not valid-object (inpromoactionSubObj)
     then do:
@@ -391,7 +410,7 @@ class ibs.th.gbl.storage.promoactionstorage:
     end.
     
     define variable v-sub as class promoactionsub no-undo .
-    getDataStorage (inpromoactionSubObj,buffer buf_promoaction).
+    getDataStorage (inpromoactionSubObj,buffer buf_promoaction, objCode).
   end.
   method public void CleanChildObj (inpromoactionSubObj as class promoactionsub):
     if inpromoactionSubObj:TypeDiscontEnum eq ibs.th.ref.promo.enum-type-discount:envisa 

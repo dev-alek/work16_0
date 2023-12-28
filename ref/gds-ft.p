@@ -37,8 +37,8 @@ def var v-choose as char no-undo.
   run gbl/d-list.w (
               INPUT "b-sel":U
               ,INPUT "Выберите тип топлива"
-              ,INPUT "petrol,diesel-sum,diesel-wint,metan,propan,lgas"
-              ,INPUT "Бензин,ДТ летнее,ДТ зимнее,Метан,Пропан,СУГ"
+              ,INPUT "petrol,diesel,diesel-sum,diesel-wint,metan,propan,lgas"
+              ,INPUT "Бензин,ДТ,ДТ летнее,ДТ зимнее,Метан,Пропан,СУГ"
               ,INPUT {&comma-char}
               ,INPUT  p-attr-value
               ,output v-choose).

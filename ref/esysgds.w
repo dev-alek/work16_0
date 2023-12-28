@@ -113,7 +113,8 @@ b-sch b-print B-Help br-esys-gds mark-num fill-in-code-system fill-in-code-th
 
 
 function get-gds-name returns character 
-	( p-gds-code as integer ) forward.
+ ( p-gds-code as integer,
+   p-attr-code as integer ) forward.
 
 
 /* ************************  Functions ********************** */
@@ -142,7 +143,7 @@ ext-classif.KEY#_two  COLUMN-LABEL "Код!внешней!системы" FORMAT ">>>>>>>>9"
 get-esys-name (ext-classif.KEY#_two) @ esys-name COLUMN-LABEL "Внешняя система" FORMAT "X(30)"
 ext-classif.charkey_one  COLUMN-LABEL "Код товара!во внешней!системе" FORMAT "X(20)"
 ext-classif.key#_one COLUMN-LABEL "Код!товара" FORMAT ">>>>>>>>9"
-get-gds-name(ext-classif.key#_one) COLUMN-LABEL "Наименование товара" FORMAT "X(32)"
+get-gds-name(ext-classif.key#_one, ext-classif.key#_three) COLUMN-LABEL "Наименование товара" FORMAT "X(32)"
 WITH NO-ROW-MARKERS SEPARATORS SIZE 98.3 BY 20.37 FIT-LAST-COLUMN.
 /* Define a dialog box                                                  */
 
@@ -296,10 +297,25 @@ END.
 ON CHOOSE OF b-cli IN FRAME Dialog-Frame /* Объект */
 DO:
   define variable gdsrec as recid no-undo.
+  define buffer buf_code for ub.code.
   IF NOT AVAILABLE ext-classif THEN RETURN NO-APPLY.
   for first goods no-lock where goods.gds-code = ext-classif.key#_one:
     gdsrec = recid(goods).
     run ref/gds-form.w (parparentproc, {&lookup}, v-cntxt-obj-type, v-cntxt-obj-code, input this-procedure:handle, input-output gdsrec).
+  end.
+  if not available goods then 
+  do:
+    /* если товар не найден, ищем сезон ДТ */
+    for first buf_code no-lock where
+              buf_code.parent = "DTSeasons"
+          and buf_code.code = string(ext-classif.key#_one)
+    :
+      gdsrec = recid(buf_code).
+      run ref/dtseasons-frm.w (
+        input parparentproc
+        , {&lookup}
+        , input-output gdsrec).
+    end.
   end.
 END.
 
@@ -923,13 +939,24 @@ END PROCEDURE.
 /* ************************  Function Implementations ***************** */
 
 function get-gds-name returns character 
-	( p-gds-code as integer ):
+ ( p-gds-code as integer ,
+   p-attr-code as integer):
     define buffer bf_goods for ub.goods.
+    define buffer bf_code for ub.code.
 
     find first bf_goods no-lock where bf_goods.gds-code = p-gds-code no-error. 
     
     if available bf_goods then
-        return bf_goods.gds-name.
+    do:
+      if p-attr-code <> 0 then 
+      do:
+        find first bf_code where
+                   bf_code.parent = "DTSeasons"
+               and bf_code.code = string(p-attr-code) 
+             no-lock no-error.
+      end.
+      return bf_goods.gds-name + if available bf_code then " : " + bf_code.codename else "".
+    end.
     else return "".
     
 end function.

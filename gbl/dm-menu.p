@@ -3647,6 +3647,24 @@ procedure m-okei-kkt-exe:
 
 end procedure. /* m-units-exe */
 
+procedure m-dt-seasons-exe:
+
+  define variable rid#          as recid     no-undo .
+
+  do
+  on error undo, return error return-value
+  :
+    run ref/codelay.p
+      (input  parparentproc
+      ,input  ( if v-cntxt-db-num = 0 then {&update} else {&lookup})
+      ,input  ""
+      ,input  "DTSeasons"
+      ,input  ?
+      ) .
+  end.
+
+end procedure. /* m-units-exe */
+
 procedure m-emrc-exe:
 
   define variable rid#          as char     no-undo .

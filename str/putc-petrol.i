@@ -71,7 +71,8 @@ procedure putc-petrol :
                      do:
                         find first buf_ext-system no-lock where buf_ext-system.db-num = buf_ext-classif.db-num and
                            buf_ext-system.esys-id = buf_ext-classif.Key#_Two no-error .
-                        run bgelib-tag-open in this-procedure ( input 2, input "FuelCodeInfo", input substitute("ctrl='&2' code='&1'", string (buf_ext-classif.Key#_One), "ADD":u)).
+                        run bgelib-tag-open in this-procedure ( input 2, input "FuelCodeInfo"
+                          , input substitute("ctrl='&2' code='&1'", string (if buf_ext-classif.Key#_Three <> 0 then buf_ext-classif.Key#_Three else buf_ext-classif.Key#_One), "ADD":u)).
                         run bgelib-tag-put in this-procedure ( input 3, input "FCIExtCode", input string(buf_ext-classif.CharKey_One), input 1 ).
                         run bgelib-tag-put in this-procedure ( input 3, input "FCIExtId", input string(buf_ext-classif.Key#_Two), input 1 ).
                         run bgelib-tag-put in this-procedure ( input 3, input "FCIExtName", input string(if available (buf_ext-system) then buf_ext-system.esys-name else ""), input 1 ).
@@ -85,7 +86,8 @@ procedure putc-petrol :
                for each buf_ext-classif where buf_ext-classif.classif-subject = {&table_goods} and buf_ext-classif.classif-name = {&extclass_goods_esys} and buf_ext-classif.Key#_Two = integer(entry (ii,v-system,",")) no-lock by buf_ext-classif.CharKey_One:
                   find first buf_ext-system no-lock where buf_ext-system.db-num = buf_ext-classif.db-num and
                      buf_ext-system.esys-id = buf_ext-classif.Key#_Two no-error .
-                  run bgelib-tag-open in this-procedure ( input 2, input "FuelCodeInfo", input substitute("ctrl='&2' code='&1'", string (buf_ext-classif.Key#_One), "ADD":u)).
+                  run bgelib-tag-open in this-procedure ( input 2, input "FuelCodeInfo"
+                    , input substitute("ctrl='&2' code='&1'", string (if buf_ext-classif.Key#_Three <> 0 then buf_ext-classif.Key#_Three else buf_ext-classif.Key#_One), "ADD":u)).
                   run bgelib-tag-put in this-procedure ( input 3, input "FCIExtCode", input string(buf_ext-classif.CharKey_One), input 1 ).
                   run bgelib-tag-put in this-procedure ( input 3, input "FCIExtId", input string(buf_ext-classif.Key#_Two), input 1 ).
                   run bgelib-tag-put in this-procedure ( input 3, input "FCIExtName", input string(if available (buf_ext-system) then buf_ext-system.esys-name else ""), input 1 ).
@@ -106,7 +108,8 @@ procedure putc-petrol :
                      do:
                         find first buf_ext-system no-lock where buf_ext-system.db-num = buf_c-ext-classif.db-num and
                            buf_ext-system.esys-id = buf_c-ext-classif.Key#_Two no-error .
-                        run bgelib-tag-open in this-procedure ( input 2, input "FuelCodeInfo", input substitute("ctrl='&2' code='&1'", string (buf_c-ext-classif.Key#_One), "DEL":u)).
+                        run bgelib-tag-open in this-procedure ( input 2, input "FuelCodeInfo"
+                          , input substitute("ctrl='&2' code='&1'", string (if buf_ext-classif.Key#_Three <> 0 then buf_ext-classif.Key#_Three else buf_ext-classif.Key#_One), "DEL":u)).
                         run bgelib-tag-put in this-procedure ( input 3, input "FCIExtCode", input string(buf_c-ext-classif.CharKey_One), input 1 ).
                         run bgelib-tag-put in this-procedure ( input 3, input "FCIExtId", input string(buf_c-ext-classif.Key#_Two), input 1 ).
                         run bgelib-tag-put in this-procedure ( input 3, input "FCIExtName", input string(if available (buf_ext-system) then buf_ext-system.esys-name else ""), input 1 ).                  
@@ -120,7 +123,8 @@ procedure putc-petrol :
                      do:
                         find first buf_ext-system no-lock where buf_ext-system.db-num = buf_ext-classif.db-num and
                            buf_ext-system.esys-id = buf_ext-classif.Key#_Two no-error .
-                        run bgelib-tag-open in this-procedure ( input 2, input "FuelCodeInfo", input substitute("ctrl='&2' code='&1'", string (buf_ext-classif.Key#_One), "DEL":u)).
+                        run bgelib-tag-open in this-procedure ( input 2, input "FuelCodeInfo"
+                          , input substitute("ctrl='&2' code='&1'", string (if buf_ext-classif.Key#_Three <> 0 then buf_ext-classif.Key#_Three else buf_ext-classif.Key#_One), "DEL":u)).
                         run bgelib-tag-put in this-procedure ( input 3, input "FCIExtCode", input string(buf_ext-classif.CharKey_One), input 1 ).
                         run bgelib-tag-put in this-procedure ( input 3, input "FCIExtId", input string(buf_ext-classif.Key#_Two), input 1 ).
                         run bgelib-tag-put in this-procedure ( input 3, input "FCIExtName", input string(if available (buf_ext-system) then buf_ext-system.esys-name else ""), input 1 ).                  
