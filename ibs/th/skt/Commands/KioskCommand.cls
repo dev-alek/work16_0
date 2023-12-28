@@ -60,7 +60,6 @@ class ibs.th.skt.Commands.KioskCommand inherits ICommand:
   define private buffer buf_gds-obj   for ub.gds-obj.
   define private buffer buf_country   for ub.country.
 
-  define private variable logWrite   as class     LogWrite no-undo.
   define private variable hndlSocket as handle    no-undo.
   define private variable contLenght as integer   no-undo.
   define private variable content    as character no-undo.
@@ -94,8 +93,6 @@ class ibs.th.skt.Commands.KioskCommand inherits ICommand:
     
     run gbl/conf-rd.p ("gdsscrvw", "", "", 0, "", "", "", no, output confPar, output parType) no-error.
     
-    logWrite = new LogWrite().
-
     create x-document hDoc.
     create x-noderef  hRoot.
     create x-noderef  hRow.
@@ -235,17 +232,16 @@ class ibs.th.skt.Commands.KioskCommand inherits ICommand:
     define variable mbuffer1 as memptr   no-undo.
     define variable tempStr  as longchar no-undo.
     define variable glog     as logical  no-undo.
-    
     set-size(mbuffer1) = length (content, "RAW":U) + 1.
     put-string(mbuffer1,1) = content.
 
       
     tempStr = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1) - 1 ).
-    set-size(mbuffer) = 0.
     set-size(mbuffer) = length (tempStr, "RAW":U) + 1 .
     put-string(mbuffer,1) = tempstr.
     assign
       glog = hndlsocket:write(mbuffer,1,length(tempStr,'RAW':U)) no-error.
+    set-size(mbuffer) = 0.
     if not glog 
       then do:
         LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
@@ -253,6 +249,7 @@ class ibs.th.skt.Commands.KioskCommand inherits ICommand:
       end.
     assign
       glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1) - 1) no-error.
+    set-size(mbuffer1) = 0.
     if not glog
       then do:
         LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".

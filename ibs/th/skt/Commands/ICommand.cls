@@ -17,14 +17,25 @@ Creation date: 01/30/15
 
 using ibs.th.skt.Commands.*.
 using ibs.th.gbl.sys.objth.
+using ibs.th.skt.Adapters.*.
 
 class ibs.th.skt.Commands.ICommand inherits objth abstract :
   
-  method public  void Execute_(req as class IRequest, resp as class IResponse): 
-    return error "Данный метод абстрактный".
-  end.
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   define protected variable logWrite    as class     LogWrite no-undo.   
+   constructor public ICommand (  ):
+      super ().
+      logWrite = new LogWrite().
+   end constructor.
+
+  method abstract public  void Execute_(req as class IRequest, resp as class IResponse).
   
   method public void ContinueExecution(req as class IRequest,resp as class IResponse ):
+     resp:condition = resp:STSlist:WriteResponse:NameProp.
+     resp:setContent("Данный метот не должен вызываться").
 /*     resp:condition = resp:STSlist:WriteResponse:NameProp.
      define variable sss as longchar no-undo.
      define variable vvv as integer no-undo.
@@ -32,5 +43,14 @@ class ibs.th.skt.Commands.ICommand inherits objth abstract :
      sss = "Жизнь удалась111".
      resp:setContent(sss). */
   end.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public ICommand ( ):
+      delete object logWrite.
+      
+	end destructor.
 
 end class.

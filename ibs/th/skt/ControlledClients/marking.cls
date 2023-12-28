@@ -32,6 +32,8 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
   define override public property vss-description as character no-undo init "Обработчик запросов по маркам с кассы" get.
 
   {cmp\str-glbl.i class}
+  &scop CRLF chr(13) + chr(10)
+  &scop HdEnd chr(13) + chr(10)  + chr(13) + chr(10)
   define private variable logWrite   as class LogWrite no-undo.
   define private variable cashSts    as class cash     no-undo.
   define private variable answerFlag as logical        no-undo init false.
@@ -473,8 +475,9 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
 
   method private void sendContent(inLC as longchar):
     define variable v-cont-length as integer no-undo.
+    inLC = inLC + {&CRLF}.
     v-cont-length = length(inLC,"RAW":U).
-    SomeStr = substitute("HTTP/1.1 200 OK&1Server: 4GL&1Content-Type: text/html; charset=UTF-8&1Content-Length: &3&2&4",chr(13) + chr(10),chr(13) + chr(10) + chr(13) + chr(10),string(v-cont-length),inLC).
+    SomeStr = substitute("HTTP/1.1 200 OK&1Server: 4GL&1Content-Type: text/html; charset=UTF-8&1Content-Length: &3&2&4",{&CRLF},{&HdEnd},string(v-cont-length),inLC).
     return.
   end method.
 

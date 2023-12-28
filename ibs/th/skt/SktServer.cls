@@ -30,6 +30,7 @@ using Progress.Lang.*.
 using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.*.
+using ibs.th.skt.Adapters.*.
 
 class ibs.th.skt.SktServer: 
 
@@ -49,6 +50,7 @@ class ibs.th.skt.SktServer:
   define public property LogMsg as character no-undo
     get.
     set.
+  define private variable logWrite as class   LogWrite no-undo.
 
   define public property QueryParam as character no-undo
     get.
@@ -83,7 +85,7 @@ class ibs.th.skt.SktServer:
     define variable DeferredCommand   as class DeferredCommand.
 		
     clientControl = new ClientControl(hLog). /*количество возможных комманд соответсвует кол-ву клиентов*/
-    
+    logWrite = new LogWrite().
     /*создадим объекты конкретных комманд для клиентов сокет-сервера. вешаем комманду на порядковый номер клиента в списке*/
     run gbl/conf-rd.p ("is-tsd", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
@@ -137,7 +139,8 @@ class ibs.th.skt.SktServer:
       vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
       if error-status:error then 
       do:
-        return error return-value.
+        logWrite:LogStr = return-value.
+        vDelete = yes.
       end.
     end.
     if vDelete
@@ -165,7 +168,8 @@ class ibs.th.skt.SktServer:
       vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp, lpar) no-error.
       if error-status:error then 
       do:
-        return error return-value.
+        logWrite:LogStr = return-value.
+        vDelete = yes.
       end.
 /*      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.*/
     end.
@@ -187,6 +191,8 @@ class ibs.th.skt.SktServer:
       client_ = ClientPar.
       return.
     end.
+    else
+       client_ = "".
     
     
     if not    req:Content matches '*<data req="gds"*' 
@@ -233,7 +239,7 @@ class ibs.th.skt.SktServer:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public SktServer ( ):
-    
+    delete object logWrite.
     delete object clientControl no-error.
     
 	end destructor.

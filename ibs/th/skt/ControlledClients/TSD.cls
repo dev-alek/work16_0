@@ -1520,7 +1520,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         string (buf_utd.obj-code) + {&delimiteFld} + buf_utd.obj-type + {&delimiteFld} + 
         {&delimiteFld} + {&delimiteFld}
         +
-        string (FactSum) + {&delimiteFld} + string (iso-date (datetime-tz (if buf_utd.Timestamp = ? then now else buf_utd.Timestamp))) + {&delimiteFld} 
+        string (FactSum) + {&delimiteFld} + string (iso-date (datetime-tz (if buf_utd.DocumentDate = ? then now else buf_utd.DocumentDate))) + {&delimiteFld} 
         + string(myflagsDoc:FlagsToInt) + {&delimiterLine}).
       
       tsdstreamopenapp("MT_documents.txt"). 

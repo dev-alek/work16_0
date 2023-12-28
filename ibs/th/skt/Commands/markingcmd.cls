@@ -39,14 +39,23 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
     get.
     private set. 
 
-  define private variable marking     as class  marking no-undo.
-  define private variable logWrite    as class     LogWrite no-undo.
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   define private variable marking     as class  marking no-undo.
+      
+   constructor public markingcmd (  ):
+      super ().
+      marking = new marking().
+   end constructor.
+
+  
   define private variable hndlSocket as handle no-undo.
 
   method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse ):
     
-    logWrite = new LogWrite().
-    marking = new marking().
+    
     hndlsocket = req:HndlSocket.
     marking:hndler(req).
     writeSock(marking:SomeStr).
@@ -72,6 +81,7 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
       convert target codepage "UTF-8".
     assign
       glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
+    set-size(mbuffer1) = 0.
     if not glog
       then do:
         LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
@@ -81,5 +91,13 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
     return true.
       
   end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public markingcmd ( ):
+      delete object marking.
+	end destructor.
 
 end class.

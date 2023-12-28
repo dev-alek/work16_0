@@ -44,7 +44,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     private set.
   
   define private variable tsd         as class     TSD .
-  define private variable logWrite    as class     logWrite no-undo.
   define private variable hRoot       as handle    no-undo.
   define private variable hDoc        as handle    no-undo.
   define private variable hRow        as handle    no-undo.
@@ -82,7 +81,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
       then assign is-ProcArch64 = true.
     input close.
-    logWrite = new LogWrite().
     tsd = new tsd().
     
   end constructor.
@@ -249,7 +247,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
          then
             leave block-size.
       end.
-      
+      set-size (mbuffer1) = 0.
       set-size (mbuffer1) = vsize.
       input from value (file-info:file-name) binary no-convert.
       import mbuffer1.
@@ -913,7 +911,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     
     define variable mTypeResp as character no-undo init "text/csv".
     
-    set-size(mbuffer1) = 0.
     if arg = "dictionaries" then 
     do:
       os-command silent value( 'set pro >>procarch') .
@@ -1007,12 +1004,12 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.
       
     tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: &4&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1),mTypeResp).
-    set-size(mbuffer) = 0.
     set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
     put-string(mbuffer,1) = tempLongCh.
     startStep("Начало отправки справочника на ТСД.").
     assign
       glog = hndlsocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
+    set-size(mbuffer) = 0.
     if not glog 
       then do:
         logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
@@ -1020,6 +1017,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       end.
     assign
       glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
+    set-size(mbuffer1) = 0.
     if not glog
       then do:
         logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".

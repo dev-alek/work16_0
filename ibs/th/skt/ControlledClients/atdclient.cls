@@ -23,8 +23,8 @@ using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.*.
 using ibs.th.skt.Adapters.*.
 
-&scop CRLF chr(13) + chr(10)
-&scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
+&scop CRLF chr(10) + chr(13)
+&scop HdEnd chr(10) + chr(13)  + chr(10) + chr(13)
 
 class ibs.th.skt.ControlledClients.atdclient : 
   
@@ -87,11 +87,17 @@ class ibs.th.skt.ControlledClients.atdclient :
         vLC = "".
       end case.
       delete object vExp.
-      v-cont-length = length(vLC,"RAW":U).
-      SomeStr = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/jason&1Content-Length: &3&2&4",{&CRLF},{&HdEnd},string(v-cont-length),vLC).
-      vLC = ?.
+      SomeStr = vLC.
     end. 
   end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public atdclient ( ):
+      delete object logWrite.
+	end destructor.
   
   
 end class.

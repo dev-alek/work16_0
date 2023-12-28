@@ -67,7 +67,7 @@ Creation date: 01/30/15
     gds-code
     .
     
-  define temp-table TempGdsDtl
+  define temp-table TempGdsDtl no-undo
     field SuppInDocNo  as character
     field line-num     as integer
     field gds-code     as integer
@@ -82,7 +82,7 @@ Creation date: 01/30/15
     prt-code
     .
     
-  define temp-table TempParts
+  define temp-table TempParts no-undo
     field SuppInDocNo  as character
     field line-num     as integer
     field gds-code     as integer
@@ -95,7 +95,7 @@ Creation date: 01/30/15
     part-code
     .
     
-  define temp-table TempDocAttr
+  define temp-table TempDocAttr no-undo
     field SuppInDocNo  as character
     field attr-code    as character
     field attr-value   as character

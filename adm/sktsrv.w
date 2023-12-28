@@ -607,7 +607,14 @@ PROCEDURE connproc :
                 sktserv:ClientPar  = entry (1, v-querypar, "?"). 
                 sktserv:QueryParam = entry (2, v-querypar, "?").
               end.
-              else sktserv:ClientPar = v-querypar.
+              else do:
+                 sktserv:ClientPar = v-querypar.
+                 sktserv:QueryParam = "".
+               end.
+            end.
+            else do:
+               sktserv:ClientPar = "".
+               sktserv:QueryParam = "".
             end.
           end.
           end.
@@ -818,7 +825,7 @@ procedure parseheader:
   RUN write-to-log('REQUEST-HEADER:' + p-header ).
   /*разбор шапки*/
   n = 2.
-  if p-header begins "GET" and num-entries (p-header, "/") > 1
+  if num-entries (p-header, "/") > 1
   then do:
     v-querypar = right-trim (right-trim  (entry(n, p-header, "/"), "HTTP"), " ").
   end.
