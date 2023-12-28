@@ -211,7 +211,7 @@ class ibs.th.skt.SktServer:
       hdoc:get-document-element(hRoot) no-error.
       assign
         client_ = hRoot:name no-error.
-        
+/*        logWrite:WriteFileToLog( req:Content).*/
     end.
     
     /*далее случаи не по стандарту*/    
@@ -222,6 +222,7 @@ class ibs.th.skt.SktServer:
         then 
       do:
         client_ = "TableMenu".
+        logWrite:WriteFileToLog( req:Content + chr(13) + chr(10)).
       end.
       else 
       do: 

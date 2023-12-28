@@ -61,8 +61,7 @@ class ibs.th.skt.Commands.IResponse abstract:
       set-size(Content) = length(arg,"raw").
       copy-lob
       from object arg
-      to object Content
-      convert target codepage "UTF-8".
+      to object Content.
    end.
    
    method public void setContent(arg as char ):
