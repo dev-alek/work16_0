@@ -1477,6 +1477,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       cbSGDKK:Enabled = false.
       maskedTextBoxAukKey:Enabled = false.
       
+      if infoSecsObj:IsSGDKK
+      then do :
+        if cbSGDKK:Checked
+        then do :
+          label50:text = "Идентификатор доступа (ключ) «верхнего уровня» или одноразовый код:" .
+        end .
+        else do :
+          label50:text = "Идентификатор доступа (ключ) «нижнего уровня»:" .
+        end .
+      end .
+      
       do ii = 1 to extent (maskedTextBoxArr):
         this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
         this-object:maskedTextBoxArr[ii]:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
