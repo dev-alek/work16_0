@@ -1269,7 +1269,7 @@ class ibs.th.utl.method-for-draw-utility final:
                   /* Delete all objects created by this procedure to avoid memory leaks */
   
                   put-log( string(now) + "   Начинаем загрузку атрибутов автопроизводства...") .
-
+                  load_gds_maping(ifile-path).
                   for each tt-fbr-gds-obj no-lock :
                     find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-fbr-gds-obj.gds-code no-error .
                     if available tt-gds-mapping
@@ -1368,7 +1368,7 @@ class ibs.th.utl.method-for-draw-utility final:
                 method public void  load_version (iAddr as character):
                   define variable vcmd as character no-undo.
                   define variable vOk  as logical   no-undo.
-                  put-log(string (now) + "   Отправляем запрос для получения верии.").
+                  put-log(string (now) + "   Отправляем запрос для получения верcии.").
                   vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetVersion >&3", search ("exe/curl.exe"), iaddr, "version-temp.json").
                   os-command silent value (vcmd).
                   fix-codepage_and_SetJsonObj (input "version-temp.json") no-error.
