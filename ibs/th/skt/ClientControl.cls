@@ -123,10 +123,10 @@ class ibs.th.skt.ClientControl:
       .
   end method.
 
-  method public void checkEnd ():
+  method public logical checkEnd ():
      define variable req  as ibs.th.skt.Commands.IRequest  no-undo.
      define variable resp as ibs.th.skt.Commands.IResponse no-undo.
-     
+     define variable vAvailProc as logical no-undo.
      for each ttDeferredCommands:
         req  = cast(ttDeferredCommands.objreq, ibs.th.skt.Commands.IRequest).
         resp = cast(ttDeferredCommands.objResp,ibs.th.skt.Commands.IResponse).
@@ -158,7 +158,10 @@ class ibs.th.skt.ClientControl:
            delete ttDeferredCommands.
            
         end.
+        else
+           vAvailProc = yes.
      end.
+     return vAvailProc.
   end.
   
   method private logical writeSock (hndlsocket as handle, resp as ibs.th.skt.Commands.IResponse ):
@@ -193,7 +196,12 @@ class ibs.th.skt.ClientControl:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public ClientControl ( ):
-	  
+	 for each ttDeferredCommands:
+	    cast(ttDeferredCommands.objreq,IRequest):HndlSocket:disconnect().
+	    delete object ttDeferredCommands.objreq no-error.
+       delete object ttDeferredCommands.objResp no-error.
+       delete ttDeferredCommands.
+	 end. 
     for each ttCommands:
       delete object ttCommands.objCommand no-error.
       delete ttCommands.

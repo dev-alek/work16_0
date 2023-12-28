@@ -232,8 +232,8 @@ class ibs.th.skt.SktServer:
 
   end.
 
-  method public void checkEnd ():
-     clientControl:checkEnd().
+  method public logical checkEnd ():
+     return clientControl:checkEnd().
   end.
 	/*------------------------------------------------------------------------------
 	 Purpose:

@@ -388,15 +388,24 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   CheckUpd = new ibs.th.adm.upd.CheckUpd ().
   IF NOT THIS-PROCEDURE:PERSISTENT THEN 
   do while mWork:
-     /* if  CheckUpd:isStopWork or CheckUpd:isNeedUpd 
-     then do:
-        RUN proc-stop-srv.
-        mWork = no.
-     end. */
-     wait-for close of this-procedure pause 0.001.
+     /*  */
+     
      if valid-object(sktserv)
      then
-        sktserv:checkEnd().
+        if sktserv:checkEnd()
+        then
+           wait-for close of this-procedure pause 0.001.
+        else do:
+           if  CheckUpd:isStopWork or CheckUpd:isNeedUpd 
+           then do:
+              RUN proc-stop-srv.
+              mWork = no.
+           end.
+           else
+              wait-for connect of hServerSocket or choose of Btn-st or close of this-procedure pause 60.
+        end.
+     else
+       wait-for choose of Btn-st or close of this-procedure.
      
   end.
   unsubscribe "write-to-log".  
