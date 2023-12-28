@@ -2997,7 +2997,7 @@ class ibs.th.utl.method-for-draw-utility final:
                         then 
                       do:
                         assign
-                          tt-fin-doc.cor-acc-value = {&question-mark}
+                          tt-fin-doc.cor-acc-value = ?
                           .
                       end.
                       else 
@@ -3016,7 +3016,7 @@ class ibs.th.utl.method-for-draw-utility final:
                         then 
                       do:
                         assign
-                          tt-fin-doc.cor-acc1-value = {&question-mark}
+                          tt-fin-doc.cor-acc1-value = ?
                           .
                       end.
                       else 
