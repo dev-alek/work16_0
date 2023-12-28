@@ -576,13 +576,13 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
       tabControl:SelectTab(v-idSel - 1) .
     end .
     
-    do ii = 1 to infoSecsObj:SectionNum:
-      if not valid-object (tankSectionControl[ii]) or tankSectionControl[ii]:idSecTabPage = tankSectionControl[infoSecsObj:idSecCurr]:idSecTabPage 
-        then next.
-
-      tankSectionControl[ii]:GetAukKey(infoSecsObj:InfoSectionCurr:AukKey, infoSecsObj:InfoSectionCurr:alarm-SGDKK).  
-
-    end.
+/*    do ii = 1 to infoSecsObj:SectionNum:                                                                                                          */
+/*      if not valid-object (tankSectionControl[ii]) or tankSectionControl[ii]:idSecTabPage = tankSectionControl[infoSecsObj:idSecCurr]:idSecTabPage*/
+/*        then next.                                                                                                                                */
+/*                                                                                                                                                  */
+/*      tankSectionControl[ii]:GetAukKey(infoSecsObj:InfoSectionCurr:AukKey, infoSecsObj:InfoSectionCurr:alarm-SGDKK).                              */
+/*                                                                                                                                                  */
+/*    end.                                                                                                                                          */
     
     do ii = 1 to infoSecsObj:SectionNum:
       if not tankSectionControl[ii]:CheckSec(yes)

@@ -1247,7 +1247,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   method public void GetAukKey(inAukKey as character, inSGDKK as logical) :
     
     if cbSGDKK:checked = inSGDKK
-    and trim(maskedTextBoxAukKey:text) = ""
     then do :
       maskedTextBoxAukKey:text = inAukKey .
     end .
