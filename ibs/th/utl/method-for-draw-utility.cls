@@ -1457,6 +1457,7 @@ class ibs.th.utl.method-for-draw-utility final:
                       and tt-cash-desk-attr.attr-code = "fr-type" :
                       tt-cash-desk.fr-type = tt-cash-desk-attr.attr-value .                                    
                     end.          
+
                   end.
 
                   do while isCashDesk:
@@ -1595,29 +1596,36 @@ class ibs.th.utl.method-for-draw-utility final:
                       and tt-cash-desk-attr.pos-type = buf_tt-cash-desk.pos-type
                       and tt-cash-desk-attr.cash-num = buf_tt-cash-desk.cash-num :
                       case tt-cash-desk-attr.attr-code :
-                        when "last-check-params"
+
+                        when "device-kind"
                         then 
                           do :
-          &scop proc-name cd-attr-write
+                            &scop proc-name cd-attr-write
                             {&run_proc_attr-lib}
                               (
                               input v-cntxt-db-num-obj
                               ,input v-cntxt-obj-code
                               ,input tt-cash-desk-attr.pos-type
                               ,input tt-cash-desk-attr.cash-num
-                              ,input "" /* (if tt-cash-desk-attr.pos-type = {&cd-type-ibm-xml}
+                              ,input  (if tt-cash-desk-attr.pos-type = {&cd-type-ibm-xml}
                                          then {&cda-IBM-XML_operative}
-                                         else {&cda-AUTOTANK_operative})*/
-                              ,input " " /*(if tt-cash-desk-attr.pos-type = {&cd-type-IBM-XML}
-                                        then {&cda-IBM-XML_operative_last-check-params}
-                                        else {&cda-AUTOTANK_operative_last-check-params})*/
+                                         else {&cda-AUTOTANK_operative})
+                              ,input  (if tt-cash-desk-attr.pos-type = {&cd-type-IBM-XML}
+                                        then {&cda-IBM-XML_operative_device-kind}
+                                        else {&cda-AUTOTANK_operative_device-kind})
                               ,input tt-cash-desk-attr.attr-value
                               ,input ? /*p-date*/
                               ,input 0 /*p-decimal*/
                               ,input 0 /*p-integer*/
                               ,input no /*p-logical*/
-                              ) no-error.
+                              ) .
+                             if error-status:error then 
+                               do:
+                               put-Log(return-value + " " + error-status:get-message(1)).
+                             undo, return error return-value.
+                             end.
                           end.
+
                       end case.                                   
                     end.                                       
                   end.
