@@ -71,7 +71,9 @@ if (old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB)
 then do:
-  new-{&main-tbl}.sts = old-marking.sts.
+  new-{&main-tbl}.sts = old-{&main-tbl}.sts.
+  if old-{&main-tbl}.loc-key <> "" then
+    new-{&main-tbl}.loc-key = old-{&main-tbl}.loc-key.
 end.
 if new-{&main-tbl}.sts <> old-{&main-tbl}.sts then do:
   new-{&main-tbl}.last-change = now.
@@ -115,11 +117,14 @@ end.
 
 
 end. /* main-block */
-
-/*if not g#auto*/
-/*then do:     */
+{ trg/trghistnws.i 
+  &hist = yes 
+  &seqnamehist = "s-c-mark-chip-num"
+}
+if g#db-num <> 0 then 
+do:
   { trg/trghistnws.i 
-    &hist = yes 
-    &seqnamehist = "s-c-mark-chip-num"
+    &nws  = yes
   }
-/*end.*/
+end.
+

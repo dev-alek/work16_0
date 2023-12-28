@@ -133,12 +133,11 @@ MySeqUtd = ?.
 
 /* ------------------------------------- marking -------------------------------------------------- */
 &glob main-tbl marking
-&glob addwhere or buf_{&main-tbl}.mark eq gtin
+&glob addwhere or buf_{&main-tbl}.mark begins gtin
 {gbl/mergetable.i
    &bufSource = "locb-{&main-tbl}"
    &bufTarget = "buf_{&main-tbl}"
    &tableKeyMerge = "{&{&main-tbl}_primary_key}"
-   &copy-except = "except sts loc-key last-change"
    &beforefind = "gtin = GetCodeIdent(locb-{&main-tbl}.mark)."
 }
 &glob addwhere

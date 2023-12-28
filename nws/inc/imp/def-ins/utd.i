@@ -33,6 +33,7 @@ define variable counter  as   integer   no-undo.
 define variable rec-full as   character no-undo.
 define variable rec-name as   character no-undo.
 define variable v-send-to-cash as logical no-undo .
+define variable gtin           as character no-undo.
 
 for each locb-utd
 on error  undo, return error
