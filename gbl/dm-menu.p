@@ -6651,6 +6651,29 @@ PROCEDURE m_disable-online-check :
   define variable p-enable-item as logical   no-undo .
   run chk-goods_add(output p-enable-item)no-error .
   if not p-enable-item then return .
+  define variable v-current-db-num as integer   no-undo .
+  define variable v-obj-db-num     as integer   no-undo .
+
+    { gbl/curdbnum.i
+      v-current-db-num
+    }
+    { gbl/objdbnum.i
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      v-obj-db-num
+    }
+  
+  if v-current-db-num <> 0 then do:
+  for each ub.shop no-lock where ub.shop.obj-code = v-cntxt-obj-code: 
+    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
+      buf_thbj-attr.obj-type = {&shop} and
+      buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
+      buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
+      buf_thbj-attr.property-value-logical = true .
+    end. 
+  end.
+  end.
+  else do:
   for each ub.shop no-lock : 
     for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
       buf_thbj-attr.obj-type = {&shop} and
@@ -6665,6 +6688,7 @@ PROCEDURE m_disable-online-check :
     buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
     buf_thbj-attr.property-value-logical = true .
   end. 
+  end.
   message "Параметр «Аварийная ситуация в ГИС МТ» - включен"
     view-as alert-box.          
 
@@ -6675,6 +6699,29 @@ PROCEDURE m_enable-online-check :
   define variable p-enable-item as logical   no-undo .
   run chk-goods_add(output p-enable-item)no-error .
   if not p-enable-item then return .
+  define variable v-current-db-num as integer   no-undo .
+  define variable v-obj-db-num     as integer   no-undo .
+
+    { gbl/curdbnum.i
+      v-current-db-num
+    }
+    { gbl/objdbnum.i
+      v-cntxt-obj-type
+      v-cntxt-obj-code
+      v-obj-db-num
+    }
+  
+  if v-current-db-num <> 0 then do:
+  for each ub.shop no-lock where ub.shop.obj-code = v-cntxt-obj-code: 
+    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
+      buf_thbj-attr.obj-type = {&shop} and
+      buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
+      buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
+      buf_thbj-attr.property-value-logical = false .
+    end. 
+  end.
+  end.
+  else do:
   for each ub.shop no-lock : 
     for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
       buf_thbj-attr.obj-type = {&shop} and
@@ -6689,6 +6736,7 @@ PROCEDURE m_enable-online-check :
     buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
     buf_thbj-attr.property-value-logical = false .
   end. 
+  end.
   message "Параметр «Аварийная ситуация в ГИС МТ» - выключен"
     view-as alert-box.          
 
