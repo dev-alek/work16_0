@@ -959,7 +959,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     file-info:file-name = search(vfileresultxml) .
     if file-info:file-size = 0
     then do :
-       dbgPrint("marking.log", "Запрос не выполнен! Ошибка при конвертации json в XML.").
+       dbgPrint("marking.log", "Запрос не выполнен! Ошибка при чтении XML <body>. " + error-status:get-message(1)).
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
@@ -1029,9 +1029,12 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     
     define variable vMRC as decimal no-undo.
     define variable vMrp as decimal no-undo.
+    define variable vMRC_r as decimal no-undo.
+    define variable vMrp_r as decimal no-undo.
     define variable vExpireDMY  as character  no-undo.
     define variable vExpireTime as character  no-undo.
     define variable vExpireDate as datetime-tz no-undo.
+    define variable vExpireTimeMes as character no-undo.
         
     define buffer buf_marking-attr for ub.marking-attr.
     define buffer buf_code for ub.code.
@@ -1202,14 +1205,22 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
                 vExpireDMY = entry(1,ttmark-check.expireDate,"T").
                 if num-entries(vExpireDMY,"-") = 3 then 
                 do:
-                   vExpireTime = entry(1,entry(2,ttmark-check.expireDate,"T"),"Z").
+                   if num-entries(ttmark-check.expireDate,"T") >= 2 then
+                      vExpireTime = entry(1,entry(2,ttmark-check.expireDate,"T"),"Z").
+                   else vExpireTime =  "00:00:00.000".  
                    vExpireDMY = entry(3,vExpireDMY,"-") + "/" + entry(2,vExpireDMY,"-") + "/" + entry(1,vExpireDMY,"-").
                    vExpireDate = datetime-tz(vExpireDMY + " " + vExpireTime) no-error.
                    if vExpireDate <> ? and 
                       vExpireDate < now + gismt-BanDate * 60 * 1000
-                   then assign   
-                           vErrSts = "Срок годности товара истек " + string(vExpireDate) + ". "
-                           mCheckSts = 0.
+                   then do:
+                      vExpireTime = entry(1,vExpireTime,".").
+                      if num-entries(vExpireTime,":") > 2 then
+                         vExpireTimeMes = entry(1,vExpireTime,":") + ":" + entry(2,vExpireTime,":"). 
+                      else vExpireTimeMes = "".   
+                      assign
+                         vErrSts = "Срок годности товара истек " + vExpireDMY + " " + vExpireTimeMes + ". "
+                         mCheckSts = 0.
+                   end.      
                 end.   
             end.
             if ttmark-check.expireDate = ""
@@ -1235,10 +1246,16 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
          if vCheckMRC and 
             vMrp <> 0 and 
             vMRC <> vMrp          
-         then assign 
-                 vErrSts = vErrSts + "МРЦ на упаковке " + (if vMRC = ? then quoter(vMRC) else string(vMrc)) + " не совпадает с МРЦ в Честном Знаке - " + ttmark-check.mrp + ". "
-                 mCheckSts = 0.
-
+         then 
+              assign 
+                 vMRC_r = if vMRC <> ? then Round((vMrc / 100), 2) else 0
+                 vMrp_r = Round((vMrp / 100), 2)
+                 vErrSts = vErrSts + "МРЦ на упаковке " 
+                           + (if vMRC = ? then "не определена" else trim(string(vMrc_r,">>>>>>>>>>9.99"), " ") + " р.") 
+                           + " не совпадает с МРЦ в Честном Знаке - " 
+                           + trim(string(vMrp_r,">>>>>>>>>>9.99"), " ") + " р. ".
+                 mCheckSts = 0
+                 .
          if  vCheckOwner and 
              ttmark-check.isOwner = "false" and 
              ttmark-check.isTracking = "true" and 
