@@ -1605,12 +1605,12 @@ class ibs.th.utl.method-for-draw-utility final:
                               (
                               input v-cntxt-db-num-obj
                               ,input v-cntxt-obj-code
-                              ,input tt-cash-desk-attr.pos-type
-                              ,input tt-cash-desk-attr.cash-num
-                              ,input  (if tt-cash-desk-attr.pos-type = {&cd-type-ibm-xml}
+                              ,input buf_tt-cash-desk.pos-type
+                              ,input buf_tt-cash-desk.cash-num
+                              ,input  (if buf_tt-cash-desk.pos-type = {&cd-type-ibm-xml}
                                          then {&cda-IBM-XML_operative}
                                          else {&cda-AUTOTANK_operative})
-                              ,input  (if tt-cash-desk-attr.pos-type = {&cd-type-IBM-XML}
+                              ,input  (if buf_tt-cash-desk.pos-type = {&cd-type-IBM-XML}
                                         then {&cda-IBM-XML_operative_device-kind}
                                         else {&cda-AUTOTANK_operative_device-kind})
                               ,input tt-cash-desk-attr.attr-value
