@@ -2607,7 +2607,7 @@ do:
       ) no-error .
   if error-status :error then 
   do:
-    return no-apply .
+    return.
   end.
 
   run adm/shattri.p (
