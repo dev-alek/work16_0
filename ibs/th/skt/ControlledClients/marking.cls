@@ -118,6 +118,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     else do:
        dbgPrint("marking.log", "Не определена БД").
     end.
+    cashSts =  new cash().
   end.
 
   method public void hndler (req as class ibs.th.skt.Commands.iRequest):
@@ -160,7 +161,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
       shift_num  = 0 
     .
     
-    cashSts =  new cash().
+    
 
     thMarkSts = ObjSrv:Env:Marking:Sts:Mark.
 
@@ -1323,6 +1324,15 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     end.
     return.
   end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public marking ( ):
+      delete object cashSts.
+      delete object logWrite.
+	end destructor.
   
   
 end class.  

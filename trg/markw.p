@@ -32,6 +32,8 @@ define buffer marking-attr  for ub.marking-attr.
 define buffer marking-lines for ub.marking-lines.
 define buffer marking-chk   for ub.marking-chk.
 define buffer parentMarking for ub.marking.
+define buffer c-Marking     for ub.c-marking.
+
 
 { trg/trghistnws.i }
 
@@ -79,18 +81,25 @@ if new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB then do:
 end .
 
 if new-{&main-tbl}.mark <> old-{&main-tbl}.mark then do:
-  for each marking-attr exclusive-lock 
+   for each marking-attr exclusive-lock 
       where marking-attr.mark = old-{&main-tbl}.mark:
-    marking-attr.mark = new-{&main-tbl}.mark.
-  end.
-  for each marking-lines exclusive-lock 
+      marking-attr.mark = new-{&main-tbl}.mark.
+   end.
+   for each marking-lines exclusive-lock 
       where marking-lines.mark = old-{&main-tbl}.mark:
-    marking-lines.mark = new-{&main-tbl}.mark.
-  end.
-  for each marking-chk exclusive-lock 
+      marking-lines.mark = new-{&main-tbl}.mark.
+   end.
+   for each marking-chk exclusive-lock 
       where marking-chk.mark = old-{&main-tbl}.mark:
-    marking-chk.mark = new-{&main-tbl}.mark.
-  end.
+      marking-chk.mark = new-{&main-tbl}.mark.
+   end.
+   for each c-marking where c-marking.mark eq old-{&main-tbl}.mark exclusive-lock:
+      c-marking.mark = new-{&main-tbl}.mark.
+   end.
+   for each c-marking-attr where c-marking-attr.mark eq old-{&main-tbl}.mark exclusive-lock:
+      c-marking.mark = new-{&main-tbl}.mark.
+   end.
+
 end .  
 end. 
   
@@ -103,6 +112,7 @@ do:   /* при создании новой дочерней марки меняем статус марки как у родителя, е
      new-{&main-tbl}.sts = parentMarking.sts.
   end.
 end.
+
 
 end. /* main-block */
 
