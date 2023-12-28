@@ -323,14 +323,13 @@ end.
 
 /* Соберем Сезоны ДТ */
 for each buf_code no-lock where
-         buf_code.parent  = "DTSeasons"
-     and buf_code.status_ = 0:
+         buf_code.parent  = "DTSeasons":
   find first buf_ext-classif no-lock where buf_ext-classif.classif-subject = {&table_goods}
       and buf_ext-classif.classif-name = {&extclass_goods_esys}
       and buf_ext-classif.key#_two = p-code_system
       and buf_ext-classif.key#_three = 0 
       and buf_ext-classif.key#_one = integer(buf_code.code) no-error.
-  if available buf_code then
+  if available buf_ext-classif then
   do:
     find first buf_units no-lock where 
                buf_units.unit-name = buf_code.misc3 no-error.
@@ -347,7 +346,7 @@ for each buf_code no-lock where
     hSAXWriter:WRITE-DATA-ELEMENT("AddData", "UNIT_TYPE=" + string(v-units-okei) ) no-error.
     hSAXWriter:WRITE-DATA-ELEMENT("UnitType" , string(v-units-okei) ) no-error.
 
-    hSAXWriter:WRITE-DATA-ELEMENT("IsActive" , "Yes") no-error.
+    hSAXWriter:WRITE-DATA-ELEMENT("IsActive" , if buf_code.status_ = 0 then "Yes" else "No") no-error.
     hSAXWriter:WRITE-DATA-ELEMENT("EffectiveDate" , "2010-01-01") no-error.
     hSAXWriter:WRITE-DATA-ELEMENT("ExpirationDate" , "2100-01-01") no-error.
     
