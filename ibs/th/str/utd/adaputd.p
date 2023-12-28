@@ -276,6 +276,13 @@ do:
       temp_doc-line.vat-pc     = 100 * sum-vat / (buf_utd-lines.TotalWithVatExcluded / temp_doc-line.cli-qnty)
     .
     
+    if buf_utd-lines.TaxRate <> round ( temp_doc-line.vat-pc, 1 )
+    and temp_doc-line.price-rubl < 10
+    and abs(buf_utd-lines.TaxRate - temp_doc-line.vat-pc) < 1
+    then do :
+      temp_doc-line.vat-pc = buf_utd-lines.TaxRate .
+    end .
+    
     if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsArticForType(v-par-val)
     then do:
       
