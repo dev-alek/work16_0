@@ -73,7 +73,10 @@ then do:
 end.
 if new-{&main-tbl}.sts <> old-{&main-tbl}.sts then do:
   new-{&main-tbl}.last-change = now.
-end . 
+end .
+if new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB then do:
+  new-{&main-tbl}.loc-key = "".
+end .
 
 if new-{&main-tbl}.mark <> old-{&main-tbl}.mark then do:
   for each marking-attr exclusive-lock 

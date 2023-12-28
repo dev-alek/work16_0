@@ -148,7 +148,17 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     assign
       mCheckSts = 1
       mReqId        = ""
-      mReqTimeStamp = "".
+      mReqTimeStamp = ""
+      answerFlag = false
+      cash       = ""      
+      shift_id   = ""
+      chk_id     = ""
+      cntx_id    = ""
+      mark       = ""
+      action     = ""
+      shift_tbeg = ?
+      shift_num  = 0 
+    .
     
     cashSts =  new cash().
 
