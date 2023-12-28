@@ -102,8 +102,11 @@ FOR EACH chk-doc WHERE  chk-doc.obj-code = p-obj-code AND chk-date >= x-Date-Sta
 			
       find first bar-code where bar-code.b-code eq chk-gds.b-code no-lock no-error.
       IF AVAILABLE bar-code THEN  gds_chk = bar-code.gds-code.
-			
-      CREATE tt-chk.
+      find first tt-chk no-lock no-error.
+      IF NOT AVAILABLE tt-chk THEN DO:
+         CREATE tt-chk.
+      END.
+
       ASSIGN
          tt-chk.chk-num   = chk-doc.chk-num
          tt-chk.chk-z     = chk-doc.z-number
@@ -210,6 +213,7 @@ DO:
       .
 
    FOR EACH tt-chk:
+      
       if tt-chk.is-petrol THEN 
       do:                          /* если топливо       */ 
          if tt-chk.flag = "1" THEN 
@@ -438,7 +442,7 @@ DO:   /* без частичных возвратов */
       '</tbody>' skip .
 END.
 
-
+empty temp-table tt-chk.
 if error-status:error then
 do:
    message return-value view-as alert-box.
