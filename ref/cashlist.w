@@ -2165,12 +2165,15 @@ FUNCTION get-fo-version RETURNS CHARACTER
   define variable v-decimal    as decimal   no-undo .
   define variable v-integer    as integer   no-undo .
   define variable v-logical    as logical   no-undo .
+
   run cd-attr-value in this-procedure (
-    input  p-db-num
+    input   p-db-num
     ,input  p-obj-code
     ,input  p-pos-type
     ,input  p-cash-num
-    ,input  {&cda-IBM-XML_operative}
+    ,input  (if p-pos-type = {&cd-type-IBM-XML}
+    then {&cda-IBM-XML_operative}
+    else {&cda-AUTOTANK_operative})
     ,input  {&cda-IBM-XML_operative_fo-version}
     ,output v-fo-version
     ,output v-date
@@ -2178,7 +2181,6 @@ FUNCTION get-fo-version RETURNS CHARACTER
     ,output v-integer
     ,output v-logical
     ,output v-dop) no-error.
-
   RETURN v-fo-version.   /* Function return value. */
 
 END FUNCTION.
