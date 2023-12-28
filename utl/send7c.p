@@ -66,17 +66,13 @@ assign
         tt-utd.sts-edi = ub.c-utd.sts-edi
 .
 end.
-{ gbl/rum-runa.i
-           ?
-           this-procedure:handle
-           ?
-           {&edoc-proc_event_utd}
-           " buffer tt-utd:handle "
-           " buffer ub.utd:handle "
-           ''
-           ''
-           no-error
-       }
+  run bge\send1cerp.p (?,
+    this-procedure,
+    this-procedure,
+    "edi-doc",
+    (buffer tt-utd:handle),
+    (buffer ub.utd:handle),
+    ?) no-error.
 
 if error-status:error 
 then do:
