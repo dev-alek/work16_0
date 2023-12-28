@@ -141,11 +141,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       vgtin = ?.
    if vgtin ne ?
       and marking.gds-ext-id ne vgtin
+      and marking.unit-ext <> "LEVEL2"  /* EXPSD-8372 */
    then
-      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 макрки не равен &2",getGtinByDM(marking.mark),marking.gds-ext-id)) .
+      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 марки не равен &2",getGtinByDM(marking.mark),marking.gds-ext-id)) .
    if marking.gds-code ne getGdsCodeByGtin(marking.gds-ext-id)
    then
-      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 макрки относится к товару &2, в файле товар &3",marking.gds-ext-id,getGdsCodeByGtin(marking.gds-ext-id),marking.gds-code)) .
+      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 марки относится к товару &2, в файле товар &3",marking.gds-ext-id,getGdsCodeByGtin(marking.gds-ext-id),marking.gds-code)) .
    
    if     objImp:mrc ne 0 
       and objImp:mrc ne ?
