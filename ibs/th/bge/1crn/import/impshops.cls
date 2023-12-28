@@ -715,8 +715,14 @@ Action-role-item
     end .
     FOR EACH thbjattr_thbj-attr:
       case thbjattr_thbj-attr.prop-code :
-        when {&attr-marking_marking-EDO} then // объект работает с EDI
+        when {&attr-marking_marking-EDO} then do: // объект работает с EDI
           thbjattr_thbj-attr.property-value-logical = v-edi .
+          define variable mImp2CdH as handle no-undo.
+          run str/imp2cdgeth.p(output mImp2CdH).
+          run fill-code in mImp2CdH ({&TABLE_THBJ-ATTR},
+                                     thbjattr_thbj-attr.upper-prop-code,
+                                     thbjattr_thbj-attr.prop-code).
+        end.
       end case .
     END .
     thbjattr_set-section ({&shop}, v-obj-code, {&attr-marking}, input table thbjattr_thbj-attr) .

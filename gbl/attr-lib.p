@@ -5741,7 +5741,7 @@ define variable v-created as logical no-undo .
 
 define buffer buf_thbj-attr for ub.thbj-attr.
 define buffer buf_thbjattr_thbj-attr for thbjattr_thbj-attr.
-
+define buffer sys-ctrl for ub.sys-ctrl.
 main-block:
 do
 on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -5853,6 +5853,7 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
      end.
     end.
   end.
+  { gbl/objserref.i }
 end.
 end procedure. /* thbjattr_set-section */
 

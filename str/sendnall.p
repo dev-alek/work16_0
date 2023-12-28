@@ -521,7 +521,9 @@ for each buf_clients no-lock
                       ) no-error.
    end.
 end.
-
+if settingUpd then do:
+   { gbl/objserref.i }
+end.
 procedure sendnall_get-pdf : /*callback*/
 define input-output parameter p-ii as integer no-undo .
 define output parameter p-plt-id as integer no-undo .

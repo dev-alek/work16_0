@@ -124,23 +124,6 @@ DEFINE VARIABLE hDoc-out  AS HANDLE.
 DEFINE VARIABLE hRoot-out AS HANDLE.
 DEFINE VARIABLE hRow-out  AS HANDLE.
 
-/* временные таблицы */
-DEFINE TEMP-TABLE  in-ItemHowMany NO-UNDO
-    FIELD ItemCode   AS CHAR
-    FIELD IHMObject  AS CHAR
-    FIELD IHMObjCode AS INTEGER
-    FIELD IHMFact    AS DECIMAL
-    FIELD IHMFree    AS DECIMAL
-INDEX idx-code ItemCode
-.
-DEFINE TEMP-TABLE  Out-ItemHowMany NO-UNDO
-    FIELD ItemCode   AS CHAR
-    FIELD IHMObject  AS CHAR
-    FIELD IHMObjCode AS INTEGER
-    FIELD IHMFact    AS DECIMAL
-    FIELD IHMFree    AS DECIMAL
-INDEX idx-code ItemCode
-.
 &scop CRLF chr(13) + chr(10)
 &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 /* _UIB-CODE-BLOCK-END */

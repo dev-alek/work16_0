@@ -24,6 +24,7 @@ define temp-table locb-utd-err no-undo like  ub.utd-err.
 define temp-table locb-utd-err-attr no-undo like  ub.utd-err-attr.
 define temp-table locb-marking no-undo like  ub.marking.
 define temp-table locb-marking-attr no-undo like  ub.marking-attr.
+define variable gtin as character no-undo.
 { gbl/tmprecid.i}
 { utlcomp/pikey.i }
 { utl/gtin.i }

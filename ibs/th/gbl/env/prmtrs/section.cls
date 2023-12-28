@@ -50,8 +50,4 @@ class ibs.th.gbl.env.prmtrs.section inherits objth:
     return edo.
   end method.
   
-  method public void ResetEdo ():
-    delete object edo no-error.
-  end.
-
 end class.

@@ -64,7 +64,12 @@ on error undo, return error
   assign
     v-work-dir = file-info :full-pathname + {&back-slash-char}
   .
-
+  if     entry(1,propath) ne "."
+     and entry(1,propath) ne file-info :full-pathname
+  then
+     gen-dir = entry(1,propath).
+  else
+     gen-dir = entry(2,propath) no-error.
   run gbl/d-prompt.w (
       'title=':u + "Введите имя директории" + '\':u
     + 'text1=':u + "Введите имя директории" + '\':u

@@ -3049,9 +3049,45 @@ PROCEDURE proc-load-tax-rate-value: /* 82 */
   end.                                                                                 
 END PROCEDURE. /* proc-load-tax-rate-value 82 */
 
+define temp-table wt-thbj-attr no-undo like ub.thbj-attr. 
+PROCEDURE proc-load-thbj-attr: /* 83 */
+  define input parameter p-imp-handle as handle  no-undo.
+  define input parameter p-pck-num    as integer no-undo.
+  define input parameter l-counter    as integer no-undo.
+  do                                                  
+  on error  undo, return error substitute( "$proc-load-thbj-attr. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) 
+  on stop   undo, return error substitute( "$proc-load-thbj-attr. stop" )   
+  on endkey undo, return error substitute( "$proc-load-thbj-attr. endkey" ) 
+  :                                                   
+    define buffer tb-thbj-attr for ub.thbj-attr.            
+    define variable compare-log as logical no-undo.   
+    for each wt-thbj-attr  
+    on error undo, return error substitute( "$proc-load-thbj-attr(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  
+    :
+      delete wt-thbj-attr . 
+    end. 
+    create wt-thbj-attr.                    
+    run nws-impl in p-imp-handle         
+      ( input {&table_thbj-attr}          
+       ,input (buffer wt-thbj-attr:handle)  
+      ) no-error.                        
+    if error-status :error then do:      
+      return error return-value .        
+    end.                                 
+    find first tb-thbj-attr                 
+      where tb-thbj-attr.obj-type = wt-thbj-attr.obj-type
+        and tb-thbj-attr.obj-code = wt-thbj-attr.obj-code
+        and tb-thbj-attr.upper-prop-code = wt-thbj-attr.upper-prop-code
+        and tb-thbj-attr.prop-code = wt-thbj-attr.prop-code
+      exclusive-lock no-error.
+    { nws/inc/imp/thbjattr.i } 
+    delete wt-thbj-attr.                                                                  
+  end.                                                                                 
+END PROCEDURE. /* proc-load-thbj-attr 83 */
+
 { nws/inc/imp/def-out/trn-doc.i }
 define temp-table wt-trn-doc no-undo like ub.trn-doc. 
-PROCEDURE proc-load-trn-doc: /* 83 */
+PROCEDURE proc-load-trn-doc: /* 84 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3082,11 +3118,11 @@ PROCEDURE proc-load-trn-doc: /* 83 */
     { nws/inc/imp/trn-doc.i } 
     delete wt-trn-doc.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-trn-doc 83 */
+END PROCEDURE. /* proc-load-trn-doc 84 */
 
 { nws/inc/imp/def-out/c-trn-do.i }
 define temp-table wt-c-trn-doc no-undo like ub.c-trn-doc. 
-PROCEDURE proc-load-c-trn-doc: /* 84 */
+PROCEDURE proc-load-c-trn-doc: /* 85 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3119,11 +3155,11 @@ PROCEDURE proc-load-c-trn-doc: /* 84 */
     { nws/inc/imp/c-trn-do.i } 
     delete wt-c-trn-doc.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-c-trn-doc 84 */
+END PROCEDURE. /* proc-load-c-trn-doc 85 */
 
 { nws/inc/imp/def-out/turnbmai.i }
 define temp-table wt-turnover-buyer-main no-undo like ub.turnover-buyer-main. 
-PROCEDURE proc-load-turnover-buyer-main: /* 85 */
+PROCEDURE proc-load-turnover-buyer-main: /* 86 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3157,11 +3193,11 @@ PROCEDURE proc-load-turnover-buyer-main: /* 85 */
     { nws/inc/imp/turnbmai.i } 
     delete wt-turnover-buyer-main.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-turnover-buyer-main 85 */
+END PROCEDURE. /* proc-load-turnover-buyer-main 86 */
 
 { nws/inc/imp/def-out/tnvgroup.i }
 define temp-table wt-turnover-group no-undo like ub.turnover-group. 
-PROCEDURE proc-load-turnover-group: /* 86 */
+PROCEDURE proc-load-turnover-group: /* 87 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3193,11 +3229,11 @@ PROCEDURE proc-load-turnover-group: /* 86 */
     { nws/inc/imp/tnvgroup.i } 
     delete wt-turnover-group.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-turnover-group 86 */
+END PROCEDURE. /* proc-load-turnover-group 87 */
 
 { nws/inc/imp/def-out/wth-doc.i }
 define temp-table wt-wth-doc no-undo like ub.wth-doc. 
-PROCEDURE proc-load-wth-doc: /* 87 */
+PROCEDURE proc-load-wth-doc: /* 88 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3228,11 +3264,11 @@ PROCEDURE proc-load-wth-doc: /* 87 */
     { nws/inc/imp/wth-doc.i } 
     delete wt-wth-doc.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-wth-doc 87 */
+END PROCEDURE. /* proc-load-wth-doc 88 */
 
 { nws/inc/imp/def-out/c-wth-do.i }
 define temp-table wt-c-wth-doc no-undo like ub.c-wth-doc. 
-PROCEDURE proc-load-c-wth-doc: /* 88 */
+PROCEDURE proc-load-c-wth-doc: /* 89 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3265,11 +3301,11 @@ PROCEDURE proc-load-c-wth-doc: /* 88 */
     { nws/inc/imp/c-wth-do.i } 
     delete wt-c-wth-doc.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-c-wth-doc 88 */
+END PROCEDURE. /* proc-load-c-wth-doc 89 */
 
 { nws/inc/imp/def-out/xyzanaly.i }
 define temp-table wt-xyz-analysis no-undo like ub.xyz-analysis. 
-PROCEDURE proc-load-xyz-analysis: /* 89 */
+PROCEDURE proc-load-xyz-analysis: /* 90 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3301,10 +3337,10 @@ PROCEDURE proc-load-xyz-analysis: /* 89 */
     { nws/inc/imp/xyzanaly.i } 
     delete wt-xyz-analysis.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-xyz-analysis 89 */
+END PROCEDURE. /* proc-load-xyz-analysis 90 */
 
 define temp-table wt-code no-undo like ub.code. 
-PROCEDURE proc-load-code: /* 90 */
+PROCEDURE proc-load-code: /* 91 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3335,11 +3371,11 @@ PROCEDURE proc-load-code: /* 90 */
     { nws/inc/imp/code.i } 
     delete wt-code.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-code 90 */
+END PROCEDURE. /* proc-load-code 91 */
 
 { nws/inc/imp/def-out/utd.i }
 define temp-table wt-utd no-undo like ub.utd. 
-PROCEDURE proc-load-utd: /* 91 */
+PROCEDURE proc-load-utd: /* 92 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3349,9 +3385,7 @@ PROCEDURE proc-load-utd: /* 91 */
   on endkey undo, return error substitute( "$proc-load-utd. endkey" ) 
   :                                                   
     define buffer tb-utd for ub.utd.            
-    define variable compare-log as logical no-undo.
-    define variable gtin as character no-undo.
-
+    define variable compare-log as logical no-undo.   
     { nws/inc/imp/def-ins/utd.i }
     for each wt-utd  
     on error undo, return error substitute( "$proc-load-utd(del-wt-). &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )  
@@ -3373,10 +3407,10 @@ PROCEDURE proc-load-utd: /* 91 */
     { nws/inc/imp/utd.i } 
     delete wt-utd.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-utd 91 */
+END PROCEDURE. /* proc-load-utd 92 */
 
 define temp-table wt-chk-slip-head no-undo like ub.chk-slip-head. 
-PROCEDURE proc-load-chk-slip-head: /* 92 */
+PROCEDURE proc-load-chk-slip-head: /* 93 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3423,10 +3457,10 @@ PROCEDURE proc-load-chk-slip-head: /* 92 */
     end.                                                                                                            
     delete wt-chk-slip-head.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-chk-slip-head 92 */
+END PROCEDURE. /* proc-load-chk-slip-head 93 */
 
 define temp-table wt-chk-slip-string no-undo like ub.chk-slip-string. 
-PROCEDURE proc-load-chk-slip-string: /* 93 */
+PROCEDURE proc-load-chk-slip-string: /* 94 */
   define input parameter p-imp-handle as handle  no-undo.
   define input parameter p-pck-num    as integer no-undo.
   define input parameter l-counter    as integer no-undo.
@@ -3474,5 +3508,5 @@ PROCEDURE proc-load-chk-slip-string: /* 93 */
     end.                                                                                                            
     delete wt-chk-slip-string.                                                                  
   end.                                                                                 
-END PROCEDURE. /* proc-load-chk-slip-string 93 */
+END PROCEDURE. /* proc-load-chk-slip-string 94 */
 

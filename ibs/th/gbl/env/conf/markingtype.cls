@@ -26,7 +26,7 @@ class ibs.th.gbl.env.conf.markingtype inherits objth.
   
   define public property ConfVal as character initial "" no-undo 
     get.
-    private set.
+    set.
 
   constructor public markingtype ( conf_val as char ):
     super().
