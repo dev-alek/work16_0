@@ -388,11 +388,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   CheckUpd = new ibs.th.adm.upd.CheckUpd ().
   IF NOT THIS-PROCEDURE:PERSISTENT THEN 
   do while mWork:
-     if CheckUpd:isStopWork or CheckUpd:isNeedUpd
+     /* if  CheckUpd:isStopWork or CheckUpd:isNeedUpd 
      then do:
         RUN proc-stop-srv.
         mWork = no.
-     end.
+     end. */
      wait-for close of this-procedure pause 0.001.
      if valid-object(sktserv)
      then
