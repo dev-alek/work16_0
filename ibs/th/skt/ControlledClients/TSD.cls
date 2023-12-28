@@ -83,31 +83,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     get.
     set.
 
-  define private buffer buf_user      for ub.user-login.
-  define private buffer buf_goods     for ub.goods.
-  define private buffer buf_clients   for ub.clients.
-  define private buffer buf_shop      for ub.shop.
-  define private buffer buf_store     for ub.store.
-  define private buffer buf_bar-code  for ub.bar-code.
-  define private buffer buf_gds-obj   for ub.gds-obj.
-  define private buffer buf_price-all for ub.price-all.
-  define private buffer buf_prod-bc   for ub.prod-bc.
-  define private buffer buf_trn-doc   for ub.trn-doc.
-  define private buffer buf_doc-line  for ub.doc-line.
-  define private buffer buf_parts     for ub.parts.
-  define private buffer buf_gen-attr  for ub.gen-attr.
-  
   define private variable tthDocument as handle no-undo.
   define private stream tsdstream.
   define private variable logWrite     as class     LogWrite     no-undo.
   define private variable keyrec       as class     keyrec       no-undo.
-/*  define private variable flagsdoc     as class     flagsdoc     no-undo.*/
-/*  define private variable flagsdocline as class     flagsdocline no-undo.*/
   define private variable v-keyrec     as character no-undo.
-
-/*  define private variable isDocMarkOn  as logical   no-undo.       */
-/*  define private variable DocFlags     as integer   no-undo init 0.*/
-/*  define private variable DocLineFlags as integer   no-undo init 0.*/
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -208,7 +188,14 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define variable jj as integer no-undo.
     define variable jjm as integer no-undo.
     define variable iim as integer no-undo.
-
+    define buffer buf_trn-doc    for ub.trn-doc.
+    define buffer buf_doc-line   for ub.doc-line.
+    define buffer buf_goods      for ub.goods.
+    define buffer buf_bar-code   for ub.bar-code.
+    define buffer buf_parts      for ub.parts.
+    define buffer buf_gen-attr   for ub.gen-attr.
+    define buffer buf_user-login for ub.user-login.
+    
     def    var      internal-b-code like ub.bar-code.b-code no-undo .
     def    var      full-b-code     as character init "" no-undo .
     def    var      bc-frmt         as character no-undo .
@@ -384,15 +371,15 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       
       FactSum = if dFactSum > -1 and dFactSum < 1 then replace (string (dFactSum), ".", "0,") else replace (string (dFactSum), ".", ",").
       
-      find first buf_user where buf_user.user-id = buf_trn-doc.user-name no-error.
+      find first buf_user-login where buf_user-login.user-id = buf_trn-doc.user-name  no-lock no-error.
       
       tsdstreamopenapp("MT_documents.txt"). 
         put stream tsdstream unformatted buf_trn-doc.doc-code + {&delimiteFld} + 
         docType + {&delimiteFld} + "false" + {&delimiteFld} + buf_trn-doc.status_ + string (buf_trn-doc.flag, "+/-") + {&delimiteFld} + 
         string (buf_trn-doc.cli-code) + {&delimiteFld} + buf_trn-doc.cli-type + {&delimiteFld} + 
         string (buf_trn-doc.obj-code) + {&delimiteFld} + buf_trn-doc.obj-type + {&delimiteFld} + 
-        (if available (buf_user)
-        then buf_trn-doc.user-name + {&delimiteFld} + buf_user.user-login + {&delimiteFld} else {&delimiteFld} + {&delimiteFld}
+        (if available (buf_user-login)
+        then buf_trn-doc.user-name + {&delimiteFld} + buf_user-login.user-login + {&delimiteFld} else {&delimiteFld} + {&delimiteFld}
         ) +
         string (FactSum) + {&delimiteFld} + string (iso-date (datetime-tz (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))) + {&delimiteFld} 
         + string(myflagsDoc:FlagsToInt) + {&delimiterLine}.
@@ -413,6 +400,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define variable confPar   as character no-undo.
     define variable parType   as character no-undo.
     define variable statusOK  as logical   no-undo init false.
+    define buffer buf_clients   for ub.clients.
     run gbl/conf-rd.p ("tsd-list", "", "", 0, "", "", "", no, output confPar, output parType) no-error.
     if lookup (SN, confPar, ";") > 0 
       then statusOK = true.
@@ -431,10 +419,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
   method public void WriteUsers ():
     define variable dbNum as integer no-undo.
+    define buffer buf_user-login for ub.user-login.
     tsdstreamopen("TH_users.txt").
     dbNum = GetDbNum().
-    for each buf_user where buf_user.status_ = 0 and buf_user.db-num = dbNum no-lock:
-      put stream tsdstream unformatted buf_user.user-id + {&delimiteFld} + buf_user.user-login + {&delimiterLine}.
+    for each buf_user-login where buf_user-login.status_ = 0 and buf_user-login.db-num = dbNum no-lock:
+      put stream tsdstream unformatted buf_user-login.user-id + {&delimiteFld} + buf_user-login.user-login + {&delimiterLine}.
     end.
     tsdstreamclose().
     
@@ -442,7 +431,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
 
   method public void WriteObjects ():
-
+    define buffer buf_clients   for ub.clients.
     tsdstreamopen("TH_objects.txt").    
     for each buf_clients where buf_clients.stts = 0 and (buf_clients.obj-type = "маг" or buf_clients.obj-type = "скл") no-lock:
      put stream tsdstream unformatted 
@@ -457,7 +446,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
 
   method public void WriteClients ():
-    
+    define buffer buf_clients   for ub.clients.
     tsdstreamopen("TH_clients.txt"). 
     for each buf_clients where buf_clients.stts = 0 and (buf_clients.obj-type = "орг" 
       or buf_clients.obj-type = "чел" or buf_clients.obj-type = {&shop} or buf_clients.obj-type = {&stock})
@@ -480,6 +469,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define variable dVatPc      as decimal   no-undo.
     define variable is-petrol   as logical no-undo.
     define variable is-pieces   as logical no-undo.  
+    define buffer buf_goods     for ub.goods.
+    define buffer buf_gds-obj   for ub.gds-obj.
 
     tsdstreamopen("TH_goods.txt").
     cicle:
@@ -573,7 +564,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define variable v-par-type      as character no-undo .
     define variable is-petrol      as logical no-undo.
     define variable is-pieces      as logical no-undo.    
-    
+    define buffer buf_goods     for ub.goods.
+    define buffer buf_bar-code  for ub.bar-code.
+    define buffer buf_price-all for ub.price-all.
+    define buffer buf_prod-bc   for ub.prod-bc.
+
     run gbl/conf-rd.p ("bc-pfx", "", "", 0, "", "", "", yes, output bc-pfx, output v-par-type) no-error.
     run gbl/conf-rd.p ("bc-frmt", "", "", 0, "", "", "", yes, output bc-frmt, output v-par-type) no-error.   
     empty temp-table TempBCode.
@@ -885,7 +880,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           and buf_doc-line.prod-code = ub.goods.prod-code
           no-error  .
         if available buf_doc-line then do:
-          find first buf_doc-line-attr where buf_doc-line-attr.doc-code = buf_doc-line.doc-code and buf_doc-line-attr.gds-code = ub.goods.gds-code and buf_doc-line-attr.attr-code = "tsd-qnty" no-error.
+          find first buf_doc-line-attr where buf_doc-line-attr.doc-code = buf_doc-line.doc-code and buf_doc-line-attr.gds-code = ub.goods.gds-code and buf_doc-line-attr.attr-code = "tsd-qnty" no-lock no-error.
           if not available buf_doc-line-attr and first-of (TempDocLine.gds-code)
             then do:
               create buf_doc-line-attr.
@@ -1054,11 +1049,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       for each TempMarkLine where TempMarkLine.Sts = "Check" or TempMarkLine.Sts = "CheckScan" or TempMarkLine.Sts = "CrTsd" :
         find first ub.utd-marking-lines where ub.utd-marking-lines.db-num = v-utd-db-num and ub.utd-marking-lines.doc-id = v-utd-doc-id 
           and ub.utd-marking-lines.mark = TempMarkLine.MarkCode 
-          no-error.
+          exclusive-lock no-error.
         if available (ub.utd-marking-lines)
         then do:
           ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
-          find first ub.marking where ub.marking.mark = TempMarkLine.MarkCode no-error.
+          find first ub.marking where ub.marking.mark = TempMarkLine.MarkCode no-lock no-error.
 /*          ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.*/
           if available  ub.marking and TempMarkLine.Sts = "CheckScan"
             then ungrg(ub.marking.mark-parent).
@@ -1072,7 +1067,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           do:
             find first buf_utd-marking-lines where
                   buf_utd-marking-lines.db-num = v-utd-db-num and buf_utd-marking-lines.doc-id = v-utd-doc-id 
-              and buf_utd-marking-lines.mark begins TempMarkLine.MarkParent no-error.
+              and buf_utd-marking-lines.mark begins TempMarkLine.MarkParent exclusive-lock no-error.
             if not available (buf_utd-marking-lines)
             then do:
               LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + substitute ("Нарушена целостности либо изменен документ &1 на стороне TH", v-utd-doc-id).
@@ -1091,7 +1086,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
              .
             if ismark(v-mark-ident)
             then do:
-               find first ub.marking where ub.marking.mark = v-mark-ident no-error.
+               find first ub.marking where ub.marking.mark = v-mark-ident exclusive-lock no-error.
                if not available (ub.marking) 
                  then create ub.marking .
                assign
@@ -1138,7 +1133,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
   method private void ungrg (mark-parent as char):
     define buffer buf_m for ub.marking.
-    for each buf_m where buf_m.mark = mark-parent :
+    for each buf_m where buf_m.mark = mark-parent exclusive-lock :
       buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
       ungrg(buf_m.mark-parent).
     end. 
@@ -1157,7 +1152,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       
       if TempTrnDoc.ext-doc-type = "InvIntroduce"
       then do:
-        find first ub.utd where ub.utd.doc-code = TempTrnDoc.ext-doc-code no-error.
+        find first ub.utd where ub.utd.doc-code = TempTrnDoc.ext-doc-code no-lock no-error.
         if not available (ub.utd)
           then next.
         v-utd-db-num = ub.utd.db-num.
@@ -1180,7 +1175,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         if available ( ub.utd-marking-lines)
           then next.
         
-        find first ub.marking where ub.marking.mark = ub.utd-marking-lines.mark no-error.
+        find first ub.marking where ub.marking.mark = ub.utd-marking-lines.mark exclusive-lock no-error.
         if available (ub.marking)
         then do:
           ub.marking.sts = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
@@ -1232,7 +1227,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             then next.
        end.
         
-        find first buf_marking where (buf_marking.mark = TempMarkLine.MarkCode) no-error.
+        find first buf_marking where (buf_marking.mark = TempMarkLine.MarkCode) no-lock no-error.
       
         if not available (buf_marking)
         then do:
@@ -1247,7 +1242,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         find first bf_doc-line where bf_doc-line.doc-code = v-inv-doc
           and bf_doc-line.artic = ub.goods.artic
           and bf_doc-line.prod-type = ub.goods.prod-type
-          and bf_doc-line.prod-code = ub.goods.prod-code no-error.
+          and bf_doc-line.prod-code = ub.goods.prod-code no-lock no-error.
         
         if not available (bf_doc-line)
         then do:
@@ -1328,7 +1323,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   on error undo, return error
   :
     
-    find first ub.goods-attr where ub.goods-attr.gds-code = p-gds-code and ub.goods-attr.attr-code = {&attr-mark-type} no-error. 
+    find first ub.goods-attr where ub.goods-attr.gds-code = p-gds-code and ub.goods-attr.attr-code = {&attr-mark-type} no-lock no-error. 
     
     if available ub.goods-attr
       then return ub.goods-attr.attr-value.
@@ -1364,7 +1359,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define buffer buf_m-par       for ub.marking.
     define buffer buf_utd-l       for ub.utd-lines.
     define buffer buf_m           for ub.marking.
-    
+    define buffer buf_goods     for ub.goods.
+    define buffer buf_bar-code  for ub.bar-code.
+    define buffer buf_trn-doc   for ub.trn-doc.
+    define buffer buf_doc-line  for ub.doc-line.
     
     define variable dFactSum   as decimal   no-undo.
     define variable factQnty   as character no-undo.
