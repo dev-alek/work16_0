@@ -1400,16 +1400,16 @@ class ibs.th.utl.method-for-draw-utility final:
     
                   define variable v-has-records as logical no-undo.
                   for each ub.cash-desk no-lock where ub.cash-desk.db-num = v-cntxt-db-num-obj
-                    and ub.cash-desk.obj-code = v-cntxt-obj-code 
-                    and ub.cash-desk.pos-type <> "IBM-XML":
+                    and ub.cash-desk.obj-code = v-cntxt-obj-code :
+                    /*  and ub.cash-desk.pos-type = "IBM-XML"    */ 
                     v-has-records = true .
                     leave.    
                   end.
                   if not v-has-records
                     then
                     for each ub.cash-desk-attr no-lock where ub.cash-desk-attr.db-num = v-cntxt-db-num-obj
-                      and ub.cash-desk-attr.obj-code = v-cntxt-obj-code 
-                      and ub.cash-desk-attr.pos-type <> "IBM-XML":
+                      and ub.cash-desk-attr.obj-code = v-cntxt-obj-code : 
+                      /* and ub.cash-desk-attr.pos-type <> "IBM-XML" */ 
                       v-has-records = true .
                       leave.    
                     end.
