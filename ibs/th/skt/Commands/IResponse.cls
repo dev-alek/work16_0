@@ -37,7 +37,8 @@ class ibs.th.skt.Commands.IResponse abstract:
          condition = arg.
    end.
    
-   define public property ContentLength as int64 no-undo 
+   
+   define public property Content-Type as character  no-undo init "text/html; charset=UTF-8" 
    get.
    set.
    
@@ -45,8 +46,10 @@ class ibs.th.skt.Commands.IResponse abstract:
    get.
    set(arg as memptr):
       Content = arg.
-      ContentLength = get-size(Content).
    end.
+
+   define public property ContentLength as int64 no-undo 
+   get : return get-size(Content). end.
    
    define public property ParamWait as char no-undo 
    get.
@@ -58,17 +61,24 @@ class ibs.th.skt.Commands.IResponse abstract:
       set-size(Content) = length(arg,"raw").
       copy-lob
       from object arg
-      to object Content
-      convert target codepage "UTF-8".
-      ContentLength = length(arg,"raw").
-      
+      to object Content.
    end.
-
+   
+   method public void setContent(arg as char ):
+      define variable VStr as longchar no-undo.
+      set-size(Content) = 0.
+      VStr = arg + chr(13) + chr(10).
+      set-size(Content) = length(VStr,"raw").
+      copy-lob
+      from object VStr
+      to object Content.
+   end.
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public IResponse ( ):
+	   set-size(Content) = 0.
       delete object STSlist.
 	end destructor.
  

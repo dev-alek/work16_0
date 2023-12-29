@@ -42,16 +42,18 @@ define variable char-gds-code as character no-undo.
     define buffer buf_goods for ub.goods.
     define buffer buf_ext-system for ub.ext-system.
     define variable cursorr  as integer no-undo init 0.
-  define variable code_goods_name as character no-undo.
+    define variable code_goods_name as character no-undo.
     define variable v-list      as character no-undo.
     define variable p-goods-gds  as integer no-undo.
     define variable p-name-goods as char no-undo.
+    define variable codeDtSeason as character no-undo.
     define variable i as integer   no-undo .
     
 { ref/extclass.i }
 { cmp/str-glbl.i }
 { gbl/key-rec.i }
 { gbl/getcntxt.i def }
+{ ref/gds-attr.i }
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -99,6 +101,7 @@ DEFINE BUTTON btn_cancel AUTO-END-KEY
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     TOOLTIP "Нажмите, чтобы выбрать из справочника товаров"
      LABEL "" 
      SIZE 3 BY .89.
 
@@ -107,6 +110,7 @@ DEFINE BUTTON btn_cancel AUTO-END-KEY
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+     TOOLTIP "Нажмите, чтобы выбрать ~"Сезон ДТ~""
      LABEL "" 
      SIZE 3 BY .89.
      
@@ -146,14 +150,14 @@ DEFINE VARIABLE code_vnesh AS CHARACTER FORMAT "X(256)":U
 DEFINE FRAME Dialog-Frame
    
     code_system AT ROW 5.5 COL 35 COLON-ALIGNED WIDGET-ID 2
-    code_goods AT ROW 6.75 COL 35 COLON-ALIGNED WIDGET-ID 4
     code_vnesh at row 8 col 35 COLON-ALIGNED WIDGET-ID 6
     btn_save AT ROW 2 COL 2.5
     btn_cancel AT ROW 2 COL 59
     b-system AT ROW 5.5 COL 55 COLON-ALIGNED WIDGET-ID 8
-    b-goods-much at row 6.75 COL 58 COLON-ALIGNED WIDGET-ID 12
+    code_goods AT ROW 6.75 COL 35 COLON-ALIGNED WIDGET-ID 4
     b-goods AT ROW 6.75 COL 55 COLON-ALIGNED WIDGET-ID 10     
-    name_goods at row 6.75 col 64 COLON-ALIGNED no-label
+    name_goods at row 6.75 col 58 COLON-ALIGNED no-label
+    b-goods-much at row 6.75 COL 83 COLON-ALIGNED WIDGET-ID 12
     SPACE(12.12) SKIP(4.53)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
     SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -185,7 +189,11 @@ ASSIGN
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
- 
+ASSIGN
+  b-goods-much:HIDDEN IN FRAME Dialog-Frame           = TRUE
+  name_goods:HIDDEN IN FRAME Dialog-Frame             = TRUE
+  name_goods:READ-ONLY IN FRAME Dialog-Frame          = TRUE
+.
 
 
 
@@ -214,17 +222,7 @@ ON CHOOSE OF btn_save IN FRAME Dialog-Frame
         
       
         v-value-character = code_vnesh.
-      .
-        repeat i = 1 to num-entries (code_goods) :
-            
-            find first buf_goods  no-lock where  buf_goods.gds-code =  integer(entry(i, code_goods)) no-error.
-            if  error-status:error then
-            do:    
-       
-                message "Товар с кодом " entry (i, code_goods) " не найден!" view-as alert-box.
-                return no-apply.
-            end.
-        end. 
+      
             
             
         if code_system = "" then 
@@ -246,6 +244,16 @@ ON CHOOSE OF btn_save IN FRAME Dialog-Frame
             return no-apply.
         end.
  
+        repeat i = 1 to num-entries (code_goods) :
+            
+            find first buf_goods  no-lock where  buf_goods.gds-code =  integer(entry(i, code_goods)) no-error.
+            if  error-status:error then
+            do:    
+       
+                message "Товар с кодом " entry (i, code_goods) " не найден!" view-as alert-box.
+                return no-apply.
+            end.
+        end. 
             
             repeat i = 1 to num-entries (code_goods) :
             
@@ -264,7 +272,7 @@ ON CHOOSE OF btn_save IN FRAME Dialog-Frame
                     ,input 0  /*p-db-num*/
                     ,input entry (i, code_goods) /*p-key#_one*/
                     ,input code_system /*p-Key#_Two*/
-                    ,input 0 /*p-key#_Three*/
+                    ,input integer(codeDtSeason) /*p-key#_Three*/
                     ,input v-value-character  /*p-CharKey_One */
                     ,input '':U /*p-CharKey_two */
                     ,input '' /*p-CharKey_three */
@@ -286,20 +294,10 @@ ON CHOOSE OF btn_save IN FRAME Dialog-Frame
      /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-   
-
-
-
-     /* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 &Scoped-define SELF-NAME b-system
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-system Dialog-Frame
 ON CHOOSE OF b-system IN FRAME Dialog-Frame
     DO:
-    
-
         run bge/oxmlexts.p (
             input parparentproc,
             input 2,
@@ -340,8 +338,7 @@ ON CHOOSE OF b-system IN FRAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-goods Dialog-Frame
 ON CHOOSE OF b-goods IN FRAME Dialog-Frame
     DO:
-        
-        
+        define variable canSetDtSeason as logical no-undo.
         assign code_goods .
     
         run ref/gds-ref.p (parparentproc, 'b-sel', ?, ?, ?, ?, ?, ?, ?, v-cntxt-obj-type, v-cntxt-obj-code, ?, output v-list) no-error.
@@ -352,19 +349,32 @@ ON CHOOSE OF b-goods IN FRAME Dialog-Frame
         end.
         v-ok = false.
         
-        for first ub.goods no-lock where recid(ub.goods) =  integer(v-list)
-            :
-                   
-            find first buf_goods where recid(buf_goods) = recid(ub.goods) no-error.
-                
-               
-            
+        for first ub.goods no-lock where recid(ub.goods) =  integer(v-list):
+            assign
+                code_goods:screen-value = string(goods.gds-code)
+                code_goods:tooltip      = goods.gds-name 
+            no-error.
+            run gds-attr_check-can-set-dt-seasons in this-procedure
+              (goods.gds-code, output canSetDtSeason).
+            if canSetDtSeason then
+            do:
+              assign
+                b-goods-much:visible = true
+                name_goods:visible = true
+                name_goods = ""
+              .
+/*              display name_goods with frame {&frame-name}.*/
+              enable name_goods b-goods-much with frame {&frame-name}.
+            end.
+            else do:
+              assign
+                b-goods-much:visible = false
+                name_goods:visible = false
+                codeDtSeason = ""
+              .
+            end.
         end.
-        code_goods:screen-value = string(buf_goods.gds-code) no-error.
-      
-        
 /*        apply "leave" to code_goods.*/
-        
     end.
     /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -373,54 +383,34 @@ ON CHOOSE OF b-goods IN FRAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-goods Dialog-Frame
 ON CHOOSE OF b-goods-much IN FRAME Dialog-Frame
     DO:
-        
-   
-        
-        assign code_goods .
-       name_goods:screen-value = "".
-       
-            run ref/gds-ref.p (input parparentproc, 
-                               input "b-sel",
-                               input ?,
-                               input ?, 
-                               input ?, 
-                               input ?, 
-                               input ?,
-                               input ?,
-                               input ?,
-                               input v-cntxt-obj-type,
-                               input v-cntxt-obj-code, 
-                               input ?, 
-                               output ref-list) no-error.
-    
- if error-status:error or ref-list = ? or ref-list = "" then 
-        do:
-            message "Ошибка при выборе товара для добавления в справочник." view-as alert-box.
-            return no-apply.
-        end.
-        v-ok = false.
-       
-        repeat i = 1 to num-entries (ref-list) :
-          find first buf_goods where recid (buf_goods) = integer (entry (i, ref-list)) no-lock  .
-          char-gds-code = char-gds-code + string(buf_goods.gds-code) + ",".
-   
-         end.
-               char-gds-code = right-trim(char-gds-code, ",") .
- code_goods:screen-value = char-gds-code no-error.
- 
+      define variable rid            as recid no-undo .
+      define buffer buf_code       for ub.code.
 
- 
-/*      apply "leave" to code_goods.*/
-  
-  
-
-   end.  
+      run ref/dtseasons.p
+        (input  parparentproc
+        ,output rid
+        ) no-error.
+      if rid <> ? then 
+      do:
+        find first buf_code no-lock where
+                   recid(buf_code) = rid no-error .
+        if not avail buf_code then return no-apply.
+        assign
+          codeDtSeason = buf_code.code
+          name_goods = buf_code.codename
+        .
+      end.
+      else 
+      do:
+        assign
+          codeDtSeason = ""
+          name_goods = ""
+        .
+      end.
+      display name_goods with frame {&frame-name}.
+    END.  
     /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
-
-
 
 &UNDEFINE SELF-NAME
 
@@ -478,9 +468,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY code_system code_goods b-system b-goods code_vnesh name_goods b-goods-much
+  DISPLAY code_system code_goods b-system b-goods code_vnesh
       WITH FRAME Dialog-Frame.
-  ENABLE btn_save btn_cancel code_system code_goods b-system b-goods code_vnesh b-goods-much
+  ENABLE btn_save btn_cancel code_system code_goods b-system b-goods code_vnesh
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

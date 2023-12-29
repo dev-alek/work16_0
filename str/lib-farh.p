@@ -2665,7 +2665,8 @@ find first bf_fin-doc where bf_fin-doc.host-code    = parhost-code    and
     find first bf-second_fin-code-cor-acc where bf-second_fin-code-cor-acc.host-code = bf_fin-doc.host-code and
                                                 bf-second_fin-code-cor-acc.fin-code  = bf_fin-doc.cor-acc1  no-lock no-error.
     if not available bf-second_fin-code-cor-acc then do:
-      if bf_sysconf.is-cassa-acc then do:
+      /* EXPSD-8392 временна€ заплатка дл€ удалени€ док-та переноса остатков. —моделировать создание такого док-та не удалось */
+      if bf_sysconf.is-cassa-acc and not bf_fin-doc.prn-doc-code begins "тех" and program-name(3) <> "trg/finddocdl.p" then do:
         return error substitute ("Ќе найден корреспондирующий счет по фирме &1. ¬нутренний номер счета &2.", bf_fin-doc.host-code, bf_fin-doc.cor-acc1).
       end.
     end.

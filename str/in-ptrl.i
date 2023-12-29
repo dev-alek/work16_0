@@ -1797,8 +1797,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               infoSectionsTotal:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
             end .
           end.
+          infoSectionsTotal:SaveDB().
         end .
-        infoSectionsTotal:SaveDB().
+        
         
         run placelib_get-attr(input {&place-virtual}
                              ,input t-doc.obj-code
@@ -2195,9 +2196,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             
             do ii = 1 to p-infoSectionsTotal:SectionNum :
               infoSectionObj = p-infoSectionsTotal:GetInfoSectionProp(ii).
-              infoSectionObj:FactQnty = infoSectionObj:TankVol.
-              infoSectionObj:FactDensity = infoSectionObj:TankDensity.
-              p-infoSectionsTotal:SaveDb().
+              if p-mode ne {&lookup}
+              then do:
+                 infoSectionObj:FactQnty = infoSectionObj:TankVol.
+                 infoSectionObj:FactDensity = infoSectionObj:TankDensity.
+                 p-infoSectionsTotal:SaveDb().
+              end.
               p-infoSectionsTotal:GetDBAllAttr().
               p-infoSectionsTotal:CalculateTotal().
             end.
@@ -2408,7 +2412,9 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               end.
             
             end.
-            p-infoSectionsTotal:SaveDb().
+            if p-mode ne {&lookup}
+            then
+               p-infoSectionsTotal:SaveDb().
             p-infoSectionsTotal:GetDBAllAttr().
             p-infoSectionsTotal:CalculateTotal().
             
@@ -3154,39 +3160,39 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         
         if trn-type = {&is-fuel}
         then do :  
-/*          find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = varcar-num                                             */
-/*                                                  and sep_auto-tank-attr.attr-code = "auto-sep"                                            */
-/*                                                  no-error.                                                                                */
-/*          if available sep_auto-tank-attr                                                                                                  */
-/*          and logical(sep_auto-tank-attr.attr-value)                                                                                       */
-/*          then do : /* АЦ с СГДКК */                                                                                                       */
-/*                                                                                                                                           */
-/*          end .                                                                                                                            */
-/*          else do : /* Обычная АЦ без СГДКК */                                                                                             */
-/*            secs_ :                                                                                                                        */
-/*            for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code                                     */
-/*                                                 and buf_doc-line-attr.attr-code = "n",                                                    */
-/*            first buf_goods no-lock where buf_goods.gds-code = buf_doc-line-attr.gds-code                                                  */
-/*            :                                                                                                                              */
-/*              infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().                                                                      */
-/*              infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).                                          */
-/*              infoSectionsTotal:GetDBAllAttr().                                                                                            */
-/*              do ii = 1 to infoSectionsTotal:SectionNum :                                                                                  */
-/*                infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .                                                                    */
-/*                if not (infoSecObj:TankWeight > 0)                                                                                         */
-/*                or infoSecObj:TankWeight = ?                                                                                               */
-/*                or infoSecObj:TankDensity = ?                                                                                              */
-/*                then do :                                                                                                                  */
-/*                  delete object infoSectionsTotal.                                                                                         */
-/*                  message                                                                                                                  */
-/*                    "Перед созданием документов сверки по накладной необходимо заполнить всю дополнительную информацию по приемке топлива!"*/
-/*                  view-as alert-box .                                                                                                      */
-/*                  return .                                                                                                                 */
-/*                end .                                                                                                                      */
-/*              end .                                                                                                                        */
-/*              delete object infoSectionsTotal.                                                                                             */
-/*            end .                                                                                                                          */
-/*          end .                                                                                                                            */
+          find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = varcar-num
+                                                  and sep_auto-tank-attr.attr-code = "auto-sep"
+                                                  no-error.
+          if available sep_auto-tank-attr
+          and logical(sep_auto-tank-attr.attr-value)
+          then do : /* АЦ с СГДКК */
+            
+          end .
+          else do : /* Обычная АЦ без СГДКК */
+            secs_ :
+            for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                                 and buf_doc-line-attr.attr-code = "n",
+            first buf_goods no-lock where buf_goods.gds-code = buf_doc-line-attr.gds-code
+            :
+              infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
+              infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+              infoSectionsTotal:GetDBAllAttr().
+              do ii = 1 to infoSectionsTotal:SectionNum :
+                infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+                if not (infoSecObj:TankWeight > 0)
+                or infoSecObj:TankWeight = ?
+                or infoSecObj:TankDensity = ?
+                then do :
+                  delete object infoSectionsTotal.
+                  message
+                    "Перед созданием документов сверки по накладной необходимо заполнить всю дополнительную информацию по приемке топлива!"
+                  view-as alert-box .
+                  return .
+                end .
+              end .
+              delete object infoSectionsTotal.
+            end .
+          end .
             
           v-kpsecs = "" .
           v-need-rvs-sec = "" .
@@ -3337,16 +3343,15 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         
         if v-kpsecs > ""
         then do :
-/*          run gbl/d-askw.w (                                                                                                                                                              */
-/*             input "Выбор способа выполнения комиссионного приёма"                                                                                                                        */
-/*            ,input ("Для секций " + v-kpsecs + " требуется комиссионный прием. Каким способом будет выполняться комиссионный прием?")                                                     */
-/*            ,input "|"                                                                                                                                                                    */
-/*            ,input "Замеры в АЦ|По сверкам|Отмена"                                                                                                                                        */
-/*            ,input "Выполнение комиссионного приёма стандартным способом по замерам в автоцистерне|Выполнение комиссионного приёма по данным сверок в резервуаре|Отказ от создания сверок"*/
-/*            ,input 1                                                                                                                                                                      */
-/*            ,input 3                                                                                                                                                                      */
-/*            ,output choice).                                                                                                                                                              */
-          choice = 1 .
+          run gbl/d-askw.w (
+             input "Выбор способа выполнения комиссионного приёма"
+            ,input ("Для секций " + v-kpsecs + " требуется комиссионный прием. Каким способом будет выполняться комиссионный прием?")
+            ,input "|"
+            ,input "Замеры в АЦ|По сверкам|Отмена"
+            ,input "Выполнение комиссионного приёма стандартным способом по замерам в автоцистерне|Выполнение комиссионного приёма по данным сверок в резервуаре|Отказ от создания сверок"
+            ,input 1
+            ,input 3
+            ,output choice).
           case choice :
             when 1
             then do :

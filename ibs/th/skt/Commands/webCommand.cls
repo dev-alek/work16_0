@@ -40,7 +40,6 @@ class ibs.th.skt.Commands.webCommand inherits ICommand:
     private set.
 
   define private variable websrv      as class     websrv .
-  define private variable logWrite    as class     LogWrite no-undo.
   define private variable hRoot       as handle    no-undo.
   define private variable hDoc        as handle    no-undo.
   define private variable hRow        as handle    no-undo.
@@ -71,8 +70,7 @@ class ibs.th.skt.Commands.webCommand inherits ICommand:
     define variable ANS as logical .
     
     websrv = new websrv().
-    logWrite = new LogWrite().
-
+    
     create x-document hDoc.
     create x-noderef  hRoot.
 /*    create x-noderef  hRow.*/
@@ -185,7 +183,7 @@ class ibs.th.skt.Commands.webCommand inherits ICommand:
     end.
     
   end /*trans*/.
-    
+    delete object websrv.
 /*  return resp.*/
     
   end method.
@@ -949,6 +947,7 @@ class ibs.th.skt.Commands.webCommand inherits ICommand:
     
     assign
       glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
+    set-size(mbuffer1) = 0.
     if not glog
       then do:
         LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".

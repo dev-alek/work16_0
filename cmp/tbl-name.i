@@ -354,13 +354,14 @@ Creation date: 04/05/06
 &glob table_c-layout-elem-rule 'c-layout-elem-rule':U
 &glob table_c-layout-elem-rule-attr 'c-layout-elem-rule-attr':U
 &glob table_c-marking 'c-marking':U
+&glob table_c-marking-attr 'c-marking-attr':U
 &glob table_c-norm-loss 'c-norm-loss':U
 &glob table_c-nozzle 'c-nozzle':U
 &glob table_c-nozzle-attr 'c-nozzle-attr':U
 &glob table_c-nzl-hist 'c-nzl-hist':U
 &glob table_c-obj-grp-obj-price 'c-obj-grp-obj-price':U
 &glob table_c-OperServ 'c-OperServ':U
-&glob table_c-operServAttr 'c-operServAttr':U
+&glob table_c-OperServAttr 'c-OperServAttr':U
 &glob table_c-ord-doc 'c-ord-doc':U
 &glob table_c-ord-doc-attr 'c-ord-doc-attr':U
 &glob table_c-ord-dtl 'c-ord-dtl':U

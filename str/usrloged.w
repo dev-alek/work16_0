@@ -496,7 +496,7 @@ PROCEDURE update-record :
 
       assign
         fi-user-login
-        t-user-administrator
+/*        t-user-administrator*/
         fi-max-discnt
         t-quest-print
       .

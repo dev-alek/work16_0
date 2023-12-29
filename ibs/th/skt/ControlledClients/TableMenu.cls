@@ -34,12 +34,9 @@ class ibs.th.skt.ControlledClients.TableMenu:
     get.
     set.
 
-  define private variable response   as character no-undo.
-  define private variable v-parsed   as character no-undo.
-  define private variable v-sea-code as integer   no-undo.
-  define private variable v-obj-code as integer   no-undo.
-  define private variable v-grp-rus  as character no-undo.
-  define private variable v-grp-eng  as character no-undo.
+  
+
+  
   define variable logWrite      as class   LogWrite no-undo.
   define variable mbuffer-out   as memptr  no-undo.
   define variable v-cont-length as integer no-undo.
@@ -56,6 +53,9 @@ class ibs.th.skt.ControlledClients.TableMenu:
 
 
   method public void WriteCSVGrp ():
+    define variable response   as character no-undo.
+    define variable v-grp-rus  as character no-undo.
+    define variable v-grp-eng  as character no-undo.
     
     for each ub.season no-lock:
       if ub.season.stts <> 0 then next.
@@ -73,10 +73,25 @@ class ibs.th.skt.ControlledClients.TableMenu:
 
 
   method public void WriteCSVGds (cont as longchar):
-
+    define variable response   as character no-undo.
+    define variable v-parsed   as character no-undo.
+    define variable v-sea-code as integer   no-undo.
+    define variable v-obj-code as integer   no-undo.
+    
     v-parsed = trim(substring(cont, (index(cont, 'grp=') + 4), (index(cont, '/') - (index(cont, 'grp=') + 4))), '"').
-    v-obj-code = integer(entry(1, v-parsed, ';')).
-    v-sea-code = integer(entry(2, v-parsed, ';')).
+    v-obj-code = integer(entry(1, v-parsed, ';')) no-error.
+    if error-status:error
+    then do:
+       logWrite:LogStr = "Не передан объект в запросе".
+       return error.
+    end.
+       
+    v-sea-code = integer(entry(2, v-parsed, ';')) no-error.
+    if error-status:error
+    then do:
+       logWrite:LogStr = "Не передан группа в запросе".
+       return error.
+    end.
     logWrite:LogStr = "".
     for each ub.gds-season where ub.gds-season.sea-code = v-sea-code no-lock:
       find first ub.goods where ub.goods.gds-code = ub.gds-season.gds-code no-lock no-error.
@@ -86,7 +101,7 @@ class ibs.th.skt.ControlledClients.TableMenu:
         and ub.gds-obj.gds-code = ub.goods.gds-code no-lock no-error.
       if not available(ub.gds-obj) then 
       do:
-        logWrite:LogStr = logWrite:LogStr + substitute ('&3Ошибка: Товар "&1" Код: "&2". Убедитесь, что на товар назначена цена.', ub.goods.gds-name, ub.goods.gds-code,{&new-line}).
+        logWrite:WriteFileToLog( substitute ('&3Ошибка: Товар "&1" Код: "&2". Убедитесь, что на товар назначена цена.', ub.goods.gds-name, ub.goods.gds-code,{&new-line})).
         next.
       end.
       
@@ -109,7 +124,7 @@ class ibs.th.skt.ControlledClients.TableMenu:
       objType = MarkType:GetProp(v-value).
       if objType ne MarkType:Unknow
       then do:
-         logWrite:LogStr = logWrite:LogStr + substitute ('&4Товар "&1" Код: "&2" установлен тип маркировки "&3". Товар пропущен.',  ub.goods.gds-name, string(ub.goods.gds-code), objType:Label_,{&new-line}).
+         logWrite:WriteFileToLog( substitute ('&4Товар "&1" Код: "&2" установлен тип маркировки "&3". Товар пропущен.',  ub.goods.gds-name, string(ub.goods.gds-code), objType:Label_,{&new-line})).
          next.
       end.
       find first ub.bar-code where ub.bar-code.gds-code = ub.goods.gds-code

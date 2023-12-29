@@ -27,6 +27,11 @@ class ibs.th.gbl.sys.objsrv:
   &glob GlobObjSrvClass yes
     { utl/objregtt.i }
 
+  define public property upd as integer no-undo
+    get.
+    private set.
+  
+
   define public property Env as class env no-undo
     get.
     private set.
@@ -119,7 +124,10 @@ class ibs.th.gbl.sys.objsrv:
              tt-objth.objname   = IdObj
              tt-objth.objhndl   = iobj
           .
+          
        end.
+       else
+          iobj:RefrashObject(). /* если клас создается через utl\objreg.i то вызовен метот обновления после отработки конструктора, При содание записи регистрация произошло в objth и контекст не был еще установлен в конструкторе*/
        tt-objth.propname  = propname.
        objparent = if valid-object(iobjparen) then iobjparen:ToString() else this-object:ToString().
        tt-objth.procparent = iparantProc.
@@ -172,7 +180,7 @@ class ibs.th.gbl.sys.objsrv:
 
   end method.
 
-method public void DelobjChild( iParent as character  ):
+  method public void DelobjChild( iParent as character  ):
     define buffer tt-objth for tt-objth.
     /*    find first tt-objth exclusive-lock where tt-objth.objhndl = integer(obj).*/
     /*    delete tt-objth.                                                         */
@@ -234,13 +242,18 @@ method public void DelobjChild( iParent as character  ):
     end.
     delete object SysLog no-error.
   end destructor.
-
+  
+  method public logical RefrashObject(iUpd as integer ):
+     for each tt-objth:
+        cast (tt-objth.objhndl, objth):RefrashObject().
+     end.
+     upd = iUpd.
+  end method.
+  
   method public void GetTableObjTh(output table for tt-objth):
     for each tt-objth:
        tt-objth.label_ = cast (tt-objth.objhndl, objth):getLable().
     end.
-    
-
   end method.
 
 end class.

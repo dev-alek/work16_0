@@ -1269,7 +1269,7 @@ class ibs.th.utl.method-for-draw-utility final:
                   /* Delete all objects created by this procedure to avoid memory leaks */
   
                   put-log( string(now) + "   Начинаем загрузку атрибутов автопроизводства...") .
-
+                  load_gds_maping(ifile-path).
                   for each tt-fbr-gds-obj no-lock :
                     find first tt-gds-mapping no-lock where tt-gds-mapping.gds-code15 = tt-fbr-gds-obj.gds-code no-error .
                     if available tt-gds-mapping
@@ -1368,7 +1368,7 @@ class ibs.th.utl.method-for-draw-utility final:
                 method public void  load_version (iAddr as character):
                   define variable vcmd as character no-undo.
                   define variable vOk  as logical   no-undo.
-                  put-log(string (now) + "   Отправляем запрос для получения верии.").
+                  put-log(string (now) + "   Отправляем запрос для получения верcии.").
                   vcmd = substitute ("&1 --http0.9 &2/THGetInfo?GetVersion >&3", search ("exe/curl.exe"), iaddr, "version-temp.json").
                   os-command silent value (vcmd).
                   fix-codepage_and_SetJsonObj (input "version-temp.json") no-error.
@@ -1400,16 +1400,16 @@ class ibs.th.utl.method-for-draw-utility final:
     
                   define variable v-has-records as logical no-undo.
                   for each ub.cash-desk no-lock where ub.cash-desk.db-num = v-cntxt-db-num-obj
-                    and ub.cash-desk.obj-code = v-cntxt-obj-code 
-                    and ub.cash-desk.pos-type <> "IBM-XML":
+                    and ub.cash-desk.obj-code = v-cntxt-obj-code :
+                    /*  and ub.cash-desk.pos-type = "IBM-XML"    */ 
                     v-has-records = true .
                     leave.    
                   end.
                   if not v-has-records
                     then
                     for each ub.cash-desk-attr no-lock where ub.cash-desk-attr.db-num = v-cntxt-db-num-obj
-                      and ub.cash-desk-attr.obj-code = v-cntxt-obj-code 
-                      and ub.cash-desk-attr.pos-type <> "IBM-XML":
+                      and ub.cash-desk-attr.obj-code = v-cntxt-obj-code : 
+                      /* and ub.cash-desk-attr.pos-type <> "IBM-XML" */ 
                       v-has-records = true .
                       leave.    
                     end.
@@ -1457,6 +1457,7 @@ class ibs.th.utl.method-for-draw-utility final:
                       and tt-cash-desk-attr.attr-code = "fr-type" :
                       tt-cash-desk.fr-type = tt-cash-desk-attr.attr-value .                                    
                     end.          
+
                   end.
 
                   do while isCashDesk:
@@ -1512,7 +1513,6 @@ class ibs.th.utl.method-for-draw-utility final:
                   define variable v-addr-path as character no-undo .
                   define buffer buf_tt-cash-desk for tt-cash-desk .
                   define variable v-send as logical no-undo .
- 
                   for each tt-cash-desk where not tt-cash-desk.is-del and not tt-cash-desk.isSave exclusive-lock:
                     v-send = false .  
                     find first buf_tt-cash-desk where not buf_tt-cash-desk.isSave and buf_tt-cash-desk.pos-type = "Autotank" and buf_tt-cash-desk.autonomy = 2 no-error .
@@ -1554,8 +1554,10 @@ class ibs.th.utl.method-for-draw-utility final:
                       + " №"     + string(buf_tt-cash-desk.cash-num) 
                       + " IP: "  + entry(if buf_tt-cash-desk.addr-path eq "" then 1 else num-entries(buf_tt-cash-desk.addr-path, chr(4)) ,
                       buf_tt-cash-desk.addr-path, 
-                      chr(4))).      
-
+                      chr(4))).
+                            
+                    define variable vOldCashNum as integer no-undo.
+                    vOldCashNum = buf_tt-cash-desk.cash-num.
                     if buf_tt-cash-desk.cash-num <> v-cash-num then
                       assign
                         buf_tt-cash-desk.cash-num = v-cash-num 
@@ -1593,31 +1595,38 @@ class ibs.th.utl.method-for-draw-utility final:
                     for each tt-cash-desk-attr no-lock where tt-cash-desk-attr.db-num = buf_tt-cash-desk.db-num
                       and tt-cash-desk-attr.obj-code = buf_tt-cash-desk.obj-code
                       and tt-cash-desk-attr.pos-type = buf_tt-cash-desk.pos-type
-                      and tt-cash-desk-attr.cash-num = buf_tt-cash-desk.cash-num :
+                      and tt-cash-desk-attr.cash-num = vOldCashNum :
                       case tt-cash-desk-attr.attr-code :
-                        when "last-check-params"
+
+                        when "device-kind"
                         then 
                           do :
-          &scop proc-name cd-attr-write
+                            &scop proc-name cd-attr-write
                             {&run_proc_attr-lib}
                               (
                               input v-cntxt-db-num-obj
                               ,input v-cntxt-obj-code
-                              ,input tt-cash-desk-attr.pos-type
-                              ,input tt-cash-desk-attr.cash-num
-                              ,input "" /* (if tt-cash-desk-attr.pos-type = {&cd-type-ibm-xml}
+                              ,input buf_tt-cash-desk.pos-type
+                              ,input buf_tt-cash-desk.cash-num
+                              ,input  (if buf_tt-cash-desk.pos-type = {&cd-type-ibm-xml}
                                          then {&cda-IBM-XML_operative}
-                                         else {&cda-AUTOTANK_operative})*/
-                              ,input " " /*(if tt-cash-desk-attr.pos-type = {&cd-type-IBM-XML}
-                                        then {&cda-IBM-XML_operative_last-check-params}
-                                        else {&cda-AUTOTANK_operative_last-check-params})*/
-                              ,input tt-cash-desk-attr.attr-value
+                                         else {&cda-AUTOTANK_operative})
+                              ,input  (if buf_tt-cash-desk.pos-type = {&cd-type-IBM-XML}
+                                        then {&cda-IBM-XML_operative_device-kind}
+                                        else {&cda-AUTOTANK_operative_device-kind})
+                              ,input "" /* p-character */ 
                               ,input ? /*p-date*/
                               ,input 0 /*p-decimal*/
-                              ,input 0 /*p-integer*/
+                              ,input int(tt-cash-desk-attr.attr-value) /*p-integer*/
                               ,input no /*p-logical*/
-                              ) no-error.
+                              ) .
+                             if error-status:error then 
+                               do:
+                               put-Log(return-value + " " + error-status:get-message(1)).
+                             undo, return error return-value.
+                             end.
                           end.
+
                       end case.                                   
                     end.                                       
                   end.
@@ -2989,7 +2998,7 @@ class ibs.th.utl.method-for-draw-utility final:
                         then 
                       do:
                         assign
-                          tt-fin-doc.cor-acc-value = {&question-mark}
+                          tt-fin-doc.cor-acc-value = ?
                           .
                       end.
                       else 
@@ -3008,7 +3017,7 @@ class ibs.th.utl.method-for-draw-utility final:
                         then 
                       do:
                         assign
-                          tt-fin-doc.cor-acc1-value = {&question-mark}
+                          tt-fin-doc.cor-acc1-value = ?
                           .
                       end.
                       else 

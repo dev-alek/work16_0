@@ -69,5 +69,8 @@ class ibs.th.gbl.sys.objth abstract:
   method public void getobjserv():
     { gbl/objsrv.i get}
   end method.
+  
+  method public logical RefrashObject():
+  end method.
 
 end class.

@@ -201,6 +201,7 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable impOKSEventHndlrObj     as class impOks                 no-undo.
   
   define variable emc-SubjectObj          as class Emc                    no-undo. 
+  define variable dt-season-SubjectObj    as class dt-season              no-undo. 
   define variable cashparam-SubjectObj    as class cashparam              no-undo. 
   define variable impCodeEventHndlrObj    as class impCode                no-undo.
   
@@ -579,6 +580,22 @@ class ibs.th.bge.1crn.import.parsesub:
         when "emc":U 
         then do:
            &glob subname emc
+           if not valid-object({&subname}-SubjectObj)       
+           then 
+              {&subname}-SubjectObj       = new {&subname}(). 
+           if not valid-object(impCodeEventHndlrObj) 
+           then do :
+              impCodeEventHndlrObj = new impCode ().
+           end .
+           v-iSubject = {&subname}-SubjectObj .
+           v-iImpSub  = impCodeEventHndlrObj .
+                // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "dt-season":U 
+        then do:
+           &glob subname dt-season
            if not valid-object({&subname}-SubjectObj)       
            then 
               {&subname}-SubjectObj       = new {&subname}(). 

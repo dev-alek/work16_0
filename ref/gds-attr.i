@@ -19,7 +19,7 @@ Creation date: 04/10/06
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 &if defined (include_attr-lib) = 0 &then
-{ gbl/attr-lib.i }
+{ gbl/attr-lib.i}
 &endif
 
 procedure gds-attr-name :
@@ -650,5 +650,26 @@ procedure gds-attr_check-can-energy-value :
   end.
 
 end procedure.
+
+procedure gds-attr_check-can-set-dt-seasons :
+  /* проверяет, может ли быть установлен этому товару атрибут "Сезон ДТ" */
+  define input  parameter p-gds-code    like ub.goods-attr.gds-code     no-undo .
+  define output parameter p-can-set  as logical no-undo .
+  do
+  on error undo, return error return-value
+  :
+    &scop proc-name gds-attr_check-can-set-dt-seasons
+    {&run_proc_attr-lib}
+      (input  p-gds-code
+      ,output p-can-set
+      ) no-error .
+    if error-status :error
+    then do:
+      undo, return error return-value .
+    end.
+  end.
+
+end procedure.
+
 
 /* $Workfile$ e n d */

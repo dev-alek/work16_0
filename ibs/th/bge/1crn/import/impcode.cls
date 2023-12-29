@@ -76,6 +76,15 @@ class ibs.th.bge.1crn.import.impCode inherits ibs.th.gbl.sys.objth implements ib
        Code.CodeValue = objImp:codeValue
        Code.status_   = objImp:status_
        Code.misc1     = objImp:misc1
+       Code.misc2     = objImp:misc2
+       Code.misc3     = objImp:misc3
+       Code.misc4     = objImp:misc4
+       Code.misc5     = objImp:misc5
+       Code.misc6     = objImp:misc6
+       Code.misc7     = objImp:misc7
+       Code.misc8     = objImp:misc8
+       Code.misc9     = objImp:misc9
+       Code.misc10    = objImp:misc10
     .
     define variable mImp2CdH as handle no-undo.
     run str/imp2cdgeth.p(output mImp2CdH).

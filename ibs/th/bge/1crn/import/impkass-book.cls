@@ -296,7 +296,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       tt-cashbook.rule-payer-rko     = objImp:rule-payer-rko      when objImp:rule-payer-rko    <> ?
       tt-cashbook.rule-payer-inkass  = objImp:rule-payer-inkass   when objImp:rule-payer-inkass <> ?
       tt-cashbook.BankRecip-acct     = objImp:bank-resive-acc     when objImp:bank-resive-acc  <> ?
-      tt-cashbook.CorrAcctIncas      = objImp:Corr-incass         when objImp:Corr-incass  <> ?
+      tt-cashbook.CorrAcctIncas      = objImp:Corr-inkass         when objImp:Corr-inkass  <> ?
       tt-cashbook.BasisIncas         = objImp:rule-osn-incass     when objImp:rule-osn-incass  <> ?
       tt-cashbook.Status_            = objImp:del-l
    /* tt-cashbook.Status_      = 0:"Текущий", 1:"Удаленный"

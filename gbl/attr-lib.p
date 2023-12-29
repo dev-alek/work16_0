@@ -52,7 +52,7 @@ define variable vss-description as character no-undo initial "Библиотека  процед
 { ref/grpobj.i   }
 { gbl/thbj-def.i }
 { rep/frmlib.i }
-{gbl/key-rec.i}
+{ gbl/key-rec.i}
 
 if valid-handle (g#attr-lib)
 and g#attr-lib <> this-procedure :handle
@@ -5741,7 +5741,7 @@ define variable v-created as logical no-undo .
 
 define buffer buf_thbj-attr for ub.thbj-attr.
 define buffer buf_thbjattr_thbj-attr for thbjattr_thbj-attr.
-
+define buffer sys-ctrl for ub.sys-ctrl.
 main-block:
 do
 on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
@@ -5853,6 +5853,7 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
      end.
     end.
   end.
+  { gbl/objserref.i }
 end.
 end procedure. /* thbjattr_set-section */
 
@@ -12088,6 +12089,20 @@ end procedure.
 &scop manual-edit-attr-dop-alt-name-o  1
 &scop batch-edit-attr-dop-alt-name-o  1
 
+/* Сезон топлива */
+
+&glob type-attr-dt-seasons {&type-char}
+&glob format-attr-dt-seasons  "X(50)"
+&glob label-attr-dt-seasons   "Сезон ДТ"
+&glob tooltip-attr-dt-seasons   "Сезон ДТ"
+&glob user-can-edit-attr-dt-seasons  true
+&glob output-display-attr-dt-seasons  true
+&glob other-attr-dt-seasons  "spr=gds-obj-dt-seasons/cd=IBM-XML/send2kassa=promoAction"
+&glob news-attr-dt-seasons true
+&glob copy-attr-dt-seasons  true
+&scop manual-edit-attr-dt-seasons 2
+&scop batch-edit-attr-dt-seasons  2
+
 /* сюда добавлять новые параметры атрибутов товаров на объекте */
 
 
@@ -12186,7 +12201,8 @@ do
       {&attr-temp-full-code}
       &scop attr-code attr-dop-alt-name-o
       {&attr-temp-full-code}
-
+      &scop attr-code attr-dt-seasons
+      {&attr-temp-full-code}
 
        /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:
@@ -12246,6 +12262,8 @@ do
       &scop attr-code attr-normal-wastage-o
       {&attr-temp-code}
       &scop attr-code attr-dop-alt-name-o
+      {&attr-temp-code}
+      &scop attr-code attr-dt-seasons
       {&attr-temp-code}
 
 
@@ -12312,6 +12330,38 @@ procedure gdsoattr-value :
 
 end procedure.
 
+/*-----------------------------------------------------------------------------------------------------------------------*/
+/* alek поиск кода товара по значению привязанного атрибута к товару для объекта*/
+procedure gdsoattr-gds-code :
+/*-----------------------------------------------------------------------------------------------------------------------*/
+
+ do
+  on error undo, return error
+  :
+    define input  parameter p-code     like ub.gds-obj-attr.attr-code  no-undo .
+    define input  parameter p-value    like ub.gds-obj-attr.attr-value no-undo .
+    define input  parameter p-obj-type like ub.gds-obj-attr.obj-type   no-undo .
+    define input  parameter p-obj-code like ub.gds-obj-attr.obj-code   no-undo .
+    define output parameter p-gds-code like ub.gds-obj-attr.gds-code   no-undo .
+
+    define buffer buf_gds-obj-attr for ub.gds-obj-attr .
+    define variable v-format         as character no-undo .
+    define variable v-label          as character no-undo .
+    define variable v-user-can-edit  as logical   no-undo .
+    define variable v-output-display as logical   no-undo .
+    define variable v-other          as character no-undo .
+
+    find first buf_gds-obj-attr no-lock where
+               buf_gds-obj-attr.obj-type  = p-obj-type AND
+               buf_gds-obj-attr.obj-code  = p-obj-code AND
+               buf_gds-obj-attr.attr-code  = p-code AND
+               buf_gds-obj-attr.attr-value = p-value
+      no-error .
+    if avail buf_gds-obj-attr then
+      p-gds-code =  buf_gds-obj-attr.gds-code.
+  end.
+
+end procedure.
 
 procedure gdsoattr-write :
 
@@ -12912,6 +12962,8 @@ procedure gdsoattr-copy :
       {&attr-copy-code}
       &scop attr-code attr-dop-alt-name-o
       {&attr-copy-code}
+      &scop attr-code attr-dt-seasons
+      {&attr-copy-code}
 
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */
@@ -12973,6 +13025,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-dop-alt-name-o
       {&attr-manual-edit-code}
+      &scop attr-code attr-dt-seasons
+      {&attr-manual-edit-code}
 
 
 
@@ -13033,6 +13087,8 @@ do
       &scop attr-code attr-normal-wastage-o
       {&attr-batch-edit-code}
       &scop attr-code attr-dop-alt-name-o
+      {&attr-batch-edit-code}
+      &scop attr-code attr-dt-seasons
       {&attr-batch-edit-code}
 
 
@@ -13350,7 +13406,7 @@ do
 
 
 
-       /* сюда добавлять новые параметры атрибутов товаров на объекте ДЛЯ ЗАКАЗОВ*/
+       /* сюда добавлять новые параметры атрибутов товаров на объекте ОВ*/
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара для ЗАКАЗОВ на объекте/фирме &1", p-code ).
       end.
@@ -14645,6 +14701,113 @@ procedure db-attr-batch-edit :
     end.
   end.
 end procedure.
+
+/* проверяет, может ли быть установлен этому товару атрибут "Сезон ДТ" */
+procedure gds-attr_check-can-set-dt-seasons :
+  define input  parameter p-gds-code like ub.goods.gds-code     no-undo .
+  define output parameter p-can-set  as   logical no-undo .
+
+  define variable v-value as character no-undo .
+  define variable v-type as character no-undo .
+
+  run gds-attr-value in this-procedure (
+    input p-gds-code
+    ,input "fuel-type"
+    ,output v-value
+    ,output v-type) .
+  p-can-set = v-value = "diesel".
+
+end procedure.
+
+/* alek проверяет, является ли код товара кодом сезона ДТ */
+/* если да то опеределяем по нему код товара */
+procedure gds-attr_check-code-dt-seasons :
+  define input  parameter p-code     as   integer             no-undo .
+  define input  parameter p-obj-type like ub.clients.obj-type no-undo .
+  define input  parameter p-obj-code like ub.clients.obj-code no-undo .
+  define output parameter p-gds-code like ub.goods.gds-code   no-undo .
+  define output parameter p-dt-code  as   integer             no-undo .
+
+  define buffer buf_code for ub.code.
+  
+  p-dt-code = 0.
+  if can-find(first buf_code where
+                  buf_code.code = string(p-code)
+              and buf_code.parent = "DTSeasons") then
+  do:
+    p-dt-code = p-code.
+    run gdsoattr-gds-code in this-procedure 
+      ("dt-seasons", string(p-code), p-obj-type, p-obj-code, output p-gds-code).
+    /* Если переданный код не привязан ни к одному товару на объекте, */
+    /* то код товара и код Сезона ДТ возвращаем одинаковый */
+    if p-gds-code = 0 then
+      p-gds-code = p-code.
+  end.
+  else 
+    p-gds-code = p-code.
+
+end procedure.
+
+procedure gds-obj-dt-seasons :
+
+  define input parameter parparentproc as widget-handle no-undo .
+  define input parameter p-gds-code like ub.gds-obj-attr.gds-code no-undo .
+  define input parameter p-obj-type like ub.gds-obj-attr.obj-type no-undo .
+  define input parameter p-obj-code like ub.gds-obj-attr.obj-code no-undo .
+  define input-output parameter p-value as character no-undo .
+  define output parameter p-setted as logical no-undo .
+  
+  define variable rid            as recid no-undo .
+  define variable canSetDtSeason as logical no-undo.
+  define buffer buf_code       for ub.code.
+  define buffer buf_goods      for ub.goods.
+
+  run gds-attr_check-can-set-dt-seasons in this-procedure
+    (p-gds-code, output canSetDtSeason).
+  if not canSetDtSeason then
+  do:
+    find first buf_goods where
+               buf_goods.gds-code = p-gds-code 
+         no-lock no-error.
+    message "Атрибут ~"Сезон ДТ~| может быть настроен только для дизельного топлива.~n"
+            "Для товара " if available buf_goods then substitute("<&1 &2 &3>",buf_goods.gds-code, buf_goods.artic, buf_goods.gds-name) else ""
+            "~nне установлен атрибут ~"Тип топлива~" в значении ~"ДТ~".~n"
+            "В установке атрибута «Сезон ДТ» отказано." view-as alert-box.
+    p-setted = no.
+    return.
+  end.
+
+  do
+  on error undo, return error
+  :
+    run ref/dtseasons.p
+      (input  parparentproc
+      ,output rid
+      ) no-error.
+    if rid <> ? then 
+    do:
+      find first buf_code no-lock where
+                 recid(buf_code) = rid no-error .
+      if not avail buf_code then return error.
+      assign
+        p-value = buf_code.code
+        p-setted = yes
+      .
+    end.
+    else 
+    do:
+      if error-status:error then 
+      do:
+        message 
+          return-value skip
+          "В установке атрибута «Сезон ДТ» отказано." view-as alert-box
+        .
+      end.
+      p-setted = no.
+    end.
+  end.
+
+end procedure. /* gds-obj-dt-seasons */
 
 /* ################## */
 /* атрибуты внешних систем */

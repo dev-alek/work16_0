@@ -1247,7 +1247,6 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   method public void GetAukKey(inAukKey as character, inSGDKK as logical) :
     
     if cbSGDKK:checked = inSGDKK
-    and trim(maskedTextBoxAukKey:text) = ""
     then do :
       maskedTextBoxAukKey:text = inAukKey .
     end .
@@ -1477,6 +1476,17 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxDocVolume:Enabled = false.
       cbSGDKK:Enabled = false.
       maskedTextBoxAukKey:Enabled = false.
+      
+      if infoSecsObj:IsSGDKK
+      then do :
+        if cbSGDKK:Checked
+        then do :
+          label50:text = "Идентификатор доступа (ключ) «верхнего уровня» или одноразовый код:" .
+        end .
+        else do :
+          label50:text = "Идентификатор доступа (ключ) «нижнего уровня»:" .
+        end .
+      end .
       
       do ii = 1 to extent (maskedTextBoxArr):
         this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
@@ -4388,7 +4398,12 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       end.
     end .
     
-    if not infoSecsObj:RdcDnstvalue = "not"
+    if     not infoSecsObj:RdcDnstvalue = "not"
+       and ((not infoSecsObj:IsSGDKK)
+            or (    infoSecsObj:IsSGDKK 
+                and cbSGDKK:checked
+                and infoSecsObj:InfoSectionCurr:AccMeth = 0)
+           )
     then do: 
       maskedTextBoxTankVol:Text = format_round_0 ((decimal (maskedTextBoxCarVol:Text)) + decimal (maskedTextBoxMouth:Text) - decimal(maskedTextBoxTankWater:Text) + (if comboBoxPour:Text = "Нижний налив" then infoSecsObj:InfoSectionCurr:DopVolume else 0)).
     end.

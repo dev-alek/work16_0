@@ -314,6 +314,7 @@ function GetNextElement return character
           oteg = replace(replace(oteg,")",""),"(","").
           
           pstr = substring (pstr,length(vTeg)+ 1).
+          vTeg = replace(vTeg,chr(29),"").
           leave block-elem.
        end.
        else

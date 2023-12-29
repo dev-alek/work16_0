@@ -27,5 +27,11 @@ class ibs.th.skt.Adapters.LogWrite:
     method public void WriteFileToLog(ifile as char) :
       run ibs/th/skt/Adapters/WriteFileToLog.p (ifile).
     end.
+    method public void WriteFileToLog(iText as longchar) :
+       os-delete "filewrireLog.txt".
+       copy-lob iText to
+                file "filewrireLog.txt".
+      run ibs/th/skt/Adapters/WriteFileToLog.p ("filewrireLog.txt").
+    end.
 
 end class.

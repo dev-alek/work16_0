@@ -136,20 +136,25 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         .
       end.
       when {&table_goods} then do:
-        assign
-        v-gds-code = integer(entry(lookup("gds-code":U
-                                          , v-field-list
-                                          , {&delim-key})
-                                    , v-value-list, {&delim-key}))
-        buf_c-ext-classif.chip-num           = next-value (s-gds-chip, {&db-name_schema}).
-        create buf_c-gds-hist.
-        buffer-copy buf_c-ext-classif
-        to buf_c-gds-hist
-        assign
-        buf_c-gds-hist.subject = {&table_ext-classif}
-        buf_c-gds-hist.gds-code = v-gds-code
-
-        .
+        if ub.ext-classif.uniq-key-rec begins {&table_goods} then
+        do:
+          assign
+            v-gds-code = integer(entry(lookup("gds-code":U
+                                              , v-field-list
+                                              , {&delim-key})
+                                        , v-value-list, {&delim-key}))
+            buf_c-ext-classif.chip-num           = next-value (s-gds-chip, {&db-name_schema})
+          .
+          create buf_c-gds-hist.
+          buffer-copy buf_c-ext-classif
+            to buf_c-gds-hist
+            assign
+            buf_c-gds-hist.subject = {&table_ext-classif}
+            buf_c-gds-hist.gds-code = v-gds-code
+          .
+        end.
+        else 
+          buf_c-ext-classif.chip-num = next-value (s-ref-corr-chip, {&db-name_schema}).
       end.
       otherwise do:
         buf_c-ext-classif.chip-num           = next-value (s-ref-corr-chip, {&db-name_schema}).

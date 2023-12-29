@@ -73,6 +73,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   define buffer buf_utd for ub.utd .
   define buffer buf_marking-lines for ub.marking-lines .
   define buffer buf_goods for ub.goods .
+  define buffer sep_auto-tank-attr  for ub.auto-tank-attr.
+  define buffer buf_rvs-doc for ub.rvs-doc .
+  
   define property Msg as character no-undo
     get:
       return trim (Msg, {&new-line}).
@@ -470,6 +473,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     define variable is-exist-sec as logical no-undo.
     define variable v-date as date no-undo.
     define variable v-int  as integer no-undo.
+    define variable vIsSGDKK as logical no-undo init no .
     
     
     
@@ -503,14 +507,34 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     &scop tag-code condition
     {&create-record-cust}
     
-    find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = {&trdcattr-seals-condition} no-error. ~
+    find first buf_doc-attr no-lock where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = {&trdcattr-seals-condition} no-error. ~
     if available (buf_doc-attr) 
     then do:
       write-data-element ('seales', entry (1, buf_doc-attr.attr-value, {&delim-par})) no-error.
       write-data-element ('seales-condition', entry (2, buf_doc-attr.attr-value, {&delim-par})) no-error.
     end.
     
-    find first buf_doc-line-attr where buf_doc-line-attr.doc-code = DocCode and buf_doc-line-attr.attr-code begins "shape" no-error.
+    find first buf_doc-attr no-lock where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = {&trdcattr-car-num} no-error .
+    if available buf_doc-attr
+    then do :
+      find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = buf_doc-attr.attr-value
+                                              and sep_auto-tank-attr.attr-code = "auto-sep"
+                                              no-error.
+      if available sep_auto-tank-attr
+      and logical(sep_auto-tank-attr.attr-value)
+      then do :
+        vIsSGDKK = yes .
+      end .
+    end .
+    if vIsSGDKK = yes
+    then do :
+      write-data-element ('ess', string(1)) no-error.
+    end .
+    else do :
+      write-data-element ('ess', string(0)) no-error.
+    end .
+    
+    find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = DocCode and buf_doc-line-attr.attr-code begins "shape" no-error.
     if available (buf_doc-line-attr) 
     then do:
       write-data-element ('neck-type', string(lookup(buf_doc-line-attr.attr-value, {&list-shape}) - 1)) no-error .
@@ -676,15 +700,18 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
 /*            write-data-element ("cmom-nb", string (infoSecObj:cmom-nb)).*/
           write-data-element ("cap-psprt", string-mth (infoSecObj:CarVol)).
           write-data-element ("sz-nck", replace(infoSecObj:Diameter, {&delim-cmd}, " ")).
-          write-data-element ("filling-method", (if infoSecObj:Pour = "Верхний налив" then '0' else '1')).
-          if infoSecObj:DopVolume = ?
-          or infoSecObj:DopVolume = 0
+          if not vIsSGDKK
           then do :
-            infoSecObj:DopVolume = decimal (entry(1, replace(infoSecObj:Diameter, {&delim-cmd}, " "), "/")) no-error .
-            if error-status:error 
-              then infoSecObj:DopVolume = 0.
+            write-data-element ("filling-method", (if infoSecObj:Pour = "Верхний налив" then '0' else '1')).
+            if infoSecObj:DopVolume = ?
+            or infoSecObj:DopVolume = 0
+            then do :
+              infoSecObj:DopVolume = decimal (entry(1, replace(infoSecObj:Diameter, {&delim-cmd}, " "), "/")) no-error .
+              if error-status:error 
+                then infoSecObj:DopVolume = 0.
+            end .
+            write-data-element ("pipe-vlm", string (infoSecObj:DopVolume)).
           end .
-          write-data-element ("pipe-vlm", string (infoSecObj:DopVolume)).
           write-data-element ("lvl", string-mth (infoSecObj:ABTarir)).
           write-data-element ("cap-nck", string-mth (infoSecObj:Mouth)).
           write-data-element ("cap", string-mth (infoSecObj:TankVol)).
@@ -713,6 +740,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("sl-date-e", string (iso-date (infoSecObjFirst:DateEnd))).
           write-data-element ("sl-time-e", string (infoSecObjFirst:TimeEnd, "HH:MM")).
           write-data-element ("cmm", string (if infoSecObj:IsKP then "1" else "0")).
+          if infoSecObj:IsKP
+          then do :
+            write-data-element ("acc-meth", string (infoSecObj:AccMeth)).
+          end .
           write-data-element ("er-ms", string-mth (infoSecObj:AccPomi)).
           /*нормативный документ завода изготовителя*/
           write-data-element ("norm-doc", string (infoSecObj:NormDoc)).
@@ -741,7 +772,15 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           if infoSecObj:Pressure > 0
           then
             write-data-element ("dnp", string-mth (infoSecObj:Pressure)).
-            
+          
+          if vIsSGDKK
+          then do :
+            write-data-element ("alrm", (if infoSecObj:alarm-SGDKK then string(1) else string(0))).
+            if infoSecObj:aukKey > ""
+            then do :
+              write-data-element ("auk", string(infoSecObj:aukKey)).
+            end .
+          end .  
           write-data-element ("tank-num", string (infoSecObj:ListTank)).
           /*сертификат соответствия*/
           write-data-element ("certif-fuel", string (infoSecObj:CertifFuel)).
@@ -758,6 +797,36 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           /*время отбора пробы часы/минут HourProb MinProb*/
           write-data-element ("prob-time", string (infoSecObj:HourProb, "99") + ":" + string (infoSecObj:MinProb, "99")).
 /*            end.*/
+          find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                                           and buf_rvs-doc.out-code = buf_trn-doc.doc-code
+                                           and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                                           and entry(2, buf_rvs-doc.rvs-code, "-") = infoSecObj:SectionName
+                                           no-error .
+          if not available buf_rvs-doc
+          then do :
+            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                                             and buf_rvs-doc.out-code = buf_trn-doc.doc-code
+                                             no-error .
+          end .
+          if available buf_rvs-doc
+          then do :
+            write-data-element ("rvs-before", string (buf_rvs-doc.rvs-code)).
+          end .
+          find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                                           and buf_rvs-doc.out-code = buf_trn-doc.doc-code
+                                           and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                                           and entry(2, buf_rvs-doc.rvs-code, "-") = infoSecObj:SectionName
+                                           no-error .
+          if not available buf_rvs-doc
+          then do :
+            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                                             and buf_rvs-doc.out-code = buf_trn-doc.doc-code
+                                             no-error .
+          end .
+          if available buf_rvs-doc
+          then do :
+            write-data-element ("rvs-after", string (buf_rvs-doc.rvs-code)).
+          end .
           sw:end-element ("sc").
         end.
       end.

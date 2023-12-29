@@ -46,7 +46,7 @@ release sys-ctrl.
 if    iChek
 then do:
    oUpd = mdb-ver ne ? and mdb-ver < iTarg.
-   publish "putstat" (substitute ("Проверка на понижение бд. Необходимо понизить версию ? &1",oUpd) ).
+   publish "putstat" (substitute ("Проверка Нужно обновление бд? &1",oUpd) ).
 end.
 else do:
    if mdb-ver eq ? or mdb-ver >= iTarg  

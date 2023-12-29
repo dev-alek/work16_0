@@ -109,8 +109,10 @@ method override public void CrContentToSW (insw as handle):
                           tax-rate-value.tax-code = 1 and
                         tax-rate-value.rate-value = utd-lines.TaxRate no-lock no-error.
             if available tax-rate-value then*/
-               insw:write-data-element (  "nds-code",         string( utd-lines.TaxRate )           ) . 
-            insw:write-data-element (  "gd-code",      string(utd-lines.gds-code)        ) . 
+               insw:write-data-element (  "nds-code",         string( utd-lines.TaxRate )           ) .
+            if utd-lines.gds-code ne ?
+            then
+               insw:write-data-element (  "gd-code",      string(utd-lines.gds-code)        ) . 
             insw:write-data-element (  "price-nonds",      string(utd-lines.Price)        ) . 
             insw:write-data-element (  "qnty-ttn",   string(utd-lines.Quantity)  ) . 
             insw:write-data-element (  "sum",  string(utd-lines.Total)                 ) .

@@ -38,45 +38,36 @@ define override public property vss-revision    as character no-undo init "$Revi
     get.
     private set. 
 
-  define private variable atdcli     as class  atdclient no-undo.
-  define private variable logWrite    as class     LogWrite no-undo.
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   define private variable atdcli     as class  atdclient no-undo.   
+   constructor public atdclientcmd (  ):
+      super ().
+      atdcli = new atdclient().
+   end constructor.
+
+  
+  
   define private variable hndlSocket as handle no-undo.
 
   method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse ):
-    logWrite = new LogWrite().
-    atdcli = new atdclient().
+    
     hndlsocket = req:HndlSocket.
     atdcli:hndler(req).
-    writeSock(atdcli:SomeStr).
+    resp:Content-Type = "application/json".
+    resp:setContent(atdcli:SomeStr).
+    resp:condition = resp:STSlist:WriteResponse:NameProp.   
 
   end method.
 
-  /*------------------------------------------------------------------------------
-   Purpose:
-   Notes:
-  ------------------------------------------------------------------------------*/
-
-  method private logical writeSock ( arg as longchar ):
-    
-    define variable mbuffer  as memptr   no-undo.
-    define variable mbuffer1 as memptr   no-undo.
-    define variable tempStr  as longchar no-undo.
-    define variable glog     as logical  no-undo.
-    
-    
-    
-    set-size(mbuffer1) = length (atdcli:SomeStr, "RAW":U) + 1.
-    put-string(mbuffer1,1) = atdcli:SomeStr.        
-    
-    assign
-      glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
-    if not glog
-      then do:
-        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
-        ErrStatus = true.
-      end.
-    return true.
-      
-  end method.
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public atdclientcmd ( ):
+      delete object atdcli.
+   end destructor.
 
 end class.

@@ -43,9 +43,9 @@ class ibs.th.skt.ClientControl:
       super ().
       hLog = iLog.
       logWrite = new LogWrite().
-      HTTPOK = substitute("HTTP/1.1 200 OK&1Server: 4GL&1Content-Type: text/html; charset=UTF-8&1Content-Length: &3&2&4",
+      HTTPOK = substitute("HTTP/1.1 200 OK&1Server: 4GL&1Content-Type: &3&1Content-Length: &4&2",
                          chr(13) + chr(10),
-                         chr(13) + chr(10) + chr(13) + chr(10) , "&1").
+                         chr(13) + chr(10) + chr(13) + chr(10) , "&1","&2").
    end constructor.
 
 
@@ -56,9 +56,17 @@ class ibs.th.skt.ClientControl:
       logWrite:LogStr = "Для данного клиента не создана комманда.".
       return error.
     end.
-    cast(ttCommands.objCommand, ibs.th.skt.Commands.ICommand):Execute_(req, resp). 
-    if    resp:condition eq resp:STSlist:WaitResult:NameProp
-       or resp:condition eq resp:STSlist:WriteStatusAndWait:NameProp
+    cast(ttCommands.objCommand, ibs.th.skt.Commands.ICommand):Execute_(req, resp)no-error.
+    if error-status:error
+    then do:
+       return error return-value + " " + error-status:get-message (1).
+    end.
+    if resp:condition eq resp:STSlist:WriteResponse:NameProp
+    then do:
+       writeSock(req:HndlSocket,resp). 
+    end.
+    else if    resp:condition eq resp:STSlist:WaitResult:NameProp
+            or resp:condition eq resp:STSlist:WriteStatusAndWait:NameProp
     then do:
        create ttDeferredCommands.
        assign
@@ -81,9 +89,16 @@ class ibs.th.skt.ClientControl:
       logWrite:LogStr = "Для данного клиента не создана комманда.".
       return error .
     end.
-    cast(ttCommands.objCommand, ibs.th.skt.Commands.TSDCommand):Execute_(req, resp, lpar).
-    if    resp:condition eq resp:STSlist:WaitResult:NameProp
-       or resp:condition eq resp:STSlist:WriteStatusAndWait:NameProp
+    cast(ttCommands.objCommand, ibs.th.skt.Commands.TSDCommand):Execute_(req, resp, lpar) no-error.
+    if error-status:error
+    then
+       return error return-value + " " + error-status:get-message (1).
+    if resp:condition eq resp:STSlist:WriteResponse:NameProp
+    then do:
+       writeSock(req:HndlSocket,resp). 
+    end.
+    else if    resp:condition eq resp:STSlist:WaitResult:NameProp
+            or resp:condition eq resp:STSlist:WriteStatusAndWait:NameProp
     then do:
        create ttDeferredCommands.
        assign
@@ -108,10 +123,10 @@ class ibs.th.skt.ClientControl:
       .
   end method.
 
-  method public void checkEnd ():
+  method public logical checkEnd ():
      define variable req  as ibs.th.skt.Commands.IRequest  no-undo.
      define variable resp as ibs.th.skt.Commands.IResponse no-undo.
-     
+     define variable vAvailProc as logical no-undo.
      for each ttDeferredCommands:
         req  = cast(ttDeferredCommands.objreq, ibs.th.skt.Commands.IRequest).
         resp = cast(ttDeferredCommands.objResp,ibs.th.skt.Commands.IResponse).
@@ -143,7 +158,10 @@ class ibs.th.skt.ClientControl:
            delete ttDeferredCommands.
            
         end.
+        else
+           vAvailProc = yes.
      end.
+     return vAvailProc.
   end.
   
   method private logical writeSock (hndlsocket as handle, resp as ibs.th.skt.Commands.IResponse ):
@@ -152,13 +170,14 @@ class ibs.th.skt.ClientControl:
     define variable v-cont-length as integer no-undo.
     define variable VOK as longchar no-undo.
     define variable VrespOK as memptr no-undo.
-    VOK = substitute (HTTPOK,string(get-size(resp:Content))).
+    VOK = substitute (HTTPOK,resp:Content-Type,string(resp:ContentLength)).
     copy-lob
       from object VOK
       to object VrespOK
       convert target codepage "UTF-8".
     assign
       glog = hndlsocket:write(VrespOK,1,get-size(VrespOK)) no-error.
+    set-size(VrespOK) = 0.
     if not glog
     then do:
        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
@@ -177,7 +196,12 @@ class ibs.th.skt.ClientControl:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public ClientControl ( ):
-	  
+	 for each ttDeferredCommands:
+	    cast(ttDeferredCommands.objreq,IRequest):HndlSocket:disconnect().
+	    delete object ttDeferredCommands.objreq no-error.
+       delete object ttDeferredCommands.objResp no-error.
+       delete ttDeferredCommands.
+	 end. 
     for each ttCommands:
       delete object ttCommands.objCommand no-error.
       delete ttCommands.

@@ -678,7 +678,7 @@ attr-group-np
 
 /* типы топлива */
 { cmp/cr-prepc.i 1 prop-list-attr-fuel-type
-"petrol,diesel-sum,diesel-wint,metan,propan,lgas"
+"petrol,diesel-sum,diesel-wint,metan,propan,lgas,diesel"
 attr-fuel-type
 }
 
@@ -960,6 +960,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 /* Дополнение к альтернативному названию */
 { cmp/cr-prep.i 1 attr-dop-alt-name-o       dop-alt-name-o      " " dop-alt-name-o     }
 
+/* Сезон ДТ */
+{ cmp/cr-prep.i 1 attr-dt-seasons       dt-seasons      " " dt-seasons     }
+
 /* сюда добавлять новые названия атрибутов товаров на объекте */
 
 
@@ -983,6 +986,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 ,{&bef-attr-doc-tickets-o}~
 ,{&bef-attr-normal-wastage-o}~
 ,{&bef-attr-dop-alt-name-o}~
+,{&bef-attr-dt-seasons}~
 ':u
 run filwrlib_append-new-line in this-procedure ( input "&global-define gdsoattr-list {&gdsoattr-list}" ).
 

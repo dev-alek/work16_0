@@ -74,7 +74,6 @@ if error-status:error then do:
   undo, return error .
 end .
 
-{ gbl/getcntxt.i get }
 { gbl/hostcode.i p-obj-type p-obj-code v-host-code }
 
 CASE p-pos-type:
@@ -173,7 +172,7 @@ def var ii as integer no-undo .
 v-promo-stor = new ibs.th.gbl.storage.promoactionstorage().
 do ii = 0 to num-entries(recid-list,{&comma-char}):
 for each ub.PromoAction no-lock where recid(ub.PromoAction) = integer(entry(ii,recid-list,{&comma-char})):
-   v-promo-stor:getpromoactionsubs(input-output vSubs,ub.PromoAction.db-num,ub.PromoAction.id).
+   v-promo-stor:getpromoactionsubs(input-output vSubs,ub.PromoAction.db-num,ub.PromoAction.id, p-obj-code).
 end.  
 end.
 end.

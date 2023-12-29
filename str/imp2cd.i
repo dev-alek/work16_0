@@ -47,6 +47,7 @@ procedure send-to-cash:
     or can-find(first c-ext-classif-list no-lock)
     or can-find(first PromoAction-list no-lock)
     or sendEMRC
+    or settingUpd
     then do:
       run str/diallog.w (
                          &if "{&imp2cd_parparentproc}" <> '' &then
@@ -64,6 +65,13 @@ procedure send-to-cash:
   end.
 end procedure.
 
+procedure fill-setting :
+   define input parameter i-obj    as character no-undo .
+   define input parameter i-parent as character no-undo .
+   define input parameter i-code   as character no-undo .
+   settingUpd = yes.
+end procedure.
+
 procedure fill-code :
    define input parameter i-parent as character no-undo .
    define input parameter i-code   as character no-undo .
@@ -71,6 +79,7 @@ procedure fill-code :
    then
       sendEMRC = yes.
 end procedure.
+
 procedure fill-gds-list :
 define parameter buffer buf_goods for ub.goods.
 

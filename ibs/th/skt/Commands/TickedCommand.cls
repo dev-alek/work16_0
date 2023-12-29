@@ -39,14 +39,20 @@ class ibs.th.skt.Commands.TickedCommand inherits ICommand:
     get.
     private set. 
 
-  define private variable ticked     as class  Ticked no-undo.
-  define private variable logWrite    as class     LogWrite no-undo.
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   define private variable ticked     as class  Ticked no-undo.   
+   constructor public TickedCommand (  ):
+      super ().
+      ticked = new Ticked().
+   end constructor.
+
+  
   define private variable hndlSocket as handle no-undo.
 
   method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse ):
-    
-    logWrite = new LogWrite().
-    ticked = new Ticked().
     hndlsocket = req:HndlSocket.
     ticked:AuthorizationTicked(req).
     writeSock("").
@@ -72,6 +78,7 @@ class ibs.th.skt.Commands.TickedCommand inherits ICommand:
     
     assign
       glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
+    set-size(mbuffer1) = 0.
     if not glog
       then do:
         LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
@@ -80,5 +87,13 @@ class ibs.th.skt.Commands.TickedCommand inherits ICommand:
     return true.
       
   end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public TickedCommand ( ):
+      delete object ticked.
+	end destructor.
 
 end class.

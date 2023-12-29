@@ -30,6 +30,7 @@ class ibs.th.ref.promo.PromoGoodsSub implements ithsub:
   define variable vss-description as character no-undo initial "Объект товар акции.". 
   
   { cmp/str-glbl.i class}
+  { ref/gdsoattr.i '' class}
   
   define property Msg as character no-undo
     get.
@@ -146,6 +147,18 @@ class ibs.th.ref.promo.PromoGoodsSub implements ithsub:
         setFlagChange (true).
       end.
     END. 
+
+  define property objCode as integer no-undo
+    get.
+    set(arg as integer):
+      if arg <> objCode
+        then 
+      do:
+        objCode = arg.
+        setFlagChange (true).
+      end.
+    end.
+
   define buffer bf_gds for ub.goods.
   define property GdsCode as integer no-undo
     get.
@@ -179,6 +192,28 @@ class ibs.th.ref.promo.PromoGoodsSub implements ithsub:
       end.
     end.
 
+  define property dtSeason as character no-undo
+    get:
+      define variable typeAttr as character no-undo.
+      if not available (bf_gds) then 
+      do:
+        find first bf_gds no-lock 
+          where bf_gds.gds-code = GdsCode no-error.
+      end.
+      if available (bf_gds) then 
+      do:
+          return 
+            gdsoattr-value(
+              {&attr-dt-seasons},
+              gdsCode,
+              {&shop},
+              objCode,
+              output typeAttr
+            ).
+      end.
+      else return "".
+    end.
+
   define property promo-code as character no-undo
     get:
       if available (buf_PromoAttr)
@@ -205,7 +240,7 @@ class ibs.th.ref.promo.PromoGoodsSub implements ithsub:
      &Obj       = promoSetGoods
      &ObjClass  = promoGoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(idAction,id,ibs.th.ref.promo.enum-promo-goods-type:promoSetGoods,db-num) } 
+     &storColec = getpromoGoodssubs(idAction,id,ibs.th.ref.promo.enum-promo-goods-type:promoSetGoods,db-num,objCode) } 
     
   define property Changed as logical no-undo
     get.

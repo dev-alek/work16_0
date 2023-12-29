@@ -150,6 +150,7 @@ class ibs.th.ref.code.code_trg final:
        define variable conf-par as character no-undo.
        
        define variable par-type as character no-undo.
+/*       run gbl/inidebug.p.*/
        if mode-erprn eq ?
        then do:
           { gbl/conf-rd.i
@@ -165,6 +166,7 @@ class ibs.th.ref.code.code_trg final:
              par-type
              no-error
              }
+          
           if not error-status:error and conf-par = "yes":U then mode-erprn = yes.
           else mode-erprn = no.
        end.
@@ -466,6 +468,15 @@ class ibs.th.ref.code.code_trg final:
              formLable(1, 4, "ПФ ККТ").
              MaxLevel = MaxLevel + 1.
              chek-erpRN = yes.
+          end.
+          else if icode eq "DTSeasons"
+          then do:
+             formLable(1, 1, "Код").
+             formLable(1, 2, "Наименование на чеке").
+             formLable(1, 4, "Альтернативное наименование").
+             formLable(1, 5, "НДС в ПЦ").
+             formLable(1, 6, "ЕИ в ПЦ").
+             MaxLevel = MaxLevel + 1.
           end.
        end.
     end.

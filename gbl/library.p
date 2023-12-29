@@ -9751,6 +9751,56 @@ procedure pftxvalo :
 
 end procedure. /* pftaxval */
 
+procedure getListTaxRateValue :
+
+  define input  parameter iTax       like ub.tax.tax-name              no-undo .
+  define input  parameter iDate      like ub.tax-rate-value.fact-date  no-undo .
+  define input  parameter iHostCode  like ub.sysconf.host-code         no-undo .
+  define input  parameter iObjType   like ub.clients.obj-type          no-undo .
+  define input  parameter iObjCode   like ub.clients.obj-code          no-undo .
+  define output parameter oListTaxValue as character no-undo .
+
+  define variable vss-description as character no-undo initial "getListTaxRateValue: Возвращает список действующих ставок налога на дату для заданного объекта".
+
+  define variable vFactOrder as decimal no-undo.
+  define buffer buf_tax            for ub.tax.
+  define buffer buf_tax-rate       for ub.tax-rate.
+  define buffer buf_tax-rate-value for ub.tax-rate-value.
+
+  if iDate = ? then
+    iDate = today.
+  run factord-end-day in this-procedure
+    (input  iDate
+    ,output vFactOrder
+    ).
+  do
+  on error undo, return error return-value
+  :
+    for first buf_tax where 
+              buf_tax.tax-name = iTax
+          and buf_tax.status_  = {&current-status} no-lock,
+        each buf_tax-rate where 
+             buf_tax-rate.tax-code = buf_tax.tax-code
+         and buf_tax-rate.status_ = {&current-status}
+        no-lock,
+        last buf_tax-rate-value where
+             buf_tax-rate-value.tax-code = buf_tax-rate.tax-code 
+         and buf_tax-rate-value.rate-code = buf_tax-rate.rate-code 
+         and buf_tax-rate-value.host-code = iHostCode 
+         and buf_tax-rate-value.obj-type = iObjType 
+         and buf_tax-rate-value.obj-code = iObjCode
+         and buf_tax-rate-value.fact-order <= vFactOrder 
+         and buf_tax-rate-value.status_ = {&current-status}
+        no-lock by buf_tax-rate-value.rate-value:
+      oListTaxValue = substitute(
+        "&1&2&3", 
+        oListTaxValue,
+        if oListTaxValue = "" then "" else ",",
+        string(buf_tax-rate-value.rate-value)
+      ). 
+    end.
+  end.
+end procedure.
 
 procedure curobjdt :
 

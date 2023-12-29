@@ -43,7 +43,6 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define temp-table tt-rvs-line-attr like ub.rvs-line-attr .
   define temp-table tt-rvs-line-pump like ub.c-rvs-line-pump .
   
-  
   define variable v-user-name             as character no-undo .
   define variable v-autorvs               as integer   no-undo init 0 .
   define variable v-type                  as character no-undo .
@@ -335,11 +334,11 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
     if v-type = "4" then do:
       if tt-rvs-doc.out-code = ? then do:
         if num-entries(tt-rvs-doc.PS,"¹") > 1 then do:
-        v-out-code = entry(2,tt-rvs-doc.PS,"¹") .
-        v-out-code = replace (v-out-code,".","") .
-        v-out-code = trim(v-out-code," ").
-      end.  
-      sw:write-data-element ("parent-doc", v-out-code) no-error .
+          v-out-code = entry(2,tt-rvs-doc.PS,"¹") .
+          v-out-code = replace (v-out-code,".","") .
+          v-out-code = trim(v-out-code," ").
+        end.  
+        sw:write-data-element ("parent-doc", v-out-code) no-error .
       end.
       else sw:write-data-element ("parent-doc", tt-rvs-doc.out-code) no-error .
     end.
@@ -679,6 +678,18 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
       sw:write-data-element ("cnt-meh-ob" , if tt-rvs-line-pump.state-mh-qnty = ? then "0" else string-mth(tt-rvs-line-pump.state-mh-qnty)) no-error .
       sw:write-data-element ("sum-meh-ob" , if tt-rvs-line-pump.state-am-qnty = ? then "0" else string-mth(tt-rvs-line-pump.state-am-qnty)) no-error .
       sw:write-data-element ("qnty-nal-fact" , if tt-rvs-line-pump.state-cf-qnty = ? then "0" else string-mth(tt-rvs-line-pump.state-cf-qnty)) no-error .
+      if v-type = "1"
+      or v-type = "2"
+      then do :
+        if tt-rvs-line-pump.state-el-cnt = ?
+        or tt-rvs-line-pump.state-el-cnt <= 0
+        then do :
+          sw:write-data-element ("trk-err" , "1") no-error .
+        end .
+        else do :
+          sw:write-data-element ("trk-err" , "0") no-error .
+        end .
+      end .
       sw:end-element ("trk-p")  .
     end.
     sw:end-element ("trk-ps")  .

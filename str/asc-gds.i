@@ -69,6 +69,8 @@ define variable iii as integer no-undo .
 define variable v-mask-full as character no-undo .
 define variable v-mask-short as character no-undo .
 define variable vKKT as integer no-undo.
+define variable attrValue as character no-undo.
+define variable attrType  as character no-undo.
 
 DEFine BUFFER BUF_BAR-CODE FOR UB.BAR-CODE.
 define buffer buf_price-list for ub.price-list.
@@ -215,6 +217,23 @@ then do:
 end.
 else
    vBc-on = yes.
+run gdsoattr-value in this-procedure (
+  {&attr-dt-seasons},
+  loc-goods.gds-code,
+  parobj-type,
+  parobj-code,
+  output attrValue,
+  output attrType
+) no-error.
+if attrValue <> "" then do:
+  find first b-code where
+             b-code.parent = "DTSeasons"
+         and b-code.code   = attrValue
+       no-lock no-error.
+  v-main-prt-b-code = integer(b-code.code).
+end.
+else release b-code.
+
 assign
 cash-gds.gds-code = loc-goods.gds-code
 cash-gds.artic = loc-goods.artic
@@ -229,13 +248,15 @@ cash-gds.cli-base-rate = loc-bar-code.cli-base-rate
 cash-gds.std-discnt-rule = std-discnt-rule_
 cash-gds.gds-namelong = loc-goods.gds-name
 cash-gds.gds-name = IF nam-2str
-                    then loc-goods.gds-name
+                    then if available b-code then b-code.codename else loc-goods.gds-name
                     else (
                           IF nam-artc
                           then loc-goods.artic
-                          else (if loc-goods.chk-name <> ""
-                                then loc-goods.chk-name
-                                else loc-goods.gds-name)
+                          else if available b-code 
+                               then b-code.codename 
+                               else (if loc-goods.chk-name <> ""
+                                     then loc-goods.chk-name
+                                     else loc-goods.gds-name)
                          )
                  
 cash-gds.f-name = if NOT l-empty-scale then loc-gds-prt-term.f-name else ""
@@ -323,6 +344,24 @@ cash-gds.is-main-code = (if cash-gds.b-str = ""
                          else no)
 cash-gds.obj-type = parobj-type
 cash-gds.obj-code = parobj-code
+.
+assign
+cash-gds.gds-name1 =   name-2cdf(
+                      input name-2cd
+                    , input yes /*по товару*/
+                    , input cod-pcod
+                    , input cash-gds.b-code
+                    , input loc-goods.gds-code
+                    , input loc-goods.artic
+                    , input loc-goods.engl-name
+                    , input loc-bar-code.in-code
+                    , input loc-bar-code.part-code
+                    , input parobj-type
+                    , input parobj-code
+                    , input loc-goods.alpha1
+                    , output v-gtd
+                    )
+cash-gds.gtd   = v-gtd
 .
 vKKT = 255.
 find first b-code where

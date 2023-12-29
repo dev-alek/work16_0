@@ -67,6 +67,9 @@ class ibs.th.ref.promo.PromoActionSub implements ithsub:
       end.
     END. 
    
+  define property objCode as integer no-undo
+    get.
+    set.
      
   define property beg-date as Date no-undo
     get():
@@ -205,7 +208,7 @@ class ibs.th.ref.promo.PromoActionSub implements ithsub:
      &Obj       = GoodsCrits
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:criterion,db-num) }
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:criterion,db-num,objCode) }
      
   define property CritgoodsFl as logical no-undo init ?
     get():
@@ -221,25 +224,25 @@ class ibs.th.ref.promo.PromoActionSub implements ithsub:
      &Obj       = GoodsAppl
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:appl,db-num) }
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:appl,db-num,objCode) }
       
   {ibs/th/ref/promo/propertyclass.i
      &Obj       = PromoSet
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:promoSet,db-num) }
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:promoSet,db-num,objCode) }
      
   {ibs/th/ref/promo/propertyclass.i
      &Obj       = CardsBin
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:bin,db-num) }
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:bin,db-num,objCode) }
 
   {ibs/th/ref/promo/propertyclass.i
      &Obj       = BarCode
      &ObjClass  = promogoodssubs
      &StorClass = promoGoodsStorage
-     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:barcode,db-num) }
+     &storColec = getpromoGoodssubs(id,ibs.th.ref.promo.enum-promo-goods-type:barcode,db-num,objCode) }
         
   {ibs/th/ref/promo/propertyclass.i
      &Obj       = Criterion
@@ -251,7 +254,7 @@ class ibs.th.ref.promo.PromoActionSub implements ithsub:
      &Obj       = Gifts
      &ObjClass  = promoGiftsubs
      &StorClass = promoGiftStorage
-     &storColec = getpromoGiftSubs(id,0,db-num) }
+     &storColec = getpromoGiftSubs(id,0,db-num,objCode) }
      
   {ibs/th/ref/promo/propertyclass.i
      &Obj       = Objects
@@ -281,7 +284,12 @@ Notes:
 ------------------------------------------------------------------------------*/
     
   constructor public promoactionsub (  ):
+    this-object(?).
+  end constructor.
+
+  constructor public promoactionsub ( objCode as integer ):
     vpromotype = new promotype().
+    this-object:objCode = objCode.
   end constructor.
 
   /*------------------------------------------------------------------------------

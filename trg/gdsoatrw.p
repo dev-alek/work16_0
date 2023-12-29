@@ -28,6 +28,7 @@ define variable vss-description as character no-undo init "Триггер на запись gds
 { ref/gdsoattr.i trigger }
 { gbl/cur-time.i }
 { nws/lib-nws.i }
+{ gbl/getcntxa.i }
 
 define variable p-news as logical no-undo.
 define variable conf-par as character no-undo .
@@ -40,14 +41,20 @@ define variable v-output-display as logical   no-undo .
 define variable v-other          as character no-undo .
 define variable jj as integer no-undo .
 define variable v-dop1 as character no-undo .
+define variable v-dop2 as character no-undo .
 define variable v-host-code like ub.sysconf.host-code no-undo .
 define variable v-date as date no-undo .
 define variable v-time as integer no-undo .
 define variable v-manual-editing as integer no-undo .
+define variable dbNum as integer no-undo .
+define variable listPromoIds as character no-undo .
+define variable sendGoods2Kassa as logical no-undo init false.
 define buffer buf_c-gds-obj-attr for ub.c-gds-obj-attr.
 define buffer buf_c-gds-hist for ub.c-gds-hist.
 define buffer buf_gds-obj for ub.gds-obj.
 define buffer locked_gds-obj-attr for ub.gds-obj-attr.
+define buffer PromoGoods  for ub.PromoGoods.
+define buffer PromoAction for ub.PromoAction.
 
 
 main-block:
@@ -97,6 +104,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
        do jj = 1 to num-entries(v-other, {&slash-char}):
          assign
          v-dop1 = entry(1, entry(jj, v-other, {&slash-char}), '=':U)
+         v-dop2 = entry(2, entry(jj, v-other, {&slash-char}), '=':U)
          .
          if v-dop1 = "cd":U then do:
            find first buf_gds-obj no-lock where
@@ -114,10 +122,12 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                           ,input  ub.gds-obj-attr.obj-code
                           ,input  "U":U
                         ).
+            sendGoods2Kassa = true.
           end.
-          LEAVE _do.
-        end.
-      end.
+          NEXT _do.
+         end.
+         { trg/gdsoatr_send2kassa.i "getPromoIds"}
+       end.
     end. /*if send-ref*/
     if g#news then do:
       define variable v-send as integer no-undo .
@@ -195,6 +205,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
             ) .
       end.
     end.
+    { trg/gdsoatr_send2kassa.i "send2Kassa"}
   end.
   if g#oxml = yes
   then do:

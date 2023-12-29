@@ -689,6 +689,10 @@ Creation date: 01/29/07
 &glob table_c-layout-elem-rule-full '{&bef-table_c-layout-elem-rule-full}':U
 &glob bef-table_c-layout-elem-rule-attr-full Ист атр линий раскладок
 &glob table_c-layout-elem-rule-attr-full '{&bef-table_c-layout-elem-rule-attr-full}':U
+&glob bef-table_c-marking-full c-marking
+&glob table_c-marking-full '{&bef-table_c-marking-full}':U
+&glob bef-table_c-marking-attr-full История изменений по marking-attr
+&glob table_c-marking-attr-full '{&bef-table_c-marking-attr-full}':U
 &glob bef-table_c-norm-loss-full c-norm-loss
 &glob table_c-norm-loss-full '{&bef-table_c-norm-loss-full}':U
 &glob bef-table_c-nozzle-full Пистолеты ТРК
@@ -701,8 +705,8 @@ Creation date: 01/29/07
 &glob table_c-obj-grp-obj-price-full '{&bef-table_c-obj-grp-obj-price-full}':U
 &glob bef-table_c-OperServ-full Операторы
 &glob table_c-OperServ-full '{&bef-table_c-OperServ-full}':U
-&glob bef-table_c-operServAttr-full атрибуты кассовой книги
-&glob table_c-operServAttr-full '{&bef-table_c-operServAttr-full}':U
+&glob bef-table_c-OperServAttr-full атрибуты кассовой книги
+&glob table_c-OperServAttr-full '{&bef-table_c-OperServAttr-full}':U
 &glob bef-table_c-ord-doc-full История заказа
 &glob table_c-ord-doc-full '{&bef-table_c-ord-doc-full}':U
 &glob bef-table_c-ord-doc-attr-full История атрибутов заказа

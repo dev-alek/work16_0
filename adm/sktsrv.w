@@ -124,23 +124,6 @@ DEFINE VARIABLE hDoc-out  AS HANDLE.
 DEFINE VARIABLE hRoot-out AS HANDLE.
 DEFINE VARIABLE hRow-out  AS HANDLE.
 
-/* временные таблицы */
-DEFINE TEMP-TABLE  in-ItemHowMany NO-UNDO
-    FIELD ItemCode   AS CHAR
-    FIELD IHMObject  AS CHAR
-    FIELD IHMObjCode AS INTEGER
-    FIELD IHMFact    AS DECIMAL
-    FIELD IHMFree    AS DECIMAL
-INDEX idx-code ItemCode
-.
-DEFINE TEMP-TABLE  Out-ItemHowMany NO-UNDO
-    FIELD ItemCode   AS CHAR
-    FIELD IHMObject  AS CHAR
-    FIELD IHMObjCode AS INTEGER
-    FIELD IHMFact    AS DECIMAL
-    FIELD IHMFree    AS DECIMAL
-INDEX idx-code ItemCode
-.
 &scop CRLF chr(13) + chr(10)
 &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 /* _UIB-CODE-BLOCK-END */
@@ -388,15 +371,24 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   CheckUpd = new ibs.th.adm.upd.CheckUpd ().
   IF NOT THIS-PROCEDURE:PERSISTENT THEN 
   do while mWork:
-     if CheckUpd:isStopWork or CheckUpd:isNeedUpd
-     then do:
-        RUN proc-stop-srv.
-        mWork = no.
-     end.
-     wait-for close of this-procedure pause 0.001.
+     /*  */
+     
      if valid-object(sktserv)
      then
-        sktserv:checkEnd().
+        if sktserv:checkEnd()
+        then
+           wait-for close of this-procedure pause 0.001.
+        else do:
+           if  CheckUpd:isStopWork or CheckUpd:isNeedUpd 
+           then do:
+              RUN proc-stop-srv.
+              mWork = no.
+           end.
+           else
+              wait-for connect of hServerSocket or choose of Btn-st or close of this-procedure pause 60.
+        end.
+     else
+       wait-for choose of Btn-st or close of this-procedure.
      
   end.
   unsubscribe "write-to-log".  
@@ -607,7 +599,14 @@ PROCEDURE connproc :
                 sktserv:ClientPar  = entry (1, v-querypar, "?"). 
                 sktserv:QueryParam = entry (2, v-querypar, "?").
               end.
-              else sktserv:ClientPar = v-querypar.
+              else do:
+                 sktserv:ClientPar = v-querypar.
+                 sktserv:QueryParam = "".
+               end.
+            end.
+            else do:
+               sktserv:ClientPar = "".
+               sktserv:QueryParam = "".
             end.
           end.
           end.
@@ -818,7 +817,7 @@ procedure parseheader:
   RUN write-to-log('REQUEST-HEADER:' + p-header ).
   /*разбор шапки*/
   n = 2.
-  if p-header begins "GET" and num-entries (p-header, "/") > 1
+  if num-entries (p-header, "/") > 1
   then do:
     v-querypar = right-trim (right-trim  (entry(n, p-header, "/"), "HTTP"), " ").
   end.

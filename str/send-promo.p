@@ -173,13 +173,13 @@ procedure putc-16 :
           EXCLUSIVE-LOCK where ub.PromoAction.Status_ <> 3
           :
 
-          v-promo-action = new PromoActionSub().
+          v-promo-action = new PromoActionSub(i-obj-code).
 
           v-promo-action:ID = ub.PromoAction.id .
 
           m-storage = new ibs.th.gbl.storage.promoactionstorage () . // создать экземпляр, который работает с БД
 
-          m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
+          m-storage:refreshObj(v-promo-action, i-obj-code) . // прочесть коллекцию акций (все акции)
           v-promo-action:refreshChildObj() . // возвращает
           if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
           { str/putc-16.i }
@@ -190,13 +190,13 @@ procedure putc-16 :
         FOR EACH ub.PromoAction 
           EXCLUSIVE-LOCK where ub.PromoAction.Status_ = 1
           :
-          v-promo-action = new PromoActionSub().
+          v-promo-action = new PromoActionSub(i-obj-code).
 
           v-promo-action:ID = ub.PromoAction.id .
 
           m-storage = new ibs.th.gbl.storage.promoactionstorage () . // создать экземпляр, который работает с БД
 
-          m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
+          m-storage:refreshObj(v-promo-action, i-obj-code) . // прочесть коллекцию акций (все акции)
           v-promo-action:refreshChildObj() . // возвращает
           if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
           { str/putc-16.i }
@@ -221,7 +221,7 @@ procedure putc-16 :
           do:
             m-storage = new ibs.th.gbl.storage.promoactionstorage () . // создать экземпляр, который работает с БД
 
-            m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
+            m-storage:refreshObj(v-promo-action, i-obj-code) . // прочесть коллекцию акций (все акции)
             v-promo-action:refreshChildObj() . // возвращает
             if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
           { str/putc-16.i }
@@ -237,7 +237,7 @@ procedure putc-16 :
           do:
             m-storage = new ibs.th.gbl.storage.promoactionstorage () . // создать экземпляр, который работает с БД
 
-            m-storage:refreshObj(v-promo-action) . // прочесть коллекцию акций (все акции)
+            m-storage:refreshObj(v-promo-action, i-obj-code) . // прочесть коллекцию акций (все акции)
             v-promo-action:refreshChildObj() . // возвращает
             if ub.PromoAction.typecond = 4 then {str/putc-17d.i} .
           { str/putc-16.i }

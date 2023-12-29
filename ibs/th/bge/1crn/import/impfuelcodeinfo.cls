@@ -28,6 +28,7 @@ class ibs.th.bge.1crn.import.impfuelcodeinfo implements ibs.th.bge.1crn.import.i
    define buffer buf_ext-classif for ub.ext-classif .   
    define buffer buf_ext-system  for ub.ext-system .
    define buffer buf_goods       for ub.goods .
+   define buffer buf_code       for ub.code .
   
    define variable v-code         as character no-undo .
    define variable v-uniq-key-rec as character no-undo .
@@ -75,8 +76,23 @@ class ibs.th.bge.1crn.import.impfuelcodeinfo implements ibs.th.bge.1crn.import.i
       end.  
       else 
       do:
-         Msg = "Товар с кодом " + string(objfuelcodeinfo:IntCode) + " не найден" .
-         return false.
+         /* Товар не найден. Может это сезон ДТ */
+         find first buf_code no-lock where 
+                    buf_code.parent = "DTSeasons" 
+                and buf_code.code = string(integer(objfuelcodeinfo:IntCode)) 
+              no-error .
+         if available (buf_code) then do:
+             gen-key-rec (input {&table_Code},input (buffer buf_code:handle),output v-uniq-key-rec) no-error.
+             if error-status:error then 
+             do:
+                msg = return-value .
+                return false .
+             end.         
+         end.
+         else do:
+             Msg = "Товар с кодом " + string(objfuelcodeinfo:IntCode) + " не найден" .
+             return false.
+         end.
       end.    
  /*Внешняя система не указана, идет ко всем внешним системам*/
          for each buf_ext-system no-lock:

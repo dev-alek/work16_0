@@ -130,8 +130,22 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
     private set.
       
   constructor public edo ( pObjType as char, pObjCode as int ):
-
-
+     assign
+      ObjType = pObjType
+      ObjCode = pObjCode
+    .
+  end.
+  
+  method override public logical RefrashObject():
+     if     ObjType ne ""
+        and ObjType ne ?
+        and ObjCode ne ?
+        and ObjCode ne 0
+     then
+        RefrashObject(ObjType,ObjCode).
+  end method.
+  
+  method public logical RefrashObject(pObjType as char, pObjCode as int):
     define variable v-value-character     as character     no-undo .
     define variable v-value-decimal       as decimal       no-undo .
     define variable v-value-integer       as integer       no-undo .
@@ -158,7 +172,14 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingType = v-value-character.
-    {utl\objreg.i MarkingTypeobj markingtype MarkingType}
+    if valid-object(MarkingTypeobj)
+    then do:
+       MarkingTypeobj:ConfVal = MarkingType.
+    end.
+    else do:
+      {utl\objreg.i MarkingTypeobj markingtype MarkingType}
+    end.
+    
     run adm/shattri.p (
       input "get":U
       ,input pObjType
@@ -174,7 +195,13 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingTypeEDO = v-value-character.
-    {utl\objreg.i MarkingTypeEDOobj markingtype MarkingTypeEDO}
+    if valid-object(MarkingTypeEDOobj)
+    then do:
+       MarkingTypeEDOobj:ConfVal = MarkingTypeEDO.
+    end.
+    else do:
+       {utl\objreg.i MarkingTypeEDOobj markingtype MarkingTypeEDO}
+    end.
         
     run adm/shattri.p (
       input "get":U
@@ -299,8 +326,13 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingTypeArtic = v-value-character.
-    {utl\objreg.i MarkingTypeArticObj markingtype MarkingTypeArtic}
-        
+    if valid-object(MarkingTypeArticObj)
+    then do:
+       MarkingTypeArticObj:ConfVal = MarkingTypeArtic.
+    end.
+    else do:
+       {utl\objreg.i MarkingTypeArticObj markingtype MarkingTypeArtic}
+    end.    
     
     run adm/shattri.p (
       input "get":U
@@ -317,8 +349,14 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingTypeTransitional = v-value-character.
-    {utl\objreg.i MarkingTypeTransitionalObj markingtype MarkingTypeTransitional}
-
+    if valid-object(MarkingTypeTransitionalObj)
+    then do:
+       MarkingTypeTransitionalObj:ConfVal = MarkingTypeTransitional.
+    end.
+    else do:
+       {utl\objreg.i MarkingTypeTransitionalObj markingtype MarkingTypeTransitional}
+    end.
+    
     run adm/shattri.p (
       input "get":U
       ,input pObjType
@@ -334,7 +372,13 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingTypeBlockCashUnMark = v-value-character.
-    {utl\objreg.i MarkingTypeBlockCashUnMarkObj markingtype MarkingTypeBlockCashUnMark}
+    if valid-object(MarkingTypeBlockCashUnMarkObj)
+    then do:
+       MarkingTypeBlockCashUnMarkObj:ConfVal = MarkingTypeBlockCashUnMark.
+    end.
+    else do:
+       {utl\objreg.i MarkingTypeBlockCashUnMarkObj markingtype MarkingTypeBlockCashUnMark}
+    end.
     
     run adm/shattri.p (
       input "get":U
@@ -351,7 +395,13 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingTypeSaleReturn = v-value-character.
-    {utl\objreg.i MarkingTypeSaleReturnObj markingtype MarkingTypeSaleReturn}
+    if valid-object(MarkingTypeSaleReturnObj)
+    then do:
+       MarkingTypeSaleReturnObj:ConfVal = MarkingTypeSaleReturn.
+    end.
+    else do:
+       {utl\objreg.i MarkingTypeSaleReturnObj markingtype MarkingTypeSaleReturn}
+    end.
     
     run adm/shattri.p (
       input "get":U
@@ -368,7 +418,13 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingTypeSaleUPD = v-value-character.
-    {utl\objreg.i MarkingTypeSaleUPDObj markingtype MarkingTypeSaleUPD}
+    if valid-object(MarkingTypeSaleUPDObj)
+    then do:
+       MarkingTypeSaleUPDObj:ConfVal = MarkingTypeSaleUPD.
+    end.
+    else do:
+       {utl\objreg.i MarkingTypeSaleUPDObj markingtype MarkingTypeSaleUPD}
+    end.
     
     run adm/shattri.p (
       input "get":U
@@ -385,8 +441,14 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
     MarkingTypeOnlySale = v-value-character.
-    {utl\objreg.i MarkingTypeOnlySaleObj markingtype MarkingTypeOnlySale}                    
-  end constructor.
+    if valid-object(MarkingTypeOnlySaleObj)
+    then do:
+       MarkingTypeOnlySaleObj:ConfVal = MarkingTypeOnlySale.
+    end.
+    else do:
+       {utl\objreg.i MarkingTypeOnlySaleObj markingtype MarkingTypeOnlySale}  
+    end.                  
+  end method.
 
   /*------------------------------------------------------------------------------
    Purpose:

@@ -724,7 +724,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:bfilt:ImageTransparentColor = System.Drawing.Color:Magenta.
       this-object:bfilt:Name = "bfilt".
       this-object:bfilt:Size = new System.Drawing.Size(36, 36).
-      this-object:bfilt:Text = "Фильтр удаленные/все".
+      this-object:bfilt:Text = "Фильтр текущие/все".
       this-object:bfilt:Click:Subscribe(this-object:bfilt_Click).
       /*  */
       /* bselect */

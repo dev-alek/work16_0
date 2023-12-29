@@ -30,6 +30,9 @@ procedure GetObjServ:
     ObjSrv = new objsrv().
     ObjSrv:Initialization().
   end.
+  else do:
+     { gbl/objserref.i &checkupd = yes }
+  end.
   objServ = ObjSrv.
 end.
 
@@ -74,8 +77,5 @@ do:
       "Попытка запустить ее как обычную процедуру" skip
       view-as alert-box error .
   end.
-  
-  ObjSrv = new objsrv().
-  ObjSrv:Initialization().
   
 end.

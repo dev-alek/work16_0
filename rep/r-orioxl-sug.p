@@ -456,13 +456,14 @@ procedure table-inv:
     '<TD colspan = "10" style="text-align: center; border: 1px solid black;">11</TD>' skip
     '</TR>'skip     
     .
-  for each tt-sug:
     assign
       j_LineCount = 0
       .
+  for each tt-sug:
+    j_LineCount = j_LineCount + 1 .
     put stream OutStr-html unformatted
       '<TR>' skip
-      '<TD colspan = "4" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(j_LineCount + 1) + '</TD>' skip
+      '<TD colspan = "4" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(j_LineCount) + '</TD>' skip
       '<TD colspan = "9" text_wrap="true" style="text-align: center; border: 1px solid black;">' + tt-sug.gds-name + '</TD>' skip
       '<TD colspan = "5" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.gds-code) + '</TD>' skip
       '<TD colspan = "6" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.pl-code_) + '</TD>' skip
@@ -516,13 +517,14 @@ procedure table-inv:
     '<TD colspan = "10" style="text-align: center; border: 1px solid black;">10</TD>' skip
     '</TR>'skip     
     .
-  for each tt-sug:
     assign
       j_LineCount = 0
       .
+  for each tt-sug:
+    j_LineCount = j_LineCount + 1 .
     put stream OutStr-html unformatted
       '<TR>' skip
-      '<TD colspan = "4" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(j_LineCount + 1) + '</TD>' skip
+      '<TD colspan = "4" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(j_LineCount) + '</TD>' skip
       '<TD colspan = "9" text_wrap="true" style="text-align: center; border: 1px solid black;">' + tt-sug.gds-name + '</TD>' skip
       '<TD colspan = "5" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.gds-code) + '</TD>' skip
       '<TD colspan = "8" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-sug.pl-type) + '</TD>' skip
