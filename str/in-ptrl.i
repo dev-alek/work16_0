@@ -3993,6 +3993,13 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           infoSectionsTotal:GetDBAllAttr().
           do ii = 1 to infoSectionsTotal:SectionNum :
             infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+            if infoSectionObj:AccMeth = 0
+            then do :
+              infoSectionObj:TankDensityPomi = ? .
+              infoSectionObj:TankVolPomi = ? .
+              infoSectionObj:TankWeight = ? .
+              infoSectionObj:AccPomi = ? .
+            end .
             infoSectionObj:AccMeth = ? .
             infoSectionObj:DateStart = ? .
             infoSectionObj:TimeStart = ? .

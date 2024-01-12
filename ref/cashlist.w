@@ -2174,7 +2174,9 @@ FUNCTION get-fo-version RETURNS CHARACTER
     ,input  (if p-pos-type = {&cd-type-IBM-XML}
     then {&cda-IBM-XML_operative}
     else {&cda-AUTOTANK_operative})
-    ,input  {&cda-IBM-XML_operative_fo-version}
+    ,input  (if p-pos-type = {&cd-type-IBM-XML}
+    then {&cda-IBM-XML_operative_fo-version}
+    else {&cda-AUTOTANK_operative_fo-version})
     ,output v-fo-version
     ,output v-date
     ,output v-decimal

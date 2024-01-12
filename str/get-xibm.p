@@ -293,9 +293,12 @@ else do:
    end.
 end.
 /* --- получение версии кассового ПО --- */
+
 define variable v-rowid as rowid no-undo .
 define variable v-tbl-name as character no-undo .
 define buffer locked_cash-desk for ub.cash-desk.
+p-second-mode = trim(p-second-mode,{&delim-par}).
+
 if entry(1, p-second-mode) = "version" then do:
   do transaction:
     run gen-row-keyr in this-procedure

@@ -182,6 +182,20 @@ run str/imp2cdgeth.p(output mImp2CdH).
   find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error.
   if not available buf_goods
   then do :
+    find first ub.prod-bc no-lock where ub.prod-bc.b-str = string(v-gds-code) no-error .
+    if available (ub.prod-bc) then do:
+
+      find first ub.goods no-lock where ub.goods.gds-code = ub.prod-bc.b-code no-error .
+      v-err-mess = substitute(
+        "Уже есть товар &1 &2 с доп. кодом &3 - товар &3 &4 не будет добавлен в систему &5"
+        , ub.goods.gds-code
+        , ub.goods.gds-name
+        , v-gds-code
+        , p-GdsObj:name_
+        , {&new-line}
+      ) .
+       undo, return error v-err-mess .     
+    end.
       assign
         v-gds-mode = {&add-def}
         v-rid = ?

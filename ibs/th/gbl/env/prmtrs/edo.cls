@@ -37,10 +37,7 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
     get.
     private set.
   
-  define public property MarkingTypeEDO as character initial "" no-undo 
-    get.
-    private set.
-
+  
   define public property MarkingTypeEDOobj as class markingtype no-undo 
     get.
     private set.
@@ -49,49 +46,29 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
     get.
     private set.
 
-  define public property MarkingTypeArtic as character initial "" no-undo 
-    get.
-    private set.
-
+  
   define public property MarkingTypeTransitionalObj as class markingtype no-undo 
     get.
     private set.
 
-  define public property MarkingTypeTransitional as character initial "" no-undo 
-    get.
-    private set.
-
+  
   define public property MarkingTypeBlockCashUnMarkObj as class markingtype no-undo 
     get.
     private set.
 
-  define public property MarkingTypeBlockCashUnMark as character initial "" no-undo 
-    get.
-    private set.
     
   define public property MarkingTypeSaleReturnObj as class markingtype no-undo 
     get.
     private set.
 
-  define public property MarkingTypeSaleReturn as character initial "" no-undo 
-    get.
-    private set.
-    
   define public property MarkingTypeSaleUPDObj as class markingtype no-undo 
     get.
     private set.
 
-  define public property MarkingTypeSaleUPD as character initial "" no-undo 
-    get.
-    private set.
-    
   define public property MarkingTypeOnlySaleObj as class markingtype no-undo 
     get.
     private set.
 
-  define public property MarkingTypeOnlySale as character initial "" no-undo 
-    get.
-    private set.                    
 /*  define public property IsMarking as logical initial false no-undo*/
 /*    get:                                                           */
 /*       return MarkingTypeobj:IsMarking.                            */
@@ -174,7 +151,7 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
     MarkingType = v-value-character.
     if valid-object(MarkingTypeobj)
     then do:
-       MarkingTypeobj:ConfVal = MarkingType.
+       MarkingTypeobj:reLoadItems(v-value-character).
     end.
     else do:
       {utl\objreg.i MarkingTypeobj markingtype MarkingType}
@@ -194,13 +171,12 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,output v-value-type
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
-    MarkingTypeEDO = v-value-character.
     if valid-object(MarkingTypeEDOobj)
     then do:
-       MarkingTypeEDOobj:ConfVal = MarkingTypeEDO.
+       MarkingTypeEDOobj:reLoadItems(v-value-character).
     end.
     else do:
-       {utl\objreg.i MarkingTypeEDOobj markingtype MarkingTypeEDO}
+       {utl\objreg.i MarkingTypeEDOobj markingtype v-value-character}
     end.
         
     run adm/shattri.p (
@@ -325,13 +301,12 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,output v-value-type
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
-    MarkingTypeArtic = v-value-character.
     if valid-object(MarkingTypeArticObj)
     then do:
-       MarkingTypeArticObj:ConfVal = MarkingTypeArtic.
+       MarkingTypeArticObj:reLoadItems(v-value-character).
     end.
     else do:
-       {utl\objreg.i MarkingTypeArticObj markingtype MarkingTypeArtic}
+       {utl\objreg.i MarkingTypeArticObj markingtype v-value-character}
     end.    
     
     run adm/shattri.p (
@@ -348,13 +323,12 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,output v-value-type
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
-    MarkingTypeTransitional = v-value-character.
     if valid-object(MarkingTypeTransitionalObj)
     then do:
-       MarkingTypeTransitionalObj:ConfVal = MarkingTypeTransitional.
+       MarkingTypeTransitionalObj:reLoadItems(v-value-character).
     end.
     else do:
-       {utl\objreg.i MarkingTypeTransitionalObj markingtype MarkingTypeTransitional}
+       {utl\objreg.i MarkingTypeTransitionalObj markingtype v-value-character}
     end.
     
     run adm/shattri.p (
@@ -371,13 +345,12 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,output v-value-type
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
-    MarkingTypeBlockCashUnMark = v-value-character.
     if valid-object(MarkingTypeBlockCashUnMarkObj)
     then do:
-       MarkingTypeBlockCashUnMarkObj:ConfVal = MarkingTypeBlockCashUnMark.
+       MarkingTypeBlockCashUnMarkObj:reLoadItems(v-value-character).
     end.
     else do:
-       {utl\objreg.i MarkingTypeBlockCashUnMarkObj markingtype MarkingTypeBlockCashUnMark}
+       {utl\objreg.i MarkingTypeBlockCashUnMarkObj markingtype v-value-character}
     end.
     
     run adm/shattri.p (
@@ -394,13 +367,12 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,output v-value-type
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
-    MarkingTypeSaleReturn = v-value-character.
     if valid-object(MarkingTypeSaleReturnObj)
     then do:
-       MarkingTypeSaleReturnObj:ConfVal = MarkingTypeSaleReturn.
+       MarkingTypeSaleReturnObj:reLoadItems(v-value-character).
     end.
     else do:
-       {utl\objreg.i MarkingTypeSaleReturnObj markingtype MarkingTypeSaleReturn}
+       {utl\objreg.i MarkingTypeSaleReturnObj markingtype v-value-character}
     end.
     
     run adm/shattri.p (
@@ -417,13 +389,12 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,output v-value-type
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
-    MarkingTypeSaleUPD = v-value-character.
     if valid-object(MarkingTypeSaleUPDObj)
     then do:
-       MarkingTypeSaleUPDObj:ConfVal = MarkingTypeSaleUPD.
+       MarkingTypeSaleUPDObj:reLoadItems(v-value-character).
     end.
     else do:
-       {utl\objreg.i MarkingTypeSaleUPDObj markingtype MarkingTypeSaleUPD}
+       {utl\objreg.i MarkingTypeSaleUPDObj markingtype v-value-character}
     end.
     
     run adm/shattri.p (
@@ -440,13 +411,12 @@ class ibs.th.gbl.env.prmtrs.edo inherits objth.
       ,output v-value-type
       ,input-output TABLE thbjattr_thbj-attr
       ) no-error .
-    MarkingTypeOnlySale = v-value-character.
     if valid-object(MarkingTypeOnlySaleObj)
     then do:
-       MarkingTypeOnlySaleObj:ConfVal = MarkingTypeOnlySale.
+       MarkingTypeOnlySaleObj:reLoadItems(v-value-character).
     end.
     else do:
-       {utl\objreg.i MarkingTypeOnlySaleObj markingtype MarkingTypeOnlySale}  
+       {utl\objreg.i MarkingTypeOnlySaleObj markingtype v-value-character}  
     end.                  
   end method.
 

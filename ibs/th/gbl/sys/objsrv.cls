@@ -21,7 +21,7 @@ using ibs.th.gbl.logger.putout.
 using ibs.th.gbl.sys.env.ini.
 using ibs.th.gbl.lib.
 using ibs.th.gbl.systemsetting.
-
+using ibs.th.gbl.sys.SystemAux.
 
 class ibs.th.gbl.sys.objsrv:
   &glob GlobObjSrvClass yes
@@ -54,6 +54,10 @@ class ibs.th.gbl.sys.objsrv:
     get.
     private set. 
   
+  define property SystemAux as class systemaux no-undo
+    get.
+    private set. 
+  
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -74,6 +78,7 @@ class ibs.th.gbl.sys.objsrv:
 
   method public void Initialization(  ):
     session:error-stack-trace = session:debug-alert.
+    {utl\objreg.i SystemAux SystemAux}
     {utl\objreg.i SysINI ini}
     {utl\objreg.i out putout "SysINI:SystemLogFileName:Value_" }
     {utl\objreg.i Env env }
@@ -81,6 +86,7 @@ class ibs.th.gbl.sys.objsrv:
     define variable vtext as character no-undo.
     vtext = {utlcomp/keypub.i}.
     {utl\objreg.i SystemSetting systemsetting vtext}.
+    
     return.
     define variable v-err-msg as character no-undo .  
 /*  catch exAppErrors as class Progress.Lang.AppError :                                  */

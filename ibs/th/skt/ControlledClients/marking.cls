@@ -686,8 +686,8 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
                 then do:
                    assign
                       vTimeAvail = Round((vTimeBegErr + gismt-MaxTime * 3600000 - now) / 3600000,0)
-                      vErrSts = "—ообщите управл€ющему/старшему смены, что до блокировки продаж маркированных товаров осталось " 
-                                + string(vTimeAvail) + " часов. "
+                      vErrSts = "—ообщите управл€ющему/старшему смены, что до блокировки продаж маркированных товаров осталось: " 
+                                + string(vTimeAvail) + " ч. "
                       .
                 end.   
              end.    
@@ -1251,9 +1251,9 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
                  vMRC_r = if vMRC <> ? then Round((vMrc / 100), 2) else 0
                  vMrp_r = Round((vMrp / 100), 2)
                  vErrSts = vErrSts + "ћ–÷ на упаковке " 
-                           + (if vMRC = ? then "не определена" else trim(string(vMrc_r,">>>>>>>>>>9.99"), " ") + " р.") 
+                           + (if vMRC = ? then "не определена" else trim(string(vMrc_r,">>>>>>>>>>9.99"), " ") + "р.") 
                            + " не совпадает с ћ–÷ в „естном «наке - " 
-                           + trim(string(vMrp_r,">>>>>>>>>>9.99"), " ") + " р. ".
+                           + trim(string(vMrp_r,">>>>>>>>>>9.99"), " ") + "р. "
                  mCheckSts = 0
                  .
          if  vCheckOwner and 
