@@ -1772,6 +1772,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       if infoSecsObj:IsKP
       then do :
         if cbSGDKK:Checked
+        and infoSecsObj:InfoSectionCurr:AccMeth = 0
         then do :
           groupBox2:Enabled = true.
           groupBox3:Enabled = true.
