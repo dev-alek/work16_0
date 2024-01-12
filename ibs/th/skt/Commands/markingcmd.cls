@@ -31,9 +31,6 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
   &scop CRLF chr(13) + chr(10)
   &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 
-  define public property ErrStatus as logical no-undo 
-    get.
-    set. 
 
   define public property LogMsg as character no-undo 
     get.
@@ -55,10 +52,13 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
 
   method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse ):
     
-    
-    hndlsocket = req:HndlSocket.
-    marking:hndler(req).
-    writeSock(marking:SomeStr).
+    do transaction:
+       hndlsocket = req:HndlSocket.
+       marking:hndler(req).
+       if not writeSock(marking:SomeStr)
+       then
+          undo, return.
+    end.
 
   end method.
 
@@ -73,21 +73,26 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
     define variable mbuffer1 as memptr   no-undo.
     define variable tempStr  as longchar no-undo.
     define variable glog     as logical  no-undo.
-    LogWrite:LogStr = LogWrite:LogStr + " " + string (marking:SomeStr).
     set-size(mbuffer1) = length (marking:SomeStr, "RAW":U).    
     copy-lob
       from object marking:SomeStr
       to object mbuffer1
       convert target codepage "UTF-8".
-    assign
-      glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
-    set-size(mbuffer1) = 0.
+    if not hndlSocket:connected()
+    then do:
+       LogWrite:LogStr = " " + "Клиент отключился.".
+       return false.
+    end.
+    glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1)).
     if not glog
-      then do:
-        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
-        ErrStatus = true.
-        undo.
-      end.
+       or hndlsocket:bytes-written ne get-size(mbuffer1)
+    then do:
+        set-size(mbuffer1) = 0.
+        LogWrite:WriteFileToLog("Ошибка при отправке сообщения удаленному клиенту.").
+        return false.
+    end.
+    set-size(mbuffer1) = 0.
+    LogWrite:LogStr = LogWrite:LogStr + " " + string (marking:SomeStr).
     return true.
       
   end method.
