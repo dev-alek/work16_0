@@ -90,6 +90,7 @@ define buffer buf_fbr-recipe            for ub.fbr-recipe .
 define buffer buf_doc-line              for ub.doc-line .
 define buffer buf_doc-line-attr         for ub.doc-line-attr .
 define buffer buf_parts                 for ub.parts .
+define buffer buf_sale-doc              for ub.sale-doc .
 
 define variable varvalue as character no-undo .
 define variable vartype  as character no-undo .
@@ -357,12 +358,21 @@ fact-close:
         end.
         
         if buf_fbr-doc.fact-date = ? then do:
+          assign
+            buf_fbr-doc.fact-date      = v-fact-date
+            buf_fbr-doc.shift-date     = v-shift-date
+            buf_fbr-doc.shift-num      = v-shift-num
+            buf_fbr-doc.shift-name     = v-shift-name
+          .
+          find first buf_sale-doc no-lock where buf_sale-doc.inkas-code = buf_fbr-doc.out-code no-error .
+          if available buf_sale-doc
+          then do :
             assign
-                buf_fbr-doc.fact-date      = v-fact-date
-                buf_fbr-doc.shift-date     = v-shift-date
-                buf_fbr-doc.shift-num      = v-shift-num
-                buf_fbr-doc.shift-name     = v-shift-name
+              buf_fbr-doc.shift-date     = buf_sale-doc.shift-date
+              buf_fbr-doc.shift-num      = buf_sale-doc.shift-num
+              buf_fbr-doc.shift-name     = buf_sale-doc.shift-name
             .
+          end .
         end.
         
         find first buf_shift-obj no-lock
@@ -373,6 +383,9 @@ fact-close:
             no-error.
         
         if available buf_shift-obj then do:
+          find first buf_sale-doc no-lock where buf_sale-doc.inkas-code = buf_fbr-doc.out-code no-error .
+          if not available buf_sale-doc
+          then do :
             if buf_fbr-doc.fact-date > buf_shift-obj.close-date
                 OR buf_fbr-doc.fact-date < buf_shift-obj.open-date then do:
                 
@@ -382,6 +395,7 @@ fact-close:
                                          buf_shift-obj.shift-num
                                         ).
             end.
+          end .
         end.
         
         assign
