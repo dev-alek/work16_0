@@ -6657,16 +6657,11 @@ PROCEDURE m_disable-online-check :
     { gbl/curdbnum.i
       v-current-db-num
     }
-    { gbl/objdbnum.i
-      v-cntxt-obj-type
-      v-cntxt-obj-code
-      v-obj-db-num
-    }
   
   if v-current-db-num <> 0 then do:
   for each ub.shop no-lock where ub.shop.obj-code = v-cntxt-obj-code: 
-    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
-      buf_thbj-attr.obj-type = {&shop} and
+    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = v-current-db-num and
+      buf_thbj-attr.obj-type = {&db} and
       buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
       buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
       buf_thbj-attr.property-value-logical = true .
@@ -6674,20 +6669,14 @@ PROCEDURE m_disable-online-check :
   end.
   end.
   else do:
-  for each ub.shop no-lock : 
-    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
-      buf_thbj-attr.obj-type = {&shop} and
+  for each ub.db no-lock : 
+    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.db.db-num and
+      buf_thbj-attr.obj-type = {&db} and
       buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
       buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
       buf_thbj-attr.property-value-logical = true .
     end. 
   end.
-  for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = 0 and
-    buf_thbj-attr.obj-type = "" and
-    buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
-    buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
-    buf_thbj-attr.property-value-logical = true .
-  end. 
   end.
   message "Параметр «Аварийная ситуация в ГИС МТ» - включен"
     view-as alert-box.          
@@ -6705,37 +6694,26 @@ PROCEDURE m_enable-online-check :
     { gbl/curdbnum.i
       v-current-db-num
     }
-    { gbl/objdbnum.i
-      v-cntxt-obj-type
-      v-cntxt-obj-code
-      v-obj-db-num
-    }
   
   if v-current-db-num <> 0 then do:
-  for each ub.shop no-lock where ub.shop.obj-code = v-cntxt-obj-code: 
-    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
-      buf_thbj-attr.obj-type = {&shop} and
+ 
+    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = v-current-db-num and
+      buf_thbj-attr.obj-type = {&db} and
       buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
       buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
       buf_thbj-attr.property-value-logical = false .
     end. 
-  end.
+
   end.
   else do:
-  for each ub.shop no-lock : 
-    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.shop.obj-code and
-      buf_thbj-attr.obj-type = {&shop} and
+  for each ub.db no-lock : 
+    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.db.db-num and
+      buf_thbj-attr.obj-type = {&db} and
       buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
       buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
       buf_thbj-attr.property-value-logical = false .
     end. 
   end.
-  for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = 0 and
-    buf_thbj-attr.obj-type = "" and
-    buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
-    buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
-    buf_thbj-attr.property-value-logical = false .
-  end. 
   end.
   message "Параметр «Аварийная ситуация в ГИС МТ» - выключен"
     view-as alert-box.          
