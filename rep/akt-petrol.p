@@ -172,7 +172,7 @@ do
   /*Номер АЦ*/
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-car-num},OUTPUT v-car-num) no-error .
     
-  /*Наличие СГДКК*/
+  /*Наличие СЭП*/
   find first ub.auto-tank-attr no-lock where ub.auto-tank-attr.auto-num = v-car-num and
     ub.auto-tank-attr.attr-code = "auto-sep" and
     logical(ub.auto-tank-attr.attr-value) = true no-error .

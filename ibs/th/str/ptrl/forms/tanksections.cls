@@ -505,7 +505,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
           then do :
             message "Для секций " skip
                     numsecs
-                    "установлены флаги «Тревожное событие СГДКК». По обозначенным  секциям будет активирован  комиссионный прием. Продолжить?"
+                    "установлены флаги «Тревожное событие СЭП». По обозначенным  секциям будет активирован  комиссионный прием. Продолжить?"
             view-as alert-box question buttons yes-no update vlog .
             if not vlog
             then do :

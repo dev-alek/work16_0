@@ -1104,8 +1104,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 		then do :
 		  if cbSGDKK:Checked
       then do :
-        message "Установлен флаг «Тревожное событие СГДКК». Для продолжения работы с документом потребуется ввести Идентификатор доступа (ключа) «верхнего уровня» или одноразовый код.?" skip
-                "Вы уверены в правильности установки флага «Тревожное событие СГДКК»?"
+        message "Установлен флаг «Тревожное событие СЭП». Для продолжения работы с документом потребуется ввести Идентификатор доступа (ключа) «верхнего уровня» или одноразовый код.?" skip
+                "Вы уверены в правильности установки флага «Тревожное событие СЭП»?"
         view-as alert-box question buttons yes-no update v-log .
         if v-log
         then do :
@@ -1142,7 +1142,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 		else do :
   		if cbSGDKK:Checked
       then do :
-        message "При установке флага «Тревожное событие СГДКК» будет активирован комиссионный прием. Продолжить?"
+        message "При установке флага «Тревожное событие СЭП» будет активирован комиссионный прием. Продолжить?"
         view-as alert-box question buttons yes-no update v-log .
         if v-log
         then do :
@@ -3291,7 +3291,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:cbSGDKK:Padding = new System.Windows.Forms.Padding(5, 0, 0, 0).
     this-object:cbSGDKK:Size = new System.Drawing.Size(182, 20).
     this-object:cbSGDKK:TabIndex = 38.
-    this-object:cbSGDKK:Text = "Тревожное событие СГДКК".
+    this-object:cbSGDKK:Text = "Тревожное событие СЭП".
     this-object:cbSGDKK:UseCompatibleTextRendering = true.
     this-object:cbSGDKK:UseVisualStyleBackColor = false.
     /*  */
