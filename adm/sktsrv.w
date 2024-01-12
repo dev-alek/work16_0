@@ -345,8 +345,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable sktserv  as class SktServer no-undo.
   define variable logWrite as class LogWrite  no-undo.
 
-  apply 'choose':U to Btn-st.
-    { gbl/curdbnum.i
+  { gbl/curdbnum.i
       g#db-num
     }
   g#language = 'RUS'.
@@ -364,7 +363,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   logWrite = new LogWrite().          
   sktserv  = new SktServer(this-procedure).
-  
+  apply 'choose':U to Btn-st.
   mWork = yes.
   subscribe "write-to-log" anywhere.
   define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
