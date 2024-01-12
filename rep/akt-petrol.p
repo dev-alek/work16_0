@@ -1127,8 +1127,8 @@ procedure print-table1:
       put stream OutStr-html unformatted
       '<TD text_wrap="true" colspan="2" style="text-align: center;">' + tt-petrol.urov-AC + '</TD>' skip
       '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.999",3) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-AC,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + if tt-petrol.density-AC = ? then " " else fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip        
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + if tt-petrol.temp-AC = ? then " " else fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + (if tt-petrol.density-AC = ? then " " else fnc-convert-dot-to-colon(tt-petrol.density-AC,"->>>>>>>>>>>9.9",1)) + '</TD>' skip        
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + (if tt-petrol.temp-AC = ? then " " else fnc-convert-dot-to-colon(tt-petrol.temp-AC,"->>>>>>>>>>>9.9",1)) + '</TD>' skip
       '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip
       '</TR>'skip     
       .
@@ -1196,9 +1196,9 @@ procedure print-table2:
     end .
     else do :
       put stream OutStr-html unformatted
-      '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + if tt-petrol.limit = ? then " " else fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + if tt-petrol.limit = ? then " " else fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + if tt-petrol.limit = ? then " " else fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '</TD>' skip           
+      '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + (if tt-petrol.limit = ? then " " else fnc-convert-dot-to-colon(tt-petrol.limit,"->>>>>>>>>>9.9",1)) + '</TD>' skip
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + (if tt-petrol.limit = ? then " " else fnc-convert-dot-to-colon(tt-petrol.deficit,"->>>>>>>>>>9.9",1)) + '</TD>' skip
+      '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + (if tt-petrol.limit = ? then " " else fnc-convert-dot-to-colon(tt-petrol.excess,"->>>>>>>>>>9.9",1)) + '</TD>' skip           
       .
     end .
     put stream OutStr-html unformatted
