@@ -755,14 +755,15 @@ do
             tt-petrol.urov-AC = "SGDKK".
           end .
           
-          if sgdkk
-          and v-InfoSection:IsKP
+          if v-InfoSection:IsKP
           and v-InfoSection:AccMeth = 1
           then do :
             tt-petrol.urov-AC = "".
             tt-petrol.density-AC = ? .
             tt-petrol.temp-AC    = ? .
             tt-petrol.limit      = ? .
+            tt-petrol.vol-AC     = 0 .
+            tt-petrol.weight-AC  = 0 .
             
             v-sec-name = v-InfoSection:SectionName .
             find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
@@ -814,6 +815,7 @@ do
                 tt-petrol.weight-AC  = tt-petrol.weight-AC  - buf_rvs-line.state-measure-cli-qnty .
               end .
             end .
+            tt-petrol.vol-AC = tt-petrol.vol-AC / 1000 .
           end .
 
         /*                    for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_doc-line.obj-type     */

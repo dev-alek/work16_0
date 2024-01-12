@@ -680,7 +680,9 @@ if ((varstatus = {&wayb} and varflag) or varstatus = {&fact}) and varauto-tank =
 then do:
   define variable v-dec as decimal no-undo .
   v-kpsecs = "" .
-  for each bf_doc-line-attr where bf_doc-line-attr.doc-code = bf_trn-doc.doc-code and bf_doc-line-attr.attr-code = "n":
+  for each bf_doc-line-attr where bf_doc-line-attr.doc-code = bf_trn-doc.doc-code
+                              and bf_doc-line-attr.attr-code = "n" 
+                              break by bf_doc-line-attr.gds-code :
     def var infoSectionObj as class InfoSection no-undo.
     infoSectionsTotal = new InfoSectionsTotal().
     infoSectionsTotal:Initialization(bf_trn-doc.doc-code, bf_doc-line-attr.gds-code).
@@ -780,21 +782,32 @@ then do:
             end .
           end .
           else do :
-            if infoSectionsTotal:IsSGDKK
+            if first-of(bf_doc-line-attr.gds-code)
             then do :
-              if infoSectionObj:alarm-SGDKK
+              if infoSectionsTotal:IsSGDKK
               then do :
-                v-kpsecs = v-kpsecs + infoSectionObj:SectionName + " (" + bf_goods.gds-name + "), " .
-                if not infoSectionObj:IsKP
+                if infoSectionObj:alarm-SGDKK
                 then do :
-                  infoSectionObj:IsKP = yes .
-                  v-needsavesec = yes .
+                  v-kpsecs = v-kpsecs + infoSectionObj:SectionName + " (" + bf_goods.gds-name + "), " .
+                  if not infoSectionObj:IsKP
+                  then do :
+                    infoSectionObj:IsKP = yes .
+                    v-needsavesec = yes .
+                  end .
+                end .
+                else do :
+                  if infoSectionObj:IsKP
+                  then do :
+                    infoSectionObj:IsKP = no .
+                    v-needsavesec = yes .
+                  end .
                 end .
               end .
               else do :
                 if infoSectionObj:IsKP
                 then do :
                   infoSectionObj:IsKP = no .
+                  infoSectionObj:TankWeight = 0 .
                   v-needsavesec = yes .
                 end .
               end .
