@@ -686,8 +686,8 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
                 then do:
                    assign
                       vTimeAvail = Round((vTimeBegErr + gismt-MaxTime * 3600000 - now) / 3600000,0)
-                      vErrSts = "Сообщите управляющему/старшему смены, что до блокировки продаж маркированных товаров осталось " 
-                                + string(vTimeAvail) + " часов. "
+                      vErrSts = "Сообщите управляющему/старшему смены, что до блокировки продаж маркированных товаров осталось: " 
+                                + string(vTimeAvail) + " ч. "
                       .
                 end.   
              end.    
