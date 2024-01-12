@@ -1251,9 +1251,9 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
                  vMRC_r = if vMRC <> ? then Round((vMrc / 100), 2) else 0
                  vMrp_r = Round((vMrp / 100), 2)
                  vErrSts = vErrSts + "МРЦ на упаковке " 
-                           + (if vMRC = ? then "не определена" else trim(string(vMrc_r,">>>>>>>>>>9.99"), " ") + " р.") 
+                           + (if vMRC = ? then "не определена" else trim(string(vMrc_r,">>>>>>>>>>9.99"), " ") + "р.") 
                            + " не совпадает с МРЦ в Честном Знаке - " 
-                           + trim(string(vMrp_r,">>>>>>>>>>9.99"), " ") + " р. ".
+                           + trim(string(vMrp_r,">>>>>>>>>>9.99"), " ") + "р. "
                  mCheckSts = 0
                  .
          if  vCheckOwner and 
