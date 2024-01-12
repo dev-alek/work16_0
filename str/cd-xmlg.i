@@ -677,39 +677,42 @@ on error undo, return error
               m-head-pos-type  = cash-desk.pos-type
               m-head-cash-num  = cash-desk.cash-num
            .
-/*Дата последнего опроса касс*/
-           run cd-attr-write in this-procedure (
-                                                   input cash-desk.db-num
-                                                  ,input cash-desk.obj-code
-                                                  ,input cash-desk.pos-type
-                                                  ,input cash-desk.cash-num
-                                                  ,input  (if p-pos-type = {&cd-type-ibm-xml}
-                                                           then {&cda-IBM-XML_operative}
-                                                           else {&cda-AUTOTANK_operative})
-                                                  ,input {&cda-IBM-XML_operative_last-date-polls}
-                                                  ,input string (today,"99.99.9999")
-                                                  ,input ? /*p-date*/
-                                                  ,input 0 /*p-decimal*/
-                                                  ,input 0 /*p-integer*/
-                                                  ,input no /*p-logical*/
-                                                  ) .
+          /*Дата последнего опроса касс*/
+          if p-pos-type = {&cd-type-ibm-xml} then 
+          do:
+            run cd-attr-write in this-procedure (
+              input cash-desk.db-num
+              ,input cash-desk.obj-code
+              ,input cash-desk.pos-type
+              ,input cash-desk.cash-num
+              ,input  (if p-pos-type = {&cd-type-ibm-xml}
+              then {&cda-IBM-XML_operative}
+              else {&cda-AUTOTANK_operative})
+              ,input {&cda-IBM-XML_operative_last-date-polls}
+              ,input string (today,"99.99.9999")
+              ,input ? /*p-date*/
+              ,input 0 /*p-decimal*/
+              ,input 0 /*p-integer*/
+              ,input no /*p-logical*/
+              ) .
 
-/*Время последнего опроса касс*/
-           run cd-attr-write in this-procedure (
-                                                   input cash-desk.db-num
-                                                  ,input cash-desk.obj-code
-                                                  ,input cash-desk.pos-type
-                                                  ,input cash-desk.cash-num
-                                                  ,input  (if p-pos-type = {&cd-type-ibm-xml}
-                                                           then {&cda-IBM-XML_operative}
-                                                           else {&cda-AUTOTANK_operative})
-                                                  ,input {&cda-IBM-XML_operative_last-time-polls}
-                                                  ,input string (time,"HH:MM:SS") 
-                                                  ,input ? /*p-date*/
-                                                  ,input 0 /*p-decimal*/
-                                                  ,input 0 /*p-integer*/
-                                                  ,input no /*p-logical*/
-                                                  ) .
+            /*Время последнего опроса касс*/
+            run cd-attr-write in this-procedure (
+              input cash-desk.db-num
+              ,input cash-desk.obj-code
+              ,input cash-desk.pos-type
+              ,input cash-desk.cash-num
+              ,input  (if p-pos-type = {&cd-type-ibm-xml}
+              then {&cda-IBM-XML_operative}
+              else {&cda-AUTOTANK_operative})
+              ,input {&cda-IBM-XML_operative_last-time-polls}
+              ,input string (time,"HH:MM:SS") 
+              ,input ? /*p-date*/
+              ,input 0 /*p-decimal*/
+              ,input 0 /*p-integer*/
+              ,input no /*p-logical*/
+              ) .
+          end.                                                  
 
 
            run cd-attr-value in this-procedure (
@@ -717,10 +720,10 @@ on error undo, return error
                                               ,input cash-desk.obj-code
                                               ,input cash-desk.pos-type
                                               ,input cash-desk.cash-num
-                                              ,input  (if p-pos-type = {&cd-type-IBM-XML}
+                                              ,input  (if cash-desk.pos-type = {&cd-type-IBM-XML}
                                                       then {&cda-IBM-XML_operative}
                                                       else {&cda-AUTOTANK_operative})
-                                              ,input  (if p-pos-type = {&cd-type-IBM-XML}
+                                              ,input  (if cash-desk.pos-type = {&cd-type-IBM-XML}
                                                        then {&cda-IBM-XML_operative_fo-version}
                                                        else {&cda-AUTOTANK_operative_fo-version})
                                               ,output v-old-fo-version
@@ -737,10 +740,10 @@ on error undo, return error
                                                   ,input cash-desk.obj-code
                                                   ,input cash-desk.pos-type
                                                   ,input cash-desk.cash-num
-                                                  ,input  (if p-pos-type = {&cd-type-ibm-xml}
+                                                  ,input  (if cash-desk.pos-type = {&cd-type-ibm-xml}
                                                            then {&cda-IBM-XML_operative}
                                                            else {&cda-AUTOTANK_operative})
-                                                  ,input (if p-pos-type = {&cd-type-IBM-XML}
+                                                  ,input (if cash-desk.pos-type = {&cd-type-IBM-XML}
                                                           then {&cda-IBM-XML_operative_fo-version}
                                                           else {&cda-AUTOTANK_operative_fo-version})
                                                   ,input v-fo-version
