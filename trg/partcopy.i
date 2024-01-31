@@ -1877,7 +1877,7 @@ procedure partcopy-update-parts-delete :
           undo, return error .
         end.
         
-        if v-izlcstpr then v-need-unrv = false .
+        if v-izlcstpr and archive_parts.fact-qnty > 0 then v-need-unrv = false .
 
         if v-need-rsrv = true
         then do:

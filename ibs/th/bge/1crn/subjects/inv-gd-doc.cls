@@ -95,6 +95,11 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
   define variable dLoss-sum        as decimal   no-undo .
   define temp-table tt-marks no-undo
     field mark as character.
+    
+  constructor public inv-gd-doc():
+    if not valid-handle (ibs.th.gbl.gbl-hndllib:g#trdcalib) then
+      run str/trdcalib.p persistent no-error .
+  end constructor.
   
   method public void CrContentToSW (insw as handle):
     { gbl/objsrv.i}
