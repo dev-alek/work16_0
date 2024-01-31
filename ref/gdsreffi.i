@@ -374,7 +374,8 @@ vNum-entries = NUm-ENTRIES(v-gds-ref-fi).
       else if entry(1, entry-ii, ".") = {&table_goods-attr} then  do: 
         vvalue = "[!!Ошибка]".
                 run gds-attr-value in this-procedure ( fi-goods.gds-code
-                                                      ,input entry(2, entry(2, entry-ii, "."), "_")
+                                                      /* ,input entry(2, entry(2, entry-ii, "."), "_") */ 
+                                                      ,input (SUBSTRING (entry-ii,INDEX(entry-ii,"_") + 1))
                                                       ,output vvalue
                                                       ,output vtype) no-error.
                                                       
