@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f0c0c05c7135, 3643, test $
+$Author: ARostovtsev $
+$Date: 2024/01/23 07:31:16 $
+$Workfile: partcopy.i $
+$Archive: trg/partcopy.i $
 
 Копирование партии из одной зоны в другую
 
@@ -25,7 +25,7 @@ p-free-output-copy  false  копирование партии в документ, в свободную, расходную
 { gbl/objsrv.i }
   
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: partcopy.i $ $Revision: f0c0c05c7135, 3643, test $".
 
 procedure partcopy :
 
@@ -285,7 +285,7 @@ procedure partcopy :
             end .
             next .
           end .
-          
+
           find first ub.marking-lines no-lock where ub.marking-lines.mark     = buf_orig_ml.mark
                                                 and ub.marking-lines.gds-code = buf_orig_ml.gds-code
                                                 and ub.marking-lines.obj-type = buf_orig_ml.obj-type
@@ -304,6 +304,7 @@ procedure partcopy :
               ub.marking-lines.fact-order = pri_trn-doc.fact-order when available pri_trn-doc
             .
           end .
+          if avail buf_trn-doc and buf_trn-doc.doc-type <> {&inventory} then do:
           for first buf_marking exclusive-lock where buf_marking.mark = buf_orig_ml.mark 
             and not (buf_marking.sts = oMarkSts:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
             
@@ -336,6 +337,7 @@ procedure partcopy :
           end .
 
         end .
+        end.    /*if avail buf_trn-doc and buf_trn-doc.doc-type <> {&inventory}*/
       end .
       
       define variable v-doc-type  as character no-undo .
@@ -637,7 +639,8 @@ procedure partcopy :
               end.
             end .
           end .    
-          else do :    
+          else do :   
+            if avail buf_trn-doc and buf_trn-doc.doc-type <> {&inventory} and buf_parts.out-code <> {&output-code} then do:
             create buf_marking-lines .
             assign
               buf_marking-lines.mark       = orig_marking-lines.mark
@@ -657,6 +660,7 @@ procedure partcopy :
               find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_parts.out-code no-error .
               if available buf_trn-doc then buf_marking-lines.fact-order = buf_trn-doc.fact-order .
             end .
+            end.   /* if buf_parts.out-code <> {&output-code} */
 /*            EXPSD-8495 убран перевод марок в статус "Выбыл"  */            
 /*            for first buf_marking exclusive-lock where buf_marking.mark = orig_marking-lines.mark                                             */
 /*              and not (buf_marking.sts = oMarkSts:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):*/
@@ -2385,7 +2389,8 @@ procedure partcopy-update-parts-delete :
                   free_marking-lines.prt-code   = buf_parts.prt-code      
                 .
               end .
-              if not (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv})
+              if avail buf_trn-doc and buf_trn-doc.doc-type <> {&inventory} and
+                 not (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv})
                 then assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
               if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass}
               then do :
@@ -2931,4 +2936,4 @@ procedure partcopy-change-purch-code :
   end.
 end procedure. /* partcopy */
 
-/* $Workfile$ e n d */
+/* $Workfile: partcopy.i $ e n d */
