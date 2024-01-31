@@ -2,7 +2,7 @@
 &then 
 &glob utl_gtin_i yes
 &scoped-define vssseq {&sequence}
-def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: gtin.i $ $Revision: 183a8c35eb5d, 3587, rls $".
 { cmp/str-glbl.i {1}}
 { gbl/xmlchar.i}
 { gbl/objsrv.i {1}}
@@ -701,7 +701,7 @@ function getMRC4 return decimal
 {utl\comment.i} */ 
 (iMRC as char):
    define variable oMrc     as decimal no-undo init ?.
-   define variable vAlphabet as character no-undo init "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\~"%&\'*+-./_,:;=<>?".
+   define variable vAlphabet as character no-undo init "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!~"%&'*+-./_,:;=<>?".
    define variable vi       as integer no-undo.
    define variable vfound   as integer no-undo.
    define variable vposStart   as integer no-undo.
