@@ -303,7 +303,9 @@ for each x_obj-group :
     end.
 end.
 /* Проверка на pr-goods состав ДНЦ (можно ли вводить товары, топливо, услуги  ) */
+define variable v-errstr as character no-undo .
 run dfc-pr-good in this-procedure no-error .
+
 
 if error-status :error then do:
       run write-log-and-file in p-log-handle (
@@ -311,7 +313,8 @@ if error-status :error then do:
           , input log-file-name
           , input 1
           , input substitute("Проверка состава  ДНЦ...&1 &2",error-status :get-message(1),return-value)).
-      return error "pr-goods":U .
+      return error v-errstr .
+      /* return error "pr-goods":U  */
 end.
 
 run write-log-and-file in p-log-handle (
@@ -840,7 +843,7 @@ else do:
     if v-ask then do: /* Нужно отправлять */
       run str/diallog.w
               ( input parparentproc
-              , input this-procedure
+              , input p-log-handle
               , input 'str/sendpdfr.p':U
               , input ("U":U + {&delim-par} +
                       string(buf_price-doc-forming.plt-id) + {&delim-par}  +
@@ -983,7 +986,7 @@ procedure dfc-pr-good :
         leave.
       end.
     end.
-  define variable v-errstr as character no-undo .
+ /*  define variable v-errstr as character no-undo . */ 
   v-errstr = "" .
 
 
