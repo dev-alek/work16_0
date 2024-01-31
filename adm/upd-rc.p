@@ -281,7 +281,8 @@ end.  /*  repeat  on error undo   */
 input stream flstream close.
 
 /*    выгрузка в 1С-Erp*/
-
+   define variable vLogFile as character no-undo.
+   vLogFile = log-file-name.
    run bge/oxml-ini.p no-error.
    if error-status :error
    then do:
@@ -290,7 +291,7 @@ input stream flstream close.
                         + return-value
                                 ).
    end.
-   
+   log-file-name = vLogFile.
    define variable m-db-num as int no-undo.
    define variable m-extsys as character no-undo.
    find first sys-ctrl no-error.
