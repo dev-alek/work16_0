@@ -59,12 +59,12 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
   
   define temp-table ttmark-body no-undo    
      xml-node-name "body"
-     field code            as char
+     field code            as int
      field error-1         as char XML-NODE-NAME "error"
      field requestid       as char
      field status-1        as char XML-NODE-NAME "status"
      field reqid           as char
-     field reqtimestamp    as char
+     field reqtimestamp    as int64
      field timestamp       as char
      .
   define temp-table ttmark-check no-undo    
@@ -72,21 +72,21 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
      field cis             as char
      field printView       as char
      field gtin            as char
-     field verified        as char
-     field found           as char
-     field realizable      as char
-     field utilised        as char 
-     field isBlocked       as char 
+     field verified        as logical
+     field found           as logical
+     field realizable      as logical
+     field utilised        as logical 
+     field isBlocked       as logical 
      field productionDate  as char
-     field isOwner         as char 
-     field errorCode       as char 
-     field isTracking      as char 
-     field sold            as char
+     field isOwner         as logical 
+     field errorCode       as int 
+     field isTracking      as logical 
+     field sold            as logical
      field packageType     as char
      field producerInn     as char
-     field grayZone        as char
-     field mrp             as char
-     field expireDate      as char
+     field grayZone        as logical
+     field mrp             as int
+     field expireDate      as datetime-tz
      .
    
   define dataset gismt-mark-body  xml-node-name "bodys" for ttmark-body.
@@ -970,7 +970,6 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     
     copy-lob from file vfileresultxml to vlongJson.
     vlongJson = "<bodys>" +  vlongJson + "</bodys>".
-    if index(vlongJson,"</expiredate>") > 0 then .    
     copy-lob from vlongJson to file vfileresultxml.
     vRetOk = dataset gismt-mark-body:read-xml("FILE":U, vfileresultxml, "EMPTY":U, ?, ?) no-error.
     if not vRetOk or error-status:error then do:
@@ -1045,6 +1044,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     assign
        vErrSts = ""
        mCheckSts = 1
+       mTypeMark = ""
        .
     
     /* определяем тип марки и МРЦ */
@@ -1143,10 +1143,10 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     for first ttmark-body no-lock:
         assign
            mReqId        = ttmark-body.reqid
-           mReqTimeStamp = ttmark-body.reqtimestamp
+           mReqTimeStamp = string(ttmark-body.reqtimestamp)
            .
-        if ttmark-body.code = "0" or
-           ttmark-body.code = "10" 
+        if ttmark-body.code = 0 or
+           ttmark-body.code = 10 
            then . 
         else do:
            assign 
@@ -1165,9 +1165,8 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
      
     for first ttmark-check no-lock:
 
-      if ttmark-check.errorCode = "" or 
-         ttmark-check.errorCode = "0" or
-         ttmark-check.errorCode = "10" 
+      if ttmark-check.errorCode = 0 or
+         ttmark-check.errorCode = 10 
          then . 
       else do:
           assign 
@@ -1175,21 +1174,11 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
             mCheckSts = 0.
           return vErrSts.
       end.      
-         
-      if ttmark-check.found = "" then ttmark-check.found = "false".
-      if ttmark-check.verified = "" then ttmark-check.verified = "false".
-      if ttmark-check.realizable = "" then ttmark-check.realizable = "false".
-      if ttmark-check.sold = "" then ttmark-check.sold = "true".
-      if ttmark-check.utilised = "" then ttmark-check.utilised = "false".
-      if ttmark-check.isBlocked = "" then ttmark-check.isBlocked = "true".
-      if ttmark-check.isOwner = "" then ttmark-check.isOwner = "false".
-      if ttmark-check.isTracking = "" then ttmark-check.isTracking = "true".
-      if ttmark-check.grayZone = "" then ttmark-check.grayZone = "false".
-      
+
       vMrp = int(ttmark-check.mrp) no-error.
                  
       if vCheck then do:
-         if ttmark-check.found = "false" 
+         if ttmark-check.found = false 
          then do: 
             assign 
                 vErrSts = "Данная марка не зарегистрирована в Честном Знаке. "
@@ -1197,48 +1186,30 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
             return vErrSts.
          end.
          
-         if  vCheckDate = yes then do:
-            vExpireDate = ?.
-            if ttmark-check.expireDate <> ""
-               and num-entries(ttmark-check.expireDate,"T") = 2 
+         if  vCheckDate = yes then do:            
+            if ttmark-check.expireDate <> ? 
             then do:
-                vExpireDMY = entry(1,ttmark-check.expireDate,"T").
-                if num-entries(vExpireDMY,"-") = 3 then 
-                do:
-                   if num-entries(ttmark-check.expireDate,"T") >= 2 then
-                      vExpireTime = entry(1,entry(2,ttmark-check.expireDate,"T"),"Z").
-                   else vExpireTime =  "00:00:00.000".  
-                   vExpireDMY = entry(3,vExpireDMY,"-") + "/" + entry(2,vExpireDMY,"-") + "/" + entry(1,vExpireDMY,"-").
-                   vExpireDate = datetime-tz(vExpireDMY + " " + vExpireTime) no-error.
-                   if vExpireDate <> ? and 
-                      vExpireDate < now + gismt-BanDate * 60 * 1000
-                   then do:
-                      vExpireTime = entry(1,vExpireTime,".").
-                      if num-entries(vExpireTime,":") > 2 then
-                         vExpireTimeMes = entry(1,vExpireTime,":") + ":" + entry(2,vExpireTime,":"). 
-                      else vExpireTimeMes = "".   
-                      assign
-                         vErrSts = "Срок годности товара истек " + vExpireDMY + " " + vExpireTimeMes + ". "
-                         mCheckSts = 0.
-                   end.      
+                if ttmark-check.expireDate < now + gismt-BanDate * 60 * 1000
+                then do:
+                  assign
+                     vErrSts = "Срок годности товара истек " + string(ttmark-check.expireDate,"99/99/9999 HH:MM") + ". "
+                     mCheckSts = 0.
                 end.   
             end.
-            if ttmark-check.expireDate = ""
-               or vExpireDate = ?
-            then assign 
+            else assign 
                    vErrSts = ""
                    mCheckSts = 2.
          end.
-         if  vCheckBlock and ttmark-check.isBlocked = "true"
+         if  vCheckBlock and ttmark-check.isBlocked = true
          then assign
                  vErrSts = vErrSts + "Реализация товара запрещена контролирующими органами. "
                  mCheckSts = 0.
          
          if  vCheckStatusKM and 
-                 (ttmark-check.utilised = "false" or 
-                 (ttmark-check.realizable = "false" and ttmark-check.grayZone = "false") or 
-                 ttmark-check.sold = "true" or 
-                 ttmark-check.verified = "false")
+                 (ttmark-check.utilised = false or 
+                 (ttmark-check.realizable = false and ttmark-check.grayZone = false) or 
+                 ttmark-check.sold = true or 
+                 ttmark-check.verified = false)
          then assign 
                  vErrSts = vErrSts + "Марка товара в статусе, запрещающем розничную реализацию. "
                  mCheckSts = 0.
@@ -1257,9 +1228,9 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
                  mCheckSts = 0
                  .
          if  vCheckOwner and 
-             ttmark-check.isOwner = "false" and 
-             ttmark-check.isTracking = "true" and 
-             ttmark-check.grayZone = "false"
+             ttmark-check.isOwner = false and 
+             ttmark-check.isTracking = true and 
+             ttmark-check.grayZone = false
          then assign
                  vErrSts = vErrSts + "Общество не является владельцем товара. "
                  mCheckSts = 0.

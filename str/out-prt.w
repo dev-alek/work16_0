@@ -1353,7 +1353,7 @@ DO:
   end.
 
   run edit-doc-pl in this-procedure
-    ( input (if prt-mode = {&lookup} then {&lookup} else {&update} )
+    ( input (if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then t-doc.ext-doc-type else if prt-mode = {&lookup} then {&lookup} else {&update} )
     ).
 
 END.

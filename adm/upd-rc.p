@@ -33,6 +33,7 @@ define variable vss-description as character no-undo init "Обновление r-кодов, о
 { cmp/str-glbl.i }
 { adm/auto-def.i }
 define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
+
 procedure write-log:
    define input  parameter iTabPosition as integer   no-undo.
     define input parameter i-message    as character no-undo.
@@ -67,6 +68,8 @@ define variable v-delfile as char no-undo.
 define variable v-date   as date no-undo .
 define variable v-txt   as char no-undo .
 define variable v-arc   as char no-undo .
+define variable oldg#news as logical no-undo .
+define variable oldg#esys as logical no-undo .
 
 define stream flstream.
 
@@ -281,7 +284,13 @@ end.  /*  repeat  on error undo   */
 input stream flstream close.
 
 /*    выгрузка в 1С-Erp*/
+oldg#news = g#news .
+oldg#esys = g#esys .
 
+   g#news = false .
+   g#esys = true .
+   define variable vLogFile as character no-undo.
+   vLogFile = log-file-name.
    run bge/oxml-ini.p no-error.
    if error-status :error
    then do:
@@ -290,7 +299,7 @@ input stream flstream close.
                         + return-value
                                 ).
    end.
-   
+   log-file-name = vLogFile.
    define variable m-db-num as int no-undo.
    define variable m-extsys as character no-undo.
    find first sys-ctrl no-error.
@@ -359,6 +368,8 @@ input stream flstream close.
                                       )
                           ) .
     end.
+   g#news = oldg#news.
+   g#esys = oldg#esys.
 
 for each upgfile-tbl no-lock
   where upgfile-tbl.dateupg > v-compile-date

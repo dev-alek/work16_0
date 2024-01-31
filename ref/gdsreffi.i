@@ -212,6 +212,7 @@ DEFINE VARiable vvalue as character no-undo.
 DEFINE VARiable vtype as character no-undo.
 DEFINE VARiable vlabel as character no-undo.
 define buffer buf_usr-flt_custom-labels for usr-flt_custom-labels.
+
   IF v-gds-ref-fi = "" then
   v-gds-ref-fi = {&gdsreffi-ord}.
  if avail fi-goods then do:
@@ -238,11 +239,12 @@ vNum-entries = NUm-ENTRIES(v-gds-ref-fi).
 &scop J-plus
 &endif
   DO ii = 1 to vNum-entries:
+
     entry-ii = ENTRY(ii, v-gds-ref-fi).
     find first buf_usr-flt_custom-labels where
               buf_usr-flt_custom-labels.tbl-name = entry(1, entry-ii, ".")
          and  buf_usr-flt_custom-labels.fld-name = entry(2, entry-ii, ".")
-         and  buf_usr-flt_custom-labels.call-point = {&uf-gdsreffi}
+         and  buf_usr-flt_custom-labels.call-point =  {&uf-gdsreffi}  
          and  buf_usr-flt_custom-labels.call-type = {&add-fields} no-error.
 
     if  available buf_usr-flt_custom-labels then do:
@@ -368,7 +370,23 @@ vNum-entries = NUm-ENTRIES(v-gds-ref-fi).
       {&j-plus}
       if jj = 9 then LEAVE.
     end.
-  END.
+  
+      else if entry(1, entry-ii, ".") = {&table_goods-attr} then  do: 
+        vvalue = "[!!Ошибка]".
+                run gds-attr-value in this-procedure ( fi-goods.gds-code
+                                                      /* ,input entry(2, entry(2, entry-ii, "."), "_") */ 
+                                                      ,input (SUBSTRING (entry-ii,INDEX(entry-ii,"_") + 1))
+                                                      ,output vvalue
+                                                      ,output vtype) no-error.
+                                                      
+                myfi[jj] = vvalue.
+                /*
+                &if "{5}" <> "anyl-xls" &then
+                buf_usr-flt_custom-labels.custom-label  + {&space-char} +
+                &Endif
+                           native-string(vvalue, buf_usr-flt_custom-labels.fld-data-type, buf_usr-flt_custom-labels.custom-format).*/
+      end.  
+  END.  
   end.
   assign
   fi-1 = myfi[1]

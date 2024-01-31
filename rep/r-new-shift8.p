@@ -57,6 +57,7 @@ DEF    VAR      kol-itog            AS DECIMAL   NO-UNDO.
 DEF    VAR      sum-itog            AS DECIMAL   NO-UNDO.
 
 DEFINE TEMP-TABLE tt-chk NO-UNDO
+   FIELD doc-code  LIKE chk-doc.doc-code     /* Номер  */
    FIELD chk-num   LIKE chk-doc.chk-num      /* Номер чека */
    FIELD chk-z     LIKE chk-doc.z-number     /* Номер z отчета*/
    FIELD trk       LIKE chk-gds.pump         /* Номер ТРК  */
@@ -71,14 +72,26 @@ DEFINE TEMP-TABLE tt-chk NO-UNDO
    FIELD npp       AS INT                     /* номер по порядку */	
    FIELD b-code    LIKE chk-gds.b-code       /* баркод */	
    FIELD is-code   LIKE chk-gds.src-code     /* исходный код товара */	
-   INDEX pi AS UNIQUE PRIMARY chk-num chk-z npp
+   INDEX pi AS UNIQUE PRIMARY doc-code chk-num chk-z npp
    .         
 	
-	
-FOR EACH chk-doc WHERE  chk-doc.obj-code = p-obj-code AND chk-date >= x-Date-Start  AND chk-date <= x-Date-End AND chk-type = 6  NO-LOCK:
-   npp = 0.
+
+FOR EACH chk-doc WHERE 
+         chk-doc.obj-type = p-obj-type 
+     AND chk-doc.obj-code = p-obj-code 
+     AND chk-doc.shift-date >= x-Date-Start 
+     AND chk-doc.shift-date <= x-Date-End 
+     AND chk-type = 6 
+    no-lock by chk-doc.shift-date:
+   npp = 0. 
+   handmade = '-'. 
+  if ub.chk-doc.shift-date = x-date-Start and ub.chk-doc.shift-num < x-Shift-Start then next .
+  if ub.chk-doc.shift-date = x-date-End   and ub.chk-doc.shift-num > x-Shift-End then next .
+
 			
-   FIND FIRST chk-doc-attr WHERE chk-doc-attr.attr-code = 'CHFlag1' AND chk-doc-attr.doc-code = chk-doc.doc-code  NO-LOCK NO-ERROR.
+   FIND FIRST chk-doc-attr WHERE chk-doc-attr.attr-code = 'CHFlag1' AND chk-doc-attr.doc-code = chk-doc.doc-code  NO-LOCK NO-error.
+   IF ERROR-STATUS:ERROR THEN  FLG = '0' .
+    
    if AVAILABLE chk-doc-attr then FLG = chk-doc-attr.attr-value.
 						
    FOR EACH  chk-gds WHERE chk-gds.doc-code = chk-doc.doc-code  NO-LOCK:    
@@ -95,19 +108,21 @@ FOR EACH chk-doc WHERE  chk-doc.obj-code = p-obj-code AND chk-date >= x-Date-Sta
       END.
 			
       /* признак ручного чека */
-      handmade = '-'. 
       FIND FIRST c-chk-doc WHERE c-chk-doc.doc-code = chk-doc.doc-code AND c-chk-doc.is-add = yes NO-LOCK NO-ERROR.
       IF AVAILABLE c-chk-doc THEN handmade = '+'. 
 
 			
       find first bar-code where bar-code.b-code eq chk-gds.b-code no-lock no-error.
       IF AVAILABLE bar-code THEN  gds_chk = bar-code.gds-code.
-      find first tt-chk no-lock no-error.
-      IF NOT AVAILABLE tt-chk THEN DO:
-         CREATE tt-chk.
-      END.
+    
+    
+    
+    
 
+      CREATE tt-chk.
+ 
       ASSIGN
+         tt-chk.doc-code  = chk-doc.doc-code
          tt-chk.chk-num   = chk-doc.chk-num
          tt-chk.chk-z     = chk-doc.z-number
          tt-chk.trk       = chk-gds.pump

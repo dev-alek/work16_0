@@ -1222,6 +1222,7 @@ class ibs.th.utl.method-for-draw-utility final:
                                 end.
                             end case .
                             assign
+                              entry(1,buf_schedule-attr.attr-value,"|") = "C:\Trade_House16x\Exchange\news-dir\exch\" + (if formatObjCode <> "" then string(v-cntxt-obj-code, formatObjCode) else string(v-cntxt-obj-code)) + "-000"
                               entry(2,buf_schedule-attr.attr-value,"|") = "C:\Trade_House16x\Exchange\news-dir\exch\" + (if formatObjCode <> "" then string(v-cntxt-obj-code, formatObjCode) else string(v-cntxt-obj-code)) + "-000"
                               .
                           end.

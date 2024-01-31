@@ -1109,6 +1109,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         view-as alert-box question buttons yes-no update v-log .
         if v-log
         then do :
+          maskedTextBoxAukKey:text = "" .
           label50:text = "Идентификатор доступа (ключ) «верхнего уровня» или одноразовый код:" .
 /*          groupBox2:Enabled = true.*/
 /*          groupBox3:Enabled = true.*/
@@ -1734,7 +1735,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       then do :
         if cbSGDKK:Checked
         then do :
-          cbSGDKK:Enabled = false.
+          if infoSecsObj:InfoSectionCurr:AccMeth >= 0
+          then do :
+            cbSGDKK:Enabled = false.
+          end .
           label50:text = "Идентификатор доступа (ключ) «верхнего уровня» или одноразовый код:" .
           label50:ForeColor = System.Drawing.Color:Red.
         end .

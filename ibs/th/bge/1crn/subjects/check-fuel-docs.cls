@@ -328,7 +328,7 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
     sw:write-data-element ("doc-code", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)) no-error .
     sw:write-data-element ("doc-num", if tt-rvs-doc.rvs-code = ? then "" else string(tt-rvs-doc.rvs-code)) no-error .
     sw:write-data-element ("doc-date", if tt-rvs-doc.doc-date = ? then "" else iso-date(datetime(tt-rvs-doc.doc-date, (tt-rvs-doc.fact-time * 1000 )))).
-    sw:write-data-element ("doc-date-f", if tt-rvs-doc.fact-date = ? then "" else iso-date(datetime(tt-rvs-doc.fact-date, (tt-rvs-doc.sys-time-int * 1000 )))).
+    sw:write-data-element ("doc-date-f", if tt-rvs-doc.sys-date = ? then "" else iso-date(datetime(tt-rvs-doc.sys-date, (tt-rvs-doc.sys-time-int * 1000 )))).
     sw:write-data-element ("del-f", if tt-rvs-doc.del-f = ? then "" else string(tt-rvs-doc.del-f)) no-error .
     sw:write-data-element ("doc-type", string(v-type)) no-error .
     if v-type = "4" then do:
