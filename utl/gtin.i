@@ -309,6 +309,7 @@ function GetNextElement return character
              vLength = int(entry(vi,vlistleng)).
           
           otegval = substring (pstr,length(vteg) + 1, vLength).
+          oteg = replace(replace(vteg,")",""),"(","").
           vTeg = vteg + otegval.
           otegval = replace(otegval,chr(29),"").
           oteg = replace(replace(oteg,")",""),"(","").
