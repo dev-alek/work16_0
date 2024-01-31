@@ -183,9 +183,8 @@ on error undo, return error return-value
           "Ќевозможно продолжить работу системы" skip
           view-as alert-box error .
       end.
-      .return.
+      return.
     end.
-    v-get-ro_read-only = yes.
     define variable v-last-login-mjd as decimal   no-undo .
     assign
       v-last-login-mjd = sys-time_get-mjd-func()
