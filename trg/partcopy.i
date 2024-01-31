@@ -657,9 +657,10 @@ procedure partcopy :
               find first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_parts.out-code no-error .
               if available buf_trn-doc then buf_marking-lines.fact-order = buf_trn-doc.fact-order .
             end .
-            for first buf_marking exclusive-lock where buf_marking.mark = orig_marking-lines.mark 
-              and not (buf_marking.sts = oMarkSts:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
-              assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB .
+/*            EXPSD-8495 убран перевод марок в статус "Выбыл"  */            
+/*            for first buf_marking exclusive-lock where buf_marking.mark = orig_marking-lines.mark                                             */
+/*              and not (buf_marking.sts = oMarkSts:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):*/
+/*              assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB .                                                         */
 /*              if buf_marking.mark-parent <> ""                                                                      */
 /*              and buf_marking.unit-ext = "UNIT"                                                                     */
 /*              then do :                                                                                             */
@@ -684,7 +685,7 @@ procedure partcopy :
 /*                  assign buf_marking-pack.sts = v-parent-mark-sts .                                                 */
 /*                end.                                                                                                */
 /*              end.                                                                                                  */
-            end .
+/*            end .*/
           end .
           release buf_marking-lines no-error .                                
         end.
