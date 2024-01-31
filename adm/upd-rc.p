@@ -281,6 +281,7 @@ end.  /*  repeat  on error undo   */
 input stream flstream close.
 
 /*    выгрузка в 1С-Erp*/
+   g#news = false .
    define variable vLogFile as character no-undo.
    vLogFile = log-file-name.
    run bge/oxml-ini.p no-error.
@@ -360,6 +361,7 @@ input stream flstream close.
                                       )
                           ) .
     end.
+   g#news = true.
 
 for each upgfile-tbl no-lock
   where upgfile-tbl.dateupg > v-compile-date
@@ -398,6 +400,7 @@ on error undo, return error return-value
       v-txt = "".
       v-txt = v-PathRC + "\exe\7z.exe" + " x -y -o" + v-PathRC + " " +  UpgFile-tbl.FullNameUpgFile.
     end.
+g#news = true.
 
     os-command silent value ( v-txt ) .
 
