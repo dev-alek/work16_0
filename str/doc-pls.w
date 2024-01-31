@@ -1682,10 +1682,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     if p-upd-field = "doc":U
       or p-upd-field = "fact-doc":U
     then do:
-      enable
-        b-add
-        b-del
+      if v-mode <> {&TDEDT_Pri_Perem}
+      then do :
+        enable
+          b-add
+          b-del
         with frame {&frame-name} .
+      end .
       if v-mode = {&autoupdate}
         and v-single-place = true
       then do:
