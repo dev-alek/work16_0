@@ -325,7 +325,7 @@ DEFINE BROWSE br_marking-type
   type-marking.EDO column-label "Приходование!учет внеш." LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   type-marking.artic column-label "Объемно-!артикульный!учет" LABEL-BGCOLOR 8 FORMAT "yes/no":U 
   view-as toggle-box
-  type-marking.transitional column-label "Переходный" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  type-marking.transitional column-label "Переходный!период" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   /*      type-marking.blockCashUnMark column-label "Блок.на кассе!операций!с неизвестными!марками" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box*/
   type-marking.saleReturn column-label "Разрешена!продажа!возвращенных!товаров" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   /*      type-marking.saleUPD column-label "Разрешена!продажа до!подписания!УПД" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box*/
@@ -813,14 +813,16 @@ for each temp-thbj-attr:
   delete temp-thbj-attr.
 end.
 
+  ENABLE  br_marking-type WITH FRAME Dialog-Frame.
   if p-mode = {&update} then 
   do:
-    ENABLE  t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr t-edo-NotMark t-bar-code t-rus-key br_marking-type
+    ENABLE  t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr t-edo-NotMark t-bar-code t-rus-key
       WITH FRAME Dialog-Frame.
   end.  
   else do:
     Display  t-edo cb-gray_zone_qnty t-manual t-ban_recipes t-ban-altr t-edo-NotMark t-bar-code t-rus-key br_marking-type
       WITH FRAME Dialog-Frame. 
+    br_marking-type:read-only in frame Dialog-Frame = true.
     disable B-exit with frame Dialog-Frame.
    end.  
 run adm/shattri.p (
