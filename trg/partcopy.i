@@ -1,10 +1,10 @@
 /*
 
-$Revision: f0c0c05c7135, 3643, test $
-$Author: ARostovtsev $
-$Date: 2024/01/23 07:31:16 $
-$Workfile: partcopy.i $
-$Archive: trg/partcopy.i $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Копирование партии из одной зоны в другую
 
@@ -25,7 +25,7 @@ p-free-output-copy  false  копирование партии в документ, в свободную, расходную
 { gbl/objsrv.i }
   
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: partcopy.i $ $Revision: f0c0c05c7135, 3643, test $".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 procedure partcopy :
 
@@ -2936,4 +2936,4 @@ procedure partcopy-change-purch-code :
   end.
 end procedure. /* partcopy */
 
-/* $Workfile: partcopy.i $ e n d */
+/* $Workfile$ e n d */

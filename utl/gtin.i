@@ -2,7 +2,7 @@
 &then 
 &glob utl_gtin_i yes
 &scoped-define vssseq {&sequence}
-def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: gtin.i $ $Revision: 183a8c35eb5d, 3587, rls $".
+def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 { cmp/str-glbl.i {1}}
 { gbl/xmlchar.i}
 { gbl/objsrv.i {1}}
