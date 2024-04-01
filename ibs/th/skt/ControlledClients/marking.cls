@@ -817,6 +817,8 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
    
     define variable vRetOk   as logical   no-undo.
     define variable vCh      as character no-undo.
+    define variable vBefCurl as datetime-tz no-undo. 
+    define variable vAftCurl as datetime-tz no-undo.
         
     define buffer buf_firm for ub.firm .
     define buffer buf_shop for ub.shop.
@@ -855,7 +857,9 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
        return 1.
     end. 
       
-    if gismt-AdressPort <> "" then CmdParamProxy = substitute ('-x &1 -U &2:&3', gismt-AdressPort, gismt-ProxyLogin, gismt-ProxyPswd).
+    if gismt-AdressPort <> "" and gismt-ProxyLogin <> "" and gismt-ProxyPswd <> "" 
+    then CmdParamProxy = substitute ('-x &1 -U &2:&3',gismt-AdressPort,gismt-ProxyLogin,gismt-ProxyPswd).
+    else if gismt-AdressPort <> "" then CmdParamProxy = substitute ('-x &1',gismt-AdressPort).
     else CmdParamProxy = "".  
     
     vFileLog = "GisMtReq-" + replace(string(today),"/","-") +  ".log".
@@ -894,11 +898,13 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
                       CmdParamProxy,           /*6*/
                       vFileResultErr,          /*7*/
                       gismt-DopParam,          /*8*/
-                      replace(string(gismt-WaitTime, "zzzz9.99999"),".",",")).         /*9*/  
+                      trim(replace(string(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*9*/  
                       
     dbgPrint("marking.log", "cmd: " + cmd).
-                                         
+    vBefCurl = now.                                     
     os-command silent value(cmd) .
+    vAftCurl = now. 
+    dbgPrint("marking.log", substitute("Время работы curl: Начало &1 Окончание &2 Всего (мс) &3  ", vBefCurl, vAftCurl, vAftCurl - vBefCurl)).
      
     if searchFile(vfileresult) = ?
     then do :
