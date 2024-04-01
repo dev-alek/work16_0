@@ -71,11 +71,16 @@ delete object v-tth no-error.
 assign
   thMarkSts     = ObjSrv:Env:Marking:Sts:Mark
   currentTime   = string(time,"HH:MM:SS")
-  timeMunisYear = datetime(month(today), day(today), year(today) - 1,
-                           integer(entry(1,currentTime,":")),integer(entry(2,currentTime,":")),
-                           integer(entry(3,currentTime,":")))
   datePlus2Year = 04/01/2026
 .
+
+if month(today) = 2 and day(today) = 29 then 
+   timeMunisYear = datetime(month(today), 28, year(today) - 1,
+                           integer(entry(1,currentTime,":")),integer(entry(2,currentTime,":")),
+                           integer(entry(3,currentTime,":"))).
+else timeMunisYear = datetime(month(today), day(today), year(today) - 1,
+                           integer(entry(1,currentTime,":")),integer(entry(2,currentTime,":")),
+                           integer(entry(3,currentTime,":"))).
 
 run write-to-log( "Удаление марок, измененных до " +  string(timeMunisYear,"99/99/9999 HH:MM:SS")) .
 if maxDelMarks > 0 then
