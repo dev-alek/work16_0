@@ -1,5 +1,5 @@
-&ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI
-&ANALYZE-RESUME
+&ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI 
+&ANALYZE-RESUME 
 /* Connected Databases 
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -7,11 +7,11 @@
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 4ff7b201ba9b, 3436, rls $
+$Author: VSpiridonov $
+$Date: 2023/10/16 15:13:32 $
+$Workfile: users.w $
+$Archive: str/users.w $
 
 Список пользователей системы
 
@@ -59,11 +59,11 @@ define temp-table temp_user-login-obj no-undo
 define input parameter parparentproc  as widget-handle no-undo .
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 4ff7b201ba9b, 3436, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:32 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: users.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/users.w $":U .
 define variable vss-description as character no-undo init "Список пользователей системы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -3627,6 +3627,7 @@ on error undo, return error
     ).
 
   /*печать тела*/
+
   get first br-user.
   
   do while available buf_init_user-account:
@@ -3643,13 +3644,14 @@ on error undo, return error
             WHERE buf_user-login-action-role.action-head-code    = {&action-head-code-main}
             AND buf_user-login-action-role.user-id             = buf_init_user-login.user-id
             NO-LOCK:
+
+
               if not v-action-gbl and buf_user-login-action-role.db-num              <> buf_init_user-login.db-num then next .
               
-      
               find FIRST buf_action-role
                 WHERE buf_action-role.action-head-code    = {&action-head-code-main}
                 AND buf_action-role.action-role-code    = buf_user-login-action-role.action-role-code
-                AND buf_action-role.db-num              = buf_init_user-login.db-num
+                AND (buf_action-role.db-num              = buf_init_user-login.db-num OR buf_action-role.db-num = 0)
                 AND (buf_init_user-login.db-num          = cb-db or string(cb-db) = '-1')
                 NO-LOCK no-error.
                 if AVAILABLE buf_action-role then do:
@@ -3662,10 +3664,14 @@ on error undo, return error
                   if buf_user-login-action-role.action-role-context = {&cntxt-global} then do:
                   assign v-action-role-context = "Без привязки". end.
                   if buf_user-login-action-role.action-role-context = {&cntxt-firm} then do:
-                  assign v-action-role-context = SUBSTITUTE("Фирма &1", buf_user-login-action-role.host-code). end. 
+                  assign v-action-role-context = SUBSTITUTE("Фирма &1", string(buf_user-login-action-role.host-code)). end. 
                   if buf_user-login-action-role.action-role-context = {&cntxt-object} then do:
-                  assign v-action-role-context = SUBSTITUTE("&1 &2", buf_user-login-action-role.obj-type, buf_user-login-action-role.obj-code). end.             
+                  assign v-action-role-context = SUBSTITUTE("&1 &2", buf_user-login-action-role.obj-type, buf_user-login-action-role.obj-code). 
+                  end.             
    
+
+
+
                 put stream OutStr-html unformatted
                   substitute(
                   '<tr>
