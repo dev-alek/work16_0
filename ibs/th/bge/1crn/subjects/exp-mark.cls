@@ -45,6 +45,17 @@ class ibs.th.bge.1crn.subjects.exp-mark inherits send1cerpsub:
   define override public property InitSecTag as character no-undo init {&tag-interface}
   get.
   
+   method override public void CheckParam(  ):
+      if not valid-handle (oldbh)
+      then
+         return error "Не передан старый буфер".
+      if oldbh:table ne "marking"
+      then 
+         return error "Старый буфер не marking: " + oldbh:table. 
+      return.
+
+   end method.
+
   /*------------------------------------------------------------------------------
    Purpose: выгружает несколько чеков со всеми потрохами в контекст контейнера SAX-writer
    Notes:   обязательный метод

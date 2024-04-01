@@ -719,7 +719,7 @@ Action-role-item
           thbjattr_thbj-attr.property-value-logical = v-edi .
           define variable mImp2CdH as handle no-undo.
           run str/imp2cdgeth.p(output mImp2CdH).
-          run fill-code in mImp2CdH ({&TABLE_THBJ-ATTR},
+          run fill-setting in mImp2CdH ({&TABLE_THBJ-ATTR},
                                      thbjattr_thbj-attr.upper-prop-code,
                                      thbjattr_thbj-attr.prop-code).
         end.

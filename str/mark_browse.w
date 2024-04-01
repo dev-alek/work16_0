@@ -2180,6 +2180,7 @@ PROCEDURE scan-mark :
     define variable v-GTIN      as character no-undo .
     define variable v-gds-code  as integer   no-undo .
     define VARIABLE vRecKeyLine as character no-undo .
+    define variable vFlag       as log       no-undo.
     define buffer gray_marking                for ub.marking .
     define buffer gray_unit-marking           for ub.marking .
     define buffer gray_utd-marking-lines      for ub.utd-marking-lines .
@@ -2227,6 +2228,7 @@ PROCEDURE scan-mark :
         v-mark = "" .
         return no-apply.
     end.  
+    
     if p-mode <> {&lookup} then 
     do:
         /*Режим Серая зона*/
@@ -2417,6 +2419,15 @@ PROCEDURE scan-mark :
             find first X_marking exclusive-lock where X_marking.mark begins v-marking no-error .
             if available (X_marking) then
             do:
+                run checkEMRC(v-mark, output vFlag).
+                if not vFlag
+                then do:
+                   F-text = "МРЦ на упаковке меньше ЕМЦ. Приемка товара запрещена." .
+                   display F-text with frame {&frame-name}.
+                   v-mark:screen-value = "" .
+                   v-mark = "" .
+                   return no-apply.
+                end.   
                 for first buf_utd-marking-lines no-lock where buf_utd-marking-lines.doc-id = X_marking.doc-id
                     and buf_utd-marking-lines.db-num = X_marking.db-num
                     and buf_utd-marking-lines.mark = X_marking.mark,
@@ -2457,7 +2468,6 @@ PROCEDURE scan-mark :
                         v-mark = "" .
                         return no-apply.              
                     end. /*if X_marking.sts = Marking:MarkError:KeyIntDB  then do:*/
-               
                     find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = X_marking.mark and buf_utd-marking-lines.db-num = X_marking.db-num and
                         buf_utd-marking-lines.doc-id = X_marking.doc-id no-error .
                     if available (buf_utd-marking-lines) then 

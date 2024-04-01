@@ -631,15 +631,16 @@ define input parameter p-trn-doc-code   as character        no-undo.
 do
 on error undo, return error
 :
-   { str/tdat-val.i
-        p-trn-doc-code
-        {&trdcattr-addsum}
-        v-attr-value
-        v-attr-type
-    }
-    if lookup( {&sum-general-doc}, v-attr-value ) = 0
-    or lookup( {&sum-wastage-doc}, v-attr-value ) = 0
-    then do:
+/*Убрала , чтобы пересчитывалась*/
+/*   { str/tdat-val.i                                  */
+/*        p-trn-doc-code                               */
+/*        {&trdcattr-addsum}                           */
+/*        v-attr-value                                 */
+/*        v-attr-type                                  */
+/*    }                                                */
+/*    if lookup( {&sum-general-doc}, v-attr-value ) = 0*/
+/*    or lookup( {&sum-wastage-doc}, v-attr-value ) = 0*/
+/*    then do:                                         */
         run utl/uaddsum.p (
               input p-trn-doc-code
             , input yes
@@ -659,6 +660,6 @@ on error undo, return error
             view-as alert-box error.
             undo, return error.
         end.
-    end.
+/*    end.*/
 end.
 end procedure. /* check-doc-sum */

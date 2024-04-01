@@ -1,4 +1,3 @@
-{ cmp/str-glbl.i }
 &if defined(starterasunc) eq 0
 &then
 define input  parameter iType            as character no-undo. 
@@ -30,18 +29,22 @@ procedure addtask:
    define input  parameter ITask as character no-undo.
    define input  parameter iProc as character no-undo.
    define input  parameter iParam as character no-undo.
+   subscribe "PutFileLogAsunc" anywhere run-procedure "WriteLogAsync".
    if mStartTime ne ?
    then
       mAsyncHelper:AddTask (ITask,iProc,iParam,mStartTime).
    else
       mAsyncHelper:AddTask (ITask,iProc,iParam).
+   unsubscribe "PutFileLogAsunc".
 end.   
 procedure addTaskTime:
    define input  parameter ITask      as character no-undo.
    define input  parameter iProc      as character no-undo.
    define input  parameter iParam     as character no-undo.
    define input  parameter iStartTime as datetime-tz no-undo.
+   subscribe "PutFileLogAsunc" anywhere run-procedure "WriteLogAsync".
    mAsyncHelper:AddTask (ITask,iProc,iParam,iStartTime).
+   unsubscribe "PutFileLogAsunc".
 end.  
 
 procedure waitproc:

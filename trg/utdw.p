@@ -435,7 +435,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   if available (ub.clients) and (new-{&main-tbl}.sts <> old-utd.sts) and
     ((g#db-num ne 0 and g#news) or (g#db-num eq 0 and not g#news)) and new-{&main-tbl}.doc-code = "" and new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB 
     and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
- */   
+ */ 
   if    (new-{&main-tbl}.sts = objSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB  and new-{&main-tbl}.sts <> old-{&main-tbl}.sts)
     and (new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:UTD:KeyIntDB)
     and ((g#db-num ne 0 and g#news) or 
@@ -512,8 +512,8 @@ procedure sendmark:
                     this-procedure,
                     this-procedure,
                     "mark",
-                    (buffer old-{&main-tbl}:handle),
-                    (buffer new-{&main-tbl}:handle),
+                    (buffer marking:handle),
+                    ?,
                     ?) no-error.
       if error-status:error 
       then

@@ -81,6 +81,7 @@ class ibs.th.skt.SktServer:
     define variable kioskCommand  as class KioskCommand.
     define variable webCommand    as class webCommand.
     define variable atdclientcmd  as class atdclientcmd.
+    define variable THGetInfoCmd  as class THGetInfoCmd.
     define variable AuthMarking   as class markingcmd.
     define variable DeferredCommand   as class DeferredCommand.
 		
@@ -111,6 +112,9 @@ class ibs.th.skt.SktServer:
     end.
     atdclientcmd = new atdclientcmd ().
     clientControl:SetCommandForClient(lookup("atdclient",clientList), atdclientcmd).
+    
+    THGetInfoCmd = new THGetInfoCmd ().
+    clientControl:SetCommandForClient(lookup("ThGetInfo",clientList), THGetInfoCmd).
     
     AuthMarking = new markingcmd ().
     clientControl:SetCommandForClient(lookup("AuthMarking",clientList), AuthMarking).

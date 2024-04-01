@@ -63,8 +63,7 @@ procedure waitProc:
    mWaitFramTimeOut = iTimeOut.
    mWaitFramStopTimeOut = no.
    mWaitFramStop        = no.
-   output to value(mhelper:MyWorkDir + "Stop.txt").
-   output close.
+   mhelper:Writefile(mhelper:MyWorkDir + "Stop.txt","").
    mhelper:vCountend = 0.
    subscribe   to "WaitFramStop" anywhere.
    run WaitFramWaitFor(ipInterval).

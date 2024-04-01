@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 84b48ab2f3b8, 747, rls $
+$Author: ASMorozov $
+$Date: Mon Aug 08 15:24:07 2016 +0300 $
+$Workfile: bin-i.p $
+$Archive: nws/bin-i.p $
 
 Прием бинарного файла
 
@@ -38,11 +38,11 @@ define input parameter p-path as character no-undo .
 define input parameter p-md5-signature as character no-undo .
 define output parameter p-ok as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 84b48ab2f3b8, 747, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Aug 08 15:24:07 2016 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bin-i.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/bin-i.p $":U .
 define variable vss-description as character no-undo init "Прием бинарного файла".
 { cmp/vssrevis.i }
 
@@ -529,10 +529,11 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     end.
     else do:
       assign
-      v-res-message =  substitute("OK запуске принятого файла &1 (режим &2)"
-                                                                                  , p-file-name
-                                                                                  , p-mode
-                                                                                  ).
+      v-res-message =  if return-value = "" then  substitute("OK запуске принятого файла &1 (режим &2)"
+                                                             , p-file-name
+                                                             , p-mode
+                                                            )
+                       else return-value.
 
     end.
     find first buf_ext-file-par where

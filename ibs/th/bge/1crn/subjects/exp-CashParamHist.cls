@@ -27,6 +27,12 @@ class ibs.th.bge.1crn.subjects.exp-CashParamHist inherits send1cerpsub implement
    define override public property InitSecTag as character no-undo init {&tag-interface}
    get.
     
+   method override public void CheckParam(  ):
+      
+      return.
+
+   end method.
+
    method private character fConvetDateTime 
       (input iTStamp as dec):
    
@@ -46,7 +52,7 @@ class ibs.th.bge.1crn.subjects.exp-CashParamHist inherits send1cerpsub implement
      return string(iso-date(datetime-tz(string(vDate,"99/99/9999") + " " + string(vSec, "HH:MM:SS" + vTimeZone) ))).
       
    end method. 
-
+   
    method override public void CrContentToSW( input insw as handle ):
       define buffer code for ub.code.
       for each Cash-param-hist 

@@ -27,7 +27,10 @@ class ibs.th.bge.1crn.subjects.exp-CashParamControl inherits send1cerpsub implem
    define override public property InitSecTag as character no-undo init {&tag-interface}
    get.
    
-
+   method override public void CheckParam(  ):
+      return.
+   end method.
+   
    method override public void CrContentToSW( input insw as handle ):
       define buffer code for ub.code.
       for each code where code.parent begins "cash-param"

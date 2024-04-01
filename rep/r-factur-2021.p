@@ -1835,25 +1835,10 @@ procedure print-header :
         find first buf_trn-doc no-lock
             where buf_trn-doc.doc-code = p-doc-code
             .
-        run gbl/conf-rd.p (
-            "factur01"
-            , ""
-            , ""
-            , 0
-            , ""
-            , ""
-            , ""
-            , no
-            , output v-print-doc
-            , output v-par-type
-            ) no-error.
-        if error-status :error
-            then 
-        do:
-            assign
-                v-print-doc = "no"
-                .
-        end.
+    { gbl/getsect.i run {&cmp} buf_trn-doc.host-code {&attr-prt-firm} }
+    for each thbjattr_thbj-attr :
+        if thbjattr_thbj-attr.prop-code = 'factur01' then v-print-doc =  string(thbjattr_thbj-attr.property-value-logical) .
+    end.
         assign
             p-sf-par = no
             .

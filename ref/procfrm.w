@@ -10,7 +10,6 @@
 {ref\ttprocbrow.i}
 {cmp\str-glbl.i}
 define variable masynchelper as class ibs.th.file.asynchelperTh no-undo.
-
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -336,7 +335,7 @@ on choose of Btn_OK in frame Dialog-Frame /* Отказать в подписи */
     
     vParams = right-trim(vParams,{&delim-par}).
     
-       
+    subscribe "PutFileLogAsunc" anywhere run-procedure "WriteLogAsync".
     mAsyncHelper = new ibs.th.file.AsyncHelperth().
     mAsyncHelper:mProcPublish   = this-procedure.
     mAsyncHelper:setCurrentUserPasswd().
@@ -361,12 +360,14 @@ on choose of Btn_OK in frame Dialog-Frame /* Отказать в подписи */
        
                
        
-   end.
+    end.
     run ibs\th\file\waithelper.p (mAsyncHelper,?, 1,tt-procAsunc.procname).
     os-command no-wait value (mAsyncHelper:getlog(?)).   
     message "Результаты выполнения находятся в " mAsyncHelper:SaveArh()
     view-as alert-box.
     delete object mAsyncHelper.
+    unsubscribe "PutFileLogAsunc".
+    
   end.
 
 /* _UIB-CODE-BLOCK-END */

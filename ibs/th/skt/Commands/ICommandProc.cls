@@ -32,12 +32,24 @@ class ibs.th.skt.Commands.ICommandProc inherits ICommand  abstract:
                         input ""
                       , input "bat"
                       , output bat-file) .
-     output to value(bat-file) convert target "ibm866".
+     
+     v-pid = runProcFile(icmd, bat-file).                   
+                                 
+     return v-pid.
+
+     
+  end.
+  
+  method public int64 runProcFile (icmd as character, iFileName as character):
+     define variable v-pid as int64 no-undo.
+     
+     output to value(iFileName) convert target "ibm866".
      put  unformatted icmd skip.
      output close.
-     run gbl/run-gpid.p (input bat-file
+     run gbl/run-gpid.p (input iFileName
                         ,input '':U
                         ,output v-pid).
+                                 
      return v-pid.
 
      

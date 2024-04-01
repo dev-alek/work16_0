@@ -17,9 +17,12 @@ class ibs.th.file.AsyncHelperth:
    { cmp/str-glbl.i class}
    {utl/ttprocdef.i}
    {utl/ttfileList.i  ttfile  }
-   
- /*  {utl/setpwd.i class}*/
-/*define temp-table ttfileTarget no-undo like ttfile.*/
+   define public property hpApi as handle no-undo 
+   get.
+   private set.
+   { gbl/runrepid.i }
+
+
 define temp-table ttfileList no-undo like ttfile.
 
       
@@ -98,9 +101,9 @@ define public variable MyBachMode as logical no-undo init yes.
 
 
 end.*/
-define public property m-prowin32FileName as character no-undo
-get.
-    set (arg as char):
+   define public property m-prowin32FileName as character no-undo
+   get.
+   set (arg as char):
       if arg eq ""
       then
          arg = "bin/prowin32.exe".
@@ -108,29 +111,48 @@ get.
       if arg ne ?
       then
          m-prowin32FileName = arg.
-    end.
-    define public property MyWorkDir as character no-undo
-    get():
-        return (if MyWorkDir  ne "" then( MyWorkDir + v-path-tls-dir-delim ) else "").
-    end.    
-    set (arg as char):
+   end.
+    
+   define variable myPID      as int64     no-undo.
+   define variable myCompName as character no-undo.
+   define variable myCompUser as character no-undo.
+   define variable preWorkDir as character no-undo.
+   
+   define public property MyWorkDir as character no-undo
+   get():
+      return (if MyWorkDir  ne "" then( MyWorkDir + v-path-tls-dir-delim ) else "").
+   end.    
+   set (arg as char):
       if arg ne ?
-      then
+      then do:
+         define variable vi   as integer no-undo.
          if  arg eq "pid_"
          then do:
-            define variable vpid as int64 no-undo.
-            run utl/getpid.p(output vpid).
-            if vpid ne 0 and vpid ne ?
+            if     myPID ne 0 
+               and myPID ne ?
             then do:
-               
-               MyWorkDir = substitute("pid_&1_&2" , string(vpid) , string(random(1,9999999))).
-               os-delete value(MyWorkDir) recursive.
-               os-create-dir VALUE(MyWorkDir).
-            end. 
+               block-cr: 
+               do vi = 1 to 1:
+                  MyWorkDir = substitute("&1&2" , preWorkDir, string(random(1,9999999))).
+                  if objExists( MyWorkDir)
+                  then
+                     next block-cr.
+                  os-create-dir VALUE(MyWorkDir).
+                  MyWorkDir = objExists( MyWorkDir,"D").
+                  if MyWorkDir ne ?
+                  then
+                     leave block-cr.
+               end.
+            end.
+            else
+               MyWorkDir = ?. 
          end.
          else
-            MyWorkDir = arg.
-      
+            MyWorkDir = objExists( arg,"D").
+         if MyWorkDir ne ?
+         then
+            Writefile(MyWorkDir + "parentPid.txt", string(mypid) + {&new-line}).
+       end.
     end.
     
     define public property myTimeOut as int no-undo
@@ -211,8 +233,22 @@ get.
    constructor AsyncHelperth ( ):
    
       super ().
+      define variable vi   as integer   no-undo.
+      define variable vrep as character no-undo initial '/,\,:,*,",<,>,|'.
+      run gbl\getwindows.p(output hpApi).
       m-prowin32FileName =  search ("bin/prowin32.exe").
       mAsyncProc = new ibs.th.file.asyncproc().
+      run utl/getpid.p (output myPID,
+                        output myCompName,
+                        output myCompUser).
+      do vi = 1 to num-entries (vrep):
+         assign
+            myCompName = replace(myCompName,entry(vi,vrep),"_")
+            myCompUser = replace(myCompUser,entry(vi,vrep),"_")
+         .
+      end.
+      preWorkDir = substitute("pid_&1_&2_&3_&4" , myCompName, myCompUser, string(myPID)).                  
+      DelDontWorkProc().
 /*      MyWorkDir = "pid_".*/
     /*  creatTTForDir("c:\11").
       updateFolder("c:\22", input table ttfile).
@@ -260,55 +296,51 @@ get.
    end.
    define variable mrunnum as int64 no-undo.
    
-   method public void firstrun():
+   method public logical firstrun():
       
       if mFirstrun
       then do: /*создадим рабочуюю директорию */ 
          MyWorkDir = "pid_".
+         if MyWorkDir eq ?
+         then do:
+            publish "PutFileLogAsunc" from mProcPublish ("Не удалось создать рабочий каталог, задание прервано." ).
+            return no.
+         end.
          mIniFile = " -ininame "  + GetStartupParam("-ininame")  .
          ConPar = substitute(ConPar, substitute ("-U &1 -P &2 ",myUser,myPass)).
-         output stream sWriteFile to value(MyWorkDir + "prof.pf").
-         put stream sWriteFile unformatted substitute('-DESCRIPTION "&2"&1 -LISTINGS .&1 -FILENAME prof.out&1 ',{&new-line},TaskName) .
-         output stream sWriteFile close.
+         Writefile(MyWorkDir + "prof.pf", substitute('-DESCRIPTION "&2"&1 -LISTINGS .&1 -FILENAME prof.out&1 ',{&new-line},TaskName)).
          
          mFirstrun = no.
       end.
+      return true.
    end.
    
-   method public int64 AddTask (ITask    as character,
+   method public void AddTask (ITask    as character,
                                 iProc    as character,
                                 iParam   as character):
-      return AddTask(ITask,iProc,iParam, getnowDay()).                             
+      AddTask(ITask,iProc,iParam, getnowDay()).                             
                                   
    end.
    define variable mTaskNum as int64 no-undo.
-   method public int64 AddTask (ITask    as character,
+   method public void AddTask (ITask    as character,
                                 iProc    as character,
                                 iParam   as character,
                                 iStartTimeAfter as datetime-tz):
       
-      firstrun().
+      if not firstrun()
+      then
+         return.
       find last ttrun where ttrun.task eq itask
       no-lock no-error.
       if not available ttrun
       then do:
          if not FileExists  (MyWorkDir + itask + ".txt" )
          then do:
-            
-            output stream sWriteFile to value(MyWorkDir + itask + ".txt").
-            put stream sWriteFile unformatted "InitProc " getnow() skip.
-            output stream sWriteFile close.
-            
-            
-            output stream sWriteFile to value (getLog(itask) ).
-            output stream sWriteFile close.
-         
-            
+            Writefile(MyWorkDir + itask + ".txt", "InitProc " + string(getnow())).
+            Writefile( getLog(itask),"").           
          end.
          else do:
-            if valid-handle(mProcPublish)
-            then
-               publish "PutFileLogAsunc" from mProcPublish ("Процедура " + iProc + "уже запущена в паралельном режиме." ).
+            Writefile (getLog(itask),"Процедура " + iProc + "уже запущена в паралельном режиме." ).
             if valid-handle(mProcPublish)
             then
                publish "PutFileLogAsunc" from mProcPublish (MyWorkDir + itask + ".txt" ).
@@ -361,9 +393,7 @@ get.
                                          iTask as char,
                                          inum  as int64,
                                          iText as char):
-      output stream sWriteFile to value(MyWorkDir + itask + ".txt") append.
-      put stream sWriteFile unformatted iType " " getnow() " task " itask  " Num " inum  " dop " iText skip.
-      output stream sWriteFile close.
+      Writefile(MyWorkDir + itask + ".txt", substitute ( "&1 &2  task &3  Num &4 dop &5",iType,getnow(),itask,inum, iText)).                                      
    end.
    
    method public int64 AsyncProc (
@@ -454,8 +484,7 @@ get.
         else if    vtime > 120
         then do:
            vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/endproc.txt".
-           output stream sWriteFile to value(vFile).
-           output stream sWriteFile close.
+           Writefile(vFile, "").
         end.
         
         PubFileLog (ttrun.task, ttrun.num, no).
@@ -753,8 +782,7 @@ Phase 1 of Load completed.  Working.  Please wait ...~
        vCountend = 0. 
        WAIT-FOR-COMPLETE = false.      /* на всякий случай */
        mstop = no.
-      output stream sWriteFile to value(MyWorkDir + "Stop.txt").
-      output stream sWriteFile close.
+       Writefile(MyWorkDir + "Stop.txt", "").
        do while not WAIT-FOR-COMPLETE:
           
           WAIT-FOR-COMPLETE = true.
@@ -983,7 +1011,7 @@ end.
       end.
    end.
    
-   method private int64 AsyncRun (
+   method private void AsyncRun (
       iSched     as character,
       iSchedNum  as integer
      ):
@@ -1001,8 +1029,12 @@ end.
          vtask = iSched + string (iSchednum).
          os-delete value (MyWorkDir + vTask) recursive.
          if not  FolderExists  ( MyWorkDir + vTask) 
-         then
+         then do:
             os-create-dir VALUE(MyWorkDir + vTask ).
+            if not  FolderExists  ( MyWorkDir + vTask)
+            then
+               return.
+         end.
          os-copy value(MyWorkDir + "assemblies.xml" )
                  value(MyWorkDir + vTask + v-path-tls-dir-delim + "assemblies.xml").  
             mAsyncProc:SavePARAM(?,?).
@@ -1029,15 +1061,10 @@ end.
                mAsyncProc:SavePARAM("ParamProc_" + string(vi),entry(vi,ttrun.fParam, {&delim-par} )).
             end.
             mAsyncProc:SavefilePARAM(MyWorkDir + vTask + v-path-tls-dir-delim + "param.txt").
-            output stream sWriteFile to value(MyWorkDir + vTask + v-path-tls-dir-delim + "propath.txt").
-            put stream sWriteFile unformatted propath skip.
-            output stream sWriteFile close.
-              output stream sWriteFile to value(MyWorkDir + vTask + v-path-tls-dir-delim +  "meslogasync.log").
-                   
-              put stream sWriteFile unformatted "error Ошибка запуска сессии." skip.
-              output stream sWriteFile close.
-              output stream sWriteFile to value(MyWorkDir + vTask + v-path-tls-dir-delim + "stop.txt").
-               output stream sWriteFile close.
+            Writefile(MyWorkDir + vTask + v-path-tls-dir-delim + "propath.txt", propath).
+            os-delete value(MyWorkDir + vTask + v-path-tls-dir-delim +  "meslogasync.log").
+            Writefile(MyWorkDir + vTask + v-path-tls-dir-delim +  "meslogasync.log", "error Ошибка запуска сессии.").
+            Writefile(MyWorkDir + vTask + v-path-tls-dir-delim + "stop.txt","").       
                
          define variable vruncomand as character no-undo.
          vruncomand =  vtask + " & " + ttrun.cmd + " & copy /y param.txt endproc.txt & del /F stop.txt & exit".
@@ -1046,9 +1073,7 @@ end.
          if ( not isRcode or session:debug-alert ) 
    /*       and not UserDB */
          then do:
-            output stream sWriteFile to value(MyWorkDir + vtask + ".bat").                                                                                                                          
-            put stream sWriteFile unformatted "cd " replace (vruncomand,"&","~n":U) skip.
-            output stream sWriteFile close.
+            Writefile(MyWorkDir + vtask + ".bat", "cd " + replace (vruncomand,"&","~n":U)).
          end.
          vruncomand =  "cd " + MyWorkDir + vruncomand.
          os-command no-wait value (vruncomand  ).
@@ -1304,9 +1329,7 @@ method public logical  termprc(input iDir as character,iProc as character,iNum a
       vOk = true.
       if FolderExists (vdir)
       then do:
-         output stream sWriteFile to value (substitute("&1\endproc.txt",vdir )).
-         put stream sWriteFile skip.
-         output stream sWriteFile close.
+         Writefile(substitute("&1\endproc.txt",vdir ), "").
       end.
    end.
    if iPid eq 0
@@ -1314,9 +1337,7 @@ method public logical  termprc(input iDir as character,iProc as character,iNum a
    do:
       if FolderExists (vdir)
       then do:
-         output stream sWriteFile to value (substitute("&1\endproc.txt",vDir) ).
-         put stream sWriteFile skip.
-         output stream sWriteFile close.
+         Writefile(substitute("&1\endproc.txt",vdir ), "").
       end.
    end.
    return vOk.       
@@ -1688,4 +1709,54 @@ method public logical WaitFor ( input iSched as character, input ipInterval as i
    method public logical  objExists  (input  ifile as character):
       return    (objExists(ifile,"D") ne ?) or ( objExists(ifile,"F") ne ?) .                                  
    end.
+   
+   define stream sReadDir.
+   method public logical  DelDontWorkProc  ():
+      define variable vPureName as character no-undo.
+      define variable vFileType as character no-undo.
+      define variable vFullPath as character no-undo.
+      define variable vFile     as character no-undo.
+      define variable vPid      as integer no-undo.
+      input STREAM sReadDir FROM os-dir(".").
+      repeat:
+         import stream sReadDir vPureName vFullPath vFileType.
+         if     vFileType =  "d"
+            and vPureName begins  preWorkDir  
+         then do:
+            file-info:file-name = vFullPath.
+            if file-info:full-pathname <> ?
+            and ( ( file-info:file-create-date = today
+                 and file-info:file-create-time < time + 120
+               )
+               or (    file-info:file-create-date < today
+                   and time > 120)
+             )
+            then do:
+               vFile = vFullPath + "/parentPid.txt".
+               if FileExists(vFile)
+               then do:
+                  input STREAM sReadfile FROM  VALUE(vFile). 
+                  repeat:
+                     import stream sReadfile vPid.
+                  end.
+                  input STREAM sReadfile close.
+                  if IsProcessRunning( vpid ) <> -1 
+                  then do:
+                     os-delete value(vFullPath) recursive.
+                  end.
+               end.
+               else if vPureName begins  "pid_"
+               then
+                  os-delete value(vFullPath) recursive.
+            end.
+         end.
+      end.   
+      input STREAM sReadDir close.                                  
+   end.
+   
+   method public char Writefile (ifile as char,itext as char):
+      define variable verror as character no-undo.
+      verror = mAsyncProc:Writefile(ifile, itext).
+   end.
+   
 end class.

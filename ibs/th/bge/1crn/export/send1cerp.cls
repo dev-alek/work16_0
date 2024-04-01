@@ -40,7 +40,7 @@ class ibs.th.bge.1crn.export.send1cerp
                 input 1                            ~
               , input "~{&log-file}"               ~
               , input 1                            ~
-              , input Msg).
+              , input Msg) no-error.
  
    
    define public property parparentproc as handle    no-undo
@@ -68,6 +68,7 @@ class ibs.th.bge.1crn.export.send1cerp
    method public void setError(iText as char):
       msg = iText.
       {&display-message}
+      
    end.   
    
    constructor public send1cerp (input  i-parparentproc   as handle,
@@ -168,8 +169,10 @@ class ibs.th.bge.1crn.export.send1cerp
          end.
          subOBj = dynamic-new classExport() no-error.
          if error-status:error
-         then
+         then do:
             setError(substitute( "&1&2&3&2&4", return-value, {&new-line}, error-status :get-message (1), MSG)).
+            return.
+         end.
          ObjSrv:RegObj(this-object,subOBj).
          define variable v-custom-pack-name   as character   no-undo .
          define variable v-dump-ord-int64     as int64       no-undo .
@@ -207,7 +210,7 @@ class ibs.th.bge.1crn.export.send1cerp
          if error-status:error 
          then do:
             Msg = subObj:msg.
-            undo _main, retry .
+            undo _main, return .
          end. 
          if  context_begin-esys-command( input v-esys-id-list, input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) = false  
          then do:
@@ -244,7 +247,9 @@ class ibs.th.bge.1crn.export.send1cerp
             if valid-object (subObj)
             then
                delete object subObj.
-            delete procedure v-esys-cmd-proc-handle no-error.   
+            if valid-handle (v-esys-cmd-proc-handle)
+            then
+               delete procedure v-esys-cmd-proc-handle no-error.   
          end finally.
       end. /*doe _main*/
    end. /* proc-main */

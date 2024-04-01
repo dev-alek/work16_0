@@ -4453,6 +4453,8 @@ if varrvs-place = yes then do:
 
     run gds-o-normal-wastage-value in this-procedure
     ( input-output NormWast).
+    
+    infoSectionsTotal:NormalWastage = NormWast:NormalWastageTransDate .
 
 /*    input buf_goods.gds-code         */
 /*     , input t-doc.obj-type          */
