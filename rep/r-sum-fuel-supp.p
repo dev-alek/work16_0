@@ -426,7 +426,7 @@ procedure BeforeCalc:
    
    mPrim2[1] = "Расчет сверхнормативного расхождения между резервуаром и АЦ" .
    mPrim2[2] = "Если 1.44 < 0 1.44+Корень((1.37*Пр)^2+(1.30*Пр)^2+(1.34*Птрк)^2+(1.25*Пац)^2)/100" .
-   mPrim2[3] = "Если 1.44 > 0 1.39-Корень((1.37*Пр)^2+(1.30*Пр)^2+(1.34*Птрк)^2+(1.25*Пац)^2)/100" .
+   mPrim2[3] = "Если 1.44 > 0 1.44-Корень((1.37*Пр)^2+(1.30*Пр)^2+(1.34*Птрк)^2+(1.25*Пац)^2)/100" .
    mPrim2[4] = "Пр - относительная погрешность измерения массы нефтепродукта в резервуаре (в сверках)" .
    mPrim2[5] = "Пац - погрешность измерения массы в АЦ" .
    mPrim2[6] = "Результат расчета округляется до десятых." .
@@ -890,7 +890,7 @@ procedure processTrn :
           tt-rep.col4       = v-nids
           tt-rep.col5       = string(v-date-start) + "<br>" + {&new-line} + string(v-hour-start, "99") + ":" + string(v-min-start, "99") + ":00"
           tt-rep.col6       = string(v-date-end) + "<br>" + {&new-line} + string(v-hour-end, "99") + ":" + string(v-min-end, "99") + ":00"
-          tt-rep.col7       = string(v-hour-pour, "99") + ":" + string(v-min-pour, "99") + ":00"
+          tt-rep.col7       = string(v-hour-pour) + ":" + string(v-min-pour, "99") + ":00"
           tt-rep.col8       = v-cli-name
           tt-rep.col9       = v-auto-cli-name
           tt-rep.col10       = v-nb-cli-name
