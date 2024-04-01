@@ -1,8 +1,10 @@
 &if defined(search_def) eq 0
 &then
 &glob search_def yes
-{ cmp/str-glbl.i }
-
+/*{ cmp/str-glbl.i }*/
+&if defined(str-glbl_i) = 0 &then
+&global-define CommentStartNoClass /~* 
+&endif
 { def/funcmet.i objExists character }
 (input  ifolder as character,
  input  iType   as character  ):

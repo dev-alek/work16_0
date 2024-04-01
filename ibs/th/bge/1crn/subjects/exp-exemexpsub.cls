@@ -28,6 +28,12 @@ class ibs.th.bge.1crn.subjects.exp-exemexpsub inherits send1cerpsub:
    define override public property InitSecTag as character no-undo init "test-export"
    get.
    
+   method override public void CheckParam(  ):
+      
+      return.
+
+   end method.
+
    method override public void CrContentToSW( input hSaxWriter as handle ):
       hSAXWriter:start-element("slips") no-error.
          hSAXWriter:insert-attribute("type",   "REQUEST")       no-error.

@@ -63,10 +63,14 @@ class ibs.th.bge.1crn.export.send1cerpsub abstract
          newbh         = i-newbh
          params        = i-params
       .
-      
+      CheckParam() no-error.
+      if error-status:error
+      then
+         return error return-value.
    end.
    
    method abstract public void CrContentToSW (hSaxWriter as handle).
+   method abstract public void CheckParam    ().
 
    define property Msg as character no-undo
    get:
