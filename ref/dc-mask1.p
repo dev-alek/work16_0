@@ -330,17 +330,9 @@ ON STOP UNDO _main, RETURN ERROR:
       if v-cash-d-pcnt = ? then do:
         v-cash-d-pcnt = 0.
       end.
-
-      if buf_dis-card.category = ? then do:
+      if v-categ = ? then do:
         v-categ = 0.
-      end. 
-      else do:
-      v-categ = buf_dis-card.category.
-      end. 
-
-/*    if v-categ = ? then do:
-        v-categ = 0.
-      end. */
+      end.
 
       run ref/dcardi01.p (
                      input parparentproc
