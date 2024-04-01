@@ -38,6 +38,11 @@ class ibs.th.skt.Commands.ICommandProc inherits ICommand  abstract:
      run gbl/run-gpid.p (input bat-file
                         ,input '':U
                         ,output v-pid).
+     if not session:debug-alert
+     then do:
+         os-delete value(bat-file) no-error.
+     end.
+                                 
      return v-pid.
 
      

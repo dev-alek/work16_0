@@ -15,6 +15,7 @@ Modified: Belova Marina 25/10/2023
 */
 
 using Progress.Lang.*.
+using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.marking.sts.cash.
 using ibs.th.skt.Adapters.LogWrite.
 using ibs.th.gbl.propmap.
@@ -23,7 +24,8 @@ using ibs.th.gbl.sys.objth.
 
 
 
-class ibs.th.skt.ControlledClients.marking inherits objth: 
+
+class ibs.th.skt.ControlledClients.marking inherits ICommandProc: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
   define override public property vss-author      as character no-undo init "$Author:$":U get.
   define override public property vss-date        as character no-undo init "$Date:$":U get.
@@ -33,8 +35,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
 
   {cmp\str-glbl.i class}
   &scop CRLF chr(13) + chr(10)
-  &scop HdEnd chr(13) + chr(10)  + chr(13) + chr(10)
-  define private variable logWrite   as class LogWrite no-undo.
+  &scop HdEnd chr(13) + chr(10)  + chr(13) + chr(10)  
   define private variable cashSts    as class cash     no-undo.
   define private variable answerFlag as logical        no-undo init false.
   define private variable thMarkSts  as class ibs.th.str.marking.sts.mark no-undo.
@@ -101,8 +102,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
   { ibs/th/skt/controlledclients/gismtprop.i def}
 
   constructor public marking (  ):
-    super ().
-    logWrite = new LogWrite().
+    super ().    
     
     /* определяем настройки подключения к ГИС МТ */
     define buffer buf_sys-ctrl for ub.sys-ctrl .
@@ -576,6 +576,10 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     find buf_cash-desk where buf_cash-desk.cash-num = cash no-lock no-error.
     return if available buf_cash-desk then buf_cash-desk.obj-code else ?.
   end method.
+ 
+  method override public void Execute_(req as class IRequest, resp as class IResponse):
+      
+  end method.
 
   method private character unlockMarks (
     loc-key as character
@@ -815,10 +819,12 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     define variable v-param-type      as character no-undo .
     define variable v-param-value     as character no-undo .
    
-    define variable vRetOk   as logical   no-undo.
-    define variable vCh      as character no-undo.
+    define variable vRetOk   as logical     no-undo.
+    define variable vCh      as character   no-undo.
     define variable vBefCurl as datetime-tz no-undo. 
     define variable vAftCurl as datetime-tz no-undo.
+    define variable vpid     as integer     no-undo.
+    define variable vTimePause as integer   no-undo.
         
     define buffer buf_firm for ub.firm .
     define buffer buf_shop for ub.shop.
@@ -898,11 +904,41 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
                       CmdParamProxy,           /*6*/
                       vFileResultErr,          /*7*/
                       gismt-DopParam,          /*8*/
-                      gismt-WaitTime).         /*9*/  
+                      trim(replace(string(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*9*/  
                       
     dbgPrint("marking.log", "cmd: " + cmd).
-    vBefCurl = now.                                     
-    os-command silent value(cmd) .
+    vBefCurl = now.
+    /*os-command silent value(cmd).*/
+    
+    /* запуск curl в ассинхронном режиме */ 
+    vpid = runProc(cmd).    
+    /* ждем окончания работы */
+    block_wait:
+    do while true:
+        /* проверка, работает ли еще процесс */                
+        if IsProcessRunning(vpid) = 0 then do:
+            if searchFile(vfileresult) <> ? then do:
+                file-info:file-name = searchFile(vfileresult).
+                if file-info:file-size <> 0 then do:
+                   dbgPrint("marking.log", substitute("Сформирован файл-ответ &1", vfileresult)).
+                   leave block_wait.
+                end.   
+            end.    
+        end.
+        /* время ожидания вышло */
+        if vBefCurl + Int(gismt-WaitTime * 1000) < now then do:         
+           dbgPrint("marking.log", "Время ожидания работы curl истекло").
+           leave block_wait.
+        end.
+        /* немного ждем */
+        vTimePause = now - (vBefCurl + Int(gismt-WaitTime * 1000)) + 10. 
+        if vTimePause < -10 then       
+           run gbl/pause.p(10).
+        else if vTimePause < 0 and vTimePause > -10
+        then       
+           run gbl/pause.p(0 - vTimePause).    
+    end.
+    
     vAftCurl = now. 
     dbgPrint("marking.log", substitute("Время работы curl: Начало &1 Окончание &2 Всего (мс) &3  ", vBefCurl, vAftCurl, vAftCurl - vBefCurl)).
      
@@ -1368,8 +1404,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public marking ( ):
-      delete object cashSts.
-      delete object logWrite.
+      delete object cashSts.      
 	end destructor.
   
   
