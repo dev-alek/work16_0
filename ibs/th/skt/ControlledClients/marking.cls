@@ -801,6 +801,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     define variable cmdlog         as character   no-undo.
     define variable CmdParamProxy  as character   no-undo.
     define variable vFileToken     as character   no-undo. 
+    define variable vFileBat       as character   no-undo.
     define variable vFileResult    as character   no-undo.
     define variable vFileResultErr as character   no-undo.   
     define variable vFileresultXml as character   no-undo.
@@ -892,8 +893,11 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     
     run gbl/_tmpfile.p ( "ChkGisMTRes", ".txt", output vFileResult ) .
     run gbl/_tmpfile.p ( "ChkGisMTResErr", ".txt", output vFileResultErr ) .
+    run gbl/_tmpfile.p ( "ChkGisMT", ".bat", output vFileBat ) .
+    
     dbgPrint("marking.log", substitute("vFileResult &1 ", vFileResult)).
     dbgPrint("marking.log", substitute("vFileResultErr &1 ", vFileResultErr)).
+    dbgPrint("marking.log", substitute("vFileBat &1 ", vFileBat)).
     
     cmd = substitute ('&1 &8 --connect-timeout &9 --max-time &9 -X POST -H "Content-Type: application/json" -H &5 &6 --data @&4 &3 >&2 --stderr &7',
                       search ("exe/curl.exe"), /*1*/
@@ -911,7 +915,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     /*os-command silent value(cmd).*/
     
     /* запуск curl в ассинхронном режиме */ 
-    vpid = runProc(cmd).    
+    vpid = runProcFile(cmd, vFileBat).    
     /* ждем окончания работы */
     block_wait:
     do while true:
@@ -1081,6 +1085,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     if not session:debug-alert
     then do:
        os-delete value(vDataMark) no-error.
+       os-delete value(vFileBat) no-error.
        os-delete value(vFileResult) no-error.
        os-delete value(vFileResultErr) no-error.
        os-delete value(vFileResultXml) no-error.
