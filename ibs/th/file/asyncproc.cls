@@ -40,11 +40,14 @@ class ibs.th.file.asyncproc:
    
    define stream sLogMes. 
    define stream sWriteFile.
+   define variable vWritelog as logical no-undo.
    method public logical BegRec():
       output stream sLogMes to "meslogasync.log".
+      vWritelog = yes.
    end.
    
    method public logical EndRec():
+      vWritelog = no.
       output stream sLogMes close.
       mWriteLogNum = mWriteLogNum + 1.
       os-delete             value ("meslogasync.log" + string(mWriteLogNum)).
@@ -114,9 +117,8 @@ class ibs.th.file.asyncproc:
          putStatusText = iText
          vtext         = iText
       .
-      output stream sWriteFile to "procstatus.txt". 
-      put stream sWriteFile unformatted vtext skip.
-      output stream sWriteFile close.
+      os-delete VALUE ("procstatus.txt").
+      Writefile("procstatus.txt", vtext + {&new-line}).
       NextLog().
    end.
    
@@ -131,9 +133,7 @@ class ibs.th.file.asyncproc:
    method public void  creatProcInfo (input iAllobj as integer,iProcnum as integer,iAllproc as integer   ):
        define variable vMyPid as int64 no-undo.
       run utl/getpid.p (output vMyPid) no-error.
-      output stream sWriteFile to "procinfo.txt".
-      put stream sWriteFile unformatted substitute("&1~001&2~001&3~001&4",vMyPID ,iAllobj,iProcnum,iAllproc) skip.
-      output stream sWriteFile close.
+      Writefile("procinfo.txt", substitute("&1~001&2~001&3~001&4&5",vMyPID ,iAllobj,iProcnum,iAllproc,{&new-line})).
       mWriteLogTime = getnow().
    end method.
    
@@ -284,4 +284,24 @@ class ibs.th.file.asyncproc:
    method public logical  objExists  (input  ifile as character):
       return    (objExists(ifile,"D") ne ?) or ( objExists(ifile,"F") ne ?) .                                  
    end.
+   
+   method public char Writefile (ifile as character ,itext as character):
+      if itext eq ""
+      then
+         itext = "-----------------------------------------------------".
+      run gbl/fileapnd.p (
+          input ifile
+        , input itext
+        , input 3
+    ) no-error.
+    if error-status :error
+    then do:
+       if vWritelog
+       then
+          putmes (substitute ("Не удалось записать файл &1 : &2 ",ifile,return-value)).
+       else
+          return substitute ("Не удалось записать файл &1 : &2 ",ifile,return-value).
+    end.
+    return "".
+   end.   
 end class.

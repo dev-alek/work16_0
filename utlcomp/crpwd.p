@@ -2,7 +2,7 @@ define input  parameter iRc as logical no-undo.
 define variable mOutFile as character no-undo.
 define variable mMaxNumPas as integer no-undo.
 define variable mLogin as character no-undo init "sysadm".
-mOutFile = replace (search("utlcomp/crpwd.p"),"crpwd.p","crpwd.i").
+mOutFile = replace (search(program-name (1)),"crpwd.p","crpwd.i").
 function crpas returns integer  (input iText as character) forward.
 output to value(mOutFile).
    crpas("sysadm").
@@ -63,7 +63,7 @@ function covchar returns character   (input iText as character):
   init "éöóêåíãøùçõúôûâàïğîëäæıÿ÷ñìèòüáş¸ÉÖÓÊÅÍÃØÙÇÕÚÔÛÂÀÏĞÎËÄÆß×ÑÌÈÒÜÁŞ¨İ"
   .
   define variable newchar as character no-undo
-  init "qwertyuiop[]asdfghjkl;'zxcvbnm,.tQWERTYUIOP{}ASDFGHJKL:ZXCVBNM<>T"
+  init "qwertyuiop[]asdfghjkl;'zxcvbnm,.tQWERTYUIOP{}ASDFGHJKL:ZXCVBNM<>T-"
   .
   newchar = newchar + '"'.
   define variable vi as integer no-undo.
