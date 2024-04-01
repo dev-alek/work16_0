@@ -14759,6 +14759,7 @@ procedure gds-obj-dt-seasons :
   
   define variable rid            as recid no-undo .
   define variable canSetDtSeason as logical no-undo.
+  define variable gdsCode        like ub.gds-obj-attr.gds-code no-undo.
   define buffer buf_code       for ub.code.
   define buffer buf_goods      for ub.goods.
 
@@ -14789,6 +14790,20 @@ procedure gds-obj-dt-seasons :
       find first buf_code no-lock where
                  recid(buf_code) = rid no-error .
       if not avail buf_code then return error.
+      /* проверка: Сезон ДТ может быть привязан только к 1-му ДТ на этом объекте */
+      run gdsoattr-gds-code in this-procedure
+        ("dt-seasons", buf_code.code, p-obj-type, p-obj-code, output gdsCode).
+      if gdsCode <> 0 and gdsCode <> p-gds-code then
+      do:
+        find first buf_goods where
+                   buf_goods.gds-code = gdsCode 
+             no-lock no-error.
+        message "Атрибут ~"Сезон ДТ~" может быть настроен только для одного дизельного топлива для одного объекта.~n"
+                "Для товара " if available buf_goods then substitute("<&1 &2 &3>",buf_goods.gds-code, buf_goods.artic, buf_goods.gds-name) else ""
+                "~nуже настроен атрибут ~"Сезон ДТ~" в значении " buf_code.code ".~n"
+                "В установке атрибута «Сезон ДТ» отказано." view-as alert-box.
+        undo, return error.
+      end.
       assign
         p-value = buf_code.code
         p-setted = yes
