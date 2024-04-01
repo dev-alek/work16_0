@@ -821,8 +821,47 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             else
             do:
-              if p-rvs-type = {&rvs-after-doc} then
-                v-act-name = 'actn_rvs-on-doc_upd-revision':U. /* Право на изменение сверки */
+              run placelib_get-attr  ( input {&place-rvd-dnsty}
+                                        ,input buf_place.obj-code
+                                        ,input buf_place.obj-type
+                                        ,input buf_place.pl-code
+                                        ,output v-value
+                                        ,output v-ok      ) no-error.
+              if not v-ok then pl-rvd-dens = no.
+              else pl-rvd-dens = logical(v-value) .
+              
+              run placelib_get-attr  ( input {&place-rvd-lvl}
+                                        ,input buf_place.obj-code
+                                        ,input buf_place.obj-type
+                                        ,input buf_place.pl-code
+                                        ,output v-value
+                                        ,output v-ok      ) no-error.
+              if not v-ok then pl-rvd-lvl = no.
+              else pl-rvd-lvl = logical(v-value) .
+              
+              run placelib_get-attr  ( input {&place-rvd-tmp}
+                                        ,input buf_place.obj-code
+                                        ,input buf_place.obj-type
+                                        ,input buf_place.pl-code
+                                        ,output v-value
+                                        ,output v-ok      ) no-error.
+              if not v-ok then pl-rvd-temp = no.
+              else pl-rvd-temp = logical(v-value) .
+              
+              if buf_place.is-meas
+              and not pl-rvd-dens
+              and not pl-rvd-lvl
+              and not pl-rvd-temp
+              then do :
+                assign
+                  v-act-name = 'actn_rvs-on-doc_upd-revision':U /* Право на изменение сверки */
+                .
+              end .
+              else do :
+                assign
+                  v-act-name = 'actn_rvs-control_upd-immeas':U /* Право на изменение сверки */
+                .
+              end .
             end.
             if infoSectionsTotal:IsKP
             then do :
