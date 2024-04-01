@@ -5408,8 +5408,8 @@ procedure restore-s-utd-doc-code :
 
     &scoped-define sequence-name   s-utd-doc-code
 
-    &scoped-define table-name      gds-mercury
-    &scoped-define seq-field-name  id
+    &scoped-define table-name      utd
+    &scoped-define seq-field-name  doc-id
     &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
     &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
     {&validate-sequence}
