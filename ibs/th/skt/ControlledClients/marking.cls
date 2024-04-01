@@ -889,7 +889,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     dbgPrint("marking.log", substitute("vFileResult &1 ", vFileResult)).
     dbgPrint("marking.log", substitute("vFileResultErr &1 ", vFileResultErr)).
     
-    cmd = substitute ('&1 &8 --max-time &9 -X POST -H "Content-Type: application/json" -H &5 &6 --data @&4 &3 >&2 --stderr &7',
+    cmd = substitute ('&1 &8 --connect-timeout &9 --max-time &9 -X POST -H "Content-Type: application/json" -H &5 &6 --data @&4 &3 >&2 --stderr &7',
                       search ("exe/curl.exe"), /*1*/
                       vFileResult,             /*2*/
                       quoter(gismt-GisAdress), /*3*/
@@ -898,7 +898,7 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
                       CmdParamProxy,           /*6*/
                       vFileResultErr,          /*7*/
                       gismt-DopParam,          /*8*/
-                      trim(replace(string(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*9*/  
+                      gismt-WaitTime).         /*9*/  
                       
     dbgPrint("marking.log", "cmd: " + cmd).
     vBefCurl = now.                                     
