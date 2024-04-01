@@ -583,10 +583,32 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
     define variable newSts    as integer   no-undo.
     define buffer buf_marking for ub.marking.
     define buffer buf_marking-l for ub.marking-lines.
-
-    for each buf_marking where 
+    
+    /* сначала обрабатываем упаковки (блоки) */
+    repeat preselect each buf_marking exclusive-lock where 
              buf_marking.loc-key begins loc-key
-         and lookup("chk_num",buf_marking.loc-key,":") = 0:
+             and lookup("chk_num",buf_marking.loc-key,":") = 0
+             :
+      find next buf_marking.
+             
+      if ObjSrv:Lib:MarkingTree:LevelDown(buf_marking.mark)
+      then do:       
+          setMarkStatus (
+            if buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB then thMarkSts:FreeZone:KeyIntDB else thMarkSts:SaleLock:KeyIntDB,
+            "",
+            "",
+            "",
+            buffer buf_marking)
+          .
+          setShift(buf_marking.mark, shift_tbeg, shift_num).
+      end.
+    end.
+    /* обрабатываем все что осталось */
+    repeat preselect each buf_marking exclusive-lock where 
+             buf_marking.loc-key begins loc-key
+             and lookup("chk_num",buf_marking.loc-key,":") = 0
+             :
+      find next buf_marking.
       setMarkStatus (
         if buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB then thMarkSts:FreeZone:KeyIntDB else thMarkSts:SaleLock:KeyIntDB,
         "",
@@ -601,8 +623,29 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
 
   method private character commitCheck ():
     define buffer buf_marking for ub.marking.
-
-    for each buf_marking where buf_marking.loc-key = "cash:" +  cash + ":" + "context:" + cntx_id:
+    define variable vCnt as int no-undo.
+    
+    vCnt = 0. 
+    /* сначала обрабатываем упаковки (блоки) */
+    repeat preselect each buf_marking exclusive-lock where buf_marking.loc-key = "cash:" +  cash + ":" + "context:" + cntx_id:
+      find next buf_marking.
+      if ObjSrv:Lib:MarkingTree:LevelDown(buf_marking.mark)
+      then do: 
+         setMarkStatus (
+            if buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB then thMarkSts:SaleLock:KeyIntDB else thMarkSts:ReturnLock:KeyIntDB, 
+            "cash:" +  cash + ":" + "context:" + cntx_id + ":" + "chk_num:" + chk_id,
+            "",
+            "",
+            buffer buf_marking)
+         .
+         setShift(buf_marking.mark, shift_tbeg, shift_num).
+         vCnt = vCnt + 1.
+      end.
+    end.
+    
+    /* обрабатываем все что осталось */
+    repeat preselect each buf_marking exclusive-lock where buf_marking.loc-key = "cash:" +  cash + ":" + "context:" + cntx_id:
+      find next buf_marking.
       setMarkStatus (
         if buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB then thMarkSts:SaleLock:KeyIntDB else thMarkSts:ReturnLock:KeyIntDB, 
         "cash:" +  cash + ":" + "context:" + cntx_id + ":" + "chk_num:" + chk_id,
@@ -611,11 +654,12 @@ class ibs.th.skt.ControlledClients.marking inherits objth:
         buffer buf_marking)
       .
       setShift(buf_marking.mark, shift_tbeg, shift_num).
-      accum buf_marking.mark (count).
+      vCnt = vCnt + 1.
     end.
-    return if (accum count buf_marking.mark) = 0
+    
+    return if vCnt = 0
       then getJson(0, "По данной кассе не было маркированого товара", mark)
-      else getJson(1, cashSts:Commit:Label_ + " Зарезервировано кол-во " + string (accum count buf_marking.mark), mark).
+      else getJson(1, cashSts:Commit:Label_ + " Зарезервировано кол-во " + string (vCnt), mark).
   end method.
 
   method private character FixErrGisMT ():
