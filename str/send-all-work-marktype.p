@@ -39,7 +39,7 @@ procedure putc :
    define variable vTimeDate as character no-undo.
    define variable vCount        as integer   no-undo.
    define buffer buf_code for ub.code.
-   
+
    for each buf_code where 
             buf_code.parent = "MarkType"
         and logical(buf_code.misc2)
@@ -87,6 +87,14 @@ procedure putc :
    end.
    oSend = true.
 end procedure.
+
+procedure get-root-teg:
+   define output parameter otypes as character no-undo init "config".
+end.
+
+procedure get-xml-encoding:
+   define output parameter oEncoding as character no-undo init "UTF-8".
+end.
 
 /* Invoked to report a warning. */
 procedure Warning:

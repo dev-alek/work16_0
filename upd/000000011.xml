@@ -7,7 +7,7 @@
     <table-Code NwsNotSend="TableList">
         <record-Code record-delete="no">
             <code>Versions</code>
-            <CodeName>Версии справочников</CodeName>
+            <CodeName>Версии справочников БД</CodeName>
             <export_>yes</export_>
             <status_>0</status_>
             <nwsgbd>yes</nwsgbd>
@@ -24,7 +24,7 @@
             <parent>Versions0</parent>
             <code>MarkType</code>
             <CodeName>Типы маркировки</CodeName>
-            <CodeValue>00:00 01.01.2024</CodeValue>
+            <CodeValue>01.01.2024 00:00</CodeValue>
             <export_>yes</export_>
             <status_>0</status_>
             <nwsgbd>yes</nwsgbd>

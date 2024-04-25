@@ -31,10 +31,13 @@ run xml-cd-filename in this-procedure (
     , output v-log-file-name
     , output v-locked
 ).
+if v-xml-encoding <> "windows-1251" then
+    fix-codepage(Mreq) = v-xml-encoding.
+
 create sax-writer hSAXWriter.
 hSAXWriter:set-output-destination("longchar", Mreq) no-error.
 hSAXWriter:formatted = true.
-hSAXWriter:encoding = "windows-1251".
+hSAXWriter:encoding = v-xml-encoding.
                
 hSAXWriter:start-document() no-error.
 define variable OS-time as character  no-undo.

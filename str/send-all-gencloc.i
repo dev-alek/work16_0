@@ -39,7 +39,7 @@ delete object hSAXWriter no-error.
 
 if session:debug-alert
 then do:
-    copy-lob from Mreq to file i-Type + "2kassa.xml".
+    copy-lob from Mreq to file i-Type + "2kassa.xml" convert target codepage v-xml-encoding.
 end.
 
 if     

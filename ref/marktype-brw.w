@@ -279,6 +279,7 @@ do:
    define variable vMisc2     as character no-undo.
    define variable vMisc3     as character no-undo.
    define variable vMisc4     as character no-undo.
+   define variable vId        as rowid     no-undo.
    define buffer buf_tt_code for tt_code.
 
    for last buf_tt_code no-lock
@@ -321,7 +322,8 @@ do:
         view-as alert-box.
      return no-apply.
    end.
-   if vIsUpdated then  do:
+   if vIsUpdated then 
+   do:
        create tt_code.
        assign
          tt_code.parent = "MarkType"
@@ -335,11 +337,12 @@ do:
          tt_code.export_ = yes 
          tt_code.status_ = 0
          tt_code.nwsgbd = yes
+         vId            = rowid(tt_code)
        .
       {&OPEN-QUERY-BROWSE-5}
-      reposition BROWSE-5 to recid recid(tt_code).
+      reposition BROWSE-5 to rowid vId.
+      apply "ENTRY" to BROWSE-5.
    end.
-   apply "ENTRY" to BROWSE-5.
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -394,6 +397,7 @@ do:
       delete tt_code.
       {&OPEN-QUERY-BROWSE-5}
       apply "ENTRY" to BROWSE-5.
+      reposition {&browse-name} to row 1.
    end.
 end.
 
@@ -670,10 +674,11 @@ PROCEDURE Exp2Xml :
     define buffer   b-tt_code for tt_code.
     define variable v-file-name as character no-undo.
     define variable vDateTime   as character no-undo.
+    define variable vCodeName   as character no-undo.
     
     assign
       v-file-name = "marktype_000000000" + ".xml"
-      vDateTime   = substitute("&1 &2",string(time,"HH:MM"),string(today,"99.99.9999")).
+      vDateTime   = substitute("&1 &2",string(today,"99.99.9999"),string(time,"HH:MM")).
     .   
                   
     output stream out-xml to value(v-file-name).
@@ -682,7 +687,7 @@ PROCEDURE Exp2Xml :
     "<?xml version=~"1.0~" encoding=~"windows-1251~" ?>" skip 
     "<Root>" skip
     "    <File-info>" skip
-    "        <DateActive>" vDateTime "</DateActive>" skip
+    "        <DateActive>01.01.2100</DateActive>" skip
     "        <version>000</version>" skip
     "    </File-info>" skip
     "    <table-Code NwsNotSend=~"TableList~">" skip 
@@ -722,12 +727,20 @@ PROCEDURE Exp2Xml :
     
     /* выгружаем в xml весь справочник, кроме старых марок */
     for each b-tt_code:
+        assign
+           vCodeName = replace(b-tt_code.CodeName, "&", "&amp;")
+           vCodeName = replace(vCodeName, "~"", "&quot;")        
+           vCodeName = replace(vCodeName, "'", "&apos;")
+           vCodeName = replace(vCodeName, "<", "&lt;")
+           vCodeName = replace(vCodeName, ">", "&gt;")
+           vCodeName = replace(vCodeName, "<", "&lt;")
+        .
         put stream out-xml unformatted
             "        <record-Code record-delete=~"no~">" skip
             "            <parent>MarkType</parent>" skip
             "            <code>" b-tt_code.code "</code>" skip
             "            <CodeValue>" b-tt_code.codevalue "</CodeValue>" skip
-            "            <CodeName>" b-tt_code.CodeName "</CodeName>" skip
+            "            <CodeName>" vCodeName "</CodeName>" skip
             "            <misc1>" b-tt_code.misc1 "</misc1>" skip
             "            <misc2>" b-tt_code.misc2 "</misc2>" skip
             "            <misc3>" b-tt_code.misc3 "</misc3>" skip

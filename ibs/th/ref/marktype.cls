@@ -223,6 +223,7 @@ class ibs.th.ref.marktype inherits Form:
     define variable vTextBox as System.Windows.Forms.TextBox no-undo.
     define variable vText    as integer                      no-undo.
     vTextBox = cast(sender, System.Windows.Forms.TextBox).
+    if vTextBox:Text = "" then return. 
 
     vText = integer(vTextBox:text) no-error.
     if error-status:error or 
@@ -231,6 +232,37 @@ class ibs.th.ref.marktype inherits Form:
        length(vTextBox:text) > 2 then
     do:
         vTextBox:text = substring(vTextBox:text, 1, length(vTextBox:text) - 1).
+        vTextBox:SelectionStart = length(vTextBox:Text).
+    end.
+  end method.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void mCheckInputCodeValue(input sender as System.Object, input e as System.EventArgs):
+    define variable vTextBox as System.Windows.Forms.TextBox no-undo.
+    define variable vAscii as integer no-undo.
+    define variable vCount as integer   no-undo.
+    define variable vValue as character no-undo.
+    
+    vTextBox = cast(sender, System.Windows.Forms.TextBox).
+    if vTextBox:Text = "" then return. 
+    do vCount = 1 to length(vTextBox:Text):
+      vAscii   = asc(substring(vTextBox:text, vCount, 1)).
+      /* разрешен ввод только латинсих букв и цифр */
+      if not ((vAscii >= 48 and vAscii <= 57) or
+              (vAscii >= 65 and vAscii <= 90) or
+              (vAscii >= 97 and vAscii <= 122)) then
+      do:
+        message
+          "Разрешен ввод только цифр и латинских букв." skip
+          "Проверьте раскладку клавиатуры."
+          view-as alert-box.
+        substring(vTextBox:text, vCount, 1) = "".
+        vTextBox:SelectionStart = length(vTextBox:Text).
+      end.
     end.
   end method.
 
@@ -327,6 +359,7 @@ class ibs.th.ref.marktype inherits Form:
     this-object:fillCodeValue:Name = "fillCodeValue".
     this-object:fillCodeValue:Size = new System.Drawing.Size(vFillWidth, {&fillHeight}).
     this-object:fillCodeValue:TabIndex = 2.
+    this-object:fillCodeValue:TextChanged:Subscribe(this-object:mCheckInputCodeValue).
     /*  */
     /* CodeName */
     /*  */
