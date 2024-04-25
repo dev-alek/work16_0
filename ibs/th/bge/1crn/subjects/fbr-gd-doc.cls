@@ -285,7 +285,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
         write-data-element ("doc-code", buf_fbr-doc.doc-code).
         write-data-element ("doc-num", buf_fbr-doc.doc-code).
         write-data-element ("del-f", string (isDel, "1/0") ).
-        write-data-element ("doc-date", if buf_fbr-doc.doc-date = ? then "" else iso-date (datetime (buf_fbr-doc.doc-date, buf_fbr-doc.sys-time-int))).
+        write-data-element ("doc-date", if buf_fbr-doc.doc-date = ? then "" else substitute("&1T&2",iso-date(date(buf_fbr-doc.doc-date)), string(buf_fbr-doc.sys-time))).
         write-data-element ("fact-date", if buf_fbr-doc.fact-date = ? then "" else iso-date (date (buf_fbr-doc.fact-date))).
         write-data-element ("doc-type", v-doc-type-ERPRN).
         write-data-element ("shift-date", if buf_fbr-doc.shift-date = ? then "" else iso-date (date (buf_fbr-doc.shift-date))).
