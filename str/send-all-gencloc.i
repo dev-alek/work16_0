@@ -35,8 +35,10 @@ then do:
    return error.
 end.
 delete object hSAXWriter no-error.
-
-copy-lob from mData to mReq convert target codepage v-xml-encoding.
+if v-xml-encoding = "Windows-1251" then
+   copy-lob from mData to mReq.
+else
+   copy-lob from mData to mReq convert target codepage v-xml-encoding.
 if session:debug-alert then
     copy-lob from mReq to file i-Type + "2kassa.xml".
 
