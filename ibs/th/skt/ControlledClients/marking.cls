@@ -21,8 +21,7 @@ using ibs.th.skt.Adapters.LogWrite.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.sys.objsrv.
 using ibs.th.gbl.sys.objth.
-
-
+/*using ibs.th.skt.ControlledClients.GisMtCDN.*/
 
 
 class ibs.th.skt.ControlledClients.marking inherits ICommandProc: 
@@ -40,6 +39,8 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
   define private variable answerFlag as logical        no-undo init false.
   define private variable thMarkSts  as class ibs.th.str.marking.sts.mark no-undo.
   define private variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+  /*define private variable thGisMtCdn as class GisMtCDN no-undo .*/
+  define variable mAsyncHelper as class ibs.th.file.AsyncHelperth  no-undo.
 
   define private variable cash      as character no-undo.
   define private variable shift_id  as character no-undo.
@@ -107,13 +108,14 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     /* определяем настройки подключения к ГИС МТ */
     define buffer buf_sys-ctrl for ub.sys-ctrl .
     define variable vRetProp as character no-undo.
+    define variable vCdnAdr as character no-undo.
     
     find first buf_sys-ctrl no-lock no-error.
     if available buf_sys-ctrl and buf_sys-ctrl.db-num <> 0 
     then do:
        dbgPrint("marking.log", substitute("База &1 номер: &2", "{&db}", buf_sys-ctrl.db-num)).
        vRetProp = get-gismt-prop ({&db},
-                                  buf_sys-ctrl.db-num) no-error.
+                                  buf_sys-ctrl.db-num) no-error.                            
     end.
     else do:
        dbgPrint("marking.log", "Не определена БД").
@@ -665,7 +667,8 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
       then getJson(0, "По данной кассе не было маркированого товара", mark)
       else getJson(1, cashSts:Commit:Label_ + " Зарезервировано кол-во " + string (vCnt), mark).
   end method.
-
+     
+  /* Фиксация времени начала сбоя ГИС МТ */
   method private character FixErrGisMT ():
      
     define variable vErrSts as character no-undo.
@@ -748,6 +751,75 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     return vErrSts.
     
   end method.   
+  
+  /* Фиксация времени начала сбоя ГИС МТ */
+  method private character CheckErrGisMT ():
+     
+    define variable vErrSts as character no-undo.
+    define variable vTimeBegErr as datetime-tz no-undo.
+    define variable vTimeAvail  as integer     no-undo.
+    
+    define buffer buf_code for ub.code.
+    
+    assign
+       mCheckSts = 2  
+       vErrSts = ""
+       .    
+           
+    /* Проверяем, зафиксирован ли сбой онлайн-проверки */    
+    find first buf_code where buf_code.parent eq "GisMt"
+           and buf_code.code   eq "GisMtErr"
+       exclusive-lock no-wait no-error.
+    /* если ошибка уже была, смотрим сколько прошло времени */   
+    if available buf_code            
+       and buf_code.codevalue > "" 
+    then do:
+       vTimeBegErr = datetime-tz(buf_code.codevalue) no-error.
+       if gismt-MaxTime <> ? and
+          gismt-TimeFalStart <> ? and 
+          vTimeBegErr <> ?
+       then do:
+          /* время максимального ожидания вышло */
+          if vTimeBegErr + gismt-MaxTime * 3600000 < now
+          then do:
+              assign
+                 mCheckSts = 4 
+                 vErrSts = "С момента начала сбоя онлайн-проверки прошло более " 
+                    + string(gismt-MaxTime) 
+                    + " часов, реализация маркированных товаров невозможна. "
+                 .
+          end.
+          /* время максимального ожидания не вышло, но время когда надо начать предупреждать */
+          else if vTimeBegErr + gismt-TimeFalStart * 3600000 <= now
+          then do:
+             assign
+                vTimeAvail = Round((vTimeBegErr + gismt-MaxTime * 3600000 - now) / 3600000,0)
+                vErrSts = "Сообщите управляющему/старшему смены, что до блокировки продаж маркированных товаров осталось: " 
+                          + string(vTimeAvail) + " ч. "
+             .
+          end.   
+       end.    
+       else if vTimeBegErr = ? then buf_code.codevalue = string(now).   
+    end.       
+    
+    return vErrSts.
+    
+  end method.   
+  
+  /* Сброс ошибки недоступности ГИС МТ */
+  method private void SetNoErrGisMT ():
+     def buffer buf_code for ub.code.
+    
+      do transaction on error undo, leave: 
+         find first buf_code where buf_code.parent eq "GisMt"
+                               and buf_code.code   eq "GisMtErr"
+            exclusive-lock no-error.
+         if available buf_code 
+         then buf_code.codevalue = "".
+      end.     
+    
+  end method.
+  
   /* Получение настроек из типа маркировки */
   method private logical GetMarkProp (
      p-obj-type  as character, 
@@ -810,8 +882,8 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     define variable vlongJson      as longchar    no-undo case-sensitive.
     define variable vlongJsonError as longchar    no-undo case-sensitive.
     define variable vMark          as character   no-undo case-sensitive.
-    define variable vDataMark      as character   no-undo.
-    define variable vTimeReq       as datetime-tz no-undo.
+    define variable vDataMark      as character   no-undo.    
+    define variable vRetProp       as character   no-undo.
     
     define variable v-value-character as character no-undo .
     define variable v-value-date      as date      no-undo .
@@ -822,18 +894,26 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     define variable v-param-value     as character no-undo .
    
     define variable vRetOk   as logical     no-undo.
+    define variable vRetVal  as integer     no-undo.
     define variable vCh      as character   no-undo.
     define variable vBefCurl as datetime-tz no-undo. 
     define variable vAftCurl as datetime-tz no-undo.
     define variable vpid     as integer     no-undo.
     define variable vTimePause as integer   no-undo.
+    define variable vGisAdress as character   no-undo.
+    define variable vGisAdrCDN as character   no-undo.
+    define variable vTimeStart as datetime-tz no-undo.
+    define variable vTimeNow   as datetime-tz no-undo.    
+    define variable vRetCdn    as logical     no-undo.
+    define variable vNumRep as int64 no-undo.
+    define variable vNumMax as int64 no-undo.
         
     define buffer buf_firm for ub.firm .
     define buffer buf_shop for ub.shop.
+    define buffer buf_sys-ctrl for ub.sys-ctrl .
     
     /* заменяем 1D в 16-тиричной на \u001d */
-    assign
-       vTimeReq = now
+    assign       
        vMark = mark
        vMark = replace(vMark, '\', '\\') .
        vMark = replace(vMark, '/', '\/') .
@@ -847,7 +927,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                                        vMark)).
     
     /* определяем по фирме ИНН */
-    vInn = "".
+    /*vInn = "".
     find first buf_shop no-lock where buf_shop.obj-code = p-obj-code no-error. 
     if available buf_shop then do:
        find first buf_firm no-lock where buf_firm.firm-code = buf_shop.host-code no-error. 
@@ -855,20 +935,23 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        dbgPrint("marking.log", substitute(" Код фирмы &1", buf_shop.host-code)).
     end.   
     else dbgPrint("marking.log", substitute("Не найден магазин с кодом &1", p-obj-code)).
-    dbgPrint("marking.log", substitute(" ИНН &1 ", vInn)).
+    dbgPrint("marking.log", substitute(" ИНН &1 ", vInn)).*/
                                   
+    /* определяем настройки подключения к ГИС МТ */
+    if gismt-UpdateRequest then do:
+        find first buf_sys-ctrl no-lock no-error.
+        if available buf_sys-ctrl and buf_sys-ctrl.db-num <> 0 
+        then 
+            vRetProp = get-gismt-prop ({&db},
+                                       buf_sys-ctrl.db-num) no-error.
+    end.                           
     dbgPrint("marking.log", "gismt-info").
     
     /* если установлен параметр, обозначающий наличие аварии в ГИС МТ, выходим */
     if gismt-CrashSituat then do:
        dbgPrint("marking.log", "Установлена аварийная ситуация.").
        return 1.
-    end. 
-      
-    if gismt-AdressPort <> "" and gismt-ProxyLogin <> "" and gismt-ProxyPswd <> "" 
-    then CmdParamProxy = substitute ('-x &1 -U &2:&3',gismt-AdressPort,gismt-ProxyLogin,gismt-ProxyPswd).
-    else if gismt-AdressPort <> "" then CmdParamProxy = substitute ('-x &1',gismt-AdressPort).
-    else CmdParamProxy = "".  
+    end.
     
     vFileLog = "GisMtReq-" + replace(string(today),"/","-") +  ".log".
     vCh = "". /* что бы в новый лог писал с первой строки, а в имеющийся - со следующей */
@@ -881,119 +964,209 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     /* формируем лог файл */
     OUTPUT STREAM out_data TO value(vFileLog) APPEND.
     PUT STREAM out_data UNFORMATTED 
-      vCh skip now " " mMarkOrig " ".
-    OUTPUT STREAM out_data CLOSE.
+      vCh skip now chr(9) mMarkOrig chr(9).
+    OUTPUT STREAM out_data CLOSE.     
     
     /* формируем файл запроса к ГИС МТ с маркой и ИНН */
     run gbl/_tmpfile.p ( "GisMT_data", ".txt", output vDataMark ) .
     dbgPrint("marking.log", substitute("vDataMark &1 ", vDataMark)).
     OUTPUT STREAM out_data TO value(vDataMark).
-    PUT STREAM out_data UNFORMATTED  
+    /*PUT STREAM out_data UNFORMATTED  
       '~{"codes":["' vMark '"],"inn":"' vInn  '"~}' .
+    OUTPUT STREAM out_data CLOSE.*/
+    
+    PUT STREAM out_data UNFORMATTED  
+      '~{"codes":["' vMark '"]~}' .
     OUTPUT STREAM out_data CLOSE.
+     
+    dbgPrint("marking.log", substitute(" Работа с CDN-площадками &1 ", gismt-cdnTurnOn)).
+                    
+    if gismt-AdressPort <> "" and gismt-ProxyLogin <> "" and gismt-ProxyPswd <> "" 
+    then CmdParamProxy = substitute ('-x &1 -U &2:&3',gismt-AdressPort,gismt-ProxyLogin,gismt-ProxyPswd).
+    else if gismt-AdressPort <> "" then CmdParamProxy = substitute ('-x &1',gismt-AdressPort).
+    else CmdParamProxy = "".      
     
     run gbl/_tmpfile.p ( "ChkGisMTRes", ".txt", output vFileResult ) .
     run gbl/_tmpfile.p ( "ChkGisMTResCnv", ".txt", output vFileResultCnv ) .
     run gbl/_tmpfile.p ( "ChkGisMTResErr", ".txt", output vFileResultErr ) .
-    run gbl/_tmpfile.p ( "ChkGisMT", ".bat", output vFileBat ) .
-     
+    run gbl/_tmpfile.p ( "ChkGisMT", ".bat", output vFileBat ) .     
     
     dbgPrint("marking.log", substitute("vFileResult &1 ", vFileResult)).
     dbgPrint("marking.log", substitute("vFileResultErr &1 ", vFileResultErr)).
     dbgPrint("marking.log", substitute("vFileBat &1 ", vFileBat)).
+        
+    if gismt-cdnTurnOn and gismt-cdnRepeat
+    then vNumMax = 2.
+    else vNumMax = 1.
     
-    cmd = substitute ('&1 &8 --connect-timeout &9 --max-time &9 -X POST -H "Content-Type: application/json" -H &5 &6 --data @&4 &3 >&2 --stderr &7',
-                      search ("exe/curl.exe"), /*1*/
-                      vFileResult,             /*2*/
-                      quoter(gismt-GisAdress), /*3*/
-                      searchfile(vDataMark),   /*4*/
-                      quoter("X-api-Key: " + gismt-RegKey), /*5*/
-                      CmdParamProxy,           /*6*/
-                      vFileResultErr,          /*7*/
-                      gismt-DopParam,          /*8*/
-                      trim(replace(string(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*9*/  
-                      
-    dbgPrint("marking.log", "cmd: " + cmd).
-    vBefCurl = now.
-    /*os-command silent value(cmd).*/
+    vTimeStart = now.
     
-    /* запуск curl в ассинхронном режиме */ 
-    vpid = runProcFile(cmd, vFileBat).    
-    /* ждем окончания работы */
-    block_wait:
-    do while true:
-        /* проверка, работает ли еще процесс */                        
-        if searchFile(vfileresult) <> ? then do:
-           file-info:file-name = searchFile(vfileresult).
-           if file-info:file-size <> 0 then do:
-               copy-lob from file vFileResult to vlongJson .
-               if (vlongJson begins "<html>" and 
-                   r-index(vlongJson,"</html>") > 0)
-                  or
-                  (r-index(vlongJson,"reqTimestamp") > 0 and
-                   r-index(substring(vlongJson,r-index(vlongJson,"reqTimestamp")),"}") > 0) 
-               then do:
-                   dbgPrint("marking.log", substitute("Сформирован файл-ответ &1", vfileresult)).
-                   vRetOk = yes.
-                   leave block_wait.
-               end.   
-            end.   
-        end.            
-        /* время ожидания вышло */
-        if vBefCurl + Int(gismt-WaitTime * 1000) < now then do:         
-           dbgPrint("marking.log", "Время ожидания работы curl истекло").
-           leave block_wait.
-        end.
-        /* немного ждем */
-        vTimePause = now - (vBefCurl + Int(gismt-WaitTime * 1000)) + 10. 
-        if vTimePause < -10 then       
-           run gbl/pause.p(10).
-        else if vTimePause < 0 and vTimePause > -10
-        then       
-           run gbl/pause.p(0 - vTimePause).    
-    end.
-    
-    vAftCurl = now. 
-    dbgPrint("marking.log", substitute("Время работы curl: Начало &1 Окончание &2 Всего (мс) &3  ", vBefCurl, vAftCurl, vAftCurl - vBefCurl)).
-     
+    block_chgcdn:
+    do  while true:
+       if gismt-cdnTurnOn then do:
+           vGisAdrCDN = GetCDNAdress().
+           if vGisAdrCDN = "" then do:
+               /* фиксируем, что больше площадок нет */
+              dbgPrint("marking.log", "Нет доступных площадок").    
+              leave block_chgcdn.
+           end.   
+           vGisAdress = vGisAdrCDN + "/api/v4/true-api/codes/check".
+       end.
+       else vGisAdress = gismt-GisAdress.
+       
+       block_repeat:
+       do vNumRep = 1 to vNumMax:
+           vRetVal = RunCurlGisMT(vGisAdress,     
+                                  vDataMark,
+                                  CmdParamProxy,
+                                  vFileResult,
+                                  vFileResultErr,
+                                  vFileBat).           
+           vTimeNow = now.             
+                     
+           OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
+           PUT STREAM out_data UNFORMATTED  
+              vGisAdress chr(9) vTimeNow chr(9).
+           OUTPUT STREAM out_data CLOSE.
+           
+           if searchFile(vfileresult) = ?
+           then do :            
+               /* формируем лог файл */
+               OUTPUT STREAM out_data TO value(vFileLog) APPEND.
+               PUT STREAM out_data UNFORMATTED  
+                  "Отсутствует ответ ГИС МТ " chr(9).
+               OUTPUT STREAM out_data CLOSE.               
+           end .
+           else do:
+               file-info:file-name = searchFile(vfileresult) .
+               if file-info:file-size = 0
+               then do :                  
+                   /* формируем лог файл */
+                   OUTPUT STREAM out_data TO value(vFileLog) APPEND.
+                   PUT STREAM out_data UNFORMATTED  
+                      "Отсутствует ответ ГИС МТ " chr(9).
+                   OUTPUT STREAM out_data CLOSE.
+               end .
+               else 
+               os-append value(vfileresult) value(vFileLog) . /* добавляем в лог ответ Гис МТ */           
+           end.                     
+           
+           dbgPrint("marking.log", substitute("Ответ по запросу vRetVal &1", vRetVal)).                      
+                                 
+           /* проверяем, когда не надо повторный запрос и смену площадки */              
+           if vRetVal = 0 or 
+              vRetVal = 203 or
+              vRetVal = 418
+           then leave block_chgcdn.
+           
+           if vRetVal = 401 then do: 
+               /* формируем лог файл */
+               OUTPUT STREAM out_data TO value(vFileLog) APPEND.
+               PUT STREAM out_data UNFORMATTED  
+                  chr(9) "Ошибка идентификации по API Key ".
+               OUTPUT STREAM out_data CLOSE.
+               leave block_chgcdn. 
+           end.        
+           else if vRetVal > 400 and 
+              vRetVal < 500 and 
+              vRetVal <> 429
+           then do:
+              /* формируем лог файл */
+              OUTPUT STREAM out_data TO value(vFileLog) APPEND.
+              PUT STREAM out_data UNFORMATTED  
+                  chr(9) "Ошибка: некорректный запрос ".
+              OUTPUT STREAM out_data CLOSE.  
+              leave block_chgcdn.
+           end.    
+           
+           /* при 5000 надо повторный запрос, но не надо смены площадки */  
+           if vRetVal = 5000 and vNumRep = vNumMax 
+           then do: 
+              OUTPUT STREAM out_data TO value(vFileLog) APPEND.
+              PUT STREAM out_data UNFORMATTED  
+                  chr(9) "Ошибка недоступности трансграна ".
+              OUTPUT STREAM out_data CLOSE.  
+              leave block_chgcdn.
+           end.    
+                                           
+           /* во всех остальных случаях, 
+           ** после второго опроса площадки
+           ** помечаем площадку плохой */
+           if vNumRep = vNumMax
+               and gismt-cdnTurnOn 
+           then do:
+              vRetCdn = SetCDNAdressErr(vGisAdrCDN).  
+           end.     
+           
+           /* проверяем, осталось ли время для повторного запроса */                   
+           if vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
+           then do:
+              dbgPrint("marking.log", substitute("Время для повторного запроса не осталось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)).
+              if vRetVal = -1 and
+                 gismt-cdnTurnOn
+              then 
+                 vRetCdn = SetCDNAdressErr(vGisAdrCDN).
+              leave block_chgcdn.
+           end.       
+           
+       end.  
+       
+       /* не меняем площадку, если выключена настройка смены площадки */
+       if not gismt-cdnTurnOn then leave block_chgcdn.  
+         
+       /* проверяем, осталось ли время */
+       vTimeNow = now.
+       if vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
+       then do:
+          dbgPrint("marking.log", substitute("Время подбора площадки закончилось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)). 
+          leave block_chgcdn.
+       end.                      
+    end.                                              
+                           
     if searchFile(vfileresult) = ?
     then do :
-       dbgPrint("marking.log", "Запрос не выполнен! Не могу найти файл ").
-       /* формируем лог файл */
-       OUTPUT STREAM out_data TO value(vFileLog) APPEND.
-       PUT STREAM out_data UNFORMATTED  
-         "Отсутствует ответ ГИС МТ ".
-       OUTPUT STREAM out_data CLOSE.
+       dbgPrint("marking.log", "Запрос не выполнен! Не могу найти файл ").       
        return 2.
     end .
     file-info:file-name = searchFile(vfileresult) .
     if file-info:file-size = 0
     then do :
-       dbgPrint("marking.log", "Запрос не выполнен! Файл-ответ пустой (размер 0 байт). ").   
-       /* формируем лог файл */
-       OUTPUT STREAM out_data TO value(vFileLog) APPEND.
-       PUT STREAM out_data UNFORMATTED  
-         " Отсутствует ответ ГИС МТ ".
-       OUTPUT STREAM out_data CLOSE.
+       dbgPrint("marking.log", "Запрос не выполнен! Файл-ответ пустой (размер 0 байт). ").          
        return 2.
-    end .
+    end.
     
     copy-lob from file vFileResult to vlongJson .
-    copy-lob from file vFileresultErr to vlongJsonError .
-    
-    /* формируем лог файл */
-    os-append value(vfileresult) value(vFileLog) .
+    copy-lob from file vFileresultErr to vlongJsonError .        
            
     /* анализируем, есть ли ошибки в ответе */
-    if index(vlongJsonError,"curl:") > 0 then do:
+    if index(vlongJsonError,"curl:") > 0 or
+       vlongJson begins "<html>" 
+    then do:
        dbgPrint("marking.log", "Ошибка ответа от сервиса ").
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         " Отсутствует ответ ГИС МТ ".
+         chr(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
        return 2.
-    end.   
+    end.     
+    
+    if vRetVal <> 0 and 
+       vRetVal <> 203 and 
+       vRetVal <> 418 and
+       vRetVal <> 5000  
+    then do:
+       dbgPrint("marking.log", substitute("Получена ошибка с кодом &1 ", vRetVal)).          
+       return 2.
+    end.     
+    
+    if vRetVal = 203 or 
+       vRetVal = 418 or
+       vRetVal = 5000
+    then do:
+        dbgPrint("marking.log", substitute("Получена ошибка с кодом &1 ", vRetVal)).          
+       return vRetVal.
+    end.             
    
     /* заменяем спец.символы, которые не дадут сконвертировать в xml */
     assign
@@ -1041,7 +1214,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         " Отсутствует ответ ГИС МТ ".
+         chr(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
        return 2.
     end.   
@@ -1063,7 +1236,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         " Отсутствует ответ ГИС МТ ".
+         chr(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
        return 2.
     end .
@@ -1077,7 +1250,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         " Отсутствует ответ ГИС МТ ".
+         chr(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
        return 2.
     end.   
@@ -1087,7 +1260,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         " Отсутствует ответ ГИС МТ ".
+         chr(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
        return 2.
     end.
@@ -1126,6 +1299,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     define variable vCheckMRC      as logical   no-undo.
     define variable vCheckOwner    as logical   no-undo.
     define variable vCheckStatusKM as logical   no-undo.
+    define variable vCheckTracking as logical   no-undo.
     define variable vCheck         as logical   no-undo.
     
     define variable vMRC as decimal no-undo.
@@ -1187,17 +1361,22 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                                p-obj-code,
                                {&attr-marking_checkStatusKM},
                                mTypeMark).
+    vCheckTracking  = GetMarkProp (p-obj-type, 
+                               p-obj-code,
+                               {&attr-marking_checkTracking},
+                               mTypeMark).                           
        
     if  vCheckBlock or vCheckDate or vCheckMRC or vCheckOwner or vCheckStatusKM
        then vCheck = yes.
     else vCheck = no.     
     
-    dbgPrint("marking.log", substitute("vCheckBlock &1 vCheckDate &2 vCheckMRC &3 vCheckOwner &4 vCheckStatusKM &5",
+    dbgPrint("marking.log", substitute("vCheckBlock &1 vCheckDate &2 vCheckMRC &3 vCheckOwner &4 vCheckStatusKM &5 vCheckTracking &6",
                                        vCheckBlock,
                                        vCheckDate,
                                        vCheckMRC,
                                        vCheckOwner,
-                                       vCheckStatusKM)).
+                                       vCheckStatusKM,
+                                       vCheckTracking)).
                                        
     /* у типа маркировки не отмечен ни один параметр для проверки */
     if not vCheck then return "".
@@ -1223,22 +1402,40 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        mCheckSts = 2.
        return "".
     end.   
+    
     /* произошла аварийная ситуация - фиксируем */
-    if vGetGisMt = 2 then 
-    do:
-       vErrSts = FixErrGisMT().
-       return vErrSts.
+    if vGetGisMt <> 0 then do: 
+        if vGetGisMt = 2 then 
+        do:
+           vErrSts = FixErrGisMT().           
+        end.
+        /* если авария самого трансграна 
+        ** время аварии не сбрасываем и не выставляем */
+        else if vGetGisMt = 5000 
+        then do:
+            assign
+               mCheckSts = 2
+               vErrSts = ""
+               . 
+        end.    
+        /* если авария в ГИС МТ, наше время аварии скидываем */
+        else if vGetGisMt = 203 or
+                vGetGisMt = 418
+        then do:
+            SetNoErrGisMT().
+            assign 
+                mCheckSts = 2
+                vErrSts = ""
+                .
+        end.
+        /* Запускаем проверку, не надо ли обновить 
+        ** площадки и их обновление */
+        if gismt-cdnTurnOn and 
+           CheckCdnNeedUpd()
+           then run utl/pub-runcdn.p.
+        return vErrSts.
     end.
-    /* Сбоя нет, проверяем, был ли ранее сбой и сбрасываем время сбоя */
-    else do:
-       do transaction on error undo, leave: 
-          find first buf_code where buf_code.parent eq "GisMt"
-                                and buf_code.code   eq "GisMtErr"
-             exclusive-lock no-error.
-          if available buf_code 
-          then buf_code.codevalue = "".
-        end.     
-    end.
+    else SetNoErrGisMT().                
 
     dbgPrint("marking.log", "ttmark-body").
      
@@ -1247,16 +1444,15 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
            mReqId        = ttmark-body.reqid
            mReqTimeStamp = string(ttmark-body.reqtimestamp)
            .
-        if ttmark-body.code = 0 or
-           ttmark-body.code = 10 
-           then . 
-        else do:
+        /* по новому алгоритму сюда теоретически не должны попасть */   
+        if ttmark-body.code <> 0  
+        then do:
            assign 
               mCheckSts = 0
               vErrSts = "Онлайн-проверка завершилась с ошибкой. "
               .
             return vErrSts.  
-         end.        
+        end.                       
     end.
     
     vMRC = getMRCByDM(mark) * 100 no-error.
@@ -1331,7 +1527,8 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                  .
          if  vCheckOwner and 
              ttmark-check.isOwner = false and 
-             ttmark-check.isTracking = true and 
+             ((vCheckTracking and ttmark-check.isTracking = true) or 
+              not vCheckTracking) and 
              ttmark-check.grayZone = false
          then assign
                  vErrSts = vErrSts + "Общество не является владельцем товара. "
@@ -1349,9 +1546,12 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
      iLogName as character, 
      iTxt as character
     ):
+        def var vLogName as char no-undo.
+        
     if session:debug-alert
-    then do:     
-       output stream out_s to value(iLogName) append.
+    then do:  
+       vLogName = entry(1,iLogName,".") + "-" + replace(string(today),"/","-") + "." + entry(2,iLogName,".").           
+       output stream out_s to value(vLogName) append.
        case iTxt:
           when "gismt-info" then do:
              put stream out_s unformatted
@@ -1414,7 +1614,215 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     end.
     return.
   end method.
+  
+  method private character GetCDNAdress ():
+      def buffer buf_code for ub.code.
+      def var vAddr as char no-undo.
+      def var vTimeResp as int no-undo.
+      def var vTimeNow as datetime-tz no-undo.
+      
+      assign
+         vTimeNow = now
+         vTimeResp = 0
+         .
+      for each buf_code no-lock where buf_code.parent = "CDN_GisMt":
+          dbgPrint("marking.log", substitute("Площадка &1 Время отклика &2 Время блокировки &3 Текущее время &4 ", 
+                                             buf_code.code,
+                                             buf_code.codeval,
+                                             buf_code.misc2,
+                                             vTimeNow)).
+          if buf_code.misc2 = "" or datetime-tz(buf_code.misc2) < vTimeNow 
+          then do:
+              if vTimeResp = 0 or 
+                 vTimeResp = ? or 
+                 vTimeResp > int(buf_code.codeval) 
+              then
+                 assign
+                    vAddr = buf_code.code 
+                    vTimeResp = int(buf_code.codeval) no-error.               
+          end.    
+      end.    
+      dbgPrint("marking.log", substitute("Выбрали площадку &1 время отклика &2 ",vAddr,vTimeResp)).
+      return vAddr.
+  end method.    
+  
+  method private logical SetCDNAdressErr (
+      iCdnAdr as character):
+          
+      def buffer buf_code for ub.code.            
+      def var vTimeNow as datetime no-undo.
+      def var vOk as log no-undo.
 
+      vTimeNow = now.
+      find first buf_code where 
+                 buf_code.parent = "CDN_GisMt" 
+             and buf_code.code = iCdnAdr
+             exclusive-lock no-wait no-error.
+      if avail buf_code then  do:
+         buf_code.misc2 = String(vTimeNow + 15000 * 60).
+         vOk = yes.
+      end.   
+      else vOk = no.
+      
+      dbgPrint("marking.log", substitute("Установка площадке &1 время разблокировки &2 успешно &3 ",iCdnAdr,(vTimeNow + 15000 * 60),vOk)).
+      
+      return vOk.      
+  end method. 
+  
+  method private logical CheckCdnNeedUpd ():
+      def buffer buf_code for ub.code.
+      def var vAddr as char no-undo.
+      def var vNeedUpd as log no-undo.
+      def var vAllBlock as log no-undo.
+      def var vTimeNow as datetime-tz no-undo.
+      def var vTimeUpd as datetime-tz no-undo.
+      def var vTimeUnbl as datetime-tz no-undo.
+      
+      assign
+         vTimeNow = now   
+         vTimeUpd = ?      
+         .
+         
+      /* Проверяем все ли площадки заблокированы 
+      ** и сколько прошло времени с последнего обновления */   
+      vAllBlock = yes.
+      block_code:
+      for each buf_code no-lock where buf_code.parent = "CDN_GisMt":
+          vTimeUpd = datetime-tz(buf_code.misc1) no-error.
+          if buf_code.misc2 <> "" then 
+             vTimeUnbl = datetime-tz(buf_code.misc2) no-error.
+          /* ищем незаблокированную площадку */   
+          if buf_code.misc2 = "" or 
+             (vTimeUnbl <> ? and
+              vTimeUnbl < vTimeNow)
+          then do: 
+             vAllBlock = no.
+             leave block_code.
+          end.   
+      end.      
+      
+      if vAllBlock and
+         (vTimeUpd = ? or          
+         (vTimeUpd <> ? and
+          datetime-tz(vTimeUpd) < vTimeNow and
+          (vTimeNow - datetime-tz(vTimeUpd)) >= gismt-cdnTimeUpd * 3600 * 1000))  
+      then do:
+         /* Проверяем, не идет ли уже обновление */
+         find first buf_code where 
+                  buf_code.parent = "CDN_GisMt" 
+              and buf_code.code = "CDN_Upd"              
+           no-lock no-error.
+         if not avail buf_code 
+         then vNeedUpd = yes. 
+         else dbgPrint("marking.log", substitute("Площадки не обновляем, идет обновление &1 ",  buf_code.codeval)).
+      end.
+      else dbgPrint("marking.log", substitute("Площадки не обновляем, все заблокированы &1 время посл обновления &2 Частота обновления (ч) &3 ",
+                                              vAllBlock, vTimeUpd, gismt-cdnTimeUpd )).    
+      
+      return vNeedUpd.
+  end method.
+  
+ /* Вызывает curl с переданным адресом и возвращает ответ:
+ ** -1 - не получен ответ от curl
+ ** -xxx - код ответа ошибки в формате html
+ ** xxx - код ответа  */
+  method private integer RunCurlGisMT (
+     vGisAdress as character,     
+     vDataMark as character,
+     CmdParamProxy as character,
+     vFileResult as character,
+     vFileResultErr as character,
+     vFileBat as character
+     ):
+         
+    define variable vBefCurl as datetime-tz no-undo. 
+    define variable vAftCurl as datetime-tz no-undo.
+    define variable vpid     as integer     no-undo.
+    define variable vTimePause as integer   no-undo.
+    define variable vRetVal as integer   no-undo.
+    define variable cmd as character   no-undo.
+    define variable vlongJson as longchar no-undo.
+    define variable vlongJson2 as longchar no-undo.
+    define variable vCh as character no-undo. 
+    define variable vNumCode as integer no-undo.
+    define variable vNumCode2 as integer no-undo.
+        
+    vRetVal = -1.
+         
+    cmd = substitute ('&1 &8 --connect-timeout &9 --max-time &9 -X POST -H "Content-Type: application/json" -H &5 &6 --data @&4 &3 >&2 --stderr &7',
+                      search ("exe/curl.exe"), /*1*/
+                      vFileResult,             /*2*/
+                      quoter(vGisAdress), /*3*/
+                      searchfile(vDataMark),   /*4*/
+                      quoter("X-api-Key: " + gismt-RegKey), /*5*/
+                      CmdParamProxy,           /*6*/
+                      vFileResultErr,          /*7*/
+                      gismt-DopParam,          /*8*/
+                      trim(replace(string(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*9*/  
+                      
+    dbgPrint("marking.log", "cmd: " + cmd).
+    vBefCurl = now.
+    /*os-command silent value(cmd).*/
+    
+    /* запуск curl в ассинхронном режиме */ 
+    vpid = runProcFile(cmd, vFileBat).    
+    /* ждем окончания работы */
+    block_wait:
+    do while true:
+        /* проверка, работает ли еще процесс */                
+        /*if IsProcessRunning(vpid) = 0 then do:*/
+        if searchFile(vfileresult) <> ? then do:
+            file-info:file-name = searchFile(vfileresult).
+            if file-info:file-size <> 0 then do:
+               copy-lob from file vFileResult to vlongJson no-error.
+               if (vlongJson begins "<html>" and 
+                   r-index(vlongJson,"</html>") > 0)
+                  or
+                  (r-index(vlongJson,"reqTimestamp") > 0 and
+                   r-index(substring(vlongJson,r-index(vlongJson,"reqTimestamp")),"}") > 0) 
+                  or r-index(vlongJson,'"codes":[]}') > 0  
+               then do:
+                   dbgPrint("marking.log", substitute("Сформирован файл-ответ &1", vfileresult)).                   
+                   leave block_wait.
+               end.
+               /*else dbgPrint("marking.log", substitute("RunCurlGisMT файл-ответ не полный &1", vfileresult)).*/
+            end.  
+            /*else dbgPrint("marking.log", substitute("RunCurlGisMT Размер файл-ответ 0 &1", vfileresult)).*/ 
+        end.    
+        /*else dbgPrint("marking.log", substitute("RunCurlGisMT Не найден файл-ответ &1", vfileresult)).*/
+        /*end.*/
+        /* время ожидания вышло */
+        if vBefCurl + Int(gismt-WaitTime * 1000) < now then do:         
+           dbgPrint("marking.log", "Время ожидания работы curl истекло").
+           leave block_wait.
+        end.
+        /* немного ждем */
+        vTimePause = now - (vBefCurl + Int(gismt-WaitTime * 1000)) + 10. 
+        if vTimePause < -10 then       
+           run gbl/pause.p(10).
+        else if vTimePause < 0 and vTimePause > -10
+        then       
+           run gbl/pause.p(0 - vTimePause).    
+    end.
+    
+    vAftCurl = now. 
+    dbgPrint("marking.log", substitute("Время работы curl: Начало &1 Окончание &2 Всего (мс) &3  ", vBefCurl, vAftCurl, vAftCurl - vBefCurl)).
+    
+    /* Проверяем наличие ошибки в ответе */
+    if vlongJson begins "<html>" and index(vlongJson,"<title>") > 0 then 
+       vRetVal =  int64(substring(vLongJson, index(vLongJson,"<title>") + 7,3)) no-error.
+    else if index(vlongJson,'"code":') > 0 then do:  
+       vNumCode = index(vLongJson,'"code":') + 7. 
+       vlongJson2 = substring(vLongJson, vNumCode).
+       vNumCode2 = index(vLongJson2,",") - 1. 
+       vCh = String(substring(vLongJson, vNumCode, vNumCode2)).   
+       vRetVal  = int64(vCh).
+    end.   
+  
+    return vRetVal.
+    
+  end method.    
+  
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:

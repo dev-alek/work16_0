@@ -575,13 +575,13 @@ attr-egais-host }
 /*Настройки для подключения к ГИС МТ и проверки КМ*/
 { cmp/cr-prep.i 1 attr-gisMT gisMT " " gisMT }
 { cmp/cr-prepc.i 1 prop-list-attr-gisMT
-"adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate"
+"adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest"
 attr-gisMT }
 
 /*Электронный документооборот*/
 { cmp/cr-prep.i 1 attr-marking marking " " marking }
 { cmp/cr-prepc.i 1 prop-list-attr-marking
-"marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional,marking-type-blockCashUnMark,marking-type-saleReturn,marking-type-saleUPD,marking-type-onlySale,checkBlock,checkDate,checkMRC,checkOwner,checkStatusKM"
+"marking-EDO,marking-EDO-NotMark,marking-type,marking-manual,gray_zone_qnty,marking-type-edo,ban-recipes,ban-altr,bar-code,rus-key,marking-type-artic,marking-type-transitional,marking-type-blockCashUnMark,marking-type-saleReturn,marking-type-saleUPD,marking-type-onlySale,checkBlock,checkDate,checkMRC,checkOwner,checkStatusKM,checkTracking"
 attr-marking }
 
 /*набор опций работы с документами МЦ*/

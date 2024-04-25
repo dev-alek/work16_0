@@ -24,6 +24,7 @@ DEFINE TEMP-TABLE type-marking NO-UNDO
   field checkMRC        as logical
   field checkOwner      as logical
   field checkStatusKM   as logical
+  field checkTracking   as logical
   index mark-type mark-type
   .
 
@@ -91,6 +92,8 @@ define variable S-type-checkDate       as character no-undo .
 define variable S-type-checkMRC        as character no-undo .
 define variable S-type-checkOwner      as character no-undo .
 define variable S-type-checkStatusKM   as character no-undo .
+define variable S-type-checkTracking   as character no-undo .
+
 
 assign
 v-tth      = buffer temp-thbj-attr:table-handle .
@@ -121,10 +124,10 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 /* Definitions for BROWSE br_marking-type                                      */
 &Scoped-define FIELDS-IN-QUERY-br_marking-type type-marking.mark-type ~
 type-marking.mark type-marking.edo type-marking.artic type-marking.transitional type-marking.blockCashUnMark type-marking.saleReturn type-marking.saleUPD type-marking.onlySale~
-type-marking.checkBlock type-marking.checkDate type-marking.checkMRC type-marking.checkOwner type-marking.checkStatusKM
+type-marking.checkBlock type-marking.checkDate type-marking.checkMRC type-marking.checkOwner type-marking.checkStatusKM type-marking.checkTracking
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br_marking-type type-marking.mark-type ~
 type-marking.mark type-marking.edo type-marking.artic type-marking.transitional type-marking.blockCashUnMark type-marking.saleReturn type-marking.saleUPD type-marking.onlySale~
-type-marking.checkBlock type-marking.checkDate type-marking.checkMRC type-marking.checkOwner type-marking.checkStatusKM
+type-marking.checkBlock type-marking.checkDate type-marking.checkMRC type-marking.checkOwner type-marking.checkStatusKM type-marking.checkTracking
 &Scoped-define ENABLED-TABLES-IN-QUERY-br_marking-type type-marking
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-br_marking-type type-marking
 &Scoped-define QUERY-STRING-br_marking-type FOR EACH type-marking INDEXED-REPOSITION
@@ -242,6 +245,13 @@ FUNCTION ischeckStatusKMAvail RETURNS LOGICAL
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ischeckTrackingAvail Dialog-Frame 
+FUNCTION ischeckTrackingAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
@@ -333,8 +343,9 @@ DEFINE BROWSE br_marking-type
   type-marking.checkBlock column-label "Проверка!блокировок!контрол.!органов" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   type-marking.checkDate column-label "Проверка!срока!годности" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   type-marking.checkMRC column-label "Проверка!МРЦ" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
-  type-marking.checkOwner column-label "Проверка!владельцав" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  type-marking.checkOwner column-label "Проверка!владельцев" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   type-marking.checkStatusKM column-label "Проверка!статуса КМ" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+  type-marking.checkTracking column-label "Проверка!прослежи-!ваемости" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   ENABLE
       type-marking.mark
       type-marking.EDO
@@ -345,6 +356,7 @@ DEFINE BROWSE br_marking-type
       type-marking.checkMRC
       type-marking.checkOwner
       type-marking.checkStatusKM
+      type-marking.checkTracking
 /*      type-marking.blockCashUnMark*/
       type-marking.saleReturn
 /*      type-marking.saleUPD */
@@ -579,6 +591,7 @@ ON ROW-DISPLAY OF br_marking-type IN FRAME Dialog-Frame
     type-marking.checkMRC        :bgcolor  IN BROWSE br_marking-type = if ischeckMRCAvail()      then WHITE_COLOR else GRAY_COLOR .
     type-marking.checkOwner        :bgcolor  IN BROWSE br_marking-type = if ischeckOwnerAvail()      then WHITE_COLOR else GRAY_COLOR .
     type-marking.checkStatusKM        :bgcolor  IN BROWSE br_marking-type = if ischeckStatusKMAvail()      then WHITE_COLOR else GRAY_COLOR .
+    type-marking.checkTracking        :bgcolor  IN BROWSE br_marking-type = if ischeckTrackingAvail()      then WHITE_COLOR else GRAY_COLOR .
   end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -599,6 +612,7 @@ ON row-leave OF br_marking-type IN FRAME Dialog-Frame
     define variable vcheckMRC      as logical no-undo .
     define variable vcheckOwner    as logical no-undo .
     define variable vcheckStatusKM as logical no-undo .
+    define variable vcheckTracking as logical no-undo .
 
     assign
       vMarkvn        = type-marking.edo
@@ -614,6 +628,7 @@ ON row-leave OF br_marking-type IN FRAME Dialog-Frame
       vcheckMRC      = type-marking.checkMRC
       vcheckOwner    = type-marking.checkOwner
       vcheckStatusKM = type-marking.checkStatusKM
+      vcheckTracking = type-marking.checkTracking
       browse br_marking-type type-marking.edo
       browse br_marking-type type-marking.artic
       browse br_marking-type type-marking.transitional
@@ -627,6 +642,7 @@ ON row-leave OF br_marking-type IN FRAME Dialog-Frame
       browse br_marking-type type-marking.checkMRC
       browse br_marking-type type-marking.checkOwner
       browse br_marking-type type-marking.checkStatusKM
+      browse br_marking-type type-marking.checkTracking
       .
     if      not isArticAvail()
       and  type-marking.artic ne vartic
@@ -943,7 +959,11 @@ run adm/shattri.p (
                                           else IF temp-thbj-attr.prop-code = {&attr-marking_checkStatusKM} THEN 
                                             DO:
                                               S-type-checkStatusKM = temp-thbj-attr.property-value-character .
-                                            END.                                                                                                               
+                                            END.                                                         
+                                            else IF temp-thbj-attr.prop-code = {&attr-marking_checkTracking} THEN 
+                                              DO:
+                                                S-type-checkTracking = temp-thbj-attr.property-value-character .
+                                              END.                                                                                                               
   END.
   for each type-marking:
     if lookup (type-marking.mark-orig,S-type-mark) > 0 then type-marking.mark = true .
@@ -971,7 +991,9 @@ run adm/shattri.p (
     if lookup (type-marking.mark-orig,S-type-checkOwner) > 0 then type-marking.checkOwner = true .
     else type-marking.checkOwner = false .  
     if lookup (type-marking.mark-orig,S-type-checkStatusKM) > 0 then type-marking.checkStatusKM = true .
-    else type-marking.checkStatusKM = false .                   
+    else type-marking.checkStatusKM = false .
+    if lookup (type-marking.mark-orig,S-type-checkTracking) > 0 then type-marking.checkTracking = true .
+    else type-marking.checkTracking = false .                   
   end.   
   
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}    
@@ -1057,6 +1079,7 @@ ASSIGN FRAME {&FRAME-NAME}
   S-type-checkMRC = "".
   S-type-checkOwner = "".
   S-type-checkStatusKM = "".
+  S-type-checkTracking = "".
   for each type-marking:
     if type-marking.mark = true then S-type-mark = S-type-mark + "," + type-marking.mark-orig . 
     if type-marking.edo = true then S-type-EDO = S-type-edo + "," + type-marking.mark-orig .
@@ -1070,7 +1093,8 @@ ASSIGN FRAME {&FRAME-NAME}
     if type-marking.checkDate = true then S-type-checkDate = S-type-checkDate + "," + type-marking.mark-orig .
     if type-marking.checkMRC = true then S-type-checkMRC = S-type-checkMRC + "," + type-marking.mark-orig .
     if type-marking.checkOwner = true then S-type-checkOwner = S-type-checkOwner + "," + type-marking.mark-orig .
-    if type-marking.checkStatusKM = true then S-type-checkStatusKM = S-type-checkStatusKM + "," + type-marking.mark-orig .   
+    if type-marking.checkStatusKM = true then S-type-checkStatusKM = S-type-checkStatusKM + "," + type-marking.mark-orig .
+    if type-marking.checkTracking = true then S-type-checkTracking = S-type-checkTracking + "," + type-marking.mark-orig .   
   end.    
 
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
@@ -1114,7 +1138,9 @@ ASSIGN FRAME {&FRAME-NAME}
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkOwner} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
   IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkOwner,",").  
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkStatusKM} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkStatusKM,",").  
+  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkStatusKM,",").
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkTracking} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkTracking,",").  
   do transaction:
     RUN thbjattr_set-section IN THIS-PROCEDURE (
       input p-obj-type
@@ -1320,6 +1346,21 @@ END FUNCTION.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ischeckStatusKMAvail Dialog-Frame 
 FUNCTION ischeckStatusKMAvail RETURNS LOGICAL
+  ( /* parameter-definitions */ ) :
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
+
+  RETURN yes.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ischeckTrackingAvail Dialog-Frame 
+FUNCTION ischeckTrackingAvail RETURNS LOGICAL
   ( /* parameter-definitions */ ) :
   /*------------------------------------------------------------------------------
     Purpose:  
