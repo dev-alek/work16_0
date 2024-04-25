@@ -44,7 +44,7 @@ procedure putc :
             buf_code.parent = "MarkType"
         and logical(buf_code.misc2)
        no-lock by int(buf_code.code):
-      vTypesForKass = substitute("&1,&2", vTypesForKass, buf_code.code).     
+      vTypesForKass = substitute("&1,&2", vTypesForKass, int(buf_code.code)).     
    end.
    if vTypesForKass <> "" then
    do:
@@ -70,7 +70,7 @@ procedure putc :
       do vCount = 1 to num-entries(vTypesForKass):
          find first buf_code where 
                     buf_code.parent = "MarkType"
-                and buf_code.code   = entry(vCount, vTypesForKass)
+                and int(buf_code.code)   = int(entry(vCount, vTypesForKass))
               no-lock no-error.
          vTimeDate = substitute("&1 &2", 
            string(int(buf_code.misc4),"HH:MM"), 
@@ -78,7 +78,7 @@ procedure putc :
          iSAXWriter:start-element("Param") .
             iSAXWriter:insert-attribute("ctrl", "ADD").
             iSAXWriter:insert-attribute("group", "GS1").
-            iSAXWriter:insert-attribute("key", "MARK_REQ_DATE_" + buf_code.code).
+            iSAXWriter:insert-attribute("key", substitute("MARK_REQ_DATE_&1", int(buf_code.code))).
        
             iSAXWriter:write-data-element("ParamValue" , vTimeDate) .
             iSAXWriter:write-data-element("ParamDesc" , "Время и Дата начала обязательной маркировки").
@@ -94,6 +94,14 @@ end.
 
 procedure get-xml-encoding:
    define output parameter oEncoding as character no-undo init "UTF-8".
+end.
+
+procedure get-tag-from:
+   define output parameter oValue as character no-undo init "empty".
+end.
+
+procedure get-tag-to:
+   define output parameter oValue as character no-undo init "*".
 end.
 
 /* Invoked to report a warning. */

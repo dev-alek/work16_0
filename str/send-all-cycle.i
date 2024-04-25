@@ -22,6 +22,8 @@ procedure   for-cash-cycle:
    define variable v-cash-types as character no-undo init {&cd-type-ibm-xml}.
    define variable V-root-teg   as character no-undo init "data".
    define variable v-xml-encoding as character no-undo init "windows-1251".
+   define variable v-tag-from   as character no-undo.
+   define variable v-tag-to     as character no-undo.
 /*   define variable v-cash-type  as character no-undo.*/
    define variable v-work-handle as handle no-undo .
    if     search("str/send-all-work-" + i-type + ".p") eq ?
@@ -65,6 +67,46 @@ procedure   for-cash-cycle:
              , input 1
              , input substitute( "!!!Ошибка при выполнение процедуры &1 (str/send-all&4.r) : &2 &3"
                                    ,"get-xml-encoding"
+                                   ,return-value
+                                   ,error-status:get-message (1)
+                                   , i-type
+                                   
+                               )
+                                               ).
+         v-view-log = yes.
+         return.
+      end.
+   end.
+   if lookup("get-tag-from", v-work-handle:internal-entries) >  0
+   then do:
+      run get-tag-from in v-work-handle (output v-tag-from) no-error.
+      if error-status:error then do:
+         run write-log-and-file in p-log-handle (
+               input 1
+             , input log-file-name
+             , input 1
+             , input substitute( "!!!Ошибка при выполнение процедуры &1 (str/send-all&4.r) : &2 &3"
+                                   ,"get-teg-from"
+                                   ,return-value
+                                   ,error-status:get-message (1)
+                                   , i-type
+                                   
+                               )
+                                               ).
+         v-view-log = yes.
+         return.
+      end.
+   end.
+   if lookup("get-tag-to", v-work-handle:internal-entries) >  0
+   then do:
+      run get-tag-to in v-work-handle (output v-tag-to) no-error.
+      if error-status:error then do:
+         run write-log-and-file in p-log-handle (
+               input 1
+             , input log-file-name
+             , input 1
+             , input substitute( "!!!Ошибка при выполнение процедуры &1 (str/send-all&4.r) : &2 &3"
+                                   ,"get-teg-to"
                                    ,return-value
                                    ,error-status:get-message (1)
                                    , i-type

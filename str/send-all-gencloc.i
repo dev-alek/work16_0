@@ -36,11 +36,9 @@ then do:
 end.
 delete object hSAXWriter no-error.
 
-
-if session:debug-alert
-then do:
-    copy-lob from Mreq to file i-Type + "2kassa.xml" convert target codepage v-xml-encoding.
-end.
+copy-lob from mData to mReq convert target codepage v-xml-encoding.
+if session:debug-alert then
+    copy-lob from mReq to file i-Type + "2kassa.xml".
 
 if     
 /*       not (g#news or g#auto or g#esys )*/
