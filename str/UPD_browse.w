@@ -4991,17 +4991,26 @@ PROCEDURE mark-temp :
                             buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
                             buf_utd-lines-attr.attr-code = "QuantityBarCode"
                       exclusive-lock no-error.
-                 if not avail buf_utd-lines-attr then
+                 if avail buf_utd-lines-attr then
                  do:
-                    create buf_utd-lines-attr.
-                    assign
-                       buf_utd-lines-attr.db-num    = X_utd-lines.db-num
-                       buf_utd-lines-attr.doc-id    = X_utd-lines.doc-id
-                       buf_utd-lines-attr.LineNum   = X_utd-lines.LineNum
-                       buf_utd-lines-attr.attr-code = "QuantityBarCode"
-                    .
+                    if X_utd-lines.qnty-scan <> 0 then
+                      buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan).
+                    else 
+                      delete buf_utd-lines-attr.
+                 end.
+                 else do:
+                    if X_utd-lines.qnty-scan <> 0 then
+                    do:  
+                       create buf_utd-lines-attr.
+                       assign
+                          buf_utd-lines-attr.db-num     = X_utd-lines.db-num
+                          buf_utd-lines-attr.doc-id     = X_utd-lines.doc-id
+                          buf_utd-lines-attr.LineNum    = X_utd-lines.LineNum
+                          buf_utd-lines-attr.attr-code  = "QuantityBarCode"
+                          buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) .
+                       .
+                    end.
                  end. 
-                 buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) .
                end.
             end .
             if  avail buf_marking and (
