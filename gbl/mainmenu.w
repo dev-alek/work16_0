@@ -67,6 +67,7 @@ define variable vss-description as character no-undo init "Главное окно IBS Trad
 { gbl/mainproc.i def }
 { gbl/db-attr.i  }
 { str/placelib.i }
+{ str/is-gas.i }
 
 &scoped-define open-mark   chr(187)
 &scoped-define close-mark   chr(171)
@@ -6438,6 +6439,7 @@ procedure proc-check-RVD :
   define variable v-message as character no-undo .
   define variable v-attr-value as character no-undo .
   define variable v-attr-type as character no-undo .
+  define variable v-ok as logical no-undo init no .
   
   if v-cntxt-db-num = 0 then return .
   
@@ -6455,12 +6457,16 @@ procedure proc-check-RVD :
                                       and logical(buf_place-attr.attr-value) = yes,
     first buf_place no-lock where buf_place.obj-type = v-cntxt-obj-type
                               and buf_place.obj-code = v-cntxt-obj-code
-                              and buf_place.pl-code = buf_place-attr.pl-code,
+                              and buf_place.pl-code = buf_place-attr.pl-code
+                              and buf_place.status_ = "",
     first buf_pl-gds no-lock where buf_pl-gds.obj-type = v-cntxt-obj-type
                                and buf_pl-gds.obj-code = v-cntxt-obj-code
                                and buf_pl-gds.pl-code = buf_place.pl-code,
     first buf_goods no-lock where buf_goods.gds-code = buf_pl-gds.gds-code 
     :
+      if is-gas(buf_goods.gds-code) then next .
+      
+      v-ok = yes .
       v-message = v-message + " Резервуар " + buf_place.loc1 + " код " + string(buf_place.pl-code) + " " + buf_place.pl-name + " с " + buf_goods.gds-name + {&new-line} .
       for first buf_place-attr2 no-lock where buf_place-attr2.obj-type = v-cntxt-obj-type
                                           and buf_place-attr2.obj-code = v-cntxt-obj-code
@@ -6487,7 +6493,10 @@ procedure proc-check-RVD :
         v-message = v-message + "   - Уровень" + {&new-line} .
       end .
     end .
-    message v-message view-as alert-box title "Внимание!" .                           
+    if v-ok
+    then do :
+      message v-message view-as alert-box title "Внимание!" . 
+    end .                          
   end . 
   
 end procedure .
