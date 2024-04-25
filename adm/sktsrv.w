@@ -806,12 +806,12 @@ PROCEDURE write-to-log-file :
   Notes:
 ------------------------------------------------------------------------------*/
 DEFINE INPUT PARAMETER str-long AS longchar NO-UNDO.
-
+define variable vFileName as character no-undo.
 str-long = cur-time-string-sec() + {&tabulation} + str-long + {&new-line} .
-
+vFileName = "sktsrv-" + replace(string(today),"/","-") + ".log".
 copy-lob
 from object str-long
-to file 'sktsrv.log' append
+to file vFileName append
 no-error
 .
 

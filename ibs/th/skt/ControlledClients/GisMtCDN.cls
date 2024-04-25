@@ -330,35 +330,37 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
         iTimeStart as datetime-tz,
         iReqTime as int64,
         iavgTimeMs as int):
-        
-        def var vTimeNow as datetime-tz no-undo.
-        def buffer buf_code for ub.code.            
+                
+        def buffer buf_code for ub.code.
+                    
+        WriteLogCdn(iCdnAdr,
+                    iTimeStart,
+                    iReqTime).     
           
-          vTimeNow = now.
-          find first buf_code where 
-                     buf_code.parent = "CDN_GisMt" 
-                 and buf_code.code = iCdnAdr
-                 exclusive-lock no-wait no-error.
-          if not avail buf_code then do:
-              if locked buf_code then do:
-                    /*run PutMesAsunc (substitute ("Площадка &1 заблокирована для изменения. Не удалось обновить данные." , iCdnAdr)).*/
-              end.    
-              else do:
-                 create buf_code.
-                 assign
-                    buf_code.parent = "CDN_GisMt" 
-                    buf_code.code = iCdnAdr
-                    buf_code.codename = "Адрес площадки ГИС МТ"
-                    .
-              end.   
-          end.            
-          if avail buf_code then  do:
-              assign
-                buf_code.codeval = string(iReqTime)                            
-                buf_code.misc1 = String(iTimeStart)
-                buf_code.misc2 = ""
-                 .  
+        find first buf_code where 
+                   buf_code.parent = "CDN_GisMt" 
+               and buf_code.code = iCdnAdr
+           exclusive-lock no-wait no-error.
+        if not avail buf_code then do:
+          if locked buf_code then do:
+                /*run PutMesAsunc (substitute ("Площадка &1 заблокирована для изменения. Не удалось обновить данные." , iCdnAdr)).*/
+          end.    
+          else do:
+             create buf_code.
+             assign
+                buf_code.parent = "CDN_GisMt" 
+                buf_code.code = iCdnAdr
+                buf_code.codename = "Адрес площадки ГИС МТ"
+                .
           end.   
+        end.            
+        if avail buf_code then  do:
+           assign
+             buf_code.codeval = string(iReqTime)                            
+             buf_code.misc1 = String(iTimeStart)
+             buf_code.misc2 = ""
+             .  
+        end.   
         
    end method.   
     
@@ -393,6 +395,37 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
             DelCdnUpd(iTimeStart).
         end.              
    end method.
+   
+   method  private void WriteLogCdn
+       (iCdnAdr as char,
+        iTimeStart as datetime-tz,
+        iReqTime as int64):
+            
+        define variable vFileName as character no-undo.
+        define variable vCh as character no-undo.
+        define variable vFullCh as character no-undo.
+        define variable vWork as character no-undo.
+        define variable vNum as int no-undo.
+        define variable vStrLong as longchar no-undo.
+        
+        vFileName = "GisMtCDN-" + replace(string(today),"/","-") +  ".log".
+        
+        /* ищем каталог запуска */
+        assign
+           vWork = ""
+           vCh = "param.txt"
+           .
+        vFullCh = searchfile(vCh).
+        if vFullCh <> ? and vFullCh <> ""
+        then vNum = index(vFullCh,"\pid_").
+        if vNum <> 0 then vWork = substring(vFullCh, 1, vNum).
+        vFileName =  vWork + vFileName.
+        
+        vStrLong = substitute("&1~t&2~t&3~n",iTimeStart,iCdnAdr,iReqTime).
+        
+        copy-lob from object vStrLong to file vFileName append no-error.
+
+   end method.    
       
      
    constructor public GisMtCDN (  ):
