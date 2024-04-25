@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5b89e89c1f45, 2641, rls $
+$Author: EShklyar $
+$Date: 2020/12/04 13:41:03 $
+$Workfile: inc-salr.i $
+$Archive: str/inc-salr.i $
 
 Процедура закачки чеков в продажу
 
@@ -16,7 +16,7 @@ Creation date: 03/21/05
 */
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: inc-salr.i $ $Revision: 5b89e89c1f45, 2641, rls $".
 
 { str/inc-salf.i }
 { gbl/thbj-def.i }
@@ -523,8 +523,14 @@ on error undo, return error return-value
                             else  kind-to-reserv-gds)
           docs-to-reserv-gds = (docs-to-reserv  + docs-to-reserv-gds) when v-add
         .
+
+        FIND FIRST ub.bar-code WHERE ub.bar-code.b-code = buf_chk-gds.b-code NO-LOCK NO-ERROR.
+        release ub.goods.
+        if avail ub.bar-code then
+          FIND FIRST ub.goods WHERE
+                     ub.goods.gds-code = ub.bar-code.gds-code NO-LOCK.
+
         if buf_chk-gds.pump > 0 then do :
-          FIND FIRST ub.bar-code WHERE ub.bar-code.b-code = buf_chk-gds.b-code NO-LOCK NO-ERROR.
           if not avail ub.bar-code then do:
         &scop my-message substitute("&1 &2 &3&4Чек &5 строка &6,&4отсутствует в БД бар-код &7&4Чек не будет закачан в продажу"  ~
                                     , vss-workfile                   ~
@@ -575,6 +581,34 @@ on error undo, return error return-value
             buf_chk-gds.pl-code = plcode
             buf_chk-gds.loc1    = buf_place.loc1
           .
+          /* расчет плотности топлива */
+          if valid-density( buf_chk-gds.density, (goods.unit-base = goods.unit-cli)  ) <> true then do:
+            { str/avrgdens.i
+              goods.gds-code
+              X_chk-doc.obj-type
+              X_chk-doc.obj-code
+              buf_chk-gds.pl-code
+              X_chk-doc.shift-date
+              X_chk-doc.shift-num
+              X_chk-doc.chk-date
+              X_chk-doc.chk-time
+              buf_chk-gds.density
+              no-error
+            }
+            if error-status:error then do:
+              &scop my-message substitute("Чек &1 Бар-код &2 ТРК &3&4Не удается определить плотность топлива в танке&4&5&4Чек не будет закачан в продажу"  ~
+                                , X_chk-doc.doc-code             ~
+                                , t-gds.b-code                   ~
+                                , t-gds.pump                     ~
+                                , ~{&new-line~}                  ~
+                                , return-value                   ~
+                                )
+    
+              {&display-message-laud} .
+              UNDO _one-check, leave _one-check.
+            end.
+          end.
+          
         end . /* end_of pump > 0 */
         
 define variable v-chk-gds-line-type-1    as character no-undo .
@@ -688,8 +722,6 @@ find first t-gds
                   serparts = no
                   cashfbrs = no
                   .
-                  FIND FIRST ub.bar-code WHERE
-                            ub.bar-code.b-code = buf_chk-gds.b-code NO-LOCK NO-ERROR.
                   if not avail bar-code then do:
         &scop my-message substitute("&1 &2 &3&4Чек &5 строка &6,&4отсутствует в БД бар-код &7&4Чек не будет закачан в продажу"  ~
                                     , vss-workfile                   ~
@@ -706,8 +738,7 @@ find first t-gds
                   /*обычная продажа по партиям*/
                   if ub.bar-code.in-code <> "" then cashparts-chk = yes.
                   else cashparts-chk = no.
-                  FIND FIRST ub.goods WHERE
-                            ub.goods.gds-code = ub.bar-code.gds-code NO-LOCK.
+
                   if buf_chk-gds.price-base = 0
                   and goods.gds-type = {&gds-office}
                   and (buf_Chk-gds.write-off-code = 0
@@ -884,6 +915,7 @@ find first t-gds
                                                       else buf_chk-gds.discnt * buf_chk-gds.doc-qnty)
               t-gds.road-sum = t-gds.road-sum + buf_chk-gds.road-tax * buf_chk-gds.doc-qnty
               t-gds.service-sum = t-gds.service-sum + buf_chk-gds.price-service * buf_chk-gds.doc-qnty
+              t-gds.density = buf_chk-gds.density
               .
               run gds-attr-value(
                     t-gds.gds-code,
@@ -910,45 +942,7 @@ find first t-gds
               end.
             end. /*несуммовой чек*/
           end. /*do dtrg to docs-to-reserv */
-          if available (t-gds) and t-gds.pump > 0
-          then do:
-            assign
-              t-gds.density = buf_chk-gds.density
-            .
 
-            if valid-density( buf_chk-gds.density, (goods.unit-base = goods.unit-cli)  ) <> true then do:
-              /*здесь определим density*/
-              { str/avrgdens.i
-                t-gds.gds-code
-                X_chk-doc.obj-type
-                X_chk-doc.obj-code
-                t-gds.pl-code
-                X_chk-doc.shift-date
-                X_chk-doc.shift-num
-                X_chk-doc.chk-date
-                X_chk-doc.chk-time
-                t-gds.density
-                no-error
-                }
-              if error-status:error then do:
-    &scop my-message substitute("Чек &1 Бар-код &2 ТРК &3&4Не удается определить плотность топлива в танке&4&5&4Чек не будет закачан в продажу"  ~
-                                , X_chk-doc.doc-code             ~
-                                , t-gds.b-code                   ~
-                                , t-gds.pump                     ~
-                                , ~{&new-line~}                  ~
-                                , return-value                   ~
-                                )
-
-      {&display-message-laud} .
-                  UNDO _one-check, leave _one-check.
-              end.
-
-              assign
-              buf_chk-gds.density = t-gds.density
-              .
-            end.
-
-          end.
           if available t-gds then release t-gds .
           assign
           buf_chk-gds.line-type = entry(1, buf_chk-gds.line-type) + {&delim-par} +
@@ -1770,4 +1764,4 @@ end.
 END PROCEDURE.
 
 
-/* $Workfile$   E n d */
+/* $Workfile: inc-salr.i $   E n d */
