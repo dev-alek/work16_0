@@ -96,9 +96,9 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
      
      
      /* Проверяем, что сейчас обновления нет */
-     vRetOk = CheckCdnUpd ().
+     /*vRetOk = CheckCdnUpd ().
      if not vRetOk then return.              
-          
+          */
      /*run PutMesAsunc (substitute ("Начало обновления площадок &1" , vTimeStart)).*/
      
      vParamProxy = GetParamProxy().
@@ -126,7 +126,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
      on error undo, return error:
          /* установка параметра начала опроса площадок */          
          vRetOk = SetCdnUpd(vTimeStart).
-    
+         
          run gbl/_tmpfile.p ( "CdnListGisMTRes", ".txt", output vFileResult ) .
          run gbl/_tmpfile.p ( "CdnListGisMTErr", ".txt", output vFileErr ) .
          run gbl/_tmpfile.p ( "CdnListGisMTRes", ".json", output vFileResJson ) .
@@ -177,6 +177,8 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
          end.
          /* удаляем плохие площадки, или скидываем блокировку */     
          DelOldCdn(vTimeStart).
+         /* удаляем признак, что работает обновление площадок */
+         DelCdnUpd(vTimeStart).
          WriteLogCdn(vReqSDN).
      end.     
      /*run PutMesAsunc (substitute ("Окончания обновления площадок &1 заняло времени (мс) &2" , now, now - vTimeStart)).*/
@@ -316,7 +318,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
               buf_code.codename = "Запущен процесс обновления площадок ГИС МТ"
               buf_code.codeval = string(iTimeStart)   
               .
-           vCheck = yes.
+           vCheck = yes.       
        end.   
        
        return vCheck.   
@@ -325,13 +327,11 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
    method public void DelCdnUpd (iTimeStart as datetime-tz):
        def buffer buf_code for ub.code.       
        
-       find first buf_code where 
+       for each buf_code where 
                   buf_code.parent = "CDN_GisMt" 
-              and buf_code.code = "CDN_Upd" 
-              and buf_code.codeval = string(iTimeStart)             
-           exclusive-lock no-wait no-error.
-       if avail buf_code then do:
-           delete buf_code.
+              and buf_code.code = "CDN_Upd"                            
+           exclusive-lock:       
+          delete buf_code.           
        end.           
           
    end method.
@@ -410,9 +410,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
                          buf_code.parent = "CDN_GisMt"              
                      exclusive-lock :
                buf_code.misc2 = "".           
-            end.
-            /* удаляем признак, что работает обновление площадок */
-            DelCdnUpd(iTimeStart).
+            end.           
         end.              
    end method.
    

@@ -1013,7 +1013,11 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
            if vGisAdrCDN = "" then do:
                /* фиксируем, что больше площадок нет */
               dbgPrint("marking.log", "Нет доступных площадок").    
-              leave block_chgcdn.
+              OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
+              PUT STREAM out_data UNFORMATTED  
+                 chr(9) "Нет доступных площадок для обращения в ГИС МТ" chr(9).
+              OUTPUT STREAM out_data CLOSE.
+              return 2.
            end.   
            vGisAdress = vGisAdrCDN + "/api/v4/true-api/codes/check".
        end.
@@ -1045,7 +1049,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                                   vFileResult,
                                   vFileResultErr,
                                   vFileBat). 
-                                            
+           dbgPrint("marking.log", substitute("Файл ответа &1 результат &1 ", searchFile(vFileResult), vRetVal)).                                 
            vTimeNow = now.             
                      
            OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
@@ -1072,10 +1076,24 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                    OUTPUT STREAM out_data CLOSE.
                end .
                else do:
-                  dbgPrint("marking.log", substitute("Добавляем в лог ответ из файла &1 ", vFileResult)). 
-                  os-append value(vfileresult) value(vFileLog) . /* добавляем в лог ответ Гис МТ */
-                  if OS-ERROR <> 0 then
-                  dbgPrint("marking.log", substitute("Возникла ошибка при добавлении ответа в лог: &1 ", OS-ERROR)).
+                  dbgPrint("marking.log", substitute("Добавляем в лог ответ из файла &1 ", vFileResult)).
+                  vlongJson = "". 
+                  copy-lob from file vFileResult to vlongJson no-error. 
+                  if vlongJson = "" or 
+                     error-status:error or 
+                     error-status:get-message(1) <> "" then do:
+                     dbgPrint("marking.log", substitute("Возникла ошибка при чтении ответа для записи в лог: &1 ", error-status:get-message(1))). 
+                  end.  
+                  else do:   
+                      /* добавляем в лог ответ Гис МТ */
+                      copy-lob from vlongJson to file vFileLog append no-error.                   
+                      if error-status:error or 
+                         error-status:get-message(1) <> "" 
+                      then do:
+                          dbgPrint("marking.log", substitute("Возникла ошибка при добавлении ответа в лог: &1 ", error-status:get-message(1))).
+                      end.    
+                      else dbgPrint("marking.log", substitute("Ответ ГИС МТ успешно добавлен в файл &1 ", vFileLog)).
+                  end.
                end.              
            end.                     
            
@@ -1185,8 +1203,8 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        return 2.
     end.
     
-    copy-lob from file vFileResult to vlongJson .
-    copy-lob from file vFileresultErr to vlongJsonError .        
+    copy-lob from file vFileResult to vlongJson no-error.
+    copy-lob from file vFileresultErr to vlongJsonError no-error.        
          
     /* анализируем, есть ли ошибки в ответе */
     if index(vlongJsonError,"curl:") > 0 or
@@ -1680,21 +1698,24 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
          vTimeResp = 0
          .
       for each buf_code no-lock where buf_code.parent = "CDN_GisMt":
-          dbgPrint("marking.log", substitute("Площадка &1 Время отклика &2 Время блокировки &3 Текущее время &4 ", 
-                                             buf_code.code,
-                                             buf_code.codeval,
-                                             buf_code.misc2,
-                                             vTimeNow)).
-          if buf_code.misc2 = "" or datetime-tz(buf_code.misc2) < vTimeNow 
-          then do:
-              if vTimeResp = 0 or 
-                 vTimeResp = ? or 
-                 vTimeResp > int(buf_code.codeval) 
-              then
-                 assign
-                    vAddr = buf_code.code 
-                    vTimeResp = int(buf_code.codeval) no-error.               
-          end.    
+          if buf_code.code <> "CDN_Upd" then do:
+              dbgPrint("marking.log", substitute("Площадка &1 Время отклика &2 Время блокировки &3 Текущее время &4 ", 
+                                                 buf_code.code,
+                                                 buf_code.codeval,
+                                                 buf_code.misc2,
+                                                 vTimeNow)).
+              if buf_code.misc2 = "" or datetime-tz(buf_code.misc2) < vTimeNow 
+              then do:
+                  if vTimeResp = 0 or 
+                     vTimeResp = ? or 
+                     vTimeResp > int(buf_code.codeval) 
+                  then
+                     assign
+                        vAddr = buf_code.code 
+                        vTimeResp = int(buf_code.codeval) no-error.               
+              end.
+          end.   
+          else dbgPrint("marking.log", substitute("Идет процесс обновления CDN площадок, время начала &1 ", buf_code.misc1)).
       end.
       if vAddr <> "" then    
          dbgPrint("marking.log", substitute("Выбрали площадку &1 время отклика &2 ",vAddr,vTimeResp)).
@@ -1715,12 +1736,15 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
              and buf_code.code = iCdnAdr
              exclusive-lock no-wait no-error.
       if avail buf_code then  do:
-         buf_code.misc2 = String(vTimeNow + 15000 * 60).
-         vOk = yes.
+         buf_code.misc2 = String(vTimeNow + 15000 * 60).         
+         release buf_code no-error.
+         if error-status:error then vOk = no.
+         else vOk = yes.
       end.   
       else vOk = no.
       
-      dbgPrint("marking.log", substitute("Установка площадке &1 время разблокировки &2 успешно &3 ",iCdnAdr,(vTimeNow + 15000 * 60),vOk)).
+      dbgPrint("marking.log", substitute("Установка площадке &1 время разблокировки &2 успешно &3 &4",
+                                         iCdnAdr, (vTimeNow + 15000 * 60), vOk, error-status:get-message(1))).
       
       return vOk.      
   end method. 
