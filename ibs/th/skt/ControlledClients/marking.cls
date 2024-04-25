@@ -1453,6 +1453,12 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        return "".
     end.   
     
+    /* Запускаем проверку, не надо ли обновить 
+    ** площадки и их обновление */
+    if gismt-cdnTurnOn and 
+       CheckCdnNeedUpd()
+       then run utl/pub-runcdn.p.
+           
     /* произошла аварийная ситуация - фиксируем */
     if vGetGisMt <> 0 then do: 
         if vGetGisMt = 2 then 
@@ -1478,11 +1484,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                 vErrSts = ""
                 .
         end.
-        /* Запускаем проверку, не надо ли обновить 
-        ** площадки и их обновление */
-        if gismt-cdnTurnOn and 
-           CheckCdnNeedUpd()
-           then run utl/pub-runcdn.p.
+        
         return vErrSts.
     end.
     else SetNoErrGisMT().                
