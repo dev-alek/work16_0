@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f63144a79127, 2284, rls $
+$Author: ASMorozov $
+$Date: Wed Dec 25 15:24:02 2019 +0300 $
+$Workfile: peres-gd-doc.cls $
+$Archive: ibs/th/bge/1crn/subjects/peres-gd-doc.cls $
 
 Экспорт сообщения с накладаной в 1С ERPRN inv-gd-doc
 
@@ -254,11 +254,12 @@ index sum-type is primary unique sum-type.
 
   
   method private void StartDocInv ():
-      sw:start-element ("peres-gd-doc") .
+        find first c-trn-doc where c-trn-doc.doc-code = bf_trn-doc.doc-code NO-LOCK NO-ERROR.
+        sw:start-element ("peres-gd-doc") .
         write-data-element ("doc-code", bf_trn-doc.doc-code).
         write-data-element ("doc-num", bf_trn-doc.doc-code).
         write-data-element ("del-f", string (isDel, "1/0") ).
-        write-data-element ("doc-date", if bf_trn-doc.doc-date = ? then "" else iso-date (datetime (bf_trn-doc.doc-date, bf_trn-doc.sys-time-int))).
+ 		write-data-element ("doc-date", if bf_trn-doc.doc-date = ? then "" else substitute("&1T&2", iso-date(date(c-trn-doc.doc-date)),string(c-trn-doc.sys-time) ) ). 
         write-data-element ("fact-date", if bf_trn-doc.fact-date = ? then "" else iso-date (date (bf_trn-doc.fact-date))).
         write-data-element ("shift-date", if bf_trn-doc.shift-date = ? then "" else iso-date (date (bf_trn-doc.shift-date))).
         write-data-element ("shift-num", if bf_trn-doc.shift-num = ? then "0" else string-mth (bf_trn-doc.shift-num)).
