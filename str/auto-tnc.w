@@ -56,6 +56,8 @@ DEFINE BUFFER buf_auto-tank        FOR ub.auto-tank.
 DEFINE BUFFER type_auto-tank-attr  FOR ub.auto-tank-attr.
 DEFINE BUFFER neck_auto-tank-attr  FOR ub.auto-tank-attr.
 DEFINE BUFFER sep_auto-tank-attr   FOR ub.auto-tank-attr.
+DEFINE BUFFER valve_auto-tank-attr  FOR ub.auto-tank-attr.
+DEFINE BUFFER con-sleeve_auto-tank-attr   FOR ub.auto-tank-attr.
 DEFINE BUFFER error_auto-tank-attr FOR ub.auto-tank-attr.
 DEFINE BUFFER temp_auto-tank-attr  FOR ub.auto-tank-attr.
 define buffer buf_auto-section     for ub.auto-section.
@@ -216,6 +218,16 @@ DEFINE VARIABLE SEP AS LOGICAL INITIAL no
    LABEL "Наличие СЭП" 
    VIEW-AS TOGGLE-BOX
    SIZE 15 BY .83 NO-UNDO.
+   
+DEFINE VARIABLE valve AS LOGICAL INITIAL no 
+   LABEL "Контрольный вентиль" 
+   VIEW-AS TOGGLE-BOX
+   SIZE 25 BY .83 NO-UNDO.
+   
+DEFINE VARIABLE con-sleeve   AS decimal FORMAT ">>>>9.9<" 
+   LABEL "Длина соединительного рукава, м" 
+   VIEW-AS FILL-IN 
+   SIZE 10 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -229,7 +241,7 @@ DEFINE BROWSE brw-auto-num-sec
    QUERY brw-auto-num-sec DISPLAY
    tt_auto-tank-sec.sec-num FORMAT ">>>>9":U LABEL "№ секции"
    tt_auto-tank-sec.brutto-qnty FORMAT "->>,>>>,>>9.<<<":U LABEL "Вместимость(л)"
-   tt_auto-tank-sec.add-volume  FORMAT "->>,>>>,>>9.<<<":U LABEL "Дополнит. объем трубопровода нижнего налива(мм)"
+   tt_auto-tank-sec.add-volume  FORMAT "->>,>>>,>>9.<<<":U LABEL "Дополнит. объем трубопровода нижнего налива(л)"
   /*ENABLE
       tt_auto-tank-sec.diametr
       tt_auto-tank-sec.brutto-qnty*/
@@ -251,6 +263,8 @@ DEFINE FRAME Dialog-Frame
    c-AC-type AT ROW 3.75 COL 54 COLON-ALIGNED WIDGET-ID 36
    b-choose-auto-firm AT ROW 3.79 COL 36.88 WIDGET-ID 4
    C-neck AT ROW 5 COL 17.5 COLON-ALIGNED WIDGET-ID 38
+   valve at row 5 col 3 WIDGET-ID 88
+   con-sleeve at row 5 col 30 WIDGET-ID 98
    f-error AT ROW 7.25 COL 59.75 COLON-ALIGNED WIDGET-ID 46
    f-temp AT ROW 8.54 COL 3.75 WIDGET-ID 48
    varPS AT ROW 10.25 COL 19.5 NO-LABEL
@@ -583,6 +597,11 @@ ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Ввод */
             ub.auto-tank.status_ = {&current-status}
             .
       end.
+      
+      assign
+        valve
+        con-sleeve
+      .
   
       if parmode = {&add-def} or
          parmode = {&update} then 
@@ -654,6 +673,24 @@ ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Ввод */
                   .          
             end.
          end.
+         if c-AC-type = 2 then 
+         do :        
+            create ub.auto-tank-attr.
+            assign
+               ub.auto-tank-attr.auto-num   = ub.auto-tank.auto-num
+               ub.auto-tank-attr.attr-code  = "valve"
+               ub.auto-tank-attr.attr-value = string(valve)
+               .
+            if con-sleeve > 0 then
+            do:
+               create ub.auto-tank-attr.
+               assign
+                  ub.auto-tank-attr.auto-num   = ub.auto-tank.auto-num
+                  ub.auto-tank-attr.attr-code  = "con-sleeve"
+                  ub.auto-tank-attr.attr-value = string(con-sleeve)
+                  .          
+            end.
+         end.
       end.
       if parmode = {&update} then 
       do:
@@ -677,6 +714,32 @@ ON CHOOSE OF b-save IN FRAME Dialog-Frame /* Ввод */
                 sep_auto-tank-attr.attr-code  = "auto-sep"
                 sep_auto-tank-attr.attr-value = string(SEP)
                 .
+         end.
+         if c-AC-type = 2 then 
+         do :        
+            if available valve_auto-tank-attr then valve_auto-tank-attr.attr-value = string(valve) .
+            else 
+            do :
+                create valve_auto-tank-attr.
+                assign
+                    valve_auto-tank-attr.auto-num   = ub.auto-tank.auto-num
+                    valve_auto-tank-attr.attr-code  = "valve"
+                    valve_auto-tank-attr.attr-value = string(valve)
+                .
+            end .
+            if con-sleeve > 0 then
+            do:
+               if available con-sleeve_auto-tank-attr then con-sleeve_auto-tank-attr.attr-value = string(con-sleeve) .
+               else 
+               do :
+                    create con-sleeve_auto-tank-attr.
+                    assign
+                        con-sleeve_auto-tank-attr.auto-num   = ub.auto-tank.auto-num
+                        con-sleeve_auto-tank-attr.attr-code  = "con-sleeve"
+                        con-sleeve_auto-tank-attr.attr-value = string(con-sleeve)
+                    .    
+               end .     
+            end.
          end.
          if f-error <> 0 and f-error <> ? then 
          do :
@@ -814,14 +877,27 @@ ON VALUE-CHANGED OF c-AC-type IN FRAME Dialog-Frame /* Тип АЦ */
             f-error
             f-temp
             with frame {&frame-name} .
+         hide
+            valve
+            con-sleeve
+            in frame {&frame-name} .   
       end.   
       else 
+      if c-AC-type = 2 then 
       do:
          hide
             C-neck
             f-error
             f-temp
-            in frame {&frame-name} .        
+            in frame {&frame-name} .   
+         display
+            valve
+            con-sleeve
+            with frame {&frame-name} .  
+         enable
+            valve
+            con-sleeve
+            with frame {&frame-name} .     
       end.     
    END.
 
@@ -911,6 +987,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       find first sep_auto-tank-attr no-lock
          where sep_auto-tank-attr.auto-num = ub.auto-tank.auto-num
          and sep_auto-tank-attr.attr-code = "auto-sep" no-error.  
+      find first valve_auto-tank-attr no-lock
+         where valve_auto-tank-attr.auto-num = ub.auto-tank.auto-num
+         and valve_auto-tank-attr.attr-code = "valve" no-error.           
+      find first con-sleeve_auto-tank-attr no-lock
+         where con-sleeve_auto-tank-attr.auto-num = ub.auto-tank.auto-num
+         and con-sleeve_auto-tank-attr.attr-code = "con-sleeve" no-error. 
    end.
    if parmode = {&update} then 
    do:
@@ -930,7 +1012,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             and neck_auto-tank-attr.attr-code = "autotype-neck" no-error.
          find first sep_auto-tank-attr exclusive-lock
             where sep_auto-tank-attr.auto-num = ub.auto-tank.auto-num
-            and sep_auto-tank-attr.attr-code = "auto-sep" no-error.             
+            and sep_auto-tank-attr.attr-code = "auto-sep" no-error.     
+         find first valve_auto-tank-attr exclusive-lock
+            where valve_auto-tank-attr.auto-num = ub.auto-tank.auto-num
+            and valve_auto-tank-attr.attr-code = "valve" no-error.           
+         find first con-sleeve_auto-tank-attr exclusive-lock
+            where con-sleeve_auto-tank-attr.auto-num = ub.auto-tank.auto-num
+            and con-sleeve_auto-tank-attr.attr-code = "con-sleeve" no-error.         
       end.
    end.
    if parmode = {&lookup} or
@@ -947,6 +1035,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       if available error_auto-tank-attr then f-error = decimal(error_auto-tank-attr.attr-value).
       if available temp_auto-tank-attr then f-temp = decimal(temp_auto-tank-attr.attr-value) .
       if available sep_auto-tank-attr then sep = logical (sep_auto-tank-attr.attr-value) .
+      if available valve_auto-tank-attr then valve = logical (valve_auto-tank-attr.attr-value) .
+      if available con-sleeve_auto-tank-attr then con-sleeve = decimal(con-sleeve_auto-tank-attr.attr-value) .
       if varauto-firm = "" or varauto-firm = ? then 
       do:
          FOR first auto-tank-attr no-lock where auto-tank-attr.attr-code = "auto-firm"
@@ -1090,14 +1180,20 @@ PROCEDURE local-enable_UI :
             with frame {&frame-name} .
       end.   
    end.
-   else 
-   do:
-      disable
-         b-choose-auto-firm c-AC-type varPS varauto-num varname varauto-firm sep
-         C-neck f-error f-temp
-         with frame {&frame-name} .
-   end.   
+   hide
+    valve
+    con-sleeve
+    in frame {&frame-name} . 
+   apply "value-changed" to c-ac-type in frame dialog-frame.
    {&OPEN-QUERY-brw-auto-num-sec}
+   
+   if parmode = {&lookup}
+   then do :
+     disable
+         b-choose-auto-firm c-AC-type varPS varauto-num varname varauto-firm sep
+         C-neck f-error f-temp valve con-sleeve
+         with frame {&frame-name} .
+   end .
 
 END PROCEDURE.
 

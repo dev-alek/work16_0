@@ -322,6 +322,11 @@ DEFINE VARIABLE b-doc AS LOGICAL INITIAL no
      LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 2.5 BY .83 NO-UNDO.
+     
+DEFINE VARIABLE t-clear AS LOGICAL INITIAL no 
+     LABEL "Произведена зачистка АЦ перед наполнением на ГНС" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 50 BY .83 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -369,6 +374,7 @@ DEFINE FRAME Dialog-Frame
      f-acc-ship AT ROW 14.46 COL 38.13 NO-LABEL WIDGET-ID 42
      f-doc AT ROW 14.67 COL 4.5 NO-LABEL WIDGET-ID 108
      b-doc AT ROW 14.75 COL 2 WIDGET-ID 48
+     t-clear AT ROW 14.75 COL 32 WIDGET-ID 148
      f-item-doc AT ROW 15.83 COL 82.5 RIGHT-ALIGNED NO-LABEL WIDGET-ID 46
      f-date-start AT ROW 17 COL 19.25 COLON-ALIGNED WIDGET-ID 60
      f-date-end AT ROW 17 COL 59.5 COLON-ALIGNED WIDGET-ID 58
@@ -509,6 +515,7 @@ DO:
                               f-min-end
                               f-date-start
                               f-date-end
+                              t-clear
   .
  
   if input frame {&frame-name} f-hour-income <> ?
@@ -1268,6 +1275,34 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   if not varvalue = ""
     then frame {&frame-name}:title = "Дополнительная информация по корр. накладной СУГ. Исх.накл. - " + varvalue.
+    
+  { str/tdat-val.i
+     p-doc-code
+     {&trdcattr-is-lgas}
+     varvalue
+     vartype
+     no-error
+   }
+   
+   if varvalue = "yes" then do:
+     assign
+       v-is-lgas = true.
+
+   end.
+   
+   { str/tdat-val.i
+     p-doc-code
+     {&trdcattr-is-lgas-corr}
+     varvalue
+     vartype
+     no-error
+   }
+
+  if varvalue = "yes" then do:
+     assign
+       v-is-lgas = true.
+
+  end.
   
   for each tt-upd-attr-fuel no-lock:
 
@@ -1445,7 +1480,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         when {&trdcattr-doc-not} then do:
             assign
               b-doc =  logical(buf_doc-attr.attr-value) no-error.
-        end.        
+        end.     
+        when {&trdcattr-clear-ac} then do:
+            assign
+              t-clear =  logical(buf_doc-attr.attr-value) no-error.
+        end.    
         when {&trdcattr-spisok-not-doc} then do:
             assign
               f-item-doc =  buf_doc-attr.attr-value no-error.
@@ -1529,35 +1568,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         f-min-start
         f-date-start
         f-date-end
+        t-clear
     in frame Dialog-Frame . 
 
-   { str/tdat-val.i
-     p-doc-code
-     {&trdcattr-is-lgas}
-     varvalue
-     vartype
-     no-error
-   }
    
-   if varvalue = "yes" then do:
-     assign
-       v-is-lgas = true.
-
-   end.
-   
-   { str/tdat-val.i
-     p-doc-code
-     {&trdcattr-is-lgas-corr}
-     varvalue
-     vartype
-     no-error
-   }
-
-   if varvalue = "yes" then do:
-     assign
-       v-is-lgas = true.
-
-   end.
     if v-is-lgas then do:
       display
         f-hour-start
@@ -1566,6 +1580,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         f-min-start
         f-date-start
         f-date-end
+        t-clear
       with frame Dialog-Frame .
     end. 
     hide 
@@ -1617,6 +1632,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-min-start
       f-date-start
       f-date-end
+      t-clear
       with frame {&frame-name}.
   end.
 /*  assign                      */
@@ -1834,7 +1850,7 @@ PROCEDURE enable_UI :
          f-seals-condition-2 f-date-cert f-fio f-ptbocode f-ptbotype b-ptb 
          f-date-pour f-hour-pour f-min-pour f-hour-income f-min-income 
          f-item-pour f-acc-ship b-doc f-date-start f-date-end f-hour-start 
-         f-min-start f-hour-end f-min-end 
+         f-min-start f-hour-end f-min-end t-clear
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1923,6 +1939,12 @@ PROCEDURE save-attr :
         when {&trdcattr-doc-not} then do:
             assign
               v-attr-value = string (b-doc) when string (b-doc) <> "".
+        end.
+        when {&trdcattr-clear-ac} then do:
+          if v-is-lgas
+          then
+            assign
+              v-attr-value = string (t-clear) when string (t-clear) <> "".
         end.
         when {&trdcattr-spisok-not-doc} then do:
         if b-doc = yes then do:

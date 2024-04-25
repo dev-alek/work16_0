@@ -649,6 +649,10 @@ class ibs.th.str.InfoSectionsTotal:
     for each buf_doc-line-attr where buf_doc-line-attr.doc-code = TrnDocNum 
       and buf_doc-line-attr.gds-code = GdsCode 
       :
+       
+      if buf_doc-line-attr.attr-code = "propan-perc"
+      or buf_doc-line-attr.attr-code = "connect-hoses"
+      then next .
       
       delete buf_doc-line-attr.
       

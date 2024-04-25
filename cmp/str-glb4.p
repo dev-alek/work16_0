@@ -1482,6 +1482,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Документ инвентаризации с первоначальным вводом марок */
 { cmp/cr-prep.i 1 trdcattr-inv-introduce "trdcattr-inv-introduce" " " "trdcattr-inv-introduce" }
 
+/* Произведена зачистка АЦ перед наполнением на ГНС */
+{ cmp/cr-prep.i 1 trdcattr-clear-ac "clear-ac" " " "clear-ac" }
+
 /* Признак, что документ созан по УТД и должен в новостях обрабатываться на закрытия без учета, что это новости */
 { cmp/cr-prep.i 1 trdcattr-is-not-close-fact-news "trdcattr-is-not-close-fact-news" " " "trdcattr-is-not-close-fact-news" }
 
@@ -1579,6 +1582,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-is-lgas-corr}~
 ,{&bef-trdcattr-othermoves}~
 ,{&bef-trdcattr-is-return}~
+,{&bef-trdcattr-clear-ac}~
 ,{&bef-trdcattr-edo-return}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).

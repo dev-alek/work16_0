@@ -591,6 +591,17 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         end.
         write-data-element ("dnsty-fact", string-mth (buf_doc-line.fact-density)).
         write-data-element ("sum", string-mth (round (buf_doc-line.price-cli * buf_doc-line.cli-qnty, 2))).
+        
+        find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = DocCode
+                                               and buf_doc-line-attr.gds-code = buf_gds.gds-code
+                                               and buf_doc-line-attr.attr-code = "propan-perc"
+                                               no-error .
+        if available buf_doc-line-attr
+        and buf_doc-line-attr.attr-value > ""
+        and decimal(buf_doc-line-attr.attr-value) >= 0
+        then do :
+          write-data-element ('C3H8', string-mth (decimal(buf_doc-line-attr.attr-value))) .
+        end .
       
       sw:end-element ("gd").
     end.
@@ -1264,6 +1275,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
 
   method private void TrdcAattrPri ():
     
+    define buffer bf_doc-line-attr for ub.doc-line-attr .
+    
     &scop attr-code trdcattr-dids
     {&create-record-date}
     &scop attr-code trdcattr-nsf
@@ -1308,7 +1321,24 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     &scop tag-code othermoves
     &scop attr-code trdcattr-othermoves
     {&create-record-cust-logical}
-  end .  
+  end . 
+  if v-is-lgas-trn
+  or v-is-lgas-corr-trn 
+  then do :
+    &scop tag-code cleared
+    &scop attr-code trdcattr-clear-ac
+    {&create-record-cust-logical}
+    
+    for first bf_doc-line-attr no-lock where bf_doc-line-attr.doc-code = DocCode
+                                         and bf_doc-line-attr.attr-code = "connect-hoses"
+    :
+      if bf_doc-line-attr.attr-value > ""
+      and bf_doc-line-attr.attr-value <> ?
+      then do :
+        write-data-element ("connect-hoses", if logical(bf_doc-line-attr.attr-value) then "1" else "0") .
+      end .
+    end .
+  end .
     
   end.
 

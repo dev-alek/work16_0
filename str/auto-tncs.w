@@ -134,9 +134,9 @@ DEFINE VARIABLE ellipse-min        AS CHARACTER FORMAT "x(8)"
    SIZE 15 BY 1 NO-UNDO.
 
 DEFINE VARIABLE F-dop-volume       AS DECIMAL   FORMAT ">>,>>9.999":U INITIAL 0 
-   LABEL "Доп.объем трубопровода нижнего налива,л" 
+   LABEL "Доп.объем трубопровода нижнего налива, л" 
    VIEW-AS FILL-IN 
-   SIZE 15 BY 1 NO-UNDO.
+   SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE square-depth       AS CHARACTER FORMAT "x(8)" 
    LABEL "Толщина стенки горловины, мм" 

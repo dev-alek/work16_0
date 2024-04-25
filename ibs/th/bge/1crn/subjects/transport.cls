@@ -54,7 +54,11 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
    define property me-vlm      as decimal      no-undo get. 
       private set.
    define property ac-tk       as decimal      no-undo get. 
-      private set.        
+      private set. 
+   define property valve       as integer      no-undo get. 
+      private set.
+   define property con-sleeve  as decimal      no-undo get. 
+      private set.       
    define property sections    as subjects     no-undo get. 
       private set.
    define property calibration-table    as subjects     no-undo get. 
@@ -132,7 +136,17 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
             do:
                assign 
                   ac-tk = decimal(inValue) .
-            end.                        
+            end. 
+         when "valve" then 
+            do:
+               assign 
+                  valve = integer(inValue) .
+            end.
+         when "con-sleeve" then 
+            do:
+               assign 
+                  con-sleeve = decimal(inValue) .
+            end.                       
       end case.
    end.
 
@@ -199,6 +213,8 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
          me-vlm    = ?
          ac-tk     = ?
          ess       = ?
+         valve     = ?
+         con-sleeve = ?
          .
       delete object sections no-error .
       delete object calibration-table no-error .

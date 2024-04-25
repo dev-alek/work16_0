@@ -56,8 +56,9 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
 &global-define place-com-vessel    "place-com-vessel"                    /*признак сообщающегося резервуара*/
 &global-define place-com-tanks     "place-com-tanks"                    /*коды сообщающихся резервуаров*/
 &global-define place-is-main       "place-is-main"                    /*признак главного резервуара (СР)*/
+&global-define place-gate-valve    "place-gate-valve"                    /*Задвижка в резервуаре при переподключении рукавов при прие-ме СУГ*/
 
-&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm,place-ponton,place-ponton-mass,place-ponton-height,place-com-vessel,place-com-tanks,place-is-main':u /*список атрибутов резервуара*/
+&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm,place-ponton,place-ponton-mass,place-ponton-height,place-com-vessel,place-com-tanks,place-is-main,place-gate-valve':u /*список атрибутов резервуара*/
 
   define buffer buf_place      for ub.place .
   define buffer com_place      for ub.place .
@@ -107,6 +108,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
       field com-tanks           as character
       field is-main             as logical
       field main-com-code       as character
+      field gate-valve          as logical
       index pi as primary unique
       pl-code
       .
@@ -362,7 +364,10 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
               end.  
               when {&place-is-main} then do :
                 if v-ok then tt-place-attr.is-main = logical(v-value) .
-              end.                                                                                       
+              end.    
+              when {&place-gate-valve} then do :
+                if v-ok then tt-place-attr.gate-valve = logical(v-value) .
+              end.                                                                                   
            end case.
         end.
         
@@ -449,6 +454,13 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
           else do :
             sw:write-data-element ("com-code", tt-place-attr.main-com-code) .
           end .
+        end .
+        if tt-place-attr.gate-valve
+        then do :
+          sw:write-data-element ("gate-valve", "1").
+        end .
+        else do :
+          sw:write-data-element ("gate-valve", "0").
         end .
       end.
       

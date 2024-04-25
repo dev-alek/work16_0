@@ -122,6 +122,32 @@ class ibs.th.bge.1crn.import.imptransport implements ibs.th.bge.1crn.import.iimp
          end.
          if v-transport:ess <> 1 then buf_auto-tank-attr.attr-value = "no" .
          else buf_auto-tank-attr.attr-value = "yes" .
+         
+         find first buf_auto-tank-attr EXCLUSIVE-LOCK where buf_auto-tank-attr.auto-num = buf_auto-tank.auto-num and buf_auto-tank-attr.attr-code = "valve" no-error .
+         if not AVAILABLE (buf_auto-tank-attr) then 
+         do:
+            create buf_auto-tank-attr.
+            assign
+               buf_auto-tank-attr.attr-code = "valve"
+               buf_auto-tank-attr.auto-num  = buf_auto-tank.auto-num 
+               .
+         end.
+         if v-transport:valve <> 1 then buf_auto-tank-attr.attr-value = "no" .
+         else buf_auto-tank-attr.attr-value = "yes" .
+         
+         if v-transport:con-sleeve > 0
+         then do :
+           find first buf_auto-tank-attr EXCLUSIVE-LOCK where buf_auto-tank-attr.auto-num = buf_auto-tank.auto-num and buf_auto-tank-attr.attr-code = "con-sleeve" no-error .
+           if not AVAILABLE (buf_auto-tank-attr) then 
+           do:
+              create buf_auto-tank-attr.
+              assign
+                 buf_auto-tank-attr.attr-code = "con-sleeve"
+                 buf_auto-tank-attr.auto-num  = buf_auto-tank.auto-num 
+                 .
+           end.
+           buf_auto-tank-attr.attr-value = string(v-transport:con-sleeve) .
+         end .
                          
          for each buf_auto-section where buf_auto-section.auto-num = v-transport:reg-num:
           
