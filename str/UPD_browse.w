@@ -4982,8 +4982,36 @@ PROCEDURE mark-temp :
             if buf_utd-marking-lines.doc-level = 1 then 
             do:
                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
-               if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) then 
-                 X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1 .
+               if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) then
+               do: 
+                 X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1.
+                 find first buf_utd-lines-attr where 
+                            buf_utd-lines-attr.db-num = X_utd-lines.db-num and
+                            buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
+                            buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
+                            buf_utd-lines-attr.attr-code = "QuantityBarCode"
+                      exclusive-lock no-error.
+                 if avail buf_utd-lines-attr then
+                 do:
+                    if X_utd-lines.qnty-scan <> 0 then
+                      buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan).
+                    else 
+                      delete buf_utd-lines-attr.
+                 end.
+                 else do:
+                    if X_utd-lines.qnty-scan <> 0 then
+                    do:  
+                       create buf_utd-lines-attr.
+                       assign
+                          buf_utd-lines-attr.db-num     = X_utd-lines.db-num
+                          buf_utd-lines-attr.doc-id     = X_utd-lines.doc-id
+                          buf_utd-lines-attr.LineNum    = X_utd-lines.LineNum
+                          buf_utd-lines-attr.attr-code  = "QuantityBarCode"
+                          buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) .
+                       .
+                    end.
+                 end. 
+               end.
             end .
             if  avail buf_marking and (
                buf_marking.sts = Marking:GrayZone:KeyIntDB or 
@@ -5232,7 +5260,6 @@ PROCEDURE save_mark :
       /*                                                                                                                                                       */
       /*      f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .*/
       /*      if F-text = "" then do:                                               */
-
       find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
          and buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
       if available (buf_utd-marking-lines) then

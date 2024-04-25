@@ -99,7 +99,19 @@
       <ParamHiden>no</ParamHiden>
     </procParam>
   </procAsunc>
-  
+
+  <procAsunc>
+    <procid>is_cdn</procid>
+    <procval>utl\proc-gismtcdn.p</procval>
+    <procname>√»— Ã“ cdn</procname>
+    <procParam>
+      <procid>is_cdn</procid>
+      <paramName>¡ƒ</paramName>
+      <numparam>1</numparam>
+      <ParamValue>*</ParamValue>
+      <ParamHiden>no</ParamHiden>
+    </procParam>
+  </procAsunc>  
 
   <SesParam>
     <parCheck>false</parCheck>

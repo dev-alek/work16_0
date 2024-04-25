@@ -2325,6 +2325,14 @@ define buffer buf_doc-pl-attr for doc-pl-attr .
     tt-rvs-line.state-brutto-cli-qnty = tt-rvs-line.state-measure-cli-qnty + varstate-water-qnty
     tt-rvs-line.state-level-petrol = tt-rvs-line.state-level-total - tt-rvs-line.state-level-water
   .
+  if not rdc-value = "pomi-rn"
+  then do :
+    if tt-rvs-line.state-temperature = ?
+    then do :
+      message "Не заполнено обязательное поле «Температура средняя»" view-as alert-box .
+      return no-apply .
+    end .
+  end .
   buffer-copy tt-rvs-line to buf_rvs-line.
   
   if v-revision-mode
@@ -3654,7 +3662,9 @@ DO:
     end .
   end .
   else do :
-    disable tt-rvs-line.state-temperature with frame {&frame-name} .
+    if rdc-value = "pomi-rn"
+    then
+      disable tt-rvs-line.state-temperature with frame {&frame-name} .
     disable b-sug-struct with frame {&frame-name} .
   end .
   if input frame {&frame-name} {&self-name} <> {&self-name} then do:
@@ -4951,6 +4961,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end .
     else do :
       enable
+        tt-rvs-line.state-temperature
         tt-rvs-line.fact-calc-vol
         tt-rvs-line.state-density
         tt-rvs-line.state-measure-cli-qnty

@@ -600,7 +600,7 @@ end.*/
           do while available ttrun:
              if not SaveFile
              then do:
-                os-delete value (MyWorkDir + vtask + string(ttrun.num)) recursive.
+               /* os-delete value (MyWorkDir + vtask + string(ttrun.num)) recursive. */
                 os-delete value (MyWorkDir + vtask + string(ttrun.num) + ".bat").
              end.
              writeStatusProces("Delete", ttrun.task, ttrun.num,  "WorkEnd").

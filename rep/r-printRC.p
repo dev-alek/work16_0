@@ -50,6 +50,7 @@ define buffer buf_upgrade       for ub.upgrade .
 define buffer buf_upgrade-attr  for ub.upgrade-attr .
 define buffer buf_person        for ub.person .
 define buffer buf_user-account  for ub.user-account .
+define buffer buf_code          for ub.code .
 
 define buffer buf_rvs-line-attr for ub.rvs-line-attr .
 define temp-table temp_db-list no-undo
@@ -170,6 +171,7 @@ define variable v-date_to   as character no-undo .
     '<td style="width: 80px;"></td>' skip
     '<td style="width: 120px;"></td>' skip
     '<td style="width: 120px;"></td>' skip
+    '<td style="width: 120px;"></td>' skip
     '<td style="width: 150px;"></td>' skip
     '</tr>' skip
     .
@@ -177,22 +179,22 @@ define variable v-date_to   as character no-undo .
  
   put stream OutStr-html unformatted
     '<TR>' skip
-    '<TD colspan="11" style="font-weight: bold;">Отчет по версиям RC на БД</TD>' skip 
+    '<TD colspan="12" style="font-weight: bold;">Отчет по версиям RC на БД</TD>' skip 
     '</TR>' skip
     '<TR>' skip
-    '<TD colspan="11" style="font-weight: bold;">Дата: ' + string (v-today,"99.99.9999") + '</TD>' skip  
+    '<TD colspan="12" style="font-weight: bold;">Дата: ' + string (v-today,"99.99.9999") + '</TD>' skip  
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="11" style="font-weight: bold;">Время: ' + get-time(v-time) + '</TD>' skip        
+    '<TD colspan="12" style="font-weight: bold;">Время: ' + get-time(v-time) + '</TD>' skip        
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="11" style="font-weight: bold;">Фильтры: с ' + string (p-date_from,"99.99.9999") + " по " + string(p-date_to,"99.99.9999") + '</TD>' skip
+    '<TD colspan="12" style="font-weight: bold;">Фильтры: с ' + string (p-date_from,"99.99.9999") + " по " + string(p-date_to,"99.99.9999") + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="11" style="font-weight: bold;">БД: ' + if p-db-list = "" then "Все" + '</TD>' else string(p-db-list) + '</TD>' skip
+    '<TD colspan="12" style="font-weight: bold;">БД: ' + if p-db-list = "" then "Все" + '</TD>' else string(p-db-list) + '</TD>' skip
     '</TR>'skip
     .
   put stream OutStr-html unformatted            
@@ -213,6 +215,7 @@ define variable v-date_to   as character no-undo .
     '<th text_wrap="true" style="align: center;">Дата и время компиляции RC</th>' skip
     '<th text_wrap="true" style="align: center;">Дата и время копирования индентификатора версии RC на ПК</th>' skip
     '<th text_wrap="true" style="align: center;">Дата и время записи данных о версии в БД</th>' skip
+    '<th text_wrap="true" style="align: center;">Дата и время версии конфигурации типов маркировки</th>' skip
     '<th text_wrap="true" style="align: center;">Имя пользователя</th>' skip
     '</tr>' skip
     .
@@ -292,6 +295,14 @@ define variable v-date_to   as character no-undo .
         .
       put stream OutStr-html unformatted
         '<td text_wrap="true" style="align: center;">' + string(buf_upgrade.UpgDate) + "_" + string(buf_upgrade.UpgTime) + '</td>' skip  .
+      
+      find first buf_code where
+                 buf_code.parent = substitute("Versions&1&2",{&delim-par},buf_db.db-num)
+             and buf_code.code = "MarkType"
+           no-lock no-error.
+      put stream OutStr-html unformatted        
+        '<td text_wrap="true" style="align: center;">' if avail buf_code then buf_code.codevalue else '' '</td>' skip.
+        
       for first buf_upgrade-attr no-lock where 
         buf_upgrade-attr.db-num = buf_upgrade.db-num and 
         buf_upgrade-attr.version-num = buf_upgrade.version-num and

@@ -1259,6 +1259,18 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-doc-not true
 &glob sort-trdcattr-doc-not 100
 
+/* Произведена зачистка АЦ перед наполнением на ГНС (СУГ) */
+&glob fillin_width-trdcattr-clear-ac 4
+&glob fillin_height-trdcattr-clear-ac 1
+&glob type-trdcattr-clear-ac {&type-log}
+&glob format-trdcattr-clear-ac "yes/no"
+&glob label-trdcattr-clear-ac "Произведена зачистка АЦ перед наполнением на ГНС"
+&glob tooltip-trdcattr-clear-ac "Произведена зачистка АЦ перед наполнением на ГНС"
+&glob user-can-edit-trdcattr-clear-ac true
+&glob output-display-trdcattr-clear-ac true
+&glob other-trdcattr-clear-ac '':u
+&glob news-trdcattr-clear-ac true
+&glob sort-trdcattr-clear-ac 200
 
 /* Список не предоставленных документов */
 &glob fillin_width-trdcattr-spisok-not-doc 20

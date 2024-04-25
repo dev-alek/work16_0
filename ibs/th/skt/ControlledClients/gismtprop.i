@@ -29,6 +29,12 @@ Creation date: 25/10/2023
  define variable gismt-WaitTime     as decimal   no-undo. 
  define variable gismt-CrashSituat  as logical   no-undo.
  define variable gismt-BanDate      as integer   no-undo.
+ define variable gismt-cdnTurnOn    as logical   no-undo.
+ define variable gismt-cdnAdress    as character no-undo.
+ define variable gismt-cdnRepeat    as logical   no-undo.
+ define variable gismt-cdnChange    as logical   no-undo.
+ define variable gismt-cdnTimeUpd   as integer   no-undo.
+ define variable gismt-UpdateRequest as logical   no-undo.
 
 { def/funcmet.i get-gismt-prop character }
 (input p-obj-type as char,
@@ -97,7 +103,25 @@ Creation date: 25/10/2023
         end.  
         when {&attr-gisMT_banDate} then do:
           gismt-BanDate = thbjattr_thbj-attr.property-value-integer.
-        end.             
+        end.  
+        when {&attr-gisMT_cdnTurnOn} THEN DO:
+           gismt-cdnTurnOn = thbjattr_thbj-attr.property-value-logical.           
+        end.    
+        when {&attr-gisMT_cdnAdress} THEN DO:
+           gismt-cdnAdress = thbjattr_thbj-attr.property-value-character.           
+        end.
+        when {&attr-gisMT_cdnRepeat} THEN DO:
+           gismt-cdnRepeat = thbjattr_thbj-attr.property-value-logical.           
+        end.
+        when {&attr-gisMT_cdnChange} THEN DO:
+           gismt-cdnChange = thbjattr_thbj-attr.property-value-logical.           
+        end. 
+        when {&attr-gisMT_cdnTimeUpdate} THEN DO:
+           gismt-cdnTimeUpd = thbjattr_thbj-attr.property-value-integer.           
+        end.    
+        when {&attr-gisMT_UpdateRequest} THEN DO:
+           gismt-UpdateRequest = thbjattr_thbj-attr.property-value-logical.           
+        end.       
       end case.
       delete thbjattr_thbj-attr.
     end.

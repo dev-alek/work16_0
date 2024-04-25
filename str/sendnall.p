@@ -497,7 +497,7 @@ if can-find (first  pdf-list ) then do:
                       ,input "N"
                       ) no-error.
 end.
-if sendEMRC then do:
+if sendEMRC or sendMarkType then do:
 for each buf_clients no-lock
       where buf_clients.obj-type = {&shop}
         and buf_clients.db-num   = p-db-num,
@@ -507,19 +507,31 @@ for each buf_clients no-lock
        AND buf_cash-desk.cash-on = yes
   on error undo, return error
   :
-   run str/send-all.p (
-                       input parparentproc
-                      ,input this-procedure:handle
-                      ,input p-log-handle
-                      ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U
-                      ) no-error.
-   run str/send-all.p (
-                       input parparentproc
-                      ,input this-procedure:handle
-                      ,input p-log-handle
-                      ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U
-                      ) no-error.
+   if sendEMRC then
+   do:
+       run str/send-all.p (
+                           input parparentproc
+                          ,input this-procedure:handle
+                          ,input p-log-handle
+                          ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'D':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U
+                          ) no-error.
+       run str/send-all.p (
+                           input parparentproc
+                          ,input this-procedure:handle
+                          ,input p-log-handle
+                          ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'emrc':U + {&delim-par} + 'Передача справочника ЕМЦ':U
+                          ) no-error.
    end.
+   if sendMarkType then
+   do:
+       run str/send-all.p (
+                           input parparentproc
+                          ,input this-procedure:handle
+                          ,input p-log-handle
+                          ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'MarkType':U + {&delim-par} + 'Передача типов маркировки':U
+                          ) no-error.
+   end.
+end.
 end.
 if settingUpd then do:
    { gbl/objserref.i }

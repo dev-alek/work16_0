@@ -287,8 +287,11 @@ class ibs.th.file.asyncproc:
    
    method public char Writefile (ifile as character ,itext as character):
       if itext eq ""
-      then
-         itext = "-----------------------------------------------------".
+      then do:
+         output stream sWriteFile to value(ifile).
+         output stream sWriteFile close.
+      end.
+      else do:
       run gbl/fileapnd.p (
           input ifile
         , input itext
@@ -301,6 +304,7 @@ class ibs.th.file.asyncproc:
           putmes (substitute ("Не удалось записать файл &1 : &2 ",ifile,return-value)).
        else
           return substitute ("Не удалось записать файл &1 : &2 ",ifile,return-value).
+    end.
     end.
     return "".
    end.   

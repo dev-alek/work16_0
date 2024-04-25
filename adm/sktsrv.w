@@ -43,7 +43,8 @@ define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "4GL socket server (HTTPD)".
-
+define variable mAsyncHelper as class ibs.th.file.AsyncHelperth  no-undo.
+{utl/asuncprocauto.i &starterasunc = yes}
 
 define new shared variable g#LogStr       as character no-undo .
 define shared     variable g#auto-user-id as character no-undo .
@@ -365,9 +366,19 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   sktserv  = new SktServer(this-procedure).
   apply 'choose':U to Btn-st.
   mWork = yes.
-  subscribe "write-to-log" anywhere.
+  subscribe "write-to-log" anywhere run-procedure "write-to-log-event".
+  subscribe "runCDn" anywhere.
+  
   define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
   CheckUpd = new ibs.th.adm.upd.CheckUpd ().
+  mAsyncHelper = new ibs.th.file.AsyncHelperth().
+  mAsyncHelper:mProcPublish = this-procedure.
+  mAsyncHelper:setCurrentUserPasswd().
+  mAsyncHelper:MyBachMode = yes.
+  mAsyncHelper:WritelogInter = 5.
+  mAsyncHelper:MyBachMode = yes.
+  mAsyncHelper:maxproc    = 1.
+  run runCDN.
   IF NOT THIS-PROCEDURE:PERSISTENT THEN 
   do while mWork:
      /*  */
@@ -375,8 +386,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
      if valid-object(sktserv)
      then
         if sktserv:checkEnd()
-        then
+           or mAsyncHelper:isWorkShed()
+        then do:
            wait-for close of this-procedure pause 0.001.
+           mAsyncHelper:WaitForOne(?).	
+        end.
         else do:
            if  CheckUpd:isStopWork or CheckUpd:isNeedUpd 
            then do:
@@ -390,7 +404,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
        wait-for choose of Btn-st or close of this-procedure.
      
   end.
-  unsubscribe "write-to-log".  
+  delete object mAsyncHelper.
+  unsubscribe "write-to-log".
+  unsubscribe "runCDN".  
 END.
 delete object logWrite.
 /* _UIB-CODE-BLOCK-END */
@@ -526,7 +542,7 @@ PROCEDURE connproc :
       then v-content = get-string (mbuffer-in, 1).
     
     RUN write-to-log-file('SOCKET-READ:' + v-content ).
-/*    RUN write-to-log('SOCKET-READ:' + v-str ).*/
+/*    RUN write-to-log-event('SOCKET-READ:' + v-str ).*/
     if ((v-content = '' or v-content = ?) and (v-cont-type <> "raw" and v-querypar = "")) or v-header = "" then do:
       resp-head =  substitute("HTTP/1.0 408 Request Timeout or bad request &1Server: 4GL&2",{&CRLF},{&HdEnd}).
       SET-SIZE(mbuffer-out) = 0.
@@ -628,7 +644,7 @@ PROCEDURE connproc :
           
           /*if error-status:error then do:
             resp-head =  substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).
-            RUN write-to-log(return-value).            
+            RUN write-to-log-event(return-value).            
           end.
           else do:
 /*            resp-head = "OK".*/
@@ -636,7 +652,7 @@ PROCEDURE connproc :
           
       END.
   end. /* ContBlock */
-  RUN write-to-log('RESPONSE: ' + resp-head).
+  RUN write-to-log-event('RESPONSE: ' + resp-head).
   
     
 END PROCEDURE.
@@ -697,10 +713,10 @@ PROCEDURE proc-start-srv :
 DEF VAR vl-cnt AS LOG NO-UNDO.
 IF v-connect-param > '' THEN.
 ELSE DO:
-  RUN write-to-log('Не указаны параметры подключения!').
-  RUN write-to-log('Параметры задаются -param "Sock:-S <Port>" или -param "M:<h+>Sock:<Port>" ').
+  RUN write-to-log-event('Не указаны параметры подключения!').
+  RUN write-to-log-event('Параметры задаются -param "Sock:-S <Port>" или -param "M:<h+>Sock:<Port>" ').
   v-connect-param = "-S 8080".
-  RUN write-to-log('Задаем порт по умочанию 8080').
+  RUN write-to-log-event('Задаем порт по умочанию 8080').
   
 END.
 /* v-connect-param = 'sdj78'. */
@@ -709,12 +725,12 @@ CREATE SERVER-SOCKET hServerSocket.
 hServerSocket:SET-CONNECT-PROCEDURE ("connProc":U).
 vl-cnt = hServerSocket:ENABLE-CONNECTIONS(v-connect-param) NO-ERROR.
 if vl-cnt = NO THEN do:
-  RUN write-to-log(substitute('Ошибка запуска сервера &1!',error-status:get-message(1) )).
+  RUN write-to-log-event(substitute('Ошибка запуска сервера &1!',error-status:get-message(1) )).
   return.
 end.
 v-srv-connected = YES.
 /* IF VALID-HANDLE(hServerSocket) AND hServerSocket:CONNECTED() THEN */
-RUN write-to-log(substitute('Запущен сокет-сервер с параметрами: &1 ',v-connect-param)).
+RUN write-to-log-event(substitute('Запущен сокет-сервер с параметрами: &1 ',v-connect-param)).
 btn-st:LABEL IN FRAME {&FRAME-NAME} = 'Стоп'.
 sktserv  = new SktServer(this-procedure).
 END PROCEDURE.
@@ -732,13 +748,13 @@ PROCEDURE proc-stop-srv :
 DEF VAR vl-dis AS LOG NO-UNDO.
 vl-dis = hServerSocket:disable-CONNECTIONS() NO-ERROR.
 IF NOT vl-dis THEN DO:
-  RUN write-to-log(substitute('Ошибка остановки сервера &1!',error-status:get-message(1) )).
+  RUN write-to-log-event(substitute('Ошибка остановки сервера &1!',error-status:get-message(1) )).
   return.
 END.
 DELETE OBJECT sktserv.
 DELETE OBJECT hServerSocket.
 IF NOT valid-handle(hServerSocket) THEN
-RUN write-to-log(substitute('Остановлен сокет-сервер (&1)',v-connect-param)).
+RUN write-to-log-event(substitute('Остановлен сокет-сервер (&1)',v-connect-param)).
 ELSE RETURN.
 v-srv-connected = NO.
 btn-st:LABEL IN FRAME {&FRAME-NAME} = 'Старт'.
@@ -747,8 +763,8 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-to-log C-Win
-PROCEDURE write-to-log :
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-to-log-event C-Win
+PROCEDURE write-to-log-event :
 /*------------------------------------------------------------------------------
   Purpose:
   Parameters:  <none>
@@ -761,7 +777,7 @@ define variable str as char no-undo.
 auto-log:move-to-eof( ) IN FRAME {&FRAME-NAME} NO-ERROR.
 if objExists(itext,"F") eq ?
 then do:
-   str = cur-time-string-sec() + {&tabulation} + itext + {&new-line}.
+   str = cur-time-string-msec() + {&tabulation} + itext + {&new-line}.
 
    auto-log:insert-string( str ) NO-ERROR.
    RUN write-to-log-file(str).
@@ -769,7 +785,7 @@ end.
 else do:
    def var varfile-str as longchar no-undo.
    
-   str = cur-time-string-sec() + {&tabulation} + "Файл: " +  itext + {&new-line}.
+   str = cur-time-string-msec() + {&tabulation} + "Файл: " +  itext + {&new-line}.
    auto-log:insert-string(str) NO-ERROR.
    auto-log:insert-file(search(itext)) no-error.
    RUN write-to-log-file(str).
@@ -790,12 +806,12 @@ PROCEDURE write-to-log-file :
   Notes:
 ------------------------------------------------------------------------------*/
 DEFINE INPUT PARAMETER str-long AS longchar NO-UNDO.
-
-str-long = cur-time-string-sec() + {&tabulation} + str-long + {&new-line} .
-
+define variable vFileName as character no-undo.
+str-long = cur-time-string-msec() + {&tabulation} + str-long + {&new-line} .
+vFileName = "sktsrv-" + replace(string(today),"/","-") + ".log".
 copy-lob
 from object str-long
-to file 'sktsrv.log' append
+to file vFileName append
 no-error
 .
 
@@ -813,7 +829,7 @@ procedure parseheader:
   define variable idxQuerypar as integer no-undo.
 
   def var i as int no-undo.
-  RUN write-to-log('REQUEST-HEADER:' + p-header ).
+  RUN write-to-log-event('REQUEST-HEADER:' + p-header ).
   /*разбор шапки*/
   n = 2.
   if num-entries (p-header, "/") > 1
@@ -850,3 +866,13 @@ end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _Procedure RunCdn C-Win
+procedure runCdn:
+   run utl/runproc-cdn.p ("CDN",this-procedure).
+  
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+   

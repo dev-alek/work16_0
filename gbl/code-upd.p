@@ -11,7 +11,8 @@ Author:  Ruban Dmitriy Andreevich
 Creation date: 8 окт. 2019 г.
 
 */ 
-define input  parameter parparentproc as handle no-undo.
+define input  parameter parparentproc as handle  no-undo.
+
 define variable vss-revision    as character no-undo init "$Revision:$":U .
 define variable vss-author      as character no-undo init "$Author:$":U .
 define variable vss-date        as character no-undo init "$Date:$":U .
@@ -84,10 +85,15 @@ do mdbver = mdbver_old + 1 to 999999999:
       if error-status:error
       then
          return error return-value.
-      vimport:updatetablefordb(this-procedure) no-error.
-      if error-status:error
-      then
-         return error return-value.
+      
+      UPD_TBL:
+      do transaction on error undo UPD_TBL, leave UPD_TBL:
+          vimport:updatetablefordb(this-procedure) no-error.
+          if error-status:error
+          then return error return-value.
+            
+      end.
+      return-value = "".
       vimport:xmldom-clear().
    end.
    else
@@ -117,20 +123,23 @@ then do:
    if mtxt ne {utl/chekmd5.i v-md5-signature }  
    then 
       return error substitute("Файл &1 имеет не правильную сигнатуру md5.", mfile).
-
    mfilever = vimport:xmldom-load-ver  ( mfile,? ) no-error.
    if error-status:error
    then
       return error return-value.
-   vimport:updatetablefordb(this-procedure) no-error.
-   if error-status:error
-   then
-      return error return-value  + " " + error-status:get-message(1).
-   else 
-      run db-attr-write in this-procedure ( input ibs.th.gbl.gbl-var:g#db-num
-                                          , input {&attr-ver-code}
-                                          , input mfilever
-                                          ) no-error .
+
+   IMP_CODE:
+   do transaction on error undo IMP_CODE, leave IMP_CODE:
+       vimport:updatetablefordb(this-procedure) no-error.
+       if error-status:error
+       then
+          return error return-value + " " + error-status:get-message(1).
+       else 
+          run db-attr-write in this-procedure ( input ibs.th.gbl.gbl-var:g#db-num
+                                              , input {&attr-ver-code}
+                                              , input mfilever
+                                              ) no-error .
+   end.
    vimport:xmldom-clear().
 end.
 finally:

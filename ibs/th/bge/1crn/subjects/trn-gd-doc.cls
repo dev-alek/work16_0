@@ -75,6 +75,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   define buffer buf_goods for ub.goods .
   define buffer sep_auto-tank-attr  for ub.auto-tank-attr.
   define buffer buf_rvs-doc for ub.rvs-doc .
+  define buffer buf_contract-specif for ub.contract-specif .
   
   define property Msg as character no-undo
     get:
@@ -414,15 +415,22 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   end.
 
   method private void PriVneshLine ():
-    
+   define variable vat-pc as character no-undo .
     sw:start-element ("gds").
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
-      
+
       find first buf_gds no-lock where
             buf_gds.artic = buf_doc-line.artic 
         and buf_gds.prod-code = buf_doc-line.prod-code
         and buf_gds.prod-type = buf_doc-line.prod-type.
-      
+      if buf_trn-doc.contract-code <> 0 then do:
+        for first buf_contract-specif no-lock where buf_contract-specif.contract-num = buf_trn-doc.contract-code and
+        buf_contract-specif.artic = buf_doc-line.artic and
+        buf_contract-specif.prod-code = buf_doc-line.prod-code and
+        buf_contract-specif.prod-type = buf_doc-line.prod-type :
+          if buf_contract-specif.VAT-type = {&without-VAT} then vat-pc = "-1".
+        end.
+      end.
       sw:start-element ("gd").
         write-data-element ("line-num", string-mth (buf_doc-line.line-num)).
         write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
@@ -438,7 +446,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
             and buf_gds-dtl.prod-code = buf_gds-dtl.prod-code
             and buf_gds-dtl.prod-type = buf_gds-dtl.prod-type.
           write-data-element ("sum", string-mth (round (buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty, 2))).
-          write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
+          write-data-element ("nds-code", if vat-pc <> "" then vat-pc else string-mth ( round (buf_doc-line.VAT-pc , 0))).
           write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
           write-data-element ("sum-s", string-mth ( round (buf_doc-line.price-rubl * buf_doc-line.fact-qnty / (1 + (buf_doc-line.VAT-pc / 100)), 2))).
         end.
@@ -448,7 +456,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           sum_ = round (buf_doc-line.price-rubl * buf_doc-line.fact-qnty, 2).
           sum-nds = round ((buf_doc-line.price-rubl * buf_doc-line.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2).
           write-data-element ("sum", string-mth (sum_)).
-          write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
+          write-data-element ("nds-code", if vat-pc <> "" then vat-pc else string-mth ( round (buf_doc-line.VAT-pc , 0))).
           write-data-element ("sum-nds", string-mth (sum-nds)).
           write-data-element ("sum-s", string-mth (sum_ - sum-nds)).
         end.
@@ -583,6 +591,17 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         end.
         write-data-element ("dnsty-fact", string-mth (buf_doc-line.fact-density)).
         write-data-element ("sum", string-mth (round (buf_doc-line.price-cli * buf_doc-line.cli-qnty, 2))).
+        
+        find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = DocCode
+                                               and buf_doc-line-attr.gds-code = buf_gds.gds-code
+                                               and buf_doc-line-attr.attr-code = "propan-perc"
+                                               no-error .
+        if available buf_doc-line-attr
+        and buf_doc-line-attr.attr-value > ""
+        and decimal(buf_doc-line-attr.attr-value) >= 0
+        then do :
+          write-data-element ('C3H8', string-mth (decimal(buf_doc-line-attr.attr-value))) .
+        end .
       
       sw:end-element ("gd").
     end.
@@ -1256,6 +1275,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
 
   method private void TrdcAattrPri ():
     
+    define buffer bf_doc-line-attr for ub.doc-line-attr .
+    
     &scop attr-code trdcattr-dids
     {&create-record-date}
     &scop attr-code trdcattr-nsf
@@ -1300,7 +1321,24 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     &scop tag-code othermoves
     &scop attr-code trdcattr-othermoves
     {&create-record-cust-logical}
-  end .  
+  end . 
+  if v-is-lgas-trn
+  or v-is-lgas-corr-trn 
+  then do :
+    &scop tag-code cleared
+    &scop attr-code trdcattr-clear-ac
+    {&create-record-cust-logical}
+    
+    for first bf_doc-line-attr no-lock where bf_doc-line-attr.doc-code = DocCode
+                                         and bf_doc-line-attr.attr-code = "connect-hoses"
+    :
+      if bf_doc-line-attr.attr-value > ""
+      and bf_doc-line-attr.attr-value <> ?
+      then do :
+        write-data-element ("connect-hoses", if logical(bf_doc-line-attr.attr-value) then "1" else "0") .
+      end .
+    end .
+  end .
     
   end.
 
@@ -1463,7 +1501,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("qnty-ttn", string-mth (buf_parts.qnty)).
           write-data-element ("qnty-fact", string-mth (buf_parts.fact-qnty)).
           write-data-element ("sum", string-mth (round (buf_parts.price-rubl * buf_parts.fact-qnty, 2))).
-          write-data-element ("nds-code", string-mth ( round (buf_parts.VAT-pc , 0))).
+          write-data-element ("nds-code", if buf_parts.VAT-type = {&without-VAT} then "-1" else string-mth ( round (buf_parts.VAT-pc , 0))).
           write-data-element ("sum-nds", string-mth ( round ((buf_parts.price-rubl * buf_parts.fact-qnty * buf_parts.VAT-pc) / (100 + buf_parts.VAT-pc) , 2))).
           write-data-element ("sum-s", string-mth (round (buf_parts.price-rubl * buf_parts.fact-qnty / (1 + (buf_parts.VAT-pc / 100)), 2))).
         

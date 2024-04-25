@@ -44,6 +44,12 @@ class ibs.th.gbl.env.marking inherits objth:
     {utl\objreg.i Types Types  }
   end constructor.
 
+  METHOD OVERRIDE PUBLIC LOGICAL RefrashObject(  ):
+      if valid-object(Types) then
+        delete object Types.
+      {utl\objreg.i Types Types  }
+  END METHOD.
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:

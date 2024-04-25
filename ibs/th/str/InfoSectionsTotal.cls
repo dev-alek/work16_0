@@ -649,6 +649,10 @@ class ibs.th.str.InfoSectionsTotal:
     for each buf_doc-line-attr where buf_doc-line-attr.doc-code = TrnDocNum 
       and buf_doc-line-attr.gds-code = GdsCode 
       :
+       
+      if buf_doc-line-attr.attr-code = "propan-perc"
+      or buf_doc-line-attr.attr-code = "connect-hoses"
+      then next .
       
       delete buf_doc-line-attr.
       
@@ -1735,7 +1739,8 @@ class ibs.th.str.InfoSectionsTotal:
                 InfoSectionCurr:TankDensityPomi    = decimal(v-mm:Rcy) / 1000
                 InfoSectionCurr:TankVolPomi        = v-mm:Vcy * 1000
                 InfoSectionCurr:TankWeight     = v-mm:M
-                InfoSectionCurr:AccPomi = round (v-mm:DeltaOtn_M, 3)
+/*              InfoSectionCurr:AccPomi = round (v-mm:DeltaOtn_M, 3) ZI-2815*/
+                InfoSectionCurr:AccPomi = 0.65
               .
 /*              display                  */
 /*                f-tank-density-pomi    */

@@ -19,6 +19,7 @@ define {1} shared temp-table dc-dis-card-mask-attr no-undo like ub.dis-card-mask
 { str/def-PromoAction-list.i "{1} shared" }       
 define {1} shared var sendEMRC   as logical no-undo.
 define {1} shared var settingUpd as logical no-undo.
+define {1} shared var sendMarkType as logical no-undo.
 &endif
 
 

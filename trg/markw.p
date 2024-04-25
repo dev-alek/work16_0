@@ -125,6 +125,7 @@ if g#db-num <> 0 then
 do:
   { trg/trghistnws.i 
     &nws  = yes
+    &notSendDel = yes
   }
 end.
 

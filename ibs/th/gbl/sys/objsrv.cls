@@ -250,10 +250,10 @@ class ibs.th.gbl.sys.objsrv:
   end destructor.
   
   method public logical RefrashObject(iUpd as integer ):
+     upd = iUpd.
      for each tt-objth:
         cast (tt-objth.objhndl, objth):RefrashObject().
      end.
-     upd = iUpd.
   end method.
   
   method public void GetTableObjTh(output table for tt-objth):

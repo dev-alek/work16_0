@@ -28,7 +28,6 @@ define input parameter p-obj-type like ub.clients.obj-type no-undo.
 define input parameter p-obj-code like ub.clients.obj-code no-undo.
 
 
-
 define variable vss-revision    as character no-undo init "$Revision$":U .
 define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
@@ -68,11 +67,14 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help RECT-1 RECT-2 ~
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help RECT-1 RECT-2 gisAdress ~
+cdnTurnOn cdnAdress registrationKey adressPort login password dopParam ~
+waitTime maxTime timeFalStart banDate cdnTimeUpdate cdnRepeat cdnChange ~
+crashSituat UpdateRequest 
+&Scoped-Define DISPLAYED-OBJECTS gisAdress cdnTurnOn cdnAdress ~
 registrationKey adressPort login password dopParam waitTime maxTime ~
-timeFalStart crashSituat banDate 
-&Scoped-Define DISPLAYED-OBJECTS registrationKey adressPort login password ~
-dopParam waitTime maxTime timeFalStart crashSituat banDate 
+timeFalStart banDate cdnTimeUpdate cdnRepeat cdnChange crashSituat ~
+UpdateRequest 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -102,22 +104,32 @@ DEFINE BUTTON B-quit AUTO-END-KEY
 DEFINE VARIABLE adressPort AS CHARACTER FORMAT "X(256)":U 
      LABEL "Адрес и порт" 
      VIEW-AS FILL-IN 
-     SIZE 64 BY 1 NO-UNDO.
+     SIZE 67 BY 1 NO-UNDO.
 
 DEFINE VARIABLE banDate AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 5 
      LABEL "Опережение срабатывания запрета по сроку годности в минутах" 
      VIEW-AS FILL-IN 
-     SIZE 6.5 BY 1 NO-UNDO.
+     SIZE 6.6 BY 1 NO-UNDO.
+
+DEFINE VARIABLE cdnAdress AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Адрес cdn" 
+     VIEW-AS FILL-IN 
+     SIZE 67 BY 1 NO-UNDO.
+
+DEFINE VARIABLE cdnTimeUpdate AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 24 
+     LABEL "Период обновления списка CDN-площадок (часы)" 
+     VIEW-AS FILL-IN 
+     SIZE 6.6 BY 1 NO-UNDO.
 
 DEFINE VARIABLE dopParam AS CHARACTER FORMAT "X(256)":U 
      LABEL "Дополнительные параметры запроса" 
      VIEW-AS FILL-IN 
-     SIZE 47 BY 1 NO-UNDO.
+     SIZE 49.2 BY 1 NO-UNDO.
 
 DEFINE VARIABLE gisAdress AS CHARACTER FORMAT "X(256)":U 
      LABEL "Адрес ГИС МТ" 
      VIEW-AS FILL-IN 
-     SIZE 64 BY 1 NO-UNDO.
+     SIZE 67 BY 1 NO-UNDO.
 
 DEFINE VARIABLE login AS CHARACTER FORMAT "X(256)":U 
      LABEL "Логин" 
@@ -127,7 +139,7 @@ DEFINE VARIABLE login AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE maxTime AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 72 
      LABEL "Макс. допустимое время разрешения продажи при сбое онлайн проверки (часы)" 
      VIEW-AS FILL-IN 
-     SIZE 6.5 BY 1 NO-UNDO.
+     SIZE 6.6 BY 1 NO-UNDO.
 
 DEFINE VARIABLE password AS CHARACTER FORMAT "X(256)":U 
      LABEL "Пароль" 
@@ -137,30 +149,50 @@ DEFINE VARIABLE password AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE registrationKey AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ключ авторизации" 
      VIEW-AS FILL-IN 
-     SIZE 64 BY 1 NO-UNDO.
+     SIZE 67 BY 1 NO-UNDO.
 
 DEFINE VARIABLE timeFalStart AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 2 
      LABEL "Время с момента сбоя до начала уведомления персонала (часы)" 
      VIEW-AS FILL-IN 
-     SIZE 6.5 BY 1 NO-UNDO.
+     SIZE 6.6 BY 1 NO-UNDO.
 
 DEFINE VARIABLE waitTime AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 1.5 
      LABEL "Длительность ожидания ответа ГИС МТ (секунды)" 
      VIEW-AS FILL-IN 
-     SIZE 6.5 BY 1 NO-UNDO.
+     SIZE 6.6 BY 1 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 85 BY 15.75.
+     SIZE 92 BY 20.24.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 82.5 BY 3.25.
+     SIZE 90 BY 3.24.
+
+DEFINE VARIABLE cdnChange AS LOGICAL INITIAL no 
+     LABEL "Смена площадки" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 48 BY .81 NO-UNDO.
+
+DEFINE VARIABLE cdnRepeat AS LOGICAL INITIAL no 
+     LABEL "Повторный опрос площадки" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 48 BY .81 NO-UNDO.
+
+DEFINE VARIABLE cdnTurnOn AS LOGICAL INITIAL no 
+     LABEL "Работа с cdn-площадками" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 48 BY .81 NO-UNDO.
 
 DEFINE VARIABLE crashSituat AS LOGICAL INITIAL no 
      LABEL "Аварийная ситуация в ГИС МТ" 
      VIEW-AS TOGGLE-BOX
-     SIZE 48 BY .83 NO-UNDO.
+     SIZE 48 BY .81 NO-UNDO.
+
+DEFINE VARIABLE UpdateRequest AS LOGICAL INITIAL no 
+     LABEL "Обновление параметров при запросе КМ" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 48 BY .81 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -168,23 +200,29 @@ DEFINE VARIABLE crashSituat AS LOGICAL INITIAL no
 DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      B-quit AT ROW 1 COL 11
-     B-Help AT ROW 1 COL 74.63
-     gisAdress AT ROW 3.13 COL 18.5 COLON-ALIGNED WIDGET-ID 118
-     registrationKey AT ROW 4.25 COL 18.5 COLON-ALIGNED WIDGET-ID 142
-     adressPort AT ROW 6.63 COL 18.5 COLON-ALIGNED WIDGET-ID 144
-     login AT ROW 7.79 COL 18.5 COLON-ALIGNED WIDGET-ID 146
-     password AT ROW 7.79 COL 83.5 RIGHT-ALIGNED WIDGET-ID 148 PASSWORD-FIELD 
-     dopParam AT ROW 9.88 COL 3.5 WIDGET-ID 154
-     waitTime AT ROW 11.25 COL 83.5 RIGHT-ALIGNED WIDGET-ID 156
-     maxTime AT ROW 12.54 COL 83.5 RIGHT-ALIGNED WIDGET-ID 168
-     timeFalStart AT ROW 13.88 COL 83.5 RIGHT-ALIGNED WIDGET-ID 170
-     crashSituat AT ROW 15.25 COL 17.5 WIDGET-ID 174
-     banDate AT ROW 16.46 COL 83.5 RIGHT-ALIGNED WIDGET-ID 172
+     B-Help AT ROW 1 COL 74.6
+     gisAdress AT ROW 3.14 COL 22 COLON-ALIGNED WIDGET-ID 118
+     cdnTurnOn AT ROW 4.33 COL 24 WIDGET-ID 174
+     cdnAdress AT ROW 5.29 COL 22 COLON-ALIGNED WIDGET-ID 118
+     registrationKey AT ROW 6.48 COL 22 COLON-ALIGNED WIDGET-ID 142
+     adressPort AT ROW 8.52 COL 22 COLON-ALIGNED WIDGET-ID 144
+     login AT ROW 9.71 COL 22 COLON-ALIGNED WIDGET-ID 146
+     password AT ROW 9.71 COL 90 RIGHT-ALIGNED WIDGET-ID 148 PASSWORD-FIELD 
+     dopParam AT ROW 11.71 COL 3.2 WIDGET-ID 154
+     waitTime AT ROW 13.14 COL 91.6 RIGHT-ALIGNED WIDGET-ID 156
+     maxTime AT ROW 14.33 COL 91.6 RIGHT-ALIGNED WIDGET-ID 168
+     timeFalStart AT ROW 15.52 COL 91.6 RIGHT-ALIGNED WIDGET-ID 170
+     banDate AT ROW 16.71 COL 91.6 RIGHT-ALIGNED WIDGET-ID 172
+     cdnTimeUpdate AT ROW 17.91 COL 84 COLON-ALIGNED WIDGET-ID 168
+     cdnRepeat AT ROW 19.1 COL 24 WIDGET-ID 174
+     cdnChange AT ROW 20.05 COL 24 WIDGET-ID 174
+     crashSituat AT ROW 21 COL 24 WIDGET-ID 174
+     UpdateRequest AT ROW 21.95 COL 24 WIDGET-ID 176
      "Проски-сервер" VIEW-AS TEXT
-          SIZE 14 BY .67 AT ROW 5.75 COL 39.5 WIDGET-ID 152
-     RECT-1 AT ROW 2.75 COL 2 WIDGET-ID 116
-     RECT-2 AT ROW 6.25 COL 3.5 WIDGET-ID 150
-     SPACE(1.12) SKIP(9.20)
+          SIZE 17 BY .67 AT ROW 7.67 COL 41 WIDGET-ID 152
+     RECT-1 AT ROW 2.91 COL 2 WIDGET-ID 116
+     RECT-2 AT ROW 8.14 COL 3 WIDGET-ID 150
+     SPACE(1.39) SKIP(11.94)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для подключения к ГИС МТ и проверки КМ"
@@ -215,11 +253,6 @@ ASSIGN
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN dopParam IN FRAME Dialog-Frame
    ALIGN-L                                                              */
-/* SETTINGS FOR FILL-IN gisAdress IN FRAME Dialog-Frame
-   NO-DISPLAY NO-ENABLE                                                 */
-ASSIGN 
-       gisAdress:HIDDEN IN FRAME Dialog-Frame           = TRUE.
-
 /* SETTINGS FOR FILL-IN maxTime IN FRAME Dialog-Frame
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN password IN FRAME Dialog-Frame
@@ -243,6 +276,21 @@ ON GO OF FRAME Dialog-Frame /* Настройки для подключения к ГИС МТ и проверки КМ 
 DO:
   run save-proc in this-procedure no-error.
   if error-status :error then return no-apply.
+END.
+
+&Scoped-define SELF-NAME B-Help
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cdnTurnOn Dialog-Frame
+ON VALUE-CHANGED OF cdnTurnOn IN FRAME {&FRAME-NAME}
+DO: /* Call Help Function (or a simple message). */
+    ASSIGN cdnTurnOn.
+    if cdnTurnOn then do:
+       disable gisAdress with frame {&frame-name} .
+       enable cdnAdress with frame {&frame-name} .
+   end.    
+   else do:
+       enable gisAdress with frame {&frame-name} .
+       disable cdnAdress with frame {&frame-name} .
+   end.       
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -320,11 +368,14 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY registrationKey adressPort login password dopParam waitTime maxTime 
-          timeFalStart crashSituat banDate gisAdress
+  DISPLAY gisAdress cdnTurnOn cdnAdress registrationKey adressPort login 
+          password dopParam waitTime maxTime timeFalStart banDate cdnTimeUpdate 
+          cdnRepeat cdnChange crashSituat UpdateRequest 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit B-Help RECT-1 RECT-2 registrationKey adressPort login 
-         password dopParam waitTime maxTime timeFalStart crashSituat banDate gisAdress
+  ENABLE B-exit B-quit B-Help RECT-1 RECT-2 gisAdress cdnTurnOn cdnAdress 
+         registrationKey adressPort login password dopParam waitTime maxTime 
+         timeFalStart banDate cdnTimeUpdate cdnRepeat cdnChange crashSituat 
+         UpdateRequest 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -415,9 +466,41 @@ FOR EACH temp-thbj-attr
     IF temp-thbj-attr.prop-code = {&attr-gisMT_banDate} THEN DO:
        banDate = temp-thbj-attr.property-value-integer.
        display banDate with frame {&frame-name} .
+    END. 
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnTurnOn} THEN DO:
+       cdnTurnOn = temp-thbj-attr.property-value-logical.
+       display cdnTurnOn with frame {&frame-name} .
     END.    
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnAdress} THEN DO:
+       cdnAdress = temp-thbj-attr.property-value-character.
+       display cdnAdress with frame {&frame-name} .
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnRepeat} THEN DO:
+       cdnRepeat = temp-thbj-attr.property-value-logical.
+       display cdnRepeat with frame {&frame-name} .
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnChange} THEN DO:
+       cdnChange = temp-thbj-attr.property-value-logical.
+       display cdnChange with frame {&frame-name} .
+    END. 
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnTimeUpdate} THEN DO:
+       cdnTimeUpdate = temp-thbj-attr.property-value-integer.
+       display cdnTimeUpdate with frame {&frame-name} .
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_UpdateRequest} THEN DO:
+       UpdateRequest = temp-thbj-attr.property-value-logical.
+       display UpdateRequest with frame {&frame-name} .
+    END.
 END.
 
+   if cdnTurnOn then do:
+       disable gisAdress with frame {&frame-name} .
+       enable cdnAdress with frame {&frame-name} .
+   end.    
+   else do:
+       enable gisAdress with frame {&frame-name} .
+       disable cdnAdress with frame {&frame-name} .
+   end.    
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -471,6 +554,12 @@ ASSIGN FRAME {&FRAME-NAME}
     waitTime
     crashSituat
     banDate
+    cdnTurnOn
+    cdnAdress
+    cdnRepeat
+    cdnChange
+    cdnTimeUpdate
+    UpdateRequest
     .
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_adressPort} .
     temp-thbj-attr.property-value-character = adressPort.
@@ -504,6 +593,24 @@ ASSIGN FRAME {&FRAME-NAME}
 
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_banDate} .
     temp-thbj-attr.property-value-integer = banDate.
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnTurnOn} .
+    temp-thbj-attr.property-value-logical = cdnTurnOn.
+           
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnAdress} .
+    temp-thbj-attr.property-value-character = cdnAdress.
+       
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnRepeat} .
+    temp-thbj-attr.property-value-logical = cdnRepeat.
+       
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnChange} .
+    temp-thbj-attr.property-value-logical = cdnChange.
+        
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnTimeUpdate} .
+    temp-thbj-attr.property-value-integer = cdnTimeUpdate.
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_UpdateRequest} .
+    temp-thbj-attr.property-value-logical = UpdateRequest.
 
     do transaction:
         RUN thbjattr_set-section IN THIS-PROCEDURE (

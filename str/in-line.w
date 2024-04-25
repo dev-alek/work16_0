@@ -44,6 +44,7 @@ define variable vss-description as character no-undo initial "Редактирование стр
 define buffer t-doc     for ub.trn-doc.
 define buffer buf_goods for ub.goods .
 define buffer buf_contract-specif for ub.contract-specif .
+define buffer bf_place-attr for ub.place-attr .
   
 /* Временная таблица для организации интерфейса */
 define temp-table tt-fr-doc-line no-undo like ub.doc-line
@@ -88,6 +89,7 @@ define temp-table tt-fr-doc-line no-undo like ub.doc-line
   field alc-certif-path         as   character
   field alc-imp-type            as   character
   field alc-imp-code            as   integer
+  field propan-perc             as   decimal format ">>9.9<<"
 .
 
 define new shared temp-table tt-doc-pl no-undo
@@ -427,6 +429,15 @@ define variable prt-fact as decimal format "->>,>>>,>>9.999":u initial 0
      view-as fill-in
      size 16 by 1 no-undo.
 
+define variable cb-connect-hoses as character init ""
+   LABEL "Подключение рукавов при приеме СУГ" 
+   VIEW-AS COMBO-BOX INNER-LINES 3
+   LIST-ITEM-PAIRS "","",
+   "Подключение рукавов было","yes",
+   "Подключение рукавов не было","no"
+   DROP-DOWN-LIST
+   SIZE 31.5 BY 1 NO-UNDO.
+
 define variable abr-rb as character format "x(3)":u no-undo .
 define variable abr-rb2 as character format "x(3)":u no-undo .
 
@@ -482,6 +493,8 @@ define frame d-in-line
   tt-fr-doc-line.other-base             at row 17   col 50    colon-aligned label "Пр.расх."                                    fgcolor 4
   tt-fr-doc-line.transport-rubl         at row 16   col 80    colon-aligned label "Тр.расх."                                    fgcolor 4
   tt-fr-doc-line.other-rubl             at row 17   col 80    colon-aligned label "Пр.расх."                                    fgcolor 4
+  tt-fr-doc-line.propan-perc            at row 18.5 col 3     label "Массовая доля пропана в смеси, %"  view-as fill-in size 8    by 1
+  cb-connect-hoses                      at row 19.5 col 3
   prt-doc                               at row 9    col 10.5  colon-aligned
   prt-fact                              at row 10   col 10.5  colon-aligned
   "Сумма НДС(вал.постав.)"              at row 7    col 60                                             view-as text                     bgcolor 3 fgcolor 15
@@ -3344,6 +3357,56 @@ do:
     end.
   
   end.
+  
+  if v-lgas-gds
+  then do :
+    define buffer buf_doc-line-attr for ub.doc-line-attr .
+    find first buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = t-doc.doc-code
+                                                  and buf_doc-line-attr.gds-code = buf_goods.gds-code
+                                                  and buf_doc-line-attr.attr-code = "propan-perc"
+                                                  no-error .
+    if not available buf_doc-line-attr
+    then do :
+      create buf_doc-line-attr .
+      assign
+        buf_doc-line-attr.doc-code = t-doc.doc-code    
+        buf_doc-line-attr.gds-code = buf_goods.gds-code
+        buf_doc-line-attr.attr-code = "propan-perc"    
+      .
+    end .
+    assign
+      buf_doc-line-attr.attr-value = string(tt-fr-doc-line.propan-perc)
+    .
+    
+    for first tt-doc-pl :
+      find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
+                                         and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
+                                         and bf_place-attr.pl-code   = tt-doc-pl.pl-code
+                                         and bf_place-attr.attr-code = "place-gate-valve"
+                                         no-error .
+      if available bf_place-attr
+      and logical(bf_place-attr.attr-value)
+      then do :
+        find first buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = t-doc.doc-code
+                                                      and buf_doc-line-attr.gds-code = buf_goods.gds-code
+                                                      and buf_doc-line-attr.attr-code = "connect-hoses"
+                                                      no-error .
+        if not available buf_doc-line-attr
+        then do :
+          create buf_doc-line-attr .
+          assign
+            buf_doc-line-attr.doc-code = t-doc.doc-code    
+            buf_doc-line-attr.gds-code = buf_goods.gds-code
+            buf_doc-line-attr.attr-code = "connect-hoses"
+          .
+        end .
+        assign
+          buf_doc-line-attr.attr-value = cb-connect-hoses
+          buf_doc-line-attr.attr-value = ? when cb-connect-hoses = ""
+        .
+      end .
+    end .
+  end .
 
 end.
 
@@ -4043,6 +4106,29 @@ else do: /* не добавление (изменение и просмотр) */
       tt-fr-doc-line.fact-density = tt-fr-doc-line.doc-density
     .
   end.
+  
+  if v-lgas-gds
+  then do :
+    find first bf_doc-line-attr where bf_doc-line-attr.doc-code  = tt-fr-doc-line.doc-code and
+                                      bf_doc-line-attr.gds-code  = buf_goods.gds-code and
+                                      bf_doc-line-attr.attr-code = "propan-perc"
+                                      no-error.
+    if available bf_doc-line-attr
+    then do :
+      tt-fr-doc-line.propan-perc = decimal(bf_doc-line-attr.attr-value) no-error .
+    end .
+    find first bf_doc-line-attr where bf_doc-line-attr.doc-code  = tt-fr-doc-line.doc-code and
+                                      bf_doc-line-attr.gds-code  = buf_goods.gds-code and
+                                      bf_doc-line-attr.attr-code = "connect-hoses"
+                                      no-error.
+    if available bf_doc-line-attr
+    then do :
+      if bf_doc-line-attr.attr-value = ?
+      then cb-connect-hoses = "" .
+      else cb-connect-hoses = bf_doc-line-attr.attr-value .
+      display cb-connect-hoses with frame {&frame-name}.
+    end .
+  end .
 
   if parinplnsum = yes then do:
     find first bf_doc-line-attr where bf_doc-line-attr.doc-code  = tt-fr-doc-line.doc-code and
@@ -4470,7 +4556,31 @@ if varrvs-place = yes then do:
         b-docsec
         b-addinf
         in frame {&frame-name}.
+      display tt-fr-doc-line.propan-perc with frame {&frame-name}.
+      if parline-mode <> {&lookup}
+      and not t-doc.flag_
+      then do:
+        enable tt-fr-doc-line.propan-perc with frame {&frame-name}.
+        for first tt-doc-pl :
+          find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
+                                             and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
+                                             and bf_place-attr.pl-code   = tt-doc-pl.pl-code
+                                             and bf_place-attr.attr-code = "place-gate-valve"
+                                             no-error .
+          if available bf_place-attr
+          and logical(bf_place-attr.attr-value)
+          then do :
+            enable cb-connect-hoses with frame {&FRAME-NAME} .
+          end .
+          else do :
+            disable cb-connect-hoses with frame {&FRAME-NAME} .
+          end .
+        end .
+      end .
     end.
+    else do :
+      hide tt-fr-doc-line.propan-perc cb-connect-hoses in frame {&frame-name}.
+    end .
       
     if parline-mode <> {&add-def} then infoSectionsTotal:GetDBAllAttr().
 
@@ -5171,7 +5281,39 @@ define buffer bf-units-cli for ub.units.
       message "Не указана цена в {&abbr_rublyah}." view-as alert-box error.
       return error.
     end.
-  end.                                            
+  end.    
+  
+  if v-lgas-gds
+  then do :
+    assign tt-fr-doc-line.propan-perc cb-connect-hoses .
+    
+    if tt-fr-doc-line.propan-perc <= 0
+    or tt-fr-doc-line.propan-perc >= 100
+    or tt-fr-doc-line.propan-perc = ?
+    then do :
+      message "Укажите массовую долю пропана в смеси, % из паспорта качества. Данная информация является обязательной!"
+      view-as alert-box .
+      return error .
+    end .
+    
+    for first tt-doc-pl :
+      find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
+                                         and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
+                                         and bf_place-attr.pl-code   = tt-doc-pl.pl-code
+                                         and bf_place-attr.attr-code = "place-gate-valve"
+                                         no-error .
+      if available bf_place-attr
+      and logical(bf_place-attr.attr-value)
+      then do :
+        if cb-connect-hoses = ""
+        then do :
+          message "Внимание! Укажите Подключение рукавов при приеме СУГ!"
+          view-as alert-box .
+          return error .
+        end .
+      end .
+    end .
+  end .                                        
   /*
   if t-doc.status_ <> {&inquiry} then do:   
     if tt-fr-doc-line.price-cli < 0  then do:
@@ -6798,6 +6940,25 @@ procedure edit-doc-pl :
     if error-status :error then do:
       return error  .
     end.
+    
+    if v-lgas-gds
+    then do :
+      for first tt-doc-pl :
+        find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
+                                           and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
+                                           and bf_place-attr.pl-code   = tt-doc-pl.pl-code
+                                           and bf_place-attr.attr-code = "place-gate-valve"
+                                           no-error .
+        if available bf_place-attr
+        and logical(bf_place-attr.attr-value)
+        then do :
+          enable cb-connect-hoses with frame {&FRAME-NAME} .
+        end .
+        else do :
+          disable cb-connect-hoses with frame {&FRAME-NAME} .
+        end .
+      end .
+    end .
 
   end. /* if line-mode <> {&lookup} */
 end procedure. /* edit-doc-pl */

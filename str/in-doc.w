@@ -4351,6 +4351,8 @@ end.
 {&create-record-fuel}
 &scop attr-code trdcattr-date-end
 {&create-record-fuel}
+&scop attr-code trdcattr-clear-ac
+{&create-record-fuel}
 
 end.
 end procedure.
