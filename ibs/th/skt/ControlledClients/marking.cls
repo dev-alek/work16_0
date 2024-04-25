@@ -90,7 +90,11 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
      field mrp             as int
      field expireDate      as datetime-tz
      .
-   
+  /* таблица имен временных файлов, которые нужно почистить */
+  define temp-table tt-file-name no-undo
+     field tmpFileName as char
+     index tmpFileName tmpFileName.
+     
   define dataset gismt-mark-body  xml-node-name "bodys" for ttmark-body.
   define dataset gismt-mark-codes xml-node-name "body"  for ttmark-check.
 
@@ -936,14 +940,16 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     end.   
     else dbgPrint("marking.log", substitute("Не найден магазин с кодом &1", p-obj-code)).
     dbgPrint("marking.log", substitute(" ИНН &1 ", vInn)).*/
-                                  
+    dbgPrint("marking.log", substitute("Заново считывать настройки подключения к ГИС МТ &1 ", gismt-UpdateRequest)).                              
     /* определяем настройки подключения к ГИС МТ */
     if gismt-UpdateRequest then do:
         find first buf_sys-ctrl no-lock no-error.
         if available buf_sys-ctrl and buf_sys-ctrl.db-num <> 0 
-        then 
+        then do:
+            dbgPrint("marking.log", substitute("Cчитываем настройки подключения к ГИС МТ для &1 &2", "{&db}",buf_sys-ctrl.db-num)).
             vRetProp = get-gismt-prop ({&db},
                                        buf_sys-ctrl.db-num) no-error.
+        end.                               
     end.                           
     dbgPrint("marking.log", "gismt-info").
     
@@ -969,7 +975,11 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     
     /* формируем файл запроса к ГИС МТ с маркой и ИНН */
     run gbl/_tmpfile.p ( "GisMT_data", ".txt", output vDataMark ) .
+    create tt-file-name.
+    assign tt-file-name.tmpFileName = vDataMark.
+    
     dbgPrint("marking.log", substitute("vDataMark &1 ", vDataMark)).
+    
     OUTPUT STREAM out_data TO value(vDataMark).
     /*PUT STREAM out_data UNFORMATTED  
       '~{"codes":["' vMark '"],"inn":"' vInn  '"~}' .
@@ -980,30 +990,25 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     OUTPUT STREAM out_data CLOSE.
      
     dbgPrint("marking.log", substitute(" Работа с CDN-площадками &1 ", gismt-cdnTurnOn)).
+    dbgPrint("marking.log", substitute(" Повторный опрос CDN-площадки &1 ", gismt-cdnRepeat)).
+    dbgPrint("marking.log", substitute(" Смена CDN-площадки &1 ", gismt-cdnChange)).
                     
     if gismt-AdressPort <> "" and gismt-ProxyLogin <> "" and gismt-ProxyPswd <> "" 
     then CmdParamProxy = substitute ('-x &1 -U &2:&3',gismt-AdressPort,gismt-ProxyLogin,gismt-ProxyPswd).
     else if gismt-AdressPort <> "" then CmdParamProxy = substitute ('-x &1',gismt-AdressPort).
     else CmdParamProxy = "".      
-    
-    run gbl/_tmpfile.p ( "ChkGisMTRes", ".txt", output vFileResult ) .
-    run gbl/_tmpfile.p ( "ChkGisMTResCnv", ".txt", output vFileResultCnv ) .
-    run gbl/_tmpfile.p ( "ChkGisMTResErr", ".txt", output vFileResultErr ) .
-    run gbl/_tmpfile.p ( "ChkGisMT", ".bat", output vFileBat ) .     
-    
-    dbgPrint("marking.log", substitute("vFileResult &1 ", vFileResult)).
-    dbgPrint("marking.log", substitute("vFileResultErr &1 ", vFileResultErr)).
-    dbgPrint("marking.log", substitute("vFileBat &1 ", vFileBat)).
         
     if gismt-cdnTurnOn and gismt-cdnRepeat
-    then vNumMax = 2.
+    then vNumMax = 2.    
     else vNumMax = 1.
+    
+    dbgPrint("marking.log", substitute(" Кол-во запросов по одной площадке &1 ", vNumMax)).
     
     vTimeStart = now.
     
     block_chgcdn:
     do  while true:
-       if gismt-cdnTurnOn then do:
+       if gismt-cdnTurnOn then do:           
            vGisAdrCDN = GetCDNAdress().
            if vGisAdrCDN = "" then do:
                /* фиксируем, что больше площадок нет */
@@ -1016,12 +1021,31 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        
        block_repeat:
        do vNumRep = 1 to vNumMax:
+           if vNumRep > 1 then do:
+               dbgPrint("marking.log", substitute("Повторный запрос на площадку &1 ", vGisAdress)).
+           end.
+               
+           run gbl/_tmpfile.p ( "ChkGisMTRes", ".txt", output vFileResult ) .
+           create tt-file-name.
+           assign tt-file-name.tmpFileName = vFileResult.           
+           run gbl/_tmpfile.p ( "ChkGisMTResErr", ".txt", output vFileResultErr ) .
+           create tt-file-name.
+           assign tt-file-name.tmpFileName = vFileResultErr.
+           run gbl/_tmpfile.p ( "ChkGisMT", ".bat", output vFileBat ) .     
+           create tt-file-name.
+           assign tt-file-name.tmpFileName = vFileBat.
+            
+           dbgPrint("marking.log", substitute("vFileResult &1 ", vFileResult)).           
+           dbgPrint("marking.log", substitute("vFileResultErr &1 ", vFileResultErr)).
+           dbgPrint("marking.log", substitute("vFileBat &1 ", vFileBat)).
+    
            vRetVal = RunCurlGisMT(vGisAdress,     
                                   vDataMark,
                                   CmdParamProxy,
                                   vFileResult,
                                   vFileResultErr,
-                                  vFileBat).           
+                                  vFileBat). 
+                                            
            vTimeNow = now.             
                      
            OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
@@ -1047,8 +1071,12 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                       "Отсутствует ответ ГИС МТ " chr(9).
                    OUTPUT STREAM out_data CLOSE.
                end .
-               else 
-               os-append value(vfileresult) value(vFileLog) . /* добавляем в лог ответ Гис МТ */           
+               else do:
+                  dbgPrint("marking.log", substitute("Добавляем в лог ответ из файла &1 ", vFileResult)). 
+                  os-append value(vfileresult) value(vFileLog) . /* добавляем в лог ответ Гис МТ */
+                  if OS-ERROR <> 0 then
+                  dbgPrint("marking.log", substitute("Возникла ошибка при добавлении ответа в лог: &1 ", OS-ERROR)).
+               end.              
            end.                     
            
            dbgPrint("marking.log", substitute("Ответ по запросу vRetVal &1", vRetVal)).                      
@@ -1098,58 +1126,35 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
               vRetCdn = SetCDNAdressErr(vGisAdrCDN).  
            end.     
            
-           /* проверяем, осталось ли время для повторного запроса */                   
-           if vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
-           then do:
-              dbgPrint("marking.log", substitute("Время для повторного запроса не осталось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)).
-              if vRetVal = -1 and
-                 gismt-cdnTurnOn
-              then 
-                 vRetCdn = SetCDNAdressErr(vGisAdrCDN).
-              leave block_chgcdn.
-           end.       
-           
+           /* проверяем, осталось ли время для повторного запроса 
+           ** или смены площадки */  
+           if vNumRep <> vNumMax and 
+              gismt-cdnTurnOn and                
+              gismt-cdnRepeat
+           then do:             
+               /* если второй раз площадку не опрашиваем, то помечаем ее плохой */    
+               if vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
+               then do:
+                  dbgPrint("marking.log", substitute("Время для повторного запроса не осталось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)).
+                  vRetCdn = SetCDNAdressErr(vGisAdrCDN).
+                  leave block_chgcdn.
+               end.
+           end.                          
        end.  
        
-       /* не меняем площадку, если выключена настройка смены площадки */
-       if not gismt-cdnTurnOn then leave block_chgcdn.  
-         
-       /* проверяем, осталось ли время */
-       vTimeNow = now.
-       if vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
+       /* меняем площадку, только если включена настройка  работы по площадкам и смены площадки */
+       if gismt-cdnTurnOn and gismt-cdnChange 
        then do:
-          dbgPrint("marking.log", substitute("Время подбора площадки закончилось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)). 
-          leave block_chgcdn.
-       end.                      
+           /* проверяем, осталось ли время для смены площадки */
+           vTimeNow = now.
+           if vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
+           then do:
+              dbgPrint("marking.log", substitute("Время подбора площадки закончилось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)). 
+              leave block_chgcdn.
+           end.
+       end.
+       else leave block_chgcdn.                      
     end.                                              
-                           
-    if searchFile(vfileresult) = ?
-    then do :
-       dbgPrint("marking.log", "Запрос не выполнен! Не могу найти файл ").       
-       return 2.
-    end .
-    file-info:file-name = searchFile(vfileresult) .
-    if file-info:file-size = 0
-    then do :
-       dbgPrint("marking.log", "Запрос не выполнен! Файл-ответ пустой (размер 0 байт). ").          
-       return 2.
-    end.
-    
-    copy-lob from file vFileResult to vlongJson .
-    copy-lob from file vFileresultErr to vlongJsonError .        
-           
-    /* анализируем, есть ли ошибки в ответе */
-    if index(vlongJsonError,"curl:") > 0 or
-       vlongJson begins "<html>" 
-    then do:
-       dbgPrint("marking.log", "Ошибка ответа от сервиса ").
-       /* формируем лог файл */
-       OUTPUT STREAM out_data TO value(vFileLog) APPEND.
-       PUT STREAM out_data UNFORMATTED  
-         chr(9) "Отсутствует ответ ГИС МТ ".
-       OUTPUT STREAM out_data CLOSE.
-       return 2.
-    end.     
     
     if vRetVal <> 0 and 
        vRetVal <> 203 and 
@@ -1166,7 +1171,35 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     then do:
         dbgPrint("marking.log", substitute("Получена ошибка с кодом &1 ", vRetVal)).          
        return vRetVal.
-    end.             
+    end.  
+                           
+    if searchFile(vfileresult) = ?
+    then do :
+       dbgPrint("marking.log", "Запрос не выполнен! Не могу найти файл ").       
+       return 2.
+    end .
+    file-info:file-name = searchFile(vfileresult) .
+    if file-info:file-size = 0
+    then do :
+       dbgPrint("marking.log", "Запрос не выполнен! Файл-ответ пустой (размер 0 байт). ").          
+       return 2.
+    end.
+    
+    copy-lob from file vFileResult to vlongJson .
+    copy-lob from file vFileresultErr to vlongJsonError .        
+         
+    /* анализируем, есть ли ошибки в ответе */
+    if index(vlongJsonError,"curl:") > 0 or
+       vlongJson begins "<html>" 
+    then do:
+       dbgPrint("marking.log", "Ошибка ответа от сервиса ").
+       /* формируем лог файл */
+       OUTPUT STREAM out_data TO value(vFileLog) APPEND.
+       PUT STREAM out_data UNFORMATTED  
+         chr(9) "Отсутствует ответ ГИС МТ ".
+       OUTPUT STREAM out_data CLOSE.
+       return 2.
+    end.                        
    
     /* заменяем спец.символы, которые не дадут сконвертировать в xml */
     assign
@@ -1206,6 +1239,10 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        vlongJson = replace(vlongJson, '"20":', '"n20":')
        vlongJson = replace(vlongJson, '"21":', '"n21":')
        .
+    run gbl/_tmpfile.p ( "ChkGisMTResCnv", ".txt", output vFileResultCnv ) .
+    create tt-file-name.
+    assign tt-file-name.tmpFileName = vFileResultCnv.
+    dbgPrint("marking.log", substitute("vFileResultCnv &1 ", vFileResultCnv)).
     
     copy-lob from vlongJson to file vFileResultCnv no-error.
     
@@ -1219,7 +1256,9 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        return 2.
     end.   
     
-    run gbl/_tmpfile.p ( "ChkGisMTResXml", ".xml", output vFileResultXml ) . 
+    run gbl/_tmpfile.p ( "ChkGisMTResXml", ".xml", output vFileResultXml ) .
+    create tt-file-name.
+    assign tt-file-name.tmpFileName = vFileResultXml. 
     dbgPrint("marking.log", substitute("vFileResultXml &1 ", vFileResultXml)).
             
     cmd = substitute ('&1 -file=&2 >&3',
@@ -1263,17 +1302,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
          chr(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
        return 2.
-    end.
-    
-    if not session:debug-alert
-    then do:
-       os-delete silent value(vDataMark) no-error.
-       os-delete silent value(vFileBat) no-error.
-       os-delete silent value(vFileResult) no-error.
-       os-delete silent value(vFileResultCnv) no-error.
-       os-delete silent value(vFileResultErr) no-error.
-       os-delete silent value(vFileResultXml) no-error.
-    end.   
+    end.         
        
     return 0.
     
@@ -1397,6 +1426,9 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     /* вызываем проверку по марке */
     vGetGisMt = GetGisMTCheck(p-obj-type,p-obj-code,mark).
     
+    /* Чистим временные файлы */
+    DelTmpFile().
+    
     /* установлен признак аварии в настройках */
     if vGetGisMt = 1 then do:
        mCheckSts = 2.
@@ -1439,7 +1471,9 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
 
     dbgPrint("marking.log", "ttmark-body").
      
-    for first ttmark-body no-lock:
+    find first ttmark-body no-lock no-error.
+    if avail ttmark-body 
+    then do:
         assign
            mReqId        = ttmark-body.reqid
            mReqTimeStamp = string(ttmark-body.reqtimestamp)
@@ -1454,6 +1488,16 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
             return vErrSts.  
         end.                       
     end.
+    else do:
+        /* Сюда можем попасть, если вылетели из проверки GetGisMTCheck по непредвиденной ошибке
+        ** например - ошибка с файлом на экран */
+        dbgPrint("marking.log", "Произошло аварийное завершение метода проверки марки в ГИС МТ - нет шапки ответа.").
+        assign 
+           mCheckSts = 0
+           vErrSts = "Онлайн-проверка завершилась с ошибкой. "
+           .
+        return vErrSts.
+    end.    
     
     vMRC = getMRCByDM(mark) * 100 no-error.
     if vMRC = ? then vMRC = 0.
@@ -1461,8 +1505,9 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     
     dbgPrint("marking.log", "ttmark-check").
      
-    for first ttmark-check no-lock:
-
+    find first ttmark-check no-lock no-error.
+    if avail ttmark-check 
+    then do:
       if ttmark-check.errorCode = 0 or
          ttmark-check.errorCode = 10 
          then . 
@@ -1535,7 +1580,16 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                  mCheckSts = 0.
       end.     
     end.
-    
+    else do:
+        /* Сюда можем попасть, если вылетели из проверки GetGisMTCheck по непредвиденной ошибке
+        ** по непонятной причине */
+        dbgPrint("marking.log", "Произошло аварийное завершение метода проверки марки в ГИС МТ - нет тела ответа.").
+        assign 
+           mCheckSts = 0
+           vErrSts = "Онлайн-проверка завершилась с ошибкой. "
+           .
+        return vErrSts.
+    end.    
     dbgPrint("marking.log", substitute("vErrSts &1 mCheckSts &2", vErrSts, mCheckSts)).
     
     return vErrSts.
@@ -1641,8 +1695,10 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                     vAddr = buf_code.code 
                     vTimeResp = int(buf_code.codeval) no-error.               
           end.    
-      end.    
-      dbgPrint("marking.log", substitute("Выбрали площадку &1 время отклика &2 ",vAddr,vTimeResp)).
+      end.
+      if vAddr <> "" then    
+         dbgPrint("marking.log", substitute("Выбрали площадку &1 время отклика &2 ",vAddr,vTimeResp)).
+      else dbgPrint("marking.log", "Не удалось подобрать площадку.").    
       return vAddr.
   end method.    
   
@@ -1701,7 +1757,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
           end.   
       end.      
       
-      if vAllBlock and
+      if vAllBlock or
          (vTimeUpd = ? or          
          (vTimeUpd <> ? and
           datetime-tz(vTimeUpd) < vTimeNow and
@@ -1713,7 +1769,11 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
               and buf_code.code = "CDN_Upd"              
            no-lock no-error.
          if not avail buf_code 
-         then vNeedUpd = yes. 
+         then do:
+            dbgPrint("marking.log", substitute("Обновляем список площадок, все заблокированы &1 время посл обновления &2 Частота обновления (ч) &3 ",
+                                              vAllBlock, vTimeUpd, gismt-cdnTimeUpd )). 
+            vNeedUpd = yes.
+         end.    
          else dbgPrint("marking.log", substitute("Площадки не обновляем, идет обновление &1 ",  buf_code.codeval)).
       end.
       else dbgPrint("marking.log", substitute("Площадки не обновляем, все заблокированы &1 время посл обновления &2 Частота обновления (ч) &3 ",
@@ -1821,6 +1881,17 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
   
     return vRetVal.
     
+  end method.    
+  
+  method private void DelTmpFile():
+      for each tt-file-name:
+          if not session:debug-alert
+          then do:
+             if searchFile(tt-file-name.tmpFileName) <> ? then
+             os-delete silent value(tt-file-name.tmpFileName) no-error.
+          end.
+          delete tt-file-name.           
+      end. 
   end method.    
   
 	/*------------------------------------------------------------------------------

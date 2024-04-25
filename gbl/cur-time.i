@@ -375,6 +375,21 @@ function cur-time-datetime returns datetime
 
 end.
 
+{&CommentStartNoClass}
+method private character cur-time-string-msec ()
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function cur-time-string-msec returns character
+{utl\comment.i} */
+:
+  /* возвращает текущую дату и время с точностью до милисекунды */  
+  define variable v-date as datetime  no-undo .  
+
+  v-date = now.
+  
+  return string(v-date) .
+
+end.
+
 &endif
 
 /* $Workfile$ */

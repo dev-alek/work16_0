@@ -777,7 +777,7 @@ define variable str as char no-undo.
 auto-log:move-to-eof( ) IN FRAME {&FRAME-NAME} NO-ERROR.
 if objExists(itext,"F") eq ?
 then do:
-   str = cur-time-string-sec() + {&tabulation} + itext + {&new-line}.
+   str = cur-time-string-msec() + {&tabulation} + itext + {&new-line}.
 
    auto-log:insert-string( str ) NO-ERROR.
    RUN write-to-log-file(str).
@@ -785,7 +785,7 @@ end.
 else do:
    def var varfile-str as longchar no-undo.
    
-   str = cur-time-string-sec() + {&tabulation} + "Τΰιλ: " +  itext + {&new-line}.
+   str = cur-time-string-msec() + {&tabulation} + "Τΰιλ: " +  itext + {&new-line}.
    auto-log:insert-string(str) NO-ERROR.
    auto-log:insert-file(search(itext)) no-error.
    RUN write-to-log-file(str).
@@ -807,7 +807,7 @@ PROCEDURE write-to-log-file :
 ------------------------------------------------------------------------------*/
 DEFINE INPUT PARAMETER str-long AS longchar NO-UNDO.
 define variable vFileName as character no-undo.
-str-long = cur-time-string-sec() + {&tabulation} + str-long + {&new-line} .
+str-long = cur-time-string-msec() + {&tabulation} + str-long + {&new-line} .
 vFileName = "sktsrv-" + replace(string(today),"/","-") + ".log".
 copy-lob
 from object str-long

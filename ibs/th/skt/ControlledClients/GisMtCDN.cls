@@ -42,6 +42,8 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
    field description     as char
    field avgTimeMs       as int 
    .
+  
+  define temp-table tt-code no-undo like ub.code.
    
   define dataset gismt-host-body SERIALIZE-HIDDEN  for tthosts-body, tthosts
      PARENT-ID-RELATION FOR tthosts-body, tthosts PARENT-ID-FIELD reqid .
@@ -89,7 +91,8 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
      define variable vFileResult    as character   no-undo.
      define variable vFileResJson    as character   no-undo.
      define variable vFileErr as character   no-undo.
-     define variable vParamProxy as character no-undo.          
+     define variable vParamProxy as character no-undo.  
+     define variable vReqSDN as logical no-undo.             
      
      
      /* Проверяем, что сейчас обновления нет */
@@ -101,13 +104,19 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
      vParamProxy = GetParamProxy().
      vlongJson = "".
      vTimeStart = now.
+     
      for each tthosts-body:
          delete tthosts-body.
      end.
      
      for each tthosts:
          delete tthosts.
-     end. 
+     end.
+      
+     for each tt-code: 
+         delete tt-code.
+     end.
+         
       /*
      /* проверяем сколько времени прошло с предыдущего обновления */
      vRetOk = CheckCdnUpdTime(vTimeStart).
@@ -130,7 +139,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
                           vParamProxy,           /*5*/
                           vFileErr,              /*6*/
                           gismt-DopParam,        /*7*/
-                          trim(replace(string(gismt-WaitTime, "zzzz9.99999"),".",","),"")). /*8*/
+                          trim(replace(string(gismt-WaitTime * 2, "zzzz9.99999"),".",","),"")). /*8*/
                           
          /*run PutMesAsunc (substitute ("Запрос списка площадок &1" , cmd)).*/
                               
@@ -159,13 +168,16 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
                     for each tthosts:
                        /*run PutMesAsunc (substitute ("host_adr &1" , tthosts.host_adr)).*/
                        /* Запуск опроса площадок и обновления */
+                       vReqSDN = yes.
                        ReqHost(tthosts.host_adr, vParamProxy, vTimeStart).                              
                     end.
+                    UpdCdNAdrFormTT().
                 end.    
             end.    
          end.
          /* удаляем плохие площадки, или скидываем блокировку */     
          DelOldCdn(vTimeStart).
+         WriteLogCdn(vReqSDN).
      end.     
      /*run PutMesAsunc (substitute ("Окончания обновления площадок &1 заняло времени (мс) &2" , now, now - vTimeStart)).*/
    end method.
@@ -330,37 +342,45 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
         iTimeStart as datetime-tz,
         iReqTime as int64,
         iavgTimeMs as int):
-                
-        def buffer buf_code for ub.code.
                     
-        WriteLogCdn(iCdnAdr,
-                    iTimeStart,
-                    iReqTime).     
-          
-        find first buf_code where 
-                   buf_code.parent = "CDN_GisMt" 
-               and buf_code.code = iCdnAdr
-           exclusive-lock no-wait no-error.
-        if not avail buf_code then do:
-          if locked buf_code then do:
-                /*run PutMesAsunc (substitute ("Площадка &1 заблокирована для изменения. Не удалось обновить данные." , iCdnAdr)).*/
-          end.    
-          else do:
-             create buf_code.
-             assign
-                buf_code.parent = "CDN_GisMt" 
-                buf_code.code = iCdnAdr
-                buf_code.codename = "Адрес площадки ГИС МТ"
-                .
-          end.   
-        end.            
-        if avail buf_code then  do:
-           assign
-             buf_code.codeval = string(iReqTime)                            
-             buf_code.misc1 = String(iTimeStart)
-             buf_code.misc2 = ""
-             .  
-        end.   
+        find first tt-code where 
+                   tt-code.parent = "CDN_GisMt" 
+               and tt-code.code = iCdnAdr
+            no-error.
+        if not avail tt-code then do:          
+           create tt-code.                         
+        end.                    
+        assign
+           tt-code.parent = "CDN_GisMt" 
+           tt-code.code = iCdnAdr
+           tt-code.codename = "Адрес площадки ГИС МТ"          
+           tt-code.codeval = string(iReqTime)                            
+           tt-code.misc1 = String(iTimeStart)
+           tt-code.misc2 = ""
+           .  
+
+   end method.         
+   
+   method public void UpdCdNAdrFormTT ():             
+        def buffer buf_code for ub.code.                                 
+        
+        for each tt-code:  
+            find first buf_code where 
+                       buf_code.parent = tt-code.parent 
+                   and buf_code.code = tt-code.code
+               exclusive-lock no-wait no-error.
+            if not avail buf_code then do:
+              if locked buf_code then do:
+                    /*run PutMesAsunc (substitute ("Площадка &1 заблокирована для изменения. Не удалось обновить данные." , iCdnAdr)).*/
+              end.    
+              else do:
+                 create buf_code.                 
+              end.   
+            end.            
+            if avail buf_code then do:
+               buffer-copy tt-code to buf_code.  
+            end. 
+        end.  
         
    end method.   
     
@@ -397,16 +417,16 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
    end method.
    
    method  private void WriteLogCdn
-       (iCdnAdr as char,
-        iTimeStart as datetime-tz,
-        iReqTime as int64):
-            
+       (iFlagOk as logical):
+           
+        def buffer buf_code for ub.code.    
         define variable vFileName as character no-undo.
         define variable vCh as character no-undo.
         define variable vFullCh as character no-undo.
         define variable vWork as character no-undo.
         define variable vNum as int no-undo.
         define variable vStrLong as longchar no-undo.
+        define variable vTimeUnBlock as character no-undo. 
         
         vFileName = "GisMtCDN-" + replace(string(today),"/","-") +  ".log".
         
@@ -421,9 +441,24 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
         if vNum <> 0 then vWork = substring(vFullCh, 1, vNum).
         vFileName =  vWork + vFileName.
         
-        vStrLong = substitute("&1~t&2~t&3~n",iTimeStart,iCdnAdr,iReqTime).
-        
-        copy-lob from object vStrLong to file vFileName append no-error.
+        if not iFlagOk then do:
+            vStrLong = string(now) + "~tНе удалось обновить CDN площадки. Текущие площадки:~n".
+            copy-lob from object vStrLong to file vFileName append no-error.
+        end.    
+        else do:
+            vStrLong = string(now) + "~tCDN площадки обновлены:~n".
+            copy-lob from object vStrLong to file vFileName append no-error.
+        end.                
+        for each buf_code no-lock where 
+                 buf_code.parent = "CDN_GisMt":          
+           vTimeUnBlock = if buf_code.misc2 = "" then "null" else buf_code.misc2.               
+           vStrLong = substitute("&1~t&2~t&3~t&4~n",
+                                 buf_code.misc1,
+                                 buf_code.code,
+                                 buf_code.codeval,
+                                 vTimeUnBlock).      
+           copy-lob from object vStrLong to file vFileName append no-error.
+        end.   
 
    end method.    
       
