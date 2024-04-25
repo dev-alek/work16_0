@@ -36,6 +36,12 @@ then do:
 end.
 delete object hSAXWriter no-error.
 
+
+if session:debug-alert
+then do:
+    copy-lob from Mreq to file i-Type + "2kassa.xml".
+end.
+
 if     
 /*       not (g#news or g#auto or g#esys )*/
 /*   and  Это должны решать сами процедуры запроссов в каком режиме им работать */

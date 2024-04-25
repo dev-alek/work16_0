@@ -4823,6 +4823,20 @@ procedure m-cash-emrc-exe :
   ) no-error.
 
 end procedure. /* m-cash-emrc-exe */
+
+procedure m-cash-marktype-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/send-all.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'MarkType':U + {&delim-par} + 'Передача справочника Типы Марок':U)
+      , input ? /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка справочника MarkType")
+  ) no-error.
+
+end procedure. /* m-cash-marktype-exe */
  { utl/cashparamHash.i }
 procedure m-cash-param-exe :
    define variable v-current-db-num as integer   no-undo .

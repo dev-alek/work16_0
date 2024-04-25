@@ -43,25 +43,49 @@ class ibs.th.str.marking.Types inherits TypeMap:
   
   constructor public Types ():
     /* типы маркировки */
+    define buffer code for ub.code.
+    define variable vCode as integer no-undo.
     super().
-    tabak            = crProp(01,"tabak",             "Табачная продукция").
-    shoes            = crProp(02,"shoes",             "Обувь").
-    perfume          = crProp(03,"perfume",           "Духи и парфюмерия").
-    industry         = crProp(04,"industry",          "Легпром").
-    tires            = crProp(05,"tires",             "Шины").
-    apteka           = crProp(06,"apteka",            "Лекарства").
-    photo            = crProp(07,"photo",             "Фотокамеры/фотовспышки").
-    milk             = crProp(08,"milk",              "Молочная продукция > 40").
-    water            = crProp(09,"water",             "Упакованная вода").
-    stiki            = crProp(10,"stiki",             "Стики").
-    milk-40          = crProp(11,"milk-40",           "Молочная продукция <= 40").
-    NSJ              = crProp(12,"NSJ",               "Никотинсодержащие жидкости и ЭСДН").
-    Bad              = crProp(13,"Bad",               "БАД").
-    antiseptic       = crProp(14,"antiseptic",        "Антисептики").
-    Badd2L7          = crProp(16,"Badd2L7",           "БАД d2L7").
-    
+
+    for each code no-lock where code.parent = "MarkType":
+        vCode = int(code.code) no-error.
+        if vCode <> ? then
+        do:
+            if vCode = 1 then
+              tabak = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 2 then
+              shoes = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 3 then
+              perfume = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 4 then
+              industry = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 5 then
+              tires = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 6 then
+              apteka = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 7 then
+              photo = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 8 then
+              milk = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 9 then
+              water = crProp(vCode,code.codevalue,code.codename).
+           else if vCode = 10 then
+              stiki = crProp(vCode,code.codevalue,code.codename).
+           else if vCode = 11 then
+              milk-40 = crProp(vCode,code.codevalue,code.codename).
+           else if vCode = 12 then
+              NSJ = crProp(vCode,code.codevalue,code.codename).
+          else if vCode = 13 then
+              Bad = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 14 then
+              antiseptic = crProp(vCode,code.codevalue,code.codename).
+            else if vCode = 16 then
+              Badd2L7 = crProp(vCode,code.codevalue,code.codename).
+            else
+              crProp(vCode,code.codevalue,code.codename).
+        end.    
+    end.    
     Unknow:Label_  = "Неизвестный тип маркировки.".
-    
   end.
   
 end class.

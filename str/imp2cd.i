@@ -48,6 +48,7 @@ procedure send-to-cash:
     or can-find(first PromoAction-list no-lock)
     or sendEMRC
     or settingUpd
+    or sendMarkType
     then do:
       run str/diallog.w (
                          &if "{&imp2cd_parparentproc}" <> '' &then
@@ -78,6 +79,9 @@ procedure fill-code :
    if i-parent begins "EMC"
    then
       sendEMRC = yes.
+   if i-parent begins "MarkType"
+   then
+      sendMarkType = yes.
 end procedure.
 
 procedure fill-gds-list :

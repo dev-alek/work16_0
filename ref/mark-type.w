@@ -4,11 +4,11 @@
 &Scoped-define FRAME-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1eba0946c2d7, 3078, rls $
+$Author: DRuban $
+$Date: Пт авг 05 19:16:25 2022 +0300 $
+$Workfile: mark-type.w $
+$Archive: ref/mark-type.w $
 
 Выбор типа маркировки, атрибут товара
 
@@ -24,11 +24,11 @@ DEFINE INPUT PARAMETER p-spr-param AS character NO-UNDO.
 DEFINE INPUT-OUTPUT PARAMETER p-attr-value AS character NO-UNDO.
 DEFINE OUTPUT PARAMETER p-setted AS LOGICAL NO-UNDO.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1eba0946c2d7, 3078, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Пт авг 05 19:16:25 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: mark-type.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/mark-type.w $":U .
 define variable vss-description as character no-undo init "Выбор типа маркировки, атрибут товара".
 
 { cmp/vssrevis.i }
@@ -223,20 +223,17 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-load Dialog-Frame 
 PROCEDURE proc-load :
-define variable v-list as character no-undo.
 define variable vi as integer no-undo.
 define variable MarkType as ibs.th.gbl.map.mapstring no-undo.
 define variable objType  as ibs.th.gbl.propmap no-undo.
 
 MarkType = ObjSrv:Env:Marking:Types:MAPTYPE.
+cb-mark-type:delete(1) in frame {&FRAME-NAME}.
+
 do vi = 1 to MarkType:GetItemByLab(vi):     
-objType  = ObjSrv:Env:Marking:Types:CurrProp.
-
-    v-list = v-list + "," + objType:Label_ + "," + objType:NameProp.
+    objType  = ObjSrv:Env:Marking:Types:CurrProp.
+    cb-mark-type:add-last(objType:Label_,objType:NameProp) in frame {&FRAME-NAME}.
 end.
-
-v-list = trim(v-list, ",").
-cb-mark-type:list-item-pairs in frame {&FRAME-NAME} = v-list.
 
 if p-mode = {&add-def} OR p-mode = {&update} then do:
     enable cb-mark-type with frame {&FRAME-NAME}.
