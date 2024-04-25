@@ -690,7 +690,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                 vErrSts = vErrSts + "Время сбоя не зафиксировано. ".
           else do:
              /* создаем верхний уровень, если его нет */
-             find first code where buf_code.parent eq ""
+             find first buf_code where buf_code.parent eq ""
                                and buf_code.code   eq "GisMt"
              no-lock no-error.
              if not available buf_code then do:
@@ -803,6 +803,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     define variable vFileToken     as character   no-undo. 
     define variable vFileBat       as character   no-undo.
     define variable vFileResult    as character   no-undo.
+    define variable vFileResultCnv as character   no-undo.
     define variable vFileResultErr as character   no-undo.   
     define variable vFileresultXml as character   no-undo.
     define variable vFileLog       as character   no-undo.
@@ -892,8 +893,10 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     OUTPUT STREAM out_data CLOSE.
     
     run gbl/_tmpfile.p ( "ChkGisMTRes", ".txt", output vFileResult ) .
+    run gbl/_tmpfile.p ( "ChkGisMTResCnv", ".txt", output vFileResultCnv ) .
     run gbl/_tmpfile.p ( "ChkGisMTResErr", ".txt", output vFileResultErr ) .
     run gbl/_tmpfile.p ( "ChkGisMT", ".bat", output vFileBat ) .
+     
     
     dbgPrint("marking.log", substitute("vFileResult &1 ", vFileResult)).
     dbgPrint("marking.log", substitute("vFileResultErr &1 ", vFileResultErr)).
@@ -919,16 +922,23 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     /* ждем окончания работы */
     block_wait:
     do while true:
-        /* проверка, работает ли еще процесс */                
-        if IsProcessRunning(vpid) = 0 then do:
-            if searchFile(vfileresult) <> ? then do:
-                file-info:file-name = searchFile(vfileresult).
-                if file-info:file-size <> 0 then do:
+        /* проверка, работает ли еще процесс */                        
+        if searchFile(vfileresult) <> ? then do:
+           file-info:file-name = searchFile(vfileresult).
+           if file-info:file-size <> 0 then do:
+               copy-lob from file vFileResult to vlongJson .
+               if (vlongJson begins "<html>" and 
+                   r-index(vlongJson,"</html>") > 0)
+                  or
+                  (r-index(vlongJson,"reqTimestamp") > 0 and
+                   r-index(substring(vlongJson,r-index(vlongJson,"reqTimestamp")),"}") > 0) 
+               then do:
                    dbgPrint("marking.log", substitute("Сформирован файл-ответ &1", vfileresult)).
+                   vRetOk = yes.
                    leave block_wait.
-                end.   
-            end.    
-        end.
+               end.   
+            end.   
+        end.            
         /* время ожидания вышло */
         if vBefCurl + Int(gismt-WaitTime * 1000) < now then do:         
            dbgPrint("marking.log", "Время ожидания работы curl истекло").
@@ -1024,7 +1034,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        vlongJson = replace(vlongJson, '"21":', '"n21":')
        .
     
-    copy-lob from vlongJson to file vfileresult .
+    copy-lob from vlongJson to file vFileResultCnv no-error.
     
     if vlongJson = "" then do:
        dbgPrint("marking.log", "Не получен ответ от сервиса ").
@@ -1041,7 +1051,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
             
     cmd = substitute ('&1 -file=&2 >&3',
                       search("exe/json2xml.exe"),
-                      vFileResult,
+                      vFileResultCnv,
                       vfileresultxml).
                           
     os-command silent value (cmd).  
@@ -1058,9 +1068,9 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        return 2.
     end .
     
-    copy-lob from file vfileresultxml to vlongJson.
+    copy-lob from file vfileresultxml to vlongJson no-error.
     vlongJson = "<bodys>" +  vlongJson + "</bodys>".
-    copy-lob from vlongJson to file vfileresultxml.
+    copy-lob from vlongJson to file vfileresultxml no-error.
     vRetOk = dataset gismt-mark-body:read-xml("FILE":U, vfileresultxml, "EMPTY":U, ?, ?) no-error.
     if not vRetOk or error-status:error then do:
        dbgPrint("marking.log", "Запрос не выполнен! Ошибка при чтении XML <body>. " + error-status:get-message(1)).
@@ -1084,11 +1094,12 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     
     if not session:debug-alert
     then do:
-       os-delete value(vDataMark) no-error.
-       os-delete value(vFileBat) no-error.
-       os-delete value(vFileResult) no-error.
-       os-delete value(vFileResultErr) no-error.
-       os-delete value(vFileResultXml) no-error.
+       os-delete silent value(vDataMark) no-error.
+       os-delete silent value(vFileBat) no-error.
+       os-delete silent value(vFileResult) no-error.
+       os-delete silent value(vFileResultCnv) no-error.
+       os-delete silent value(vFileResultErr) no-error.
+       os-delete silent value(vFileResultXml) no-error.
     end.   
        
     return 0.
