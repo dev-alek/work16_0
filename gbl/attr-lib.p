@@ -4919,7 +4919,7 @@ Timeout ожидания подтверждения блокировки пистолетов,~
 &scop user-can-edit-attr-marking   true
 &scop output-display-attr-marking  true
 &scop other-attr-marking           'spr-ext=gbl\marking.w':U
-&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical,logical,logical,character,character,character,character,character,character,character,character,character,character,character,,character':U
+&scop prop-type-list-attr-marking  'logical,logical,character,logical,integer,character,logical,logical,logical,logical,character,character,character,character,character,character,character,character,character,character,character,character':U
 &scop prop-label-list-attr-marking 'Включена работа с ЭДО для маркированных документов,Включена работа с ЭДО для не маркированных документов,Типы маркировок для помарочного учета,Ручной ввод марок,Допустимое отсутствие КМ для "Серой зоны",Типы маркировки для оприходования по ЭДО,Запрет на создание рецептов и маркетинговых акций с маркированными товарами,Использования рецепта Альтернатива только для получения ингредиентов,~
 Определение товара по штрих-коду,автоматическое переключение раскладки на рус,Типы маркировок для объемно-артикульного учета,Типы маркировок переходный период,Блокировка на кассе операций с неизвестными марками,Разрешена продажа возвращенных товаров,Разрешены продажи до подписания УПД,Возврат только проданных,~
 Проверка блокировок контролирующих органов,Проверка срока годности,Проверка МРЦ,Проверка владельца,Проверка статуса КМ,Анализ флага прослеживаемости'
