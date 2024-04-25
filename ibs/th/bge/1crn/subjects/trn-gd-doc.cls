@@ -75,6 +75,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   define buffer buf_goods for ub.goods .
   define buffer sep_auto-tank-attr  for ub.auto-tank-attr.
   define buffer buf_rvs-doc for ub.rvs-doc .
+  define buffer buf_contract-specif for ub.contract-specif .
   
   define property Msg as character no-undo
     get:
@@ -414,15 +415,22 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   end.
 
   method private void PriVneshLine ():
-    
+   define variable vat-pc as character no-undo .
     sw:start-element ("gds").
     for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code by buf_doc-line.line-num:
-      
+
       find first buf_gds no-lock where
             buf_gds.artic = buf_doc-line.artic 
         and buf_gds.prod-code = buf_doc-line.prod-code
         and buf_gds.prod-type = buf_doc-line.prod-type.
-      
+      if buf_trn-doc.contract-code <> 0 then do:
+        for first buf_contract-specif no-lock where buf_contract-specif.contract-num = buf_trn-doc.contract-code and
+        buf_contract-specif.artic = buf_doc-line.artic and
+        buf_contract-specif.prod-code = buf_doc-line.prod-code and
+        buf_contract-specif.prod-type = buf_doc-line.prod-type :
+          if buf_contract-specif.VAT-type = {&without-VAT} then vat-pc = "-1".
+        end.
+      end.
       sw:start-element ("gd").
         write-data-element ("line-num", string-mth (buf_doc-line.line-num)).
         write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
@@ -438,7 +446,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
             and buf_gds-dtl.prod-code = buf_gds-dtl.prod-code
             and buf_gds-dtl.prod-type = buf_gds-dtl.prod-type.
           write-data-element ("sum", string-mth (round (buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty, 2))).
-          write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
+          write-data-element ("nds-code", if vat-pc <> "" then vat-pc else string-mth ( round (buf_doc-line.VAT-pc , 0))).
           write-data-element ("sum-nds", string-mth ( round ((buf_gds-dtl.price-rubl * buf_gds-dtl.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2))).
           write-data-element ("sum-s", string-mth ( round (buf_doc-line.price-rubl * buf_doc-line.fact-qnty / (1 + (buf_doc-line.VAT-pc / 100)), 2))).
         end.
@@ -448,7 +456,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           sum_ = round (buf_doc-line.price-rubl * buf_doc-line.fact-qnty, 2).
           sum-nds = round ((buf_doc-line.price-rubl * buf_doc-line.fact-qnty * buf_doc-line.VAT-pc) / (100 + buf_doc-line.VAT-pc) , 2).
           write-data-element ("sum", string-mth (sum_)).
-          write-data-element ("nds-code", string-mth ( round (buf_doc-line.VAT-pc , 0))).
+          write-data-element ("nds-code", if vat-pc <> "" then vat-pc else string-mth ( round (buf_doc-line.VAT-pc , 0))).
           write-data-element ("sum-nds", string-mth (sum-nds)).
           write-data-element ("sum-s", string-mth (sum_ - sum-nds)).
         end.
@@ -1463,7 +1471,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("qnty-ttn", string-mth (buf_parts.qnty)).
           write-data-element ("qnty-fact", string-mth (buf_parts.fact-qnty)).
           write-data-element ("sum", string-mth (round (buf_parts.price-rubl * buf_parts.fact-qnty, 2))).
-          write-data-element ("nds-code", string-mth ( round (buf_parts.VAT-pc , 0))).
+          write-data-element ("nds-code", if buf_parts.VAT-type = {&without-VAT} then "-1" else string-mth ( round (buf_parts.VAT-pc , 0))).
           write-data-element ("sum-nds", string-mth ( round ((buf_parts.price-rubl * buf_parts.fact-qnty * buf_parts.VAT-pc) / (100 + buf_parts.VAT-pc) , 2))).
           write-data-element ("sum-s", string-mth (round (buf_parts.price-rubl * buf_parts.fact-qnty / (1 + (buf_parts.VAT-pc / 100)), 2))).
         
