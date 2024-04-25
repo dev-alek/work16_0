@@ -132,7 +132,6 @@ do:
           new-{&main-tbl}.misc1 = old-{&main-tbl}.misc1    
         .
     end.
-    { gbl/objserref.i }
 end.
 
 if g#news and g#db-num <> 0 and 
