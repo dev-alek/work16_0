@@ -36,8 +36,10 @@ define variable vss-description as character no-undo initial "Переход по статуса
 { str/lib-trn.i  }
 { str/lib-rvs.i  }
 { str/placelib.i }
-{str/autorvs.i}
+{ str/autorvs.i  }
 { gbl/getsect.i def }
+{ ref/gds-attr.i }
+{ str/is-sug.i   }
 
 tr:
 do transaction
@@ -247,6 +249,18 @@ do transaction
           end.
           when {&permitted}
           then do:
+            for each buf_rvs-line no-lock
+                where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                on error undo, return error return-value
+            :
+              if is-sug(buf_rvs-line.gds-code)
+              then do :
+                if buf_rvs-line.state-temperature = ?
+                then do :
+                  undo tr, return error substitute( "Не заполнено обязательное поле «Температура средняя». (СУГ &1, резервуар &2)", buf_rvs-line.gds-code, buf_rvs-line.pl-code).
+                end .
+              end .
+            end .
             case buf_rvs-doc.rvs-type :
               when {&rvs-shift}
               then do:

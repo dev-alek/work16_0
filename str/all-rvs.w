@@ -776,12 +776,12 @@ do:
       }
         if error-status :error then 
         do:
-        run userlogrvs(58, return-value + error-status:get-message(1) ) .
             message
                 "Ошибка при закрытии документа сверки." skip
                 error-status:get-message(1) skip
                 return-value
                 view-as alert-box error.
+            run userlogrvs(58, return-value + error-status:get-message(1) ) .
             undo tr, leave.
         end.
 
