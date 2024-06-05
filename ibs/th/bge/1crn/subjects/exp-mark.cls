@@ -78,12 +78,14 @@ method override public void CrContentToSW (insw as handle):
       insw:write-data-element (  "gds-code":U,       if marking.gds-code eq ? then "" else string(marking.gds-code)   ).
       find first marking-attr where marking-attr.mark eq marking.mark
                                 and marking-attr.attr-code eq "mrc"  
+                                and marking-attr.attr-value <> '0'
+                                and marking-attr.attr-value <> ''
       no-lock no-error.
       if available marking-attr
       then
          insw:write-data-element (  "mrc":U,       marking-attr.attr-value   ).
-      else
-         insw:write-data-element (  "mrc":U,       ""   ).
+      /*else
+         insw:write-data-element (  "mrc":U,       ""   ).*/
       insw:end-element ({&tag-mark}) .
 /*      insw:end-element ({&tag-marks}) .*/
    end.
