@@ -178,8 +178,14 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
          /* удаляем плохие площадки, или скидываем блокировку */     
          DelOldCdn(vTimeStart).
          /* удаляем признак, что работает обновление площадок */
-         DelCdnUpd(vTimeStart).
+         DelCdnUpd().
          WriteLogCdn(vReqSDN).
+         if not session:debug-alert
+         then do:         
+             os-delete silent value(vFileResult)     no-error.
+             os-delete silent value(vFileErr)        no-error.
+             os-delete silent value(vFileResJson)     no-error.             
+         end.
      end.     
      /*run PutMesAsunc (substitute ("Окончания обновления площадок &1 заняло времени (мс) &2" , now, now - vTimeStart)).*/
    end method.
@@ -263,6 +269,13 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
             vReqTime = 5 * 3600 * 1000. /* устанавливаем адресу время ответа 5 минут */
             UpdCdNAdr(iHostAdr, iTimeStart, vReqTime, -1).
          end.   
+         
+         if not session:debug-alert
+         then do:         
+             os-delete silent value(vFileResult)     no-error.
+             os-delete silent value(vFileErr)        no-error.
+             os-delete silent value(vFileResJson)     no-error.             
+         end.
    end method.   
    
    /* проверка, что обновление cdn-площадок не запущено */
@@ -324,7 +337,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
        return vCheck.   
    end method.
    
-   method public void DelCdnUpd (iTimeStart as datetime-tz):
+   method public void DelCdnUpd ():
        def buffer buf_code for ub.code.       
        
        for each buf_code where 
@@ -462,12 +475,12 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
       
      
    constructor public GisMtCDN (  ):
-      super ().
-      /*run gbl\getwindows.p(output hpApi).*/
+      super ().      
    end constructor.
 
    destructor public GisMtCDN ( ):
-
+      /* удаляем флаг, что работает обновление площадок */
+      DelCdnUpd().   
    end destructor.
 
 end class.
