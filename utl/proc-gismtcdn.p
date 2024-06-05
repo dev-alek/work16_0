@@ -24,9 +24,11 @@ define variable mError as logical no-undo.
 { utl/proc-async.i proc_def}
 { utl/search.i  class }
 
-define variable thGisMtCdn as class GisMtCDN no-undo .
+define variable thGisMtCdn as class GisMtCDN no-undo .      
+define variable mParam     as character      no-undo.
 
-define variable mParam as character no-undo.
+def buffer buf_code for ub.code.
+
 mParam = GetPARAMAsunc( 1).
 if mParam eq ? then do:
    run PutMesAsunc( "error   Получение данных было прервано пользователем." ).
@@ -34,7 +36,26 @@ if mParam eq ? then do:
    return.
 end.
 
+/* устанавливаем флаг обновления, если еще не установили раньше 
+** (нужно при первом запуске сокета) */
+find first buf_code where 
+           buf_code.parent = "CDN_GisMt" 
+       and buf_code.code = "CDN_Upd"              
+    no-lock no-error.
+ 
+if not avail buf_code then do:
+   create buf_code.
+   assign
+      buf_code.parent = "CDN_GisMt" 
+      buf_code.code = "CDN_Upd"
+      buf_code.codename = "Запущен процесс обновления площадок ГИС МТ"
+      buf_code.codeval = string(now)   
+      .  
+end.
+
 thGisMtCdn =  new GisMtCDN().
 thGisMtCdn:GetListCdn().
-        
+thGisMtCdn:DelCdnUpd(). /* удаляем флаг, что работает обновление площадок */
+
 delete object thGisMtCdn.  
+{ utl/proc-async.i proc_end}  

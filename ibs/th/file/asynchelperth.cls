@@ -298,7 +298,8 @@ end.*/
    
    method public logical firstrun():
       
-      if mFirstrun
+      if mFirstrun 
+      or not FolderExists(MyWorkDir)
       then do: /*создадим рабочуюю директорию */ 
          MyWorkDir = "pid_".
          if MyWorkDir eq ?
@@ -336,8 +337,14 @@ end.*/
       then do:
          if not FileExists  (MyWorkDir + itask + ".txt" )
          then do:
-            Writefile(MyWorkDir + itask + ".txt", "InitProc " + string(getnow())).
-            Writefile( getLog(itask),"").           
+            if FolderExists(MyWorkDir) then do:                  
+                Writefile(MyWorkDir + itask + ".txt", "InitProc " + string(getnow())).
+                Writefile( getLog(itask),"").
+            end.           
+            else do:
+               run utl\proc-msg.p ("Не удалось запустить процедуру " + iProc +  " Не найден рабочий каталог: " + MyWorkDir) no-error.
+               return error.
+            end.    
          end.
          else do:
             Writefile (getLog(itask),"Процедура " + iProc + "уже запущена в паралельном режиме." ).

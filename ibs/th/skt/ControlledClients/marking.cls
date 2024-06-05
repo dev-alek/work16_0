@@ -685,8 +685,8 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        mCheckSts = 2  
        vErrSts = ""
        .
-    
-    do transaction on error undo, leave:        
+    fixerr:
+    do transaction on error undo, retry fixerr:        
        /* Проверяем, зафиксирован ли сбой онлайн-проверки */
        find first buf_code where buf_code.parent eq "GisMt"
                              and buf_code.code   eq "GisMtErr"
@@ -752,6 +752,10 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
           else buf_code.codevalue = string(now).
        end.
     end.
+    if retry then do:
+        dbgPrint("marking.log", "Ошибка фиксации времени сбоя ГИС МТ").        
+    end.
+        
     return vErrSts.
     
   end method.   
@@ -814,13 +818,17 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
   method private void SetNoErrGisMT ():
      def buffer buf_code for ub.code.
     
-      do transaction on error undo, leave: 
+      setnoerr:   
+      do transaction on error undo, retry setnoerr: 
          find first buf_code where buf_code.parent eq "GisMt"
                                and buf_code.code   eq "GisMtErr"
             exclusive-lock no-error.
          if available buf_code 
          then buf_code.codevalue = "".
       end.     
+      if retry then do:
+         dbgPrint("marking.log", "Ошибка сброски времени сбоя ГИС МТ").
+      end.    
     
   end method.
   
@@ -989,10 +997,6 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
       '~{"codes":["' vMark '"]~}' .
     OUTPUT STREAM out_data CLOSE.
      
-    dbgPrint("marking.log", substitute(" Работа с CDN-площадками &1 ", gismt-cdnTurnOn)).
-    dbgPrint("marking.log", substitute(" Повторный опрос CDN-площадки &1 ", gismt-cdnRepeat)).
-    dbgPrint("marking.log", substitute(" Смена CDN-площадки &1 ", gismt-cdnChange)).
-                    
     if gismt-AdressPort <> "" and gismt-ProxyLogin <> "" and gismt-ProxyPswd <> "" 
     then CmdParamProxy = substitute ('-x &1 -U &2:&3',gismt-AdressPort,gismt-ProxyLogin,gismt-ProxyPswd).
     else if gismt-AdressPort <> "" then CmdParamProxy = substitute ('-x &1',gismt-AdressPort).
@@ -1452,13 +1456,14 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        mCheckSts = 2.
        return "".
     end.   
-    
+    /*
     /* Запускаем проверку, не надо ли обновить 
     ** площадки и их обновление */
     if gismt-cdnTurnOn and 
        CheckCdnNeedUpd()
-       then run utl/pub-runcdn.p.
-           
+       then            
+       run utl/pub-runcdn.p (p-obj-type, string(p-obj-code)).              
+      */     
     /* произошла аварийная ситуация - фиксируем */
     if vGetGisMt <> 0 then do: 
         if vGetGisMt = 2 then 
@@ -1642,7 +1647,13 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                    " TimeFalStart " gismt-TimeFalStart skip
                    " WaitTime " gismt-WaitTime skip
                    " CrashSituat " gismt-CrashSituat skip
-                   " BanDate " gismt-BanDate
+                   " BanDate " gismt-BanDate skip
+                   " cdnTurnOn " gismt-cdnTurnOn skip   
+                   " cdnAdress " gismt-cdnAdress skip
+                   " cdnRepeat " gismt-cdnRepeat skip
+                   " cdnChange " gismt-cdnChange skip
+                   " cdnTimeUpd " gismt-cdnTimeUpd skip  
+                   " UpdateRequest " gismt-UpdateRequest 
                    skip.   
           end.   
           when "ttmark-body" then do:
@@ -1720,7 +1731,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                         vTimeResp = int(buf_code.codeval) no-error.               
               end.
           end.   
-          else dbgPrint("marking.log", substitute("Идет процесс обновления CDN площадок, время начала &1 ", buf_code.misc1)).
+          else dbgPrint("marking.log", substitute("Идет процесс обновления CDN площадок, время начала &1 ",buf_code.codeval)).                        
       end.
       if vAddr <> "" then    
          dbgPrint("marking.log", substitute("Выбрали площадку &1 время отклика &2 ",vAddr,vTimeResp)).
@@ -1735,26 +1746,32 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
       def var vTimeNow as datetime no-undo.
       def var vOk as log no-undo.
 
-      vTimeNow = now.
-      find first buf_code where 
-                 buf_code.parent = "CDN_GisMt" 
-             and buf_code.code = iCdnAdr
-             exclusive-lock no-wait no-error.
-      if avail buf_code then  do:
-         buf_code.misc2 = String(vTimeNow + 15000 * 60).         
-         release buf_code no-error.
-         if error-status:error then vOk = no.
-         else vOk = yes.
-      end.   
-      else vOk = no.
+      setsdn:
+      do transaction on error undo, retry setsdn:      
+          vTimeNow = now.
+          find first buf_code where 
+                     buf_code.parent = "CDN_GisMt" 
+                 and buf_code.code = iCdnAdr
+                 exclusive-lock no-wait no-error.
+          if avail buf_code then  do:
+             buf_code.misc2 = String(vTimeNow + 15000 * 60).         
+             release buf_code no-error.
+             if error-status:error then vOk = no.
+             else vOk = yes.
+          end.   
+          else vOk = no.
+          
+          dbgPrint("marking.log", substitute("Установка площадке &1 время разблокировки &2 успешно &3 &4",
+                                             iCdnAdr, (vTimeNow + 15000 * 60), vOk, error-status:get-message(1))).
+      end.
+      if retry then do:
+          dbgPrint("marking.log", substitute("Ошибка блокировки площадки &1", iCdnAdr)).
       
-      dbgPrint("marking.log", substitute("Установка площадке &1 время разблокировки &2 успешно &3 &4",
-                                         iCdnAdr, (vTimeNow + 15000 * 60), vOk, error-status:get-message(1))).
-      
+      end.    
       return vOk.      
   end method. 
   
-  method private logical CheckCdnNeedUpd ():
+  method public logical CheckCdnNeedUpd ():
       def buffer buf_code for ub.code.
       def var vAddr as char no-undo.
       def var vNeedUpd as log no-undo.
@@ -1797,10 +1814,16 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                   buf_code.parent = "CDN_GisMt" 
               and buf_code.code = "CDN_Upd"              
            no-lock no-error.
-         if not avail buf_code 
+         if not avail buf_code               
          then do:
             dbgPrint("marking.log", substitute("Обновляем список площадок, все заблокированы &1 время посл обновления &2 Частота обновления (ч) &3 ",
                                               vAllBlock, vTimeUpd, gismt-cdnTimeUpd )). 
+            vNeedUpd = yes.
+         end.    
+         /* если прошло 20 минут с момента обновления, то игнорим флаг (завис) */
+         else if datetime-tz(buf_code.codeval) < (now - 20 * 60000) then do:
+             dbgPrint("marking.log", substitute("Обновляем список площадок, флаг обновления был установлен &1",
+                                                buf_code.codeval )). 
             vNeedUpd = yes.
          end.    
          else dbgPrint("marking.log", substitute("Площадки не обновляем, идет обновление &1 ",  buf_code.codeval)).
@@ -1916,10 +1939,16 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
       for each tt-file-name:
           if not session:debug-alert
           then do:
-             if searchFile(tt-file-name.tmpFileName) <> ? then
-             os-delete silent value(tt-file-name.tmpFileName) no-error.
+             /*dbgPrint("marking.log", substitute("Удаляем временный файл &1  ", tt-file-name.tmpFileName)).*/ 
+             if searchFile(tt-file-name.tmpFileName) <> ? then do:
+                 os-delete silent value(tt-file-name.tmpFileName).             
+                 /*if searchFile(tt-file-name.tmpFileName) <> ? then 
+                 dbgPrint("marking.log", substitute("Ошибка удаления файла &1 ", tt-file-name.tmpFileName)).*/
           end.
+             if searchFile(tt-file-name.tmpFileName) = ? then
           delete tt-file-name.           
+      end. 
+          else delete tt-file-name.           
       end. 
   end method.    
   
