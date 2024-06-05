@@ -1551,11 +1551,14 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
          
          if  vCheckDate = yes then do:            
             if ttmark-check.expireDate <> ? 
-            then do:
-                if ttmark-check.expireDate < now + gismt-BanDate * 60 * 1000
+            then do:                
+                /* убираем часовой пояс */
+                vExpireTimeMes = entry(1,string(ttmark-check.expireDate),"+").
+                vExpireDate = datetime-tz(vExpireTimeMes).                                
+                if vExpireDate < now + gismt-BanDate * 60 * 1000
                 then do:
                   assign
-                     vErrSts = "Срок годности товара истек " + string(ttmark-check.expireDate,"99/99/9999 HH:MM") + ". "
+                     vErrSts = "Срок годности товара истек " + string(vExpireDate,"99/99/9999 HH:MM") + ". "
                      mCheckSts = 0.
                 end.   
             end.
