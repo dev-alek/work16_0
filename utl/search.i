@@ -15,12 +15,21 @@
     then
        vFileType = iType.
     do vi = 1 to num-entries(vFileType):
-       file-information:file-name = "./" + ifolder.
+       file-information:file-name = ".\" + right-trim(replace(ifolder,"/","\"),"\").
        vtype = file-information:file-type.
-       if index(vtype , entry(vi,vFileType )) > 0 then return file-information:full-pathname .
-       file-information:file-name = ifolder.
+       /* BTS-145 был баг, что сюда приходила строка GET-запроса, а возвращался прогрессовый файл ablunit.pl */
+       /* поэтому добавлена проверка, что в full-pathname и file-name идин и тот же файл */
+       if entry(num-entries(file-information:file-name, "\"), file-information:file-name, "\") 
+          = entry(num-entries(file-information:full-pathname, "\"), file-information:full-pathname ,"\") and
+          index(vtype , entry(vi,vFileType )) > 0 
+       then return file-information:full-pathname .
+       file-information:file-name = right-trim(replace(ifolder,"/","\"),"\").
        vtype = file-information:file-type.
-       if index( vtype, entry(vi,vFileType )) > 0 then return file-information:full-pathname .
+       if file-information:file-name <> "" and 
+          entry(num-entries(file-information:file-name, "\"), file-information:file-name, "\") 
+          = entry(num-entries(file-information:full-pathname, "\"), file-information:full-pathname ,"\") and 
+          index( vtype, entry(vi,vFileType )) > 0 
+       then return file-information:full-pathname .
     end.
     return ? .
 

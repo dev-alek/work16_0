@@ -94,14 +94,9 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
      define variable vParamProxy as character no-undo.  
      define variable vReqSDN as logical no-undo.             
      
-     
-     /* Проверяем, что сейчас обновления нет */
-     /*vRetOk = CheckCdnUpd ().
-     if not vRetOk then return.              
-          */
-     /*run PutMesAsunc (substitute ("Начало обновления площадок &1" , vTimeStart)).*/
-     
      vParamProxy = GetParamProxy().
+     if not gismt-cdnTurnOn then return .
+
      vlongJson = "".
      vTimeStart = now.
      
@@ -141,14 +136,11 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
                           gismt-DopParam,        /*7*/
                           trim(replace(string(gismt-WaitTime * 2, "zzzz9.99999"),".",","),"")). /*8*/
                           
-         /*run PutMesAsunc (substitute ("Запрос списка площадок &1" , cmd)).*/
-                              
          os-command silent value(cmd).                 
                            
          if searchFile(vfileresult) <> ? then do:
             file-info:file-name = searchFile(vfileresult).
             if file-info:file-size <> 0 then do:
-                /*run PutMesAsunc (substitute ("Разбираем файл &1" , vfileresult)).*/
                 copy-lob from file vFileResult to vlongJson no-error.          
                 
                 vlongJson = '~{"bodys":[' + vlongJson + "]}" .
@@ -162,11 +154,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
                 find first tthosts-body no-error.
                 if avail tthosts-body  and tthosts-body.code = 0 then 
                 do:
-                    /*run PutMesAsunc (substitute ("code &1" , tthosts-body.code)).
-                    run PutMesAsunc (substitute ("description &1" , tthosts-body.description)).
-                    run PutMesAsunc (substitute ("avgTimeMs &1" , tthosts-body.avgTimeMs)).*/
                     for each tthosts:
-                       /*run PutMesAsunc (substitute ("host_adr &1" , tthosts.host_adr)).*/
                        /* Запуск опроса площадок и обновления */
                        vReqSDN = yes.
                        ReqHost(tthosts.host_adr, vParamProxy, vTimeStart).                              
@@ -178,8 +166,14 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
          /* удаляем плохие площадки, или скидываем блокировку */     
          DelOldCdn(vTimeStart).
          /* удаляем признак, что работает обновление площадок */
-         DelCdnUpd(vTimeStart).
+         DelCdnUpd().
          WriteLogCdn(vReqSDN).
+         if not session:debug-alert
+         then do:         
+             os-delete silent value(vFileResult)     no-error.
+             os-delete silent value(vFileErr)        no-error.
+             os-delete silent value(vFileResJson)     no-error.             
+         end.
      end.     
      /*run PutMesAsunc (substitute ("Окончания обновления площадок &1 заняло времени (мс) &2" , now, now - vTimeStart)).*/
    end method.
@@ -233,15 +227,12 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
          if searchFile(vfileresult) <> ? then do:
             file-info:file-name = searchFile(vfileresult).
             if file-info:file-size <> 0 then do:
-                /*run PutMesAsunc (substitute ("Разбираем файл &1" , vfileresult)).*/
                 copy-lob from file vFileResult to vlongJson no-error.          
                 
                 vlongJson = '~{"bodys":[' + vlongJson + "]}" .
                 hDS = dataset gismt-host-adr:handle.
                           
-                vRetOk  = hDS:read-json("longchar":U, vlongJson) no-error.
-                /*run PutMesAsunc (substitute ("Площадка &1 vRetOk &2 num-err &3 err-mess &4" , 
-                iHostAdr, vRetOk, error-status:NUM-MESSAGES, error-status:get-message(1))).    */          
+                vRetOk  = hDS:read-json("longchar":U, vlongJson) no-error.      
                 
                 dataset gismt-host-adr:write-json("FILE":U, vFileResJson) no-error.            
     
@@ -250,10 +241,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
                    tthosts-adr.code = 0 then 
                 do:
                     UpdCdNAdr(iHostAdr, iTimeStart, vReqTime, tthosts-adr.avgTimeMs).
-                    vFlagOk = yes.
-                    /*run PutMesAsunc (substitute ("code &1" , tthosts-adr.code)).
-                    run PutMesAsunc (substitute ("description &1" , tthosts-adr.description)).
-                    run PutMesAsunc (substitute ("avgTimeMs &1" , tthosts-adr.avgTimeMs)).*/                
+                    vFlagOk = yes.       
                 end.    
             end.    
          end.
@@ -263,6 +251,13 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
             vReqTime = 5 * 3600 * 1000. /* устанавливаем адресу время ответа 5 минут */
             UpdCdNAdr(iHostAdr, iTimeStart, vReqTime, -1).
          end.   
+         
+         if not session:debug-alert
+         then do:         
+             os-delete silent value(vFileResult)     no-error.
+             os-delete silent value(vFileErr)        no-error.
+             os-delete silent value(vFileResJson)     no-error.             
+         end.
    end method.   
    
    /* проверка, что обновление cdn-площадок не запущено */
@@ -324,7 +319,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
        return vCheck.   
    end method.
    
-   method public void DelCdnUpd (iTimeStart as datetime-tz):
+   method public void DelCdnUpd ():
        def buffer buf_code for ub.code.       
        
        for each buf_code where 
@@ -398,7 +393,8 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
             for each buf_code where 
                          buf_code.parent = "CDN_GisMt"              
                      exclusive-lock :
-               if  buf_code.misc1 <> String(iTimeStart) then
+               if  buf_code.misc1 <> String(iTimeStart) 
+               and buf_code.code <> "CDN_Upd" then
                do:
                    delete buf_code. 
                end.           
@@ -462,8 +458,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
       
      
    constructor public GisMtCDN (  ):
-      super ().
-      /*run gbl\getwindows.p(output hpApi).*/
+      super ().      
    end constructor.
 
    destructor public GisMtCDN ( ):

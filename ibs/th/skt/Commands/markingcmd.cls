@@ -58,6 +58,12 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
        if not writeSock(marking:SomeStr)
        then
           undo, return.
+       /* обновляем, если надо, CDN площадки */             
+       else if marking:CheckCdnNeedUpd() then 
+       do:           
+          run utl/pub-runcdn.p .
+       end.    
+       
     end.
 
   end method.

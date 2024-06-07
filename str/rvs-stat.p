@@ -57,6 +57,7 @@ do transaction
     define buffer buf_place    for ub.place .
     define buffer last-rvs-doc for ub.rvs-doc . 
     define buffer last-rvs-line for ub.rvs-line .
+    define buffer buf_doc-attr for ub.doc-attr .
 
     define variable v-cardif        as integer   no-undo .
     define variable v-abs-critdif   as decimal   no-undo .
@@ -249,15 +250,22 @@ do transaction
           end.
           when {&permitted}
           then do:
-            for each buf_rvs-line no-lock
-                where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                on error undo, return error return-value
-            :
-              if is-sug(buf_rvs-line.gds-code)
-              then do :
-                if buf_rvs-line.state-temperature = ?
+            find first buf_doc-attr no-lock where buf_doc-attr.doc-code = buf_rvs-doc.rvs-code
+                                              and buf_doc-attr.attr-code = "rvs-auto"
+                                              and buf_doc-attr.attr-value = "Yes"
+                                              no-error .
+            if not available buf_doc-attr
+            then do :
+              for each buf_rvs-line no-lock
+                  where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                  on error undo, return error return-value
+              :
+                if is-sug(buf_rvs-line.gds-code)
                 then do :
-                  undo tr, return error substitute( "Не заполнено обязательное поле «Температура средняя». (СУГ &1, резервуар &2)", buf_rvs-line.gds-code, buf_rvs-line.pl-code).
+                  if buf_rvs-line.state-temperature = ?
+                  then do :
+                    undo tr, return error substitute( "Не заполнено обязательное поле «Температура средняя». (СУГ &1, резервуар &2)", buf_rvs-line.gds-code, buf_rvs-line.pl-code).
+                  end .
                 end .
               end .
             end .
