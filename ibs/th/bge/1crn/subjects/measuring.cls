@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: measuring.cls $
+$Archive: ibs/th/bge/1crn/subjects/measuring.cls $
 
 Структура данных shops (АЗК/АЗС) из 1С
 
@@ -91,6 +91,9 @@ class ibs.th.bge.1crn.subjects.measuring inherits ibs.th.bge.1crn.subjects.asubj
   define property dnst-abs-me-lpg-l as decimal no-undo
     get. 
     private set.
+  define property dnst-rel-me-lpg-l as decimal no-undo
+    get. 
+    private set.
   define property dnst-abs-me-lpg-v as decimal no-undo
     get. 
     private set.
@@ -142,6 +145,7 @@ class ibs.th.bge.1crn.subjects.measuring inherits ibs.th.bge.1crn.subjects.asubj
       when "dnst-abs-me-np"    then dnst-abs-me-np    = if inValue >= "" then decimal (inValue) else 0.
       when "dnst-rel-me-np"    then dnst-rel-me-np    = if inValue >= "" then decimal (inValue) else 0.
       when "dnst-abs-me-lpg-l" then dnst-abs-me-lpg-l = if inValue >= "" then decimal (inValue) else 0.
+      when "dnst-rel-me-lpg-l" then dnst-rel-me-lpg-l = if inValue >= "" then decimal (inValue) else 0.
       when "dnst-abs-me-lpg-v" then dnst-abs-me-lpg-v = if inValue >= "" then decimal (inValue) else 0.
       when "wght-rel-me"       then wght-rel-me       = if inValue >= "" then decimal (inValue) else 0.
       when "limit"             then limit             = if inValue >= "" then decimal (inValue) else 0 .
@@ -212,6 +216,7 @@ class ibs.th.bge.1crn.subjects.measuring inherits ibs.th.bge.1crn.subjects.asubj
       dnst-abs-me-np    = ?
       dnst-rel-me-np    = ?
       dnst-abs-me-lpg-l = ?
+      dnst-rel-me-lpg-l = ?
       dnst-abs-me-lpg-v = ?
       wght-rel-me       = ?
       limit             = ?

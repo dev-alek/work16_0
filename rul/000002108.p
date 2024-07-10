@@ -50,11 +50,11 @@ define input parameter v-curr-r-b   as character no-undo .
 define input parameter p-cmd-proc-handle as handle no-undo .
 define input parameter p-cmd-code  as integer no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 22985a2af0a7, 1166, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:20:26 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: 000002108.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rul/000002108.p $":U .
 define variable vss-description as character no-undo init "Библиотека процедур для работы с кодексом 18, набор 2".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
@@ -335,12 +335,12 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   case p-ruleset-id:
     when {&thref-proc_20_ref-event_100} then do:
       if v-has-newbh
-      and v-newbh:table <> {&table_place} and v-newbh:table <> {&table_pl-gds} and v-newbh:table <> {&table_pl-level} then do:
+      and v-newbh:table <> {&table_place} and v-newbh:table <> {&table_pl-gds} and v-newbh:table <> {&table_pl-level} and v-newbh:table <> {&table_pl-level-mm} then do:
         undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_place}).
       end.
       
       if v-has-oldbh
-      and v-oldbh:table <> {&table_place} and v-oldbh:table <> {&table_pl-gds} and v-oldbh:table <> {&table_pl-level} then do:
+      and v-oldbh:table <> {&table_place} and v-oldbh:table <> {&table_pl-gds} and v-oldbh:table <> {&table_pl-level} and v-newbh:table <> {&table_pl-level-mm} then do:
         undo, return error substitute("Передан неверный буфер вместо буфера для &1",  {&table_place}).
       end.
     end.

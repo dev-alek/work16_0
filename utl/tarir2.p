@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 10804996d925, 3000, rls $
+$Author: SSlivenko $
+$Date: Ср апр 06 16:23:44 2022 +0300 $
+$Workfile: tarir2.p $
+$Archive: utl/tarir2.p $
 
 Загрузка тарировочных таблиц !!! (только по ОДНОМУ резервуару в отличие от tarir.p )
 Файл формата:
@@ -31,6 +31,7 @@ define variable varvolume        as DECIMAL   no-undo.
 define variable varprev-level    as integer   no-undo.
 define variable varprev-volume   as DECIMAL   no-undo.
 define variable vardelta         as decimal   no-undo.
+define variable vError           as character no-undo.
 
 define temp-table tt-tarir
    field level   as   integer
@@ -38,7 +39,7 @@ define temp-table tt-tarir
    field delta   as   decimal
    index pi is unique primary
          level
-         .
+.
 
 define buffer buf_clients  for ub.clients .
 define buffer buf_place    for ub.place .
@@ -87,7 +88,7 @@ on error undo, return error return-value :
         and   buf_place.pl-code  = p-pl-code
         no-lock
         no-error.
-   if not available buf_clients then do:
+   if not available buf_place then do:
       message "Указан неправильный резервуар " p-obj-type " " p-obj-code " " p-pl-code "."
       skip "Таблицы не загружены."
       view-as alert-box error.
@@ -97,15 +98,32 @@ on error undo, return error return-value :
    input stream str-in from VALUE(v-filename).
    repeat :
       import stream str-in unformatted varstring.
+
+      if varstring = "" then next.
       assign
          varcode   = integer(entry (1, varstring, chr(9)))
          varlevel  = integer(entry (2, varstring, chr(9)))
          varvolume = DECIMAL(entry (3, varstring, chr(9)))
       no-error.
 
-      if error-status:error = no
-      and STRING(varcode) = buf_place.loc1
+      if error-status:error then 
+      do:
+        vError = "Неверный формат файла.".
+        leave.
+      end.
+
+      if STRING(varcode) = buf_place.loc1
       then do:
+
+        find first tt-tarir where
+                   tt-tarir.level = varlevel
+             no-lock no-error.
+        if avail tt-tarir then
+        do:
+          vError = substitute("В файле указан повторно уровень &1.", varlevel).
+          leave.
+        end.  
+
         create tt-tarir.
         assign
            tt-tarir.level  = varlevel
@@ -131,6 +149,9 @@ on error undo, return error return-value :
         tt-tarir.delta  = vardelta .
       end.
    end. /* repeat */
+   
+   if vError <> "" then
+     return error substitute("&1~nТаблицы не загружены.", vError).
 
    IF NOT CAN-FIND (FIRST tt-tarir) THEN DO:
       message "В файле нет тарировочной таблицы для резервуара " p-obj-type " " p-obj-code " " p-pl-code " ("  buf_place.loc1 ")."

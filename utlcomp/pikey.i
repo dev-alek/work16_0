@@ -946,6 +946,7 @@
 &glob pl-gds-pump-attr_primary_key obj-type obj-code gds-code pump-code pl-code attr-code 
 &glob pl-level_primary_key obj-type obj-code pl-code pl-level 
 &glob pl-level-attr_primary_key obj-type obj-code pl-code pl-level attr-code 
+&glob pl-level-mm_primary_key obj-type obj-code pl-code zone level
 &glob pl-pump_primary_key obj-type obj-code pl-code pump-code 
 &glob pl-pump-attr_primary_key obj-type obj-code pl-code pump-code attr-code 
 &glob pl-pump-nozzle_primary_key obj-type obj-code pl-code pump-code nozzle-code 

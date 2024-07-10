@@ -102,6 +102,7 @@ define variable vss-description as character no-undo initial "Ёкран работы со ст
 { str/initiator.i }
 { gbl/color.i }
 { str/get-pokmi-dll-version.i }
+{ str/calibrationbelt.i }
 
 define variable g-log        as logical   no-undo.
 define variable g-log2       as logical   no-undo.
@@ -145,6 +146,7 @@ define variable v-value           as character no-undo.
 define variable v-ok              as logical   no-undo.
 define VARIABLE ii as integer no-undo .
 
+define variable vAutomationDegree as integer no-undo extent 3 init [2,1,3].
 
 define buffer buf_goods        for ub.goods .
 define buffer buf_rvs-doc      for ub.rvs-doc.
@@ -1442,6 +1444,7 @@ define variable place-ratio-error as decimal no-undo.
 define variable dens-prov         as decimal no-undo format "9.9999999999":U.
 
 define variable CalibTable        as character no-undo initial "".
+define variable CalibBelt         as character no-undo initial "".
 define variable ToolType          as integer no-undo.
 define variable LevelToolType          as integer no-undo.
 define variable A_LevelMeasurementTool  as decimal no-undo.
@@ -1457,6 +1460,13 @@ define variable DeadZone_Reservoir      as decimal no-undo.
 define variable DeltaOtn_H              as decimal no-undo.
 define variable DeltaOtn_H_Water        as decimal no-undo.
 define variable DeltaOtn_R              as decimal no-undo.
+define variable ToolAutomationLevel_H   as integer no-undo.
+define variable ToolAutomationLevel_H_Water as integer no-undo.
+define variable ToolAutomationLevel_R   as integer no-undo.
+define variable ToolAutomationLevel_Tv  as integer no-undo.
+define variable ToolAutomationLevel_Tr  as integer no-undo.
+define variable DeltaAbs_H_CalcType     as integer no-undo.
+define variable DeltaAbs_H_Water_CalcType   as integer no-undo.
 define variable temp-for-pomi           as integer no-undo.
 define variable error-string            as character no-undo.
 define variable v-is-meas               as logical no-undo.
@@ -1713,15 +1723,22 @@ define buffer bf_place for ub.place .
           assign
             ToolType               = buf_sr-izmerenia.sr-type-id
             A_LevelMeasurementTool = buf_sr-izmerenia.sr-temp-line
+            ToolAutomationLevel_H  = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+            ToolAutomationLevel_H_Water = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
             DeltaAbs_H             = buf_sr-izmerenia.sr-abs-err-neft-water
             DeltaAbs_H_Water       = buf_sr-izmerenia.sr-abs-err-water
+            ToolAutomationLevel_R  = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
             DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+            ToolAutomationLevel_Tv = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
             DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
+            ToolAutomationLevel_Tr = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
             DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
             DeltaOtn_N             = 0.05
             DeltaOtn_H             = buf_sr-izmerenia.sr-relative-err-neft-water
             DeltaOtn_H_Water       = buf_sr-izmerenia.sr-relative-err-water
             DeltaOtn_R             = buf_sr-izmerenia.sr-relative-err-dens
+            DeltaAbs_H_CalcType    = buf_sr-izmerenia.sr-type-level-measuring + 1
+            DeltaAbs_H_Water_CalcType = buf_sr-izmerenia.sr-type-level-measuring + 1
           .
         end.
       end.
@@ -1822,6 +1839,7 @@ define buffer bf_place for ub.place .
           assign
             DeltaAbs_Tv            = temp_sr-izmerenia.sr-abs-err-temp-vol
             DeltaAbs_Tr            = temp_sr-izmerenia.sr-abs-err-temp-dens
+            ToolAutomationLevel_Tr = vAutomationDegree[temp_sr-izmerenia.sr-type-izm + 1]
           .
         end.
       end .
@@ -1831,21 +1849,45 @@ define buffer bf_place for ub.place .
     and v-mi-tmp-dnst <> v-mi-tmp
     then do :
       for first temp-dens_sr-izmerenia no-lock where temp-dens_sr-izmerenia.node-code = v-mi-tmp-dnst :
-        assign DeltaAbs_Tr = temp-dens_sr-izmerenia.sr-abs-err-temp-dens when temp-dens_sr-izmerenia.sr-abs-err-temp-dens > 0 .
+        assign 
+          DeltaAbs_Tr = temp-dens_sr-izmerenia.sr-abs-err-temp-dens when temp-dens_sr-izmerenia.sr-abs-err-temp-dens > 0
+          ToolAutomationLevel_Tr = vAutomationDegree[temp-dens_sr-izmerenia.sr-type-izm + 1]
+        .
       end .
     end .
     
     if available level_sr-izmerenia
-    then
-      LevelToolType = level_sr-izmerenia.sr-type-level-measuring .
-    else
-      LevelToolType = buf_sr-izmerenia.sr-type-level-measuring .
+    then assign
+      LevelToolType = level_sr-izmerenia.sr-type-level-measuring 
+      ToolAutomationLevel_H  = vAutomationDegree[level_sr-izmerenia.sr-type-izm + 1]
+      ToolAutomationLevel_H_Water = vAutomationDegree[level_sr-izmerenia.sr-type-izm + 1]
+      DeltaAbs_H_CalcType = level_sr-izmerenia.sr-type-level-measuring + 1
+      DeltaAbs_H_Water_CalcType = level_sr-izmerenia.sr-type-level-measuring + 1
+    .
+    else assign
+      LevelToolType = buf_sr-izmerenia.sr-type-level-measuring 
+      ToolAutomationLevel_H  = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+      ToolAutomationLevel_H_Water = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+      DeltaAbs_H_CalcType = buf_sr-izmerenia.sr-type-level-measuring + 1
+      DeltaAbs_H_Water_CalcType = buf_sr-izmerenia.sr-type-level-measuring + 1
+    .
+    
+    if avail temp_sr-izmerenia then
+      ToolAutomationLevel_Tv = vAutomationDegree[temp_sr-izmerenia.sr-type-izm + 1].
+    else 
+      ToolAutomationLevel_Tv = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1].
       
+    if avail dens_sr-izmerenia then
+      ToolAutomationLevel_R  = vAutomationDegree[dens_sr-izmerenia.sr-type-izm + 1].
+    else 
+      ToolAutomationLevel_R = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1].
+
     if available dens_sr-izmerenia
     and dens_sr-izmerenia.sr-type-izm = 3
     and dens_sr-izmerenia.sr-temperature
     then do :
       DeltaAbs_Tr = dens_sr-izmerenia.sr-abs-err-temp-dens .
+      ToolAutomationLevel_Tr = vAutomationDegree[dens_sr-izmerenia.sr-type-izm + 1].
     end .
     
     if DeltaAbs_H       = ? then DeltaAbs_H = 0 .
@@ -1859,7 +1901,14 @@ define buffer bf_place for ub.place .
     if DeltaOtn_R       = ? then DeltaOtn_R = 0 .
     if LevelToolType    = ? then LevelToolType = 0 .
     if ToolType         = ? then ToolType = 0 .
-    if A_LevelMeasurementTool = ? then A_LevelMeasurementTool = 0 .
+    if A_LevelMeasurementTool      = ? then A_LevelMeasurementTool = 0 .
+    if ToolAutomationLevel_Tr      = ? then ToolAutomationLevel_Tr =0.
+    if ToolAutomationLevel_H       = ? then ToolAutomationLevel_H = 0.
+    if ToolAutomationLevel_H_Water = ? then ToolAutomationLevel_H_Water = 0.
+    if ToolAutomationLevel_Tv      = ? then ToolAutomationLevel_Tv = 0.
+    if ToolAutomationLevel_R       = ? then ToolAutomationLevel_R = 0.
+    if DeltaAbs_H_CalcType         = ? then DeltaAbs_H_CalcType = 0.
+    if DeltaAbs_H_Water_CalcType   = ? then DeltaAbs_H_Water_CalcType = 0.
     
     /*..........................................*/
     
@@ -2023,6 +2072,41 @@ define buffer bf_place for ub.place .
               'H                      = ' v-mm:H                                             SKIP
               'H_water                = ' v-mm:H_water                                       SKIP
               'CalibrationTable       = ' v-mm:CalibrationTable                              SKIP
+              .
+              if v-pokmi-dll-version = "1.0.5.6"
+              then do :
+                CalibBelt = getCalibrationBelt(
+                    tt-rvs-line.obj-type, 
+                    tt-rvs-line.obj-code,
+                    tt-rvs-line.pl-code,
+                    tt-rvs-line.state-level-total,
+                    if tt-rvs-line.state-level-water <> ? then tt-rvs-line.state-level-water else 0
+                ).
+                assign
+                  v-mm:CalibrationBelt        = CalibBelt
+                  v-mm:ToolAutomationLevel_H  = ToolAutomationLevel_H
+                  v-mm:ToolAutomationLevel_H_Water = ToolAutomationLevel_H_Water
+                  v-mm:ToolAutomationLevel_R  = ToolAutomationLevel_R
+                  v-mm:ToolAutomationLevel_Tv = ToolAutomationLevel_Tv
+                  v-mm:ToolAutomationLevel_Tr = ToolAutomationLevel_Tr
+                  v-mm:DeltaAbs_H_CalcType    = DeltaAbs_H_CalcType
+                  v-mm:DeltaAbs_H_Water_CalcType = DeltaAbs_H_Water_CalcType
+                .
+                PUT STREAM outstream unformatted
+                  'DeltaOtn_N            = ' v-mm:DeltaOtn_N                SKIP
+                  'CalibrationBelt             = ' v-mm:CalibrationBelt           SKIP
+                  'ToolAutomationLevel_H       = ' v-mm:ToolAutomationLevel_H     SKIP
+                  'ToolAutomationLevel_H_Water = ' ToolAutomationLevel_H_Water    SKIP
+                  'ToolAutomationLevel_R       = ' v-mm:ToolAutomationLevel_R     SKIP
+                  'ToolAutomationLevel_Tv      = ' v-mm:ToolAutomationLevel_Tv    SKIP
+                  'ToolAutomationLevel_Tr      = ' v-mm:ToolAutomationLevel_Tr    SKIP
+                  'DeltaAbs_H_CalcType         = ' v-mm:DeltaAbs_H_CalcType       SKIP
+                  'DeltaAbs_H_Water_CalcType   = ' v-mm:DeltaAbs_H_Water_CalcType SKIP
+                  
+                .
+              end .
+              
+              PUT STREAM outstream unformatted
               'Tr                     = ' v-mm:Tr                                            SKIP
               'Tv                     = ' v-mm:Tv                                            SKIP
               'R                      = ' v-mm:R                                             SKIP
@@ -2056,15 +2140,11 @@ define buffer bf_place for ub.place .
         .
       end.
       
-      if v-pokmi-dll-version = "1.0.5.6"
-      then do :
-        
-      end .
-      
       output stream outstream close.
       v-mm:Exec() .
       if v-mm:Result <> 0 then do :
-        error-string = v-mm:ResultDetail .
+        error-string = substitute("~n–езервуар: &1.~n", if avail buf2_place then buf2_place.loc1 else "") 
+                     + replace(v-mm:ResultDetail,";0x","~n0x") .
         output stream outstream to value ("pomi.log")  append.
         put stream outstream error-string format "X(1024)" skip.
         message
@@ -2150,7 +2230,9 @@ define buffer bf_place for ub.place .
             "MM:DeltaV              = " + v-mm:DeltaV     + {&new-line} +
             "MM:Vcy                 = " + v-mm:Vcy     + {&new-line} +
             "MM:Rcy                 = " + v-mm:Rcy          + {&new-line} +
-            "MM:Mcy                 = " + v-mm:Mcy + {&new-line} +
+            (if v-pokmi-dll-version <> "1.0.5.6" then 
+              "MM:Mcy                 = " + v-mm:Mcy + {&new-line}
+             else "") +
             "MM:V_product           = " + v-mm:V_product  + {&new-line} +
             "MM:V                   = " + v-mm:V  + {&new-line} + 
             "MM:Rv                  = " + v-mm:Rv  + {&new-line} +

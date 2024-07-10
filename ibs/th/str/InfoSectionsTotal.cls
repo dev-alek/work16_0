@@ -1467,11 +1467,15 @@ class ibs.th.str.InfoSectionsTotal:
     define variable Dgor                    as decimal no-undo.
     define variable NeckWidth               as decimal no-undo.
     define variable NeckHeight              as decimal no-undo.
+    define variable ToolAutomationLevel_R   as integer no-undo.
+    define variable ToolAutomationLevel_Tv  as integer no-undo.
+    define variable ToolAutomationLevel_Tr  as integer no-undo.
     define variable error-string            as character no-undo.
     define variable v-mm as com-handle.
     define variable v-proc as character no-undo.
     define variable v-TankVol-m3            as decimal decimals 10 no-undo .
     define variable v-pokmi-dll-version as character no-undo .
+    define variable vAutomationDegree as integer no-undo extent 3 init [2,1,3].
   /*  define buffer buf_clob-bind    for ub.clob-bind.*/
     define buffer buf_sr-izmerenia    for ub.sr-izmerenia .
 /*    run save-page.*/
@@ -1501,9 +1505,21 @@ class ibs.th.str.InfoSectionsTotal:
             undo _trpomi, return no-apply  .
           end.
           else do :
+            if buf_sr-izmerenia.sr-type-izm = 2 then 
+            do:
+              message
+                "При расчете по методу CMethodOfMetering31N ~"Расчет массы и объема нефтепродуктов в автомобильных цистернах~"" skip
+                "не предусматривается использование СИ с типом ~"Измерительная система~""
+              view-as alert-box error.
+              undo _trpomi, return no-apply  .
+            end.    
+            
             assign
               ToolType               = buf_sr-izmerenia.sr-type-id
               DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+              ToolAutomationLevel_R  = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1].
+              ToolAutomationLevel_Tv = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1].
+              ToolAutomationLevel_Tr = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
             .
           end.
           
@@ -1517,7 +1533,9 @@ class ibs.th.str.InfoSectionsTotal:
           else do :
             assign
               DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
+              ToolAutomationLevel_Tv = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
               DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
+              ToolAutomationLevel_Tr = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
             .
           end.
           
@@ -1677,7 +1695,11 @@ class ibs.th.str.InfoSectionsTotal:
             .
             if v-pokmi-dll-version = "1.0.5.6"
             then do :
-              
+              assign
+                v-mm:ToolAutomationLevel_R  = ToolAutomationLevel_R
+                v-mm:ToolAutomationLevel_Tv = ToolAutomationLevel_Tv
+                v-mm:ToolAutomationLevel_Tr = ToolAutomationLevel_Tr
+              .  
             end .
             
             v-mm:Exec() .
@@ -1735,12 +1757,22 @@ class ibs.th.str.InfoSectionsTotal:
               'Rv                     = ' v-mm:Rv                skip
               'DeltaOtn_Vcy           = ' v-mm:DeltaOtn_Vcy      skip 
               'M                      = ' v-mm:M                 skip
-              'Mcy                    = ' v-mm:Mcy               skip
               'DeltaOtn_M             = ' v-mm:DeltaOtn_M        skip
             .    
+            if v-pokmi-dll-version = '1.0.5.6' then
+              put stream outstream unformatted
+                'ToolAutomationLevel_R  =' v-mm:ToolAutomationLevel_R skip
+                'ToolAutomationLevel_Tv =' v-mm:ToolAutomationLevel_Tv skip
+                'ToolAutomationLevel_Tr =' v-mm:ToolAutomationLevel_Tr skip
+                'Rcy20                  =' v-mm:Rcy20 skip
+              .
+            else
+              put stream outstream unformatted
+                'Mcy                    =' v-mm:Mcy skip.
+
             output stream outstream close.
             if v-mm:Result <> 0 then do :
-              error-string = v-mm:ResultDetail .
+              error-string = replace(v-mm:ResultDetail,";0x","~n0x") .
               output stream outstream to value ("pomi.log") append.
                 put stream outstream error-string format "x(1024)" skip.
               output stream outstream close.

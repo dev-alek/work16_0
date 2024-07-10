@@ -7,11 +7,11 @@
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*------------------------------------------------------------------------
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9995f7bf39ec, 3001, rls $
+$Author: SSlivenko $
+$Date: Ср апр 06 16:23:44 2022 +0300 $
+$Workfile: pl-lvls.w $
+$Archive: ref/pl-lvls.w $
 
 Градуировочная таблица для резервуара
 
@@ -28,11 +28,11 @@ Creation date: 01/28/09
 /*----------------------------------------------------------------------*/
 
 /* ***************************  Definitions  ************************** */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 9995f7bf39ec, 3001, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Ср апр 06 16:23:44 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pl-lvls.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/pl-lvls.w $":U .
 define variable vss-description as character no-undo init "Градуировочная таблица для резервуара".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -45,8 +45,10 @@ define input parameter parparentproc   as widget-handle  no-undo .
 define input parameter p-obj-type      as character      no-undo .
 define input parameter p-obj-code      as integer        no-undo .
 define input parameter p-pl-code       as integer        no-undo .
+/* Local Variable Definitions ---                                       */
 define variable v_ok as LOGICAL no-undo .
 define buffer buf_pl-level for ub.pl-level .
+define buffer buf_pl-level-mm for ub.pl-level-mm .
 define buffer buf_pl-level-attr for ub.pl-level-attr .
 define buffer buf_place    for ub.place .
 define buffer buf_place-attr    for ub.place-attr .
@@ -54,7 +56,7 @@ define VARIABLE v-ok-level as logical no-undo INIT no .
 define variable v-chk-act-host-code as integer   no-undo .
 define variable v-place-type as integer no-undo .
 define variable glog                as logical   no-undo .
-/* Local Variable Definitions ---                                       */
+define stream   vTxt.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -90,6 +92,11 @@ define variable glog                as logical   no-undo .
       WHERE buf_pl-level.obj-type = p-obj-type ~
  AND buf_pl-level.obj-code = p-obj-code ~
  AND buf_pl-level.pl-code = p-pl-code NO-LOCK, ~
+ FIRST buf_pl-level-mm OUTER-JOIN where buf_pl-level-mm.obj-type = p-obj-type ~
+ and buf_pl-level-mm.obj-code = p-obj-code ~
+ and buf_pl-level-mm.pl-code = p-pl-code ~
+ and buf_pl-level-mm.min-level <= buf_pl-level.pl-level ~
+ and buf_pl-level-mm.max-level >= buf_pl-level.pl-level NO-LOCK, ~
  first buf_pl-level-attr where buf_pl-level-attr.obj-type = p-obj-type ~
  and buf_pl-level-attr.obj-code = p-obj-code ~
  and buf_pl-level-attr.pl-code = p-pl-code ~
@@ -150,10 +157,14 @@ DEFINE BUTTON b-load
      LABEL "&Загрузить" 
      SIZE 10 BY 1.
 
+DEFINE BUTTON b-zone 
+     LABEL "&Таблица поясов" 
+     SIZE 15 BY 1.
+
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BROWSE-2 FOR 
-      buf_pl-level, buf_pl-level-attr SCROLLING.
+      buf_pl-level, buf_pl-level-mm, buf_pl-level-attr SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
@@ -162,10 +173,11 @@ DEFINE BROWSE BROWSE-2
   QUERY BROWSE-2 NO-LOCK DISPLAY
       buf_pl-level.pl-level COLUMN-LABEL "Уровень, см"
       buf_pl-level.pl-qnty WIDTH 15.5
+      IF AVAIL buf_pl-level-mm THEN string(buf_pl-level-mm.zone,">>>>>>>9") ELSE "" COLUMN-LABEL "        Пояс" WIDTH 12
       decimal(buf_pl-level-attr.attr-value) WIDTH 26 format "9.999" label "Погрешность составления,%"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 66 BY 17.5 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 79 BY 17.5 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -177,7 +189,8 @@ DEFINE FRAME Dialog-Frame
      b-del AT ROW 1 COL 31 WIDGET-ID 6
      b-load AT ROW 1 COL 41 WIDGET-ID 8
      b-delete AT ROW 1 COL 51 WIDGET-ID 10
-     b-help AT ROW 1 COL 57
+     b-zone AT ROW 1 COL 60 WIDGET-ID 12
+     b-help AT ROW 1 COL 70
      BROWSE-2 AT ROW 2.25 COL 1 WIDGET-ID 200
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -437,6 +450,12 @@ ON CHOOSE OF b-delete IN FRAME Dialog-Frame /* Очистить */
                     delete buf_pl-level.
 
                 end.
+                FOR EACH buf_pl-level-attr 
+                    WHERE buf_pl-level-attr.obj-type = p-obj-type 
+                      AND buf_pl-level-attr.obj-code = p-obj-code 
+                      AND buf_pl-level-attr.pl-code = p-pl-code :
+                  delete buf_pl-level-attr.
+                end.
                 run waitfram-hide in this-procedure.
                 if error-status:error then 
                 do:
@@ -559,10 +578,19 @@ ON CHOOSE OF b-load IN FRAME Dialog-Frame /* Загрузить */
         }
         if NOT glog then return no-apply.
 
+        if avail buf_pl-level then do:
+          message "Импорт невозможен." skip
+                  "Сначала необходимо очистить градуировочную таблицу для резервуара."
+                  view-as alert-box error 
+                  buttons OK
+                  title "ПРЕДУПРЕЖДЕНИЕ".
+          return no-apply.  
+        end.
+        
         run gbl/d-file.p  ( input-output v-file-name
             , input-output v-dir-name
-            , input  "":U
-            , input  "":U
+            , input  "Файл импорта (*.txt,*.xlsx)"
+            , input  "*.txt;*.xlsx"
             , input  "":U
             , input  "":U
             , input  TRUE
@@ -576,11 +604,15 @@ ON CHOOSE OF b-load IN FRAME Dialog-Frame /* Загрузить */
             AND v-file-name <> ?
             THEN 
         DO:
-            run utl/tarir2.p  ( INPUT v-file-name
-                , INPUT p-obj-type
-                , INPUT p-obj-code
-                , INPUT p-pl-code
-                ) NO-ERROR.
+            if entry(2,v-file-name,".") = "xlsx" then do:
+              run importExcel in this-procedure (v-file-name) no-error.
+            end.
+            else
+              run utl/tarir2.p  ( INPUT v-file-name
+                  , INPUT p-obj-type
+                  , INPUT p-obj-code
+                  , INPUT p-pl-code
+                  ) NO-ERROR.
             IF ERROR-STATUS:ERROR THEN 
             DO:
                 message
@@ -594,6 +626,25 @@ ON CHOOSE OF b-load IN FRAME Dialog-Frame /* Загрузить */
             v-ok-level = yes .
         END.
     END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-zone
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-zone Dialog-Frame
+ON CHOOSE OF b-zone IN FRAME Dialog-Frame /* Таблица поясов */
+DO:
+    run ref/pl-level-mm-brw.w (
+        parparentproc,
+        p-obj-type,
+        p-obj-code,
+        p-pl-code,
+        {&update}
+        
+    ).
+    run enable_UI in this-procedure.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -833,6 +884,117 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE importExcel f-pl-level-mm 
+PROCEDURE importExcel :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+define input parameter fileImport as character no-undo.
+
+define variable mExcelApplication as component-handle no-undo. /* ССЫЛКА НА ПРИЛОЖЕНИЕ */
+define variable mWorkBook         as component-handle no-undo. /* ССЫЛКА НА РАБОЧУЮ КНИГУ */
+define variable mWorkSheet        as component-handle no-undo. /* ССЫЛКА НА РАБОЧИЙ ЛИСТ */
+
+define variable cntLine           as integer   no-undo.
+define variable vLine             as character no-undo.
+define variable vErr              as character no-undo.
+
+define variable vTarirDelta       as decimal                no-undo.
+define variable vLevel            like ub.pl-level.pl-level no-undo.
+define variable vQnty             like ub.pl-level.pl-qnty  no-undo.
+define variable vFileTxt          as character.
+
+define buffer b_pl-level for ub.pl-level.
+define buffer b_pl-level-attr for ub.pl-level-attr.
+
+create "Excel.Application":U mExcelApplication no-error.
+if error-status :error then 
+do:
+ return error "Ошибка при запуске Excel".
+end.    
+
+ASSIGN
+ mExcelApplication:DisplayAlerts = NO
+ mWorkbook                       = mExcelApplication:WorkBooks:Add(fileImport)
+ mWorkSheet                      = mWorkbook:Sheets:Item(1)
+.
+
+if trim(mWorkSheet:Range("A1"):VALUE) <> "Имя/Тип" or
+   trim(mWorkSheet:Range("A2"):VALUE) <> "Погрешность определения вместимости, ±%" or
+   trim(mWorkSheet:Range("A4"):VALUE) = "" then
+do:
+  return error "В выбранном файле нет градуировочных таблиц.~nТаблицы не загружены.".
+end.
+
+vTarirDelta = mWorkSheet:Range("B2"):VALUE no-error.
+  if error-status:error then
+  do:
+    vErr = "Ошибка при чтении ячейки B2.".
+    return error vErr.
+  end.
+
+vFileTxt = substitute("&1&2.&3",
+                      session:temp-directory,
+                      entry(1,entry(num-entries(fileImport,"\"),fileImport,"\"),"."),
+                      "txt").
+output stream vTxt to value(vFileTxt).
+cntLine = 4.
+IMP:
+do transaction on error undo IMP, leave IMP:
+repeat:
+  vLine  = string(cntLine).
+  if mWorkSheet:Range("A" + vLine):VALUE = "" or
+     mWorkSheet:Range("A" + vLine):VALUE = ? then
+    leave IMP.
+
+  assign
+    vLevel = mWorkSheet:Range("A" + vLine):VALUE
+    vQnty  = mWorkSheet:Range("B" + vLine):VALUE
+  no-error.
+
+  if error-status:error then
+  do:
+    vErr = "Ошибка при чтении строки: " + error-status:get-message(1).
+    undo IMP, leave IMP.
+  end.
+
+  put stream vTxt unformatted
+    string(buf_place.loc1) {&tabulation}
+    string(vLevel) {&tabulation}
+    string(round(vQnty * 1000,0)) {&tabulation}
+    string(round(vTarirDelta,3)) skip
+  .
+  
+  cntLine = cntLine + 1.
+end.
+end.
+output stream vTxt close. 
+
+mExcelApplication:Quit().
+release object mExcelApplication.
+
+if vErr = "" then
+do:
+    run utl/tarir2.p  ( input vFileTxt
+        , input p-obj-type
+        , input p-obj-code
+        , input p-pl-code
+    ) no-error.
+    if error-status:error then
+      vErr = substitute("&1~n&2", error-status:get-message(1), return-value).
+end.
+
+os-delete value(vFileTxt).
+if vErr <> "" then
+  return error vErr.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
     /*------------------------------------------------------------------------------
@@ -861,7 +1023,7 @@ PROCEDURE enable_UI :
                    These statements here are based on the "Other 
                    Settings" section of the widget Property Sheets.
     ------------------------------------------------------------------------------*/
-    ENABLE b-exit b-add b-chg b-del b-load b-delete b-help BROWSE-2 
+    ENABLE b-exit b-add b-chg b-del b-load b-delete b-zone b-help BROWSE-2 
         WITH FRAME Dialog-Frame.
     VIEW FRAME Dialog-Frame.
     {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

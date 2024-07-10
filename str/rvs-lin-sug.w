@@ -1492,6 +1492,8 @@ define variable DeltaOtn_H_Water        as decimal no-undo.
 define variable DeltaOtn_R              as decimal no-undo.
 define variable DeltaOtn_K              as decimal no-undo.
 define variable DeltaOtn_K_Full         as decimal no-undo.
+define variable Use_DeltaOtn_R_liquid_IN as logical no-undo.
+define variable DeltaOtn_R_liquid_IN    as decimal no-undo.
 define variable A_Reservoir             as decimal no-undo init 0.0000125 .
 define variable temp-for-pomi           as integer no-undo.
 define variable error-string            as character no-undo.
@@ -1746,6 +1748,8 @@ define buffer bf_place for ub.place .
             DeltaAbs_R_SUG         = buf_sr-izmerenia.sr-abs-err-dens-lgas-liquid
             DeltaAbs_R_SUG-vapor   = buf_sr-izmerenia.sr-abs-err-dens-lgas-vapor
             DeltaOtn_R             = buf_sr-izmerenia.sr-relative-err-dens
+            Use_DeltaOtn_R_liquid_IN = buf_sr-izmerenia.sr-relative-err-dens-lgas-liquid <> ?
+            DeltaOtn_R_liquid_IN     = buf_sr-izmerenia.sr-relative-err-dens-lgas-liquid
 /*            DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol */
 /*            DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens*/
             DeltaOtn_N             = 0.05
@@ -1874,6 +1878,8 @@ define buffer bf_place for ub.place .
     if DeltaOtn_R       = ? then DeltaOtn_R = 0 .
     if LevelToolType    = ? then LevelToolType = 0 .
     if A_LevelMeasurementTool = ? then A_LevelMeasurementTool = 0 .
+    if Use_DeltaOtn_R_liquid_IN = ? then Use_DeltaOtn_R_liquid_IN = false.
+    if DeltaOtn_R_liquid_IN = ? then DeltaOtn_R_liquid_IN = 0.
     
     /*..........................................*/
     
@@ -1955,13 +1961,21 @@ define buffer bf_place for ub.place .
       
       if v-pokmi-dll-version = "1.0.5.6"
       then do :
-        
+        assign
+          v-mm:Use_DeltaOtn_R_liquid_IN = Use_DeltaOtn_R_liquid_IN
+          v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN
+        .
+        PUT STREAM outstream unformatted
+          'Use_DeltaOtn_R_liquid_IN = ' v-mm:Use_DeltaOtn_R_liquid_IN SKIP
+          'DeltaOtn_R_liquid_IN     = ' v-mm:DeltaOtn_R_liquid_IN     SKIP
+          
+        .
       end .
       
       output stream outstream close.
       v-mm:Exec() .
       if v-mm:Result <> 0 then do :
-        error-string = v-mm:ResultDetail .
+        error-string = substitute("~n–езервуар: &1.~n", buf_place.loc1) + replace(v-mm:ResultDetail,";0x","~n0x") .
         output stream outstream to value ("pomi.log")  append.
         put stream outstream error-string format "X(1024)" skip.
         message
@@ -1973,6 +1987,22 @@ define buffer bf_place for ub.place .
         undo _trpomi, return no-apply .
       end.
       else do :
+
+        if v-pokmi-dll-version = "1.0.5.6" and v-mm:C_HN = 0 then
+        do:
+          error-string = "ќшибка входного параметра CalibrationTable. Ѕиблеотека ѕќкћ» вернула C_HN = 0." .
+          output stream outstream to value ("pomi.log")  append.
+          put stream outstream error-string skip.
+          message
+            substitute('ќшибка входных параметров в библиотеку ѕќкћ».~n &1',error-string)
+            view-as alert-box error
+          .
+          RELEASE OBJECT v-mm NO-ERROR.
+          v-mm = ?.
+          output stream outstream close.
+          undo _trpomi, return no-apply .
+        end.      
+          
         assign 
           tt-rvs-line.state-measure-qnty      = v-mm:V_liquid * 1000 
           tt-rvs-line.state-measure-tc-qnty   = v-mm:V_liquid * 1000 

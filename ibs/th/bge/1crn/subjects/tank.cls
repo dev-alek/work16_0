@@ -66,12 +66,16 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
   define buffer buf_place-attr for ub.place-attr .
   define buffer buf_pl-level   for ub.pl-level .
   define buffer buf_c-pl-level for ub.c-pl-level .
+  define buffer buf_pl-level-mm   for ub.pl-level-mm .
   define buffer buf_pl-level-attr for ub.pl-level-attr .
   define buffer buf_pl-gds     for ub.pl-gds .
   define temp-table tt-place like ub.c-place 
   field gds-code as integer.
+  define temp-table tt-pl-level-mm like ub.pl-level-mm. 
+
   define temp-table tt-pl-level like ub.c-pl-level 
-  field comp-err  as decimal.
+  field belt      as decimal
+  field comp-err  as integer.
   
   define variable ii      as integer   no-undo .
   define variable v-code  as character no-undo .
@@ -176,14 +180,22 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         buf_pl-level.obj-type = tt-place.obj-type:
         create tt-pl-level .
         buffer-copy buf_pl-level to tt-pl-level .
-     find first buf_pl-level-attr no-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
-                                            and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
-                                            and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
-                                            and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
-                                            and buf_pl-level-attr.attr-code = "tarir-delta"
-                                            no-error .
-     if available buf_pl-level-attr then tt-pl-level.comp-err = decimal (buf_pl-level-attr.attr-value) .
-     end .           
+        find first buf_pl-level-attr no-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+                                               and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+                                               and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
+                                               and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+                                               and buf_pl-level-attr.attr-code = "tarir-delta"
+                                               no-error .
+        if available buf_pl-level-attr then tt-pl-level.comp-err = decimal (buf_pl-level-attr.attr-value) .
+        find first buf_pl-level-mm where 
+                   buf_pl-level-mm.obj-type   = tt-place.obj-type
+               and buf_pl-level-mm.obj-code   = tt-place.obj-code
+               and buf_pl-level-mm.pl-code    = tt-place.pl-code
+               and buf_pl-level-mm.min-level <= buf_pl-level.pl-level
+               and buf_pl-level-mm.max-level >= buf_pl-level.pl-level
+             no-lock no-error.
+        tt-pl-level.belt = if avail buf_pl-level-mm then buf_pl-level-mm.zone else 0.
+      end .           
     end .
     else 
     do:
@@ -199,8 +211,33 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
                                             and buf_pl-level-attr.attr-code = "tarir-delta"
                                             no-error .
      if available buf_pl-level-attr then tt-pl-level.comp-err = decimal (buf_pl-level-attr.attr-value) .        
+        find first buf_pl-level-mm where 
+                   buf_pl-level-mm.obj-type = tt-place.obj-type
+               and buf_pl-level-mm.obj-code = tt-place.obj-code
+               and buf_pl-level-mm.pl-code = tt-place.pl-code
+               and buf_pl-level-mm.min-level <= buf_c-pl-level.pl-level
+               and buf_pl-level-mm.max-level >= buf_c-pl-level.pl-level 
+             no-lock no-error.
+        tt-pl-level.belt = if avail buf_pl-level-mm then buf_pl-level-mm.zone else 0.
       end.      
     end.        
+    
+    find first buf_pl-level-mm where 
+               buf_pl-level-mm.pl-code = tt-place.pl-code
+           and buf_pl-level-mm.obj-code = tt-place.obj-code
+           and buf_pl-level-mm.obj-type = tt-place.obj-type no-lock no-error .
+    if avail buf_pl-level-mm then
+    do:
+        for each buf_pl-level-mm where 
+                 buf_pl-level-mm.pl-code = tt-place.pl-code
+             and buf_pl-level-mm.obj-code = tt-place.obj-code
+             and buf_pl-level-mm.obj-type = tt-place.obj-type 
+            no-lock:
+            create tt-pl-level-mm .
+            buffer-copy buf_pl-level-mm to tt-pl-level-mm .
+        end.
+    end.
+    
     
     for each tt-place where tt-place.pl-code = INTEGER (pl-code) no-lock :    
       find first tt-place-attr exclusive-lock where tt-place-attr.pl-code = tt-place.pl-code no-error.
@@ -475,11 +512,33 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
           tt-pl-level.obj-type = tt-place.obj-type:
           sw:start-element ("cal-tbl-line") .
           sw:write-data-element ("lvl"  , string(tt-pl-level.pl-level)).
+          if tt-pl-level.belt <> 0 then sw:write-data-element ("belt", string(tt-pl-level.belt)).
           sw:write-data-element ("amnt" , string(tt-pl-level.pl-qnty)).
           sw:write-data-element ("comp-err" , string(tt-pl-level.comp-err)).
+          
           sw:end-element ("cal-tbl-line")  .
         end.
         sw:end-element ("cal-tbl")  .  
+      end.
+
+      find first tt-pl-level-mm no-lock where tt-pl-level-mm.pl-code = tt-place.pl-code and
+        tt-pl-level-mm.obj-code = tt-place.obj-code and
+        tt-pl-level-mm.obj-type = tt-place.obj-type no-error .
+      if AVAILABLE (tt-pl-level-mm) then 
+      do:      
+        sw:start-element ("belt-tbl") .
+        for each tt-pl-level-mm no-lock where tt-pl-level-mm.pl-code = tt-place.pl-code and
+          tt-pl-level-mm.obj-code = tt-place.obj-code and
+          tt-pl-level-mm.obj-type = tt-place.obj-type:
+          sw:start-element ("belt-tbl-line") .
+          sw:write-data-element ("num-belt"  , string(tt-pl-level-mm.zone)).
+          sw:write-data-element ("low-lvl"  , string(tt-pl-level-mm.min-level)).
+          sw:write-data-element ("up-lvl"  , string(tt-pl-level-mm.max-level)).
+          sw:write-data-element ("tbl-lvl"  , string(tt-pl-level-mm.level)).
+          sw:write-data-element ("Belt-capacity"  , left-trim(right-trim(string(tt-pl-level-mm.capacity / 1000,">>>9.9999"),"0")," ")).
+          sw:end-element ("belt-tbl-line")  .
+        end.
+        sw:end-element ("belt-tbl")  .  
       end.
       sw:END-ELEMENT ("tank") .  
     end.

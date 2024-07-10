@@ -1,11 +1,11 @@
 &scoped-define impclass measuring
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c93c7157b47d, 2925, rls $
+$Author: VRukavishnikov $
+$Date: Пн ноя 22 19:49:14 2021 +0300 $
+$Workfile: impmeasuring.cls $
+$Archive: ibs/th/bge/1crn/import/impmeasuring.cls $
 
 Класс ипорта данных {&impclass} из 1С
 
@@ -80,6 +80,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       ,input objImp:temp-abs-me-dnst               /* p-sr-abs-err-temp-dens (dec) */
       ,input objImp:dnst-rel-me-np                 /* p-sr-relative-err-dens (dec) */
       ,input objImp:dnst-abs-me-lpg-l              /* p-sr-abs-err-dens-lgas-liquid (dec) */
+      ,input objImp:dnst-rel-me-lpg-l              /* p-sr-relative-err-dens-lgas-liquid (dec) */
       ,input objImp:dnst-abs-me-lpg-v              /* p-sr-abs-err-dens-lgas-vapor (dec) */
       ,input objImp:wght-rel-me                    /* p-sr-otnos (dec) */
       ,input objImp:level-tk                       /* p-sr-temp-line (dec) */

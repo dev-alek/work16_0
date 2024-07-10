@@ -968,6 +968,7 @@ Creation date: 04/05/06
 &glob table_pl-gds-pump-attr 'pl-gds-pump-attr':U
 &glob table_pl-level 'pl-level':U
 &glob table_pl-level-attr 'pl-level-attr':U
+&glob table_pl-level-mm 'pl-level-mm':U
 &glob table_pl-pump 'pl-pump':U
 &glob table_pl-pump-attr 'pl-pump-attr':U
 &glob table_pl-pump-nozzle 'pl-pump-nozzle':U
