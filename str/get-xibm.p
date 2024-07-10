@@ -1349,7 +1349,8 @@ procedure proc-00 :
                     buf_chk-doc.z-number = z-num_ 
                     buf_chk-doc.doc-num = doc-num_ 
                     buf_chk-doc.chk-type = v-chk-type[1] 
-                    buf_chk-doc.out-code = if buf_chk-doc.chk-type eq 13 or buf_chk-doc.chk-type eq 40 then {&cd-type-csm} else buf_chk-doc.out-code 
+                    buf_chk-doc.out-code = if buf_chk-doc.chk-type eq 13 or buf_chk-doc.chk-type eq 40 then {&cd-type-csm} else buf_chk-doc.out-code   
+                    
                     buf_chk-doc.prev-chk-type = int(prev-gbl-type) 
                     v-is-petrol-check = lookup(string(v-chk-type[1]) , {&petrol-receipt-codes}) > 0 
                     buf_chk-doc.correct = YES 
@@ -2736,271 +2737,279 @@ procedure proc-end-chk :
        
        FIND FIRST tt-chk-doc NO-ERROR. 
        IF AVAILABLE tt-chk-doc THEN DO:
+       FIND FIRST ub.chk-doc WHERE 
+              ub.chk-doc.chk-id    = tt-chk-doc.chk-id
+          AND ub.chk-doc.obj-code  = tt-chk-doc.obj-code
+          AND ub.chk-doc.obj-type  = tt-chk-doc.obj-type
+          AND ub.chk-doc.chk-date  = tt-chk-doc.chk-date
+          AND ub.chk-doc.chk-time  = tt-chk-doc.chk-time
+          NO-ERROR. 
        
-       CREATE ub.chk-doc.   
-       ASSIGN 
-       ub.chk-doc.doc-code  = tt-chk-doc.doc-code
-       ub.chk-doc.chk-type  = tt-chk-doc.chk-type
-       ub.chk-doc.office    = tt-chk-doc.office
-       ub.chk-doc.chk-id    = tt-chk-doc.chk-id
-       ub.chk-doc.correct   = tt-chk-doc.correct
-       ub.chk-doc.obj-code  = tt-chk-doc.obj-code
-       ub.chk-doc.obj-type  = tt-chk-doc.obj-type
-       ub.chk-doc.doc-code  = tt-chk-doc.doc-code
-       ub.chk-doc.chk-num   = tt-chk-doc.chk-num
-       ub.chk-doc.chk-date  = tt-chk-doc.chk-date
-       ub.chk-doc.chk-time  = tt-chk-doc.chk-time
-       ub.chk-doc.sales-man = tt-chk-doc.sales-man
-       ub.chk-doc.pay-desk  = tt-chk-doc.pay-desk
-       ub.chk-doc.cashier   = tt-chk-doc.cashier
-       ub.chk-doc.src-shift-date = tt-chk-doc.src-shift-date
-       ub.chk-doc.shift-num      = tt-chk-doc.shift-num
-       ub.chk-doc.src-shift-name = tt-chk-doc.src-shift-name
-       ub.chk-doc.shift-name     = tt-chk-doc.shift-name
-       ub.chk-doc.z-number       = tt-chk-doc.z-number
-       ub.chk-doc.chk-type       = tt-chk-doc.chk-type
-       ub.chk-doc.prev-chk-type  = tt-chk-doc.prev-chk-type
-       ub.chk-doc.cash-rate      = tt-chk-doc.cash-rate
-       ub.chk-doc.cash-scale     = tt-chk-doc.cash-scale
-       ub.chk-doc.doc-num        = tt-chk-doc.doc-num
-       ub.chk-doc.tot-doc        = tt-chk-doc.tot-doc
-       ub.chk-doc.netto          = tt-chk-doc.netto
-       ub.chk-doc.discnt         = tt-chk-doc.discnt
-       ub.chk-doc.d-pcnt         = tt-chk-doc.d-pcnt 
-       ub.chk-doc.src-d-pcnt     = tt-chk-doc.src-d-pcnt
-       ub.chk-doc.doc-qnty       = tt-chk-doc.doc-qnty
-       ub.chk-doc.src-tot-doc    = tt-chk-doc.src-tot-doc
-       ub.chk-doc.src-d-mask     = tt-chk-doc.src-d-mask
-       ub.chk-doc.d-mask         = tt-chk-doc.d-mask
-       ub.chk-doc.d-card         = tt-chk-doc.d-card
-       ub.chk-doc.src-d-card     = tt-chk-doc.src-d-card
-       ub.chk-doc.src-cli-type   = tt-chk-doc.src-cli-type
-       ub.chk-doc.src-cli-code   = tt-chk-doc.src-cli-code
-       ub.chk-doc.cli-type       = tt-chk-doc.cli-type
-       ub.chk-doc.cli-code       = tt-chk-doc.cli-code
-       ub.chk-doc.doc-num2       = tt-chk-doc.doc-num2
-       ub.chk-doc.out-2-code     = tt-chk-doc.out-2-code
-       . 
+          IF NOT AVAILABLE ub.chk-doc THEN DO:
+          CREATE ub.chk-doc.   
+          ASSIGN 
+          ub.chk-doc.doc-code  = tt-chk-doc.doc-code
+          ub.chk-doc.chk-type  = tt-chk-doc.chk-type
+          ub.chk-doc.office    = tt-chk-doc.office
+          ub.chk-doc.chk-id    = tt-chk-doc.chk-id
+          ub.chk-doc.correct   = tt-chk-doc.correct
+          ub.chk-doc.obj-code  = tt-chk-doc.obj-code
+          ub.chk-doc.obj-type  = tt-chk-doc.obj-type
+          ub.chk-doc.doc-code  = tt-chk-doc.doc-code
+          ub.chk-doc.chk-num   = tt-chk-doc.chk-num
+          ub.chk-doc.chk-date  = tt-chk-doc.chk-date
+          ub.chk-doc.chk-time  = tt-chk-doc.chk-time
+          ub.chk-doc.sales-man = tt-chk-doc.sales-man
+          ub.chk-doc.pay-desk  = tt-chk-doc.pay-desk
+          ub.chk-doc.cashier   = tt-chk-doc.cashier
+          ub.chk-doc.src-shift-date = tt-chk-doc.src-shift-date
+          ub.chk-doc.shift-num      = tt-chk-doc.shift-num
+          ub.chk-doc.src-shift-name = tt-chk-doc.src-shift-name
+          ub.chk-doc.shift-name     = tt-chk-doc.shift-name
+          ub.chk-doc.z-number       = tt-chk-doc.z-number
+          ub.chk-doc.chk-type       = tt-chk-doc.chk-type
+          ub.chk-doc.prev-chk-type  = tt-chk-doc.prev-chk-type
+          ub.chk-doc.cash-rate      = tt-chk-doc.cash-rate
+          ub.chk-doc.cash-scale     = tt-chk-doc.cash-scale
+          ub.chk-doc.doc-num        = tt-chk-doc.doc-num
+          ub.chk-doc.tot-doc        = tt-chk-doc.tot-doc
+          ub.chk-doc.netto          = tt-chk-doc.netto
+          ub.chk-doc.discnt         = tt-chk-doc.discnt
+          ub.chk-doc.d-pcnt         = tt-chk-doc.d-pcnt 
+          ub.chk-doc.src-d-pcnt     = tt-chk-doc.src-d-pcnt
+          ub.chk-doc.doc-qnty       = tt-chk-doc.doc-qnty
+          ub.chk-doc.src-tot-doc    = tt-chk-doc.src-tot-doc
+          ub.chk-doc.src-d-mask     = tt-chk-doc.src-d-mask
+          ub.chk-doc.d-mask         = tt-chk-doc.d-mask
+          ub.chk-doc.d-card         = tt-chk-doc.d-card
+          ub.chk-doc.src-d-card     = tt-chk-doc.src-d-card
+          ub.chk-doc.src-cli-type   = tt-chk-doc.src-cli-type
+          ub.chk-doc.src-cli-code   = tt-chk-doc.src-cli-code
+          ub.chk-doc.cli-type       = tt-chk-doc.cli-type
+          ub.chk-doc.cli-code       = tt-chk-doc.cli-code
+          ub.chk-doc.doc-num2       = tt-chk-doc.doc-num2
+          ub.chk-doc.out-2-code     = tt-chk-doc.out-2-code
+          ub.chk-doc.out-code       = tt-chk-doc.out-code
+          . 
                 
-       FOR EACH tt-chk-doc-attr WHERE tt-chk-doc-attr.doc-code = tt-chk-doc.doc-code :
-            CREATE ub.chk-doc-attr. 
-            ASSIGN 
-            ub.chk-doc-attr.doc-code = tt-chk-doc.doc-code
-            ub.chk-doc-attr.attr-code = tt-chk-doc-attr.attr-code
-            ub.chk-doc-attr.attr-value = tt-chk-doc-attr.attr-value
-            . 
-       END.
+          FOR EACH tt-chk-doc-attr WHERE tt-chk-doc-attr.doc-code = tt-chk-doc.doc-code :
+               CREATE ub.chk-doc-attr. 
+               ASSIGN 
+               ub.chk-doc-attr.doc-code = tt-chk-doc.doc-code
+               ub.chk-doc-attr.attr-code = tt-chk-doc-attr.attr-code
+               ub.chk-doc-attr.attr-value = tt-chk-doc-attr.attr-value
+               . 
+          END.
        
-       FOR EACH tt-chk-gds WHERE tt-chk-gds.doc-code = tt-chk-doc.doc-code : 
-            CREATE ub.chk-gds.
-            ASSIGN 
-            ub.chk-gds.doc-code     = tt-chk-gds.doc-code 
-            ub.chk-gds.line-num     = tt-chk-gds.line-num 
-            ub.chk-gds.grp-code     = tt-chk-gds.grp-code 
-            ub.chk-gds.chk-date     = tt-chk-gds.chk-date 
-            ub.chk-gds.b-code       = tt-chk-gds.b-code 
-            ub.chk-gds.src-code     = tt-chk-gds.src-code 
-            ub.chk-gds.src-price    = tt-chk-gds.src-price 
-            ub.chk-gds.src-sum      = tt-chk-gds.src-sum 
-            ub.chk-gds.src-qnty     = tt-chk-gds.src-qnty 
-            ub.chk-gds.src-discnt   = tt-chk-gds.src-discnt 
-            ub.chk-gds.doc-qnty     = tt-chk-gds.doc-qnty 
-            ub.chk-gds.price-service = tt-chk-gds.price-service 
-            ub.chk-gds.time-oper    = tt-chk-gds.time-oper 
-            ub.chk-gds.pass-gds     = tt-chk-gds.pass-gds  
-            ub.chk-gds.is-error     = tt-chk-gds.is-error 
-            ub.chk-gds.doc-qnty     = tt-chk-gds.doc-qnty 
-            ub.chk-gds.pump         = tt-chk-gds.pump 
-            ub.chk-gds.nozzle       = tt-chk-gds.nozzle 
-            ub.chk-gds.loc1         = tt-chk-gds.loc1 
-            ub.chk-gds.src-pl-code  = tt-chk-gds.src-pl-code 
-            ub.chk-gds.road-tax     = tt-chk-gds.road-tax 
-            ub.chk-gds.line-sign    = tt-chk-gds.line-sign 
-            ub.chk-gds.line-type    = tt-chk-gds.line-type 
-            ub.chk-gds.src-d-card   = tt-chk-gds.src-d-card 
-            ub.chk-gds.src-d-mask   = tt-chk-gds.src-d-mask 
-            ub.chk-gds.src-cli-type = tt-chk-gds.src-cli-type 
-            ub.chk-gds.src-cli-code = tt-chk-gds.src-cli-code 
-            ub.chk-gds.d-card       = tt-chk-gds.d-card            
-            .
-               FOR EACH tt-chk-gds-attr WHERE tt-chk-gds-attr.doc-code = tt-chk-doc.doc-code 
-                                       AND tt-chk-gds-attr.line-num = tt-chk-gds.line-num :
-                 CREATE ub.chk-gds-attr.
-                 ASSIGN 
-                 ub.chk-gds-attr.doc-code   = tt-chk-gds.doc-code 
-                 ub.chk-gds-attr.line-num   = tt-chk-gds-attr.line-num
-                 ub.chk-gds-attr.attr-code  = tt-chk-gds-attr.attr-code
-                 ub.chk-gds-attr.attr-value = tt-chk-gds-attr.attr-value
-                 .
-               END.       
-               
-               FOR EACH tt-chk-gds-pay WHERE tt-chk-gds-pay.doc-code = tt-chk-doc.doc-code 
+          FOR EACH tt-chk-gds WHERE tt-chk-gds.doc-code = tt-chk-doc.doc-code : 
+               CREATE ub.chk-gds.
+               ASSIGN 
+               ub.chk-gds.doc-code     = tt-chk-gds.doc-code 
+               ub.chk-gds.line-num     = tt-chk-gds.line-num 
+               ub.chk-gds.grp-code     = tt-chk-gds.grp-code 
+               ub.chk-gds.chk-date     = tt-chk-gds.chk-date 
+               ub.chk-gds.b-code       = tt-chk-gds.b-code 
+               ub.chk-gds.src-code     = tt-chk-gds.src-code 
+               ub.chk-gds.src-price    = tt-chk-gds.src-price 
+               ub.chk-gds.src-sum      = tt-chk-gds.src-sum 
+               ub.chk-gds.src-qnty     = tt-chk-gds.src-qnty 
+               ub.chk-gds.src-discnt   = tt-chk-gds.src-discnt 
+               ub.chk-gds.doc-qnty     = tt-chk-gds.doc-qnty 
+               ub.chk-gds.price-service = tt-chk-gds.price-service 
+               ub.chk-gds.time-oper    = tt-chk-gds.time-oper 
+               ub.chk-gds.pass-gds     = tt-chk-gds.pass-gds  
+               ub.chk-gds.is-error     = tt-chk-gds.is-error 
+               ub.chk-gds.doc-qnty     = tt-chk-gds.doc-qnty 
+               ub.chk-gds.pump         = tt-chk-gds.pump 
+               ub.chk-gds.nozzle       = tt-chk-gds.nozzle 
+               ub.chk-gds.loc1         = tt-chk-gds.loc1 
+               ub.chk-gds.src-pl-code  = tt-chk-gds.src-pl-code 
+               ub.chk-gds.road-tax     = tt-chk-gds.road-tax 
+               ub.chk-gds.line-sign    = tt-chk-gds.line-sign 
+               ub.chk-gds.line-type    = tt-chk-gds.line-type 
+               ub.chk-gds.src-d-card   = tt-chk-gds.src-d-card 
+               ub.chk-gds.src-d-mask   = tt-chk-gds.src-d-mask 
+               ub.chk-gds.src-cli-type = tt-chk-gds.src-cli-type 
+               ub.chk-gds.src-cli-code = tt-chk-gds.src-cli-code 
+               ub.chk-gds.d-card       = tt-chk-gds.d-card               
+               .
+                  FOR EACH tt-chk-gds-attr WHERE tt-chk-gds-attr.doc-code = tt-chk-doc.doc-code 
+                                             AND tt-chk-gds-attr.line-num = tt-chk-gds.line-num :
+                    CREATE ub.chk-gds-attr.
+                    ASSIGN 
+                    ub.chk-gds-attr.doc-code   = tt-chk-gds.doc-code 
+                    ub.chk-gds-attr.line-num   = tt-chk-gds-attr.line-num
+                    ub.chk-gds-attr.attr-code  = tt-chk-gds-attr.attr-code
+                    ub.chk-gds-attr.attr-value = tt-chk-gds-attr.attr-value
+                    .
+                  END.       
+                  
+                  FOR EACH tt-chk-gds-pay WHERE tt-chk-gds-pay.doc-code = tt-chk-doc.doc-code 
                                        AND tt-chk-gds-pay.b-code = tt-chk-gds.b-code :
-                 CREATE ub.chk-gds-pay.
-                 ASSIGN 
-                 ub.chk-gds-attr.doc-code   = tt-chk-gds.doc-code 
-                 ub.chk-gds-attr.line-num   = tt-chk-gds-attr.line-num
-                 ub.chk-gds-attr.attr-code  = tt-chk-gds-attr.attr-code
-                 ub.chk-gds-attr.attr-value = tt-chk-gds-attr.attr-value
-                 .
-               END.       
-               
-       END.
+                    CREATE ub.chk-gds-pay.
+                    ASSIGN 
+                    ub.chk-gds-attr.doc-code   = tt-chk-gds.doc-code 
+                    ub.chk-gds-attr.line-num   = tt-chk-gds-attr.line-num
+                    ub.chk-gds-attr.attr-code  = tt-chk-gds-attr.attr-code
+                    ub.chk-gds-attr.attr-value = tt-chk-gds-attr.attr-value
+                    .
+                  END.       
+                  
+           END.
        
-       FOR EACH tt-chk-pay : 
+          FOR EACH tt-chk-pay : 
             CREATE ub.chk-pay.
-            ASSIGN 
-            ub.chk-pay.doc-code   = tt-chk-pay.doc-code
-            ub.chk-pay.line-num   = tt-chk-pay.line-num
-            ub.chk-pay.chk-date   = tt-chk-pay.chk-date
-            ub.chk-pay.obj-code   = tt-chk-pay.obj-code
-            ub.chk-pay.obj-type   = tt-chk-pay.obj-type
-            ub.chk-pay.tot-rubl   = tt-chk-pay.tot-rubl
-            ub.chk-pay.tot-sum    = tt-chk-pay.tot-sum
-            ub.chk-pay.tot-base   = tt-chk-pay.tot-base 
-            ub.chk-pay.pay-code   = tt-chk-pay.pay-code
-            ub.chk-pay.curr-code  = tt-chk-pay.curr-code
-            ub.chk-pay.time-oper  = tt-chk-pay.time-oper
-            ub.chk-pay.cash-rate  = tt-chk-pay.cash-rate 
-            ub.chk-pay.bank-rate  = tt-chk-pay.bank-rate 
-            ub.chk-pay.bank-scale = tt-chk-pay.bank-scale 
-            ub.chk-pay.pass-pay   = tt-chk-pay.pass-pay
-            ub.chk-pay.pay-card   = tt-chk-pay.pay-card
-            ub.chk-pay.line-type  = tt-chk-pay.line-type
-            ub.chk-pay.line-sign  = tt-chk-pay.line-sign
-            ub.chk-pay.is-error   = tt-chk-pay.is-error
-            .
-            
-            FOR EACH tt-chk-pay-attr  WHERE tt-chk-pay-attr.doc-code = tt-chk-pay.doc-code  
-                                        AND tt-chk-pay-attr.line-num = tt-chk-pay.line-num :
+               ASSIGN 
+               ub.chk-pay.doc-code   = tt-chk-pay.doc-code
+               ub.chk-pay.line-num   = tt-chk-pay.line-num
+               ub.chk-pay.chk-date   = tt-chk-pay.chk-date
+               ub.chk-pay.obj-code   = tt-chk-pay.obj-code
+               ub.chk-pay.obj-type   = tt-chk-pay.obj-type
+               ub.chk-pay.tot-rubl   = tt-chk-pay.tot-rubl
+               ub.chk-pay.tot-sum    = tt-chk-pay.tot-sum
+               ub.chk-pay.tot-base   = tt-chk-pay.tot-base 
+               ub.chk-pay.pay-code   = tt-chk-pay.pay-code
+               ub.chk-pay.curr-code  = tt-chk-pay.curr-code
+               ub.chk-pay.time-oper  = tt-chk-pay.time-oper
+               ub.chk-pay.cash-rate  = tt-chk-pay.cash-rate 
+               ub.chk-pay.bank-rate  = tt-chk-pay.bank-rate 
+               ub.chk-pay.bank-scale = tt-chk-pay.bank-scale 
+               ub.chk-pay.pass-pay   = tt-chk-pay.pass-pay
+               ub.chk-pay.pay-card   = tt-chk-pay.pay-card
+               ub.chk-pay.line-type  = tt-chk-pay.line-type
+               ub.chk-pay.line-sign  = tt-chk-pay.line-sign
+               ub.chk-pay.is-error   = tt-chk-pay.is-error
+               .
+               
+               FOR EACH tt-chk-pay-attr  WHERE tt-chk-pay-attr.doc-code = tt-chk-pay.doc-code  
+                                           AND tt-chk-pay-attr.line-num = tt-chk-pay.line-num :
                 CREATE ub.chk-pay-attr.
-                ASSIGN 
-                ub.chk-pay-attr.doc-code   = tt-chk-pay.doc-code
-                ub.chk-pay-attr.line-num   = tt-chk-pay-attr.line-num
-                ub.chk-pay-attr.attr-code  = tt-chk-pay-attr.attr-code
-                ub.chk-pay-attr.attr-value = tt-chk-pay-attr.attr-value             
-                .            
+                   ASSIGN 
+                   ub.chk-pay-attr.doc-code   = tt-chk-pay.doc-code
+                   ub.chk-pay-attr.line-num   = tt-chk-pay-attr.line-num
+                   ub.chk-pay-attr.attr-code  = tt-chk-pay-attr.attr-code
+                   ub.chk-pay-attr.attr-value = tt-chk-pay-attr.attr-value                
+                   .            
             END.
        END.
         
-    FOR EACH tt-chk-discnt WHERE tt-chk-doc.doc-code = tt-chk-discnt.doc-code:   
-           CREATE ub.chk-discnt.   
-           ASSIGN 
-           ub.chk-discnt.doc-code             = tt-chk-discnt.doc-code                
-           ub.chk-discnt.line-num             = tt-chk-discnt.line-num                
-           ub.chk-discnt.whole-send-news      = tt-chk-discnt.whole-send-news
-           ub.chk-discnt.out-code             = tt-chk-discnt.out-code                
-           ub.chk-discnt.is-error             = tt-chk-discnt.is-error                
-           ub.chk-discnt.time-oper            = tt-chk-discnt.time-oper               
-           ub.chk-discnt.line-type            = tt-chk-discnt.line-type               
-           ub.chk-discnt.line-sign            = tt-chk-discnt.line-sign               
-           ub.chk-discnt.pass-discnt          = tt-chk-discnt.pass-discnt             
-           ub.chk-discnt.value-type           = tt-chk-discnt.value-type              
-           ub.chk-discnt.discnt-type          = tt-chk-discnt.discnt-type             
-           ub.chk-discnt.d-card               = tt-chk-discnt.d-card                  
-           ub.chk-discnt.discnt-value-abs     = tt-chk-discnt.discnt-value-abs        
-           ub.chk-discnt.discnt-value-pcnt    = tt-chk-discnt.discnt-value-pcnt       
-           ub.chk-discnt.object-qnty          = tt-chk-discnt.object-qnty
-           ub.chk-discnt.object-sum           = tt-chk-discnt.object-sum              
-           ub.chk-discnt.object-line-num      = tt-chk-discnt.object-line-num
-           ub.chk-discnt.discnt-id            = tt-chk-discnt.discnt-id               
-           ub.chk-discnt.pay-desk             = tt-chk-discnt.pay-desk
-           ub.chk-discnt.obj-type             = tt-chk-discnt.obj-type                
-           ub.chk-discnt.obj-code             = tt-chk-discnt.obj-code                
-           ub.chk-discnt.chk-time             = tt-chk-discnt.chk-time                
-           ub.chk-discnt.record-type          = tt-chk-discnt.record-type             
-           ub.chk-discnt.src-d-card           = tt-chk-discnt.src-d-card              
-           ub.chk-discnt.kateg                = tt-chk-discnt.kateg                   
-           ub.chk-discnt.rank                 = tt-chk-discnt.rank
-           ub.chk-discnt.templ-rl-root        = tt-chk-discnt.templ-rl-root           
-           ub.chk-discnt.rule-num             = tt-chk-discnt.rule-num                
-           ub.chk-discnt.promo-id             = tt-chk-discnt.promo-id                
-           ub.chk-discnt.shift-date           = tt-chk-discnt.shift-date              
-           ub.chk-discnt.shift-num            = tt-chk-discnt.shift-num               
-           .             
+       FOR EACH tt-chk-discnt WHERE tt-chk-doc.doc-code = tt-chk-discnt.doc-code:   
+              CREATE ub.chk-discnt.   
+              ASSIGN 
+              ub.chk-discnt.doc-code             = tt-chk-discnt.doc-code                
+              ub.chk-discnt.line-num             = tt-chk-discnt.line-num                
+              ub.chk-discnt.whole-send-news      = tt-chk-discnt.whole-send-news
+              ub.chk-discnt.out-code             = tt-chk-discnt.out-code                
+              ub.chk-discnt.is-error             = tt-chk-discnt.is-error                
+              ub.chk-discnt.time-oper            = tt-chk-discnt.time-oper               
+              ub.chk-discnt.line-type            = tt-chk-discnt.line-type               
+              ub.chk-discnt.line-sign            = tt-chk-discnt.line-sign               
+              ub.chk-discnt.pass-discnt          = tt-chk-discnt.pass-discnt             
+              ub.chk-discnt.value-type           = tt-chk-discnt.value-type              
+              ub.chk-discnt.discnt-type          = tt-chk-discnt.discnt-type             
+              ub.chk-discnt.d-card               = tt-chk-discnt.d-card                  
+              ub.chk-discnt.discnt-value-abs     = tt-chk-discnt.discnt-value-abs        
+              ub.chk-discnt.discnt-value-pcnt    = tt-chk-discnt.discnt-value-pcnt       
+              ub.chk-discnt.object-qnty          = tt-chk-discnt.object-qnty
+              ub.chk-discnt.object-sum           = tt-chk-discnt.object-sum              
+              ub.chk-discnt.object-line-num      = tt-chk-discnt.object-line-num
+              ub.chk-discnt.discnt-id            = tt-chk-discnt.discnt-id               
+              ub.chk-discnt.pay-desk             = tt-chk-discnt.pay-desk
+              ub.chk-discnt.obj-type             = tt-chk-discnt.obj-type                
+              ub.chk-discnt.obj-code             = tt-chk-discnt.obj-code                
+              ub.chk-discnt.chk-time             = tt-chk-discnt.chk-time                
+              ub.chk-discnt.record-type          = tt-chk-discnt.record-type             
+              ub.chk-discnt.src-d-card           = tt-chk-discnt.src-d-card              
+              ub.chk-discnt.kateg                = tt-chk-discnt.kateg                   
+              ub.chk-discnt.rank                 = tt-chk-discnt.rank
+              ub.chk-discnt.templ-rl-root        = tt-chk-discnt.templ-rl-root           
+              ub.chk-discnt.rule-num             = tt-chk-discnt.rule-num                
+              ub.chk-discnt.promo-id             = tt-chk-discnt.promo-id                
+              ub.chk-discnt.shift-date           = tt-chk-discnt.shift-date              
+              ub.chk-discnt.shift-num            = tt-chk-discnt.shift-num               
+              .             
            
-           FOR EACH tt-chk-discnt-attr WHERE tt-chk-discnt-attr.doc-code = tt-chk-discnt.doc-code
-                                       AND   tt-chk-discnt-attr.line-num = tt-chk-discnt.line-num
-                                       AND   tt-chk-discnt-attr.discnt-id = tt-chk-discnt.discnt-id 
-                                       :   
+              FOR EACH tt-chk-discnt-attr WHERE tt-chk-discnt-attr.doc-code = tt-chk-discnt.doc-code
+                                          AND   tt-chk-discnt-attr.line-num = tt-chk-discnt.line-num
+                                          AND   tt-chk-discnt-attr.discnt-id = tt-chk-discnt.discnt-id 
+                                          :   
                                        
                                        
-              FIND FIRST ub.chk-discnt-attr   WHERE  
+                 FIND FIRST ub.chk-discnt-attr   WHERE  
+                      ub.chk-discnt-attr.doc-code         = tt-chk-discnt-attr.doc-code
+                  AND ub.chk-discnt-attr.line-num         = tt-chk-discnt-attr.line-num
+                  AND ub.chk-discnt-attr.record-type      = tt-chk-discnt-attr.record-type  
+                  AND ub.chk-discnt-attr.discnt-id        = tt-chk-discnt-attr.discnt-id      
+                  AND ub.chk-discnt-attr.object-line-num  = tt-chk-discnt-attr.object-line-num    
+                  AND ub.chk-discnt-attr.attr-code        = tt-chk-discnt-attr.attr-code        
+                  AND ub.chk-discnt-attr.attr-value       = tt-chk-discnt-attr.attr-value       
+                  AND ub.chk-discnt-attr.out-code         = tt-chk-discnt-attr.out-code  
+                  NO-ERROR .
+                  IF NOT AVAILABLE ub.chk-discnt-attr THEN DO:
+                   CREATE  ub.chk-discnt-attr .
+                   ASSIGN
                    ub.chk-discnt-attr.doc-code         = tt-chk-discnt-attr.doc-code
-               AND ub.chk-discnt-attr.line-num         = tt-chk-discnt-attr.line-num
-               AND ub.chk-discnt-attr.record-type      = tt-chk-discnt-attr.record-type  
-               AND ub.chk-discnt-attr.discnt-id        = tt-chk-discnt-attr.discnt-id      
-               AND ub.chk-discnt-attr.object-line-num  = tt-chk-discnt-attr.object-line-num    
-               AND ub.chk-discnt-attr.attr-code        = tt-chk-discnt-attr.attr-code        
-               AND ub.chk-discnt-attr.attr-value       = tt-chk-discnt-attr.attr-value       
-               AND ub.chk-discnt-attr.out-code         = tt-chk-discnt-attr.out-code  
-               NO-ERROR .
-               IF NOT AVAILABLE ub.chk-discnt-attr THEN DO:
-                CREATE  ub.chk-discnt-attr .
-                ASSIGN
-                ub.chk-discnt-attr.doc-code         = tt-chk-discnt-attr.doc-code
-                ub.chk-discnt-attr.line-num         = tt-chk-discnt-attr.line-num
-                ub.chk-discnt-attr.record-type      = tt-chk-discnt-attr.record-type  
-                ub.chk-discnt-attr.discnt-id        = tt-chk-discnt-attr.discnt-id      
-                ub.chk-discnt-attr.object-line-num  = tt-chk-discnt-attr.object-line-num    
-                ub.chk-discnt-attr.attr-code        = tt-chk-discnt-attr.attr-code        
-                ub.chk-discnt-attr.attr-value       = tt-chk-discnt-attr.attr-value       
-                ub.chk-discnt-attr.out-code         = tt-chk-discnt-attr.out-code       
-                .  
+                   ub.chk-discnt-attr.line-num         = tt-chk-discnt-attr.line-num
+                   ub.chk-discnt-attr.record-type      = tt-chk-discnt-attr.record-type  
+                   ub.chk-discnt-attr.discnt-id        = tt-chk-discnt-attr.discnt-id      
+                   ub.chk-discnt-attr.object-line-num  = tt-chk-discnt-attr.object-line-num    
+                   ub.chk-discnt-attr.attr-code        = tt-chk-discnt-attr.attr-code        
+                   ub.chk-discnt-attr.attr-value       = tt-chk-discnt-attr.attr-value       
+                   ub.chk-discnt-attr.out-code         = tt-chk-discnt-attr.out-code       
+                   .  
+                  END.
+
                END.
-/*               MESSAGE tt-chk-discnt-attr.doc-code 
-               tt-chk-discnt-attr.line-num     
-               tt-chk-discnt-attr.attr-code        
-               tt-chk-discnt-attr.attr-value       
-               VIEW-AS ALERT-BOX . */
-           END.
-    END.
+       END.
  
-       FOR EACH  tt-bar-code:      
-       CREATE ub.bar-code.
-           ASSIGN
-               ub.bar-code.b-code           =    tt-bar-code.b-code                      
-               ub.bar-code.whole-send-news  =    tt-bar-code.whole-send-news             
-               ub.bar-code.node-code        =    tt-bar-code.node-code                   
-               ub.bar-code.part-code        =    tt-bar-code.part-code                   
-               ub.bar-code.in-code          =    tt-bar-code.in-code                     
-               ub.bar-code.unit-cli         =    tt-bar-code.unit-cli                    
-               ub.bar-code.cli-base-rate    =    tt-bar-code.cli-base-rate               
-               ub.bar-code.gds-code         =    tt-bar-code.gds-code                    
-               ub.bar-code.cr-db-num        =    tt-bar-code.cr-db-num                   
-               ub.bar-code.stts_            =    tt-bar-code.stts_             
+          FOR EACH  tt-bar-code:      
+          CREATE ub.bar-code.
+              ASSIGN
+                  ub.bar-code.b-code           =    tt-bar-code.b-code                      
+                  ub.bar-code.whole-send-news  =    tt-bar-code.whole-send-news             
+                  ub.bar-code.node-code        =    tt-bar-code.node-code                   
+                  ub.bar-code.part-code        =    tt-bar-code.part-code                   
+                  ub.bar-code.in-code          =    tt-bar-code.in-code                     
+                  ub.bar-code.unit-cli         =    tt-bar-code.unit-cli                    
+                  ub.bar-code.cli-base-rate    =    tt-bar-code.cli-base-rate               
+                  ub.bar-code.gds-code         =    tt-bar-code.gds-code                    
+                  ub.bar-code.cr-db-num        =    tt-bar-code.cr-db-num                   
+                  ub.bar-code.stts_            =    tt-bar-code.stts_             
                .
-       END.       
+           END.       
        
-       FOR EACH  tt-marking-chk:      
-       CREATE ub.marking-chk.
-           ASSIGN
-           ub.marking-chk.doc-code     = tt-marking-chk.doc-code      
-           ub.marking-chk.line-num     = tt-marking-chk.line-num      
-           ub.marking-chk.date-modify  = tt-marking-chk.date-modify    
-           ub.marking-chk.time-modify  = tt-marking-chk.time-modify    
-           ub.marking-chk.sts          = tt-marking-chk.sts           
-           ub.marking-chk.comment      = tt-marking-chk.comment       
-           ub.marking-chk.unit         = tt-marking-chk.unit          
-           ub.marking-chk.mark         = tt-marking-chk.mark         
-           .
-       END.       
+          FOR EACH  tt-marking-chk:      
+          CREATE ub.marking-chk.
+              ASSIGN
+              ub.marking-chk.doc-code     = tt-marking-chk.doc-code      
+              ub.marking-chk.line-num     = tt-marking-chk.line-num      
+              ub.marking-chk.date-modify  = tt-marking-chk.date-modify    
+              ub.marking-chk.time-modify  = tt-marking-chk.time-modify    
+              ub.marking-chk.sts          = tt-marking-chk.sts           
+              ub.marking-chk.comment      = tt-marking-chk.comment       
+              ub.marking-chk.unit         = tt-marking-chk.unit          
+              ub.marking-chk.mark         = tt-marking-chk.mark         
+              .
+           END.       
 
-    EMPTY TEMP-TABLE     tt-chk-doc.
-    EMPTY TEMP-TABLE     tt-chk-doc-attr.
-    EMPTY TEMP-TABLE     tt-chk-gds.
-    EMPTY TEMP-TABLE     tt-chk-gds-attr.
-    EMPTY TEMP-TABLE     tt-chk-gds-pay.
-    EMPTY TEMP-TABLE     tt-chk-pay.
-    EMPTY TEMP-TABLE     tt-chk-pay-attr.
-    EMPTY TEMP-TABLE     tt-chk-discnt.
-    EMPTY TEMP-TABLE     tt-chk-discnt-attr.
-    EMPTY TEMP-TABLE     tt-bar-code.
-    EMPTY TEMP-TABLE     tt-marking-chk.    
+          EMPTY TEMP-TABLE     tt-chk-doc.
+          EMPTY TEMP-TABLE     tt-chk-doc-attr.
+          EMPTY TEMP-TABLE     tt-chk-gds.
+          EMPTY TEMP-TABLE     tt-chk-gds-attr.
+          EMPTY TEMP-TABLE     tt-chk-gds-pay.
+          EMPTY TEMP-TABLE     tt-chk-pay.
+          EMPTY TEMP-TABLE     tt-chk-pay-attr.
+          EMPTY TEMP-TABLE     tt-chk-discnt.
+          EMPTY TEMP-TABLE     tt-chk-discnt-attr.
+          EMPTY TEMP-TABLE     tt-bar-code.
+          EMPTY TEMP-TABLE     tt-marking-chk.    
 
-    end.
+       end.
+       
+   END.
+      
+ END.
     
-    END.
 end procedure. /* proc-end-chk */
 
 
