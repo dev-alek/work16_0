@@ -240,6 +240,7 @@ procedure check-rvs-doc :
     find first buf_rvs-doc no-lock
       where buf_rvs-doc.obj-type = p-obj-type
         and buf_rvs-doc.obj-code = p-obj-code
+        and buf_rvs-doc.rvs-type <> {&test-asi}
         and buf_rvs-doc.status_ <> {&fact}
       no-error .
     if available buf_rvs-doc then do:

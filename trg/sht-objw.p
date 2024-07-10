@@ -350,19 +350,12 @@ on error undo, return error return-value
         end.
 
         /* провер€ем, нет ли открытых сверок по объекту */
-        /* чтоб легло на индекс, делаем 2 find */
         find first buf_rvs-doc
           where buf_rvs-doc.obj-type = ub.shift-obj.obj-type
             and buf_rvs-doc.obj-code = ub.shift-obj.obj-code
-            and buf_rvs-doc.status_ > {&fact}
+            and buf_rvs-doc.rvs-type <> {&test-asi}
+            and buf_rvs-doc.status_  <> {&fact}
           no-error .
-        if not available buf_rvs-doc then do:
-          find first buf_rvs-doc
-            where buf_rvs-doc.obj-type = ub.shift-obj.obj-type
-              and buf_rvs-doc.obj-code = ub.shift-obj.obj-code
-              and buf_rvs-doc.status_ < {&fact}
-            no-error .
-        end.
         if available buf_rvs-doc then do:
           message
             "Ќайдена незакрыта€ сверка" skip
@@ -542,19 +535,12 @@ on error undo, return error return-value
           undo main-block, return error .
         end.
         /* провер€ем, нет ли открытых сверок по объекту */
-        /* чтоб легло на индекс, делаем 2 find */
         find first buf_rvs-doc
           where buf_rvs-doc.obj-type = ub.shift-obj.obj-type
             and buf_rvs-doc.obj-code = ub.shift-obj.obj-code
-            and buf_rvs-doc.status_ > {&fact}
-            no-error .
-        if not available buf_rvs-doc then do:
-          find first buf_rvs-doc
-            where buf_rvs-doc.obj-type = ub.shift-obj.obj-type
-              and buf_rvs-doc.obj-code = ub.shift-obj.obj-code
-              and buf_rvs-doc.status_ < {&fact}
-            no-error .
-        end.
+            and buf_rvs-doc.rvs-type <> {&test-asi}
+            and buf_rvs-doc.status_  <> {&fact}
+          no-error .
         if available buf_rvs-doc then do:
           message
             "Ќайдена незакрыта€ сверка" skip
@@ -1021,18 +1007,12 @@ on error undo, return error return-value
 
         /* провер€ем, нет ли открытых сверок по объекту (они могут быть только по текущей смене)
           закрытые сверки оставл€ем */
-        /* чтоб легло на индекс, делаем 2 find */
         find first buf_rvs-doc
           where buf_rvs-doc.obj-type = ub.shift-obj.obj-type
             and buf_rvs-doc.obj-code = ub.shift-obj.obj-code
-            and buf_rvs-doc.status_ > {&fact}
+            and buf_rvs-doc.rvs-type <> {&test-asi}
+            and buf_rvs-doc.status_  <> {&fact}
           no-error .
-        if not available buf_rvs-doc then
-          find first buf_rvs-doc
-            where buf_rvs-doc.obj-type = ub.shift-obj.obj-type
-              and buf_rvs-doc.obj-code = ub.shift-obj.obj-code
-              and buf_rvs-doc.status_ < {&fact}
-            no-error .
         if available buf_rvs-doc then do:
           message
             "Ќайдена незакрыта€ сверка" skip
