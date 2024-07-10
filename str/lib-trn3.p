@@ -2870,6 +2870,18 @@ procedure lib-trn3_vollosan :
                                      ) .
       end.
       
+      if v-next-rvs-doc = ""
+      and v-prev-rvs-doc > ""
+      then do :
+        assign v-next-rvs-doc = v-prev-rvs-doc .
+      end .
+      
+      if v-prev-rvs-doc = ""
+      and v-next-rvs-doc > ""
+      then do :
+        assign v-prev-rvs-doc = v-next-rvs-doc .
+      end .
+      
       for first buf_rvs-doc no-lock where buf_rvs-doc.rvs-code = v-next-rvs-doc,
         each buf_rvs-line no-lock
         where buf_rvs-line.rvs-code   = buf_rvs-doc.rvs-code
@@ -2930,22 +2942,25 @@ procedure lib-trn3_vollosan :
         end .
       end .
       else do :
-        p-pl-code = tt-place-volume-loss.pl-code .
-        run placelib_write-attr (input {&place-current}
-                                ,input p-obj-code
-                                ,input p-obj-type
-                                ,input p-pl-code
-                                ,input "yes"
-                                ,output v-ok      )
-        no-error.
-        for each buf_tt-place-volume-loss where buf_tt-place-volume-loss.pl-code <> tt-place-volume-loss.pl-code :
+        if available tt-place-volume-loss
+        then do :
+          p-pl-code = tt-place-volume-loss.pl-code .
           run placelib_write-attr (input {&place-current}
                                   ,input p-obj-code
                                   ,input p-obj-type
-                                  ,input buf_tt-place-volume-loss.pl-code
-                                  ,input "no"
+                                  ,input p-pl-code
+                                  ,input "yes"
                                   ,output v-ok      )
           no-error.
+          for each buf_tt-place-volume-loss where buf_tt-place-volume-loss.pl-code <> tt-place-volume-loss.pl-code :
+            run placelib_write-attr (input {&place-current}
+                                    ,input p-obj-code
+                                    ,input p-obj-type
+                                    ,input buf_tt-place-volume-loss.pl-code
+                                    ,input "no"
+                                    ,output v-ok      )
+            no-error.
+          end .
         end .
       end .
       
