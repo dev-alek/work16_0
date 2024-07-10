@@ -75,7 +75,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
 
   define temp-table tt-pl-level like ub.c-pl-level 
   field belt      as decimal
-  field comp-err  as integer.
+  field comp-err  as decimal.
   
   define variable ii      as integer   no-undo .
   define variable v-code  as character no-undo .
@@ -514,7 +514,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
           sw:write-data-element ("lvl"  , string(tt-pl-level.pl-level)).
           if tt-pl-level.belt <> 0 then sw:write-data-element ("belt", string(tt-pl-level.belt)).
           sw:write-data-element ("amnt" , string(tt-pl-level.pl-qnty)).
-          sw:write-data-element ("comp-err" , string(tt-pl-level.comp-err)).
+          sw:write-data-element ("comp-err" , string(tt-pl-level.comp-err,">9.999")).
           
           sw:end-element ("cal-tbl-line")  .
         end.

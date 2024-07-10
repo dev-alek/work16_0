@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d3f7ea4aa09e, 3307, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:07 $
+$Workfile: imp-cmd.p $
+$Archive: nws/imp-cmd.p $
 
 Обработка входящих команд
 
@@ -20,11 +20,11 @@ define input  parameter rec-full     as character no-undo.
 define input  parameter p-counter    as integer   no-undo .
 define input  parameter db-src       like ub.db.db-num no-undo. /* номер БД источника                 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d3f7ea4aa09e, 3307, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/05/19 13:37:07 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: imp-cmd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/imp-cmd.p $":U .
 define variable vss-description as character no-undo init "Обработка входящих команд".
 { cmp/vssrevis.i "substitute('&1|&2':u,rec-full,db-src)" }
 { cmp/trg-def.i  }
@@ -1353,6 +1353,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             or when {&table_pl-pump-nozzle}
             or when {&table_pl-pump}
             or when {&table_pl-level}
+            or when {&table_pl-level-mm}
             or when {&table_place}
             or when {&table_pump-nozzle}
             or when {&table_recipe-gds}
@@ -1648,4 +1649,4 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   end case.
 end.
 
-/* $Workfile$ end */
+/* $Workfile: imp-cmd.p $ end */

@@ -5,11 +5,11 @@
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
 /*------------------------------------------------------------------------
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 10804996d925, 3000, rls $
+$Author: SSlivenko $
+$Date: Ср апр 06 16:23:44 2022 +0300 $
+$Workfile: pl-lvl.w $
+$Archive: ref/pl-lvl.w $
 
 Редактирование записи в градуировочной таблице
 
@@ -36,11 +36,11 @@ define input-output parameter  p-pl-level as decimal          no-undo.
 define output parameter p-ok      as logical          no-undo.
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 10804996d925, 3000, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Ср апр 06 16:23:44 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pl-lvl.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/pl-lvl.w $":U .
 define variable vss-description as character no-undo init "Редактирование записи в градуировочной таблице".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -105,7 +105,7 @@ DEFINE BUTTON b-quit AUTO-END-KEY
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE v-pl-level AS INTEGER FORMAT ">>9":U INITIAL 0
+DEFINE VARIABLE v-pl-level AS INTEGER FORMAT ">>>>9":U INITIAL 0
      LABEL "Уровень, см"
      VIEW-AS FILL-IN
      SIZE 14 BY 1 NO-UNDO.

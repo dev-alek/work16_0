@@ -1,11 +1,11 @@
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: tank-imp.cls $
+$Archive: ibs/th/bge/1crn/subjects/tank-imp.cls $
 
 Структура данных tank в 1С
 
@@ -91,11 +91,14 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
    define property cal-tbl as subjects no-undo get. 
       private set.
   
+   define property belt-tbl as subjects no-undo get. 
+      private set.
+ 
    define override property InitTag as character no-undo init "tank"
       get. 
     
    constructor public tank-imp ():
-      InitListTag = "cal-tbl".
+      InitListTag = "cal-tbl,belt-tbl".
    end constructor.
   
      
@@ -255,6 +258,10 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
          when "cal-tbl" then
             do:
                cal-tbl = SubsObj.            
+            end.
+         when "belt-tbl" then
+            do:
+               belt-tbl = SubsObj.            
             end.
       end case.
    end.
