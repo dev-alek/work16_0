@@ -362,6 +362,7 @@ DO:
          view-as alert-box.
          return no-apply.
       end.
+      ri = ?.
       run refreshbrowse.
       isUpdate = yes.
     end.
