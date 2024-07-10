@@ -298,7 +298,7 @@ end.*/
    
    method public logical firstrun():
       
-      if mFirstrun 
+      if mFirstrun
       or not FolderExists(MyWorkDir)
       then do: /*создадим рабочуюю директорию */ 
          MyWorkDir = "pid_".
@@ -338,9 +338,9 @@ end.*/
          if not FileExists  (MyWorkDir + itask + ".txt" )
          then do:
             if FolderExists(MyWorkDir) then do:                  
-                Writefile(MyWorkDir + itask + ".txt", "InitProc " + string(getnow())).
-                Writefile( getLog(itask),"").
-            end.           
+               Writefile(MyWorkDir + itask + ".txt", "InitProc " + string(getnow())).
+               Writefile( getLog(itask),"").           
+            end.
             else do:
                run utl\proc-msg.p ("Не удалось запустить процедуру " + iProc +  " Не найден рабочий каталог: " + MyWorkDir) no-error.
                return error.
@@ -560,15 +560,21 @@ end.*/
         else do:
            vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/procstatus.txt".
            if FileExists(vFile)
-             then do:
-               define variable vtxt as character no-undo.
-               input STREAM sReadfile FROM  VALUE(vFile). 
-               repeat:
-                  import stream sReadfile unformatted vtxt.
-                  
-                  ttrun.fstatus =  vtxt   .
-               end.
-               input STREAM sReadfile close.
+           then do:
+              define variable vtext as longchar no-undo.
+              copy-lob from file vFile to vtext no-error.
+              if error-status:error
+              then do:
+/*                  run write-to-log (substitute ("Не удалось прочесть файл &1",iFile)).*/
+              end.
+              else do:
+                 vtext = replace (vtext,{&carriage-return} + {&new-line},{&new-line}).
+                 if length(vtext) < 32000
+                 then
+                    ttrun.fstatus = vtext.
+                 else
+                    ttrun.fstatus = substring (vtext,1,32000).
+              end.
             end.
         end.       
      end.
@@ -1251,33 +1257,22 @@ end.
             vFile = vdir + "procstatus.txt".
              if FileExists(vFile)
              then do:
-               input STREAM sReadfile FROM  VALUE(vFile). 
-               repeat:
-                  import stream sReadfile unformatted vCount.
-                  if vCount ne ""
-                  then do:
-                     assign
-                        ttrun.fstatus =  vCount
-                     no-error.
-                  end.
+               define variable vtext as longchar no-undo.
+               copy-lob from file vFile to vtext no-error.
+               if error-status:error
+               then do:
+/*                  run write-to-log (substitute ("Не удалось прочесть файл &1",iFile)).*/
                end.
-               input STREAM sReadfile close.
-            end.
-            vFile = vdir + "procstatus.txt".
-             if FileExists(vFile)
-             then do:
-               input STREAM sReadfile FROM  VALUE(vFile). 
-               repeat:
-                  import stream sReadfile unformatted vCount.
-                  if vCount ne ""
-                  then do:
-                     assign
-                        ttrun.fstatus =  vCount
-                     no-error.
-                  end.
+               else do:
+                  vtext = replace (vtext,{&carriage-return} + {&new-line},{&new-line}).
+                  if length(vtext) < 32000
+                  then
+                     ttrun.fstatus = vtext.
+                  else
+                     ttrun.fstatus = substring (vtext,1,32000).
                end.
-               input STREAM sReadfile close.
             end.
+            
          end.
          else do:
              if available ttrun
