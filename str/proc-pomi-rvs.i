@@ -985,6 +985,20 @@ procedure calc-pomi-rvs :
     if DeltaAbs_H_CalcType2         = ? then DeltaAbs_H_CalcType2 = 0.
     if DeltaAbs_H_Water_CalcType2   = ? then DeltaAbs_H_Water_CalcType2 = 0.
     
+    if bf_bef_rvs-line.state-level-water = 0
+    then do :
+      ToolAutomationLevel_H_Water1 = 0 .
+      DeltaAbs_H_Water_CalcType1 = 0 .
+      DeltaAbs_H_Water1 = 0 .
+    end .
+    
+    if bf_aft_rvs-line.state-level-water = 0
+    then do :
+      ToolAutomationLevel_H_Water2 = 0 .
+      DeltaAbs_H_Water_CalcType2 = 0 .
+      DeltaAbs_H_Water2 = 0 .
+    end .
+    
     if LevelToolType1 > 0
     then do :
       RELEASE OBJECT v-mm57 NO-ERROR.

@@ -4282,6 +4282,13 @@ THEN DO:
       if Use_DeltaOtn_R_liquid_IN = ? then Use_DeltaOtn_R_liquid_IN = false.
       if DeltaOtn_R_liquid_IN     = ? then DeltaOtn_R_liquid_IN = 0.
       
+      if bf_rvs-line.level-water = 0
+      then do :
+        ToolAutomationLevel_H_Water = 0 .
+        DeltaAbs_H_Water_CalcType = 0 .
+        DeltaAbs_H_Water = 0 .
+      end .
+      
       /*..........................................*/
       
       v-pokmi-dll-version = get-pokmi-dll-version() .
