@@ -347,7 +347,7 @@ on error undo, return error return-value
     '</TR>'skip    
   .
   
-  for each tt-result:
+  for each tt-result by tt-result.loc1 :
     put stream OutStr-html unformatted
       '<TR>' skip
       '<TH style="text-align: center; font-weight: normal;">' + tt-result.gds-name + '</TH>' skip
