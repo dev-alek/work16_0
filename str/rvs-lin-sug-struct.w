@@ -456,7 +456,7 @@ do :
       return .
     end.
     else do :
-      p-dens = v-mm55:R / 1000 .
+      p-dens = round(v-mm55:R / 1000,4) .
       OUTPUT stream outstream to value ("pomi.log")  append.
       PUT STREAM outstream unformatted
           "MM:R   = " v-mm55:R  SKIP
@@ -534,7 +534,7 @@ do :
       return .
     end.
     else do :
-      p-dens-pf = v-mm56:R / 1000 .
+      p-dens-pf = round(v-mm56:R / 1000,4) .
       OUTPUT stream outstream to value ("pomi.log")  append.
       PUT STREAM outstream unformatted
           "MM:R   = " v-mm56:R  SKIP
