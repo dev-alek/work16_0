@@ -61,6 +61,8 @@ define variable v-record             as character no-undo .
 define variable v-found-maria-discnt as logical   no-undo .
 define stream finp.
 define buffer buf_cash-desk-attr for ub.cash-desk-attr .
+
+
 /*PROCEDURE putc-gds.*/
 /*разнящийся вывод для разных типов касс*/
 procedure putc-61 :
@@ -132,7 +134,7 @@ procedure putc-61 :
             then "ADD":U
             else "DEL":U)
             , OS2-time
-            , if ub.person.cashier eq ? then "*" else string(ub.person.cashier))).
+            , ub.staff.psn-code)).
 
           if available ub.person
             then 

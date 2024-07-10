@@ -28,14 +28,15 @@ PROCEDURE SENDING:
     AND ub.cash-desk.cash-on
     BREAK
     By ub.cash-desk.pos-type :
-    if not can-find (first buf_cash-desk-attr no-lock
-      where buf_cash-desk-attr.db-num   = ub.cash-desk.db-num
-      and buf_cash-desk-attr.obj-code = ub.cash-desk.obj-code
-      and buf_cash-desk-attr.pos-type = ub.cash-desk.pos-type
-      and buf_cash-desk-attr.cash-num = ub.cash-desk.cash-num
-      and buf_cash-desk-attr.upper-attr-code = ub.cash-desk.pos-type + "_operative":U
-      and buf_cash-desk-attr.attr-code       = "device-kind":U 
-      and buf_cash-desk-attr.attr-value-integer = 4) then return .
+/*    if not can-find (first buf_cash-desk-attr no-lock                                */
+/*      where buf_cash-desk-attr.db-num   = ub.cash-desk.db-num                        */
+/*      and buf_cash-desk-attr.obj-code = ub.cash-desk.obj-code                        */
+/*      and buf_cash-desk-attr.pos-type = ub.cash-desk.pos-type                        */
+/*      and buf_cash-desk-attr.cash-num = ub.cash-desk.cash-num                        */
+/*      and buf_cash-desk-attr.upper-attr-code = ub.cash-desk.pos-type + "_operative":U*/
+/*      and buf_cash-desk-attr.attr-code       = "device-kind":U                       */
+/*      and buf_cash-desk-attr.attr-value-integer = Types:GrafCash:KeyInt then next .  */
+
     /*выполним действия, разнящиеся для разных типов касс -
     разные настройки в progress.ini - разные операции со spool-dir и т.д.*/
     IF FIRST-OF(ub.cash-desk.pos-type) then 
