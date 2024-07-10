@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0c1a62f6cd43, 1415, test $
+$Author: EShklyar $
+$Date: Fri Jun 29 17:59:55 2018 +0300 $
+$Workfile: cd-cycl6.i $
+$Archive: str/cd-cycl6.i $
 
 отсылка ксссиров - цикл по всем кассам одного типа
 
@@ -16,18 +16,28 @@ Creation date: 03/24/06
 */
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: cd-cycl6.i $ $Revision: 0c1a62f6cd43, 1415, test $".
 
 PROCEDURE   for-cash-cycle:
 DEFINE VARIABLE v-dir-remote as character no-undo .
 DEFINE VARIABLE v-dir-remote-tmp as character no-undo .
 define buffer for-cash-desk for ub.cash-desk.
+define variable graff_kassa as logical no-undo .
+define buffer buf_cash-desk-attr for ub.cash-desk-attr .
 
   FOR EACH for-cash-desk NO-LOCK WHERE
             for-cash-desk.db-num = g#db-num AND
             for-cash-desk.pos-type = ub.cash-desk.pos-type AND
             for-cash-desk.obj-code = i-obj-code AND
             for-cash-desk.cash-on  = yes:
+       if can-find (first buf_cash-desk-attr no-lock
+       where buf_cash-desk-attr.db-num   = for-cash-desk.db-num
+         and buf_cash-desk-attr.obj-code = for-cash-desk.obj-code
+         and buf_cash-desk-attr.pos-type = for-cash-desk.pos-type
+         and buf_cash-desk-attr.cash-num = for-cash-desk.cash-num
+         and buf_cash-desk-attr.upper-attr-code = for-cash-desk.pos-type + "_operative":U
+         and buf_cash-desk-attr.attr-code       = "device-kind":U 
+         and buf_cash-desk-attr.attr-value-integer = 4) then graff_kassa = true .
     run write-log-and-file in p-log-handle (
           input 1
         , input log-file-name
@@ -53,7 +63,7 @@ define buffer for-cash-desk for ub.cash-desk.
       &cdt-ibm-xml=yes
       }
     /*сформируем вывод для кассы определенного типа*/
-    RUN putc-6( for-cash-desk.pos-type ).
+    RUN putc-6( for-cash-desk.pos-type, graff_kassa ).
     /*закрываем поток*/
     { str/cloc-gen.i
       &cd-buffer=for-cash-desk
@@ -67,4 +77,4 @@ define buffer for-cash-desk for ub.cash-desk.
   END . /*for each for-cash-desk*/
 END PROCEDURE.
 
-/* $Workfile$ e n d */
+/* $Workfile: cd-cycl6.i $ e n d */
