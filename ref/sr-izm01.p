@@ -68,6 +68,15 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
     ) .
   end .
 
+  if p-sr-density = 1 and (p-sr-abs-err-dens-lgas-liquid = 0.0 or p-sr-abs-err-dens-lgas-liquid = ?) and
+     (p-sr-relative-err-dens-lgas-liquid = 0.0 or p-sr-relative-err-dens-lgas-liquid = ?) then do:
+        undo, throw new Progress.Lang.AppError(
+                substitute("&1 &2 &3&4Хотя бы один из атрибутов <dnst-abs-me-lpg-l> и <dnst-rel-me-lpg-l> должен быть не нулевым [&5]",
+                 vss-workfile, vss-revision, vss-description, {&new-line},
+                 p-node-code) 
+      ) .  
+  end.
+
   if can-find (first buf_sr-izmerenia
   where buf_sr-izmerenia.sr-model                    = p-sr-model
     AND buf_sr-izmerenia.sr-level                    = (p-sr-level > 0)
