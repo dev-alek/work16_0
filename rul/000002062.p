@@ -4089,7 +4089,6 @@ PROCEDURE StrTax :
       do:
         if tt-fin-doc.curr-code = 0 then 
         do:
-          if tt0-fin-doc-tax.vat-pc = 0 then do:
             case taxVne:
               when "vne" then 
                 do:
@@ -4122,7 +4121,6 @@ PROCEDURE StrTax :
               end.  
             end case .
         end.  
-      end.
       end.
       if str = " Â ò.÷.: " then assign str = "" .
     end.
