@@ -313,7 +313,7 @@ procedure data-print :
       tt-sug.density  = bf_rvs-line.state-density
       tt-sug.temp     = bf_rvs-line.state-temperature
       tt-sug.qnty     = bf_rvs-line.state-measure-cli-qnty
-      tt-sug.volue-pl = bf_place.add-qnty
+      tt-sug.volue-pl = bf_rvs-line.add-qnty
       tt-sug.qnty1    = tt-sug.volue-pl * tt-sug.density
       tt-sug.pl-type  = "трубопровод"
       .

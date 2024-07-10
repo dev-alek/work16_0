@@ -305,7 +305,7 @@ procedure data-print :
          tt-petrol.density  = bf_rvs-line.state-density * 1000 /*Переводим из г/см3 в кг/м3 */
          tt-petrol.temp     = bf_rvs-line.state-temperature
          tt-petrol.qnty     = round(bf_rvs-line.state-measure-cli-qnty,0)
-         tt-petrol.volue-pl = bf_place.add-qnty * 0.001
+         tt-petrol.volue-pl = bf_rvs-line.add-qnty * 0.001
          tt-petrol.qnty1    = round((tt-petrol.volue-pl * tt-petrol.density),0)
          tt-petrol.pl-type  = "трубопровод"
          .
