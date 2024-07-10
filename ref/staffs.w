@@ -1155,6 +1155,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       v-db-num = p-db-num
       .
     end.
+
     run enable_UI  in this-procedure .
     HIDE mark-num in frame {&frame-name} .
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -1692,7 +1693,7 @@ v-tab-order = "b-exit,b-mark,b-add,b-sel,b-lkp,b-chg,b-del,b-hist,b-print,b-help
 ENABLE
 br-staff
 b-quit
-b-qrCode
+b-qrCode when p-role = {&role-cashier}
 b-mark WHEN lookup( "b-mark", bttns) > 0
 b-sel  WHEN lookup( "b-sel", bttns) > 0
 b-print
@@ -1708,6 +1709,10 @@ f-staff-code
 RS-status
 b-arch when p-role = {&role-cashier}
 WITH FRAME {&frame-name} .
+
+disable b-qrCode  WHEN lookup( "b-sel", bttns) > 0 with frame {&frame-name} .
+if p-role <> {&role-cashier} then
+hide b-qrCode in frame {&frame-name} .
 assign
 MENU-ITEM m-add-new:sensitive in menu menu-add = (lookup( "b-add", bttns) > 0  and buf_db.add-clients)
 MENU-ITEM m_psn:sensitive in menu menu-b-chg = (lookup( "b-add", bttns) > 0  and buf_db.add-clients)

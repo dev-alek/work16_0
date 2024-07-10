@@ -120,7 +120,7 @@ end.
 
       if pos-graff then do:
           for first ub.staff no-lock where ub.staff.psn-code = ub.person.psn-code
-          and ub.staff.role = 'C' 
+          and ub.staff.role = {&role-cashier} 
           and (ub.staff.date-end > today or ub.staff.date-end = ?),
           first ub.staff-attr no-lock where ub.staff-attr.attr-code = "CashierQRCode"
           and ub.staff-attr.role = ub.staff.role
