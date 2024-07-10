@@ -2049,7 +2049,8 @@ define buffer bf_place for ub.place .
         tt-rvs-line.state-brutto-qnty = tt-rvs-line.fact-sum-vol .
         tt-rvs-line.state-brutto-cli-qnty  = tt-rvs-line.state-brutto-qnty * tt-rvs-line.state-density .
         
-        if v-mm:DeltaOtn_M > 0.65 then delta-mass-qnty = 0.65. else delta-mass-qnty = v-mm:DeltaOtn_M  .
+/*        if v-mm:DeltaOtn_M > 0.65 then delta-mass-qnty = 0.65. else delta-mass-qnty = v-mm:DeltaOtn_M  .*/
+        if  tt-rvs-line.state-measure-cli-qnty > 200000 then delta-mass-qnty = 0.5 . else delta-mass-qnty = 0.65. 
         
         abs-delta-mass-qnty = tt-rvs-line.state-measure-cli-qnty * delta-mass-qnty / 100 .
         
