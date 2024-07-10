@@ -2162,7 +2162,6 @@ procedure proc-01-gds :
                 (b-c, shop-type, shop-code, output b-c,output v-dt-season).
                 
             FIND FIRST buf_chk-doc NO-ERROR.
-            /* MESSAGE 'chk-gds'   buf_chk-doc.doc-code VIEW-AS ALERT-BOX . */
             
             CREATE buf_chk-gds.
             assign
@@ -2731,13 +2730,13 @@ end procedure. /* proc-end */
 
 procedure proc-end-chk :
 
-    DO on error undo, return error :
+ DO on error undo, return error :
     
        /*  MESSAGE 'если мы здесь то кончился чек' VIEW-AS ALERT-BOX.  */
        
        FIND FIRST tt-chk-doc NO-ERROR. 
        IF AVAILABLE tt-chk-doc THEN DO:
-       FIND FIRST ub.chk-doc WHERE 
+          FIND FIRST ub.chk-doc WHERE 
               ub.chk-doc.chk-id    = tt-chk-doc.chk-id
           AND ub.chk-doc.obj-code  = tt-chk-doc.obj-code
           AND ub.chk-doc.obj-type  = tt-chk-doc.obj-type
@@ -2992,6 +2991,8 @@ procedure proc-end-chk :
               .
            END.       
 
+          end.
+          
           EMPTY TEMP-TABLE     tt-chk-doc.
           EMPTY TEMP-TABLE     tt-chk-doc-attr.
           EMPTY TEMP-TABLE     tt-chk-gds.
@@ -3002,12 +3003,9 @@ procedure proc-end-chk :
           EMPTY TEMP-TABLE     tt-chk-discnt.
           EMPTY TEMP-TABLE     tt-chk-discnt-attr.
           EMPTY TEMP-TABLE     tt-bar-code.
-          EMPTY TEMP-TABLE     tt-marking-chk.    
+          EMPTY TEMP-TABLE     tt-marking-chk.       
+       END.
 
-       end.
-       
-   END.
-      
  END.
     
 end procedure. /* proc-end-chk */
