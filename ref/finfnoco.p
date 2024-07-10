@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5ee64da48eb6, 3419, rls $
+$Author: DRuban $
+$Date: 2023/10/16 15:13:30 $
+$Workfile: finfnoco.p $
+$Archive: ref/finfnoco.p $
 
 Заполнение и проверка временной таблицы платежа
 
@@ -71,12 +71,11 @@ define INPUT-OUTPUT parameter table for ttc-fin-doc.
 define OUTPUT parameter table for tt0-fin-doc-attr.
 define output parameter p-limit-access as integer no-undo .
 
-
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 5ee64da48eb6, 3419, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:30 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: finfnoco.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/finfnoco.p $":U .
 define variable vss-description as character no-undo init "Заполнение и проверка временной таблицы платежа".
 { cmp/vssrevis.i }
 
@@ -179,10 +178,10 @@ define buffer buf_contract-currency  for ub.currency.
 define buffer locked_fin-doc         for ub.fin-doc.
 
 
-
 do
   on error undo,
-  return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status:get-message( 1 ) )
+  return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status:get-message( 1 ) )  
+  /* return error substitute( "&1" , return-value )   */
   :
 
   { gbl/getcntxt.i get }
@@ -640,6 +639,7 @@ if (p-mode = {&add-def}
   tt-fin-doc.receiver-code <> 0)
   then 
 do:
+  
   FIND FIRST buf_receiver WHERE
     buf_receiver.obj-type = (if p-mode = {&add-def}
     then p-receiver-type
@@ -650,6 +650,8 @@ do:
     NO-LOCK  no-error.
   if not avail buf_receiver then 
   do:
+     
+
     undo, return error substitute("&1 &2 &3&4 Неверные параметры p-receiver-type или значение поля receiver-type &5&4И/ИЛИ p-receiver-code или значение поля receiver-code &6"
       ,vss-workfile
       ,vss-revision
@@ -2864,4 +2866,8 @@ procedure get-fin-schet :
 
   end. /*doe*/
 
+
+
+
 end procedure. /* get-fin-schet */
+

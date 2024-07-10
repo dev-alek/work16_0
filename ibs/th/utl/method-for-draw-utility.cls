@@ -2898,7 +2898,8 @@ class ibs.th.utl.method-for-draw-utility final:
                     /* end. */ 
                     if error-status:error then 
                     do:
-                      put-log("Ошибки при заполнении фин.док-та значениями по умолчанию").
+                      /* put-log("Ошибки при заполнении фин.док-та значениями по умолчанию"). */
+                      put-log(substitute("Ошибки при заполнении фин.док-та значениями по умолчанию &1 &2 ",{&new-line},ENTRY(3,return-value)) ).
                     end.
                     find first tt-fin-doc.
                     /*заполнение налогов*/
