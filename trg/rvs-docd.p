@@ -267,7 +267,6 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
     end.
   end.
   if ub.rvs-doc.status_ = {&fact}
-  and ub.rvs-doc.rvs-type <> {&test-asi}
   then do:
     { gbl/rum-runa.i
       ?
