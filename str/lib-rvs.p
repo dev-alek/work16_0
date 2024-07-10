@@ -2072,15 +2072,19 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable v-ok              as logical   no-undo.
   define variable  p-prev-rvs-date  as logical no-undo.
 
-    /*параметры для видеонаблюдения */
-    define variable v-vid-ok  as logical   no-undo .
-    define variable v-vid-mes as character no-undo .
-    define variable v-vid-action as integer    no-undo .
-    define variable v-vid-param  as longchar   no-undo .  
-    /*параметры для работы с библиотекой ПО МИ*/
-    define variable v-mm         as com-handle.
-    define variable v-proc       as character  no-undo.
-    define variable v-mm57       as com-handle.
+  /*параметры для видеонаблюдения */
+  define variable v-vid-ok  as logical   no-undo .
+  define variable v-vid-mes as character no-undo .
+  define variable v-vid-action as integer    no-undo .
+  define variable v-vid-param  as longchar   no-undo .  
+  /*параметры для работы с библиотекой ПОкМИ*/
+  define variable v-mm         as com-handle.
+  define variable v-proc       as character  no-undo.
+  define variable v-mm57       as com-handle.
+  
+  define variable Tv as decimal no-undo .
+  define variable Tr as decimal no-undo .
+  define variable R  as decimal no-undo .
 
   define variable place-type        as integer no-undo.
   define variable place-SI          as integer no-undo.
@@ -4267,7 +4271,7 @@ THEN DO:
       if DeltaAbs_R_Sug-vapor = ? then DeltaAbs_R_Sug-vapor = 0 .
       if LevelToolType    = ? then LevelToolType = 0 .
       if ToolType         = ? then ToolType = 0 .
-      if A_LevelMeasurementTool = ? then A_LevelMeasurementTool = 0 .
+      if A_LevelMeasurementTool      = ? then A_LevelMeasurementTool = 0 .
       if ToolAutomationLevel_Tr      = ? then ToolAutomationLevel_Tr =0.
       if ToolAutomationLevel_H       = ? then ToolAutomationLevel_H = 0.
       if ToolAutomationLevel_H_Water = ? then ToolAutomationLevel_H_Water = 0.
@@ -4568,6 +4572,51 @@ THEN DO:
             else do :
               v-mm:A_LevelMeasurementTool = A_LevelMeasurementTool .
             end .
+            
+            assign
+              Tv = if temp-izm-vol <> ? then temp-izm-vol else bf_rvs-line.state-temperature
+              Tr = bf_rvs-line.state-temperature
+              R  = if izmer-density <> ? then ( izmer-density * 1000 ) else ( bf_rvs-line.state-density * 1000 )
+            .
+            
+            v-mm:Set_Tv(replace(string(Tv), ".", ",")) no-error .
+            if string(v-mm:Tv) = ".0000000000"
+            and Tv <> 0
+            then do :
+              v-mm:Set_Tv(string(Tv)) no-error .
+            end .
+            if substring(string(v-mm:Tv), length(string(v-mm:Tv)) - 2) = "999"
+            then do :
+              v-mm:Set_Tv(replace(string(Tv + 0.0000000001), ".", ",")) no-error .
+              if string(v-mm:Tv) = ".0000000000"
+              and Tv <> 0
+              then do :
+                v-mm:Set_Tv(string(Tv + 0.0000000001)) no-error .
+              end .
+            end .
+            
+            v-mm:Set_Tr(replace(string(Tr), ".", ",")) no-error .
+            if string(v-mm:Tr) = ".0000000000"
+            and Tr <> 0
+            then do :
+              v-mm:Set_Tr(string(Tr)) no-error .
+            end .
+            if substring(string(v-mm:Tr), length(string(v-mm:Tr)) - 2) = "999"
+            then do :
+              v-mm:Set_Tr(replace(string(Tr + 0.0000000001), ".", ",")) no-error .
+              if string(v-mm:Tr) = ".0000000000"
+              and Tr <> 0
+              then do :
+                v-mm:Set_Tr(string(Tr + 0.0000000001)) no-error .
+              end .
+            end .
+            
+            v-mm:Set_R(replace(string(R), ".", ",")) no-error .
+            if string(v-mm:R) = ".0000000000"
+            then do :
+              v-mm:Set_R(string(R)) no-error .
+            end .
+            
             PUT STREAM outstream unformatted
               'CalibrationBelt       = ' v-mm:CalibrationBelt           SKIP
               'ToolAutomationLevel_H       = ' v-mm:ToolAutomationLevel_H     SKIP

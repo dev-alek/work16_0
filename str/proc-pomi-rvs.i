@@ -109,6 +109,13 @@ procedure calc-pomi-rvs :
   define variable v-mi-tmp-dnst-1         as integer no-undo .
   define variable v-mi-tmp-dnst-2         as integer no-undo .
   
+  define variable Tv1                     as decimal no-undo .
+  define variable Tr1                     as decimal no-undo .
+  define variable R1                      as decimal no-undo .
+  define variable Tv2                     as decimal no-undo .
+  define variable Tr2                     as decimal no-undo .
+  define variable R2                      as decimal no-undo .
+  
   define variable temp-for-pomi           as integer no-undo.
   define variable error-string            as character no-undo.
   define variable v-is-meas               as logical no-undo.
@@ -1108,6 +1115,72 @@ procedure calc-pomi-rvs :
     end.
     
     assign
+      Tr1 = bf_bef_rvs-line.state-temperature
+      Tv1 = if v-temp-izm-vol1 <> ? then v-temp-izm-vol1 else bf_bef_rvs-line.state-temperature 
+      R1  = ( bf_bef_rvs-line.state-density * 1000 )
+      
+      Tr2 = bf_aft_rvs-line.state-temperature
+      Tv2 = if v-temp-izm-vol2 <> ? then v-temp-izm-vol2 else bf_aft_rvs-line.state-temperature 
+      R2  = ( bf_aft_rvs-line.state-density * 1000 )
+    .
+    
+    for first bf_rvs-line-attr no-lock where bf_rvs-line-attr.rvs-code  = bf_bef_rvs-line.rvs-code
+                                         and bf_rvs-line-attr.obj-code  = bf_bef_rvs-line.obj-code
+                                         and bf_rvs-line-attr.obj-type  = bf_bef_rvs-line.obj-type
+                                         and bf_rvs-line-attr.gds-code  = bf_bef_rvs-line.gds-code
+                                         and bf_rvs-line-attr.pl-code   = bf_bef_rvs-line.pl-code
+                                         and bf_rvs-line-attr.attr-code = "Tr"
+    :
+      assign Tr1 = decimal(bf_rvs-line-attr.attr-value) .
+    end .
+    for first bf_rvs-line-attr no-lock where bf_rvs-line-attr.rvs-code  = bf_bef_rvs-line.rvs-code
+                                         and bf_rvs-line-attr.obj-code  = bf_bef_rvs-line.obj-code
+                                         and bf_rvs-line-attr.obj-type  = bf_bef_rvs-line.obj-type
+                                         and bf_rvs-line-attr.gds-code  = bf_bef_rvs-line.gds-code
+                                         and bf_rvs-line-attr.pl-code   = bf_bef_rvs-line.pl-code
+                                         and bf_rvs-line-attr.attr-code = "Tv"
+    :
+      assign Tv1 = decimal(bf_rvs-line-attr.attr-value) .
+    end .
+    for first bf_rvs-line-attr no-lock where bf_rvs-line-attr.rvs-code  = bf_bef_rvs-line.rvs-code
+                                         and bf_rvs-line-attr.obj-code  = bf_bef_rvs-line.obj-code
+                                         and bf_rvs-line-attr.obj-type  = bf_bef_rvs-line.obj-type
+                                         and bf_rvs-line-attr.gds-code  = bf_bef_rvs-line.gds-code
+                                         and bf_rvs-line-attr.pl-code   = bf_bef_rvs-line.pl-code
+                                         and bf_rvs-line-attr.attr-code = "R"
+    :
+      assign R1 = decimal(bf_rvs-line-attr.attr-value) * 1000 .
+    end .
+    
+    for first bf_rvs-line-attr no-lock where bf_rvs-line-attr.rvs-code  = bf_aft_rvs-line.rvs-code
+                                         and bf_rvs-line-attr.obj-code  = bf_aft_rvs-line.obj-code
+                                         and bf_rvs-line-attr.obj-type  = bf_aft_rvs-line.obj-type
+                                         and bf_rvs-line-attr.gds-code  = bf_aft_rvs-line.gds-code
+                                         and bf_rvs-line-attr.pl-code   = bf_aft_rvs-line.pl-code
+                                         and bf_rvs-line-attr.attr-code = "Tr"
+    :
+      assign Tr2 = decimal(bf_rvs-line-attr.attr-value) .
+    end .
+    for first bf_rvs-line-attr no-lock where bf_rvs-line-attr.rvs-code  = bf_aft_rvs-line.rvs-code
+                                         and bf_rvs-line-attr.obj-code  = bf_aft_rvs-line.obj-code
+                                         and bf_rvs-line-attr.obj-type  = bf_aft_rvs-line.obj-type
+                                         and bf_rvs-line-attr.gds-code  = bf_aft_rvs-line.gds-code
+                                         and bf_rvs-line-attr.pl-code   = bf_aft_rvs-line.pl-code
+                                         and bf_rvs-line-attr.attr-code = "Tv"
+    :
+      assign Tv2 = decimal(bf_rvs-line-attr.attr-value) .
+    end .
+    for first bf_rvs-line-attr no-lock where bf_rvs-line-attr.rvs-code  = bf_aft_rvs-line.rvs-code
+                                         and bf_rvs-line-attr.obj-code  = bf_aft_rvs-line.obj-code
+                                         and bf_rvs-line-attr.obj-type  = bf_aft_rvs-line.obj-type
+                                         and bf_rvs-line-attr.gds-code  = bf_aft_rvs-line.gds-code
+                                         and bf_rvs-line-attr.pl-code   = bf_aft_rvs-line.pl-code
+                                         and bf_rvs-line-attr.attr-code = "R"
+    :
+      assign R2 = decimal(bf_rvs-line-attr.attr-value) * 1000 .
+    end .
+    
+    assign
       v-mm:M1                      = bf_bef_rvs-line.state-measure-cli-qnty
       v-mm:M2                      = bf_aft_rvs-line.state-measure-cli-qnty
       v-mm:H1                      = bf_bef_rvs-line.state-level-total * 10
@@ -1116,12 +1189,12 @@ procedure calc-pomi-rvs :
       v-mm:H2_water                = bf_aft_rvs-line.state-level-water * 10 when bf_aft_rvs-line.state-level-water <> ?
       v-mm:CalibrationTable        = CalibTable
       v-mm:CalibrationBelt         = CalibBelt
-      v-mm:Tv1                     = if v-temp-izm-vol1 <> ? then v-temp-izm-vol1 else bf_bef_rvs-line.state-temperature 
-      v-mm:Tv2                     = if v-temp-izm-vol2 <> ? then v-temp-izm-vol2 else bf_aft_rvs-line.state-temperature
-      v-mm:Tr1                     = bf_bef_rvs-line.state-temperature
-      v-mm:Tr2                     = bf_aft_rvs-line.state-temperature
-      v-mm:R1                      = ( bf_bef_rvs-line.state-density * 1000 )
-      v-mm:R2                      = ( bf_aft_rvs-line.state-density * 1000 )
+/*      v-mm:Tv1                     = Tv1*/
+/*      v-mm:Tv2                     = Tv2*/
+/*      v-mm:Tr1                     = Tr1*/
+/*      v-mm:Tr2                     = Tr2*/
+/*      v-mm:R1                      = R1 */
+/*      v-mm:R2                      = R2 */
       v-mm:ToolType1               = ToolType1
       v-mm:ToolType2               = ToolType2
       v-mm:DeltaOtn_K              = DeltaOtn_K
@@ -1158,6 +1231,110 @@ procedure calc-pomi-rvs :
       v-mm:DeltaOtn_R2             = DeltaOtn_R2
       v-mm:DeltaOtn_N              = DeltaOtn_N
     .
+    
+    v-mm:Set_Tv1(replace(string(Tv1), ".", ",")) no-error .
+    if string(v-mm:Tv1) = ".0000000000"
+    and Tv1 <> 0
+    then do :
+      v-mm:Set_Tv1(string(Tv1)) no-error .
+    end .
+    if string(v-mm:Tv1) = ".0000000000"
+    and Tv1 <> 0
+    then do :
+      assign v-mm:Tv1 = Tv1 .
+    end .
+    if substring(string(v-mm:Tv1), length(string(v-mm:Tv1)) - 2) = "999"
+    then do :
+      v-mm:Set_Tv1(replace(string(Tv1 + 0.0000000001), ".", ",")) no-error .
+      if string(v-mm:Tv1) = ".0000000000"
+      and Tv1 <> 0
+      then do :
+        v-mm:Set_Tv1(string(Tv1 + 0.0000000001)) no-error .
+      end .
+    end .
+    
+    v-mm:Set_Tv2(replace(string(Tv2), ".", ",")) no-error .
+    if string(v-mm:Tv2) = ".0000000000"
+    and Tv2 <> 0
+    then do :
+      v-mm:Set_Tv2(string(Tv2)) no-error .
+    end .
+    if string(v-mm:Tv2) = ".0000000000"
+    and Tv2 <> 0
+    then do :
+      assign v-mm:Tv2 = Tv2 .
+    end .
+    if substring(string(v-mm:Tv2), length(string(v-mm:Tv2)) - 2) = "999"
+    then do :
+      v-mm:Set_Tv2(replace(string(Tv2 + 0.0000000001), ".", ",")) no-error .
+      if string(v-mm:Tv2) = ".0000000000"
+      and Tv2 <> 0
+      then do :
+        v-mm:Set_Tv2(string(Tv2 + 0.0000000001)) no-error .
+      end .
+    end .
+    
+    v-mm:Set_Tr1(replace(string(Tr1), ".", ",")) no-error .
+    if string(v-mm:Tr1) = ".0000000000"
+    and Tr1 <> 0
+    then do :
+      v-mm:Set_Tr1(string(Tr1)) no-error .
+    end .
+    if string(v-mm:Tr1) = ".0000000000"
+    and Tr1 <> 0
+    then do :
+      assign v-mm:Tr1 = Tr1 .
+    end .
+    if substring(string(v-mm:Tr1), length(string(v-mm:Tr1)) - 2) = "999"
+    then do :
+      v-mm:Set_Tr1(replace(string(Tr1 + 0.0000000001), ".", ",")) no-error .
+      if string(v-mm:Tr1) = ".0000000000"
+      and Tr1 <> 0
+      then do :
+        v-mm:Set_Tr1(string(Tr1 + 0.0000000001)) no-error .
+      end .
+    end .
+    
+    v-mm:Set_Tr2(replace(string(Tr2), ".", ",")) no-error .
+    if string(v-mm:Tr2) = ".0000000000"
+    and Tr2 <> 0
+    then do :
+      v-mm:Set_Tr2(string(Tr2)) no-error .
+    end .
+    if string(v-mm:Tr2) = ".0000000000"
+    and Tr2 <> 0
+    then do :
+      assign v-mm:Tr2 = Tr2 .
+    end .
+    if substring(string(v-mm:Tr2), length(string(v-mm:Tr2)) - 2) = "999"
+    then do :
+      v-mm:Set_Tr2(replace(string(Tr2 + 0.0000000001), ".", ",")) no-error .
+      if string(v-mm:Tr2) = ".0000000000"
+      and Tr2 <> 0
+      then do :
+        v-mm:Set_Tr2(string(Tr2 + 0.0000000001)) no-error .
+      end .
+    end .
+    
+    v-mm:Set_R1(replace(string(R1), ".", ",")) no-error .
+    if string(v-mm:R1) = ".0000000000"
+    then do :
+      v-mm:Set_R1(string(R1)) no-error .
+    end .
+    if string(v-mm:R1) = ".0000000000"
+    then do :
+      assign v-mm:R1 = R1 .
+    end .
+    
+    v-mm:Set_R2(replace(string(R2), ".", ",")) no-error .
+    if string(v-mm:R2) = ".0000000000"
+    then do :
+      v-mm:Set_R2(string(R2)) no-error .
+    end .
+    if string(v-mm:R2) = ".0000000000"
+    then do :
+      assign v-mm:R2 = R2 .
+    end .
 
     output stream outstream to value ("pomi.log") append.
     put stream outstream unformatted

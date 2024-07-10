@@ -2157,6 +2157,45 @@ define buffer bf_place for ub.place .
         else do :
           v-mm:A_LevelMeasurementTool = A_LevelMeasurementTool .
         end .
+        
+        v-mm:Set_Tv(replace(string(Tv), ".", ",")) no-error .
+        if string(v-mm:Tv) = ".0000000000"
+        and Tv <> 0
+        then do :
+          v-mm:Set_Tv(string(Tv)) no-error .
+        end .
+        if substring(string(v-mm:Tv), length(string(v-mm:Tv)) - 2) = "999"
+        then do :
+          v-mm:Set_Tv(replace(string(Tv + 0.0000000001), ".", ",")) no-error .
+          if string(v-mm:Tv) = ".0000000000"
+          and Tv <> 0
+          then do :
+            v-mm:Set_Tv(string(Tv + 0.0000000001)) no-error .
+          end .
+        end .
+        
+        v-mm:Set_Tr(replace(string(Tr), ".", ",")) no-error .
+        if string(v-mm:Tr) = ".0000000000"
+        and Tr <> 0
+        then do :
+          v-mm:Set_Tr(string(Tr)) no-error .
+        end .
+        if substring(string(v-mm:Tr), length(string(v-mm:Tr)) - 2) = "999"
+        then do :
+          v-mm:Set_Tr(replace(string(Tr + 0.0000000001), ".", ",")) no-error .
+          if string(v-mm:Tr) = ".0000000000"
+          and Tr <> 0
+          then do :
+            v-mm:Set_Tr(string(Tr + 0.0000000001)) no-error .
+          end .
+        end .
+        
+        v-mm:Set_R(replace(string(R), ".", ",")) no-error .
+        if string(v-mm:R) = ".0000000000"
+        then do :
+          v-mm:Set_R(string(R)) no-error .
+        end .
+        
         PUT STREAM outstream unformatted
           'DeltaOtn_N            = ' v-mm:DeltaOtn_N                SKIP
           'CalibrationBelt             = ' v-mm:CalibrationBelt           SKIP
