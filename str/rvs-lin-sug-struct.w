@@ -340,7 +340,7 @@ do :
       rvs-line-attr.attr-code = "dens15"
     .
   end.
-  rvs-line-attr.attr-value = string(f-dens15, "9.99") .
+  rvs-line-attr.attr-value = string(f-dens15, "9.9999") .
   
   find first rvs-line-attr exclusive-lock
        where rvs-line-attr.obj-code  = p-obj-code
